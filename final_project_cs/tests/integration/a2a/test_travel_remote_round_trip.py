@@ -21,7 +21,8 @@ from uuid import uuid4
 import httpx
 import pytest
 
-from app.core.contracts import ContextPack, NextAction, TeamTask
+from app.core.contracts import ContextPack, NextAction, TeamManifest, TeamTask
+from app.core.registry import TeamRegistry
 from app.core.remote_team.a2a_executor import A2ATeamExecutor
 from app.infrastructure.a2a.http_transport import A2AHttpTransport
 from app.presentation.a2a.travel_remote_agent import (
@@ -46,6 +47,26 @@ def make_task(*, capability: str = "place.verify_hours", seconds: int = 30) -> T
                     deadline_at=datetime.now(UTC) + timedelta(seconds=seconds))
 
 
+class RemotePlaceTeam:
+    """등록부에 올리는 원격 팀 선언 — 실행은 A2A 가 하고 등록부는 「설치됐나 · 이 기능을 선언했나」만 본다.
+
+    ☆`[2026-10-12]` 실행기는 이제 등록부 없이 부르면 `not_installed` 로 거절한다(`a2a_executor.execute`,
+      wiki `teams/team-contract/plugin-availability.md`). 이 시험이 등록부를 안 넘겨서 6건이 같이 깨졌다.
+      선언은 원격 Card(`CARD`) 의 기능 목록을 그대로 옮긴다."""
+
+    manifest = TeamManifest(team_id=TEAM, display_name=CARD["capabilities"][0]["display_name"],
+                            contract_name="a_cop.team_task",
+                            supported_contract_versions=CARD["capabilities"][0]["contract_versions"],
+                            capabilities=CARD["capabilities"][0]["capabilities"],
+                            accepted_case_types=CARD["capabilities"][0]["accepted_case_types"],
+                            required_context=[], allowed_tools=[], knowledge_scope=["place"],
+                            implementation_revision="a2a-round-trip-test")
+
+
+def remote_executor(transport) -> A2ATeamExecutor:
+    return A2ATeamExecutor(transport, lambda _c: "/a2a/tasks", registry=TeamRegistry([RemotePlaceTeam()]))
+
+
 def client(app, *, token: str | None = REMOTE_TOKEN) -> tuple[httpx.AsyncClient, A2AHttpTransport]:
     http = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE)
     return http, A2AHttpTransport(http, token=token)
@@ -67,7 +88,7 @@ async def test_round_trip_reaches_input_required_then_completes():
     """Card 발견 → submit → input-required → 추가 입력 → Artifact 완료."""
     app = create_travel_remote_agent()
     http, transport = client(app)
-    executor = A2ATeamExecutor(transport, lambda _c: "/a2a/tasks")
+    executor = remote_executor(transport)
     task = make_task()
 
     async with http:
@@ -100,7 +121,7 @@ async def test_missing_place_id_is_rejected():
     """★식별자 없이 「확인했다」고 말하지 않는다. 422 로 거절한다."""
     app = create_travel_remote_agent()
     http, transport = client(app)
-    executor = A2ATeamExecutor(transport, lambda _c: "/a2a/tasks")
+    executor = remote_executor(transport)
 
     async with http:
         await executor.execute(make_task())
@@ -114,7 +135,7 @@ async def test_missing_place_id_is_rejected():
 async def test_wrong_token_is_unauthorized():
     """★원격별 인증이 실제로 걸린다. 커머스 토큰으로는 안 열린다."""
     http, transport = client(create_travel_remote_agent(), token="remote-catalog-token")
-    executor = A2ATeamExecutor(transport, lambda _c: "/a2a/tasks")
+    executor = remote_executor(transport)
     async with http:
         result = await executor.execute(make_task())
     assert result.outcome == "failed"
@@ -125,7 +146,7 @@ async def test_wrong_token_is_unauthorized():
 async def test_remote_failure_maps_to_escalate():
     """원격이 못 하면 실패로 매핑되고 사람에게 넘어간다."""
     http, transport = client(create_travel_remote_agent(behavior="fail_immediately"))
-    executor = A2ATeamExecutor(transport, lambda _c: "/a2a/tasks")
+    executor = remote_executor(transport)
     async with http:
         result = await executor.execute(make_task())
     assert result.outcome == "failed"
@@ -137,7 +158,7 @@ async def test_remote_failure_maps_to_escalate():
 async def test_deadline_stops_a_never_finishing_remote():
     """★원격이 안 끝나도 우리가 멈춘다. deadline 이 실제로 도는지 본다."""
     http, transport = client(create_travel_remote_agent(behavior="never_finishes"))
-    executor = A2ATeamExecutor(transport, lambda _c: "/a2a/tasks")
+    executor = remote_executor(transport)
     async with http:
         result = await executor.execute(make_task(seconds=1))
     assert result.outcome == "failed"
@@ -149,7 +170,7 @@ async def test_cancel_is_recorded_apart_from_failure():
     """★취소는 실패가 아니다. 누가 멈췄는지가 남아야 한다."""
     app = create_travel_remote_agent()
     http, transport = client(app)
-    executor = A2ATeamExecutor(transport, lambda _c: "/a2a/tasks")
+    executor = remote_executor(transport)
 
     async with http:
         await executor.execute(make_task())

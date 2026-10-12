@@ -158,6 +158,36 @@ python -m scripts.check_env
 
 `[실측]` **단 extension 2건 FAIL 은 마이그레이션 전에는 정상이다.** 이걸 모르면 멀쩡한 상태를 고장으로 오해한다.
 
+## ★ 시험(pytest) — 이동 자료 없이 돈다 `[2026-10-12]`
+
+**이동 자료(지하철 시간표 등 약 93MB)는 받지 않아도 된다.** 시험은 기본으로 이동 계산기를 끄고 돈다
+(`tests/conftest.py` 가 `ACOP_MOBILITY_DATA_DIR` 를 비운다). GitHub 검사(CI)도 같은 조건이다.
+
+| 무엇을 | 어떻게 |
+|---|---|
+| DB | 빈 DB 하나(`pgvector` 확장 가능한 PostgreSQL) → `python -m app.infrastructure.db.migrate` → `python -m scripts.register_prompts` |
+| 빠른 관문(develop 과 같음) | `python -m pytest tests/architecture tests/contract tests/unit -q` 그리고 `python -m pytest tests/security -q` |
+| 전체(main 과 같음) | `python -m pytest -q` (실제 모델을 부르는 `live` 는 `pytest.ini` 가 뺀다) |
+| 환경값 | CI 와 같게 — `.github/workflows/ci-main.yml` 의 `env` 칸(시험용 가짜 값)과 위 `PYTHONPATH` |
+
+**이동을 거치는 시험을 새로 쓸 때** — 앱을 만든 직후 시험용 고정 구간을 명시한다. 안 하면 이동 팀이
+「엔진 미준비」로 거절해 503 `team_unavailable`(`reason: engine_unavailable`)이 난다([plugin-availability](../teams/team-contract/plugin-availability.md) — 직선거리 어림으로 대신하지 않는 것이 계약이다).
+
+```python
+from tests.helpers.plugin_bindings import publish_fixed_mobility
+
+client = TestClient(create_app(...))
+publish_fixed_mobility(client.app, source="내_시험_이름")            # 구간마다 5분 · 앞 일정 끝나고 출발
+# 일정 짜기처럼 「다음 일정 시작 − 이동 − 여유」 출발 규칙을 보는 시험은 도착 여유를 준다
+publish_fixed_mobility(client.app, source="내_시험_이름", arrival_buffer_min=MOVE_BUFFER_MIN)
+```
+
+**실제 시간표로 돌려 보고 싶을 때만** 자료 폴더를 직접 지정한다 — 셸에서 `ACOP_MOBILITY_DATA_DIR=<자료 폴더>/datasets/mobility/processed`.
+느려진다(2026-10-12 일정 짜기 시험 묶음: 꺼짐 33초 → 켬 약 10분 `[실측 1회]`). 실제 자료로 하는 확인은 자료가 붙어 있는 개발 기계의 cs 프로젝트 서버(화면·API)에서 한다.
+
+`[실측]` 2026-10-12 develop 의 이동 팀 「엔진 미준비 거절」 변경 뒤, 자료 없는 CI 에서 이동을 거치는 e2e 시험 45건이
+깨졌다(요식 PR 도 같이 붉어짐). 위 고정 구간을 넣어 고쳤다.
+
 ## 관계
 
 - [run.md](run.md) — 실행 명령
