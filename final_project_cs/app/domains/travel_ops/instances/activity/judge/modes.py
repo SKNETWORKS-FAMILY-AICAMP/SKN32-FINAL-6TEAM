@@ -17,20 +17,21 @@ import json
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeout
 from dataclasses import replace
 from typing import Any, Protocol
 
 from .. import failure_codes as fc
 from .llm import LLMJudge
 from .rule import RuleJudge
-from .types import JudgeContext, JudgeRequest, Verdict
+from .types import WEB_KINDS, JudgeContext, JudgeRequest, Verdict
 
 SHADOW_LOGGER_NAME = "acop.activity.judge_shadow"
 _shadow_log = logging.getLogger(SHADOW_LOGGER_NAME)
 
 #: LLM 모드에서 **호출 실패**면 규칙으로 답한다. 근거 검증 탈락(`llm_uncited`)은 실패가 아니라 「모름」이라
 #:  규칙으로 덮지 않는다 — LLM 모드를 켠다는 것은 「LLM 이 근거를 못 대면 모른다고 말한다」를 고른 것이다.
-_CALL_FAILURES = frozenset({fc.LLM_TIMEOUT, fc.LLM_SCHEMA_INVALID, fc.LLM_ERROR})
+_CALL_FAILURES = frozenset({fc.LLM_TIMEOUT, fc.LLM_SCHEMA_INVALID, fc.LLM_ERROR, fc.LLM_BUSY})
 
 
 class ActivityJudge(Protocol):
@@ -124,7 +125,13 @@ def rule_first(ctx: JudgeContext, request: JudgeRequest, rule: Verdict, llm: LLM
                 return replace(rule, dropped=[*rule.dropped, "llm:budget_exhausted"])
         except Exception:  # noqa: BLE001 — 세지 못하면 부르지 않는다(ShadowJudge 와 같다)
             return replace(rule, dropped=[*rule.dropped, "llm:budget_unreadable"])
-    verdict = _run(llm.judge(ctx, request))
+    # ★`[2026-10-12]` 1.6 — 웹 판정은 고객이 기다리는 상한을 둔다. 넘으면 「모름」으로 답하고 호출은 뒤에서 끝난다(비용은 나간다)
+    timeout = (float(llm.reliability["web_answer_timeout_seconds"])
+               if request.kind in WEB_KINDS and getattr(llm, "reliability", None) else None)
+    try:
+        verdict = _run(llm.judge(ctx, request), timeout=timeout)
+    except FuturesTimeout:
+        verdict = Verdict(request.kind, "unknown", "llm", basis="web_answer_timeout", failure_code=fc.LLM_TIMEOUT)
     if not verdict.known:
         return replace(rule, dropped=[*rule.dropped, f"llm:{verdict.failure_code or 'unknown'}"])
     allowed = CAUTIOUS_VALUES.get(request.kind)
@@ -133,10 +140,14 @@ def rule_first(ctx: JudgeContext, request: JudgeRequest, rule: Verdict, llm: LLM
     return verdict
 
 
-def _run(coro) -> Any:
-    """동기 코드에서 코루틴 하나를 끝까지 돌린다. ★Team 코드는 이벤트 루프 안에서 불리므로 새 스레드에서 돈다."""
-    with ThreadPoolExecutor(max_workers=1, thread_name_prefix="activity-judge") as pool:
-        return pool.submit(asyncio.run, coro).result()
+def _run(coro, *, timeout: float | None = None) -> Any:
+    """동기 코드에서 코루틴 하나를 끝까지 돌린다. ★Team 코드는 이벤트 루프 안에서 불리므로 새 스레드에서 돈다.
+    ★`timeout` 을 넘으면 `concurrent.futures.TimeoutError` — 기다리기만 그만두고 스레드는 끝까지 둔다(끊을 수 없다)."""
+    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="activity-judge")
+    try:
+        return pool.submit(asyncio.run, coro).result(timeout=timeout)
+    finally:
+        pool.shutdown(wait=timeout is None)
 
 
 #: 판정 LLM 호출 예산의 줄 이름 — 웹 검색(실시간 운영)은 호출당 약 $0.032, 나머지(원문 해석)는 약 $0.0003 이라 따로 센다.

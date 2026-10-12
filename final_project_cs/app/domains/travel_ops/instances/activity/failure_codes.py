@@ -51,6 +51,8 @@ LLM_SCHEMA_INVALID: Final = "llm_schema_invalid"
 LLM_UNCITED: Final = "llm_uncited"
 LLM_ERROR: Final = "llm_error"
 LLM_FALLBACK_RULE: Final = "llm_fallback_rule"
+# ★`[2026-10-12]` 구현 계획 1.6 — 웹 검색 동시 호출 자리를 못 잡았다(429 를 미리 막는 상한)
+LLM_BUSY: Final = "llm_busy"
 
 DESCRIPTIONS: Final[dict[str, str]] = {
     ALREADY_STARTED: "이미 시작됐거나 끝난 활동이다 — 성립을 다시 점검하지 않는다",
@@ -81,4 +83,5 @@ DESCRIPTIONS: Final[dict[str, str]] = {
     LLM_UNCITED: "판정 LLM 이 근거를 대지 못했다 — 인용이 원문에 없거나 출처가 검색 목록에 없다(판정: 모름)",
     LLM_ERROR: "판정 LLM 호출이 그 밖의 이유로 실패했다 — 429·키 없음·네트워크(판정: 모름)",
     LLM_FALLBACK_RULE: "LLM 모드에서 LLM 판정이 실패해 규칙 판정으로 답했다",
+    LLM_BUSY: "웹 검색 판정이 동시 호출 상한에 걸려 자리를 기다리다 그만뒀다(부르지 않음, 판정: 모름)",
 }
