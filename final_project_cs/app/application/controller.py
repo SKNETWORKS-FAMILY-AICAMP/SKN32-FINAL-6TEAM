@@ -871,8 +871,13 @@ class Controller:
                             conn.rollback()
                             try:
                                 return await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
-                            except ActiveRunError:
+                            except (ActiveRunError, StateConflict):
                                 # 같은 재시도가 먼저 시작된 경우 완료라고 하지 않고 현재 상태를 돌려준다.
+                                # ★`[2026-10-13]` StateConflict 도 같은 경우다 — 같은 답장 둘이 동시에 와서 둘 다
+                                #   「진행 중인 실행 없음」을 본 뒤 run_case 로 들어가면, 늦은 쪽은 시작 단계(A)의 재개 전이에서
+                                #   버전이 앞서 나가 충돌한다. 그 단계는 한 트랜잭션이라 실행 기록까지 되돌려지고 Team 은
+                                #   불리지 않았다. 전에는 이 충돌이 그대로 올라가 중복 답장이 「이미 처리됨」 대신 오류가 됐다
+                                #   (test_concurrent_duplicate_replies_have_single_team_execution 이 가끔 실패 — 로컬 12회 중 여러 번).
                                 latest = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id) or case
                                 return {"case_id": str(case_id), "status": latest["status"],
                                         "version": latest["version"], "idempotent": True}
