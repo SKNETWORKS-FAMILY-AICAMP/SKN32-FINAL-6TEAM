@@ -14,6 +14,11 @@
   python -m scripts.try_itinerary_item lodging ... --shown "호텔A;호텔B;호텔C"
   python -m scripts.try_itinerary_item flight --title "인천 → 나리타" --from ICN --to NRT --date 2026-11-06 --time 10:00 --party 2
   python -m scripts.try_itinerary_item flight ... --booked        # 예약한 항목 — 검색하지 않아야 한다
+  python -m scripts.try_itinerary_item lodging ... --choose 1     # `[2026-10-12]` 이어서 1번 후보를 고른다(고를 때 가격 재확인까지)
+
+`[2026-10-12]` `--choose N`: 「바꿔 줘」 제안의 항목 상세를 가짜 일정에 넣고, 같은 실행에서 N번 후보를 고르는 두 번째 일감을 돌린다
+(`subject_ref.request.choice`). 고를 때 가격 재확인 — 숙소는 마이리얼트립 상세 1번(구글 호텔은 부르지 않음), 항공은 검색 1번이 더 나간다.
+항공은 소스별 상태 · 걸린 시간(`elapsed`)도 찍는다.
 """
 from argparse import ArgumentParser
 import asyncio
@@ -45,7 +50,6 @@ def build_view(args) -> tuple[dict, str]:
 
 
 def main():
-    from app.core.contracts import ContextPack, TeamTask
     from app.domains.travel_ops.ports.data_sources.base import TravelSources
     from app.domains.travel_ops.ports.data_sources.myrealtrip import MyRealTripMcp
     from app.tools.read_tools import ReadToolbox
@@ -67,6 +71,7 @@ def main():
     parser.add_argument("--date")
     parser.add_argument("--time", default="10:00")
     parser.add_argument("--connecting-ok", action="store_true")
+    parser.add_argument("--choose", type=int, default=0)
     args = parser.parse_args()
     needed = (["area", "lat", "lon", "check_in", "check_out"] if args.kind == "lodging" else ["origin", "destination", "date"])
     missing = [name for name in needed if getattr(args, name) in (None, "")]
@@ -106,17 +111,35 @@ def main():
     toolbox = ReadToolbox(lambda: None, travel=travel)
     toolbox.itinerary = lambda scope, **_: view          # DB 대신 가짜 일정(이 실행에서만)
     team = Team(toolbox, None)
+    print(f"기기 {platform.node()} · 시각 {datetime.now(ZoneInfo('Asia/Seoul')).isoformat(timespec='seconds')}")
+    result = run(team, args.kind, view, item_id, None, "이거 말고 다른 데로 바꿔 줘", source, offers, google)
+    if not args.choose or not result.action_proposals:
+        return
+    held = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
+    options = held.get("alternates") or []
+    if not 1 <= args.choose <= len(options):
+        print(f"--choose {args.choose}: 후보가 {len(options)}개다")
+        return
+    view["items"][0]["detail"] = held                     # 제안을 적용한 것처럼(이 실행에서만)
+    pick = options[args.choose - 1]
+    print(f"\n── 이어서 {args.choose}번 고르기: {pick['name']} ──")
+    run(team, args.kind, view, item_id, {"type": "change", "choice": pick["key"]}, f"{args.choose}번으로 할게", source, offers, google)
+
+
+def run(team, kind, view, item_id, request, text, source, offers, google):
+    from app.core.contracts import ContextPack, TeamTask
+
     case_id = uuid4()
-    state = {"customer_id": str(uuid4()), "request_id": f"try-{uuid4().hex[:8]}",
-             "subject_ref": {"kind": "trip", "id": view["trip"]["trip_id"], "part_id": item_id, "base_version": 1},
+    ref = {"kind": "trip", "id": view["trip"]["trip_id"], "part_id": item_id, "base_version": 1, **({"request": request} if request else {})}
+    state = {"customer_id": str(uuid4()), "request_id": f"try-{uuid4().hex[:8]}", "subject_ref": ref,
              "interpretation": {"report": {"type": "change"}}}
-    capability = Team.select_capability(None, "바꿔 줘", state)
-    pack = ContextPack(pack_id=uuid4(), case_id=case_id, team_id=args.kind, tenant_id="try", knowledge_scope=list(team.manifest.knowledge_scope),
+    capability = type(team).select_capability(None, "바꿔 줘", state)
+    pack = ContextPack(pack_id=uuid4(), case_id=case_id, team_id=kind, tenant_id="try", knowledge_scope=list(team.manifest.knowledge_scope),
                        current_state=state, estimated_input_tokens=1)
-    task = TeamTask(task_id=uuid4(), run_id=uuid4(), case_id=case_id, team_id=args.kind, capability=capability,
-                    case_version=1, input_text="이거 말고 다른 데로 바꿔 줘", context=pack, allowed_tools=team.manifest.allowed_tools,
+    task = TeamTask(task_id=uuid4(), run_id=uuid4(), case_id=case_id, team_id=kind, capability=capability,
+                    case_version=1, input_text=text, context=pack, allowed_tools=team.manifest.allowed_tools,
                     deadline_at=datetime.now(UTC) + timedelta(seconds=90))
-    print(f"기기 {platform.node()} · 시각 {datetime.now(ZoneInfo('Asia/Seoul')).isoformat(timespec='seconds')} · 일감 {capability}")
+    print(f"일감 {capability}")
     started = time.perf_counter()
     result = asyncio.run(team.execute(task))
     took = time.perf_counter() - started
@@ -127,14 +150,21 @@ def main():
     print(f"[근거] {[item.source_id for item in result.evidence]} · 못 가져온 것 마이리얼트립 {dict(source.misses) or '없음'}"
           + (f" · Ignav {dict(offers.misses) or '없음'}" if offers else "")
           + (f" · 구글 {dict(google.misses) or '없음'}" if google else ""))
+    for item in result.evidence:
+        value = item.value if isinstance(item.value, dict) else {}
+        if item.source_id.startswith("read.booking_search_flights") and value.get("sources"):
+            states = {name: state.get("status") for name, state in value["sources"].items()}
+            print(f"[소스] {item.source_id} · 상태 {states} · 걸린 초 {value.get('elapsed')}")
     for proposal in result.action_proposals:
         new = proposal.arguments["replacements"][0]["item"]
         print(f"[제안] {proposal.action_type} · 승인 필요 {proposal.approval_required} · 이유 {proposal.arguments['reason']}"
               f" · 항목 종류 {new['kind']} · 제목 {new['title']}")
+        if proposal.arguments.get("summary", {}).get("price_check"):
+            print(f"[가격 재확인] {proposal.arguments['summary']['price_check']}")
         print(f"[다음 --shown] {';'.join(new['detail'].get('shown') or [])}")
     print("[답]")
     print(result.answer or "(없음)")
-
+    return result
 
 if __name__ == "__main__":
     main()

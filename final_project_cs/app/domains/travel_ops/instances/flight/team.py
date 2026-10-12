@@ -315,6 +315,10 @@ def _booking_note(pick: dict[str, Any], people: int | None) -> str:
 def _price_note(check: dict[str, Any]) -> str:
     """고를 때 가격 재확인 결과 한 문장(앞에 빈칸). 1인 값을 모르면 아무것도 적지 않는다."""
     before, now = check.get("before"), check.get("now")
+    seller_before, seller_now = check.get("seller_before"), check.get("seller_now")
+    if check["status"] == "changed" and seller_before and seller_now and seller_before != seller_now:
+        return (f" 보여 드릴 때 가장 싼 곳은 {seller_before}(1인 {_won(before, 'KRW')})이었는데, 지금은 "
+                f"{seller_now}이(가) 1인 {_won(now, 'KRW')}으로 가장 싸요.")
     if check["status"] == "changed":
         return f" 보여 드릴 때 1인 {_won(before, 'KRW')}이던 가격이 지금 1인 {_won(now, 'KRW')}이에요."
     if check["status"] == "same":
@@ -703,7 +707,11 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         now = renewed.get("per_person")
         if before is None or now is None:
             return renewed, {"status": "unchecked", "before": before, "now": now}
-        return renewed, {"status": "same" if now == before else "changed", "before": before, "now": now}
+        # ★가장 싼 값은 「그 편을 준 판매처 중 가장 싼 곳」이라, 같은 편이어도 판매처 묶음이 달라지면 값이 바뀐다(가격 변동이 아니다).
+        #   ☆10-12 18:41 playdata ICN→NRT MM642: 보일 때 1인 150,700원 → 고를 때 143,616원(링크는 Ignav 판매처) — 판매처를 함께 남겨 가른다
+        seller_before, seller_now = pick.get("seller"), renewed.get("seller")
+        return renewed, {"status": "same" if now == before else "changed", "before": before, "now": now,
+                         "seller_before": seller_before, "seller_now": seller_now}
 
     @staticmethod
     def _flight_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:

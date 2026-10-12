@@ -535,13 +535,23 @@ def test_choosing_rechecks_the_price_and_says_it_is_the_same_or_changed():
     """`[2026-10-12]` 고를 때 가격 재확인 — 같으면 그대로라고, 바뀌면 바뀐 값으로 바꾸고 두 값을 적는다."""
     same = _choose_jeju(WITH_VIA)
     assert same.answer.endswith(" 지금 가격도 1인 151,000원 그대로예요.")
-    assert same.action_proposals[0].arguments["summary"]["price_check"] == {"status": "same", "before": 151000, "now": 151000}
+    assert same.action_proposals[0].arguments["summary"]["price_check"] == {
+        "status": "same", "before": 151000, "now": 151000, "seller_before": "마이리얼트립", "seller_now": "마이리얼트립"}
     dearer = {**WITH_VIA, "flights": [{**WITH_VIA["flights"][0], "price_total": 340000}, *WITH_VIA["flights"][1:]]}
     changed = _choose_jeju(dearer)
     assert changed.answer.endswith(" 보여 드릴 때 1인 151,000원이던 가격이 지금 1인 170,000원이에요.")
     new = changed.action_proposals[0].arguments["replacements"][0]["item"]
     assert new["detail"]["chosen"]["per_person"] == 170000 and new["detail"]["chosen"]["key"] == JEJU_KEY
     assert [o["name"] for o in new["detail"]["alternates"]] == ["티웨이항공 TW727 18:30", "타이베이 → 인천"]
+
+
+def test_a_cheaper_seller_on_recheck_is_said_as_a_seller_change_not_a_price_change():
+    """☆10-12 18:41 playdata — 같은 편인데 고를 때 다른 판매처(Ignav)가 더 싸게 들어왔다. 값이 「바뀌었다」고 하지 않고 판매처를 적는다."""
+    from app.domains.travel_ops.instances.flight.team import _price_note
+
+    note = _price_note({"status": "changed", "before": 150700, "now": 143616,
+                        "seller_before": "마이리얼트립", "seller_now": "Gotogate(여행사)"})
+    assert note == " 보여 드릴 때 가장 싼 곳은 마이리얼트립(1인 150,700원)이었는데, 지금은 Gotogate(여행사)이(가) 1인 143,616원으로 가장 싸요."
 
 
 def test_a_chosen_flight_its_source_no_longer_lists_is_not_applied():
