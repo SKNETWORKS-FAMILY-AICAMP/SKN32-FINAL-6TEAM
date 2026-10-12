@@ -13,6 +13,10 @@
 
     [확인] 분류   한식 · 중식 · 일식 · 양식 · 카페디저트 · 기타  (214 의 칸과 같다. 「미상」은 넣지 않는다 — 비워 두면 규칙이 다시 본다)
     넣는 값       category = [확인] 분류, category_method = 'manual' — refresh_category 가 덮지 않는다(214)
+    [확인] 결     `[2026-10-12]` 음식 결(231 의 칸 — 고기구이 · 국물요리 …). 칸이 없거나 비면 결은 건드리지 않는다.
+                  「없음」은 사람이 보고 결이 없다고 정한 것이다(style = NULL, manual — 규칙이 다시 채우지 않는다)
+    넣는 값       style = [확인] 결, style_method = 'manual' — refresh_style 이 덮지 않는다(231)
+    한 줄에 분류 · 결 중 하나만 있어도 된다. 확인일이 있는데 둘 다 비면 멈춘다.
 
 가게는 place_uid 로 찾는다. 칸 값이 틀리면 조용히 건너뛰지 않고 멈춘다.
 """
@@ -30,6 +34,11 @@ OUT = os.path.join(DINING_DATA, "_build", "category.sql")
 
 #: 214 `dn_place_category_chk` 의 칸에서 「미상」을 뺀 것
 ALLOWED = ("한식", "중식", "일식", "양식", "카페디저트", "기타")
+#: 231 `dn_place_style_chk` 의 칸
+STYLES = ("고기구이", "국물요리", "면", "해산물", "한상차림", "분식", "닭요리", "족발·보쌈", "초밥", "돈가스·튀김",
+          "덮밥", "중식요리", "이탈리안", "버거·샌드위치", "브런치", "아시아요리", "베이커리·디저트", "커피·차", "술집")
+#: 사람이 보고 결이 없다고 정한 값
+NO_STYLE = "없음"
 
 
 def q(s: str) -> str:
@@ -38,20 +47,29 @@ def q(s: str) -> str:
 
 def build(sheet: str) -> tuple[list[str], dict[str, int]]:
     lines = ["-- 분류 검수 반영. 만든 것: scripts/dining/make_category_sql.py", "BEGIN;"]
-    n = {"분류": 0, "확인 전": 0}
+    n = {"분류": 0, "결": 0, "확인 전": 0}
     for row in csv.DictReader(open(sheet, encoding="utf-8-sig")):
         if not (row.get("확인일") or "").strip():
             n["확인 전"] += 1
             continue
         uid = (row.get("place_uid") or "").strip()
         cat = (row.get("[확인] 분류") or "").strip()
+        style = (row.get("[확인] 결") or "").strip()
         if not uid:
             raise ValueError(f"place_uid 가 없다: {row.get('상호')!r}")
-        if cat not in ALLOWED:
-            raise ValueError(f"[확인] 분류를 읽지 못함: {row.get('상호')!r} {cat!r} — {' · '.join(ALLOWED)} 중 하나")
-        lines.append(f"UPDATE dining.dn_place SET category = {q(cat)}, category_method = 'manual', updated_at = now() "
-                     f"WHERE place_uid = {q(uid)};")
-        n["분류"] += 1
+        if cat or not style:
+            if cat not in ALLOWED:
+                raise ValueError(f"[확인] 분류를 읽지 못함: {row.get('상호')!r} {cat!r} — {' · '.join(ALLOWED)} 중 하나")
+            lines.append(f"UPDATE dining.dn_place SET category = {q(cat)}, category_method = 'manual', updated_at = now() "
+                         f"WHERE place_uid = {q(uid)};")
+            n["분류"] += 1
+        if style:
+            if style not in (*STYLES, NO_STYLE):
+                raise ValueError(f"[확인] 결을 읽지 못함: {row.get('상호')!r} {style!r} — {' · '.join(STYLES)} · {NO_STYLE} 중 하나")
+            value = "NULL" if style == NO_STYLE else q(style)
+            lines.append(f"UPDATE dining.dn_place SET style = {value}, style_method = 'manual', updated_at = now() "
+                         f"WHERE place_uid = {q(uid)};")
+            n["결"] += 1
     lines += ["COMMIT;", ""]
     return lines, n
 
