@@ -63,10 +63,14 @@ def test_over_budget_or_failed_call_stays_unknown():
     assert rule_first(CTX, requests.closure(ODD, FRIDAY), _unknown("closure"), broken).value == "unknown"
 
 
-def test_live_status_never_takes_llm_mode():
-    with pytest.raises(ValueError):
-        kind_mode("live_status", {"live_status": "llm"})
+def test_live_status_takes_llm_mode_and_accepts_only_closed():
+    """`[2026-10-12 사용자 결정]` 실시간 운영도 `llm` 을 받는다 — 맨 처음 확인. 라벨이 없어 「닫혔다」만 받는다."""
+    assert kind_mode("live_status", {"live_status": "llm"}) == "llm"
     assert kind_mode("closure", {"closure": "llm"}) == "llm"
+    request = requests.live_status("경복궁", "activity", None, FRIDAY)
+    opened = LLMJudge(FakeJudgeLLM(out("open", citations=[{"url": "https://a.go.kr", "quote": "정상 개방",
+                                                           "published_at": None}]), sources=["https://a.go.kr"]))
+    assert rule_first(CTX, request, _unknown("live_status"), opened).value == "unknown"
 
 
 # ── 팀 경로 ──────────────────────────────────────────────────────────

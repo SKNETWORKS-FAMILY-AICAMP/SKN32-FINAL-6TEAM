@@ -77,14 +77,18 @@ def default_runner() -> BackgroundRunner:
 
 
 #: 종류별로 받는 값(`travel.activity_judge.kind_modes`). `[2026-10-12]`
-#:  `llm` = **규칙이 모를 때만** LLM(`rule_first`) — D-CS-015 개정 2(2026-10-12 사용자 결정)로 받는다. 실시간 운영은 섀도만.
+#:  `llm` = **규칙이 모를 때만** LLM(`rule_first`) — D-CS-015 개정 2(2026-10-12 사용자 결정)로 받는다.
+#:  ★`[2026-10-12 사용자 결정]` 실시간 운영(웹 검색)도 `llm` 을 받는다 — 장소를 받으면 **맨 처음** 웹 검색으로 운영 · 실존을
+#:  확인하는 구조로 바꿨다. 운영시간 · 휴무는 데이터 정제(규칙 · 한 번 읽어 저장)로 대신한다. 전에는 라벨이 없어 섀도만 받았다.
 KIND_MODES = ("rule", "shadow", "llm")
-#: `llm` 을 받지 않는 종류 — 웹 검색 · 라벨 없음(D-CS-015 개정 2 ⑤)
-_NO_LLM_KINDS = frozenset({"live_status"})
+#: `llm` 을 받지 않는 종류 — 지금은 없다(위 사용자 결정으로 실시간 운영을 뺐다)
+_NO_LLM_KINDS: frozenset[str] = frozenset()
 #: 조심하는 쪽 — 이 종류에서 LLM 이 **확정해도 되는** 값. 그 밖의 확정 값(풀어 주는 쪽 · 「휴무 아님」 「괜찮다」)은 모름으로 내린다.
 #:  10-12 재평가에서 LLM 의 오답 5건이 모두 풀어 주는 쪽이었다(closure-06 · disaster-04) — D-CS-015 개정 2 「지키는 것」.
+#:  ★실시간 운영은 라벨이 없다(정확도 미측정) — 「닫혔다(휴무 · 폐업)」만 받는다. 「연다」는 다른 점검을 건너뛸 이유가 아니다.
 CAUTIOUS_VALUES: dict[str, frozenset[str]] = {"closure": frozenset({"closed"}),
-                                              "disaster_effect": frozenset({"blocks"})}
+                                              "disaster_effect": frozenset({"blocks"}),
+                                              "live_status": frozenset({"closed"})}
 
 
 def kind_mode(kind: str, modes: Any = None) -> str:
@@ -144,6 +148,54 @@ BUDGET_METER_WEB = "activity_judge_web"
 def budget_meter(kind: str) -> str:
     """판정 종류 → 예산 줄 이름. `[2026-10-12]`"""
     return BUDGET_METER_WEB if kind == "live_status" else BUDGET_METER_TEXT
+
+
+class LocalWebBudget:
+    """조립이 예산(`judge_budget`)을 꽂지 않았을 때 **웹 검색만** 프로세스 안에서 세는 상한. `[2026-10-12]`
+
+    ★왜. 실시간 운영을 `llm` 으로 켜면 장소마다 웹 검색(호출당 약 $0.032)을 부른다. DB 예산 줄은 코어 조립 몫(협의 메모 요청 7)이라
+      아직 꽂히지 않았고, 그대로면 상한 없이 부른다. 그 전까지 `travel.activity_judge.budget.web` 의 일 · 월 상한을 여기서 센다.
+    ★프로세스마다 따로 세고 재기동하면 0 부터다 — DB 예산이 꽂히면 그쪽이 앞선다(`ActivityTeam._judge_budget`).
+    ★원문 해석(text)은 세지 않는다 — 지금까지와 같다.
+    """
+
+    def __init__(self, caps: dict[str, dict[str, int]] | None = None, *, today: Any = None) -> None:
+        self._caps = (caps or budget_caps())[BUDGET_METER_WEB]
+        self._today = today
+        self._day: Any = None
+        self._month: Any = None
+        self._day_count = 0
+        self._month_count = 0
+        self._lock = threading.Lock()
+
+    def __call__(self, kind: str) -> bool:
+        if budget_meter(kind) != BUDGET_METER_WEB:
+            return True
+        from datetime import date
+
+        today = self._today() if self._today is not None else date.today()
+        with self._lock:
+            if today != self._day:
+                self._day, self._day_count = today, 0
+            if (today.year, today.month) != self._month:
+                self._month, self._month_count = (today.year, today.month), 0
+            if self._day_count >= self._caps["day"] or self._month_count >= self._caps["month"]:
+                return False
+            self._day_count += 1
+            self._month_count += 1
+            return True
+
+
+_local_web_budget: LocalWebBudget | None = None
+
+
+def local_web_budget() -> LocalWebBudget:
+    """프로세스에 하나 — 팀 인스턴스가 여럿이어도 같이 센다."""
+    global _local_web_budget
+    with _runner_lock:
+        if _local_web_budget is None:
+            _local_web_budget = LocalWebBudget()
+        return _local_web_budget
 
 
 def budget_caps(guard: Any = None) -> dict[str, dict[str, int]]:

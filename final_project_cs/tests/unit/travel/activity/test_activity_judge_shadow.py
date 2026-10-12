@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from app.core.settings import get_guardrails
 from app.domains.travel_ops.instances.activity import ActivityTeam
 
 from ..helpers import FakeTools, pack, task
@@ -30,6 +31,17 @@ CLEAR = {"verdict": "clear", "disruptions": [], "advisories": [], "checks": [], 
 QUIET_MESSAGE = {"kind": "기타", "step": "안전안내", "text": "[종로구청] 세종대로 일대 집회로 교통 혼잡이 예상됩니다",
                  "created_at": "2026-11-10T09:00:00+09:00", "regions": ["서울특별시 종로구"], "serial": "7",
                  "weather": False}
+
+
+#: ★`[2026-10-12]` 이 파일은 **섀도**를 잰다 — 실시간 운영의 기본값이 `llm`(맨 처음 확인, 사용자 결정)으로 바뀌어,
+#:  10-12 전 섀도 표를 여기서 고정한다. `llm` 경로는 `test_activity_live_status_first.py`.
+SHADOW_MODES = {"closure": "shadow", "operating_hours": "rule", "weather_sensitive": "shadow",
+                "disaster_effect": "shadow", "live_status": "shadow"}
+
+
+@pytest.fixture(autouse=True)
+def _shadow_kind_modes(monkeypatch):
+    _with_kind_modes(monkeypatch, **SHADOW_MODES)
 
 
 class ContraryJudgeLLM:
@@ -200,11 +212,12 @@ def _with_kind_modes(monkeypatch, **modes):
 
 
 def test_the_configured_default_keeps_todays_shadows():
-    """기본 설정은 10-12 전 동작 그대로 — 휴무 · 실내외 · 재난 · 실시간은 섀도, 운영시간은 부르지 않는다."""
+    """기본 설정 — 휴무 · 실내외 · 재난은 섀도, 운영시간은 부르지 않는다. 실시간 운영은 `llm`(맨 처음 확인, 10-12 사용자 결정)."""
     from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
 
-    assert [kind_mode(k) for k in ("closure", "weather_sensitive", "disaster_effect", "live_status")] == ["shadow"] * 4
-    assert kind_mode("operating_hours") == "rule"
+    modes = get_guardrails().get("travel.activity_judge.kind_modes")
+    assert [kind_mode(k, modes) for k in ("closure", "weather_sensitive", "disaster_effect")] == ["shadow"] * 3
+    assert kind_mode("operating_hours", modes) == "rule" and kind_mode("live_status", modes) == "llm"
 
 
 def test_a_kind_set_to_rule_is_not_called_and_the_others_still_are(monkeypatch):

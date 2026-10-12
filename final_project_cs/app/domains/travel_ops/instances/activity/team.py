@@ -36,7 +36,7 @@ from .disaster_impact import Impact, ImpactRules, assess
 from .verdicts import holidays_needed, hours_verdict
 from .judge import requests as judge_requests
 from .judge.llm import LLMJudge
-from .judge.modes import ShadowJudge, kind_mode, rule_first
+from .judge.modes import ShadowJudge, kind_mode, local_web_budget, rule_first
 from .judge.types import LIVE_STATUS, JudgeContext, JudgeRequest, Verdict
 from .notices import HOURS_AUTO_READ, with_notice
 from .replacement import ReplacementMixin
@@ -128,6 +128,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
     #:  (`judge.modes.budget_meter` · `budget_caps`, 코어 협의). `None` 이면 세지 않는다(지금까지와 같다).
     judge_budget: Any | None = None
     #: 이 팀이 받는 판정 LLM 모드. ★`llm` 은 D-CS-015 범위 밖이다 — 조립이 기동 때 막는다(조용히 섀도로 바꾸지 않는다).
+    #:  ★`[2026-10-12]` 종류별 `llm`(실시간 운영 · 휴무 · 재난)은 전역 `shadow` 로 판정 LLM 을 꽂은 뒤 `kind_modes` 로 켠다.
     judge_modes = ("rule", "shadow")
 
     @staticmethod
@@ -396,6 +397,16 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                                   warnings=["장소·운영 정보를 확인하지 못했다 — 없음이 아니라 모르는 상태다",
                                             *headcount_warnings])
 
+        # ★`[2026-10-12 사용자 결정]` 장소를 받으면 **맨 처음** 웹 검색 LLM 으로 그 날짜의 운영 · 실존(임시휴무 · 폐업)을 본다.
+        #   `kind_modes.live_status = llm` 일 때만. 「닫혔다」면 여기서 대체 장소를 붙여 바꾸고, 그 밖(연다 · 모름 · 실패)은
+        #   아래 점검을 그대로 한다. 섀도면 전처럼 마지막에 비교만 한다(`_shadow_live_status`).
+        live_decision: dict[str, Any] | None = None
+        read_class: dict[str, Any] | None = None
+        if isinstance(place, dict):
+            live_decision, evidence, stop, read_class = self._live_status_first(task, booking, place, seen, evidence)
+            if stop is not None:
+                return stop
+
         # ★성립 점검은 **한 번**이다(`read.disruptions`). 예보·특보·(붙는 대로)
         #   재난문자·대기질을 도구가 한꺼번에 본다. 무엇을 볼지(실내면 예보 안 봄)는
         #   점검이 장소 속성으로 정한다 — Team 이 소스 조합을 들고 있지 않는다.
@@ -406,7 +417,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         outdoor_ask: list[dict[str, Any]] = []
         disaster_warnings: list[str] = []
         if isinstance(place, dict):
-            indoor, evidence, place_class = self._indoor_outdoor(task, booking, place, seen, evidence)
+            indoor, evidence, place_class = self._indoor_outdoor(task, booking, place, seen, evidence, read_class)
             report = self._read(task, "read.disruptions", {
                 "place_id": booking.get("place_id"),
                 "latitude": place.get("latitude"),
@@ -536,6 +547,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             warnings.append("운영시간 · 휴무를 확인하지 못했다 — 판정에 넣지 않았다")
         if hours_decision is not None:
             decisions["hours"] = hours_decision
+        if live_decision is not None:
+            decisions["live_status"] = live_decision
         if indoor:
             decisions["indoor"] = indoor
             if indoor.get("source") == "class":
@@ -584,9 +597,47 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             return None
         ctx = JudgeContext(case_id=task.case_id, capability=task.capability, run_id=task.run_id,
                            tenant_id=task.context.tenant_id)
+        # ★`[2026-10-12]` 조립이 예산을 안 꽂았으면 웹 검색만 프로세스 안에서 센다(`LocalWebBudget` — 원문 해석은 세지 않는다)
+        budget = self.judge_budget if self.judge_budget is not None else local_web_budget()
         verdict = rule_first(ctx, request, Verdict(request.kind, "unknown", "rule", basis=basis),
-                             LLMJudge(self.judge_llm), budget=self.judge_budget)
+                             LLMJudge(self.judge_llm), budget=budget)
         return verdict if verdict.known else None
+
+    def _live_status_first(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list
+                           ) -> tuple[dict[str, Any] | None, list, TeamResult | None, dict[str, Any] | None]:
+        """⑤ 실시간 운영 · 실존(웹 검색)을 **맨 처음** 본다 — `kind_modes.live_status = llm` 일 때만. `[2026-10-12 사용자 결정]`
+
+        ★섀도 때와 달리 실외 · 72시간 조건을 두지 않는다 — 폐업 · 장기 휴관은 날짜와 상관없이 알아야 한다. 비용은 웹 예산
+          (`travel.activity_judge.budget.web`)이 막는다. 넘으면 부르지 않고 「모름」으로 아래 점검을 계속한다.
+        ★「닫혔다」만 받는다(`modes.CAUTIOUS_VALUES`) — 웹 출처를 근거에 싣고 대체 장소를 붙여 바꾸자고 제안한다(승인 대기).
+        반환: (`decisions.live_status` 에 실을 값 | None, 근거, 여기서 멈출 결과 | None,
+        읽은 관광공사 분류 `{"value": …}` | None — 실내외 판정이 다시 읽지 않게).
+        """
+        if self.judge_llm is None or not place.get("name") or kind_mode(LIVE_STATUS) != "llm":
+            return None, evidence, None, None
+        found = self._read(task, "read.place_class", {"place_id": booking.get("place_id")}, seen)
+        read_class = {"value": found if isinstance(found, dict) else None}
+        address = found.get("address") if isinstance(found, dict) else None
+        verdict = self._rule_first(task, judge_requests.live_status(place.get("name"), "activity", address,
+                                                                   booking.get("starts_at")),
+                                   basis="develop_does_not_read_web_notices")
+        if verdict is None:
+            return {"value": "unknown", "source": "llm"}, evidence, None, read_class
+        citations = [{"url": c.get("url"), "quote": c.get("quote"), "published_at": c.get("published_at")}
+                     for c in verdict.citations if isinstance(c, dict)]
+        evidence = self._evidence(task, source_id="judge.live_status", claim="웹 공지상 운영 상태",
+                                  value={"value": verdict.value, "citations": citations}, base=evidence)
+        decision = {"value": verdict.value, "source": "llm", "citations": citations}
+        if verdict.value != "closed":       # ★`rule_first` 가 이미 거르지만, 막는 결정은 「닫혔다」에서만 한다
+            return decision, evidence, None, read_class
+        quote = next((c["quote"] for c in citations if c.get("quote")), None)
+        stop = self._closed_place_change(
+            task, booking, place, seen, evidence, reason=f"웹 공지 — {quote or '휴무 · 폐업'}",
+            answer=(f"웹 공지에서 이 장소가 예약 날짜에 운영하지 않는다고 확인했습니다"
+                    f"{f'(「{quote}」)' if quote else ''}. 변경 제안을 만들었고 승인 뒤에 진행됩니다."),
+            decisions={"feasible": False, "reason": "live_closed",
+                       "failure_code": self._record_failure(task, fc.LIVE_CLOSED), "live_status": decision})
+        return decision, evidence, stop, read_class
 
     def _shadow_live_status(self, task: TeamTask, booking: dict, place: Any, seen: set[str], indoor: dict[str, Any],
                             place_class: dict[str, Any] | None, remaining: float) -> None:
@@ -648,7 +699,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 if isinstance(check, dict) and check.get("category") == "disaster_msg"
                 for message in check.get("unclassified") or [] if isinstance(message, dict)]
 
-    def _indoor_outdoor(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list
+    def _indoor_outdoor(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list,
+                        read_class: dict[str, Any] | None = None
                         ) -> tuple[dict[str, Any], list, dict[str, Any] | None]:
         """실내외 — 장소에 적힌 값 → 관광공사 분류(`read.place_class`) 순. `[2026-10-09]` team 통합 ⑤(사용자 결정: develop 기준 + 분류).
 
@@ -657,11 +709,14 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         반환: (`{value: True|False|None, source: place|class|None}`, 근거, 읽은 분류 | None). `value` None 이면 모른다 — 공유
         점검이 야외처럼 보고 `indoor_unknown` 을 붙인다.
         ★`[2026-10-09]` 분류까지 모르면 판정 LLM 섀도(③)를 건다(D-CS-015) — 비교 기준은 develop 판의 지금 값(모름)이다.
+        ★`read_class`: 맨 처음 실시간 확인(`_live_status_first`)이 이미 읽었으면 `{"value": 읽은 값}` — 같은 도구를 두 번 부르면
+          도구 상자가 반복으로 막는다(`ToolLoopExceeded`). `[2026-10-12]`
         """
         known = place.get(self._WEATHER_SENSITIVE_KEY)
         if known is not None:
             return {"value": bool(known), "source": "place"}, evidence, None
-        found = self._read(task, "read.place_class", {"place_id": booking.get("place_id")}, seen)
+        found = (read_class["value"] if read_class is not None
+                 else self._read(task, "read.place_class", {"place_id": booking.get("place_id")}, seen))
         found = found if isinstance(found, dict) else None
         value = (found or {}).get("weather_sensitive")
         if value is None:

@@ -655,7 +655,9 @@ travel:
       operating_hours: rule
       weather_sensitive: shadow
       disaster_effect: shadow
-      live_status: shadow
+      # ★`[2026-10-12 사용자 결정]` 장소를 받으면 맨 처음 웹 검색으로 운영 · 실존을 본다 — 「닫혔다(휴무 · 폐업)」면 바꾸자고 제안한다.
+      #   전역 모드가 `rule` 이면 여전히 안 부른다(돈이 나가지 않는다). 켜려면 `ACOP_ACTIVITY_JUDGE_MODE=shadow`.
+      live_status: llm
     # ★`[2026-10-12]` 판정 LLM 호출 상한(구현 계획 4.6) — 일 · 월. 넘으면 그 판정은 부르지 않고 `skipped`(budget_exhausted)로 남긴다.
     #   웹 검색(실시간 운영)은 따로 센다 — 호출당 약 $0.032(text 는 약 $0.0003, 10-06 측정 · 구현 계획 §1.2).
     #   text 2,000/일 ≈ $0.6 · 30,000/월 ≈ $9, web 50/일 ≈ $1.6 · 1,000/월 ≈ $32 (추정 상한).
