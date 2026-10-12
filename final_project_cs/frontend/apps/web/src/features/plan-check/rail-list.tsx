@@ -55,13 +55,14 @@ function evenCards(rows: readonly HTMLElement[], spans: readonly { from: number 
   rows.forEach((row, index) => {
     const card = row.dataset.rail === "move" ? null : row.querySelector<HTMLElement>(":scope > article");
     if (!card) return;
-    if (row.hasAttribute("data-past") || row.hasAttribute("data-rail-open") || row.hasAttribute("data-past-open")) { card.style.removeProperty("min-height"); return; }
+    if (row.hasAttribute("data-past") || row.hasAttribute("data-rail-open") || row.hasAttribute("data-past-open")) { card.style.removeProperty("min-height"); delete card.dataset.even; return; }
     const { from, to } = spans[index];
     const byTime = from !== null && to !== null ? DOT_Y + Math.max(0, to - from) * RAIL_PX_PER_MIN - card.offsetTop : 0;
     folded.push({ card, need: Math.max(contentHeight(card), byTime) });
   });
   const tallest = Math.ceil(Math.max(0, ...folded.map((entry) => entry.need)));
-  folded.forEach(({ card }) => { card.style.minHeight = `${tallest}px`; });
+  // `data-even`: the card was made taller than its content — its foot (확인 필요 · 되돌리기) then stays at its bottom (plan-check.module.css).
+  folded.forEach(({ card }) => { card.style.minHeight = `${tallest}px`; card.dataset.even = ""; });
 }
 
 /** Lowest point a stop row's own content reaches (its card, or its past line) — the time column is fixed (`TIME_BOTTOM`) and may be stuck to the top while scrolling. */

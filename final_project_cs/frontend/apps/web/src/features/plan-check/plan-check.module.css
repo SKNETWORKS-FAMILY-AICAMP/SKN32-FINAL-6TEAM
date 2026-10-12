@@ -242,6 +242,9 @@ button.moveHead { cursor: pointer; }
 .cardFootNote .cardWritten { display: block; margin: 0; font-size: 12px; font-weight: 600; }
 .cardFootTools { display: flex; flex: none; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .cardFootTools .pill { font-size: 12px; font-weight: 600; }
+/* `[2026-10-13 ④ · 카드 높이 통일]` 그날 가장 긴 카드 높이로 늘린 접힌 카드(rail-list.tsx 가 data-even 을 단다)는 하단 칸(확인 필요 · 되돌리기)을 카드 바닥에 붙인다 — 늘어난 빈칸은 내용과 하단 칸 사이에 든다. */
+.card[data-even] { display: flex; flex-direction: column; }
+.card[data-even] > .cardFoot { margin-top: auto; }
 .needsInline { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; }
 /* What of the stop is still the customer's to deal with, under the name of a shut card: 「✕ 장소」 · 「! 시간」. */
 .needs { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: -4px 0 0; padding: 0 12px 10px 46px; }
