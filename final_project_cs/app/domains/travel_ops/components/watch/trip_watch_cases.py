@@ -317,8 +317,7 @@ class TripWatchCaseOpener:
                 continue
             for at in range(0, len(fresh), cap):
                 chunk = fresh[at:at + cap]
-                from app.domains.travel_ops.components.watch.trip_watch_batch import unavailable_reason
-                if len(chunk) < 2 or unavailable_reason("activity") is not None:
+                if len(chunk) < 2:
                     for issue, attempt in chunk:
                         self._open_single(issue, attempt, now, result, opened)
                 else:
@@ -399,7 +398,7 @@ class TripWatchCaseOpener:
 
     def _open_batch(self, trip_id: UUID, chunk: list[tuple[Issue, int]], now: datetime, result: CaseTickResult,
                     opened: list[UUID]) -> None:
-        """한 여행의 문제 둘 이상 — **묶음 Case 하나**. 라벨은 활동(`activity_other`)이다 — 활동 Team 이 조정자다(`trip_watch_batch`).
+        """한 여행의 문제 둘 이상 — **묶음 Case 하나**. 라벨은 첫 구성원의 담당을 따른다. Activity가 꺼져도 다른 담당의 묶음은 진행한다.
         요청 id 는 묶음 구성원의 정체(`base_id`) 목록의 지문 — 같은 묶음을 두 번 안 열고, 일시 실패로 닫혔으면 `:r{n}` 으로 다시 연다."""
         issues = [issue for issue, _ in chunk]
         members = sorted(issue.base_id for issue in issues)
@@ -425,7 +424,7 @@ class TripWatchCaseOpener:
                                     "categories": sorted({str(c.get("category")) for c in i.causes})} for i in issues],
                          "at": now.isoformat(), "detected": "batch",
                          "categories": sorted({str(c.get("category")) for i in issues for c in i.causes})},
-                labels={"intent": "incident_report", "issue_code": "activity_other", "sentiment": "neutral"})
+                labels={"intent": "incident_report", "issue_code": issues[0].issue_code, "sentiment": "neutral"})
         record = {"trip_id": str(trip_id), "item": titles, "case_id": str(case.case_id), "issue_code": "batch",
                   "items": [i.item.title for i in issues]}
         if case.created:

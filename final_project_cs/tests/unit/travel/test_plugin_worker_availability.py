@@ -119,7 +119,6 @@ def test_disabled_kind_not_checked_while_independent_kind_continues(monkeypatch,
     disabled, enabled = item("dining"), item("activity")
     calls = []
     monkeypatch.setattr(watcher_module.PendingStore, "expire", lambda *a, **k: [])
-    monkeypatch.setattr(watcher_module, "forecast_attention", lambda *a, **k: None)
     kwargs = dict(store=fake_store([(trip_id, disabled), (trip_id, enabled)]),
                   check=lambda **kw: calls.append(kw) or {"verdict": "clear"},
                   connection_factory=Connection, clock=lambda: datetime.now(timezone.utc))
@@ -369,12 +368,10 @@ def test_one_job_exception_keeps_the_same_round_and_runs_later_jobs(monkeypatch,
 @pytest.mark.parametrize("due", [False, True])
 def test_composition_failure_keeps_safety_inside_the_existing_watch_gate(monkeypatch, due):
     from app.application import job_gate
-    from app.domains.travel_ops.components.watch import monitoring
     calls = []
     monkeypatch.setattr(job_gate, "interval_seconds", lambda *a: (180, 180))
     monkeypatch.setattr(job_gate, "claim", lambda *a, **k: due)
     monkeypatch.setattr(run_sweepers, "get_connection", Connection)
-    monkeypatch.setattr(monitoring, "execute", lambda *a, work, **k: work())
     monkeypatch.setattr(run_sweepers, "_run_trip_safety", lambda *a: calls.append("safety") or {"checked": 2})
     monkeypatch.setattr(run_sweepers, "_run_trip_watch_cases", lambda *a: pytest.fail("Team watch executed"))
     result = run_sweepers._watch_if_due("travel-test", forced=False, composition_failed=True)

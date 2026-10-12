@@ -6,8 +6,8 @@
 
 ★자리(적대 검토의 결론): **코어(Controller)를 고치지 않는다.** 코어는 일정(`itinerary`) 어휘를 모른다(INV-CS-ARCH-001) — 「초안을 다음 Team 에 넘긴다」는 일정 초안이 무엇인지 알아야 한다.
 도메인 어휘를 넣지 않고 코어에서 하려면 Controller 의 Team 연쇄 실행 · 제안 병합을 새로 만들어야 하는데, 그건 Controller 불변식(INV-CS-RT-* 26개)을 건드리는 큰 변경이다.
-그래서 **Case 하나(= 여행 하나)**를 만들고(`trip_watch_cases`) 활동 Team 이 조정자가 되어 이 모듈로 세 종류 항목을 한 초안 위에서 계산한다 — 계산은 세 Team 이 이미 하던 함수
-(`plan_activity_trigger` · `plan_dining_trigger` · `plan_mobility_trigger`)를 그대로 부르고, **적용은 코어가 Case 완료와 한 트랜잭션으로 한다**(제안 하나 — `itinerary.apply`).
+그래서 **Case 하나(= 여행 하나)**를 만들고(`trip_watch_cases`) 사용 가능한 구성원 Team이 이 모듈로 항목별 소유 Team의 계산을 한 초안 위에서 연결한다 — 계산은 세 Team 이 이미 하던 함수
+(`plan_activity_trigger` · `plan_dining_trigger` · `plan_mobility_trigger`)를 각 소유 Team의 도구·예산으로 부르고, **적용은 코어가 Case 완료와 한 트랜잭션으로 한다**(제안 하나 — `itinerary.apply`).
 Case 하나가 곧 한 단위라 **크래시 · 재시도 · 멱등이 전과 같다**(적용 전에 죽으면 Case 가 안 닫혀 다시 돈다 — 중간 초안을 DB 에 두지 않는다).
 
 ★순서는 활동 → 식당 → 이동(같은 종류는 시작 시각 순). 뒤 항목은 **앞에서 고친 초안 기준**으로 계산한다 — 앞이 고른 곳을 뒤가 또 고르지 않고(`unused_places`), 앞이 이동 항목을 새로 만들었으면 그
@@ -37,6 +37,8 @@ import logging
 import time
 from time import perf_counter       # 항목별 소요 시간 — 위 `time`(마감 시계)과 따로 둔다(시험이 마감 시계만 바꿔 끼울 수 있게)
 from dataclasses import dataclass, field
+from types import SimpleNamespace
+from copy import copy
 from typing import Any
 
 from app.core.contracts import ActionProposal, NextAction, TeamResult, TeamTask
@@ -192,12 +194,24 @@ class WatchBatch:
     def __init__(self, work: Any, task: TeamTask, ctx: dict[str, Any]) -> None:
         self.work, self.task, self.ctx = work, task, ctx
 
+    def _scoped_work(self, step):
+        """항목 소유 Team의 도구·예산으로 계산한다. 단독 부품 시험은 명시된 연결을 쓴다."""
+        table = current_bindings()
+        if table is None:
+            return self.work, self.task
+        entry = table.registry.require_runnable(step.team_id, f"{step.team_id}.itinerary")
+        source = entry.module
+        work = copy(source)
+        context = self.task.context.model_copy(update={"team_id": step.team_id,
+            "knowledge_scope": list(entry.manifest.knowledge_scope)})
+        task = TeamTask.model_validate({**self.task.model_dump(), "team_id": step.team_id,
+            "capability": f"{step.team_id}.itinerary", "context": context,
+            "allowed_tools": list(entry.manifest.allowed_tools)})
+        return work, task
+
     # ── 진입 ────────────────────────────────────────────────────
     def run(self) -> TeamResult:
-        work, task, ctx = self.work, self.task, self.ctx
-        if work.manifest.team_id != "activity":
-            # 도구 선언을 합쳐 가진 Team 은 활동뿐이다(`ActivityTeam.manifest.allowed_tools`)
-            return work._escalate(task, "batch_not_handled_by_team", ctx["evidence"])
+        task, ctx = self.task, self.ctx
         trip, current = ctx["trip"], list(ctx["items"])
         constraints = trip.get("constraints") or {}
         entries = (task.context.current_state.get("trigger") or {}).get("batch") or []
@@ -244,7 +258,9 @@ class WatchBatch:
         if planner is None:
             return Outcome(item, "nothing", reasons=["unhandled_kind"])
         try:
-            plan = planner(self.work, self.task, self.ctx, item)
+            selected_work, selected_task = self._scoped_work(SimpleNamespace(team_id=item.kind))
+            blocked = selected_work._guard(selected_task) if selected_work is not None else None
+            plan = blocked if blocked is not None else planner(selected_work, selected_task, self.ctx, item)
         except TeamUnavailable as exc:
             logger.warning("watch_batch_team_unavailable kind=%s team_id=%s reason=%s composition_revision=%s",
                            item.kind, exc.team_id, exc.reason, getattr(current_bindings(), "revision", None))
@@ -315,19 +331,19 @@ class WatchBatch:
         warnings += [f"미실행 항목 — {o.item.title}: team_unavailable({', '.join(o.reasons[:2])})" for o in unavailable]
 
         if not (applied or asked or consent):
-            if unavailable:
+            if unavailable and not (stuck or retry):
                 first = unavailable[0]
                 raise TeamUnavailable(first.reasons[1] if len(first.reasons) > 1 else first.item.kind, first.reasons[0])
             if stuck or retry:
                 # 아무것도 못 바꿨다 — 단일 Case 와 같게 escalate 하고, 항목별 결과를 표지로 남긴다(`outcome:` 못 푼 것 → 감시가 고객에게 한 번에 알린다 · `retry:` 다시 열 것).
                 #   다시 열 항목이 있으면 **다시 열 수 있는 사유**(`fatal_source_failure`)로 닫는다 — 그 항목이 영원히 막히지 않게
-                code = ("fatal_source_failure" if retry else
+                code = ("fatal_source_failure" if retry or unavailable else
                         "itinerary_recheck_failed" if all(o.kind == "recheck_failed" for o in stuck) else "itinerary_unresolved")
-                tokens = [*(f"outcome:{o.item.item_id}:{o.kind}" for o in stuck), *(f"retry:{o.item.item_id}" for o in retry)]
+                tokens = [*(f"outcome:{o.item.item_id}:{o.kind}" for o in stuck), *(f"retry:{o.item.item_id}" for o in [*retry, *unavailable])]
                 return work._escalate(task, code, evidence, warnings=[*tokens, f"묶음 결과: {summary}"])
             return work.settle(task, ctx, NoChange("clear"))
 
-        arguments, answer = self._arguments(trip, trip["version"], outcomes, applied, asked, consent, stuck, retry)
+        arguments, answer = self._arguments(trip, trip["version"], outcomes, applied, asked, consent, stuck, [*retry, *unavailable])
         proposal = ActionProposal(
             action_type=ACTION_TYPE, arguments=arguments,
             idempotency_key=idempotency_key(

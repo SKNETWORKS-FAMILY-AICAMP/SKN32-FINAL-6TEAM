@@ -441,7 +441,6 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     from datetime import datetime
     from zoneinfo import ZoneInfo
 
-    from app import composition
     from app.infrastructure.db import repository
     from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
     from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck

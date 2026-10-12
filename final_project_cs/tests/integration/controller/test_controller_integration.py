@@ -13,7 +13,7 @@ from app.application.case_service import CaseService, ResumeTokenError
 from app.application.controller import Controller, ControllerError
 from app.core.contracts import ActionProposal, ContextPack, Evidence, InvalidTransition, NextAction, StateConflict, TeamManifest, TeamResult
 from app.core.idempotency import idempotency_key
-from app.core.registry import RegistryError, TeamRegistry
+from app.core.registry import TeamRegistry
 from app.core.team_availability import TeamUnavailable
 from app.core.transition import OutboxMessage, replay_case, transition_case
 from app.core.case_lifecycle.events import EventType

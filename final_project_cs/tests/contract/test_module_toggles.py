@@ -20,7 +20,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.composition import _MODULE_IMPLEMENTATIONS, build_classifier
-from app.core.project_config import ProjectConfig, ProjectConfigError
+from app.core.project_config import ProjectConfig
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

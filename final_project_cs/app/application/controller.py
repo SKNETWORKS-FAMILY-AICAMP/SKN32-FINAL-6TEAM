@@ -60,13 +60,15 @@ class Controller:
                  verification_policy: Any | None = None, fact_queries: Any = (),
                  response_review: Any | None = None,
                  action_handlers: ActionHandlers | None = None,
-                 reroute: Callable[..., dict[str, Any] | None] | None = None) -> None:
+                 reroute: Callable[..., dict[str, Any] | None] | None = None,
+                 diagnostic_recorder: Callable[[dict], dict] | None = None) -> None:
         # ★대조 어휘는 주입받는다. Controller 는 어떤 필드를 대조하는지 모른다 —
         #   알면 basement 가 특정 업무 도메인에 묶인다.
         from app.core.verification import VerificationPolicy
         self.verification_policy = verification_policy or VerificationPolicy()
         # ★라우팅이 어긋났을 때 한 번 더 고르는 자리(`_reroute_once`). 안 꽂으면 종전대로 escalated.
         self.reroute = reroute
+        self.diagnostic_recorder = diagnostic_recorder
         self.fact_queries = tuple(fact_queries or ())
         # The composition root supplies all concrete adapters.  These lazy
         # defaults retain backwards compatibility for focused application
@@ -94,6 +96,21 @@ class Controller:
         self.response_review = response_review
         # ★적용기는 조립이 넣는다. 없으면 **빈 표** — 승인 없는 제안은 전부 escalated 로 간다.
         self.action_handlers = action_handlers or ActionHandlers()
+
+    def _report_failure(self, case: dict[str, Any], code: str) -> dict | None:
+        """저장 실패가 원래 업무 예외를 덮지 않게 하되 수집 저하는 명시한다."""
+        if self.diagnostic_recorder is None:
+            return None
+        payload = {"tenant_id": case["tenant_id"], "customer_id": case.get("customer_id"),
+                   "case_id": case["case_id"], "code": code,
+                   "subject_ref": (case.get("state_json") or {}).get("subject_ref")}
+        try:
+            result = self.diagnostic_recorder(payload)
+        except Exception:
+            result = {"status": "collection_degraded"}
+        if result.get("status") == "collection_degraded":
+            logger.error("controller_diagnostic status=collection_degraded code=%s", code)
+        return result
 
     #: ★Team 이 볼 수 있는 Case 상태 칸 — **이름이 중립인 것만.** 무엇을 가리키는지는
     #:  도메인이 채운다(`[결정 2026-09-17]` wiki `external/rest-endpoints.md` subject_ref).
@@ -353,6 +370,7 @@ class Controller:
                         self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
                                                     event_type=EventType.ROUTED, payload={"owner_team_id": entry.manifest.team_id, "capability": capability}, actor_id=actor_id)
                     except TeamUnavailable as exc:
+                        self._report_failure(case, "team_unavailable")
                         logger.warning("team routing unavailable", extra={
                             "team_id": exc.team_id, "reason": exc.reason, "case_id": str(case_id),
                             "composition_revision": getattr(self, "composition_revision", None)})
@@ -373,13 +391,18 @@ class Controller:
                                 payload={"owner_team_id": entry.manifest.team_id, "capability": capability,
                                          "rerouted": note}, actor_id=actor_id)
                         else:
+                            self._report_failure(case, "routing_failed")
                             self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
                                                         event_type=EventType.ROUTING_FAILED, payload={"failure_code": "no_team"}, actor_id=actor_id)
                             self.case_service.finish_run(conn, run_id, "failed")
                             return {"case_id": str(case_id), "status": "escalated", "run_id": str(run_id), "error": str(exc)}
                     case = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
                 else:
-                    entry = self.require_team(case["owner_team_id"], case_id=case_id)
+                    try:
+                        entry = self.require_team(case["owner_team_id"], case_id=case_id)
+                    except TeamUnavailable:
+                        self._report_failure(case, "team_unavailable")
+                        raise
                 resume = False
                 resume_node = None
                 if (case["status"] == CaseStatus.RUNNING
@@ -432,6 +455,7 @@ class Controller:
                                                      actor_type="controller", actor_id=actor_id)
                         self.case_service.finish_run(conn, run_id, "failed")
                     conn.commit()
+                    self._report_failure(case, "team_timeout")
                     return {"case_id": str(case_id), "run_id": str(run_id), "status": transition.status.value, "version": transition.version}
                 # ★대조에는 **Controller 가 만든** task.context 를 넘긴다.
                 #   Team 이 돌려준 result.context 를 쓰면 근거와 제안을 같은 쪽이 지어낼 수 있어
@@ -460,6 +484,7 @@ class Controller:
                 #   `resume()` 이 같은 종류의 경합(InvalidTransition)을 다루는
                 #   방식과 같다 — 지면 조용히 물러나고 기록을 남긴다.
                 self._abandon_run(conn, run_id)
+                self._report_failure(case, "state_conflict")
                 logger.warning(
                     "concurrent write won during team execution; result not applied",
                     extra={"tenant_id": tenant_id, "case_id": str(case_id), "run_id": str(run_id)},
@@ -471,6 +496,7 @@ class Controller:
                 # ★A 를 커밋했으므로 실행 시작 기록은 살아남는다. 그 대가로 실행을
                 #   닫는 책임이 생긴다. CancelledError 도 포함해야 해서 BaseException 이다.
                 self._abandon_run(conn, run_id)
+                self._report_failure(case, "team_exception")
                 if isinstance(exc, TeamUnavailable):
                     logger.warning("team execution unavailable after start", extra={
                         "team_id": exc.team_id, "reason": exc.reason, "case_id": str(case_id),

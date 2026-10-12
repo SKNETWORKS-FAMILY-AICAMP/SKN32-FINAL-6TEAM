@@ -38,7 +38,6 @@ def interrupt_after_routing(monkeypatch):
 
 
 def test_multi_question_http_retry_preserves_each_target_and_one_completion(decided,monkeypatch):
-    from app.core import transition as state_transitions
 
     _model(decided,[('time','성수 점심','explicit'),('duration','· 저녁','explicit')])
     original=interrupt_after_routing(monkeypatch)
@@ -58,7 +57,6 @@ def test_multi_question_http_retry_preserves_each_target_and_one_completion(deci
 
 
 def test_context_corrected_target_and_snapshot_are_committed_together(decided,monkeypatch):
-    from app.core import transition as state_transitions
 
     _model(decided,[('time','· 저녁','explicit')])
     _say(decided,'저녁은 몇 시야?','merged-context-first')

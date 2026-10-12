@@ -1,0 +1,74 @@
+{
+  "scope": "isolated synthetic database and mock-server UI; public reads separate",
+  "web": {
+    "unit_passed": 712,
+    "unit_total": 712,
+    "mock_ui_passed": 12,
+    "mock_ui_total": 12,
+    "viewports": [
+      375,
+      1280
+    ],
+    "undo_height_px": 25.796875,
+    "badge_height_px": 25.796875,
+    "font_size_px": 12,
+    "padding": "2px 8px",
+    "hit_height_px": 44,
+    "production_build_node": "24.19.0"
+  },
+  "early_backend": {
+    "passed": 3940,
+    "failed": 26,
+    "skipped": 81,
+    "deselected": 220
+  },
+  "targeted_recovery": {
+    "passed": 62,
+    "failed": 0
+  },
+  "full_index_scan": {
+    "grep_lines": 2333,
+    "infrastructure_findings": 0,
+    "scope": "all staged root text; binary text not inspected"
+  },
+  "final_backend": {
+    "passed": 4015,
+    "failed": 0,
+    "skipped": 81,
+    "deselected": 220,
+    "source_changed": [],
+    "own_test_cluster_stopped": true,
+    "skip_reasons": {
+      "trained sentiment artifacts absent": 4,
+      "external mobility datasets absent": 75,
+      "external dining datasets absent": 2
+    },
+    "command": "python -m pytest -m not live -p pytest_asyncio.plugin -p no:cacheprovider -m not live tests/architecture tests/contract tests/security tests/unit tests/scenario tests/integration/controller tests/integration/db tests/e2e/test_web_conversation_resume.py tests/e2e/test_web_initial_retry.py tests/e2e/test_web_resume_commit_recovery.py tests/e2e/test_watch_plugin_recovery.py tests/e2e/test_mcp_server.py tests/e2e/test_mcp_read_tools.py tests/e2e/test_fact_read_recovery_web.py tests/e2e/test_chat_read_requests.py tests/e2e/test_recovery_read_merge_web.py tests/e2e/test_intake_ledger_pick.py",
+    "junit_sha256": "3ce9373ada19099fcf9f05d4631c792d0f34c48b9ff3dd7a4ed29e31a7bbe288",
+    "database_suite": {
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "dod": {
+    "passed": 26,
+    "total": 26,
+    "mvp_passed": 18,
+    "mvp_total": 18,
+    "command": "python -m scripts.verify_dod_v11",
+    "environment": "isolated synthetic PostgreSQL only"
+  },
+  "earlier_run_note": "3974-pass run preceded restoration of native migration contract; final DB rollback suite is recorded separately.",
+  "claude": {
+    "model": "claude-sonnet-5-5",
+    "effort": "high",
+    "calls": 8,
+    "input_tokens": 16,
+    "output_tokens": 118192,
+    "cache_creation_tokens": 163091,
+    "cache_read_tokens": 10804,
+    "account_remaining": "unavailable",
+    "scope": "code, release, storage and final migration safety reviews; static review"
+  }
+}

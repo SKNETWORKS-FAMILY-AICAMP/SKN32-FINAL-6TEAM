@@ -18,6 +18,8 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from contextvars import Context
+from app.domains.travel_ops.scenarios.replay_services import replay_leg_services
 
 import pytest
 
@@ -27,7 +29,7 @@ from app.infrastructure.db.session import get_connection
 from app.domains.travel_ops.scenarios.case_engine import CaseEngine
 from app.domains.travel_ops.components.planning.pending import PendingStore
 
-from .test_case_version_day import _classifier, _extractor, case_world  # noqa: F401 — 픽스처를 그대로 쓴다
+from .test_case_version_day import SCENARIO, _classifier, _extractor, case_world  # noqa: F401 — 픽스처를 그대로 쓴다
 
 ROAD = {"verdict": "disrupted", "disruptions": [{"category": "traffic_control", "kind": "road_closed"}]}
 FIRE = {"verdict": "disrupted", "disruptions": [{"category": "disaster_msg", "kind": "fire"}]}
@@ -61,11 +63,13 @@ def _engine(world, reports: dict[str, dict]):
         return report() if callable(report) else report
 
     return CaseEngine(tenant_id=world["tenant"], check=check, route_events=world["engine"].opener.route_events,
-                      classifier=_classifier, report_extractor=_extractor, clock=world["clock"])
+                      classifier=_classifier, report_extractor=_extractor, clock=world["clock"],
+                      service_overrides=replay_leg_services(SCENARIO))
 
 
 def _tick(engine):
-    return engine.tick(lookahead=ALL_DAY)
+    # 새 엔진은 새 요청처럼 자기 조립 판을 고정한다. 바깥 픽스처의 다른 엔진을 상속하지 않는다.
+    return Context().run(engine.tick, lookahead=ALL_DAY)
 
 
 def _versions(world):

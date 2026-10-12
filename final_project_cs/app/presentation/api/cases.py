@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import logging
 import inspect
 from typing import Any, Callable
@@ -22,9 +21,7 @@ from app.core.transition import transition_case
 from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.application.classification import classify_case
 from app.application.proposal_guard import audit_payload, describe, recheck_before_execution
-from app.core.redaction import masked
 from app.presentation.security import Principal, require_scope
 
 logger = logging.getLogger(__name__)
