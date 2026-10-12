@@ -39,7 +39,7 @@ KST = ZoneInfo("Asia/Seoul")
 ENGINE_BUDGET_S = 25.0
 SOURCE_LABEL = {"places": "우리 장소 목록", "tour_api": "관광공사", "kakao": "카카오 지도", "customer_pick": "직접 고른 곳",
                 "customer": "직접 고른 곳"}
-_HOURS_CODES = {"before_opening", "after_closing", "after_last_entry", "break_time"}
+_HOURS_CODES = {"before_opening", "after_closing", "after_last_entry", "break_time", "outside_hours"}
 _RANK = {"bad": 4, "warn": 3, "filled": 2, "ok": 1, "unknown": 0}
 
 
@@ -257,16 +257,19 @@ def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) 
     today = hours_on(facts.attributes, day)
     dow = weekday_ko(day)
     codes = {v.code: v for v in vios}
+    # ★`[2026-10-13]` 활동 원장 판정(관광지) — 휴무 원문 · 중간에 닫힘을 활동 팀이 정했다(`hours.facts_for` ⑤)
+    act = facts.activity or {}
     # 휴무일
     if "closed_day" in codes or today == "closed":
-        closed = _line("closed", "bad", f"{dow}요일은 쉬는 날이에요 · 방문일이 휴무예요")
+        why = f"({act['quote']})" if act.get("closed") is True and act.get("quote") else ""
+        closed = _line("closed", "bad", f"{dow}요일은 쉬는 날이에요 · 방문일이 휴무예요{why}")
     else:
         off = closed_weekdays(facts.attributes)
         if off:
             closed = _line("closed", "ok", f"{'·'.join(off)}요일 휴무 · 방문은 {dow}요일")
         elif week_known_all(facts.attributes):
             closed = _line("closed", "ok", "쉬는 요일이 없어요")
-        elif today is not None:
+        elif today is not None or act.get("closed") is False:
             closed = _line("closed", "ok", f"{dow}요일은 열어요")
         else:
             closed = _line("closed", "unknown", "휴무 정보가 없어요")
@@ -276,7 +279,14 @@ def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) 
     # 운영시간
     if today == "closed" or "closed_day" in codes:
         return _line("hours", "unknown", "쉬는 날이라 운영하지 않아요"), closed
+    if act.get("cut_short") is True and act.get("closes_at") and act.get("usable_minutes"):
+        # 도착 때는 열려 있지만 끝나기 전에 닫는다 — 「이미 닫힘」과 안내가 다르다(머물 수 있는 분을 알린다)
+        return _line("hours", "warn", f"{act['closes_at']}에 닫아 {act['usable_minutes']}분만 머물 수 있어요"), closed
     if not isinstance(today, DayHours):
+        if act.get("within_hours") is False:
+            return _line("hours", "warn", "운영시간 밖이에요 · 시각을 옮겨 주세요"), closed
+        if act.get("within_hours") is True:
+            return _line("hours", "ok", "운영시간 안에 머물러요"), closed
         return _line("hours", "unknown", f"{dow}요일 운영시간을 읽지 못했어요"), closed
     opens, closes = today.opens.strftime("%H:%M"), today.closes.strftime("%H:%M")
     parts: list[tuple[str, str]] = []
@@ -287,6 +297,8 @@ def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) 
     if "after_last_entry" in codes:
         last = today.last_entry.strftime("%H:%M") if today.last_entry else ""
         parts.append(("warn", f"{last} 입장 마감이에요 · {row['start']} 시작은 늦어요"))
+    if "outside_hours" in codes and not parts:
+        parts.append(("warn", "운영시간 밖이에요 · 시각을 옮겨 주세요"))
     if "break_time" in codes:
         brk = facts.attributes.get("break") or ["", ""]
         parts.append(("warn", f"{brk[0]}–{brk[1]} 브레이크 타임에 걸쳐요"))
@@ -425,7 +437,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         seq_of[i] = len(parts) + 1
         attributes = dict(facts[i].attributes)
         parts.append(Part(seq=len(parts) + 1, kind=r["kind"], title=r["title"] or "(제목 없음)", starts_at=start,
-                          ends_at=end, place={"name": r["title"] or "", "attributes": attributes}))
+                          ends_at=end, place={"name": r["title"] or "", "attributes": attributes,
+                                              **({"activity": facts[i].activity} if facts[i].activity else {})}))
     violations = check_itinerary(parts)
     by_seq: dict[int, list[Violation]] = {}
     for v in violations:

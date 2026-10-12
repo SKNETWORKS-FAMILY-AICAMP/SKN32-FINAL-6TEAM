@@ -637,7 +637,7 @@ class ReadToolbox:
         when = _as_datetime(at)
         with self.connection_factory() as conn:
             facts = facts_for(conn, scope.tenant_id, {"place_id": str(place_id)}, "activity",
-                              when if isinstance(when, datetime) else None, None)
+                              when if isinstance(when, datetime) else None, None, activity_verdict=False)
             with conn.cursor() as cur:
                 cur.execute(
                     "SELECT ch.hours_origin FROM places p JOIN catalog_hours ch "

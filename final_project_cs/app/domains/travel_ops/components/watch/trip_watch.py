@@ -30,6 +30,7 @@ from typing import Any, Callable
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore, visible_to
 from app.domains.travel_ops.components.team_hooks import similarity
+from app.domains.travel_ops.components.watch.activity_disasters import rejudge as rejudge_activity_disasters
 from app.domains.travel_ops.components.itinerary.itinerary_changes import (ItineraryChange, NoChange, next_after, place_before, plan_activity_adjustment,
                                 plan_route_adjustment, planned_option, route_of, route_targets)
 from app.domains.travel_ops.components.planning.pending import PendingStore, apply_or_ask, ask_consent, forecast_attention, needs_consent, weather_only
@@ -97,6 +98,8 @@ class TripWatcher:
                 continue
             result.checked += 1
             report = self.check(place=item.place, starts_at=item.starts_at)
+            # ★`[2026-10-13]` 관광지는 재난문자 이상을 활동 판정(재해 분류표)으로 다시 가른다 — 복구 문자는 빼고, 실내라도 호우 · 산사태는 더한다
+            report = rejudge_activity_disasters(report, item)
             verdict = report.get("verdict")
             with self._connect() as conn, conn.transaction():
                 attention = forecast_attention(conn, store=self.store, trip_id=trip_id, item=item, report=report)

@@ -8,7 +8,10 @@ domain: travel
 
 # cs wiki 변경 기록
 
-## 2026-10-12 22:00 — 전수 점검: 정의 안 된 이름 2건 · 결함 주석 · 시험 임시 파일
+## 2026-10-13 — 활동 판정 끼움 자리 연결(격리 사본)
+
+활동 팀 원장 판정을 확인 화면 · 등록 판정 · 감시가 쓰게 연결했다(활동 코어 전달 사항 3번). 관광공사 운영시간 표가 없어도 화요일 경복궁이 「쉬는 날」로 잡히고, 도착 뒤 닫는 곳은 「18:00에 닫아 60분만 머물 수 있어요」로 보인다. 근거: [2026-10-13 활동 판정 끼움 자리 연결](records/reports/2026-10-13_activity_ledger_hook.md).
+
 ## 2026-10-12 — 실내외 판정 스크립트를 팀 폴더 밖으로
 
 `fill_indoor_outdoor.py` 가 팀 폴더(`instances/activity/data_processing/`) 안에서 `openai` 를 직접 import 해 팀 규율 시험에 걸렸다. 한 번 돌려 CSV 를 채우는 스크립트라 `scripts/activity/` 로 옮겼다(동작 같음). [teams/activity.md](teams/activity.md).
@@ -17,7 +20,7 @@ domain: travel
 
 머지(`74ec376b`)로 합친 뒤에만 깨지는 두 곳을 고쳤다 — `refresh_places` 의 `INTRO_FIELDS` 풀기 · CSV 행 수 기대값. `load_places` 가 옛 CSV 컬럼 이름을 읽어 네 칸이 비던 것도 새 이름에 맞췄다. [결함 리포트](records/reports/debugs/2026-10-12_2230_test머지_뒤_관광공사_다시받기가_죽는다.md).
 
-## 2026-10-10 — UIUX 완료 인계 통합
+## 2026-10-12 22:00 — 전수 점검: 정의 안 된 이름 2건 · 결함 주석 · 시험 임시 파일
 
 야간 감시 스크립트(`scripts/run_sweepers.py`)와 대화 처리(`trip_messages.py`)가 정의 안 된 이름을 써서 그 경로에서 멈추던 것을 고쳤습니다. 낡은 결함 현황 주석 1건 제거(183/183), 이동 시험의 임시 파일 정리(14/14). 「복구 읽기 합치기」는 시험만 들어온 미완성(3/38 실패)이라 남겼습니다. [통합 인계](../../wiki/handoff/2026-10-12_2200_claude-integrated-handoff.md)
 

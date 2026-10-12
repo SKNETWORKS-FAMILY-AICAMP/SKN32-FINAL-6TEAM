@@ -254,15 +254,20 @@ class DisruptionCheck:
             return {**base, "status": "not_connected", "mode": mode,
                     "reason": (f"샘플 기간({coverage.get('from')} ~ {coverage.get('to')}) 밖 — "
                                f"실키 발급 대기 (data.go.kr/data/15134001)")}
-        disruptions = [{"category": "disaster_msg", "kind": item.get("kind"),
-                        "step": item.get("step"), "text": item.get("text"),
-                        "created_at": item.get("created_at"), "source": value.get("source"),
-                        "mode": mode}
-                       for item in value.get("for_region") or []
-                       if sensitive or not item.get("weather")]
+        rows = [{"category": "disaster_msg", "kind": item.get("kind"),
+                 "step": item.get("step"), "text": item.get("text"),
+                 "created_at": item.get("created_at"), "source": value.get("source"),
+                 "mode": mode}
+                for item in value.get("for_region") or []]
+        weather = [bool(item.get("weather")) for item in value.get("for_region") or []]
+        disruptions = [row for row, is_weather in zip(rows, weather) if sensitive or not is_weather]
+        # ★`[2026-10-13]` 날씨 영향이 없다고 본 장소에서 뺀 날씨형 문자는 버리지 않고 **사실로** 남긴다 — 이상으로 세지는 않는다.
+        #   호우 · 산사태처럼 그 구에 가는 것 자체가 위험한 문자는 실내 관광지도 막는다(활동 팀 판정 — 감시가 `activity_ledger.disaster` 로 다시 가른다)
+        held_back = [row for row, is_weather in zip(rows, weather) if not sensitive and is_weather]
         return {**base, "status": "ok", "mode": mode, "source": value.get("source"),
                 "confirmed_at": value.get("confirmed_at"),
                 "unclassified": value.get("unclassified", []),
+                "weather_held_back": held_back,
                 "_disruptions": disruptions}
 
 
