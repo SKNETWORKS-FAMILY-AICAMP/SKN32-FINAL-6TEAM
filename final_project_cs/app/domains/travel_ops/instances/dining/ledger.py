@@ -374,6 +374,9 @@ class PlannerLedger:
 NAME_TYPO_RATIO = 0.2               # 자모 거리 / 긴 쪽 길이 — 이 이하면 오타로 본다(`intake/places.TYPO_RATIO` 와 같다)
 NAME_PREFIX_MIN = 4                 # 앞부분 일치로 받는 최소 글자 수(「진옥화할매」 → 「진옥화할매원조닭한마리」)
 NAME_PREFIX_UNIQUE_MIN = 3          # ★`[2026-10-10 사용자 결정]` 이 글자 수부터는 앞부분이 맞는 가게가 **하나뿐일 때만** 받는다(「편강율」 → 「편강 율 플래그십&티하우스」)
+#: ★`[2026-10-12]` 3글자 앞부분 찾기에서 받지 않는 끝말 — 동네 · 역 · 길 이름이다. 접수가 「성수동 소문난 감자탕」을 「성수동」으로
+#:  좁혔을 때 「성수동」으로 시작하는 가게가 하나(「성수동 대림창고 갤러리」)라 그 가게가 골라졌다(장소 찾기 평가 PL-034)
+AREA_TAIL = re.compile(r"(동|구|역|로|길)$")
 DISH_RADIUS_M = 800                 # 「근처 칼국수집」 · 「통인시장 기름떡볶이」 — 기준 좌표에서 이 안의 원장 가게
 _BRANCH_TAIL = re.compile(r"(본점|직영점|분점|별관|본관|신관|[가-힣a-z0-9]{1,8}점)")
 _NEAR_WORDS = ("근처", "주변", "가까운", "아무")
@@ -475,7 +478,7 @@ def find_place_by_name(conn, name: str | None, *, near: tuple[float, float] | No
     if len(base) >= NAME_PREFIX_UNIQUE_MIN:
         prefix = [s for s in shops if s["base"].startswith(base) or s["key"].startswith(base)]
         # ★`[2026-10-10 사용자 결정]` 3글자(`NAME_PREFIX_MIN` 미만)는 앞부분이 맞는 가게가 하나뿐일 때만 — 짧은 말은 여러 가게의 앞머리가 되기 쉽다
-        if len(base) < NAME_PREFIX_MIN and len(prefix) != 1:
+        if len(base) < NAME_PREFIX_MIN and (len(prefix) != 1 or AREA_TAIL.search(base)):
             prefix = []
         if prefix:
             shop, many = _pick(prefix, near)
