@@ -76,6 +76,46 @@ def test_괄호가_열리자마자_나온_낱말은_괄호의_것이다():
     assert rules[SUN]["coverage"] == "unknown"
 
 
+def test_붙여_쓴_항목_경계의_낱말도_가져가지_않는다():
+    """「[평일]- 11:00~21:00- 준비시간 15:00~17:00」 — 시각 바로 뒤에 붙은 「- 준비시간」은 다음 항목이다. `[2026-10-12]`
+
+    고치기 전에는 ` - ` 만 경계로 봐서 평일 영업 범위가 브레이크가 되고 월~금이 통째로 모름이었다(관광공사 원문의 흔한 모양).
+    결함: wiki/records/reports/debugs/2026-10-12_영업시간_추출이_평일을_통째로_버린다.md
+    """
+    rules, _ = ph.parse_hours("[평일]- 11:00~21:00- 준비시간 15:00~17:00- 점심 마지막 주문 14:40[주말]- 11:00~21:00")
+    assert shape(rules, MON) == [(660, 900, 880, "present"), (1020, 1260, None, "unknown")]
+    assert shape(rules, SAT) == [(660, 1260, None, "unknown")]
+
+
+def test_다음_범위의_브레이크_낱말을_가져가지_않는다():
+    """「토,일 12:00~21:30 브레이크타임 15:00~17:30」 의 「브레이크타임」은 뒤 범위의 것이다. `[2026-10-12]`"""
+    rules, _ = ph.parse_hours("월~금 11:30~21:30<br>토,일 12:00~21:30<br>브레이크타임 15:00~17:30<br>라스트오더 14:30/21:00")
+    assert rules[SAT]["coverage"] == "intervals" and rules[SUN]["coverage"] == "intervals"
+    assert [(i["open_min"], i["close_min"]) for i in rules[SAT]["intervals"]] == [(720, 900), (1050, 1290)]
+
+
+def test_범위_뒤에_붙은_브레이크_낱말은_그대로_브레이크다():
+    """「(15:00~17:00 브레이크타임)<br>21:00 라스트오더」 — 낱말 뒤 시각이 범위가 아니면 이 브레이크의 낱말이다. `[2026-10-12]`
+
+    ☆처음 고친 판이 시각 하나에도 반응해 이 브레이크를 영업으로 읽었다(오프트 · 띠아낭 등 6곳) — 1,600건 전후 비교에서 잡았다.
+    """
+    rules, _ = ph.parse_hours("11:00 ~ 21:00 (15:00~17:00 브레이크타임)<br>20:15 라스트오더")
+    assert shape(rules, MON) == [(660, 900, None, "unknown"), (1020, 1260, 1215, "present")]
+    rules, _ = ph.parse_hours("매일 11:00 - 22:00 / 14:30 - 17:00 브레이크타임 / 20:30 라스트오더")
+    assert [(i["open_min"], i["close_min"]) for i in rules[MON]["intervals"]] == [(660, 870), (1020, 1320)]
+
+
+def test_상시_영업은_하루_내내다():
+    rules, _ = ph.parse_hours("- 일요일~목요일 08:30~06:00- 금요일~토요일 상시 영업")
+    assert shape(rules, SAT) == [(0, 1440, None, "unknown")]
+    assert shape(rules, SUN) == [(510, 1800, None, "unknown")]
+
+
+def test_매주_주말_휴무를_읽는다():
+    rules, _ = ph.parse_closure("매주 주말")
+    assert rules == [{"pattern_kind": "weekly", "weekday": SAT}, {"pattern_kind": "weekly", "weekday": SUN}]
+
+
 @pytest.mark.parametrize("token, expected", [
     ("토요일", (SAT,)),
     ("일요일", (SUN,)),

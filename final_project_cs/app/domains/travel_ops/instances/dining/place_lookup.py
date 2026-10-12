@@ -26,13 +26,17 @@ class LedgerPlaceLookup:
         self._on_found = on_found
         self.misses: dict[str, int] = {}
 
-    def find(self, place_name: str, *, area_code: str | None = None, **_: Any) -> dict[str, Any] | None:
+    def find(self, place_name: str, *, area_code: str | None = None,
+             near: tuple[float, float] | None = None, **_: Any) -> dict[str, Any] | None:
+        # ★`[2026-10-08]` 접수가 넘긴 앞뒤 일정 좌표(`near`)가 먼저다 — 관광지 · 카카오에서 찾은 앞 일정도 기준이 된다.
+        #   없으면 전처럼 이 요청에서 찾은 장소 좌표(`_near`, `trip_api._PlaceCtx`)
+        point = near if near is not None else (self._near() if self._near else None)
         try:
             with self._connect() as conn:
-                found = find_place_by_name(conn, place_name, near=self._near() if self._near else None)
+                found = find_place_by_name(conn, place_name, near=point)
                 if found is None:
                     # ★`[2026-10-05]` 원장(관광공사 위주 1,600곳)에 없으면 인허가(사업자 등록) 영업 중 식당에서 — 영업시간은 모른다
-                    found = find_license_shop_by_name(conn, place_name, near=self._near() if self._near else None)
+                    found = find_license_shop_by_name(conn, place_name, near=point)
         except Exception:   # noqa: BLE001 — 드라이버를 import 하지 않는다(Team 경계). 못 읽으면 막힌 것
             self.misses["unavailable"] = self.misses.get("unavailable", 0) + 1
             return None

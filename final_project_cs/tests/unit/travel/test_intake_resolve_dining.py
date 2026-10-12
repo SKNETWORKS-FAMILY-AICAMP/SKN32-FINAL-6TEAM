@@ -163,3 +163,47 @@ def test_a_ledger_hit_feeds_the_near_hint_for_the_next_items():
         place_lookup.find_place_by_name = original
 
     assert ctx.get_near() == (37.5777, 126.9715)
+
+
+class NearLookup(Lookup):
+    """원장 흉내 — 받은 근처 기준(`near`)을 적어 둔다."""
+
+    def __init__(self, known):
+        super().__init__(known)
+        self.near = []
+
+    def find(self, name, area_code=None, near=None):
+        self.near.append(near)
+        return super().find(name, area_code)
+
+
+def test_the_neighbours_point_reaches_the_ledger_lookup():
+    """☆2026-10-08 — 「경복궁 → 근처 국밥집」. 경복궁이 관광지 · 카카오에서 찾힌 곳이면 원장이 근처 기준을 못 받아 못 찾았다
+    (통합 5abf28a 에서 ctx 를 채우던 감싸개가 빠졌다 — 재측정 PL-023 · PLH-10). 접수가 넘긴 앞 일정 좌표를 원장에 그대로 넘긴다."""
+    dining = NearLookup({"근처 국밥집": "광화문국밥"})
+
+    found = resolve("근처 국밥집", our_places=[], dining=dining, kind_hint="dining", near=(37.5796, 126.9770))
+
+    assert found.method == "dining_ledger"
+    assert dining.near[0] == (37.5796, 126.9770)
+
+
+def test_the_ledger_prefers_the_point_it_was_given_over_the_request_hint():
+    import contextlib
+
+    from app.domains.travel_ops.instances.dining import place_lookup
+
+    asked = []
+    original = place_lookup.find_place_by_name
+    place_lookup.find_place_by_name = lambda conn, name, near=None: asked.append(near)
+    original_license = place_lookup.find_license_shop_by_name
+    place_lookup.find_license_shop_by_name = lambda conn, name, near=None: None
+    try:
+        lookup = place_lookup.LedgerPlaceLookup(lambda: contextlib.nullcontext(), near=lambda: (1.0, 1.0))
+        lookup.find("근처 국밥집", near=(37.5796, 126.9770))      # 접수가 넘긴 앞 일정 좌표가 먼저
+        lookup.find("근처 국밥집")                                 # 없으면 전처럼 요청 힌트
+    finally:
+        place_lookup.find_place_by_name = original
+        place_lookup.find_license_shop_by_name = original_license
+
+    assert asked == [(37.5796, 126.9770), (1.0, 1.0)]
