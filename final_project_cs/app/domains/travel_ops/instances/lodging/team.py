@@ -67,6 +67,10 @@ GOOGLE_SHOWN = 3
 SPREAD_KM = 30.0
 #: 일정 숙소 항목의 「바꿔 줘」 — 새 후보가 없으면 목록을 이만큼 더 받아 다시 찾는다(첫 값은 보통 찾기와 같다). 우리가 고른 값
 ALTERNATE_SIZES = (SEARCH_SIZE, 50)
+#: 「바꿔 줘」 새 후보를 고를 때 기준점(원래 숙소 · 없으면 일정 가운데)에서 이 거리 안이면 「가까운 곳」으로 먼저. 우리가 고른 값(2026-10-12)
+NEAR_KM = 3.0
+#: 원래 숙소 1박 가격을 알면 이 비율 안의 곳을 먼저(1박 10만 원 숙소에 40만 원을 먼저 내밀지 않게). 우리가 고른 값(2026-10-12)
+PRICE_BAND = (0.7, 1.3)
 #: 한국 안 좌표인지(국내 · 해외 검색을 고른다) — 대략의 경계. 우리가 고른 값
 _KOREA = ((33.0, 38.7), (124.5, 131.0))
 
@@ -138,37 +142,77 @@ def _points(items: list[Any], *, skip: Any = None) -> list[dict[str, Any]]:
     return out
 
 
-def _fresh_picks(booked: dict[str, Any], exclude: set[str], center: dict[str, Any] | None,
-                 dates: dict[str, str], party: dict[str, Any]) -> list[dict[str, Any]]:
-    """새 후보 `SHOWN` 곳 — 마이리얼트립 목록(제공처 순서, 가격 있는 곳만 · 상세는 부르지 않는다) 먼저, 모자라면 구글 호텔
-    (숙박 공유 · 가격 없음 · 링크 없음 제외, 일정 가운데가 쓸 만하면 가까운 순). 이름이 `exclude` 에 있으면 뺀다."""
-    picks: list[dict[str, Any]] = []
+def _anchor(item: Any, center: dict[str, Any] | None) -> dict[str, Any] | None:
+    """「바꿔 줘」 후보의 거리 기준점 — 원래 숙소 좌표, 없으면 쓸 만한 일정 가운데. 둘 다 없으면 `None`."""
+    where = _coords(item.place)
+    if where is not None:
+        return {"latitude": where[0], "longitude": where[1], "kind": "원래 숙소", "usable": True}
+    if center and center["usable"]:
+        return {**center, "kind": "일정 가운데"}
+    return None
+
+
+def _reference_price(item: Any) -> float | None:
+    """원래 숙소의 1박 가격 — 고른 후보(`detail.chosen`)나 항목 상세에 있을 때만. 모르면 `None`(가격으로 거르지 않는다)."""
+    for source in (item.detail.get("chosen") or {}, item.detail):
+        value = source.get("price_per_night")
+        if isinstance(value, (int, float)) and value > 0:
+            return float(value)
+    return None
+
+
+def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, Any] | None,
+                 dates: dict[str, str], party: dict[str, Any], reference_price: float | None = None,
+                 details: dict[Any, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """새 후보 `SHOWN` 곳. 이름이 `exclude` 에 있으면 뺀다. 상세는 부르지 않는다(목록 값만).
+
+    후보 모으기: 마이리얼트립 목록(제공처 순서, 가격 있는 곳만 — 목록에 좌표가 없다) → 구글 호텔(숙박 공유 · 가격 없음 · 링크 없음 제외, 좌표 있음).
+    `details`(gid → 마이리얼트립 상세)가 있으면 그 곳은 상세 좌표로 거리를 재고, 그 날짜에 객실이 없으면 뺀다.
+    ★`[2026-10-12]` 고르는 순서 — ① 원래 1박 가격의 `PRICE_BAND` 안(가격을 모르면 이 단계 없음) ② 기준점(`_anchor`)에서 `NEAR_KM` 안인 곳을
+      가까운 순 ③ 나머지는 모은 순서 그대로. 좌표를 모르는 곳(상세를 안 읽은 마이리얼트립)은 「가까운 곳」으로 치지 않는다(거리를 지어내지 않는다).
+    ★`[2026-10-12]` 고른 셋에 마이리얼트립이 하나도 없으면 셋째 자리를 마이리얼트립 첫 곳으로 바꾼다 — 그 날짜 예약 화면으로 바로 가는 링크는
+      마이리얼트립만 준다(구글 호텔 링크는 결과 페이지).
+    """
+    details = details or {}
+    pool: list[dict[str, Any]] = []
     taken = set(exclude)
     for stay in ((booked.get("myrealtrip") or {}).get("stays") or []):
-        if len(picks) >= SHOWN:
-            break
         if stay.get("price_per_night") is None or _key(stay["name"]) in taken:
             continue
+        detail = details.get(stay["gid"])
+        if detail and (detail.get("no_rooms") or detail.get("sold_out")):
+            continue                                # 그 날짜에 객실이 없다
         taken.add(_key(stay["name"]))
-        picks.append({"key": f"myrealtrip:{stay['gid']}", "name": stay["name"], "source": "마이리얼트립",
-                      "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
-                      "review_count": stay.get("review_count"), "distance_km": None,
-                      "link": _list_link(stay["gid"], dates, party)})
-    google = [stay for stay in ((booked.get("google") or {}).get("stays") or [])
-              if stay.get("type") != "vacation rental" and stay.get("price_per_night") is not None and stay.get("link")]
-    if center and center["usable"]:
-        google.sort(key=lambda stay: (_distance(center, stay) is None, _distance(center, stay) or 0.0))
-    for stay in google:
-        if len(picks) >= SHOWN:
-            break
-        if _key(stay["name"]) in taken:
+        where = _coords(detail)
+        pool.append({"key": f"myrealtrip:{stay['gid']}", "name": stay["name"], "source": "마이리얼트립",
+                     "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
+                     "review_count": stay.get("review_count"), "distance_km": _distance(anchor, detail),
+                     "latitude": where[0] if where else None, "longitude": where[1] if where else None,
+                     "link": _list_link(stay["gid"], dates, party)})
+    for stay in ((booked.get("google") or {}).get("stays") or []):
+        if stay.get("type") == "vacation rental" or stay.get("price_per_night") is None or not stay.get("link") \
+                or _key(stay["name"]) in taken:
             continue
         taken.add(_key(stay["name"]))
-        picks.append({"key": f"google:{_key(stay['name'])}", "name": stay["name"], "source": "구글 호텔",
-                      "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
-                      "review_count": stay.get("review_count"), "distance_km": _distance(center, stay),
-                      "latitude": (_coords(stay) or (None, None))[0], "longitude": (_coords(stay) or (None, None))[1],
-                      "link": stay["link"]})
+        where = _coords(stay)
+        pool.append({"key": f"google:{_key(stay['name'])}", "name": stay["name"], "source": "구글 호텔",
+                     "price_per_night": stay.get("price_per_night"), "rating": stay.get("rating") or None,
+                     "review_count": stay.get("review_count"), "distance_km": _distance(anchor, stay),
+                     "latitude": where[0] if where else None, "longitude": where[1] if where else None, "link": stay["link"]})
+
+    def order(pick: dict[str, Any]) -> tuple[bool, bool, float]:
+        price = pick.get("price_per_night")
+        outside = reference_price is not None and not (
+            isinstance(price, (int, float)) and PRICE_BAND[0] * reference_price <= price <= PRICE_BAND[1] * reference_price)
+        far = pick["distance_km"] is None or pick["distance_km"] > NEAR_KM
+        return outside, far, 0.0 if far else pick["distance_km"]
+
+    ranked = sorted(pool, key=order)               # sorted 는 안정 정렬 — 같은 칸 안에서는 모은 순서를 지킨다
+    picks = ranked[:SHOWN]
+    if len(picks) == SHOWN and not any(pick["source"] == "마이리얼트립" for pick in picks):
+        first = next((pick for pick in ranked[SHOWN:] if pick["source"] == "마이리얼트립"), None)
+        if first is not None:
+            picks = [*picks[:SHOWN - 1], first]
     return picks
 
 
@@ -415,11 +459,16 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         party = {"adults": query["adults"], "children": None}
         center = trip_center(_points(items, skip=item.item_id), date.fromisoformat(query["check_in"]),
                              date.fromisoformat(query["check_out"]))
+        anchor, reference_price = _anchor(item, center), _reference_price(item)
         shown = [str(name) for name in item.detail.get("shown") or []]
         exclude = {_key(name) for name in [*shown, item.title, (item.place or {}).get("name") or ""] if name}
         picks: list[dict[str, Any]] = []
         booked: dict[str, Any] = {}
         sizes_used: list[int] = []
+        # `[2026-10-12]` 마이리얼트립 목록에는 좌표가 없다(10-07 실호출 · searchStays 입력에도 좌표 칸이 없다 — stayPoi · regionId 는 내부 번호).
+        #   앞의 `DETAIL_CALLS` 곳만 상세를 읽어 좌표 · 객실 여부를 얻는다. 상세를 못 읽으면(429 등) 더 부르지 않는다 — 검색 갈래와 같은 규칙
+        details: dict[Any, dict[str, Any]] = {}
+        detail_calls, stopped = 0, False
         for size in ALTERNATE_SIZES:
             sizes_used.append(size)
             booked = self._read(task, "read.booking_search_stays", {
@@ -427,11 +476,28 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             ctx["evidence"] = self._evidence(task, source_id=f"read.booking_search_stays:{size}",
                                              claim="숙소 새 후보(booking: 마이리얼트립 · 구글 호텔)", value=booked or None,
                                              base=ctx["evidence"])
-            picks = _fresh_picks(booked, exclude, center, dates, party)
+            for stay in ((booked.get("myrealtrip") or {}).get("stays") or []):
+                if detail_calls >= DETAIL_CALLS or stopped:
+                    break
+                if stay.get("price_per_night") is None or _key(stay["name"]) in exclude or stay["gid"] in details:
+                    continue
+                detail_calls += 1
+                detail = self._read(task, "read.stay_detail", {"gid": stay["gid"], **dates, **party}, ctx["seen"])
+                if detail and detail.get("cooldown_seconds"):
+                    detail = None
+                ctx["evidence"] = self._evidence(task, source_id=f"read.stay_detail:{stay['gid']}", claim="숙소 상세(마이리얼트립 · 좌표)",
+                                                 value=detail, base=ctx["evidence"])
+                if detail is None:
+                    stopped = True
+                else:
+                    details[stay["gid"]] = detail
+            picks = _fresh_picks(booked, exclude, anchor, dates, party, reference_price, details)
             if picks or not booked:
                 break
         record = {"itinerary": "lodging_options", "item": item.title, "query": query, "shown_before": len(shown),
-                  "sizes": sizes_used, "options": [pick["name"] for pick in picks]}
+                  "sizes": sizes_used, "options": [pick["name"] for pick in picks],
+                  "anchor": anchor["kind"] if anchor else None, "reference_price": reference_price, "details_read": len(details),
+                  "near": sum(1 for pick in picks if pick["distance_km"] is not None and pick["distance_km"] <= NEAR_KM)}
         if not picks:
             if not booked:
                 return self._unknown(task, "숙소 검색 결과", ctx["evidence"])
@@ -440,9 +506,12 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                                 next_action=NextAction.RESPOND, decisions=[record],
                                 answer=f"{item.title} 대신 갈 수 있는 숙소를 더 찾지 못했어요. 일정은 그대로 두었어요.")
         options = [_lodging_option(rank, pick, item) for rank, pick in enumerate(picks, start=1)]
-        listed = " · ".join(f"{option['rank']}) {option['name']}" + (f"(1박 {_won(option['price_per_night'])})"
-                                                                     if option.get("price_per_night") is not None else "")
-                            for option in options)
+        def note(option: dict[str, Any]) -> str:
+            parts = [f"1박 {_won(option['price_per_night'])}"] if option.get("price_per_night") is not None else []
+            if option.get("distance_km") is not None and anchor:
+                parts.append(f"{anchor['kind']}에서 {option['distance_km']}km")
+            return f"({' · '.join(parts)})" if parts else ""
+        listed = " · ".join(f"{option['rank']}) {option['name']}{note(option)}" for option in options)
         answer = f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}. 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."
         detail = {**item.detail, "alternates": options, "other_options": [option["name"] for option in options],
                   "shown": [*shown, *(pick["name"] for pick in picks)], "query": query}
@@ -456,7 +525,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         change = ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                                  replacements={item.item_id: replacement},
                                  summary={"lodging_options": [o["name"] for o in options], "shown_total": len(detail["shown"]),
-                                          **{k: v for k, v in record.items() if k in ("sizes", "shown_before")}})
+                                          **{k: v for k, v in record.items() if k in ("sizes", "shown_before", "anchor", "near", "details_read")}})
         return self.settle(task, ctx, change)
 
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:
