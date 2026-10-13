@@ -314,6 +314,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         required_context=["case_state", "policy", "db_facts", "history"],
         policy_optional_capabilities=["lodging.assist", "lodging.status", "lodging.itinerary"],
         allowed_tools=["read.booking", "read.itinerary", "read.stay_search", "read.stay_detail", "read.booking_search_stays",
+                       "read.stay_lookup",                    # `[2026-10-13]` 내 숙소 위치 — 마이리얼트립이 못 줄 때(카카오 · 관광공사)
                        "read.policy", "read.booking_terms", *[name for name in ITINERARY_TOOLS if name != "read.itinerary"]],
         knowledge_scope=["travel_cancellation", "travel_access"],
         max_steps=8,                                  # 일정 1 + booking 1 + 상세 DETAIL_CALLS(2) + 여유(내 숙소 갈래 · 일정 항목 갈래의 넓혀 찾기 등)
@@ -471,29 +472,70 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                                                         "domestic": found.domestic, "size": NAME_SIZE}, seen)
         evidence = self._evidence(task, source_id="read.stay_search", claim="숙소 이름 검색 결과(마이리얼트립)", value=listing,
                                   base=evidence)
-        if listing is None:
-            return self._unknown(task, "숙소 검색 결과", evidence)
-        stays = listing["stays"]
+        # `[2026-10-13]` 마이리얼트립이 쉬는 중(429 뒤)이면 목록 대신 `cooldown_seconds` 만 온다 — 전에는 여기서 `stays` 를 읽다 멈췄다
+        resting = bool(listing and listing.get("cooldown_seconds"))
+        stays = [] if listing is None or resting else listing.get("stays") or []
         exact = [stay for stay in stays if _same_name(stay["name"], found.stay_name)]
         chosen = exact[0] if len(exact) == 1 else stays[0] if len(stays) == 1 else None
         if chosen is None:
             if not stays:
-                return self._respond(task, evidence, {**decision, "found": 0},
-                                     f"「{found.stay_name}」 이름으로 찾은 숙소가 없습니다. 숙소 이름을 예약 확인서에 적힌 대로 다시 알려 주세요.")
+                why = "resting" if resting else "failed" if listing is None else "not_found"
+                return self._my_stay_elsewhere(task, found, seen, evidence, decision, dates, why)
             names = " / ".join(stay["name"] for stay in stays)
             return self._respond(task, evidence, {**decision, "found": len(stays), "needs": ["stay_name"]},
                                  f"「{found.stay_name}」 에 해당할 수 있는 숙소가 여러 곳입니다: {names}. 어느 곳인지 이름을 그대로 알려 주세요.")
         detail = self._read(task, "read.stay_detail", {"gid": chosen["gid"], **dates, **party}, seen)
         evidence = self._evidence(task, source_id=f"read.stay_detail:{chosen['gid']}", claim="숙소 상세(마이리얼트립)",
                                   value=detail, base=evidence)
-        if detail is None or detail.get("latitude") is None or detail.get("longitude") is None:
-            return self._unknown(task, "숙소 위치", evidence)
+        if detail is None or detail.get("cooldown_seconds") or detail.get("latitude") is None or detail.get("longitude") is None:
+            why = "resting" if detail and detail.get("cooldown_seconds") else "no_location"
+            return self._my_stay_elsewhere(task, found, seen, evidence, decision, dates, why)
         stay = {key: detail.get(key) for key in ("gid", "name", "address", "latitude", "longitude", "link")}
         answer = (f"{detail['name']} — {detail.get('address') or '주소 모름'} "
                   f"(위도 {detail['latitude']}, 경도 {detail['longitude']}). "
                   f"{dates['check_in']}~{dates['check_out']} 숙박으로 확인했습니다. 숙소 페이지: {detail.get('link') or '링크 없음'}\n"
                   "위치는 마이리얼트립에 등록된 값입니다. 일정에는 아직 넣지 않았습니다.")
         return self._respond(task, evidence, {**decision, "my_stay": {**stay, **dates}}, answer)
+
+    def _my_stay_elsewhere(self, task: TeamTask, found: Interpretation, seen: set[str], evidence: list[Evidence],
+                           decision: dict[str, Any], dates: dict[str, str], why: str) -> TeamResult:
+        """`[2026-10-13]` 마이리얼트립이 못 줄 때(쉬는 중 · 실패 · 못 찾음 · 위치 없음) 내 숙소의 주소 · 좌표를 다른 곳에서 찾는다.
+
+        `read.stay_lookup` — 카카오 로컬(숙박, 서울) → 관광공사(숙박). 날짜별 가격 · 예약 링크는 없다(위치만).
+        이름 핵심(`_core`)이 같은 곳이 하나면 그곳, 결과가 하나면 그곳, 여럿이면 되묻는다. 위치를 지어내지 않는다.
+        """
+        looked = self._read(task, "read.stay_lookup", {"name": found.stay_name}, seen)
+        evidence = self._evidence(task, source_id="read.stay_lookup", claim="숙소 이름으로 위치 찾기(카카오 · 관광공사)",
+                                  value=looked, base=evidence)
+        record = {**decision, "my_stay_fallback": why}
+        if looked is None:
+            if why == "not_found":
+                return self._respond(task, evidence, {**record, "found": 0},
+                                     f"「{found.stay_name}」 이름으로 찾은 숙소가 없습니다. 숙소 이름을 예약 확인서에 적힌 대로 다시 알려 주세요.")
+            return self._unknown(task, "숙소 위치", evidence)
+        stays = [stay for stay in looked.get("stays") or []
+                 if stay.get("latitude") is not None and stay.get("longitude") is not None]
+        exact = [stay for stay in stays if _core(stay["name"]) and _core(stay["name"]) == _core(found.stay_name)]
+        pick = exact[0] if len(exact) == 1 else stays[0] if len(stays) == 1 else None
+        if pick is None:
+            if not stays:
+                return self._respond(task, evidence, {**record, "found": 0},
+                                     f"「{found.stay_name}」 이름으로 찾은 숙소가 없습니다. 숙소 이름을 예약 확인서에 적힌 대로 다시 알려 주세요.")
+            names = " / ".join(stay["name"] for stay in stays)
+            return self._respond(task, evidence, {**record, "found": len(stays), "needs": ["stay_name"]},
+                                 f"「{found.stay_name}」 에 해당할 수 있는 숙소가 여러 곳입니다: {names}. 어느 곳인지 이름을 그대로 알려 주세요.")
+        label = {"kakao": "카카오맵", "tour_api": "한국관광공사"}.get(str(looked.get("source")), "다른 지도 정보")
+        reason = {"resting": "마이리얼트립이 요청 한도로 잠시 쉬는 중이라 ",
+                  "failed": "마이리얼트립 조회에 실패해 ",
+                  "not_found": "마이리얼트립에서 찾지 못해 ",
+                  "no_location": "마이리얼트립에 위치가 없어 "}.get(why, "")
+        stay = {"name": pick["name"], "address": pick.get("address"), "latitude": pick["latitude"],
+                "longitude": pick["longitude"], "link": None, "source": looked.get("source")}
+        answer = (f"{pick['name']} — {pick.get('address') or '주소 모름'} "
+                  f"(위도 {pick['latitude']}, 경도 {pick['longitude']}). "
+                  f"{reason}{label}에 등록된 위치로 알려 드려요. 이 경로로는 날짜별 가격 · 예약 링크를 확인하지 못했어요.\n"
+                  "일정에는 아직 넣지 않았습니다.")
+        return self._respond(task, evidence, {**record, "my_stay": {**stay, **dates}}, answer)
 
     # ── 일정 숙소 항목 (`lodging.itinerary`, 2026-10-11) ─────────────
     def _change(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:

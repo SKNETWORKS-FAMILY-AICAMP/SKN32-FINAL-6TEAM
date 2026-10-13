@@ -176,6 +176,8 @@ class ReadToolbox:
             # ★`[2026-10-10]` booking 모듈 — 여러 판매처를 한 번에 비교(팀 피드백: 에이전트 → booking → 어댑터). 항공 팀 · 숙소 팀이 쓴다
             "read.booking_search_flights": self.booking_search_flights,
             "read.booking_search_stays": self.booking_search_stays,
+            # ★`[2026-10-13]` 숙소 이름 → 주소 · 좌표(카카오 로컬 → 관광공사). 숙소 팀이 마이리얼트립을 못 쓸 때 「내 숙소」 위치에만 쓴다
+            "read.stay_lookup": self.stay_lookup,
         }
 
     #: 여행 예약의 컬럼. ★`_one()` 이 zip 으로 붙이므로 SELECT 순서와 **같아야** 한다.
@@ -617,6 +619,32 @@ class ReadToolbox:
         wanted = ("adults", "children", "size", "max_price")
         return source.stay_search(keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
                                   **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def stay_lookup(self, scope: ToolContext, *, name: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """숙소 이름 → 주소 · 좌표. `[2026-10-13]` 숙소 팀의 「내 숙소」가 마이리얼트립을 못 쓸 때(쉬는 중 · 실패 · 못 찾음).
+
+        ① 카카오 로컬 — 숙박(`AD5`)으로 좁혀 서울 전역을 관련도 순으로(서울 밖은 어댑터가 뺀다). 응답은 저장하지 않는다(카카오 약관).
+        ② 관광공사 — 숙박(32)에서 제목이 정확히 같은 한 곳(애매하면 없음).
+        돌려주는 것: `{"source": "kakao"|"tour_api", "stays": [{name, address, latitude, longitude}]}`.
+        둘 다 부를 수 없었으면 `None`(모름). 카카오가 답했는데 둘 다 못 찾았으면 빈 목록.
+        """
+        if not name or not str(name).strip():
+            return None
+        answered = False
+        if self.kakao is not None:
+            found = self.kakao.search(str(name), size=5, category_group_code="AD5", anywhere=True)
+            if found is not None:
+                answered = True
+                if found:
+                    return {"source": "kakao", "stays": [{key: row.get(key) for key in ("name", "address", "latitude", "longitude")}
+                                                         for row in found]}
+        place = getattr(self.travel, "place", None) if self.travel else None
+        if place is not None and hasattr(place, "find"):
+            hit = place.find(str(name), content_type_id="32")
+            if hit:
+                return {"source": "tour_api", "stays": [{"name": hit.get("matched_title"), "address": hit.get("address"),
+                                                         "latitude": hit.get("latitude"), "longitude": hit.get("longitude")}]}
+        return {"source": None, "stays": []} if answered else None
 
     def booking_search_flights(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
                                depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:

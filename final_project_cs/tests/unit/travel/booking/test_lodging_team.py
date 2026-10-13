@@ -262,6 +262,34 @@ def test_my_stay_without_coordinates_is_unknown_not_a_made_up_place():
     assert (result.outcome, result.failure_code) == ("escalated", "unknown_숙소 위치")
 
 
+def test_my_stay_while_myrealtrip_rests_uses_kakao_and_says_where_it_came_from():
+    """`[2026-10-13]` 마이리얼트립이 쉬는 중(429 뒤)이면 카카오 · 관광공사에서 위치만 찾는다. 전에는 쉬는 표시에서 `stays` 를 읽다 멈췄다."""
+    kakao = {"source": "kakao", "stays": [
+        {"name": "해밀톤호텔", "address": "서울 용산구 이태원로 179", "latitude": 37.5346, "longitude": 126.9941},
+        {"name": "해밀톤호텔 주차장", "address": "서울 용산구 이태원로 180", "latitude": 37.5347, "longitude": 126.9942}]}
+    result, _, tools = _run(MY_STAY, {"read.stay_search": {"cooldown_seconds": 540, "source": "myrealtrip"},
+                                      "read.stay_lookup": kakao})
+    assert [name for name, _ in tools.calls] == ["read.stay_search", "read.stay_lookup"], "쉬는 중이면 상세를 부르지 않는다"
+    assert tools.calls[1][1] == {"name": "해밀톤호텔"}
+    stay = result.decisions[0]["my_stay"]
+    assert (stay["name"], stay["latitude"], stay["source"], stay["link"]) == ("해밀톤호텔", 37.5346, "kakao", None)
+    assert result.decisions[0]["my_stay_fallback"] == "resting"
+    assert "마이리얼트립이 요청 한도로 잠시 쉬는 중이라 카카오맵에 등록된 위치로 알려 드려요" in result.answer
+    assert "날짜별 가격 · 예약 링크를 확인하지 못했어요" in result.answer
+
+
+def test_my_stay_not_on_myrealtrip_is_looked_up_elsewhere_or_said_not_found():
+    tour = {"source": "tour_api", "stays": [{"name": "신라스테이 삼성", "address": "서울 강남구 테헤란로 506",
+                                             "latitude": 37.5069, "longitude": 127.0589}]}
+    found, _, _ = _run({**MY_STAY, "stay_name": "신라스테이 삼성"},
+                       {"read.stay_search": {**STAYS, "stays": []}, "read.stay_lookup": tour})
+    assert "마이리얼트립에서 찾지 못해 한국관광공사에 등록된 위치로 알려 드려요" in found.answer
+    nowhere, _, _ = _run(MY_STAY, {"read.stay_search": {**STAYS, "stays": []}})
+    assert nowhere.answer.startswith("「해밀톤호텔」 이름으로 찾은 숙소가 없습니다"), "다른 곳을 부를 수 없으면 전처럼 답한다"
+    failed, _, _ = _run(MY_STAY, {})
+    assert (failed.outcome, failed.failure_code) == ("escalated", "unknown_숙소 위치"), "어디서도 못 읽었으면 모름 — 위치를 지어내지 않는다"
+
+
 # ── 해석이 안 될 때 · 다른 갈래 ───────────────────────────────────
 @pytest.mark.parametrize("reply,code", [
     ({"task": "book_it_now"}, "interpretation_invalid"),
