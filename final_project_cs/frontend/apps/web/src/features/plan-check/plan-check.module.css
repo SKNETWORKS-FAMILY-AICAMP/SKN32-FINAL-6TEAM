@@ -823,3 +823,7 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 /* B5 — 「오늘」: 오늘 일차 칩 끝의 점 · 목록 일차 제목 옆 꼬리표(여행 날짜 안일 때만, 등록한 여행). */
 .todayDot { width: 6px; height: 6px; margin-left: 1px; border-radius: 50%; background: var(--color-now); }
 .todayTag { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--color-now-soft); color: var(--color-now); font-size: 11px; font-style: normal; font-weight: 750; }
+
+/* `[2026-10-13 사용자 지시]` A day the customer wakes up in a stay: 「○○에서 출발」 at the top of the day, in the stay's soft green (the trip screen's band). */
+.stayBand { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; padding: 8px 12px; list-style: none; border: 1px dashed var(--color-success); border-radius: 10px; background: var(--color-paper); color: var(--color-primary); font-size: 12.5px; font-weight: 600; }
+.stayBand small { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--color-muted); }

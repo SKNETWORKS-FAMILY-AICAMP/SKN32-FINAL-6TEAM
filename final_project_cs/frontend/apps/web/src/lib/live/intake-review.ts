@@ -95,6 +95,8 @@ export interface ReviewMove {
   /** `[2026-10-07]` The way the calculator chose (it stays when the customer picks another), and what became of the customer's choice after the stops around the leg changed. */
   recommended_mode?: string | null;
   mode_choice?: { mode?: string | null; state?: string | null; why?: string | null } | null;
+  /** `[2026-10-13]` A morning move 「숙소 → 그날 첫 일정」: it leaves from the stay, on the day of `to` (`day` · `date`), not right after `from`. */
+  from_stay?: boolean;
   rows: CheckLine<MoveRow>[];
 }
 

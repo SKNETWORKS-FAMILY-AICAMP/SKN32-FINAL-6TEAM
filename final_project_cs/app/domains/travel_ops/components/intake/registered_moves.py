@@ -48,9 +48,12 @@ def _moves(stops, review, place_of, *, registration_keys=False):
     result = {}
     for move in review.get("moves") or []:
         a, b = matched.get(move.get("from")), matched.get(move.get("to"))
-        if a is None or b is None or (id(a), id(b)) not in adjacent or not move.get("depart") or not move.get("arrive"):
+        # `[2026-10-13]` 아침 「숙소 → 그날 첫 일정」(`from_stay`)은 순서상 이웃이 아니다 — 그날 첫 일정 **앞**에 싣는다(키 `("before", id(b))`)
+        stay_leg = bool(move.get("from_stay"))
+        if a is None or b is None or not move.get("depart") or not move.get("arrive") or (
+                not stay_leg and (id(a), id(b)) not in adjacent):
             continue
-        date = _stamp(a["starts_at"]).date().isoformat()
+        date = _stamp((b if stay_leg else a)["starts_at"]).date().isoformat()
         depart = datetime.fromisoformat(f"{date}T{move['depart']}").replace(tzinfo=KST)
         arrive = datetime.fromisoformat(f"{date}T{move['arrive']}").replace(tzinfo=KST)
         if arrive < depart:
@@ -66,11 +69,13 @@ def _moves(stops, review, place_of, *, registration_keys=False):
         option_id = move['selected_option_id'] if context is not None else mode
         route = {"planned": option_id, "options": [{"id": option_id, "label": move.get("mode_label"),
                  "eta_min": move.get("minutes"), "uses": deepcopy(move.get("uses") or [])}]} if mode else None
-        result[id(a)] = {"kind": "mobility", "title": move.get("summary") or f"{a['title']} → {b['title']}",
-                         "place": None, "starts_at": depart.isoformat(), "ends_at": arrive.isoformat(),
-                         "detail": {"intake": deepcopy((a.get("detail") or {}).get("intake") or {}),
-                                    "route_def": route, "route_basis": move.get("basis"),
-                                    **({'departure_context': context} if context is not None else {})}}
+        result[("before", id(b)) if stay_leg else id(a)] = {
+            "kind": "mobility", "title": (f"{a['title']} → {b['title']}" if stay_leg else move.get("summary") or f"{a['title']} → {b['title']}"),
+            "place": None, "starts_at": depart.isoformat(), "ends_at": arrive.isoformat(),
+            "detail": {"intake": deepcopy((a.get("detail") or {}).get("intake") or {}),
+                       "route_def": route, "route_basis": move.get("basis"),
+                       **({"from_stay": True} if stay_leg else {}),
+                       **({'departure_context': context} if context is not None else {})}}
     return result
 
 
@@ -83,6 +88,8 @@ def with_review_moves(body, review):
                    registration_keys=bool((body.get("constraints") or {}).get("taxi_call_product")))
     entries = []
     for stop in stops:
+        if ("before", id(stop)) in moves:
+            entries.append(moves[("before", id(stop))])      # 아침 「숙소 → 그날 첫 일정」
         entries.append(stop)
         if id(stop) in moves:
             entries.append(moves[id(stop)])

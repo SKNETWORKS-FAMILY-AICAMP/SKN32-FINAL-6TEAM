@@ -71,6 +71,10 @@ def _worst(parts: list[tuple[str, str]]) -> tuple[str, str]:
     return max((r for r, _ in parts), key=lambda r: _RANK[r]), " · ".join(t for _, t in parts)
 
 
+#: `[2026-10-13]` 아침 「숙소 → 첫 일정」 이동의 출발 하한 — 계산기는 첫 일정 도착에 맞춰 가장 늦은 출발을 고른다(등록 쪽 `itinerary_changes.STAY_MORNING_FLOOR` 와 같다)
+STAY_MORNING_FROM = "06:00"
+
+
 def _dt(day: str | None, hhmm: str | None) -> datetime | None:
     if not day or not hhmm:
         return None
@@ -516,6 +520,17 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     old_moves = {m.get("sig"): m for m in (previous or {}).get("moves", []) if m.get("sig") and m.get("basis") == "timetable"}
     moves: list[dict[str, Any]] = []
     move_total = sum(1 for i in range(len(rows) - 1) if rows[i]["date"] and rows[i]["date"] == rows[i + 1]["date"])
+    # `[2026-10-13 사용자 지시]` 묵는 날 아침 「숙소 → 그날 첫 일정」 — 등록 뒤 일정 화면과 같은 구간을 확인 화면에서도 보인다(등록은 이 구간을 그대로 싣는다 — `registered_moves`)
+    morning: list[tuple[int, int]] = []
+    for i, stay in enumerate(rows):
+        if stay["kind"] != "lodging" or not stay.get("end_date") or not stay["date"]:
+            continue
+        for j, b in enumerate(rows):
+            if b["kind"] == "lodging" or not b["date"] or not (stay["date"] < b["date"] <= stay["end_date"]):
+                continue
+            if not any(r["date"] == b["date"] and r["kind"] != "lodging" for r in rows[:j]):
+                morning.append((i, j))                  # 그날 첫 일정
+    move_total += len(morning)
 
     def add_move(move: dict[str, Any], ia: dict[str, Any], ib: dict[str, Any]) -> None:
         """구간 하나가 정해졌다 — 모으고 곧바로 알린다(이동 계산이 시간의 대부분이라 화면이 이 알림으로 진행을 안다)."""
@@ -551,6 +566,30 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             leg, choice, recommended = _apply_pick(pick, leg, engine_for_mode, pa, pb, a_end, b_start, b["start"])
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
         add_move({**_move(ia, ib, leg, provisional, sig), "recommended_mode": recommended, "mode_choice": choice}, ia, ib)
+
+    for i, j in morning:
+        a, b = rows[i], rows[j]
+        ia, ib = items[i], items[j]
+        floor, b_start = _dt(b["date"], STAY_MORNING_FROM), _dt(b["date"], b["start"])
+        if a["place"] is None or b["place"] is None or b_start is None:
+            add_move({**_waiting_move(ia, ib, mode_pick.get(f"{ia['id']}~{ib['id']}")), "day": ib["day"], "date": ib["date"],
+                      "from_stay": True}, ia, ib)
+            continue
+        pa = {"key": ia["id"], "name": a["place"]["name"], "lat": float(a["place"]["latitude"]), "lon": float(a["place"]["longitude"])}
+        pb = {"key": ib["id"], "name": b["place"]["name"], "lat": float(b["place"]["latitude"]), "lon": float(b["place"]["longitude"])}
+        pick = mode_pick.get(f"{ia['id']}~{ib['id']}")
+        sig = (f"stay:{pa['name']}|{pa['lat']!r},{pa['lon']!r}>{pb['name']}|{pb['lat']!r},{pb['lon']!r}@{floor.isoformat()}>{b_start.isoformat()}"
+               f"#{ia['place_state']}{ib['place_state']}" + (f"#m={pick}" if pick else "") + taxi_pricing.signature(pricing))
+        if sig in old_moves:
+            add_move({**old_moves[sig], "from": ia["id"], "to": ib["id"], "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
+            continue
+        leg = leg_between(budgeted, pa, pb, floor, b_start)
+        choice, recommended = None, leg.mode
+        if pick:
+            leg, choice, recommended = _apply_pick(pick, leg, engine_for_mode, pa, pb, floor, b_start, b["start"])
+        provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
+        add_move({**_move(ia, ib, leg, provisional, sig), "recommended_mode": recommended, "mode_choice": choice,
+                  "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
 
     # 겹침은 보통 앞 구간이 「늦게 닿는다」로 잡혀 이동이 확인 필요를 센다. 이동으로 안 잡히는 겹침(한쪽 장소를 모르거나 같은 곳이라 이동이 없는 것)은
     # 등록 판정이 거절할 일이므로 그 일정을 확인 필요로 센다 — 안 그러면 겹친 일정이 「등록 가능」으로 보인다

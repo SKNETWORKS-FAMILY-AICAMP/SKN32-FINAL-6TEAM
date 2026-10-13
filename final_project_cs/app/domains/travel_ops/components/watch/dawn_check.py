@@ -238,10 +238,13 @@ class DawnCheck:
         ★값은 비교에만 쓰고 버린다(구글 약관). 짝 표에 없는 식당은 「모름」이다."""
         if not hasattr(self.source, "price"):
             return None
+        from app.domains.travel_ops.components.settings_hook import google_price_enabled
         from app.domains.travel_ops.ports.data_sources.google_places import prices_for
 
+        # ★`[2026-10-13]` 관리 콘솔 스위치가 먼저(없으면 가드레일) — 부를 때마다 읽어 켜고 끈 것이 다음 확인부터 먹는다
         return lambda places: prices_for(self._connect, self.store.tenant_id, self.source,
-                                         [str(p["place_id"]) for p in places])
+                                         [str(p["place_id"]) for p in places],
+                                         enabled=google_price_enabled(self.store.tenant_id))
 
     def _provider_id(self, conn, place_id) -> str | None:
         with conn.cursor() as cur:

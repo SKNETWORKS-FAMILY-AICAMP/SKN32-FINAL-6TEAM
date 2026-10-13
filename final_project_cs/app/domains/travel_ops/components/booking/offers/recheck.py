@@ -58,9 +58,18 @@ def recheck_stay(source: Any, option: dict[str, Any], *, check_in: str, check_ou
             "basis": option.get("price_basis") or "list"}
 
 
+def _shown_seller_low(option: dict[str, Any]) -> float | None:
+    """보여 줄 때 판매처 최저가 — 후보의 `sellers`(보여 준 판매처) 가운데 가장 싼 1박. ★`price_from`(「1박 ○원~」)은 구글 목록가까지 넣은 최저라
+    판매처끼리 비교할 기준이 아니다(☆2026-10-13 x600 확인 — 라인 호텔 명동 목록 173,845원 · 판매처 최저 176,766원이 「바뀜」으로 나왔다)."""
+    prices = [s.get("price_per_night") for s in option.get("sellers") or [] if isinstance(s.get("price_per_night"), (int, float))]
+    return min(prices) if prices else None
+
+
 def _recheck_google(google: Any, option: dict[str, Any], *, check_in: str, check_out: str, adults: int,
                     keyword: str | None) -> dict[str, Any]:
-    before = option.get("price_from") if option.get("price_from") is not None else option.get("price_per_night")
+    before = _shown_seller_low(option)
+    if before is None:
+        before = option.get("price_from") if option.get("price_from") is not None else option.get("price_per_night")
     token = option.get("property_token")
     if google is None or not hasattr(google, "stay_detail"):
         return {"status": "unchecked", "before": before, "now": None, "reason": "source_unavailable"}

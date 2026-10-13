@@ -120,6 +120,8 @@ export interface PlanMove {
   modeKey?: string | null;
   recommendedMode?: string | null;
   modeChoice?: { mode: string | null; state: "kept" | "dropped" | null; why: string | null } | null;
+  /** `[2026-10-13]` A morning move 「숙소 → 그날 첫 일정」 — it opens its day (`day` is the day of `toId`), it does not follow `fromId` on the check-in day. */
+  fromStay?: boolean;
   checks: CheckRow[];
   verdict: Verdict | null;
 }
@@ -170,9 +172,11 @@ const stageIndex = (stage: PlanStage) => STAGES.indexOf(stage);
 /** Items and moves of one day in the order they are lived: item, move, item … */
 export function timeline(view: Pick<PlanCheckView, "items" | "moves">, day: number): ({ type: "item"; item: PlanItem } | { type: "move"; move: PlanMove })[] {
   const out: ({ type: "item"; item: PlanItem } | { type: "move"; move: PlanMove })[] = [];
+  // `[2026-10-13]` A day of a stay opens with the move from the hotel to its first stop — before the stops, so checks, reveal and insertion points follow it in that order.
+  for (const move of view.moves.filter((entry) => entry.fromStay && entry.day === day)) out.push({ type: "move", move });
   for (const item of view.items.filter((entry) => entry.day === day)) {
     out.push({ type: "item", item });
-    const move = view.moves.find((entry) => entry.fromId === item.id);
+    const move = view.moves.find((entry) => entry.fromId === item.id && !entry.fromStay);
     if (move) out.push({ type: "move", move });
   }
   return out;

@@ -43,7 +43,7 @@ services:
     image: tripilot-arm-api:${IMAGE_TAG:?}
     restart: "on-failure:3"
     network_mode: host
-    env_file: [app.env]
+    env_file: [.env, .env.apikeys]       # x600 서버와 같은 두 파일 — 뒤가 이긴다
     command: ["uvicorn", "app.presentation.api.app:app", "--host", "127.0.0.1", "--port", "8043", "--no-server-header"]
     environment:
       ACOP_DEPLOYMENT_VERSION: ${IMAGE_TAG:?}
@@ -55,7 +55,7 @@ services:
     image: tripilot-arm-api:${IMAGE_TAG:?}
     restart: unless-stopped
     network_mode: host
-    env_file: [app.env]
+    env_file: [.env, .env.apikeys]       # x600 서버와 같은 두 파일 — 뒤가 이긴다
     command: ["/srv/deploy/worker.sh"]
     environment:
       ACOP_DEPLOYMENT_VERSION: ${IMAGE_TAG:?}

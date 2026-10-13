@@ -76,3 +76,12 @@ def test_the_seller_list_matches_the_lodging_team():
     from app.domains.travel_ops.instances.lodging.team import SELLER_NAMES as TEAM
 
     assert SELLER_NAMES == TEAM, "재확인과 보여 주기가 같은 판매처끼리 비교해야 한다"
+
+
+def test_a_google_hotel_is_compared_with_the_sellers_it_showed_not_the_list_price():
+    """☆2026-10-13 x600 — 라인 호텔 명동: 「1박 173,845원~」은 구글 목록가였고 판매처 최저는 176,766원 — 그대로인데 「바뀜」으로 나왔다."""
+    option = {"key": "google:라인호텔명동", "name": "라인 호텔 명동", "price_per_night": 173845, "price_from": 173845, "property_token": "tok",
+              "sellers": [{"name": "클룩", "price_per_night": 176766}, {"name": "트립닷컴", "price_per_night": 178579}]}
+    google = Google({"sellers": [{"seller": "Klook", "price_per_night": 176766}, {"seller": "Trip.com", "price_per_night": 178579}]})
+    got = recheck_stay(None, option, check_in="2030-11-06", check_out="2030-11-09", adults=2, google=google, keyword="명동")
+    assert (got["status"], got["before"], got["now"]) == ("same", 176766, 176766)
