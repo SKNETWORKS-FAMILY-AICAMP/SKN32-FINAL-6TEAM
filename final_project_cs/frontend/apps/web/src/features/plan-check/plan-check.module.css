@@ -130,7 +130,7 @@ button.time { cursor: pointer; }
 .entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
 .entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
 .screen[data-stage="done"] .entry:where([data-type="item"]) .card { border-color: transparent; }
-/* `[2026-10-13 사용자 결정 — 줄 간격 ④ · 카드 테두리 있음]` 접힌 카드는 테두리를 두른다(높이가 머무는 시간이라 빈칸이 테두리 안에 든다 — rail-list.tsx). 펼친 카드 · 지난 일정 칸은 위 규칙 그대로,
+/* `[2026-10-13 사용자 결정 — 카드 테두리 있음]` 접힌 카드는 테두리를 두른다(그날 카드 높이를 고르게 맞춰 빈칸이 테두리 안에 든다 — rail-list.tsx). 펼친 카드 · 지난 일정 칸은 위 규칙 그대로,
    아래의 판정 · 고른 카드 색은 이것보다 앞선다(같은 무게라 뒤에 오는 그쪽이 이긴다). */
 .screen[data-stage="done"] .entry:where([data-type="item"]:not([data-past-open])) .card:where(:not([data-open])) { border-color: var(--color-border-strong); }
 .screen[data-stage="done"] .entry[data-verdict="review"] .card { border-color: var(--color-warning-border); }
@@ -242,7 +242,7 @@ button.moveHead { cursor: pointer; }
 .cardFootNote .cardWritten { display: block; margin: 0; font-size: 12px; font-weight: 600; }
 .cardFootTools { display: flex; flex: none; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .cardFootTools .pill { font-size: 12px; font-weight: 600; }
-/* `[2026-10-13 ④ · 카드 높이 통일]` 그날 가장 긴 카드 높이로 늘린 접힌 카드(rail-list.tsx 가 data-even 을 단다)는 하단 칸(확인 필요 · 되돌리기)을 카드 바닥에 붙인다 — 늘어난 빈칸은 내용과 하단 칸 사이에 든다. */
+/* `[2026-10-13 카드 높이 통일]` 그날 가장 긴 카드 높이로 늘린 접힌 카드(rail-list.tsx 가 data-even 을 단다)는 하단 칸(확인 필요 · 되돌리기)을 카드 바닥에 붙인다 — 늘어난 빈칸은 내용과 하단 칸 사이에 든다. */
 .card[data-even] { display: flex; flex-direction: column; }
 .card[data-even] > .cardFoot { margin-top: auto; }
 .needsInline { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; }
@@ -770,7 +770,8 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 
 /* ── `[2026-10-12 사용자 결정 — 목업 2026-10-12_타임라인_지금시각_목업.html]` 일정 줄 ──
    A — 모든 일정이 시작 아래에 「~끝」을 늘 보인다(10-10 의 「고른 일정만」을 바꿈). 이동 줄은 시각 아래 「출발」, 펼치면 그 아래 「~도착」.
-   왼쪽 줄은 줄마다 그리지 않고 하루 단위 한 겹에 시각대로 그린다(rail-list.tsx): 실선 = 머무는 시간 · 점선 = 이동 시간만 · 가는 선 = 기다림 · 여유 · 늘어난 자리, 실선 끝 ⊖. 1분 = 0.8px, 60분 넘는 빈 시간은 30px 로 접고 ≈(`[2026-10-13 ④]` — 1.2px 이던 것). */
+   왼쪽 줄은 줄마다 그리지 않고 하루 단위 한 겹에 그린다(rail-list.tsx): 실선 = 머무는 시간 · 점선 = 이동 시간만 · 가는 선 = 기다림 · 여유 · 늘어난 자리, 실선 끝 ⊖.
+   `[2026-10-13 사용자 결정 — ② 일정한 간격]` 시간 비례가 아니다 — 실선은 카드 끝까지, 이동 줄은 고정 길이(time-rail.ts `RAIL_GAP`). ④(1분 = 0.8px · 긴 빈 시간 접기 ≈)를 바꿨다. */
 /* 마지막 일정의 끝 ⊖ 가 목록 아래 경계에 걸린다 — 아래 문구(출처 등)와 닿지 않게 목록 아래에 자리를 둔다(2026-10-13 사용자 지적). */
 .timeline[data-rail-list] { padding-bottom: 18px; }
 .timeline[data-rail-list] > .entry { position: relative; }
@@ -791,14 +792,11 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 .railCap::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; background: var(--color-rail-cap); }
 .railCap[data-past] { border-color: var(--color-past-dot); }
 .railCap[data-past]::after { background: var(--color-past-dot); }
-/* `[2026-10-13 ④]` 접은 긴 빈 시간의 끊김 표시(≈ — 축이 끊긴 그래프처럼). 시간은 이동 줄의 글자(「여유 …」)가 말한다. */
-.railBreak { position: absolute; display: block; left: 1px; width: 16px; height: 8px; margin-top: -4px; border-top: 2px solid var(--color-faint); border-bottom: 2px solid var(--color-faint); background: var(--color-surface); transform: skewY(-25deg); }
 
-/* B — 지금 표시(등록한 여행만): 줄 왼쪽 꼬리표 「지금 HH:MM」 + 숨 쉬는 점 + 그날 첫 점부터 채워지는 줄, 지나온 원은 채운다. 자리는 transform 으로만 옮긴다(목록을 다시 재지 않는다). */
+/* B — 지금 표시(등록한 여행만): 숨 쉬는 점 + 그날 첫 점부터 채워지는 줄, 지나온 원은 채운다(`[2026-10-13 사용자 결정]` 「지금 HH:MM」 꼬리표는 없앴다 — 점만 흐른다). 자리는 transform 으로만 옮긴다(목록을 다시 재지 않는다). */
 .nowMark { position: absolute; z-index: 4; left: 0; right: 0; top: 0; height: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; transition: transform .45s cubic-bezier(.3, .7, .3, 1); will-change: transform; }
 .nowDot { position: absolute; left: 54px; top: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--color-now); box-shadow: 0 0 0 2.5px var(--color-surface); animation: nowPulse 1.8s ease-out infinite; }
 @keyframes nowPulse { 0% { box-shadow: 0 0 0 2.5px var(--color-surface), 0 0 0 2.5px color-mix(in srgb, var(--color-now) 45%, transparent); } 100% { box-shadow: 0 0 0 2.5px var(--color-surface), 0 0 0 11px transparent; } }
-.nowLabel { position: absolute; top: -11px; right: calc(100% - 52px); display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 11px; background: var(--color-now); color: var(--color-on-primary); font-size: 10.5px; font-weight: 800; line-height: 1; letter-spacing: -.2px; white-space: nowrap; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--color-surface), 0 3px 8px color-mix(in srgb, var(--color-now) 35%, transparent); }
 .nowFill { position: absolute; z-index: 2; left: 59px; width: 4px; margin: 0; padding: 0; list-style: none; border-radius: 2px; background: var(--color-now); pointer-events: none; transition: height .45s cubic-bezier(.3, .7, .3, 1); }
 @media (prefers-reduced-motion: reduce) { .nowMark, .nowFill { transition: none; } .nowDot { animation: none; } }
 .entry[data-passed] .rail .dot { z-index: 3; border-color: var(--color-now); background: var(--color-now); }

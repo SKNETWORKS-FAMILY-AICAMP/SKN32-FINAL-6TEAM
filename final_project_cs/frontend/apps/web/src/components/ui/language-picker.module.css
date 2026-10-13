@@ -12,3 +12,9 @@
 .option:first-child { margin-top: 6px; }
 .option:last-child { margin-bottom: 12px; }
 .option[aria-pressed="true"] { border-color: var(--color-selected); background: color-mix(in srgb, var(--color-selected-soft) 60%, var(--color-surface)); color: var(--color-selected); font-weight: 650; }
+/* `[2026-10-13 사용자 결정]` The globe beside the menu button (intro and start screen): the menu button's chip, its list drops below it. */
+.globe { position: relative; }
+.globeButton { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--color-border); border-radius: 11px; background: color-mix(in srgb, var(--color-surface) 85%, transparent); color: var(--color-primary); }
+.globeButton:hover { border-color: var(--color-primary); }
+.globeList { position: absolute; top: calc(100% + 6px); right: 0; z-index: 1; min-width: 148px; display: grid; gap: 6px; padding: 8px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); box-shadow: 0 12px 30px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.globeList .option:first-child, .globeList .option:last-child { margin: 0; }

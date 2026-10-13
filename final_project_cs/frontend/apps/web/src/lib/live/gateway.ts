@@ -9,6 +9,8 @@ interface ServerItem {
   item_id: string;
   seq: number;
   kind: string;
+  /** The server's name for `kind` (식사 · 활동 · 숙소 · 항공). */
+  kind_label?: string | null;
   title: string;
   place: string | null;
   starts_at: string;
@@ -34,7 +36,7 @@ interface ServerItem {
 /** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
 interface ServerPlaceInfo {
   address?: string | null; phone?: string | null; category?: string | null;
-  hours?: { day?: string; open?: string; close?: string; closed?: boolean; last_order?: string | null; last_entry?: string | null }[] | null;
+  hours?: { day?: string; weekday?: number; open?: string; close?: string; closed?: boolean; last_order?: string | null; last_entry?: string | null }[] | null;
   /** Opening-hours text as the source wrote it (places outside the dining ledger). */
   hours_text?: string[] | string | null;
   /** Conditions the server could not turn into a weekly table, in the source's words. */
@@ -83,7 +85,7 @@ function stop(item: ServerItem, t: Translate): TripStop {
   return {
     id: item.item_id, date: start.date, time: start.time, endTime: item.ends_at ? seoul(item.ends_at).time : undefined,
     // `[2026-10-13]` A stay (kind lodging) runs from its check-in day to its check-out day — the screen draws it on every day between.
-    ...(item.kind ? { kind: item.kind } : {}), ...(item.ends_at ? { endDate: seoul(item.ends_at).date } : {}),
+    ...(item.ends_at ? { endDate: seoul(item.ends_at).date } : {}),      // `kind` 는 아래 한 곳에서 싣는다
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
@@ -93,6 +95,8 @@ function stop(item: ServerItem, t: Translate): TripStop {
     mapUrl: mapLink(item.map_url),
     ...(item.paused === true ? { paused: true } : {}),
     ...(text(item.place_ref) ? { placeRef: text(item.place_ref) } : {}),
+    ...(text(item.kind) ? { kind: text(item.kind) } : {}),
+    ...(text(item.kind_label) ? { kindLabel: text(item.kind_label) } : {}),
   };
 }
 
@@ -131,20 +135,22 @@ const text = (value: unknown): string | undefined => (typeof value === "string" 
 /** The server's place facts, keeping only what it actually sent — an empty field is left out, not shown as "unknown". */
 export function placeInfo(raw: ServerPlaceInfo | null | undefined, t: Translate = translator("ko")): TripStop["placeInfo"] {
   if (!raw || typeof raw !== "object") return null;
-  const hours = Array.isArray(raw.hours)
-    ? raw.hours.map((rule) => [text(rule?.day),
+  const rules = Array.isArray(raw.hours)
+    ? raw.hours.map((rule) => ({ weekday: typeof rule?.weekday === "number" && Number.isInteger(rule.weekday) ? rule.weekday : null, line: [text(rule?.day),
       rule?.closed === true ? t("휴무", "Closed") : text(rule?.open) && text(rule?.close) ? `${rule.open}–${rule.close}` : undefined,
       rule?.closed !== true && text(rule?.last_order) ? t(`(주문 마감 ${rule.last_order})`, `(last order ${rule.last_order})`) : undefined,
       rule?.closed !== true && text(rule?.last_entry) ? t(`(입장 마감 ${rule.last_entry})`, `(last entry ${rule.last_entry})`) : undefined,
-    ].filter(Boolean).join(" ")).filter(Boolean)
+    ].filter(Boolean).join(" ") })).filter((rule) => rule.line)
     : [];
+  const hours = rules.map((rule) => rule.line);
+  const dayHours = rules.flatMap((rule) => rule.weekday === null ? [] : [{ weekday: rule.weekday, line: rule.line }]);
   const lines = (value: unknown): string[] =>
     (Array.isArray(value) ? value : [value]).map(text).filter((line): line is string => !!line);
   // ★With a weekly table the source text only adds its conditions; without one, the source text is the hours.
   const hoursNotes = hours.length ? lines(raw.hours_conditions) : [...lines(raw.hours_text), ...lines(raw.hours_conditions)];
   const level = text(raw.michelin?.level);
   const info = {
-    address: text(raw.address), phone: text(raw.phone), category: text(raw.category), hours, hoursNotes: [...new Set(hoursNotes)],
+    address: text(raw.address), phone: text(raw.phone), category: text(raw.category), hours, dayHours, hoursNotes: [...new Set(hoursNotes)],
     tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === "string" && !!tag) : [],
     michelin: level ? { level, year: typeof raw.michelin?.year === "number" ? raw.michelin.year : undefined } : null,
     sourceNote: text(raw.source_note),
@@ -284,7 +290,7 @@ async function read(tripId: string, language: Language): Promise<Trip> {
   // ★`[2026-10-04]` A trip has an owner: a browser with no session (a link someone kept, or a guest session that ended) is not made a new guest just to be
   //   told "not yours". It is told so at once, with the way back — a login brings an account's trips back; a guest's trips are gone.
   if (!await hasSession(language)) {
-    throw new LiveError("not_found", t("이 여행을 찾지 못했어요. 창을 닫았거나 시간이 지나 게스트 여행이 사라졌을 수 있어요. 계정에 보관한 여행이라면 마이페이지에서 로그인하면 다시 열려요.", "We could not find this trip. A guest trip cannot be continued after the window is closed, and is deleted after a while. If it is kept with an account, sign in on My page to open it again."));
+    throw new LiveError("not_found", t("이 여행을 찾지 못했어요. 창을 닫았거나 시간이 지나 게스트 여행이 사라졌을 수 있어요. 계정에 보관한 여행이라면 메뉴의 「로그인 · 가입」으로 로그인하면 다시 열려요.", "We could not find this trip. A guest trip cannot be continued after the window is closed, and is deleted after a while. If it is kept with an account, sign in with “Sign in or sign up” in the menu to open it again."));
   }
   const server = await api<ServerTrip>(`/v1/web/trips/${encodeURIComponent(tripId)}`, language);
   // ★이동 항목(kind mobility — 출발 시각 = 다음 일정 시작 − 이동 − 여유)은 일정 목록에 섞지 않는다(☆2026-09-28 「A → B」가 일정처럼 끼어 보였다).

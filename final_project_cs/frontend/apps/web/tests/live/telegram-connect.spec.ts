@@ -8,10 +8,10 @@ import { agree, mockServer, start } from "./helpers";
  * 계약: `wiki/records/plans/2026-10-05_텔레그램_연결_백엔드_요청.md`.
  */
 const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-def_123456789012345";
-const GUEST = "게스트는 일정 알림을 받지 않아요. 「로그인 · 계정」에서 로그인하면 알림을 받을 수 있어요.";   // `[2026-10-13]` 소셜 계정은 이제 다른 화면
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
+  await mockServer(request).scenario({ sessionKind: "member" });       // `[2026-10-13]` 「알림 받는 곳」은 회원만 쓴다(게스트는 잠긴 안내) - 이 시험들은 회원이다
   await agree(page, { alert_channel: true });          // 알림 채널을 연결하려면 선택 동의(`alert_channel`)가 먼저다 - 이 시험들은 이미 동의한 고객이다
   await start(page);
 });
@@ -265,16 +265,18 @@ test("옛 서버라서 텔레그램을 모르면 디스코드 줄에는 꼬리�
   expect(await mockServer(request).received("PUT", "/v1/web/profile")).toHaveLength(1);
 });
 
-test("게스트에게는 줄 맨 아래에 일정 알림을 받지 않는다는 문장이 있고, 회원에게는 없다", async ({ page, request }) => {
+test("게스트에게는 알림 화면이 잠겨 연결 단추 없이 「로그인 · 가입」만 있고, 회원에게는 연결 단추가 있다", async ({ page, request }) => {
+  // `[2026-10-13 사용자 결정]` 게스트에게는 알림을 보내지 않는다 - 전에는 텔레그램 줄 맨 아래에 그렇게 적고 단추는 보였다.
   const server = mockServer(request);
-  await server.scenario({ telegram: "on" });                                                    // 기본 세션 = 게스트
+  await server.scenario({ telegram: "on", sessionKind: "guest" });
   await page.goto("/mypage/alerts");
-  await expect(connectButton(page)).toBeVisible();
-  await expect(telegram(page).getByText(GUEST)).toBeVisible();
-  await expect(telegram(page).locator("dd > span").last()).toHaveText(GUEST);                   // 맨 아래
+  await expect(page.getByText("게스트는 일정 알림을 받지 않아요. 로그인하면 디스코드나 텔레그램으로 받을 수 있어요.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "로그인 · 가입", exact: true })).toHaveAttribute("href", "/mypage/account?returnTo=%2Fmypage%2Falerts");
+  await expect(connectButton(page)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "디스코드로 연결" })).toHaveCount(0);
 
   await server.scenario({ sessionKind: "member" });
   await page.reload();
   await expect(connectButton(page)).toBeVisible();
-  await expect(telegram(page).getByText("게스트는 일정 알림을 받지 않아요")).toHaveCount(0);
+  await expect(page.getByText("게스트는 일정 알림을 받지 않아요")).toHaveCount(0);
 });

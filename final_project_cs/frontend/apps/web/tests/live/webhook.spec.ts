@@ -9,6 +9,7 @@ const TOKEN = WEBHOOK.split("/").pop() ?? "";
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
+  await mockServer(request).scenario({ sessionKind: "member" });       // `[2026-10-13]` 「알림 받는 곳」은 회원만 쓴다(게스트는 잠긴 안내) - 이 시험들은 회원이다
   await agree(page, { alert_channel: true });          // 알림 채널을 연결하려면 선택 동의(`alert_channel`)가 먼저다 - 이 시험들은 이미 동의한 고객이다
   await start(page);
 });

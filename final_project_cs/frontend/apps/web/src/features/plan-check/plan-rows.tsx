@@ -1,7 +1,7 @@
 "use client";
 
 import { BedDouble, Bike, Bus, Car, Check, ChevronsUpDown, Footprints, Lock, LockOpen, Minus, Pencil, Plus, Sparkles, Trash2, TrainFront, Undo2, X } from "lucide-react";
-import { Fragment, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { Fragment, type MouseEvent, type ReactNode } from "react";
 import type { MoveOptionMode } from "@/lib/live/move-options";
 import { ro } from "@/lib/josa";
 import { useT } from "@/lib/settings";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { freePx, RAIL_FOLD_PX, railSpans, railY, type RailRow } from "./time-rail";
+import { railSpans, railY, type RailRow } from "./time-rail";
 
 const stay = (start: number | null, end: number | null): RailRow => ({ kind: "stay", start, end });
 const move = (depart: number | null, arrive: number | null): RailRow => ({ kind: "move", depart, arrive });
@@ -53,15 +53,5 @@ describe("railY — where a minute stands on a drawn day", () => {
   it("is null past the last pair", () => {
     expect(railY(points, 750)).toBeNull();
     expect(railY([], 600)).toBeNull();
-  });
-});
-
-describe("freePx — free time on the line (2026-10-13 ④)", () => {
-  it("is to scale up to an hour, then folded short", () => {
-    expect(freePx(30)).toBeCloseTo(24);
-    expect(freePx(60)).toBeCloseTo(48);
-    expect(freePx(61)).toBe(RAIL_FOLD_PX);
-    expect(freePx(180)).toBe(RAIL_FOLD_PX);
-    expect(freePx(-5)).toBe(0);
   });
 });

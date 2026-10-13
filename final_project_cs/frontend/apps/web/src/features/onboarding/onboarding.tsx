@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { LanguageButton } from "@/components/ui/language-picker";
 import { requiredAgreed, type ConsentCode } from "@/features/consent/consent-model";
 import { saveConsents } from "@/features/consent/consent-sync";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
@@ -181,7 +182,7 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
     <div className={styles.cardContent} id={`content-${id}`} inert={state.open !== id} aria-hidden={state.open !== id}><div className={styles.contentInner}><div className={styles.cardPadding}><div className={styles.divider} />{content}</div></div></div>
   </section>;
 
-  return <DeviceFrame headerInert={termsOpen}>
+  return <DeviceFrame headerInert={termsOpen} headerExtra={<LanguageButton />}>
     <div className={styles.setup} data-terms={termsOpen} data-quiet-open={quietOpen || undefined}>
       <Scene stage={sceneStage} step={state.step - INTRO_STEP} totalSteps={questions.length + 1} complete={state.complete} pulse={pulse} sizes="(max-width: 720px) 100vw, 402px" />
       <div className={styles.scroller} data-locked={expanded} inert={termsOpen}>
@@ -193,7 +194,7 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
           </section>
           <div className={styles.stack}>
             {card(0, false,
-              cardHead(0, t("디스코드 알림", "Discord alerts"), state.webhook.trim() ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : t("여행 알림을 받을 디스코드 채널.", "The Discord channel for your trip alerts."), false, false,
+              cardHead(0, t("디스코드 알림", "Discord alerts"), state.webhook.trim() ? t("입력했어요 · 설정에서 바꿀 수 있어요", "Entered · you can change it in Settings") : t("여행 알림을 받을 디스코드 채널.", "The Discord channel for your trip alerts."), false, false,
                 <span className={styles.optional}>{t("선택", "Optional")}</span>),
               <ContactBody t={t} webhook={state.webhook} webhookError={webhookError} webhookInput={webhookInput}
                 onWebhook={editWebhook} onContinue={() => openCard(1)} />)}

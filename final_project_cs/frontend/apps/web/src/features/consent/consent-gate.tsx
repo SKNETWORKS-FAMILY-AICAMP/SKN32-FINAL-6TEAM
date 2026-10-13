@@ -84,7 +84,7 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   const showPage = open || (ready && result !== "outdated" && (agreed || (checking && admitted)));
   const showError = result === "failed" || result === "outdated";
   const step = progress?.step ?? 0;
-  const title = pathname.startsWith(routes.myPage) ? t("마이페이지", "My page")
+  const title = pathname.startsWith(routes.myPage) ? t("설정", "Settings")
     : pathname === routes.newTrip ? t("새 여행", "New trip") : t("나의 여행", "My trips");
   return <>
     {/* ★`[2026-10-12]` 동의 사본이 없으면 확인하는 동안 열린 약관을 먼저 보인다. 확인 뒤 `/start?terms=required` 로 가며 온보딩이 다시 그려질 때

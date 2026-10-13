@@ -21,7 +21,6 @@ import { useDayGestures } from "@/features/plan-check/use-day-gestures";
 import { useTripGuardian } from "@/features/guardian/trip-guardian";
 import pc from "@/features/plan-check/plan-check.module.css";
 import { RailList, type RailNow } from "@/features/plan-check/rail-list";
-import { formatHm } from "@/features/plan-check/time-plan";
 import { LiveError } from "@/lib/live/client";
 import { getRouteShapes } from "@/lib/live/route-shapes";
 import type { Language, Translate } from "@/lib/i18n";
@@ -32,7 +31,7 @@ import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
 import { LegRow, legSummary, PastLegRow, PastStopRow, StayRow, StopRow } from "./trip-rows";
-import { currentEntry, dayTimeline, entryTimes, followNow, seoulKey, tripDays, type TripLeg } from "./trip-timeline";
+import { dayTimeline, entryTimes, seoulKey, tripDays, type TripLeg } from "./trip-timeline";
 import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
@@ -105,12 +104,12 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   const shapes = routeDetail.routes?.shapes ?? [];
 
   const days = tripDays(trip);
-  // `[2026-10-12 사용자 결정 — B]` Now (the device's clock in Seoul). `shapeNow` is the now the list is drawn by (past rows, the card that opens by itself): it catches up with `now`
+  // `[2026-10-12 사용자 결정 — B]` Now (the device's clock in Seoul). `shapeNow` is the now the list is drawn by (past rows): it catches up with `now`
   // once the list has not been touched for a moment, so the list does not change under the finger. The 「지금」 mark follows `now` itself.
   const now = useSeoulNow();
   const [shapeNow, setShapeNow] = useState(now);
   const today = days.includes(now.date) ? now.date : null;
-  // On entering: today's day while the trip is on (else the first day), with what is going on now opened.
+  // On entering: today's day while the trip is on (else the first day).
   const [day, setDay] = useState(() => days.includes(now.date) ? now.date : days[0] ?? "");
   const [all, setAll] = useState(false);
   const listZoom = useListZoom();
@@ -118,10 +117,9 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   const dayAt = days.indexOf(mapDay);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
-  // One thing open in the list at a time: a stop's card or a leg. `autoOpen`: the screen opened it (on entering, or as time passed) — one the customer opened stays as they left it.
-  const [openId, setOpenId] = useState<string | null>(() => currentEntry(trip, now));
-  const autoOpen = useRef(openId !== null);
-  const chooseOpen = (next: string | null | ((current: string | null) => string | null)) => { autoOpen.current = false; setOpenId(next); };
+  // One thing open in the list at a time: a stop's card or a leg. `[2026-10-13 사용자 결정]` Only the customer opens and closes them — nothing opens on entering or as time passes
+  // (it used to open what was going on now and follow it).
+  const [openId, setOpenId] = useState<string | null>(null);
   const [pane, setPane] = useState<"plan" | "chat">("plan");
   const [instant, setInstant] = useState(false);
   const [barOpen, setBarOpen] = useState(false);
@@ -320,8 +318,6 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   }
   const catchUp = useEffectEvent(() => {
     held.current = topRow();
-    const follow = followNow(trip, shapeNow, now, openId, autoOpen.current);
-    if (follow) { autoOpen.current = follow.auto; setOpenId(follow.open); }
     setShapeNow(now);
   });
   useEffect(() => {
@@ -342,17 +338,15 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
     const row = Array.from(body.querySelectorAll<HTMLElement>(`[data-entry-id="${CSS.escape(before.id)}"]`)).find((entry) => !entry.closest("[inert]"));
     if (row) body.scrollTop += row.getBoundingClientRect().top - before.top;
   }, [shapeNow]);
-  // On entering: the card (or way) going on now just under the day chips; with nothing open, today's 「지금」 mark 40 % down the list. Only here — time passing never scrolls the list.
+  // On entering: today's 「지금」 mark 40 % down the list. Only here — time passing never scrolls the list.
   const entered = useRef(false);
   useLayoutEffect(() => {
     const body = bodyBox.current;
     if (entered.current || !body) return;
     entered.current = true;
     const top = (element: Element) => element.getBoundingClientRect().top - body.getBoundingClientRect().top;
-    const open = openId ? Array.from(body.querySelectorAll(`[data-entry-id="${CSS.escape(openId)}"]`)).find((entry) => !entry.closest("[inert]")) : null;
     const mark = Array.from(body.querySelectorAll<HTMLElement>("[data-now-mark]")).find((entry) => !entry.closest("[inert]") && entry.style.display !== "none");
-    if (open) body.scrollTop += top(open) - UNDER_CHIPS;
-    else if (mark) body.scrollTop += top(mark) - body.clientHeight * 0.4;
+    if (mark) body.scrollTop += top(mark) - body.clientHeight * 0.4;
   });
 
   // ── Picks on the map and in the list ──
@@ -363,11 +357,11 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   function pick(id: string, from: "map" | "list") {
     const stop = trip.stops.find((entry) => entry.id === id);
     if (!stop) return;
-    if (from === "map" && selectedId === id) { setSelectedId(null); chooseOpen((current) => current === id ? null : current); return; }
+    if (from === "map" && selectedId === id) { setSelectedId(null); setOpenId((current) => current === id ? null : current); return; }
     setSelectedLine(null);
     setSelectedId(id);
     if (stop.date !== mapDay) showDay(stop.date);
-    chooseOpen(id);
+    setOpenId(id);
     if (from === "list") lowerSheet();
     else if (sheet === "peek") setSheet("half");
     goPane("plan");
@@ -377,10 +371,10 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   function pickLine(lineId: string) {
     const leg = legsOf(mapDay).find((entry) => entry.shape?.itemId === lineId);
     if (!leg) return;
-    if (selectedLine === lineId) { setSelectedLine(null); chooseOpen((current) => current === leg.id ? null : current); hideToast(); return; }
+    if (selectedLine === lineId) { setSelectedLine(null); setOpenId((current) => current === leg.id ? null : current); hideToast(); return; }
     setSelectedLine(lineId);
     setSelectedId(null);
-    chooseOpen(leg.id);
+    setOpenId(leg.id);
     if (sheet === "peek") setSheet("half");
     goPane("plan");
     bringUp(leg.id);
@@ -445,7 +439,7 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
     setDetailId(null);
     if (!id) return;
     setSelectedId(id);
-    chooseOpen(id);
+    setOpenId(id);
     bringUp(id);
     requestAnimationFrame(() => document.getElementById(`stop-button-${id}`)?.focus({ preventScroll: true }));
   }
@@ -485,12 +479,10 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
 
   const drawn = visibleShapes(shapes, mapStops);
   const unlocated = mapStops.filter((stop) => !hasValidCoordinates(stop.coordinates));
-  /** `[2026-10-12 사용자 결정 — B]` 「지금」 on a day: the mark at now on today, the line filled to the end on a day that is over, nothing on a day to come. */
-  const railNow = (date: string): RailNow | null => date < now.date ? { kind: "over" }
-    : date === now.date ? { kind: "today", minute: now.minute, label: t(`지금 ${formatHm(now.minute)}`, `Now ${formatHm(now.minute)}`) } : null;
+  /** `[2026-10-12 사용자 결정 — B]` 「지금」 on a day: the mark at now on today (`[2026-10-13]` the dot alone, no 「지금 HH:MM」), the line filled to the end on a day that is over, nothing on a day to come. */
+  const railNow = (date: string): RailNow | null => date < now.date ? { kind: "over" } : date === now.date ? { kind: "today", minute: now.minute } : null;
   const dayList = (date: string) => {
     const index = days.indexOf(date);
-    const stops = trip.stops.filter((stop) => stop.date === date);
     const entries = dayTimeline(trip, date, shapes);
     // The entries whose end has passed come first in a day: they are drawn small and grey (a stop opens as its own card when pressed).
     const times = entryTimes(entries, date, shapeNow);
@@ -499,22 +491,22 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
     return <section key={date} aria-labelledby={`trip-day-${date}`}>
       <h3 id={`trip-day-${date}`} className={pc.day}><button type="button" className={pc.dayButton} aria-pressed={mapDay === date} onClick={() => showDay(date)}>{dayName(index, t)}<small>{dayLabel(date, language)}</small></button>
         {date === today && <em className={pc.todayTag}>{t("오늘", "Today")}</em>}</h3>
-      <RailList className={pc.timeline} now={railNow(date)}>{entries.map((entry, at) => {
+      <RailList className={`${pc.timeline} ${styles.tripTimeline}`} now={railNow(date)}>{entries.map((entry, at) => {
         const past = at < pastCount;
         // `[2026-10-13 숙소 B안]` A stay after its check-in day (the 「…에서 출발」 band · the check-out row) — not on the time line's scale; pressing it shows the stay.
         if (entry.type === "stay") return <StayRow key={`${entry.stay.stop.id}:${entry.stay.phase}`} stay={entry.stay} onShow={() => pick(entry.stay.stop.id, "list")} />;
         if (entry.type === "stop") {
-          const toggle = () => { setSelectedId(entry.stop.id); setSelectedLine(null); chooseOpen((current) => current === entry.stop.id ? null : entry.stop.id); };
+          const toggle = () => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); };
           return past && openId !== entry.stop.id
             ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
-            : <StopRow key={entry.stop.id} stop={entry.stop} next={stops[stops.indexOf(entry.stop) + 1]} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
+            : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
                 past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)}
                 onAsk={() => { setSelectedId(entry.stop.id); chat.askAbout(entry.stop); }} askBusy={chat.message.isPending} />;
         }
         return past
           ? <PastLegRow key={entry.leg.id} id={entry.leg.id} />
           : <LegRow key={entry.leg.id} leg={entry.leg} open={openId === entry.leg.id}
-              onToggle={() => { chooseOpen((current) => current === entry.leg.id ? null : entry.leg.id); setSelectedLine((current) => entry.leg.shape && current !== entry.leg.shape.itemId ? entry.leg.shape.itemId : null); setSelectedId(null); }} />;
+              onToggle={() => { setOpenId((current) => current === entry.leg.id ? null : entry.leg.id); setSelectedLine((current) => entry.leg.shape && current !== entry.leg.shape.itemId ? entry.leg.shape.itemId : null); setSelectedId(null); }} />;
       })}</RailList>
     </section>;
   };

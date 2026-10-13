@@ -136,46 +136,10 @@ export function entryTimes(entries: readonly TimelineEntry[], date: string, now:
   });
 }
 
-/** The entry to keep open at `now`: the stop going on, else the way being waited for, travelled or arrived from — only when the server keeps that way (a way with no move says nothing more). */
-export function currentEntry(trip: Pick<Trip, "stops" | "moves" | "legs">, now: SeoulNow): string | null {
-  const entries = dayTimeline(trip, now.date);
-  const times = entryTimes(entries, now.date, now);
-  const index = times.findIndex((time) => time.state === "now");
-  if (index < 0) return null;
-  const entry = entries[index];
-  return entry.type === "stop" ? entry.stop.id : entry.type === "leg" && entry.leg.move ? entry.leg.id : null;
-}
-
-/** When an entry (a stop, or a way by its id) is over. */
-function entryEnd(trip: Pick<Trip, "stops" | "moves" | "legs">, id: string): SeoulNow | null {
-  for (const date of tripDays(trip)) {
-    const entries = dayTimeline(trip, date);
-    const index = entries.findIndex((entry) => (entry.type === "stop" ? entry.stop.id : entry.type === "leg" ? entry.leg.id : null) === id);
-    if (index >= 0) return { date, minute: entryTimes(entries, date, { date, minute: 0 })[index].to };
-  }
-  return null;
-}
-
-/**
- * `[2026-10-12 사용자 지시]` While the screen stays open and time passes, the open card follows now: a stop opens when it starts (the one before closes), the way after it opens when
- * the stop ends (waiting, travelling, the free time — the next stop opens only when it starts), and when the day's last stop ends everything folds. Left alone: a card the customer
- * opened themselves (until it is over). Returns the new open entry, or `undefined` when nothing changes.
+/*
+ * `[2026-10-13 사용자 결정]` The screen no longer opens what is going on now on entering, nor follows now as time passes (`currentEntry` · `followNow`, 2026-10-12 — removed): only the
+ * customer opens and closes a card.
  */
-export function followNow(trip: Pick<Trip, "stops" | "moves" | "legs">, before: SeoulNow, after: SeoulNow, open: string | null, auto: boolean): { open: string | null; auto: boolean } | undefined {
-  const from = seoulKey(before), to = seoulKey(after);
-  if (!(to > from)) return undefined;
-  const passes = (at: SeoulNow | null) => at !== null && from < seoulKey(at) && seoulKey(at) <= to;
-  const was = currentEntry(trip, before), next = currentEntry(trip, after);
-  const openEnded = open !== null && passes(entryEnd(trip, open));
-  const dayOver = tripDays(trip).some((date) => {
-    const entries = dayTimeline(trip, date);
-    return entries.length > 0 && passes({ date, minute: entryTimes(entries, date, { date, minute: 0 }).at(-1)!.to });
-  });
-  if (dayOver && next === null) return open === null ? undefined : { open: null, auto: false };
-  if (next === null || (was === next && !openEnded)) return undefined;
-  if (open !== null && !auto && open !== was && !openEnded) return undefined;
-  return open === next ? undefined : { open: next, auto: true };
-}
 
 /** The leg's distance as people say it (「850m」 · 「2.1km」); null when the server gave none. */
 export function distanceText(meters: number | null | undefined): string | null {

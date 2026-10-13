@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RouteShape } from "@/lib/live/route-shapes";
 import type { Trip, TripStop } from "./model";
-import { between, currentEntry, dayTimeline, distanceText, entryTimes, followNow, tripDays } from "./trip-timeline";
+import { between, dayTimeline, distanceText, entryTimes, tripDays } from "./trip-timeline";
 
 const stop = (id: string, date: string, time: string, endTime?: string): TripStop => ({ id, date, time, endTime, title: id, booking: "unknown", notes: "" });
 const shape = (itemId: string, from: string, to: string): RouteShape => ({ itemId, fromItemId: from, toItemId: to, from, to, mode: "subway", source: "stations", grade: "추정", distanceM: 2100, note: null, points: [], rides: [] });
@@ -49,8 +49,6 @@ describe("trip timeline", () => {
     expect(times[3]).toMatchObject({ from: 11 * 60, to: 11 * 60 });
     const first = entryTimes(dayTimeline(stayTrip, "2026-11-06"), "2026-11-06", { date: "2026-11-06", minute: 16 * 60 });
     expect(first[2]).toMatchObject({ state: "now", from: 15 * 60, to: 18 * 60 });
-    expect(currentEntry(stayTrip, { date: "2026-11-08", minute: 9 * 60 })).toBeNull();
-    expect(currentEntry(stayTrip, { date: "2026-11-09", minute: 14 * 60 })).toBe("palace");
   });
 
   it("lists the trip's days in order", () => {
@@ -99,23 +97,4 @@ describe("now on the trip (2026-10-12 사용자 결정)", () => {
     expect(states("2026-10-14", at("2026-10-14", "23:59"))).toEqual(["past", "past", "past", "past", "now"]);
   });
 
-  it("keeps open the stop going on, else the way the server keeps — not a way it knows nothing of", () => {
-    expect(currentEntry(trip, at("2026-10-14", "10:20"))).toBe("a");
-    expect(currentEntry(trip, at("2026-10-14", "12:00"))).toBe("m1");     // arrived, free time before b
-    expect(currentEntry(trip, at("2026-10-14", "14:00"))).toBeNull();     // b>c has no move
-    expect(currentEntry(trip, at("2026-10-14", "09:00"))).toBeNull();
-  });
-
-  it("follows now: the way opens when the stop ends, the next stop when it starts", () => {
-    expect(followNow(trip, at("2026-10-14", "11:29"), at("2026-10-14", "11:30"), "a", true)).toEqual({ open: "m1", auto: true });
-    expect(followNow(trip, at("2026-10-14", "12:00"), at("2026-10-14", "12:01"), "m1", true)).toBeUndefined();
-    expect(followNow(trip, at("2026-10-14", "12:29"), at("2026-10-14", "12:30"), "m1", true)).toEqual({ open: "b", auto: true });
-  });
-
-  it("leaves a card the customer opened until it is over; folds everything when the day's last stop ends", () => {
-    expect(followNow(trip, at("2026-10-14", "11:29"), at("2026-10-14", "11:30"), "c", false)).toBeUndefined();
-    expect(followNow(trip, at("2026-10-14", "13:39"), at("2026-10-14", "13:40"), "b", false)).toBeUndefined();   // b>c has no move: nothing to open, b stays
-    const short = { ...trip, stops: trip.stops.map((entry) => entry.id === "c" ? { ...entry, endTime: "16:00" } : entry) };
-    expect(followNow(short, at("2026-10-14", "15:59"), at("2026-10-14", "16:00"), "c", true)).toEqual({ open: null, auto: false });
-  });
 });

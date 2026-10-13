@@ -63,7 +63,7 @@ test("공개 공지와 점검 메시지는 화면에 보이고 고객 인증 정
   // `[2026-10-12]` 문의함(옛 「문의하기」) left the my-page card for the menu.
   await expect(page.getByRole("link", { name: "문의하기 · 내 문의와 답변", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: "문의함", exact: true }).click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /^문의함/ }).click();          // `[2026-10-13]` 줄 아래 보조 문구가 붙었다
   await expect(page).toHaveURL(/\/support$/);
 });
 
