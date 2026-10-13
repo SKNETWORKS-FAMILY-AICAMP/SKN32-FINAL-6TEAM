@@ -342,6 +342,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         policy_optional_capabilities=["lodging.assist", "lodging.status", "lodging.itinerary"],
         allowed_tools=["read.booking", "read.itinerary", "read.stay_search", "read.stay_detail", "read.booking_search_stays",
                        "read.stay_lookup",                    # `[2026-10-13]` 내 숙소 위치 — 마이리얼트립이 못 줄 때(카카오 · 관광공사)
+                       "read.stay_google",                    # `[2026-10-13]` 내 숙소를 구글 호텔에서 같은 숙소로 찾기(가격 · 사진 · 판매처)
                        "read.stay_google_details",            # `[2026-10-13]` 구글 호텔 후보의 판매처별 가격 · 주소 · 사진
                        "read.policy", "read.booking_terms", *[name for name in ITINERARY_TOOLS if name != "read.itinerary"]],
         knowledge_scope=["travel_cancellation", "travel_access"],
@@ -559,11 +560,63 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                   "no_location": "마이리얼트립에 위치가 없어 "}.get(why, "")
         stay = {"name": pick["name"], "address": pick.get("address"), "latitude": pick["latitude"],
                 "longitude": pick["longitude"], "link": None, "source": looked.get("source")}
+        stay, evidence, google = self._my_stay_google(task, found, stay, dates, seen, evidence)
+        if stay.get("sellers"):
+            sellers = " · ".join(f"{seller['name']} {_won(seller['price_per_night'])}" for seller in stay["sellers"])
+            priced = (f"구글 호텔 기준 1박 {_won(stay['price_from'])}~ (판매처 {sellers}). "
+                      + (f"예약은 {stay['link_seller']}에서: {stay['link']}" if stay.get("link") else "바로 갈 예약 링크는 없었어요."))
+        else:
+            priced = "이 경로로는 날짜별 가격 · 예약 링크를 확인하지 못했어요."
         answer = (f"{pick['name']} — {pick.get('address') or '주소 모름'} "
                   f"(위도 {pick['latitude']}, 경도 {pick['longitude']}). "
-                  f"{reason}{label}에 등록된 위치로 알려 드려요. 이 경로로는 날짜별 가격 · 예약 링크를 확인하지 못했어요.\n"
+                  f"{reason}{label}에 등록된 위치로 알려 드려요. {priced}\n"
                   "일정에는 아직 넣지 않았습니다.")
-        return self._respond(task, evidence, {**record, "my_stay": {**stay, **dates}}, answer)
+        return self._respond(task, evidence, {**record, "my_stay": {**stay, **dates}, "google": google}, answer)
+
+    def _my_stay_google(self, task: TeamTask, found: Interpretation, stay: dict[str, Any], dates: dict[str, str],
+                        seen: set[str], evidence: list[Evidence]) -> tuple[dict[str, Any], list[Evidence], dict[str, Any]]:
+        """`[2026-10-13 사용자 결정]` 다른 지도에서 찾은 내 숙소에 구글 호텔의 가격 · 사진 · 판매처 · 예약 버튼을 붙인다(마이리얼트립 429 대비).
+
+        ☆12:00 playdata(`scripts/probe_stay_google_match.py`): 구글 호텔에 **카카오가 돌려준 현재 이름**으로 물으면 같은 숙소가 맨 앞에
+          왔다 — 더그랜드롯데 서울 6m · 밀리오레호텔 명동 27m · 스테이7 명동 3m. 고객이 말한 옛 이름(「롯데호텔 서울」)은 「결과 없음」,
+          지역 검색(「서울 중구 호텔」 20곳)에는 그 숙소가 없었다(가장 가까운 곳 414m · 옆 건물 40m). 그래서 이름 검색 + **이름 핵심이 같고
+          좌표 `SAME_STAY_M` 안(둘 다)**인 곳만 같은 숙소로 본다 — 좌표만으로는 옆 호텔을 잘못 잡는다.
+        SerpApi 최대 2회(목록 1 + 상세 1). 못 찾거나 못 읽으면 위치만 돌려준다(지어내지 않는다). 기록 `google:{asked, matched, detail}`.
+        """
+        google = {"asked": True, "matched": False, "detail": False}
+        party = {"adults": found.adults, "children": found.children}
+        listing = self._read(task, "read.stay_google", {"keyword": stay["name"], **dates, **party}, seen)
+        evidence = self._evidence(task, source_id="read.stay_google", claim="구글 호텔에서 같은 숙소 찾기(현재 이름)", value=listing,
+                                  base=evidence)
+        if listing is None:
+            google["asked"] = False
+            return stay, evidence, google
+        where = (stay["latitude"], stay["longitude"])
+        same = next((row for row in listing.get("stays") or []
+                     if row.get("property_token") and row.get("latitude") is not None and row.get("longitude") is not None
+                     and _same_stay(row, stay["name"], where)), None)
+        if same is None:
+            return stay, evidence, google
+        google["matched"] = True
+        out = {**stay, "google_name": same["name"], "property_token": same["property_token"], "image": same.get("image"),
+               "price_per_night": same.get("price_per_night"), "link": same.get("link") or None, "price_basis": "list"}
+        got = self._read(task, "read.stay_google_details", {"tokens": [same["property_token"]], "keyword": stay["name"], **dates,
+                                                            "adults": found.adults}, seen)
+        evidence = self._evidence(task, source_id="read.stay_google_details", claim="구글 호텔 판매처별 가격 · 사진(내 숙소)", value=got,
+                                  base=evidence)
+        detail = ((got or {}).get("details") or {}).get(same["property_token"])
+        if not detail:
+            return out, evidence, google
+        google["detail"] = True
+        out["sellers"] = _sellers(detail)
+        out["image"] = out["image"] or detail.get("image")
+        out["address"] = out.get("address") or detail.get("address") or None
+        direct = next((seller for seller in out["sellers"] if seller.get("link")), None)
+        if direct:
+            out["link"], out["link_seller"] = direct["link"], direct["name"]
+        prices = [p for p in [out.get("price_per_night"), *(s["price_per_night"] for s in out["sellers"])] if isinstance(p, (int, float))]
+        out["price_from"] = min(prices) if out["sellers"] and prices else None
+        return out, evidence, google
 
     # ── 일정 숙소 항목 (`lodging.itinerary`, 2026-10-11) ─────────────
     def _change(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:

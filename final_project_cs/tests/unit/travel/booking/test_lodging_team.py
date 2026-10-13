@@ -269,13 +269,53 @@ def test_my_stay_while_myrealtrip_rests_uses_kakao_and_says_where_it_came_from()
         {"name": "해밀톤호텔 주차장", "address": "서울 용산구 이태원로 180", "latitude": 37.5347, "longitude": 126.9942}]}
     result, _, tools = _run(MY_STAY, {"read.stay_search": {"cooldown_seconds": 540, "source": "myrealtrip"},
                                       "read.stay_lookup": kakao})
-    assert [name for name, _ in tools.calls] == ["read.stay_search", "read.stay_lookup"], "쉬는 중이면 상세를 부르지 않는다"
-    assert tools.calls[1][1] == {"name": "해밀톤호텔"}
+    assert [name for name, _ in tools.calls] == ["read.stay_search", "read.stay_lookup", "read.stay_google"], \
+        "쉬는 중이면 마이리얼트립 상세를 부르지 않는다 · 구글 호텔은 현재 이름으로 한 번"
+    assert tools.calls[1][1] == {"name": "해밀톤호텔"} and tools.calls[2][1]["keyword"] == "해밀톤호텔"
     stay = result.decisions[0]["my_stay"]
     assert (stay["name"], stay["latitude"], stay["source"], stay["link"]) == ("해밀톤호텔", 37.5346, "kakao", None)
     assert result.decisions[0]["my_stay_fallback"] == "resting"
+    assert result.decisions[0]["google"] == {"asked": False, "matched": False, "detail": False}, "구글 호텔 소스가 없으면 위치만"
     assert "마이리얼트립이 요청 한도로 잠시 쉬는 중이라 카카오맵에 등록된 위치로 알려 드려요" in result.answer
     assert "날짜별 가격 · 예약 링크를 확인하지 못했어요" in result.answer
+
+
+def test_my_stay_found_elsewhere_gets_google_prices_photo_and_booking_button():
+    """`[2026-10-13 사용자 결정]` 마이리얼트립이 429 면 카카오 위치만으로는 보여 줄 게 없다 — 구글 호텔에서 같은 숙소를 찾아 판매처 가격 ·
+    사진 · 예약 버튼을 붙인다. ☆12:00 playdata: 카카오 현재 이름으로 물으면 맨 앞(6m). 같은 숙소 = 이름 핵심 같음 + 100m 안(둘 다)."""
+    kakao = {"source": "kakao", "stays": [{"name": "더그랜드롯데 서울", "address": "서울 중구 을지로 30",
+                                           "latitude": 37.5651, "longitude": 126.9810}]}
+    google = {"stays": [
+        {"name": "더그랜드롯데 서울 이그제큐티브타워", "type": "hotel", "price_per_night": 400000.0, "latitude": 37.5652,
+         "longitude": 126.9811, "link": "https://x", "property_token": "tok-tower", "image": "https://img/tower.jpg"},   # 이름 핵심 다름
+        {"name": "더그랜드롯데 서울", "type": "hotel", "price_per_night": 350000.0, "latitude": 37.5651, "longitude": 126.9811,
+         "link": "https://www.lottehotel.com/seoul", "property_token": "tok-main", "image": "https://img/main.jpg"},
+        {"name": "더그랜드롯데 서울", "type": "hotel", "price_per_night": 1.0, "latitude": 37.60, "longitude": 127.10,
+         "link": "https://far", "property_token": "tok-far", "image": None}]}                                              # 이름 같아도 멂
+    detail = {"address": "30 Eulji-ro, Jung-gu", "image": None, "sellers": [
+        {"seller": "Agoda", "price_per_night": 330000.0, "link": None, "official": False},
+        {"seller": "Trip.com", "price_per_night": 340000.0, "link": "https://kr.trip.com/hotels/redirect?hotelid=9&locale=ko-KR", "official": False},
+        {"seller": "Lotte Hotel", "price_per_night": 345000.0, "link": "https://www.lottehotel.com/seoul", "official": True}]}
+    result, _, tools = _run({**MY_STAY, "stay_name": "롯데호텔 서울"},
+                            {"read.stay_search": {"cooldown_seconds": 540, "source": "myrealtrip"}, "read.stay_lookup": kakao,
+                             "read.stay_google": google, "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
+    assert [name for name, _ in tools.calls] == ["read.stay_search", "read.stay_lookup", "read.stay_google", "read.stay_google_details"]
+    assert tools.calls[2][1]["keyword"] == "더그랜드롯데 서울", "고객이 말한 옛 이름이 아니라 카카오가 돌려준 현재 이름으로"
+    assert tools.calls[3][1]["tokens"] == ["tok-main"], "이름 핵심이 같고 100m 안인 곳 하나만(신관 · 먼 곳은 뺌)"
+    stay = result.decisions[0]["my_stay"]
+    assert (stay["name"], stay["address"], stay["source"]) == ("더그랜드롯데 서울", "서울 중구 을지로 30", "kakao"), "이름 · 주소는 카카오 것"
+    assert (stay["image"], stay["price_per_night"], stay["price_from"]) == ("https://img/main.jpg", 350000.0, 330000.0)
+    assert [s["name"] for s in stay["sellers"]] == ["아고다", "트립닷컴", "공식 사이트"]
+    assert (stay["link"], stay["link_seller"]) == ("https://kr.trip.com/hotels/redirect?hotelid=9&locale=ko-KR", "트립닷컴"), \
+        "예약 버튼은 바로 갈 주소가 있는 가장 싼 판매처(아고다는 광고 링크라 주소 없음)"
+    assert result.decisions[0]["google"] == {"asked": True, "matched": True, "detail": True}
+    assert ("구글 호텔 기준 1박 330,000원~ (판매처 아고다 330,000원 · 트립닷컴 340,000원 · 공식 사이트 345,000원). "
+            "예약은 트립닷컴에서: https://kr.trip.com/hotels/redirect?hotelid=9&locale=ko-KR") in result.answer
+    assert "일정에는 아직 넣지 않았습니다" in result.answer
+    unmatched, _, _ = _run({**MY_STAY, "stay_name": "롯데호텔 서울"},
+                           {"read.stay_search": None, "read.stay_lookup": kakao, "read.stay_google": {"stays": google["stays"][:1]}})
+    assert unmatched.decisions[0]["google"] == {"asked": True, "matched": False, "detail": False}
+    assert "날짜별 가격 · 예약 링크를 확인하지 못했어요" in unmatched.answer, "같은 숙소가 없으면 위치만 — 옆 건물을 붙이지 않는다"
 
 
 def test_my_stay_not_on_myrealtrip_is_looked_up_elsewhere_or_said_not_found():
