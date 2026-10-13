@@ -1,0 +1,351 @@
+{
+  "application": {
+    "observed_at": "2026-10-09T20:29:05.640231+00:00",
+    "source_sha": "210b020067a1e42f2622262adeb60d1f3d371668",
+    "status": "place_sources_configured_at_batch_boundary",
+    "configured_names": [
+      "ACOP_GUARDRAILS_PATH",
+      "ACOP_KAKAO_REST_API_KEY",
+      "ACOP_RATE_TOUR_API_PER_DAY",
+      "ACOP_TOUR_API_KEY"
+    ],
+    "in_flight_batch_interrupted": false
+  },
+  "arm_audit": {
+    "observed_at": "2026-10-09T20:33:29.345519+00:00",
+    "counts": {
+      "places": 1247,
+      "place_catalog": 7996,
+      "catalog_hours": 1248,
+      "dining.dn_place": 1228,
+      "dining.dn_license_shop": 0,
+      "dining.dn_source_record": 1617
+    },
+    "caps": {
+      "tour_api": {
+        "day": 100,
+        "month": 3000
+      },
+      "kakao_local_keyword": {
+        "day": 100,
+        "month": 3000
+      }
+    },
+    "usage": [
+      [
+        "kakao_local_keyword",
+        "day:2026-10-09",
+        3,
+        100,
+        0,
+        0,
+        null
+      ],
+      [
+        "kakao_local_keyword",
+        "month:2026-10",
+        3,
+        3000,
+        0,
+        0,
+        null
+      ],
+      [
+        "tour_api",
+        "day:2026-10-10",
+        24,
+        100,
+        0,
+        0,
+        null
+      ],
+      [
+        "tour_api",
+        "month:2026-10",
+        24,
+        3000,
+        0,
+        0,
+        null
+      ]
+    ],
+    "source_budget_shared": true,
+    "source_budget_on_db_error": "refuse",
+    "kakao_caps": {
+      "kakao_local_keyword": {
+        "day": 100,
+        "month": 3000
+      }
+    },
+    "tour_daily_setting": 100,
+    "catalog_tenant_count": 1
+  },
+  "import": {
+    "status": "imported_without_deletion_or_constraint_bypass",
+    "tables": {
+      "public.places": {
+        "expected": 1247,
+        "inserted": 1247
+      },
+      "public.place_catalog": {
+        "expected": 7996,
+        "inserted": 7996
+      },
+      "public.catalog_hours": {
+        "expected": 1248,
+        "inserted": 1248
+      },
+      "dining.dn_source": {
+        "expected": 15,
+        "inserted": 0
+      },
+      "dining.dn_load_meta": {
+        "expected": 13,
+        "inserted": 13
+      },
+      "dining.dn_place": {
+        "expected": 1228,
+        "inserted": 1228
+      },
+      "dining.dn_source_record": {
+        "expected": 1617,
+        "inserted": 1617
+      },
+      "dining.dn_hours_rule": {
+        "expected": 8540,
+        "inserted": 8540
+      },
+      "dining.dn_hours_interval": {
+        "expected": 11546,
+        "inserted": 11546
+      },
+      "dining.dn_closure_rule": {
+        "expected": 970,
+        "inserted": 970
+      },
+      "dining.dn_closure_coverage": {
+        "expected": 1246,
+        "inserted": 1246
+      },
+      "dining.dn_attribute": {
+        "expected": 1967,
+        "inserted": 1967
+      },
+      "dining.dn_holiday_stub": {
+        "expected": 46,
+        "inserted": 46
+      },
+      "dining.dn_core_place_link": {
+        "expected": 36,
+        "inserted": 36
+      }
+    },
+    "offline_checks": [
+      {
+        "activity_candidates": 10,
+        "activity_with_hours": 0,
+        "hours_sources": {
+          "nightly": 0,
+          "places": 0
+        },
+        "dining_candidates_700m": 18,
+        "dining_name_lookup": true,
+        "external_calls": 0,
+        "wide_activity_candidates": 100,
+        "wide_activity_with_hours": 30
+      },
+      {
+        "activity_candidates": 10,
+        "activity_with_hours": 1,
+        "hours_sources": {
+          "nightly": 1,
+          "places": 0
+        },
+        "dining_candidates_700m": 11,
+        "dining_name_lookup": true,
+        "external_calls": 0,
+        "wide_activity_candidates": 100,
+        "wide_activity_with_hours": 11
+      },
+      {
+        "activity_candidates": 10,
+        "activity_with_hours": 5,
+        "hours_sources": {
+          "nightly": 5,
+          "places": 0
+        },
+        "dining_candidates_700m": 5,
+        "dining_name_lookup": true,
+        "external_calls": 0,
+        "wide_activity_candidates": 100,
+        "wide_activity_with_hours": 35
+      }
+    ]
+  },
+  "local_and_existing_deployment_caps_each": {
+    "tour_api": {
+      "day": 450,
+      "month": 13000
+    },
+    "kakao_local_keyword": {
+      "day": 450,
+      "month": 13000
+    }
+  },
+  "quota_scope": "three_known_applications; not provider-wide quota proof",
+  "tests": {
+    "deployment_and_guardrails": {
+      "passed": 3,
+      "total": 3
+    },
+    "activity_regression": {
+      "passed": 7,
+      "total": 7
+    },
+    "new_regression_old_code_failed": 1
+  },
+  "activity_fix_deployed": false,
+  "intake_repair": {
+    "previous_revision": 1,
+    "revision": 2,
+    "coordinates": 8,
+    "total_items": 10,
+    "non_place_fields_unchanged": true,
+    "view_verification": {
+      "revision": 2,
+      "status": "review",
+      "review_error": null,
+      "items": 10,
+      "with_coordinates": 8,
+      "review_needs": {
+        "items": 2,
+        "moves": 0,
+        "total": 2
+      },
+      "engine": "mixed",
+      "place_states": [
+        "needs_choice",
+        "found",
+        "found",
+        "found",
+        "found",
+        "needs_choice",
+        "found",
+        "found",
+        "found",
+        "found"
+      ],
+      "moves": 8,
+      "scope": "actual_application_view_function; browser_reload_not_verified"
+    },
+    "view_observed_at": "2026-10-09T20:42:15.487043+00:00",
+    "verification_environment": "separate_one_time_container; 1536MiB; 0.3 CPU; actual application initialization/view; browser not verified"
+  },
+  "named_lookups": {
+    "found": 8,
+    "total": 8,
+    "place_sources": {
+      "경복궁": "places",
+      "광장시장": "tour_api",
+      "국립중앙박물관": "tour_api",
+      "N서울타워": "kakao",
+      "북촌한옥마을": "tour_api",
+      "인사동": "tour_api",
+      "창덕궁": "tour_api",
+      "청계천": "tour_api"
+    }
+  },
+  "diagnostic_incident": {
+    "observed_at_utc": "2026-10-09T20:34:58Z",
+    "cause": "Second full application diagnostic inside resident API cgroup exceeded 1536MiB limit",
+    "kernel": {
+      "kernel_oom_lines": [
+        "Memory cgroup out of memory: Killed process 340398 (uvicorn) total-vm:1346608kB, anon-rss:984660kB, file-rss:36096kB, shmem-rss:0kB, UID:0 pgtables:2184kB oom_score_adj:0",
+        "Memory cgroup out of memory: Killed process 344080 (python) total-vm:706820kB, anon-rss:583584kB, file-rss:26024kB, shmem-rss:0kB, UID:0 pgtables:1328kB oom_score_adj:0"
+      ]
+    },
+    "automatic_restart_count": 1,
+    "health_after": "healthy",
+    "affected_batch_summary": {
+      "sha": "210b020067a1e42f2622262adeb60d1f3d371668",
+      "profile": "language_style",
+      "observed_at": "2026-10-09T20:34:58.568401+00:00",
+      "passed": 8,
+      "total": 11,
+      "attempted": 11,
+      "seconds": 327.97270177997416,
+      "failure": null,
+      "scope": "real_http_contract_not_independent_accuracy",
+      "repeated_soak_not_independent_accuracy": true,
+      "co_running_inference_benchmark": true
+    },
+    "affected_checks": [
+      {
+        "name": "api_health",
+        "passed": true
+      },
+      {
+        "name": "without_user_key",
+        "passed": true
+      },
+      {
+        "name": "session_owner",
+        "passed": true
+      },
+      {
+        "name": "session_other",
+        "passed": true
+      },
+      {
+        "name": "create_synthetic_trip",
+        "passed": true
+      },
+      {
+        "name": "own_trip",
+        "passed": true
+      },
+      {
+        "name": "other_user_denied",
+        "passed": true
+      },
+      {
+        "name": "travel_message_1",
+        "passed": true
+      },
+      {
+        "name": "travel_message_2",
+        "passed": false,
+        "error": "RemoteDisconnected"
+      },
+      {
+        "name": "travel_message_3",
+        "passed": false,
+        "error": "URLError"
+      },
+      {
+        "name": "travel_message_4",
+        "passed": false,
+        "error": "URLError"
+      }
+    ],
+    "retry": {
+      "resumed_profile": "language_style",
+      "failed_attempt_preserved": true,
+      "previous_passed": 8,
+      "previous_total": 11,
+      "backup_id": "2026-10-09_204235_diagnostic_oom_recovery",
+      "other_failed_profiles": [
+        "context_cache",
+        "mixed_travel"
+      ]
+    },
+    "prevention": "Never initialize another full app inside resident API container; isolated bounded one-time container used successfully"
+  },
+  "incident_note": "The first travel message returned decision_failed despite HTTP200 and the HTTP contract counted it passed. This is not a model quality pass.",
+  "health_after_isolated_verification": {
+    "observed_at_kst": "2026-10-10T05:42:35+09:00",
+    "api_health": "ok",
+    "docker_health": "healthy",
+    "restart_count": 1
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-10-12T04:41:46.822684+09:00",
+  "developer_api_calls": 0,
+  "provider_current_usage": null,
+  "remaining_daily_quota": null,
+  "reset_at": null,
+  "reason": "공유키/프로젝트의 신뢰 가능한 전체 사용량·원자적 예약 확보를 이번 작업에서 확인하지 못해 개발자API는 호출하지 않았습니다. 기존 공개자료 오프라인재생과 공개 공식약관 웹열람만 사용했습니다.",
+  "reserve_rate_minimum": 0.2,
+  "operational_limit_or_schedule_changed": false,
+  "retry_or_other_key_bypass": false
+}

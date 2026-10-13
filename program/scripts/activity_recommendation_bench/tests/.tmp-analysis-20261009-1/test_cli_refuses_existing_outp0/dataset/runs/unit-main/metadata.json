@@ -1,0 +1,1 @@
+{"repeats": 3, "independent_cases": 2, "config": {"seed": 20261009, "bootstrap_samples": 100, "evaluation_file": "fixtures.jsonl"}, "config_hash": "config", "prompt_hash": "prompt", "dataset_hash": "866d212bb5d25361f596ebade20881896b541d5bf22390cdd49d1dbb05a707bb"}

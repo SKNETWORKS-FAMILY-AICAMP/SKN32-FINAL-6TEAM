@@ -1,0 +1,31 @@
+{
+  "suites": [
+    {
+      "name": "구조·계약·보안·관련 단위",
+      "tests": 529,
+      "passed": 529,
+      "artifact": "validation/commerce-regression-v6.xml"
+    },
+    {
+      "name": "DB·API·MCP·Controller",
+      "tests": 98,
+      "passed": 98,
+      "artifact": "validation/commerce-integration-v6.xml"
+    },
+    {
+      "name": "개발자 진단 웹·읽기 어댑터",
+      "tests": 90,
+      "passed": 90,
+      "artifact": "validation/commerce-ui-v7.xml"
+    },
+    {
+      "name": "학습 도장·wiki 검사기",
+      "tests": 6,
+      "passed": 6,
+      "artifact": "validation/commerce-tools-v7.xml"
+    }
+  ],
+  "passed": 723,
+  "total": 723,
+  "scope": "Shared working tree; local isolated tests, not public deployment or real travel upstream APIs"
+}

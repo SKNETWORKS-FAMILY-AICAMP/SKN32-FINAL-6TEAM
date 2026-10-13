@@ -1,0 +1,51 @@
+
+=================================== ERRORS ====================================
+______ ERROR collecting tests/unit/travel/mobility/test_judgment_log.py _______
+tests\unit\travel\mobility\test_judgment_log.py:119: in <module>
+    lg = jl.JudgmentLogger(d, device="laptop", run_id="R1", stream=err).open()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\devtools\judgment_log.py:405: in open
+    self._check_device()
+app\domains\travel_ops\instances\mobility\devtools\judgment_log.py:391: in _check_device
+    with open(f, "x", encoding="utf-8") as fh:          # ���� ���� �����(���� ��� �� ���μ��� ����)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   PermissionError: [Errno 13] Permission denied: 'C:\\Users\\playdata2\\AppData\\Local\\Packages\\sandbox.{1fa45d67-2518-4588-b4ba-37f0b2f07079}\\AC\\Temp\\tmpk1c4lmw3\\DEVICE.txt'
+
+During handling of the above exception, another exception occurred:
+..\..\..\anaconda3\Lib\shutil.py:637: in _rmtree_unsafe
+    os.rmdir(path)
+E   PermissionError: [WinError 5] �׼����� �źεǾ����ϴ�: 'C:\\Users\\playdata2\\AppData\\Local\\Packages\\sandbox.{1fa45d67-2518-4588-b4ba-37f0b2f07079}\\AC\\Temp\\tmpk1c4lmw3'
+
+During handling of the above exception, another exception occurred:
+tests\unit\travel\mobility\test_judgment_log.py:117: in <module>
+    with tempfile.TemporaryDirectory() as d:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\tempfile.py:946: in __exit__
+    self.cleanup()
+..\..\..\anaconda3\Lib\tempfile.py:950: in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+..\..\..\anaconda3\Lib\tempfile.py:930: in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+..\..\..\anaconda3\Lib\shutil.py:781: in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\shutil.py:639: in _rmtree_unsafe
+    onexc(os.rmdir, path, err)
+..\..\..\anaconda3\Lib\tempfile.py:902: in onexc
+    _resetperms(path)
+..\..\..\anaconda3\Lib\tempfile.py:286: in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+..\..\..\anaconda3\Lib\tempfile.py:277: in _dont_follow_symlinks
+    func(path, *args)
+E   PermissionError: [WinError 5] �׼����� �źεǾ����ϴ�: 'C:\\Users\\playdata2\\AppData\\Local\\Packages\\sandbox.{1fa45d67-2518-4588-b4ba-37f0b2f07079}\\AC\\Temp\\tmpk1c4lmw3'
+------------------------------- Captured stdout -------------------------------
+OK   1\uc904 \ud544\ub4dc \uc9d1\ud569\uc774 \uc124\uacc4\uc640 \uac19\ub2e4(GPS \ud544\ub4dc \uc5c6\uc74c)\nOK   verdict \ub294 \ubc16 2\uac12 \xb7 reason \uc740 \ucf54\ub4dc\nOK   grade_counts \u2014 '\uadfc\uac70\uc5c6\uc74c:\u2026' \uc811\ub450 \ucc98\ub9ac\nOK   confirm_time = \uac00\uc7a5 \ub2a6\uc740 observed_at\nOK   match True \xb7 latency \ubc18\uc62c\ub9bc\nOK   alt_source \uae30\ubcf8 own \xb7 ext_calls [] \xb7 alt_dropped 0\nOK   \uc88c\ud45c \ubb38\uc790\uc5f4 \u2192 <\uc88c\ud45c> \xb7 dict \u2192 \uc774\ub984\ub9cc\nOK   GPS \ud0a4(origin_source\xb7accuracy_m\xb7live_pos)\ub294 \uc785\ub825\uc5d0 \uc5c6\ub2e4\nOK   \uc88c\ud45c \ubc30\uc5f4\xb7\uacf5\ubc31/\uacbd\ub3c4\uba3c\uc800 \ubb38\uc790\uc5f4\xb7party \ubb38\uc790\uc5f4\xb7\ub300\ubb38\uc790 \ud0a4\ub3c4 \uac00\ub9b0\ub2e4\nOK   ext_calls \uc5d0 \uc751\ub2f5 \ud0a4\uac00 \uc11e\uc774\uba74 \ucc28\ub2e8\nOK   ext_calls \uba54\ud0c0\ub370\uc774\ud130\ub9cc\uc774\uba74 \ud1b5\uacfc\nOK   alt_dropped \uc5d0 \ud6c4\ubcf4 \ub0b4\uc6a9\uc774 \uc624\uba74 \ucc28\ub2e8\nOK   alt_dropped \uc0ac\uc720 \ucf54\ub4dc\ub9cc\uc774\uba74 \ud1b5\uacfc\nOK   disruptions \uc5d0 ODsay \ud0a4\uac00 \uc11e\uc774\uba74 \ucc28\ub2e8\nOK   \ubb38\uc790\uc5f4\uc5d0 \uc6d0\ubb38 JSON \uc774 \ub4e4\uc5b4\uc624\uba74 \ucc28\ub2e8\nOK   ext_calls \uac12\uc5d0 \ubaa9\ub85d\uc774 \uc624\uba74 \ucc28\ub2e8\nOK   alt_dropped.n \uc774 \ubb38\uc790\uc5f4\uc774\uba74 \ucc28\ub2e8(\uc608\uc678\ub85c \uc0c8\uc9c0 \uc54a\ub294\ub2e4)\nOK   alt_source \uc5b4\ud718 \ubc16\uc774\uba74 \ucc28\ub2e8\nOK   \uae4a\uc740 \uacf3\uc758 mapObj \ub3c4 \uc7a1\ub294\ub2e4\nOK   \uc6b0\ub9ac \ud310\uc815 dict \ub294 \uc624\ud0d0 \uc5c6\uc74c
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\mobility-default-v4.xml -
+=========================== short test summary info ===========================
+ERROR tests/unit/travel/mobility/test_judgment_log.py - PermissionError: [Win...
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+220 deselected, 1 error in 5.39s
+Exception ignored in: <function Console.__del__ at 0x0000027227531BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -20,8 +20,16 @@ import { PreferencesSummary, QuestionCarousel } from "./preferences";
 import { TermsCardBody, TermsReader, termsDoc } from "./terms";
 import styles from "./onboarding.module.css";
 
+/**
+ * ★`[2026-10-12 사용자 지시]` The terms card opens with its animation once. The consent gate first shows the open terms while it checks the server,
+ * then sends the customer to `/start?terms=required` — that second drawing of the same card is shown without the opening animation.
+ */
+let termsShownOnce = false;
+
 /** Discord alerts, terms and travel preferences before the first plan. Everything stays in page state. */
 export function Onboarding({ termsRequired = false }: { termsRequired?: boolean } = {}) {
+  const [quietOpen] = useState(() => termsRequired && termsShownOnce);
+  useEffect(() => { termsShownOnce = termsRequired && !quietOpen; }, [termsRequired, quietOpen]);
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
@@ -135,7 +143,9 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
   /**
    * 「동의하고 다음으로」: this press is what records the consent (the browser's copy at once, the server's record right behind it).
    * ★`[2026-10-06 사용자 지시]` The first agreement goes straight on to registering a plan — the preference survey is no longer part of the first run
-   *   (it stays here as the third card, opened from the menu / My page). A customer who already agreed and only changes their boxes stays on this screen.
+   *   (it stays here as the third card, opened from the menu / My page).
+   * ★`[2026-10-12 사용자 지시]` A customer who already agreed (e.g. sent back here because the consent check failed) goes to My trips —
+   *   this press never opens the preference card (「여행 취향 설정 완료」 kept coming back after re-agreeing).
    */
   function continueTerms() {
     if (!requiredAgreed(state.choices)) return;
@@ -143,9 +153,7 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
     void saveConsents(state.choices, language);
     flushWebhook(state.choices.alert_channel);
     feedback("complete");
-    if (firstAgreement) { router.push(routes.newTrip); return; }
-    setState((current) => ({ ...current, open: 2 }));
-    setSceneStage(2);
+    router.push(firstAgreement ? routes.newTrip : routes.trips);
   }
 
   function closeTerms() {
@@ -175,7 +183,7 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
   </section>;
 
   return <DeviceFrame headerInert={termsOpen} headerExtra={<LanguageButton />}>
-    <div className={styles.setup} data-terms={termsOpen}>
+    <div className={styles.setup} data-terms={termsOpen} data-quiet-open={quietOpen || undefined}>
       <Scene stage={sceneStage} step={state.step - INTRO_STEP} totalSteps={questions.length + 1} complete={state.complete} pulse={pulse} sizes="(max-width: 720px) 100vw, 402px" />
       <div className={styles.scroller} data-locked={expanded} inert={termsOpen}>
         <main id="main-content" className={`${styles.phone} ${firstRender ? styles.firstRender : ""}`}>

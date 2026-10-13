@@ -1,0 +1,44 @@
+{
+  "started_at_kst": "2026-10-12T04:16:45.746373+09:00",
+  "finished_at_kst": "2026-10-12T04:16:57.477941+09:00",
+  "catalog_render_equal_twice": true,
+  "document_output_equal": true,
+  "commands": [
+    {
+      "command": [
+        "python",
+        "program/scripts/build_wiki_catalogs.py",
+        "--check"
+      ],
+      "returncode": 0,
+      "stdout": "생성물 일치\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "C:/Users/playdata2/.agents/skills/diagram-design/scripts/self_check.py",
+        "program\\research\\baseline_completion_2026-10-12\\tasks\\wiki\\state-recording.html"
+      ],
+      "returncode": 0,
+      "stdout": "OK program\\research\\baseline_completion_2026-10-12\\tasks\\wiki\\state-recording.html\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "program\\research\\baseline_completion_2026-10-12\\tasks\\wiki\\apply_documents.py"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "generated_files": [
+    "final_project_cs/wiki/data/migration-inventory.generated.md",
+    "final_project_cs/wiki/quality/invariant-summary.generated.md",
+    "wiki/governance/implementation-inventory.generated.md",
+    "wiki/governance/implementation-inventory.generated.json"
+  ],
+  "passed": true
+}

@@ -1,0 +1,26 @@
+{
+  "source_rows": 423107,
+  "source_sha256": "fd7e7b6edc18a5ac4f40f53b594d460d5cbd96d90919aaeb54b957890080d606",
+  "official_scope_rows": 104614,
+  "preserved_stop_rows": 104614,
+  "missing_rows": 0,
+  "extra_rows": 0,
+  "row_match": true,
+  "timetable_match_counts": [
+    {
+      "line": "02호선",
+      "matched": 40606,
+      "unmatched": 182,
+      "total": 40788
+    },
+    {
+      "line": "03호선",
+      "matched": 18598,
+      "unmatched": 9567,
+      "total": 28165
+    }
+  ],
+  "api_calls": 0,
+  "network_calls": 0,
+  "scope": "공식 원값 보존과 기존 승차편 연결. 실제 운행 오차/현장검증 아님"
+}

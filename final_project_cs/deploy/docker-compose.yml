@@ -41,9 +41,12 @@ services:
     environment:
       ACOP_DATABASE_URL: postgresql+psycopg://acop:${TRIPILOT_DB_PASSWORD}@tripilot-db:5432/acop_cs
       ACOP_MOBILITY_DATA_DIR: /data/mobility/processed       # 끝 폴더 이름이 `processed` 면 그 자리를 자료 폴더로 본다(engine/paths.py)
+      ACOP_DEPLOYMENT_VERSION: ${TRIPILOT_TAG:-unrecorded}
+      ACOP_DIAGNOSTIC_SPOOL: /srv/var/operations-diagnostics/pending.sqlite3
     volumes:
       - ${TRIPILOT_MOBILITY_DIR:-./datasets/mobility/processed}:/data/mobility/processed:ro      # 저장소 `datasets/mobility/processed` 와 같은 자리
       - tripilot_ops:/srv/var/ops
+      - tripilot_diagnostics:/srv/var/operations-diagnostics
     networks:
       internal: {}
       proxy:
@@ -66,9 +69,12 @@ services:
     environment:
       ACOP_DATABASE_URL: postgresql+psycopg://acop:${TRIPILOT_DB_PASSWORD}@tripilot-db:5432/acop_cs
       ACOP_MOBILITY_DATA_DIR: /data/mobility/processed       # 끝 폴더 이름이 `processed` 면 그 자리를 자료 폴더로 본다(engine/paths.py)
+      ACOP_DEPLOYMENT_VERSION: ${TRIPILOT_TAG:-unrecorded}
+      ACOP_DIAGNOSTIC_SPOOL: /srv/var/operations-diagnostics/pending.sqlite3
     volumes:
       - ${TRIPILOT_MOBILITY_DIR:-./datasets/mobility/processed}:/data/mobility/processed:ro      # 저장소 `datasets/mobility/processed` 와 같은 자리
       - tripilot_ops:/srv/var/ops
+      - tripilot_diagnostics:/srv/var/operations-diagnostics
     healthcheck:
       disable: true
     networks: [internal]
@@ -106,3 +112,4 @@ networks:
 volumes:
   tripilot_pg: {}
   tripilot_ops: {}
+  tripilot_diagnostics: {}

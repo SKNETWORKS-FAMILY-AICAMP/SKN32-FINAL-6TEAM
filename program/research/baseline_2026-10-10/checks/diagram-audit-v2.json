@@ -1,0 +1,26 @@
+{
+  "results": [
+    {
+      "file": "triPilot-baseline-v2-diagram-1.html",
+      "passed": true,
+      "output": "OK C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_2026-10-10\\checks\\triPilot-baseline-v2-diagram-1.html"
+    },
+    {
+      "file": "triPilot-baseline-v2-diagram-2.html",
+      "passed": true,
+      "output": "OK C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_2026-10-10\\checks\\triPilot-baseline-v2-diagram-2.html"
+    },
+    {
+      "file": "baseline-writing-guide-v2-diagram-1.html",
+      "passed": true,
+      "output": "OK C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_2026-10-10\\checks\\baseline-writing-guide-v2-diagram-1.html"
+    },
+    {
+      "file": "baseline-writing-guide-v2-diagram-2.html",
+      "passed": true,
+      "output": "OK C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_2026-10-10\\checks\\baseline-writing-guide-v2-diagram-2.html"
+    }
+  ],
+  "passed": 4,
+  "total": 4
+}

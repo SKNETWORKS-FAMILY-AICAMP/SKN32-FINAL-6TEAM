@@ -1,0 +1,17 @@
+{
+  "links_checked": 19,
+  "links_expected": 19,
+  "recovered_completed_saved": 4405,
+  "recovered_completed_expected": 4405,
+  "archive_SHA": 22,
+  "archive_SHA_expected": 22,
+  "A_worker_preserved": true,
+  "A_ready": 4,
+  "new_role_jobs": 3,
+  "explicit_corrected_attempts": 1,
+  "new_worker": false,
+  "new_weights_downloaded": false,
+  "failed_D2_missing_preserved": 1000,
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_1150_gpu-refill-valen-d2-failure-and-winnow-role.md",
+  "observation": "2026-10-09T02:40:03.186597+00:00"
+}

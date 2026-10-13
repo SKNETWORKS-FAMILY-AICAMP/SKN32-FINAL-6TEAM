@@ -1,0 +1,51 @@
+--- before/final_project_cs/app/domains/travel_ops/ports/data_sources/subway_boarding.py
++++ after/final_project_cs/app/domains/travel_ops/ports/data_sources/subway_boarding.py
+@@ -13,6 +13,7 @@
+ from zoneinfo import ZoneInfo
+ 
+ from ..subway_train_identity import valid_train_number
++from ..subway_route_identity import matched_arrival_service, valid_service_direction
+ 
+ KST = ZoneInfo('Asia/Seoul')
+ ARRIVAL_STATES = {'0', '1', '3', '4', '5', '99'}
+@@ -56,6 +57,8 @@
+         path = service.get('path_station_ids')
+         if (not isinstance(path, list) or len(path) < 2 or not all(_id(x) for x in path)
+                 or len(set(path)) != len(path) or path[0] != station_id or target_station_id not in path[1:]):
++            return 'service_path_invalid'
++        if not valid_service_direction(service):
+             return 'service_path_invalid'
+         identity = (path[1], path[-1], service['train_status'])
+         if identity in identities:
+@@ -105,14 +108,10 @@
+     counts = Counter(row.get('train_number') for row in rows
+                      if row.get('line_id') == line_id and row.get('station_id') == station_id
+                      and valid_train_number(row.get('train_number')))
+-    services = {(p['path_station_ids'][1], p['path_station_ids'][-1], p['train_status']): p
+-                for p in allowed_services}
+     choices, excluded = [], []
+     for row in rows:
+         reason = None
+-        key = tuple(row.get(k) for k in ('next_station_id', 'terminal_station_id', 'train_status'))
+-        # 모양이 잘못된 API 식별값은 dict의 키로 만들거나 문자열로 지어내지 않는다.
+-        service = services.get(key) if all(isinstance(k, str) for k in key) else None
++        service = matched_arrival_service(row, allowed_services)
+         code_value = row.get('arrival_code')
+         code = str(code_value) if isinstance(code_value, (str, int)) and not isinstance(code_value, bool) else None
+         eta = row.get('eta_seconds')
+@@ -160,8 +159,13 @@
+     if not choices:
+         return fail('no_boardable_prediction', 'no_vehicle_after_ready')
+     arrival, row, service, received, provider_age = min(choices, key=lambda x: (x[0], x[1]['train_number']))
+-    return {**base, 'status': 'predicted', 'train_number': row['train_number'],
+-            'next_station_id': row['next_station_id'], 'terminal_station_id': row['terminal_station_id'],
++    direction = ({'direction_basis': 'route_label_and_neighbor_ids',
++                  'provider_next_station_id': row.get('next_station_id'),
++                  'provider_previous_station_id': row.get('previous_station_id'),
++                  'route_label': row['route_label']}
++                 if 'next_station_names' in service and 'route_label' in row else {})
++    return {**base, **direction, 'status': 'predicted', 'train_number': row['train_number'],
++            'next_station_id': service['path_station_ids'][1], 'terminal_station_id': row['terminal_station_id'],
+             'train_status': row['train_status'], 'path_station_ids': deepcopy(service['path_station_ids']),
+             'arrival_at': arrival.isoformat(), 'remaining_seconds': (arrival - now).total_seconds(),
+             'wait_after_access_seconds': (arrival - ready_at).total_seconds(),

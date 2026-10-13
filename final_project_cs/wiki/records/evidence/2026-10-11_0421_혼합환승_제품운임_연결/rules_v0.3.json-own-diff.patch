@@ -1,0 +1,46 @@
+--- final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/_backup/2026-10-11_0421_혼합환승_제품운임_연결/rules_v0.3.json
++++ final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json
+@@ -1611,6 +1611,7 @@
+    "distance_steps": {
+     "value": {
+      "base_m": 10000,
++     "base_m_by_type": {"광역": 30000},
+      "steps": [
+       {
+        "upto_m": null,
+@@ -1620,7 +1621,7 @@
+      ]
+     },
+     "grade": "확정",
+-    "근거": "물가정보 지하철 페이지 환승 「추가요금: 10km초과시 매5km 까지 마다 100원 가산」 · 버스 페이지 「기본요금(10km)까지 + 추가 5km마다 100원씩」 — 지하철 단독의 50km 넘는 8km 단계가 아니다(GPT 54 #3). 광역·경기좌석 등은 30km 초과시(이 절의 types 밖)."
++    "근거": "서울시 통합환승 할인제 안내(2026-02-02 수정, 2026-10-11 조회) 기본구간 10km, 광역버스 30km, 초과 매5km 100원. 지하철 단독의 50km 넘는 8km 단계가 아니다. 서울 광역만 추가하며 경기좌석 등 별도 유형은 이 절의 types 밖이다. https://news.seoul.go.kr/traffic/transfer_discount"
+    },
+    "cap": {
+     "value": "sum_of_single",
+@@ -1648,15 +1649,21 @@
+      "간선",
+      "지선",
+      "순환",
+-     "마을"
++     "마을",
++     "광역"
+     ],
+     "grade": "확정",
+-    "근거": "이 절의 규칙으로 매기는 탈것. 광역·심야가 섞인 환승은 기본운임 기준 거리(광역 30km 등)를 공식 페이지에서 확인 못 해 값을 뺀다."
++    "근거": "서울시 통합환승 할인제 안내의 적용 대상 서울버스 간선·지선·순환·광역·마을. 서울 광역의 기본구간 30km를 2026-10-11 공식 안내로 확인하여 연결했다. 심야와 경기/인천 별도 유형은 이번 적용 밖이다. https://news.seoul.go.kr/traffic/transfer_discount"
+    },
+    "bus_distance": {
+-    "value": null,
+-    "grade": "근거없음",
+-    "근거": "버스 구간의 운임거리 근거가 없다 — `bus_stops_v1.sect_dist_m` 은 41 이 이상 셀을 보고한 값이라 요금에 안 쓴다((53) 정정 방 뒤). 그래서 **버스가 섞인 환승(버스→지하철 · 버스→버스)은 지금 값을 안 낸다**. 규칙은 합성 시험으로만 잠근다."
++    "value": "selected_contiguous_sections",
++    "grade": "추정",
++    "근거": "2026-10-11 제품 연결: 서울시 노선정보조회 getStaionByRoute의 fullSectDist(구간거리)를 보존한 sect_dist_m을 선택 노선 ID·승하차 순번·정류소 ID가 맞고 중간 순번/거리가 완전한 경우만 합산한다. 이 거리가 교통카드 청구 운임거리와 같다고 확정하지 않는다. 성인 1인 1카드·승하차 태그 조건부 할인 예상액으로 표시하고 조조는 미적용한다. 같은 버스 노선 재승차/환승시간 초과/유형 밖/거리 누락이면 개별 요금 합 예상액 상단으로 대체한다. 출처 https://www.data.go.kr/data/15000193/openapi.do · https://news.seoul.go.kr/traffic/transfer_discount · 조회 2026-10-11."
++   },
++   "max_ride_min": {
++    "value": {"subway": 300, "bus": 300, "마을": 60},
++    "grade": "확정",
++    "근거": "서울시 통합환승 할인제도 안내(2026-02-02 수정, 2026-10-11 조회)의 최대 이용시간 지하철/시내버스 5시간, 마을버스 1시간. 초과 시 기본요금 재부과이므로 할인 모델 적용에서 제외한다. https://news.seoul.go.kr/traffic/transfer_discount"
+    }
+   }
+  },

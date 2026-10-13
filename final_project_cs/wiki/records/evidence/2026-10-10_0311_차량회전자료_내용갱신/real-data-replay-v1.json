@@ -1,0 +1,97 @@
+{
+  "created_at": "2026-10-10T03:16:02.415373+09:00",
+  "conditions": [
+    {
+      "from": [
+        126.9852,
+        37.5845
+      ],
+      "to": [
+        127.0601,
+        37.6076
+      ]
+    },
+    {
+      "from": [
+        126.978,
+        37.5665
+      ],
+      "to": [
+        126.9895,
+        37.57
+      ]
+    }
+  ],
+  "replays": [
+    {
+      "condition": 1,
+      "variant": "A",
+      "output_sha256": "2a2fd7d67dbabe15bad7354a30f2785b10f0c042fed6aeeea2460461e1d88c7d",
+      "distance_m": 10184.1,
+      "applied_relations": 2487
+    },
+    {
+      "condition": 1,
+      "variant": "B",
+      "output_sha256": "2a2fd7d67dbabe15bad7354a30f2785b10f0c042fed6aeeea2460461e1d88c7d",
+      "distance_m": 10184.1,
+      "applied_relations": 2487
+    },
+    {
+      "condition": 1,
+      "variant": "B",
+      "output_sha256": "2a2fd7d67dbabe15bad7354a30f2785b10f0c042fed6aeeea2460461e1d88c7d",
+      "distance_m": 10184.1,
+      "applied_relations": 2487
+    },
+    {
+      "condition": 1,
+      "variant": "A",
+      "output_sha256": "2a2fd7d67dbabe15bad7354a30f2785b10f0c042fed6aeeea2460461e1d88c7d",
+      "distance_m": 10184.1,
+      "applied_relations": 2487
+    },
+    {
+      "condition": 2,
+      "variant": "A",
+      "output_sha256": "0cb0b487da64a2ae3f243b9b104c50d9ac986a5e6904e84e07685fe89ad74fcf",
+      "distance_m": 1468.71,
+      "applied_relations": 2487
+    },
+    {
+      "condition": 2,
+      "variant": "B",
+      "output_sha256": "0cb0b487da64a2ae3f243b9b104c50d9ac986a5e6904e84e07685fe89ad74fcf",
+      "distance_m": 1468.71,
+      "applied_relations": 2487
+    },
+    {
+      "condition": 2,
+      "variant": "B",
+      "output_sha256": "0cb0b487da64a2ae3f243b9b104c50d9ac986a5e6904e84e07685fe89ad74fcf",
+      "distance_m": 1468.71,
+      "applied_relations": 2487
+    },
+    {
+      "condition": 2,
+      "variant": "A",
+      "output_sha256": "0cb0b487da64a2ae3f243b9b104c50d9ac986a5e6904e84e07685fe89ad74fcf",
+      "distance_m": 1468.71,
+      "applied_relations": 2487
+    }
+  ],
+  "matched": 8,
+  "total": 8,
+  "data_hashes": {
+    "datasets/mobility/processed/mobility/road_graph_v2/build_report.json": "5f63b0009a7e9a958f162b4f756e4f60538772115e95c6f86eb7ed421e4b4399",
+    "datasets/mobility/processed/mobility/road_graph_v2/edges.jsonl.gz": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb",
+    "datasets/mobility/processed/mobility/road_graph_v2/MANIFEST.json": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd",
+    "datasets/mobility/processed/mobility/road_graph_v2/nodes.jsonl.gz": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38",
+    "datasets/mobility/processed/mobility/road_graph_v2/region_v1.geojson": "827a39de6d1cf23a8b910dc3edeca73534e3e8b8490228fdaf53abb3efc5c9b8",
+    "datasets/mobility/processed/mobility/road_graph_v2/turn_restrictions_v1.json": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+  },
+  "network_attempts": 0,
+  "limited_api_calls": 0,
+  "source_bytes_per_vehicle_request": 211626,
+  "limits": "보유 도로자료의 고정 개발 2쌍. 실제 차량·새 독립 웹·HTTP 지연 측정 아님."
+}

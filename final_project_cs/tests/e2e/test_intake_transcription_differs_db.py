@@ -16,11 +16,22 @@ from uuid import UUID
 from psycopg import Rollback
 
 from app.infrastructure.db.session import get_connection
+from tests.helpers.plugin_bindings import publish_fixed_mobility
 
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
-from .test_trip_intake_api import PHOTO, PHOTO_TEXT, _client, _items, _key, _send
+from .test_trip_intake_api import PHOTO, PHOTO_TEXT, _client as _intake_client, _items, _key, _send
 
 MISREAD = PHOTO_TEXT.replace("토속촌삼계탕", "토속촌삼겹탕")
+
+
+def _client(vision):
+    """사진 재독·확인 흐름 시험에 필요한 이동 계산만 명시 조립한다.
+
+    받아쓰기·확인 값·DB 경로는 실제 구현을 유지하며 경로 정확도를 재는 시험은 아니다.
+    """
+    client = _intake_client(vision)
+    publish_fixed_mobility(client.app, source="transcription_review_test")
+    return client
 
 
 class Vision:
@@ -104,10 +115,26 @@ def _review_item(view, title):
     return next(i for i in view["review"]["items"] if title in i["title"])
 
 
-def test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons(api):
+def test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons(api, monkeypatch):
+    from app.domains.travel_ops.components.intake import places
+
+    # 이 시험은 못 찾은 장소에 두 읽기 안내를 붙여도 차단을 낮추지 않는 계약이다.
+    # 현재 원장의 오타 교정 여부와 분리하여 해당 이름만 명시적으로 못 찾게 한다.
+    original_resolve = places.resolve
+    unresolved_calls = []
+
+    def resolve(title, **kwargs):
+        if "토속촌삼겹탕" in title:
+            unresolved_calls.append(title)
+            return places.Resolved(status="unresolved", query=title,
+                                   needs_review=True, note="시험 조건: 장소를 찾지 못했습니다")
+        return original_resolve(title, **kwargs)
+
+    monkeypatch.setattr(places, "resolve", resolve)
     client = _client(Vision(MISREAD, PHOTO_TEXT))
     view = _send(client, _key(client), files=[("plan.png", PHOTO.read_bytes())])
     item = _review_item(view, "삼겹탕")
+    assert unresolved_calls
     assert item["status"] == "review" and item["can_lock"] is False                                    # 고객이 고를 때까지 확정 못 한다
     assert item["rereads"] == [{"field": "title", "current": "토속촌삼겹탕", "other": "토속촌삼계탕"}]    # 줄 전체가 아니라 값만
     [place] = [row for row in item["rows"] if row["row"] == "place"]                                   # 장소 줄 하나에 말이 덧붙는다(같은 줄이 둘로 나가지 않는다)

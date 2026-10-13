@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-08",
+  "machine": "Oracle ARM",
+  "authorized": "existing machine; continuous travel inference validation",
+  "cpu_cores_actual": 2,
+  "host_memory_bytes_actual": 12503744512,
+  "workload_memory_max_bytes": 10737418240,
+  "workload_cpu_limit_cores": 1.8,
+  "cpu_target_pct_of_two_cores": 20,
+  "measurement_window_seconds": 300,
+  "resource_sample_seconds": 5,
+  "service": "tripilot-arm-serving.service",
+  "remote_workdir": "~/bench/continuous-travel-20261008",
+  "worker_pid_first_observed": 171515,
+  "service_enabled": true,
+  "initial_profiles": 10,
+  "initial_questions": 7254,
+  "mock_server_checks": {
+    "passed": 5,
+    "total": 5
+  },
+  "real_inference_verified": true,
+  "steady_cpu_target_verified": true,
+  "status": "running",
+  "independent_accuracy_interpretation": false,
+  "continuous_soak": true,
+  "inputs": {
+    "d3": {
+      "questions": 360,
+      "sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea"
+    },
+    "mx": {
+      "questions": 4014,
+      "sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087"
+    }
+  },
+  "canon": "final_project_cs/wiki/operations/arm-serving-queue.md",
+  "local_raw_results": "program/scripts/plan_qa_bench/results/arm_serving_20261008",
+  "recent_five_minute_target_verified": true,
+  "last_observed_at": "2026-10-08T08:36:41.623945+00:00",
+  "current_job": "e4bt_q4_d3",
+  "current_saved": 95,
+  "current_expected": 360,
+  "resource_measurement": {
+    "window_s": 300.0614089119772,
+    "cpu_pct_two_cores": 89.56234574597872,
+    "host_cpu_busy_pct": 90.22778975585786,
+    "host_steal_pct": 0.16253213342910994,
+    "memory_current_bytes": 9021267968,
+    "above_20_contiguous_seconds": 10832.440036124986,
+    "five_minute_target_verified": true
+  },
+  "lock_held": true,
+  "http_health": "ok",
+  "actual_reboot_test_done": false,
+  "automatic_restart_configured": true,
+  "report": "final_project_cs/wiki/records/reports/2026-10-08_1440_arm_serving_activation.md",
+  "auto_review_rejection": "Second queue invocation for duplicate guard check was rejected; replaced by read-only lock observation. No duplicate invocation executed.",
+  "steady_report": "final_project_cs/wiki/records/reports/2026-10-08_1443_arm_steady_cpu.md",
+  "latest_raw_observation": "program/scripts/plan_qa_bench/results/arm_serving_20261008/observation_hb1735.json",
+  "latest_observation_backup": "program/research/daily_rag_slm/_backup/2026-10-08_174128_arm_hb1735/arm_serving_2026-10-08.json"
+}

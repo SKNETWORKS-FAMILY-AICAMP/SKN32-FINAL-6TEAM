@@ -1,0 +1,80 @@
+{
+  "observed_at_utc": "2026-10-08T17:32:49.017338+00:00",
+  "files": [
+    {
+      "relative": "saluki_original_smoke12_a1/started.json",
+      "sha256": "3ec3a1dad47e392cc1da39c0dd4ef85e39bd72a421dbc5ecf9a5cf9a1b7e66c0",
+      "bytes": 1402
+    },
+    {
+      "relative": "saluki_original_smoke12_a1/job.log",
+      "sha256": "9f1fb0ca941b6d931c26328184259a9c9315f3a010e43359290d484a9200039d",
+      "bytes": 570
+    },
+    {
+      "relative": "saluki_original_smoke12_a1/saluki_contract.json",
+      "sha256": "69d00c010522c08e5a2159cfbaee36890d665a47772ba028a6461d32bbdb5fb1",
+      "bytes": 1188
+    },
+    {
+      "relative": "saluki_original_smoke12_a1/dtest_server_saluki_smoke_a1.log",
+      "sha256": "fec5f10a2a94556299bde5984040518f5f1c2262539b1a03f814e42e59f52550",
+      "bytes": 10884
+    },
+    {
+      "relative": "saluki_original_smoke12_a1/saluki_resources.jsonl",
+      "sha256": "c1549d00693e9482f2449485b4894239560e4f19d387a97496f57b099becf81e",
+      "bytes": 1239
+    },
+    {
+      "relative": "saluki_original_smoke12_a1/context_lengths.json",
+      "sha256": "acea390ed47a5651761a4fedf63b0e88b0674bf705dfbd431cc74585a3d30e8c",
+      "bytes": 1052
+    },
+    {
+      "relative": "saluki_original_smoke12_a1/d_test_saluki_smoke_a1.jsonl",
+      "sha256": "4a230c89c59a818526389a6d05c18d7d6f4435d80b09666e6ee6ec85b669e758",
+      "bytes": 3299
+    },
+    {
+      "relative": "saluki_original_smoke12_a1/saluki_summary.json",
+      "sha256": "941cfe01ece1a9487a18c1cb929c17641350650cc47d77167ded5ee1af7dcd17",
+      "bytes": 326
+    },
+    {
+      "relative": "saluki_original_d3_a1/saluki_contract.json",
+      "sha256": "51048032200b3d9d7752fc4222fdc41b38fed60974bec1c4f324645edc4c3ff6",
+      "bytes": 1174
+    },
+    {
+      "relative": "saluki_original_d3_a1/context_lengths.json",
+      "sha256": "d78d906e7cebeb065b419e2df519818f6e0e4fbc13d0a27000adbe3bdc43ea21",
+      "bytes": 28894
+    },
+    {
+      "relative": "saluki_original_d3_a1/started.json",
+      "sha256": "07636f17e5b9d7f289862fdc5c4dabcab2aced959a77677bcc1b5d1d782a9dce",
+      "bytes": 1460
+    },
+    {
+      "relative": "saluki_original_d3_a1/saluki_resources.jsonl",
+      "sha256": "07d8ceb5aa18cf8f60b9830932f5e40c15e359d8b6171008bd2ce2ff83591962",
+      "bytes": 10634
+    },
+    {
+      "relative": "saluki_original_d3_a1/d_test_saluki_original_d3_a1.jsonl",
+      "sha256": "7c02806135541f2057683beaa07d68b0f9af4059878ec042cec4cf52745142c8",
+      "bytes": 51163
+    },
+    {
+      "relative": "tripilot-saluki-20261009/SMOKE_PASS.json",
+      "sha256": "941cfe01ece1a9487a18c1cb929c17641350650cc47d77167ded5ee1af7dcd17",
+      "bytes": 326
+    }
+  ],
+  "remote_local_sha_match": [
+    14,
+    14
+  ],
+  "D3_partial_snapshot": true
+}

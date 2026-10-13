@@ -1,0 +1,61 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs
+configfile: pytest.ini
+plugins: anyio-4.14.1, langsmith-0.10.0, asyncio-0.25.2
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 6 items
+
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.06] FAILED [ 16%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.08] FAILED [ 33%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.1] FAILED [ 50%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.06] FAILED [ 66%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.08] FAILED [ 83%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.1] FAILED [100%]
+
+================================== FAILURES ===================================
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.06] _
+tests\integration\controller\test_plugin_unavailable.py:555: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert transport.submit_calls == transport.cancel_started == 1
+E   assert 1 == 0
+E    +  where 1 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54F20C20>.submit_calls
+E    +  and   0 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54F20C20>.cancel_started
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.08] _
+tests\integration\controller\test_plugin_unavailable.py:555: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert transport.submit_calls == transport.cancel_started == 1
+E   assert 1 == 0
+E    +  where 1 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FC83B0>.submit_calls
+E    +  and   0 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FC83B0>.cancel_started
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.1] _
+tests\integration\controller\test_plugin_unavailable.py:555: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert transport.submit_calls == transport.cancel_started == 1
+E   assert 1 == 0
+E    +  where 1 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FCACC0>.submit_calls
+E    +  and   0 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FCACC0>.cancel_started
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.06] _
+tests\integration\controller\test_plugin_unavailable.py:555: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert transport.submit_calls == transport.cancel_started == 1
+E   assert 1 == 0
+E    +  where 1 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FCA180>.submit_calls
+E    +  and   0 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FCA180>.cancel_started
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.08] _
+tests\integration\controller\test_plugin_unavailable.py:555: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert transport.submit_calls == transport.cancel_started == 1
+E   assert 1 == 0
+E    +  where 1 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FCB470>.submit_calls
+E    +  and   0 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FCB470>.cancel_started
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.1] _
+tests\integration\controller\test_plugin_unavailable.py:555: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert transport.submit_calls == transport.cancel_started == 1
+E   assert 1 == 0
+E    +  where 1 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FE4800>.submit_calls
+E    +  and   0 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x000001EE54FE4800>.cancel_started
+=========================== short test summary info ===========================
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.06]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.08]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.1]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.06]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.08]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.1]
+============================== 6 failed in 3.95s ==============================

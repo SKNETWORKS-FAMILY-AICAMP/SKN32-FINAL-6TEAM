@@ -1,0 +1,20 @@
+{
+  "checked_at": "2026-10-12T04:36:15.048261+09:00",
+  "n": 4,
+  "pretrip_product_supported": 4,
+  "missing_pretrip_quote": 0,
+  "supported_retrospective_budget_covers_total": 4,
+  "historical_brand_policy_confirmed_n": 0,
+  "meter_mae_won": 1125,
+  "meter_underestimates": 4,
+  "meter_within_1000_won": 2,
+  "actual_meter_time_or_option_fee_used_as_prediction_input": false,
+  "actual_option_fee_injected": false,
+  "private_receipts_used_for_fit": false,
+  "reserve_rate_changed": false,
+  "developer_api_calls": 0,
+  "network_blocked": true,
+  "source_sha256": "a3727f4cb93f7b60361b2f01392c0928a93b9de6e42454b9edb68cc73ce93f2d",
+  "products_sha256": "3ad8a87062442d8bcd2ae630329f7e6219d7643a1a10d74701b654a2879c3585",
+  "scope": "현재 공식 상품 정책의 서울4건 후향 재생. 과거 약관·실제 GPS·사전 견적이 없는 부분은 별도 미확인. 새 독립 검증 아님"
+}

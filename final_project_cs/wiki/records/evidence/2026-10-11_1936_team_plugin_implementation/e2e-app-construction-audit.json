@@ -1,0 +1,186 @@
+{
+  "app_constructions": 28,
+  "rows": [
+    {
+      "file": "tests/e2e/test_booking_change_link.py",
+      "line": 100,
+      "scope": "world",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_case_version_rest.py",
+      "line": 44,
+      "scope": "rest",
+      "explicit_markers": [
+        "publish_fixed_mobility"
+      ]
+    },
+    {
+      "file": "tests/e2e/test_composer_write_channel.py",
+      "line": 47,
+      "scope": "_client",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_decision_unit_web.py",
+      "line": 87,
+      "scope": "decided",
+      "explicit_markers": [
+        "publish_fixed_mobility"
+      ]
+    },
+    {
+      "file": "tests/e2e/test_intake_review.py",
+      "line": 140,
+      "scope": "_client",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_introspection_endpoint.py",
+      "line": 20,
+      "scope": "test_introspection_requires_scope_and_returns_snapshot",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_introspection_endpoint.py",
+      "line": 30,
+      "scope": "test_introspection_denies_other_scope",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_legal_retention.py",
+      "line": 45,
+      "scope": "_client",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_mcp_read_tools.py",
+      "line": 62,
+      "scope": "_client",
+      "explicit_markers": [
+        "publish_test_services"
+      ]
+    },
+    {
+      "file": "tests/e2e/test_mobility_engine_flow.py",
+      "line": 67,
+      "scope": "flow",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_operations_ui.py",
+      "line": 20,
+      "scope": "module",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_reload_endpoint.py",
+      "line": 29,
+      "scope": "client",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_reload_endpoint.py",
+      "line": 126,
+      "scope": "test_the_customer_release_build_has_no_reload_route",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_trip_api.py",
+      "line": 134,
+      "scope": "api",
+      "explicit_markers": [
+        "publish_fixed_mobility"
+      ]
+    },
+    {
+      "file": "tests/e2e/test_trip_dining_ledger.py",
+      "line": 76,
+      "scope": "api",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 60,
+      "scope": "_client",
+      "explicit_markers": [
+        "publish_fixed_mobility"
+      ]
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 256,
+      "scope": "test_unread_lines_are_pointed_at_by_the_model_and_places_are_looked_up",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 290,
+      "scope": "test_a_model_outage_only_skips_the_pointing_step",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 304,
+      "scope": "_full_client",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_trip_planner.py",
+      "line": 147,
+      "scope": "build",
+      "explicit_markers": [
+        "publish_fixed_mobility"
+      ]
+    },
+    {
+      "file": "tests/e2e/test_web_api.py",
+      "line": 272,
+      "scope": "_chat_client",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 56,
+      "scope": "cookies",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_web_guard.py",
+      "line": 36,
+      "scope": "_client",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_web_guard.py",
+      "line": 360,
+      "scope": "test_an_unhandled_error_still_carries_the_allowed_origin_so_the_browser_can_read_it",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_web_profile.py",
+      "line": 322,
+      "scope": "test_the_browser_may_send_put_with_the_user_key_from_the_web_origin",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_web_social_login.py",
+      "line": 67,
+      "scope": "social",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_web_social_login.py",
+      "line": 301,
+      "scope": "test_a_login_without_a_key_needs_a_human_check_when_one_is_required_and_a_login_with_a_key_does_not",
+      "explicit_markers": []
+    },
+    {
+      "file": "tests/e2e/test_web_social_login.py",
+      "line": 359,
+      "scope": "test_a_browser_on_another_origin_may_call_delete",
+      "explicit_markers": []
+    }
+  ],
+  "warning": "Markers are discovery evidence, not proof; wrapper imports and fixture injection need caller review."
+}

@@ -1,4 +1,7 @@
 ---
+
+> **2026-10-11 현재 학습 기준:** 보스는 `engine-travel-policy-v2`이며 합성 철도 패스·여행 체험 예약 자료만 사용합니다. 과거 쇼핑몰 보스 설명·실측치는 아래의 당시 기록입니다. 현재 보스 통과로 합산하지 않습니다. 이전 보스 성과는 `archived`로 분리합니다. 중지한 결함·트랙·시나리오는 이력 조회만 가능하며 현재 실행 목록에 넣지 않습니다.
+
 type: guide
 title: 도장 사용법
 description: 학습 트랙 5개와 명령. 정답은 pytest와 실측 트레이스가 판정한다
@@ -6,6 +9,7 @@ status: draft
 tags: [testing, documentation]
 owners: [human:미배정]
 domain: neutral
+domain_note: 학습 도구 사용법이며 중지한 쇼핑몰 트랙을 현행 트랙과 구분해 설명한다
 ---
 
 # 도장 사용법

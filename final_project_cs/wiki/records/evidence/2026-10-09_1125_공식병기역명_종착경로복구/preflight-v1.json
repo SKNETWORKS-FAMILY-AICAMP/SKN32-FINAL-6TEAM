@@ -1,0 +1,15 @@
+{
+  "hash_matches": 285,
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1125_공식병기역명_종착경로복구/subway_identity.py",
+      "sha256": "15f95eae1b7e9abe36d938e6061d52081e4c00887f131828c3e3e15b7ab90777"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1125_공식병기역명_종착경로복구/mobility.md",
+      "sha256": "5d2b0910f9cb43266aa801b358b6d6454341713c69b1b9d3186f4b6263100b11"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "file": "scripts\\mobility\\build_readiness_visual_v19.py",
+    "backup": "scripts\\mobility\\_backup\\2026-10-09_0527_시각화_현재잔여_정정\\build_readiness_visual_v19.py",
+    "sha256": "c2f919e47e8ff3b5469fe783152c5f684c946dcf62f748fdc3388b2d36fa627a"
+  },
+  {
+    "file": "wiki\\records\\reports\\2026-10-09_0525_현재동행_출발대조와_재경로_검증.md",
+    "backup": "wiki\\records\\reports\\_backup\\2026-10-09_0527_시각화_현재잔여_정정\\2026-10-09_0525_현재동행_출발대조와_재경로_검증.md",
+    "sha256": "bcaa05452e8fd437009b8d2688ae62218f0642e7f832f889f9e3aabd553a003b"
+  },
+  {
+    "file": "wiki\\teams\\mobility.md",
+    "backup": "wiki\\teams\\_backup\\2026-10-09_0527_시각화_현재잔여_정정\\mobility.md",
+    "sha256": "e69c89852bac027a1218deff29d8e44909eeacb4afed8a5763e970495cde31df"
+  },
+  {
+    "file": "wiki\\records\\evidence\\2026-10-09_0513_현재동행_출발대조\\verification-proof-v1.json",
+    "backup": "wiki\\records\\evidence\\2026-10-09_0513_현재동행_출발대조\\_backup\\2026-10-09_0527_시각화_현재잔여_정정\\verification-proof-v1.json",
+    "sha256": "46297ca564598e2775df458ba8f9309d9fb2cf43ba8478fc5cc3907ac4f4346a"
+  },
+  {
+    "file": "wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v19\\mobility-readiness.html",
+    "backup": "wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v19\\_backup\\2026-10-09_0527_시각화_현재잔여_정정\\mobility-readiness.html",
+    "sha256": "89734d65cf579c4f4cf255dc13e8d58d4b95ad83ce9818bc0f1ead4b168259a5"
+  },
+  {
+    "file": "wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v19\\readiness-catalog.json",
+    "backup": "wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v19\\_backup\\2026-10-09_0527_시각화_현재잔여_정정\\readiness-catalog.json",
+    "sha256": "c705127d45a736777231b3fd547d8ac551dc338fb70d94cc8440a1fbe5a1f7f3"
+  }
+]

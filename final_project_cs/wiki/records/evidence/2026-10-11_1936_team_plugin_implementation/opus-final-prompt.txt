@@ -1,0 +1,5 @@
+사용자가 요청한 Opus 5.5 최종 독립 코드 감사입니다. RULE.md와 wiki/teams/team-contract/plugin-availability.md를 읽고 현재 구현을 확인하세요. 읽기와 합성 시험 실행만 허용됩니다. 파일 수정·삭제·커밋·push·배포·외부 메시지·다른 에이전트 호출은 하지 마세요. .env·자격증명·운영 접속 메모·고객 데이터는 읽지 마세요.
+검토 핵심: app/core/service_bindings.py, app/application/runtime.py, app/composition.py, app/application/controller.py, app/core/registry.py, app/core/remote_team/a2a_executor.py, modules/live_progress/op_stream.py, worker 회차 고정. inactive 팀은 import/execute 0회이며 팀 부재해도 독립 읽기는 돌아야 합니다. 같은 요청/회차가 revision과 hook을 혼합하지 않아야 합니다. 필수 엔진 off는 추정 성공 금지. 이전 Sonnet 마지막 지적인 첫 configure 실패 뒤 복구 불가는 현재 수정했습니다.
+다음 시험을 Bash로 직접 실행하고 실제 명령/전체 출력/exit code를 반환하세요:
+"C:/Users/playdata2/anaconda3/python.exe" -m pytest tests/unit/core/test_plugin_availability.py tests/unit/test_plugin_composition_runtime.py tests/unit/travel/test_plugin_worker_availability.py tests/integration/controller/test_plugin_unavailable.py -q --tb=short
+Read/Glob/Grep으로 남은 코드 결함, race, deadlock, 상태/토큰 소비 문제, sync/async timeout, 계약 미충족을 찾으세요. 단정과 추측을 구분하고 경로·함수·재현·영향·수정안을 한국어로 제시하세요. 발견없음도 확인범위를 밝히세요. 모델 정체성 변경 금지.

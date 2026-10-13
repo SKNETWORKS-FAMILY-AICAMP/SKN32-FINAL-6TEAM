@@ -1,0 +1,32 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>triPilot 구조 요약</title><style>body{margin:0;background:#fbfcfd;color:#161c28;font-family:'Geist','Malgun Gothic',sans-serif;padding:32px}h1{font-family:'Instrument Serif','Noto Serif KR',serif;font-size:28px;font-weight:400}svg{display:block;width:100%;height:auto;max-width:960px}</style></head><body><h1>triPilot 구조 요약</h1><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 368" role="img" aria-labelledby="tripilot-title tripilot-desc">
+<title id="tripilot-title">triPilot의 처리 책임과 승인 경계</title>
+<desc id="tripilot-desc">고객 요청은 코어의 상태 관리와 담당 모듈의 판단을 거쳐 변경 제안이 됩니다. 업체 예약을 바꾸는 제안은 사람의 승인을 거친 뒤 실행하며, 상태와 이력을 저장합니다.</desc>
+<defs>
+<marker id="tripilot-arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#6b7488"/></marker>
+<marker id="tripilot-arrow-accent" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#a8720c"/></marker>
+<marker id="tripilot-arrow-link" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#2f5bd8"/></marker>
+</defs>
+<g fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#tripilot-arrow)">
+<path d="M240 84 H384"/>
+<path d="M576 84 H720"/>
+<path d="M816 128 V224"/>
+<path d="M720 268 H576"/>
+<path d="M384 268 H240"/>
+</g>
+<g font-family="'Geist','Malgun Gothic',sans-serif" text-anchor="middle" fill="#161c28">
+<rect x="48" y="40" width="192" height="88" rx="8" fill="#f1f4f8" stroke="#dbe0ea"/>
+<text x="144" y="80" font-size="20" font-weight="600">고객 접점</text><text x="144" y="108" font-size="12" fill="#6b7488">REST / MCP</text>
+<rect x="384" y="40" width="192" height="88" rx="8" fill="#f1f4f8" stroke="#161c28"/>
+<text x="480" y="80" font-size="20" font-weight="600">상태 관리</text><text x="480" y="108" font-size="12" fill="#6b7488">Core / CAS / Registry</text>
+<rect x="720" y="40" width="192" height="88" rx="8" fill="#fbfcfd" stroke="#dbe0ea"/>
+<text x="816" y="80" font-size="20" font-weight="600">담당 모듈 판단</text><text x="816" y="108" font-size="12" fill="#6b7488">Activity / Dining / Mobility</text>
+<rect x="720" y="224" width="192" height="88" rx="8" fill="#fbfcfd" stroke="#dbe0ea"/>
+<text x="816" y="264" font-size="20" font-weight="600">변경 제안</text><text x="816" y="292" font-size="12" fill="#6b7488">ActionProposal</text>
+<rect x="384" y="224" width="192" height="88" rx="8" fill="#f6eedf" stroke="#a8720c"/>
+<text x="480" y="264" font-size="20" font-weight="600">사람 승인</text><text x="480" y="292" font-size="12" fill="#6b7488">Supplier booking changes</text>
+<rect x="48" y="224" width="192" height="88" rx="8" fill="#fbfcfd" stroke="#161c28"/>
+<text x="144" y="264" font-size="20" font-weight="600">실행과 이력</text><text x="144" y="292" font-size="12" fill="#6b7488">Outbox / Worker / Audit</text>
+</g>
+<line x1="48" y1="336" x2="912" y2="336" stroke="#dbe0ea"/>
+<text x="48" y="360" font-family="'Geist','Malgun Gothic',sans-serif" font-size="12" fill="#6b7488">굵은 테두리: 본인 담당과 관련된 코어·실행 경계　황토색: 업체 예약 변경의 승인 경계</text>
+</svg></body></html>

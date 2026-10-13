@@ -1,0 +1,13 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py",
+    "tests/unit/travel/mobility/test_graph_atomic_replacement_v1.py"
+  ],
+  "exit_code": 0,
+  "stdout": "All checks passed!\n",
+  "stderr": ""
+}

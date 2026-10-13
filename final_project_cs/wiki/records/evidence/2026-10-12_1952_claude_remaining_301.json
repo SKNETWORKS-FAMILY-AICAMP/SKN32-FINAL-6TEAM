@@ -1,0 +1,2002 @@
+{
+  "base_commit": "12f81c66aef28bfda8f105c13792801c22deaf3e",
+  "runtime_commit": "439487e5f8ae5e6c2981388f101740f5a686d040",
+  "skipped": [
+    {
+      "class": "tests.unit.ml.test_local_sentiment",
+      "name": "test_clear_sentences_are_classified",
+      "reason": "학습 산출물이 없다: <workspace>\\.tmp\\manager_recovery_20261012\\recovery-candidate\\datasets\\ml\\sentiment_ko\\baseline — `python -m ml.train_baseline` 로 만든다",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.ml.test_local_sentiment",
+      "name": "test_low_confidence_falls_back_to_neutral",
+      "reason": "학습 산출물이 없다",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.ml.test_local_sentiment",
+      "name": "test_contract_keys_are_stable",
+      "reason": "학습 산출물이 없다: <workspace>\\.tmp\\manager_recovery_20261012\\recovery-candidate\\datasets\\ml\\sentiment_ko\\baseline — `python -m ml.train_baseline` 로 만든다",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.ml.test_local_sentiment",
+      "name": "test_trained_transformer_loads_through_the_same_adapter",
+      "reason": "학습 산출물이 없다: <workspace>\\.tmp\\manager_recovery_20261012\\recovery-candidate\\datasets\\ml\\sentiment_ko\\skt__A.X-Encoder-base",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_check_scripts",
+      "name": "test_check_runtime_on_real_timetable",
+      "reason": "시간표 없음(DATA_DIR/travel/processed/mobility/timetable_v1.jsonl) — 자료 기기에서만 돈다(문제목록 #54)",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_graph_router",
+      "name": "test_real_graph_agrees_with_recorded_graphhopper_routes",
+      "reason": "road_graph_v1 이 없다(C:\\data\\travel\\processed\\mobility\\road_graph_v1) — 자료 기기에서만 돈다",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_graph_router",
+      "name": "test_real_graph_astar_equals_plain_dijkstra_on_random_pairs",
+      "reason": "road_graph_v1 이 없다(C:\\data\\travel\\processed\\mobility\\road_graph_v1) — 자료 기기에서만 돈다",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_taxi",
+      "name": "test_real_data_taxi_mode_lists_a_taxi_option_with_time_and_fare",
+      "reason": "이동 자료 없음 — 자료 기기에서만 돈다(판정기 입력이 없다: ['timetable', 'order', 'transfer_walk', 'bus_rou)",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_taxi",
+      "name": "test_real_data_default_modes_never_list_a_taxi",
+      "reason": "이동 자료 없음 — 자료 기기에서만 돈다(판정기 입력이 없다: ['timetable', 'order', 'transfer_walk', 'bus_rou)",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_golden",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_contract_keys",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_times_hold",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_core_itinerary_checks",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_skip_no_station",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_night_service_day",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_0400_boundary",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_0400_two_sides",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_same_place_kept_unverified",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_envelope_references",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_recheck_carries_context",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_not_before_prev_end",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_keep_input_move_when_skipped",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_independent_recheck",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_route_key_reserved",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_recheck_catches_tampering",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_cli_passes_routes",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_not_before_seconds",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_leading_and_only_moves_kept",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_golden_all_modes",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_option_ids_mode_tag",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_uses_self_check",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_line_names_contract",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_reasons_axis",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_walk_m_and_fare",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_no_per_option_departure",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_bus_from_place_recheck",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_transfer_car_display",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_left_out_rechecked",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_bus_cap_after_eligibility",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_recheck_revives",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_core_routes_strips_display",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_replan_fare_known_locked",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_recheck_at_offsets",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_bus_cap_zero_keeps_planned",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_fare_mixed_is_unknown",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_fare_subway_bracket",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_fare_ub_join_same_name_only",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_plan_v1",
+      "name": "test_fare_lb_unknown_zero",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[R-BASE-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[R-LAST-03]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[R-FIRST-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[LAST-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['line_station_order_v1.json', 'transfer_walk_v1.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[NIGHT-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[NIGHT-03]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[NIGHT-12]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[R-TRANS-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[R-LOOP-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[R-TERM-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[R-HOL-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[BP-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[BUS-03]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[MIX-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[ISSUE-02]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[ISSUE-03]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[ALT-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[J-WORST-02]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[J-SLACK-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[J-NODATA-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_regression_cases",
+      "name": "test_gate[MULTI-01]",
+      "reason": "data not present: \\data\\travel\\processed\\mobility — ['timetable_v1.jsonl', 'line_station_order_v1.json', 'transfer_walk_v1.json', 'bus_route_v1.jsonl', 'bus_stops_v1.jsonl', 'station_coords.json']",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_taxi_fallback",
+      "name": "test_before_first_train_falls_back_to_a_labelled_taxi",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_taxi_fallback",
+      "name": "test_daytime_is_untouched",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_taxi_fallback",
+      "name": "test_explicit_modes_without_taxi_keep_the_old_no_result",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_taxi_fallback",
+      "name": "test_switch_off_restores_the_old_behaviour",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_verify55_v1",
+      "name": "test_d_p90_multi_seoul_itaewon",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_verify55_v1",
+      "name": "test_d_wondeok_no_yangpyeong_transfer",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_verify55_v1",
+      "name": "test_d_exclusion_matches_coords",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_verify55_v1",
+      "name": "test_d_yangpyeong_name_only_not_silent",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_verify55_v1",
+      "name": "test_d_g1_legs_fake_transfer_blocked",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.mobility.test_verify55_v1",
+      "name": "test_d_g2_between_homonyms",
+      "reason": "시간표 없음(DATA_DIR) — 데이터 축 SKIP",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.test_dining_make_michelin_sql",
+      "name": "test_목록은_가이드_서울_180곳",
+      "reason": "데이터 없음(git 밖): 미쉐린_서울_2026.csv",
+      "detail": null
+    },
+    {
+      "class": "tests.unit.travel.test_dining_make_michelin_sql",
+      "name": "test_모은_가게는_목록의_나머지_145곳",
+      "reason": "데이터 없음(git 밖): 미쉐린_서울_2026_가게.jsonl",
+      "detail": null
+    }
+  ],
+  "deselected": [
+    {
+      "nodeid": "tests/unit/travel/mobility/test_bus_bus_walk_v1.py::test_same_id_before_coords",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_bus_bus_walk_v1.py::test_missing_or_bad_coords_unknown[bad0]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_bus_bus_walk_v1.py::test_missing_or_bad_coords_unknown[bad1]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_bus_bus_walk_v1.py::test_missing_or_bad_coords_unknown[bad2]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_bus_bus_walk_v1.py::test_missing_or_bad_coords_unknown[bad3]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_bus_bus_walk_v1.py::test_distance_and_limit",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_on_late_gives_earliest_arrival[seongsu_skip]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_on_late_gives_earliest_arrival[ntower_namdae]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_on_late_gives_earliest_arrival[gyeongbok_lotte]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_is_minimal_and_matches_latest_mode[seongsu_skip]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_is_minimal_and_matches_latest_mode[ntower_namdae]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_is_minimal_and_matches_latest_mode[gyeongbok_lotte]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_default_leg_unchanged_without_flag",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_plan_puts_earliest_in_skipped",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_waits_for_first_train[before_first_0430]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_waits_for_first_train[boundary_035930]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_waits_for_first_train[after_last_holiday]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_earliest_v1.py::test_full_e3_real_answers_have_no_grade",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_mixed_v1.py::test_full_83_skip_gives_konkuk_bus_2016",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_mixed_v1.py::test_full_mix_latest_matches_verifier_lfd",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_mixed_v1.py::test_full_earliest_uses_mixed_when_stations_blocked",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_mixed_v1.py::test_full_plain_options_unchanged_by_mixed",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_party_size_label",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_bike_v1.py::test_golden_bike",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_only_request",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_concurrency_v1.py::test_default_modes_no_bike",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_concurrency_v1.py::test_modes_contract",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_concurrency_v1.py::test_runtime_verify_case_copies",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_concurrency_v1.py::test_bike_not_called_by_default",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_concurrency_v1.py::test_interleave_injection",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_concurrency_v1.py::test_threads_8x80",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_order_and_no_margin",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_recheck_independent",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_holiday_is_sunday_board",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_commute_crowding_weekday_only",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_saturday_crowding_not_commute",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_bus_range_profile",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_night_last_service",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_first_service_window",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_no_station",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_verifier_untouched",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_g6_window_step_validated",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_g1_shared_verifier_never_touched",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_g7_basis_wording",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_plan_estimate_v1.py::test_g8_no_bike_router_calls_by_default",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-BASE-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-BASE-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-BASE-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-FIRST-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-LAST-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-WALL-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-WALL-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-SHORT-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-SHORT-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-SHORT-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-TERM-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-NODEST-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-DIR-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-DIR-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-LOOP-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-ORIG-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-ORIG-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-TRANS-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-LIMIT-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-LIMIT-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-SAT-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-SUN-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-HOL-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-HOL-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-GAP-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-NOSTN-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[synthetic-RIDE-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-BASE-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-BUFFER-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-LAST-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-LAST-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-WALL-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-WALL-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-SHORT-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-SHORT-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-SHORT-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-NODEST-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-DIR-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-DIR-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-LOOP-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-ORIG-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-ORIG-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-LIMIT-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-LIMIT-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-SAT-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-SUN-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-SAT-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-SUN-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-HOL-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-HOL-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-MISSING-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[real-R-NOTRAVEL-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[issue-ISSUE-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[issue-ISSUE-03B]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[issue-ISSUE-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[issue-ISSUE-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[issue-ISSUE-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[issue-ISSUE-07]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[issue-ISSUE-08]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[alt-ALT-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[alt-ALT-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[alt-ALT-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[alt-ALT-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-07]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-08]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-09]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-10]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BUS-11]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BB-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BB-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BB-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus-BB-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[mixed-MIX-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[mixed-MIX-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[mixed-MIX-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[mixed-MIX-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[mixed-MIX-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[mixed-MIX-07]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MULTI-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MULTI-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MULTI-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MULTI-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MULTI-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MIX-AB-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MIX-AB-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MIX-AB-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MIX-AB-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MIX-AB-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MIX-AB-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MIX-AB-07]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MIX-AB-08]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[multi-MIX-AB-09]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-03b]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-07]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-08]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-09]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-10]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[car-CAR-11]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-07]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-08]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-09]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-10]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-11]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-12]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-13]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bike-BIKE-14]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-SLACK-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-WORST-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-WORST-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-CONG-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-CONG-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-CONG-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-LIMIT-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-DISR-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-CONG-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-MULTI-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-CAR-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-LATE-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-CONG-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[judgment-J-CONG-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-04]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-07]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-08]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-09]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-10]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-10B]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-11]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-13]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-14]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-15]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-16]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-17]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[night-NIGHT-18]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus_profile-BP-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus_profile-BP-03a]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus_profile-BP-03b]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus_profile-BP-04a]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus_profile-BP-04b]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus_profile-BP-05]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus_profile-BP-06]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus_noprof-NP-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[bus_noprof-NP-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[destfill-D28-01]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[destfill-D28-02]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_regression_cases.py::test_full[destfill-D28-03]",
+      "markers": [
+        "mobility_full",
+        "parametrize"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_station_fallback_v1.py::test_full_no_disruption_is_unchanged",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_station_fallback_v1.py::test_full_nearest_skipped_gives_next_station_route",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_station_fallback_v1.py::test_full_only_blocked_stations_is_no_service",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_station_fallback_v1.py::test_full_blocked_without_bus_is_no_service",
+      "markers": [
+        "mobility_full"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_kakao_golden.py::test_every_pair_in_the_reference_has_a_car_and_a_transit_value",
+      "markers": [
+        "live"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_kakao_golden.py::test_wait_before_after_cover_the_same_comparable_paths",
+      "markers": [
+        "live"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_kakao_golden.py::test_transit_stays_close_to_the_kakao_best_and_recommended_routes",
+      "markers": [
+        "live"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_kakao_golden.py::test_taxi_minutes_follow_the_kakao_car_route_time",
+      "markers": [
+        "live"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_kakao_golden.py::test_taxi_fare_comparison_is_an_estimate_not_a_floor_ceiling",
+      "markers": [
+        "live"
+      ]
+    },
+    {
+      "nodeid": "tests/unit/travel/mobility/test_taxi_budget_calibration.py::test_current_medium_budget_passes_reserved_paths_and_matches_calibration",
+      "markers": [
+        "live"
+      ]
+    }
+  ],
+  "summary": {
+    "skipped": 81,
+    "mobility_full": 214,
+    "live": 6,
+    "remaining_original_nodeids": 301
+  },
+  "selection_command": "original release paths, -m 'not live', --collect-only; capture pytest_deselected hook",
+  "collection_count": 4316,
+  "selected_count": 4096,
+  "owned_test_database_stopped": true
+}

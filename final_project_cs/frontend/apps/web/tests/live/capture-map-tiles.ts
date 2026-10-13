@@ -56,3 +56,4 @@ export async function useMapTiles(page: Page) {
     await expect(page.locator(".leaflet-tile-loaded").first()).toBeVisible();
   };
 }
+

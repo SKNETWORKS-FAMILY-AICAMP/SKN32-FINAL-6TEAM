@@ -1,0 +1,56 @@
+{
+  "version": "activity-retest-v3",
+  "date_kst": "2026-10-10",
+  "new_budget_usd": 0.5,
+  "baseline_usd": 0.349834632,
+  "max_paid_calls": 600,
+  "seed": 20261010,
+  "timeout_seconds": 60,
+  "max_output_tokens": 4096,
+  "choice_max_output_tokens": 512,
+  "efforts": [
+    "none",
+    "low"
+  ],
+  "models": {
+    "nano": "gpt-5.4-nano",
+    "luna": "gpt-6-luna",
+    "jev": "jev-latest"
+  },
+  "prices": {
+    "nano": {
+      "input": 0.2,
+      "cached_input": 0.02,
+      "cache_write": 0.2,
+      "output": 1.25
+    },
+    "luna": {
+      "input": 0.1,
+      "cached_input": 0.01,
+      "cache_write": 0.125,
+      "output": 0.5
+    },
+    "jev": {
+      "input": 0.042,
+      "cached_input": 0.042,
+      "cache_write": 0.042,
+      "output": 0
+    }
+  },
+  "credential_file": "final_project_cs/.env",
+  "openai_base_url": "https://api.openai.com/v1",
+  "jev_endpoint": "https://api.typesafe.ai/v1/systemone",
+  "dataset_directory": "datasets/travel/activity_recommendation_bench_20261009/retest-20261010",
+  "raw_subdirectory": "raw/v2",
+  "score_chunk_size": 64,
+  "choice_chunk_size": 64,
+  "shortlist_keep": 8,
+  "bootstrap_samples": 5000,
+  "price_checked_at": "2026-10-10",
+  "price_sources": [
+    "https://developers.openai.com/api/docs/models/gpt-5.4-nano",
+    "https://developers.openai.com/api/docs/models/gpt-6-luna",
+    "https://typesafe.ai/blog/introducing-system-one-models-and-jev"
+  ],
+  "stability_case_count": 6
+}

@@ -1,0 +1,47 @@
+{
+  "verified_complete_answers": 4014,
+  "failed_or_unparsed": 1,
+  "missing": 0,
+  "format_failure_excluded_from_correct_not_denominator": true,
+  "false_pick_delta_uses_actual_false_picks": true,
+  "request": {
+    "gemma_correct": 960,
+    "frog_correct": 898,
+    "total": 1033,
+    "gemma_minus_frog_pp": 6.001936108422072,
+    "cluster95_pp": [
+      3.9482790585709275,
+      8.137367590714446
+    ],
+    "paired_exact": {
+      "a_only": 96,
+      "b_only": 34,
+      "p": 4.944275600544126e-08
+    },
+    "clusters": 59,
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 7
+  },
+  "no_request_correct": {
+    "gemma_correct": 820,
+    "frog_correct": 807,
+    "total": 974,
+    "gemma_minus_frog_pp": 1.3347022587268993,
+    "cluster95_pp": [
+      -0.6166653978404577,
+      3.458887648061858
+    ],
+    "paired_exact": {
+      "a_only": 47,
+      "b_only": 34,
+      "p": 0.18207674694084314
+    },
+    "clusters": 59,
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 7
+  },
+  "model_repetitions": 1,
+  "same_suite": true,
+  "full_cohort_rank": false,
+  "quantization_note": "Gemma is Q4_K_M; Frog artifact quantization not verified here. Artifact hashes/engine versions recorded; this is not a same-precision architecture or speed claim."
+}

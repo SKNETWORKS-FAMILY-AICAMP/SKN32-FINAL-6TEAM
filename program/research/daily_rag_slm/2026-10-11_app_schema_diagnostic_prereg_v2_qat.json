@@ -1,0 +1,37 @@
+{
+  "created_at_utc": "2026-10-10T23:13:38.662035+00:00",
+  "purpose": "Fixed two-condition QAT representation check for application JSON contract; same frozen questions and budgets, no prompt or threshold tuning",
+  "unique_itineraries": 1,
+  "questions": 6,
+  "history_conditions": 2,
+  "budgets_abba": [
+    400,
+    800,
+    800,
+    400
+  ],
+  "calls_per_model": 48,
+  "models": [
+    "e4bqat_original_d3",
+    "e4bqat_finch_s20261014_d3"
+  ],
+  "training": [
+    "publisher Instruct QAT only",
+    "our FINCH seed20261014 adapter on QAT"
+  ],
+  "scope": "GPU proxy models are not asserted to match unknown ARM merged-adapter lineage; no cross-machine speed claims",
+  "independent_holdout": false,
+  "adoption": false,
+  "payload_sha256": "0162d560348efc5b9a0f929c7e9a8198c82da41c71e79d717e95cca1e82ac93c",
+  "logic_tests": {
+    "passed": 3,
+    "total": 3
+  },
+  "stop_after_fixed_matrix": true,
+  "interpretation": "Compare within each model, retain all empty/invalid/truncated rows, inspect reasoning and finish_reason; token budget increase alone does not establish repair",
+  "next_if_success": "Separate exact ARM replay and full app regressions before resuming blocked profiles",
+  "extends": "2026-10-11_app_schema_diagnostic_prereg_v1.json",
+  "reason": "QAT and standard GGUF may handle current app reasoning/output contract differently; complete fixed matrix then stop",
+  "observed_before_registration": "Base standard GGUF 47/48 JSON and field checks; FINCH and Saluki incomplete. No QAT diagnostic results examined",
+  "calls_total": 96
+}

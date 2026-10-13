@@ -1,0 +1,51 @@
+{
+  "utc": "2026-10-12T03:52:39.899191+00:00",
+  "containers": [
+    {
+      "name": "tripilot-arm-db-1",
+      "running": true,
+      "health": "healthy",
+      "restart_count": 0,
+      "image": "pgvector/pgvector:pg17"
+    },
+    {
+      "name": "tripilot-arm-model-adapter-1",
+      "running": true,
+      "health": "healthy",
+      "restart_count": 0,
+      "image": "python:3.12-slim"
+    },
+    {
+      "name": "tripilot-arm-api-1",
+      "running": true,
+      "health": "healthy",
+      "restart_count": 0,
+      "image": "tripilot-arm-api:6866c5960357-summary-20261012"
+    },
+    {
+      "name": "tripilot-arm-worker-1",
+      "running": true,
+      "health": null,
+      "restart_count": 0,
+      "image": "tripilot-arm-api:6866c5960357-summary-20261012"
+    },
+    {
+      "name": "tripilot-arm-web-1",
+      "running": true,
+      "health": "healthy",
+      "restart_count": 0,
+      "image": "tripilot-arm-web:6866c5960357-summary-20261012"
+    }
+  ],
+  "model_health": {
+    "status": "ok"
+  },
+  "engine": "b11370-bed0a8566",
+  "slots": 1,
+  "model_ftype": "Q4_0",
+  "units": {
+    "tripilot-arm-app-model.service": "active",
+    "tripilot-arm-work-queue.service": "active",
+    "tripilot-arm-serving.service": "active"
+  }
+}

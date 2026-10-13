@@ -1,0 +1,17 @@
+[
+  {
+    "file": "findings-v2.json",
+    "backup": "_backup\\2026-10-12_remaining-recommendations-approved\\findings-v2.json",
+    "sha256": "b2b6ce8e925f0cec093cb9d510fe725d6d3163ef71e594ddedb38acb8771869b"
+  },
+  {
+    "file": "wiki-review-v2.html",
+    "backup": "_backup\\2026-10-12_remaining-recommendations-approved\\wiki-review-v2.html",
+    "sha256": "dd2c5a42bd153a81a81533eae8f24f7f1c78767f452a6a772919e71b841d1980"
+  },
+  {
+    "file": "wiki-review-v2.md",
+    "backup": "_backup\\2026-10-12_remaining-recommendations-approved\\wiki-review-v2.md",
+    "sha256": "c031ff1fc3a1021e34c144e2c31c1ec89fc31096d432ff8f49a1d7ea80ac2424"
+  }
+]

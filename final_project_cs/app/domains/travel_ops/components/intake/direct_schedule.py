@@ -161,6 +161,16 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
                 else:
                     shift(b, earliest, route.basis)
 
+        # 뒤 일정 시작을 미루면 collect가 앞 일정의 추정 끝을 다시 늘릴 수 있다.
+        # 이미 이동 계산에 사용한 끝 시각도 편집으로 고정하여 체류 시간을 유지한다.
+        fixed_ends = set()
+        for a, b in zip(chain, chain[1:]):
+            if (a["end_at"] is not None and b["start_at"] is not None
+                    and b["start_at"] != review._dt(day, b["start"])
+                    and key(a) not in basis
+                    and ((a.get("provenance") or {}).get("ends_at") or {}).get("rule") == "intake.default_duration"):
+                fixed_ends.add(key(a))
+
         # 앞당기면서 생긴 앞 구간도 최종 시각으로 검증한다.
         for a, b in zip(chain, chain[1:]):
             if key(a) not in active and key(b) not in active:
@@ -169,14 +179,15 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
             if route is not None and not route.ok:
                 raise ScheduleConflict("앞뒤 이동시간을 함께 맞추지 못해 변경을 저장하지 않았어요.")
         for r in chain:
-            if key(r) not in basis:
+            if key(r) not in basis and key(r) not in fixed_ends:
                 continue
             if not hours_fit(r, r["start_at"], r["end_at"]):
                 raise ScheduleConflict("이동에 맞춰 시각을 옮기면 운영시간에 맞지 않아요. 다른 시각이나 장소를 골라 주세요.")
             for field, moment in (("starts_at", r["start_at"]), ("ends_at", r["end_at"])):
                 value = moment.strftime("%H:%M")
-                if value == r["start" if field == "starts_at" else "end"]:
+                freeze_end = field == "ends_at" and key(r) in fixed_ends
+                if value == r["start" if field == "starts_at" else "end"] and not freeze_end:
                     continue
                 out.append({"source_id": str(r["source_id"]), "field": f"items[{r['index']}].{field}",
-                            "value": value, "basis": basis[key(r)]})
+                            "value": value, "basis": basis.get(key(r), "inferred_duration_preserved")})
     return out

@@ -1,0 +1,3275 @@
+{
+  "created_at": "2026-10-09T05:51:43.200778+09:00",
+  "scope": "이동 21개 기능의 현재 근거·남은 작업; 기능 수는 제품 준비율 아님",
+  "counts": {
+    "조건부 사용": 4,
+    "개선 필요": 9,
+    "추가 검증": 8
+  },
+  "features": [
+    {
+      "name": "택시 미터 예상액",
+      "status": "조건부 사용",
+      "scope": "서울 중형·예상액 안내",
+      "metric": "카카오 ±1,000원 55/100; 중앙 −900원/−7.2%. 네이버 9/12.",
+      "reason": "공식 거리·저속 시간 요율은 구현됐으나 추천 경로와 저속 구간이 다르다.",
+      "need": "같은 경로·출발 시각으로 반복 대조; 실제 미터 영수증. 대형·모범·호출료 범위 분리.",
+      "source": "taxi"
+    },
+    {
+      "name": "택시 예산 여유",
+      "status": "조건부 사용",
+      "scope": "예산용 예상액; 결제 상한 약속 제외",
+      "metric": "카카오 예상액 이상 96/100; 네이버 11/12. 중앙 여유 +27.4%/+36.0%.",
+      "reason": "37%는 앞 자료에서 고정한 여유. 웹 예상액을 덮는 빈도이며 실제 결제 보장이 아니다.",
+      "need": "다른 날·교통 상태의 새 경로 검증; 실제 결제 초과율과 과다 여유를 함께 재기.",
+      "source": "taxi"
+    },
+    {
+      "name": "자동차 소요 시간",
+      "status": "개선 필요",
+      "scope": "일정의 참고 시간",
+      "metric": "카카오 ±5분 88/100; 중앙 −1.70분/−10.4%; 절대오차 평균 2.49분.",
+      "reason": "도로급 정적 속도로 경로를 고른 뒤 교통 속도로 시간을 재산정한다. 두 기준이 다르다.",
+      "need": "교통 상태를 경로 선택 비용에도 반영하는 실험; 출퇴근·한강 횡단 반복 측정. 정적 단순 회전 2,487관계의 탐색 연결을 확인했다. 복잡한 유턴·시간/차종 예외·회전 적용 후 도로 연결·출입점·새 웹 오차 검증은 남음. 실제 선택 도로의 붙임 거리와 다른 후보 사용 근거를 보존했다. 동일 좌표의 네이버 100m·카카오 약 800m 차이는 출발 도로·시각 정렬 후 판정해야 한다. 도로 위 좌표로 이동해도 다른 후보를 다시 선택했다. 진입 도로 통제가 필요하며 웹 확인은 미완료다.",
+      "source": "fresh"
+    },
+    {
+      "name": "자동차 경로 거리",
+      "status": "개선 필요",
+      "scope": "범위가 확인된 경로 참고",
+      "metric": "카카오 ±10% 53/100; 중앙 −6.8%; 절대오차 평균 1.256km.",
+      "reason": "택시 부족 4건은 우리 거리가 웹 경로보다 약 35~45% 짧았다. 요율만 바꿔 해결되지 않는다.",
+      "need": "회전 제한·도로 연결·경로 형상 대조 및 지도 그래프 갱신. 정적 단순 회전 2,487관계의 탐색 연결을 확인했다. 복잡한 유턴·시간/차종 예외·회전 적용 후 도로 연결·출입점·새 웹 오차 검증은 남음. 실제 선택 도로의 붙임 거리와 다른 후보 사용 근거를 보존했다. 동일 좌표의 네이버 100m·카카오 약 800m 차이는 출발 도로·시각 정렬 후 판정해야 한다. 도로 위 좌표로 이동해도 다른 후보를 다시 선택했다. 진입 도로 통제가 필요하며 웹 확인은 미완료다.",
+      "source": "fresh"
+    },
+    {
+      "name": "대중교통 전체 소요",
+      "status": "개선 필요",
+      "scope": "오차·제외 경로를 확인한 일정 참고",
+      "metric": "수정 전 카카오 대기 제외 ±5분: 빠른 후보 72/100·추천안 68/100. 추가 네이버 7/8 → 8/8; 절대오차 평균 7.38 → 2.63분.",
+      "reason": "부분 순환선의 없는 연결을 수정해 연신내→합정이 62→19분(웹 18분)으로 회복됐다. 기존 자료를 보고 수정한 8쌍이라 독립 검증이 필요하다.",
+      "need": "같은 출발 시각·입구·목표 경로로 별도 날짜 반복 측정.",
+      "source": "multi"
+    },
+    {
+      "name": "지하철 경로 산출",
+      "status": "조건부 사용",
+      "scope": "거리·노선 범위가 확인된 서울 경로",
+      "metric": "수단을 엄격히 나눈 재집계: 93/96 → 94/96.",
+      "reason": "실제 구간열로 수단을 구분했다. 기존 95/96에는 버스 혼합 후보가 섞여 있었다.",
+      "need": "급행·종착·지선·요일·막차 구간의 독립 검증.",
+      "source": "development"
+    },
+    {
+      "name": "버스 직행·환승 산출",
+      "status": "개선 필요",
+      "scope": "직행과 1회 환승의 참고안",
+      "metric": "버스만인 후보 52/100 → 100/100. 대기 제외 ±5분 70/100; 평균 절대 차이 4.41분.",
+      "reason": "노선 후보 개수 제한·운행 방향·요일·시간대를 수정했다. 각 환승 승차 시각에 운행 여부를 확인한다.",
+      "need": "2회 이상 환승·첫차와 막차·다른 날짜의 독립 표본 및 실제 탑승 검증.",
+      "source": "development"
+    },
+    {
+      "name": "지하철 요금",
+      "status": "개선 필요",
+      "scope": "정확·추정·범위 상단을 표시",
+      "metric": "같은 93경로 요금 68 → 93. 현재 94/94 안내, 그중 상단 12건. 웹 금액 범위 일치 82/94.",
+      "reason": "공식 역간 거리와 신분당선 구간별 별도 운임을 확보했다. OSM 거리·공표 거리의 방향 대응 추정·확정 거리를 구분한다.",
+      "need": "거리 경계의 정확 요금·자료 충돌 두 구간 및 별도 노선 요금의 추가 검증. 상단은 정확 요금으로 세지 않기.",
+      "source": "development"
+    },
+    {
+      "name": "버스·혼합 환승 요금",
+      "status": "개선 필요",
+      "scope": "할인 전 상한 표시",
+      "metric": "요금 안내 99/100; 할인 전 상한 59건. 웹 범위 일치 33/99; 상한이 웹 최대 이상 48/59.",
+      "reason": "단일 탑승 요금 합의 상한이다. 통합거리 환승 할인을 계산하는 제품 경로는 추가 구현이 필요하다.",
+      "need": "실제 운임거리·환승 할인·하차 태그·조조 적용을 계산하고 같은 경로로 검증.",
+      "source": "development"
+    },
+    {
+      "name": "장소 사이 도보 거리",
+      "status": "조건부 사용",
+      "scope": "도로망이 연결된 평지 경로",
+      "metric": "카카오 ±10% 17/30; 중앙 +2.1%. 네이버 절대오차 평균 0.68km/12쌍.",
+      "reason": "현재 지도에는 일부 보행 전용 샛길·계단이 빠질 수 있다.",
+      "need": "보행 전용 그래프, 공원·계단·횡단보도 연결과 실제 경로 대조.",
+      "source": "fresh"
+    },
+    {
+      "name": "도보 소요·역 접근 시간",
+      "status": "개선 필요",
+      "scope": "보행 속도에 따른 참고값",
+      "metric": "기존 30쌍은 직선 1,617~3,897m로 제품 1,200m 상한 밖: 공개 제공 0/30, 정책 제외 30/30. 제품 ETA 오차 분모 0. 원시 진단 ±5분 15/30→15/30; MAE 7.038→6.782분.",
+      "reason": "계단 시간이 일정과 기록 경로 재사용에 전달되도록 수정했다. 관련 회귀 55/55 통과. 원시 MAE 차이의 쌍별 bootstrap95% 구간 −0.727~+0.086분으로 정확도 개선은 확정할 수 없다.",
+      "need": "직접 도보의 현재 보행망·계단 시간, 옛 문맥 재경로, 안내 보류의 사건 처리·새 일정·재안내, 일정 판 저장 경합과 지원 인원·휴식·첫 방문 대조를 통제 시험에서 확인했습니다. 1.2km 정책 안의 출입구·시각·추천 경로가 맞는 웹 표본, 보행망/횡단/고도 품질, 실제 보행 오차·현재 위치/탑승 입력·선호 수단 변경·지원 밖 접근성이 남았습니다. 장거리 원시 진단은 제품 제공률로 쓰지 않습니다. 계산~저장 사이 여행 입력 변경과 두 연결의 저장 순서를 검증했습니다. 운영 조건 변경 API·안내 배달 뒤 조건 변경 대응은 별도 남은 범위입니다.",
+      "source": "fresh"
+    },
+    {
+      "name": "자전거 경로",
+      "status": "개선 필요",
+      "scope": "도로망상의 참고 경로",
+      "metric": "카카오 거리 ±10% 16/30; 네이버 거리 중앙 −17.5%(12쌍).",
+      "reason": "자전거길 선호와 강변·횡단 연결에서 서비스별 경로가 다르다.",
+      "need": "허용 도로·강변 진입·교량·경로 형상 확인. 안전 경로 정확도를 별도로 재기.",
+      "source": "multi"
+    },
+    {
+      "name": "자전거 소요",
+      "status": "개선 필요",
+      "scope": "운행 시간 참고",
+      "metric": "카카오 ±5분 23/30; 중앙 −3.2분/−17.9%. 네이버 절대오차 평균 12.73분/12쌍.",
+      "reason": "현재 시간이 짧게 나오는 경향. 속도를 20km/h로 올리는 계산은 오히려 차이를 키웠다.",
+      "need": "경로를 먼저 대조한 뒤 경사·정지·자전거 유형·대여 시간을 분리.",
+      "source": "fresh"
+    },
+    {
+      "name": "첫차·막차·출발 역산",
+      "status": "추가 검증",
+      "scope": "시간표를 쓰는 판정 로직",
+      "metric": "웹 첫차·막차 확인은 한 경로. 전체 노선·요일 통과율 분모 미확보.",
+      "reason": "코드·단위 시험은 있으나 실제 운행 시간에 대한 대표 검증이 부족하다.",
+      "need": "평일·주말·공휴일·자정 넘김·환승 막차와 실제 출발 안내를 묶어 검증.",
+      "source": "wiki"
+    },
+    {
+      "name": "환승 횟수·역 출구·승차 칸",
+      "status": "추가 검증",
+      "scope": "원자료가 있는 항목 표시",
+      "metric": "기존 추천안 환승 횟수 일치 66/100. 출구·승차 칸 정확도 분모 미확보.",
+      "reason": "추천안이 달라 환승 횟수 차이가 곧 오류는 아니다. 승차 칸은 경로 정확 일치 자료만 표시한다.",
+      "need": "같은 경로로 환승·출구·개찰과 안내 칸을 직접 대조.",
+      "source": "wiki"
+    },
+    {
+      "name": "실시간 지하철·버스 도착",
+      "status": "추가 검증",
+      "scope": "연결 및 원자료 조회",
+      "metric": "서울 버스 API 이용 승인을 완료했고 실제 응답 104정류장을 확인했다. 지하철 실제 응답도 확보했다. 실제 차량 도착 대비 시간 오차는 아직 측정하지 않았다.",
+      "reason": "공급자 시각·방향·정류장 순서를 보존하고, 출발 대기 등 상태를 0초로 바꾸지 않는다. 자료 조회 성공과 고객 알림 연결 성공은 별도다.",
+      "need": "버스 첫 탑승의 현재 도착 관측, 옛 문맥 재경로, 안내 보류의 사건 처리·새 일정·재안내, 일정 판 저장 경합과 지원 인원·휴식·첫 방문 대조를 통제 시험에서 확인했습니다. 실제 차량 도착 오차·모든 환승 재계산·지하철 실시간 연결·현재 위치/탑승 입력·선호 수단 변경·지원 밖 접근성·새 독립 웹 검증이 남았습니다. 계산~저장 사이 여행 입력 변경과 두 연결의 저장 순서를 검증했습니다. 운영 조건 변경 API·안내 배달 뒤 조건 변경 대응은 별도 남은 범위입니다.",
+      "source": "wiki"
+    },
+    {
+      "name": "혼잡 안내",
+      "status": "추가 검증",
+      "scope": "근거 자료가 있는 혼잡 경고",
+      "metric": "실제 혼잡 대비 정확도 분모 미확보.",
+      "reason": "노선·시간대 통계와 급행/실제 차량 혼잡은 다를 수 있다.",
+      "need": "일반·급행 구분 및 경고의 실제 일치율·누락률 측정.",
+      "source": "wiki"
+    },
+    {
+      "name": "무정차·도로 사고 감시",
+      "status": "추가 검증",
+      "scope": "연결된 소스의 사건 판정",
+      "metric": "공지에서 역을 읽는 로직·도로 사건 대체 소스는 구현. 실제 사건 회수율 미측정.",
+      "reason": "공지 제목만으로 역을 못 읽는 경우가 있다. 사건 없음과 읽기 실패를 구분해야 한다.",
+      "need": "실제 공지 재생·동명 역·다역 공지·두 소스 동시 실패·지연 검증.",
+      "source": "wiki"
+    },
+    {
+      "name": "따릉이 대여·반납·재고",
+      "status": "추가 검증",
+      "scope": "대여소 및 실시간 재고 조회",
+      "metric": "지도 자전거 시간 비교는 실제 대여소 재고·반납 성공률 시험이 아니다.",
+      "reason": "도로 주행 시간 외에 대여소 접근·잠금 해제·반납·재고가 필요하다.",
+      "need": "주행 전후 재고 변동·마감·만차·대체 대여소·전체 여정 소요 측정.",
+      "source": "wiki"
+    },
+    {
+      "name": "사건 후 일정 조정·자동 적용",
+      "status": "추가 검증",
+      "scope": "계산기와 Team 연결",
+      "metric": "이번 오프라인 100쌍 대조는 배포된 cs 프로젝트 서버의 일정 변경 검증이 아니다.",
+      "reason": "후보를 내는 능력과 고객 일정에 안전하게 적용하는 능력은 별도로 검증해야 한다.",
+      "need": "여행 전체 재생: 제약·동시 변경·실패 전환·알림·최신 링크 확인.",
+      "source": "wiki"
+    },
+    {
+      "name": "지도 경로 표시",
+      "status": "추가 검증",
+      "scope": "화면 개선 검토",
+      "metric": "네이버와 우리 화면의 사용자 과제 성공률·경로 표시 정확도 비교는 아직 안 했다.",
+      "reason": "경로선·구간 색·출발/도착·정류장·환승·시간 카드를 연결해야 길을 따라갈 수 있다.",
+      "need": "실제 경로 형상을 가진 지도 시안 및 휴대폰 화면·클릭 연동 시험.",
+      "source": "wiki"
+    }
+  ],
+  "development_source_sha256": "91466c718fed80d6f81e34847b57fa9b63b995034f3486ad625f21392ae74bc2",
+  "web_source_sha256": {
+    "google-W01-transit.json": "958741b59131b3769d2962b52d3785c68134e704113d46098b6e31d494165bee",
+    "google-W01-walk.json": "9c63f169ec7bfaadeae8f270b27f2ebc22513d2cccbf4e2083d4153f67d51b39",
+    "google-W02-transit-address-v2.json": "d9ce56d0a7ee73cce847183ac36daceb12412b1616001261d53f5f3fc68f5735",
+    "google-W02-transit.json": "d2edfc54464f1d4005d4941595cc1f39f82d60c416abf6ed7c2a92ed52477ae2",
+    "kakao-W01-share.json": "3ec8c4e6c620fd736f5b7fd06c3a26be692753c78b005ab8bb8396213099ec93",
+    "kakao-W01-walk-detail.json": "e6c5209bebd5d88d3f68c94babf4f70a925fa0afef8fd893bf57472e6c94cc9b",
+    "kakao-W01-walk.json": "ab5ada2945a17ab92344082dccfce1e5310735774ff8bb87ae62cbc86ce1289b",
+    "kakao-W01R-walk.json": "b7e49507dfe065fe8557da937fd5ccabba82c766a6d4e13f30aa0c0b7826e0b2",
+    "kakao-W02-bike.json": "47a3e434d141903c7c6c49d49f78fc5607199a65746fcb51779b4332af009d07",
+    "kakao-W02-car.json": "74d2924cbf36c01cacff98093b94e84a265e07e86e96e998ac45d0d48cf451fb",
+    "kakao-W02-transit.json": "fe2f9d6ae0e903a1d679c395cee7c18b60b23e8ffe07a11e610d7ce0d547a9cf",
+    "kakao-W02-walk-repeat-v1.json": "3132a8d3df42cb21da65e28d20efb91f5c38c29a2723e8f14542e384adafc271",
+    "kakao-W02-walk.json": "3288c0c59e5263d91131f7ac716545050e8ae1371d72c048b586f5459d1c03f7",
+    "kakao-W02R-walk-v1.json": "ef272f85dc1202264f6a3114fb947bf9b4174b88877ed80c49753973529d7f8a",
+    "naver-W01-walk-detail.json": "8295074b2f85f9a0eb11c9b0a7635382d419f5b034d3ff8f734716c2b0e92322",
+    "naver-W01-walk.json": "dfb7373d83758e1f5aa3cd8e82049fc4cb0718975fd91770b36165d76709f78b",
+    "naver-W01R-walk.json": "559f5848f955171ccbfe41c9314fee0b3eeaff125d572effefb6b7ec64ab1337",
+    "naver-W02-bike.json": "10d74a3bc0c59848434f3909fbbb0b47c3b60b64bac97de8777b9ad93b756242",
+    "naver-W02-car.json": "68bad47e5dadff82eb2aa44d264ec46ef56c788298d4f67253e854b70c64c3c1",
+    "naver-W02-transit.json": "f6b02a684e0af46c216721007b3dc0d5f6a218f01520eba7779dbcc340a44c32",
+    "naver-W02-walk-repeat-v1.json": "b91f41aa2b16097be8ecf614e3377f0ee4728426a8cf316ca3220cc36dbcd008",
+    "naver-W02-walk.json": "fded9e62d79db72dfa2f7e09767b145862309322215e61863d27ca093d569f87",
+    "naver-W02R-walk-v1.json": "9aae6ff3f869bc056b5f72ff41f72cb11499c0298c2873dcb2025f7ce850a982",
+    "source-index-v1.json": "a2ff2ee03b7420b7803e28645e365dac1ab734daf03eb3c7cff17671fee97d0c",
+    "source-index-v2.json": "e3f749e63e0ac3f5dd5197f06ec5866402271f504f053e0b74febb491d09e4b2"
+  },
+  "departure_verification": {
+    "created_at": "2026-10-09T01:40:48.563364+09:00",
+    "report": "2026-10-09_0140_출발관측_승차환승_재계산과_안내검증.md",
+    "target_passed": 49,
+    "regression_passed": 607,
+    "source_to_notice_passed": 2,
+    "independent_real_trip_samples": 0,
+    "production_consumer_assembled": false,
+    "late_case_replanning_connected": false,
+    "scope": "고정 입력·실제 계산기·로컬 DB 바깥함; 실제 승차·배포 응답 아님"
+  },
+  "departure_assembly": {
+    "created_at": "2026-10-09T01:59:05.565589+09:00",
+    "report": "2026-10-09_0159_출발관측_자동알림_조립검증.md",
+    "target_passed": 44,
+    "regression_passed": 649,
+    "production_entry_code_assembled": true,
+    "deployed_customer_guidance_confirmed": false,
+    "late_case_replanning_connected": false,
+    "scope": "고정 입력·조립된 계산기·응답 주입·실제 로컬 개발 DB; 고객 GPS·실제 승차 아님"
+  },
+  "walk_departure": {
+    "created_at": "2026-10-09T02:23:23.494170+09:00",
+    "report": "2026-10-09_0223_도보출발_현재경로_재검증.md",
+    "target_passed": 55,
+    "target_total": 55,
+    "regression_passed": 671,
+    "regression_total": 671,
+    "db_walk_passed": 2,
+    "db_walk_total": 2,
+    "development_validation": true,
+    "independent_web_accuracy_rows": 0,
+    "developer_api_calls": 0,
+    "data_unchanged": {
+      "W03_kakao_walk_forward.json": true,
+      "W03_kakao_walk_forward.png": true,
+      "W03_kakao_walk_forward.txt": true,
+      "W03_naver_walk_forward.json": true,
+      "W03_naver_walk_forward.png": true,
+      "W03_naver_walk_forward.txt": true
+    },
+    "source_sha256": {
+      "app/domains/travel_ops/instances/mobility/engine/plan.py": "03411bb15f564384edb83a24948cca7ff8027a59556f1722c0c9fa2d5628feb9",
+      "app/domains/travel_ops/instances/mobility/engine/departure_context.py": "0fbf038e9b7fe584ee14318da16fb972c3e461a55b16447fc40a63271e5e5ba2",
+      "app/domains/travel_ops/instances/mobility/engine/departure_observer.py": "5e181c145cb5d003292e071328183e863022f715edebea97f813b51b45ac5440",
+      "tests/unit/travel/mobility/test_departure_walk_v1.py": "a15fa4cd4a8bc40f51aa2f19c9dd81e6224f18b5177560ee5484508ee6a81792",
+      "tests/unit/travel/test_departure_walk_assembly_v1.py": "39cc707901f411e448442d07116de6ffed866bed4d45a3f96c2a582ee72ad6cc",
+      "tests/scenario/test_departure_walk_db_v1.py": "538abbde47eb7915ee23bbabc667e149953a95ccf44614970ed63e59d9e1a83c",
+      "scripts/mobility/build_readiness_visual_v12.py": "3fcacff5ce6d84249d0fb99e1678382c749676a1c22752571ed60f5e3f745051"
+    }
+  },
+  "car_turns": {
+    "created_at": "2026-10-09T02:53:17.768007+09:00",
+    "report": "2026-10-09_0253_차량회전_탐색적용과_도로자료_단절검증.md",
+    "regression_passed": 686,
+    "regression_total": 686,
+    "regression_deselected": 209,
+    "target_latest_passed": 15,
+    "target_latest_total": 15,
+    "ordinary_probe": {
+      "created_at": "2026-10-09T02:38:26.478107+09:00",
+      "scope": "development queries at mapped restriction approaches; not independent web or real driving validation",
+      "queries": 12,
+      "repeats_per_pair": 3,
+      "applied_relations": 2487,
+      "source_relations": 6258,
+      "load_seconds": 28.653532800002722,
+      "developer_api_calls": 0,
+      "observations": [
+        {
+          "relation_id": 3448146,
+          "start": [
+            126.9973976,
+            37.4948708
+          ],
+          "end": [
+            126.997418,
+            37.4953676
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 55.2,
+                "model_seconds": 13.247,
+                "query_seconds": 0.0021118000004207715
+              },
+              "after": {
+                "distance_m": 55.2,
+                "model_seconds": 13.247,
+                "query_seconds": 0.005292300003929995
+              }
+            },
+            {
+              "before": {
+                "distance_m": 55.2,
+                "model_seconds": 13.247,
+                "query_seconds": 0.0014119999977992848
+              },
+              "after": {
+                "distance_m": 55.2,
+                "model_seconds": 13.247,
+                "query_seconds": 0.0022871999972267076
+              }
+            },
+            {
+              "before": {
+                "distance_m": 55.2,
+                "model_seconds": 13.247,
+                "query_seconds": 0.001327199992374517
+              },
+              "after": {
+                "distance_m": 55.2,
+                "model_seconds": 13.247,
+                "query_seconds": 0.0020533000060822815
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 3598859,
+          "start": [
+            126.9038664,
+            37.5630048
+          ],
+          "end": [
+            126.90383600000001,
+            37.562961200000004
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.0035386999952606857
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.004242299997713417
+              }
+            },
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.0028728000033879653
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.0036615999997593462
+              }
+            },
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.0031817000126466155
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.004254400002537295
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 3725931,
+          "start": [
+            127.03717040000001,
+            37.559164
+          ],
+          "end": [
+            127.03713000000002,
+            37.5591456
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.0036254000006010756
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.005008199994335882
+              }
+            },
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.003208099995390512
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.003998200001660734
+              }
+            },
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.003088400000706315
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.005432000005384907
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 3725932,
+          "start": [
+            127.03717040000001,
+            37.559164
+          ],
+          "end": [
+            127.03705680000002,
+            37.559158
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.0032913000031840056
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.005430700010037981
+              }
+            },
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.003236699994886294
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.0040126999956555665
+              }
+            },
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.003068000005441718
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.006157700001494959
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 4207546,
+          "start": [
+            126.8817672,
+            37.4801626
+          ],
+          "end": [
+            126.8817024,
+            37.480117400000005
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.002274099999340251
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.0029885999974794686
+              }
+            },
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.002388799999607727
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.002814599996781908
+              }
+            },
+            {
+              "before": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.001857499999459833
+              },
+              "after": {
+                "distance_m": 0.0,
+                "model_seconds": 0.0,
+                "query_seconds": 0.002642600011313334
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 4627267,
+          "start": [
+            126.73521680000002,
+            37.576729199999996
+          ],
+          "end": [
+            126.7352156,
+            37.576646399999994
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 3.3,
+                "model_seconds": 0.396,
+                "query_seconds": 0.0009151999984169379
+              },
+              "after": {
+                "distance_m": 3.3,
+                "model_seconds": 0.396,
+                "query_seconds": 0.0016209000023081899
+              }
+            },
+            {
+              "before": {
+                "distance_m": 3.3,
+                "model_seconds": 0.396,
+                "query_seconds": 0.0007520000071963295
+              },
+              "after": {
+                "distance_m": 3.3,
+                "model_seconds": 0.396,
+                "query_seconds": 0.0015786000003572553
+              }
+            },
+            {
+              "before": {
+                "distance_m": 3.3,
+                "model_seconds": 0.396,
+                "query_seconds": 0.0008476000075461343
+              },
+              "after": {
+                "distance_m": 3.3,
+                "model_seconds": 0.396,
+                "query_seconds": 0.0016140000079758465
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 4666941,
+          "start": [
+            126.91387660000001,
+            37.548831199999995
+          ],
+          "end": [
+            126.9139826,
+            37.548875599999995
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 6.06,
+                "model_seconds": 0.624,
+                "query_seconds": 0.003132099998765625
+              },
+              "after": {
+                "distance_m": 6.06,
+                "model_seconds": 0.624,
+                "query_seconds": 0.003907899998011999
+              }
+            },
+            {
+              "before": {
+                "distance_m": 6.06,
+                "model_seconds": 0.624,
+                "query_seconds": 0.0038674999959766865
+              },
+              "after": {
+                "distance_m": 6.06,
+                "model_seconds": 0.624,
+                "query_seconds": 0.004082699990249239
+              }
+            },
+            {
+              "before": {
+                "distance_m": 6.06,
+                "model_seconds": 0.624,
+                "query_seconds": 0.0029980999970575795
+              },
+              "after": {
+                "distance_m": 6.06,
+                "model_seconds": 0.624,
+                "query_seconds": 0.003795299999183044
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 4674491,
+          "start": [
+            127.0456758,
+            37.4632072
+          ],
+          "end": [
+            127.0459334,
+            37.463165200000006
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 19.93,
+                "model_seconds": 1.794,
+                "query_seconds": 0.0013000000035390258
+              },
+              "after": {
+                "distance_m": 19.93,
+                "model_seconds": 1.794,
+                "query_seconds": 0.0028929000109201297
+              }
+            },
+            {
+              "before": {
+                "distance_m": 19.93,
+                "model_seconds": 1.794,
+                "query_seconds": 0.0009902000019792467
+              },
+              "after": {
+                "distance_m": 19.93,
+                "model_seconds": 1.794,
+                "query_seconds": 0.0016365000046789646
+              }
+            },
+            {
+              "before": {
+                "distance_m": 19.93,
+                "model_seconds": 1.794,
+                "query_seconds": 0.0008958999969763681
+              },
+              "after": {
+                "distance_m": 19.93,
+                "model_seconds": 1.794,
+                "query_seconds": 0.001589500010595657
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 4674492,
+          "start": [
+            127.04553179999999,
+            37.46337200000001
+          ],
+          "end": [
+            127.0459334,
+            37.463165200000006
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 41.37,
+                "model_seconds": 3.723,
+                "query_seconds": 0.0014708999951835722
+              },
+              "after": {
+                "distance_m": 41.37,
+                "model_seconds": 3.723,
+                "query_seconds": 0.0017950000037671998
+              }
+            },
+            {
+              "before": {
+                "distance_m": 41.37,
+                "model_seconds": 3.723,
+                "query_seconds": 0.000945399995543994
+              },
+              "after": {
+                "distance_m": 41.37,
+                "model_seconds": 3.723,
+                "query_seconds": 0.0016086999967228621
+              }
+            },
+            {
+              "before": {
+                "distance_m": 41.37,
+                "model_seconds": 3.723,
+                "query_seconds": 0.0008985000022221357
+              },
+              "after": {
+                "distance_m": 41.37,
+                "model_seconds": 3.723,
+                "query_seconds": 0.0015503000031458214
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 4674494,
+          "start": [
+            127.0456758,
+            37.4632072
+          ],
+          "end": [
+            127.0458418,
+            37.463054400000004
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 20.77,
+                "model_seconds": 1.869,
+                "query_seconds": 0.0009680999937700108
+              },
+              "after": {
+                "distance_m": 20.77,
+                "model_seconds": 1.869,
+                "query_seconds": 0.0015921000012895092
+              }
+            },
+            {
+              "before": {
+                "distance_m": 20.77,
+                "model_seconds": 1.869,
+                "query_seconds": 0.000920400008908473
+              },
+              "after": {
+                "distance_m": 20.77,
+                "model_seconds": 1.869,
+                "query_seconds": 0.002237100008642301
+              }
+            },
+            {
+              "before": {
+                "distance_m": 20.77,
+                "model_seconds": 1.869,
+                "query_seconds": 0.0010787999926833436
+              },
+              "after": {
+                "distance_m": 20.77,
+                "model_seconds": 1.869,
+                "query_seconds": 0.0022520999918924645
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 4674495,
+          "start": [
+            127.04553179999999,
+            37.46337200000001
+          ],
+          "end": [
+            127.0458418,
+            37.463054400000004
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 41.2,
+                "model_seconds": 3.708,
+                "query_seconds": 0.000994000001810491
+              },
+              "after": {
+                "distance_m": 41.2,
+                "model_seconds": 3.708,
+                "query_seconds": 0.0015644999948563054
+              }
+            },
+            {
+              "before": {
+                "distance_m": 41.2,
+                "model_seconds": 3.708,
+                "query_seconds": 0.0009497999999439344
+              },
+              "after": {
+                "distance_m": 41.2,
+                "model_seconds": 3.708,
+                "query_seconds": 0.0015673000016249716
+              }
+            },
+            {
+              "before": {
+                "distance_m": 41.2,
+                "model_seconds": 3.708,
+                "query_seconds": 0.0008814000029815361
+              },
+              "after": {
+                "distance_m": 41.2,
+                "model_seconds": 3.708,
+                "query_seconds": 0.001542500001960434
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        },
+        {
+          "relation_id": 4674502,
+          "start": [
+            127.0506462,
+            37.461216
+          ],
+          "end": [
+            127.0500866,
+            37.4613516
+          ],
+          "repeats": [
+            {
+              "before": {
+                "distance_m": 50.7,
+                "model_seconds": 4.563,
+                "query_seconds": 0.0008174999966286123
+              },
+              "after": {
+                "distance_m": 50.7,
+                "model_seconds": 4.563,
+                "query_seconds": 0.0013948999985586852
+              }
+            },
+            {
+              "before": {
+                "distance_m": 50.7,
+                "model_seconds": 4.563,
+                "query_seconds": 0.0006327000010060146
+              },
+              "after": {
+                "distance_m": 50.7,
+                "model_seconds": 4.563,
+                "query_seconds": 0.0012946999922860414
+              }
+            },
+            {
+              "before": {
+                "distance_m": 50.7,
+                "model_seconds": 4.563,
+                "query_seconds": 0.0006245999975362793
+              },
+              "after": {
+                "distance_m": 50.7,
+                "model_seconds": 4.563,
+                "query_seconds": 0.0012273999891476706
+              }
+            }
+          ],
+          "astar_dijkstra_equal": true,
+          "applied_rule_violations": 0
+        }
+      ],
+      "median_before_query_seconds": 0.0013695999950869009,
+      "median_after_query_seconds": 0.002269649994559586,
+      "changed_distance_queries": 0
+    },
+    "pinned_probe": {
+      "created_at": "2026-10-09T02:46:12.949621+09:00",
+      "scope": "development: incoming and final edge fixed explicitly; public snap selection and real driving are not measured",
+      "queries": 12,
+      "repeats_per_query": 3,
+      "developer_api_calls": 0,
+      "baseline_target_transition_used": 12,
+      "after_applied_rule_violations": 0,
+      "routed_queries": 11,
+      "no_path_queries": 1,
+      "changed_distance_queries": 11,
+      "observations": [
+        {
+          "relation_id": 3448146,
+          "incoming": 488124,
+          "outgoing": 127207,
+          "start": [
+            126.99758738237122,
+            37.49495325622504
+          ],
+          "end": [
+            126.997418,
+            37.4953676
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 80.29,
+                "model_seconds": 16.539,
+                "query_seconds": 0.00024410001060459763,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 149.69,
+                "model_seconds": 24.866,
+                "query_seconds": 0.044570199999725446
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 80.29,
+                "model_seconds": 16.539,
+                "query_seconds": 8.149999484885484e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 149.69,
+                "model_seconds": 24.866,
+                "query_seconds": 0.0010046999959740788
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 80.29,
+                "model_seconds": 16.539,
+                "query_seconds": 6.980000762268901e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 149.69,
+                "model_seconds": 24.866,
+                "query_seconds": 0.0009444000024814159
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 24.873599555969236
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 24.873599555969236
+            }
+          }
+        },
+        {
+          "relation_id": 3598859,
+          "incoming": 592130,
+          "outgoing": 187610,
+          "start": [
+            126.9038664,
+            37.5630048
+          ],
+          "end": [
+            126.90383600000001,
+            37.562961200000004
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 8.8,
+                "model_seconds": 0.792,
+                "query_seconds": 0.00011160000576637685,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 1521.41,
+                "model_seconds": 151.705,
+                "query_seconds": 0.0017809999990276992
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 8.8,
+                "model_seconds": 0.792,
+                "query_seconds": 0.00010150000161956996,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 1521.41,
+                "model_seconds": 151.705,
+                "query_seconds": 0.0014682000037282705
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 8.8,
+                "model_seconds": 0.792,
+                "query_seconds": 6.410000787582248e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 1521.41,
+                "model_seconds": 151.705,
+                "query_seconds": 0.0012429000053089112
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 151.71471327972412
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 151.71471327972412
+            }
+          }
+        },
+        {
+          "relation_id": 3725931,
+          "incoming": 160634,
+          "outgoing": 160616,
+          "start": [
+            127.03760099555629,
+            37.558872160233534
+          ],
+          "end": [
+            127.03714649225975,
+            37.55910781773219
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 67.08,
+                "model_seconds": 6.037,
+                "query_seconds": 8.13999940874055e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 118.95,
+                "model_seconds": 14.498,
+                "query_seconds": 0.001600300005520694
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 67.08,
+                "model_seconds": 6.037,
+                "query_seconds": 9.669999417383224e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 118.95,
+                "model_seconds": 14.498,
+                "query_seconds": 0.0012202999932924286
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 67.08,
+                "model_seconds": 6.037,
+                "query_seconds": 0.00010990000737365335,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 118.95,
+                "model_seconds": 14.498,
+                "query_seconds": 0.0009831000061240047
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 14.485199990749361
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 14.485199990749361
+            }
+          }
+        },
+        {
+          "relation_id": 3725932,
+          "incoming": 160634,
+          "outgoing": 7395,
+          "start": [
+            127.03760099555629,
+            37.558872160233534
+          ],
+          "end": [
+            127.03705680000002,
+            37.559158
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 62.89,
+                "model_seconds": 5.845,
+                "query_seconds": 7.759999425616115e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 114.76,
+                "model_seconds": 14.306,
+                "query_seconds": 0.00098230000003241
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 62.89,
+                "model_seconds": 5.845,
+                "query_seconds": 6.620000931434333e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 114.76,
+                "model_seconds": 14.306,
+                "query_seconds": 0.000830000004498288
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 62.89,
+                "model_seconds": 5.845,
+                "query_seconds": 7.660000119358301e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 114.76,
+                "model_seconds": 14.306,
+                "query_seconds": 0.0007736999978078529
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 14.296800004482272
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 14.296800004482272
+            }
+          }
+        },
+        {
+          "relation_id": 4627267,
+          "incoming": 185920,
+          "outgoing": 60616,
+          "start": [
+            126.73521680000002,
+            37.576729199999996
+          ],
+          "end": [
+            126.7352156,
+            37.576646399999994
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 24.66,
+                "model_seconds": 2.959,
+                "query_seconds": 7.680000271648169e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 42.68,
+                "model_seconds": 5.555,
+                "query_seconds": 0.0009720999951241538
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 24.66,
+                "model_seconds": 2.959,
+                "query_seconds": 7.439999899361283e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 42.68,
+                "model_seconds": 5.555,
+                "query_seconds": 0.0008967999892774969
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 24.66,
+                "model_seconds": 2.959,
+                "query_seconds": 0.00020349999249447137,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 42.68,
+                "model_seconds": 5.555,
+                "query_seconds": 0.0011193999962415546
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 5.553600044250489
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 5.553600044250489
+            }
+          }
+        },
+        {
+          "relation_id": 4666941,
+          "incoming": 174072,
+          "outgoing": 174592,
+          "start": [
+            126.91381694200587,
+            37.54883086484273
+          ],
+          "end": [
+            126.91392437740201,
+            37.54894753834761
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 33.14,
+                "model_seconds": 4.13,
+                "query_seconds": 8.739999611862004e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 72.89,
+                "model_seconds": 8.218,
+                "query_seconds": 0.0008005999989109114
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 33.14,
+                "model_seconds": 4.13,
+                "query_seconds": 5.360000068321824e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 72.89,
+                "model_seconds": 8.218,
+                "query_seconds": 0.0006932999967830256
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 33.14,
+                "model_seconds": 4.13,
+                "query_seconds": 4.990000161342323e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 72.89,
+                "model_seconds": 8.218,
+                "query_seconds": 0.0007329999934881926
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 8.230628517695836
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 8.230628517695836
+            }
+          }
+        },
+        {
+          "relation_id": 4674491,
+          "incoming": 484868,
+          "outgoing": 187018,
+          "start": [
+            127.0456758,
+            37.4632072
+          ],
+          "end": [
+            127.0459334,
+            37.463165200000006
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 28.58,
+                "model_seconds": 2.666,
+                "query_seconds": 7.320000440813601e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 892.99,
+                "model_seconds": 83.927,
+                "query_seconds": 0.0009322000114480034
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 28.58,
+                "model_seconds": 2.666,
+                "query_seconds": 5.370000144466758e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 892.99,
+                "model_seconds": 83.927,
+                "query_seconds": 0.0008300999907078221
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 28.58,
+                "model_seconds": 2.666,
+                "query_seconds": 5.129999772179872e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 892.99,
+                "model_seconds": 83.927,
+                "query_seconds": 0.0007899999909568578
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 83.92140140206475
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 83.92140140206475
+            }
+          }
+        },
+        {
+          "relation_id": 4674492,
+          "incoming": 140940,
+          "outgoing": 187018,
+          "start": [
+            127.04493292672674,
+            37.463825803238336
+          ],
+          "end": [
+            127.0459334,
+            37.463165200000006
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 122.94,
+                "model_seconds": 11.158,
+                "query_seconds": 7.569999434053898e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 987.35,
+                "model_seconds": 92.42,
+                "query_seconds": 0.0009831999923335388
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 122.94,
+                "model_seconds": 11.158,
+                "query_seconds": 6.02000072831288e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 987.35,
+                "model_seconds": 92.42,
+                "query_seconds": 0.0008500999974785373
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 122.94,
+                "model_seconds": 11.158,
+                "query_seconds": 5.529999907594174e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 987.35,
+                "model_seconds": 92.42,
+                "query_seconds": 0.000887800008058548
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 92.41380159432548
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 92.41380159432548
+            }
+          }
+        },
+        {
+          "relation_id": 4674494,
+          "incoming": 484868,
+          "outgoing": 187021,
+          "start": [
+            127.0456758,
+            37.4632072
+          ],
+          "end": [
+            127.04576472616112,
+            37.46293547432697
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 43.69,
+                "model_seconds": 4.221,
+                "query_seconds": 7.869998808018863e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 922.69,
+                "model_seconds": 86.983,
+                "query_seconds": 0.0010131000017281622
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 43.69,
+                "model_seconds": 4.221,
+                "query_seconds": 6.659999780822545e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 922.69,
+                "model_seconds": 86.983,
+                "query_seconds": 0.0008516999951098114
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 43.69,
+                "model_seconds": 4.221,
+                "query_seconds": 5.629999213851988e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 922.69,
+                "model_seconds": 86.983,
+                "query_seconds": 0.0009218000050168484
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 86.9783156761442
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 86.9783156761442
+            }
+          }
+        },
+        {
+          "relation_id": 4674495,
+          "incoming": 140940,
+          "outgoing": 187021,
+          "start": [
+            127.04493292672674,
+            37.463825803238336
+          ],
+          "end": [
+            127.04576472616112,
+            37.46293547432697
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 138.05,
+                "model_seconds": 12.713,
+                "query_seconds": 7.349999214056879e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 1017.05,
+                "model_seconds": 95.475,
+                "query_seconds": 0.000997700000880286
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 138.05,
+                "model_seconds": 12.713,
+                "query_seconds": 6.549998943228275e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 1017.05,
+                "model_seconds": 95.475,
+                "query_seconds": 0.0009648000122979283
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 138.05,
+                "model_seconds": 12.713,
+                "query_seconds": 5.869999586138874e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 1017.05,
+                "model_seconds": 95.475,
+                "query_seconds": 0.0009241999941878021
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 95.47071586840494
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 95.47071586840494
+            }
+          }
+        },
+        {
+          "relation_id": 4674502,
+          "incoming": 487664,
+          "outgoing": 142503,
+          "start": [
+            127.05166008930163,
+            37.46077685284649
+          ],
+          "end": [
+            127.0500866,
+            37.4613516
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 161.86,
+                "model_seconds": 15.934,
+                "query_seconds": 9.050000517163426e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 1022.63,
+                "model_seconds": 94.322,
+                "query_seconds": 0.001161300009698607
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 161.86,
+                "model_seconds": 15.934,
+                "query_seconds": 5.8999998145736754e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 1022.63,
+                "model_seconds": 94.322,
+                "query_seconds": 0.0011491999903228134
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 161.86,
+                "model_seconds": 15.934,
+                "query_seconds": 5.18000015290454e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "routed",
+                "distance_m": 1022.63,
+                "model_seconds": 94.322,
+                "query_seconds": 0.001344999996945262
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "routed",
+              "cost": 94.31460145092011
+            },
+            "astar": {
+              "status": "routed",
+              "cost": 94.31460145092011
+            }
+          }
+        },
+        {
+          "relation_id": 4677532,
+          "incoming": 461986,
+          "outgoing": 187174,
+          "start": [
+            126.81659695671017,
+            37.56103677313472
+          ],
+          "end": [
+            126.81649055992263,
+            37.561935578472514
+          ],
+          "repeats": [
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 101.44,
+                "model_seconds": 9.13,
+                "query_seconds": 8.959999831859022e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "no_path",
+                "query_seconds": 0.0007747999916318804
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 101.44,
+                "model_seconds": 9.13,
+                "query_seconds": 6.180000491440296e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "no_path",
+                "query_seconds": 0.0007213000062620267
+              }
+            },
+            {
+              "before": {
+                "status": "routed",
+                "distance_m": 101.44,
+                "model_seconds": 9.13,
+                "query_seconds": 5.669999518431723e-05,
+                "target_transition_used": true
+              },
+              "after": {
+                "status": "no_path",
+                "query_seconds": 0.0007254999945871532
+              }
+            }
+          ],
+          "applied_rule_violations": 0,
+          "astar_dijkstra_equal": true,
+          "reference": {
+            "dijkstra": {
+              "status": "no_path"
+            },
+            "astar": {
+              "status": "no_path"
+            }
+          }
+        }
+      ]
+    },
+    "source_hashes": [
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+        "sha256": "58188f0a8fd358ac9b8dc4d6abaa2e7c2f5651e01e2f7fc2ea94948ea6791063"
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+        "sha256": "cdf23a8f43677c8e0dca20a3ae8e4acc8282bd3cc3ae5dd15194603e0dcbcfeb"
+      },
+      {
+        "file": "app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py",
+        "sha256": "5ed6abddfc65ef809ebff6d584ffc3dcd3aa49e5b29eb227b5f822626ede20e5"
+      },
+      {
+        "file": "scripts/mobility/build_car_turn_policy_v1.py",
+        "sha256": "bd56a3841a90f8a73c6414b86feab1c992ba76462e012fd1e65ee0234378d190"
+      },
+      {
+        "file": "scripts/mobility/build_readiness_visual_v13.py",
+        "sha256": "c0c3f136e799bacabb1c813a07638ba85f42f2d22889b0aa311477e83e692436"
+      },
+      {
+        "file": "tests/unit/travel/mobility/test_car_turn_restrictions_v1.py",
+        "sha256": "1c79505b9c5ab63f4092e6c71878b2b376b0294cde1722e4284a0d92274468b3"
+      }
+    ],
+    "applied_relations": 2487,
+    "source_relations": 6258,
+    "developer_api_calls": 0,
+    "git_head": "38f9e08cb08cafba6ce2f66ff7b08c19788cf1d1",
+    "worktree": "shared dirty worktree, exact code hashes supplied; no commit or deployment"
+  },
+  "selected_road_evidence": {
+    "created_at": "2026-10-09T03:25:20.144168+09:00",
+    "report": "2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+    "target": {
+      "tests": 45,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "regression_passed": 691,
+    "regression_total": 691,
+    "regression": {
+      "tests": 691,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "parts": [
+      {
+        "tests": 266,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "tests": 227,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "tests": 193,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "post_probe": {
+      "created_at": "2026-10-09T03:14:37.106156+09:00",
+      "start": [
+        126.81659695671017,
+        37.56103677313472
+      ],
+      "end": [
+        126.81649055992263,
+        37.561935578472514
+      ],
+      "repeats": [
+        {
+          "distance_m": 98.29,
+          "model_seconds": 9.175,
+          "snap_m": [
+            8.8,
+            0.0
+          ],
+          "quality": {
+            "access_max_m": 8.8,
+            "arterial_pct": 0.0,
+            "optimistic": false
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [
+              187112,
+              187174
+            ],
+            "search_cost_seconds": 9.175276625678396,
+            "snap_selection": {
+              "candidate_counts": [
+                2,
+                2
+              ],
+              "selected_candidate_ranks": [
+                1,
+                0
+              ],
+              "used_non_nearest": [
+                true,
+                false
+              ],
+              "nearest_snap_m": [
+                0.0,
+                0.0
+              ],
+              "physical_access_verified": false
+            }
+          }
+        },
+        {
+          "distance_m": 98.29,
+          "model_seconds": 9.175,
+          "snap_m": [
+            8.8,
+            0.0
+          ],
+          "quality": {
+            "access_max_m": 8.8,
+            "arterial_pct": 0.0,
+            "optimistic": false
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [
+              187112,
+              187174
+            ],
+            "search_cost_seconds": 9.175276625678396,
+            "snap_selection": {
+              "candidate_counts": [
+                2,
+                2
+              ],
+              "selected_candidate_ranks": [
+                1,
+                0
+              ],
+              "used_non_nearest": [
+                true,
+                false
+              ],
+              "nearest_snap_m": [
+                0.0,
+                0.0
+              ],
+              "physical_access_verified": false
+            }
+          }
+        },
+        {
+          "distance_m": 98.29,
+          "model_seconds": 9.175,
+          "snap_m": [
+            8.8,
+            0.0
+          ],
+          "quality": {
+            "access_max_m": 8.8,
+            "arterial_pct": 0.0,
+            "optimistic": false
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [
+              187112,
+              187174
+            ],
+            "search_cost_seconds": 9.175276625678396,
+            "snap_selection": {
+              "candidate_counts": [
+                2,
+                2
+              ],
+              "selected_candidate_ranks": [
+                1,
+                0
+              ],
+              "used_non_nearest": [
+                true,
+                false
+              ],
+              "nearest_snap_m": [
+                0.0,
+                0.0
+              ],
+              "physical_access_verified": false
+            }
+          }
+        }
+      ],
+      "api_calls": 0,
+      "scope": "수정 후 실제 그래프 단독 적재; 동일 개발 좌표쌍 3회; 웹 도로·시각 정렬 안 됨"
+    },
+    "web_pairs": 1,
+    "provider_queries": 3,
+    "provider_routes": 2,
+    "aligned_accuracy_rows": 0,
+    "web_raw_integrity": [
+      {
+        "file": "C04_google_car.json",
+        "expected": "6c138b73332c31399fd006f45829fd6e878c8ced90798f850034c65a87540ec0",
+        "actual": "6c138b73332c31399fd006f45829fd6e878c8ced90798f850034c65a87540ec0"
+      },
+      {
+        "file": "C04_google_visible-excerpt.txt",
+        "expected": "3b342f22fc2f0b53aee9f4340acf9e0638245de7a8535c35edd268633bd0256c",
+        "actual": "3b342f22fc2f0b53aee9f4340acf9e0638245de7a8535c35edd268633bd0256c"
+      },
+      {
+        "file": "C04_kakao_car.json",
+        "expected": "8c9b5dee16b643e1b10acba9e91cbbdb4eb21c606aaa60973967c890cd779c05",
+        "actual": "8c9b5dee16b643e1b10acba9e91cbbdb4eb21c606aaa60973967c890cd779c05"
+      },
+      {
+        "file": "C04_kakao_visible-excerpt.txt",
+        "expected": "9634cc42b57c4f3983075dfbdbdc0ed9bf53d568a414aae8535daee32407b993",
+        "actual": "9634cc42b57c4f3983075dfbdbdc0ed9bf53d568a414aae8535daee32407b993"
+      },
+      {
+        "file": "C04_naver_car.json",
+        "expected": "09cb895bfa93de47cf010701a3b0370f6cf01a19a2e8600007458025f628236d",
+        "actual": "09cb895bfa93de47cf010701a3b0370f6cf01a19a2e8600007458025f628236d"
+      },
+      {
+        "file": "C04_naver_visible-excerpt.txt",
+        "expected": "6c18fa8592d15c3c2cc7bd74cfcbb152e67e4e71d531acb782020be0b4ad9c34",
+        "actual": "6c18fa8592d15c3c2cc7bd74cfcbb152e67e4e71d531acb782020be0b4ad9c34"
+      },
+      {
+        "file": "C04_osm_latest_observation.json",
+        "expected": "9a1a9a8ddc807a625cad233cd075b8f269ebc63c4bf317b81a4776ecfb52b0fc",
+        "actual": "9a1a9a8ddc807a625cad233cd075b8f269ebc63c4bf317b81a4776ecfb52b0fc"
+      }
+    ],
+    "source_hashes": [
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car.py",
+        "sha256": "c95f6088f56771fa94b61a60e0d1b1f90a8a64213b73d74247cb2dfd0ff0bf66"
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car_turn_search.py",
+        "sha256": "99cff4d7f59ee9625b5f03fef9555a8c61726373a795e3b892a4e2529940889e"
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py",
+        "sha256": "28a5c2c86f6bdc6bcd90a6896955bf59cc11d5bc8f724b20cbc71002cfd73e4e"
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\fold.py",
+        "sha256": "98938b3397328eb4a3c994d45846e9071a9f97aa3f9e4b1a92536d8a076c4156"
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\turn_restrictions.py",
+        "sha256": "5ed6abddfc65ef809ebff6d584ffc3dcd3aa49e5b29eb227b5f822626ede20e5"
+      },
+      {
+        "file": "final_project_cs\\tests\\unit\\travel\\mobility\\test_car_selected_snap_evidence_v1.py",
+        "sha256": "4c044793fb9177b01c5a3eca8d4decccb8c57a97b921bfb332cdc4c3f796ac2d"
+      },
+      {
+        "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v14.py",
+        "sha256": "66c7761ff3410f525f5c358ff48b8dd9ec9dc855c5a41b10ceef34a374262d32"
+      }
+    ],
+    "data_hashes": [
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+        "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+        "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+        "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+        "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+      }
+    ],
+    "api_calls": 0,
+    "independent_holdout": false
+  },
+  "legacy_selection": {
+    "created_at": "2026-10-09T03:47:39.473730+09:00",
+    "report": "2026-10-09_0347_차량_대체경로_선택거리와_좌표이동_통제실험.md",
+    "regression": {
+      "passed": 695,
+      "total": 695,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "process_groups": 4
+    },
+    "target_passed": 57,
+    "target_total": 57,
+    "target_source": "subset of final expanded JUnit cases",
+    "before_failed": 4,
+    "before_total": 4,
+    "real_probe": {
+      "created_at": "2026-10-09T03:38:27.466969+09:00",
+      "queries": 2,
+      "repetitions": 3,
+      "calls": 6,
+      "api_calls": 0,
+      "independent_holdout": false,
+      "observations": [
+        {
+          "repeat": 1,
+          "label": "original",
+          "requested_start": [
+            126.81659695671017,
+            37.56103677313472
+          ],
+          "requested_end": [
+            126.81649055992263,
+            37.561935578472514
+          ],
+          "distance_m": 98.29,
+          "model_seconds": 9.175,
+          "snap_m": [
+            8.8,
+            0.0
+          ],
+          "quality": {
+            "access_max_m": 8.8,
+            "arterial_pct": 0.0,
+            "optimistic": false
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [
+              187112,
+              187174
+            ],
+            "search_cost_seconds": 9.175276625678396,
+            "snap_selection": {
+              "candidate_counts": [
+                2,
+                2
+              ],
+              "selected_candidate_ranks": [
+                1,
+                0
+              ],
+              "used_non_nearest": [
+                true,
+                false
+              ],
+              "nearest_snap_m": [
+                0.0,
+                0.0
+              ],
+              "physical_access_verified": false
+            }
+          }
+        },
+        {
+          "repeat": 1,
+          "label": "on_selected_road",
+          "requested_start": [
+            126.81668092135571,
+            37.56107982631504
+          ],
+          "requested_end": [
+            126.81649055992263,
+            37.561935578472514
+          ],
+          "distance_m": 87.32,
+          "model_seconds": 7.859,
+          "snap_m": [
+            10.9,
+            0.0
+          ],
+          "quality": {
+            "access_max_m": 10.9,
+            "arterial_pct": 0.0,
+            "optimistic": false
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [],
+            "search_cost_seconds": 7.85880010989319,
+            "snap_selection": {
+              "candidate_counts": [
+                3,
+                2
+              ],
+              "selected_candidate_ranks": [
+                2,
+                0
+              ],
+              "used_non_nearest": [
+                true,
+                false
+              ],
+              "nearest_snap_m": [
+                0.0,
+                0.0
+              ],
+              "physical_access_verified": false
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "label": "original",
+          "requested_start": [
+            126.81659695671017,
+            37.56103677313472
+          ],
+          "requested_end": [
+            126.81649055992263,
+            37.561935578472514
+          ],
+          "distance_m": 98.29,
+          "model_seconds": 9.175,
+          "snap_m": [
+            8.8,
+            0.0
+          ],
+          "quality": {
+            "access_max_m": 8.8,
+            "arterial_pct": 0.0,
+            "optimistic": false
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [
+              187112,
+              187174
+            ],
+            "search_cost_seconds": 9.175276625678396,
+            "snap_selection": {
+              "candidate_counts": [
+                2,
+                2
+              ],
+              "selected_candidate_ranks": [
+                1,
+                0
+              ],
+              "used_non_nearest": [
+                true,
+                false
+              ],
+              "nearest_snap_m": [
+                0.0,
+                0.0
+              ],
+              "physical_access_verified": false
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "label": "on_selected_road",
+          "requested_start": [
+            126.81668092135571,
+            37.56107982631504
+          ],
+          "requested_end": [
+            126.81649055992263,
+            37.561935578472514
+          ],
+          "distance_m": 87.32,
+          "model_seconds": 7.859,
+          "snap_m": [
+            10.9,
+            0.0
+          ],
+          "quality": {
+            "access_max_m": 10.9,
+            "arterial_pct": 0.0,
+            "optimistic": false
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [],
+            "search_cost_seconds": 7.85880010989319,
+            "snap_selection": {
+              "candidate_counts": [
+                3,
+                2
+              ],
+              "selected_candidate_ranks": [
+                2,
+                0
+              ],
+              "used_non_nearest": [
+                true,
+                false
+              ],
+              "nearest_snap_m": [
+                0.0,
+                0.0
+              ],
+              "physical_access_verified": false
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "label": "original",
+          "requested_start": [
+            126.81659695671017,
+            37.56103677313472
+          ],
+          "requested_end": [
+            126.81649055992263,
+            37.561935578472514
+          ],
+          "distance_m": 98.29,
+          "model_seconds": 9.175,
+          "snap_m": [
+            8.8,
+            0.0
+          ],
+          "quality": {
+            "access_max_m": 8.8,
+            "arterial_pct": 0.0,
+            "optimistic": false
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [
+              187112,
+              187174
+            ],
+            "search_cost_seconds": 9.175276625678396,
+            "snap_selection": {
+              "candidate_counts": [
+                2,
+                2
+              ],
+              "selected_candidate_ranks": [
+                1,
+                0
+              ],
+              "used_non_nearest": [
+                true,
+                false
+              ],
+              "nearest_snap_m": [
+                0.0,
+                0.0
+              ],
+              "physical_access_verified": false
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "label": "on_selected_road",
+          "requested_start": [
+            126.81668092135571,
+            37.56107982631504
+          ],
+          "requested_end": [
+            126.81649055992263,
+            37.561935578472514
+          ],
+          "distance_m": 87.32,
+          "model_seconds": 7.859,
+          "snap_m": [
+            10.9,
+            0.0
+          ],
+          "quality": {
+            "access_max_m": 10.9,
+            "arterial_pct": 0.0,
+            "optimistic": false
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [],
+            "search_cost_seconds": 7.85880010989319,
+            "snap_selection": {
+              "candidate_counts": [
+                3,
+                2
+              ],
+              "selected_candidate_ranks": [
+                2,
+                0
+              ],
+              "used_non_nearest": [
+                true,
+                false
+              ],
+              "nearest_snap_m": [
+                0.0,
+                0.0
+              ],
+              "physical_access_verified": false
+            }
+          }
+        }
+      ],
+      "scope": "기존 좌표·도로 위로 옮긴 좌표 교대; 정적 모델; 웹 신규 결과 미확보; 합법 진입 미확인"
+    },
+    "initial_hash_checks": [
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car.py",
+        "original_backup_used": false,
+        "matches": true
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car_turn_search.py",
+        "original_backup_used": false,
+        "matches": true
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py",
+        "original_backup_used": true,
+        "matches": true
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\fold.py",
+        "original_backup_used": false,
+        "matches": true
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\turn_restrictions.py",
+        "original_backup_used": false,
+        "matches": true
+      },
+      {
+        "file": "final_project_cs\\tests\\unit\\travel\\mobility\\test_car_selected_snap_evidence_v1.py",
+        "original_backup_used": false,
+        "matches": true
+      },
+      {
+        "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v14.py",
+        "original_backup_used": false,
+        "matches": true
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+        "original_backup_used": false,
+        "matches": true
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+        "original_backup_used": false,
+        "matches": true
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+        "original_backup_used": false,
+        "matches": true
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+        "original_backup_used": false,
+        "matches": true
+      }
+    ],
+    "source_hashes": [
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py",
+        "sha256": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8"
+      },
+      {
+        "file": "final_project_cs\\tests\\unit\\travel\\mobility\\test_car_legacy_selected_snap_v1.py",
+        "sha256": "7afed3834ace40cbc9ba1a6c5af0283fc353b14c7923d412e02b1ea3059f8970"
+      },
+      {
+        "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v15.py",
+        "sha256": "c7612518d31a327fb97d5a7e85c660054e5917d281eba7d58bc50d403c07f239"
+      }
+    ],
+    "data_hashes": [
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+        "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+        "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+        "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+        "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+      }
+    ],
+    "existing_web_hashes_verified": 7,
+    "fresh_web_routes": 0,
+    "aligned_accuracy_rows": 0,
+    "independent_holdout": false,
+    "api_direct_calls": 0
+  },
+  "departure_source_gate": {
+    "created_at": "2026-10-09T04:08:44.435483+09:00",
+    "report": "2026-10-09_0408_출발재검증_사건소스_분리와_도보안내_검증.md",
+    "regression": {
+      "passed": 704,
+      "total": 704,
+      "process_groups": 4
+    },
+    "related_passed": 37,
+    "related_total": 37,
+    "related_scope": "최종 확대 XML의 목표 35개와 새 DB 2개; 중복 합산 안 함",
+    "before": {
+      "failed": 5,
+      "passed": 2,
+      "total": 7
+    },
+    "db_passed": 2,
+    "db_total": 2,
+    "source_hashes": [
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_reminders.py",
+        "sha256": "ddf6f92659701b88a403a71997e8b3e5b3f03e3522021050790e3f3327695d1d"
+      },
+      {
+        "file": "final_project_cs\\tests\\unit\\travel\\test_departure_source_gate_v1.py",
+        "sha256": "6292e41cfaf05426fc39eb92cce3d60a75c0b765509c0fbc0d5d4d63c7306024"
+      },
+      {
+        "file": "final_project_cs\\tests\\scenario\\test_departure_source_gate_db_v1.py",
+        "sha256": "a9f3e18676e3b0c246b03153db13cc76a03089f5d8bc30343d3573ba40b3b2f4"
+      },
+      {
+        "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v16.py",
+        "sha256": "e7fdf960742818ff9955d510d4c95a6650232103bb17885ff561ab21a0687a69"
+      }
+    ],
+    "data_hashes": [
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+        "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+        "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+        "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+        "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+      }
+    ],
+    "initial_hash_checks": [
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py",
+        "matches": true
+      },
+      {
+        "file": "final_project_cs\\tests\\unit\\travel\\mobility\\test_car_legacy_selected_snap_v1.py",
+        "matches": true
+      },
+      {
+        "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v15.py",
+        "matches": true
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+        "matches": true
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+        "matches": true
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+        "matches": true
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+        "matches": true
+      }
+    ],
+    "fresh_web_routes": 0,
+    "independent_holdout": false,
+    "map_api_calls": 0
+  },
+  "departure_watch_connection": {
+    "created_at": "2026-10-09T04:39:49.744297+09:00",
+    "regression": {
+      "passed": 788,
+      "total": 788,
+      "deselected": 209,
+      "parts": [
+        {
+          "part": 1,
+          "passed": 307,
+          "deselected": 19
+        },
+        {
+          "part": 2,
+          "passed": 256,
+          "deselected": 11
+        },
+        {
+          "part": 3,
+          "passed": 219,
+          "deselected": 179
+        },
+        {
+          "part": 4,
+          "passed": 5,
+          "deselected": 0
+        }
+      ],
+      "separate_assembly_passed": 1
+    },
+    "related_passed": 24,
+    "related_total": 24,
+    "local_db": {
+      "conditions": 2,
+      "successful_replan_conditions": 1,
+      "already_announced_conditions": 1,
+      "repeated_ticks": 10,
+      "cases": 1,
+      "itinerary_applications": 1,
+      "change_notices": 1,
+      "new_departure_notices": 1
+    },
+    "report": "2026-10-09_0439_출발보류_감시연결과_현재경로_재조정_검증.md",
+    "prior_hashes_matched": 8,
+    "source_hashes": [
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\components\\itinerary\\itinerary.py",
+        "sha256": "0c54566aadbc32b1b1beaf891451079e57b0c24cea58df3ec0c23ce88096b332"
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\components\\itinerary\\itinerary_changes.py",
+        "sha256": "e8ebb982a96cdb2e72fc98b050cf9318159d2e00587f5d6ca83a3076680db51a"
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_watch_cases.py",
+        "sha256": "3afb435095fe5449b75b46c704a5f47ee3c6c922317106205d2e636a8d0a2453"
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\team.py",
+        "sha256": "bb4f52559af260f80cc18eb0c5f146f799a761286da220f72d892848435d686c"
+      },
+      {
+        "file": "final_project_cs\\scripts\\run_sweepers.py",
+        "sha256": "90c7cff8e52854015acf5debaac66b78427ef6181bf98677495d0ef59bb242c8"
+      },
+      {
+        "file": "final_project_cs\\tests\\unit\\travel\\test_departure_watch_v1.py",
+        "sha256": "ff17dc554b15ec1e1b991692d3c294672ee53912c29c4f4a4a877e143a2b5901"
+      },
+      {
+        "file": "final_project_cs\\tests\\unit\\travel\\test_departure_replan_v1.py",
+        "sha256": "fcbf3a0bf991d4af5e7ae5549ef203e644319aff69b89a34ad619f7c123e3c95"
+      },
+      {
+        "file": "final_project_cs\\tests\\scenario\\test_departure_watch_db_v1.py",
+        "sha256": "c959813ee2861e2e9e7a24b280aa987432e13d01f6fe1ec6838e4c75b4206dc8"
+      },
+      {
+        "file": "final_project_cs\\tests\\unit\\travel\\test_departure_watch_assembly_v1.py",
+        "sha256": "4c00806e57858e6c42a6086ea047ac58ef741aac6e2f57e91e93e2736a129a23"
+      },
+      {
+        "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v17.py",
+        "sha256": "00660f48ea73e845d67c32c7dbce259506a06d49e5078b8a29dc210985412c52"
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_reminders.py",
+        "sha256": "ddf6f92659701b88a403a71997e8b3e5b3f03e3522021050790e3f3327695d1d"
+      },
+      {
+        "file": "final_project_cs\\app\\domains\\travel_ops\\components\\watch\\departure_revalidation.py",
+        "sha256": "ce342e2d392f62b60fa11df2e16413695a428b03ad5bb3ac9866df7f25ef4a0b"
+      }
+    ],
+    "data_hashes": [
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+        "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+        "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+        "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+        "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+      }
+    ],
+    "new_web_route_observations": 0,
+    "actual_trip_payment_measurements": 0,
+    "html_browser_render_checked": false
+  },
+  "departure_atomicity": {
+    "created_at": "2026-10-09T05:08:14.624030+09:00",
+    "report": "2026-10-09_0508_출발안내_발행경합_방지와_직접선택_검증.md",
+    "regression": {
+      "passed": 798,
+      "total": 798,
+      "parts": [
+        {
+          "part": 1,
+          "total": 271,
+          "passed": 271,
+          "failures": 0,
+          "skipped": 0,
+          "deselected": 11
+        },
+        {
+          "part": 2,
+          "total": 222,
+          "passed": 222,
+          "failures": 0,
+          "skipped": 0,
+          "deselected": 179
+        },
+        {
+          "part": 3,
+          "total": 300,
+          "passed": 300,
+          "failures": 0,
+          "skipped": 0,
+          "deselected": 19
+        },
+        {
+          "part": 4,
+          "total": 5,
+          "passed": 5,
+          "failures": 0,
+          "skipped": 0,
+          "deselected": 0
+        }
+      ],
+      "deselected": 209
+    },
+    "related_passed": 43,
+    "related_total": 43,
+    "local_db_new_conditions": 10,
+    "concurrent_connections_conditions": 2,
+    "before_unsafe_conditions": 5,
+    "intermediate_choice_failures": 3,
+    "intermediate_assembly_fixture_failures": 1,
+    "final_start_hash_matches": 8,
+    "prior_hash_matches": 16,
+    "source_hashes": [
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/actions/itinerary_actions.py",
+        "sha256": "05db2ac83722aeca63aa134c7c30b51aa844dd21b89697c567968fc16e5167d9"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary.py",
+        "sha256": "06003ab0dd8db6c34ae995ae776eef52363e5e2915a6743fe7bfc30821d91de2"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+        "sha256": "e8ebb982a96cdb2e72fc98b050cf9318159d2e00587f5d6ca83a3076680db51a"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/watch/departure_revalidation.py",
+        "sha256": "ce342e2d392f62b60fa11df2e16413695a428b03ad5bb3ac9866df7f25ef4a0b"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_reminders.py",
+        "sha256": "824238a407e6a833710621f4a4ba8d23e698be42fcfb75b26c54abb94d7d3404"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py",
+        "sha256": "3afb435095fe5449b75b46c704a5f47ee3c6c922317106205d2e636a8d0a2453"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/instances/mobility/team.py",
+        "sha256": "bb4f52559af260f80cc18eb0c5f146f799a761286da220f72d892848435d686c"
+      },
+      {
+        "file": "final_project_cs/scripts/mobility/build_readiness_visual_v17.py",
+        "sha256": "00660f48ea73e845d67c32c7dbce259506a06d49e5078b8a29dc210985412c52"
+      },
+      {
+        "file": "final_project_cs/scripts/mobility/build_readiness_visual_v18.py",
+        "sha256": "1ef94ed54585b88eec239167adb108695b14809784ddff6ff77c4547eb0ececd"
+      },
+      {
+        "file": "final_project_cs/scripts/run_sweepers.py",
+        "sha256": "40bf018c8e66eb2539a1f113f85d83ed4168f825de8814116953b4b0cf0ba592"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_atomic_choice_db_v1.py",
+        "sha256": "cde6addb720be0a12fddd8450a688dddd9f7a69bc7a5e257b1794877598de0f1"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_atomic_db_v1.py",
+        "sha256": "63ce43c0aeb8893b4cf38ff9f8de8bbac538272119415753cecbdd29593ec817"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_watch_db_v1.py",
+        "sha256": "c959813ee2861e2e9e7a24b280aa987432e13d01f6fe1ec6838e4c75b4206dc8"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_assembly_v1.py",
+        "sha256": "5ab54fa53d8d065758c3c5b0aa70fcec3700c7b18bef47de17e2c805edf462e0"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_replan_v1.py",
+        "sha256": "fcbf3a0bf991d4af5e7ae5549ef203e644319aff69b89a34ad619f7c123e3c95"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_watch_assembly_v1.py",
+        "sha256": "4c00806e57858e6c42a6086ea047ac58ef741aac6e2f57e91e93e2736a129a23"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_watch_v1.py",
+        "sha256": "ff17dc554b15ec1e1b991692d3c294672ee53912c29c4f4a4a877e143a2b5901"
+      }
+    ],
+    "data_hashes": [
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+        "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+        "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+        "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+        "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+      }
+    ],
+    "new_web_route_observations": 0,
+    "actual_trip_payment_measurements": 0,
+    "html_browser_render_checked": false,
+    "external_codex_review": "blocked_by_automatic_approval_review_no_retry",
+    "git_head": "38f9e08cb08cafba6ce2f66ff7b08c19788cf1d1"
+  },
+  "current_party_validation": {
+    "created_at": "2026-10-09T05:25:41.116427+09:00",
+    "report": "2026-10-09_0525_현재동행_출발대조와_재경로_검증.md",
+    "regression": {
+      "passed": 815,
+      "total": 815,
+      "parts": [
+        {
+          "part": 1,
+          "total": 301,
+          "passed": 301,
+          "failures": 0,
+          "skipped": 0,
+          "deselected": 19
+        },
+        {
+          "part": 2,
+          "total": 269,
+          "passed": 269,
+          "failures": 0,
+          "skipped": 0,
+          "deselected": 11
+        },
+        {
+          "part": 3,
+          "total": 240,
+          "passed": 240,
+          "failures": 0,
+          "skipped": 0,
+          "deselected": 179
+        },
+        {
+          "part": 4,
+          "total": 5,
+          "passed": 5,
+          "failures": 0,
+          "skipped": 0,
+          "deselected": 0
+        }
+      ],
+      "deselected": 209
+    },
+    "related_passed": 34,
+    "related_total": 34,
+    "new_unit_conditions": 15,
+    "local_db_new_conditions": 2,
+    "before_unsafe_conditions": 2,
+    "watch_ticks_per_db_condition": 10,
+    "cases_per_db_condition": 1,
+    "version_before_after": [
+      2,
+      3
+    ],
+    "change_notices_per_db_condition": 1,
+    "departure_notices_per_db_condition": 1,
+    "final_start_hash_matches": 11,
+    "prior_hash_matches": 21,
+    "source_hashes": [
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/actions/itinerary_actions.py",
+        "sha256": "05db2ac83722aeca63aa134c7c30b51aa844dd21b89697c567968fc16e5167d9"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary.py",
+        "sha256": "06003ab0dd8db6c34ae995ae776eef52363e5e2915a6743fe7bfc30821d91de2"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+        "sha256": "e8ebb982a96cdb2e72fc98b050cf9318159d2e00587f5d6ca83a3076680db51a"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/watch/departure_revalidation.py",
+        "sha256": "f023b1e9974994851693da8e12d146bd82887bcb8b8fd51619b1d8a7fae2863f"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_reminders.py",
+        "sha256": "e948bda8f45550b10ce4087aee090b52f8ad45a47b68d4db5c50fcacb863c444"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py",
+        "sha256": "9113baf14d7ad3d0dc033e713ecdd557388ac280c261eb8bc81ebd4a817ef044"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+        "sha256": "5eb3e55e212955c40f6e1d73cfdcc502268a2e5ff9394d22d83ba126fba7dcc9"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/instances/mobility/team.py",
+        "sha256": "bb4f52559af260f80cc18eb0c5f146f799a761286da220f72d892848435d686c"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+        "sha256": "d0ed6dca374ad2e2d0c4fbc242a77e822fbaca4138976f468ba13ded763c0d67"
+      },
+      {
+        "file": "final_project_cs/scripts/mobility/build_readiness_visual_v17.py",
+        "sha256": "00660f48ea73e845d67c32c7dbce259506a06d49e5078b8a29dc210985412c52"
+      },
+      {
+        "file": "final_project_cs/scripts/mobility/build_readiness_visual_v18.py",
+        "sha256": "1ef94ed54585b88eec239167adb108695b14809784ddff6ff77c4547eb0ececd"
+      },
+      {
+        "file": "final_project_cs/scripts/mobility/build_readiness_visual_v19.py",
+        "sha256": "3b201907031e4192fec7555aec4b15df789a638bac28e149d57fe102390eb90e"
+      },
+      {
+        "file": "final_project_cs/scripts/run_sweepers.py",
+        "sha256": "40bf018c8e66eb2539a1f113f85d83ed4168f825de8814116953b4b0cf0ba592"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_assembly_db_v1.py",
+        "sha256": "47bbbd27b49c121f87cad8afad1246edb6d9144e33c96009cfff1f4c2d89099d"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_atomic_choice_db_v1.py",
+        "sha256": "cde6addb720be0a12fddd8450a688dddd9f7a69bc7a5e257b1794877598de0f1"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_atomic_db_v1.py",
+        "sha256": "63ce43c0aeb8893b4cf38ff9f8de8bbac538272119415753cecbdd29593ec817"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_observer_reminders_v1.py",
+        "sha256": "1a68631e4ce4321c3b0f272dc8566284646c5a0a7f15fe76f9c6254d8fabada2"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_party_db_v1.py",
+        "sha256": "137ebf768f1120027d74eaef466ada4a2464623e3553ac3a3d60202e782400a1"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_walk_db_v1.py",
+        "sha256": "dbf5e95af5c932cf0b86fdac47cae050f151b6e4b4c3273a8db1e7e349d7a65c"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_watch_db_v1.py",
+        "sha256": "c959813ee2861e2e9e7a24b280aa987432e13d01f6fe1ec6838e4c75b4206dc8"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_assembly_v1.py",
+        "sha256": "5ab54fa53d8d065758c3c5b0aa70fcec3700c7b18bef47de17e2c805edf462e0"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_party_v1.py",
+        "sha256": "14c5b1e34ab860cbdfcecb18f53b47e3e142ddf839380c1a0782f72ded18d99d"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_replan_v1.py",
+        "sha256": "fcbf3a0bf991d4af5e7ae5549ef203e644319aff69b89a34ad619f7c123e3c95"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_watch_assembly_v1.py",
+        "sha256": "4c00806e57858e6c42a6086ea047ac58ef741aac6e2f57e91e93e2736a129a23"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_watch_v1.py",
+        "sha256": "f9db26e154c4ba2d74cbc054f468614f28e2f1256ac8fcbd539aff709c57a229"
+      }
+    ],
+    "data_hashes": [
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+        "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+        "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+        "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+        "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+      }
+    ],
+    "operational_settings_api_tested": false,
+    "actual_position_boarding_tested": false,
+    "supported_inputs": [
+      "party_size",
+      "mobility_ease",
+      "survey.domestic",
+      "first_visit"
+    ],
+    "unverified_inputs": [
+      "preferred_mobility change",
+      "unsupported accessibility inputs"
+    ],
+    "new_web_route_observations": 0,
+    "actual_trip_payment_measurements": 0,
+    "html_browser_render_checked": false,
+    "external_codex_review": "blocked_by_automatic_approval_review_no_retry",
+    "git_head": "38f9e08cb08cafba6ce2f66ff7b08c19788cf1d1",
+    "initial_publication_start_hash_matches": 12,
+    "presentation_source_changed_after_tests": true,
+    "presentation_correction_at": "2026-10-09T05:28:24.483572+09:00"
+  },
+  "departure_input_race_validation": {
+    "created_at": "2026-10-09T05:51:43.200778+09:00",
+    "report": "2026-10-09_0551_출발조건_저장경합과_JSON형식_대조_검증.md",
+    "regression": {
+      "passed": 823,
+      "total": 823,
+      "parts": [
+        {
+          "part": 1,
+          "passed": 302,
+          "total": 302,
+          "failed": 0,
+          "skipped": 0,
+          "deselected": 19
+        },
+        {
+          "part": 2,
+          "passed": 272,
+          "total": 272,
+          "failed": 0,
+          "skipped": 0,
+          "deselected": 11
+        },
+        {
+          "part": 3,
+          "passed": 244,
+          "total": 244,
+          "failed": 0,
+          "skipped": 0,
+          "deselected": 179
+        },
+        {
+          "part": 4,
+          "passed": 5,
+          "total": 5,
+          "failed": 0,
+          "skipped": 0,
+          "deselected": 0
+        }
+      ],
+      "deselected": 209
+    },
+    "related_passed": 30,
+    "related_total": 30,
+    "local_db_new_conditions": 8,
+    "concurrent_connections_conditions": 2,
+    "before_unsafe_conditions": 2,
+    "intermediate_type_failure_conditions": 1,
+    "prior_hash_matches": 29,
+    "final_start_hash_matches": 6,
+    "source_hashes": [
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/actions/itinerary_actions.py",
+        "sha256": "05db2ac83722aeca63aa134c7c30b51aa844dd21b89697c567968fc16e5167d9"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary.py",
+        "sha256": "634d14cb37f8714c08b3a768438421160ad5c15a3bd59b0892a6cb0c0f76b2a3"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+        "sha256": "e8ebb982a96cdb2e72fc98b050cf9318159d2e00587f5d6ca83a3076680db51a"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/watch/departure_revalidation.py",
+        "sha256": "f023b1e9974994851693da8e12d146bd82887bcb8b8fd51619b1d8a7fae2863f"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_reminders.py",
+        "sha256": "2ce55016b35d05ca61d24c4fa31639caf177f017a6be5feb33554b30390772e4"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py",
+        "sha256": "9113baf14d7ad3d0dc033e713ecdd557388ac280c261eb8bc81ebd4a817ef044"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+        "sha256": "5eb3e55e212955c40f6e1d73cfdcc502268a2e5ff9394d22d83ba126fba7dcc9"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/instances/mobility/team.py",
+        "sha256": "bb4f52559af260f80cc18eb0c5f146f799a761286da220f72d892848435d686c"
+      },
+      {
+        "file": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+        "sha256": "d0ed6dca374ad2e2d0c4fbc242a77e822fbaca4138976f468ba13ded763c0d67"
+      },
+      {
+        "file": "final_project_cs/scripts/mobility/build_readiness_visual_v17.py",
+        "sha256": "00660f48ea73e845d67c32c7dbce259506a06d49e5078b8a29dc210985412c52"
+      },
+      {
+        "file": "final_project_cs/scripts/mobility/build_readiness_visual_v18.py",
+        "sha256": "1ef94ed54585b88eec239167adb108695b14809784ddff6ff77c4547eb0ececd"
+      },
+      {
+        "file": "final_project_cs/scripts/mobility/build_readiness_visual_v19.py",
+        "sha256": "3b201907031e4192fec7555aec4b15df789a638bac28e149d57fe102390eb90e"
+      },
+      {
+        "file": "final_project_cs/scripts/mobility/build_readiness_visual_v20.py",
+        "sha256": "03b41a0afd6e66e16fa772d9786246e118f6e3c62ebafbeb4dcdacca84f0da65"
+      },
+      {
+        "file": "final_project_cs/scripts/run_sweepers.py",
+        "sha256": "40bf018c8e66eb2539a1f113f85d83ed4168f825de8814116953b4b0cf0ba592"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_assembly_db_v1.py",
+        "sha256": "47bbbd27b49c121f87cad8afad1246edb6d9144e33c96009cfff1f4c2d89099d"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_atomic_choice_db_v1.py",
+        "sha256": "cde6addb720be0a12fddd8450a688dddd9f7a69bc7a5e257b1794877598de0f1"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_atomic_db_v1.py",
+        "sha256": "63ce43c0aeb8893b4cf38ff9f8de8bbac538272119415753cecbdd29593ec817"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_input_lock_db_v1.py",
+        "sha256": "f8e3445d4dfc7b61d715a0169f3f9d66263a2a398aafc0737d2791071c197e28"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_input_race_db_v1.py",
+        "sha256": "eb66c26424c887739234b2b0450f995a19b6589264a1ca356500576b163ca646"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_input_types_db_v1.py",
+        "sha256": "5927265be16d990a40b63c3f6055db0fbc2230d3b6971c8270053ebca40c1f22"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_observer_reminders_v1.py",
+        "sha256": "1a68631e4ce4321c3b0f272dc8566284646c5a0a7f15fe76f9c6254d8fabada2"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_party_db_v1.py",
+        "sha256": "137ebf768f1120027d74eaef466ada4a2464623e3553ac3a3d60202e782400a1"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_walk_db_v1.py",
+        "sha256": "dbf5e95af5c932cf0b86fdac47cae050f151b6e4b4c3273a8db1e7e349d7a65c"
+      },
+      {
+        "file": "final_project_cs/tests/scenario/test_departure_watch_db_v1.py",
+        "sha256": "c959813ee2861e2e9e7a24b280aa987432e13d01f6fe1ec6838e4c75b4206dc8"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_assembly_v1.py",
+        "sha256": "5ab54fa53d8d065758c3c5b0aa70fcec3700c7b18bef47de17e2c805edf462e0"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_party_v1.py",
+        "sha256": "14c5b1e34ab860cbdfcecb18f53b47e3e142ddf839380c1a0782f72ded18d99d"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_replan_v1.py",
+        "sha256": "fcbf3a0bf991d4af5e7ae5549ef203e644319aff69b89a34ad619f7c123e3c95"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_watch_assembly_v1.py",
+        "sha256": "4c00806e57858e6c42a6086ea047ac58ef741aac6e2f57e91e93e2736a129a23"
+      },
+      {
+        "file": "final_project_cs/tests/unit/travel/test_departure_watch_v1.py",
+        "sha256": "f9db26e154c4ba2d74cbc054f468614f28e2f1256ac8fcbd539aff709c57a229"
+      }
+    ],
+    "data_hashes": [
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+        "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+        "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+        "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+      },
+      {
+        "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+        "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+      }
+    ],
+    "new_web_route_observations": 0,
+    "actual_trip_payment_measurements": 0,
+    "operational_settings_api_tested": false,
+    "html_browser_render_checked": false,
+    "external_cli_review": "not_retried_previous_automatic_approval_block",
+    "git_head": "38f9e08cb08cafba6ce2f66ff7b08c19788cf1d1"
+  }
+}

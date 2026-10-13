@@ -1,0 +1,21 @@
+{"checked_queries": 1, "target_queries": 12}
+{"checked_queries": 2, "target_queries": 12}
+{"checked_queries": 3, "target_queries": 12}
+{"checked_queries": 4, "target_queries": 12}
+{"checked_queries": 5, "target_queries": 12}
+{"checked_queries": 6, "target_queries": 12}
+{"checked_queries": 7, "target_queries": 12}
+{"checked_queries": 8, "target_queries": 12}
+{"checked_queries": 9, "target_queries": 12}
+{"checked_queries": 10, "target_queries": 12}
+{"checked_queries": 11, "target_queries": 12}
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\probe_car_turn_pinned_v1.py", line 60, in <module>
+    path = router.route(start.pt, end.pt, profile='car')['paths'][0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\engine\graph_router.py", line 417, in route
+    parts, arcs, cost_seconds = pieces(self, Ss, Ts, turn_policy)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\engine\car_turn_search.py", line 89, in pieces
+    raise RouterDown('no_path: 이 그래프의 적용 회전 조건에서 경로를 찾지 못했다')
+app.domains.travel_ops.instances.mobility.engine.car.RouterDown: no_path: 이 그래프의 적용 회전 조건에서 경로를 찾지 못했다

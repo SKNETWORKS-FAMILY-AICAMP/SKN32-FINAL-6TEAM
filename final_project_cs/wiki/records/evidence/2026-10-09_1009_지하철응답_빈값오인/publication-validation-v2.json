@@ -1,0 +1,27 @@
+{
+  "source_hash_matches": 233,
+  "backup_hash_matches": 10,
+  "local_links": [
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v36/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1009_지하철응답_빈값오인",
+    "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1009_지하철응답_빈값오인/seoul_subway.py",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1009_지하철응답_빈값오인/backup-manifest-v2.json",
+    "datasets/mobility/raw/2026-10-09_1009_지하철응답_빈값오인_public_sample",
+    "final_project_cs/wiki/records/reports/debugs/2026-10-09_1009_지하철응답_빈값오인.md",
+    "final_project_cs/wiki/records/reports/2026-10-09_1014_지하철_빈결과오인과_보관회복_검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v36/readiness-catalog.json"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_1014_지하철_빈결과오인과_보관회복_검증.md": "3dcd1c514d40899c067cdbb1259a43ea60095bb291b5df5e2e578c41c5f52213",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v36/mobility-readiness.html": "c21b2e0dd461540496bee5ad8338e7d393f19d896a9cd641105fd2f1f46ba01a",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v36/readiness-catalog.json": "c3581663d603bddde1cf7f996eff6445fcf1b6e24dd027726eeb27be56efa29c",
+    "final_project_cs/wiki/teams/mobility.md": "772e4599574d8929bf7517862a2f627dc07f0ac0da013da407e27d6ee5c2f444",
+    "final_project_cs/wiki/records/reports/debugs/2026-10-09_1009_지하철응답_빈값오인.md": "0bb8ed6c6ca96bdbd84ccbe48fabb66c0d4b65da5d2c25c868460509d6d28cca",
+    "datasets/mobility/REPORT.md": "ed4eb0922f3616e6acf700f51b6815739f5658a00bbe11ad86eff200786e782c",
+    "datasets/mobility/README.md": "6f672b4083160a3dedcc35dedbef8e692320ab159cf5a199945c40958c5db4c3",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1009_지하철응답_빈값오인/verification-proof-v1.json": "17d863d3af2e6a95f2e684fabd55e8413da0bc66cf590eb112c8ca9e17c66c36",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1009_지하철응답_빈값오인/backup-manifest-v2.json": "3e3f5fef348dffe682a4e44e40f8f5cd9787015527772317c9e72a2c497d61cf"
+  },
+  "feature_count": 21,
+  "browser_render_verified": false
+}

@@ -319,13 +319,23 @@ def test_a_batch_the_applier_refused_for_the_whole_itinerary_recheck_is_announce
     assert note["text"].count("일정 전체와 맞지 않아") == len(opened["items"]) and "일정은 그대로 두었어요" in note["text"]
 
 
-def test_a_batch_whose_close_has_no_item_tokens_is_not_announced(api, guardrails):
-    """점검 소스 실패처럼 항목별 결과 표지가 없는 닫힘은 고객에게 알리지 않는다 — 바뀐 것이 있는지 모른다(운영자 몫)."""
+def test_a_retryable_batch_failure_without_item_tokens_announces_unchanged_items_once(api, guardrails):
+    """현재 분류 실행 계약: 확인 실패를 정상·변경 완료로 숨기지 않고 유지·재확인을 안내한다."""
     _create(api)
     guardrails.update({"travel.watch.batch_enabled": True})
     before = len(_notices(api))
-    first = _tick(_opener(api, _check_activities(DISRUPTED), _escalating("fatal_source_failure")))
-    assert first.opened and first.notified == [] and not [n for n in _notices(api)[before:] if n.get("batch")]
+    opener = _opener(api, _check_activities(DISRUPTED), _escalating("fatal_source_failure"))
+    first = _tick(opener)
+    assert first.opened and len(first.notified) == 1
+    [note] = [n for n in _notices(api)[before:] if n.get("batch")]
+    assert len(note["deferred"]) == len(first.opened[0]["items"])
+    assert all(d["code"] == "fatal_source_failure" and d["checked_at"] for d in note["deferred"])
+    assert "기존 일정을 유지" in note["text"] and "다시 확인" in note["text"]
+    assert "changes" not in note
+    with get_connection() as conn:
+        assert api["store"].latest(conn, UUID(first.opened[0]["trip_id"]))[0]["version"] == 1
+    _tick(opener)
+    assert len([n for n in _notices(api)[before:] if n.get("batch")]) == 1
 
 
 # ── 일정 전체 재판정이 막은 변경도 고객에게 알린다(결정 9 — 전체 일정 재검증) ───────────

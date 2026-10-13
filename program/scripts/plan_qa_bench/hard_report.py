@@ -15,7 +15,7 @@ from stats import fmt_ratio  # noqa: E402
 sys.stdout.reconfigure(encoding='utf-8')
 D = os.path.join(HERE, 'results', 'd_test')
 SET = os.path.join(HERE, 'results', 'hard_set', 'h_set_test_30_20261015_agree.json')
-TAGS = [('시드 1', 'e4bt'), ('시드 2', 'e4bs2'), ('시드 3', 'e4bs3'), ('oos1', 'oos1'), ('oos2', 'oos2'), ('oos3', 'oos3')]
+TAGS = [('시드 1', 'e4bt'), ('시드 2', 'e4bs2'), ('시드 3', 'e4bs3'), ('oos1', 'oos1'), ('oos2', 'oos2'), ('oos3', 'oos3'), ('oos2r(어려운 문장 보강)', 'oos2r')]
 P = {x['i']: x for x in json.load(open(SET, encoding='utf-8'))}
 
 
@@ -91,6 +91,7 @@ out.append(f'| **대조 전체 정답 선택률** | {len(ids_p)} | ' + ' | '.joi
 out.append(f'| 틀린 것: 다른 항목 · 없음으로 처리 | | ' + ' | '.join(cells2) + ' |')
 out.append(f'| 같은 장소 다른 방문을 맞는 것으로 다시 세면 | | ' + ' | '.join(cells3) + ' |')
 out.append('\n- 한계: 문장은 솔 6.1 이 쓰고 루나 6.0 이 라벨했다(둘 다 Codex 계열 · 사람 점검 없음). 일정 30개 · 문장은 일정마다 44개 안팎. 시드 · oos 모델당 1회. 합의하지 못한 64개(N1 32 · N6 13 · P2 10 · P3 7 · P1 2)는 사람 골든셋 후보로 따로 둔다. oos2 · oos3 는 학습이 끝난 뒤 같은 표에 이어 쓴다.')
+out.append('- oos2r은 첫 잡담 보강 자료에 어려운 문장 900개를 더한 학습판이며, 별도 보류 세트 H로 평가합니다. 한 시드의 1회 측정이므로 반복 간 편차는 아직 확인하지 않았습니다.')
 text = '\n'.join(out)
 open(os.path.join(HERE, 'results', 'hard_report.md'), 'w', encoding='utf-8').write(text)
 print(text)

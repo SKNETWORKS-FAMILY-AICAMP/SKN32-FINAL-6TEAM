@@ -1,0 +1,22 @@
+[
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "hash": "187B3AD7F75222A193DE1E533EDB839C1E1196A2628DC65C334D59FCDD80626E",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-09_0213_도보출발_재검증\\plan.py.bak"
+  },
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+    "hash": "9C20C053282BBB831030D645153618FF17AAC18BC1C14AA7D737ED2F626BC8B9",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-09_0213_도보출발_재검증\\departure_context.py.bak"
+  },
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "hash": "AC3672FF24230E8E730425A6A30919F67AE0DFD7779723354A7A6E2C1AA7BD4B",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-09_0213_도보출발_재검증\\departure_observer.py.bak"
+  },
+  {
+    "file": "wiki/teams/mobility.md",
+    "hash": "BD21ECAEBDA4FD216F098ECB4C9EFB21D64DDAC08E584BBE31CD1BFF751231AE",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\teams\\_backup\\2026-10-09_0213_도보출발_재검증\\mobility.md.bak"
+  }
+]

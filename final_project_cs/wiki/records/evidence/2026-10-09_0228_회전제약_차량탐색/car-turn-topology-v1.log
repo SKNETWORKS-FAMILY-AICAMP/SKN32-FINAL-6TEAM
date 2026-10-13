@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\diagnose_turn_topology_v1.py", line 3, in <module>
+    import gzip, json, osmium
+ModuleNotFoundError: No module named 'osmium'

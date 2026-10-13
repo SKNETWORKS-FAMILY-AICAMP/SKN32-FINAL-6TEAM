@@ -1,0 +1,690 @@
+{
+  "captured_at_kst": "2026-10-12T04:18:15.263258+09:00",
+  "full_wiki_violations": {
+    "상태 필드 형식 위반": [
+      "final_project_cs/wiki/operations/unattended-operations.md  (implementation_status: in-progress)",
+      "final_project_cs/wiki/teams/classification-execution-plan.md  (implementation_status: in_progress)"
+    ],
+    "front matter 없음": [
+      "final_project_cs/wiki/external/taxi-pricing-web-v1.md"
+    ],
+    "깨진 링크 (대상 파일 없음)": [
+      "final_project_cs/wiki/teams/classification-execution-plan.md -> ../../../program/research/baseline_completion_2026-10-12/tasks/orchestration/report.md"
+    ]
+  },
+  "state_field_warnings": [
+    "final_project_cs/wiki/external/test-scenarios.md  (implementation_status: implemented-partial — 개별 담당자의 범위 확인·정규화 필요)",
+    "final_project_cs/wiki/operations/service-improvement.md  (implementation_status: implemented-local — 개별 담당자의 범위 확인·정규화 필요)"
+  ],
+  "unapplied_documents": [
+    {
+      "path": "final_project_cs/wiki/actions/action-proposal.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/actions/idempotency.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/context/context-budget.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/data/index.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/fields.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/index.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-001-composer-ui-removal.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-002-finetuned-model-not-adopted.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-003-composer-scope.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-005-odsay-not-used.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-006-cancellation-terms-are-structured.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-007-ui-operator-login.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-008-ops-console-separate-app.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-010-google-calls-in-dawn-batch-only.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-013-domain-folder-layout.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/a2a-protocol.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/admin-screen-api.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-environment-limits.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-key-issue-guide.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/introspection.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/llm-failover.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/mcp-tools.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/personal-ai-oauth.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-api.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/cases.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/delegations.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/trips.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-access.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-auth.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-intakes.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-trips.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/service-chat-help.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/test-scenarios.md",
+      "missing_fields": [
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/travel-density.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/trip-chat-context.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/watch-monitoring.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/watch-simulation.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-auth-transfer.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-flow-2026-10-09.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-intake-restore.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/log.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/operations/always-on.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/operations/unattended-operations.md",
+      "missing_fields": [
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/guardrails.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/invariants.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/slm-model-evaluation.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/case-lifecycle.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/code-layout.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/composition.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining-agent-design.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-boundary.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/fields.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/plugin-availability.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/architecture/notifications.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/architecture/system-context.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/business/pricing-travel.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-002-graph-store-gate.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-003-message-broker.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-004-self-hosting-rationale.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-005-write-gate.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-006-composer-ownership.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-007-central-config-store.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-009-recommendation-scope.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-010-deferral-scoring.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-011-composer-v3-gap.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-012-cutover-timing.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-013-declarative-team.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-015-implementation-catalog.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-016-scope-narrowing-reasons.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-019-travel-density.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-021-email-verified-key-recovery.md",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-022-study-only-kto-images.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/delivery/dod.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/delivery/release-gate.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/delivery/roles.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/delivery/timeline.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/evaluation/finetuning.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/evaluation/index.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/governance/document-standard.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/index.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/product/positioning.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/product/scope.md",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    }
+  ],
+  "feature_results_pending": [
+    "auth",
+    "orchestration",
+    "operations",
+    "existing:Mobility",
+    "verification",
+    "integration"
+  ],
+  "required_integration_actions": [
+    "작성 중 상태 in-progress/in_progress를 실제 범위 확인 후 기존 planned/partial/implemented/unverified 중 해당 값으로 정규화",
+    "분류 실행 계획의 담당 보고서 링크 생성·확인, 이동 신규 페이지 머리말 보완",
+    "각 기능 결과를 해당 wiki 본문 환경·실행 시각·근거에 연결; 확인하지 않은 배포는 unverified 유지",
+    "전체 위키 검사 재실행 후 자동 목록 재생성·--check 확인",
+    "findings-v2.json 해시가 바뀌었으므로 parent가 관리하는 review_status와 기준선 입력 해시를 통합 때 갱신",
+    "저장소 log에는 이번 보고서 링크와 실제 최종 통합 결과 기록; v12·최종 베이스라인은 integration 담당 작성"
+  ]
+}

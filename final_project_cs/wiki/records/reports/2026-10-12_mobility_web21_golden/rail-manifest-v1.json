@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "source_url": "https://www.data.go.kr/data/15098251/fileData.do",
+  "source_basis_date": "2026-09-01",
+  "observed_at": "2026-10-12T02:29:39.501334+00:00",
+  "source_sha256": "fd7e7b6edc18a5ac4f40f53b594d460d5cbd96d90919aaeb54b957890080d606",
+  "timetable_sha256": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+  "source_rows": 423107,
+  "scope_lines": [
+    "02호선",
+    "03호선"
+  ],
+  "excluded_runs": {},
+  "runs": 3798,
+  "output_sha256": "4cb51c534f049e0d78687429e9dc7fc97aefee7327f1a9c7ff59b35732f25454",
+  "output_bytes": 525511
+}

@@ -1,0 +1,315 @@
+{
+  "e4bqat_oos1_d2": {
+    "saved": 1000,
+    "expected": 1000,
+    "answer_sha256": "673fbdf6154233d97387b8c2a2f265c2a98e0665ba140db59ab0800a9f098581",
+    "groups": {
+      "positive": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed": 0
+      },
+      "negative": {
+        "total": 1000,
+        "correct": 995,
+        "false_pick": 5,
+        "failed": 0
+      },
+      "compound": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed": 0
+      }
+    },
+    "paired": {
+      "positive": {
+        "total": 0,
+        "original_correct": 0,
+        "trained_correct": 0,
+        "original_false_pick": 0,
+        "original_failed": 0,
+        "gain": 0,
+        "loss": 0,
+        "exact_p": 1
+      },
+      "negative": {
+        "total": 1000,
+        "original_correct": 931,
+        "trained_correct": 995,
+        "original_false_pick": 68,
+        "original_failed": 1,
+        "gain": 64,
+        "loss": 0,
+        "exact_p": 1.0842021724855044e-19
+      },
+      "compound": {
+        "total": 0,
+        "original_correct": 0,
+        "trained_correct": 0,
+        "original_false_pick": 0,
+        "original_failed": 0,
+        "gain": 0,
+        "loss": 0,
+        "exact_p": 1
+      }
+    }
+  },
+  "e4bqat_oos2_d": {
+    "saved": 2735,
+    "expected": 2735,
+    "answer_sha256": "8b93241de170a3b5deb35d17c63031ced208578e41f9cc33acaa66001229b895",
+    "groups": {
+      "positive": {
+        "total": 883,
+        "correct": 796,
+        "false_pick": 0,
+        "failed": 0
+      },
+      "negative": {
+        "total": 1786,
+        "correct": 1772,
+        "false_pick": 14,
+        "failed": 0
+      },
+      "compound": {
+        "total": 66,
+        "correct": 66,
+        "false_pick": 0,
+        "failed": 0
+      }
+    },
+    "paired": {
+      "positive": {
+        "total": 883,
+        "original_correct": 730,
+        "trained_correct": 796,
+        "original_false_pick": 0,
+        "original_failed": 12,
+        "gain": 75,
+        "loss": 9,
+        "exact_p": 4.308584029113881e-14
+      },
+      "negative": {
+        "total": 1786,
+        "original_correct": 1707,
+        "trained_correct": 1772,
+        "original_false_pick": 76,
+        "original_failed": 3,
+        "gain": 68,
+        "loss": 3,
+        "exact_p": 5.057803134644878e-17
+      },
+      "compound": {
+        "total": 66,
+        "original_correct": 50,
+        "trained_correct": 66,
+        "original_false_pick": 0,
+        "original_failed": 2,
+        "gain": 16,
+        "loss": 0,
+        "exact_p": 3.0517578125e-05
+      }
+    }
+  },
+  "checks": [
+    {
+      "check": "e4bqat_oos1_d2 ID unique/exact",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 gold/type exact",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 frozen gold hash",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 expected",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 pick contract",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 positive independent counts",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 negative independent counts",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 answer digest",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 full count",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 execution metadata",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 verification counts",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 baseline exact IDs gold type",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 same base input code engine",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 own training roles",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 registration digest",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 matched digest",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 paired positive",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos1_d2 paired negative",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d ID unique/exact",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d gold/type exact",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d frozen gold hash",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d expected",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d pick contract",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d positive independent counts",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d negative independent counts",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d answer digest",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d full count",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d execution metadata",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d verification counts",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d baseline exact IDs gold type",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d same base input code engine",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d own training roles",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d registration digest",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d matched digest",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d paired positive",
+      "passed": true
+    },
+    {
+      "check": "e4bqat_oos2_d paired negative",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos1_d2/d_test_d2_backlog_e4bqat_oos1.jsonl",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos1_d2/started.json",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos1_d2/choice_counts.json",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos1_d2/verification.json",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos1_d2/matched_original.json",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/scripts/plan_qa_bench/verify_choice_matched_original.py",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/scripts/plan_qa_bench/_backup/2026-10-08_172455_matched_original_choice_report/record_backlog_choice_completion.py",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/research/daily_rag_slm/_backup/2026-10-08_173726_e4bqat_oos1_d2_completion/gpu_backlog_2026-10-08.json",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/research/daily_rag_slm/_backup/2026-10-08_173726_e4bqat_oos1_d2_completion/2026-10-08.json",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../program/research/daily_rag_slm/_backup/2026-10-08_173726_e4bqat_oos1_d2_completion/2026-10-08.md",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../final_project_cs/wiki/quality/_backup/2026-10-08_173726_e4bqat_oos1_d2_completion/slm-model-evaluation.md",
+      "passed": true
+    },
+    {
+      "check": "report link ../../../../final_project_cs/wiki/_backup/2026-10-08_173726_e4bqat_oos1_d2_completion/log.md",
+      "passed": true
+    }
+  ],
+  "passed": 48,
+  "total_checks": 48,
+  "issues": [],
+  "report_links": 12,
+  "scope": "read-only local independent recount; no live SSH or GPU rerun; file digests and preserved registration checked; remote live bytes not re-read"
+}

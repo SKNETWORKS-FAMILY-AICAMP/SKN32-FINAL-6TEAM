@@ -1,0 +1,368 @@
+{
+  "utc": "2026-10-11T16:00:57.040727+00:00",
+  "checks": {
+    "unauthenticated_trips": {
+      "http": 401,
+      "seconds": 0.04224352299934253,
+      "body": "{\"error\":{\"code\":\"unauthenticated\",\"message\":\"사용자 키가 없거나 맞지 않는다\"}}"
+    },
+    "trip_list": {
+      "http": 200,
+      "seconds": 0.08188262401381508,
+      "value": {
+        "trips": [
+          {
+            "trip_id": "c3d4ed6c-248b-434a-bea0-adc92db04adb",
+            "title": "ARM 서빙 시험용 서울 여행",
+            "version": 1,
+            "created_at": "2026-10-11T13:00:11.624708+00:00"
+          }
+        ]
+      }
+    },
+    "trip_read": {
+      "http": 200,
+      "seconds": 0.12398838502122089,
+      "value": {
+        "trip_id": "c3d4ed6c-248b-434a-bea0-adc92db04adb",
+        "customer_id": "8d75a588-ee99-4863-90e1-3a59d1215df5",
+        "title": "ARM 서빙 시험용 서울 여행",
+        "locale": "ko",
+        "party_size": 1,
+        "version": 1,
+        "guardian": {
+          "enabled": false,
+          "since": null,
+          "via": null
+        },
+        "safety": {
+          "paused": false
+        },
+        "items": [
+          {
+            "item_id": "8e7c7352-878c-4b8e-83ab-e28e1a36b333",
+            "seq": 1,
+            "kind": "activity",
+            "kind_label": "활동",
+            "meal": null,
+            "title": "경복궁 관람",
+            "place": null,
+            "starts_at": "2026-10-18T10:00:00+09:00",
+            "ends_at": "2026-10-18T11:00:00+09:00",
+            "changed": false,
+            "price_compare": null,
+            "other_options": [],
+            "customer_pinned": false,
+            "badges": [],
+            "lat": null,
+            "lon": null,
+            "booked": false,
+            "place_info": null,
+            "map_url": null,
+            "paused": false
+          },
+          {
+            "item_id": "a16f0ee8-d684-4e3d-b38a-a1a850e26fe2",
+            "seq": 2,
+            "kind": "dining",
+            "kind_label": "식사",
+            "meal": "점심",
+            "title": "점심 식사",
+            "place": null,
+            "starts_at": "2026-10-18T12:00:00+09:00",
+            "ends_at": "2026-10-18T13:00:00+09:00",
+            "changed": false,
+            "price_compare": null,
+            "other_options": [],
+            "customer_pinned": false,
+            "badges": [],
+            "lat": null,
+            "lon": null,
+            "booked": false,
+            "place_info": null,
+            "map_url": null,
+            "paused": false
+          }
+        ],
+        "map": {
+          "days": [],
+          "note": "구글 지도 링크는 API 키 없이 고객 지도 앱으로 연다 — 한국은 두 곳 사이 대중교통만 경로가 나온다"
+        },
+        "history": [
+          {
+            "version": 1,
+            "reason": "created",
+            "causes": [],
+            "at": "2026-10-11T13:00:11.624708+00:00"
+          }
+        ],
+        "plan_url": "https://oracle-arm.devroro.click/plan/c3d4ed6c-248b-434a-bea0-adc92db04adb?t=88c216b7b6e87c96fb425c1ffc628ddf",
+        "density": [],
+        "warnings": []
+      }
+    },
+    "chat_history": {
+      "http": 200,
+      "seconds": 0.06298724003136158,
+      "value": {
+        "trip_id": "c3d4ed6c-248b-434a-bea0-adc92db04adb",
+        "turns": [
+          {
+            "role": "assistant",
+            "text": "경복궁 관람 — 10월 18일(일) 10:00~11:00.\n\n혹시 이런 뜻이었나요? 1) 1일차 10:00 경복궁 관람 운영시간 알려 줘 · 2) 1일차 10:00 경복궁 관람 자세히 알려 줘",
+            "case_id": "826f527a-040a-4e6d-80df-d41687e73fe3",
+            "at": "2026-10-11T15:58:48.236375+00:00"
+          },
+          {
+            "role": "customer",
+            "text": "When does my first activity start?",
+            "case_id": "328de5f8-9ec8-4786-afd5-11ce56ca89bd",
+            "at": "2026-10-11T15:59:58.213703+00:00"
+          },
+          {
+            "role": "assistant",
+            "text": "경복궁 관람 — 10월 18일(일) 10:00~11:00.\n\n혹시 이런 뜻이었나요? 1) 1일차 10:00 경복궁 관람 운영시간 알려 줘 · 2) 1일차 10:00 경복궁 관람 자세히 알려 줘",
+            "case_id": "328de5f8-9ec8-4786-afd5-11ce56ca89bd",
+            "at": "2026-10-11T15:59:58.213703+00:00"
+          },
+          {
+            "role": "customer",
+            "text": "점심 몇시였지요?",
+            "case_id": "c97a8f3c-6e62-4cda-97d1-6c10410134ac",
+            "at": "2026-10-11T16:00:49.197210+00:00"
+          },
+          {
+            "role": "assistant",
+            "text": "점심 식사 — 10월 18일(일) 12:00~13:00.\n\n혹시 이런 뜻이었나요? 1) 1일차 12:00 점심 식사 운영시간 알려 줘 · 2) 1일차 12:00 점심 식사 자세히 알려 줘",
+            "case_id": "c97a8f3c-6e62-4cda-97d1-6c10410134ac",
+            "at": "2026-10-11T16:00:49.197210+00:00"
+          }
+        ]
+      }
+    },
+    "proposals": {
+      "http": 200,
+      "seconds": 0.10161449504084885,
+      "value": {
+        "trip_id": "c3d4ed6c-248b-434a-bea0-adc92db04adb",
+        "proposals": []
+      }
+    },
+    "notices": {
+      "http": 200,
+      "seconds": 0.09614849300123751,
+      "value": {
+        "notices": [
+          {
+            "key": "v1",
+            "type": "change_notice",
+            "kind": null,
+            "text": "여행 일정이 준비되었습니다 — ARM 서빙 시험용 서울 여행. 계획서: https://oracle-arm.devroro.click/plan/c3d4ed6c-248b-434a-bea0-adc92db04adb?t=88c216b7b6e87c96fb425c1ffc628ddf",
+            "version": 1,
+            "proposal_id": null,
+            "options": null,
+            "delivery": "dead_letter",
+            "rollback": null,
+            "consent": false,
+            "consent_key": null,
+            "guardian": null,
+            "safety": null,
+            "at": "2026-10-11T13:06:31.146807+00:00"
+          }
+        ]
+      }
+    },
+    "route_shapes": {
+      "http": 200,
+      "seconds": 0.11430243198992684,
+      "value": {
+        "trip_id": "c3d4ed6c-248b-434a-bea0-adc92db04adb",
+        "detail": false,
+        "shapes": [],
+        "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"
+      }
+    },
+    "cached_risks": {
+      "http": 200,
+      "seconds": 0.1285628199693747,
+      "value": {
+        "trip_id": "c3d4ed6c-248b-434a-bea0-adc92db04adb",
+        "version": 1,
+        "at": "2026-10-12T01:00:57.790580+09:00",
+        "mode": "cached",
+        "scope": "upcoming",
+        "horizon_hours": 3.0,
+        "snapshot_hours": 3.0,
+        "items": [],
+        "skipped": [],
+        "summary": {
+          "problem": 0,
+          "clear": 0,
+          "unknown": 0,
+          "checked": 0
+        },
+        "notes": [
+          "감시가 모아 둔 최근 결과만 읽었어요(바깥에 새로 묻지 않아요). 결과가 없는 종류는 확인 불가예요.",
+          "지금부터 3시간 안에 시작하는 점검 대상 일정이 없어요."
+        ],
+        "categories": [
+          {
+            "category": "forecast",
+            "label": "날씨 예보"
+          },
+          {
+            "category": "weather_warning",
+            "label": "기상 특보"
+          },
+          {
+            "category": "disaster_msg",
+            "label": "재난문자"
+          },
+          {
+            "category": "traffic_control",
+            "label": "교통 통제"
+          },
+          {
+            "category": "air_quality",
+            "label": "대기질"
+          },
+          {
+            "category": "earthquake",
+            "label": "지진"
+          }
+        ]
+      }
+    },
+    "public_web": {
+      "http": 403,
+      "seconds": 0.04232620302354917,
+      "body": "error code: 1010\n"
+    },
+    "movement": {
+      "http": 200,
+      "seconds": 4.602441091963556,
+      "value": {
+        "from": "경복궁",
+        "to": "광화문광장",
+        "checked_at": "2026-10-12T01:00:57.969248+09:00",
+        "mode": "depart_at",
+        "basis": {
+          "mode": "enabled",
+          "timetable_built_at": "built:2026-10-01T10:38:34+09:00",
+          "rules_version": "v0.9.2",
+          "timetable_stale": false
+        },
+        "status": "judged",
+        "grade": "estimate",
+        "grade_label": "어림(시간표 아님)",
+        "depart_at": "2026-10-18T10:00:00+09:00",
+        "arrive_at": "2026-10-18T10:16:00+09:00",
+        "eta_min": 16,
+        "route": {
+          "id": "walk",
+          "label": "도보",
+          "eta_min": 16,
+          "walk_m": 990,
+          "fare_krw": 0,
+          "uses": [],
+          "grade": "estimate"
+        },
+        "alternatives": [],
+        "left_out": [
+          {
+            "label": "버스 N51 경복궁→세종문화회관",
+            "code": "no_last_departure",
+            "reason": "마지막 성립 출발을 역산하지 못했다 — 07:23 은 N51 첫차(23:40) 이전이다"
+          },
+          {
+            "label": "3호선 경복궁→종로3가 → 버스 7212 종로3가역.탑골공원→광화문역2번출구.KT광화문지사",
+            "code": "mix_dominated",
+            "reason": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 34분 vs 24 · 환승 1 vs 0 · 도보 16분 vs 14)"
+          },
+          {
+            "label": "3호선 경복궁→종로3가 → 1호선 종로3가→시청 → 버스 종로11 시청역1호선.서울시청→광화문역2번출구.KT광화문지사",
+            "code": "mix_dominated",
+            "reason": "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 37분 vs 24 · 환승 2 vs 0 · 도보 15.9분 vs 14)"
+          },
+          {
+            "label": "그 밖 혼합 후보 30개",
+            "code": "mix_skipped",
+            "reason": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+          },
+          {
+            "label": "그 밖 혼합 후보 48개",
+            "code": "mix_skipped",
+            "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+          },
+          {
+            "label": "그 밖 혼합 후보 138개",
+            "code": "mix_cap",
+            "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+          },
+          {
+            "label": "3호선 경복궁→종로3가 → 5호선 종로3가→광화문",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:50 출발은 성립 확인(역산) · 환승 1회 · 소요 24분"
+          },
+          {
+            "label": "3호선 안국→종로3가 → 5호선 종로3가→광화문",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:44 출발은 성립 확인(역산) · 환승 1회 · 소요 30분"
+          },
+          {
+            "label": "3호선 경복궁→종로3가 → 1호선 종로3가→종각",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:44 출발은 성립 확인(역산) · 환승 1회 · 소요 32분"
+          },
+          {
+            "label": "3호선 안국→경복궁",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:40 출발은 성립 확인(역산) · 환승 0회 · 소요 33분"
+          },
+          {
+            "label": "5호선 광화문→종로3가 → 3호선 종로3가→경복궁",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:33 출발은 성립 확인(역산) · 환승 1회 · 소요 40분"
+          },
+          {
+            "label": "3호선 안국→종로3가 → 1호선 종로3가→종각",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:38 출발은 성립 확인(역산) · 환승 1회 · 소요 38분"
+          },
+          {
+            "label": "5호선 광화문→종로3가 → 1호선 종로3가→종각",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:33 출발은 성립 확인(역산) · 환승 1회 · 소요 43분"
+          },
+          {
+            "label": "버스 7016 경복궁역3번출구→세종문화회관",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:03 출발은 성립 확인(역산) · 환승 0회 · 소요 56분"
+          },
+          {
+            "label": "버스 종로11 경복궁→세종문화회관",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:46 출발은 성립 확인(역산) · 환승 0회 · 소요 24분"
+          },
+          {
+            "label": "버스 01A 경복궁.국립민속박물관→남인사마당 → 5호선 종로3가→광화문",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 10:00에 끝나고, 이동 출발 10:00 출발은 재판정에서 불성립 · 09:39 출발은 성립 확인(역산) · 환승 1회 · 소요 35분"
+          },
+          {
+            "label": "그 밖 버스 직행 3개",
+            "code": "bus_more",
+            "reason": "도보 긴 쪽 — before_prev_end 3"
+          }
+        ],
+        "grade_note": "고른 경로가 열차 시간표가 아니라 도보 · 택시(거리 · 도로 길찾기)나 버스(배차 추정)라 어림에 가까운 값이에요",
+        "requested_depart_at": "2026-10-18T10:00:00+09:00",
+        "wait_min": 0
+      }
+    }
+  },
+  "db": {
+    "code": 1,
+    "value": "Traceback (most recent call last):\n  File \"<stdin>\", line 3, in <module>\n  File \"/usr/local/lib/python3.12/site-packages/psycopg/connection.py\", line 97, in connect\n    params = cls._get_connection_params(conninfo, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/psycopg/connection.py\", line 181, in _get_connection_params\n    return conninfo_to_dict(conninfo, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/psycopg/conninfo.py\", line 82, in conninfo_to_dict\n    opts = _parse_conninfo(conninfo)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/psycopg/conninfo.py\", line 103, in _parse_conninfo\n    raise e.ProgrammingError(str(ex)) from None\npsycopg.ProgrammingError: missing \"=\" after \"postgresql+psycopg://acop:5a83c12a63a2abcbf29e84faf56609a4ce026d20ac8294db@127.0.0.1:15432/acop_cs\" in connection info string\n\n"
+  }
+}

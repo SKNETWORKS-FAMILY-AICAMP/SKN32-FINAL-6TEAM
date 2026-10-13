@@ -7,7 +7,8 @@
 
 ★값은 `config/guardrails.yaml` `travel.safety` 한 곳에 둔다(RULE §3.1). 그 값은 **우리가 고른 것**이다 — 공식 코드표에서 나온 것이 아니다.
 ★재난문자 재해구분명이 **모르는 값이어도** 본문 낱말(`trip_keywords`)로 심각함을 가른다. 모르는 구분 + 낱말 없음 = 정지하지 않는다(조용히 넘기지 않고 기존 안전 알림으로 남는다).
-★훈련 · 해제 문자는 정지시키지 않는다(`exclude_keywords`) — 「민방위 훈련」 문자 한 통으로 여행이 멈추면 안 된다.
+★훈련 문자(`exclude_keywords`)와 끝난 사건의 문자(공용 판정 `notice_status` — `[2026-10-12]` 전에는 「해제」 낱말)는 정지시키지 않는다 — 「민방위 훈련」 문자 한 통으로 여행이 멈추면 안 된다.
+  ★「해제 시까지 대피」·「해제 예정」은 끝이 아니다 — 전에는 「해제」 낱말 하나로 이런 경보까지 정지에서 빠졌다.
 ★이 파일은 **무엇을 할지의 이름**(`level`)만 정한다. 정지를 쓰고 알리는 일은 `components/watch/safety_pause.py` 가 한다.
 """
 from __future__ import annotations
@@ -17,14 +18,18 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Literal, Mapping
 
+from app.domains.travel_ops.ports.data_sources.notice_status import notice_status
+
 Level = Literal["day", "trip"]
 ShelterType = Literal["civil_defense", "quake_outdoor"]
 
 #: 날씨가 일으키는 재해 — 위급재난 단계여도 여행 전체를 정지하는 근거가 아니다(실내 대체 · 안전 알림이 맡는다). `disaster_msg.WEATHER_KINDS` 와 같은 뜻이다
-_WEATHER_KINDS = frozenset({"호우", "태풍", "대설", "강풍", "폭염", "한파", "산사태", "풍랑", "황사", "홍수", "낙뢰"})
+_WEATHER_KINDS = frozenset({"호우", "태풍", "대설", "강풍", "폭염", "한파", "산사태", "풍랑", "황사", "홍수", "낙뢰",
+                            "안개", "미세먼지", "대조기"})  # `[2026-10-13]` 공식 목록 41종의 날씨형을 더했다
 #: 대피 장소를 안내할 재해 — 지진 계열은 옥외 대피장소, 전쟁 · 폭발 · 테러 계열은 민방위 대피시설. 화재 · 산불 · 붕괴는 대피 장소 자료로 안내하지 않는다(공식 안내만)
 _QUAKE_KINDS = frozenset({"지진", "지진해일"})
-_SHELTER_KINDS = frozenset({"민방위", "테러", "폭발", "화산", "원전", "방사능", "가스"})
+#:   `[2026-10-13]` 「민방위」는 공식 재해구분 이름이 「민방공」이다(옛 이름도 남긴다 — 옛 기록 · 시험 원인). 화생방사고 · 비상사태도 대피시설 안내 대상이다
+_SHELTER_KINDS = frozenset({"민방공", "민방위", "테러", "폭발", "화산", "원전", "방사능", "가스", "화생방사고", "비상사태"})
 _SHELTER_KEYWORDS = ("공습경보", "경계경보", "전쟁", "미사일", "생화학", "방사능", "화산", "분화")
 
 
@@ -79,11 +84,13 @@ class SafetyEvent:
     text: str | None                   # 재난문자 원문(그대로)
     key: str                           # 같은 사건의 지문
     shelter_type: ShelterType | None   # 안내할 대피 장소 종류 — None 이면 대피 장소 목록 없이 공식 안내만
+    simulation_id: str | None = None
 
     def evidence(self) -> dict[str, Any]:
         """정지의 근거(`trip_safety_pauses.event_json`) — 읽은 값만, 지어낸 것 없음."""
         return {"category": self.category, "kind": self.kind, "label": self.label, "step": self.step,
-                "at": self.at.isoformat() if self.at else None, "text": self.text, "level": self.level}
+                "at": self.at.isoformat() if self.at else None, "text": self.text, "level": self.level,
+                **({"mode": "simulation", "simulation_id": self.simulation_id} if self.simulation_id else {})}
 
 
 def _moment(value: Any) -> datetime | None:
@@ -116,14 +123,15 @@ def _from_quake(cause: Mapping[str, Any], rules: SafetyRules) -> SafetyEvent | N
     at = _moment(cause.get("at"))
     return SafetyEvent(level=level, category="earthquake", kind="지진", label=f"규모 {magnitude:g} 지진", step=None, at=at,
                        text=str(cause["location"]) if cause.get("location") else None,
-                       key=_key("earthquake", cause.get("at"), cause.get("location"), magnitude), shelter_type="quake_outdoor")
+                       key=_key("earthquake", cause.get("at"), cause.get("location"), magnitude), shelter_type="quake_outdoor",
+                       simulation_id=cause.get("simulation_id") if cause.get("mode") == "simulation" else None)
 
 
 def _from_message(cause: Mapping[str, Any], rules: SafetyRules) -> SafetyEvent | None:
     kind, step = str(cause.get("kind") or "").strip(), str(cause.get("step") or "").strip()
     text = str(cause.get("text") or "").strip()
-    if any(word in text for word in rules.exclude_keywords):
-        return None                                        # 훈련 · 해제 — 정지시키지 않는다
+    if any(word in text for word in rules.exclude_keywords) or notice_status(text).ended:
+        return None                                        # 훈련 · 끝난 사건(해제 · 종료 · 철회 …) — 정지시키지 않는다
     keyword = next((word for word in rules.trip_keywords if word in text), None)
     weather = kind in _WEATHER_KINDS
     trip = ((step in rules.trip_steps and not weather) or kind in rules.trip_kinds or keyword is not None)
@@ -134,7 +142,8 @@ def _from_message(cause: Mapping[str, Any], rules: SafetyRules) -> SafetyEvent |
     label = (f"{kind}({step})" if kind and step else kind or "긴급 안전 상황")
     return SafetyEvent(level=level, category="disaster_msg", kind=kind, label=label, step=step or None, at=_moment(cause.get("created_at")),
                        text=text or None, key=_key("disaster_msg", cause.get("created_at"), kind, step, text[:80]),
-                       shelter_type=_shelter_type(kind, text))
+                       shelter_type=_shelter_type(kind, text),
+                       simulation_id=cause.get("simulation_id") if cause.get("mode") == "simulation" else None)
 
 
 def classify(causes: list[Mapping[str, Any]] | None, rules: SafetyRules | None = None) -> SafetyEvent | None:
@@ -154,4 +163,5 @@ def classify(causes: list[Mapping[str, Any]] | None, rules: SafetyRules | None =
     return sorted(found, key=lambda e: (e.level != "trip",))[0]
 
 
-__all__ = ["Level", "SafetyEvent", "SafetyRules", "ShelterType", "classify"]
+# `notice_status` — 에이전트 팀이 「끝났나」 공용 판정을 쓰는 문(팀은 ports 를 직접 import 하지 않는다 — `test_team_tool_discipline`). `[2026-10-13]`
+__all__ = ["Level", "SafetyEvent", "SafetyRules", "ShelterType", "classify", "notice_status"]

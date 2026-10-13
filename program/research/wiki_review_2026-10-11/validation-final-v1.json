@@ -1,0 +1,12 @@
+{
+  "checks": {
+    "unique_ids": true,
+    "25_findings": true,
+    "local_links": true,
+    "svg_accessible": true,
+    "citations": true,
+    "reading_scope": true
+  },
+  "passed": 6,
+  "total": 6
+}

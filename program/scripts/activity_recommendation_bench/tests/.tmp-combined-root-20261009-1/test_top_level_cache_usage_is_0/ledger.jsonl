@@ -1,0 +1,2 @@
+{"event": "reserved", "call_id": "0001", "lane": "nano", "cost_usd": 0.016692, "at": "2026-10-08T17:20:19.643432+00:00"}
+{"event": "finished", "call_id": "0001", "cost_usd": 0.00074, "usage_known": true}

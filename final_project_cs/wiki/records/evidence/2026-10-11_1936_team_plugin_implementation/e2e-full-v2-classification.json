@@ -1,0 +1,60 @@
+{
+  "collected": 999,
+  "executed": 650,
+  "passed": 637,
+  "failed": 12,
+  "skipped": 1,
+  "unexecuted": 349,
+  "elapsed_seconds": 1124.09,
+  "failures": [
+    {
+      "test": "tests.e2e.test_desk_gate::test_without_ask_first_a_report_still_changes_the_plan_right_away",
+      "classification": "explicit_test_provider_missing"
+    },
+    {
+      "test": "tests.e2e.test_desk_gate::test_ask_first_turns_a_closed_report_into_a_question",
+      "classification": "explicit_test_provider_missing"
+    },
+    {
+      "test": "tests.e2e.test_desk_gate::test_a_pinned_item_is_asked_about_even_without_ask_first",
+      "classification": "explicit_test_provider_missing"
+    },
+    {
+      "test": "tests.e2e.test_desk_gate::test_a_customer_sentence_that_ends_in_a_question_closes_the_case",
+      "classification": "explicit_test_provider_missing"
+    },
+    {
+      "test": "tests.e2e.test_guest_and_trip_delete::test_every_table_that_carries_a_trip_number_is_accounted_for",
+      "classification": "privacy_inventory_missing_existing_cascade_table"
+    },
+    {
+      "test": "tests.e2e.test_intake_transcription_differs_db::test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons",
+      "classification": "explicit_test_provider_missing"
+    },
+    {
+      "test": "tests.e2e.test_intake_transcription_differs_db::test_when_the_customer_picks_a_value_the_reread_and_the_warning_go_away",
+      "classification": "explicit_test_provider_missing"
+    },
+    {
+      "test": "tests.e2e.test_mcp_read_tools::test_a_move_by_coordinates_is_judged_and_counted",
+      "classification": "explicit_test_provider_missing"
+    },
+    {
+      "test": "tests.e2e.test_mcp_read_tools::test_a_move_by_trip_items_uses_that_trips_places_and_only_my_trip",
+      "classification": "explicit_test_provider_missing"
+    },
+    {
+      "test": "tests.e2e.test_mcp_read_tools::test_a_server_without_the_judge_returns_a_straight_line_estimate_and_says_it",
+      "classification": "obsolete_estimate_success_expectation"
+    },
+    {
+      "test": "tests.e2e.test_mcp_read_tools::test_the_move_tool_over_mcp_reports_the_grade_and_never_leaks_the_key",
+      "classification": "explicit_test_provider_missing"
+    },
+    {
+      "test": "tests.e2e.test_trip_api::test_the_whole_day_through_the_api",
+      "classification": "explicit_test_provider_missing"
+    }
+  ],
+  "note": "The process loaded source before later fixture fixes; this run is preserved, not overwritten."
+}

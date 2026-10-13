@@ -1,0 +1,27 @@
+[
+  {
+    "path": "frontend/apps/web/src/features/trip-registration/test-plans.tsx",
+    "source_sha256": "197b28320b5803be85ce1e1022164cabc98aa4113ab9ef2e491939dab0b47ca6",
+    "tested_sha256": "197b28320b5803be85ce1e1022164cabc98aa4113ab9ef2e491939dab0b47ca6"
+  },
+  {
+    "path": "frontend/apps/web/src/features/trip-registration/test-plans.module.css",
+    "source_sha256": "e38dd3429d10b4e23e6fb2e8a000bc867e134ffb40fd161de32cc161e242cf3c",
+    "tested_sha256": "e38dd3429d10b4e23e6fb2e8a000bc867e134ffb40fd161de32cc161e242cf3c"
+  },
+  {
+    "path": "frontend/apps/web/tests/live/prepared-test-plans-20261011.spec.ts",
+    "source_sha256": "55823aed3363e432e2ab0ccfdc22200f995bd41585bf3fb005d4cd8e074a4c96",
+    "tested_sha256": "55823aed3363e432e2ab0ccfdc22200f995bd41585bf3fb005d4cd8e074a4c96"
+  },
+  {
+    "path": "frontend/apps/web/tests/live/fixtures/prepared-test-plans.json",
+    "source_sha256": "9ae8c948596299055dee1da0404d0740ddaaaa8bd2df0b6efba15068703abc52",
+    "tested_sha256": "9ae8c948596299055dee1da0404d0740ddaaaa8bd2df0b6efba15068703abc52"
+  },
+  {
+    "path": "frontend/apps/web/tests/live/test-plan-categories-20261011.spec.ts",
+    "source_sha256": "cd85387f9aebd09afc87fbc095c742436745747a5b588df579a345bd8519d91a",
+    "tested_sha256": "cd85387f9aebd09afc87fbc095c742436745747a5b588df579a345bd8519d91a"
+  }
+]

@@ -2,13 +2,16 @@
 type: decision
 title: 업무 도메인 폴더는 app/domains/<도메인>/ 아래 다섯 칸으로 나눈다
 description: 여행 코드 69개가 한 폴더에 섞여 있던 것을 모듈·인스턴스·컴포넌트·Port·입구 칸으로 나눈다. 옛 app/domain 은 Case 상태 규칙이라 app/core/case_lifecycle 로 옮겼다
-status: accepted
-tags: [architecture, composition]
+status: draft
+tags: [architecture]
 domain: neutral
 domain_note: 폴더 구조 규칙은 도메인 무관이다. 지금 도메인이 여행이라 예시로 travel_ops 가 나온다
+decision_status: accepted
 ---
 
 # D-CS-013 업무 도메인 폴더 구조
+
+`[2026-10-11 목표 계약 보완·코드 구현 대기]` 폴더 구분과 계산 Port 경계는 유지합니다. 사용자의 Team 부재 정책에 따라, 아래 10월 6일 미등록 시 어림값·모름 처리와 호출 때 전역 모듈을 다시 읽는 방식은 구현 현황으로만 읽습니다. 필수 Team 업무를 대신 성공시키는 정책은 [로딩·실행·교체 계획](../teams/team-plugin-lifecycle.md)의 이용 불가 처리로 대체하고, 선택 계산만 유효한 독립 흐름에서 생략합니다. 새 판 조립은 기존 전역을 변경하지 않으며 요청이 같은 판을 끝까지 사용해야 합니다. [Claude Opus 5.5 재논의 결과](../records/reports/2026-10-11_1914_team_plugin_consensus.md). 폴더 이동 완료와 새 실행 정책 구현 완료를 혼동하지 않습니다.
 
 `[2026-10-06 사용자 결정]` 구조와 칸 이름은 사용자가 정했고, 바깥 폴더 이름은 Codex 와 2회차에 합의했다(기록: 아래 「근거」).
 
@@ -100,7 +103,9 @@ app/
 새 칸 [`components/team_hooks/`](../../app/domains/travel_ops/components/team_hooks/) — 옆칸 `core_hooks/`
 와 방향이 반대다(그쪽은 여행이 플랫폼 코어에 꽂는 어휘, 여기는 팀이 여행 부품에 꽂는 계산).
 
-| 자리 | 부품이 묻는 것 | 꽂는 쪽 | 미등록이면 | 짝 |
+아래 표는 2026-10-06 구현 당시의 기록이며 2026-10-11 목표 부재 정책을 대신하지 않습니다.
+
+| 자리 | 부품이 묻는 것 | 꽂는 쪽 | 당시 미등록이면 | 짝 |
 |---|---|---|---|---|
 | `legs.py` | 두 지점 사이 시간 · 노선 · 사고 반영 · 도보 상한 | 이동 팀 | 계산기 `None`(어림값) · 사고 `([], [])` · 상한 `None` | 7 |
 | `dining_ledger.py` | 근처 식당 들여놓기 · 시간대 영업 판정 · 이름으로 찾기 | 요식 팀 | 판정 `None`(모름) · 근처는 받은 목록 그대로 | 5 |

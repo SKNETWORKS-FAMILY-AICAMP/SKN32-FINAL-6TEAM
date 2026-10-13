@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "rows": [
+    {
+      "id": "현장-승차-001",
+      "status": "unaligned",
+      "scope": "actual_transport_event",
+      "reason": "reference_evidence_missing",
+      "absolute_error_seconds": null,
+      "within_tolerance": null
+    }
+  ],
+  "total": 1,
+  "compared": 0,
+  "by_reference_kind": {
+    "actual_transport_event": {
+      "total": 1,
+      "compared": 0,
+      "unaligned": 1,
+      "passed": 0,
+      "failed": 0
+    }
+  },
+  "claim": "자료 종류별 정렬 비교; 공표·표시·재생은 실제 탑승 정확도가 아님",
+  "developer_api_calls": 0
+}

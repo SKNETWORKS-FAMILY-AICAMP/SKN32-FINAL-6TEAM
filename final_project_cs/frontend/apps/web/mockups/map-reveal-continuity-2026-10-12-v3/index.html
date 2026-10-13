@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>로딩 중 전체 일정 표시 · 지도 순차 이동</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf2ef;color:#233e33;font-family:system-ui,sans-serif;line-height:1.7}main{max-width:1100px;margin:auto;padding:32px 20px}h1{font-size:28px;line-height:1.3}h2{font-size:22px;margin-top:36px}p{max-width:72ch}.compare{display:grid;grid-template-columns:1fr 1.5fr;gap:24px}figure{margin:0;padding:20px;background:white;border:1px solid #cfdbd3;border-radius:20px}video,img{display:block;width:100%;height:auto;border-radius:12px}figcaption{font-weight:650;margin-bottom:16px}details{margin-top:20px}summary{cursor:pointer;padding:12px 0}a{color:#2d6048}@media(max-width:700px){.compare{grid-template-columns:1fr}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+<main>
+<h1>읽어 온 일정은 처음부터 모두 보입니다</h1>
+<p>지도에서 첫 마커를 확인하는 동안에도 다음 일정은 제목과 시간이 보이는 접힌 카드로 남습니다. 현재 확인 중인 카드만 펼치고, 검증 결과는 해당 순서에 맞춰 표시합니다.</p>
+<p>아래 재생 버튼으로 실제 화면의 전체 이동 과정을 확인하실 수 있습니다.</p>
+<div class="compare">
+<figure><figcaption>375px · 모바일</figcaption><video controls preload="metadata" poster="first-375.png" src="reveal-375.webm" aria-label="모바일 전체 일정 표시와 순차 지도 이동 녹화"></video><details open><summary>첫 마커 표시 중 화면</summary><a href="first-375.png"><img src="first-375.png" alt="경복궁을 확인하는 동안 올리브영과 광장시장도 접힌 카드로 보이는 화면"></a></details></figure>
+<figure><figcaption>1280px · 넓은 화면</figcaption><video controls preload="metadata" poster="first-1280.png" src="reveal-1280.webm" aria-label="넓은 화면 전체 일정 표시와 순차 지도 이동 녹화"></video><details open><summary>첫 마커 표시 중 화면</summary><a href="first-1280.png"><img src="first-1280.png" alt="넓은 화면에서 전체 읽힌 일정이 먼저 표시된 모습"></a></details></figure>
+</div>
+<h2>멀어진 이전 마커도 각각 남습니다</h2>
+<p>3번 일정으로 이동한 뒤에도 1번과 2번은 별도 버튼으로 남습니다. 현재 지도 마커와 한 묶음으로 합치지 않습니다.</p>
+<div class="compare">
+<figure><figcaption>375px · 3번 확인 중</figcaption><a href="third-375.png"><img src="third-375.png" alt="가운데 3번 마커와 좌우에 각각 남은 2번·1번 버튼"></a></figure>
+<figure><figcaption>1280px · 3번 확인 중</figcaption><a href="third-1280.png"><img src="third-1280.png" alt="넓은 화면의 현재 마커와 개별 이전 마커 버튼"></a></figure>
+</div>
+<p>mock 서버의 실제 순차 응답과 제품 화면으로 촬영했습니다. 지도 배경은 보관된 OpenStreetMap 타일입니다. 실제 cs 프로젝트 서버 응답·실기기 GPS 확인 결과는 아닙니다.</p>
+<p><a href="../map-reveal-continuity-2026-10-12-v2/index.html">이전 판 보기</a></p>
+</main>
+</html>

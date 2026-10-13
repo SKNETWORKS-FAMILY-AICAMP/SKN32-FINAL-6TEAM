@@ -1,0 +1,166 @@
+{
+  "created_at": "2026-10-09T09:38:27.932677+09:00",
+  "injected_cases": 2,
+  "records": [
+    {
+      "variant": "before",
+      "case": "valid",
+      "outcome": "normalized",
+      "train": {
+        "line": "2호선",
+        "direction": "내선",
+        "route_label": null,
+        "message": null,
+        "position": null,
+        "arrival_code": null,
+        "eta_seconds": 180,
+        "received_at": "2026-10-09 09:30:00",
+        "received_age_seconds": 5,
+        "source_clock_ahead": false,
+        "train_status": "일반"
+      }
+    },
+    {
+      "variant": "before",
+      "case": "invalid_superscript",
+      "outcome": "ValueError",
+      "error": "invalid literal for int() with base 10: '²'"
+    },
+    {
+      "variant": "after",
+      "case": "valid",
+      "outcome": "normalized",
+      "train": {
+        "line": "2호선",
+        "direction": "내선",
+        "route_label": null,
+        "message": null,
+        "position": null,
+        "arrival_code": null,
+        "eta_seconds": 180,
+        "eta_status": "valid",
+        "line_id": "1002",
+        "station_id": "1002000222",
+        "previous_station_id": "1002000221",
+        "next_station_id": "1002000223",
+        "terminal_station_id": "1002000211",
+        "terminal_station": "성수",
+        "train_number": "0021",
+        "arrival_order": "00000001",
+        "received_at": "2026-10-09 09:30:00",
+        "received_age_seconds": 5,
+        "source_clock_ahead": false,
+        "train_status": "일반"
+      }
+    },
+    {
+      "variant": "after",
+      "case": "invalid_superscript",
+      "outcome": "normalized",
+      "train": {
+        "line": "2호선",
+        "direction": "내선",
+        "route_label": null,
+        "message": null,
+        "position": null,
+        "arrival_code": null,
+        "eta_seconds": null,
+        "eta_status": "invalid",
+        "line_id": "1002",
+        "station_id": "1002000222",
+        "previous_station_id": "1002000221",
+        "next_station_id": "1002000223",
+        "terminal_station_id": "1002000211",
+        "terminal_station": "성수",
+        "train_number": "0021",
+        "arrival_order": "00000001",
+        "received_at": "2026-10-09 09:30:00",
+        "received_age_seconds": 5,
+        "source_clock_ahead": false,
+        "train_status": "일반"
+      }
+    },
+    {
+      "variant": "after",
+      "case": "valid",
+      "outcome": "normalized",
+      "train": {
+        "line": "2호선",
+        "direction": "내선",
+        "route_label": null,
+        "message": null,
+        "position": null,
+        "arrival_code": null,
+        "eta_seconds": 180,
+        "eta_status": "valid",
+        "line_id": "1002",
+        "station_id": "1002000222",
+        "previous_station_id": "1002000221",
+        "next_station_id": "1002000223",
+        "terminal_station_id": "1002000211",
+        "terminal_station": "성수",
+        "train_number": "0021",
+        "arrival_order": "00000001",
+        "received_at": "2026-10-09 09:30:00",
+        "received_age_seconds": 5,
+        "source_clock_ahead": false,
+        "train_status": "일반"
+      }
+    },
+    {
+      "variant": "after",
+      "case": "invalid_superscript",
+      "outcome": "normalized",
+      "train": {
+        "line": "2호선",
+        "direction": "내선",
+        "route_label": null,
+        "message": null,
+        "position": null,
+        "arrival_code": null,
+        "eta_seconds": null,
+        "eta_status": "invalid",
+        "line_id": "1002",
+        "station_id": "1002000222",
+        "previous_station_id": "1002000221",
+        "next_station_id": "1002000223",
+        "terminal_station_id": "1002000211",
+        "terminal_station": "성수",
+        "train_number": "0021",
+        "arrival_order": "00000001",
+        "received_at": "2026-10-09 09:30:00",
+        "received_age_seconds": 5,
+        "source_clock_ahead": false,
+        "train_status": "일반"
+      }
+    },
+    {
+      "variant": "before",
+      "case": "valid",
+      "outcome": "normalized",
+      "train": {
+        "line": "2호선",
+        "direction": "내선",
+        "route_label": null,
+        "message": null,
+        "position": null,
+        "arrival_code": null,
+        "eta_seconds": 180,
+        "received_at": "2026-10-09 09:30:00",
+        "received_age_seconds": 5,
+        "source_clock_ahead": false,
+        "train_status": "일반"
+      }
+    },
+    {
+      "variant": "before",
+      "case": "invalid_superscript",
+      "outcome": "ValueError",
+      "error": "invalid literal for int() with base 10: '²'"
+    }
+  ],
+  "old_fields_preserved": 11,
+  "network_attempts": [],
+  "new_external_samples": 0,
+  "actual_trips": 0
+}

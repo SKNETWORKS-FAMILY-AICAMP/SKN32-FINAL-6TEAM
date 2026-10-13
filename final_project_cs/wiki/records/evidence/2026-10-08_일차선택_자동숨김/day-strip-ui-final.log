@@ -1,0 +1,47 @@
+
+[WebServer] (node:22576) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:17616) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:17616) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:23116) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:19316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:8880) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21200) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:7660) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:1368) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:23700) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:15784) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+
+(node:13224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/6] tests\live\day-strip-quiet.spec.ts:18:1 › 목록을 스크롤하면 일차 줄만 사라지고 멈춘 뒤 다시 나타나며 목록 위치는 유지된다
+[2/6] tests\live\day-strip-quiet.spec.ts:35:1 › 지도를 누르고 움직이는 동안은 계속 숨고 손을 놓은 뒤 복귀한다
+[3/6] tests\live\day-strip-quiet.spec.ts:48:1 › 일차 버튼 조작은 숨기지 않고 숨은 중에도 Tab을 누르면 다시 접근할 수 있다
+[4/6] tests\live\day-strip-quiet.spec.ts:69:1 › 동작 줄이기 설정에서도 숨김·복귀가 되며 위치 이동 효과는 없다
+[5/6] tests\live\plan-focus.spec.ts:10:1 › 마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인다
+[6/6] tests\live\plan-focus.spec.ts:31:1 › 검증 중 마지막 일정은 목록 가운데에 따라오고 지도 마커도 함께 보인다
+  6 passed (45.9s)

@@ -214,10 +214,13 @@ def apply_break(day: tuple[str, list[tuple[int, int]]], cell: str | None) -> tup
     for b0, b1 in rest:              # 「03:00-04:00, 15:00-16:00」처럼 쉬는 구간이 여럿일 수 있다
         cut = []
         for start, end in out:
-            if start < b0 and b1 < end:
-                cut += [(start, b0), (b1, end)]
-            else:
+            if b1 <= start or b0 >= end:
                 cut.append((start, end))
+                continue
+            if start < b0:
+                cut.append((start, min(b0, end)))
+            if b1 < end:
+                cut.append((max(b1, start), end))
         out = cut
     return coverage, out
 

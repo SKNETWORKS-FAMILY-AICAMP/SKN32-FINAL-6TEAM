@@ -1,0 +1,62 @@
+{
+  "results": [
+    {
+      "name": "triPilot-baseline-v1",
+      "mode": "desktop",
+      "metrics": {
+        "pageWidth": 1440,
+        "viewport": 1440,
+        "svg": 2,
+        "sections": 11,
+        "hiddenDetails": 0
+      },
+      "blockedRequests": [],
+      "pageErrors": [],
+      "passed": true
+    },
+    {
+      "name": "triPilot-baseline-v1",
+      "mode": "mobile",
+      "metrics": {
+        "pageWidth": 390,
+        "viewport": 390,
+        "svg": 2,
+        "sections": 11,
+        "hiddenDetails": 0
+      },
+      "blockedRequests": [],
+      "pageErrors": [],
+      "passed": true
+    },
+    {
+      "name": "baseline-writing-guide",
+      "mode": "desktop",
+      "metrics": {
+        "pageWidth": 1440,
+        "viewport": 1440,
+        "svg": 2,
+        "sections": 7,
+        "hiddenDetails": 0
+      },
+      "blockedRequests": [],
+      "pageErrors": [],
+      "passed": true
+    },
+    {
+      "name": "baseline-writing-guide",
+      "mode": "mobile",
+      "metrics": {
+        "pageWidth": 390,
+        "viewport": 390,
+        "svg": 2,
+        "sections": 7,
+        "hiddenDetails": 0
+      },
+      "blockedRequests": [],
+      "pageErrors": [],
+      "passed": true
+    }
+  ],
+  "passed": 4,
+  "total": 4
+}

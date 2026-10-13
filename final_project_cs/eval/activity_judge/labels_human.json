@@ -1,0 +1,380 @@
+{
+ "reviewer": "송채영",
+ "reviewed_on": "2026-10-12",
+ "first_pass": "labels_first_pass.json",
+ "labels": {
+  "closure-01": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed"
+   ],
+   "note": ""
+  },
+  "closure-02": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "note": ""
+  },
+  "closure-03": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed"
+   ],
+   "note": ""
+  },
+  "closure-04": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "note": ""
+  },
+  "closure-05": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed",
+    "unknown"
+   ],
+   "note": ""
+  },
+  "closure-06": {
+   "expected": "closed",
+   "acceptable": [
+    "closed",
+    "unknown"
+   ],
+   "note": ""
+  },
+  "closure-07": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed",
+    "unknown"
+   ],
+   "note": ""
+  },
+  "closure-08": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "note": ""
+  },
+  "closure-09": {
+   "expected": "closed",
+   "acceptable": [
+    "closed",
+    "unknown"
+   ],
+   "note": ""
+  },
+  "closure-10": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed",
+    "unknown"
+   ],
+   "note": ""
+  },
+  "closure-11": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed"
+   ],
+   "note": ""
+  },
+  "closure-12": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "note": ""
+  },
+  "closure-13": {
+   "expected": "not_closed",
+   "acceptable": [
+    "not_closed"
+   ],
+   "note": ""
+  },
+  "closure-14": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "note": ""
+  },
+  "closure-15": {
+   "expected": "unknown",
+   "acceptable": [
+    "unknown"
+   ],
+   "note": ""
+  },
+  "closure-16": {
+   "expected": "closed",
+   "acceptable": [
+    "closed"
+   ],
+   "note": ""
+  },
+  "hours-01": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "note": ""
+  },
+  "hours-02": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "note": ""
+  },
+  "hours-03": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "note": ""
+  },
+  "hours-04": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "note": ""
+  },
+  "hours-05": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "note": ""
+  },
+  "hours-06": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "note": ""
+  },
+  "hours-07": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "note": ""
+  },
+  "hours-08": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "note": ""
+  },
+  "hours-09": {
+   "expected": "within",
+   "acceptable": [
+    "within"
+   ],
+   "note": ""
+  },
+  "hours-10": {
+   "expected": "unknown",
+   "acceptable": [
+    "unknown"
+   ],
+   "note": ""
+  },
+  "hours-11": {
+   "expected": "unknown",
+   "acceptable": [
+    "unknown"
+   ],
+   "note": ""
+  },
+  "hours-12": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "note": ""
+  },
+  "hours-13": {
+   "expected": "outside",
+   "acceptable": [
+    "outside"
+   ],
+   "note": ""
+  },
+  "hours-14": {
+   "expected": "within",
+   "acceptable": [
+    "within",
+    "unknown"
+   ],
+   "note": ""
+  },
+  "weather-01": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor"
+   ],
+   "note": ""
+  },
+  "weather-02": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "note": ""
+  },
+  "weather-03": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor",
+    "unknown"
+   ],
+   "note": ""
+  },
+  "weather-04": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "note": ""
+  },
+  "weather-05": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor"
+   ],
+   "note": ""
+  },
+  "weather-06": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "note": ""
+  },
+  "weather-07": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor"
+   ],
+   "note": ""
+  },
+  "weather-08": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "note": ""
+  },
+  "weather-09": {
+   "expected": "indoor",
+   "acceptable": [
+    "indoor"
+   ],
+   "note": ""
+  },
+  "weather-10": {
+   "expected": "outdoor",
+   "acceptable": [
+    "outdoor"
+   ],
+   "note": ""
+  },
+  "disaster-01": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "note": ""
+  },
+  "disaster-02": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "note": ""
+  },
+  "disaster-03": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks"
+   ],
+   "note": ""
+  },
+  "disaster-04": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks"
+   ],
+   "note": ""
+  },
+  "disaster-05": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "note": ""
+  },
+  "disaster-06": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks",
+    "unknown"
+   ],
+   "note": ""
+  },
+  "disaster-07": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks"
+   ],
+   "note": ""
+  },
+  "disaster-08": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "note": ""
+  },
+  "disaster-09": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "note": ""
+  },
+  "disaster-10": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect"
+   ],
+   "note": ""
+  },
+  "disaster-11": {
+   "expected": "blocks",
+   "acceptable": [
+    "blocks"
+   ],
+   "note": ""
+  },
+  "disaster-12": {
+   "expected": "no_effect",
+   "acceptable": [
+    "no_effect",
+    "unknown"
+   ],
+   "note": ""
+  }
+ }
+}

@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-10-10T09:19:12.585504+09:00",
+  "official_sources": [
+    {
+      "url": "https://docs.python.org/3.12/library/os.html#os.stat_result",
+      "basis": "0이 아닌 파일 식별자는 장치 식별자와 함께 파일을 구분합니다. Windows ctime은 생성 시각이므로 내용 변경 감지 근거로 쓰지 않습니다."
+    }
+  ],
+  "runtime": "3.12.7 | packaged by conda-forge | (main, Oct  4 2024, 15:47:54) [MSC v.1941 64 bit (AMD64)]",
+  "unit": "파일 교체 감지 계약; 새로운 길찾기 알고리즘이나 논문 기반 성능 주장을 적용하지 않음",
+  "actual_graph_file_identity_available": true,
+  "browser_failure": "CUA 세션 초기화 후 getState 시간 초과. 현재 공식 실시간 목록의 운행 식별자·시각·역 귀속 추가 확인 실패.",
+  "api_budget": {
+    "limited_api_calls": 0,
+    "provider_usage_before": null,
+    "provider_usage_after": null,
+    "remaining": null,
+    "reset_time": null,
+    "reservation": "미확보",
+    "decision": "공유 누적 사용량 미확인으로 한도 있는 API 호출 안 함",
+    "reserve_fraction": 0.2
+  }
+}

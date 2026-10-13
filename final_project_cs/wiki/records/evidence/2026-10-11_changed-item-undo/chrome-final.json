@@ -1,0 +1,224 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.location.config.ts",
+      "changed-item-undo-20261011.spec.ts",
+      "--reporter=line,json",
+      "--trace=off",
+      "--output=test-results-changed-item-undo-final"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\playwright.location.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/test-results-changed-item-undo-final",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "changed-item-undo-20261011.spec.ts",
+      "file": "changed-item-undo-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 변경한 일정은 추천 대신 되돌리기를 표시하고 그 일정만 복원한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2505,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:33:07.617Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ea0715d742deffa82ef-72b5cb740c0bba9b0495",
+          "file": "changed-item-undo-20261011.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "1280px 변경한 일정은 추천 대신 되돌리기를 표시하고 그 일정만 복원한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2551,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:33:10.450Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ea0715d742deffa82ef-e4b8128a6b43dc9e9335",
+          "file": "changed-item-undo-20261011.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "복원 실패는 변경과 되돌리기를 유지하며 다시 누르면 복원한다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 14099,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#plan-card-0-1').getByRole('heading')\nTimeout: 12000ms\n\u001b[32m- Expected  - 2\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[32m- 올리브영 광화문점\u001b[39m\n\u001b[32m- 원문 「올리브영」\u001b[39m\n\u001b[31m+ 올리브영 광화문점원문 「올리브영」\u001b[39m\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('#plan-card-0-1').getByRole('heading') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('#plan-card-0-1').getByRole('heading')\u001b[22m\n\u001b[2m    27 × locator resolved to <h4 class=\"plan-check_cardHeading__Zn_fd\">…</h4>\u001b[22m\n\u001b[2m       - unexpected value \"올리브영 광화문점원문 「올리브영」\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#plan-card-0-1').getByRole('heading')\nTimeout: 12000ms\n\u001b[32m- Expected  - 2\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[32m- 올리브영 광화문점\u001b[39m\n\u001b[32m- 원문 「올리브영」\u001b[39m\n\u001b[31m+ 올리브영 광화문점원문 「올리브영」\u001b[39m\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('#plan-card-0-1').getByRole('heading') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('#plan-card-0-1').getByRole('heading')\u001b[22m\n\u001b[2m    27 × locator resolved to <h4 class=\"plan-check_cardHeading__Zn_fd\">…</h4>\u001b[22m\n\u001b[2m       - unexpected value \"올리브영 광화문점원문 「올리브영」\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\changed-item-undo-20261011.spec.ts:60:43",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\changed-item-undo-20261011.spec.ts",
+                      "column": 43,
+                      "line": 60
+                    },
+                    "snippet": "  58 |   await card.getByRole(\"button\", { name: /변경 되돌리기$/ }).click();\n  59 |   await expect(page.getByRole(\"alert\").filter({ hasText: \"일정 확인을 마치지 못했어요\" })).toBeVisible();\n> 60 |   await expect(card.getByRole(\"heading\")).toHaveText(changed);\n     |                                           ^\n  61 |   await expect(card.getByRole(\"button\", { name: /변경 되돌리기$/ })).toBeEnabled();\n  62 |   await expect(page.locator(\"#plan-recommend-0-1\")).toHaveCount(0);\n  63 |   await page.unroute(restore);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\changed-item-undo-20261011.spec.ts",
+                        "column": 43,
+                        "line": 60
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#plan-card-0-1').getByRole('heading')\nTimeout: 12000ms\n\u001b[32m- Expected  - 2\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[32m- 올리브영 광화문점\u001b[39m\n\u001b[32m- 원문 「올리브영」\u001b[39m\n\u001b[31m+ 올리브영 광화문점원문 「올리브영」\u001b[39m\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('#plan-card-0-1').getByRole('heading') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('#plan-card-0-1').getByRole('heading')\u001b[22m\n\u001b[2m    27 × locator resolved to <h4 class=\"plan-check_cardHeading__Zn_fd\">…</h4>\u001b[22m\n\u001b[2m       - unexpected value \"올리브영 광화문점원문 「올리브영」\"\u001b[22m\n\n\n  58 |   await card.getByRole(\"button\", { name: /변경 되돌리기$/ }).click();\n  59 |   await expect(page.getByRole(\"alert\").filter({ hasText: \"일정 확인을 마치지 못했어요\" })).toBeVisible();\n> 60 |   await expect(card.getByRole(\"heading\")).toHaveText(changed);\n     |                                           ^\n  61 |   await expect(card.getByRole(\"button\", { name: /변경 되돌리기$/ })).toBeEnabled();\n  62 |   await expect(page.locator(\"#plan-recommend-0-1\")).toHaveCount(0);\n  63 |   await page.unroute(restore);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\changed-item-undo-20261011.spec.ts:60:43"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:33:13.019Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-changed-item-undo-final\\changed-item-undo-20261011-복원-실패는-변경과-되돌리기를-유지하며-다시-누르면-복원한다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-changed-item-undo-final\\changed-item-undo-20261011-복원-실패는-변경과-되돌리기를-유지하며-다시-누르면-복원한다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\changed-item-undo-20261011.spec.ts",
+                    "column": 43,
+                    "line": 60
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0ea0715d742deffa82ef-e31d74fc41349f64303e",
+          "file": "changed-item-undo-20261011.spec.ts",
+          "line": 51,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T13:33:05.333Z",
+    "duration": 22570.647999999997,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

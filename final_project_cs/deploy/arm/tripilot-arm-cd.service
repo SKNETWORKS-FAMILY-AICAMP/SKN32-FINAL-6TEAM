@@ -1,0 +1,15 @@
+[Unit]
+Description=triPilot ARM develop image deployment
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/tripilot-arm-cd.env
+ExecStart=/usr/bin/python3 ${DEPLOY_BASE}/control/deploy.py
+TimeoutStartSec=infinity
+MemoryMax=512M
+UMask=0077
+StandardOutput=journal
+StandardError=journal

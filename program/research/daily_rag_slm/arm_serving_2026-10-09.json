@@ -1,0 +1,417 @@
+{
+  "date": "2026-10-09",
+  "recorded_at_kst": "2026-10-09T22:51:31.234678+09:00",
+  "machine": "Oracle ARM",
+  "authorization": "existing machine and models; continuous travel validation",
+  "service": "tripilot-arm-serving.service",
+  "active": true,
+  "enabled": true,
+  "worker_pid": 171515,
+  "worker_restarted": false,
+  "lock_held": true,
+  "restart_count_observed": 0,
+  "real_inference_verified": true,
+  "cpu_cores_actual": 2,
+  "host_memory_bytes_actual": 12503744512,
+  "workload_memory_max_bytes": 10737418240,
+  "workload_cpu_limit_cores": 1.8,
+  "cpu_target_pct_of_two_cores": 20,
+  "resource_observed_at_utc": "2026-10-09T13:44:08.362986+00:00",
+  "resource_measurement": {
+    "window_s": 300.06998916500015,
+    "cpu_pct_two_cores": 89.69293138875229,
+    "host_cpu_busy_pct": 90.22065959740324,
+    "host_steal_pct": 0.16747040977202654,
+    "memory_current_bytes": 9508732928,
+    "above_20_contiguous_seconds": 45335.195008509996,
+    "five_minute_target_verified": true
+  },
+  "free_bytes": 54390390784,
+  "cpu_target_24h_proven": false,
+  "current_job_at_observation": "e4bt_q4_d3_concurrent2",
+  "saved_at_observation": 234,
+  "expected_at_observation": 360,
+  "completed_jobs": 6,
+  "running_jobs": 1,
+  "registered_jobs_after_refill": 14,
+  "pending_jobs_after_refill": 7,
+  "registered_calls_after_refill": 7494,
+  "completed_Q4_D3": {
+    "source_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+    "metadata_matches": 360,
+    "expected": 360,
+    "saved": 360,
+    "unique_ids": 360,
+    "normal_correct": 107,
+    "normal_expected": 120,
+    "normal_wilson95": [
+      0.8234463978470834,
+      0.9355885884582658
+    ],
+    "null_false_positive": 29,
+    "null_expected": 240,
+    "false_positive_wilson95": [
+      0.08546347834981291,
+      0.16814991093920253
+    ],
+    "errors_or_unparsed": 0,
+    "missing": 0,
+    "all_correct": 318,
+    "latency_samples": 360,
+    "latency_first_request_s": 174.49889237299794,
+    "latency_after_first_median_s": 156.1293279940146,
+    "latency_p50_upper_order_s": 156.1710728800099,
+    "latency_p95_upper_order_s": 174.68819515200448,
+    "cache_n_median": 1.0,
+    "cache_n_le1": 230,
+    "prompt_processing_share_engine_time": 0.9875504332828026,
+    "timing_scope": "Single completed run, serial requests, reused synthetic development contexts; no repeated-run superiority inference",
+    "model_training": "existing trained merged E4B; exact oos recipe not yet matched",
+    "cpu_and_model": "CPU-only Oracle ARM 2 cores, Q4_K_M, existing model, llama.cpp bed0a8566, seed20261008, temperature0, max_tokens16",
+    "product_adoption": false
+  },
+  "Q4_completed_at_utc": "2026-10-08T16:56:12.981015+00:00",
+  "Q4_collection_is_new_not_completion_since_last_report": true,
+  "completed_archive_hash_files": {
+    "verified": 4,
+    "expected": 4
+  },
+  "cache_diagnostic": {
+    "registration": {
+      "registered_at_utc": "2026-10-08T22:59:39.682755+00:00",
+      "registered_jobs": [
+        "e4bt_q4_grouped60_cache_ABBA_1",
+        "e4bt_q4_grouped60_cache_ABBA_2",
+        "e4bt_q4_grouped60_cache_ABBA_3",
+        "e4bt_q4_grouped60_cache_ABBA_4"
+      ],
+      "jobs_added": 4,
+      "calls_added": 240,
+      "unique_questions": 60,
+      "exact_records_verified": 60,
+      "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+      "existing_worker_preserved": true,
+      "active_job": "e4bt_q8_d3",
+      "existing_jobs_unchanged": 10,
+      "manifest_jobs": 14,
+      "pending_jobs": 12,
+      "backup": "_backup/2026-10-08_225939_arm_cache_ABBA"
+    },
+    "normal_unique": 20,
+    "null_unique": 40,
+    "cache_flags_in_order": [
+      true,
+      false,
+      false,
+      true
+    ],
+    "completed_at_registration": 0,
+    "planned_calls": 240,
+    "hypothesis": "Long prefill dominates; grouping exact itinerary prefixes may improve prompt-cache reuse",
+    "measured_improvement": true,
+    "independent_holdout": false,
+    "pass_rule": "Matched cache-on non-first-within-context median >=30% faster, no new errors or loss of correct choices; retain all60/cold5 results",
+    "repeated_calls_do_not_expand_unique_accuracy_denominator": true,
+    "completed_jobs": 4,
+    "planned_jobs": 4,
+    "completed_calls": 240,
+    "matched_ids": 60,
+    "identical_predictions": 60,
+    "preliminary_not_final_ABBA": false,
+    "preliminary_observed_latency_difference": true,
+    "verification": "program/scripts/plan_qa_bench/results/heartbeat_20261009_1953_arm/abba_final_verification.json",
+    "runs": [
+      {
+        "index": 1,
+        "path": "program/scripts/plan_qa_bench/results/heartbeat_20261009_1355_arm_a2/completed/e4bt_q4_grouped60_cache_ABBA_1",
+        "cache_on": true,
+        "summary": {
+          "expected": 60,
+          "saved": 60,
+          "correct": 58,
+          "normal_correct": 18,
+          "normal_total": 20,
+          "null_correct": 40,
+          "null_total": 40,
+          "false_positive": 0,
+          "errors_or_unparsed": 0,
+          "latency_p50_s": 10.174135704000946,
+          "latency_p95_s": 159.50080920101027,
+          "latency_max_s": 174.16298046999145,
+          "repeated_soak_not_independent_accuracy": true
+        },
+        "engine_sha256": "2d52075fe3545ba3b02e2befb102ac82468ee39dd73e8d6ed919b80dfe10bf1f",
+        "model_sha256": "e32c451b0511819d40c50bdf2f6aa867e4e66d819935f767bb8b3223b2d13d7a",
+        "cached_count": 55,
+        "cold_count": 5,
+        "cached_median_s": 10.074418579984922,
+        "cold_median_s": 159.50080920101027,
+        "matched_followup55_median_s": 10.074418579984922
+      },
+      {
+        "index": 2,
+        "path": "program/scripts/plan_qa_bench/results/heartbeat_20261009_1355_arm_a2/completed/e4bt_q4_grouped60_cache_ABBA_2",
+        "cache_on": false,
+        "summary": {
+          "expected": 60,
+          "saved": 60,
+          "correct": 58,
+          "normal_correct": 18,
+          "normal_total": 20,
+          "null_correct": 40,
+          "null_total": 40,
+          "false_positive": 0,
+          "errors_or_unparsed": 0,
+          "latency_p50_s": 159.18410884501645,
+          "latency_p95_s": 175.07272277999436,
+          "latency_max_s": 175.35801538801752,
+          "repeated_soak_not_independent_accuracy": true
+        },
+        "engine_sha256": "2d52075fe3545ba3b02e2befb102ac82468ee39dd73e8d6ed919b80dfe10bf1f",
+        "model_sha256": "e32c451b0511819d40c50bdf2f6aa867e4e66d819935f767bb8b3223b2d13d7a",
+        "cached_count": 0,
+        "cold_count": 60,
+        "cached_median_s": null,
+        "cold_median_s": 159.12258288050361,
+        "matched_followup55_median_s": 159.18410884501645
+      },
+      {
+        "index": 3,
+        "path": "program/scripts/plan_qa_bench/results/heartbeat_20261009_1953_arm/completed/e4bt_q4_grouped60_cache_ABBA_3",
+        "cache_on": false,
+        "summary": {
+          "expected": 60,
+          "saved": 60,
+          "correct": 58,
+          "normal_correct": 18,
+          "normal_total": 20,
+          "null_correct": 40,
+          "null_total": 40,
+          "false_positive": 0,
+          "errors_or_unparsed": 0,
+          "latency_p50_s": 159.39558990500518,
+          "latency_p95_s": 175.09745149998344,
+          "latency_max_s": 175.57327338599134,
+          "repeated_soak_not_independent_accuracy": true
+        },
+        "engine_sha256": "2d52075fe3545ba3b02e2befb102ac82468ee39dd73e8d6ed919b80dfe10bf1f",
+        "model_sha256": "e32c451b0511819d40c50bdf2f6aa867e4e66d819935f767bb8b3223b2d13d7a",
+        "cached_count": 0,
+        "cold_count": 60,
+        "cached_median_s": null,
+        "cold_median_s": 159.31727703849901,
+        "matched_followup55_median_s": 159.23896417199285
+      },
+      {
+        "index": 4,
+        "path": "program/scripts/plan_qa_bench/results/heartbeat_20261009_1953_arm/completed/e4bt_q4_grouped60_cache_ABBA_4",
+        "cache_on": true,
+        "summary": {
+          "expected": 60,
+          "saved": 60,
+          "correct": 58,
+          "normal_correct": 18,
+          "normal_total": 20,
+          "null_correct": 40,
+          "null_total": 40,
+          "false_positive": 0,
+          "errors_or_unparsed": 0,
+          "latency_p50_s": 10.106455533008557,
+          "latency_p95_s": 158.81058613900677,
+          "latency_max_s": 174.08877246198244,
+          "repeated_soak_not_independent_accuracy": true
+        },
+        "engine_sha256": "2d52075fe3545ba3b02e2befb102ac82468ee39dd73e8d6ed919b80dfe10bf1f",
+        "model_sha256": "e32c451b0511819d40c50bdf2f6aa867e4e66d819935f767bb8b3223b2d13d7a",
+        "cached_count": 55,
+        "cold_count": 5,
+        "cached_median_s": 10.044118061981862,
+        "cold_median_s": 158.81058613900677,
+        "matched_followup55_median_s": 10.044118061981862
+      }
+    ],
+    "measured_improvement_scope": "Same fixed model and five selected itinerary contexts, 55 matched followup questions; development latency diagnostic only",
+    "final_ABBA": true,
+    "product_adoption": false,
+    "primary_metric": {
+      "matched_followup_ids": 55,
+      "matched_median_of_run_medians_on_s": 10.059268320983392,
+      "matched_median_of_run_medians_off_s": 159.21153650850465,
+      "matched_reduction": 0.9368182196995125,
+      "development_diagnostic_pass": true,
+      "identical_predictions_all4": true
+    },
+    "intervals": {
+      "method": "paired bootstrap over5 selected itinerary contexts,2000 repeats,seed20261009; median of2 run medians per flag",
+      "conditional_reduction_ci95": [
+        0.9341583634534806,
+        0.9417595089247137
+      ],
+      "limited_selected_contexts": 5,
+      "independent_accuracy_denominator": 60,
+      "normal_correct": [
+        18,
+        20
+      ],
+      "normal_wilson95": [
+        0.6989663547715128,
+        0.9721335187862319
+      ],
+      "false_pick": [
+        0,
+        40
+      ],
+      "false_pick_wilson95": [
+        -6.938893903907228e-18,
+        0.08762160119728665
+      ],
+      "identical_predictions_across_all4": [
+        60,
+        60
+      ],
+      "paired_accuracy_discordant": [
+        0,
+        0
+      ],
+      "paired_exact_p": 1.0,
+      "all_calls_errors": [
+        0,
+        240
+      ],
+      "not_independent_holdout": true
+    }
+  },
+  "source_observation": "program/scripts/plan_qa_bench/results/arm_storage_latency_20261009_2020/observation.json",
+  "raw_results": "program/scripts/plan_qa_bench/results/heartbeat_20261009_1953_arm",
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_2244_arm-runtime-memory-disk.md",
+  "model_recipe_verified": false,
+  "product_adoption": false,
+  "cs_project_full_deployment_verified": false,
+  "next_actions": [
+    "Preserve running concurrent2 profile and seven pending jobs; collect completed attempts without a second worker",
+    "Broaden independent context and tenant isolation validation before any cache adoption; new-context first request remains about159seconds",
+    "Keep 60 unique questions separate from240 repeated calls and retain all failures"
+  ],
+  "completed_Q8_D3": {
+    "expected": 360,
+    "saved": 360,
+    "correct": 315,
+    "normal_correct": 106,
+    "normal_total": 120,
+    "null_correct": 209,
+    "null_total": 240,
+    "false_positive": 31,
+    "errors_or_unparsed": 0,
+    "latency_p50_s": 110.71452203500667,
+    "latency_p95_s": 124.32256508199498,
+    "latency_max_s": 130.77805902500404,
+    "repeated_soak_not_independent_accuracy": true
+  },
+  "Q8_archive_verification": "program/scripts/plan_qa_bench/results/daily_20261009_arm_v1/archive_verification.json",
+  "previous_observation_before_1400": {
+    "resource_observed_at_utc": "2026-10-09T01:09:54.254772+00:00",
+    "resource_measurement": {
+      "window_s": 300.0509401000163,
+      "cpu_pct_two_cores": 58.90750681903642,
+      "host_cpu_busy_pct": 59.29456335126009,
+      "host_steal_pct": 0.13111503346181627,
+      "memory_current_bytes": 9661194240,
+      "above_20_contiguous_seconds": 85.0159571460099,
+      "five_minute_target_verified": true
+    },
+    "current_job_at_observation": "e4bt_q4_grouped60_cache_ABBA_1",
+    "saved_at_observation": 0,
+    "completed_jobs": 2,
+    "pending_jobs_after_refill": 11,
+    "source_observation": "program/scripts/plan_qa_bench/results/daily_20261009_arm_v1/observation.json",
+    "report": "final_project_cs/wiki/records/reports/2026-10-09_1015_daily-research-and-serving.md"
+  },
+  "cache_archive_verification": {
+    "new_verified": 8,
+    "new_expected": 8,
+    "all_four_run_verified": 16,
+    "all_four_run_expected": 16,
+    "backup": "program/research/daily_rag_slm/_backup/2026-10-09_200026_arm_ABBA_final"
+  },
+  "observation_history": [
+    {
+      "recorded_at_kst": "2026-10-09T13:59:27.318005+09:00",
+      "resource_observed_at_utc": "2026-10-09T04:56:42.500970+00:00",
+      "resource_measurement": {
+        "window_s": 300.0711776870012,
+        "cpu_pct_two_cores": 89.78686359575387,
+        "host_cpu_busy_pct": 90.23567202058511,
+        "host_steal_pct": 0.16415599816394416,
+        "memory_current_bytes": 9500459008,
+        "above_20_contiguous_seconds": 13693.075619582,
+        "five_minute_target_verified": true
+      },
+      "current_job_at_observation": "e4bt_q4_grouped60_cache_ABBA_3",
+      "saved_at_observation": 16,
+      "completed_jobs": 4,
+      "pending_jobs_after_refill": 9,
+      "source_observation": "program/scripts/plan_qa_bench/results/heartbeat_20261009_1355_arm_a2/observation.json",
+      "report": "final_project_cs/wiki/records/reports/2026-10-09_1400_six-hour-gpu-arm-report.md"
+    },
+    {
+      "recorded_at_kst": "2026-10-09T20:00:26.379951+09:00",
+      "resource_observed_at_utc": "2026-10-09T10:54:40.686000+00:00",
+      "resource_measurement": {
+        "window_s": 300.0590202269959,
+        "cpu_pct_two_cores": 89.78114682111554,
+        "host_cpu_busy_pct": 90.21121998795644,
+        "host_steal_pct": 0.15585416579125144,
+        "memory_current_bytes": 9584762880,
+        "above_20_contiguous_seconds": 35167.926030842995,
+        "five_minute_target_verified": true
+      },
+      "current_job_at_observation": "e4bt_q4_d3_concurrent2",
+      "saved_at_observation": 132,
+      "expected_at_observation": 360,
+      "source_observation": "program/scripts/plan_qa_bench/results/heartbeat_20261009_1953_arm/observation.json",
+      "report": "final_project_cs/wiki/records/reports/2026-10-09_2000_six-hour-gpu-arm-report.md"
+    }
+  ],
+  "queue_counts_observed_at_utc": "2026-10-09T10:54:40.686000+00:00",
+  "disk_root": {
+    "total_bytes": 102888095744,
+    "used_bytes": 48480927744,
+    "available_bytes": 54390390784,
+    "used_pct": 47.12005542859627
+  },
+  "host_memory": {
+    "total_bytes": 12503744512,
+    "available_bytes": 8018374656,
+    "used_without_available_bytes": 4485369856,
+    "used_without_available_pct": 35.87221293345633
+  },
+  "engine_resident_memory": {
+    "VmRSS": 9094242304,
+    "RssAnon": 3786215424,
+    "RssFile": 5308026880,
+    "RssShmem": 0,
+    "VmSwap": 0
+  },
+  "memory_target_pct_host": 20,
+  "disk_used_user_check_bytes": 20000000000,
+  "runtime_followup": {
+    "engine": "llama.cpp llama-server, CPU-only",
+    "same_engine_pid": 182474,
+    "engine_elapsed_seconds_at_observation": 23294,
+    "model_ready_log_elapsed_seconds": 4.065618,
+    "first_input_processing_seconds": 157.596398,
+    "first_generation_seconds": 1.20971,
+    "first_request_wall_seconds": 158.81058613900677,
+    "second_input_processing_seconds": 8.824788,
+    "second_generation_seconds": 1.215107,
+    "second_request_wall_seconds": 10.044209623010829,
+    "second_reused_tokens": 1712,
+    "second_new_tokens": 89,
+    "cache_disabled_after_first_median_seconds": 159.39558990500518,
+    "latency_source": "program/scripts/plan_qa_bench/results/arm_storage_latency_20261009_2020/latency_decomposition.json",
+    "scope": "existing fixed-context serial ABBA development diagnostic; no new inference or performance claim for concurrent2",
+    "current_resource_snapshot_is_not_oci_7_day_idle_classification": true,
+    "disk_usage_is_not_listed_in_oci_compute_idle_criteria": true,
+    "oracle_policy_url": "https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm"
+  }
+}

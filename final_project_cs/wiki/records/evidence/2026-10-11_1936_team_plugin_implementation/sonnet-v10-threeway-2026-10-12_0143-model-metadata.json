@@ -1,0 +1,102 @@
+{
+  "requested_model": "claude-sonnet-5-5",
+  "exit_code": 0,
+  "is_error": false,
+  "canonical_models": {
+    "claude-sonnet-5-5": "claude-sonnet-5-5"
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 18,
+      "outputTokens": 7179,
+      "cacheReadInputTokens": 568020,
+      "cacheCreationInputTokens": 111751,
+      "webSearchRequests": 0,
+      "costUSD": 0.6324339999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 888,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "direct_Read_calls": [
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/v10-threeway-2026-10-12_0140-unit-v2.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/sonnet-v10-threeway-2026-10-12_0134-result.txt"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/merge-evidence/app/domains/travel_ops/components/conversation/trip_messages.py.prior-v10.diff"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/merge-evidence/config/guardrails.yaml.newbase-v10.diff"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/merge-evidence/config/guardrails.yaml.prior-v10.diff"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/merge-evidence/config/guardrails.yaml.v9-v10.diff",
+      "limit": 1100
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/merge-evidence/config/guardrails.yaml.v9-v10.diff",
+      "limit": 520
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/merge-evidence/app/domains/travel_ops/components/conversation/trip_messages.py.newbase-v10.diff"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/merge-evidence/app/domains/travel_ops/components/conversation/trip_messages.py.v9-v10.diff"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/merge-evidence/config/guardrails.yaml.v9-v10.diff",
+      "offset": 521,
+      "limit": 540
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/tests/e2e/test_web_initial_concurrency.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/tests/e2e/test_web_conversation_resume.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/tests/e2e/test_web_resume_commit_recovery.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/tests/unit/travel/test_fact_context.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/tests/unit/travel/test_initial_retry_boundaries.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/tests/unit/core/test_controller_resume_recovery.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/app/application/controller.py",
+      "offset": 783,
+      "limit": 170
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/app/core/case_lifecycle/case.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/app/core/transition.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_012943_plugin_v10/app/application/controller.py",
+      "offset": 180,
+      "limit": 40
+    }
+  ],
+  "tools": {
+    "Grep": 2,
+    "Bash": 1,
+    "Read": 20,
+    "Glob": 1
+  },
+  "num_turns": 25
+}

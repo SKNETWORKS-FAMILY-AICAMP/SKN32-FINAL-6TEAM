@@ -192,3 +192,127 @@ def test_인허가_좌표가_없으면_브이월드_좌표로_만든다(mn, tmp_
     assert "'vworld_geocoder'" in sql and "37.5200000" in sql and "'nopo', 'yes'" in sql
     assert "dn_hours_rule" in sql                                  # 영업시간도 그 가게로 들어간다
     assert mn.new_place_lines([row], {}, {})[1]["관리번호 없음"] == ["번호 없는 집"]   # 좌표가 없으면 만들지 않는다
+
+
+@pytest.mark.parametrize("rest, expected", [
+    ("11:00-12:00", [(720, 1260)]),
+    ("20:00-21:00", [(660, 1200)]),
+    ("10:00-12:00", [(720, 1260)]),
+    ("11:00-21:00", []),
+])
+def test_break_touching_open_or_close_is_removed(mv, rest, expected):
+    assert mv.apply_break(mv.parse_day("11:00-21:00"), rest) == ("intervals", expected)
+
+
+def test_duplicate_shop_labels_fail_before_generating_hours(mn):
+    with pytest.raises(ValueError, match="같은 상호"):
+        mn.new_place_lines([_sheet_row("같은집", 주소="서울 종로구 도로 1"),
+                            _sheet_row("같은집", 주소="서울 종로구 도로 2")], {})
+
+
+def test_sheet_upgrade_keeps_reviewed_rows_and_backs_up(mn, tmp_path, monkeypatch):
+    import csv
+    path = tmp_path / "sheet.csv"
+    row = _sheet_row("검수한집", 월="11:00-21:00", 확인일="2026-10-08")
+    with path.open("w", encoding="utf-8-sig", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=mn.SHEET_COLUMNS)
+        writer.writeheader()
+        writer.writerow({key: row.get(key, "") for key in mn.SHEET_COLUMNS})
+    original = path.read_bytes()
+    monkeypatch.setattr(mn, "SHEET", str(path))
+    monkeypatch.setattr(mn, "MADE", str(tmp_path / "made.json"))
+    monkeypatch.setattr(mn.sys, "argv", ["script", "--upgrade"])
+    monkeypatch.setattr(mn, "_ledger_index", lambda: ([], {}, {}))
+    monkeypatch.setattr(mn, "_localdata", lambda: {("sentinel",): []})
+    monkeypatch.setattr(mn, "_match", lambda *args: ("확정", [{"place_uid": "mine"}]))
+    monkeypatch.setattr(mn, "_licensed", lambda *args: ("없음", None))
+    mn.sheet([{"상호": "검수한집", "주소": row["주소"], "자치구": "종로구"}])
+    found = list(csv.DictReader(path.open(encoding="utf-8-sig")))
+    assert any(line.get("월") == "11:00-21:00" for line in found)
+    assert any(backup.read_bytes() == original for backup in tmp_path.glob("_backup/*/sheet.csv"))
+
+
+def test_license_reader_prefers_latest_dated_utf8_and_supports_legacy_cp949(mn, tmp_path, monkeypatch):
+    import csv
+    monkeypatch.setattr(mn, "RAW", str(tmp_path))
+    base = "서울시 일반음식점 인허가 정보"
+    for name, encoding, number in [(base + ".csv", "cp949", "legacy"),
+                                    (base + "_20261001.csv", "utf-8-sig", "old"),
+                                    (base + "_20261005.csv", "utf-8-sig", "new")]:
+        with (tmp_path / name).open("w", encoding=encoding, newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=["관리번호", "사업장명"])
+            writer.writeheader()
+            writer.writerow({"관리번호": number, "사업장명": "서울식당"})
+    assert list(mn._licenses()) == ["new"]
+    (tmp_path / (base + "_20261001.csv")).unlink()
+    (tmp_path / (base + "_20261005.csv")).unlink()
+    assert mn._licenses()["legacy"][1]["사업장명"] == "서울식당"
+
+
+def test_license_reader_translates_seoul_api_columns(mn, tmp_path, monkeypatch):
+    import csv
+    monkeypatch.setattr(mn, "RAW", str(tmp_path))
+    path = tmp_path / "서울시 일반음식점 인허가 정보_20261005.csv"
+    with path.open("w", encoding="utf-8-sig", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=["MGTNO", "BPLCNM", "RDNWHLADDR", "X", "Y"])
+        writer.writeheader()
+        writer.writerow({"MGTNO": "api1", "BPLCNM": "서울식당", "RDNWHLADDR": "서울 종로구 종로 1", "X": "1", "Y": "2"})
+    row = mn._licenses()["api1"][1]
+    assert row["사업장명"] == "서울식당" and row["좌표정보(X)"] == "1"
+    assert mn._localdata()[('종로구', '종로', '1')][0][1]["관리번호"] == "api1"
+
+
+@pytest.mark.parametrize("broken", [False, True])
+def test_license_reader_detects_cp949_body_with_ascii_header(mn, tmp_path, monkeypatch, broken):
+    monkeypatch.setattr(mn, "RAW", str(tmp_path))
+    path = tmp_path / "서울시 일반음식점 인허가 정보_20261005.csv"
+    payload = "MGTNO,BPLCNM\nlicense1,서울식당".encode("cp949")
+    if broken:
+        payload += b"\xff"
+    path.write_bytes(payload + b"\n")
+    row = mn._licenses()["license1"][1]
+    assert row["사업장명"].startswith("서울식당")
+
+
+def test_sheet_upgrade_without_license_data_keeps_original(mn, tmp_path, monkeypatch):
+    path = tmp_path / "sheet.csv"
+    path.write_text("번호,상호(목록),주소\n1,서울식당,서울 종로구 종로 1\n", encoding="utf-8-sig")
+    original = path.read_bytes()
+    monkeypatch.setattr(mn, "SHEET", str(path))
+    monkeypatch.setattr(mn.sys, "argv", ["script", "--upgrade"])
+    monkeypatch.setattr(mn, "_ledger_index", lambda: ([], {}, {}))
+    monkeypatch.setattr(mn, "_localdata", lambda: {})
+    with pytest.raises(ValueError, match="덮어쓰지"):
+        mn.sheet([])
+    assert path.read_bytes() == original
+
+
+def test_geocode_without_license_data_stops_before_api_call(mn, monkeypatch):
+    monkeypatch.setattr(mn, "_licenses", lambda: {})
+    with pytest.raises(ValueError, match="좌표 수집을 중단"):
+        mn.geocode([])
+
+
+def test_main_missing_license_source_never_overwrites_sql(mn, tmp_path, monkeypatch):
+    monkeypatch.setattr(mn, "RAW", str(tmp_path / "missing"))
+    monkeypatch.setattr(mn, "OUT", str(tmp_path))
+    monkeypatch.setattr(mn.sys, "argv", ["script"])
+    output = tmp_path / "nopo.sql"
+    output.write_text("previous SQL", encoding="utf-8")
+    listing = tmp_path / "list.csv"
+    listing.write_text("상호,주소,자치구\n", encoding="utf-8-sig")
+    sheet = tmp_path / "sheet.csv"
+    sheet.write_text("번호,상호(목록),주소\n", encoding="utf-8-sig")
+    monkeypatch.setattr(mn, "LIST", str(listing))
+    monkeypatch.setattr(mn, "SHEET", str(sheet))
+    with pytest.raises(ValueError, match="SQL 생성을 중단"):
+        mn.main()
+    assert output.read_text(encoding="utf-8") == "previous SQL"
+
+
+def test_each_required_license_source_must_have_rows(mn, tmp_path, monkeypatch):
+    monkeypatch.setattr(mn, "RAW", str(tmp_path))
+    (tmp_path / "서울시 일반음식점 인허가 정보.csv").write_text("관리번호,사업장명\nN1,서울식당\n", encoding="utf-8-sig")
+    (tmp_path / "서울시 휴게음식점 인허가 정보.csv").write_text("관리번호,사업장명\n", encoding="utf-8-sig")
+    with pytest.raises(ValueError, match="데이터가 없어"):
+        mn._licenses(require_all=True)

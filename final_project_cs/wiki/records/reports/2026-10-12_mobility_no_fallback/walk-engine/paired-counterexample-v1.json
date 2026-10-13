@@ -1,0 +1,252 @@
+{
+  "synthetic_only": true,
+  "actual_trip_measurement": false,
+  "paths": {
+    "before": {
+      "distance": 209.18,
+      "time": 14462,
+      "points": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            127.0,
+            37.5
+          ],
+          [
+            127.00005,
+            37.5
+          ],
+          [
+            127.002,
+            37.499001
+          ]
+        ]
+      },
+      "details": {
+        "osm_way_id": [
+          [
+            0,
+            1,
+            10
+          ],
+          [
+            1,
+            2,
+            40
+          ]
+        ],
+        "road_class": [
+          [
+            0,
+            1,
+            "primary"
+          ],
+          [
+            1,
+            2,
+            "primary"
+          ]
+        ]
+      },
+      "snap_m": [
+        0.0,
+        110.4
+      ],
+      "quality": {
+        "access_max_m": 110.4,
+        "arterial_pct": 0.0,
+        "optimistic": false
+      },
+      "turn_restrictions": {
+        "status": "unavailable",
+        "applied_relations": 0,
+        "complete_road_rules": false,
+        "snap_selection": {
+          "candidate_counts": [
+            1,
+            2
+          ],
+          "selected_candidate_ranks": [
+            0,
+            0
+          ],
+          "used_non_nearest": [
+            false,
+            false
+          ],
+          "nearest_snap_m": [
+            0.0,
+            110.4
+          ],
+          "physical_access_verified": false
+        }
+      }
+    },
+    "after": {
+      "distance": 209.24,
+      "time": 11593,
+      "points": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            127.0,
+            37.5
+          ],
+          [
+            127.00005,
+            37.5
+          ],
+          [
+            127.002,
+            37.501
+          ]
+        ]
+      },
+      "details": {
+        "osm_way_id": [
+          [
+            0,
+            1,
+            10
+          ],
+          [
+            1,
+            2,
+            50
+          ]
+        ],
+        "road_class": [
+          [
+            0,
+            1,
+            "primary"
+          ],
+          [
+            1,
+            2,
+            "primary"
+          ]
+        ]
+      },
+      "snap_m": [
+        0.0,
+        110.5
+      ],
+      "quality": {
+        "access_max_m": 110.5,
+        "arterial_pct": 0.0,
+        "optimistic": false
+      },
+      "turn_restrictions": {
+        "status": "unavailable",
+        "applied_relations": 0,
+        "complete_road_rules": false,
+        "snap_selection": {
+          "candidate_counts": [
+            1,
+            2
+          ],
+          "selected_candidate_ranks": [
+            0,
+            1
+          ],
+          "used_non_nearest": [
+            false,
+            true
+          ],
+          "nearest_snap_m": [
+            0.0,
+            110.4
+          ],
+          "physical_access_verified": false
+        }
+      }
+    },
+    "dijkstra": {
+      "distance": 209.24,
+      "time": 11593,
+      "points": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            127.0,
+            37.5
+          ],
+          [
+            127.00005,
+            37.5
+          ],
+          [
+            127.002,
+            37.501
+          ]
+        ]
+      },
+      "details": {
+        "osm_way_id": [
+          [
+            0,
+            1,
+            10
+          ],
+          [
+            1,
+            2,
+            50
+          ]
+        ],
+        "road_class": [
+          [
+            0,
+            1,
+            "primary"
+          ],
+          [
+            1,
+            2,
+            "primary"
+          ]
+        ]
+      },
+      "snap_m": [
+        0.0,
+        110.5
+      ],
+      "quality": {
+        "access_max_m": 110.5,
+        "arterial_pct": 0.0,
+        "optimistic": false
+      },
+      "turn_restrictions": {
+        "status": "unavailable",
+        "applied_relations": 0,
+        "complete_road_rules": false,
+        "snap_selection": {
+          "candidate_counts": [
+            1,
+            2
+          ],
+          "selected_candidate_ranks": [
+            0,
+            1
+          ],
+          "used_non_nearest": [
+            false,
+            true
+          ],
+          "nearest_snap_m": [
+            0.0,
+            110.4
+          ],
+          "physical_access_verified": false
+        }
+      }
+    }
+  },
+  "before_seconds": 14.462,
+  "after_seconds": 11.593,
+  "dijkstra_seconds": 11.593,
+  "source_before_sha256": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8",
+  "source_after_sha256": "901222e5a55d57bce44e9b0b2ac71f71ae30bc3512aa21efab5dfcbfe6b56eda",
+  "api_calls": 0
+}

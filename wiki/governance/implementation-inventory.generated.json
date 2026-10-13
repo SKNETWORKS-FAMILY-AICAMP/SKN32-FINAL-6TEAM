@@ -1,0 +1,1520 @@
+{
+  "scope": "hub・cs current decision/contract + W01-W25 current wiki targets; excludes deprecated/generated/records/backup/staging/sample",
+  "meaning": "Metadata inventory only. Missing fields and uninspected deployment are unverified; no runtime or semantic acceptance claim.",
+  "documents": [
+    {
+      "path": "final_project_cs/wiki/actions/action-proposal.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/actions/idempotency.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/context/context-budget.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/data/index.md",
+      "type": "guide",
+      "w_ids": [
+        "W14"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/fields.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/index.md",
+      "type": "guide",
+      "w_ids": [
+        "W14"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-001-composer-ui-removal.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-002-finetuned-model-not-adopted.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-003-composer-scope.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-005-odsay-not-used.md",
+      "type": "decision",
+      "w_ids": [
+        "W24"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-006-cancellation-terms-are-structured.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-007-ui-operator-login.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-008-ops-console-separate-app.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md",
+      "type": "decision",
+      "w_ids": [
+        "W09"
+      ],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-010-google-calls-in-dawn-batch-only.md",
+      "type": "decision",
+      "w_ids": [
+        "W09"
+      ],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+      "type": "decision",
+      "w_ids": [
+        "W04",
+        "W21"
+      ],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-012-agent-auth-claude-style.md",
+      "type": "decision",
+      "w_ids": [
+        "W04"
+      ],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "implemented",
+      "validation_status": "partial",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-013-domain-folder-layout.md",
+      "type": "decision",
+      "w_ids": [
+        "W08"
+      ],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md",
+      "type": "decision",
+      "w_ids": [
+        "W05"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/a2a-protocol.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/admin-screen-api.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-environment-limits.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-key-issue-guide.md",
+      "type": "guide",
+      "w_ids": [
+        "W24"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/introspection.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/llm-failover.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/mcp-tools.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/personal-ai-oauth.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-api.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints.md",
+      "type": "guide",
+      "w_ids": [
+        "W02",
+        "W03",
+        "W04",
+        "W05",
+        "W21"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/cases.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/delegations.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/trips.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-access.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-auth.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-intakes.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-trips.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/service-chat-help.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/taxi-pricing-web-v1.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "partial",
+      "validation_status": "partial",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/test-scenarios.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "partial",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/travel-density.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/trip-chat-context.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/watch-monitoring.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/watch-simulation.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-auth-transfer.md",
+      "type": "contract",
+      "w_ids": [
+        "W04"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-flow-2026-10-09.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-intake-restore.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/log.md",
+      "type": "guide",
+      "w_ids": [
+        "W18"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/operations/always-on.md",
+      "type": "runbook",
+      "w_ids": [
+        "W18"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/operations/unattended-operations.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "partial",
+      "validation_status": "partial",
+      "verified_at": "2026-10-12T04:56:57+09:00",
+      "deployment_status": "unverified",
+      "missing_fields": []
+    },
+    {
+      "path": "final_project_cs/wiki/quality/guardrails.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/invariants.md",
+      "type": "contract",
+      "w_ids": [
+        "W12",
+        "W13",
+        "W23"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/slm-model-evaluation.md",
+      "type": "reference",
+      "w_ids": [
+        "W10",
+        "W15"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/case-lifecycle.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/classification-execution-plan.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "implemented",
+      "validation_status": "verified",
+      "verified_at": "2026-10-12T04:43:59.881485+09:00",
+      "deployment_status": "unverified",
+      "missing_fields": []
+    },
+    {
+      "path": "final_project_cs/wiki/teams/code-layout.md",
+      "type": "guide",
+      "w_ids": [
+        "W16"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/composition.md",
+      "type": "contract",
+      "w_ids": [
+        "W08"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining-agent-design.md",
+      "type": "guide",
+      "w_ids": [
+        "W21"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-boundary.md",
+      "type": "guide",
+      "w_ids": [
+        "W12"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/fields.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/plugin-availability.md",
+      "type": "contract",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/architecture/notifications.md",
+      "type": "concept",
+      "w_ids": [
+        "W05",
+        "W06"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/architecture/system-context.md",
+      "type": "concept",
+      "w_ids": [
+        "W02",
+        "W04"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/business/pricing-travel.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-002-graph-store-gate.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-003-message-broker.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-004-self-hosting-rationale.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-005-write-gate.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-006-composer-ownership.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-007-central-config-store.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-009-recommendation-scope.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-010-deferral-scoring.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-011-composer-v3-gap.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-012-cutover-timing.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-013-declarative-team.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-015-implementation-catalog.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-016-scope-narrowing-reasons.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+      "type": "decision",
+      "w_ids": [
+        "W06",
+        "W07",
+        "W08",
+        "W25"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-018-decision15-stop-paths.md",
+      "type": "decision",
+      "w_ids": [
+        "W06",
+        "W20"
+      ],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": []
+    },
+    {
+      "path": "wiki/decisions/D-019-travel-density.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+      "type": "decision",
+      "w_ids": [
+        "W03",
+        "W09",
+        "W20"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-021-email-verified-key-recovery.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "decision_status",
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-022-study-only-kto-images.md",
+      "type": "decision",
+      "w_ids": [],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+      "type": "decision",
+      "w_ids": [
+        "W10",
+        "W11",
+        "W13",
+        "W14",
+        "W19"
+      ],
+      "review_status": "draft",
+      "decision_status": "accepted",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/delivery/dod.md",
+      "type": "plan",
+      "w_ids": [
+        "W05",
+        "W11"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/delivery/release-gate.md",
+      "type": "guide",
+      "w_ids": [
+        "W11"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/delivery/roles.md",
+      "type": "guide",
+      "w_ids": [
+        "W16"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/delivery/timeline.md",
+      "type": "guide",
+      "w_ids": [
+        "W17"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/evaluation/finetuning.md",
+      "type": "guide",
+      "w_ids": [
+        "W15"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/evaluation/index.md",
+      "type": "guide",
+      "w_ids": [
+        "W10"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/governance/document-standard.md",
+      "type": "policy",
+      "w_ids": [
+        "W25"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/index.md",
+      "type": "guide",
+      "w_ids": [
+        "W01"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/product/positioning.md",
+      "type": "guide",
+      "w_ids": [
+        "W02",
+        "W03"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    },
+    {
+      "path": "wiki/product/scope.md",
+      "type": "guide",
+      "w_ids": [
+        "W02",
+        "W03"
+      ],
+      "review_status": "draft",
+      "decision_status": "unverified",
+      "implementation_status": "unverified",
+      "validation_status": "unverified",
+      "verified_at": "unverified",
+      "deployment_status": "unverified",
+      "missing_fields": [
+        "implementation_status",
+        "validation_status"
+      ]
+    }
+  ]
+}

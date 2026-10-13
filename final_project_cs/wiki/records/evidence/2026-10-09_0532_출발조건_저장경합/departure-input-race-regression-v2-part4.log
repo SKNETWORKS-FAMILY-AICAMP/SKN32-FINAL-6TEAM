@@ -1,0 +1,51 @@
+Timeout (0:00:45)!
+Thread 0x000056c4 (most recent call first):
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\car_turn_search.py", line 87 in pieces
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\graph_router.py", line 424 in route
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\car.py", line 315 in leg
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\runtime.py", line 153 in leg
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\verify_time.py", line 1625 in _car_run
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\verify_time.py", line 1637 in _taxi
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\verify_time.py", line 2142 in verify_multi
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\verify_time.py", line 2506 in verify_case
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py", line 299 in _vc
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py", line 1081 in _transit_pair
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py", line 1531 in leg
+  File "<workspace>\final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py", line 1859 in plan
+  File "<workspace>\final_project_cs\tests\unit\travel\mobility\test_taxi_fallback.py", line 45 in _run
+  File "<workspace>\final_project_cs\tests\unit\travel\mobility\test_taxi_fallback.py", line 53 in test_before_first_train_falls_back_to_a_labelled_taxi
+  File "<python-runtime>\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "<python-runtime>\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "<python-runtime>\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "<python-runtime>\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "<python-runtime>\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+.....                                                                    [100%]
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\departure-input-race-regression-v2-part4.xml -
+5 passed in 51.43s

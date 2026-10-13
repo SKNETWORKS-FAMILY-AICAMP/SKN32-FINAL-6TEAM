@@ -1,0 +1,91 @@
+{
+  "generated_at": "2026-10-10T02:47:23.6108571+09:00",
+  "tests": {
+    "new_python": "88/88",
+    "consent_web": "27/27",
+    "consent_http_regression": "24/24",
+    "mock_browser": "19/19"
+  },
+  "files": [
+    {
+      "path": "app/domains/travel_ops/components/customer/consents.py",
+      "sha256": "97f9ab208643492bf26291b56e164a6f7376c83cb056c67b55380956f9746987",
+      "bytes": 15962
+    },
+    {
+      "path": "app/domains/travel_ops/components/customer/service_improvement.py",
+      "sha256": "ca685228809e7d9f42b8e1ffd3f71ff5179059a60d32469c9f0c4a78843660c2",
+      "bytes": 10971
+    },
+    {
+      "path": "app/infrastructure/db/migrations/229_service_improvement.sql",
+      "sha256": "36af1b5a34363ccc54a739383473faf34afaf2974ff82ec3b931a45afc83cfdf",
+      "bytes": 1619
+    },
+    {
+      "path": "scripts/service_improvement.py",
+      "sha256": "ebeeea0e4849a804f5fa92b547fadcbfd3d560c670ee03cb9e738780922fa4a5",
+      "bytes": 2852
+    },
+    {
+      "path": "scripts/run_sweepers.py",
+      "sha256": "c4549bb1d26f7bdd65c9579edbda852adc519658cab270699a4ade097f8c721a",
+      "bytes": 26672
+    },
+    {
+      "path": "config/guardrails.yaml",
+      "sha256": "41758dda2269d57f954f84e0feff70caaf342145cde2e6546aad9555193b343f",
+      "bytes": 69661
+    },
+    {
+      "path": "frontend/apps/web/src/features/consent/consent-model.ts",
+      "sha256": "cfbb0c0d316917a1d2aa795bb7657f0053d11118783ba156d93251c3a3791f70",
+      "bytes": 2013
+    },
+    {
+      "path": "frontend/apps/web/src/features/consent/consent-manager.tsx",
+      "sha256": "1b5734ee19d04c2ddda263ef006248843ee3dc3855f85f5150e3872e7777fd45",
+      "bytes": 9692
+    },
+    {
+      "path": "frontend/apps/web/src/features/consent/terms-content.ts",
+      "sha256": "2c6a904bd7b73fda4fc23fc564a69f7a65d921230d2f8494f8d6a37e5b267aea",
+      "bytes": 104588
+    },
+    {
+      "path": "frontend/apps/web/tests/live/consent.spec.ts",
+      "sha256": "228a953d486d2d99844d89c563ab4a35a347bd6e4b68a50a4b7399a807c70790",
+      "bytes": 21824
+    },
+    {
+      "path": "frontend/apps/web/tests/live/stub-server.mjs",
+      "sha256": "1e1b305dd569249eb460948313c1b13569577c1bb7d0cf5f56eda4bba5cbba15",
+      "bytes": 116791
+    },
+    {
+      "path": "tests/unit/test_service_improvement.py",
+      "sha256": "9a63aadfd31da656b36e889e2c559d2ef5ede5cb2c69e0563e4bd9258a4e6814",
+      "bytes": 2340
+    },
+    {
+      "path": "tests/integration/db/test_service_improvement.py",
+      "sha256": "775a739a3951d0a84ef8a7e67cd06dac5e05643e35da5da9f20336b44a64878a",
+      "bytes": 13007
+    },
+    {
+      "path": "tests/e2e/test_consents.py",
+      "sha256": "0d6f1bad572bcb85b30c56a25752dba9ed5934cdb66991161f48a0f93e6d96d8",
+      "bytes": 17298
+    },
+    {
+      "path": "wiki/operations/service-improvement.md",
+      "sha256": "31bc9c6d4003f1958ee7528ba5beb00188baba091189f06fc6882cfbca19476e",
+      "bytes": 7566
+    },
+    {
+      "path": "wiki/records/reports/2026-10-10_service-improvement-consent.md",
+      "sha256": "51d31c78a647b1568ed0fe410b95544d34e9fec56f8cfca26ac49286b92be675",
+      "bytes": 7059
+    }
+  ]
+}

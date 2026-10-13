@@ -1,0 +1,24 @@
+{
+  "job": {
+    "id": "winnow_oos_mx",
+    "label": "Winnow-E4B our-travel oos adapter Q8_0 base",
+    "our_training": true,
+    "model": "/workspace/deciders/winnow_e4b/gguf/Winnow-E4B-Q8_0.gguf",
+    "prompts": "/workspace/heavy/all_prompts_mx.json",
+    "script": "/workspace/heavy/d_test_llama_lp.py",
+    "tag": "mx_backlog_winnow_oos",
+    "port": 8401,
+    "logprobs": "1",
+    "expected": 4014,
+    "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+    "lora": "/tmp/tripilot-trained-adapters-20261008/winnow_e4b_oos_f16.gguf",
+    "training_base_revision": "aabbd52f5dfce0f7d9d22ca9e53e75259d865239",
+    "base_revision": "1b257e8fa80b270a62338362a8b35e37f7890273",
+    "base_same_blob_across_revisions": true,
+    "adapter_sha256": "3a4f2646ed55ce3758bc0c6e66b6ee005840886c499da4189e2503b2301ef963"
+  },
+  "started": "2026-10-08T05:36:11.766056+00:00",
+  "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+  "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

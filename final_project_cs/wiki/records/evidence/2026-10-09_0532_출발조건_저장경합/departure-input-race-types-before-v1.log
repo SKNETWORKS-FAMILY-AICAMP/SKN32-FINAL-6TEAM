@@ -1,0 +1,24 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____________ test_boolean_changed_to_number_is_not_the_same_input _____________
+
+world = {'clock': <tests.scenario.test_case_version_day.Clock object at 0x00000218A48FE5D0>, 'store': <app.domains.travel_ops.... object at 0x00000218965885F0>, 'tenant': 'remind_ab9e4aabc0', 'trip_id': UUID('56003f25-92c6-4f99-8432-42fad41793eb')}
+
+    def test_boolean_changed_to_number_is_not_the_same_input(world):
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            trip, items = world['store'].latest(conn, world['trip_id'])
+            move = next(i for i in items if i.seq == 3)
+            before = {**trip['constraints'], 'first_visit':True}
+            snapshot = {'party_size':trip['party_size'],'constraints':deepcopy(before)}
+            current = {**before,'first_visit':1}
+            cur.execute('UPDATE trips SET constraints=%s::jsonb WHERE tenant_id=%s AND trip_id=%s',
+                        (json.dumps(current),world['tenant'],world['trip_id']))
+>           with pytest.raises(StaleDeparture,match='departure trip inputs changed'):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'app.domains.travel_ops.components.itinerary.itinerary.StaleDeparture'>
+
+tests\scenario\test_departure_input_types_db_v1.py:21: Failed
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\departure-input-race-types-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_departure_input_types_db_v1.py::test_boolean_changed_to_number_is_not_the_same_input
+1 failed in 1.38s

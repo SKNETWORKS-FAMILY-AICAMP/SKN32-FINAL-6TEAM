@@ -1,0 +1,70 @@
+[
+  {
+    "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-11_0421_혼합환승_제품운임_연결/test_mixed_fare_upper_v1.py",
+    "sha256": "f91368e9b0a3e3080c68bbd2b04abd24835e1151dc8dfc8ff31ccf6e40fc881e"
+  },
+  {
+    "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-11_0431_광역환승_공식30km/test_plan_v1.py",
+    "sha256": "09b63fce870f13de17db87efb69df26c2aa33abea6c23f0839a64ef4e4b41c6a"
+  },
+  {
+    "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-11_0431_광역환승_공식30km/test_transfer_fare_product_v1.py",
+    "sha256": "3bddde63dc2743ed320e2ced782983532586254cee7ee01244b58a894ea4b327"
+  },
+  {
+    "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-11_0436_운임주석_최종정합/test_plan_v1.py",
+    "sha256": "cf48d87910a4b1ca6598531cb7009137acc1c7352f6c658509282c9a5ae331ec"
+  },
+  {
+    "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-11_0434_표시흐름_검수/test_transfer_fare_product_v1.py",
+    "sha256": "5a3aeaa62393a324f893059ddd84f8b93a133fa30b4eb0fd806fdc81a0383f05"
+  },
+  {
+    "path": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-11_0439_혼합환승_결과보존/2026-10-11_0421_혼합환승_제품운임_연결.md",
+    "sha256": "817c7b3f3dfafeaa28979a973f0343b4ac6108af532e247baa917d19fd3510d1"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/_backup/2026-10-11_0421_혼합환승_제품운임_연결/rules_v0.3.json",
+    "sha256": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/_backup/2026-10-11_0431_광역환승_공식30km/rules_v0.3.json",
+    "sha256": "943767e24c846b7b27fa1625e480b5e065d4d6ac17c5a1d816eff46383726816"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/_backup/2026-10-11_0439_혼합환승_결과보존/mobility.md",
+    "sha256": "de62b3aa1863106c37a263e177058ddb43858f28d2728d1a9f0242f56c6e0d64"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/_backup/2026-10-11_0421_혼합환승_제품운임_연결/mobility.md",
+    "sha256": "391a99bd7afeabe1f496c2b26093b9b03c538528c4d749754e80097c0df0ecb0"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/_backup/2026-10-11_0431_광역환승_공식30km/mobility.md",
+    "sha256": "5a992dd4acea5a540ee805f4623efdfe558b9ea86fae6c18a38dfe379a202a41"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0437_한국어주석/options.py",
+    "sha256": "07c26938a8236e3b5b1ed1a044439ce38466d1e251caf18feaa618bc05606ad4"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0421_혼합환승_제품운임_연결/options.py",
+    "sha256": "8c0d0a8a9e9f44b5a93b7b8d8da71d618773adf6ef0f75f655a0fa52fd07b8e6"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0421_혼합환승_제품운임_연결/plan.py",
+    "sha256": "f251b0d60d33245a1f8b6be1d44fc50f1829d4313622fa4bc2dd4030033c419a"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0431_광역환승_공식30km/options.py",
+    "sha256": "c53fd5b12a4fecbd32a5881c223f5b120a55eb3d5efae006eeb3420ddaf5b7bf"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0436_운임주석_최종정합/options.py",
+    "sha256": "101d02a2e64ebd03c29cb4bf37a0556de92178ddda344b81cb2562b0a081da4b"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0434_표시흐름_검수/plan.py",
+    "sha256": "5e3817d42a3f51d0b098386664dad70c4f0795b898b2d2a7bd1337c73cca4614"
+  }
+]

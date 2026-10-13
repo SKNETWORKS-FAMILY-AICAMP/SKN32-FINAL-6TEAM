@@ -1,0 +1,13 @@
+{
+  "app/core/registry.py": "b538ae5aae7a1b459caaa6468ef31f1ab6f651db497884b5e35ebf1feb1ad5db",
+  "app/application/controller.py": "c1ad476afb283bf75da5c07468b724bd7ccbdb18079fe2a939996aca6f514116",
+  "app/core/remote_team/a2a_executor.py": "55207f95df494ba87e4e82b195bc242cae32da20923fb5a576d554ccadb64928",
+  "app/domains/travel_ops/__init__.py": "a34ff79f08dca82c64b1a5c2ff0e424e5acbdc212da0ccade452d0b7fa25557f",
+  "app/domains/travel_ops/components/itinerary/move_judge.py": "1f5a63a25c07272bc559639054f57f6c0f48c4b0f33057d29590fe5c84261228",
+  "app/domains/travel_ops/components/intake/hours.py": "110edfcf6140bfc34ac41ab1a07df9afbe8247529f4780479a0912793edb9c20",
+  "app/domains/travel_ops/instances/dining/ledger.py": "f3b6a212300c4e2dc9f73a36f2f65ec41b63a89eb2ccfce4b3d0b8cdd9da0c22",
+  "scripts/run_sweepers.py": "66ea951a6a7f86f9576723edbb1d4e71048056b46bf657fa6798cddbc85f8eb0",
+  "app/tools/read_tools.py": "efe74e37b6f7f044cbd5d88724df862454a7c79b79a5628bcd5f29a3bf258f7f",
+  "wiki/teams/team-contract/plugin-availability.md": "9424db7c0ad66fbf487e381b4b44664094de96759aa438a24f20b1eb97ed61ac",
+  "sonnet-post-opus-pytest.py": "e4001a455dbc3d9105609e480d8bcecce1b8cc8ee18664ac4caa63dd807770ef"
+}

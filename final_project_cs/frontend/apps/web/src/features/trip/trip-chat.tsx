@@ -53,9 +53,9 @@ export function useTripChat(trip: Trip, selectedId: string | null, onAsked: () =
     // A logout removes it; a new entry with the same trip key belongs to a later session.
     onMutate: () => ({ query: queryClient.getQueryCache().find({ queryKey: tripKey(trip.id, language), exact: true }) }),
     // ★Only a stop the customer actually picked goes to the server (`item_id`).
-    mutationFn: async ({ text, itemId, location }: { text: string; clearDraft: boolean; itemId?: string | null; location?: LocationFix | null }) => {
+    mutationFn: async ({ text, itemId, location, summaryDay }: { text: string; clearDraft: boolean; itemId?: string | null; location?: LocationFix | null; summaryDay?: string }) => {
       setProgress(null);
-      try { return { updated: await tripGateway.sendMessage(trip.id, text, language, itemId, location, setProgress), sent: null }; }
+      try { return { updated: await tripGateway.sendMessage(trip.id, text, language, itemId, location, setProgress, undefined, summaryDay), sent: null }; }
       catch (error) {
         if (!(error instanceof LiveError) || error.code !== "reply_kept") throw error;
         setRereading(true);
@@ -114,7 +114,7 @@ export function useTripChat(trip: Trip, selectedId: string | null, onAsked: () =
 
   const pickedId = trip.stops.some((stop) => stop.id === selectedId) ? selectedId : null;
 
-  function ask(text: string, clearDraft = false, itemId: string | null = pickedId, location: LocationFix | null = null) {
+  function ask(text: string, clearDraft = false, itemId: string | null = pickedId, location: LocationFix | null = null, summaryDay?: string) {
     if (message.isPending) return;
     const trimmed = text.trim();
     if (!trimmed) {
@@ -125,7 +125,7 @@ export function useTripChat(trip: Trip, selectedId: string | null, onAsked: () =
     setInputError("");
     setLocationError("");
     onAsked();
-    message.mutate({ text: trimmed, clearDraft, itemId, location });
+    message.mutate({ text: trimmed, clearDraft, itemId, location, summaryDay });
   }
 
   // ★The server said the answer needs where the customer is. The browser is asked only now, on this press (user decision 2026-09-30) — and only with the agreement to the location item.
@@ -167,9 +167,9 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }:
       <div className={styles.chatContext}><strong>{dayText} · {day}</strong>
         <span>{selected ? t(`선택: ${selected.title}`, `Selected: ${selected.title}`) : t("선택한 일정이 없어요.", "No stop selected.")}</span></div>
       {trip.messages.length === 0 && <article className={styles.message} data-role="assistant"><p className={styles.messageMeta}>triPilot</p><p className={styles.bubble}>{t("등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", "Explore your saved itinerary. Ask for a day summary, details of your selected stop, or what comes next.")}</p></article>}
-      {trip.messages.map((item, index) => <article key={item.id} className={styles.message} data-role={item.role}><p className={styles.messageMeta}>{item.role === "user" ? t("나", "You") : "triPilot"}</p><p className={styles.bubble}>{item.role === "assistant" ? <LinkedText text={item.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /> : item.text}</p>
+      {trip.messages.map((item, index) => <article key={item.id} className={styles.message} data-role={item.role}><p className={styles.messageMeta}>{item.role === "user" ? t("나", "You") : "triPilot"}</p><p className={styles.bubble}>{item.role === "assistant" ? <LinkedText text={item.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} siteLabel={(site) => t(`${site}에서 열기`, `Open on ${site}`)} /> : item.text}</p>
         {item.awaitingReply && index === trip.messages.length - 1 && <p className={styles.undoHint}>{t("답변을 기다리고 있어요. 아래에 답하시면 같은 요청을 이어서 처리해요.", "Waiting for your reply. Answer below to continue this request.")}</p>}
-        {item.more && <details className={styles.more}><summary>{t("더 보기", "More")}</summary><p><LinkedText text={item.more} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /></p></details>}
+        {item.more && <details className={styles.more}><summary>{t("더 보기", "More")}</summary><p><LinkedText text={item.more} mapLabel={t("지도 앱으로 열기", "Open in maps app")} siteLabel={(site) => t(`${site}에서 열기`, `Open on ${site}`)} /></p></details>}
         {item.basis && item.basis.length > 0 && <p className={styles.devBasis}>{t("개발 모드 · 근거 ", "Dev mode · basis ")}{item.basis.join(", ")}</p>}
         {/* ★A change made from chat can be undone while it is still the plan's latest version. */}
         {item.changedTo !== undefined && item.changedTo === trip.version && <div className={styles.choices}>
@@ -197,7 +197,7 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }:
     </div>
     <div className={styles.prompts}>
       {latest.away && <button type="button" className={styles.chatLatest} onClick={() => { latest.jump(); logRef.current?.focus({ preventScroll: true }); }}>{latest.unread ? t("새 메시지 · 최신 대화로 이동", "New messages · Jump to latest") : t("최신 대화로 이동", "Jump to latest")}</button>}
-      <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 하루 일정을 요약해 주세요.`, `Summarize the itinerary for ${day}.`))}>{t("하루 요약", "Day summary")}</button>
+      <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 하루 일정을 요약해 주세요.`, `Summarize the itinerary for ${day}.`), false, null, null, day)}>{t("하루 요약", "Day summary")}</button>
       <button type="button" className={styles.prompt} disabled={!selected || message.isPending} onClick={() => selected && chat.askAbout(selected)}>{t("선택 일정", "Selected stop")}</button>
       <button type="button" className={styles.prompt} disabled={!selected || message.isPending} onClick={() => selected && chat.ask(t(`${selected.date} ${selected.time} ${selected.title} 다음 일정을 알려 주세요.`, `What comes after ${selected.title} on ${selected.date} at ${selected.time}?`))}>{t("다음 일정", "Next stop")}</button>
       <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 예약 표시를 알려 주세요.`, `Show booking notes for ${day}.`))}>{t("예약 표시", "Booking notes")}</button>

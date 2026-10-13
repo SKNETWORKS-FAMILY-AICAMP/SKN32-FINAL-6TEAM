@@ -153,7 +153,7 @@ export async function noHorizontalScroll(page: Page) {
  * `[2026-10-05]` Consent is per item: 서비스 이용약관 and 개인정보 수집·이용 are required. `[2026-10-05 사용자 지시]` A required item is ticked at once - no reading to the end first.
  * ★`[2026-10-06 사용자 지시]` The FIRST agreement goes straight on to the plan screen (the preference survey is not part of the first run any more). So that the many
  *   start-screen tests that continue with the preferences keep their steps, this helper then opens the preferences from the menu, as a customer would (`openPreferencesFromMenu`).
- *   A customer who had already agreed and only changes their boxes stays on /start with the preferences card open, as before.
+ * ★`[2026-10-12 사용자 지시]` A customer who had already agreed goes to My trips too (the press never opens the preferences card) — the helper then opens the preferences from the menu the same way.
  */
 export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel" | "service_improvement"> = []) {
   await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
@@ -165,8 +165,7 @@ export async function agreeTerms(page: Page, optional: Array<"sensitive" | "loca
   }
   for (const code of optional) await page.locator(`#consent-${code}`).evaluate((input: HTMLInputElement) => { if (!input.checked) input.click(); });
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
-  if (alreadyAgreed) return;
-  await expect(page).toHaveURL(/\/trips\/new$/);
+  await expect(page).toHaveURL(alreadyAgreed ? /\/trips$/ : /\/trips\/new$/);
   await openPreferencesFromMenu(page);
 }
 

@@ -14,6 +14,8 @@ import styles from "./consent.module.css";
 
 /** 약관에 동의하지 않아도 열리는 화면: 첫 소개, 약관 화면(시작), 소셜 로그인이 돌아오는 화면(로그인하면 서버에 있는 동의가 이 브라우저로 온다). */
 const OPEN_PATHS = new Set<string>([routes.home, routes.start, routes.authDone]);
+/** `[2026-10-12 사용자 지시]` 동의 확인 진행 카드는 확인이 이 시간을 넘게 걸릴 때만 보인다. 빨리 끝나면 아무것도 안 뜬다(「동의하고 다음으로」 뒤 로딩이 바로 뜨던 문제). */
+const CHECK_CARD_AFTER_MS = 3000;
 
 const subscribeNothing = () => () => {};
 /** 서버 렌더와 첫 화면은 false, 화면이 붙은 뒤 true - 동의 사본(브라우저 저장소)은 그 뒤에야 읽힌다. */
@@ -71,8 +73,7 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!checking || !ready) return;
     const started = performance.now();
-    // 짧은 확인에서는 기존 화면을 유지하고, 실제 대기가 1초를 넘을 때만 안내한다.
-    const delay = setTimeout(() => setVisible(true), 1000);
+    const delay = setTimeout(() => setVisible(true), CHECK_CARD_AFTER_MS);
     const tick = setInterval(() => setElapsed(Math.floor((performance.now() - started) / 1000)), 1000);
     return () => { clearTimeout(delay); clearInterval(tick); setVisible(false); setElapsed(0); };
   }, [checking, ready]);
@@ -86,6 +87,8 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   const title = pathname.startsWith(routes.myPage) ? t("설정", "Settings")
     : pathname === routes.newTrip ? t("새 여행", "New trip") : t("나의 여행", "My trips");
   return <>
+    {/* ★`[2026-10-12]` 동의 사본이 없으면 확인하는 동안 열린 약관을 먼저 보인다. 확인 뒤 `/start?terms=required` 로 가며 온보딩이 다시 그려질 때
+        열림 애니메이션이 두 번 돌지 않게, 온보딩이 두 번째 그림에서는 애니메이션을 끈다(`onboarding.tsx` 의 `termsShownOnce`). */}
     {showPage ? children : ready && !agreed && result !== "outdated" ? <Onboarding termsRequired /> : <DeviceFrame scroll headerInert>
       {/* 동의 확인 전에 보호 API를 호출하지 않는다. 기존 화면과 같은 틀·배치를 먼저 보여 준다. */}
       <main className={styles.waitingPage} aria-busy="true" data-consent-shell>
@@ -100,7 +103,11 @@ export function ConsentGate({ children }: { children: ReactNode }) {
         {showError ? <>
           <h2>{result === "outdated" ? t("약관이 새로 바뀌었어요", "The terms have been updated") : t("동의 기록을 확인하지 못했어요", "Could not check your consent record")}</h2>
           <p>{result === "outdated" ? t("새로 고침해서 새 약관을 확인해 주세요.", "Reload to see the new terms.") : t("기존 동의는 그대로 두었어요. 다시 확인해 주세요.", "Your existing consent was kept. Please try again.")}</p>
-          <Button variant="primary" onClick={() => result === "outdated" ? window.location.reload() : setRetry((value) => value + 1)}>{result === "outdated" ? t("새로 고침", "Reload") : t("다시 확인하기", "Check again")}</Button>
+          <div className={styles.checkActions}>
+            <Button variant="primary" onClick={() => result === "outdated" ? window.location.reload() : setRetry((value) => value + 1)}>{result === "outdated" ? t("새로 고침", "Reload") : t("다시 확인하기", "Check again")}</Button>
+            {/* 서버 확인이 안 될 때도 고객이 직접 동의 화면으로 가서 다시 동의할 수 있게 한다. 오류 카드를 먼저 걷어야 약관 화면이 가려지지 않는다. */}
+            {result === "failed" && <Button variant="quiet" onClick={() => { setResult(null); router.push(`${routes.start}?terms=required`); }}>{t("동의 다시 하기", "Agree again")}</Button>}
+          </div>
         </> : <>
           <div className={styles.checkHead}><h2>{t("앱 사용 준비", "Getting ready")}</h2><span>{elapsed}{t("초", " s")}</span></div>
           <p className={styles.checkNow}>{progress?.lost ? t("연결이 끊겨 다시 확인하고 있어요", "Reconnecting to check again")

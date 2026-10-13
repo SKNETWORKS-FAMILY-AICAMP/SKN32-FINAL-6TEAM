@@ -1,0 +1,85 @@
+{
+  "local_target_verified": true,
+  "applied_only": "229_service_improvement.sql",
+  "migration_sha256": "36af1b5a34363ccc54a739383473faf34afaf2974ff82ec3b931a45afc83cfdf",
+  "columns": [
+    [
+      "service_improvement_batches",
+      "batch_id",
+      "uuid"
+    ],
+    [
+      "service_improvement_batches",
+      "tenant_id",
+      "text"
+    ],
+    [
+      "service_improvement_batches",
+      "terms_version",
+      "text"
+    ],
+    [
+      "service_improvement_batches",
+      "payload",
+      "jsonb"
+    ],
+    [
+      "service_improvement_batches",
+      "payload_sha256",
+      "text"
+    ],
+    [
+      "service_improvement_batches",
+      "state",
+      "text"
+    ],
+    [
+      "service_improvement_batches",
+      "created_at",
+      "timestamp with time zone"
+    ],
+    [
+      "service_improvement_batches",
+      "expires_at",
+      "timestamp with time zone"
+    ],
+    [
+      "service_improvement_batches",
+      "review_due_at",
+      "timestamp with time zone"
+    ],
+    [
+      "service_improvement_batches",
+      "review",
+      "jsonb"
+    ],
+    [
+      "service_improvement_budget",
+      "tenant_id",
+      "text"
+    ],
+    [
+      "service_improvement_budget",
+      "generations",
+      "integer"
+    ]
+  ],
+  "constraint_counts": [
+    [
+      "service_improvement_batches",
+      5
+    ],
+    [
+      "service_improvement_budget",
+      2
+    ]
+  ],
+  "budget_trigger_count": 1,
+  "batch_index_exists": true,
+  "new_table_row_counts": [
+    0,
+    0
+  ],
+  "existing_customer_rows_modified": false,
+  "remote_database_contacted": false
+}

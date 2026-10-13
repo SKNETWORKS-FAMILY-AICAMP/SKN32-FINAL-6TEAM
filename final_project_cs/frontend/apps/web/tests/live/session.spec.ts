@@ -136,7 +136,7 @@ test("서버가 모르는 세션(끝났거나 지워진 쿠키)이면 조용히 
   const server = mockServer(request);
   await start(page, "acop_u_expired");                                    // 서버가 모르는 쿠키
   await page.goto(`/trips/${TRIP_ID}`);
-  await expect(page.getByText(/마이페이지에서 로그인하면 다시 열려요/)).toBeVisible();
+  await expect(page.getByText(/메뉴의 「로그인 · 가입」으로 로그인하면 다시 열려요/)).toBeVisible();   // `[2026-10-13]` 로그인 입구는 메뉴 프로필 칸
   expect(await server.received("POST", "/v1/web/auth/session")).toHaveLength(0);
   expect(await server.received("GET", `/v1/web/trips/${TRIP_ID}`)).toHaveLength(0);   // 여행을 묻지도 않았다
   // 서버는 모르는 쿠키를 지우라고 했다

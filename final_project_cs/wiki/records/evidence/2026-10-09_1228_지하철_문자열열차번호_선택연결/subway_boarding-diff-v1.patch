@@ -1,0 +1,29 @@
+--- before/final_project_cs/app/domains/travel_ops/ports/data_sources/subway_boarding.py
++++ after/final_project_cs/app/domains/travel_ops/ports/data_sources/subway_boarding.py
+@@ -11,6 +11,8 @@
+ from datetime import datetime, timedelta
+ import math
+ from zoneinfo import ZoneInfo
++
++from ..subway_train_identity import valid_train_number
+ 
+ KST = ZoneInfo('Asia/Seoul')
+ ARRIVAL_STATES = {'0', '1', '3', '4', '5', '99'}
+@@ -102,7 +104,7 @@
+                     else 'arrival_total_unknown')
+     counts = Counter(row.get('train_number') for row in rows
+                      if row.get('line_id') == line_id and row.get('station_id') == station_id
+-                     and _id(row.get('train_number')))
++                     and valid_train_number(row.get('train_number')))
+     services = {(p['path_station_ids'][1], p['path_station_ids'][-1], p['train_status']): p
+                 for p in allowed_services}
+     choices, excluded = [], []
+@@ -118,7 +120,7 @@
+             reason = 'boarding_identity_mismatch'
+         elif service is None:
+             reason = 'service_path_mismatch'
+-        elif not _id(row.get('train_number')):
++        elif not valid_train_number(row.get('train_number')):
+             reason = 'train_identity_missing'
+         elif counts[row['train_number']] != 1:
+             reason = 'duplicate_train_identity'

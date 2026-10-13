@@ -1,0 +1,177 @@
+FFFFFFFFF.FF                                                             [100%]
+================================== FAILURES ===================================
+____ test_routed_distance_controls_time_with_existing_straight_policy[150] ____
+
+distance = 150
+
+    @pytest.mark.parametrize('distance', [150, 650, 1500])
+    def test_routed_distance_controls_time_with_existing_straight_policy(distance):
+        out, samples, calls = run_estimate({'distance_m': distance})
+        expected = max(1, math.ceil(distance / Planner(_rt(), modes=['walk']).speed / 60))
+>       assert {x['eta'] for x in samples} == {expected}
+E       assert {7} == {3}
+E         
+E         Extra items in the left set:
+E         7
+E         Extra items in the right set:
+E         3
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:40: AssertionError
+____ test_routed_distance_controls_time_with_existing_straight_policy[650] ____
+
+distance = 650
+
+    @pytest.mark.parametrize('distance', [150, 650, 1500])
+    def test_routed_distance_controls_time_with_existing_straight_policy(distance):
+        out, samples, calls = run_estimate({'distance_m': distance})
+        expected = max(1, math.ceil(distance / Planner(_rt(), modes=['walk']).speed / 60))
+>       assert {x['eta'] for x in samples} == {expected}
+E       assert {7} == {11}
+E         
+E         Extra items in the left set:
+E         7
+E         Extra items in the right set:
+E         11
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:40: AssertionError
+___ test_routed_distance_controls_time_with_existing_straight_policy[1500] ____
+
+distance = 1500
+
+    @pytest.mark.parametrize('distance', [150, 650, 1500])
+    def test_routed_distance_controls_time_with_existing_straight_policy(distance):
+        out, samples, calls = run_estimate({'distance_m': distance})
+        expected = max(1, math.ceil(distance / Planner(_rt(), modes=['walk']).speed / 60))
+>       assert {x['eta'] for x in samples} == {expected}
+E       assert {7} == {25}
+E         
+E         Extra items in the left set:
+E         7
+E         Extra items in the right set:
+E         25
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:40: AssertionError
+__________ test_real_synthetic_stair_graph_has_same_time_as_schedule __________
+
+    def test_real_synthetic_stair_graph_has_same_time_as_schedule():
+        rt = _rt()
+        rt._v.bike_router = BikeRouter(stair_router())
+        out, samples, _ = run_estimate(runtime=rt)
+        p = Planner(rt, modes=['walk'])
+        target = datetime(2026, 10, 9, 12, tzinfo=timezone(timedelta(hours=9)))
+        (route, *_), _reason = p.leg(PLACES[0], PLACES[1], target, {}, False, 'estimate-stairs')
+        option = next(x for x in route['options'] if x['id'] == 'walk')
+>       assert out['eta']['p50_min'] == option['eta_min']
+E       assert 7 == 9
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:54: AssertionError
+___________ test_missing_network_path_is_not_a_feasible_direct_walk ___________
+
+    def test_missing_network_path_is_not_a_feasible_direct_walk():
+        out, samples, calls = run_estimate(error={'kind': 'no_path'})
+>       assert out['verdict'] == 'no_data'
+E       AssertionError: assert 'feasible' == 'no_data'
+E         
+E         - no_data
+E         + feasible
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:62: AssertionError
+____ test_route_failure_preserves_explicit_legacy_model_basis[router_down] ____
+
+error = 'router_down'
+
+    @pytest.mark.parametrize('error', ['router_down', 'bad_response', 'out_of_area'])
+    def test_route_failure_preserves_explicit_legacy_model_basis(error):
+        out, samples, calls = run_estimate(error={'kind': error})
+        assert out['verdict'] == 'feasible'
+>       assert out['walk_basis']['source'] == 'straight_distance_model'
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_basis'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:72: KeyError
+___ test_route_failure_preserves_explicit_legacy_model_basis[bad_response] ____
+
+error = 'bad_response'
+
+    @pytest.mark.parametrize('error', ['router_down', 'bad_response', 'out_of_area'])
+    def test_route_failure_preserves_explicit_legacy_model_basis(error):
+        out, samples, calls = run_estimate(error={'kind': error})
+        assert out['verdict'] == 'feasible'
+>       assert out['walk_basis']['source'] == 'straight_distance_model'
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_basis'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:72: KeyError
+____ test_route_failure_preserves_explicit_legacy_model_basis[out_of_area] ____
+
+error = 'out_of_area'
+
+    @pytest.mark.parametrize('error', ['router_down', 'bad_response', 'out_of_area'])
+    def test_route_failure_preserves_explicit_legacy_model_basis(error):
+        out, samples, calls = run_estimate(error={'kind': error})
+        assert out['verdict'] == 'feasible'
+>       assert out['walk_basis']['source'] == 'straight_distance_model'
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_basis'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:72: KeyError
+________ test_optimistic_stairs_keep_time_and_extended_access_distance ________
+
+    def test_optimistic_stairs_keep_time_and_extended_access_distance():
+        result = {'distance_m': 100, 'optimistic': True,
+                  'foot_timing': {'flat_mps': FOOT_MPS, 'seconds': 100 / (FOOT_MPS * .6)}}
+        p = Planner(_rt(), modes=['walk'])
+        p.v.bike_router = SimpleNamespace(available=lambda: True, route=lambda *a: result)
+        from app.domains.travel_ops.instances.mobility.engine.geo import meters
+        dm = meters(PLACES[0]['lat'], PLACES[0]['lon'], PLACES[1]['lat'], PLACES[1]['lon'])
+        _distance, minutes, _ = p._walk_path(PLACES[0], PLACES[1], dm)
+        out, samples, _ = run_estimate(result)
+>       assert out['eta']['p50_min'] == math.ceil(minutes)
+E       assert 7 == 8
+E        +  where 8 = <built-in function ceil>(7.8117991452923015)
+E        +    where <built-in function ceil> = math.ceil
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:87: AssertionError
+_________ test_public_estimate_function_carries_new_basis_and_version _________
+
+    def test_public_estimate_function_carries_new_basis_and_version():
+        out, _samples, calls = run_estimate({'distance_m': 650}, public=True)
+>       assert out['walk_basis']['source'] == 'walking_network'
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_basis'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:100: KeyError
+___________ test_no_router_preserves_model_and_reports_degradation ____________
+
+    def test_no_router_preserves_model_and_reports_degradation():
+        rt = _rt()
+        rt._v.bike_router = None
+        out, _samples, _ = run_estimate(runtime=rt)
+        assert out['verdict'] == 'feasible'
+>       assert out['walk_basis'] == {'source': 'straight_distance_model', 'degraded': True,
+               ^^^^^^^^^^^^^^^^^
+                                     'reason': 'walking_router_unavailable'}
+E       KeyError: 'walk_basis'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:110: KeyError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_0909_時間帯도보_보행망연결\before-v2.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_routed_distance_controls_time_with_existing_straight_policy[150]
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_routed_distance_controls_time_with_existing_straight_policy[650]
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_routed_distance_controls_time_with_existing_straight_policy[1500]
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_real_synthetic_stair_graph_has_same_time_as_schedule
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_missing_network_path_is_not_a_feasible_direct_walk
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_route_failure_preserves_explicit_legacy_model_basis[router_down]
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_route_failure_preserves_explicit_legacy_model_basis[bad_response]
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_route_failure_preserves_explicit_legacy_model_basis[out_of_area]
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_optimistic_stairs_keep_time_and_extended_access_distance
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_public_estimate_function_carries_new_basis_and_version
+FAILED tests/unit/travel/mobility/test_estimate_walk_network_v1.py::test_no_router_preserves_model_and_reports_degradation
+11 failed, 1 passed in 4.91s
+Exception ignored in: <function Console.__del__ at 0x0000016A1BED5E40>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

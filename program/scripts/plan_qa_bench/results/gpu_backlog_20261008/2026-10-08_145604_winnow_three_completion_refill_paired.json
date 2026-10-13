@@ -1,0 +1,80 @@
+{
+  "D": {
+    "positive": {
+      "total": 883,
+      "original_correct": 709,
+      "trained_correct": 793,
+      "trained_only_correct": 91,
+      "original_only_correct": 7,
+      "exact_p": 9.440274241692034e-20,
+      "original_false_pick": 0,
+      "trained_false_pick": 0,
+      "original_failures": 19,
+      "trained_failures": 0
+    },
+    "negative": {
+      "total": 1786,
+      "original_correct": 1670,
+      "trained_correct": 1773,
+      "trained_only_correct": 105,
+      "original_only_correct": 2,
+      "exact_p": 7.123167455112855e-29,
+      "original_false_pick": 90,
+      "trained_false_pick": 13,
+      "original_failures": 26,
+      "trained_failures": 0
+    }
+  },
+  "D2": {
+    "positive": {
+      "total": 0,
+      "original_correct": 0,
+      "trained_correct": 0,
+      "trained_only_correct": 0,
+      "original_only_correct": 0,
+      "exact_p": 1.0,
+      "original_false_pick": 0,
+      "trained_false_pick": 0,
+      "original_failures": 0,
+      "trained_failures": 0
+    },
+    "negative": {
+      "total": 1000,
+      "original_correct": 910,
+      "trained_correct": 997,
+      "trained_only_correct": 87,
+      "original_only_correct": 0,
+      "exact_p": 1.2924697071141057e-26,
+      "original_false_pick": 77,
+      "trained_false_pick": 3,
+      "original_failures": 13,
+      "trained_failures": 0
+    }
+  },
+  "H": {
+    "positive": {
+      "total": 461,
+      "original_correct": 401,
+      "trained_correct": 434,
+      "trained_only_correct": 41,
+      "original_only_correct": 8,
+      "exact_p": 1.9646537765538596e-06,
+      "original_false_pick": 0,
+      "trained_false_pick": 0,
+      "original_failures": 2,
+      "trained_failures": 0
+    },
+    "negative": {
+      "total": 855,
+      "original_correct": 435,
+      "trained_correct": 714,
+      "trained_only_correct": 329,
+      "original_only_correct": 50,
+      "exact_p": 1.8256661333951823e-51,
+      "original_false_pick": 403,
+      "trained_false_pick": 141,
+      "original_failures": 17,
+      "trained_failures": 0
+    }
+  }
+}

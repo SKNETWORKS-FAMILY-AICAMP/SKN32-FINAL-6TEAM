@@ -1,0 +1,33 @@
+{
+  "observed_at_kst": "2026-10-11T23:25:48.506005+09:00",
+  "version": "v2",
+  "total_planned": 3,
+  "completed": 1,
+  "original_strict_pass": 0,
+  "local_parser_semantic_pass": 1,
+  "independent_holdout": false,
+  "oracle_deployed": false,
+  "checks": [
+    {
+      "key": "empty_afternoon",
+      "completed": true,
+      "semantic_pass": true,
+      "new_model_call": false,
+      "original_strict_pass": false,
+      "seconds": 325.7418715899694,
+      "rendered": "전체 여행 날짜 오후 범위에는 등록된 일정이 없어요. 일정을 바꾸지는 않았어요."
+    },
+    {
+      "key": "day_two_paraphrase",
+      "completed": false,
+      "semantic_pass": false,
+      "new_model_call": false
+    },
+    {
+      "key": "existing_time",
+      "completed": false,
+      "semantic_pass": false,
+      "new_model_call": false
+    }
+  ]
+}

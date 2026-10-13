@@ -1,0 +1,268 @@
+{
+  "observed_at_utc": "2026-10-11T13:30:20.076009+00:00",
+  "archive_sha256": "f134b5a46a825b70cc6216f6c74e2651971cdd891567eb358638d9dc4ab895c7",
+  "verified_files": 27,
+  "summaries": {
+    "finch_s20261014_app_completion_v1": {
+      "summary": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 6,
+        "correct": 32,
+        "stability_eligible": false,
+        "stability_attempted": 0,
+        "stability_correct": 0,
+        "stop": "prerequisite_failed",
+        "peak_gpu_bytes": 9897931776,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T05:27:00.936218+00:00"
+      },
+      "baseline_rows": 48,
+      "baseline_correct": 32,
+      "observations": 0,
+      "observations_correct": 0,
+      "budgets": {
+        "400": {
+          "saved": 24,
+          "correct": 16
+        },
+        "800": {
+          "saved": 24,
+          "correct": 16
+        }
+      }
+    },
+    "cosine_s20261014_app_completion_v1": {
+      "summary": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 10,
+        "correct": 28,
+        "stability_eligible": false,
+        "stability_attempted": 0,
+        "stability_correct": 0,
+        "stop": "prerequisite_failed",
+        "peak_gpu_bytes": 9897931776,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T05:47:52.777097+00:00"
+      },
+      "baseline_rows": 48,
+      "baseline_correct": 28,
+      "observations": 0,
+      "observations_correct": 0,
+      "budgets": {
+        "400": {
+          "saved": 24,
+          "correct": 14
+        },
+        "800": {
+          "saved": 24,
+          "correct": 14
+        }
+      }
+    },
+    "oos2r_app_completion_v1": {
+      "summary": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 0,
+        "correct": 48,
+        "stability_eligible": true,
+        "stability_attempted": 4960,
+        "stability_correct": 4960,
+        "stop": "duration_completed",
+        "peak_gpu_bytes": 10347614208,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T11:53:15.585824+00:00"
+      },
+      "baseline_rows": 48,
+      "baseline_correct": 48,
+      "observations": 4960,
+      "observations_correct": 4960,
+      "budgets": {
+        "400": {
+          "saved": 24,
+          "correct": 24
+        },
+        "800": {
+          "saved": 24,
+          "correct": 24
+        }
+      }
+    },
+    "oos3_app_completion_v1": {
+      "summary": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 0,
+        "correct": 16,
+        "stability_eligible": false,
+        "stability_attempted": 0,
+        "stability_correct": 0,
+        "stop": "prerequisite_failed",
+        "peak_gpu_bytes": 9897931776,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T11:58:32.498237+00:00"
+      },
+      "baseline_rows": 48,
+      "baseline_correct": 16,
+      "observations": 0,
+      "observations_correct": 0,
+      "budgets": {
+        "400": {
+          "saved": 24,
+          "correct": 8
+        },
+        "800": {
+          "saved": 24,
+          "correct": 8
+        }
+      }
+    }
+  },
+  "audit": [
+    {
+      "name": "finch_s20261014_app_completion_v1/job.json",
+      "bytes": 666,
+      "sha256": "a320f10350ad296553e734eec1fb6c7d4c4db828b436e2d96c528e2c218bf86b"
+    },
+    {
+      "name": "finch_s20261014_app_completion_v1/job.log",
+      "bytes": 1361,
+      "sha256": "452ca9f0ec08db4be6b137dc282510630c94e77278152ad6f791d088d299a9d0"
+    },
+    {
+      "name": "finch_s20261014_app_completion_v1/contract.json",
+      "bytes": 1022,
+      "sha256": "6fcc7d1e871464491c0ec20bc79d795a0412277159186ae24d7cb60dd758a584"
+    },
+    {
+      "name": "finch_s20261014_app_completion_v1/answers.jsonl",
+      "bytes": 93357,
+      "sha256": "6d8fe1520959a6b834bf0a3383343940d878848ea2f33a1b918c42ab683ddfd8"
+    },
+    {
+      "name": "finch_s20261014_app_completion_v1/summary.json",
+      "bytes": 347,
+      "sha256": "09f8276b7f5395592032bdba31e59b5d631a5fa3d794503e614bba468513c5ae"
+    },
+    {
+      "name": "cosine_s20261014_app_completion_v1/job.json",
+      "bytes": 668,
+      "sha256": "c061fe6652da53189ca1f3282ad525c103a035efdafea656eda31c7291e086cb"
+    },
+    {
+      "name": "cosine_s20261014_app_completion_v1/job.log",
+      "bytes": 1358,
+      "sha256": "627d3542f54f256824456453252e8fc2b5ce5437964786964a4e5b346691bccb"
+    },
+    {
+      "name": "cosine_s20261014_app_completion_v1/contract.json",
+      "bytes": 1023,
+      "sha256": "8a2e71db9bae959fcf363c849edf8dfcf48622e67b83aeae74c4e5e8f11c2939"
+    },
+    {
+      "name": "cosine_s20261014_app_completion_v1/answers.jsonl",
+      "bytes": 109296,
+      "sha256": "f00e19613b6f766311e5196b076f20c0d44db04e774a7b628f8bd04ac2d63b29"
+    },
+    {
+      "name": "cosine_s20261014_app_completion_v1/summary.json",
+      "bytes": 348,
+      "sha256": "4985d540e55c129763732eb40de62c904c016e4696c93705717287298d7f331a"
+    },
+    {
+      "name": "hf_app_completion_20261011_1400/manifest.json",
+      "bytes": 5802,
+      "sha256": "4896dbc23ba72064291ba643451346095aa93ac4bceb40d320f25ad871856c8f"
+    },
+    {
+      "name": "hf_app_completion_20261011_1400/state.json",
+      "bytes": 1541,
+      "sha256": "3429c2c60174a267903a02718fcc9472660f27645d09d11ca5ddc3b4d2177bd7"
+    },
+    {
+      "name": "oos2r_app_completion_v1/job.json",
+      "bytes": 675,
+      "sha256": "4e2fc2ae00bc08c935e1a59f5698debcd8165a52caca737f3e36fac9da291f91"
+    },
+    {
+      "name": "oos2r_app_completion_v1/job.log",
+      "bytes": 1362,
+      "sha256": "01addaa61337b69df402b41c63e57474a59e7927090a32975497edcea402bf4e"
+    },
+    {
+      "name": "oos2r_app_completion_v1/contract.json",
+      "bytes": 1031,
+      "sha256": "98c78fcf28d2a127e7b9b3c207dafcaa3e6cd14ae4ed77ed0b8cf927a05927eb"
+    },
+    {
+      "name": "oos2r_app_completion_v1/answers.jsonl",
+      "bytes": 36398,
+      "sha256": "ff77679919c90c579ee3f7f5acbd9166192d74e9bb296b9e9c656b0a87e52680"
+    },
+    {
+      "name": "oos2r_app_completion_v1/observations.jsonl",
+      "bytes": 3864039,
+      "sha256": "b8f8d5bad7082546df7d04428a8c19d82870d0cbc41c44c07456aba88d83ba09"
+    },
+    {
+      "name": "oos2r_app_completion_v1/resources.jsonl",
+      "bytes": 59225,
+      "sha256": "2f62c1c039ec4cbb07b61cbb36136ff1b9527dd458b5b87c27789dd7c626d234"
+    },
+    {
+      "name": "oos2r_app_completion_v1/progress.json",
+      "bytes": 101,
+      "sha256": "86311ee1107d373778427a86bbc049fc7517013dace1e8f548b330b2146e7321"
+    },
+    {
+      "name": "oos2r_app_completion_v1/summary.json",
+      "bytes": 352,
+      "sha256": "83f5c2156f21d2b9be1ed7dd19dffadf27e21d85206df8fe770f22cb0d8524df"
+    },
+    {
+      "name": "oos3_app_completion_v1/job.json",
+      "bytes": 670,
+      "sha256": "0c1b67fbf90fbbfea1ace11bb8e72e6fc9ed0ef7664e21315c832787fce985eb"
+    },
+    {
+      "name": "oos3_app_completion_v1/job.log",
+      "bytes": 1111,
+      "sha256": "f7799e44c009aa6045f84a1afaa0e627c1fa150a3e543c345a77851d06a012c9"
+    },
+    {
+      "name": "oos3_app_completion_v1/contract.json",
+      "bytes": 1025,
+      "sha256": "13720d96a49cdc868d3c632928b1c05d72419601876907e4abc1b9772faffd67"
+    },
+    {
+      "name": "oos3_app_completion_v1/answers.jsonl",
+      "bytes": 38320,
+      "sha256": "e2b0e9741e7f37e0ae2855b72063005b233e4a9ae89e57452f509d8d88710075"
+    },
+    {
+      "name": "oos3_app_completion_v1/summary.json",
+      "bytes": 347,
+      "sha256": "9d312e40c17e4b6b2f1aa864dd5f7459ec965a103fc53408d3a3994400bece70"
+    },
+    {
+      "name": "hf_app_completion_followup_20261011_1400/manifest.json",
+      "bytes": 6254,
+      "sha256": "d01e80281a384330ff4667739aaab3f6b499e31c87feca3171b8e42e03f4fefc"
+    },
+    {
+      "name": "hf_app_completion_followup_20261011_1400/state.json",
+      "bytes": 996,
+      "sha256": "653bb39d12337d2e09fbb24fe2bd9c794408d3f2441dc63d338cb59c2fb6f7af"
+    }
+  ]
+}

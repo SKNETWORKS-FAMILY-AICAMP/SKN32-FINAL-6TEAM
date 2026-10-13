@@ -1,0 +1,26 @@
+{
+  "verified_at_kst": "2026-10-09T02:44:08.442184",
+  "automation_id": "rag-strata",
+  "kind": "heartbeat",
+  "status": "ACTIVE",
+  "interval_hours": 6,
+  "reporting_policy": {
+    "interval_hours": 6,
+    "regular_report_even_without_new_result": true,
+    "latest_user_instruction_at": "2026-10-09",
+    "include": [
+      "completed_work_explanation",
+      "delta_since_last_report",
+      "current_and_waiting_work",
+      "failures_and_validation_gaps",
+      "next_6_hours",
+      "counts_denominators_percentages",
+      "observation_timestamps",
+      "evidence_links"
+    ]
+  },
+  "backup": "program/research/daily_rag_slm/_backup/2026-10-09_024340_six_hour_status_report",
+  "existing_schedule_updated": true,
+  "new_automation_created": false,
+  "daily_research_preserved": true
+}

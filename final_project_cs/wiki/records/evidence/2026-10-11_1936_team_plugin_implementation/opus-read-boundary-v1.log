@@ -1,0 +1,29 @@
+.....................................F.................................. [ 88%]
+.........                                                                [100%]
+================================== FAILURES ===================================
+_____ test_the_dining_ledger_supplies_the_days_hours_break_and_closed_day _____
+tests\unit\travel\test_intake_review_units.py:261: in test_the_dining_ledger_supplies_the_days_hours_break_and_closed_day
+    facts = hours.facts_for(_Conn(), "t", place, "dining", at("12:00"), at("13:00"))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\intake\hours.py:87: in facts_for
+    _apply_ledger(conn, tenant_id, core_id, start, end, out)
+app\domains\travel_ops\components\intake\hours.py:143: in _apply_ledger
+    state = dining_ledger.state(conn, tenant_id, core_id, start, end or start, order_margin_min=ORDER_MARGIN_MIN)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\dining_ledger.py:85: in state
+    return _selected_0(conn, tenant_id, place_id, at, until, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\ledger.py:193: in dining_state
+    if not ledger_ready(conn):
+           ^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\ledger.py:88: in ledger_ready
+    return bool(cur.fetchone()[0])
+                ^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_intake_review_units.py::test_the_dining_ledger_supplies_the_days_hours_break_and_closed_day
+1 failed, 80 passed in 10.75s
+Exception ignored in: <function Console.__del__ at 0x0000023879275BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

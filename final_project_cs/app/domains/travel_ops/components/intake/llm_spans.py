@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Callable
 
 from .rules import TIME, Claim, Span, _date_in, _hhmm, _narrow
@@ -23,7 +24,8 @@ SYSTEM = (
     "For each useful part, return the line number, the EXACT substring copied character-for-character from that line "
     "(never fix typos, never translate, never add words), and its role.\n"
     "Roles: place (a place/shop/sight the traveller will visit), time (a clock time or time of day), "
-    "date (a date or relative day such as 내일), meal (breakfast/lunch/dinner word), booking_no (reservation number), "
+    "date (a date or relative day such as 내일), time also includes relative-now expressions such as 지금/당장/현재, "
+    "meal (breakfast/lunch/dinner word), booking_no (reservation number), "
     "party (number of people), plan_request (they ask us to make a plan, e.g. '일정 짜 줘'), ignore.\n"
     'Return JSON only: {"spans": [{"line": 1, "quote": "...", "role": "place"}]}. '
     "If nothing is useful, return {\"spans\": []}.")
@@ -42,7 +44,7 @@ class SpanItem:
     date: str | None
 
 
-def label_lines(lines: list[str], unread: list[int], chat: Any) -> tuple[list[Claim], list[SpanItem], dict[str, Any]]:
+def label_lines(lines: list[str], unread: list[int], chat: Any, *, now: datetime | None = None) -> tuple[list[Claim], list[SpanItem], dict[str, Any]]:
     """(claims, 항목, 보고). ★모델이 가리킨 조각 중 원문에 그대로 있는 것만 받는다."""
     report: dict[str, Any] = {"asked_lines": len(unread), "spans": 0, "accepted": 0, "rejected": [], "plan_request": False}
     if not unread or chat is None:
@@ -85,6 +87,14 @@ def label_lines(lines: list[str], unread: list[int], chat: Any) -> tuple[list[Cl
                     claims.append(Claim("", value, Span(number, start + match.start(), start + match.end(),
                                                         match.group(0)), needs_review=review, note=note,
                                         method="llm_span"))
+            elif now is not None and any(word in quote for word in ("지금", "현재", "당장")):
+                from zoneinfo import ZoneInfo
+                instant = now.astimezone(ZoneInfo("Asia/Seoul"))
+                value = instant.strftime("%H:%M")
+                item.start = value
+                item.date = instant.date().isoformat()
+                claims.append(Claim("", value, Span(number, start, end, quote), note="접수 시각 기준 현재 시각",
+                                    method="llm_span"))
         elif role == "date":
             value, match = _date_in(quote)
             if match:

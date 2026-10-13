@@ -1,0 +1,128 @@
+{
+  "observed_at_utc": "2026-10-10T05:11:20.391942+00:00",
+  "report": "final_project_cs/wiki/records/reports/2026-10-10_1400_six-hour-gpu-arm-report.md",
+  "new_model_answer_rows_collected": 22369,
+  "model_artifact_files_verified": 58,
+  "model_artifact_files_total": 58,
+  "arm_http_files_verified": 56,
+  "arm_http_files_total": 56,
+  "context": {
+    "completed_conditions": 6,
+    "total_conditions": 6,
+    "completed_questions": 13122,
+    "total_questions": 13122,
+    "unparsed": 7,
+    "errors": 0,
+    "adopted": false,
+    "reason": "normal request loss and increased false picks"
+  },
+  "A": {
+    "registered": 162,
+    "status_counts": {
+      "completed": 126,
+      "completed_with_errors": 28,
+      "failed": 2,
+      "running": 1
+    },
+    "ready_pending": 5,
+    "running": 1,
+    "added_conditions": 8,
+    "added_questions": 17496,
+    "order_completed": 2,
+    "order_total": 8,
+    "order_collected": 720,
+    "order_expected": 17496,
+    "worker_preserved": true,
+    "free_bytes": 3771789312,
+    "gpu_instant": "96 MiB, 0 %",
+    "initial_idle_observed": true
+  },
+  "B": {
+    "native_main_completed": 6,
+    "native_main_total": 6,
+    "native_rows_completed": 13122,
+    "native_rows_total": 13122,
+    "followup_saved": {
+      "oos1_smoke": 12,
+      "oos2r_smoke": 12,
+      "oos1_d3": 360,
+      "oos2r_d3": 360,
+      "oos1_mx": 1743
+    },
+    "current": "oos1_mx",
+    "immediate_next": 1,
+    "conditional_new_main_conditions": 4,
+    "conditional_new_main_rows": 8748,
+    "conditional_new_smoke_rows": 24,
+    "dispatcher_alive": true,
+    "worker_preserved": true,
+    "gpu_instant": "10265 MiB, 62 %",
+    "free_bytes": 5609492480
+  },
+  "ARM": {
+    "observed_at_utc": "2026-10-10T05:11:21.497700+00:00",
+    "resources": {
+      "window_s": 300.0800183379906,
+      "cpu_pct_two_cores": 83.92096744554148,
+      "host_cpu_busy_pct": 93.17896639320992,
+      "host_steal_pct": 0.1878777316541913,
+      "memory_current_bytes": 7413571584,
+      "above_20_contiguous_seconds": 41670.894016965,
+      "five_minute_target_verified": true
+    },
+    "benchmark_active": {
+      "at": "2026-10-10T05:09:01.476566+00:00",
+      "job_id": "e4bt_q4_d3_nocache",
+      "engine_pid": 266244,
+      "expected": 360,
+      "saved": 182
+    },
+    "host_memory_total_bytes": 12503744512,
+    "host_memory_available_bytes": 6124810240,
+    "host_memory_used_pct": 51.01619171663382,
+    "disk": {
+      "total": 102888095744,
+      "used": 58131476480,
+      "available": 44739842048
+    },
+    "units": {
+      "tripilot-arm-cd.timer": "active",
+      "tripilot-arm-refill.timer": "active",
+      "tripilot-arm-work-queue.service": "active",
+      "tripilot-arm-serving.service": "active"
+    },
+    "app_queue_counts": {
+      "failed": 3,
+      "completed": 22,
+      "pending": 64,
+      "running": 1
+    },
+    "ready_batches_added": 20,
+    "ready_now": 19,
+    "blocked_pending": 45,
+    "estimated_ready_seconds": 22437.39070956547,
+    "estimate_not_runtime_guarantee": true,
+    "queue_bug_fixed": true,
+    "regression_tests_passed": 15,
+    "regression_tests_total": 15,
+    "benchmark_untouched": true,
+    "active_app_job_not_interrupted": true
+  },
+  "independent_validation": {
+    "E_human_reviewed": 0,
+    "E_human_total": 158,
+    "new_720_holdout_frozen": false,
+    "Saluki_training_started": false,
+    "Saluki_training_block": "same model trainable representation, CUDA memory and space preflight"
+  },
+  "research_already_done_today": true,
+  "duplicate_research": false,
+  "duplicate_training": false,
+  "new_automation_created": false,
+  "next_six_hours": [
+    "Collect candidate-order D3/E answers without rerunning; paired exact test and itinerary bootstrap after completion",
+    "Complete B oos1/oos2r E, then dispatcher starts missing oos2/oos3 smoke and D3/E",
+    "ARM continues successful profile HTTP stability repetitions; preserve failed profiles and diagnose timeouts separately",
+    "Human E adjudication and independent holdout remain mandatory before model adoption"
+  ]
+}

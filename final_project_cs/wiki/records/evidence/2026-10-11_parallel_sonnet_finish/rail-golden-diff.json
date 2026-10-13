@@ -1,0 +1,133 @@
+[
+  {
+    "path": "/items/1/ends_at",
+    "old": "2026-09-29T09:46:00+09:00",
+    "new": "2026-09-29T09:48:00+09:00"
+  },
+  {
+    "path": "/items/3/ends_at",
+    "old": "2026-09-29T13:13:00+09:00",
+    "new": "2026-09-29T13:12:00+09:00"
+  },
+  {
+    "path": "/items/3/starts_at",
+    "old": "2026-09-29T12:36:00+09:00",
+    "new": "2026-09-29T12:34:00+09:00"
+  },
+  {
+    "path": "/items/5/ends_at",
+    "old": "2026-09-29T17:50:00+09:00",
+    "new": "2026-09-29T17:48:00+09:00"
+  },
+  {
+    "path": "/items/5/starts_at",
+    "old": "2026-09-29T17:24:00+09:00",
+    "new": "2026-09-29T17:22:00+09:00"
+  },
+  {
+    "path": "/items/7/starts_at",
+    "old": "2026-09-29T19:16:00+09:00",
+    "new": "2026-09-29T19:14:00+09:00"
+  },
+  {
+    "path": "/left_out/dinner_to_lotte_mart",
+    "old": null,
+    "new": [
+      {
+        "label": "경의중앙선 서울역→디지털미디어시티 → 6호선 디지털미디어시티→연신내 → GTX-A 연신내→서울",
+        "code": "no_last_departure",
+        "reason": "마지막 성립 출발을 역산하지 못했다 — 디지털미디어시티 출발 열차의 행선지를 확인할 수 없어 연신내 까지 간다고 말할 수 없다"
+      },
+      {
+        "label": "경의중앙선 서울역→대곡 → GTX-A 대곡→서울",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→연신내 → 6호선 연신내→디지털미디어시티 → 경의중앙선 디지털미디어시티→서울역",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→대곡 → 경의중앙선 대곡→서울역",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "4호선 회현→충무로 → 3호선 충무로→연신내 → GTX-A 연신내→서울",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→연신내 → 3호선 연신내→종로3가 → 5호선 종로3가→충정로",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "GTX-A 서울→연신내 → 6호선 연신내→공덕 → 5호선 공덕→충정로",
+        "code": "uses_format",
+        "reason": "uses 표기 검사 불통과 — `GTX-A:서울`: 역 이름이 「서울역」이면 그대로 `서울역` 이다(`서울` ✗)"
+      },
+      {
+        "label": "4호선 회현→서울역",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:59 출발은 성립 확인(역산) · 환승 0회 · 소요 18분"
+      },
+      {
+        "label": "1호선 서울역→시청 → 2호선 시청→충정로",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:46 출발은 성립 확인(역산) · 환승 1회 · 소요 31분"
+      },
+      {
+        "label": "4호선 회현→서울역 → 1호선 서울역→시청 → 2호선 시청→충정로",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:28 출발은 성립 확인(역산) · 환승 2회 · 소요 49분"
+      },
+      {
+        "label": "4호선 회현→동대문역사문화공원 → 2호선 동대문역사문화공원→충정로",
+        "code": "before_prev_end",
+        "reason": "앞 일정이 19:00에 끝나고, 이동 출발 19:14 출발은 재판정에서 불성립 · 18:26 출발은 성립 확인(역산) · 환승 1회 · 소요 52분"
+      }
+    ]
+  },
+  {
+    "path": "/routes/dinner_to_lotte_mart/options/0/eta_min",
+    "old": 4,
+    "new": 6
+  },
+  {
+    "path": "/routes/dinner_to_lotte_mart/options/0/walk_m",
+    "old": 194,
+    "new": 330
+  },
+  {
+    "path": "/routes/gyeongbokgung_to_seongsu/options/0/eta_min",
+    "old": 37,
+    "new": 38
+  },
+  {
+    "path": "/routes/gyeongbokgung_to_seongsu/options/0/walk_m",
+    "old": 825,
+    "new": 917
+  },
+  {
+    "path": "/routes/gyeongbokgung_to_seongsu/options/1/eta_min",
+    "old": 43,
+    "new": 44
+  },
+  {
+    "path": "/routes/gyeongbokgung_to_seongsu/options/1/walk_m",
+    "old": 738,
+    "new": 830
+  },
+  {
+    "path": "/routes/hotel_to_gyeongbokgung/options/0/eta_min",
+    "old": 28,
+    "new": 30
+  },
+  {
+    "path": "/routes/hotel_to_gyeongbokgung/options/0/walk_m",
+    "old": 993,
+    "new": 1103
+  }
+]

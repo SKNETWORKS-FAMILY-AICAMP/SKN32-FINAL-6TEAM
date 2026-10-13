@@ -1,0 +1,12 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "app/domains/travel_ops/instances/mobility/engine/options.py",
+    "app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "tests/unit/travel/mobility/test_fare_discount_upper_v1.py"
+  ],
+  "exit_code": 0
+}

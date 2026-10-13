@@ -1,0 +1,202 @@
+{
+  "feature_rows": 21,
+  "svg_nodes": 6,
+  "local_links": [
+    {
+      "target": "../../2026-10-09_0525_현재동행_출발대조와_재경로_검증.md",
+      "exists": true
+    },
+    {
+      "target": "../2026-10-09_mobility_readiness_v18/mobility-readiness.html",
+      "exists": true
+    },
+    {
+      "target": "assets/2026-10-09_mobility_readiness_v19/mobility-readiness.html",
+      "exists": true
+    },
+    {
+      "target": "../../../app/domains/travel_ops/components/watch/departure_revalidation.py",
+      "exists": true
+    },
+    {
+      "target": "../../../app/domains/travel_ops/components/watch/trip_reminders.py",
+      "exists": true
+    },
+    {
+      "target": "../../../app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "exists": true
+    },
+    {
+      "target": "../../../app/domains/travel_ops/instances/mobility/wiring.py",
+      "exists": true
+    },
+    {
+      "target": "../../../app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "exists": true
+    },
+    {
+      "target": "../../../tests/unit/travel/test_departure_party_v1.py",
+      "exists": true
+    },
+    {
+      "target": "../../../tests/scenario/test_departure_party_db_v1.py",
+      "exists": true
+    },
+    {
+      "target": "../evidence/2026-10-09_0513_현재동행_출발대조/",
+      "exists": true
+    },
+    {
+      "target": "../evidence/2026-10-09_0513_현재동행_출발대조/before-backup-v1.json",
+      "exists": true
+    },
+    {
+      "target": "../evidence/2026-10-09_0513_현재동행_출발대조/correction-backups-v1.json",
+      "exists": true
+    },
+    {
+      "target": "../evidence/2026-10-09_0513_현재동행_출발대조/publication-backups-v1.json",
+      "exists": true
+    },
+    {
+      "target": "2026-10-09_0508_출발안내_발행경합_방지와_직접선택_검증.md",
+      "exists": true
+    },
+    {
+      "target": "debugs/2026-10-09_0527_시각화_현재잔여_정정.md",
+      "exists": true
+    },
+    {
+      "target": "../evidence/2026-10-09_0513_현재동행_출발대조/visual-correction-backups-v1.json",
+      "exists": true
+    }
+  ],
+  "source_data_hash_checks": [
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/actions/itinerary_actions.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/watch/departure_revalidation.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_reminders.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/instances/mobility/team.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/scripts/mobility/build_readiness_visual_v17.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/scripts/mobility/build_readiness_visual_v18.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/scripts/mobility/build_readiness_visual_v19.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/scripts/run_sweepers.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_assembly_db_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_atomic_choice_db_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_atomic_db_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_observer_reminders_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_party_db_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_walk_db_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_watch_db_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_assembly_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_party_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_replan_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_watch_assembly_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_watch_v1.py",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "matches": true
+    }
+  ],
+  "backups_checked": 21,
+  "ruff_files": 12,
+  "ruff_passed": true,
+  "diagram_check_passed": true,
+  "html_browser_render_checked": false,
+  "external_cli_retry": false,
+  "previous_feature_status_metric_preserved": true,
+  "xml_hostnames_removed": true,
+  "stale_remaining_text_corrected": 2,
+  "unchanged_product_test_sources": 11
+}

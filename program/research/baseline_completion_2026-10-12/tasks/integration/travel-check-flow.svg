@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 620" role="img" aria-labelledby="title-620 desc-620">
+<title id="title-620">작업 한 건의 자료 확인</title><desc id="desc-620">자료가 유효하면 팀 계산 후 적용 판단으로, 아니면 해당 작업만 보류하고 회차를 끝냅니다.</desc>
+<defs><marker id="arrow-620" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6b7488"/></marker><marker id="arrow-accent-620" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#a8720c"/></marker><marker id="arrow-link-620" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2f5bd8"/></marker></defs>
+<style>text{font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif;fill:#161c28;text-anchor:middle;font-size:18px}.label{font-size:15px}rect,ellipse,polygon{stroke:#6b7488;stroke-width:1.5;fill:#fbfcfd}</style>
+<rect width="940" height="620" fill="#fbfcfd" stroke="none"/>
+<path d="M300 78V107" fill="none" stroke="#6b7488" stroke-width="1.8" marker-end="url(#arrow-620)"/>
+<path d="M300 173V210" fill="none" stroke="#6b7488" stroke-width="1.8" marker-end="url(#arrow-620)"/>
+<path d="M300 330V377" fill="none" stroke="#6b7488" stroke-width="1.8" marker-end="url(#arrow-620)"/>
+<rect x="285" y="337" width="120" height="24" style="stroke:none"/><text x="345" y="355" class="label">예</text>
+<path d="M410 270H707Q715 270 715 278V327" fill="none" stroke="#6b7488" stroke-width="1.8" marker-end="url(#arrow-620)"/>
+<rect x="475" y="234" width="120" height="24" style="stroke:none"/><text x="535" y="252" class="label">아니요</text>
+<path d="M300 443V512" fill="none" stroke="#6b7488" stroke-width="1.8" marker-end="url(#arrow-620)"/>
+<path d="M715 393V462" fill="none" stroke="#6b7488" stroke-width="1.8" marker-end="url(#arrow-620)"/>
+<ellipse cx="300" cy="50" rx="140" ry="28"/>
+<text x="300" y="56"><tspan x="300" dy="0">작업 한 건 시작</tspan></text>
+<rect x="160" y="107" width="280" height="66" rx="6"/>
+<text x="300" y="146"><tspan x="300" dy="0">필요한 자료 조회</tspan></text>
+<polygon points="300,210 410,270 300,330 190,270"/>
+<text x="300" y="276"><tspan x="300" dy="0">자료 유효?</tspan></text>
+<rect x="160" y="377" width="280" height="66" rx="6"/>
+<text x="300" y="416"><tspan x="300" dy="0">분류·해당 팀 계산</tspan></text>
+<ellipse cx="300" cy="540" rx="140" ry="28"/>
+<text x="300" y="546"><tspan x="300" dy="0">다음: 적용 판단</tspan></text>
+<rect x="575" y="327" width="280" height="66" rx="6"/>
+<text x="715" y="366"><tspan x="715" dy="0">해당 작업 보류·안내</tspan></text>
+<ellipse cx="715" cy="490" rx="140" ry="28"/>
+<text x="715" y="496"><tspan x="715" dy="0">이 작업 회차 종료</tspan></text>
+</svg>

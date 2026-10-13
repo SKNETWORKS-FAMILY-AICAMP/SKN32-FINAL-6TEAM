@@ -1,0 +1,262 @@
+[
+  {
+    "path": "app/application/case_intake.py",
+    "sha256": "d25063735dca150f3659fa9c345e5608584fa13ef66a8cefda2825d45b753843",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/application/case_service.py",
+    "sha256": "c674b9364757be713ac460c0aee9c355b0b321ce4eb99569cd18f223b5b8b1bf",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/application/controller.py",
+    "sha256": "abd1567c372f125962b9b98f6fcd7e5da39e6d8d08d9f091d4d0039fdd23694d",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/application/runtime.py",
+    "sha256": "b4499bb2cf4e13b42b4d13ff34f547bd1d2b90c798c5683a5abfe7f737923949",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/composition.py",
+    "sha256": "65d0e9a4965e1070ba9d8da448ffa50c67de1a86cbe971345d6cc2fc95eef5ac",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/core/actions.py",
+    "sha256": "7ab441e8e0193ec97547f6a55cd4fb1c7e2da92d341453012d4a397f13123039",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/core/case_lifecycle/events.py",
+    "sha256": "e1271eed99fd35000815de6a60b931f40b23211a44ed95b23ef360a226418560",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/core/project_config.py",
+    "sha256": "dd6cc0844ba12e68bbfc6ed9eaf79d54b95f894bba15d2d9a02a1b30c0214a23",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/core/registry.py",
+    "sha256": "b538ae5aae7a1b459caaa6468ef31f1ab6f651db497884b5e35ebf1feb1ad5db",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/core/remote_team/a2a_executor.py",
+    "sha256": "8d28607a6c66423100d44ed60f63c93575e1e938903a348e5659fdf6044f9bda",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/core/remote_team/executor.py",
+    "sha256": "5acad19f9e2e04adc3f3c637c4105a5b559ba3eb238ae639951e9f828a2c4724",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/core/service_bindings.py",
+    "sha256": "aed8d61157f2c09b4fb40457b3d7a6824952b5b33c92e379329fb1cecf46c948",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/core/team_availability.py",
+    "sha256": "1ef185a44b5a49bac30672a8a66cbab11f28e3a4b67b46cc05b2787e6c7f63e9",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/__init__.py",
+    "sha256": "a34ff79f08dca82c64b1a5c2ff0e424e5acbdc212da0ccade452d0b7fa25557f",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/actions/itinerary_actions.py",
+    "sha256": "ff7e4d4e277dbf6effd7b868ce5312c6fe347e83870e95b6d3f0b1c01b033cd5",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+    "sha256": "c3f8997a143b1df76c442d41a0022707c73e6808cba15a23d586cb2e756e716c",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/conversation/fact_read_retry.py",
+    "sha256": "5b5fe3315cc80da54aab5b1acd3c8b8d4b531b23dbccf67f9f18ff361e2ab01b",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/conversation/trip_intake.py",
+    "sha256": "812a8f90c968d0bbd20591785ea90a77aa2d919e01024fdde00c2fe2ae82e374",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+    "sha256": "da9a45124c99e7bc3835eca509fa3c503ba73b4b38549b4c336070c68869236f",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/core_hooks/routing.py",
+    "sha256": "28c03d0bd9d6a4ff7792c8a3735a9a099f5e2aed31b729da4fb9ebc874fa05c0",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/intake/hours.py",
+    "sha256": "110edfcf6140bfc34ac41ab1a07df9afbe8247529f4780479a0912793edb9c20",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/intake/move_options.py",
+    "sha256": "a3a69f16fcdd6ce92f6ef0f5964fd6ce8e1bb968b21306e7079ce8c8fe26f81d",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/intake/moves.py",
+    "sha256": "37af3192ceb39f8d394209b3a3e37fc2611eae862cb7d65e53166e83b8ac906c",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/intake/review.py",
+    "sha256": "3c0134cf84cb75d015444e482233925d6b4fa8703e38d9b78f8cfce7bd8d5cf8",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/itinerary/itinerary_checks.py",
+    "sha256": "01aa6ac3a5087266eb85e55a450a43a80984987757655c2d5d093b3231f23af4",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/itinerary/move_judge.py",
+    "sha256": "1f5a63a25c07272bc559639054f57f6c0f48c4b0f33057d29590fe5c84261228",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/planning/replan.py",
+    "sha256": "ddc385d83f75c7a5fd7610fe179523cb562d2b15a804a8c91afcb04418f5507c",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/team_hooks/dining_ledger.py",
+    "sha256": "c376d1de069a80d711f730defa2b9fe38ecd7f2fafd3365a0a143a3902d2c39b",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/team_hooks/legs.py",
+    "sha256": "45dc4ed054b6eb3650be7075fe885a3680076e2a0d72fa3b76c60042d3ee4636",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/team_hooks/mobility_shapes.py",
+    "sha256": "6fb09caa4daa255464a8ab89f3f9d6bba208e1b448c682f4c28a9bd3b94a4699",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/team_hooks/similarity.py",
+    "sha256": "f93c81f78b54a25a1995127009896eb7ac1ebfff96c4d47a4c4c925c25d5acc1",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/team_hooks/watch_planners.py",
+    "sha256": "997bc25edf70018ed7ed53629623133fbbd4d9267705e93e87f1c72ace15e287",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/watch/trip_watch.py",
+    "sha256": "9247ec07387af972f0bee133af018db9776e0b6836e1846cf934260e019c1950",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/watch/trip_watch_batch.py",
+    "sha256": "8fd65aa82ed3e25d1bb73c3a9854d6a72ccd3d20f0d4eef5e2c8be2eff18831f",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+    "sha256": "2d9964833bd2b7f21f01db065baa39faf03e7c6dec59fdddc1f89df2abb49844",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/entry/trip_api.py",
+    "sha256": "269dc5bd12124df2b4b8876d778bf72ae7515ef7bdce08c0e1f4602038de144e",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/instances/_shared/conversation_work.py",
+    "sha256": "7d7c83424d5a1dc8d25d3af8d67d4a8390c12a73c44a65e2e39264dbf7b593a4",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/instances/_shared/itinerary_team.py",
+    "sha256": "baf66b6d64beb80c873982ce1f3ee87ac838c914461bef1e7d9e5da4cb3d1cfd",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/instances/dining/ledger.py",
+    "sha256": "f3b6a212300c4e2dc9f73a36f2f65ec41b63a89eb2ccfce4b3d0b8cdd9da0c22",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/instances/dining/team.py",
+    "sha256": "d08d294e8b66f9a6715e3c3d993fbb91cbadb4e454a21dbb06e7bf44be3bccf3",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/modules/live_progress/op_stream.py",
+    "sha256": "7cb3cefad314e1fa7774c53e3b67d0dfb20ac8b5d332a8395e323628f112526e",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/domains/travel_ops/modules/mcp/mcp_server.py",
+    "sha256": "778b4c4b05979b40320b91885dd4d43ae1ae606a2f6a3471e56984ec62192e36",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/infrastructure/a2a/http_transport.py",
+    "sha256": "cc064c4d18b424c01d3f0b3e5e26141908cd1e7948f415b7d25707e6ae341ffb",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/introspection/contract.py",
+    "sha256": "1e39236083c589391bd6a3b61706fe9bd3122227536cfb5f7044a2c82bdc5914",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/presentation/a2a/travel_remote_agent.py",
+    "sha256": "fc55034010458508e7f6fef64a675c4b96b1636b312e2ee33bfdb8e563b2f187",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/presentation/api/app.py",
+    "sha256": "f244b49623fd37c1269e6b84fd1d5f7dfbc68149e6890504b73b1b5ecae73490",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/presentation/api/cases.py",
+    "sha256": "65fe9fe16cf9176f3188743ee768426d791fe7d3497d165c039235b320687009",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/presentation/errors.py",
+    "sha256": "43e8750916f0a16f9c896baa885a7c405bbc9962281ee756c37a353dcdefef76",
+    "manifest_matches": true
+  },
+  {
+    "path": "app/tools/read_tools.py",
+    "sha256": "f67682b4cb4bdd72455c1d4da23c84ca7377aa2f96d6f6a4dbc7026bbff2d2ee",
+    "manifest_matches": true
+  },
+  {
+    "path": "config/guardrails.yaml",
+    "sha256": "703253e484fba45f667118d88e32303dc687cc747790cdae3c0ceff360364db9",
+    "manifest_matches": true
+  },
+  {
+    "path": "config/project.yaml",
+    "sha256": "6b1241bafae9134988fda20eeb6b1ef854115a577a95f88129bba5c4ccb3e175",
+    "manifest_matches": true
+  },
+  {
+    "path": "scripts/run_sweepers.py",
+    "sha256": "1828107df723732a9c66d009b8bdf966eb212a9c64f67666110e96ed586f44d6",
+    "manifest_matches": true
+  }
+]

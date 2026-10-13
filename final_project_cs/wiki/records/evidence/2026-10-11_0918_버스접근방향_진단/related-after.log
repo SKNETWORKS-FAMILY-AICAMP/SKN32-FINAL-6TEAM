@@ -1,0 +1,202 @@
+........................................................................ [ 31%]
+......................................................FF................ [ 63%]
+.FF......F.......F.F..F................................................. [ 95%]
+..........                                                               [100%]
+================================== FAILURES ===================================
+_________________________________ test_golden _________________________________
+
+    def test_golden():
+        _skip_if_no_data()
+        _, got = _run()
+        got.pop("basis")
+        want = json.loads(GOLD.read_text(encoding="utf-8"))
+>       assert _customer_values(got) == want, "예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다"
+E       AssertionError: 예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다
+E       assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:48:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]} != {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:50:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]}
+E         {'left_out': {'dinner_to_lotte_ma...
+E         
+E         ...Full output truncated (3 lines hidden), use '-vv' to show
+
+tests\unit\travel\mobility\test_plan_v1.py:159: AssertionError
+_____________________________ test_contract_keys ______________________________
+
+    def test_contract_keys():
+        _skip_if_no_data()
+        _, got = _run()
+        for it in got["items"]:
+            assert set(it) <= ITEM_KEYS, f"ItemIn 에 없는 키: {set(it) - ITEM_KEYS}"
+        for key, r in got["routes"].items():
+            assert set(r) == ROUTE_KEYS, f"{key}: {set(r) ^ ROUTE_KEYS}"
+            assert r["planned"] in {o["id"] for o in r["options"]}
+            for o in r["options"]:
+                assert OPTION_KEYS <= set(o) <= OPTION_KEYS | OPTION_OPT, f"{key}/{o.get('id')}: {set(o) ^ OPTION_KEYS}"
+                assert isinstance(o["eta_min"], int) and o["eta_min"] > 0
+        bad = [(k, p) for k, p in _walk_keys({"items": got["items"], "routes": got["routes"]}) if k in FORBIDDEN]
+        assert not bad, f"코어로 나가면 안 되는 키: {bad}"
+        mob = [it for it in got["items"] if it["kind"] == "mobility"]
+        for it in mob:
+            assert it["route"] in got["routes"]
+            context = it["detail"]["departure_context"]
+            assert context["schema_version"] == 1 and context["timing_unit"] == "model_minutes"
+            assert datetime.fromisoformat(context["captured_at"]).utcoffset() is not None
+            route = got["routes"][it["route"]]
+            assert set(context["options"]) == {o["id"] for o in route["options"]}
+            for option in route["options"]:
+                saved = context["options"][option["id"]]
+                assert saved["option_id"] == option["id"] and saved["eta_min"] == option["eta_min"]
+                if saved["check"] is not None:
+                    assert saved["check"]["legs"] == saved["legs"]
+>           assert set(context["basis"]) == {"timetable_built_at", "rules_version", "express_version"}
+E           AssertionError: assert {'express_ver...ble_built_at'} == {'express_ver...ble_built_at'}
+E             
+E             Extra items in the left set:
+E             'subway_station_version'
+E             Use -v to get more diff
+
+tests\unit\travel\mobility\test_plan_v1.py:188: AssertionError
+____________________________ test_golden_all_modes ____________________________
+
+    def test_golden_all_modes():
+        """버스 포함 예시(27 손일 「버스 포함 예시 재추출」) — 자전거는 실시간 조회라 뺀다."""
+        _skip_if_no_data()
+        doc = json.loads(IN.read_text(encoding="utf-8"))
+        got = plan(doc["places"], doc["items"], doc.get("party_size"), doc.get("constraints"),
+                   runtime=_runtime(), modes=MODES_ALL)
+        got.pop("basis")
+        want = json.loads(GOLD_ALL.read_text(encoding="utf-8"))
+>       assert _customer_values(got) == want, "버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다"
+E       AssertionError: 버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다
+E       assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:48:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]} != {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:50:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]}
+E         {'left_out': {'dinner_to_lotte_ma...
+E         
+E         ...Full output truncated (3 lines hidden), use '-vv' to show
+
+tests\unit\travel\mobility\test_plan_v1.py:579: AssertionError
+__________________________ test_option_ids_mode_tag ___________________________
+
+    def test_option_ids_mode_tag():
+        """◆선호 — 수단 태그는 id 접두(지하철/버스 구분) · route 안에서 유일 · 버스는 노선번호."""
+        _skip_if_no_data()
+        for got in (_run()[1], _ns_it(modes=MODES_ALL)[1]):
+            for key, r in got["routes"].items():
+                ids = [o["id"] for o in r["options"]]
+                assert len(ids) == len(set(ids)), f"{key}: id 중복 {ids}"
+                for o in r["options"]:
+                    assert o["id"].split("_")[0] in ID_PREFIX, o["id"]
+                    if o["id"].startswith("bus_"):          # id 로 노선번호를 복원하지 않는다(GPT 23 #9) — 접두만 본다
+>                       assert len(o["uses"]) == 1 and o["uses"][0].startswith("버스:"), o
+E                       AssertionError: {'eta_min': 49, 'fare_krw': 1550, 'id': 'bus_subway_1', 'label': '버스 01A 남산서울타워→남산공원.구힐튼호텔 → 4호선 회현→삼각지 → 6호선 삼각지→이태원 — 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용', ...}
+E                       assert (5 == 1)
+E                        +  where 5 = len(['버스:01A', '4호선:회현', '4호선:삼각지', '6호선:삼각지', '6호선:이태원'])
+
+tests\unit\travel\mobility\test_plan_v1.py:592: AssertionError
+_________________________ test_bus_from_place_recheck _________________________
+
+    def test_bus_from_place_recheck():
+        """결정 4 — 버스는 장소에서 바로 찾는다(이중 도보 없음). 출력 출발에서 판정기를 따로 불러 성립 · eta 일치."""
+        _skip_if_no_data()
+        tr = []
+        items, got = _ns_it(modes=MODES_ALL, trace=tr)
+        n = _recheck(got, tr, items, 1, {})
+        assert n == 2, n
+>       chk = next(o["check"] for o in tr[0]["options"] if o["id"] == "bus_405")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+tests\unit\travel\mobility\test_plan_v1.py:715: StopIteration
+____________________________ test_recheck_revives _____________________________
+
+    def test_recheck_revives():
+        """GPT 23 2차 #1·#3 — 역산 출발이 앞 일정과 겹쳐도(더 이르게 나와도) 계획 출발에서 다시 보면 성립하는 후보는 살린다.
+        살린 후보의 eta·편성·요금은 재판정 결과를 따른다(출력 eta = 독립 재판정 eta)."""
+        _skip_if_no_data()
+        from app.domains.travel_ops.instances.mobility.engine import plan as P
+        rt = _runtime()
+        pl = P.Planner(rt, modes=["bus"])
+        arrive = datetime(2026, 9, 29, 15, 0, tzinfo=KST)
+        sdate, by = P.service_day(arrive)
+        o = pl._bus_direct(_NT[0], _NT[1], arrive, sdate, by, {}, True, "rv", pl._walk_limit({}))[0]
+        early = dict(o, _start=o["_start"] - 30, eta_min=o["eta_min"] + 7, _route="살릴 후보", _n=700, _lr=None)
+        orig = P.Planner._bus_direct
+        tr = []
+        try:
+            P.Planner._bus_direct = lambda self, *a, **k: [dict(o), dict(early)]
+            pl.trace = tr
+            nb = datetime.combine(sdate, datetime.min.time(), tzinfo=KST) + timedelta(minutes=o["_start"] - 20)
+            got, why = pl.leg(_NT[0], _NT[1], arrive, {}, True, "rv", not_before_dt=nb)
+        finally:
+            P.Planner._bus_direct = orig
+        assert got is not None, why
+        labels = {x["label"].split(" — ")[0]: x for x in got[0]["options"]}
+>       assert "살릴 후보" in labels, got
+E       AssertionError: ({'from': '남산타워', 'options': [{'eta_min': 47, 'fare_krw': 1500, 'id': 'bus_1', 'label': '버스 01A 남산서울타워→남산도서관.용산도서관 → 버...출발 시각 칸 없음) · 환승 1회 · 소요 49분'}, {'code': 'bus_more', 'label': '그 밖 버스 직행 1개', 'reason': '도보 긴 쪽 — before_prev_end 1'}])
+E       assert '살릴 후보' in {'버스 01A 남산서울타워→남산도서관.용산도서관 → 버스 402 남산도서관.용산도서관→하얏트호텔 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용': {'eta_min': 47,...', 'label': '버스 01A 남산서울타워→남산도서관.용산도서관 → 버스 402 남산도서관.용산도서관→하얏트호텔 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용', ...}}
+
+tests\unit\travel\mobility\test_plan_v1.py:915: AssertionError
+________________________ test_replan_fare_known_locked ________________________
+
+    def test_replan_fare_known_locked():
+        """54 — GPT 23 #8 잠금을 뒤집었다: 지하철·버스 옵션에 요금이 실려 코어 재계획(route_candidates)이 「요금을 몰라」로
+        떨어뜨리지 않는다. 405 무정차 → 지하철이 대안으로 뽑히고 추가 비용 = 1,550 − 1,500 = 50(티머니 실측 환승 +50 과 같은 값)."""
+        _skip_if_no_data()
+        from app.domains.travel_ops.components.planning.replan import choose, route_candidates
+        items, got = _ns_it(modes=MODES_ALL)
+        route = got["routes"]["ns_to_it"]
+        fares = {o["id"]: o.get("fare_krw") for o in route["options"]}
+>       assert fares.get("bus_405") == 1500 and fares.get("subway_1") == 1550, fares
+E       AssertionError: {'bus_subway_1': 1550, 'subway_1': 1550}
+E       assert (None == 1500)
+E        +  where None = <built-in method get of dict object at 0x000001D9100F8800>('bus_405')
+E        +    where <built-in method get of dict object at 0x000001D9100F8800> = {'bus_subway_1': 1550, 'subway_1': 1550}.get
+
+tests\unit\travel\mobility\test_plan_v1.py:943: AssertionError
+_______________________ test_bus_cap_zero_keeps_planned _______________________
+
+    def test_bus_cap_zero_keeps_planned():
+        """GPT 23 2차 #6 — 버스 상한이 0 이어도 계획 버스는 남는다(계획 버스 유지 후 남은 자리를 도보 순)."""
+        _skip_if_no_data()
+        R = _runtime()._v.R["candidates"]["버스_직행_최대"]
+        old = R["value"]
+        try:
+            R["value"] = 0
+            _, got = _ns_it(modes=MODES_ALL)
+        finally:
+            R["value"] = old
+        r = got["routes"]["ns_to_it"]
+>       assert r["planned"] == "bus_405" and "bus_405" in {o["id"] for o in r["options"]}, r
+E       AssertionError: {'from': '남산타워', 'options': [{'eta_min': 49, 'fare_krw': 1550, 'id': 'subway_1', 'label': '4호선 명동→삼각지 → 6호선 삼각지→이태원 — ... → 6호선 삼각지→이태원 — 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용', ...}], 'planned': 'subway_1', 'to': '이태원'}
+E       assert ('subway_1' == 'bus_405'
+E         
+E         - bus_405
+E         + subway_1)
+
+tests\unit\travel\mobility\test_plan_v1.py:1044: AssertionError
+============================== warnings summary ===============================
+..\..\..\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290
+  C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_0918_버스접근방향_진단\related-after.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_golden - AssertionErr...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_contract_keys - Asser...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_golden_all_modes - As...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_option_ids_mode_tag
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_bus_from_place_recheck
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_recheck_revives - Ass...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_replan_fare_known_locked
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_bus_cap_zero_keeps_planned
+8 failed, 218 passed, 6 deselected, 1 warning in 181.83s (0:03:01)
+Exception ignored in: <function Console.__del__ at 0x000001D9639E3CE0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

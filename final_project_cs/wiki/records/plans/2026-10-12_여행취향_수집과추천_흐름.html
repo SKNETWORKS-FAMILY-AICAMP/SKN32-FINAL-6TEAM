@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>여행 취향 수집과 추천 흐름 계획</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#fbfcfd;--ink:#161c28;--muted:#6b7488;--rule:#dbe0ea;--accent:#a8720c;--accent-tint:rgba(168,114,12,.10)}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.65}main{max-width:1040px;margin:auto;padding:40px 24px}h1{font-family:"Instrument Serif","Noto Serif KR",serif;font-size:32px;font-weight:400;line-height:1.4;margin:8px 0 16px}h2{font-size:24px;font-weight:600;margin:40px 0 8px}.eyebrow{color:var(--accent);font-size:12px;font-weight:600}.intro{max-width:760px;margin:0 0 24px}.sources{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:16px 0;margin:24px 0}figure{margin:0;overflow-x:auto}svg{width:100%;min-width:620px;max-width:840px;height:auto;display:block}svg text{font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif;fill:var(--ink);font-size:16px;font-weight:500}svg .arrow{fill:none;stroke:var(--muted);stroke-width:1.2;marker-end:url(#collect-arrow)}svg .node{fill:white;stroke:var(--ink);stroke-width:1.2}svg .focal{fill:var(--accent-tint);stroke:var(--accent)}svg .label{font-size:12px;fill:var(--muted)}svg .legend{font-size:12px;fill:var(--muted)}figcaption{max-width:800px;color:var(--muted);font-size:14px;margin:8px 0 24px}footer{border-top:1px solid var(--rule);padding-top:16px;color:var(--muted);font-size:12px;margin-top:32px}@media(max-width:600px){main{padding:24px 16px}h1{font-size:28px}}@media print{main{padding:16px;max-width:none}figure{overflow:visible}svg{min-width:0}section{break-inside:avoid}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">triPilot · 2026-10-12 · 구현 전 설계안</div>
+<h1>취향은 기억하고, 일정 변경 허가는 따로 확인합니다</h1>
+<p class="intro">“난 산이 좋아”는 산 풍경 선호의 근거입니다. 등산을 좋아한다거나 지금 일정을 바꾸라는 뜻으로 넓히지 않습니다. 아래는 제안한 기능 흐름이며 현재 운영 완료 그림이 아닙니다.</p>
+<p class="sources"><strong>다섯 입력 경로</strong><br>현재 여행계획서 · 이전 여행계획서 · 고객 채팅 · 필요한 미응답 설문 · 고객의 일정 수정·추가·삭제·선택</p>
+<section>
+<h2>입력 한 건에서 취향을 파악할 때</h2>
+<figure>
+<svg viewBox="280 0 660 656" role="img" aria-labelledby="collect-title collect-desc">
+<title id="collect-title">입력의 의미와 저장 허용 범위를 확인하는 흐름</title>
+<desc id="collect-desc">입력에서 고객의 취향과 질문을 나누고 저장 가능한 근거만 기록하며, 저장 상태를 알린 뒤 이번 입력 처리를 마칩니다.</desc>
+<defs>
+<marker id="collect-arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#6b7488"/></marker>
+<marker id="collect-arrow-accent" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#a8720c"/></marker>
+<marker id="collect-arrow-link" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#2f5bd8"/></marker>
+</defs>
+<path class="arrow" d="M480 56 V88"/>
+<path class="arrow" d="M480 152 V176"/>
+<path class="arrow" d="M608 232 H680"/>
+<path class="arrow" d="M480 288 V328"/>
+<path class="arrow" d="M480 384 V424"/>
+<path class="arrow" d="M800 264 V448 Q800 456 792 456 H648"/>
+<path class="arrow" d="M480 488 V528"/>
+<rect x="620" y="204" width="48" height="20" fill="#fbfcfd"/><text class="label" x="644" y="220" text-anchor="middle">예</text>
+<rect x="492" y="296" width="136" height="20" fill="#fbfcfd"/><text class="label" x="500" y="312">아니요·근거 없음</text>
+<rect class="node" x="352" y="16" width="256" height="40" rx="20"/><text x="480" y="44" text-anchor="middle">시작: 입력 한 건 수신</text>
+<rect class="node" x="312" y="88" width="336" height="64" rx="8"/><text x="480" y="116" text-anchor="middle">취향·잡담·질문·요청 분리</text><text class="label" x="480" y="140" text-anchor="middle">누구의 말인지 · 어느 범위인지 확인</text>
+<path class="node focal" d="M480 176 L608 232 L480 288 L352 232Z"/><text x="480" y="228" text-anchor="middle">저장 가능한</text><text x="480" y="252" text-anchor="middle">본인 근거인가?</text>
+<rect class="node" x="680" y="200" width="240" height="64" rx="8"/><text x="800" y="228" text-anchor="middle">허용 범위에 기록</text><text class="label" x="800" y="252" text-anchor="middle">성공·실패 상태를 반환</text>
+<rect class="node" x="312" y="328" width="336" height="56" rx="8"/><text x="480" y="352" text-anchor="middle">장기 취향으로 저장하지 않음</text><text class="label" x="480" y="376" text-anchor="middle">허용된 이번 응답·여행 범위만 사용</text>
+<rect class="node" x="312" y="424" width="336" height="64" rx="8"/><text x="480" y="452" text-anchor="middle">질문에 답하고 저장 상태 안내</text><text class="label" x="480" y="476" text-anchor="middle">취향만으로 일정 변경은 실행하지 않음</text>
+<rect class="node" x="352" y="528" width="256" height="40" rx="20"/><text x="480" y="556" text-anchor="middle">종료: 이번 입력 처리 완료</text>
+<line x1="32" y1="608" x2="928" y2="608" stroke="#dbe0ea"/>
+<text class="legend" x="312" y="636">타원: 시작·종료　 사각형: 처리　 마름모: 판단　 선의 글: 조건</text>
+</svg>
+<figcaption>저장 가능 여부에는 본인 발언, 근거의 명확성, 저장 범위 허용, 민감정보 정책을 함께 확인합니다. 저장에 실패하면 기억했다고 말하지 않습니다. 다음 입력은 고객 메시지나 새 일정 편집이 들어올 때 시작합니다.</figcaption>
+</figure>
+</section>
+<section>
+<h2>이후 가볼 곳을 추천할 때</h2>
+<figure>
+<svg viewBox="280 0 660 672" role="img" aria-labelledby="recommend-title recommend-desc">
+<title id="recommend-title">유효한 취향을 추천에 쓰고 일정 적용과 분리하는 흐름</title>
+<desc id="recommend-desc">추천 요청을 받으면 먼저 후보의 운영 조건을 확인하고 유효한 취향이 있을 때만 정해진 순위 기준에 반영하며, 추천 이유를 보여 주고 일정을 바꾸지 않은 채 마칩니다.</desc>
+<defs>
+<marker id="recommend-arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#6b7488"/></marker>
+<marker id="recommend-arrow-accent" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#a8720c"/></marker>
+<marker id="recommend-arrow-link" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#2f5bd8"/></marker>
+</defs>
+<g style="--unused:0" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#recommend-arrow)">
+<path d="M480 56 V88"/><path d="M480 152 V192"/><path d="M608 248 H680"/><path d="M480 304 V344"/><path d="M480 400 V440"/><path d="M800 280 V464 Q800 472 792 472 H648"/><path d="M480 504 V544"/>
+</g>
+<rect x="620" y="220" width="48" height="20" fill="#fbfcfd"/><text class="label" x="644" y="236" text-anchor="middle">있음</text>
+<rect x="492" y="312" width="104" height="20" fill="#fbfcfd"/><text class="label" x="500" y="328">없음·사용 불가</text>
+<rect class="node" x="352" y="16" width="256" height="40" rx="20"/><text x="480" y="44" text-anchor="middle">시작: 추천 요청 수신</text>
+<rect class="node" x="312" y="88" width="336" height="64" rx="8"/><text x="480" y="116" text-anchor="middle">먼저 갈 수 있는 후보 검증</text><text class="label" x="480" y="140" text-anchor="middle">영업·이동·안전·명시 조건 우선</text>
+<path class="node focal" d="M480 192 L608 248 L480 304 L352 248Z"/><text x="480" y="244" text-anchor="middle">유효하고 쓸 수 있는</text><text x="480" y="268" text-anchor="middle">취향 근거가 있는가?</text>
+<rect class="node" x="680" y="216" width="240" height="64" rx="8"/><text x="800" y="244" text-anchor="middle">허용된 순위에 취향 반영</text><text class="label" x="800" y="268" text-anchor="middle">최신 명시 조건을 우선</text>
+<rect class="node" x="312" y="344" width="336" height="56" rx="8"/><text x="480" y="368" text-anchor="middle">일반 기준으로 추천</text><text class="label" x="480" y="392" text-anchor="middle">필요한 미지 항목만 따로 질문</text>
+<rect class="node" x="312" y="440" width="336" height="64" rx="8"/><text x="480" y="468" text-anchor="middle">추천 결과·실제 사용 근거 표시</text><text class="label" x="480" y="492" text-anchor="middle">후보가 없거나 검증 실패면 그 상태 안내</text>
+<rect class="node" x="320" y="544" width="320" height="40" rx="20"/><text x="480" y="572" text-anchor="middle">종료: 추천 응답 · 일정 적용 없음</text>
+<line x1="32" y1="624" x2="928" y2="624" stroke="#dbe0ea"/>
+<text class="legend" x="312" y="652">타원: 시작·종료　 사각형: 처리　 마름모: 판단　 선의 글: 조건</text>
+</svg>
+<figcaption>이 그림은 추천 요청 한 회차입니다. 실제 변경 요청이나 감시 사건은 기존 일정 변경 경로에서 별도로 처리합니다. 저장한 취향이 없거나 만료·삭제됐으면 개인화했다고 말하지 않습니다.</figcaption>
+</figure>
+</section>
+<footer>그림 형식: flowchart · 문서용 너비 660 · 각 7개 노드 · 프로젝트 acop 프로필 · 정적 HTML/SVG<br>세부 데이터·오류·동의·삭제 규칙은 함께 작성한 구현 계획서에 있습니다. 원격 배포·실제 고객 데이터 수집은 수행하지 않았습니다.</footer>
+</main></body>
+</html>

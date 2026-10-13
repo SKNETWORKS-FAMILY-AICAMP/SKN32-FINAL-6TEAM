@@ -1,0 +1,16 @@
+{
+  "suite": "H",
+  "prepared": 1316,
+  "expected": 1316,
+  "source_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "request_sha256": "afc1ce20356faefcbec931def7ff7b96561326a9233df2154aa89787d228b682",
+  "gold_in_requests": false,
+  "input_contract": "travel-item-choice-v1",
+  "official_render_validation": true,
+  "wording": "served",
+  "temperature": 1.65,
+  "rotations": 1,
+  "tokenizer_label_boundaries_verified": false,
+  "gpu_model_measurement": false,
+  "limitation": "Template/schema check only; actual tokenizer and GPU compatibility pending"
+}

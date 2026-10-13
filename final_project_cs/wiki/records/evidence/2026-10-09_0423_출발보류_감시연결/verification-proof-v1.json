@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-10-09T04:39:49.744297+09:00",
+  "regression": {
+    "passed": 788,
+    "total": 788,
+    "deselected": 209,
+    "parts": [
+      {
+        "part": 1,
+        "passed": 307,
+        "deselected": 19
+      },
+      {
+        "part": 2,
+        "passed": 256,
+        "deselected": 11
+      },
+      {
+        "part": 3,
+        "passed": 219,
+        "deselected": 179
+      },
+      {
+        "part": 4,
+        "passed": 5,
+        "deselected": 0
+      }
+    ],
+    "separate_assembly_passed": 1
+  },
+  "related_passed": 24,
+  "related_total": 24,
+  "local_db": {
+    "conditions": 2,
+    "successful_replan_conditions": 1,
+    "already_announced_conditions": 1,
+    "repeated_ticks": 10,
+    "cases": 1,
+    "itinerary_applications": 1,
+    "change_notices": 1,
+    "new_departure_notices": 1
+  },
+  "report": "2026-10-09_0439_출발보류_감시연결과_현재경로_재조정_검증.md",
+  "prior_hashes_matched": 8,
+  "source_hashes": [
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\components\\itinerary\\itinerary.py",
+      "sha256": "0c54566aadbc32b1b1beaf891451079e57b0c24cea58df3ec0c23ce88096b332"
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\components\\itinerary\\itinerary_changes.py",
+      "sha256": "e8ebb982a96cdb2e72fc98b050cf9318159d2e00587f5d6ca83a3076680db51a"
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_watch_cases.py",
+      "sha256": "3afb435095fe5449b75b46c704a5f47ee3c6c922317106205d2e636a8d0a2453"
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\team.py",
+      "sha256": "bb4f52559af260f80cc18eb0c5f146f799a761286da220f72d892848435d686c"
+    },
+    {
+      "file": "final_project_cs\\scripts\\run_sweepers.py",
+      "sha256": "90c7cff8e52854015acf5debaac66b78427ef6181bf98677495d0ef59bb242c8"
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\test_departure_watch_v1.py",
+      "sha256": "ff17dc554b15ec1e1b991692d3c294672ee53912c29c4f4a4a877e143a2b5901"
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\test_departure_replan_v1.py",
+      "sha256": "fcbf3a0bf991d4af5e7ae5549ef203e644319aff69b89a34ad619f7c123e3c95"
+    },
+    {
+      "file": "final_project_cs\\tests\\scenario\\test_departure_watch_db_v1.py",
+      "sha256": "c959813ee2861e2e9e7a24b280aa987432e13d01f6fe1ec6838e4c75b4206dc8"
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\test_departure_watch_assembly_v1.py",
+      "sha256": "4c00806e57858e6c42a6086ea047ac58ef741aac6e2f57e91e93e2736a129a23"
+    },
+    {
+      "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v17.py",
+      "sha256": "00660f48ea73e845d67c32c7dbce259506a06d49e5078b8a29dc210985412c52"
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_reminders.py",
+      "sha256": "ddf6f92659701b88a403a71997e8b3e5b3f03e3522021050790e3f3327695d1d"
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\components\\watch\\departure_revalidation.py",
+      "sha256": "ce342e2d392f62b60fa11df2e16413695a428b03ad5bb3ac9866df7f25ef4a0b"
+    }
+  ],
+  "data_hashes": [
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+    }
+  ],
+  "new_web_route_observations": 0,
+  "actual_trip_payment_measurements": 0,
+  "html_browser_render_checked": false
+}

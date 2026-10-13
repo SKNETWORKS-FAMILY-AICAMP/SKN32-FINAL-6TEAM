@@ -28,6 +28,7 @@ from app.domains.travel_ops.components.itinerary.itinerary_checks import Violati
 from app.domains.travel_ops.components.watch.trip_watch_batch import Outcome, WatchBatch, digest
 
 from ..helpers import FakeTools, pack, task
+from ..execution_plan_fixture import fixture_plan
 
 KST = ZoneInfo("Asia/Seoul")
 ALLOWED = ActivityTeam.manifest.allowed_tools
@@ -64,12 +65,13 @@ def _item(seq, kind, title, hour, place, minutes=60, **detail):
 
 
 def _world(items, candidates, reports, *, constraints=None):
-    trip = {"trip_id": str(uuid4()), "version": 1, "customer_id": str(uuid4()), "constraints": constraints or {}, "party_size": 2}
+    trip = {"trip_id": str(uuid4()), "version": 1, "customer_id": str(uuid4()), "constraints": constraints if constraints is not None else {
+        "survey": {"on_disruption": "replace"}, "survey_answered": ["on_disruption"]}, "party_size": 2}
     places = [i.place for i in items if i.place] + list(candidates)
     values = {"read.itinerary": {"trip": trip, "items": [item_to_dict(i) for i in items]}, "read.place_catalog": places}
     entries = [{"item_id": str(i.item_id), "base_id": f"watch:x:{i.item_id}:fp", "detected": "place", "issue_code": "activity_other",
                 "categories": ["traffic_control"]} for i in items if str(i.place["place_id"]) in reports]
-    context = pack("activity", state={"subject_ref": {"kind": "trip", "id": trip["trip_id"]}, "trigger_source": "schedule",
+    context = pack("activity", state={"customer_id": trip["customer_id"], "subject_ref": {"kind": "trip", "id": trip["trip_id"]}, "trigger_source": "schedule",
                                       "trigger": {"batch": entries, "at": AT.isoformat(), "detected": "batch"}})
     tools = _Tools(values, reports)
     return tools, task("activity", "activity.itinerary", context, ALLOWED)
@@ -77,7 +79,9 @@ def _world(items, candidates, reports, *, constraints=None):
 
 async def _run(items, candidates, reports, **kw):
     tools, work = _world(items, candidates, reports, **kw)
-    return await ActivityTeam(tools).execute(work), tools
+    from app.composition import build_registry, build_team_executor
+    registry = build_registry(tools=tools, llm=object())
+    return await build_team_executor(registry, execution_planner=fixture_plan).execute(work), tools
 
 
 def _replacements(result):
@@ -146,14 +150,14 @@ async def test_when_nothing_can_be_changed_it_escalates_with_one_token_per_unsol
 
 
 @pytest.mark.asyncio
-async def test_a_failed_source_closes_the_case_as_retryable_and_is_not_announced():
+async def test_a_failed_source_closes_the_case_as_retryable_and_is_marked_for_guidance():
     a1, a2 = _place("가나다 전망대", 0), _place("마바사 정원", 1)
     first, second = _item(1, "activity", "전망대 관람", 10, a1), _item(2, "activity", "정원 산책", 13, a2)
     result, _ = await _run([first, second], [], {a1["place_id"]: FATAL, a2["place_id"]: ROAD})
 
     assert result.outcome == "escalated" and result.failure_code == "fatal_source_failure"      # 다시 열 수 있는 사유
     assert f"outcome:{second.item_id}:no_alternate" in result.warnings                          # 못 푼 것은 표지가 있다(감시가 알린다)
-    assert not any(str(first.item_id) in w for w in result.warnings if w.startswith("outcome:"))  # 소스 실패 항목은 알리지 않는다
+    assert f"outcome:{first.item_id}:source_failed" in result.warnings
 
 
 @pytest.mark.asyncio
@@ -253,7 +257,7 @@ async def test_an_exception_in_one_item_does_not_block_the_others_and_that_item_
     names, arguments = _replacements(result)
     assert names == {"아자 박물관"} and arguments["batch"]["retry"] == [str(second.item_id)]       # 식당은 다시 열 항목이다
     assert any("점심 식사" in w and "error" in w and "RuntimeError" in w for w in result.warnings)  # 운영자가 볼 수 있게 남는다
-    assert "점심" not in result.answer                                                          # 고객에게는 알리지 않는다
+    assert "점심 식사" in result.answer and "오류 코드: RuntimeError" in result.answer
 
 
 def test_a_move_that_was_believed_replaced_but_is_still_there_after_the_change_was_dropped_is_retried(monkeypatch):

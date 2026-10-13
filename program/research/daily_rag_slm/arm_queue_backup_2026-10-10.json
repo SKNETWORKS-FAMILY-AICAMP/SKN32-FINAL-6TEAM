@@ -1,0 +1,10 @@
+{
+  "backup_files": [
+    "final_project_cs\\wiki\\operations\\_backup\\2026-10-10_011740_server_local_queue\\arm-develop-cd.md",
+    "final_project_cs\\wiki\\_backup\\2026-10-10_011740_server_local_queue\\log.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-10_011740_server_local_queue\\index.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-10_011740_server_local_queue\\scheduled_instructions_2026-10-08.json"
+  ],
+  "script_backup": "final_project_cs/deploy/arm/_backup/2026-10-10_011009_six_hour_queue",
+  "remote_units_backup": "control/_backup/<UTC timestamp>_queue_units"
+}

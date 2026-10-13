@@ -1,0 +1,55 @@
+{
+  "created_at": "2026-10-09T10:14:05.587814+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1009_지하철응답_빈값오인/seoul_subway.py",
+      "sha256": "d404396921c95aeeb5c641e5e58568c8486db952589efaca7b38c853b7018ec6"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1009_지하철응답_빈값오인/mobility.md",
+      "sha256": "915523405b271a370f412adf50817a3a98854dc346b5e8eef2859b78f6995ed9"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/test_subway_identity_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/_backup/2026-10-09_1009_지하철응답_빈값오인/test_subway_identity_v1.py",
+      "sha256": "3d5d9c6f72d508e664fbc66236dbe92deb584b7498e0c6e6f475c47fb9007e62"
+    },
+    {
+      "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1009_지하철응답_빈값오인.md",
+      "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_1014_응답오인_상태갱신/2026-10-09_1009_지하철응답_빈값오인.md",
+      "sha256": "3301abbb42f3b5a6da01fa796c7fa9bb805aa40563c1e1ea644d3a5960eb5eb6"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1014_응답오인_결과기록/mobility.md",
+      "sha256": "3d8ae8ad575d1420f56db9fa96430acfad65dfc531efaf76515af7823327c8a9"
+    },
+    {
+      "source": "datasets/mobility/README.md",
+      "backup": "datasets/mobility/_backup/2026-10-09_1014_공개지하철샘플_기록/README.md",
+      "sha256": "787b2bddd094d491ecf75c392b63d35b6ffdde1fde438741d45f67decdbb4344"
+    },
+    {
+      "source": "datasets/mobility/REPORT.md",
+      "backup": "datasets/mobility/_backup/2026-10-09_1014_공개지하철샘플_기록/REPORT.md",
+      "sha256": "167bc01b64d67c506c21f0926afc2d83ed155f0c3f280a65d2a4c107cd382f7d"
+    },
+    {
+      "source": "final_project_cs/wiki/records/reports/2026-10-09_1014_지하철_빈결과오인과_보관회복_검증.md",
+      "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-09_1014_응답오인_발행경로수정/2026-10-09_1014_지하철_빈결과오인과_보관회복_검증.md",
+      "sha256": "06ed2dc038e64beff52d4808357ff583237f8b78be374642fe1be3009a560e04"
+    },
+    {
+      "source": ".tmp/mobility_complete_20261008/publish_subway_envelope_v1.py",
+      "backup": ".tmp/mobility_complete_20261008/_backup/2026-10-09_1014_응답오인_발행경로수정/publish_subway_envelope_v1.py",
+      "sha256": "4702eaa13fc4d0f6d92642ab18731bfe24aca9836aa346d42d4a4509fe3d4f57"
+    },
+    {
+      "source": "final_project_cs/wiki/records/evidence/2026-10-09_1009_지하철응답_빈값오인/publish_subway_envelope_v1.py",
+      "backup": "final_project_cs/wiki/records/evidence/2026-10-09_1009_지하철응답_빈값오인/_backup/2026-10-09_1014_응답오인_발행경로수정/publish_subway_envelope_v1.py",
+      "sha256": "4702eaa13fc4d0f6d92642ab18731bfe24aca9836aa346d42d4a4509fe3d4f57"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___________ test_a_change_request_still_answers_with_what_happened ____________
+tests\e2e\test_web_api.py:392: in test_a_change_request_still_answers_with_what_happened
+    body = _say(client, me["user_key"], trip["trip_id"], "�Ĵ翡 30�� ���� �� ���ƿ�", "late-1", at=at)
+                                        ^^^^^^^^^^^^^^^
+E   KeyError: 'trip_id'
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_api.py::test_a_change_request_still_answers_with_what_happened
+1 failed in 3.13s

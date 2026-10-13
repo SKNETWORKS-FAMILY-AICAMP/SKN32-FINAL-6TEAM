@@ -1,0 +1,27 @@
+[
+  {
+    "path": "datasets/mobility/scripts/tago_subway_collect.py",
+    "backup": "datasets\\mobility\\scripts\\_backup\\2026-10-09_1357_지하철_수집실패_완료오인_수정\\tago_subway_collect.py",
+    "sha256": "8e938cba8e9ee7ffee4ceb2188d14cc9b6d5014172942326182bbe200725e444"
+  },
+  {
+    "path": "datasets/mobility/scripts/tago_retry_empty.py",
+    "backup": "datasets\\mobility\\scripts\\_backup\\2026-10-09_1357_지하철_수집실패_완료오인_수정\\tago_retry_empty.py",
+    "sha256": "e1217443887fcb884a5994ffd4a203a910287af0f8b7850b69f67e2c1895fb6d"
+  },
+  {
+    "path": "datasets/mobility/scripts/README.md",
+    "backup": "datasets\\mobility\\scripts\\_backup\\2026-10-09_1357_지하철_수집실패_완료오인_수정\\README.md",
+    "sha256": "984ea0648ceb99a5a4eebf18d6288fb69c300f7da3c5d97b576776331583d107"
+  },
+  {
+    "path": "datasets/mobility/REPORT.md",
+    "backup": "datasets\\mobility\\_backup\\2026-10-09_1357_지하철_수집실패_완료오인_수정\\REPORT.md",
+    "sha256": "75c1cfe0ce0653d1159d24f885fed6ecb1eb3a2013cfe308b4e1c4d0c243e420"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs\\wiki\\teams\\_backup\\2026-10-09_1357_지하철_수집실패_완료오인_수정\\mobility.md",
+    "sha256": "d2a414cc0a1bb65ecae8247b3d23eb320941734de1bd52b148403c21e2b51e53"
+  }
+]

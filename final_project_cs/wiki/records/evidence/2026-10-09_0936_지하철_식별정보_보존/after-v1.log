@@ -1,0 +1,7 @@
+.................................................................        [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_0936_지하철_식별정보_보존\after-v1.xml -
+65 passed in 2.17s
+Exception ignored in: <function Console.__del__ at 0x00000212D7055DA0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

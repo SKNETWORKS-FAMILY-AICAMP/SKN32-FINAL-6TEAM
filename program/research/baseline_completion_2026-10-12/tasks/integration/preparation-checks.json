@@ -1,0 +1,98 @@
+{
+  "captured_at_kst": "2026-10-12T04:48:17.319447+09:00",
+  "scope": "통합 준비 산출물만. 제품 기능·실환경 인수 시험 아님",
+  "checks": [
+    {
+      "name": "v12-outline 원문 해시",
+      "passed": true
+    },
+    {
+      "name": "v12-outline Markdown·HTML 본문 일치",
+      "passed": true
+    },
+    {
+      "name": "v12-outline HTML ID 중복",
+      "passed": true
+    },
+    {
+      "name": "baseline-outline 원문 해시",
+      "passed": true
+    },
+    {
+      "name": "baseline-outline Markdown·HTML 본문 일치",
+      "passed": true
+    },
+    {
+      "name": "baseline-outline HTML ID 중복",
+      "passed": true
+    },
+    {
+      "name": "review-checklist 원문 해시",
+      "passed": true
+    },
+    {
+      "name": "review-checklist Markdown·HTML 본문 일치",
+      "passed": true
+    },
+    {
+      "name": "review-checklist HTML ID 중복",
+      "passed": true
+    },
+    {
+      "name": "integration-table 원문 해시",
+      "passed": true
+    },
+    {
+      "name": "integration-table Markdown·HTML 본문 일치",
+      "passed": true
+    },
+    {
+      "name": "integration-table HTML ID 중복",
+      "passed": true
+    },
+    {
+      "name": "로컬 링크 목적지",
+      "passed": true,
+      "checked": 20,
+      "failed": []
+    },
+    {
+      "name": "산출물 접속값 패턴 검사",
+      "passed": true,
+      "scope": [
+        "v12-outline.md",
+        "v12-outline.html",
+        "baseline-outline.md",
+        "baseline-outline.html",
+        "review-checklist.md",
+        "review-checklist.html",
+        "integration-table.md",
+        "integration-table.html",
+        "audit_preparation.py",
+        "build_preparation_html.py",
+        "capture.py",
+        "record_common_fix_result.py",
+        "record_preparation.py",
+        "record_wiki_review.py",
+        "review_wiki_handoff.py",
+        "run_common_fix_checks.py",
+        "finalization-flow.html"
+      ],
+      "findings_without_values": [],
+      "allowed_private_loopback_occurrences": 6,
+      "limit": "IPv4·웹훅 경로·OpenAI 프로젝트 키 패턴 검사. 사용자 규칙의 RFC1918 사설·루프백은 허용. 모든 종류의 비밀값 탐지를 보장하지 않음"
+    },
+    {
+      "name": "그림 접근성·단일 파일 검사",
+      "passed": true,
+      "command": "python -B <diagram-design>/scripts/self_check.py <integration>/finalization-flow.html",
+      "stdout": "OK C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\finalization-flow.html",
+      "stderr": ""
+    }
+  ],
+  "passed": 15,
+  "failed": 0,
+  "total": 15,
+  "known_requirement_conflict": "INT-W19-001",
+  "backup": "program/research/baseline_completion_2026-10-12/tasks/integration/_backup/2026-10-12_044817_preparation_audit"
+}

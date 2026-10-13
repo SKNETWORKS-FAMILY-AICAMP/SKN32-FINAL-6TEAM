@@ -154,11 +154,22 @@ def test_a_ledger_hit_feeds_the_near_hint_for_the_next_items():
     original = place_lookup.find_place_by_name
     place_lookup.find_place_by_name = lambda conn, name, **kw: shop if name == "토속촌삼계탕" else None   # near 를 받는다(2026-10-07)
     try:
-        lookup = trip_api._dining_lookup(ctx)
-        lookup._connect = lambda: contextlib.nullcontext()
-        lookup.find("없는집")
-        assert ctx.get_near() is None
-        lookup.find("토속촌삼계탕")
+        from app.core.registry import TeamRegistry
+        from app.core.service_bindings import BindingTable, bind_services
+        from tests.unit.core.test_plugin_availability import Team
+
+        original_connect = trip_api.get_connection
+        trip_api.get_connection = lambda: contextlib.nullcontext()
+        try:
+            table = BindingTable({("dining_ledger", "lookup_factory"): place_lookup.LedgerPlaceLookup},
+                                 TeamRegistry([Team(team_id="dining")]), "synthetic-place-test")
+            with bind_services(table):
+                lookup = trip_api._dining_lookup(ctx)
+                lookup.find("없는집")
+                assert ctx.get_near() is None
+                lookup.find("토속촌삼계탕")
+        finally:
+            trip_api.get_connection = original_connect
     finally:
         place_lookup.find_place_by_name = original
 

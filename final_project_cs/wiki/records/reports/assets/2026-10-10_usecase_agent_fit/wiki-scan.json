@@ -1,0 +1,2183 @@
+{
+  "date": "2026-10-10",
+  "excluded": [
+    "records",
+    "_backup",
+    "_migration",
+    "log.md"
+  ],
+  "files": [
+    {
+      "path": "final_project_cs/wiki/actions/action-proposal.md",
+      "lines": 195,
+      "matches": [
+        {
+          "line": 131,
+          "text": "★**`read.*` 와 나머지가 성질이 다르다.** `read.*` 는 Context Broker 가 부르는 조회이고, 나머지는 **제안의 종류**다. Team 은 `read.*` 를 직접 호출하지 않는다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/actions/approval.md",
+      "lines": 226,
+      "matches": [
+        {
+          "line": 22,
+          "text": "`[실측 2026-09-10]` 골든셋 기대 라벨 중 **`wait_for_approval` 이 15/72 = 20.8%** 다(`eval/datasets/golden.jsonl` 의 `expected_next_action`). ★**이건 정답 라벨의 분포이지 실제로 사람에게 넘어간 비율이 아니다** — 운영에서 잰 인계율은 `[미확보]`. 그리고 **그 72건은 쇼핑몰 시나리오**다 — 여행 골든셋은 0건이라 여행에서 몇 %가 승인으로 가는지는 아직 모른다. `[정정]` 이 줄은 분모 없이 「21%가 사람에게 간다」로 적혀 있었다."
+        },
+        {
+          "line": 182,
+          "text": "`[실측]` [DoD-18 evidence](../records/evidence/DoD-18_UI_시나리오_종단표시.md). 승인 버튼을 실제로 눌렀더니 `HTTP 409 verification_failed` — 사유가 `\"evidence: 선언되지 않은 필드다\"`였다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/actions/evidence-check.md",
+      "lines": 244,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/actions/idempotency.md",
+      "lines": 161,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/actions/index.md",
+      "lines": 99,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/actions/outbox.md",
+      "lines": 121,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/actions/tool-gateway.md",
+      "lines": 141,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/context/context-broker.md",
+      "lines": 156,
+      "matches": [
+        {
+          "line": 40,
+          "text": "아래는 그 전 서술이다 — **Team은 read 도구를 직접 호출하지 않는다.** 부족하면 `need_more_context`로 Controller에 요청한다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/context/context-budget.md",
+      "lines": 147,
+      "matches": [
+        {
+          "line": 123,
+          "text": "`[미확보]` **`history_detail`과 `duplicate_tool_facts` 제거는 한 번도 출력에 나타난 적이 없다.** 그 섹션이 예산을 안 넘는 fixture였기 때문이다. 위 `eviction_order` 네 단계 중 **앞 둘만 관측됐고 뒤 둘은 코드에만 있다.** 운영 규모의 Case state·history·RAG 조합에서의 절삭도 관측 밖이다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/context/corpus-authoring.md",
+      "lines": 124,
+      "matches": [
+        {
+          "line": 74,
+          "text": "**이것들이 구조적으로 겹친다.** 그래서 **길이·공통 6-gram·14자 공통 문구·시나리오 probe 를 함께** 확인한다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/context/graph-retrieval.md",
+      "lines": 79,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/context/index.md",
+      "lines": 92,
+      "matches": [
+        {
+          "line": 17,
+          "text": "★`[정정 2026-09-10]` **여행 Team 은 read 도구를 `_read()` 로 직접 부른다**(허용·예산은 `ReadToolbox.call()` 이 강제). 아래 설계와 다르고 어느 쪽이 맞는지 안 정해졌다 → [../teams/team-boundary.md](../teams/team-boundary.md) §2. 그 전 서술: **Team은 read 도구를 직접 호출하지 않는다.** Context Broker가 `required_context`에 따라 읽어서 `ContextPack`으로 만들어 준다."
+        },
+        {
+          "line": 61,
+          "text": "   └─ 예산 안에서 조합       context-budget.md"
+        },
+        {
+          "line": 81,
+          "text": "**프로덕션은 Broker가 예산 안에서 조합하므로 안전하다.** 문제는 Broker를 우회한 스크립트였다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/context/memory.md",
+      "lines": 118,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/context/rag-retrieval.md",
+      "lines": 174,
+      "matches": [
+        {
+          "line": 126,
+          "text": "`[실측]` 시나리오 질의로 확인했다. \"배송완료 미수령 → doc_01\", \"반품 수량 초과 → doc_14\"가 `top_k=8` 안에서 검색된다."
+        },
+        {
+          "line": 155,
+          "text": "**하나 — 테스트가 옛 도메인 질의로 하드코딩돼 있었다.** 구독/청구 도메인 질의라 쇼핑몰 코퍼스에서 붉었다. 쇼핑몰 시나리오로 재작성했다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/context/travel-corpus.md",
+      "lines": 110,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/data/index.md",
+      "lines": 95,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/data/migrations.md",
+      "lines": 300,
+      "matches": [
+        {
+          "line": 217,
+          "text": "`[실측]` `054_user_activity_events.sql` — **사용자가 무엇을 골랐나 · 눌렀나**를 한 줄씩 쌓는 append-only 표(`event_id` · `tenant_id` · `trip_id` · `customer_id` · `kind` · `payload_json` · `created_at`). 처음 쓰는 곳은 재난 뒤 다시 시작할 때의 선택(`kind=safety_recovery_choice`). 자유 문장은 넣지 않는다(채팅은 `trip_chat_turns` 가 가린 뒤 저장). 외래키가 없어 여행 삭제 때 `trip_delete._PURGE` 로 지운다(채팅 기록과 같은 기본값 — 비식별로 남길지는 사용자 결정 대기). 다시 돌려도 안전하다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/fields.md",
+      "lines": 263,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/index.md",
+      "lines": 141,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/data/tenancy.md",
+      "lines": 98,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-001-composer-ui-removal.md",
+      "lines": 84,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-002-finetuned-model-not-adopted.md",
+      "lines": 117,
+      "matches": [
+        {
+          "line": 73,
+          "text": "| 2026-08-31 | **84건** (실주문 68건 추가) | **v6에서 첫 유효 출력.** 그러나 시나리오 획일성 |"
+        },
+        {
+          "line": 79,
+          "text": "`[실측]` 원인이 특정됐다 — **draft 동질성의 진짜 원인**은 데이터 양이 아니라 시나리오 다양성이었다."
+        },
+        {
+          "line": 102,
+          "text": "실 운영 transcript 축적  또는  시나리오 다양성 확보"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-003-composer-scope.md",
+      "lines": 93,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md",
+      "lines": 124,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-005-odsay-not-used.md",
+      "lines": 57,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-006-cancellation-terms-are-structured.md",
+      "lines": 73,
+      "matches": [
+        {
+          "line": 66,
+          "text": "- 다른 Team(Dining·Mobility·Booking Handoff)은 아직 이 표를 안 읽는다. 읽어야 하는지는"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-007-ui-operator-login.md",
+      "lines": 72,
+      "matches": [
+        {
+          "line": 61,
+          "text": "- **`/scenario/*`**(시연 시작·다음·메시지·운영 조회)는 `/ui` 밖이라 이 관문에 안 걸린다. 시나리오 설정 스위치"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-008-ops-console-separate-app.md",
+      "lines": 58,
+      "matches": [
+        {
+          "line": 4,
+          "text": "description: 운영 화면·관리 API·시나리오 모드를 고객 API 앱(8042)에서 빼고 별도 운영 앱(127.0.0.1:8070)으로 조립한다. 운영 화면은 고객 API 를 실제 HTTP 로 부르고 scope 키는 운영 앱 설정에만 둔다"
+        },
+        {
+          "line": 17,
+          "text": "운영 화면(로그인·Case·승인·위임·바깥함·VOC·관리)과 관리 API(`/admin/limits`·`/admin/reload`), 시나리오 모드가"
+        },
+        {
+          "line": 27,
+          "text": "| 고객 API 앱 | 운영 경로·관리 API·시나리오가 **0개(404)**. `/admin/reload` 는 **설정 관리용 빌드**(`app.entrypoint:app`)에만 — 반영은 그 프로세스 안에서만 뜻이 있어 운영 앱으로 옮길 수 없다 |"
+        },
+        {
+          "line": 31,
+          "text": "| 시나리오 모드 | ★`[2026-09-30 사용자 지시]` **운영 앱에서 뗐다** — 압축 보관 `legacy/scenario_mode/scenario_mode_2026-09-30.zip`(스위치 `/ui/scenario` · 시연 화면 `/tripilot` · 입구 `/scenario/*` · 본체 · 시험, 복원 방법은 그 안의 README.md). 실서비스 운영 화면과 데모가 같은 프로세스에 있으면 안 된다. 다시 쓸 때는 운영 앱에 되붙이지 말고 별도 데모 앱으로. 대본 데이터(`scenarios/seoul_day_taiwan_friends.json`)는 시험 · 스크립트가 경로로 직접 읽어 그대로 둔다. (앞 판: 셋을 한 프로세스에 함께 뒀다 — 사용자 결정 2026-09-28) |"
+        },
+        {
+          "line": 40,
+          "text": "- 1단계 확인(ui 세션, 2026-09-29): 8042 에서 운영·관리·시나리오 9개 경로 404 · 8070 은 루프백만(네트워크 주소로는 연결 안 됨) · 사용자 웹 실서버 종단 2/2 통과. 개발 콘솔의 반영 404 안내는 「고객용 빌드면 설정 관리용 빌드를 가리켜라」로 고쳤다."
+        },
+        {
+          "line": 48,
+          "text": "2. 시나리오 데모를 운영 앱에서 뗀다 — ★`[2026-09-30 완료]` 별도 앱으로 세우는 대신 **압축 보관**으로 뗐다(위 표)"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md",
+      "lines": 42,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-010-google-calls-in-dawn-batch-only.md",
+      "lines": 42,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+      "lines": 102,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-012-agent-auth-claude-style.md",
+      "lines": 58,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-013-domain-folder-layout.md",
+      "lines": 144,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md",
+      "lines": 73,
+      "matches": [
+        {
+          "line": 65,
+          "text": "전체: 구조 · 계약 · 단위 2,777 통과 · e2e · 시나리오 847 통과(실패 0)."
+        },
+        {
+          "line": 71,
+          "text": "- 시험: `tests/unit/travel/test_routing_reroute.py` 에 재현 시험 추가, 시나리오 103 · 컨트롤러 통합과 코어 단위 272 통과."
+        },
+        {
+          "line": 72,
+          "text": "- 왜 늦게 잡혔나: 위 「시나리오 847 통과」는 그날 로컬에 모델이 없어(OpenAI 크레딧 소진 · Ollama 꺼짐) 재배분이 한 번도 팀을 **고르지 못해** 이 길을 안 탔기 때문이다 — 모델이 답하는 환경에서만 드러나는 결함이었다. 이 결함은 환경 의존이라 **모델이 있는 환경(x600 서버)에서는 처음부터 터졌을 수 있다.** **컨트롤러를 건드리면 모델이 있는 환경에서도 시나리오 시험을 돌린다.**"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/index.md",
+      "lines": 74,
+      "matches": [
+        {
+          "line": 32,
+          "text": "| [D-CS-008](D-CS-008-ops-console-separate-app.md) | **운영자 콘솔은 다른 프로세스·127.0.0.1 만**(1단계) — 운영 화면·관리 API·시나리오를 고객 API 앱에서 빼 운영 앱(8070)으로. 고객 API 는 실제 HTTP·키는 운영 앱 설정에만·폼 위조 방지. 2단계(다른 기계) 전엔 「물리 분리 완료」 아님 | accepted | 인증 경계 |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/domain-swap.md",
+      "lines": 198,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/a2a-protocol.md",
+      "lines": 216,
+      "matches": [
+        {
+          "line": 124,
+          "text": "`[실측]` [DoD-19](../records/evidence/DoD-19_LOCAL_A2A_정규화.md). 두 가지가 테스트로 잡혀 있다 — `LocalTeamExecutor`의 결과가 Team 직접 호출과 `model_dump()`까지 완전히 같고, **원격 상태 어휘가 밖으로 새지 않는다**(`input_required`가 아니라 `wait_for_input`으로 나온다). 어휘가 새면 Controller가 두 경로를 구분하기 시작한다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/admin-screen-api.md",
+      "lines": 42,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-environment-limits.md",
+      "lines": 16,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-key-issue-guide.md",
+      "lines": 57,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/auth-boundary.md",
+      "lines": 256,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/index.md",
+      "lines": 96,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/introspection.md",
+      "lines": 33,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/llm-failover.md",
+      "lines": 105,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/mcp-tools.md",
+      "lines": 276,
+      "matches": [
+        {
+          "line": 34,
+          "text": "| `tripilot_get_recovery_brief` | 읽기 | ★`[2026-10-06 사용자 결정]` **재난 뒤 상황 꾸러미** — 재난으로 멈춘 여행을 사용자가 다시 시작한 뒤(72시간 안) 읽는다: `facts`(출처 있는 사실) · `unknowns`(우리가 모르는 것) · `items`(항목마다 영향 판정 `affected`/`unknown`/`unaffected` + 이유) · `constraints`(`avoid_districts` · `affected_item_ids` · `lighter_day`) · `chosen`. 다시 시작한 정지가 없으면 `recovery: null`. `unknown` 을 「영향 없음」으로 다루지 않고 밀도를 임의로 낮추지 않는다(`GET /v1/web/trips/{id}/safety/recovery`) |"
+        },
+        {
+          "line": 42,
+          "text": "| `tripilot_plan_trip` | 쓰기 | 서버의 일정 생성기가 짜서 판정을 통과한 것만 등록(첫날 · 일수 · 인원 · 취향 글) ★`[2026-10-07]` 재난 뒤 다시 짤 때 선택 인자 `avoid_districts`(꾸러미의 제외할 구 — 그 구의 후보를 뺀다) · `lighter_day`(사용자가 「오늘은 가볍게」를 골랐을 때만 true — 밀도 목표 한 단계 낮춤) |"
+        },
+        {
+          "line": 206,
+          "text": "| Team 직접 호출 | 불가 |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-api.md",
+      "lines": 299,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints.md",
+      "lines": 980,
+      "matches": [
+        {
+          "line": 160,
+          "text": "못한다(INV-CS-ARCH-001). 확정 시나리오 하루를 이 경로로 흘리는 시험:"
+        },
+        {
+          "line": 322,
+          "text": "- 확정 시나리오를 맞췄다 — `버스:성수동` 두 곳 → `버스:2016`·`버스:2224`(+ `도로:아차산로`), `bus_sejong` 에"
+        },
+        {
+          "line": 364,
+          "text": "- 답이 없으면 그 일정이 끝날 때 `expired` — **원래 일정대로 간다.** 닫는 일은 감시 반복이 한다(시나리오 감시와 Case 감시 둘 다)."
+        },
+        {
+          "line": 385,
+          "text": "| `POST /v1/web/trips/{trip_id}/messages` | 키 | 「에이전트에게 변경 요청」 — 자유 문장. `/v1/trips/{id}/messages` 와 같은 처리 (★`[2026-09-28]` 둘 다 **시나리오용 여행 버전**(`handle_trip_message`)이다 — `/v1/cases` 의 Case 버전과 답 코드가 두 벌이다. Case 버전으로 합칠 계획: `records/reports/2026-09-28_웹채팅이_시나리오용_여행버전을_탄다_리포트.md`) · ★`[2026-09-28]` **응답에 늘 `answer`(고객에게 보일 문장)가 있다** — 질문은 이 여행 일정의 사실 + 문턱(`travel.question.min_policy_score`)을 넘은 규정 조각(출처와 함께)으로 답하고 (`status: answered`, `reason: question_answered`, 근거 `basis{item, policy_hits, sourc"
+        },
+        {
+          "line": 648,
+          "text": "**지도 조합** `[2026-09-29 사용자 결정]` — 고객 **자기 지도 앱으로 여는 링크**(구글 지도 링크, **API 키 없음** — 공식 문서). 장소 항목 `items[].map_url` = 그 장소(주소를 알면 「이름 주소」, 모르면 좌표) · 이동 항목 `items[].map_url` = 앞 장소 → 다음 장소 **대중교통 길찾기**. `map.days[] = {date, stops[{number, item_id, name, lat, lon, map_url}], legs[{from_item_id, to_item_id, from, to, url}]}` — `stops[].number` 는 화면의 무료 지도가 찍는 번호. ☆처음엔 하루 경로 링크(들를 곳 여러 개)와 구글 퍼가기 경로 지도도 실었으나 **한국에서는 구글이 자동차·도보 길찾기를 주지 않고 대중교통은 들를 곳을 받지 않아** 둘 다 경로를 못 그렸다(ui 세션 실측) — 뺐다. 코드 `trip_api.m"
+        },
+        {
+          "line": 652,
+          "text": "**활동 「다른 데로 바꿔」의 후보** `[2026-09-29 사용자 요구 — ui 세션 전달]` — 활동이면 대체 후보를 **관광공사 목록**(`place_catalog`, 일정 짜기와 같은 원천)에서 원래 장소 5km 안 가까운 10곳까지 넓힌다. ★`[2026-09-29 사용자 지시]` **요청 자리에서 관광공사를 부르지 않는다** — 「장소 갱신은 새벽 3시에 한 번, 요청은 DB 만」. 운영시간은 **새벽 작업**(`scripts.run_sweepers --only catalog_hours`, 03:00~08:00 · 한 번에 10곳 · 하룻밤 600곳 · 처음 보는 곳과 목록 수정 시각이 바뀐 곳만 — 마이그레이션 036 `catalog_hours`)이 읽어 둔 값과 다른 여행에서 이미 읽은 장소 행(같은 관광공사 id, 14일 안)만 쓴다. 운영시간을 모르는 곳은 후보가 아니다. 같은 여행·같은 자리는 6시간 동안 다시 넓히지 않는다. ☆앞 판은 요청 자리에서 관광공사를"
+        },
+        {
+          "line": 702,
+          "text": "**확인 화면 검사 · 대체 후보 · 장소 검색 · 사진 · 잠금 · 전체 자동 추천 · 재검증 · 내용 이벤트** `[2026-10-02 사용자 지시 — 계획 확인 시나리오 목업 `team_branch/sw/2026-10-02_계획확인_스트리밍_대표목업.html` + 멘토링 1001]` — 목업이 「협의 필요」로 적은 것을 서버가 채웠다. 읽기 파이프라인은 그대로이고(`intake/pipeline.py`), 읽은 값에서 **검사를 계산해 한 판(revision)마다 한 번 저장**한다(`intake_reviews`, 마이그레이션 040 — 정본은 `intake_claims`, 지워도 다시 계산한다). 새 코드: `intake/review.py`(검사) · `hours.py`(운영시간 사실) · `moves.py`(이동) · `candidates.py`(후보 · 검색 · 사진) · `autofix.py`(전체 자동 추천) · `stream.py`(내용 이벤트). 시험 `tests/e"
+        },
+        {
+          "line": 808,
+          "text": "⑦스위치 `travel.watch.relaxed_enabled`(기본 켜짐 — 끄면 전과 같다). 구현 `app/domains/travel_ops/components/watch/watch_relaxed.py`(감시 Case `trip_watch_cases` · 시나리오 감시 `trip_watch`/`pending.apply_or_ask`(점검기를 받은 자리만)가 부른다) · 시험 `tests/e2e/test_watch_relaxed.py`."
+        },
+        {
+          "line": 859,
+          "text": "**알림 `payload.guardian`** — 알림 문장은 건드리지 않고 **구조값**을 싣는다(시나리오용 여행 버전 `TripStore.enqueue_*` 와 Case 버전 `itinerary_actions` 둘 다 같은 규칙 `guardian.annotate`)."
+        },
+        {
+          "line": 898,
+          "text": "**`POST /v1/web/trips/{trip_id}/safety/resume`**(몸통 없음) → `{resumed: 닫은 정지 수, safety, recovery}`(★`recovery` = 이번에 푼 재난의 **상황 꾸러미**, 풀 것이 없었으면 `null`. 아래 「재난 뒤 다시 시작」) — 사용자 키 · 쿠키(쿠키는 CSRF 필요). 본인 여행만(남의 것 · 없는 것 404). 정지가 없으면 `resumed: 0`(오류가 아니다). 일정은 안 바뀐다. **같은 사건으로 다시 정지하지 않는다**(사건 지문 `event_key`) — 새 사건이 오면 다시 정지한다. 그날 정지는 자정에 저절로 풀리므로 이 요청 없이도 내일 일정은 이어진다."
+        },
+        {
+          "line": 958,
+          "text": "### 재난 뒤 다시 시작 — `GET|POST /v1/web/trips/{trip_id}/safety/recovery` `[결정 2026-10-06 사용자]`"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/external/test-scenarios.md",
+      "lines": 43,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/travel-density.md",
+      "lines": 40,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/watch-monitoring.md",
+      "lines": 16,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/watch-simulation.md",
+      "lines": 21,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-auth-transfer.md",
+      "lines": 18,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-flow-2026-10-09.md",
+      "lines": 126,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-intake-restore.md",
+      "lines": 10,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-screen-api.md",
+      "lines": 116,
+      "matches": [
+        {
+          "line": 96,
+          "text": "[실측] 2026-10-03 · Claude. 「계획 확인하기」 뒤의 흐름을 [계획 확인 시나리오 목업](../../frontend/apps/web/mockups/tripilot-plan-check-streaming.html) 기준으로 새로 만들고, **서버가 주는 만큼 실제 경로에 연결했다**(2026-10-03 사용자 결정: 지금 서버로 되는 부분은 연결). `/intakes/[intakeId]`는 서버가 읽는 동안 새 화면이 읽기 진행(`stage`·`sources[].lines[]`·찾은 항목)을, 읽은 뒤 결과(항목·좌표·`check.title`, 장소·시간에 대한 `check.problems`·`needs_review`·`check.filled`, 판정)를 보인다. 수정 화면의 장소 바꾸기(후보·검색에서 고른 곳이나 쓴 이름 → `items[n].place {name}`)·「직접 고치기」(장소 없음·이름·날짜·시각)·삭제(`removed: true`)·여행 첫날·인원은 `"
+        },
+        {
+          "line": 98,
+          "text": "★`[2026-10-03 사용자 결정 — 최종]` 「목업에 있는 화면들은 프론트에서 다 구현해 놓고, 서버에 연결할 API는 백엔드에서 작업해서 우리 화면에 연결한다.」 그래서 목업 시나리오 1~7의 화면·동작이 모두 있다. 서버에 아직 없는 것 — 확인 단계, 운영시간·휴무일 검사, 이동, 후보의 거리·검사·사진, 장소 검색, 자동 추천(한 곳·전체), 잠금, 되돌리기, 재검증 — 은 화면에 남아 누르면 「준비 중」이라고 말한다. 미리보기(`/preview/plan-check`)는 예시 규칙으로 전부 동작한다. 「일정 짜 줘」 접수와 예비 경로(「이전 확인 화면 열기」)는 기존 접수 확인 화면이 맡는다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/index.md",
+      "lines": 182,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/alert-snapshots.md",
+      "lines": 110,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/always-on.md",
+      "lines": 216,
+      "matches": [
+        {
+          "line": 83,
+          "text": "★**숫자는 움직인다** — 시나리오 세션이 돌고 있으면 그 세션이 자기 통지를 만들고 스스로"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/operations/arm-develop-cd.md",
+      "lines": 78,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/arm-serving-queue.md",
+      "lines": 95,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/call-budget.md",
+      "lines": 48,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/google-login-setup.md",
+      "lines": 109,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/gpu-work-queue.md",
+      "lines": 75,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/index.md",
+      "lines": 86,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/local-setup.md",
+      "lines": 165,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/move-to-server.md",
+      "lines": 243,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/run.md",
+      "lines": 143,
+      "matches": [
+        {
+          "line": 9,
+          "text": "domain_note: 코드가 아직 커머스다 — 여행 전환 층 9(시연 시드가 쇼핑몰 시나리오 둘) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md"
+        },
+        {
+          "line": 82,
+          "text": "시나리오 2종이 만들어진다."
+        },
+        {
+          "line": 84,
+          "text": "| 시나리오 | 결과 |"
+        },
+        {
+          "line": 89,
+          "text": "**하드코딩 UUID가 없다.** `scripts.seed`가 만든 실제 주문·배송 행을 조회해 근거로 쓴다. ★`[실측 2026-09-10 작업 트리]` `seed.py`·`seed_demo_cases.py` 는 **작업 트리에서 지워졌고 git 에만 남아 있다.** 여행 시드 `seed_travel.py` 가 작업 트리에 있고 **미추적**이다 — 이 절의 쇼핑몰 시나리오 둘은 지금 그대로 돌릴 수 없다."
+        },
+        {
+          "line": 113,
+          "text": "| `trip` | 시나리오용 여행 버전의 감시. `--only trip` 으로만 돈다 — `trip_cases` 와 함께 돌리지 않는다 |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/operations/service-improvement.md",
+      "lines": 54,
+      "matches": [
+        {
+          "line": 27,
+          "text": "2. 고정된 27개 조합 전체의 빈도에 두 기하분포의 차를 더한다. 공정한 암호학적 난수 비트만 사용하는 이산 잡음이며 사용자 추가/제거 기준 한 회차의 수학적 epsilon은 ln(2)이다. 같은 사용자의 값 교체 기준은 2ln(2)이다. 다만 이 수학적 구성만으로 실제 구현의 형식 검증이나 법률상 익명성을 보장하지 않는다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/operations/telegram-setup.md",
+      "lines": 93,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/operations/troubleshooting.md",
+      "lines": 138,
+      "matches": [
+        {
+          "line": 65,
+          "text": "**프로덕션은 안전하다.** Broker가 예산 안에서 조합한다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/operations/unknown-state.md",
+      "lines": 121,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/quality/blind-spots.md",
+      "lines": 298,
+      "matches": [
+        {
+          "line": 97,
+          "text": "| `INV-CS-TEAM-004` | review | read 도구 직접 호출을 잡는 테스트가 없다 |"
+        },
+        {
+          "line": 98,
+          "text": "| `INV-CS-TEAM-005` | review | Team 간 직접 호출을 잡는 테스트가 없다 |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/dod-evidence-drift.md",
+      "lines": 197,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/quality/eval-harness.md",
+      "lines": 159,
+      "matches": [
+        {
+          "line": 9,
+          "text": "domain_note: 하네스 구조는 도메인 무관이다. 「여행 시나리오 측정」 절만 지금 도메인의 데이터셋·러너를 가리킨다(쇼핑몰 골든셋과 분모가 다르다)"
+        },
+        {
+          "line": 16,
+          "text": "> (실제 모델로 intent · issue_code · **엉뚱한 팀으로 가는 것** · 지연을 잰다. 라벨은 **사람 검수 전 초안**이고 holdout 은 프롬프트를 고치는 데 쓰지 않는다). 그 밖에 `eval/decision_unit/`(고객 말 → 할 일 + 대상) · `eval/runners/travel_scenarios.py`(일정 시나리오)."
+        },
+        {
+          "line": 25,
+          "text": "│                  travel_scenarios.py      ← [2026-09-22] 여행 시나리오 측정(DoD-22)"
+        },
+        {
+          "line": 33,
+          "text": "## 여행 시나리오 측정 `[2026-09-22]`"
+        },
+        {
+          "line": 40,
+          "text": "확정 시나리오 하루를 변형해 흘리고(감시 사건 넣기·빼기 · 고객 신고 · 재요청 · 여행 제약 교체), **적용된 모든 일정 버전**을 등록 때와 **같은 판정기**(`app/domains/travel_ops/components/itinerary/itinerary_checks.py`)로 다시 본다 — 겹침 · 이동 소요 · 영업시간 · 브레이크 · 결제 수단 · 예산. v11 DoD-22 「필수 조건 위반 0건」이 이것이다."
+        },
+        {
+          "line": 47,
+          "text": "| ★표본 | 시나리오 10건 · 하루 1종 · 서울 1도시. **다른 일정을 대표하지 않는다** |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/evidence.md",
+      "lines": 182,
+      "matches": [
+        {
+          "line": 121,
+          "text": "| 18 | UI 시나리오 종단 표시 | 통과 · **★도메인 이관 후 화면 미검증** |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/guardrails.md",
+      "lines": 180,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/quality/index.md",
+      "lines": 105,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/quality/invariants.md",
+      "lines": 416,
+      "matches": [
+        {
+          "line": 85,
+          "text": "| `INV-CS-TEAM-004` | Team은 read 도구를 직접 호출하지 않는다 ★**지금 코드가 어긴다** — 아래 | review | 동 |"
+        },
+        {
+          "line": 86,
+          "text": "| `INV-CS-TEAM-005` | Team은 다른 Team을 직접 호출하지 않는다 | review | 동 |"
+        },
+        {
+          "line": 103,
+          "text": "| `INV-CS-ACT-004` | **자동 변경은 쓰기 전에 일정 전체를 다시 판정하고, 바꾼 뒤 새로 생긴 위반이 있으면 적용하지 않는다**(D-017 전체 일정 재검증 — 등록 때와 같은 판정기 `check_itinerary`). ★최고 안이 걸리면 담당이 뽑아 둔 **다음 순위 안**을 차례로 시험한다 | automated | `tests/scenario/test_apply_recheck.py::test_an_automatic_change_that_breaks_the_whole_itinerary_is_not_applied` · `tests/unit/travel/activity/test_activity_fit.py` |"
+        },
+        {
+          "line": 106,
+          "text": "| `INV-CS-ACT-007` | **시나리오 감시 · 새벽 확인(`pending.apply_or_ask`)도 자동 변경 전에 일정 전체를 다시 판정한다** — Case 적용기와 같은 문(`itinerary_fit.fit_change`: 순위 순 재판정 + 밀도 게이트). 다 걸리면 **쓰지 않고** 「일정은 그대로 두었어요」(`recheck_failed`)를 같은 사건·같은 판에 **한 번만** 알리고 `rechecked` 로 센다. 묻는 쪽(변경 안 할 일정 등)은 지나지 않는다. ★`[2026-10-03 적대 검토]` **채팅 신고 경로**(`TripDesk._outcome(gate=True)` — 「늦어요」 · 「문 닫았대요」로 자동 고른 대체)도 같은 문을 지나고, 다 걸리면 쓰지 않고 `rechecked` 답 문장을 돌려준다. 고객이 직접 고른 길(다른 안으로 바꿔 줘 · 되돌려 줘)은 지나지 않는다(D-017 · 체크리스트 v2 T5) | automated | `te"
+        },
+        {
+          "line": 378,
+          "text": "| `INV-CS-TEAM-004` | read 도구를 직접 호출하지 않는다 | Team 모듈이 `tools/`를 직접 import하는지 검사 |"
+        },
+        {
+          "line": 399,
+          "text": "| `INV-CS-TEAM-005` | 다른 Team을 직접 호출하지 않는다 | Team 모듈이 다른 Team을 import하는지 검사 |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+      "lines": 107,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/quality/slm-model-evaluation.md",
+      "lines": 148,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/quality/test-map.md",
+      "lines": 165,
+      "matches": [
+        {
+          "line": 43,
+          "text": "| 재난 뒤 다시 짜기 제약(피해 구 제외 · 사용자가 고른 「오늘은 가볍게」) `[2026-10-07]` | `unit/travel/` · `e2e/` | `test_planner_recovery.py` · `test_trip_planner_recovery.py` |"
+        },
+        {
+          "line": 81,
+          "text": "| **재난 뒤 다시 시작** `[2026-10-06]` — 재난문자의 서울 구 읽기(순서 · 중복 없음 · 다른 도시 같은 이름 구 제외) · 항목 영향 판정(확정 · 불명 · 없음, 모르면 불명, 지진 · 구 없는 문자는 전부 불명) · 다시 시작해야 꾸러미가 생김 · 선택 기록과 꾸러미에 다시 보임 · 밀도는 임의로 안 낮춤 · `replace_affected` 는 제안만 하고 일정 버전 불변 · 후보에서 피해 구 제외(구 모르면 표시) · 가짜 창구로 요청 방식(확정 항목만 · 같은 요청 번호) · 남의 여행 · 풀지 않은 정지 404 · 여행 삭제 때 활동 기록 삭제 | `tests/e2e/test_safety_recovery.py`(12) · `test_safety_pause.py` · `test_mcp_server.py` | 로컬 개발 DB(마이그레이션 054 필요) · 실서버 미확인 |"
+        },
+        {
+          "line": 92,
+          "text": "| **시나리오 감시 · 새벽 확인의 일정 전체 재판정** `[2026-10-03]` | `scenario/` | `test_apply_or_ask_recheck.py` (5건 — 안 맞으면 쓰지 않고 알림 · 같은 사건 한 번만 · 맞는 변경은 그대로 · 1순위가 걸리면 2순위 · 감시기가 `rechecked` 로 셈) |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/quality/test-reliability.md",
+      "lines": 109,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/quickstart.md",
+      "lines": 107,
+      "matches": [
+        {
+          "line": 72,
+          "text": "| Team은 read 도구를 직접 호출하지 않는다. Context Broker가 넣어준다 — `[실측 2026-09-10 작업 트리]` **여행 코드는 `_read()` 로 직접 부른다**(허용·예산은 `ReadToolbox.call()` 이 강제). 원칙과 코드가 갈라져 있다 → [teams/team-boundary.md](teams/team-boundary.md) §2 | 컨텍스트 예산 붕괴 |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/agentic-controller.md",
+      "lines": 129,
+      "matches": [
+        {
+          "line": 47,
+          "text": "Team은 다른 Team을 직접 호출하지 않는다. **위임 제안**을 `TeamResult`로 반환하고 Controller가 Task로 변환한다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/case-lifecycle.md",
+      "lines": 163,
+      "matches": [
+        {
+          "line": 151,
+          "text": "| `handoff` | `routing` (다른 Team으로) |"
+        },
+        {
+          "line": 155,
+          "text": "계약이 조합을 강제한다. → [../teams/team-contract/index.md](../teams/team-contract/index.md)"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/case-state-machine.generated.md",
+      "lines": 68,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/conflict-retry.md",
+      "lines": 210,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/index.md",
+      "lines": 82,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/langgraph-comparison.md",
+      "lines": 313,
+      "matches": [
+        {
+          "line": 95,
+          "text": "| 지금 방식 | **`InvalidTransition` 으로 막혔다** — (상태, 이벤트) 25개 조합만 허용한다 |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/message-broker.md",
+      "lines": 156,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/shared-state.md",
+      "lines": 105,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/teams/activity.md",
+      "lines": 330,
+      "matches": [
+        {
+          "line": 58,
+          "text": "시나리오에 넣은 **대형마트**가 포함돼 있다. **제외 목록을 다시 봐야 한다** — 제외 기준이"
+        },
+        {
+          "line": 151,
+          "text": "## 재계획이 다른 Team의 일정을 건드린다"
+        },
+        {
+          "line": 153,
+          "text": "날짜를 옮기면 그날의 식사·이동이 전부 흔들린다. 그런데 **Team은 다른 Team을 직접 호출하지 않는다**(승계 경계). 그래서 이렇게 된다."
+        },
+        {
+          "line": 158,
+          "text": "코어 검증 층: 전체 일정 정합성을 다시 본다 (시간 충돌·예산·이동 여유)"
+        },
+        {
+          "line": 163,
+          "text": "★**전체 일정 정합성은 Team이 아니라 코어 검증 층이 본다**(v11 §5). Activity는 자기 객체만 판정하고, 그 후보가 여행 전체에서 성립하는지는 코어가 판정한다. 이 경계를 흐리면 Team마다 전체 일정을 알아야 하고 Team 교체가 불가능해진다."
+        },
+        {
+          "line": 212,
+          "text": "계산은 시나리오용 버전과 같은 `itinerary_changes.py`, 쓰기는 `itinerary.apply` 제안 → 코어가 Case 완료와 한 트랜잭션으로 적용·통지([../actions/approval.md](../actions/approval.md)). `policy` 를 `required_context` 에서 뺐고(정책 0건이 degraded 를 만든다) `max_steps` 는 후보 재점검 때문에 12. 대조 시험 `tests/scenario/test_case_version_day.py`."
+        },
+        {
+          "line": 307,
+          "text": "| 다른 Team을 부르지 않는다 | 의존 그래프가 생기면 교체가 불가능해진다 |"
+        },
+        {
+          "line": 308,
+          "text": "| read 도구를 직접 호출하지 않는다 | Context Broker가 읽기 예산을 통제한다 |"
+        },
+        {
+          "line": 309,
+          "text": "| 전체 일정 정합성을 판정하지 않는다 | 코어 검증 층의 일이다 |"
+        },
+        {
+          "line": 319,
+          "text": "| 쇼핑 분류의 제외 목록 | `[미확보]` 생활밀착형·저관광연관 **21종**을 제외했는데 시나리오의 **대형마트**가 거기 있다. 재검토 필요 |"
+        },
+        {
+          "line": 321,
+          "text": "| 골든셋 | `[실측]` 지금 골든셋 72건은 쇼핑몰이다. 이 Team의 시나리오는 0건 → v11 §8 |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/booking-handoff.md",
+      "lines": 302,
+      "matches": [
+        {
+          "line": 62,
+          "text": "★**시연 모드는 이 Team 안에 갇힌다.** 다른 Team은 이 분기를 모른다."
+        },
+        {
+          "line": 168,
+          "text": "## 되돌림이 다른 Team과 다르다"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/build-order.md",
+      "lines": 123,
+      "matches": [
+        {
+          "line": 33,
+          "text": "다른 Team 은 이 둘 중 하나가 `[미확보]` 다 — Dining 은 임시휴무를 어디서 받는지 모르고, Mobility 는 운행 정보 출처가 미정이다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/code-layout.md",
+      "lines": 73,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/teams/common-utils.md",
+      "lines": 76,
+      "matches": [
+        {
+          "line": 4,
+          "text": "description: 반복되는 네 가지를 조합형 유틸로 빼자는 설계안. 실제로는 상속 기반 _base.py 가 생겼다"
+        },
+        {
+          "line": 23,
+          "text": "### ★ 상속이 아니라 조합이다"
+        },
+        {
+          "line": 56,
+          "text": "## ★ [2026-09-10] 공통 뼈대는 생겼다 — 다만 조합이 아니라 상속이다"
+        },
+        {
+          "line": 64,
+          "text": "| 방식 | **조합형 유틸**(순수 함수 넷) | **상속**(`TravelTeamBase`) |"
+        },
+        {
+          "line": 68,
+          "text": "~~★**상속을 고른 대가가 이미 나왔다.** 공용 기반이라 **결함도 한꺼번에 물려받는다** — `business_subject` 3단 폴백이 여행 Team 전부에 걸린다(`_base.py:169`). 조합형이면 쓰는 Team 만 걸렸을 것이다.~~ `[정정 2026-09-10]` 그 Team 값은 최종 키에 쓰이지 않고 Core가 `app/application/controller.py:371-374`에서 `business_subject=str(case[\"case_id\"])`로 고정하므로, 이 결함으로 상속과 조합의 우열을 판단할 수 없으며 고칠 곳은 Core의 미구현된 v11 §4-E다(2026-09-10 실측; `open-items.md`의 「전제가 틀렸다」 판정과 같다). → [build-order.md](build-order.md)"
+        },
+        {
+          "line": 70,
+          "text": "`[미확보]` **조합형으로 되돌릴지 정한 기록이 없다.** 아래 설계안은 그 판단의 재료로 남긴다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/composition.md",
+      "lines": 232,
+      "matches": [
+        {
+          "line": 187,
+          "text": "만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 `[정정 2026-09-10]` 「아직 구현은 없다」(09-03)는 낡았다 — **`app/domains/travel_ops/instances/_shared/_base.py` 가 생겼다**(작업 트리, 커밋 전). common-utils 설계의 네 가지를 다 담았는지는 대조하지 않았다."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining-agent-design.md",
+      "lines": 394,
+      "matches": [
+        {
+          "line": 4,
+          "text": "description: 멘토 피드백(2026-10) 반영. 룰베이스 판정을 LLM 에이전트로 옮기고, 정제한 체크리스트를 평가지표로 쓴다. 유스케이스 · MCP 도구 명세 · 다이어그램 · 평가 사이클"
+        },
+        {
+          "line": 15,
+          "text": "> ★`[2026-10-07]` **§2(MCP 도구) · §3(에이전트 설계)는 `dining-mcp-boundary.md` 로 대체됐다.** 다시 따져 보니 C1~C5 는 원장으로 코드가 판정하는 것이 맞고, LLM 에이전트는 코드 갈래에 맞지 않는 자유 질문에만 쓴다. SNS 검색(`sns.search`) · 실시간 구글 확인(`dining.live_check`) · 대체 후보 순서 제안은 뺐다. 아래 §2 · §3 은 처음 안의 기록으로 남긴다."
+        },
+        {
+          "line": 141,
+          "text": "| `itinerary.read` | `trip_id` | 전체 일정 · 식사 항목 · 방문 시각 | DB | `ITINERARY_TOOLS` | 감싸기 |"
+        },
+        {
+          "line": 180,
+          "text": "| **플래너** | LLM (새로) | 전체 일정과 계기를 보고 **판정할 식사 항목 × 체크리스트 항목(C1~C6)** 을 고르고 이유를 적는다 | `itinerary.read`, `dining.find_place` |"
+        },
+        {
+          "line": 254,
+          "text": "## 4. 유스케이스"
+        },
+        {
+          "line": 264,
+          "text": "| 목표 | 행위자 | 유스케이스 |"
+        },
+        {
+          "line": 272,
+          "text": "### 4-2. 작게 — 유스케이스별"
+        },
+        {
+          "line": 292,
+          "text": "  S([\"계기: 질문 · 신고 · 새벽 점검 · 등록\"]) --> R[\"itinerary.read · 전체 일정 [MCP]\"]"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining-mcp-boundary.md",
+      "lines": 229,
+      "matches": [
+        {
+          "line": 3,
+          "text": "title: Dining 하이브리드 분류표 — 코드가 판정하고, LLM 은 코드가 못 읽는 자유 질문에만"
+        },
+        {
+          "line": 4,
+          "text": "description: 「MCP 도구로 바꿔 LLM 손에 쥐여 준다」(dining-agent-design §2)를 다시 따져 정리한 분류. 체크리스트 C1~C5 는 원장으로 코드가 판정하고, LLM 에이전트는 코드 갈래에 맞지 않는 자유 질문(Q)에만 쓴다. SNS 확인은 뺐다. 호출 조건 · 구역 분류 · 인자 · 판정 방향 · 경계 테스트를 정한다"
+        },
+        {
+          "line": 15,
+          "text": "**한 줄 요약 — 체크리스트 C1~C5 는 지금처럼 원장으로 코드가 판정한다. LLM 에이전트(MCP 도구)는 「코드 갈래에 맞지 않는 자유 질문」 하나에만 쓴다. 그것도 먼저 빈도를 재고 나서 만든다.**"
+        },
+        {
+          "line": 31,
+          "text": "| H2 자유 질문 | 코드 갈래에 안 맞는 질문 | 여러 체크 항목을 조합해야 하는 열린 질문은 **도구를 골라 쓰는 판단**이 필요하다 | **남긴다 (Q)** — 단 빈도부터 잰다 |"
+        },
+        {
+          "line": 63,
+          "text": "         라우터: 코드 갈래에 맞지 않는 자유 질문(Q)인가?"
+        },
+        {
+          "line": 78,
+          "text": "### 1-2. 호출 조건 Q — 코드 갈래에 맞지 않는 자유 질문"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining.md",
+      "lines": 262,
+      "matches": [
+        {
+          "line": 38,
+          "text": "`[실측]` `_read()` 를 Team 이 직접 부른다(`_base.py:68`). 아래 「read 도구를 직접 호출하지 않는다」는 **Context Broker 가 예산을 통제한다**는 뜻이고, 호출 자체는 `_base` 를 지나 일어난다 — 문장을 그대로 읽으면 코드와 달라 보인다."
+        },
+        {
+          "line": 106,
+          "text": "## 재계획이 다른 Team의 일정을 건드린다"
+        },
+        {
+          "line": 113,
+          "text": "코어 검증 층: 전체 일정 정합성 재검증 (시간 충돌·이동 여유·예산)"
+        },
+        {
+          "line": 118,
+          "text": "**Team은 다른 Team을 직접 호출하지 않는다.** 전체 정합성은 코어 검증 층이 본다(v11 §5)."
+        },
+        {
+          "line": 155,
+          "text": "**시나리오용 여행 버전(`trip_watch`·`trip_desk`)이 하던 일을 이 Team 이 Case 로 한다.** 여행을 가리키는 Case(`current_state.subject_ref.kind == \"trip\"`)가 오면 `select_capability(intent, input_text, state)` 가 `dining.itinerary` 를 고른다."
+        },
+        {
+          "line": 163,
+          "text": "- 계산은 `app/domains/travel_ops/components/itinerary/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다)."
+        },
+        {
+          "line": 242,
+          "text": "| 다른 Team을 부르지 않는다 | 의존 그래프 금지 |"
+        },
+        {
+          "line": 243,
+          "text": "| read 도구를 직접 호출하지 않는다 | Context Broker가 읽기 예산을 통제한다 |"
+        },
+        {
+          "line": 254,
+          "text": "| 골든셋 | `[실측]` 지금 72건은 쇼핑몰. 이 Team 시나리오는 0건 |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/folder-change-notice.md",
+      "lines": 95,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/teams/index.md",
+      "lines": 155,
+      "matches": [
+        {
+          "line": 75,
+          "text": "**셋을 갖는다** — ① 검증 규칙 ② 감시 소스 ③ 재계획 후보. 판정은 코드가, 대안 생성은 LLM이 하고 **생성한 대안은 판정을 다시 통과해야 통지된다.** ★**전체 일정 정합성은 Team이 아니라 코어 검증 층이 본다** — 재계획 후보는 제안이지 확정이 아니다. [mobility.md](mobility.md)가 그 시험대다."
+        },
+        {
+          "line": 108,
+          "text": "| read 도구를 직접 호출하지 않는다 | Context Broker가 읽기 예산을 통제한다 |"
+        },
+        {
+          "line": 109,
+          "text": "| 다른 Team을 직접 호출하지 않는다 | 의존 그래프가 생기면 교체가 불가능해진다 |"
+        },
+        {
+          "line": 134,
+          "text": "| `INV-CS-TEAM-004` | Team은 read 도구를 직접 호출하지 않는다 | **review** |"
+        },
+        {
+          "line": 135,
+          "text": "| `INV-CS-TEAM-005` | Team은 다른 Team을 직접 호출하지 않는다 | **review** |"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/mobility.md",
+      "lines": 735,
+      "matches": [
+        {
+          "line": 75,
+          "text": "**경로·순서 재배열.** 이 Team의 재계획은 다른 Team과 성질이 다르다."
+        },
+        {
+          "line": 89,
+          "text": "코어 검증 층: 전체 일정 정합성 재검증"
+        },
+        {
+          "line": 95,
+          "text": "★**그래서 Mobility가 다른 Team을 호출하고 싶어진다.** \"A Team, 이 시간으로 옮길 수 있어?\"라고 묻고 싶어진다. **금지다** — Team 간 직접 호출은 의존 그래프를 만들고 교체를 불가능하게 한다([team-boundary.md](team-boundary.md)). 후보를 내고 코어 검증 층의 판정을 받는다."
+        },
+        {
+          "line": 97,
+          "text": "`[미확보]` 재배열 후보를 몇 개까지 내는지, 코어가 어떤 순서로 검증하는지 안 정했다. 조합이 폭발하는 자리다 — v11 §9-A는 **OR-Tools 최적화를 MVP에서 뺐다.** 규칙 기반 소수 후보로 시작한다."
+        },
+        {
+          "line": 134,
+          "text": "**시나리오용 여행 버전(`trip_watch`·`trip_desk`)이 하던 일을 이 Team 이 Case 로 한다.** 여행을 가리키는 Case(`current_state.subject_ref.kind == \"trip\"`)가 오면 `select_capability(intent, input_text, state)` 가 `mobility.itinerary` 를 고른다."
+        },
+        {
+          "line": 139,
+          "text": "- 계산은 `app/domains/travel_ops/components/itinerary/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다)."
+        },
+        {
+          "line": 218,
+          "text": "| **다른 Team에게 묻지 않는다** | 위 절. 후보를 내고 코어 판정을 받는다 |"
+        },
+        {
+          "line": 221,
+          "text": "| read 도구를 직접 호출하지 않는다 | Context Broker가 읽기 예산을 통제한다 |"
+        },
+        {
+          "line": 229,
+          "text": "| 재배열 후보 수와 검증 순서 | `[미확보]` 조합 폭발을 어디서 끊는지 |"
+        },
+        {
+          "line": 231,
+          "text": "| 골든셋 | `[실측]` 지금 72건은 쇼핑몰. 이 Team 시나리오는 0건 |"
+        },
+        {
+          "line": 236,
+          "text": "- [team-boundary.md](team-boundary.md) — **다른 Team을 부르지 않는다**가 여기서 가장 시험된다"
+        },
+        {
+          "line": 331,
+          "text": "로컬 차량 탐색은 회전 자료가 있을 때 상태를 (교차로, 들어온 유향 간선)으로 나누고 no/only 방향 조합을 검사한다. 출발·도착 부분 간선에도 동일 조건을 적용한다. 교차로 자체에서 시작할 때만 들어온 간선 없음으로 시작하며 이후 진입은 분리한다. 그래프 nodes/edges 해시와 제약 파일 결합을 검사하고, 손상·교체·적재 후 삭제는 RouterDown으로 명시한다. 일반 차량 제약을 도보·자전거에 적용하지 않는다. 명확한 정적 단순 관계2487개를 초기 대상으로 하고 제외 관계·적용 분모와 자료 미가용 상태를 차량 응답 근거에 남긴다. 모든 법규와 유턴·시간 조건을 해결한 것으로 표시하지 않는다. 기존 그래프와 제약 원문은 덮어쓰지 않으며 새 sidecar 자료를 생성한다."
+        },
+        {
+          "line": 376,
+          "text": "안내는 Case를 만들지 않는다. 기본 감시는 최신 일정에서 예정 출발~다음 방문 시작 전, 출발 안내 미발행 이동을 현재 시각으로 재검증한다. 보류는 이동 Case로, 소스 실패는 치명 기록으로 구분한다. 이미 안내 발행된 이동의 현재 위치/탑승 여부를 추정하지 않는다. Team은 현재 여행 인원/제약과 앞뒤 장소로 경로를 다시 만들고 저장된 소요나 옛 출발 시각을 대안으로 쓰지 않는다. 단일/묶음 Case 모두 동일 처리하고 기존 전체 일정 검증·동의·멱등 적용 경로를 따른다. 다음 방문 시작 이후/실제 탑승·배포/전체21 완료는 이 단위에 포함하지 않는다."
+        },
+        {
+          "line": 410,
+          "text": "운영 출발 안내는 계산에 사용한 party_size와 constraints의 분리 사본을 저장 호출에 전달합니다. TripStore는 같은 여행 행 잠금 아래 현재 입력과 사본을 비교하며 일정 버전이 같아도 달라지면 StaleDeparture로 저장을 보류합니다. 조건 값을 안내 payload에 추가하지 않습니다. 비이동 안내는 기존 계약을 유지하고 저수준 직접 호출의 선택 인자는 호환을 유지합니다. 전체 constraints 대조이므로 무관한 예산 변경도 한 번 저장을 보류할 수 있으나 다음 반복에서 최신 조건으로 안내하며 의미 있는 재경로 판단은 기존 이동 정규화가 맡습니다. 실제 외부 발송/위치/탑승과 운영 설정 API까지 보장한 것은 아닙니다."
+        },
+        {
+          "line": 542,
+          "text": "## 2026-10-09_0921 같은 최근접역의 다른 역 조합 탐색 계약"
+        },
+        {
+          "line": 544,
+          "text": "두 장소의 첫 역이 같아도 다른 물리적 역 조합을 기존 후보 상한·도보 정책 안에서 열거합니다. 동일 물리적 역끼리의 승하차 없는 조합만 제외하고 동명이역의 노선군은 기존 same_station 규칙으로 구별합니다. 조합 정렬·첫 성립 조합 중단·사고 역 제외·운행/도착/앞 일정 끝 판정은 그대로 사용합니다. leg와earliest가 공유하는 목록에 적용하고 모든 가능한 경로 또는 전체 최소 소요를 보장한 것으로 쓰지 않습니다. 기존 사각지대 유지 시험은 새 계약에 맞춰 수정 전판을 보존하고 바꿉니다."
+        },
+        {
+          "line": 547,
+          "text": "## 2026-10-09_0928 같은 최근접역의 다른 역 조합 경로 복구 검증 결과"
+        },
+        {
+          "line": 549,
+          "text": "최근접역이 같아도 다른 물리적 역 조합을 기존 시간표·사고·출발 하한 판정에 넘깁니다. 신규12/12·관련118/118통과(실데이터16개제외). 저장200쌍의 해당1구간에서 조합0→7개, 지하철만 허용한 잠실1구간이 경로없음→모델32분경로로 수정후2/2회 같습니다. 도보포함8분선택은 유지됐고 지하철의 이른도착탐색도 복구됐습니다. [보고서](../records/reports/2026-10-09_0928_같은최근접역의_다른역조합_경로복구_검증.md)·[시각화v33](../records/reports/assets/2026-10-09_mobility_readiness_v33/mobility-readiness.html). 새웹·실제탑승·전체최적성·기존94/96재측정·실시간지하철연결 완료는 아니며전체21판단4/9/8유지,배포하지않았습니다."
+        },
+        {
+          "line": 609,
+          "text": "일반 비순환 정확 공식ID 첫 승차의 현재 예측을 제품 조립→출발 관측→후속 구간/환승 모델→안내 문구에 연결했습니다. 신규33/33·관련201/201·추가61/61, 보유 양평→영등포구청 + 통제 도착2/2회 모델12→13분 확인. 단축 종착이 시간표에 없어도 타는 구간이 같으면 모델 소요를 계산하도록 고쳤습니다. [보고서](../records/reports/2026-10-09_1120_지하철_현재승차_출발안내와환승_연결검증.md)·[시각화v39](../records/reports/assets/2026-10-09_mobility_readiness_v39/mobility-readiness.html). 목적지 이후 공식 역ID 공백으로 실제 긴 종착 조합이 제외되는 문제·공식 이름 대응206개·급행/순환선·실탑승은 남습니다. 보관30초/공급시각90초/미래2초는 신선도 정책이며 ETA 정확도 보장이 아닙니다. 미래 환승은 모델. 새웹/개발자API/실탑승0·21개판단4/9/8 유지·배포하"
+        },
+        {
+          "line": 619,
+          "text": "공식1~8호선 단일 괄호의 유일한 주역명 대응으로 보유 역587→613/793(26추가·180미대응보존),5호선8/8표기해소·양평→영등포구청 종착 식별조합21→43개·하남검단산/마천 통제4/4재계산을 확인했습니다. 신규25/25·관련197/197. [보고서](../records/reports/2026-10-09_1137_공식병기역명_지하철종착경로_복구검증.md)·[시각화v40](../records/reports/assets/2026-10-09_mobility_readiness_v40/mobility-readiness.html). 원ID/조회명/파일해시 유지·모호성 제외. 공개실HTTP6회중서울역1개5행정상(total22),양평/군자ERROR-3365회는 운행없음으로 처리하지 않음. 병기승차역 실제API/180개 대응/급행·순환선/실탑승·새웹은남음·21판단4/9/8 유지·배포없음."
+        },
+        {
+          "line": 629,
+          "text": "공식 최대1000행을 한 번에 조회해 기존20행 절단을 없앱니다. 공개sample키만 공식5행을 사용합니다. 정규화값에 전체건수·반환행수·완전여부를 보존하고 호선필터 전에 원문 전체행수와 선언건수를 대조합니다. 잘못된/서로충돌하는건수·전체보다많은행은 정상으로읽지않습니다. 일부응답이나전체건수미확인은표시자료로보존하되현재승차선택에서는unavailable근거를남기고기존시간표모델로재검증합니다. 공식INFO-200빈응답은전체0으로구분합니다. 기존 통제 선택 입력의 완전성 필드 부재는 유지하되 제품 소스는 반드시 새 필드를 전달합니다. 여러 시각의 페이지를 합쳐 하나의 실시간 스냅샷으로 만들지 않습니다. 수정·실행 검증은 다음 보고서에 보존합니다."
+        },
+        {
+          "line": 656,
+          "text": "공덕 실제 응답1개18행 중 문자번호6개 형식 수용0/6→6/6. 이는 선택 성공률이 아닙니다. 6개 모두ETA0·경로 조건 불일치로 제외돼 공덕→홍대입구 실제 선택/콜백 연결0/1입니다. 호출 시도2회 중 응답1회이며 실제ETA오차/탑승·새웹경로0·지도개발자API0. 후속 환승은 모델 계산이고 전21개 분류3/9/9 유지·전체 미완료입니다. 다음은 공식 방향/종착/경유와 정적 운행 조합의 대조 및 신선한 실제 적합 열차 응답을 제품 관측기에서 확인합니다. [보고서](../records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md)·[검증 원문](../records/evidence/2026-10-09_1228_지하철_문자열열차번호_선택연결/)·[시각화v44](../records/reports/assets/2026-10-09_mobility_readiness_v44/mobility-readiness.html)."
+        },
+        {
+          "line": 682,
+          "text": "보유 시간표의 출발이 실제 정차/승차 시각인지 공식 운영기관의 완전한 역별 평일·휴일 양방향 표와 대조합니다. 별도 published_boarding_timetable_v1.json은 원시간표 SHA256에 묶인 분 단위 사실값이며 원본 행은 삭제/수정하지 않습니다. 같은 역·노선·요일·방향에서 공식 모든 분이 원자료와 정확히1대1 대응할 때만 그 집합 안의 행을 승차 후보로 읽고 밖의 행은 적재 제외 건수로 드러냅니다. 공식 분 누락·중복·잘못된 스키마·원자료 판 불일치는 조용히 보정하지 않고 적재를 실패시킵니다. 열차 종류·초·행선지·새 열차를 추정하지 않습니다. 적용 범위는 확보한 홍대입구4그룹뿐이며 다른 역은 기존대로입니다."
+        },
+        {
+          "line": 696,
+          "text": "TAGO 수집과 빈 조합 재조회는 HTTP 성공만으로 완료/빈 자료를 확정하지 않습니다. 공통 검사에서 정상 결과코드·응답 구조·전체 건수·페이지 번호/크기·모든 페이지 행수를 검증한 뒤 반환합니다. 실패는 비밀값/응답본문 없는 명시적 오류이며 기본 수집은 완료 체크포인트에 넣지 않고 중단합니다. 재조회는 오류 상태를 보존하며 ok 빈 자료로 분류하지 않습니다. 제공처 원문 행은 raw_item에 별도로 보존하되 열차번호·종류를 추정하지 않습니다. 기존 완료 표의 잘못된 항목과 이미 가공된 시간표는 자동 삭제/교체하지 않습니다. 현재 DATA_DIR 미설정 환경에서 전체 수집/가공을 실행하지 않습니다."
+        },
+        {
+          "line": 698,
+          "text": "수집 계약 보완: 검증된 조합의 행을 flush/fsync한 뒤 조합마다 완료 JSON을 임시 파일과 원자적 교체로 저장합니다. 일반 API 오류로 중단돼도 그 이전 성공 조합은 재조회하지 않습니다. 두 파일을 동시에 원자적으로 커밋하는 구조는 아니므로 전원 장애·동시 수집의 exactly-once는 보장하지 않습니다."
+        },
+        {
+          "line": 703,
+          "text": "수집/빈조합재조회2진입점의 오류→정상빈자료 오인을 수정하고 전체 페이지 검증·원문보존·조합별 완료JSON저장을 연결했습니다. 신규38/38·관련505/505(165선택제외)·Ruff2파일/구문3파일 통과. 실제TAGO호출·새시간표복구·공덕공표4그룹확보0·기존제품자료보존·21분류3/9/9유지·전체미완료. 기존잘못된완료항목·전원장애사이두파일중복·정차식별은남았습니다. [보고서](../records/reports/2026-10-09_1402_지하철_수집실패와_페이지누락_복구검증.md)·[시각화v48](../records/reports/assets/2026-10-09_mobility_readiness_v48/mobility-readiness.html)·[검증](../records/evidence/2026-10-09_1357_지하철_수집실패_완료오인_수정/)."
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/remote-team-a2a.md",
+      "lines": 119,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-boundary.md",
+      "lines": 247,
+      "matches": [
+        {
+          "line": 46,
+          "text": "## 2. read 도구를 직접 호출하지 않는다"
+        },
+        {
+          "line": 95,
+          "text": "**선언은 있는데 \"직접 호출하지 않는다\"는 강제가 없다.**"
+        },
+        {
+          "line": 105,
+          "text": "## 3. 다른 Team을 직접 호출하지 않는다"
+        },
+        {
+          "line": 115,
+          "text": "VOC & Store Manager가 다른 Team에 위임할 때도 마찬가지다. **VOC는 \"위임 제안\"을 `TeamResult`로 반환하고, Controller가 그걸 Task로 만든다.**"
+        },
+        {
+          "line": 130,
+          "text": "| `INV-CS-TEAM-004` | read 도구를 직접 호출하지 않는다 | review |"
+        },
+        {
+          "line": 131,
+          "text": "| `INV-CS-TEAM-005` | 다른 Team을 직접 호출하지 않는다 | review |"
+        },
+        {
+          "line": 150,
+          "text": "| 005 | Team 모듈이 다른 Team 모듈을 import하는가 |"
+        },
+        {
+          "line": 183,
+          "text": "> Core 는 Team 내부를 `import` 하지 않고, **Team 도 `transition.py` 를 직접 호출하지 않는다.**"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/fields.md",
+      "lines": 263,
+      "matches": []
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/index.md",
+      "lines": 203,
+      "matches": [
+        {
+          "line": 41,
+          "text": "> `allowed_tools`는 **현재 코드와의 과도기 호환 필드**다. 실행 규칙상 Team이 이 목록을 사용해 직접 호출하지 않는다."
+        },
+        {
+          "line": 134,
+          "text": "`[실측]` `TeamResult`에 `model_validator`가 있다. 모순된 조합을 만들 수 없다."
+        },
+        {
+          "line": 162,
+          "text": "`[실측]` 2026-09-06 대조. 규칙 부분(Team이 지킬 셋 · tool 규칙 · `outcome`/`next_action` 조합표)은 지금도 맞고 이 문서가 그걸 담고 있다. **예시와 상태 서술은 낡았다.**"
+        }
+      ]
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-registry.md",
+      "lines": 197,
+      "matches": []
+    },
+    {
+      "path": "wiki/architecture/concurrency.md",
+      "lines": 99,
+      "matches": []
+    },
+    {
+      "path": "wiki/architecture/core-design.md",
+      "lines": 159,
+      "matches": [
+        {
+          "line": 31,
+          "text": "| 4 | **Context Broker** | 필요한 자료를 **선택·조합·정규화·압축** |"
+        },
+        {
+          "line": 93,
+          "text": "Controller 는 redis.xadd(...) 를 직접 호출하지 않는다"
+        },
+        {
+          "line": 136,
+          "text": "Human Approval · 다른 Team handoff · 완료/종료 판단"
+        },
+        {
+          "line": 149,
+          "text": "| 무엇을 | Task·Event **전달** | 자료 **조합** |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/architecture/core-vs-team.md",
+      "lines": 191,
+      "matches": [
+        {
+          "line": 68,
+          "text": "**2. read Tool을 직접 호출하지 않는다.** Context Broker가 `required_context`에 따라 읽어서 `ContextPack`에 넣어준다."
+        },
+        {
+          "line": 74,
+          "text": "**3. 다른 Team을 직접 호출하지 않는다.** Controller가 Task로 변환해 수행한다."
+        },
+        {
+          "line": 76,
+          "text": "Team 간 직접 호출을 허용하면 의존 그래프가 생기고 교체가 불가능해진다."
+        }
+      ]
+    },
+    {
+      "path": "wiki/architecture/diagrams.md",
+      "lines": 98,
+      "matches": [
+        {
+          "line": 33,
+          "text": "| **유스케이스** | 외부 주체와 업무 기능 범위. Core·CS Pack·Commerce Pack·MCP·A2A·승인 경계·운영자 ★**낡음** |"
+        },
+        {
+          "line": 78,
+          "text": "| **도메인** | 유스케이스 · A2A 시퀀스 |"
+        },
+        {
+          "line": 84,
+          "text": "| 유스케이스 | `CS Pack`·`Commerce Pack` 구획. v10 은 여행 Team 다섯이다 |"
+        },
+        {
+          "line": 89,
+          "text": "`[미확보]` **다시 그리지 않았다.** PlantUML 서버 접속이 필요하다. 여행 Team 은 2026-09-09 에 코드에 붙었으므로 유스케이스를 그릴 재료는 생겼다."
+        }
+      ]
+    },
+    {
+      "path": "wiki/architecture/index.md",
+      "lines": 93,
+      "matches": []
+    },
+    {
+      "path": "wiki/architecture/notifications.md",
+      "lines": 271,
+      "matches": [
+        {
+          "line": 27,
+          "text": "| ① 변경 통지 | 된다 — 일정 버전당 하나. `[2026-09-22]` 링크도 싣는다(시나리오용 여행 버전·Case 버전 **양쪽**) |"
+        },
+        {
+          "line": 28,
+          "text": "| ②·③ 안내 | 된다 — 안내 되잡기 작업(`run_sweepers --only trip_reminders`, 기본 실행에도 감시 뒤에 들어간다). 전에는 시나리오 모드의 시연 버튼으로만 나갔다 |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/architecture/pack-model.md",
+      "lines": 219,
+      "matches": [
+        {
+          "line": 113,
+          "text": "`[실측]` v8 §8-B (v11 §8 이 평가 대상만 여행 시나리오로 바꿨고, 이 판단 기준 자체는 안 바꿨다)"
+        }
+      ]
+    },
+    {
+      "path": "wiki/architecture/paper-basis.md",
+      "lines": 95,
+      "matches": []
+    },
+    {
+      "path": "wiki/architecture/repository-map.md",
+      "lines": 92,
+      "matches": []
+    },
+    {
+      "path": "wiki/architecture/stack-sources.md",
+      "lines": 56,
+      "matches": []
+    },
+    {
+      "path": "wiki/architecture/system-context.md",
+      "lines": 105,
+      "matches": []
+    },
+    {
+      "path": "wiki/architecture/tech-stack.md",
+      "lines": 66,
+      "matches": []
+    },
+    {
+      "path": "wiki/business/edge-inference.md",
+      "lines": 98,
+      "matches": []
+    },
+    {
+      "path": "wiki/business/error-cost.md",
+      "lines": 95,
+      "matches": []
+    },
+    {
+      "path": "wiki/business/gpu-limits.md",
+      "lines": 210,
+      "matches": []
+    },
+    {
+      "path": "wiki/business/index.md",
+      "lines": 103,
+      "matches": []
+    },
+    {
+      "path": "wiki/business/infrastructure-cost.md",
+      "lines": 219,
+      "matches": []
+    },
+    {
+      "path": "wiki/business/market.md",
+      "lines": 102,
+      "matches": []
+    },
+    {
+      "path": "wiki/business/measure-review-time.md",
+      "lines": 103,
+      "matches": []
+    },
+    {
+      "path": "wiki/business/pricing-travel.md",
+      "lines": 50,
+      "matches": [
+        {
+          "line": 20,
+          "text": "| **기여이익** | 팀당 **14,249원** `[추정 — 예산 시나리오]`. ★**고정비를 안 뺐다 — 순이익이 아니다** |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/business/pricing.md",
+      "lines": 77,
+      "matches": []
+    },
+    {
+      "path": "wiki/business/unit-economics.md",
+      "lines": 223,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-001-payment-ownership.md",
+      "lines": 234,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-002-graph-store-gate.md",
+      "lines": 73,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-003-message-broker.md",
+      "lines": 71,
+      "matches": [
+        {
+          "line": 32,
+          "text": "| 브로커 없이 직접 호출 | ❌ | 경계가 사라져 나중에 못 바꾼다 |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-004-self-hosting-rationale.md",
+      "lines": 106,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-005-write-gate.md",
+      "lines": 132,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-006-composer-ownership.md",
+      "lines": 121,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-007-central-config-store.md",
+      "lines": 195,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-008-review-spam-out-of-scope.md",
+      "lines": 95,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-009-recommendation-scope.md",
+      "lines": 113,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-010-deferral-scoring.md",
+      "lines": 244,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-011-composer-v3-gap.md",
+      "lines": 192,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-012-cutover-timing.md",
+      "lines": 128,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-013-declarative-team.md",
+      "lines": 104,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-014-judge-rebaseline.md",
+      "lines": 102,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-015-implementation-catalog.md",
+      "lines": 120,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-016-scope-narrowing-reasons.md",
+      "lines": 151,
+      "matches": [
+        {
+          "line": 138,
+          "text": "| 여행 골든셋 시나리오 | 서울 실장소로 만든다 |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+      "lines": 192,
+      "matches": [
+        {
+          "line": 42,
+          "text": "`[결정 2026-10-03 — 사용자 · 추천대로]` **「여행별 묶음 Case · 전체 일정 재검증」(위 흐름 4)과 코드의 차이를 이렇게 닫는다.** 코드는 **항목별 Case** 이고(요청 id 가 「여행 · 항목 · 원인 지문」) 적용기에 전체 재검증이 없었다. ①**항목별 Case 는 그대로 둔다** — 여행별 묶음으로 바꾸는 큰 변경은 하지 않는다(같은 여행의 두 항목이 동시에 깨지면 Case 둘이 차례로 돌고, 둘째는 첫째가 쓴 새 판을 기준으로 다시 계산한다 — 낡은 기준 버전이면 적용기가 거절한다 §6-C-7). ②**자동 변경은 쓰기 전에 일정 전체를 다시 판정한다**(`itinerary_actions.introduced_violations` — 등록 때와 같은 `check_itinerary`) — 바꾼 뒤 **새로 생긴** 위반이 있으면 적용하지 않고 고객에게 「일정은 그대로 두었어요」를 알린다. 바꾸기 전에 이미 있던 위반은 막지 않고, 고객이 고른 변경 · "
+        },
+        {
+          "line": 69,
+          "text": "4. 하나라도 FAIL 이면 **여행당 사건 1건** → 코어가 **Activity → Dining → Mobility** 순으로 대안을 받는다(앞 에이전트의 초안을 다음에 넘긴다, 에이전트끼리는 부르지 않는다) → **전체 일정 재검증** → **새 버전 1번 + 알림 1번**"
+        },
+        {
+          "line": 81,
+          "text": "**골든타임 = 고객이 영향받는 항목으로 출발을 결정하는 순간까지 남은 시간.** 확정 시나리오(`team_branch/jh/확정_시나리오.md`)로 추정했다 `[추정]`:"
+        },
+        {
+          "line": 180,
+          "text": "- 골든타임 5~10분은 시나리오 시각으로 낸 **추정**이다 — 발표에 쓰려면 근거 자료(도보·배차 간격 등)를 붙인다"
+        }
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-018-decision15-stop-paths.md",
+      "lines": 69,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-019-travel-density.md",
+      "lines": 57,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+      "lines": 123,
+      "matches": [
+        {
+          "line": 102,
+          "text": "| 고정 항목도 감지 · 알림 (Case 버전 감시) | **완료** `[2026-10-03 사용자 결정]` — 사용자 말: 「안 바꿔도 알림은 받게 해야 함. 바꾸지 않는 것과 알림을 끄는 것은 별개.」 Case 버전 감시(`trip_watch_cases.py`)가 고정 항목을 점검에서 **통째로 빼고 있었다**(시나리오 버전만 점검했다 — 두 감시가 갈려 있었다). 이제 점검하고 Case 를 연다 — 일정은 적용기의 「변경 안 할 일정이면 먼저 묻는다」가 막고(대안이 있으면 안 1·2·3 과 함께 「변경하지 않기로 한 일정이라 바꾸지 않았어요」, 없으면 「일정은 그대로 두었어요」), 안전 사건이면 안전 알림이다. 시험 `tests/scenario/test_pinned_items_are_watched.py`. ★**일정 단위 · 전체 알림 끄고 켜기는 보류**(할 일은 `wiki/architecture/notifications.md`) — 안전 사건까지 끌 수 있게 할지도 미정 |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/decisions/D-021-email-verified-key-recovery.md",
+      "lines": 120,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-022-study-only-kto-images.md",
+      "lines": 74,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+      "lines": 71,
+      "matches": []
+    },
+    {
+      "path": "wiki/decisions/index.md",
+      "lines": 107,
+      "matches": []
+    },
+    {
+      "path": "wiki/delivery/dod.md",
+      "lines": 121,
+      "matches": [
+        {
+          "line": 50,
+          "text": "| 22 | 평가 시나리오에서 필수 조건 위반 0건 | 측정 |"
+        },
+        {
+          "line": 109,
+          "text": "★**이것이 「RC 다」라는 뜻은 아니다.** 측정의 표본이 작다(여행 시나리오 10건 · 하루 1종 · 서울 1도시), 사람 라벨 대조(judge agreement)는 여전히 없고, 실제 모델을 넣은 하루 측정은 별도다. [release-gate.md](release-gate.md) 가 내보내도 되는지를 따로 본다."
+        }
+      ]
+    },
+    {
+      "path": "wiki/delivery/estimation-baseline.md",
+      "lines": 134,
+      "matches": [
+        {
+          "line": 16,
+          "text": "**AI 협업에서는 비용의 성격 자체가 다르다.**"
+        }
+      ]
+    },
+    {
+      "path": "wiki/delivery/index.md",
+      "lines": 75,
+      "matches": [
+        {
+          "line": 24,
+          "text": "1. [timeline.md](timeline.md) — 전체 일정"
+        }
+      ]
+    },
+    {
+      "path": "wiki/delivery/milestones/final-2026-10-26.md",
+      "lines": 124,
+      "matches": [
+        {
+          "line": 23,
+          "text": "`[실측 2026-09-09]` `eval/datasets/golden.jsonl` 72건이 전부 쇼핑몰이고 **여행 시나리오는 0건**이다(첫 행이 `g-order-01`)."
+        },
+        {
+          "line": 25,
+          "text": "★**이것이 최종발표의 가장 큰 위험이다.** \"믿을 수 있다\"는 주장은 측정으로만 서는데, 측정할 데이터가 아직 없다. v11 §10 도 같은 걸 리스크로 세웠다 — **하네스는 승계하고 시나리오만 교체**한다."
+        },
+        {
+          "line": 30,
+          "text": "| 골든셋·holdout 시나리오 | — | **전량 새로 만든다** |"
+        },
+        {
+          "line": 112,
+          "text": "| 근거 지표 | 미측정 | 여행 시나리오로 실측 |"
+        },
+        {
+          "line": 123,
+          "text": "- [../../evaluation/golden-set.md](../../evaluation/golden-set.md) — **여행 시나리오 0건**"
+        }
+      ]
+    },
+    {
+      "path": "wiki/delivery/milestones/index.md",
+      "lines": 46,
+      "matches": []
+    },
+    {
+      "path": "wiki/delivery/milestones/midterm-2026-09-15.md",
+      "lines": 122,
+      "matches": [
+        {
+          "line": 96,
+          "text": "| **Team이 Tool을 직접 호출하는가** | 아니다. read는 Context Broker가 제공하고 write는 `ActionProposal`만 전달한다 |"
+        },
+        {
+          "line": 121,
+          "text": "- [../timeline.md](../timeline.md) — 전체 일정"
+        }
+      ]
+    },
+    {
+      "path": "wiki/delivery/open-items.md",
+      "lines": 324,
+      "matches": [
+        {
+          "line": 180,
+          "text": "| ~~**[코드 담당 인계 2026-09-23] ① 확정 시나리오의 이동 표기를 새 계약에 맞춘다**~~ ★`[완료 2026-09-23]` 버스 2016·2224·7022(서울시 TOPIS 정류소별 경유 노선으로 확인) + `도로:아차산로`, 환승역 두 노선 각각, `도보:` 제거 — 재생 사건 대상은 그대로. [기록](../../final_project_cs/wiki/records/evidence/2026-09-23_경로_uses_표기_검사.md) — 일정 등록 몸통의 `uses`(이동 수단이 지나는 역·노선·도로를 적는 칸, 감시가 이 문자열로 운행·통제 사건을 대조한다) 표기가 2026-09-23 계약이 됐다. `final_project_cs/app/domains/travel_ops/scenarios/seoul_day_taiwan_friends.json` 에서 어긋나는 곳: ⓐ `버스:성수동` 2곳(`konkuk_bus`·`ttukseom_bus`) — 동네 이름이 아니라 *"
+        }
+      ]
+    },
+    {
+      "path": "wiki/delivery/release-gate.md",
+      "lines": 101,
+      "matches": []
+    },
+    {
+      "path": "wiki/delivery/roles.md",
+      "lines": 174,
+      "matches": []
+    },
+    {
+      "path": "wiki/delivery/scope-verdicts.md",
+      "lines": 147,
+      "matches": [
+        {
+          "line": 141,
+          "text": "`verdict`(승인/거부/검토필요)는 `TeamResult.decisions[]`에 넣고, `outcome`은 실행 상태(`completed/waiting/handoff/escalated/failed`)라 승인·거부를 넣지 않는다 — 검토필요일 때만 `escalated`나 `waiting`을 병행한다. Team 체이닝은 `next_action=HANDOFF`+`handoff_capability`로, Team 간 직접 호출은 금지. → [team-contract](../../final_project_cs/wiki/teams/team-contract/index.md)"
+        }
+      ]
+    },
+    {
+      "path": "wiki/delivery/ticket-structure.md",
+      "lines": 97,
+      "matches": []
+    },
+    {
+      "path": "wiki/delivery/timeline.md",
+      "lines": 190,
+      "matches": [
+        {
+          "line": 3,
+          "text": "title: 전체 일정"
+        },
+        {
+          "line": 12,
+          "text": "# 전체 일정"
+        },
+        {
+          "line": 133,
+          "text": "`[미확보]` 시트의 팀명·깃허브·협업툴·멘토 칸이 2026-08-17엔 전부 비어 있었다. 지금 채워졌는지 확인하지 않았다."
+        },
+        {
+          "line": 147,
+          "text": "| 9W | 버그 수정, DoD·Alembic gate 확인 | 승인·보안 회귀, 배포·감사 점검 | Team 성능 수정, 시나리오 잔여 결함 표시 | bootstrap/McNemar, 최종 리포트·실행 절차 점검 |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/delivery/todo-user.md",
+      "lines": 150,
+      "matches": [
+        {
+          "line": 38,
+          "text": "| 여행 골든셋 시나리오 (서울 실장소) | **아직 아무도 안 맡았다** — 아래 §5 |"
+        },
+        {
+          "line": 83,
+          "text": "`[실측 2026-09-09]` `eval/datasets/golden.jsonl` 72건이 전부 쇼핑몰이고 **여행 시나리오는 0건**이다."
+        }
+      ]
+    },
+    {
+      "path": "wiki/evaluation/classification-accuracy.md",
+      "lines": 106,
+      "matches": []
+    },
+    {
+      "path": "wiki/evaluation/dod28-rerun.md",
+      "lines": 204,
+      "matches": []
+    },
+    {
+      "path": "wiki/evaluation/finetuning.md",
+      "lines": 235,
+      "matches": []
+    },
+    {
+      "path": "wiki/evaluation/golden-set.md",
+      "lines": 231,
+      "matches": [
+        {
+          "line": 213,
+          "text": "`[실측]` 골든셋은 Codex 산출물이다. 받을 때 넷을 했다 — `git status`로 소유 범위 밖 파일 변경이 없는지, 검증 스크립트를 **Codex 실행과 별개로 직접 재실행**해 다양성 수치가 정확히 일치하는지, 무작위 12건을 사람이 읽어 `message`↔`doc_ref`↔`expected_next_action`이 의미적으로 맞는지, 그리고 **단위 붙은 숫자 주장을 정규식으로 전수 추출** — 80건 중 1건(`g-return-01`의 \"7일\")뿐이었고 코퍼스 `doc_11`의 청약철회 기한과 일치했다. 나머지는 숫자를 지어내지 않고 시나리오만 서술한다."
+        },
+        {
+          "line": 223,
+          "text": "3. **시나리오 획일성.** 파인튜닝 평가에서 지적된 문제다"
+        }
+      ]
+    },
+    {
+      "path": "wiki/evaluation/index.md",
+      "lines": 179,
+      "matches": []
+    },
+    {
+      "path": "wiki/evaluation/judge-second-opinion.md",
+      "lines": 197,
+      "matches": []
+    },
+    {
+      "path": "wiki/evaluation/judge.md",
+      "lines": 103,
+      "matches": []
+    },
+    {
+      "path": "wiki/evaluation/metrics.md",
+      "lines": 421,
+      "matches": []
+    },
+    {
+      "path": "wiki/evaluation/model-selection.md",
+      "lines": 159,
+      "matches": []
+    },
+    {
+      "path": "wiki/evaluation/protocol.md",
+      "lines": 206,
+      "matches": [
+        {
+          "line": 89,
+          "text": "`[실측 2026-09-10]` **golden 72건 · holdout 24건이 별개 파일이다**(`eval/datasets/golden.jsonl`·`holdout.jsonl`). `[정정]` 「72건 중 60+20 분리」로 적혀 있었다 — **60+20=80 이라 72건 안에서는 산술적으로 불가능하다.** 둘 다 쇼핑몰 시나리오이고 여행은 0건이다."
+        }
+      ]
+    },
+    {
+      "path": "wiki/governance/cutover.md",
+      "lines": 168,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/document-standard.md",
+      "lines": 264,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/domain-axis.md",
+      "lines": 136,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/drift-case-voc.md",
+      "lines": 124,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/evidence-grades.md",
+      "lines": 235,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/front-matter.md",
+      "lines": 167,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/index.md",
+      "lines": 72,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/known-weaknesses.md",
+      "lines": 110,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/migration-scope/coverage-2026-09.md",
+      "lines": 253,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/migration-scope/coverage.md",
+      "lines": 183,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/migration-scope/index.md",
+      "lines": 208,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/migration-scope/judgments-2.md",
+      "lines": 153,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/migration-scope/judgments.md",
+      "lines": 184,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/migration-scope/status.md",
+      "lines": 156,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/migration.md",
+      "lines": 212,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/parallel-work.md",
+      "lines": 206,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/review-policy.md",
+      "lines": 273,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/structure-guide.md",
+      "lines": 290,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-guide.md",
+      "lines": 193,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/index.md",
+      "lines": 111,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/round-1.md",
+      "lines": 177,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/round-2.md",
+      "lines": 80,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/round-3.md",
+      "lines": 109,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/round-4.md",
+      "lines": 127,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/round-5.md",
+      "lines": 140,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/round-6.md",
+      "lines": 126,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/round-7.md",
+      "lines": 211,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/round-8.md",
+      "lines": 157,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/type-verification/round-9.md",
+      "lines": 171,
+      "matches": []
+    },
+    {
+      "path": "wiki/governance/work-loop.md",
+      "lines": 183,
+      "matches": []
+    },
+    {
+      "path": "wiki/index.md",
+      "lines": 94,
+      "matches": []
+    },
+    {
+      "path": "wiki/product/glossary.md",
+      "lines": 157,
+      "matches": [
+        {
+          "line": 39,
+          "text": "- read Tool을 직접 호출하지 않는다 (Context Broker가 넣어준다) — ★`[실측 2026-09-10 작업 트리]` 여행 코드는 `_read()` 로 직접 부른다(허용·예산은 `ReadToolbox.call()` 이 강제). 원칙과 코드가 갈라져 있다 → [`cs/teams/team-boundary.md`](../../final_project_cs/wiki/teams/team-boundary.md) §2"
+        },
+        {
+          "line": 40,
+          "text": "- 다른 Team을 직접 호출하지 않는다 (Controller가 Task로 변환)"
+        },
+        {
+          "line": 59,
+          "text": "Team이 `required_context`를 선언하면 Broker가 예산 안에서 조합한다. 부족하면 Team이 `need_more_context`로 요청한다."
+        }
+      ]
+    },
+    {
+      "path": "wiki/product/index.md",
+      "lines": 60,
+      "matches": []
+    },
+    {
+      "path": "wiki/product/personas.md",
+      "lines": 151,
+      "matches": [
+        {
+          "line": 19,
+          "text": "`[확정 2026-09-10]` 팀이 정했다 → `team_branch/jh/확정_시나리오.md`."
+        },
+        {
+          "line": 20,
+          "text": "★**아래 「이현우」는 앞 판 페르소나다.** 대표 시나리오와 평가는 이제 이 두 사람을 기준으로 한다."
+        },
+        {
+          "line": 36,
+          "text": "대표 시나리오와 설계 대응 → [확정시나리오_설계대응](../../program/plan/A-COP_확정시나리오_설계대응.md)"
+        },
+        {
+          "line": 116,
+          "text": "★**지금 그 연결이 끊겨 있다.** `[실측 2026-09-09]` 골든셋 72건이 전부 쇼핑몰이고 **여행 시나리오는 0건**이다(`eval/datasets/golden.jsonl` 첫 행이 `g-order-01`)."
+        },
+        {
+          "line": 150,
+          "text": "- [../evaluation/golden-set.md](../evaluation/golden-set.md) — **여행 시나리오 0건**"
+        }
+      ]
+    },
+    {
+      "path": "wiki/product/pitch-questions.md",
+      "lines": 72,
+      "matches": []
+    },
+    {
+      "path": "wiki/product/positioning.md",
+      "lines": 129,
+      "matches": []
+    },
+    {
+      "path": "wiki/product/problem.md",
+      "lines": 122,
+      "matches": [
+        {
+          "line": 9,
+          "text": "    title: 골든셋 72건 (쇼핑몰 — 여행 시나리오 0건)"
+        },
+        {
+          "line": 22,
+          "text": "`[실측 2026-09-09]` **여행에는 그 데이터가 없다.** `eval/datasets/golden.jsonl` 72건이 전부 쇼핑몰이고 여행 시나리오는 **0건**이다(첫 행이 `g-order-01`)."
+        },
+        {
+          "line": 122,
+          "text": "- [../evaluation/golden-set.md](../evaluation/golden-set.md) — **여행 시나리오 0건.** 이 문서의 근거가 여기서 나온다"
+        }
+      ]
+    },
+    {
+      "path": "wiki/product/scope.md",
+      "lines": 174,
+      "matches": [
+        {
+          "line": 41,
+          "text": "대표 시나리오 여섯."
+        },
+        {
+          "line": 48,
+          "text": "`[실측]` **골든셋 72건은 쇼핑몰 시나리오다.** 평가 하네스는 승계하되 정답 시나리오를 교체해야 한다 → v11 §8."
+        },
+        {
+          "line": 112,
+          "text": "각 Team은 셋을 갖는다 — 검증 규칙 · 감시 소스 · 재계획 후보 생성. **전체 일정 정합성(시간 충돌·예산·이동 여유)은 Team이 아니라 코어 검증 층이 본다.** Team 안에서도 판정(코드)과 대안 생성(LLM)을 나누고, 생성한 대안은 판정을 다시 통과해야 통지된다."
+        },
+        {
+          "line": 121,
+          "text": "| 대표 시나리오 | 주문 확인 · 배송 예외 · 반품 요청 · 반품 가능 여부 · 환불 금액 산정 · 반복 불만 탐지 |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/product/traveler-profile.md",
+      "lines": 86,
+      "matches": [
+        {
+          "line": 40,
+          "text": "확인하는 법은 간단하다. 시나리오에 그 값을 A와 B로 바꿔 넣어 보고 **결과가 같으면 뺀다.**"
+        }
+      ]
+    },
+    {
+      "path": "wiki/product/vision-backlog.md",
+      "lines": 202,
+      "matches": [
+        {
+          "line": 75,
+          "text": "`[실측]` **비용은 인·일이 아니라 6인 AI 협업 팀 기준 실소요 일수다.** 산정 근거는 [estimation-baseline.md](../delivery/estimation-baseline.md) — **4개 저장소 실측**이다."
+        },
+        {
+          "line": 123,
+          "text": "| 05 | outbox dedupe·재전달·dead-letter **계약 테스트** · 프로세스 중단·broker 장애 **failure injection 절차** | 계약 테스트는 있다(consumer 계약, DoD-23). **실제 프로세스 kill 시나리오는 안 돌렸다**(DoD-12) → [idempotency.md](../../final_project_cs/wiki/actions/idempotency.md) |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/quickstart.md",
+      "lines": 74,
+      "matches": [
+        {
+          "line": 43,
+          "text": "| 평가를 돌리려 한다 | [evaluation/protocol.md](evaluation/protocol.md) — 하네스는 승계, **정답 시나리오는 교체 대상**(골든셋 72건은 쇼핑몰) |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/research/a2a-adoption.md",
+      "lines": 80,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/accessibility-data-sources.md",
+      "lines": 150,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/dietary-data-sources.md",
+      "lines": 235,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/dispute-cases.md",
+      "lines": 75,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/graphrag.md",
+      "lines": 88,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/index.md",
+      "lines": 131,
+      "matches": [
+        {
+          "line": 124,
+          "text": "| **Bitext customer-support-llm** | **27 intent / 11 카테고리.** `cancel_order`·`get_refund`·`track_refund` 가 우리 시나리오와 직접 겹친다 |"
+        }
+      ]
+    },
+    {
+      "path": "wiki/research/legal-basis.md",
+      "lines": 258,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/mt-benchmark.md",
+      "lines": 123,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/mt-methodology.md",
+      "lines": 194,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/place-api-quota-and-terms.md",
+      "lines": 141,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/price-data-sources.md",
+      "lines": 222,
+      "matches": []
+    },
+    {
+      "path": "wiki/research/rag-slm-improvements.md",
+      "lines": 49,
+      "matches": []
+    },
+    {
+      "path": "wiki/travel_api_competitor_census_2026-09-11.md",
+      "lines": 194,
+      "matches": [
+        {
+          "line": 14,
+          "text": "6. **국내에서는 마이리얼트립이 이미 파트너 API와 MCP 연동을 공개했다.** 항공·숙소·투어티켓 조회 및 제휴 수익 추적이 중심이며, 전체 일정의 지속 관리 API라는 근거는 없다.[^9]"
+        },
+        {
+          "line": 43,
+          "text": "| **Mindtrip** | 미국 소비자 AI 여행 플랫폼 | 공개 개발자 API 미확인 | 일정 생성·협업·예약 정리, 대화형 항공 검색·예약 출시, B2B 임베드 | Sabre API를 사용하는 소비자 제품 |"
+        },
+        {
+          "line": 56,
+          "text": "| **Vibe** | 영국·글로벌 TMC | Remote MCP, Vibe 고객용 운영 | 대화형 검색·조합 | 예 | 기존 예약 조회, 변경·취소·서비스 요청 | **매우 높음**. 외부 개인 AI 접점과 예약 관리가 직접 중복 | [Vibe MCP](https://www.vibe.travel/mcp/) |"
+        },
+        {
+          "line": 62,
+          "text": "| **Travelport TripServices** | 글로벌 GDS·여행 판매자 | REST API 운영; MCP 기반 인터페이스 구축 | 외부 에이전트가 조합 | 예 | 발권·교환·취소·환불·서비스 | **높음** 실행 기반. 소비자 일정 CS 완제품은 아님 | [TripServices](https://developer.travelport.com/), [MCP 협력](https://www.travelport.com/press-releases/cognizant-anthropic-collaboration-to-power-travel-technology-ai-era) |"
+        },
+        {
+          "line": 64,
+          "text": "| **마이리얼트립** | 한국 소비자 OTA·파트너 유통 | REST API + MCP 안내, 파트너 운영 | 상품 조합 보조 | 상품·예약 링크 중심 | 수익·예약 조회; 전체 일정 이벤트 미확인 | **중간**. 외부 에이전트 유통은 중복, 지속 일정관리는 약함 | [개발자센터](https://docs.myrealtrip.com/), [MCP PoC 설명](https://blog.myrealtrip.com/ai-travel-conversation-search/) |"
+        },
+        {
+          "line": 68,
+          "text": "| **AXUS Travel App** | 고급여행 자문사 | Push/Pull API, 등록 파트너용 | 직접 생성보다 구조 입력 | **예** | 전체 일정 push/update 및 updated-at 조회 | **중간~높음**. 여행사 일정 허브, 자동 재계획 미확인 | [API 문서](https://axustravelapp.com/api/v1/docs), [Push](https://axustravelapp.com/api/v1/docs/push), [Pull](https://axustravelapp.com/api/v1/docs/pull) |"
+        },
+        {
+          "line": 102,
+          "text": "| 예약 가능한 일정 조합 | Nezasa, Sabre 기반 Mindtrip/BizTrip, Travel Compositor | 상용화 | 공급계약 없이 정면승부 어려움 |"
+        },
+        {
+          "line": 108,
+          "text": "| 전체 일정 제약 검증 | Nezasa Itinerary Checker가 가장 근접 | 일부 상용화 | 식사·보행·동행·예산·필수경험을 일관되게 보존하는 검증 품질 |"
+        },
+        {
+          "line": 130,
+          "text": "이 조합은 우리의 ‘지속 관리’ 주장에 가장 큰 위협이다. 차이는 기업여행·예약거래 중심이라는 점이다. 우리가 레저여행의 식사, 관광지 휴무, 보행 제약, 동행자 조건까지 다룬다면 범위는 다르지만, ‘AI가 여행 중에도 계속 관리한다’는 문구 자체는 더 이상 독점적이지 않다."
+        },
+        {
+          "line": 156,
+          "text": "> 여러 출처의 여행 조건을 하나의 버전 상태로 유지하고, 예약·운영·현장 변화가 생기면 남은 전체 일정의 시간·이동·예산·동행 제약을 검증하여, 근거와 변경 영향을 제시하고 승인된 조치의 실제 수행까지 추적하는 레저여행 지속관리 API."
+        },
+        {
+          "line": 170,
+          "text": "- ‘알림만 함’, ‘단일 예약만 변경’, ‘전체 일정 대안 제시’, ‘승인 후 거래 실행’, ‘실제 수행 확인’의 다섯 단계로 결과를 분리한다."
+        }
+      ]
+    }
+  ]
+}

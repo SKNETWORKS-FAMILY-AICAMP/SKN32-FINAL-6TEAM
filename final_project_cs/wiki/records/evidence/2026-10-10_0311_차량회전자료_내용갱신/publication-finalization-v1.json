@@ -1,0 +1,13 @@
+{
+  "checked_at": "2026-10-10T03:19:33.029400+09:00",
+  "prior_files_preserved": 409,
+  "preservation_total": 409,
+  "code_before_sha256": "5ed6abddfc65ef809ebff6d584ffc3dcd3aa49e5b29eb227b5f822626ede20e5",
+  "code_after_sha256": "fb78f7f70c9d20a9a576a807f3e1f4fd989acb27b116660159565f47fa1b3b69",
+  "limited_api_calls": 0,
+  "new_tests_passed": 5,
+  "related_tests_passed": 41,
+  "replays_passed": 8,
+  "full_feature_completion": false,
+  "browser_rendered": false
+}

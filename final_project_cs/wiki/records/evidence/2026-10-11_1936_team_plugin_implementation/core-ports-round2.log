@@ -1,0 +1,30 @@
+..........................F.F.......................                     [100%]
+================================== FAILURES ===================================
+__________ test_a2a_valid_result_and_remote_unavailable_are_distinct __________
+
+    @pytest.mark.asyncio
+    async def test_a2a_valid_result_and_remote_unavailable_are_distinct():
+        value = task()
+>       result = TeamResult(task_id=value.task_id, run_id=value.run_id, team_id=value.team_id,
+                            outcome="completed", answer="��� Ȯ��", confidence=1, next_action=NextAction.RESPOND)
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for TeamResult
+E         Value error, answer �� �ִµ� evidence �� �����. �ٰ� ���� Ȯ�� �亯�� ������ �ʴ´�. [type=value_error, input_value={'task_id': UUID('a86eb55...ion.RESPOND: 'respond'>}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+tests\unit\core\test_plugin_availability.py:227: ValidationError
+__________ test_a2a_unknown_status_cannot_accept_completed_artifact ___________
+
+    @pytest.mark.asyncio
+    async def test_a2a_unknown_status_cannot_accept_completed_artifact():
+        value = task()
+>       result = TeamResult(task_id=value.task_id, run_id=value.run_id, team_id=value.team_id,
+                            outcome="completed", answer="��� Ȯ��", confidence=1, next_action=NextAction.RESPOND)
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for TeamResult
+E         Value error, answer �� �ִµ� evidence �� �����. �ٰ� ���� Ȯ�� �亯�� ������ �ʴ´�. [type=value_error, input_value={'task_id': UUID('c3dcf23...ion.RESPOND: 'respond'>}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+tests\unit\core\test_plugin_availability.py:247: ValidationError
+=========================== short test summary info ===========================
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_valid_result_and_remote_unavailable_are_distinct
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_unknown_status_cannot_accept_completed_artifact
+2 failed, 50 passed in 2.56s

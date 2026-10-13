@@ -1,0 +1,16 @@
+{
+  "environment": "local",
+  "files": [
+    {
+      "file": "local-old5.dump",
+      "bytes": 11964,
+      "sha256": "cdc48dc8e884f78d263bffd0b2b038c65bb1a05a1335723b32f945055f706ac6"
+    },
+    {
+      "file": "local-schema.sql",
+      "bytes": 246749,
+      "sha256": "a5421b1727a129789f22d483d1285197c661e40e2ff639ebc0e9761cf6601053"
+    }
+  ],
+  "scope": "old five tables schema/data plus complete schema only; no other business data"
+}

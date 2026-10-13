@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TMAP 보행자 API 준비 흐름</title>
+<style>body{margin:0;background:#fbfcfd;color:#161c28;font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif}main{max-width:960px;margin:24px auto;padding:24px}h1{font-family:'Instrument Serif','Noto Serif KR',serif;font-size:28px;font-weight:400}p{line-height:1.6;color:#6b7488}svg{width:100%;height:auto}text{font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif;font-size:16px;fill:#161c28;text-anchor:middle}.node{fill:#fff;stroke:#161c28;stroke-width:1.2}.arrow{fill:none;stroke:#6b7488;stroke-width:1.2;marker-end:url(#tmap-flow-arrow)}.edge-label{font-size:12px;font-weight:500}.legend{font-size:12px;fill:#6b7488}</style></head>
+<body><main><h1>TMAP 보행자 API 준비 흐름</h1><p>현재는 공식 안내만 확인했습니다. 계정 한도·공유 사용량은 미확인이고 제품도 미연결이므로 호출은 0회입니다.</p>
+<svg viewBox="0 0 960 600" role="img" aria-labelledby="tmap-flow-title tmap-flow-desc">
+<title id="tmap-flow-title">키 준비와 호출 보류 조건</title><desc id="tmap-flow-desc">로그인 후 앱과 무료 상품을 준비하고 앱 키를 비공개 보관합니다. 실제 한도와 공유 사용량을 확인하지 못하면 호출 없이 종료하고, 확인해도 제품 연결 개발은 별도로 진행합니다.</desc>
+<defs><marker id="tmap-flow-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6b7488"/></marker><marker id="tmap-flow-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#a8720c"/></marker><marker id="tmap-flow-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2f5bd8"/></marker></defs>
+<rect width="960" height="600" fill="#fbfcfd"/>
+<path class="arrow" d="M320 72V104"/><path class="arrow" d="M320 160V192"/><path class="arrow" d="M320 248V280"/><path class="arrow" d="M320 336V360"/>
+<path class="arrow" d="M320 440V480"/><path class="arrow" d="M440 400H732Q740 400 740 408V480"/>
+<rect x="340" y="448" width="80" height="16" fill="#fbfcfd"/><text class="edge-label" x="380" y="460">미확인</text>
+<rect x="536" y="372" width="104" height="16" fill="#fbfcfd"/><text class="edge-label" x="588" y="384">확인 완료</text>
+<rect class="node" x="160" y="32" width="320" height="40" rx="20"/><text x="320" y="60">준비 시작</text>
+<rect class="node" x="160" y="104" width="320" height="56" rx="8"/><text x="320" y="136">로그인 · 기존 앱 확인 또는 생성</text>
+<rect class="node" x="160" y="192" width="320" height="56" rx="8"/><text x="320" y="224">대상 앱에 TMAP Free 연결</text>
+<rect class="node" x="160" y="280" width="320" height="56" rx="8"/><text x="320" y="312">앱키(appKey) 1개 비공개 보관</text>
+<polygon points="320 360,440 400,320 440,200 400" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1.2"/><text x="320" y="396">한도·공유 사용량</text><text x="320" y="420">확인 완료?</text>
+<rect class="node" x="160" y="480" width="320" height="40" rx="20"/><text x="320" y="508">호출 0회 유지 · 준비 회차 종료</text>
+<rect class="node" x="600" y="480" width="280" height="40" rx="20"/><text x="740" y="508">준비 종료 · 연결 개발은 별도</text>
+<path d="M40 552H920" stroke="#dbe0ea"/><text class="legend" x="480" y="580">타원: 시작·종료　 사각형: 준비 단계　 마름모: 확인 조건</text>
+</svg>
+<p>형식: 정적 흐름도 · doc-inline 960×600 · 프로필 acop. 외부 글꼴을 불러오지 않아 로컬 한글 글꼴로 표시됩니다. 실제 가입 화면을 재현한 그림이 아닙니다. 호출 예산 원자 확보·20% 예비·24시간 만료 처리 구현은 별도 작업입니다.</p>
+</main></body></html>

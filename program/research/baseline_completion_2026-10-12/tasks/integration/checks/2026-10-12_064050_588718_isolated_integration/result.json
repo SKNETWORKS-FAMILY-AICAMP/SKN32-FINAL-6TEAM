@@ -1,0 +1,20 @@
+{
+  "at_kst": "2026-10-12T06:41:07.854975+09:00",
+  "exit": 0,
+  "args": [
+    "-m",
+    "not live",
+    "tests/unit/core/test_commit_phase_mapping.py",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "-p",
+    "no:langsmith",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_064050_588718_isolated_integration\\tmp",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_064050_588718_isolated_integration\\junit.xml"
+  ],
+  "network_blocks": [],
+  "source_changed": [],
+  "scope": "new task-owned PostgreSQL; current safe SQL runner; external and business DB blocked"
+}

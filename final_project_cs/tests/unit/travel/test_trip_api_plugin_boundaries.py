@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 from types import SimpleNamespace
 from uuid import uuid4
+from datetime import datetime, timedelta
 
 import pytest
 from fastapi import FastAPI
@@ -12,6 +13,7 @@ from app.core.registry import TeamRegistry
 from app.core.service_bindings import BindingTable, bind_services, collect_services, standalone_services
 from app.core.team_availability import TeamUnavailable
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, with_ledger
+from app.domains.travel_ops.components.itinerary.itinerary import Item
 from app.domains.travel_ops.components.team_hooks import dining_ledger, mobility_shapes
 from app.domains.travel_ops.entry import trip_api
 from app.domains.travel_ops.instances.dining import ledger
@@ -32,6 +34,11 @@ def http_boundary(monkeypatch):
                 detail={"route_def": {"planned": "walk", "options": [{"id": "walk"}]}}),
              SimpleNamespace(seq=2, kind="activity", title="도착", item_id=uuid4(),
                 place={"name": "도착", "latitude": 37.571, "longitude": 126.981}, detail={})]
+    for index, item in enumerate(items):
+        item.starts_at = datetime.fromisoformat('2026-10-12T12:00:00+09:00') + timedelta(minutes=30*index)
+        item.ends_at = item.starts_at + timedelta(minutes=20)
+    items = [Item(item_id=i.item_id, seq=i.seq, kind=i.kind, title=i.title, place_id=None,
+                  starts_at=i.starts_at, ends_at=i.ends_at, detail=i.detail, place=i.place) for i in items]
     saved = {"trip_id": trip_id, "customer_id": customer, "title": "저장된 서울 여행",
              "locale": "ko", "party_size": 2, "version": 1, "constraints": {}}
     class Cursor:
@@ -162,10 +169,10 @@ def test_actual_saved_trip_read_remains_independent(http_boundary, monkeypatch, 
     with f.client(BindingTable({}, registry_for(reason), "off")) as client:
         response = client.get(f"/v1/web/trips/{f.trip_id}")
     assert response.status_code == 200 and response.json()["title"] == "저장된 서울 여행"
-    assert f.calls == ["connection"]
+    assert f.calls == ["connection", "intake_read"]  # 저장된 접수 연결만 읽으며 Team 계산은 하지 않는다.
 
 
-@pytest.mark.parametrize("key", ["lookup_factory", "slot_verdicts", "planner_factory", "link_core_place"])
+@pytest.mark.parametrize("key", ["lookup_factory", "slot_verdicts", "planner_factory", "link_core_place", "closure_observation"])
 def test_dining_http_provider_uses_pinned_callable_and_arguments(key):
     calls = []
     provider = lambda *args, **kwargs: calls.append((args, kwargs)) or "pinned"
@@ -182,6 +189,7 @@ def test_real_assembly_captures_original_providers_without_changing_legacy_globa
     assert values[("dining_ledger", "slot_verdicts")] is ledger.slot_verdicts
     assert values[("dining_ledger", "planner_factory")] is ledger.PlannerLedger
     assert values[("dining_ledger", "link_core_place")] is ledger.link_core_place_to
+    assert values[("dining_ledger", "closure_observation")] is ledger.closure_observation
     assert values[("mobility_shapes", "items")] is route_shape.shapes_for_items
     assert values[("mobility_shapes", "review")] is route_shape.shapes_for_review
     assert mobility_shapes._items is old_items

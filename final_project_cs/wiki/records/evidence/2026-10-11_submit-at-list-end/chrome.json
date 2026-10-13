@@ -1,0 +1,754 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.location.config.ts",
+      "submit-at-list-end-20261011.spec.ts",
+      "day-strip-quiet.spec.ts",
+      "timeline-endpoints-20261009.spec.ts",
+      "--reporter=line,json",
+      "--trace=off",
+      "--output=test-results-submit-at-list-end"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\playwright.location.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/test-results-submit-at-list-end",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "day-strip-quiet.spec.ts",
+      "file": "day-strip-quiet.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "목록을 스크롤하면 일차 줄만 사라지고 멈춘 뒤 다시 나타나며 목록 위치는 유지된다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5882,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:43:59.879Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1778477e3940b8f876fe-60cd522c09ff29642ab5",
+          "file": "day-strip-quiet.spec.ts",
+          "line": 18,
+          "column": 1
+        },
+        {
+          "title": "지도를 누르고 움직이는 동안은 계속 숨고 손을 놓은 뒤 복귀한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4394,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:06.117Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1778477e3940b8f876fe-42d66da687a4b5aa83d5",
+          "file": "day-strip-quiet.spec.ts",
+          "line": 35,
+          "column": 1
+        },
+        {
+          "title": "일차 버튼 조작은 숨기지 않고 숨은 중에도 Tab을 누르면 다시 접근할 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5027,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:10.533Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1778477e3940b8f876fe-d6c96148cb7878011cdb",
+          "file": "day-strip-quiet.spec.ts",
+          "line": 48,
+          "column": 1
+        },
+        {
+          "title": "동작 줄이기 설정에서도 숨김·복귀가 되며 위치 이동 효과는 없다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2903,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:15.581Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1778477e3940b8f876fe-207259886e2eeb1d590d",
+          "file": "day-strip-quiet.spec.ts",
+          "line": 69,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "submit-at-list-end-20261011.spec.ts",
+      "file": "submit-at-list-end-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 일반 동작: 목록 끝에서 스크롤 중에도 제출 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4541,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:18.521Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "70f4b679baa33ad036a7-7df98a09e748da8ad8e9",
+          "file": "submit-at-list-end-20261011.spec.ts",
+          "line": 10,
+          "column": 3
+        },
+        {
+          "title": "375px 동작 줄임: 목록 끝에서 스크롤 중에도 제출 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2261,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:23.077Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "70f4b679baa33ad036a7-5e1bdf19f3397106f077",
+          "file": "submit-at-list-end-20261011.spec.ts",
+          "line": 10,
+          "column": 3
+        },
+        {
+          "title": "1280px 일반 동작: 목록 끝에서 스크롤 중에도 제출 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4649,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:25.355Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "70f4b679baa33ad036a7-9ca5c6a6c91159459c31",
+          "file": "submit-at-list-end-20261011.spec.ts",
+          "line": 10,
+          "column": 3
+        },
+        {
+          "title": "1280px 동작 줄임: 목록 끝에서 스크롤 중에도 제출 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2067,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:30.021Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "70f4b679baa33ad036a7-7a333bca4edd85cbf109",
+          "file": "submit-at-list-end-20261011.spec.ts",
+          "line": 10,
+          "column": 3
+        },
+        {
+          "title": "목록 끝에서 접어도 제출은 숨고 다시 펼치면 복귀한다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 14248,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('footer[class*=footer]')\nExpected: not have attribute\nReceived: have attribute\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"not toHaveAttribute\" locator('footer[class*=footer]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('footer[class*=footer]')\u001b[22m\n\u001b[2m    27 × locator resolved to <footer inert=\"\" data-quiet=\"true\" aria-hidden=\"true\" class=\"plan-check_footer__bPd8R trip-screen_chatBar__meOlD\">…</footer>\u001b[22m\n\u001b[2m       - unexpected value \"attribute present\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('footer[class*=footer]')\nExpected: not have attribute\nReceived: have attribute\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"not toHaveAttribute\" locator('footer[class*=footer]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('footer[class*=footer]')\u001b[22m\n\u001b[2m    27 × locator resolved to <footer inert=\"\" data-quiet=\"true\" aria-hidden=\"true\" class=\"plan-check_footer__bPd8R trip-screen_chatBar__meOlD\">…</footer>\u001b[22m\n\u001b[2m       - unexpected value \"attribute present\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\submit-at-list-end-20261011.spec.ts:59:28",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\submit-at-list-end-20261011.spec.ts",
+                      "column": 28,
+                      "line": 59
+                    },
+                    "snippet": "  57 |   await expect(footer).toHaveAttribute(\"inert\");\n  58 |   await handle.click();\n> 59 |   await expect(footer).not.toHaveAttribute(\"data-quiet\");\n     |                            ^\n  60 | });\n  61 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\submit-at-list-end-20261011.spec.ts",
+                        "column": 28,
+                        "line": 59
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('footer[class*=footer]')\nExpected: not have attribute\nReceived: have attribute\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"not toHaveAttribute\" locator('footer[class*=footer]') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('footer[class*=footer]')\u001b[22m\n\u001b[2m    27 × locator resolved to <footer inert=\"\" data-quiet=\"true\" aria-hidden=\"true\" class=\"plan-check_footer__bPd8R trip-screen_chatBar__meOlD\">…</footer>\u001b[22m\n\u001b[2m       - unexpected value \"attribute present\"\u001b[22m\n\n\n  57 |   await expect(footer).toHaveAttribute(\"inert\");\n  58 |   await handle.click();\n> 59 |   await expect(footer).not.toHaveAttribute(\"data-quiet\");\n     |                            ^\n  60 | });\n  61 |\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\submit-at-list-end-20261011.spec.ts:59:28"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:32.104Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-submit-at-list-end\\submit-at-list-end-20261011-목록-끝에서-접어도-제출은-숨고-다시-펼치면-복귀한다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-submit-at-list-end\\submit-at-list-end-20261011-목록-끝에서-접어도-제출은-숨고-다시-펼치면-복귀한다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\submit-at-list-end-20261011.spec.ts",
+                    "column": 28,
+                    "line": 59
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "70f4b679baa33ad036a7-d284b02a40d3058b0971",
+          "file": "submit-at-list-end-20261011.spec.ts",
+          "line": 44,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "timeline-endpoints-20261009.spec.ts",
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "출발 시각·큰 시작 시각·세로 지도 단추 375px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2060,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m40\u001b[39m\nReceived: \u001b[31m44\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m40\u001b[39m\nReceived: \u001b[31m44\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts:29:81",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts",
+                      "column": 81,
+                      "line": 29
+                    },
+                    "snippet": "  27 |     await expect(controls).toHaveAttribute('data-direction','column');\n  28 |     const dimensions=await fold.evaluate(el=>{const b=el.getBoundingClientRect(),s=el.querySelector('[role=img]')!.getBoundingClientRect(),arrow=el.querySelector('svg')!.getBoundingClientRect();return {width:b.width,height:b.height,scaleBottom:s.bottom,arrowTop:arrow.top,background:getComputedStyle(el).backgroundColor};});\n> 29 |     expect(dimensions.width).toBeLessThanOrEqual(44); expect(dimensions.height).toBe(40); expect(dimensions.scaleBottom).toBeLessThanOrEqual(dimensions.arrowTop);\n     |                                                                                 ^\n  30 |     expect(dimensions.background).toMatch(/0\\.92|92%/);\n  31 |     await capture(page,`01-times-map-${width}`); await noHorizontalScroll(page);\n  32 |   });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts",
+                        "column": 81,
+                        "line": 29
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m40\u001b[39m\nReceived: \u001b[31m44\u001b[39m\n\n  27 |     await expect(controls).toHaveAttribute('data-direction','column');\n  28 |     const dimensions=await fold.evaluate(el=>{const b=el.getBoundingClientRect(),s=el.querySelector('[role=img]')!.getBoundingClientRect(),arrow=el.querySelector('svg')!.getBoundingClientRect();return {width:b.width,height:b.height,scaleBottom:s.bottom,arrowTop:arrow.top,background:getComputedStyle(el).backgroundColor};});\n> 29 |     expect(dimensions.width).toBeLessThanOrEqual(44); expect(dimensions.height).toBe(40); expect(dimensions.scaleBottom).toBeLessThanOrEqual(dimensions.arrowTop);\n     |                                                                                 ^\n  30 |     expect(dimensions.background).toMatch(/0\\.92|92%/);\n  31 |     await capture(page,`01-times-map-${width}`); await noHorizontalScroll(page);\n  32 |   });\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts:29:81"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:47.383Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-submit-at-list-end\\timeline-endpoints-20261009-출발-시각·큰-시작-시각·세로-지도-단추-375px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-submit-at-list-end\\timeline-endpoints-20261009-출발-시각·큰-시작-시각·세로-지도-단추-375px\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts",
+                    "column": 81,
+                    "line": 29
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-468c6b2d7d2b3c9ec4ff",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 15,
+          "column": 3
+        },
+        {
+          "title": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3357,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:50.931Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-c2308617bea5966f6909",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 33,
+          "column": 3
+        },
+        {
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8224,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:44:54.635Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-451ff556640c16319d24",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 52,
+          "column": 3
+        },
+        {
+          "title": "출발 시각·큰 시작 시각·세로 지도 단추 1280px",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2170,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m40\u001b[39m\nReceived: \u001b[31m44\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m40\u001b[39m\nReceived: \u001b[31m44\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts:29:81",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts",
+                      "column": 81,
+                      "line": 29
+                    },
+                    "snippet": "  27 |     await expect(controls).toHaveAttribute('data-direction','column');\n  28 |     const dimensions=await fold.evaluate(el=>{const b=el.getBoundingClientRect(),s=el.querySelector('[role=img]')!.getBoundingClientRect(),arrow=el.querySelector('svg')!.getBoundingClientRect();return {width:b.width,height:b.height,scaleBottom:s.bottom,arrowTop:arrow.top,background:getComputedStyle(el).backgroundColor};});\n> 29 |     expect(dimensions.width).toBeLessThanOrEqual(44); expect(dimensions.height).toBe(40); expect(dimensions.scaleBottom).toBeLessThanOrEqual(dimensions.arrowTop);\n     |                                                                                 ^\n  30 |     expect(dimensions.background).toMatch(/0\\.92|92%/);\n  31 |     await capture(page,`01-times-map-${width}`); await noHorizontalScroll(page);\n  32 |   });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts",
+                        "column": 81,
+                        "line": 29
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m40\u001b[39m\nReceived: \u001b[31m44\u001b[39m\n\n  27 |     await expect(controls).toHaveAttribute('data-direction','column');\n  28 |     const dimensions=await fold.evaluate(el=>{const b=el.getBoundingClientRect(),s=el.querySelector('[role=img]')!.getBoundingClientRect(),arrow=el.querySelector('svg')!.getBoundingClientRect();return {width:b.width,height:b.height,scaleBottom:s.bottom,arrowTop:arrow.top,background:getComputedStyle(el).backgroundColor};});\n> 29 |     expect(dimensions.width).toBeLessThanOrEqual(44); expect(dimensions.height).toBe(40); expect(dimensions.scaleBottom).toBeLessThanOrEqual(dimensions.arrowTop);\n     |                                                                                 ^\n  30 |     expect(dimensions.background).toMatch(/0\\.92|92%/);\n  31 |     await capture(page,`01-times-map-${width}`); await noHorizontalScroll(page);\n  32 |   });\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts:29:81"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:45:02.881Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-submit-at-list-end\\timeline-endpoints-20261009-출발-시각·큰-시작-시각·세로-지도-단추-1280px\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\test-results-submit-at-list-end\\timeline-endpoints-20261009-출발-시각·큰-시작-시각·세로-지도-단추-1280px\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\timeline-endpoints-20261009.spec.ts",
+                    "column": 81,
+                    "line": 29
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-1b9edefaa7006d3dce5f",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 15,
+          "column": 3
+        },
+        {
+          "title": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3921,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:45:06.418Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-01446acc955c764fcec1",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 33,
+          "column": 3
+        },
+        {
+          "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8230,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:45:10.946Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-11875321d2f024842979",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 52,
+          "column": 3
+        },
+        {
+          "title": "도착 시각이 없는 구간은 시각을 지어내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4408,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T13:45:19.204Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d66a4497827c99a3e7ff-9ba5d304f20271055462",
+          "file": "timeline-endpoints-20261009.spec.ts",
+          "line": 74,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T13:43:32.839Z",
+    "duration": 111853.74,
+    "expected": 13,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

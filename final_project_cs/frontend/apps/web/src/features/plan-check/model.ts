@@ -1,4 +1,5 @@
 import type { Coordinates } from "@/features/map/model";
+import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 
 /**
  * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
@@ -45,6 +46,8 @@ export interface PlanItem {
   startsAt: string;
   /** "HH:MM", or "" when there is none. */
   endsAt: string;
+  /** `[2026-10-13]` "YYYY-MM-DD" of the end when it is another day — a stay (kind lodging) ends on its check-out day. */
+  endDate?: string;
   /**
    * What the card is called. ★`[2026-10-03 사용자]` Once the customer picked a place for the stop, this is that place's name —
    * the card used to keep the words they had written ("성수 예약 식당") after the place had changed.
@@ -117,6 +120,8 @@ export interface PlanMove {
   modeKey?: string | null;
   recommendedMode?: string | null;
   modeChoice?: { mode: string | null; state: "kept" | "dropped" | null; why: string | null } | null;
+  /** `[2026-10-13]` A morning move 「숙소 → 그날 첫 일정」 — it opens its day (`day` is the day of `toId`), it does not follow `fromId` on the check-in day. */
+  fromStay?: boolean;
   checks: CheckRow[];
   verdict: Verdict | null;
 }
@@ -133,6 +138,10 @@ export type PlanStage = "received" | "reading" | "checking" | "done";
 export const STAGES: readonly PlanStage[] = ["received", "reading", "checking", "done"];
 
 export interface PlanCheckView {
+  /** 이동 후보의 이전 판 상태를 폐기할 때 쓰는 실제 접수 revision. */
+  revision?: number;
+  /** 이번 접수의 응답에 있는 호출 상품만 표시합니다. */
+  taxiPricing?: WebTaxiPricing | null;
   stage: PlanStage;
   /** The trip's title once the check is done. */
   title: string | null;
@@ -163,9 +172,11 @@ const stageIndex = (stage: PlanStage) => STAGES.indexOf(stage);
 /** Items and moves of one day in the order they are lived: item, move, item … */
 export function timeline(view: Pick<PlanCheckView, "items" | "moves">, day: number): ({ type: "item"; item: PlanItem } | { type: "move"; move: PlanMove })[] {
   const out: ({ type: "item"; item: PlanItem } | { type: "move"; move: PlanMove })[] = [];
+  // `[2026-10-13]` A day of a stay opens with the move from the hotel to its first stop — before the stops, so checks, reveal and insertion points follow it in that order.
+  for (const move of view.moves.filter((entry) => entry.fromStay && entry.day === day)) out.push({ type: "move", move });
   for (const item of view.items.filter((entry) => entry.day === day)) {
     out.push({ type: "item", item });
-    const move = view.moves.find((entry) => entry.fromId === item.id);
+    const move = view.moves.find((entry) => entry.fromId === item.id && !entry.fromStay);
     if (move) out.push({ type: "move", move });
   }
   return out;

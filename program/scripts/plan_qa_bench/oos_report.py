@@ -16,6 +16,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 D = os.path.join(HERE, 'results', 'd_test')
 BASE = [('시드 1', 'e4bt'), ('시드 2', 'e4bs2'), ('시드 3', 'e4bs3')]
 OOS = [('oos1', 'oos1'), ('oos2', 'oos2'), ('oos3', 'oos3')]
+EXTRA = [('oos2r(어려운 문장 보강)', 'oos2r')]
 FILES = {'D': 'd_test_lp_q4km_{}.jsonl', 'D2': 'd_test_lp_d2_q4km_{}.jsonl', 'D3': 'd_test_d3_q4km_{}.jsonl'}
 
 
@@ -65,11 +66,11 @@ def metrics(ds, rows):
 
 rows_by = {}
 for ds in FILES:
-    for label, tag in BASE + OOS:
+    for label, tag in BASE + OOS + EXTRA:
         r = load(ds, tag)
         if r is not None:
             rows_by[(ds, label)] = metrics(ds, r)
-labels = [l for l, _ in BASE + OOS if any((ds, l) in rows_by for ds in FILES)]
+labels = [l for l, _ in BASE + OOS + EXTRA if any((ds, l) in rows_by for ds in FILES)]
 out = ['# 잡담 부정 사례를 더해 다시 가르친 짚기 모델(oos) 대 기존 시드 1·2·3 — D · D2 · D3 (서비스 기반 Q4_K_M, 생각 끔, 엄격 계수)\n']
 verdict = []
 for ds, groups in (('D', ['잡담 오지목', '관광객 말 중 일정 밖 오지목', '정답 없는 질문 전체 오지목', '정답 있는 질문 정확도']), ('D2', ['새 잡담 오지목']), ('D3', ['합성 잡담 오지목', '정답 있는 질문 정확도'])):
@@ -84,8 +85,8 @@ for ds, groups in (('D', ['잡담 오지목', '관광객 말 중 일정 밖 오�
         for l in have:
             a, b = rows_by[(ds, l)].get(gname, (0, 0))
             cells.append(fmt_ratio(a, b) if b else '—')
-            if b:
-                (ovals if l.startswith('oos') else bvals).append(100 * a / b)
+            if b and l in {label for label, _ in BASE + OOS}:
+                (ovals if l in {label for label, _ in OOS} else bvals).append(100 * a / b)
         br = f'{max(bvals) - min(bvals):.1f}%p' if len(bvals) >= 2 else '—'
         orr = f'{max(ovals) - min(ovals):.1f}%p' if len(ovals) >= 2 else ('(1개)' if ovals else '—')
         out.append(f'| {gname} | ' + ' | '.join(cells) + f' | {br} | {orr} |')
@@ -95,6 +96,7 @@ for ds, groups in (('D', ['잡담 오지목', '관광객 말 중 일정 밖 오�
         else:
             if bvals and ovals:
                 verdict.append(f'{ds} {gname}: 기존 평균 {sum(bvals) / len(bvals):.1f}% → oos 평균 {sum(ovals) / len(ovals):.1f}% ({sum(ovals) / len(ovals) - sum(bvals) / len(bvals):+.1f}%p)')
+out.append('\n- oos2r은 어려운 문장 900개를 더한 별도 학습판이며 1개 시드입니다. oos 범위와 평균은 첫 잡담 보강판 oos1·oos2·oos3만 계산합니다.\n')
 out.append('\n## 한 줄 요약(평균 비교)\n')
 out += [f'- {v}' for v in verdict] or ['- (oos 결과 파일 없음)']
 out.append('\n- 성공 기준: ① 잡담 오지목의 시드 사이 범위가 기존보다 좁아짐 ② 정답 있는 질문 정확도가 기존 평균보다 3%p 넘게 떨어지지 않음. oos 가 1개뿐이면 범위를 말하지 않는다(시드 한 개로 순위·일반화를 말하지 않는다).')

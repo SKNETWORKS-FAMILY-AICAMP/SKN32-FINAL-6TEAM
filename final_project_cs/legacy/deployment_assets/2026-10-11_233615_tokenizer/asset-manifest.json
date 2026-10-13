@@ -1,0 +1,23 @@
+{
+  "created_at": "2026-10-11T23:36:15.342910+09:00",
+  "assets": [
+    {
+      "context_path": "public-assets/tokenizer/9b5ad71b2ce5302211f9c61530b329a4922fc6a4",
+      "image_path": "/opt/tripilot/tokenizer-cache/9b5ad71b2ce5302211f9c61530b329a4922fc6a4",
+      "sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+      "bytes": 1681126,
+      "source": "https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken",
+      "public_vocabulary": true,
+      "file_mode": "0444",
+      "directory_mode": "0555"
+    }
+  ],
+  "asset_count": 1,
+  "runtime_overlay_files": 50,
+  "package_changes": 0,
+  "sql_changes": 0,
+  "operating_mutations": false,
+  "build_performed": false,
+  "cache_environment_key": "TIKTOKEN_CACHE_DIR",
+  "image_cache_directory": "/opt/tripilot/tokenizer-cache"
+}

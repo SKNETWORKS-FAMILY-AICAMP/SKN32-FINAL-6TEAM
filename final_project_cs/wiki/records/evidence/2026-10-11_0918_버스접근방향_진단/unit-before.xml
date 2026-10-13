@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="9" skipped="0" tests="10" time="5.400" timestamp="2026-10-11T09:19:59.306319+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_default_keeps_existing_shortest_section_pair" time="0.261" /><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_access_pair_is_added_without_discarding_shortest_section" time="0.001"><failure message="TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given">def test_access_pair_is_added_without_discarding_shortest_section():
+&gt;       rows = network().routes_between(37.5, 127., 37.52, 127., 500, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:23: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_same_pair_is_not_duplicated" time="0.001"><failure message="TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given">def test_same_pair_is_not_duplicated():
+&gt;       rows = network().routes_between(37.5, 127., 37.52, 127., 50, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:30: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_radius_direction_and_two_pairs_per_route_are_preserved[0]" time="0.001"><failure message="TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given">radius = 0
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+&gt;       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_radius_direction_and_two_pairs_per_route_are_preserved[50]" time="0.001"><failure message="TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given">radius = 50
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+&gt;       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_radius_direction_and_two_pairs_per_route_are_preserved[200]" time="0.001"><failure message="TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given">radius = 200
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+&gt;       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_radius_direction_and_two_pairs_per_route_are_preserved[500]" time="0.001"><failure message="TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given">radius = 500
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+&gt;       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_radius_direction_and_two_pairs_per_route_are_preserved[1000]" time="0.001"><failure message="TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given">radius = 1000
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+&gt;       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_backwards_stops_cannot_make_an_access_pair" time="0.001"><failure message="TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given">def test_backwards_stops_cannot_make_an_access_pair():
+&gt;       assert network().routes_between(37.52, 127., 37.5, 127., 500, True) == []
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:45: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bus_access_pairs_v1" name="test_equal_access_distance_has_stable_tie_break" time="0.001"><failure message="TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given">def test_equal_access_distance_has_stable_tie_break():
+        bus = network()
+&gt;       a = bus.routes_between(37.502, 127., 37.518, 127., 500, True)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:50: TypeError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,14 @@
+{
+  "app/core/case_lifecycle/reducer.py": {
+    "start": null,
+    "end": null
+  },
+  "tests/e2e/test_web_conversation_resume.py": {
+    "start": "376EDBDEEA1F9BA9ACE86076F0D902DF4CE58B19BB5A5B783734F2DF07D3C78F",
+    "end": "A3723FF3A39F6DE7E1F083028F093BF17822C16D1EC151C029C726763A6778D3"
+  },
+  "tests/unit/travel/test_initial_retry_boundaries.py": {
+    "start": "3FE8645C5AED8E80163003706784EB463790FCB82A728FE81D41F5E8DADEC646",
+    "end": "8C01D88DD3C54A7046017D1870536EA6D9C082E377D9870CBB117638528B9976"
+  }
+}

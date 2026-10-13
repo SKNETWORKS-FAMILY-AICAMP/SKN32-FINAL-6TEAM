@@ -150,11 +150,16 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             # ★읽기는 한 접수에 한 번만 — **한 번의 조건부 갱신으로 맡는다**(받은 직후 단계 `received` 인 접수만 읽는 중으로 바꾼다). 이미 읽었거나(확인 화면 · 등록 · 실패)
             #   다른 일꾼이 맡았으면 건드리지 않는다: 두 일꾼이 서로의 값을 지우거나 늦은 쪽이 등록된 접수를 확인 화면으로 되돌리는 일이 없다
             cur.execute("UPDATE trip_intakes SET stage='reading', updated_at=now() WHERE tenant_id=%s AND intake_id=%s "
-                        "AND status='reading' AND stage='received' RETURNING intake_id", (tenant_id, intake_id))
-            if cur.fetchone() is None:
+                        "AND status='reading' AND stage='received' RETURNING received_at", (tenant_id, intake_id))
+            claimed = cur.fetchone()
+            if claimed is None:
                 cur.execute("SELECT status FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s", (tenant_id, intake_id))
                 row = cur.fetchone()
                 return row[0] if row else "fatal"
+            received_at = claimed[0]
+            if received_at.tzinfo is None:
+                received_at = received_at.replace(tzinfo=KST)
+            received_at = received_at.astimezone(KST)
         beat = _Heartbeat(connect, tenant_id, intake_id)
         beat.__enter__()
         with connect() as conn:
@@ -192,7 +197,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                 push("progress", {"phase": phase, "done": done, "total": total, "current": {"id": f"{_position}-{index}", "title": title}})
 
             read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao, our_places=our_places,
-                        aliases=aliases, areas=areas, dining=dining, today=today or datetime.now(KST).date(),
+                        aliases=aliases, areas=areas, dining=dining, today=(today or received_at.date()), now=received_at,
                         on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress,
                         differs=differs_by_line(source.get("differs_json")))
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
@@ -347,7 +352,7 @@ _ITEM_FIELDS = {"title", "date", "starts_at", "ends_at", "kind", "place", "booki
 SEOUL_LAT, SEOUL_LON = (37.4, 37.72), (126.7, 127.3)
 _PICK_ORIGINS = ("tour_api", "kakao", "places", "search", "map", "customer_pick")
 _CONTENT_ID = re.compile(r"^\d{1,12}$")
-_TRIP_FIELDS = {"title", "party_size", "first_day"}
+_TRIP_FIELDS = {"title", "party_size", "first_day", "taxi_pricing"}
 _HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 #: 「일정 짜 줘」 모양 — 일정·코스·계획을 짜/만들어/추천해 달라는 말
 PLAN_ASK = re.compile(r"(일정|코스|계획|동선|여행)\S{0,3}\s*(?:(?:좀|다시|새로)\s*)?(짜|만들어|추천해|세워|잡아)\s*"
@@ -493,7 +498,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
 
 
 def restore(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
-            restore_revision: int) -> dict[str, Any]:
+            restore_revision: int, item: tuple[UUID, int] | None = None) -> dict[str, Any]:
     """완료된 과거 판의 원값을 새 판으로 복원한다. 보호·검사 실패는 전체 롤백한다."""
     with conn.transaction(), conn.cursor() as cur:
         cur.execute("SELECT status, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s "
@@ -514,6 +519,14 @@ def restore(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
         now = effective(_claims(conn, tenant_id, intake_id, current))
         if not before:
             raise IntakeConflict("restore_revision_invalid", "복원할 이전 값이 없어요")
+        if item is not None:
+            source_id, index = item
+            def selected(claim):
+                return str(claim["source_id"]) == str(source_id) and claim["field"].startswith(f"items[{index}].")
+            old_item = [claim for claim in before if selected(claim)]
+            if not old_item or not any(selected(claim) for claim in now):
+                raise IntakeConflict("restore_item_invalid", "복원할 일정을 현재 판과 이전 판에서 확인하지 못했어요")
+            before = [claim for claim in now if not selected(claim)] + old_item
         source_rows = _sources(conn, tenant_id, intake_id)
         _protect_restore(now, before, source_rows)
         new = current + 1
@@ -787,7 +800,13 @@ def _checked(field_name: str, value: Any) -> tuple[Any, dict[str, Any], str | No
         name = field_name[5:]
         if name not in _TRIP_FIELDS:
             raise IntakeRejected("unknown_field", f"{field_name}: 고칠 수 없는 칸입니다")
-        if name == "party_size":
+        if name == "taxi_pricing":
+            from .taxi_pricing import normalize
+            try:
+                value = normalize(value)
+            except ValueError as exc:
+                raise IntakeRejected("invalid_taxi_pricing", str(exc)) from exc
+        elif name == "party_size":
             if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= 4:
                 raise IntakeRejected("invalid_value", "인원은 1~4명입니다")
         elif name == "first_day":
@@ -903,7 +922,7 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
 
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
 def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = None,
-                our_places: list[dict[str, Any]] | None = None, today: date,
+                our_places: list[dict[str, Any]] | None = None, today: date, now: datetime | None = None,
                 aliases: dict[str, str] | None = None, areas: Any = None, dining: Any = None,
                 on_rows: Callable[[list[dict[str, Any]]], None] | None = None,
                 on_progress: Callable[[str, int, int, int, str | None], None] | None = None,
@@ -957,7 +976,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     # 남은 줄 — 모델은 가리키기만. 실패하면 이 단계만 건너뛴다(그 줄은 남은 줄로 보인다)
     if chat is not None and read.unread_lines:
         try:
-            span_claims, span_items, report = label_lines(read.lines, read.unread_lines, chat)
+            span_claims, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now)
         except Exception as exc:                      # noqa: BLE001 — 모델 장애는 기록하고 넘어간다
             span_claims, span_items, report = [], [], {"error": f"{type(exc).__name__}: {exc}"[:200]}
         rows.append({"field": "reading.llm", "value": report, "method": "llm_span",

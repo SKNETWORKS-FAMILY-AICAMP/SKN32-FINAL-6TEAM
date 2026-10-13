@@ -1,0 +1,9 @@
+qwen35_4b	unsloth/Qwen3.5-4B-GGUF	Qwen3.5-4B-Q4_K_M.gguf	e87f176479d0855a907a41277aca2f8ee7a09523 2026-03-02T14:08:17.000Z	2026-10-07
+kanana2_3b	mradermacher/kanana-2-3b-instruct-GGUF	kanana-2-3b-instruct.Q8_0.gguf	45a8a3e5925aa2c3615f6ed49fbc308132c9b587 2026-07-29T21:40:24.000Z	2026-10-07
+granite42_3b	ibm-granite/granite-4.2-3b-GGUF	granite-4.2-3b-Q4_K_M.gguf	c40945d71cd90f249a56985e8155551a9188dc30 2026-09-02T22:06:48.000Z	2026-10-07
+qwen35_9b	unsloth/Qwen3.5-9B-GGUF	Qwen3.5-9B-Q4_K_M.gguf	3885219b6810b007914f3a7950a8d1b469d598a5 2026-03-02T14:08:36.000Z	2026-10-07
+granite42_8b	ibm-granite/granite-4.2-8b-GGUF	granite-4.2-8b-Q4_K_M.gguf	93f3f6a8938ee922b784cf4e5b4203cd3428df8f 2026-09-02T22:09:30.000Z	2026-10-07
+lfm25_26b	LiquidAI/LFM2.5-2.6B-GGUF	LFM2.5-2.6B-Q4_K_M.gguf	e7caca5d835a3901a8e0d63e94009429bafafdfc 2026-09-22T20:42:43.000Z	2026-10-07
+qwen35_2b	unsloth/Qwen3.5-2B-GGUF	Qwen3.5-2B-Q4_K_M.gguf	f6d5376be1edb4d416d56da11e5397a961aca8ae 2026-03-02T14:07:35.000Z	2026-10-07
+torchcast12b	mradermacher/torchcast-decision-12b-GGUF	torchcast-decision-12b.Q4_K_M.gguf	9dec620475fc0dcd14d88f43f1aeea3d56bcd734 2026-10-07T06:21:29.000Z	2026-10-07
+winnow12b	Piotr1215/Winnow-12B-GGUF	Winnow-12B-Q4_K_M.gguf	aca6133c6ccd4d9796e0b51701487e2a50e07754 2026-10-03T12:46:57.000Z	2026-10-07

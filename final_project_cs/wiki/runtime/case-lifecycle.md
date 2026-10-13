@@ -44,12 +44,20 @@ running         → waiting_input · waiting_approval · waiting_external
 waiting_input   → resuming · escalated
 waiting_approval→ resuming · escalated
 waiting_external→ resuming · escalated
-resuming        → running · escalated
+resuming        → resuming(routed만) · running · escalated
 resolved        → cancelled
 escalated       → cancelled
 failed          → escalated
 cancelled       → (없음)
 ```
+
+### 재개 중 담당 변경 — 2026-10-11 계약 보완
+
+고객 답변으로 담당이 바뀌면 같은 Case의 `resuming` 상태에서 `routed` 이벤트로 최종 담당과 요청을 기록합니다. 상태는 `resuming`을 유지하고 버전과 이벤트 기록은 증가합니다. 그다음 `resumed` 이벤트를 거쳐 `running`으로 들어갑니다. 새 업무를 만들거나 입력을 한 번 더 소비하는 전이가 아닙니다.
+
+자기 상태로 돌아오는 이벤트는 **`resuming --routed--> resuming` 하나만** 허용합니다. `resuming`에서 `valid_input`을 다시 받거나 `completed`로 바로 끝내는 것은 계속 금지합니다. 담당·기능 관문은 최초 `valid_input`과 후속 `routed` 기록 전에 모두 통과해야 합니다. 최종 담당을 사용할 수 없으면 답변·토큰·업무 상태를 보존합니다. 상세 입력 순서는 [실행 가용성 계약](../teams/team-contract/plugin-availability.md)을 따릅니다.
+
+예를 들어 고객이 식당 질문에 “활동 일정이요”라고 답해 담당이 바뀌면 이벤트 순서는 `valid_input → routed → resumed → completed`입니다. `valid_input`과 `resumed`를 반복해 생명주기를 우회하지 않습니다.
 
 **세 가지 성질이 보인다.**
 
@@ -63,11 +71,13 @@ cancelled       → (없음)
 
 > 코드의 전이표는 조용히 늘어난다. "이 전이도 필요하겠지" 하고 하나 추가하면 상태 기계가 계획서와 어긋나는데 **기존 테스트는 전부 통과한다.** 그래서 **표 자체를 검사**한다.
 
-그리고 대조 기준을 **코드에서 가져오지 않는다.**
+그리고 대조 기준을 **코드에서 가져오지 않는다.** 현재 대조 기준은 이 wiki의 허용 전이 표입니다. v5는 최초 표를 보존한 당시 기록이며, 위의 명시적 후속 계약을 뒤집지 않습니다.
 
-> 계획서를 보고 손으로 옮겨야 대조가 성립한다.
+> 현재 계약을 보고 기대표를 별도로 적어야 대조가 성립한다.
 
 **이게 좋은 테스트 설계다.** 코드에서 기대값을 읽으면 언제나 통과한다.
+
+후속 검증 근거는 [재개 자기전이 계약 정합성 결과](../records/reports/2026-10-11_2113_case_state_contract_alignment.md)에 기록합니다.
 
 ## 조용히 넘어가지 않는다
 

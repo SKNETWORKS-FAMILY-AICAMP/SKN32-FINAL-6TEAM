@@ -16,6 +16,16 @@ from pathlib import Path
 GRADE_ORDER = {"확정": 2, "추정": 1, "근거없음": 0}
 
 
+def distance_source_paths(order_path):
+    """실제로 읽는 보강 파일을 기동 명세·변경 감시와 공유한다."""
+    directory = Path(order_path).parent
+    track = directory / 'rail_edge_track_v2.jsonl.gz'
+    if not track.exists():
+        track = directory / 'rail_edge_track_v1.jsonl.gz'
+    overlay = directory / 'rail_distance_overlay_v1.json'
+    return {k: p for k, p in {'rail_track': track, 'rail_distance_overlay': overlay}.items() if p.exists()}
+
+
 def _base(grade):
     return grade.split(":")[0]
 
@@ -47,6 +57,33 @@ def _load_est_edges(path):
     except (OSError, ValueError, KeyError):
         return {}, {}
     return est, straight
+
+
+def _load_distance_overlay(path, doc):
+    """공표값과 CSV 대응 방향을 대조한 보강. 확정 거리와 별도 운임 노선은 바꾸지 않는다."""
+    if not Path(path).exists():
+        return {}
+    allowed = {f"0{i}호선" for i in range(1, 10)} | {"경의선", "수인분당선", "경춘선", "경강선", "서해선"}
+    known = {(ln, frozenset((e['a'], e['b']))): e.get('distance_m')
+             for ln, line in doc['lines'].items() for e in line['edges']}
+    result, rejected = {}, set()
+    try:
+        payload = json.loads(Path(path).read_text(encoding='utf-8'))
+        for row in payload['edges']:
+            key = (row['line'], row['a'], row['b'])
+            pair = (key[0], frozenset(key[1:]))
+            distance = row.get('distance_m')
+            if (pair not in known or known[pair] is not None or key[0] not in allowed
+                    or row.get('grade') != '공표값·대응방향 추정' or not row.get('sources')
+                    or type(distance) is not int or distance <= 0):
+                continue
+            prior = next((v for k, v in result.items() if (k[0], frozenset(k[1:])) == pair), None)
+            if prior is not None and prior != distance:
+                rejected.add(pair)
+            result[key] = distance
+    except (OSError, ValueError, KeyError, TypeError):
+        return {}
+    return {k: v for k, v in result.items() if (k[0], frozenset(k[1:])) not in rejected}
 
 
 @dataclass
@@ -82,7 +119,17 @@ class LineOrder:
             from .paths import PROCESSED
             path = PROCESSED / "mobility" / "line_station_order_v1.json"
         lo = cls(json.loads(Path(path).read_text(encoding="utf-8")))
-        lo.est_edges, lo.straight_edges = _load_est_edges(Path(path).parent / "rail_edge_track_v1.jsonl.gz")
+        sources = distance_source_paths(path)
+        track = sources.get('rail_track')
+        lo.est_edges, lo.straight_edges = _load_est_edges(track) if track else ({}, {})
+        overlay_path = sources.get('rail_distance_overlay')
+        overlay = _load_distance_overlay(overlay_path, lo.doc) if overlay_path else {}
+        lo.distance_sources = {k: p.name for k, p in sources.items()}
+        for key, distance in overlay.items():
+            lo.est_edges.pop((key[0], key[2], key[1]), None)
+            lo.est_edges[key] = distance
+            lo.straight_edges.pop(key, None)
+            lo.straight_edges.pop((key[0], key[2], key[1]), None)
         return lo
 
     # ── 기본 조회 ──
@@ -166,6 +213,11 @@ class LineOrder:
         names = self.main_order(line)
         if origin not in names or dest not in names or target not in names:
             return None                                   # 지선이 끼면 일반 경로로
+        # 일부 구간만 순환하는 노선은 역 번호 순서가 전체의 닫힌 고리가 아니다.
+        # 실제 없는 연결을 만들지 않고, 관측된 운행 방향 간선을 따라간다.
+        g = self._g[line]
+        if any(b not in g[a] for a, b in zip(names, names[1:] + names[:1])):
+            return self._partial_loop_passes(line, origin, dest, target, dir)
         dirs = self.doc["lines"][line].get("direction", {})
         cand = []                                         # (step, 등급, 이유)
         for label, meta in dirs.items():
@@ -200,6 +252,59 @@ class LineOrder:
             return Verdict(None, "근거없음", reason, path=seq, weak_edges=weak,
                            checked_at=self.built_at)
         return Verdict(hit, grade, reason, path=seq, weak_edges=weak, checked_at=self.built_at)
+
+    def _partial_loop_passes(self, line, origin, dest, target, direction):
+        """부분 순환선: 자료에 있는 방향·연결만 사용한다. 방향이 없으면 확정하지 않는다."""
+        if not direction:
+            return Verdict(None, "근거없음", "부분 순환 구간의 운행 방향이 없다",
+                           checked_at=self.built_at)
+        graph = {nm: set() for nm in self._g[line]}
+        for edge in self.doc["lines"][line]["edges"]:
+            a, b = edge["a"], edge["b"]
+            if edge.get("dir_a_to_b") == direction:
+                graph[a].add(b)
+            if edge.get("dir_b_to_a") == direction:
+                graph[b].add(a)
+        prev, queue = {origin: None}, collections.deque([origin])
+        while queue:
+            a = queue.popleft()
+            if a == dest:
+                break
+            for b in sorted(graph[a]):
+                if b not in prev:
+                    prev[b] = a
+                    queue.append(b)
+        if dest not in prev:
+            # 목적지 이후의 간선 방향이 비어 있어도 이미 타는 구간이 확인되면
+            # 그 뒤의 자료 부족으로 앞 구간을 버리지 않는다(일반선과 같은 범위).
+            physical = self.path(line, origin, dest)
+            if physical and target in physical[1:]:
+                prefix = physical[:physical.index(target) + 1]
+                if all(b in graph[a] for a, b in zip(prefix, prefix[1:])):
+                    grades = self._edges_of(line, prefix)
+                    grade = _base(_worst(grades))
+                    return Verdict(True if grade != "근거없음" else None, grade,
+                                   f"{dest}행({direction})의 {origin}→{target} 연결 확인"
+                                   " · 하차역 뒤의 운행 방향 자료는 사용하지 않음",
+                                   path=prefix, checked_at=self.built_at)
+            return Verdict(None, "근거없음", f"{direction} 방향의 {origin}→{dest} 연결 근거가 없다",
+                           checked_at=self.built_at)
+        seq, a = [], dest
+        while a is not None:
+            seq.append(a)
+            a = prev[a]
+        seq.reverse()
+        hit = target in seq[1:]
+        segment = seq[:seq.index(target) + 1] if hit else seq
+        grades = self._edges_of(line, segment)
+        grade = _base(_worst(grades))
+        weak = [f"{a}–{b}({gr})" for a, b, gr in zip(segment, segment[1:], grades)
+                if _base(gr) != "확정"]
+        value = None if hit and grade == "근거없음" else hit
+        return Verdict(value, grade,
+                       f"{dest}행({direction})의 관측된 연결에서 {target} "
+                       + ("경유" if hit else "미경유"),
+                       path=seq, weak_edges=weak, checked_at=self.built_at)
 
     # ── 판정 ──
     def passes(self, line, origin, dest, target, dir=None, origin_terminal=False,

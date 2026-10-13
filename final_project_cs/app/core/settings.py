@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import ValidationError
@@ -57,6 +57,20 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.0
     llm_seed: int = 7
     local_ft_base_url: str = ""
+    #: 활동 판정 LLM(D-CS-008 실험 → D-CS-015 develop 판).
+    #:  `rule` = 지금 규칙 판정만 · `shadow` = 규칙으로 답하고 LLM 판정은 차이만 기록 · `llm` = LLM 판정으로 답한다.
+    #:  ★`[2026-10-09]` 기본값을 `shadow` → `rule` 로 바꿨다(D-CS-015, 사용자 결정). develop 판 활동 팀에 붙이면 키가 있는
+    #:    모든 환경의 성립 판정마다 백그라운드 LLM 호출(웹 검색 포함)이 나간다 — 섀도 기록을 모을 환경만 `.env` 로 켠다.
+    #:    `llm` 으로 올리는 기준은 `wiki/teams/액티비티 LLM 연동 계획서.md` §8 에 수치로 적은 뒤에 정한다.
+    activity_judge_mode: Literal["rule", "shadow", "llm"] = "rule"
+    #:  Responses API 로 부른다(`app/infrastructure/llm/openai_responses.py`). `llm_model` 과 따로 둔다 —
+    #:   다른 Team 의 모델을 바꾸지 않고 이 실험만 바꿀 수 있게.
+    activity_judge_model: str = "gpt-5.4-nano"
+    #:  ★`temperature`·`seed` 칸은 두지 않는다 — gpt-5.4-nano 는 `seed` 를 400 으로 거절하고
+    #:   `temperature` 는 effort=none 일 때만 받는다(2026-10-06 스파이크 Q1).
+    activity_judge_reasoning_effort: Literal["none", "low", "medium", "high", "xhigh"] = "low"
+    #:  웹 검색을 끄면 실시간 운영 상태 판정은 「모름」이 된다(지어내지 않는다).
+    activity_judge_web_search: bool = True
     #: Ollama(로컬 LLM 서버) 주소 — 채우면 분류·추출·번역을 **Ollama 로** 한다. 비우면 OpenAI.
     #:  ★2026-09-14 OpenAI 크레딧 소진(429 실측) — Gemma 4 를 포트포워딩으로 붙여 쓴다.
     #:  ★OpenAI 호환 경로(`/v1`)는 쓰지 않는다 — 생각(thinking)이 본문에 섞여 나왔다(실측).
@@ -139,6 +153,11 @@ class Settings(BaseSettings):
     #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
     ollama_pointer_model: str = ""
     ollama_pointer_timeout_seconds: float = 30.0
+    #: ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 **2차 확인** 모델(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 규칙만 쓴다.
+    #:  켜고 끄기는 가드레일 `travel.notice_end.mode`. 규칙과 모델이 둘 다 끝남일 때만 끝남이고, 모델을 못 부르면 규칙 결과를 쓴다(`notice_end_model.py`).
+    ollama_notice_model: str = ""
+    #:  ★첫 호출은 모델을 올리느라 길다(2026-10-13 x600 실측 53.7초, 이어지는 호출 약 1.3초) — 감시 루프는 고객을 기다리게 하지 않으므로 넉넉히 둔다
+    ollama_notice_timeout_seconds: float = 90.0
     # ── 모델 서버가 죽거나 늦을 때 **서버용 OpenAI 키**로 넘기는 장치 `[2026-10-07 사용자 지시]` ──
     #:  「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」. 코드 `app/infrastructure/llm_failover.py`.
     #:  ★스위치는 **기본 꺼짐**이다 — 개발 PC 에서 모델 서버 연결이 끊겼을 때 시험 · 측정이 조용히 유료 API 로 새지 않게. 운영(배포) 환경 파일에서만 켠다.
@@ -261,6 +280,14 @@ class Settings(BaseSettings):
     #   근거 정리: `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md` §4-6 「2026-09-28 재판단」.
     tour_catalog_enabled: bool = True
     google_maps_api_key: str = ""            # 구글 Maps Platform(Places) console.cloud.google.com
+    # ★`[2026-10-08]` LiteAPI(Nuitee) — 서비스 안 숙소 예약 시험(샌드박스 키 `sand_`). 비어 있으면 부르지 않는다.
+    #   지금은 `scripts/probe_liteapi_booking.py` 만 읽는다.
+    liteapi_api_key: str = ""
+    # ★`[2026-10-08]` Ignav — 항공 검색·예약 링크(MCP https://ignav.com/mcp). 비어 있으면 부르지 않는다.
+    #   지금은 `scripts/probe_ignav_mcp.py` 만 읽는다.
+    ignav_api_key: str = ""
+    # ★[2026-10-09] SerpApi Google Flights — 구글 항공권 한국 설정(gl=kr · hl=ko · KRW) 검색. 무료 월 250회. 비면 쓰지 않는다
+    serpapi_api_key: str = ""
     # ★`[2026-10-01]` 네이버 검색(블로그 · 카페글) — 대체 후보에 후기 몇 건을 곁들인다. 비어 있으면 부르지 않는다.
     #   NAVER API HUB(네이버 클라우드) 「검색」 키 — 2026-07-31 부터 개발자센터 신규 발급이 끝나 HUB 로 옮겨 갔다.
     #   주소 naverapihub.apigw.ntruss.com/search/v1/{blog,cafearticle}, 헤더 X-NCP-APIGW-API-KEY-ID · X-NCP-APIGW-API-KEY.
@@ -333,6 +360,8 @@ class Settings(BaseSettings):
     rate_subway_notice_per_day: int = 5000
     #: 확인(2026-10-04 공식 안내): 서울 「실시간 지하철 인증키」 하루 최대 1,000건 → 절반만(여유 2배). 도착정보는 지금 값이라 캐시를 짧게 둔다
     rate_seoul_subway_arrival_per_day: int = 500
+    #: 확인(2026-10-08): 버스도착정보 개발계정 1,000/일. 절반을 운영 한도로 둔다.
+    rate_seoul_bus_arrival_per_day: int = 500
     #: 서울 열린데이터광장 **일반 인증키**(따릉이 실시간 거치 대수 `bikeList`) 하루 상한 — ★공식 하루 한도를 못 찾았다(안내에 숫자 없음 · 「이용 제약 없이 쓰려면 활용사례 등록」)
     #:  `[미확인]` 그래서 **우리가 고른 보수적 값**이다. 이 값에서 막히면 따릉이 거치 대수가 「근거없음」이 되고(후보는 유지) 서비스는 계속된다. 0 = 제한 없음
     rate_seoul_bike_per_day: int = 1000
@@ -352,6 +381,11 @@ class Settings(BaseSettings):
     #      초과 $10/1,000 → 5,000 / 31 / 2 = 80.  TRANSIT 모드의 등급은 문서에 없다(미확인)
     rate_google_places_per_day: int = 16
     rate_google_routes_per_day: int = 80
+    #  ★`[2026-10-13 사용자 지시]` SerpApi(구글 호텔 · 구글 항공권 — 한 계정) — **무료 월 250회**. 월 줄 250 · 하루 줄 250 / 31 = 8.
+    #    DB 로 센다(가드레일 `travel.source_budget_sources` 의 `serpapi`) — 프로세스 · 재시작을 건너 같은 줄이다. 월 · 일 중 하나라도 차면 부르지 않는다
+    #    (「바꿔 줘」 한 번 = 목록 1 + 상세 최대 3, 고를 때 재확인 1).
+    rate_serpapi_per_day: int = 8
+    rate_serpapi_per_month: int = 250
 
     #: 간격이 안 찼을 때 기다려 볼 최대 시간(초). 고객 요청이 여기서 멈춘다.
     #:  넘으면 기다리지 않고 거부하고, Team 은 「모름」으로 넘어간다.
@@ -359,7 +393,8 @@ class Settings(BaseSettings):
 
     def source_monthly_limits(self) -> dict[str, int]:
         """`TravelSource.name` -> 월 한도(알려진 것만). DB 예산(`source_budget.py`)이 월 줄로 쓴다."""
-        return {name: value for name, value in {"its": self.rate_its_per_month}.items() if value and value > 0}
+        return {name: value for name, value in {"its": self.rate_its_per_month,
+                                                "serpapi": self.rate_serpapi_per_month}.items() if value and value > 0}
 
     def source_rate_limits(self) -> dict[str, int]:
         """`TravelSource.name` -> 하루 한도. 어댑터 이름과 정확히 맞춘다.
@@ -386,11 +421,13 @@ class Settings(BaseSettings):
             "odsay": self.rate_odsay_per_day,
             "subway_notice": self.rate_subway_notice_per_day,
             "seoul_subway_arrival": self.rate_seoul_subway_arrival_per_day,
+            "seoul_bus_arrival": self.rate_seoul_bus_arrival_per_day,
             "seoul_bike": self.rate_seoul_bike_per_day,
             "kakao": self.rate_kakao_per_day,
             "naver_search": self.rate_naver_search_per_day,
             "google_places": self.rate_google_places_per_day,
             "google_routes": self.rate_google_routes_per_day,
+            "serpapi": self.rate_serpapi_per_day,
         }
 
     def utic_key(self, *, proxied: bool) -> str:

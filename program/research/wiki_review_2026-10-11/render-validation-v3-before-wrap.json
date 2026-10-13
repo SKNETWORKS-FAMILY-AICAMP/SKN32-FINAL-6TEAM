@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "name": "항목 25개",
+      "pass": true
+    },
+    {
+      "name": "기본 전체 표시",
+      "pass": true
+    },
+    {
+      "name": "완료 필터",
+      "pass": true
+    },
+    {
+      "name": "남은 항목 필터",
+      "pass": true
+    },
+    {
+      "name": "데스크톱 가로 넘침 없음",
+      "pass": true
+    },
+    {
+      "name": "375px 가로 넘침 없음",
+      "pass": true
+    },
+    {
+      "name": "로컬 링크 대상 존재",
+      "pass": true,
+      "detail": {
+        "checked": 241,
+        "broken": []
+      }
+    },
+    {
+      "name": "이전 검토안 절 링크",
+      "pass": true,
+      "detail": {
+        "checked": 12
+      }
+    },
+    {
+      "name": "브라우저 실행 오류 없음",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "인쇄 시 필터 숨김",
+      "pass": true
+    }
+  ],
+  "passed": 10,
+  "total": 10
+}

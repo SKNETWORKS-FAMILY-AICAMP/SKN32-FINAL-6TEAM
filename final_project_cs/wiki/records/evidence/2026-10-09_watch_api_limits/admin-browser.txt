@@ -1,0 +1,15 @@
+[WebServer] (node:18008) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+(node:2648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\live\api-limits.spec.ts:9:1 › ENV 한도·기본값·현재 사용·마지막 상한을 구분하고 검색·다시 읽기한다 (1.4s)
+  ok 2 tests\live\api-limits.spec.ts:43:1 › 375px에서 조회 오류·재시도·DB 오류를 숨기지 않는다 (839ms)
+  ok 3 tests\live\monitoring-limits.spec.ts:9:1 › 6개 감시 항목 옆에 각 API의 한도를 따로 표시한다 (1.1s)
+  ok 4 tests\live\monitoring-limits.spec.ts:39:1 › 375px에서 한도 조회 실패·누락을 0으로 만들지 않고 재시도한다 (976ms)
+  ok 5 tests\live\monitoring.spec.ts:7:1 › 현재 상태·과거 회차·항목별 결과와 필터를 확인한다 (961ms)
+  ok 6 tests\live\monitoring.spec.ts:34:1 › 375px에서 오류·빈 이력과 날짜 검증을 실제 화면으로 확인한다 (953ms)
+
+  6 passed (10.3s)

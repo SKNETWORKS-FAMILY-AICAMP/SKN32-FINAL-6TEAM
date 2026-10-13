@@ -30,7 +30,7 @@ def test_missing_model_is_announced_not_defaulted(tmp_path):
     """★모델이 없으면 **켜지지 않는다.** 조용히 중립을 내면 신호 없는 축소다."""
     model = LocalSentiment(tmp_path / "없는폴더")
     with pytest.raises(SentimentUnavailable):
-        model("배송이 빨라서 좋았어요")
+        model("여행 안내가 빨라서 좋았어요")
 
 
 def test_clear_sentences_are_classified():

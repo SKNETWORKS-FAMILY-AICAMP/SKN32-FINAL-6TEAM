@@ -88,6 +88,27 @@ def ledger_ready(conn) -> bool:
         return bool(cur.fetchone()[0])
 
 
+def closure_observation(conn, tenant_id: str, place_id, start: datetime, end: datetime, now: datetime):
+    """시간표와 구분한 방문 구간별 휴무 관측. 원문·고객 정보는 반환하지 않는다."""
+    if not ledger_ready(conn):
+        return None
+    with conn.cursor() as cur:
+        cur.execute("SELECT c.value_state,c.source_code,c.asked_at,"
+                    "c.asked_at+make_interval(secs=>c.ttl_seconds) "
+                    "FROM dining.dn_core_place_link l JOIN dining.dn_live_check c ON c.place_uid=l.place_uid "
+                    "JOIN dining.dn_source s ON s.source_code=c.source_code "
+                    "WHERE l.tenant_id=%s AND l.core_place_id=%s AND s.production_allowed "
+                    "AND c.topic='closure' AND c.outcome='ok' AND c.target_at=%s "
+                    "AND c.asked_at<=%s AND c.asked_at+make_interval(secs=>c.ttl_seconds)>%s "
+                    "AND c.asked_at+make_interval(secs=>c.ttl_seconds)>=%s "
+                    "ORDER BY c.asked_at DESC,c.check_id DESC LIMIT 1", (tenant_id, place_id, start, now, now, end))
+        row = cur.fetchone()
+    if not row or row[0] not in ('yes', 'no'):
+        return None
+    return dict(status='closed' if row[0] == 'yes' else 'open', source=row[1],
+                checked_at=row[2], valid_until=row[3])
+
+
 def _catalog_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | None:
     """읽은 장소 → 원장 가게 번호. 관광공사 번호(`tourapi_kor_food`)가 하나의 가게로 이어질 때만, 번호가 없으면 이름이 원장에서 하나로 정해질 때만.
     둘 이상이면 고르지 않는다(모름) — 다른 가게의 영업시간으로 판정하는 것이 가장 나쁘다(`ledger.slot_verdicts` · `find_place_by_name` 과 같은 규칙).

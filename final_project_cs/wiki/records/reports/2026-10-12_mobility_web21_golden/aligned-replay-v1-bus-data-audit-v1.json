@@ -1,0 +1,113 @@
+{
+  "rows": [
+    {
+      "route_nm": "150",
+      "board": {
+        "route_id": "100100029",
+        "route_nm": "150",
+        "seq": 91,
+        "station_id": "101000039",
+        "ars_id": "02137",
+        "station_nm": "서울신문사",
+        "lat": 37.5683632936,
+        "lng": 126.9773647051,
+        "direction": "도봉산역",
+        "sect_dist_m": 698
+      },
+      "alight": {
+        "route_id": "100100029",
+        "route_nm": "150",
+        "seq": 92,
+        "station_id": "100000386",
+        "ars_id": "01011",
+        "station_nm": "종로1가.종각역",
+        "lat": 37.5701482455,
+        "lng": 126.9810660928,
+        "direction": "도봉산역",
+        "sect_dist_m": 532
+      },
+      "stops": 1,
+      "first_time": "03:57",
+      "last_time": "22:00",
+      "term_min": 8,
+      "web_board_ars_match": true,
+      "web_alight_name_match": true,
+      "web_direction_order_match": true
+    },
+    {
+      "route_nm": "101",
+      "board": {
+        "route_id": "100100006",
+        "route_nm": "101",
+        "seq": 44,
+        "station_id": "101000039",
+        "ars_id": "02137",
+        "station_nm": "서울신문사",
+        "lat": 37.5683632936,
+        "lng": 126.9773647051,
+        "direction": "우이동",
+        "sect_dist_m": 716
+      },
+      "alight": {
+        "route_id": "100100006",
+        "route_nm": "101",
+        "seq": 45,
+        "station_id": "100000386",
+        "ars_id": "01011",
+        "station_nm": "종로1가.종각역",
+        "lat": 37.5701482455,
+        "lng": 126.9810660928,
+        "direction": "우이동",
+        "sect_dist_m": 532
+      },
+      "stops": 1,
+      "first_time": "04:00",
+      "last_time": "23:00",
+      "term_min": 8,
+      "web_board_ars_match": true,
+      "web_alight_name_match": true,
+      "web_direction_order_match": true
+    },
+    {
+      "route_nm": "501",
+      "board": {
+        "route_id": "100100077",
+        "route_nm": "501",
+        "seq": 26,
+        "station_id": "101000039",
+        "ars_id": "02137",
+        "station_nm": "서울신문사",
+        "lat": 37.5683632936,
+        "lng": 126.9773647051,
+        "direction": "종로2가",
+        "sect_dist_m": 696
+      },
+      "alight": {
+        "route_id": "100100077",
+        "route_nm": "501",
+        "seq": 27,
+        "station_id": "100000386",
+        "ars_id": "01011",
+        "station_nm": "종로1가.종각역",
+        "lat": 37.5701482455,
+        "lng": 126.9810660928,
+        "direction": "종로2가",
+        "sect_dist_m": 526
+      },
+      "stops": 1,
+      "first_time": "04:20",
+      "last_time": "22:20",
+      "term_min": 10,
+      "web_board_ars_match": true,
+      "web_alight_name_match": true,
+      "web_direction_order_match": true
+    }
+  ],
+  "matched_route_alternatives": 3,
+  "requested_route_alternatives": 3,
+  "source_hashes": {
+    "bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0"
+  },
+  "scope": "웹 같은 승차ARS+하차명+노선순서 데이터 대응이며 Planner 실행·요금 통과를 대신하지 않습니다. 대안3노선은 같은OD의1경로 묶음입니다."
+}

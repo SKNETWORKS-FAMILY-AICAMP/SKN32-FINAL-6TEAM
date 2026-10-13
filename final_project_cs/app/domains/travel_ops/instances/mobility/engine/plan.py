@@ -48,10 +48,11 @@ from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from . import options as O
+from .bus_identity import bus_leg, route_for_leg, segment_for_leg
 from .candidates import MIX_CUTS_PER_ROUTE_PROPOSED, MIX_MAX_PROPOSED, MixedGenerator, interleave, mix_rule, ride_estimator
 from .options import line_name, station_name  # noqa: F401 — 32 시험·호출 쪽이 plan 에서 가져간다
 from .geo import same_station
-from .timeutil import MIN_DAY, SERVICE_DAY_START_MIN
+from .timeutil import MIN_DAY, SERVICE_DAY_START_MIN, day_type_of
 from .verify_time import leg_mode
 
 KST = timezone(timedelta(hours=9))
@@ -84,6 +85,15 @@ MIX_PLAN_GAIN_MIN_PROPOSED = 15
 #: 대중교통이 **운행 시간 때문에**(첫차 전 · 막차 뒤 · 배차 공백) 하나도 안 맞을 때 택시로 대체해 싣는다(2026-10-07 새벽 도착 04:30 요구에
 #:   「결과 없음」만 나오던 것 — 값을 모르는 상황을 만들지 않는다, 결정 15). 사용자가 modes 로 택시를 뺀 요청이면 쓰지 않는다. False 면 종전.
 TAXI_FALLBACK_ON_SERVICE_HOURS_PROPOSED = True
+#: 시간대 경계에서 조회하지 않은 출발을 반환하지 않기 위한 재계산 상한.
+TAXI_REFIT_MAX_QUERIES = 6
+
+
+def taxi_label(result):
+    """같은 조회의 거리와 예상 요금을 계획·현재 출발 안내에 함께 쓴다."""
+    from .car import taxi_fare_description
+    note = taxi_fare_description(result)
+    return f"택시 {result['distance_m'] / 1000:.1f}km · {note} [{result.get('grade', '근거없음')}]"
 # ☆`[2026-10-06]` 가장 가까운 출구까지의 길 거리가 직선의 이 배수를 넘으면 **같은 역의 다른 출구**도 길 거리로 따져 가장 짧은 것을 쓴다.
 #   실측(접근·하차 후보 83곳): 직선으로 가장 가까운 출구 하나만 보면 8곳이 2배를 넘는데, 모든 출구 중 길 거리 최소로 고르면 3곳으로 준다 —
 #   남대문시장→시청 4,065 m → 824 m(8.1배 → 1.6배), 광화문 209 m → 79 m(3.0배 → 1.1배), 회현 416 → 249 m. 길 거리가 직선에 가까운 곳(중앙 1.28배)은 영향이 없다.
@@ -259,7 +269,19 @@ def _multi(oa, ob):
 
 
 class Planner:
-    def __init__(self, runtime, *, stage="planning", modes=None, display=False):
+    def __init__(self, runtime, *, stage="planning", modes=None, display=False, taxi_option_fees=None,
+                 taxi_call_product=None, taxi_call_quotes=None):
+        from .taxi_budget import normalize_fees
+        from .taxi_pricing import normalize_call_quotes
+        from .errors import CaseInputError
+        if taxi_option_fees is not None and (taxi_call_product is not None or taxi_call_quotes is not None):
+            raise CaseInputError('기존 옵션료와 새 호출 상품·견적을 함께 적용할 수 없습니다')
+        self.taxi_option_fees = normalize_fees(taxi_option_fees)
+        self.taxi_call_quotes = normalize_call_quotes(taxi_call_quotes)
+        self.taxi_call_product = (taxi_call_product if taxi_call_product is not None else
+                                 'kakao_general' if taxi_option_fees is None else None)
+        if self.taxi_call_product is not None and not isinstance(self.taxi_call_product,str):
+            raise CaseInputError('택시 호출 상품은 문자열이어야 합니다')
         self.rt = runtime
         # 후보 수단 거르기(예: {"subway"}) — None 이면 DEFAULT_MODES(자전거 뺌 · 56).
         #   빈 목록·모르는 수단은 거절한다(GPT 56 #9 — 빈 목록이 조용히 기본으로 넓어지지 않게).
@@ -363,22 +385,55 @@ class Planner:
         return round(self._eff(place["lat"], place["lon"], stop["lat"], stop["lng"], straight_m))
 
     def _walk_net(self, a_place, b_place, straight_m):
-        """장소↔장소 도보 거리(m) — 보행망 라우터 foot 거리 → 없으면 직선 × 우회계수. (거리, 길 없음 여부).
+        """기존 거리 호출 계약을 보존한다. 일정 계산은 `_walk_path`로 시간도 받는다."""
+        distance_m, _minutes, no_path = self._walk_path(a_place, b_place, straight_m)
+        return distance_m, no_path
 
-        「길 없음」은 라우터가 **경로가 없다**고 답했을 때만이다. 라우터가 없거나 못 닿으면(no_router·router_down·
-        router_error·bad_response) 길이 없다는 근거가 아니다 — 직선 식으로 낸다(verify_time._bike_walk 와 같은 규칙)."""
+    def _walk_path(self, a_place, b_place, straight_m, *, evidence=None):
+        """장소↔장소 보행망의 거리·시간을 받는다. 반환: (거리 m, 소요 분, 길 없음 여부).
+
+        로컬 계단 시간을 일정의 평지 속도로 정규화한다. 시간 근거가 없으면 거리 ÷ 속도를 쓴다.
+
+        조회 실패와 실제 경로 없음은 근거 상태로 구분한다. 둘 다 거리·소요를 생성하지 않는다.
+        도로 밖 접근이 과도한 응답도 직선 계수로 보정하지 않는다."""
         br = getattr(self.v, "bike_router", None)
         if br is not None and br.available():
             prof = ((self.v.R.get("bike") or {}).get("ddareungi") or {}).get("ride", {}).get("walk_profile", "foot")
             r = br.route(prof, a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"])
             if r:
                 if r.get("optimistic"):
-                    # ☆`[2026-10-04]` 길 밖 접근 구간이 길어 낙관적일 수 있는 거리는 직선 × 우회계수와 **큰 쪽**을 쓴다(도착 여유를 깎지 않는다)
-                    return max(float(r["distance_m"]), straight_m * self.detour), False
-                return float(r["distance_m"]), False
+                    if evidence is not None:
+                        evidence.update(source="walking_network", status="unavailable",
+                                        reason="unverified_walk_access")
+                    return None, None, True
+                if evidence is not None:
+                    evidence.update(source="walking_network", degraded=False,
+                                    foot_timing=bool(r.get("foot_timing")))
+                    if r.get("source_id"):
+                        evidence["source_id"] = r["source_id"]
+                    if r.get("walk_candidates"):                    # 서울 안: 두 보행 자료 후보와 고른 쪽
+                        evidence["walk_candidates"] = r["walk_candidates"]
+                routed_m = float(r["distance_m"])
+                used_m = routed_m
+                seconds = used_m / self.speed
+                timing = r.get("foot_timing")
+                if timing:
+                    # 로컬 보행망의 평지 속도를 규칙 속도로 바꾸되 기존 계단 시간을 버리지 않는다.
+                    # 보행망 내부 계단 시간을 유지한다. 웹 정답에 맞춘 보정은 하지 않는다.
+                    base_speed, routed_seconds = float(timing["flat_mps"]), float(timing["seconds"])
+                    if not math.isfinite(base_speed) or not math.isfinite(routed_seconds) or base_speed <= 0 or routed_seconds < 0:
+                        raise ValueError("보행망 내부 시간은 유한한 양수 속도와 0 이상 초여야 한다")
+                    seconds = max(seconds, routed_seconds * base_speed / self.speed + (used_m - routed_m) / self.speed)
+                return used_m, seconds / 60, False
             if (br.last_error or {}).get("kind") == "no_path":
-                return None, True
-        return straight_m * self.detour, False
+                if evidence is not None:
+                    evidence.update(source="walking_network", status="no_path")
+                return None, None, True
+        if evidence is not None:
+            evidence.update(source="walking_network", status="unavailable",
+                            reason=((getattr(br, "last_error", None) or {}).get("kind")
+                                    or "walking_router_unavailable"))
+        return None, None, True
 
     def _blocked_station(self, rec):
         """사고 조건(self.disruptions)으로 **그 물리적 역의 모든 노선**이 서지 않거나 운행하지 않으면 True.
@@ -499,11 +554,11 @@ class Planner:
         excluded = v.rv("bus", "route_type_제외") or []
         found = []
         for i, (r, x, y, _span, da, db) in enumerate(v.bus.routes_between(
-                a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius)):
+                a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius, True)):
             if r.route_type_nm in excluded or max(da, db) > wlim:
                 continue
             da, db = self._stop_walk(a_place, x, da), self._stop_walk(b_place, y, db)      # #13 — 거른 뒤에만 길로
-            legs = [{"mode": "bus", "route": r.route_nm, "from": x["station_nm"], "to": y["station_nm"]}]
+            legs = [bus_leg(r, x, y)]
             wi, wo = self._walk(da), self._walk(db)
             st_date, by_stop = service_day(arrive_dt - timedelta(minutes=wo))
             off = (st_date - sdate).days * MIN_DAY
@@ -603,18 +658,23 @@ class Planner:
                             "walk_place_out": 0, "walk_stop_in": 0, "walk_stop_out": 0, "by_station": arrive_by}}], None
 
     # ── ⑤ 지하철+버스 혼합(87 · 12 전달 · 85 E1 2단) ─────────────────────────────
-    def _mix_gen(self, party, first_visit):
-        """혼합 후보 생성기 — 버스·역 좌표·지하철 그래프가 다 있고 modes 에 지하철·버스가 둘 다 있을 때만. 사고 조건 중 운행
+    def _mix_gen(self, party, first_visit, when=None):
+        """버스 환승 후보 생성기 — 버스가 허용되면 버스→버스도 탐색한다. 지하철 포함 모양은 호출 지점에서 수단을 거른다. 사고 조건 중 운행
         중단 노선은 지하철 탐색에서 피하고(avoid_lines), 무정차 역은 그 노선으로 끊지 않는다(skip_at) — 판정은 판정기가 한다."""
         v = self.v
-        if v.bus is None or v.sc is None or not {"subway", "bus"} <= self.modes:
+        if v.bus is None or v.sc is None or "bus" not in self.modes:
             return None
         lim, _ = v._party_limit(party)
         avoid = {d.get("line") for d in self.disruptions if d.get("kind") == "line_closed" and d.get("line")}
         skip = {(d.get("line"), d.get("station")) for d in self.disruptions
                 if d.get("kind") == "station_skip" and d.get("line") and d.get("station")}
 
-        ride = ride_estimator(v)
+        # 후보 생성도 요청한 달력 날짜·시간대로 고른다. 최종 판정은 각 구간의 실제 승차 시각으로 다시 한다.
+        hour, day_type = 12, "weekday"
+        if when is not None:
+            local = when.astimezone(KST) if when.tzinfo is not None else when.replace(tzinfo=KST)
+            hour, day_type = local.hour, day_type_of(local.date(), v.holidays)
+        ride = ride_estimator(v, hour=hour, day_type=day_type)
         self._ride_est = ride
         radius = v.rv("alternatives", "정류장_반경_m")
         return MixedGenerator(
@@ -670,7 +730,7 @@ class Planner:
             return drop("formula_mismatch", f"출발 {start} + 소요 {eta} + 여유 {margin} + 남는 {slack} ≠ 도착 목표 {arrive_by}")
         # 도보 — 장소↔정류장/역(직선×우회) + 정류장↔역 환승(판정기와 같은 식 · 같은 출구 기준 직선 · 위 walk_min) + 지하철 안 환승(거리표 m)
         sub = [x for x in legs if leg_mode(x) == "subway"]
-        inner = O.transfer_walk_m(v, sub) if len(sub) > 1 else (0.0 if sub else None)
+        inner = O.transfer_walk_m(v, sub) if len(sub) > 1 else 0.0
         walk_m = None if inner is None else (mc.walk_in_m + mc.walk_out_m + mc.link_m) * self.detour + inner
         return {"eta_min": eta, "uses": uses_of(legs), "_legs": legs, "_route": label_of(legs), "_start": start,
                 "_transfers": mc.transfers, "_n": MIX_N_BASE + i, "_key": key, "_margin": margin, "_slack": slack,
@@ -763,20 +823,39 @@ class Planner:
         """그 버스를 [lo, hi] 무렵 탈 수 있어 보이나(탐색 순서용 추정 — 판정 아님 · GPT 87 #4). 승차 정류장 통과 시각 =
         기점 첫차·막차 + 기점→승차 정류장 승차 추정(ride_estimator) · ±MIX_WINDOW_TOL_MIN · 다음 운행일(+1440)도 본다."""
         bus = self.v.bus
-        r = bus.by_id.get(getattr(mc, "route_id", None)) if bus is not None else None
-        if r is None or r.first_min is None or r.last_min is None:
+        if bus is None:
             return True
-        rows = bus.stops.get(r.route_id, [])
-        off = 0.0
-        ride = getattr(self, "_ride_est", None)
-        if ride is not None and rows and getattr(mc, "board", None) is not None:
-            off = ride(r, rows[0], mc.board) or 0.0
-        for day in (0, MIN_DAY):
-            first = r.first_min + off + day - MIX_WINDOW_TOL_MIN
-            last = r.last_min + off + day + MIX_WINDOW_TOL_MIN
-            if not (first > hi or last < lo):
-                return True
-        return False
+        boards = getattr(mc, "bus_boards", None)
+        if boards is None:
+            boards = []
+            for leg in getattr(mc, "legs", ()):
+                if leg_mode(leg) != "bus":
+                    continue
+                r = route_for_leg(bus, leg)
+                seg = segment_for_leg(bus, r, leg) if r is not None else None
+                boards.append((r, seg[0] if seg else None))
+            if not boards:
+                boards = [(bus.by_id.get(getattr(mc, "route_id", None)), getattr(mc, "board", None))]
+        offsets = getattr(mc, 'bus_board_offsets', None)
+        total = getattr(mc, 'est_min', None)
+        for index, (r, board) in enumerate(boards):
+            if r is None or r.first_min is None or r.last_min is None:
+                continue                         # 운행창을 모르면 확정 탈락시키지 않는다
+            rows = bus.stops.get(r.route_id, [])
+            ride = getattr(self, "_ride_est", None)
+            off = ride(r, rows[0], board) if ride is not None and rows and board is not None else None
+            if off is None:
+                continue
+            last_min = r.last_min + (MIN_DAY if r.last_min < r.first_min else 0)
+            board_lo, board_hi = lo, hi
+            if offsets is not None and len(offsets) == len(boards) and total is not None:
+                board_lo = lo + offsets[index]
+                board_hi = hi - (total - offsets[index])
+            if not any(not (r.first_min + off + day - MIX_WINDOW_TOL_MIN > board_hi
+                            or last_min + off + day + MIX_WINDOW_TOL_MIN < board_lo)
+                       for day in (-MIN_DAY, 0, MIN_DAY)):
+                return False
+        return True
 
     def _mixed(self, a_place, b_place, sa, sb, arrive_dt, sdate, arrive_by, party, first_visit, case_id, wlim, opts, left):
         """⑤ 혼합 후보(87). A = 장소 a 근처 정류장 → 버스 → 역 앞에서 내려 → 지하철 → 장소 b 도보 상한 안 역(sb) ·
@@ -784,19 +863,20 @@ class Planner:
         이미 본 역(A = sa · B = sb)만 뺀다(GPT 87 #6). **지하철만·버스만 후보(opts)보다 소요·환승·도보 중 하나라도 앞설 때만 싣고**,
         뒤지면 left(`mix_dominated`) · 상한(혼합_최대)을 넘으면 left(`mix_cap`). 사고로 장소 b 쪽 걸어갈 역이 모두 막히면(sb 빈 목록)
         B 가 그 구간의 대안이 된다(85 E1 2단)."""
-        gen = self._mix_gen(party, first_visit)
+        gen = self._mix_gen(party, first_visit, arrive_dt)
         if gen is None:
             return []
+        gen.service_check = lambda mc: self._in_service(mc, arrive_by - mc.est_min, arrive_by)
         ca = (gen.bus_to_subway(a_place["lat"], a_place["lon"], [(nm, ls, d) for nm, d, ls in sb], wlim,
-                                excl_st=self._phys_set(sa)) if sb else [])
+                                excl_st=self._phys_set(sa)) if sb and "subway" in self.modes else [])
         cb = (gen.subway_to_bus([(nm, ls, d) for nm, d, ls in sa], b_place["lat"], b_place["lon"], wlim,
-                                excl_st=self._phys_set(sb)) if sa else [])
+                                excl_st=self._phys_set(sb)) if sa and "subway" in self.modes else [])
         # ☆`[2026-10-06]` C = 버스 → 버스(구글이 쓰는 모양). 지하철 걷기 후보가 없어도 만들 수 있다 — 모양 A·B 와 번갈아 판정한다
         cc = gen.bus_to_bus(a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], wlim)
         cands = interleave(ca, cb, cc)      # 세 모양을 번갈아 — 판정 상한 안에서 한 모양만 보지 않게
         # 운행 시간 추정 밖(심야버스 낮 구간 등)은 **뒤로 미룬다**(GPT 87 #4 — 판정 전 확정 탈락이 아니라 탐색 순서) — 안쪽 후보가
         #   하나도 없을 때만 판정한다(밖 후보는 판정기가 대개 첫차 전·막차 뒤로 내고, 그 마지막 성립 출발 찾기는 느린 길이다)
-        win = [mc for mc in cands if self._in_service(mc, arrive_by - mc.est_min - MIX_WINDOW_TOL_MIN, arrive_by)]
+        win = [mc for mc in cands if self._in_service(mc, arrive_by - mc.est_min, arrive_by)]
         out_win = [mc for mc in cands if mc not in win] if win else []
         cands = win or cands
         if gen.skipped_airport:
@@ -819,6 +899,9 @@ class Planner:
             if not gen.materialize(mc):
                 n_none += 1           # 환승 상한 안에서 지하철 구간열을 못 찾았다(생성기 추정 표와 실제 탐색이 다른 드문 경우)
                 continue
+            regular = gen.regular_alternative(mc)
+            if regular is not None and not any(x.legs == regular.legs for x in cands if getattr(x, "_done", False)):
+                cands.insert(i + 1, regular)
             if best is not None:
                 est_walk = (mc.walk_in_m + mc.walk_out_m + mc.link_m) * self.detour / self.speed / 60 + (mc.sub_walk_min or 0)
                 if mc.est_min > best[0] * ratio + MIX_EST_TOL_MIN or not (
@@ -858,27 +941,32 @@ class Planner:
                          "reason": f"혼합 상한 {mmax}개(싣는 것) · 판정 {MIX_VERIFY_MAX}개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"})
         return kept
 
-    def _mixed_sources(self, a_place, b_place, sa, sb, nb, party, first_visit, wlim):
+    def _mixed_sources(self, a_place, b_place, sa, sb, nb, party, first_visit, wlim, when=None):
         """가장 이른 도착(86) 목표 생성용 혼합 후보 — 앞 일정 끝(nb) 무렵 운행하는 노선 · 구간열이 나오는 것 · 추정 소요 순
         MIX_VERIFY_MAX 개. 생성기가 없으면 []."""
-        gen = self._mix_gen(party, first_visit)
+        gen = self._mix_gen(party, first_visit, when)
         if gen is None:
             return []
+        gen.service_check = lambda mc: self._in_service(mc, nb, nb + EARLIEST_WAIT_MAX_MIN + mc.est_min)
         ca = (gen.bus_to_subway(a_place["lat"], a_place["lon"], [(nm, ls, d) for nm, d, ls in sb], wlim,
-                                excl_st=self._phys_set(sa)) if sb else [])
+                                excl_st=self._phys_set(sa)) if sb and "subway" in self.modes else [])
         cb = (gen.subway_to_bus([(nm, ls, d) for nm, d, ls in sa], b_place["lat"], b_place["lon"], wlim,
-                                excl_st=self._phys_set(sb)) if sa else [])
-        cands = interleave(ca, cb)
+                                excl_st=self._phys_set(sb)) if sa and "subway" in self.modes else [])
+        cc = gen.bus_to_bus(a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], wlim)
+        cands = interleave(ca, cb, cc)
         # (GPT 87 #4) 거르지 않고 순서만 — 앞 일정 끝(nb)부터 대기 상한까지(다음 운행일 첫차 포함) 탈 수 있어 보이는 노선을 먼저
         hi = nb + EARLIEST_WAIT_MAX_MIN
         cands = ([mc for mc in cands if self._in_service(mc, nb, hi + mc.est_min)]
                  + [mc for mc in cands if not self._in_service(mc, nb, hi + mc.est_min)])
         out = []
-        for mc in cands:
+        for i, mc in enumerate(cands):
             if len(out) >= MIX_VERIFY_MAX:
                 break
             if gen.materialize(mc):
                 out.append(mc)
+                regular = gen.regular_alternative(mc)
+                if regular is not None and not any(x.legs == regular.legs for x in cands if getattr(x, "_done", False)):
+                    cands.insert(i + 1, regular)
         return out
 
     def _service_hours_blocked(self, why, left):
@@ -892,7 +980,8 @@ class Planner:
 
     def _taxi_option(self, a_place, b_place, sdate, arrive_by, buf, left):
         """택시 후보 하나 또는 None(이유는 left). 판정기의 택시 서비스(`v.car` — 로컬 도로 그래프 또는 GraphHopper + TOPIS 속도 + 요금 산식)로
-        잰다. 도착 목표에서 거꾸로 두 번 맞춘다(첫 추정 출발 −30분 → 그 소요로 다시) — 출발 시각이 바뀌면 속도 프로파일이 달라진다."""
+        잰다. 출발 자체를 조회해 성립한 후보만 반환한다. 시간대 경계에서 진동해도
+        조회하지 않은 새 출발에 이전 소요를 붙이지 않는다. 제한 탐색이라 최적 출발 보장은 없다."""
         from .car import RouterDown
         car = getattr(self.v, "car", None)
         if car is None:
@@ -900,26 +989,64 @@ class Planner:
                          "reason": "택시 소요를 잴 도로 그래프·속도 자료가 없다(길찾기 꺼짐) — 택시 후보를 싣지 않았다"})
             return None
         s, e = (a_place["lon"], a_place["lat"]), (b_place["lon"], b_place["lat"])
-        guess, c, ride = arrive_by - 30, None, 0
-        for _ in range(2):
+        guess, best, seen, failed = arrive_by - 30, None, set(), []
+        for _ in range(TAXI_REFIT_MAX_QUERIES):
+            if guess in seen:
+                break
+            seen.add(guess)
             try:
-                c = car.leg(s, e, datetime.fromisoformat(iso_of(sdate, guess)), taxi=True)
+                depart = datetime.fromisoformat(iso_of(sdate, guess))
+                from .taxi_budget import selected_fee, with_option_fee
+                product = getattr(self,'taxi_call_product',None)
+                if product is not None:
+                    from .taxi_pricing import quote_for_route, with_call_product
+                    from .taxi_call_policy import resolve_call_fee
+                    quote = quote_for_route(getattr(self,'taxi_call_quotes',()),a_place,b_place)
+                    resolve_call_fee(product,depart,quoted_fee=quote)
+                c = car.leg(s, e, depart, taxi=True)
+                if product is not None:
+                    c = with_call_product(c,product,depart,quote)
+                    c['_call_product'] = product
+                    if quote is not None:
+                        c['_call_quote'] = quote
+                else:
+                    fee = selected_fee(getattr(self, 'taxi_option_fees', ()), a_place, b_place, depart)
+                    c = with_option_fee(c, fee)
+                    if fee is not None:
+                        c['_option_fee_quote'] = fee
             except RouterDown as ex:
                 left.append({"_o": {"_legs": []}, "label": "택시", "code": "taxi_no_route",
                              "reason": f"택시 경로를 못 구했다 — {str(ex)[:100]}"})
                 return None
             ride = max(1, math.ceil(c["topis_time_s"] / 60))
-            nxt = arrive_by - ride - buf
-            done = abs(nxt - guess) <= 3
-            guess = nxt
-            if done:
+            slack = arrive_by - guess - ride - buf
+            if slack >= 0 and (best is None or guess > best[0]):
+                best = (guess, c, ride, slack)
+            elif slack < 0:
+                failed.append(guess)
+            if slack == 0:
                 break
+            later_failed = [at for at in failed if best is not None and at > best[0]]
+            if later_failed:
+                lo, hi = best[0], min(later_failed)
+                if hi - lo <= 1:
+                    break
+                guess = (lo + hi) // 2
+            else:
+                guess += slack
+        if best is None:
+            left.append({"_o": {"_legs": []}, "label": "택시", "code": "taxi_no_feasible_departure",
+                         "reason": "제한된 택시 재조회에서 목표와 여유를 만족하는 출발을 확인하지 못했다"})
+            return None
+        guess, c, ride, slack = best
         fare = c.get("fare_won")
-        note = f"예상 요금 {fare:,}원(예산 여유 포함 · 교통·대기·호출료에 따라 달라짐)" if fare is not None else "요금 모름"
         return {"eta_min": ride, "uses": [], "_legs": [], "_taxi": True, "_n": 300, "_key": ("taxi", 0, 0),
-                "_route": f"택시 {c['distance_m'] / 1000:.1f}km · {note} [{c.get('grade', '근거없음')}]",
-                "_start": guess, "_transfers": 0, "_margin": buf, "_slack": 0, "_walk_min": 0, "_walk_m": 0,
-                "_fare": fare, "_severe": [], "_covered": False}
+                "_route": taxi_label(c),
+                "_start": guess, "_transfers": 0, "_margin": buf, "_slack": slack, "_walk_min": 0, "_walk_m": 0,
+                "_fare": fare, "_severe": [], "_covered": False,
+                **({'_taxi_option_fee': c['_option_fee_quote']} if '_option_fee_quote' in c else {}),
+                **({'_taxi_call_product':c['_call_product']} if '_call_product' in c else {}),
+                **({'_taxi_call_quote':c['_call_quote']} if '_call_quote' in c else {})}
 
     @staticmethod
     def _rank(o):
@@ -956,7 +1083,7 @@ class Planner:
         """뺀 후보 목록 정리 — 버스 직행은 도보 짧은 순으로 상한(버스_직행_최대)개만 한 줄씩 적고 나머지는 코드별 개수 한 줄로
         접는다(판정기 bus_rejected 와 같은 뜻 · 역 앞 노선이 많은 곳에서 목록이 덮이지 않게). 내부 참조(_o)는 뺀다."""
         bmax = self.v.R["candidates"]["버스_직행_최대"]["value"]
-        buses = sorted((e for e in left if _is_bus(e["_o"])),
+        buses = sorted((e for e in left if _is_bus(e["_o"]) and not _is_mixed(e["_o"])),
                        key=lambda e: (e["_o"]["_walk_m"] if e["_o"]["_walk_m"] is not None else float("inf"), e["_o"]["_n"]))
         drop = {id(e) for e in buses[bmax:]}
         out = [{k: v for k, v in e.items() if k != "_o"} for e in left if id(e) not in drop]
@@ -1085,15 +1212,15 @@ class Planner:
 
     def _station_pairs(self, a_place, b_place, wlim):
         """(GPT 86 Q3) 역 목록·역 짝 — leg() 와 earliest 가 같이 쓴다. (sa, sb, pairs).
-        pairs = [(ia, ib, 역a, 역b)] 가까운 짝부터((0,0) 이 늘 먼저) · 역이 없거나 양쪽 첫 역이 같으면 [](이유는 leg() 가 만든다).
+        pairs = [(ia, ib, 역a, 역b)] 가까운 짝부터 · 동일 물리적 역끼리만 제외한다.
         ★ 탐색 중단 정책은 쓰는 쪽이 정한다 — leg() 는 실을 수 있는 짝에서 멈추고(STATION_PAIR_MODE), 가장 이른 도착
           목표 생성(_earliest_targets)은 짝 전부를 본다(목표 후보를 넓게 · 확인은 leg() 가 한다)."""
         sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
-        if not sa or not sb or same_station(sa[0][0], sa[0][2], sb[0][0], sb[0][2]):
+        if not sa or not sb:
             return sa, sb, []
         pairs = [(ia, ib, x, y) for ia, x in enumerate(sa) for ib, y in enumerate(sb)
                  if not same_station(x[0], x[2], y[0], y[2])]
-        pairs.sort(key=lambda t: (t[0] + t[1], t[2][1] + t[3][1], t[0]))   # (0,0) 이 늘 먼저 — 앞 판과 같은 첫 짝
+        pairs.sort(key=lambda t: (t[0] + t[1], t[2][1] + t[3][1], t[0]))   # (0,0)이 유효하면 앞 판과 같은 첫 짝
         return sa, sb, pairs
 
     def _earliest_targets(self, a_place, b_place, not_before_dt, party, first_visit, case_id):
@@ -1132,9 +1259,9 @@ class Planner:
         sources = []
         direct = meters(a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"])
         if direct <= wlim and "walk" in self.modes:
-            wm, no_path = self._walk_net(a_place, b_place, direct)
+            wm, walk_minutes, no_path = self._walk_path(a_place, b_place, direct)
             if not no_path:
-                walk_t = max(1, math.ceil(wm / self.speed / 60)) + buf
+                walk_t = max(1, math.ceil(walk_minutes)) + buf
                 sources.append(lambda m: ([m + walk_t], False))
         sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
         for pi, (_ia, _ib, xa, xb) in enumerate(pairs):
@@ -1159,11 +1286,11 @@ class Planner:
             radius = v.rv("alternatives", "정류장_반경_m")
             excluded = v.rv("bus", "route_type_제외") or []
             for i, (r_, x, y, _span, da, db) in enumerate(v.bus.routes_between(
-                    a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius)):
+                    a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius, True)):
                 if r_.route_type_nm in excluded or max(da, db) > wlim:
                     continue
                 da, db = self._stop_walk(a_place, x, da), self._stop_walk(b_place, y, db)  # #13 — 거른 뒤에만 길로
-                def bus(m, i=i, legs=[{"mode": "bus", "route": r_.route_nm, "from": x["station_nm"], "to": y["station_nm"]}],
+                def bus(m, i=i, legs=[bus_leg(r_, x, y)],
                         wi=self._walk(da), wo=self._walk(db)):
                     day, dm, off = at(m, wi)
                     rr = self._vc({"id": f"{case_id}~ebus{i}@{m}", "date": day, "stage": self.stage, "legs": legs,
@@ -1173,7 +1300,7 @@ class Planner:
                 sources.append(bus)
         # ☆`[87]` 혼합(⑤) — leg() 와 같은 생성기 · 같은 거르기(운행 시간 · 구간열) · 추정 소요 순 MIX_VERIFY_MAX 개만 소스로
         #   (앞설 축 거르기는 하지 않는다 — 목표 후보를 넓게, 확인은 leg() 가 한다 · 86 의 짝 전부 보기와 같은 뜻)
-        for i, mc in enumerate(self._mixed_sources(a_place, b_place, sa, sb, nb, party, first_visit, wlim)):
+        for i, mc in enumerate(self._mixed_sources(a_place, b_place, sa, sb, nb, party, first_visit, wlim, not_before_dt)):
             def mix(m, i=i, mc=mc, wi=self._walk(mc.walk_in_m), wo=self._walk(mc.walk_out_m)):
                 day, dm, off = at(m, wi)
                 rr = self._vcq({"id": f"{case_id}~emix{i}@{m}", "date": day, "stage": self.stage, "legs": mc.legs,
@@ -1430,15 +1557,18 @@ class Planner:
         # ① 도보 직행 — 두 장소 직선이 도보 상한 안이면 후보. 여유는 정책 버퍼(수단 무관 · 39 결정 2).
         direct = meters(a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"])
         if direct <= wlim and (self.modes is None or "walk" in self.modes):
-            # ☆`[2026-09-29 문제목록 #13]` 앞 판은 직선 × 우회계수만 봐서 하천·철도 건너편 두 점도 「걸어서 n분」이었다.
-            #   보행망 라우터(GraphHopper foot — 자전거와 같은 서버)가 있으면 그 거리를 쓰고, 라우터가 「길 없음」이라
-            #   하면 도보 후보를 싣지 않는다. 라우터가 없거나 닿지 않으면 종전 식(직선 × 계수)으로 낸다(대체 소스).
-            wm, no_path = self._walk_net(a_place, b_place, direct)
+            # 보행망을 확보하지 못한 후보를 직선거리로 대체하지 않는다.
+            walk_basis = {}
+            wm, walk_minutes, no_path = self._walk_path(a_place, b_place, direct, evidence=walk_basis)
             if no_path:
-                left.append({"_o": {"_legs": []}, "label": "도보", "code": "no_walk_path",
-                             "reason": "보행망에 두 장소를 잇는 길이 없다(직선으로는 도보 상한 안)"})
+                missing = walk_basis.get("status") == "no_path"
+                left.append({"_o": {"_legs": []}, "label": "도보",
+                             "code": "no_walk_path" if missing else "walk_source_unavailable",
+                             "reason": ("보행망에 두 장소를 잇는 길이 없다(직선으로는 도보 상한 안)" if missing
+                                        else "검증 가능한 보행 경로를 확보하지 못해 도보 안내를 생성하지 않는다"),
+                             "walk_basis": walk_basis})
             else:
-                eta = max(1, math.ceil(wm / self.speed / 60))
+                eta = max(1, math.ceil(walk_minutes))
                 opts.append({"eta_min": eta, "uses": [], "_legs": [], "_route": "도보",
                              "_start": arrive_by - eta - buf, "_transfers": 0, "_n": 0, "_key": ("walk", 0, 0),
                              "_margin": buf, "_slack": 0, "_walk_min": eta,
@@ -1453,8 +1583,7 @@ class Planner:
         # ② 대중교통 — 장소마다 도보 상한 안 역 **가까운 순 여럿**(막힌 역 뺌 · E1) → 역 짝마다 다목적 후보(판정기
         #   verify_multi) → 후보마다 마지막 성립 출발로 다시 판정. 짝은 가까운 짝부터 보고, **실을 수 있는 대중교통 후보가
         #   앞 일정 끝 뒤에 떠날 수 있는 짝에서 멈춘다**(_pair_settles · STATION_PAIR_MODE) — 그런 짝이 첫 짝이면 앞 판과
-        #   같다. ★같은 역 조기 종료(아래)는 앞 판 정책 그대로 — 막힌 역을 뺀 뒤 양쪽 첫 역이 같아도 도보만 본다(사각지대 ·
-        #   85 닫힘 전달에 적음).
+        #   같다. 양쪽 첫 역이 같아도 다른 물리적 역 조합은 같은 판정에 넘긴다.
         sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
         oa, ob = (sa[0] if sa else None), (sb[0] if sb else None)
         why, r, n_mode = None, None, 0
@@ -1468,8 +1597,8 @@ class Planner:
             else:
                 why = {"code": "no_data", "reason": "도보 상한 안에 지하철역이 없다"
                        + (f"({a_place['name']})" if oa is None else f"({b_place['name']})")}
-        elif same_station(oa[0], oa[2], ob[0], ob[2]):          # 55 GPT #2 — 동명이역은 역명이 같아도 다른 역
-            why = {"code": "no_data", "reason": f"두 장소의 가장 가까운 역이 같다({oa[0]}) — 도보만 본다"}
+        elif not pairs:
+            why = {"code": "no_data", "reason": f"도보 상한 안에 다른 물리적 역 조합이 없다({oa[0]})"}
         visited = []
         for pi, (_ia, _ib, xa, xb) in enumerate(pairs):
             got, r_, nm_ = self._transit_pair(xa, xb, pi, arrive_dt, sdate, arrive_by, party, first_visit, case_id, left)
@@ -1557,6 +1686,9 @@ class Planner:
             late = {"code": "arrive_late",
                     "reason": f"앞 항목이 끝난 뒤({not_before_dt.astimezone(KST):%H:%M}) 떠나서는 "
                               f"{arrive_dt.astimezone(KST):%H:%M} 도착에 맞는 후보가 없다"}
+            # 후보가 없을 때(위 not opts 분기)와 같이 뺀 후보와 이유를 싣는다 — 앞 판은 이 분기에서 버려
+            #   「도보: 보행 접근 미검증」처럼 시각과 무관하게 뺀 후보의 이유가 결과에서 사라졌다.
+            late["left_out"] = self._fold_left(left)
             if earliest_on_late:
                 # 86 · E2 — 몇 분 밀면 되는지가 아니라 **가장 이른 도착**을 붙인다(코어가 한 번에 정확히 민다)
                 late["earliest"] = self._earliest_or_reason(a_place, b_place, not_before_dt, party, first_visit,
@@ -1629,11 +1761,22 @@ class Planner:
                     # ☆#21 — 공표 역간거리가 없는 구간(9호선·코레일 등)은 OSM 선로 길이 추정으로 낸 값이다. 확정처럼 보이지 않게 밝힌다
                     o["label"] = o["label"] + " · 요금은 선로 길이 추정"
             elif o["_legs"] and o.get("_lr") is not None:
-                # ☆#20 — 버스가 섞인 환승은 합성 요금 근거가 없다 → 확정 규칙(탈것별 요금의 합 상한)으로 상한을 싣고 밝힌다
-                up = O.fare_upper_of(self.v, o["_legs"], o["_lr"])
-                if up is not None:
-                    o["fare_krw"] = int(up)
-                    o["label"] = o["label"] + " · 요금은 환승 할인 전 상한"
+                # 선택 정류장 거리와 환승 조건이 갖춰진 경우 할인 예상액을 먼저 안내한다.
+                mixed_estimate = O.mixed_fare_estimate(self.v, o['_legs'], o['_lr'])
+                if mixed_estimate is not None:
+                    o['fare_krw'] = int(mixed_estimate)
+                    o['label'] += (' · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액'
+                                   ' · 거리 모델·' + ('첫 버스 조조 반영' if
+                                   O.mixed_first_bus_early_bird_discount(self.v, o['_legs'], o['_lr'])
+                                   else '조조 미적용'))
+                else:
+                    rail_only = set(O.modes_of(o['_legs'])) == {'subway'}
+                    up = (O.subway_fare_upper(self.v, o['_legs'], o['_lr']) if rail_only
+                          else O.fare_upper_of(self.v, o["_legs"], o["_lr"]))
+                    if up is not None:
+                        o["fare_krw"] = int(up)
+                        o["label"] += (" · 요금은 거리 범위 상단 예상액" if rail_only
+                                       else " · 요금은 환승 할인 전 예상액 상단 · 조조 할인 미적용")
             if self.display and o["_legs"]:
                 tc = O.transfer_cars(self.v, self._tc, o["_legs"], o.get("_lr"), o.get("_day_type"))
                 if tc:
@@ -1652,6 +1795,10 @@ class Planner:
                                                          else (0 if not o["_legs"] else None))}
                                            for o in opts],
                                "left_out": left, "left_checks": left_checks, "start_min": start})
+        from .departure_context import capture
+        self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+                                         stage=self.stage, party=party, first_visit=first_visit,
+                                         service_date=sdate, start_min=start)
         keys = ("id", "label", "eta_min", "walk_m", "fare_krw", "uses", "transfer_car")
         route = {"from": a_place["name"], "to": b_place["name"], "planned": planned["id"],
                  "options": [{k: o[k] for k in keys if k in o} for o in opts]}
@@ -1710,7 +1857,10 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
     if runtime is None:
         from .runtime import get_verifier
         runtime = get_verifier(quiet=True)
-    P = Planner(runtime, stage=stage, modes=modes, display=display)
+    P = Planner(runtime, stage=stage, modes=modes, display=display,
+                taxi_option_fees=(constraints or {}).get('taxi_option_fees'),
+                taxi_call_product=(constraints or {}).get('taxi_call_product'),
+                taxi_call_quotes=(constraints or {}).get('taxi_call_quotes'))
     P.trace = trace
     if disruptions:
         from .errors import CaseInputError
@@ -1728,6 +1878,11 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
     its = [_as_dict(x) for x in items]
     stay = sorted((it for it in its if it.get("kind") != "mobility"), key=_key_time)
     moves_in = sorted((it for it in its if it.get("kind") == "mobility"), key=_key_time)
+
+    def _leave(a):
+        """`[2026-10-13]` 이 항목을 떠나는 시각 — 숙소(며칠에 걸친다)는 체크인 시각, 나머지는 끝(없으면 시작).
+        체크아웃 시각을 쓰면 체크인 날 저녁 이동이 「운행일이 바뀐다」로 끊기거나 체크아웃 날 이후로 밀린다."""
+        return _parse_dt(a["starts_at"] if a.get("kind") == "lodging" else (a.get("ends_at") or a["starts_at"]))
 
     def moves_between(a, b):
         """입력에 있던 이동 항목 중 a 시작 ~ b 시작 사이의 것 — 우리가 그 구간을 못 만들면 그대로 남긴다."""
@@ -1777,7 +1932,7 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
         b = stay[i + 1]
         # ☆`[2026-09-29 문제목록 #45]` 운행일이 바뀌는 두 항목(1일차 저녁 → 2일차 아침) 사이는 잇지 않는다 — 그 사이에
         #   숙소로 가지만 숙소 위치를 모른다. 앞 판은 날짜를 가리지 않아 전날 마지막 장소 → 다음 날 첫 장소 이동을 만들었다.
-        if service_day(_parse_dt(a.get("ends_at") or a["starts_at"]))[0] != service_day(_parse_dt(b["starts_at"]))[0]:
+        if service_day(_leave(a))[0] != service_day(_parse_dt(b["starts_at"]))[0]:
             not_linked.append({"from": a.get("title"), "to": b.get("title"), "code": "day_boundary",
                                "reason": "운행일이 바뀐다 — 사이에 숙소로 가지만 숙소 위치를 모른다"})
             keep_as_is(a, b, "day_boundary")
@@ -1795,7 +1950,7 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
             continue
         got, why = P.leg(pa, pb, _parse_dt(b["starts_at"]), party, first_visit,
                          case_id=f"{a.get('place')}_to_{b.get('place')}",
-                         not_before_dt=_parse_dt(a.get("ends_at") or a["starts_at"]),
+                         not_before_dt=_leave(a),
                          earliest_on_late=earliest_on_late)
         if got is None:
             skip(a, b, {"from": pa["name"], "to": pb["name"], **why})
@@ -1817,6 +1972,7 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
         olds = moves_between(a, b)
         if olds:
             new = {**{k: v for k, v in olds[0].items() if k not in new}, **new}
+        new["detail"] = {**(new.get("detail") or {}), "departure_context": P.departure_context}
         merged.append(new)
     for n, it in enumerate(merged, 1):
         it["seq"] = n

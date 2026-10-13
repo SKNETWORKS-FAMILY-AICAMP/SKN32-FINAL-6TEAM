@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-10-12T12:13:26.941189+09:00",
+  "artifact_hashes": {
+    "matched": 31,
+    "total": 31,
+    "mismatch": []
+  },
+  "source_hashes": {
+    "matched": 40,
+    "total": 40,
+    "mismatch": []
+  },
+  "feature_rows": 21,
+  "private_data_access": false,
+  "limited_developer_api_calls": 0
+}

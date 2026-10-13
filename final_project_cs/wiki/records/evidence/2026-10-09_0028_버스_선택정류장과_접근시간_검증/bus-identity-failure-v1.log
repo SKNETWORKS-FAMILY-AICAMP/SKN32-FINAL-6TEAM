@@ -1,0 +1,53 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___ test_bus_candidates_are_filtered_by_straight_meters_then_walk_is_routed ___
+
+    def test_bus_candidates_are_filtered_by_straight_meters_then_walk_is_routed():
+        """\ucf54\ub371\uc2a4 \uc9c0\uc801 \u2014 \uc9c1\uc120 400 \xb7 \uae38 900 \xb7 \uc0c1\ud55c 500 \uc774\uba74 \ud658\uc0b0\uac12(692)\uacfc \ube44\uad50\ud574 \ud6c4\ubcf4\uac00 \ud0c8\ub77d\ud558\uba74 \uc548 \ub41c\ub2e4. \uac70\ub978 \ub4a4\uc5d0\ub9cc \uae38\ub85c \uc7b0\ub2e4."""
+        r = SimpleNamespace(route_nm="����01", route_type_nm="����")
+        x = {"station_nm": "��", "lat": 37.5710, "lng": 126.9800}
+        y = {"station_nm": "��", "lat": 37.5800, "lng": 126.9900}
+        far = {"station_nm": "��", "lat": 37.5900, "lng": 126.9900}
+    
+        class Bus:
+            def routes_between(self, *a):
+                return [(r, x, y, 4, 400, 300), (r, x, far, 5, 400, 900)]       # ��°�� ���� ����(500) ��
+    
+        p = _planner(FakeRouter(meters=900.0), bus=Bus())
+        p.v.rv = lambda *a: [] if a[-1] == "route_type_����" else 800
+        p.modes = {"bus"}
+        p.stage, p.disruptions = "planning", []
+        calls = []
+        p._vc = lambda case: calls.append(case) or SimpleNamespace(out=None, reason="stub", legs=None, day_type=None)
+        left = []
+        from datetime import datetime, timezone
+>       p._bus_direct(HOME, {"name": "����", "lat": 37.58, "lon": 126.99}, datetime(2026, 10, 7, 12, tzinfo=timezone.utc),
+                      __import__("datetime").date(2026, 10, 7), 720, 1, False, "c", 500, left)
+
+tests\unit\travel\mobility\test_plan_access_walk.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\plan.py:526: in _bus_direct
+    legs = [bus_leg(r, x, y)]
+            ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+route = namespace(route_nm='����01', route_type_nm='����')
+board = {'lat': 37.571, 'lng': 126.98, 'station_nm': '��'}
+alight = {'lat': 37.58, 'lng': 126.99, 'station_nm': '��'}
+
+    def bus_leg(route, board, alight):
+        """������ ���� ������ ��´�. �̸��� ǥ�ÿ��̸� �ٸ� ���� ã�� ��Ʈ�� �ƴϴ�."""
+        leg = {'mode': 'bus', 'route': route.route_nm,
+               'from': board['station_nm'], 'to': alight['station_nm'],
+>              'route_id': route.route_id, 'from_sequence': board['seq'], 'to_sequence': alight['seq']}
+                           ^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'route_id'. Did you mean: 'route_nm'?
+
+app\domains\travel_ops\instances\mobility\engine\bus_identity.py:16: AttributeError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_plan_access_walk.py::test_bus_candidates_are_filtered_by_straight_meters_then_walk_is_routed
+1 failed in 4.34s
+Exception ignored in: <function Console.__del__ at 0x00000229C5B55BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

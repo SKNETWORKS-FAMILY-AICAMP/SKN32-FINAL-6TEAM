@@ -1,0 +1,185 @@
+{
+  "observed_at_utc": "2026-10-11T15:26:49.634474+00:00",
+  "planned": 8,
+  "completed": 8,
+  "canonical_passed": 8,
+  "passed_gate": true,
+  "product_independent_holdout": false,
+  "oracle_deployed": false,
+  "prompt_retuned_on_this_set": false,
+  "checks": [
+    {
+      "key": "scope_afternoon",
+      "completed": true,
+      "canonical_passed": true,
+      "seconds": 192.38933679799084,
+      "literal_passed": true,
+      "decision": {
+        "action": "answer_fact",
+        "fact": "changeability",
+        "query": {
+          "day": "all",
+          "period": "afternoon",
+          "kind": "all"
+        },
+        "target_item": "none"
+      },
+      "answer": "전체 여행 날짜 오후 일정 2개를 확인했어요.\n· 3월 4일(월) 15:00~16:00 국립중앙박물관 관람(활동) — 예약·보호 일정 — 변경 의사와 예약 조건을 먼저 확인해야 해요.\n· 3월 5일(화) 13:00~14:00 둘째 날 한식 점심(식사) — 대체 일정 검토 가능 — 예약 기록이 없으므로 실제 예약 여부는 확인해야 해요.\n아직 바꾸지는 않았어요. 실제 변경 전에는 후보의 시간·이동 조건도 확인해요.",
+      "basis": {
+        "kind": "changeability",
+        "query": {
+          "day": "all",
+          "period": "afternoon",
+          "kind": "all"
+        },
+        "writer": "template",
+        "source": "latest_itinerary",
+        "item_ids": [
+          "00000000-0000-0000-0000-000000000002",
+          "00000000-0000-0000-0000-000000000003"
+        ],
+        "checks": [
+          {
+            "item_id": "00000000-0000-0000-0000-000000000002",
+            "state": "confirm_first",
+            "protected_by": "locked"
+          },
+          {
+            "item_id": "00000000-0000-0000-0000-000000000003",
+            "state": "reviewable",
+            "protected_by": null
+          }
+        ]
+      }
+    },
+    {
+      "key": "scope_meal_day2",
+      "completed": true,
+      "canonical_passed": true,
+      "seconds": 62.39808297494892,
+      "literal_passed": true,
+      "decision": {
+        "action": "answer_fact",
+        "fact": "schedule",
+        "query": {
+          "day": "d2",
+          "period": "afternoon",
+          "kind": "dining"
+        },
+        "target_item": "none"
+      },
+      "answer": "3월 5일(화) 오후 일정 1개를 확인했어요.\n· 3월 5일(화) 13:00~14:00 둘째 날 한식 점심(식사)",
+      "basis": {
+        "kind": "schedule",
+        "query": {
+          "day": "d2",
+          "period": "afternoon",
+          "kind": "dining"
+        },
+        "writer": "template",
+        "source": "latest_itinerary",
+        "item_ids": [
+          "00000000-0000-0000-0000-000000000003"
+        ],
+        "checks": []
+      }
+    },
+    {
+      "key": "scope_morning_day1",
+      "completed": true,
+      "canonical_passed": true,
+      "seconds": 57.99818207399221,
+      "literal_passed": true,
+      "decision": {
+        "action": "answer_fact",
+        "fact": "schedule",
+        "query": {
+          "day": "d1",
+          "period": "morning",
+          "kind": "activity"
+        },
+        "target_item": "none"
+      },
+      "answer": "3월 4일(월) 오전 일정 1개를 확인했어요.\n· 3월 4일(월) 09:00~10:00 창덕궁 산책(활동)",
+      "basis": {
+        "kind": "schedule",
+        "query": {
+          "day": "d1",
+          "period": "morning",
+          "kind": "activity"
+        },
+        "writer": "template",
+        "source": "latest_itinerary",
+        "item_ids": [
+          "00000000-0000-0000-0000-000000000001"
+        ],
+        "checks": []
+      }
+    },
+    {
+      "key": "address",
+      "completed": true,
+      "canonical_passed": true,
+      "seconds": 29.857200251019094,
+      "literal_passed": true,
+      "decision": {
+        "action": "answer_fact",
+        "fact": "address",
+        "query": null,
+        "target_item": "i2"
+      }
+    },
+    {
+      "key": "time",
+      "completed": true,
+      "canonical_passed": true,
+      "seconds": 29.062365478952415,
+      "literal_passed": true,
+      "decision": {
+        "action": "answer_fact",
+        "fact": "time",
+        "query": null,
+        "target_item": "i3"
+      }
+    },
+    {
+      "key": "write",
+      "completed": true,
+      "canonical_passed": true,
+      "seconds": 28.015601548017003,
+      "literal_passed": true,
+      "decision": {
+        "action": "apply_change",
+        "fact": "none",
+        "query": null,
+        "target_item": "i3"
+      }
+    },
+    {
+      "key": "policy",
+      "completed": true,
+      "canonical_passed": true,
+      "seconds": 28.702587178966496,
+      "literal_passed": true,
+      "decision": {
+        "action": "ask_policy",
+        "fact": "booking",
+        "query": null,
+        "target_item": "i3"
+      }
+    },
+    {
+      "key": "out_of_scope",
+      "completed": true,
+      "canonical_passed": true,
+      "seconds": 29.388355640985537,
+      "literal_passed": true,
+      "decision": {
+        "action": "other",
+        "fact": "none",
+        "query": null,
+        "target_item": "none"
+      }
+    }
+  ]
+}

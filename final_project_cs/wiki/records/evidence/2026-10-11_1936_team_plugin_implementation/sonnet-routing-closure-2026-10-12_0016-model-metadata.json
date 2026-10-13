@@ -1,0 +1,53 @@
+{
+  "requested_model": "claude-sonnet-5-5",
+  "is_error": false,
+  "canonical_models": {
+    "claude-sonnet-5-5": "claude-sonnet-5-5"
+  },
+  "permission_denials": [],
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 8,
+      "outputTokens": 3258,
+      "cacheReadInputTokens": 82224,
+      "cacheCreationInputTokens": 38055,
+      "webSearchRequests": 0,
+      "costUSD": 0.2012608,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 703,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "num_turns": 14,
+  "direct_Read_calls": [
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_1936_team_plugin_implementation\\sonnet-conversation-followup-2026-10-12_0007-result.txt"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\case_dispatch.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\core\\transition.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\travel\\test_initial_retry_boundaries.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\e2e\\test_web_initial_concurrency.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_1936_team_plugin_implementation\\initial-routing-race-after-v1.log"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_1936_team_plugin_implementation\\sonnet-conversation-delta-2026-10-11_2358-pytest.py"
+    }
+  ],
+  "tools": {
+    "Read": 7,
+    "Glob": 5,
+    "Bash": 1
+  }
+}

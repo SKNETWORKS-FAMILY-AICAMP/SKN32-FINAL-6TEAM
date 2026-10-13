@@ -1,0 +1,522 @@
+{
+  "generatedAt": "2026-10-11T17:01:12.484Z",
+  "browserVerified": false,
+  "externalRequests": 0,
+  "passed": 27,
+  "total": 27,
+  "cases": [
+    {
+      "feature": "webhook",
+      "operation": "test",
+      "scenario": "normal",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "webhook",
+      "operation": "test",
+      "scenario": "logout",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "webhook",
+      "operation": "test",
+      "scenario": "new-session",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "new-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "new-account",
+      "pass": true
+    },
+    {
+      "feature": "webhook",
+      "operation": "choose",
+      "scenario": "normal",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "webhook",
+      "operation": "choose",
+      "scenario": "logout",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "webhook",
+      "operation": "choose",
+      "scenario": "new-session",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "new-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "new-account",
+      "pass": true
+    },
+    {
+      "feature": "telegram",
+      "operation": "test",
+      "scenario": "normal",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "telegram",
+      "operation": "test",
+      "scenario": "logout",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "telegram",
+      "operation": "test",
+      "scenario": "new-session",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "new-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "new-account",
+      "pass": true
+    },
+    {
+      "feature": "telegram",
+      "operation": "release",
+      "scenario": "normal",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "telegram",
+      "operation": "release",
+      "scenario": "logout",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "telegram",
+      "operation": "release",
+      "scenario": "new-session",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "new-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "new-account",
+      "pass": true
+    },
+    {
+      "feature": "telegram",
+      "operation": "choose",
+      "scenario": "normal",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "telegram",
+      "operation": "choose",
+      "scenario": "logout",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "telegram",
+      "operation": "choose",
+      "scenario": "new-session",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "new-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "new-account",
+      "pass": true
+    },
+    {
+      "feature": "profile",
+      "operation": "save",
+      "scenario": "normal",
+      "before": {
+        "owner": "old-response",
+        "navigation": 1,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "old-response",
+        "navigation": 1,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "profile",
+      "operation": "save",
+      "scenario": "logout",
+      "before": {
+        "owner": "old-response",
+        "navigation": 1,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "profile",
+      "operation": "save",
+      "scenario": "new-session",
+      "before": {
+        "owner": "old-response",
+        "navigation": 1,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "new-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "new-account",
+      "pass": true
+    },
+    {
+      "feature": "social",
+      "operation": "unlink",
+      "scenario": "normal",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "social",
+      "operation": "unlink",
+      "scenario": "logout",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "social",
+      "operation": "unlink",
+      "scenario": "new-session",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "after": {
+        "owner": "new-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "new-account",
+      "pass": true
+    },
+    {
+      "feature": "guardian",
+      "operation": "success",
+      "scenario": "normal",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 1,
+        "toasts": 1
+      },
+      "after": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 1,
+        "toasts": 1
+      },
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "guardian",
+      "operation": "success",
+      "scenario": "logout",
+      "before": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 1,
+        "toasts": 1
+      },
+      "after": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "guardian",
+      "operation": "success",
+      "scenario": "new-session",
+      "before": {
+        "owner": "old-response",
+        "navigation": 0,
+        "guardianRemembered": 1,
+        "toasts": 1
+      },
+      "after": {
+        "owner": "new-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "new-account",
+      "pass": true
+    },
+    {
+      "feature": "guardian",
+      "operation": "rollback",
+      "scenario": "normal",
+      "before": {
+        "owner": "original-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 1
+      },
+      "after": {
+        "owner": "original-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 1
+      },
+      "expected": "original-account",
+      "pass": true
+    },
+    {
+      "feature": "guardian",
+      "operation": "rollback",
+      "scenario": "logout",
+      "before": {
+        "owner": "original-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 1
+      },
+      "after": {
+        "owner": "empty",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "guardian",
+      "operation": "rollback",
+      "scenario": "new-session",
+      "before": {
+        "owner": "original-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 1
+      },
+      "after": {
+        "owner": "new-account",
+        "navigation": 0,
+        "guardianRemembered": 0,
+        "toasts": 0
+      },
+      "expected": "new-account",
+      "pass": true
+    }
+  ]
+}

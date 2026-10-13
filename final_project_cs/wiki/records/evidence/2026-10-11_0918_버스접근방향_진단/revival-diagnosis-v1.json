@@ -1,0 +1,231 @@
+[
+  {
+    "enabled": false,
+    "items": [
+      {
+        "route": "버스 405 후암약수터→이태원119안전센터",
+        "key": [
+          "bus",
+          0,
+          0
+        ],
+        "start": 838,
+        "eta": 41,
+        "walk": 1122.8,
+        "recheck_verdict": null,
+        "recheck": {
+          "eta_min": 41,
+          "uses": [
+            "버스:405"
+          ],
+          "_legs": [
+            {
+              "mode": "bus",
+              "route": "405",
+              "from": "후암약수터",
+              "to": "이태원119안전센터",
+              "route_id": "100100597",
+              "from_sequence": 51,
+              "to_sequence": 59,
+              "from_stop_id": "102000076",
+              "to_stop_id": "102000098"
+            }
+          ],
+          "_route": "버스 405 후암약수터→이태원119안전센터",
+          "_start": 838,
+          "_transfers": 0,
+          "_n": 100,
+          "_key": [
+            "bus",
+            0,
+            0
+          ],
+          "_margin": 21,
+          "_slack": 0,
+          "_walk_min": 19,
+          "_walk_m": 1122.8,
+          "_fare": 1500,
+          "_severe": [],
+          "_covered": false,
+          "_lr": [
+            "LegResult(idx=0, label='버스 405 후암약수터→이태원119안전센터', verdict='feasible', reason='14:22 승차 예상 (대기 8분 — 배차의 절반) · 후암약수터(seq 51) → 이태원119안전센터(seq 59)', grade='추정', depart_min=862, arrive_min=876, wait_min=8, ride_min=14.0, ride_grade='추정', relief=None, dropped={}, warnings=[], evidence=[{'source_type': 'db', 'source_id': 'seoul_bus_route@2026-09-10', 'grade': '확정', 'observed_at': '2026-09-10', 'claim': '405(간선): 운행 04:10~22:40 · 배차 15분'}, {'source_type': 'policy', 'source_id': 'mobility_rules@v0.9.2', 'grade': '추정', 'observed_at': '2026-09-29', 'claim': 'bus.wait_model'}, {'source_type': 'policy', 'source_id': 'mobility_rules@v0.9.2', 'grade': '추정', 'observed_at': '2026-09-29', 'claim': 'bus.ride_model'}, {'source_type': 'db', 'source_id': 'seoul_bus_route@2026-09-10', 'grade': '확정', 'observed_at': '2026-09-10', 'claim': '405(간선): 후암약수터→이태원119안전센터 (8정거장)'}, {'source_type': 'db', 'source_id': 'seoul_OA-21217', 'grade': '추정', 'observed_at': '2026-09-13', 'claim': '405 후암약수터→이태원119안전센터 구간 8개 p50 누적(진입 시각대 · 14:22 승차)'}, {'source_type': 'policy', 'source_id': 'mobility_rules@v0.9.2', 'grade': '추정', 'observed_at': '2026-09-29', 'claim': 'bus.구간_프로파일'}], car=None, walk_min=None, code=None, worst=False, ride_src='profile')"
+          ],
+          "_day_type": "weekday",
+          "_check": {
+            "date": "2026-09-29",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "405",
+                "from": "후암약수터",
+                "to": "이태원119안전센터",
+                "route_id": "100100597",
+                "from_sequence": 51,
+                "to_sequence": 59,
+                "from_stop_id": "102000076",
+                "to_stop_id": "102000098"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 16,
+            "walk_place_out": 3,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 897
+          }
+        }
+      }
+    ]
+  },
+  {
+    "enabled": true,
+    "items": [
+      {
+        "route": "버스 405 후암약수터→이태원역.보광동입구",
+        "key": [
+          "bus",
+          0,
+          1
+        ],
+        "start": 793,
+        "eta": 78,
+        "walk": 1066.8,
+        "recheck_verdict": null,
+        "recheck": {
+          "eta_min": 78,
+          "uses": [
+            "버스:405"
+          ],
+          "_legs": [
+            {
+              "mode": "bus",
+              "route": "405",
+              "from": "후암약수터",
+              "to": "이태원역.보광동입구",
+              "route_id": "100100597",
+              "from_sequence": 38,
+              "to_sequence": 60,
+              "from_stop_id": "102000075",
+              "to_stop_id": "102000189"
+            }
+          ],
+          "_route": "버스 405 후암약수터→이태원역.보광동입구",
+          "_start": 793,
+          "_transfers": 0,
+          "_n": 101,
+          "_key": [
+            "bus",
+            0,
+            1
+          ],
+          "_margin": 29,
+          "_slack": 0,
+          "_walk_min": 18,
+          "_walk_m": 1066.8,
+          "_fare": 1500,
+          "_severe": [],
+          "_covered": false,
+          "_lr": [
+            "LegResult(idx=0, label='버스 405 후암약수터→이태원역.보광동입구', verdict='feasible', reason='13:36 승차 예상 (대기 8분 — 배차의 절반) · 후암약수터(seq 38) → 이태원역.보광동입구(seq 60)', grade='추정', depart_min=816, arrive_min=868, wait_min=8, ride_min=51.5, ride_grade='추정', relief=None, dropped={}, warnings=[], evidence=[{'source_type': 'db', 'source_id': 'seoul_bus_route@2026-09-10', 'grade': '확정', 'observed_at': '2026-09-10', 'claim': '405(간선): 운행 04:10~22:40 · 배차 15분'}, {'source_type': 'policy', 'source_id': 'mobility_rules@v0.9.2', 'grade': '추정', 'observed_at': '2026-09-29', 'claim': 'bus.wait_model'}, {'source_type': 'policy', 'source_id': 'mobility_rules@v0.9.2', 'grade': '추정', 'observed_at': '2026-09-29', 'claim': 'bus.ride_model'}, {'source_type': 'db', 'source_id': 'seoul_bus_route@2026-09-10', 'grade': '확정', 'observed_at': '2026-09-10', 'claim': '405(간선): 후암약수터→이태원역.보광동입구 (22정거장)'}, {'source_type': 'db', 'source_id': 'seoul_OA-21217', 'grade': '추정', 'observed_at': '2026-09-13', 'claim': '405 후암약수터→이태원역.보광동입구 구간 22개 p50 누적(진입 시각대 · 13:36 승차)'}, {'source_type': 'policy', 'source_id': 'mobility_rules@v0.9.2', 'grade': '추정', 'observed_at': '2026-09-29', 'claim': 'bus.구간_프로파일'}], car=None, walk_min=None, code=None, worst=False, ride_src='profile')"
+          ],
+          "_day_type": "weekday",
+          "_check": {
+            "date": "2026-09-29",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "405",
+                "from": "후암약수터",
+                "to": "이태원역.보광동입구",
+                "route_id": "100100597",
+                "from_sequence": 38,
+                "to_sequence": 60,
+                "from_stop_id": "102000075",
+                "to_stop_id": "102000189"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 15,
+            "walk_place_out": 3,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 897
+          }
+        }
+      },
+      {
+        "route": "버스 405 후암약수터→이태원119안전센터",
+        "key": [
+          "bus",
+          0,
+          0
+        ],
+        "start": 838,
+        "eta": 41,
+        "walk": 1122.8,
+        "recheck_verdict": null,
+        "recheck": {
+          "eta_min": 41,
+          "uses": [
+            "버스:405"
+          ],
+          "_legs": [
+            {
+              "mode": "bus",
+              "route": "405",
+              "from": "후암약수터",
+              "to": "이태원119안전센터",
+              "route_id": "100100597",
+              "from_sequence": 51,
+              "to_sequence": 59,
+              "from_stop_id": "102000076",
+              "to_stop_id": "102000098"
+            }
+          ],
+          "_route": "버스 405 후암약수터→이태원119안전센터",
+          "_start": 838,
+          "_transfers": 0,
+          "_n": 100,
+          "_key": [
+            "bus",
+            0,
+            0
+          ],
+          "_margin": 21,
+          "_slack": 0,
+          "_walk_min": 19,
+          "_walk_m": 1122.8,
+          "_fare": 1500,
+          "_severe": [],
+          "_covered": false,
+          "_lr": [
+            "LegResult(idx=0, label='버스 405 후암약수터→이태원119안전센터', verdict='feasible', reason='14:22 승차 예상 (대기 8분 — 배차의 절반) · 후암약수터(seq 51) → 이태원119안전센터(seq 59)', grade='추정', depart_min=862, arrive_min=876, wait_min=8, ride_min=14.0, ride_grade='추정', relief=None, dropped={}, warnings=[], evidence=[{'source_type': 'db', 'source_id': 'seoul_bus_route@2026-09-10', 'grade': '확정', 'observed_at': '2026-09-10', 'claim': '405(간선): 운행 04:10~22:40 · 배차 15분'}, {'source_type': 'policy', 'source_id': 'mobility_rules@v0.9.2', 'grade': '추정', 'observed_at': '2026-09-29', 'claim': 'bus.wait_model'}, {'source_type': 'policy', 'source_id': 'mobility_rules@v0.9.2', 'grade': '추정', 'observed_at': '2026-09-29', 'claim': 'bus.ride_model'}, {'source_type': 'db', 'source_id': 'seoul_bus_route@2026-09-10', 'grade': '확정', 'observed_at': '2026-09-10', 'claim': '405(간선): 후암약수터→이태원119안전센터 (8정거장)'}, {'source_type': 'db', 'source_id': 'seoul_OA-21217', 'grade': '추정', 'observed_at': '2026-09-13', 'claim': '405 후암약수터→이태원119안전센터 구간 8개 p50 누적(진입 시각대 · 14:22 승차)'}, {'source_type': 'policy', 'source_id': 'mobility_rules@v0.9.2', 'grade': '추정', 'observed_at': '2026-09-29', 'claim': 'bus.구간_프로파일'}], car=None, walk_min=None, code=None, worst=False, ride_src='profile')"
+          ],
+          "_day_type": "weekday",
+          "_check": {
+            "date": "2026-09-29",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "405",
+                "from": "후암약수터",
+                "to": "이태원119안전센터",
+                "route_id": "100100597",
+                "from_sequence": 51,
+                "to_sequence": 59,
+                "from_stop_id": "102000076",
+                "to_stop_id": "102000098"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 16,
+            "walk_place_out": 3,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 897
+          }
+        }
+      }
+    ]
+  }
+]

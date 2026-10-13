@@ -1,0 +1,21 @@
+- alert: 여행 계획 등록 · triPilot
+- banner:
+  - link "triPilot — 소개 화면으로 돌아가기":
+    - /url: /
+    - generic: t
+    - text: triPilot
+  - button "항로 지킴이 끄기":
+    - generic: 지금 켜져 있어요
+  - button "메뉴":
+- main:
+  - button "뒤로":
+  - heading "계획을 확인하고 있어요" [level=1]
+  - paragraph: 사진 한 장은 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.
+  - progressbar "계획 확인 진행":
+    - list:
+      - generic: 받았어요
+      - generic: 일정 읽기
+      - generic: 장소·운영시간
+      - generic: 정리 완료
+  - paragraph: 찾은 일정 0개
+  - status: 계획을 서버로 보내고 있어요.

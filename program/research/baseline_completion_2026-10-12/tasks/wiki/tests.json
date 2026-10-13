@@ -1,0 +1,37 @@
+[
+  {
+    "command": "python -m pytest program/scripts/tests/test_wiki_governance.py -q --basetemp=program/research/baseline_completion_2026-10-12/tasks/wiki/_test_tmp_3 --junitxml=program/research/baseline_completion_2026-10-12/tasks/wiki/governance-tests-final.xml --tb=short",
+    "cwd": "워크스페이스 루트",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "evidence": "program/research/baseline_completion_2026-10-12/tasks/wiki/governance-tests-final.xml",
+    "junit_timestamp": "2026-10-12T04:12:45.322763+09:00",
+    "output_written_at_kst": "2026-10-12T04:12:45.766906+09:00"
+  },
+  {
+    "command": "python -m pytest tests/contract/test_team_layout.py tests/architecture/test_travel_ops_cells.py tests/architecture/test_state_diagram_matches_code.py -q --basetemp=../program/research/baseline_completion_2026-10-12/tasks/wiki/_cs_test_tmp_2 --tb=short --junitxml=../program/research/baseline_completion_2026-10-12/tasks/wiki/cs-tests.xml",
+    "cwd": "final_project_cs",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "evidence": "program/research/baseline_completion_2026-10-12/tasks/wiki/cs-tests.xml",
+    "junit_timestamp": "2026-10-12T04:08:54.768210+09:00",
+    "output_written_at_kst": "2026-10-12T04:09:33.162410+09:00"
+  },
+  {
+    "command": "python program/scripts/check_wiki.py --include-records --json-output program/research/baseline_completion_2026-10-12/tasks/wiki/check-handoff.json",
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "violations": 4,
+    "evidence": "program/research/baseline_completion_2026-10-12/tasks/wiki/check-handoff.json"
+  },
+  {
+    "command": "python program/scripts/build_wiki_catalogs.py --check",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "evidence": "program/research/baseline_completion_2026-10-12/tasks/wiki/reproducibility.json"
+  }
+]

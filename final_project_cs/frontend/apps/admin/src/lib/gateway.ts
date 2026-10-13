@@ -164,6 +164,23 @@ async function liveRequest<T>(path: string, options: RequestInit = {}): Promise<
 }
 export const operationSettings = <T,>(kind: 'limits' | 'retention') => liveRequest<T>(`settings/${kind}`);
 export const operationCases = <T,>(id?: string) => liveRequest<T>(id ? `cases/${encodeURIComponent(id)}` : 'cases');
+export const operationSourcePolicy = <T,>() => liveRequest<T>('source-policy');
+export const operationDiagnostics = <T,>(suffix = '') => liveRequest<T>(`diagnostics${suffix}`);
+export async function saveDiagnosticResolution(fingerprint: string, payload: { version: string; reason: string }) {
+  const session = await operatorSession();
+  return liveRequest(`diagnostics/${encodeURIComponent(fingerprint)}/resolution`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
+}
+export async function saveSourcePolicy<T>(payload: unknown): Promise<T> {
+  const session = await operatorSession();
+  return liveRequest<T>('source-policy', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
+}
+export const operationSimulations = <T,>(tripId?: string) => liveRequest<T>(tripId ? `simulations/${encodeURIComponent(tripId)}` : 'simulations');
+export const operationWatchRuns = <T,>(suffix = '') => liveRequest<T>(`watch-runs${suffix}`);
+export const operationApiLimits = <T,>() => liveRequest<T>('api-limits');
+export async function saveOperationSimulation<T>(tripId: string, payload: unknown): Promise<T> {
+  const session = await operatorSession();
+  return liveRequest<T>(`simulations/${encodeURIComponent(tripId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
+}
 export async function saveOperationSettings(kind: 'limits' | 'retention', payload: unknown) {
   const session = await operatorSession();
   return liveRequest(`settings/${kind}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });

@@ -1,0 +1,13 @@
+{
+  "scope": "13 changed documents; full checker compares virtual prior contents and excludes only this audit backup copies",
+  "changed_documents": 13,
+  "local_links_checked": 200,
+  "broken_links": [],
+  "registered_pages": 3,
+  "registration_total": 3,
+  "preserved_backups": 8,
+  "backup_total": 8,
+  "global_before": 271,
+  "global_after": 271,
+  "new_checker_problems": {}
+}

@@ -1,0 +1,29 @@
+{
+  "scope": "Actual assertion full-name and normalized src file-path comparison; no new tests executed",
+  "snapshot": {
+    "total": 686,
+    "sha256": "3AAD444CD621CCBF207AD2139D0EB197D829B31EF57D5778EE0BA0E6C8C1CAD1",
+    "assertions": 686,
+    "failed": 0,
+    "passed": 686,
+    "file": "unit-snapshot-final.json"
+  },
+  "root": {
+    "total": 687,
+    "sha256": "C83DD4423D102A2133440012CD1DC780116338898B50782885DFE652469E9549",
+    "assertions": 687,
+    "failed": 1,
+    "passed": 686,
+    "file": "unit-completion-v2.json"
+  },
+  "limits": [
+    "Root-v2 includes a concurrently added gateway test not present in the fixed snapshot.",
+    "Pass counts from different scopes are not combined; the root-v2 failed expectation remains preserved."
+  ],
+  "differences": [
+    {
+      "scope": "root-v2-only",
+      "case": "src/lib/live/gateway.test.ts :: live trip gateway carries restaurant marks with their source and drops a mark it cannot credit"
+    }
+  ]
+}

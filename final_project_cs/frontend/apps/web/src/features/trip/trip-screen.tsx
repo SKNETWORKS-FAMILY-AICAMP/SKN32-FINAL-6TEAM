@@ -30,7 +30,7 @@ import type { Notice, Proposal } from "@/lib/live/extras";
 import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
-import { LegRow, legSummary, PastLegRow, PastStopRow, StopRow } from "./trip-rows";
+import { LegRow, legSummary, PastLegRow, PastStopRow, StayRow, StopRow } from "./trip-rows";
 import { dayTimeline, entryTimes, seoulKey, tripDays, type TripLeg } from "./trip-timeline";
 import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
@@ -493,6 +493,8 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
         {date === today && <em className={pc.todayTag}>{t("오늘", "Today")}</em>}</h3>
       <RailList className={`${pc.timeline} ${styles.tripTimeline}`} now={railNow(date)}>{entries.map((entry, at) => {
         const past = at < pastCount;
+        // `[2026-10-13 숙소 B안]` A stay after its check-in day (the 「…에서 출발」 band · the check-out row) — not on the time line's scale; pressing it shows the stay.
+        if (entry.type === "stay") return <StayRow key={`${entry.stay.stop.id}:${entry.stay.phase}`} stay={entry.stay} onShow={() => pick(entry.stay.stop.id, "list")} />;
         if (entry.type === "stop") {
           const toggle = () => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); };
           return past && openId !== entry.stop.id

@@ -1,5 +1,5 @@
 import { translator, type Language, type Translate } from "../i18n";
-import { beginWait, CALL_STEPS } from "./waiting";
+import { beginWait, CALL_STEPS, SHOWN_STEPS } from "./waiting";
 
 /** A refusal from the live server — its own code (`stale_revision`, `intake_incomplete` …) and body. */
 export class LiveError extends Error {
@@ -123,13 +123,16 @@ export function answerWithin(url: string): number {
 
 /** Calls that are slow ON PURPOSE and not something the customer waits for (the model is warmed up in the background): they are not counted as a slow server. */
 const BACKGROUND_CALL = /\/warmup$/;
+/** `[2026-10-13]` Calls whose screen shows its own loading line — the global slow notice waits longer for them (`SHOWN_STEPS`). */
+const SHOWN_CALL = /\/trip-intakes\/[^/]+\/(candidates|place-search|route-shapes|moves\/[^/]+\/options)$|\/trips\/[^/]+\/route-shapes$/;
 
 async function send(url: string, init: RequestInit, language: Language): Promise<Response> {
   const t = translator(language);
   let response: Response;
   const limit = AbortSignal.timeout(answerWithin(url));
   // ★`[2026-10-06 사용자 지적]` A call that has not answered for a while is counted (`waiting.ts`), so the screen says the server is slow instead of staying silent.
-  const wait = BACKGROUND_CALL.test(safePath(url)) ? null : beginWait(CALL_STEPS);
+  const path = safePath(url);
+  const wait = BACKGROUND_CALL.test(path) ? null : beginWait(SHOWN_CALL.test(path) ? SHOWN_STEPS : CALL_STEPS);
   try {
     try { response = await fetch(url, { ...init, signal: init.signal ? AbortSignal.any([init.signal, limit]) : limit }); }
     catch {

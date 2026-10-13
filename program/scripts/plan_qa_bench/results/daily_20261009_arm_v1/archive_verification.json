@@ -1,0 +1,39 @@
+{
+  "job_id": "e4bt_q8_d3",
+  "saved": 360,
+  "expected": 360,
+  "unique_ids": 360,
+  "files_verified": 4,
+  "files_expected": 4,
+  "checks": {
+    "summary.json": true,
+    "attempt_1791478727674440580.json": true,
+    "engine.log": true,
+    "answers.jsonl": true
+  },
+  "remote_file_sha256": {
+    "summary.json": "c16b3af9916cb3add13d979035ddfaf01d46574f726ced3e533efd061874ea69",
+    "attempt_1791478727674440580.json": "8e67a8723267a79452f5d89e1e201344ab8e7e5fcc68a5794c56c7738d16b8d1",
+    "engine.log": "3df71b35847f1d4f6a3723aa0e32458a6cc6e6bd68599fc14f7caf5202926e0f",
+    "answers.jsonl": "9dc7856b0d2334685439ef7f0ce13eb4caa6ec40e19ac62956a273fbceccd737"
+  },
+  "archive_sha256": "5ae8bc11a1de68599c46af6901caab5afa04ac4bf37dd21d28902b8da80bcd66",
+  "summary": {
+    "expected": 360,
+    "saved": 360,
+    "correct": 315,
+    "normal_correct": 106,
+    "normal_total": 120,
+    "null_correct": 209,
+    "null_total": 240,
+    "false_positive": 31,
+    "errors_or_unparsed": 0,
+    "latency_p50_s": 110.71452203500667,
+    "latency_p95_s": 124.32256508199498,
+    "latency_max_s": 130.77805902500404,
+    "repeated_soak_not_independent_accuracy": true
+  },
+  "training": "existing merged E4B; exact oos recipe not matched",
+  "product_adoption": false,
+  "speed_comparison": "different quantization and sequential run; no engine superiority claim"
+}

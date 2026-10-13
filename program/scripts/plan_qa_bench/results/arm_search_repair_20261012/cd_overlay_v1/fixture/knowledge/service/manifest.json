@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "tenant_id": "demo",
+  "collection": "travel_service",
+  "documents": [
+    {
+      "document_id": "t_service_01",
+      "file": "documents/chat-capabilities.md",
+      "section_count": 5
+    }
+  ]
+}

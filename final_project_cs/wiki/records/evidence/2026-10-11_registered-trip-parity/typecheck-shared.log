@@ -1,0 +1,1 @@
+src/features/trip/trip-chat.tsx(139,15): error TS2339: Property 'awaitingReply' does not exist on type 'TripMessage'.

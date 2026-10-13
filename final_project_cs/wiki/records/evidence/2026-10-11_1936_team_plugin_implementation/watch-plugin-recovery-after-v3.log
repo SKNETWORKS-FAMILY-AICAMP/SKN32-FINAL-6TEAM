@@ -1,0 +1,13 @@
+...F.......................................                              [100%]
+================================== FAILURES ===================================
+_______ test_controller_timeout_is_escalated_and_not_a_running_recovery _______
+tests\e2e\test_watch_plugin_recovery.py:208: in test_controller_timeout_is_escalated_and_not_a_running_recovery
+    attempt, covered = watcher._attempt(conn, case["state_json"]["request_id"], uuid4())
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\trip_watch_cases.py:472: in _attempt
+    is_batch, retry_ids, observed = bool(row[5]), [str(x) for x in (row[6] or [])], " ".join(str(x) for x in (row[7] or []))
+                                                                                                              ^^^^^^^^^^^^
+E   TypeError: 'int' object is not iterable
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_watch_plugin_recovery.py::test_controller_timeout_is_escalated_and_not_a_running_recovery
+1 failed, 42 passed in 121.09s (0:02:01)

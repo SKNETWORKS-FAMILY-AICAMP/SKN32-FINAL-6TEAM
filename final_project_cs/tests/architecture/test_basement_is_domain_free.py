@@ -75,7 +75,8 @@ def _python_files(*roots: str) -> list[Path]:
     for root in roots:
         base = APP / root
         if base.exists():
-            out.extend(p for p in base.rglob("*.py") if "__pycache__" not in p.parts)
+            out.extend(p for p in base.rglob("*.py")
+                       if not {"__pycache__", "_backup", "legacy"}.intersection(p.parts))
     return out
 
 

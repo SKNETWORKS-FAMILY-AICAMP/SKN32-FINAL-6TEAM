@@ -1,0 +1,53 @@
+{
+  "schedule": "finch",
+  "seed": 20261012,
+  "epochs": 1,
+  "rank": 16,
+  "accum": 4,
+  "maxlen": 3072,
+  "limit": 16,
+  "family": "gemma",
+  "cosine_peak_lr": 0.0002,
+  "finch_base_rate": 2e-05,
+  "finch_cap": 5e-05,
+  "finch_alpha": 0.9,
+  "status": "completed",
+  "train_sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c",
+  "script_sha256": "c43cc981465b6a4f8e55eca5dba3c1dbaa7f7815b2c952cd71ce799052e5c874",
+  "source": "https://arxiv.org/html/2605.20005v1",
+  "adaptation": "EMA batch is one optimizer accumulation window; initial loss is sequence mean",
+  "input_rows": 16,
+  "used_rows": 16,
+  "filtered_rows": 0,
+  "initial_loss": 0.08810096067463746,
+  "initial_loss_seconds": 13.986335515975952,
+  "optimizer_steps": 4,
+  "training_seconds": 54.48843836784363,
+  "rate_trace": [
+    {
+      "step": 1,
+      "loss": 0.14978806632279884,
+      "lr": 5e-05,
+      "ema": 0.0942696712394536
+    },
+    {
+      "step": 2,
+      "loss": 0.030204034490452614,
+      "lr": 5e-05,
+      "ema": 0.0878631075645535
+    },
+    {
+      "step": 3,
+      "loss": 0.0018409306794637814,
+      "lr": 5e-05,
+      "ema": 0.07926088987604453
+    },
+    {
+      "step": 4,
+      "loss": 0.09295188603573479,
+      "lr": 5e-05,
+      "ema": 0.08062998949201355
+    }
+  ],
+  "torch_version": "2.14.1+cu130"
+}

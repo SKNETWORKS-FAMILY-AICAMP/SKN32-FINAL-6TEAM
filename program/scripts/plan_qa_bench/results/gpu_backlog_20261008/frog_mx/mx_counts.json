@@ -1,0 +1,385 @@
+{
+  "model": "FrogNano-4B-2609",
+  "our_training": false,
+  "publisher_training": "coding RL",
+  "saved": 4014,
+  "expected": 4014,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "repetitions": 1,
+  "counts": {
+    "control": {
+      "request": {
+        "total": 1033,
+        "correct": 955,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9067603074341041,
+          0.9390777833743998
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 801,
+        "false_pick": 173,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.797127102092673,
+          0.8451037977480708
+        ],
+        "false_pick_wilson95": [
+          0.15489620225192924,
+          0.20287289790732693
+        ]
+      }
+    },
+    "mixed": {
+      "request": {
+        "total": 1033,
+        "correct": 898,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8473826278634363,
+          0.8885061558160262
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 807,
+        "false_pick": 167,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8035923736946664,
+          0.850910454168512
+        ],
+        "false_pick_wilson95": [
+          0.14908954583148804,
+          0.19640762630533354
+        ]
+      }
+    }
+  },
+  "paired": {
+    "request": {
+      "pairs": 1033,
+      "itineraries": 59,
+      "correct_control": 955,
+      "correct_mixed": 898,
+      "loss_pp": 5.517909002904163,
+      "loss_cluster95_pp": [
+        3.980197554975485,
+        6.956749917026222
+      ],
+      "mixed_accuracy_cluster95": [
+        0.84763650845345,
+        0.8894329294742074
+      ],
+      "paired_exact": {
+        "a_only": 67,
+        "b_only": 10,
+        "p": 1.696740832819895e-11
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    },
+    "no_request": {
+      "pairs": 974,
+      "itineraries": 59,
+      "correct_control": 801,
+      "correct_mixed": 807,
+      "loss_pp": -0.6160164271047228,
+      "loss_cluster95_pp": [
+        -2.454430003854108,
+        1.1271942690482988
+      ],
+      "mixed_accuracy_cluster95": [
+        0.8,
+        0.8557968532442216
+      ],
+      "paired_exact": {
+        "a_only": 33,
+        "b_only": 39,
+        "p": 0.555997717760971
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    }
+  },
+  "subtypes_mixed": {
+    "MX1": {
+      "total": 525,
+      "correct": 470,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.866108747955647,
+        0.9186254915373039
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0072639138944599795
+      ]
+    },
+    "MX2": {
+      "total": 474,
+      "correct": 398,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8039202032177737,
+        0.8699434686257941
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.008039191137108092
+      ]
+    },
+    "MX3": {
+      "total": 457,
+      "correct": 421,
+      "false_pick": 36,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8928696938946497,
+        0.942558613673913
+      ],
+      "false_pick_wilson95": [
+        0.057441386326086905,
+        0.10713030610535036
+      ]
+    },
+    "MX4": {
+      "total": 121,
+      "correct": 12,
+      "false_pick": 109,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.05764523647712836,
+        0.16536928997663522
+      ],
+      "false_pick_wilson95": [
+        0.8346307100233649,
+        0.9423547635228716
+      ]
+    },
+    "MX5a": {
+      "total": 236,
+      "correct": 224,
+      "false_pick": 12,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9132401859497103,
+        0.9706770527229063
+      ],
+      "false_pick_wilson95": [
+        0.029322947277093805,
+        0.08675981405028974
+      ]
+    },
+    "MX5b": {
+      "total": 160,
+      "correct": 150,
+      "false_pick": 10,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8887842459710525,
+        0.9657003332538804
+      ],
+      "false_pick_wilson95": [
+        0.034299666746119624,
+        0.11121575402894743
+      ]
+    },
+    "MX6a": {
+      "total": 34,
+      "correct": 30,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7337915722962817,
+        0.9532855333511766
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.10151455415332376
+      ]
+    }
+  },
+  "sources": {
+    "code": {
+      "control": {
+        "request": {
+          "total": 940,
+          "correct": 862,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8976439929540817,
+            0.9330039857642808
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 686,
+          "false_pick": 142,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8013249520960657,
+            0.8526458186938775
+          ],
+          "false_pick_wilson95": [
+            0.1473541813061226,
+            0.19867504790393442
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 940,
+          "correct": 807,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8347688606619091,
+            0.8793341210423974
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 690,
+          "false_pick": 138,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8064215492474482,
+            0.857166438759994
+          ],
+          "false_pick_wilson95": [
+            0.14283356124000599,
+            0.19357845075255184
+          ]
+        }
+      }
+    },
+    "llm": {
+      "control": {
+        "request": {
+          "total": 93,
+          "correct": 93,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.960332497388265,
+            1.0
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 115,
+          "false_pick": 31,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.7144021955106947,
+            0.846190317810452
+          ],
+          "false_pick_wilson95": [
+            0.15380968218954816,
+            0.28559780448930533
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 93,
+          "correct": 91,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9249453736530886,
+            0.9940825001915952
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 117,
+          "false_pick": 29,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.7292972468986941,
+            0.8579901480091737
+          ],
+          "false_pick_wilson95": [
+            0.14200985199082636,
+            0.27070275310130587
+          ]
+        }
+      }
+    }
+  },
+  "aggregate_gates": {
+    "request_accuracy": false,
+    "false_pick": false,
+    "request_loss": false,
+    "false_pick_increase": true
+  },
+  "aggregate_gates_passed": 1,
+  "aggregate_gates_total": 4,
+  "subtype_gates": {
+    "MX3": false,
+    "MX4": false,
+    "MX5a": false
+  },
+  "complete_valid": true,
+  "answer_sha256": "46aefc1479b5ccc378fd1f9178a761955b98976f968992dfab2928e0a26d59df",
+  "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+  "execution": {
+    "job": {
+      "id": "frog_mx",
+      "label": "FrogNano-4B-2609",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-ea42d264c21d88b9bf6ce583bb3fd4dfddb22eb5b30efba9e305c56f75974c86",
+      "prompts": "/workspace/heavy/all_prompts_mx.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "mx_backlog_frog",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 4014
+    },
+    "started": "2026-10-08T00:56:34.660441+00:00",
+    "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "limits": [
+    "one run",
+    "existing developer/regression suite; not new independent final holdout",
+    "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+    "no complete matched original cohort ranking",
+    "token p_null is not verbal confidence or calibrated option probability"
+  ]
+}

@@ -1,0 +1,25 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs
+configfile: pytest.ini
+plugins: anyio-4.14.1, langsmith-0.10.0, asyncio-0.25.2
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 10 items
+
+tests/unit/travel/test_plugin_read_boundaries.py::test_clean_process_imports_no_disabled_team_implementation PASSED [ 10%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_move_judge_preserves_disabled_reason_without_estimate PASSED [ 20%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_bound_engine_failure_never_becomes_straight_line_success[factory] PASSED [ 30%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_bound_engine_failure_never_becomes_straight_line_success[execute] PASSED [ 40%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_bound_engine_failure_never_becomes_straight_line_success[shape] PASSED [ 50%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_bound_engine_failure_never_becomes_straight_line_success[missing] PASSED [ 60%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_dining_intake_disabled_before_any_database_read[False] PASSED [ 70%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_dining_intake_disabled_before_any_database_read[True] PASSED [ 80%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_dining_intake_uses_frozen_provider_for_both_place_kinds[False] PASSED [ 90%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_dining_intake_uses_frozen_provider_for_both_place_kinds[True] PASSED [100%]
+
+============================= 10 passed in 5.00s ==============================
+Exception ignored in: <function Console.__del__ at 0x0000025DF0CF5B20>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

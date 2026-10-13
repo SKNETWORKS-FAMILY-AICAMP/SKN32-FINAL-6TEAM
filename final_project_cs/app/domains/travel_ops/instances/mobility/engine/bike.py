@@ -120,8 +120,19 @@ class BikeLive:
         except (ValueError, UnicodeDecodeError) as ex:   # JSON 이 아니다
             self.last_error = {"kind": "bad_response", "error": type(ex).__name__}
             return None
-        result = (doc.get("rentBikeStatus") or {}).get("RESULT") or doc.get("RESULT") or {}
-        rows = ((doc.get("rentBikeStatus") or {}).get("row")) or []
+        if not isinstance(doc, dict):
+            self.last_error = {"kind": "bad_response", "error": "document"}
+            return None
+        status = doc.get("rentBikeStatus", {})
+        if not isinstance(status, dict):
+            self.last_error = {"kind": "bad_response", "error": "rentBikeStatus"}
+            return None
+        result = status.get("RESULT") or doc.get("RESULT") or {}
+        rows = status.get("row", [])
+        if (not isinstance(result, dict) or not isinstance(rows, list)
+                or any(not isinstance(row, dict) for row in rows)):
+            self.last_error = {"kind": "bad_response", "error": "RESULT/row"}
+            return None
         row = next((r for r in rows if r.get("stationId") == station_id), None)
         if row is None:
             # 인증 오류(INFO-100 등)와 「그 대여소 없음」을 가른다 — 응답의 결과 코드만 남긴다
@@ -131,9 +142,19 @@ class BikeLive:
             return None
         at = _dt.datetime.now().astimezone().isoformat(timespec="minutes")
         # ★ 원 응답(doc·row)은 여기서 버린다. 남기는 것은 개수와 시각뿐.
+        count = row.get("parkingBikeTotCnt")
+        # 재고는 0 이상 정수입니다. bool·분수를 int로 조용히 바꾸지 않습니다.
+        if isinstance(count, str):
+            count = count.strip()
+            valid_count = bool(count) and count.isascii() and count.isdigit()
+        else:
+            valid_count = type(count) is int and count >= 0
+        if not valid_count:
+            self.last_error = {"kind": "bad_response", "error": "parkingBikeTotCnt"}
+            return None
         try:
-            n = int(row.get("parkingBikeTotCnt"))
-        except (TypeError, ValueError):
+            n = int(count)
+        except ValueError:
             self.last_error = {"kind": "bad_response", "error": "parkingBikeTotCnt"}
             return None
         return {"available": n, "checked_at": at, "source_id": f"seoul_bikeList@{at}"}
@@ -177,8 +198,14 @@ class BikeRouter:
         k = self.key(profile, lat1, lng1, lat2, lng2)
         if k in self.fixture:
             v = self.fixture[k]
-            return {"distance_m": v["distance_m"], "time_s": v["time_s"], "basis": "fixture",
-                    "source_id": v.get("source_id") or self.source_id}
+            out = {"distance_m": v["distance_m"], "time_s": v["time_s"], "basis": "fixture",
+                   "source_id": v.get("source_id") or self.source_id}
+            if profile == "foot" and v.get("foot_timing"):
+                out["foot_timing"] = dict(v["foot_timing"])
+            if v.get("quality"):
+                out["quality"] = dict(v["quality"])
+                out["optimistic"] = bool(out["quality"].get("optimistic"))
+            return out
         self.last_error = None
         if self.router is None:
             self.last_error = {"kind": "no_router"}
@@ -193,7 +220,13 @@ class BikeRouter:
         except (OSError, ValueError) as ex:    # 통신·응답 해석 실패. 그 밖의 예외(코드 결함)는 삼키지 않는다(#28)
             self.last_error = {"kind": "router_error", "error": type(ex).__name__}
             return None
-        paths = (doc or {}).get("paths") or []
+        if doc is not None and not isinstance(doc, dict):
+            self.last_error = {"kind": "bad_response", "error": "document"}
+            return None
+        paths = (doc or {}).get("paths", [])
+        if not isinstance(paths, list) or (paths and not isinstance(paths[0], dict)):
+            self.last_error = {"kind": "bad_response", "error": "paths"}
+            return None
         if not paths:
             self.last_error = {"kind": "no_path"}
             return None
@@ -201,16 +234,24 @@ class BikeRouter:
         # ☆`[2026-09-29 문제목록 #10]` 거리·시간이 빠진 응답을 0 으로 채우지 않는다 — 앞 판은 {"paths":[{}]} 를
         #   「0 m · 0 초 경로」로 만들었다. 빠졌으면 근거없음이다.
         try:
+            if isinstance(p["distance"], bool) or isinstance(p["time"], bool):
+                raise ValueError("bool metric")
             dist, tms = float(p["distance"]), float(p["time"])
-        except (KeyError, TypeError, ValueError):
+        except (KeyError, TypeError, ValueError, OverflowError):
             self.last_error = {"kind": "bad_response", "error": "distance/time 없음"}
             return None
-        if dist < 0 or tms < 0:
-            self.last_error = {"kind": "bad_response", "error": "음수 거리·시간"}
+        if not math.isfinite(dist) or not math.isfinite(tms) or dist < 0 or tms < 0:
+            self.last_error = {"kind": "bad_response", "error": "비유한값·음수 거리·시간"}
             return None
+        # 경로마다 어느 자료로 찾았는지(서울시 도보 그래프 · OSM)는 중계 라우터가 경로에 싣는다 — 있으면 그것을 근거로 쓴다
         out = {"distance_m": round(dist, 1),
-               "time_s": int(round(tms / 1000)), "basis": getattr(self.router, "basis", "graphhopper"),
-               "source_id": self.source_id}
+               "time_s": int(round(tms / 1000)),
+               "basis": p.get("basis") if isinstance(p.get("basis"), str) else getattr(self.router, "basis", "graphhopper"),
+               "source_id": p.get("source_id") if isinstance(p.get("source_id"), str) else self.source_id}
+        if profile == "foot" and getattr(self.router, "is_local", False) and p.get("foot_timing"):
+            out["foot_timing"] = dict(p["foot_timing"])
+        if isinstance(p.get("walk_candidates"), dict):      # 서울 안 걸음 — 두 보행 자료 후보와 고른 쪽(walk_router)
+            out["walk_candidates"] = p["walk_candidates"]
         q = p.get("quality")
         if q:                                          # 로컬 길찾기가 낸 품질 표시(낙관 가능 · 접근 거리 · 큰길 비율)
             out["quality"] = q
@@ -218,6 +259,10 @@ class BikeRouter:
         if self.record is not None:
             self.record[k] = {"distance_m": out["distance_m"], "time_s": out["time_s"],
                               "source_id": out["source_id"]}
+            if out.get("foot_timing"):
+                self.record[k]["foot_timing"] = dict(out["foot_timing"])
+            if out.get("quality"):
+                self.record[k]["quality"] = dict(out["quality"])
         return out       # ★ doc(형상 포함)은 여기서 버린다
 
 
@@ -240,9 +285,23 @@ def fare(rules_fare, ride_min):
     base = rules_fare["base_ride_min"]["value"]
     ot = rules_fare["overtime"]["value"]
     m = math.ceil(ride_min)
-    # 1회 대여 기본시간은 이용권과 무관하게 base 분 — 초과분은 5분당 200원. 이용권은 가장 싼 것(1h).
-    cheapest = min(passes, key=lambda p: p["won"])
-    over = max(0, m - base)
-    over_won = math.ceil(over / ot["per_min"]) * ot["won"] if over else 0
-    return {"pass": cheapest["name"], "pass_won": cheapest["won"], "ride_min": m,
-            "overtime_min": over, "overtime_won": over_won, "total_won": cheapest["won"] + over_won}
+    # 권종별 1회 기본시간을 적용하고 이용권+초과요금의 합을 비교합니다.
+    # 유효기간과 1회 대여시간이 다른 권종은 ride_limit_min으로 구분합니다.
+    choices = []
+    for ticket in passes:
+        channel = rules_fare.get("purchase_channel", {}).get("value")
+        if channel and ticket.get("purchase_channels") and channel not in ticket["purchase_channels"]:
+            continue
+        limit = ticket.get("ride_limit_min", ticket.get("minutes", base))
+        # 판매 정보만 있고 1회 대여조건을 확인하지 못한 권종은 가격 비교에 넣지 않습니다.
+        if limit is None:
+            continue
+        over = max(0, m - limit)
+        extra = math.ceil(over / ot["per_min"]) * ot["won"] if over else 0
+        choices.append({"pass": ticket["name"], "pass_won": ticket["won"], "ride_min": m,
+                        "base_ride_min": limit, "overtime_min": over,
+                        "overtime_won": extra, "total_won": ticket["won"] + extra})
+    # 같은 총액이면 초과가 없는 권종을 선택해 반납 여유를 확보합니다.
+    if not choices:
+        raise ValueError("따릉이 이용권의 확인된 대여조건이 없습니다")
+    return min(choices, key=lambda p: (p["total_won"], p["overtime_won"], p["pass_won"]))

@@ -1,0 +1,32 @@
+[
+  {
+    "file": "app/domains/travel_ops/components/itinerary/itinerary.py",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\itinerary\\_backup\\2026-10-09_0423_出발보류_감시연결\\itinerary.py.bak",
+    "sha256": "9c9cc6f29e5d44b691f11b3dd478ae1e98e1aba6a8be6d4ea5bdc6d53ffac190"
+  },
+  {
+    "file": "app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\itinerary\\_backup\\2026-10-09_0423_出발보류_감시연결\\itinerary_changes.py.bak",
+    "sha256": "10f72574c83104363a6c21a2da86ec931d0b61469b3ea5b12c15564ab247d6af"
+  },
+  {
+    "file": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\watch\\_backup\\2026-10-09_0423_出발보류_감시연결\\trip_watch_cases.py.bak",
+    "sha256": "a9f00baea09ded5e53dffb0ac5442ce88e4281bef69a43125c8aa08bd48370ff"
+  },
+  {
+    "file": "app/domains/travel_ops/instances/mobility/team.py",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\_backup\\2026-10-09_0423_出발보류_감시연결\\team.py.bak",
+    "sha256": "31fe89edd5cd9f891051ef3f62cc7fef6f339a8d6fdd5ee3af7a06f40ebfa737"
+  },
+  {
+    "file": "scripts/run_sweepers.py",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\scripts\\_backup\\2026-10-09_0423_出발보류_감시연결\\run_sweepers.py.bak",
+    "sha256": "b52e91385f44492cc93fc012ce8aba4032682bdf465fd86ea759194056c07e55"
+  },
+  {
+    "file": "wiki/teams/mobility.md",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\teams\\_backup\\2026-10-09_0423_出발보류_감시연결\\mobility.md.bak",
+    "sha256": "4113258e773a149165c328e823854c6773e3a8f486135c1622ae167459b133ae"
+  }
+]

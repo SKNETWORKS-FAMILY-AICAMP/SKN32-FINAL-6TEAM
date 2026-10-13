@@ -1,0 +1,53 @@
+v10 후보의 누락 범위를 읽었고, 고정 runner를 한 번 실행했습니다. 50개 모두 통과했고 `PYTEST_EXIT=0`이었습니다. 이번 읽기에서 새로 확정한 결함은 없습니다. 아래는 후보 파일만 읽은 결과이고, 운영 배포 완료나 무결함을 뜻하지 않습니다.
+
+## 직접 수행한 시험
+- 통과는 50/50입니다. 총 소요 시간은 pytest 출력 기준 5.17초입니다. 이전 Codex 측정은 2.52초였습니다.
+- 파일별 개수는 출력에 나뉘어 있지 않아 따로 적지 않습니다.
+- 제가 수행한 시험은 이것 하나뿐입니다. HTTP·DB 시험은 실행하지 않았습니다.
+- 이전 40 통과/10 setup 오류는 환경 구성 문제였고, 이번 합성 설정 runner에서는 해소됐습니다.
+
+## 읽은 누락 범위
+**1. 단위시험 세 파일 전체**
+- `test_controller_resume_recovery.py`의 DB 연결은 `MemoryConnection` 대역입니다. 상태 전이는 실제 `apply_event` 리듀서로 계산합니다. 하나의 시험은 `TestClient`를 쓰지만 메모리 안에서만 돕니다.
+- `test_initial_retry_boundaries.py`의 `Conn`은 `fetchone`만 흉내 내는 대역입니다. `test_fact_context.py`는 `SimpleNamespace`만 씁니다. 세 파일 모두 DB를 쓰지 않습니다.
+- Controller 관문이 약화된 흔적은 보지 못했습니다. `Controller._resume`(`controller.py:809-935`)에서 확인한 순서는 아래와 같습니다.
+  - 행 잠금 → 검증 → 같은 event(`idempotent`) 분기 → `require_team` 순입니다.
+  - 그다음 `resume_route`와 capability 관문을 거쳐 `VALID_INPUT` 전이로 갑니다.
+  - 관문 실패 시 입력을 소비하지 않는 것은 `test_resuming_retry_keeps_team_gate_and_original_input`과 `test_disabled_owner_expiry_preserves_waiting_token_and_input`이 확인합니다.
+- 같은 event 재개도 유지돼 있습니다.
+  - 활성 run이 있으면 시작하지 않고, 경합 시 `ActiveRunError`를 현재 상태로 돌려주며, 다른 메시지는 `StateConflict`입니다.
+- routing 경합 보호도 유지돼 있습니다.
+  - `retry_initial`의 활성 run·`base_version` 409, `ActiveRunError`의 409 변환, `execute`의 최신 상태 재확인이 모두 시험으로 덮여 있습니다.
+- `case.py`와 `transition.py`는 순수 리듀서와 version 게이트 구조이며, 읽은 범위에서 약화는 없었습니다.
+
+**2. e2e 세 파일 전체**
+- `test_web_initial_concurrency.py`는 동시 초기 요청이 Case 1건·적용 1건인지, 같은 `request_id`에 다른 본문(PII 변조 포함)이 오면 409인지를 봅니다. 두 여행이 같은 `request_id`를 써도 충돌하지 않는지, 테넌트 격리, routing 재시도에서 패자가 409인지도 봅니다.
+- `test_web_conversation_resume.py`는 토큰·버전·재개와 단일 적용을 봅니다. 초기 요청 재시도가 대기 토큰을 소비하지 않는지(62-64행)도 봅니다.
+- `test_web_resume_commit_recovery.py`는 `VALID_INPUT` 커밋 뒤 중단된 경우에 같은 event를 재시도해서 `resumed`와 적용이 1회씩인지 봅니다.
+- 이 세 파일에는 새 fact focus를 쓰는 시험이 없습니다. fact focus는 `test_fact_context.py`의 순수 `resolve` 시험과 `test_chat_context.py`가 검증하는 별개 영역입니다.
+- focus 저장 구조(`Case.state_json.chat_reply.focus`)는 `prior→v10` diff의 `chat_reply["focus"] = focus`와 `COMPLETED`의 `state_patch`로 확인했습니다. HTTP에 focus가 없다는 이유로 유실이라고 보지 않았습니다.
+
+**3. diff**
+- `trip_messages.py`의 `prior→v10`, `newbase→v10`, `v9→v10` diff를 전부 읽었습니다.
+  - 읽은 범위에서 결합 누락은 보지 못했습니다.
+  - 새 기준 쪽의 `fact_context.resolve`·`focus`·`stale_selection`·`chat_reply`와 v9 쪽의 `retry_initial`·`resume_pending`·`_dispatch_decision`·`create_case_once`가 모두 v10에 들어 있습니다.
+  - `prior→v10`에서 `with conn.transaction()` 두 곳이 `_open_message_case`의 `create_case_once` + `commit`으로 바뀌었는데, 이것은 v9 방식과 같습니다.
+- `guardrails.yaml`
+  - `newbase→v10`: `reliability`에 `a2a_cancel_timeout_seconds: 1`과 `team_cleanup_grace_seconds: 0.1` 두 키가 추가됐습니다.
+  - `prior→v10`: 위 두 키와 `focus_ttl_seconds: 1800`이 추가됐습니다. 새 기준에는 `focus_ttl_seconds`가 이미 있는 상태입니다.
+  - `v9→v10` 1043줄 전체를 읽었습니다. 값이 바뀐 쌍(`-`/`+`)은 따옴표·들여쓰기·플로우 스타일·`0.4`→`0.40` 같은 서식 변경이었고, 읽은 범위에서 값이 달라진 쌍은 없었습니다.
+  - v9에서 파일 끝에 있던 두 `reliability` 키는 v10에서 위쪽으로 옮겨졌고 값은 같습니다.
+  - v10에 새로 생긴 키는 `focus_ttl_seconds`뿐입니다.
+  - 이것은 diff 줄 대조 결과입니다. YAML을 파싱해 비교한 것은 아닙니다.
+
+## 남은 미확인
+- `v9→v10` diff에 나오지 않는 구간(양쪽이 같아 diff에서 빠진 줄)은 검증 대상이 아니었습니다.
+- `Controller.run_case`와 `case_dispatch` 전체는 이번에 다시 읽지 않았습니다. `require_team` 구간과 `_resume`만 읽었습니다.
+- 전체 e2e의 실제 통과 여부, 후보 담당의 414/414, 파일 해시 361개 일치는 전달받은 수치로만 취급합니다.
+- 이전 감사의 관찰 A·B는 정적 추론이며, 이번에 실행으로 재현하거나 반박하지 않았습니다.
+  - A: 지연 분류 중 재전송이 409가 될 수 있다는 것. `new/classifying` 409는 v9의 명시 계약 정책이고, `test_incomplete_request_is_conflict_instead_of_success_duplicate`가 그 정책을 못박습니다.
+  - B: 오래된 입력 대기 업무가 숫자 답을 가져갈 수 있다는 것. 낮은 확신이며 v9부터 있던 동작입니다.
+  - 둘 다 새 결합 결함으로 단정하지 않습니다.
+
+## 추가 확정 결함
+없습니다.

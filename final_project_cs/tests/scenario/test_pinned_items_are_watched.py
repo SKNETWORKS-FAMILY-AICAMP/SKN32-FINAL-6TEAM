@@ -49,7 +49,10 @@ def _engine(world, report, target_place_ids):
 
     _, route_events = _sources(world["clock"])
     return CaseEngine(tenant_id=world["tenant"], check=check, route_events=route_events, classifier=_classifier,
-                      report_extractor=_extractor, clock=world["clock"])
+                      report_extractor=_extractor, clock=world["clock"],
+                      service_overrides={key: value for key, value in
+                                         world["engine"].controller.service_bindings.values.items()
+                                         if key[0] == "legs"})
 
 
 def _notices(world):

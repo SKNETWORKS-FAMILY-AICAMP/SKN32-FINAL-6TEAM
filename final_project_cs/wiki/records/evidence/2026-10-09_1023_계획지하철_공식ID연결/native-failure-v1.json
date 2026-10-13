@@ -1,0 +1,5 @@
+{
+  "error": "Audit supplied datasets/mobility instead of configured processed folder; input missing before runtime loading",
+  "product_defect": false,
+  "next": "New audit v2 selects documented processed layout; old script preserved."
+}

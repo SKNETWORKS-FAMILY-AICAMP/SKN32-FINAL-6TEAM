@@ -1,0 +1,232 @@
+{
+  "scope": "새 같은 요청좌표1OD·4수단의 개발진단;상세형상·실제출입점미확정·독립holdout아님",
+  "offered": 4,
+  "requested": 4,
+  "walk": {
+    "product": {
+      "id": "walk",
+      "label": "도보",
+      "eta_min": 12,
+      "walk_m": 743,
+      "fare_krw": 0,
+      "uses": []
+    },
+    "web_m": 672,
+    "web_min": 11,
+    "nominal_error_pct": 10.56547619047619,
+    "within_existing_10pct": false,
+    "within_existing_5min": true
+  },
+  "car": {
+    "product": {
+      "v": 1,
+      "kind": "car_leg",
+      "mode": "taxi",
+      "grade": "추정",
+      "distance_m": 862.7,
+      "topis_time_s": 228,
+      "gh_time_s": 73,
+      "depart": "2026-10-12T11:43+09:00",
+      "arrive": "2026-10-12T11:47+09:00",
+      "day_type": "평일",
+      "hour_start": 11,
+      "coverage_m": {
+        "topis": 855.3,
+        "class": 7.5,
+        "default": 0.0
+      },
+      "coverage_pct": {
+        "topis": 99.1,
+        "class": 0.9,
+        "default": 0.0
+      },
+      "n_edges": 30,
+      "links": [
+        {
+          "link_id": "1000003300",
+          "m": 308.1
+        },
+        {
+          "link_id": "1010018200",
+          "m": 209.3
+        },
+        {
+          "link_id": "1000003700",
+          "m": 194.9
+        },
+        {
+          "link_id": "1000003400",
+          "m": 53.0
+        },
+        {
+          "link_id": "1000004800",
+          "m": 41.3
+        },
+        {
+          "link_id": "1010016400",
+          "m": 31.7
+        },
+        {
+          "link_id": "1000004700",
+          "m": 14.0
+        },
+        {
+          "link_id": "1010017000",
+          "m": 2.9
+        }
+      ],
+      "n_links": 8,
+      "source_id": [
+        "topis_link_profile_v1@2025-09~2026-05",
+        "osm_road_graph@2026-09-18"
+      ],
+      "warn": [],
+      "routing_evidence": {
+        "turn_restrictions": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 4709,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false
+        },
+        "snap_selection": {
+          "candidate_counts": [
+            4,
+            5
+          ],
+          "selected_candidate_ranks": [
+            3,
+            0
+          ],
+          "used_non_nearest": [
+            true,
+            false
+          ],
+          "nearest_snap_m": [
+            55.9,
+            41.0
+          ],
+          "physical_access_verified": false
+        },
+        "snap_m": [
+          65.7,
+          41.0
+        ]
+      },
+      "fare_kind": "중형",
+      "fare_won": 7600,
+      "meter_won": 5500,
+      "toll_won": 0,
+      "planning_reserve_won": 2100,
+      "planning_reserve_rate": 0.37,
+      "toll_basis": null,
+      "slow_s": 181,
+      "slow_m": 534.7,
+      "night_rate": 0.0,
+      "out_of_city": null,
+      "fare_basis": "예상 요금 7,600원: 미터 추정 5,500원 + 예산 여유 2,100원 + 통행료 0원 · 호출·옵션료 미포함·호출앱 별도 확인 · 실제 결제 상한 아님"
+    },
+    "web_display_distance": "1.0km",
+    "web_min": 4,
+    "web_meter_quote_won": 4800,
+    "web_toll_won": 0,
+    "meter_error_won": 700,
+    "meter_error_pct": 14.583333333333334
+  },
+  "bike": {
+    "product": {
+      "id": "bike",
+      "label": "자전거(따릉이) 공개좌표 출발→공개좌표 도착 · 대여 가능 여부는 출발 때 확인",
+      "eta_min": 16,
+      "fare_krw": 1000,
+      "uses": []
+    },
+    "web_ride_m": 770,
+    "web_ride_min": 4,
+    "comparable_total_time": false,
+    "reason": "웹순수주행vs제품접근·대여·반납포함"
+  },
+  "bus": {
+    "product": {
+      "id": "bus_101",
+      "label": "버스 101 서울신문사→종로1가.종각역",
+      "eta_min": 17,
+      "walk_m": 533,
+      "fare_krw": 1500,
+      "uses": [
+        "버스:101"
+      ]
+    },
+    "matched_options": [
+      {
+        "id": "bus_101",
+        "leg": {
+          "mode": "bus",
+          "route": "101",
+          "from": "서울신문사",
+          "to": "종로1가.종각역",
+          "route_id": "100100006",
+          "from_sequence": 44,
+          "to_sequence": 45,
+          "from_stop_id": "101000039",
+          "to_stop_id": "100000386"
+        },
+        "same_direction_stops": true,
+        "fare_won": 1500,
+        "eta_min": 17,
+        "wait_min": 4
+      },
+      {
+        "id": "bus_150",
+        "leg": {
+          "mode": "bus",
+          "route": "150",
+          "from": "서울신문사",
+          "to": "종로1가.종각역",
+          "route_id": "100100029",
+          "from_sequence": 91,
+          "to_sequence": 92,
+          "from_stop_id": "101000039",
+          "to_stop_id": "100000386"
+        },
+        "same_direction_stops": true,
+        "fare_won": 1500,
+        "eta_min": 17,
+        "wait_min": 4
+      }
+    ],
+    "fare_exact_od": {
+      "passed": 1,
+      "total": 1
+    },
+    "route_data_matches": 3,
+    "route_data_denominator": 3,
+    "web_total_min": 11,
+    "web_walk_min": 8,
+    "web_ride_min": 3,
+    "first_wait_comparison_eligible": false,
+    "web_access_m": 275,
+    "web_egress_m": 174,
+    "web_walk_total_m": 449,
+    "product_walk_m": 533,
+    "product_walk_min": 10,
+    "product_ride_min": 3,
+    "product_wait_min": 4,
+    "offered_reference_alternatives": 2,
+    "reference_alternative_count": 3
+  },
+  "settings_correction": "최초버스LFD비활성화는시험설정오류.첫결과보존·기본True로재생.첫unconfirmed를제품결함으로세지않음",
+  "network_attempts": 0,
+  "developer_api_calls": 0,
+  "private_data_accesses": 0,
+  "initial_code_changes": [],
+  "fixed_run_code_changes": [
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/candidates.py",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py"
+  ],
+  "evidence_sha256": {
+    "result-v1.json": "acf8b1ebf57d4f86e310be3caafcee1655475e899f82cead04f79d672b0f678e",
+    "bus-result-v2.json": "4d5a1533569780d40de8725bb73e2ccee2e942b213cee35fef8cdd16a27d512d",
+    "bus-data-audit-v1.json": "c7524335c09927953bf42e573092e65e0673870d4ec2cf8a55b1f88c9a103972"
+  }
+}

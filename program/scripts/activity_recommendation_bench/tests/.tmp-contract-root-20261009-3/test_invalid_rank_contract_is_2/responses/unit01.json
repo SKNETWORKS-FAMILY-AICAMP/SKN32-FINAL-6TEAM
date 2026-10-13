@@ -1,0 +1,10 @@
+{
+  "model": "test-model",
+  "id": "test-response",
+  "status": "completed",
+  "output_text": "{\"ranking\": [\"best\", \"second\"], \"reasons\": [\"a\", \"b\", \"c\"]}",
+  "usage": {
+    "input_tokens": 10,
+    "output_tokens": 5
+  }
+}

@@ -31,7 +31,7 @@ def _runtime_with_car():
         import pytest
         from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
-            _RT.append(build_verifier(quiet=True, local_router=True))
+            _RT.append(build_verifier(quiet=True, local_router=True, gh_url="", seoul_key=""))
         except Exception as e:                       # 길 그래프가 없는 기기
             pytest.skip(f"로컬 길 그래프로 런타임을 못 올렸다 — {str(e)[:80]}")
     rt = _RT[0]

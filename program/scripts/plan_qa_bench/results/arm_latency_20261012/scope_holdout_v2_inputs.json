@@ -1,0 +1,1468 @@
+{
+  "created_at": "2026-10-12T00:05:25.287676+09:00",
+  "seed": 20261012,
+  "temperature": 0,
+  "max_tokens": 400,
+  "requests": [
+    {
+      "key": "scope_afternoon",
+      "message": "오후에 잡혀 있는 것 중 변경 가능 여부를 확인할 항목들을 알려 주세요.",
+      "system": "너는 여행 일정 서비스의 요청 해석기다. 고객 문장 하나를 읽고 할 일(action)과 대상을 고른다. 추측으로 채우지 말고, 할 일이나 대상이 분명하지 않으면 clarify.\n할 일(action):\n- apply_change: 일정을 다른 곳으로 바꿔 달라(「바꿔」「변경해」「다른 데로」「다른 걸로」).\n- propose_alternatives: 현재 일정 대신 갈 새로운 장소 후보를 찾아 달라. 후보 장소를 요청한 경우에만 쓴다. 기존 일정의 목록·상태·변경 가능 여부 조회에는 쓰지 않는다.\n- rollback: 앞서 바뀐 것을 원래대로 되돌려 달라(「원래대로」「되돌려」「이전 걸로」). target_change 에 되돌릴 변경 id — 문장이 어느 변경인지 말하지 않으면 (가장 최근) 표시가 붙은 변경.\n- redo: 되돌렸던 변경을 다시 적용해 달라(「다시 진행」「다시 바꿔」). target_change 에 다시 적용할 변경 id.\n- answer_fact: 이 여행의 사실을 묻는다 — fact 에 **물은 것 하나**를 고른다(가장 좁은 칸):\n  address(위치 — 「어디 있어」「어딨어」「어디야」「어디쯤」「위치」「주소」) · phone(전화·연락처) ·\n  hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·\n  booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·\n  detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).\n  ★현재 위치 — 출발지가 **「여기」「지금 위치」「내 위치」「지금 있는 곳」**이면: route_here(거기서 목적지까지 가는 길 · 걸리는 시간, target_item = 도착지 ·\n  말하지 않으면 none) · nearby_dining(근처 식당) · nearby_activity(근처 볼거리 · 갈 곳). 예: 「지금 있는 곳에서 금용문 가는 길」「지금 위치에서 다음 일정까지 얼마나 걸려」는 route_here.\n  출발지도 일정의 곳 이름(「경복궁에서 금용문까지」)이면 move 다.\n  애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.\n  이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.\n- ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).\n- report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).\n- report_closed: 장소가 닫았다고 알린다.\n- clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**\n  1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나\n  직전 대화로 정할 수 없으면 clarify.\n- other: 여행 일정과 무관한 말 · 인사 · 이 서비스에 대한 질문(「뭘 할 수 있어?」「너는 누구야」).\n먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.\n목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,\n변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.\n변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.\n「오후 일정 중 바꿀 수 있는 일정이 뭐가 있어?」는 변경 실행이나 다른 장소 추천이 아니다.\n이 두 사실은 target_item=none, choices=[]와 query={day,period,kind}를 반드시 낸다.\nday는 all(날짜 미지정·전체 여행), today, tomorrow, d1…(여행 N일차).\nperiod는 all, morning(00~12시), afternoon(12~18시), evening(18~24시).\nkind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 내며 다른 시간대 대상을 고르지 않는다.\n그 밖의 사실·실제 변경 요청에는 query를 내지 않는다. 예: 「오후 일정을 바꿔 줘」는 실제 변경 요청이다.\n대상(target_item)은 일정 목록의 id 중 하나이거나 none. 목록의 「그날 식당 N번째」「그날 활동 N번째」「끼니」를 그대로 써라 —\n「둘째 날 두 번째 활동」은 2일차 줄 중 「그날 활동 2번째」인 줄이다. 날을 말하지 않은 「첫/두 번째」는 1일차에서 찾는다.\n아침·점심·저녁은 그 끼니 표시가 붙은 식당이다. 「마지막 일정」은 목록의 마지막 줄이다.\n확실하지 않은 채로 바꾸지 마라 — 할 일은 분명한데 대상이 둘 이상으로 읽히면 clarify 로 후보를 내라.\n「그 식당」「거기」「방금 바꾼 거」처럼 가리키는 말은 직전 대화와 변경 이력에서 찾는다.\n화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다.",
+      "user": "일정 목록:\ni1 | 1일차(첫날) 03-04 09:00 | 활동 · 그날 활동 1번째 | 창덕궁 산책\ni2 | 1일차(첫날) 03-04 15:00 | 활동 · 그날 활동 2번째 | 국립중앙박물관 관람\ni3 | 2일차(마지막 날) 03-05 13:00 | 식당 · 그날 식당 1번째 · 점심 | 둘째 날 한식 점심\n\n바뀐 이력(아래가 최근):\n(없음)\n\n직전 대화:\n(없음)\n\n화면에서 고른 일정: none\n\n고객 문장: 오후에 잡혀 있는 것 중 변경 가능 여부를 확인할 항목들을 알려 주세요.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "apply_change",
+              "propose_alternatives",
+              "rollback",
+              "redo",
+              "answer_fact",
+              "ask_policy",
+              "report_delay",
+              "report_closed",
+              "clarify",
+              "other"
+            ]
+          },
+          "target_item": {
+            "type": "string",
+            "enum": [
+              "i1",
+              "i2",
+              "i3",
+              "none"
+            ]
+          },
+          "target_change": {
+            "type": "string",
+            "enum": [
+              "none"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "enum": [
+              "detail",
+              "address",
+              "phone",
+              "hours",
+              "time",
+              "next",
+              "booking",
+              "day",
+              "move",
+              "route_here",
+              "nearby_dining",
+              "nearby_activity",
+              "schedule",
+              "changeability",
+              "none"
+            ]
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "day": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "today",
+                  "tomorrow",
+                  "d1",
+                  "d2"
+                ]
+              },
+              "period": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "morning",
+                  "afternoon",
+                  "evening"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "activity",
+                  "dining",
+                  "lodging"
+                ]
+              }
+            },
+            "required": [
+              "day",
+              "period",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "apply_change",
+                    "propose_alternatives",
+                    "rollback",
+                    "redo",
+                    "answer_fact",
+                    "ask_policy",
+                    "report_delay",
+                    "report_closed",
+                    "other"
+                  ]
+                },
+                "target_item": {
+                  "type": "string",
+                  "enum": [
+                    "i1",
+                    "i2",
+                    "i3",
+                    "none"
+                  ]
+                },
+                "target_change": {
+                  "type": "string",
+                  "enum": [
+                    "none"
+                  ]
+                },
+                "fact": {
+                  "type": "string",
+                  "enum": [
+                    "detail",
+                    "address",
+                    "phone",
+                    "hours",
+                    "time",
+                    "next",
+                    "booking",
+                    "day",
+                    "move",
+                    "route_here",
+                    "nearby_dining",
+                    "nearby_activity",
+                    "schedule",
+                    "changeability",
+                    "none"
+                  ]
+                }
+              },
+              "required": [
+                "action",
+                "target_item",
+                "target_change",
+                "fact"
+              ]
+            },
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "action",
+          "target_item",
+          "target_change",
+          "fact",
+          "minutes",
+          "choices"
+        ]
+      },
+      "expected": {
+        "action": "answer_fact",
+        "fact": "changeability",
+        "target_item": "none",
+        "query": {
+          "day": "all",
+          "period": "afternoon",
+          "kind": "all"
+        }
+      }
+    },
+    {
+      "key": "scope_meal_day2",
+      "message": "이튿날 오후에 예정된 식사 일정 목록을 보고 싶습니다.",
+      "system": "너는 여행 일정 서비스의 요청 해석기다. 고객 문장 하나를 읽고 할 일(action)과 대상을 고른다. 추측으로 채우지 말고, 할 일이나 대상이 분명하지 않으면 clarify.\n할 일(action):\n- apply_change: 일정을 다른 곳으로 바꿔 달라(「바꿔」「변경해」「다른 데로」「다른 걸로」).\n- propose_alternatives: 현재 일정 대신 갈 새로운 장소 후보를 찾아 달라. 후보 장소를 요청한 경우에만 쓴다. 기존 일정의 목록·상태·변경 가능 여부 조회에는 쓰지 않는다.\n- rollback: 앞서 바뀐 것을 원래대로 되돌려 달라(「원래대로」「되돌려」「이전 걸로」). target_change 에 되돌릴 변경 id — 문장이 어느 변경인지 말하지 않으면 (가장 최근) 표시가 붙은 변경.\n- redo: 되돌렸던 변경을 다시 적용해 달라(「다시 진행」「다시 바꿔」). target_change 에 다시 적용할 변경 id.\n- answer_fact: 이 여행의 사실을 묻는다 — fact 에 **물은 것 하나**를 고른다(가장 좁은 칸):\n  address(위치 — 「어디 있어」「어딨어」「어디야」「어디쯤」「위치」「주소」) · phone(전화·연락처) ·\n  hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·\n  booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·\n  detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).\n  ★현재 위치 — 출발지가 **「여기」「지금 위치」「내 위치」「지금 있는 곳」**이면: route_here(거기서 목적지까지 가는 길 · 걸리는 시간, target_item = 도착지 ·\n  말하지 않으면 none) · nearby_dining(근처 식당) · nearby_activity(근처 볼거리 · 갈 곳). 예: 「지금 있는 곳에서 금용문 가는 길」「지금 위치에서 다음 일정까지 얼마나 걸려」는 route_here.\n  출발지도 일정의 곳 이름(「경복궁에서 금용문까지」)이면 move 다.\n  애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.\n  이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.\n- ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).\n- report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).\n- report_closed: 장소가 닫았다고 알린다.\n- clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**\n  1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나\n  직전 대화로 정할 수 없으면 clarify.\n- other: 여행 일정과 무관한 말 · 인사 · 이 서비스에 대한 질문(「뭘 할 수 있어?」「너는 누구야」).\n먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.\n목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,\n변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.\n변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.\n「오후 일정 중 바꿀 수 있는 일정이 뭐가 있어?」는 변경 실행이나 다른 장소 추천이 아니다.\n이 두 사실은 target_item=none, choices=[]와 query={day,period,kind}를 반드시 낸다.\nday는 all(날짜 미지정·전체 여행), today, tomorrow, d1…(여행 N일차).\nperiod는 all, morning(00~12시), afternoon(12~18시), evening(18~24시).\nkind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 내며 다른 시간대 대상을 고르지 않는다.\n그 밖의 사실·실제 변경 요청에는 query를 내지 않는다. 예: 「오후 일정을 바꿔 줘」는 실제 변경 요청이다.\n대상(target_item)은 일정 목록의 id 중 하나이거나 none. 목록의 「그날 식당 N번째」「그날 활동 N번째」「끼니」를 그대로 써라 —\n「둘째 날 두 번째 활동」은 2일차 줄 중 「그날 활동 2번째」인 줄이다. 날을 말하지 않은 「첫/두 번째」는 1일차에서 찾는다.\n아침·점심·저녁은 그 끼니 표시가 붙은 식당이다. 「마지막 일정」은 목록의 마지막 줄이다.\n확실하지 않은 채로 바꾸지 마라 — 할 일은 분명한데 대상이 둘 이상으로 읽히면 clarify 로 후보를 내라.\n「그 식당」「거기」「방금 바꾼 거」처럼 가리키는 말은 직전 대화와 변경 이력에서 찾는다.\n화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다.",
+      "user": "일정 목록:\ni1 | 1일차(첫날) 03-04 09:00 | 활동 · 그날 활동 1번째 | 창덕궁 산책\ni2 | 1일차(첫날) 03-04 15:00 | 활동 · 그날 활동 2번째 | 국립중앙박물관 관람\ni3 | 2일차(마지막 날) 03-05 13:00 | 식당 · 그날 식당 1번째 · 점심 | 둘째 날 한식 점심\n\n바뀐 이력(아래가 최근):\n(없음)\n\n직전 대화:\n(없음)\n\n화면에서 고른 일정: none\n\n고객 문장: 이튿날 오후에 예정된 식사 일정 목록을 보고 싶습니다.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "apply_change",
+              "propose_alternatives",
+              "rollback",
+              "redo",
+              "answer_fact",
+              "ask_policy",
+              "report_delay",
+              "report_closed",
+              "clarify",
+              "other"
+            ]
+          },
+          "target_item": {
+            "type": "string",
+            "enum": [
+              "i1",
+              "i2",
+              "i3",
+              "none"
+            ]
+          },
+          "target_change": {
+            "type": "string",
+            "enum": [
+              "none"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "enum": [
+              "detail",
+              "address",
+              "phone",
+              "hours",
+              "time",
+              "next",
+              "booking",
+              "day",
+              "move",
+              "route_here",
+              "nearby_dining",
+              "nearby_activity",
+              "schedule",
+              "changeability",
+              "none"
+            ]
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "day": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "today",
+                  "tomorrow",
+                  "d1",
+                  "d2"
+                ]
+              },
+              "period": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "morning",
+                  "afternoon",
+                  "evening"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "activity",
+                  "dining",
+                  "lodging"
+                ]
+              }
+            },
+            "required": [
+              "day",
+              "period",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "apply_change",
+                    "propose_alternatives",
+                    "rollback",
+                    "redo",
+                    "answer_fact",
+                    "ask_policy",
+                    "report_delay",
+                    "report_closed",
+                    "other"
+                  ]
+                },
+                "target_item": {
+                  "type": "string",
+                  "enum": [
+                    "i1",
+                    "i2",
+                    "i3",
+                    "none"
+                  ]
+                },
+                "target_change": {
+                  "type": "string",
+                  "enum": [
+                    "none"
+                  ]
+                },
+                "fact": {
+                  "type": "string",
+                  "enum": [
+                    "detail",
+                    "address",
+                    "phone",
+                    "hours",
+                    "time",
+                    "next",
+                    "booking",
+                    "day",
+                    "move",
+                    "route_here",
+                    "nearby_dining",
+                    "nearby_activity",
+                    "schedule",
+                    "changeability",
+                    "none"
+                  ]
+                }
+              },
+              "required": [
+                "action",
+                "target_item",
+                "target_change",
+                "fact"
+              ]
+            },
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "action",
+          "target_item",
+          "target_change",
+          "fact",
+          "minutes",
+          "choices"
+        ]
+      },
+      "expected": {
+        "action": "answer_fact",
+        "fact": "schedule",
+        "target_item": "none",
+        "query": {
+          "day": "d2",
+          "period": "afternoon",
+          "kind": "dining"
+        }
+      }
+    },
+    {
+      "key": "scope_morning_day1",
+      "message": "첫째 날 오전 활동 일정들을 보여 주세요.",
+      "system": "너는 여행 일정 서비스의 요청 해석기다. 고객 문장 하나를 읽고 할 일(action)과 대상을 고른다. 추측으로 채우지 말고, 할 일이나 대상이 분명하지 않으면 clarify.\n할 일(action):\n- apply_change: 일정을 다른 곳으로 바꿔 달라(「바꿔」「변경해」「다른 데로」「다른 걸로」).\n- propose_alternatives: 현재 일정 대신 갈 새로운 장소 후보를 찾아 달라. 후보 장소를 요청한 경우에만 쓴다. 기존 일정의 목록·상태·변경 가능 여부 조회에는 쓰지 않는다.\n- rollback: 앞서 바뀐 것을 원래대로 되돌려 달라(「원래대로」「되돌려」「이전 걸로」). target_change 에 되돌릴 변경 id — 문장이 어느 변경인지 말하지 않으면 (가장 최근) 표시가 붙은 변경.\n- redo: 되돌렸던 변경을 다시 적용해 달라(「다시 진행」「다시 바꿔」). target_change 에 다시 적용할 변경 id.\n- answer_fact: 이 여행의 사실을 묻는다 — fact 에 **물은 것 하나**를 고른다(가장 좁은 칸):\n  address(위치 — 「어디 있어」「어딨어」「어디야」「어디쯤」「위치」「주소」) · phone(전화·연락처) ·\n  hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·\n  booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·\n  detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).\n  ★현재 위치 — 출발지가 **「여기」「지금 위치」「내 위치」「지금 있는 곳」**이면: route_here(거기서 목적지까지 가는 길 · 걸리는 시간, target_item = 도착지 ·\n  말하지 않으면 none) · nearby_dining(근처 식당) · nearby_activity(근처 볼거리 · 갈 곳). 예: 「지금 있는 곳에서 금용문 가는 길」「지금 위치에서 다음 일정까지 얼마나 걸려」는 route_here.\n  출발지도 일정의 곳 이름(「경복궁에서 금용문까지」)이면 move 다.\n  애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.\n  이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.\n- ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).\n- report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).\n- report_closed: 장소가 닫았다고 알린다.\n- clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**\n  1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나\n  직전 대화로 정할 수 없으면 clarify.\n- other: 여행 일정과 무관한 말 · 인사 · 이 서비스에 대한 질문(「뭘 할 수 있어?」「너는 누구야」).\n먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.\n목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,\n변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.\n변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.\n「오후 일정 중 바꿀 수 있는 일정이 뭐가 있어?」는 변경 실행이나 다른 장소 추천이 아니다.\n이 두 사실은 target_item=none, choices=[]와 query={day,period,kind}를 반드시 낸다.\nday는 all(날짜 미지정·전체 여행), today, tomorrow, d1…(여행 N일차).\nperiod는 all, morning(00~12시), afternoon(12~18시), evening(18~24시).\nkind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 내며 다른 시간대 대상을 고르지 않는다.\n그 밖의 사실·실제 변경 요청에는 query를 내지 않는다. 예: 「오후 일정을 바꿔 줘」는 실제 변경 요청이다.\n대상(target_item)은 일정 목록의 id 중 하나이거나 none. 목록의 「그날 식당 N번째」「그날 활동 N번째」「끼니」를 그대로 써라 —\n「둘째 날 두 번째 활동」은 2일차 줄 중 「그날 활동 2번째」인 줄이다. 날을 말하지 않은 「첫/두 번째」는 1일차에서 찾는다.\n아침·점심·저녁은 그 끼니 표시가 붙은 식당이다. 「마지막 일정」은 목록의 마지막 줄이다.\n확실하지 않은 채로 바꾸지 마라 — 할 일은 분명한데 대상이 둘 이상으로 읽히면 clarify 로 후보를 내라.\n「그 식당」「거기」「방금 바꾼 거」처럼 가리키는 말은 직전 대화와 변경 이력에서 찾는다.\n화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다.",
+      "user": "일정 목록:\ni1 | 1일차(첫날) 03-04 09:00 | 활동 · 그날 활동 1번째 | 창덕궁 산책\ni2 | 1일차(첫날) 03-04 15:00 | 활동 · 그날 활동 2번째 | 국립중앙박물관 관람\ni3 | 2일차(마지막 날) 03-05 13:00 | 식당 · 그날 식당 1번째 · 점심 | 둘째 날 한식 점심\n\n바뀐 이력(아래가 최근):\n(없음)\n\n직전 대화:\n(없음)\n\n화면에서 고른 일정: none\n\n고객 문장: 첫째 날 오전 활동 일정들을 보여 주세요.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "apply_change",
+              "propose_alternatives",
+              "rollback",
+              "redo",
+              "answer_fact",
+              "ask_policy",
+              "report_delay",
+              "report_closed",
+              "clarify",
+              "other"
+            ]
+          },
+          "target_item": {
+            "type": "string",
+            "enum": [
+              "i1",
+              "i2",
+              "i3",
+              "none"
+            ]
+          },
+          "target_change": {
+            "type": "string",
+            "enum": [
+              "none"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "enum": [
+              "detail",
+              "address",
+              "phone",
+              "hours",
+              "time",
+              "next",
+              "booking",
+              "day",
+              "move",
+              "route_here",
+              "nearby_dining",
+              "nearby_activity",
+              "schedule",
+              "changeability",
+              "none"
+            ]
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "day": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "today",
+                  "tomorrow",
+                  "d1",
+                  "d2"
+                ]
+              },
+              "period": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "morning",
+                  "afternoon",
+                  "evening"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "activity",
+                  "dining",
+                  "lodging"
+                ]
+              }
+            },
+            "required": [
+              "day",
+              "period",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "apply_change",
+                    "propose_alternatives",
+                    "rollback",
+                    "redo",
+                    "answer_fact",
+                    "ask_policy",
+                    "report_delay",
+                    "report_closed",
+                    "other"
+                  ]
+                },
+                "target_item": {
+                  "type": "string",
+                  "enum": [
+                    "i1",
+                    "i2",
+                    "i3",
+                    "none"
+                  ]
+                },
+                "target_change": {
+                  "type": "string",
+                  "enum": [
+                    "none"
+                  ]
+                },
+                "fact": {
+                  "type": "string",
+                  "enum": [
+                    "detail",
+                    "address",
+                    "phone",
+                    "hours",
+                    "time",
+                    "next",
+                    "booking",
+                    "day",
+                    "move",
+                    "route_here",
+                    "nearby_dining",
+                    "nearby_activity",
+                    "schedule",
+                    "changeability",
+                    "none"
+                  ]
+                }
+              },
+              "required": [
+                "action",
+                "target_item",
+                "target_change",
+                "fact"
+              ]
+            },
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "action",
+          "target_item",
+          "target_change",
+          "fact",
+          "minutes",
+          "choices"
+        ]
+      },
+      "expected": {
+        "action": "answer_fact",
+        "fact": "schedule",
+        "target_item": "none",
+        "query": {
+          "day": "d1",
+          "period": "morning",
+          "kind": "activity"
+        }
+      }
+    },
+    {
+      "key": "address",
+      "message": "국립중앙박물관은 어디에 있나요?",
+      "system": "너는 여행 일정 서비스의 요청 해석기다. 고객 문장 하나를 읽고 할 일(action)과 대상을 고른다. 추측으로 채우지 말고, 할 일이나 대상이 분명하지 않으면 clarify.\n할 일(action):\n- apply_change: 일정을 다른 곳으로 바꿔 달라(「바꿔」「변경해」「다른 데로」「다른 걸로」).\n- propose_alternatives: 현재 일정 대신 갈 새로운 장소 후보를 찾아 달라. 후보 장소를 요청한 경우에만 쓴다. 기존 일정의 목록·상태·변경 가능 여부 조회에는 쓰지 않는다.\n- rollback: 앞서 바뀐 것을 원래대로 되돌려 달라(「원래대로」「되돌려」「이전 걸로」). target_change 에 되돌릴 변경 id — 문장이 어느 변경인지 말하지 않으면 (가장 최근) 표시가 붙은 변경.\n- redo: 되돌렸던 변경을 다시 적용해 달라(「다시 진행」「다시 바꿔」). target_change 에 다시 적용할 변경 id.\n- answer_fact: 이 여행의 사실을 묻는다 — fact 에 **물은 것 하나**를 고른다(가장 좁은 칸):\n  address(위치 — 「어디 있어」「어딨어」「어디야」「어디쯤」「위치」「주소」) · phone(전화·연락처) ·\n  hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·\n  booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·\n  detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).\n  ★현재 위치 — 출발지가 **「여기」「지금 위치」「내 위치」「지금 있는 곳」**이면: route_here(거기서 목적지까지 가는 길 · 걸리는 시간, target_item = 도착지 ·\n  말하지 않으면 none) · nearby_dining(근처 식당) · nearby_activity(근처 볼거리 · 갈 곳). 예: 「지금 있는 곳에서 금용문 가는 길」「지금 위치에서 다음 일정까지 얼마나 걸려」는 route_here.\n  출발지도 일정의 곳 이름(「경복궁에서 금용문까지」)이면 move 다.\n  애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.\n  이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.\n- ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).\n- report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).\n- report_closed: 장소가 닫았다고 알린다.\n- clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**\n  1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나\n  직전 대화로 정할 수 없으면 clarify.\n- other: 여행 일정과 무관한 말 · 인사 · 이 서비스에 대한 질문(「뭘 할 수 있어?」「너는 누구야」).\n먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.\n목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,\n변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.\n변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.\n「오후 일정 중 바꿀 수 있는 일정이 뭐가 있어?」는 변경 실행이나 다른 장소 추천이 아니다.\n이 두 사실은 target_item=none, choices=[]와 query={day,period,kind}를 반드시 낸다.\nday는 all(날짜 미지정·전체 여행), today, tomorrow, d1…(여행 N일차).\nperiod는 all, morning(00~12시), afternoon(12~18시), evening(18~24시).\nkind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 내며 다른 시간대 대상을 고르지 않는다.\n그 밖의 사실·실제 변경 요청에는 query를 내지 않는다. 예: 「오후 일정을 바꿔 줘」는 실제 변경 요청이다.\n대상(target_item)은 일정 목록의 id 중 하나이거나 none. 목록의 「그날 식당 N번째」「그날 활동 N번째」「끼니」를 그대로 써라 —\n「둘째 날 두 번째 활동」은 2일차 줄 중 「그날 활동 2번째」인 줄이다. 날을 말하지 않은 「첫/두 번째」는 1일차에서 찾는다.\n아침·점심·저녁은 그 끼니 표시가 붙은 식당이다. 「마지막 일정」은 목록의 마지막 줄이다.\n확실하지 않은 채로 바꾸지 마라 — 할 일은 분명한데 대상이 둘 이상으로 읽히면 clarify 로 후보를 내라.\n「그 식당」「거기」「방금 바꾼 거」처럼 가리키는 말은 직전 대화와 변경 이력에서 찾는다.\n화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다.",
+      "user": "일정 목록:\ni1 | 1일차(첫날) 03-04 09:00 | 활동 · 그날 활동 1번째 | 창덕궁 산책\ni2 | 1일차(첫날) 03-04 15:00 | 활동 · 그날 활동 2번째 | 국립중앙박물관 관람\ni3 | 2일차(마지막 날) 03-05 13:00 | 식당 · 그날 식당 1번째 · 점심 | 둘째 날 한식 점심\n\n바뀐 이력(아래가 최근):\n(없음)\n\n직전 대화:\n(없음)\n\n화면에서 고른 일정: none\n\n고객 문장: 국립중앙박물관은 어디에 있나요?",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "apply_change",
+              "propose_alternatives",
+              "rollback",
+              "redo",
+              "answer_fact",
+              "ask_policy",
+              "report_delay",
+              "report_closed",
+              "clarify",
+              "other"
+            ]
+          },
+          "target_item": {
+            "type": "string",
+            "enum": [
+              "i1",
+              "i2",
+              "i3",
+              "none"
+            ]
+          },
+          "target_change": {
+            "type": "string",
+            "enum": [
+              "none"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "enum": [
+              "detail",
+              "address",
+              "phone",
+              "hours",
+              "time",
+              "next",
+              "booking",
+              "day",
+              "move",
+              "route_here",
+              "nearby_dining",
+              "nearby_activity",
+              "schedule",
+              "changeability",
+              "none"
+            ]
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "day": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "today",
+                  "tomorrow",
+                  "d1",
+                  "d2"
+                ]
+              },
+              "period": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "morning",
+                  "afternoon",
+                  "evening"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "activity",
+                  "dining",
+                  "lodging"
+                ]
+              }
+            },
+            "required": [
+              "day",
+              "period",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "apply_change",
+                    "propose_alternatives",
+                    "rollback",
+                    "redo",
+                    "answer_fact",
+                    "ask_policy",
+                    "report_delay",
+                    "report_closed",
+                    "other"
+                  ]
+                },
+                "target_item": {
+                  "type": "string",
+                  "enum": [
+                    "i1",
+                    "i2",
+                    "i3",
+                    "none"
+                  ]
+                },
+                "target_change": {
+                  "type": "string",
+                  "enum": [
+                    "none"
+                  ]
+                },
+                "fact": {
+                  "type": "string",
+                  "enum": [
+                    "detail",
+                    "address",
+                    "phone",
+                    "hours",
+                    "time",
+                    "next",
+                    "booking",
+                    "day",
+                    "move",
+                    "route_here",
+                    "nearby_dining",
+                    "nearby_activity",
+                    "schedule",
+                    "changeability",
+                    "none"
+                  ]
+                }
+              },
+              "required": [
+                "action",
+                "target_item",
+                "target_change",
+                "fact"
+              ]
+            },
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "action",
+          "target_item",
+          "target_change",
+          "fact",
+          "minutes",
+          "choices"
+        ]
+      },
+      "expected": {
+        "action": "answer_fact",
+        "fact": "address",
+        "target_item": "i2"
+      }
+    },
+    {
+      "key": "time",
+      "message": "둘째 날 한식 점심은 언제 시작하나요?",
+      "system": "너는 여행 일정 서비스의 요청 해석기다. 고객 문장 하나를 읽고 할 일(action)과 대상을 고른다. 추측으로 채우지 말고, 할 일이나 대상이 분명하지 않으면 clarify.\n할 일(action):\n- apply_change: 일정을 다른 곳으로 바꿔 달라(「바꿔」「변경해」「다른 데로」「다른 걸로」).\n- propose_alternatives: 현재 일정 대신 갈 새로운 장소 후보를 찾아 달라. 후보 장소를 요청한 경우에만 쓴다. 기존 일정의 목록·상태·변경 가능 여부 조회에는 쓰지 않는다.\n- rollback: 앞서 바뀐 것을 원래대로 되돌려 달라(「원래대로」「되돌려」「이전 걸로」). target_change 에 되돌릴 변경 id — 문장이 어느 변경인지 말하지 않으면 (가장 최근) 표시가 붙은 변경.\n- redo: 되돌렸던 변경을 다시 적용해 달라(「다시 진행」「다시 바꿔」). target_change 에 다시 적용할 변경 id.\n- answer_fact: 이 여행의 사실을 묻는다 — fact 에 **물은 것 하나**를 고른다(가장 좁은 칸):\n  address(위치 — 「어디 있어」「어딨어」「어디야」「어디쯤」「위치」「주소」) · phone(전화·연락처) ·\n  hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·\n  booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·\n  detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).\n  ★현재 위치 — 출발지가 **「여기」「지금 위치」「내 위치」「지금 있는 곳」**이면: route_here(거기서 목적지까지 가는 길 · 걸리는 시간, target_item = 도착지 ·\n  말하지 않으면 none) · nearby_dining(근처 식당) · nearby_activity(근처 볼거리 · 갈 곳). 예: 「지금 있는 곳에서 금용문 가는 길」「지금 위치에서 다음 일정까지 얼마나 걸려」는 route_here.\n  출발지도 일정의 곳 이름(「경복궁에서 금용문까지」)이면 move 다.\n  애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.\n  이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.\n- ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).\n- report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).\n- report_closed: 장소가 닫았다고 알린다.\n- clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**\n  1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나\n  직전 대화로 정할 수 없으면 clarify.\n- other: 여행 일정과 무관한 말 · 인사 · 이 서비스에 대한 질문(「뭘 할 수 있어?」「너는 누구야」).\n먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.\n목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,\n변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.\n변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.\n「오후 일정 중 바꿀 수 있는 일정이 뭐가 있어?」는 변경 실행이나 다른 장소 추천이 아니다.\n이 두 사실은 target_item=none, choices=[]와 query={day,period,kind}를 반드시 낸다.\nday는 all(날짜 미지정·전체 여행), today, tomorrow, d1…(여행 N일차).\nperiod는 all, morning(00~12시), afternoon(12~18시), evening(18~24시).\nkind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 내며 다른 시간대 대상을 고르지 않는다.\n그 밖의 사실·실제 변경 요청에는 query를 내지 않는다. 예: 「오후 일정을 바꿔 줘」는 실제 변경 요청이다.\n대상(target_item)은 일정 목록의 id 중 하나이거나 none. 목록의 「그날 식당 N번째」「그날 활동 N번째」「끼니」를 그대로 써라 —\n「둘째 날 두 번째 활동」은 2일차 줄 중 「그날 활동 2번째」인 줄이다. 날을 말하지 않은 「첫/두 번째」는 1일차에서 찾는다.\n아침·점심·저녁은 그 끼니 표시가 붙은 식당이다. 「마지막 일정」은 목록의 마지막 줄이다.\n확실하지 않은 채로 바꾸지 마라 — 할 일은 분명한데 대상이 둘 이상으로 읽히면 clarify 로 후보를 내라.\n「그 식당」「거기」「방금 바꾼 거」처럼 가리키는 말은 직전 대화와 변경 이력에서 찾는다.\n화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다.",
+      "user": "일정 목록:\ni1 | 1일차(첫날) 03-04 09:00 | 활동 · 그날 활동 1번째 | 창덕궁 산책\ni2 | 1일차(첫날) 03-04 15:00 | 활동 · 그날 활동 2번째 | 국립중앙박물관 관람\ni3 | 2일차(마지막 날) 03-05 13:00 | 식당 · 그날 식당 1번째 · 점심 | 둘째 날 한식 점심\n\n바뀐 이력(아래가 최근):\n(없음)\n\n직전 대화:\n(없음)\n\n화면에서 고른 일정: none\n\n고객 문장: 둘째 날 한식 점심은 언제 시작하나요?",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "apply_change",
+              "propose_alternatives",
+              "rollback",
+              "redo",
+              "answer_fact",
+              "ask_policy",
+              "report_delay",
+              "report_closed",
+              "clarify",
+              "other"
+            ]
+          },
+          "target_item": {
+            "type": "string",
+            "enum": [
+              "i1",
+              "i2",
+              "i3",
+              "none"
+            ]
+          },
+          "target_change": {
+            "type": "string",
+            "enum": [
+              "none"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "enum": [
+              "detail",
+              "address",
+              "phone",
+              "hours",
+              "time",
+              "next",
+              "booking",
+              "day",
+              "move",
+              "route_here",
+              "nearby_dining",
+              "nearby_activity",
+              "schedule",
+              "changeability",
+              "none"
+            ]
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "day": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "today",
+                  "tomorrow",
+                  "d1",
+                  "d2"
+                ]
+              },
+              "period": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "morning",
+                  "afternoon",
+                  "evening"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "activity",
+                  "dining",
+                  "lodging"
+                ]
+              }
+            },
+            "required": [
+              "day",
+              "period",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "apply_change",
+                    "propose_alternatives",
+                    "rollback",
+                    "redo",
+                    "answer_fact",
+                    "ask_policy",
+                    "report_delay",
+                    "report_closed",
+                    "other"
+                  ]
+                },
+                "target_item": {
+                  "type": "string",
+                  "enum": [
+                    "i1",
+                    "i2",
+                    "i3",
+                    "none"
+                  ]
+                },
+                "target_change": {
+                  "type": "string",
+                  "enum": [
+                    "none"
+                  ]
+                },
+                "fact": {
+                  "type": "string",
+                  "enum": [
+                    "detail",
+                    "address",
+                    "phone",
+                    "hours",
+                    "time",
+                    "next",
+                    "booking",
+                    "day",
+                    "move",
+                    "route_here",
+                    "nearby_dining",
+                    "nearby_activity",
+                    "schedule",
+                    "changeability",
+                    "none"
+                  ]
+                }
+              },
+              "required": [
+                "action",
+                "target_item",
+                "target_change",
+                "fact"
+              ]
+            },
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "action",
+          "target_item",
+          "target_change",
+          "fact",
+          "minutes",
+          "choices"
+        ]
+      },
+      "expected": {
+        "action": "answer_fact",
+        "fact": "time",
+        "target_item": "i3"
+      }
+    },
+    {
+      "key": "write",
+      "message": "둘째 날 한식 점심을 다른 식당으로 변경해 주세요.",
+      "system": "너는 여행 일정 서비스의 요청 해석기다. 고객 문장 하나를 읽고 할 일(action)과 대상을 고른다. 추측으로 채우지 말고, 할 일이나 대상이 분명하지 않으면 clarify.\n할 일(action):\n- apply_change: 일정을 다른 곳으로 바꿔 달라(「바꿔」「변경해」「다른 데로」「다른 걸로」).\n- propose_alternatives: 현재 일정 대신 갈 새로운 장소 후보를 찾아 달라. 후보 장소를 요청한 경우에만 쓴다. 기존 일정의 목록·상태·변경 가능 여부 조회에는 쓰지 않는다.\n- rollback: 앞서 바뀐 것을 원래대로 되돌려 달라(「원래대로」「되돌려」「이전 걸로」). target_change 에 되돌릴 변경 id — 문장이 어느 변경인지 말하지 않으면 (가장 최근) 표시가 붙은 변경.\n- redo: 되돌렸던 변경을 다시 적용해 달라(「다시 진행」「다시 바꿔」). target_change 에 다시 적용할 변경 id.\n- answer_fact: 이 여행의 사실을 묻는다 — fact 에 **물은 것 하나**를 고른다(가장 좁은 칸):\n  address(위치 — 「어디 있어」「어딨어」「어디야」「어디쯤」「위치」「주소」) · phone(전화·연락처) ·\n  hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·\n  booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·\n  detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).\n  ★현재 위치 — 출발지가 **「여기」「지금 위치」「내 위치」「지금 있는 곳」**이면: route_here(거기서 목적지까지 가는 길 · 걸리는 시간, target_item = 도착지 ·\n  말하지 않으면 none) · nearby_dining(근처 식당) · nearby_activity(근처 볼거리 · 갈 곳). 예: 「지금 있는 곳에서 금용문 가는 길」「지금 위치에서 다음 일정까지 얼마나 걸려」는 route_here.\n  출발지도 일정의 곳 이름(「경복궁에서 금용문까지」)이면 move 다.\n  애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.\n  이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.\n- ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).\n- report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).\n- report_closed: 장소가 닫았다고 알린다.\n- clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**\n  1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나\n  직전 대화로 정할 수 없으면 clarify.\n- other: 여행 일정과 무관한 말 · 인사 · 이 서비스에 대한 질문(「뭘 할 수 있어?」「너는 누구야」).\n먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.\n목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,\n변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.\n변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.\n「오후 일정 중 바꿀 수 있는 일정이 뭐가 있어?」는 변경 실행이나 다른 장소 추천이 아니다.\n이 두 사실은 target_item=none, choices=[]와 query={day,period,kind}를 반드시 낸다.\nday는 all(날짜 미지정·전체 여행), today, tomorrow, d1…(여행 N일차).\nperiod는 all, morning(00~12시), afternoon(12~18시), evening(18~24시).\nkind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 내며 다른 시간대 대상을 고르지 않는다.\n그 밖의 사실·실제 변경 요청에는 query를 내지 않는다. 예: 「오후 일정을 바꿔 줘」는 실제 변경 요청이다.\n대상(target_item)은 일정 목록의 id 중 하나이거나 none. 목록의 「그날 식당 N번째」「그날 활동 N번째」「끼니」를 그대로 써라 —\n「둘째 날 두 번째 활동」은 2일차 줄 중 「그날 활동 2번째」인 줄이다. 날을 말하지 않은 「첫/두 번째」는 1일차에서 찾는다.\n아침·점심·저녁은 그 끼니 표시가 붙은 식당이다. 「마지막 일정」은 목록의 마지막 줄이다.\n확실하지 않은 채로 바꾸지 마라 — 할 일은 분명한데 대상이 둘 이상으로 읽히면 clarify 로 후보를 내라.\n「그 식당」「거기」「방금 바꾼 거」처럼 가리키는 말은 직전 대화와 변경 이력에서 찾는다.\n화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다.",
+      "user": "일정 목록:\ni1 | 1일차(첫날) 03-04 09:00 | 활동 · 그날 활동 1번째 | 창덕궁 산책\ni2 | 1일차(첫날) 03-04 15:00 | 활동 · 그날 활동 2번째 | 국립중앙박물관 관람\ni3 | 2일차(마지막 날) 03-05 13:00 | 식당 · 그날 식당 1번째 · 점심 | 둘째 날 한식 점심\n\n바뀐 이력(아래가 최근):\n(없음)\n\n직전 대화:\n(없음)\n\n화면에서 고른 일정: none\n\n고객 문장: 둘째 날 한식 점심을 다른 식당으로 변경해 주세요.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "apply_change",
+              "propose_alternatives",
+              "rollback",
+              "redo",
+              "answer_fact",
+              "ask_policy",
+              "report_delay",
+              "report_closed",
+              "clarify",
+              "other"
+            ]
+          },
+          "target_item": {
+            "type": "string",
+            "enum": [
+              "i1",
+              "i2",
+              "i3",
+              "none"
+            ]
+          },
+          "target_change": {
+            "type": "string",
+            "enum": [
+              "none"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "enum": [
+              "detail",
+              "address",
+              "phone",
+              "hours",
+              "time",
+              "next",
+              "booking",
+              "day",
+              "move",
+              "route_here",
+              "nearby_dining",
+              "nearby_activity",
+              "schedule",
+              "changeability",
+              "none"
+            ]
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "day": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "today",
+                  "tomorrow",
+                  "d1",
+                  "d2"
+                ]
+              },
+              "period": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "morning",
+                  "afternoon",
+                  "evening"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "activity",
+                  "dining",
+                  "lodging"
+                ]
+              }
+            },
+            "required": [
+              "day",
+              "period",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "apply_change",
+                    "propose_alternatives",
+                    "rollback",
+                    "redo",
+                    "answer_fact",
+                    "ask_policy",
+                    "report_delay",
+                    "report_closed",
+                    "other"
+                  ]
+                },
+                "target_item": {
+                  "type": "string",
+                  "enum": [
+                    "i1",
+                    "i2",
+                    "i3",
+                    "none"
+                  ]
+                },
+                "target_change": {
+                  "type": "string",
+                  "enum": [
+                    "none"
+                  ]
+                },
+                "fact": {
+                  "type": "string",
+                  "enum": [
+                    "detail",
+                    "address",
+                    "phone",
+                    "hours",
+                    "time",
+                    "next",
+                    "booking",
+                    "day",
+                    "move",
+                    "route_here",
+                    "nearby_dining",
+                    "nearby_activity",
+                    "schedule",
+                    "changeability",
+                    "none"
+                  ]
+                }
+              },
+              "required": [
+                "action",
+                "target_item",
+                "target_change",
+                "fact"
+              ]
+            },
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "action",
+          "target_item",
+          "target_change",
+          "fact",
+          "minutes",
+          "choices"
+        ]
+      },
+      "expected": {
+        "action": "apply_change",
+        "target_item": "i3"
+      }
+    },
+    {
+      "key": "policy",
+      "message": "둘째 날 한식 점심 예약 취소 수수료가 궁금합니다.",
+      "system": "너는 여행 일정 서비스의 요청 해석기다. 고객 문장 하나를 읽고 할 일(action)과 대상을 고른다. 추측으로 채우지 말고, 할 일이나 대상이 분명하지 않으면 clarify.\n할 일(action):\n- apply_change: 일정을 다른 곳으로 바꿔 달라(「바꿔」「변경해」「다른 데로」「다른 걸로」).\n- propose_alternatives: 현재 일정 대신 갈 새로운 장소 후보를 찾아 달라. 후보 장소를 요청한 경우에만 쓴다. 기존 일정의 목록·상태·변경 가능 여부 조회에는 쓰지 않는다.\n- rollback: 앞서 바뀐 것을 원래대로 되돌려 달라(「원래대로」「되돌려」「이전 걸로」). target_change 에 되돌릴 변경 id — 문장이 어느 변경인지 말하지 않으면 (가장 최근) 표시가 붙은 변경.\n- redo: 되돌렸던 변경을 다시 적용해 달라(「다시 진행」「다시 바꿔」). target_change 에 다시 적용할 변경 id.\n- answer_fact: 이 여행의 사실을 묻는다 — fact 에 **물은 것 하나**를 고른다(가장 좁은 칸):\n  address(위치 — 「어디 있어」「어딨어」「어디야」「어디쯤」「위치」「주소」) · phone(전화·연락처) ·\n  hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·\n  booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·\n  detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).\n  ★현재 위치 — 출발지가 **「여기」「지금 위치」「내 위치」「지금 있는 곳」**이면: route_here(거기서 목적지까지 가는 길 · 걸리는 시간, target_item = 도착지 ·\n  말하지 않으면 none) · nearby_dining(근처 식당) · nearby_activity(근처 볼거리 · 갈 곳). 예: 「지금 있는 곳에서 금용문 가는 길」「지금 위치에서 다음 일정까지 얼마나 걸려」는 route_here.\n  출발지도 일정의 곳 이름(「경복궁에서 금용문까지」)이면 move 다.\n  애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.\n  이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.\n- ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).\n- report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).\n- report_closed: 장소가 닫았다고 알린다.\n- clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**\n  1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나\n  직전 대화로 정할 수 없으면 clarify.\n- other: 여행 일정과 무관한 말 · 인사 · 이 서비스에 대한 질문(「뭘 할 수 있어?」「너는 누구야」).\n먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.\n목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,\n변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.\n변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.\n「오후 일정 중 바꿀 수 있는 일정이 뭐가 있어?」는 변경 실행이나 다른 장소 추천이 아니다.\n이 두 사실은 target_item=none, choices=[]와 query={day,period,kind}를 반드시 낸다.\nday는 all(날짜 미지정·전체 여행), today, tomorrow, d1…(여행 N일차).\nperiod는 all, morning(00~12시), afternoon(12~18시), evening(18~24시).\nkind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 내며 다른 시간대 대상을 고르지 않는다.\n그 밖의 사실·실제 변경 요청에는 query를 내지 않는다. 예: 「오후 일정을 바꿔 줘」는 실제 변경 요청이다.\n대상(target_item)은 일정 목록의 id 중 하나이거나 none. 목록의 「그날 식당 N번째」「그날 활동 N번째」「끼니」를 그대로 써라 —\n「둘째 날 두 번째 활동」은 2일차 줄 중 「그날 활동 2번째」인 줄이다. 날을 말하지 않은 「첫/두 번째」는 1일차에서 찾는다.\n아침·점심·저녁은 그 끼니 표시가 붙은 식당이다. 「마지막 일정」은 목록의 마지막 줄이다.\n확실하지 않은 채로 바꾸지 마라 — 할 일은 분명한데 대상이 둘 이상으로 읽히면 clarify 로 후보를 내라.\n「그 식당」「거기」「방금 바꾼 거」처럼 가리키는 말은 직전 대화와 변경 이력에서 찾는다.\n화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다.",
+      "user": "일정 목록:\ni1 | 1일차(첫날) 03-04 09:00 | 활동 · 그날 활동 1번째 | 창덕궁 산책\ni2 | 1일차(첫날) 03-04 15:00 | 활동 · 그날 활동 2번째 | 국립중앙박물관 관람\ni3 | 2일차(마지막 날) 03-05 13:00 | 식당 · 그날 식당 1번째 · 점심 | 둘째 날 한식 점심\n\n바뀐 이력(아래가 최근):\n(없음)\n\n직전 대화:\n(없음)\n\n화면에서 고른 일정: none\n\n고객 문장: 둘째 날 한식 점심 예약 취소 수수료가 궁금합니다.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "apply_change",
+              "propose_alternatives",
+              "rollback",
+              "redo",
+              "answer_fact",
+              "ask_policy",
+              "report_delay",
+              "report_closed",
+              "clarify",
+              "other"
+            ]
+          },
+          "target_item": {
+            "type": "string",
+            "enum": [
+              "i1",
+              "i2",
+              "i3",
+              "none"
+            ]
+          },
+          "target_change": {
+            "type": "string",
+            "enum": [
+              "none"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "enum": [
+              "detail",
+              "address",
+              "phone",
+              "hours",
+              "time",
+              "next",
+              "booking",
+              "day",
+              "move",
+              "route_here",
+              "nearby_dining",
+              "nearby_activity",
+              "schedule",
+              "changeability",
+              "none"
+            ]
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "day": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "today",
+                  "tomorrow",
+                  "d1",
+                  "d2"
+                ]
+              },
+              "period": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "morning",
+                  "afternoon",
+                  "evening"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "activity",
+                  "dining",
+                  "lodging"
+                ]
+              }
+            },
+            "required": [
+              "day",
+              "period",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "apply_change",
+                    "propose_alternatives",
+                    "rollback",
+                    "redo",
+                    "answer_fact",
+                    "ask_policy",
+                    "report_delay",
+                    "report_closed",
+                    "other"
+                  ]
+                },
+                "target_item": {
+                  "type": "string",
+                  "enum": [
+                    "i1",
+                    "i2",
+                    "i3",
+                    "none"
+                  ]
+                },
+                "target_change": {
+                  "type": "string",
+                  "enum": [
+                    "none"
+                  ]
+                },
+                "fact": {
+                  "type": "string",
+                  "enum": [
+                    "detail",
+                    "address",
+                    "phone",
+                    "hours",
+                    "time",
+                    "next",
+                    "booking",
+                    "day",
+                    "move",
+                    "route_here",
+                    "nearby_dining",
+                    "nearby_activity",
+                    "schedule",
+                    "changeability",
+                    "none"
+                  ]
+                }
+              },
+              "required": [
+                "action",
+                "target_item",
+                "target_change",
+                "fact"
+              ]
+            },
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "action",
+          "target_item",
+          "target_change",
+          "fact",
+          "minutes",
+          "choices"
+        ]
+      },
+      "expected": {
+        "action": "ask_policy",
+        "target_item": "i3"
+      }
+    },
+    {
+      "key": "out_of_scope",
+      "message": "여행 말고 법인세 신고서를 대신 작성해 주세요.",
+      "system": "너는 여행 일정 서비스의 요청 해석기다. 고객 문장 하나를 읽고 할 일(action)과 대상을 고른다. 추측으로 채우지 말고, 할 일이나 대상이 분명하지 않으면 clarify.\n할 일(action):\n- apply_change: 일정을 다른 곳으로 바꿔 달라(「바꿔」「변경해」「다른 데로」「다른 걸로」).\n- propose_alternatives: 현재 일정 대신 갈 새로운 장소 후보를 찾아 달라. 후보 장소를 요청한 경우에만 쓴다. 기존 일정의 목록·상태·변경 가능 여부 조회에는 쓰지 않는다.\n- rollback: 앞서 바뀐 것을 원래대로 되돌려 달라(「원래대로」「되돌려」「이전 걸로」). target_change 에 되돌릴 변경 id — 문장이 어느 변경인지 말하지 않으면 (가장 최근) 표시가 붙은 변경.\n- redo: 되돌렸던 변경을 다시 적용해 달라(「다시 진행」「다시 바꿔」). target_change 에 다시 적용할 변경 id.\n- answer_fact: 이 여행의 사실을 묻는다 — fact 에 **물은 것 하나**를 고른다(가장 좁은 칸):\n  address(위치 — 「어디 있어」「어딨어」「어디야」「어디쯤」「위치」「주소」) · phone(전화·연락처) ·\n  hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·\n  booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·\n  detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).\n  ★현재 위치 — 출발지가 **「여기」「지금 위치」「내 위치」「지금 있는 곳」**이면: route_here(거기서 목적지까지 가는 길 · 걸리는 시간, target_item = 도착지 ·\n  말하지 않으면 none) · nearby_dining(근처 식당) · nearby_activity(근처 볼거리 · 갈 곳). 예: 「지금 있는 곳에서 금용문 가는 길」「지금 위치에서 다음 일정까지 얼마나 걸려」는 route_here.\n  출발지도 일정의 곳 이름(「경복궁에서 금용문까지」)이면 move 다.\n  애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.\n  이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.\n- ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).\n- report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).\n- report_closed: 장소가 닫았다고 알린다.\n- clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**\n  1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나\n  직전 대화로 정할 수 없으면 clarify.\n- other: 여행 일정과 무관한 말 · 인사 · 이 서비스에 대한 질문(「뭘 할 수 있어?」「너는 누구야」).\n먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.\n목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,\n변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.\n변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.\n「오후 일정 중 바꿀 수 있는 일정이 뭐가 있어?」는 변경 실행이나 다른 장소 추천이 아니다.\n이 두 사실은 target_item=none, choices=[]와 query={day,period,kind}를 반드시 낸다.\nday는 all(날짜 미지정·전체 여행), today, tomorrow, d1…(여행 N일차).\nperiod는 all, morning(00~12시), afternoon(12~18시), evening(18~24시).\nkind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 내며 다른 시간대 대상을 고르지 않는다.\n그 밖의 사실·실제 변경 요청에는 query를 내지 않는다. 예: 「오후 일정을 바꿔 줘」는 실제 변경 요청이다.\n대상(target_item)은 일정 목록의 id 중 하나이거나 none. 목록의 「그날 식당 N번째」「그날 활동 N번째」「끼니」를 그대로 써라 —\n「둘째 날 두 번째 활동」은 2일차 줄 중 「그날 활동 2번째」인 줄이다. 날을 말하지 않은 「첫/두 번째」는 1일차에서 찾는다.\n아침·점심·저녁은 그 끼니 표시가 붙은 식당이다. 「마지막 일정」은 목록의 마지막 줄이다.\n확실하지 않은 채로 바꾸지 마라 — 할 일은 분명한데 대상이 둘 이상으로 읽히면 clarify 로 후보를 내라.\n「그 식당」「거기」「방금 바꾼 거」처럼 가리키는 말은 직전 대화와 변경 이력에서 찾는다.\n화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다.",
+      "user": "일정 목록:\ni1 | 1일차(첫날) 03-04 09:00 | 활동 · 그날 활동 1번째 | 창덕궁 산책\ni2 | 1일차(첫날) 03-04 15:00 | 활동 · 그날 활동 2번째 | 국립중앙박물관 관람\ni3 | 2일차(마지막 날) 03-05 13:00 | 식당 · 그날 식당 1번째 · 점심 | 둘째 날 한식 점심\n\n바뀐 이력(아래가 최근):\n(없음)\n\n직전 대화:\n(없음)\n\n화면에서 고른 일정: none\n\n고객 문장: 여행 말고 법인세 신고서를 대신 작성해 주세요.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "apply_change",
+              "propose_alternatives",
+              "rollback",
+              "redo",
+              "answer_fact",
+              "ask_policy",
+              "report_delay",
+              "report_closed",
+              "clarify",
+              "other"
+            ]
+          },
+          "target_item": {
+            "type": "string",
+            "enum": [
+              "i1",
+              "i2",
+              "i3",
+              "none"
+            ]
+          },
+          "target_change": {
+            "type": "string",
+            "enum": [
+              "none"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "enum": [
+              "detail",
+              "address",
+              "phone",
+              "hours",
+              "time",
+              "next",
+              "booking",
+              "day",
+              "move",
+              "route_here",
+              "nearby_dining",
+              "nearby_activity",
+              "schedule",
+              "changeability",
+              "none"
+            ]
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "day": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "today",
+                  "tomorrow",
+                  "d1",
+                  "d2"
+                ]
+              },
+              "period": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "morning",
+                  "afternoon",
+                  "evening"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "activity",
+                  "dining",
+                  "lodging"
+                ]
+              }
+            },
+            "required": [
+              "day",
+              "period",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "apply_change",
+                    "propose_alternatives",
+                    "rollback",
+                    "redo",
+                    "answer_fact",
+                    "ask_policy",
+                    "report_delay",
+                    "report_closed",
+                    "other"
+                  ]
+                },
+                "target_item": {
+                  "type": "string",
+                  "enum": [
+                    "i1",
+                    "i2",
+                    "i3",
+                    "none"
+                  ]
+                },
+                "target_change": {
+                  "type": "string",
+                  "enum": [
+                    "none"
+                  ]
+                },
+                "fact": {
+                  "type": "string",
+                  "enum": [
+                    "detail",
+                    "address",
+                    "phone",
+                    "hours",
+                    "time",
+                    "next",
+                    "booking",
+                    "day",
+                    "move",
+                    "route_here",
+                    "nearby_dining",
+                    "nearby_activity",
+                    "schedule",
+                    "changeability",
+                    "none"
+                  ]
+                }
+              },
+              "required": [
+                "action",
+                "target_item",
+                "target_change",
+                "fact"
+              ]
+            },
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "action",
+          "target_item",
+          "target_change",
+          "fact",
+          "minutes",
+          "choices"
+        ]
+      },
+      "expected": {
+        "action": "other",
+        "target_item": "none",
+        "fact": "none"
+      }
+    }
+  ],
+  "prompt_sha256": "a8af1e8f66f41e4805e32f1b55f12370892e7bbaf72319471926de243406eec3",
+  "scope": "separate_fixed_targeted_developer_holdout_not_human_reviewed_product_holdout",
+  "acceptance": "8/8 canonical decisions, zero read-as-write and zero out-of-scope target; no tuning on this set",
+  "weights": "same resident publisher QAT original; no our finetuning",
+  "initial_development_cases": 3,
+  "version": 2,
+  "pre_execution_correction": "Use exact frozen scoped candidate action enums; exclude unreviewed service-help changes. V1 preserved, never executed."
+}

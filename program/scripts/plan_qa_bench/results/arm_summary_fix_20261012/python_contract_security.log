@@ -1,0 +1,17 @@
+........................................................................ [ 18%]
+........................................................................ [ 37%]
+........................................................................ [ 56%]
+........................................................................ [ 74%]
+........................................................................ [ 93%]
+.........................                                                [100%]
+============================== warnings summary ===============================
+<unknown>:352
+tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly[devtools/judgment_log.py]
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+tests/contract/test_retired_domain_assets.py::test_current_runtime_and_business_fixtures_do_not_use_retired_assets
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\devtools\judgment_log.py:352: SyntaxWarning: invalid escape sequence '\d'
+    """기본 로그 자리 `<PROCESSED>/mobility/logs`. ☆`[73 후속 · 3-5]` 자료 폴더가 정해지지 않았거나(unset · 자리표시 /data)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+385 passed, 3 warnings in 62.47s (0:01:02)

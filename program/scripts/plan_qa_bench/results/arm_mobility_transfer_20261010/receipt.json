@@ -1,0 +1,9 @@
+{
+  "observed_at": "2026-10-09T16:22:33.330380+00:00",
+  "verified_files": 67,
+  "total_files": 67,
+  "verified_bytes": 203806783,
+  "archive_sha256": "677983e140d5bb574a4213e95b4151c8fb99051d1d605d8591212ba8e21f16be",
+  "backup_relative": "mobility/_backup/20261009T162232Z_before_approved_transfer",
+  "approval": "human_explicit_transfer_67_files_203806783_bytes_to_existing_oracle_arm"
+}

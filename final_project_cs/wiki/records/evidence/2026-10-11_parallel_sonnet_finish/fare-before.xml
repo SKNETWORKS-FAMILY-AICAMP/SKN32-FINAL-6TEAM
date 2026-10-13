@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="18" skipped="0" tests="23" time="3.920" timestamp="2026-10-11T19:28:42.247894+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_daytime_following_bus_uses_full_boarding_window[755-1550]" time="0.064" /><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_daytime_following_bus_uses_full_boarding_window[756-None]" time="0.003"><failure message="AssertionError: assert 1550 == None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C060F20&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">board = 756, expected = None
+
+    @pytest.mark.parametrize('board,expected', [(755, 1550), (756, None), (760, None)])
+    def test_daytime_following_bus_uses_full_boarding_window(board, expected):
+        v, legs, results = rail_then_bus(board)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) == expected
+E       AssertionError: assert 1550 == None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C060F20&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:23: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_daytime_following_bus_uses_full_boarding_window[760-None]" time="0.004"><failure message="AssertionError: assert 1550 == None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C259190&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">board = 760, expected = None
+
+    @pytest.mark.parametrize('board,expected', [(755, 1550), (756, None), (760, None)])
+    def test_daytime_following_bus_uses_full_boarding_window(board, expected):
+        v, legs, results = rail_then_bus(board)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) == expected
+E       AssertionError: assert 1550 == None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C259190&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:23: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_night_boundaries_are_checked_for_every_part_of_the_interval[1260-1220-None]" time="0.017"><failure message="AssertionError: assert 1550 == None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C259CA0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=1210, arrive_min=1220, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">board = 1260, previous = 1220, expected = None
+
+    @pytest.mark.parametrize('board,previous,expected', [
+        (1260, 1220, None),   # 20:55~21:05의 주간 쪽은 이미30분을 넘는다.
+        (1260, 1231, None),   # 20:59~21:00 사이에30분을 넘는 부분이 있다.
+        (1260, 1230, 1550),   # 20:55~21:00은30분 이내, 이후는60분 이내다.
+        (420, 365, None),     # 06:55~07:05:07시부터주간30분으로 줄어든다.
+        (415, 360, None),     # 구간 끝07:00도 주간이다.
+        (410, 360, 1550),     # 06:45~06:55는야간60분 안이다.
+        (1450, 1400, 1550),   # 자정을 넘겨도 야간창을 유지한다.
+    ])
+    def test_night_boundaries_are_checked_for_every_part_of_the_interval(board, previous, expected):
+        v, legs, results = rail_then_bus(board, previous)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) == expected
+E       AssertionError: assert 1550 == None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C259CA0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=1210, arrive_min=1220, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:39: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_night_boundaries_are_checked_for_every_part_of_the_interval[1260-1231-None]" time="0.004"><failure message="AssertionError: assert 1550 == None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C25A7B0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=1221, arrive_min=1231, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">board = 1260, previous = 1231, expected = None
+
+    @pytest.mark.parametrize('board,previous,expected', [
+        (1260, 1220, None),   # 20:55~21:05의 주간 쪽은 이미30분을 넘는다.
+        (1260, 1231, None),   # 20:59~21:00 사이에30분을 넘는 부분이 있다.
+        (1260, 1230, 1550),   # 20:55~21:00은30분 이내, 이후는60분 이내다.
+        (420, 365, None),     # 06:55~07:05:07시부터주간30분으로 줄어든다.
+        (415, 360, None),     # 구간 끝07:00도 주간이다.
+        (410, 360, 1550),     # 06:45~06:55는야간60분 안이다.
+        (1450, 1400, 1550),   # 자정을 넘겨도 야간창을 유지한다.
+    ])
+    def test_night_boundaries_are_checked_for_every_part_of_the_interval(board, previous, expected):
+        v, legs, results = rail_then_bus(board, previous)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) == expected
+E       AssertionError: assert 1550 == None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C25A7B0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=1221, arrive_min=1231, wait_...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:39: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_night_boundaries_are_checked_for_every_part_of_the_interval[1260-1230-1550]" time="0.006" /><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_night_boundaries_are_checked_for_every_part_of_the_interval[420-365-None]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_night_boundaries_are_checked_for_every_part_of_the_interval[415-360-None]" time="0.003"><failure message="AssertionError: assert 1550 == None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C25B4D0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=350, arrive_min=360, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">board = 415, previous = 360, expected = None
+
+    @pytest.mark.parametrize('board,previous,expected', [
+        (1260, 1220, None),   # 20:55~21:05의 주간 쪽은 이미30분을 넘는다.
+        (1260, 1231, None),   # 20:59~21:00 사이에30분을 넘는 부분이 있다.
+        (1260, 1230, 1550),   # 20:55~21:00은30분 이내, 이후는60분 이내다.
+        (420, 365, None),     # 06:55~07:05:07시부터주간30분으로 줄어든다.
+        (415, 360, None),     # 구간 끝07:00도 주간이다.
+        (410, 360, 1550),     # 06:45~06:55는야간60분 안이다.
+        (1450, 1400, 1550),   # 자정을 넘겨도 야간창을 유지한다.
+    ])
+    def test_night_boundaries_are_checked_for_every_part_of_the_interval(board, previous, expected):
+        v, legs, results = rail_then_bus(board, previous)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) == expected
+E       AssertionError: assert 1550 == None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C25B4D0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=350, arrive_min=360, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:39: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_night_boundaries_are_checked_for_every_part_of_the_interval[410-360-1550]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_night_boundaries_are_checked_for_every_part_of_the_interval[1450-1400-1550]" time="0.003" /><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[None-10]" time="0.003"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C358260&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = None, term = 10
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C358260&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[-1-10]" time="0.004"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C3582F0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = -1, term = 10
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C3582F0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[11-10]" time="0.003"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C25B560&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = 11, term = 10
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C25B560&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[True-10]" time="0.003"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C258C20&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = True, term = 10
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C258C20&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[nan-10]" time="0.003"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C259D00&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = nan, term = 10
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C259D00&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[inf-10]" time="0.003"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C25A2D0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = inf, term = 10
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C25A2D0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[5-None]" time="0.003"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C35A390&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = 5, term = None
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C35A390&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[5-0]" time="0.003"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C35A8A0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = 5, term = 0
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C35A8A0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[5--1]" time="0.004"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C359370&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = 5, term = -1
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C359370&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[5-True]" time="0.005"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C359AF0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = 5, term = True
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C359AF0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_missing_or_invalid_boarding_width_keeps_upper_fare[5-inf]" time="0.003"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C3F20C0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">wait = 5, term = inf
+
+    @pytest.mark.parametrize('wait,term', [
+        (None, 10), (-1, 10), (11, 10), (True, 10), (float('nan'), 10),
+        (float('inf'), 10), (5, None), (5, 0), (5, -1), (5, True), (5, float('inf')),
+    ])
+    def test_missing_or_invalid_boarding_width_keeps_upper_fare(wait, term):
+        v, legs, results = rail_then_bus(board=740, wait=wait, term=term)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C3F20C0&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:48: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_boarding_interval_cannot_begin_before_previous_alighting" time="0.003"><failure message="AssertionError: assert 1550 is None&#10; +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C3F3C80&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])&#10; +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate">def test_boarding_interval_cannot_begin_before_previous_alighting():
+        v, legs, results = rail_then_bus(board=732)
+&gt;       assert O.mixed_fare_estimate(v, legs, results) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt;(&lt;app.domains.travel_ops.instances.mobility.engine.verify_time.Verifier object at 0x000001B83C3F3C80&gt;, [{'from': 'A', 'line': '09호선', 'mode': 'subway', 'to': 'C'}, {'from': '갑', 'from_sequence': 1, 'from_stop_id': 's1', 'mode': 'bus', ...}], [LegResult(idx=1, label='09호선 A→C', verdict='feasible', reason='', grade='확정', depart_min=720, arrive_min=730, wait_mi...정', relief=None, dropped={}, warnings=[], evidence=[], car=None, walk_min=None, code=None, worst=False, ride_src=None)])
+E        +    where &lt;function mixed_fare_estimate at 0x000001B83BF95E40&gt; = O.mixed_fare_estimate
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:54: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_transfer_boarding_interval_v1" name="test_upper_fare_is_published_when_discount_window_is_uncertain" time="0.056"><failure message="assert 1550 == 3050">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001B83C3F0E30&gt;
+
+    def test_upper_fare_is_published_when_discount_window_is_uncertain(monkeypatch):
+        from datetime import datetime
+        from .test_review_fixes_plan import PLACES
+        from app.domains.travel_ops.instances.mobility.engine import plan as P
+        from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime
+        v, legs, results = rail_then_bus()
+        planner = P.Planner(Runtime(v, timetable_built_at='controlled', rules_version='controlled', stats={}),
+                            modes=['bus', 'subway'])
+        option = {'eta_min': 50, 'uses': P.uses_of(legs), '_legs': legs, '_route': P.label_of(legs),
+                  '_start': 720, '_transfers': 1, '_n': 1, '_key': ('mixed', 0, 1), '_mixed': True,
+                  '_margin': 0, '_slack': 0, '_walk_min': 0, '_walk_m': 0, '_fare': None,
+                  '_severe': [], '_covered': False, '_lr': results, '_day_type': '평일'}
+        monkeypatch.setattr(planner, '_station_pairs', lambda *args: ([], [], []))
+        monkeypatch.setattr(planner, '_bus_direct', lambda *args: [])
+        monkeypatch.setattr(planner, '_bike_direct', lambda *args: ([], None))
+        monkeypatch.setattr(planner, '_mixed', lambda *args: [option])
+        got, why = planner.leg(PLACES[0], PLACES[1], datetime.fromisoformat('2026-10-05T12:50:00+09:00'),
+                               {}, True, 'controlled-transfer-window')
+        assert why is None
+        public = got[0]['options'][0]
+&gt;       assert public['fare_krw'] == 3050
+E       assert 1550 == 3050
+
+tests\unit\travel\mobility\test_transfer_boarding_interval_v1.py:77: AssertionError</failure></testcase></testsuite></testsuites>

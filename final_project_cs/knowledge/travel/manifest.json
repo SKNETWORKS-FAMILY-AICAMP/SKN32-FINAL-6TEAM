@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "tenant_id": "demo",
   "collection": "travel",
   "documents": [
@@ -63,5 +63,6 @@
       "file": "documents/t12_access_companion-conditions.md",
       "section_count": 11
     }
-  ]
+  ],
+  "reviewed_at": "2026-10-12T09:35:01.494871+09:00"
 }

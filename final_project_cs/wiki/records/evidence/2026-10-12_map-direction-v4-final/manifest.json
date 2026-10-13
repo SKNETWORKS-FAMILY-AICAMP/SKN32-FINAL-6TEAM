@@ -1,0 +1,177 @@
+[
+  {
+    "bytes": 244,
+    "path": "after-unit.log",
+    "sha256": "304AD2228797F54ABBF6806E89BFFBFE535D4748EDA7FB9B2753A382D2FC749A"
+  },
+  {
+    "bytes": 1398,
+    "path": "before-unit.log",
+    "sha256": "759CEA5AC9F583EB4A5F25CD0BCFAFA3F361307D8E8C6E3AE2E0FD1463065D47"
+  },
+  {
+    "bytes": 41420,
+    "path": "browser-final-results.json",
+    "sha256": "ED382F7F3FA7F3DD2C55F63258E82A0894FB5B32AD7658F476C12C210EBB22CA"
+  },
+  {
+    "bytes": 2590,
+    "path": "browser-final.log",
+    "sha256": "D9C673E0852DD71451E402BEA139AB3C822A9FC5B13550939A17F0158EFB0942"
+  },
+  {
+    "bytes": 575,
+    "path": "browser-final.ps1",
+    "sha256": "BC3597B8111691772C43040152594FDDA7D1C525AEF09D880C425C12E3D60DCA"
+  },
+  {
+    "bytes": 17320,
+    "path": "browser.log",
+    "sha256": "3DA34D41C1121E0D7549459776B269AD67A304D2A200C8883182596209B26E61"
+  },
+  {
+    "bytes": 557,
+    "path": "browser.ps1",
+    "sha256": "2A81C0135C3CBCCD35819400AD6E77BC6CCA32C1A7668BAAA820F0FA814D20DF"
+  },
+  {
+    "bytes": 72,
+    "path": "build-live-status.json",
+    "sha256": "1396F2FA4EB53486C898C577A5216F13EF89BAED72765672696E5D20E234A4A6"
+  },
+  {
+    "bytes": 1055,
+    "path": "build-live.log",
+    "sha256": "E8E651612D9A39289DA13B2723A3AD379CAD95B2A695E79F722DEA65F99E6BD2"
+  },
+  {
+    "bytes": 840,
+    "path": "build-live.ps1",
+    "sha256": "380778CAD482B2962F01257CE88706E02F4B49884F0E72C61E542927C23A2A20"
+  },
+  {
+    "bytes": 1021,
+    "path": "build.log",
+    "sha256": "D639EA3DC03199DDB0D36FBF6DF55D8B786C5A0E6EF8DCD961C7385EDF5CAA94"
+  },
+  {
+    "bytes": 62,
+    "path": "check-status.json",
+    "sha256": "A5710173499A650E03623C51A7243643908696599CBFF16C5AB2A44AAFD63E12"
+  },
+  {
+    "bytes": 1140,
+    "path": "check.ps1",
+    "sha256": "8EF01C4DCD8EA706DBCF4F63FDB7CC8D3C4CF21D68CA0B69AF08BA6680D60C55"
+  },
+  {
+    "bytes": 43952,
+    "path": "frame-proofs.json",
+    "sha256": "9175E721CC92064738BD50494D490C5E608B1651369B14E561AABFAE876ADCD8"
+  },
+  {
+    "bytes": 0,
+    "path": "lint-final.log",
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+  },
+  {
+    "bytes": 0,
+    "path": "lint.log",
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+  },
+  {
+    "bytes": 224617,
+    "path": "mockup-1280.png",
+    "sha256": "0F61F59A301DE1F42B5E996D0DF12C83765449F1327A87DBB841070DA6470C34"
+  },
+  {
+    "bytes": 127924,
+    "path": "mockup-375.png",
+    "sha256": "3D68AD63557B8A7F8AA2EC2AAD546F87CADD5EB8799DA4EF00AD154E25E335B6"
+  },
+  {
+    "bytes": 622,
+    "path": "mockup-check.json",
+    "sha256": "38BC56625E8C5A532B7770CAE501FCE3121FF4C3F081BD8E247464ECFF8001CC"
+  },
+  {
+    "bytes": 4000,
+    "path": "package-final.ps1",
+    "sha256": "75ECD05FF13EDAFF09C7768DB6776EB41C868737420C89E97335ADFB7C5AB334"
+  },
+  {
+    "bytes": 775,
+    "path": "source-match.json",
+    "sha256": "6095BAB46D50354AA650DAAC9F3B07DA3439BB1296575C1D8150CCE59B22BA06"
+  },
+  {
+    "bytes": 33,
+    "path": "static-final-status.json",
+    "sha256": "4375782CA4178D102F0C32629C2C33AAE25E8D01D5F5DA70A55D20DCDDD506CB"
+  },
+  {
+    "bytes": 706,
+    "path": "static-final.ps1",
+    "sha256": "3CB26FE3F4E6B183FE0588F95A242291D70AE023436CEA2274A09BDCC7B25A92"
+  },
+  {
+    "bytes": 0,
+    "path": "type-final.log",
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+  },
+  {
+    "bytes": 0,
+    "path": "type.log",
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+  },
+  {
+    "bytes": 43327,
+    "path": "unit-results.json",
+    "sha256": "B088829E6CFC1390F128A853FAAF4BBCB892BF8138A01AE38A71AA107B018645"
+  },
+  {
+    "bytes": 118,
+    "path": "unit.log",
+    "sha256": "EA4A99AF190B75CE0740A2191CD59AB25BF6D1026928E6A7A35F8ED4ABB77982"
+  },
+  {
+    "bytes": 1771,
+    "path": "verify-direction-mockup-v4.mjs",
+    "sha256": "475C0EFA25D8C52E26DDF7D95475319A7569E70F9A7FDDB29D5691E4E7BD3D24"
+  },
+  {
+    "bytes": 16695,
+    "path": "source/frontend/apps/web/src/features/map/map-geometry.test.ts",
+    "sha256": "5A989D4FEFDE2814C87898F22D8A4E8E2D25381254D5CBF76B64C5BEB77A6AAB"
+  },
+  {
+    "bytes": 13347,
+    "path": "source/frontend/apps/web/src/features/map/map-geometry.ts",
+    "sha256": "C035DB05A70825F9D80533D361A2A50B45142FB45E45FC2280C0A9A08CA695D3"
+  },
+  {
+    "bytes": 10749,
+    "path": "source/frontend/apps/web/tests/live/uiux-sonnet-map-reveal-20261012.spec.ts",
+    "sha256": "8CDC9F02E0DD08E041BBE2C0E453C9A2FF8577D80C23401BBE0F1CC40DE5F0BC"
+  },
+  {
+    "bytes": 15443,
+    "path": "_backup/2026-10-12_before-direction-fix/frontend/apps/web/src/features/map/map-geometry.test.ts",
+    "sha256": "A147D3E91723ACB0C985905220A771169B8084923C7187F368D26D3944CF971C"
+  },
+  {
+    "bytes": 11635,
+    "path": "_backup/2026-10-12_before-direction-fix/frontend/apps/web/src/features/map/map-geometry.ts",
+    "sha256": "ADCE81EA1EDA89D6810567EF6EC932324AECED2DCDFE20BC16ED30D6E8E89F48"
+  },
+  {
+    "bytes": 9296,
+    "path": "_backup/2026-10-12_before-direction-fix/frontend/apps/web/tests/live/uiux-sonnet-map-reveal-20261012.spec.ts",
+    "sha256": "B9B1009CCF85DA7CE8210D14F453EA0E98806536BF8E62C065BD048FFCFB795D"
+  },
+  {
+    "bytes": 56670,
+    "path": "_backup/2026-10-12_before-direction-fix/wiki/external/web-flow-2026-10-09.md",
+    "sha256": "BC0AA38E8FEC76AD0A1B70A0E5410CC6D5FEE948D5F37049ECB181C6ADD3B73B"
+  }
+]

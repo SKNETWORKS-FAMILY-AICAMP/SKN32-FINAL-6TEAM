@@ -1,0 +1,41 @@
+{
+  "files_verified": 20,
+  "files_total": 20,
+  "jobs": [
+    {
+      "job": "e4bqat_oos2_multi_items_bc_a1",
+      "rows": 835,
+      "expected": 835,
+      "unique": 835,
+      "unparsed": 2,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bbase_finch_s20261013_multi_items_bc_a1",
+      "rows": 835,
+      "expected": 835,
+      "unique": 835,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bqat_finch_s20261013_multi_items_bc_a1",
+      "rows": 835,
+      "expected": 835,
+      "unique": 835,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bbase_cosine_s20261013_multi_items_bc_a1",
+      "rows": 835,
+      "expected": 835,
+      "unique": 835,
+      "unparsed": 0,
+      "source_id_match": true
+    }
+  ],
+  "total_rows": 3340,
+  "total_expected": 3340,
+  "archive_sha256": "5e8e2174d3d5eb47c064105f1df8f4dbe1b4957d95dca088c55913fbba12337b"
+}

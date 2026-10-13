@@ -163,15 +163,15 @@ SCENARIOS["checkpoint-not-projection-v1"] = Scenario(
     objective="checkpoint 를 고쳐도 Case 가 안 바뀐다 — 권위 있는 상태는 customer_cases 하나다.",
     needs_db=True,
 )
-SCENARIOS["engine-serves-another-domain-v1"] = Scenario(
-    scenario_id="engine-serves-another-domain-v1",
-    title="같은 검증 엔진이 다른 도메인을 한 줄도 안 고치고 돌린다",
+SCENARIOS["engine-travel-policy-v2"] = Scenario(
+    scenario_id="engine-travel-policy-v2",
+    title="같은 검증 엔진에 별도 여행 정책을 주입한다",
     nodeid=(
-        "tests/architecture/test_engine_serves_another_domain.py"
-        "::test_refund_over_the_order_total_is_rejected"
+        "tests/architecture/test_engine_accepts_travel_policies.py"
+        "::test_refund_over_the_pass_payment_is_rejected"
     ),
     objective=(
-        "보스전용. 코어는 도메인을 모른다는 주장의 유일한 대조군이다. "
+        "보스전용. 여행 예약 정책과 다른 철도 패스 정책의 참조·금액 상한을 확인한다. "
         "선언만 갈아 끼우고 app/core/verification.py 는 그대로 쓴다."
     ),
     needs_db=False,

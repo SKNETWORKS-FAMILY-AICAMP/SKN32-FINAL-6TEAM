@@ -154,3 +154,4 @@ describe("server review atomic whole undo", () => {
     expect(second.actions.canUndo!()).toBe(false);
   });
 });
+

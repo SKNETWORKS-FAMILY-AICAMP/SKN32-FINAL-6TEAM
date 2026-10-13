@@ -1,0 +1,24 @@
+{
+  "cwd": "workspace root unless specified",
+  "executed": [
+    "python .tmp/mobility_complete_20261008/prepare_uturn_20261011.py",
+    "python .tmp/mobility_complete_20261008/audit_uturn_20261011.py > final_project_cs/wiki/records/evidence/2026-10-11_1515_단일방향_유턴금지/audit-replay.log 2>&1",
+    "python .tmp/mobility_complete_20261008/test_uturn_related_20261011.py > final_project_cs/wiki/records/evidence/2026-10-11_1515_단일방향_유턴금지/related-v1.log 2>&1",
+    "python .tmp/mobility_complete_20261008/replay_uturn_product_20261011.py > final_project_cs/wiki/records/evidence/2026-10-11_1515_단일방향_유턴금지/product-replay.log 2>&1",
+    "python .tmp/mobility_complete_20261008/check_uturn_scope_20261011.py > final_project_cs/wiki/records/evidence/2026-10-11_1515_단일방향_유턴금지/scope-validation.log 2>&1",
+    "python .tmp/mobility_complete_20261008/render_uturn_20261011.py",
+    "python .tmp/mobility_complete_20261008/publish_uturn_20261011.py",
+    "python -m ruff check final_project_cs/scripts/mobility/build_car_turn_policy_v1.py final_project_cs/tests/unit/travel/mobility/test_same_way_uturn_policy_v1.py"
+  ],
+  "actual_python": "C:/Users/playdata2/anaconda3/python.exe",
+  "limited_api": {
+    "calls": 0,
+    "usage_before": "unverified",
+    "usage_after": "unverified",
+    "remaining_before": "unverified",
+    "remaining_after": "unverified",
+    "reset_time": "unverified",
+    "shared_atomic_reservation": "not attempted; no limited API calls",
+    "reserve_fraction": 0.2
+  }
+}

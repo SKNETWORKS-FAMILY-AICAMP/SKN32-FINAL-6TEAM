@@ -1,0 +1,35 @@
+{
+  "created_at_utc": "2026-10-10T23:04:43.942362+00:00",
+  "purpose": "Diagnose real application structured-output failure using synthetic travel facts, never promote based on this diagnostic",
+  "unique_itineraries": 1,
+  "questions": 6,
+  "history_conditions": 2,
+  "budgets_abba": [
+    400,
+    800,
+    800,
+    400
+  ],
+  "calls_per_model": 48,
+  "models": [
+    "e4bbase_d3",
+    "e4bbase_finch_s20261014_d3",
+    "saluki_original_d3_a1"
+  ],
+  "training": [
+    "publisher Instruct only",
+    "our FINCH seed20261014 adapter",
+    "publisher release only"
+  ],
+  "scope": "GPU proxy models are not asserted to match unknown ARM merged-adapter lineage; no cross-machine speed claims",
+  "independent_holdout": false,
+  "adoption": false,
+  "payload_sha256": "0162d560348efc5b9a0f929c7e9a8198c82da41c71e79d717e95cca1e82ac93c",
+  "logic_tests": {
+    "passed": 3,
+    "total": 3
+  },
+  "stop_after_fixed_matrix": true,
+  "interpretation": "Compare within each model, retain all empty/invalid/truncated rows, inspect reasoning and finish_reason; token budget increase alone does not establish repair",
+  "next_if_success": "Separate exact ARM replay and full app regressions before resuming blocked profiles"
+}

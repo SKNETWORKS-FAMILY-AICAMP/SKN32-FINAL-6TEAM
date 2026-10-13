@@ -1,0 +1,48 @@
+
+[WebServer] (node:17904) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:3632) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:3632) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:7712) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:14876) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:24876) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:15392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:18728) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:25500) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:4272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:16104) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 7 tests using 1 worker
+
+(node:23876) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/7] tests\live\card-status-footer.spec.ts:10:1 › 확인 필요는 접힌 카드와 펼친 카드의 오른쪽 아래에 놓인다
+[2/7] tests\live\card-status-footer.spec.ts:31:1 › 시간 변경은 제목 옆 체크만 보이고 되돌리기는 펼친 카드 맨 아래 오른쪽에 남는다
+[3/7] tests\live\card-status-footer.spec.ts:64:3 › 출처는 한 줄로 접히고 키보드로 펼쳐지며 일차 전환 후 복귀한다 (no-preference)
+[4/7] tests\live\card-status-footer.spec.ts:64:3 › 출처는 한 줄로 접히고 키보드로 펼쳐지며 일차 전환 후 복귀한다 (reduce)
+[5/7] tests\live\card-status-footer.spec.ts:101:1 › 긴 일정 제목과 카드 상태는 휴대폰과 PC 화면에서 겹치지 않는다
+[6/7] tests\live\plan-focus.spec.ts:10:1 › 마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인다
+[7/7] tests\live\plan-focus.spec.ts:38:1 › 검증 중 마지막 일정은 목록 가운데에 따라오고 지도 마커도 함께 보인다
+  7 passed (1.7m)

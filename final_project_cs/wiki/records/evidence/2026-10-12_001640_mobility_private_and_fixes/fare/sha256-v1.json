@@ -1,0 +1,26 @@
+[
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py",
+    "sha256": "fbda9efed42f30dcaa6863e0b638e92f8e24f4fdac8a7cb698c5e7e344d23902"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "sha256": "329a00bf380c96a5ed7daca18a6db4d8fc0cfcbf201c00e1b282f683cd8ff9ff"
+  },
+  {
+    "path": "final_project_cs/tests/unit/travel/mobility/test_taxi_cost_components_v1.py",
+    "sha256": "a88dff10aa4261f1f2534306521a83b19d7de2392d60d0e09d50b28d5519bc4c"
+  },
+  {
+    "path": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_232451_taxi_cost_description\\car.py",
+    "sha256": "c95f6088f56771fa94b61a60e0d1b1f90a8a64213b73d74247cb2dfd0ff0bf66"
+  },
+  {
+    "path": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_232451_taxi_cost_description\\plan.py",
+    "sha256": "f38cb4f237e64db2b0ba7eefbd1e86515305c27c2a086bdc1bae361a9b979378"
+  },
+  {
+    "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json",
+    "sha256": "2176f1493a24e8c08aa39bed4c1fef70f7a3d6cbd58f11ddc36ad6a783083164"
+  }
+]

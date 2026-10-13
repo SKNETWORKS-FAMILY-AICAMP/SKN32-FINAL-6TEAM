@@ -1,0 +1,4 @@
+saluki_original_d3_a1 100 / 360
+saluki_original_d3_a1 200 / 360
+saluki_original_d3_a1 300 / 360
+{"saved": 360, "expected": 360, "parsed": 360, "errors": 0, "correct": 330, "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb", "memory_after_requests": {"limit": 30999998464, "used": 28642123776, "headroom": 2357874688}, "max_prompt_tokens": 2007, "smoke": false}

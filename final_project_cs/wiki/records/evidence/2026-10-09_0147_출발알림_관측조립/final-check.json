@@ -1,0 +1,42 @@
+{
+  "source_checks": [
+    {
+      "path": "app/composition.py",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/run_sweepers.py",
+      "unchanged": true
+    },
+    {
+      "path": "config/guardrails.yaml",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/components/team_hooks/legs.py",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/departure_revalidation.py",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/instances/mobility/wiring.py",
+      "unchanged": true
+    },
+    {
+      "path": "tests/unit/travel/test_departure_assembly_v1.py",
+      "unchanged": true
+    },
+    {
+      "path": "tests/scenario/test_departure_assembly_db_v1.py",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/mobility/build_readiness_visual_v11.py",
+      "unchanged": true
+    }
+  ],
+  "ruff_exit_code": 0,
+  "html_browser_render": "not_confirmed"
+}

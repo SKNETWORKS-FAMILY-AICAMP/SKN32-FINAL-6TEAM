@@ -1,0 +1,36 @@
+........................................................................ [ 27%]
+................................................s....................... [ 55%]
+....................F................................................... [ 83%]
+..........................................                               [100%]
+================================== FAILURES ===================================
+___________________ test_layer_directions_do_not_get_worse ____________________
+
+    def test_layer_directions_do_not_get_worse():
+        edges = _edges()
+        report = []
+        for name, callers, callees, ceiling, why in RULES:
+            pairs = sorted(pair for (src, dst), found in edges.items() if src in callers and dst in callees for pair in found)
+            now = len(pairs)
+            listing = "\n".join(f"      {src} → {module}" for src, module in pairs)
+            if now > ceiling:
+                report.append(f"  {name}: {now} > 상한 {ceiling} — 늘었다 ({why})\n{listing}")
+            elif now < ceiling:
+                report.append(f"  {name}: {now} < 상한 {ceiling} — 줄었다. 상한을 {now} 로 내린다\n{listing}")
+>       assert not report, "층끼리 부르는 방향:\n" + "\n".join(report)
+E       AssertionError: 층끼리 부르는 방향:
+E           domains → presentation: 4 > 상한 3 — 늘었다 (도메인의 HTTP 입구 셋(`delegation_api` · `trip_api` · `web_limits_api`)이 인증 의존(`Principal` · `require_scope`)을 `presentation/security.py` 에서 쓴다. 인증을 중립 자리로 옮겨야 0 이 된다)
+E               domains/travel_ops/entry/admin_simulation_api.py → app.presentation.admin_api
+E               domains/travel_ops/entry/delegation_api.py → app.presentation.security
+E               domains/travel_ops/entry/trip_api.py → app.presentation.security
+E               domains/travel_ops/modules/web_account/web_limits_api.py → app.presentation.security
+E       assert not ['  domains → presentation: 4 > 상한 3 — 늘었다 (도메인의 HTTP 입구 셋(`delegation_api` · `trip_api` · `web_limits_api`)이 인증 의존(`P...app.presentation.security\n      domains/travel_ops/modules/web_account/web_limits_api.py → app.presentation.security']
+
+tests\architecture\test_basement_layers.py:99: AssertionError
+============================== warnings summary ===============================
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+1 failed, 256 passed, 1 skipped, 1 warning in 72.60s (0:01:12)

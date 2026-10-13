@@ -92,7 +92,8 @@ test("알림 문장 속 https 주소는 채팅처럼 누를 수 있는 링크이
   const center = await openNotices(page);
   await center.getByRole("tab", { name: /받은 알림/ }).click();
   const list = center.getByRole("tabpanel");
-  const link = list.getByRole("link", { name: "https://plan.example/plan/x?t=abc" });
+  // `[2026-10-13 develop 병합]` 링크 글자는 사이트 이름만 보인다(role-manager ac3e5b0f — `linked-text.tsx` 「www. 뗀 호스트」). 가는 곳은 그대로 전체 주소다.
+  const link = list.getByRole("link", { name: "plan.example", exact: true });
   await expect(link).toHaveAttribute("href", "https://plan.example/plan/x?t=abc");
   await expect(link).toHaveAttribute("target", "_blank");
   await expect(list.getByRole("link", { name: /127\.0\.0\.1/ })).toHaveCount(0);

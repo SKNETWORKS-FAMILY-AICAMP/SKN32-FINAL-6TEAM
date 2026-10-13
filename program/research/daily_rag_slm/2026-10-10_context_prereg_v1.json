@@ -1,0 +1,105 @@
+{
+  "recorded_at_utc": "2026-10-10T01:11:57.663083+00:00",
+  "paper": "https://arxiv.org/html/2610.11132v1",
+  "hypothesis": "Original parent re-evaluation may recover normal/mixed request recognition lost after travel SFT without raising false picks",
+  "context_method": "original full prompt, raw reference response JSON string and fixed Korean instruction; no gold/pick/probability injection",
+  "source_response_variants": [
+    "cosine_s20261012",
+    "finch_s20261012",
+    "parent_control"
+  ],
+  "no_more_prompt_tuning_on_these_sets": true,
+  "development_only": true,
+  "independent_holdout": false,
+  "second_pass": "Gemma-4-E4B-it Q4_K_M publisher original",
+  "main_settings": {
+    "seed": 0,
+    "temperature": 0,
+    "enable_thinking": false,
+    "context": 4096,
+    "max_tokens": 16,
+    "threads": 4,
+    "gpu_layers": 99
+  },
+  "first_pass_reused": true,
+  "latency_scope": "second pass measured; sum of saved first+second is diagnostic only, not end-to-end resident dual-model latency",
+  "gates": {
+    "D3_normal_min": 0.95,
+    "D3_false_pick_max": 0.01,
+    "E_normal_min": 0.95,
+    "E_false_pick_max": 0.01,
+    "E_selection_loss_max_pp": 2,
+    "E_false_pick_increase_max_pp": 1,
+    "E_subtype_false_pick_max": 0.03,
+    "paired_requirement": "normal correct must not be below both corresponding SFT and parent-control on either suite; no increased false picks over corresponding SFT",
+    "repeat_condition": "only promising settings proceed to remaining two frozen seeds; independent reviewed holdout and real dual-pass latency before adoption"
+  },
+  "logic": {
+    "passed": 7,
+    "total": 7
+  },
+  "jobs": [
+    {
+      "id": "sac_cosine_s20261012_d3_a1",
+      "source_job": "e4bbase_cosine_s20261012_d3",
+      "source_prompts_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+      "source_answers_sha256": "81f0437c1dc68a498864878a8d2c8dddff0e57a729511e413ca28acb1cda0754",
+      "file": "cosine_s20261012_d3.json",
+      "prompt_sha256": "b8da020fa67d35b903829d9272c1f1c3b20a4223b454eb8a0aee3054b56b84dd",
+      "expected": 360,
+      "first_pass_unparsed_or_error": 0
+    },
+    {
+      "id": "sac_cosine_s20261012_mx_a1",
+      "source_job": "e4bbase_cosine_s20261012_mx",
+      "source_prompts_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+      "source_answers_sha256": "aeecc361c924590476ad349c85924a19b6578c0156389307faeb047b233954ae",
+      "file": "cosine_s20261012_mx.json",
+      "prompt_sha256": "853aeeb1ab53688c6a342fb45128422d69d8a8098140e7da29698a983fc8e611",
+      "expected": 4014,
+      "first_pass_unparsed_or_error": 0
+    },
+    {
+      "id": "sac_finch_s20261012_d3_a1",
+      "source_job": "e4bbase_finch_s20261012_d3",
+      "source_prompts_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+      "source_answers_sha256": "26b6e598d9fae5c97596ff93636ae774b89ec7d07648e888270d4a58cfca2440",
+      "file": "finch_s20261012_d3.json",
+      "prompt_sha256": "78f0543203044468e8c8ce7e2b54ab2c5dd104d1e3f14f9b9753c43c8002fa21",
+      "expected": 360,
+      "first_pass_unparsed_or_error": 0
+    },
+    {
+      "id": "sac_finch_s20261012_mx_a1",
+      "source_job": "e4bbase_finch_s20261012_mx",
+      "source_prompts_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+      "source_answers_sha256": "3eca3af56468cf89e3b6ebe1c48668d768745d9c2d7b139508013e62e86f73d9",
+      "file": "finch_s20261012_mx.json",
+      "prompt_sha256": "e77cb8a1821b3f650a67905d859e2217c4e4d6d9d4790754c91e17358590fd6c",
+      "expected": 4014,
+      "first_pass_unparsed_or_error": 0
+    },
+    {
+      "id": "sac_parent_control_d3_a1",
+      "source_job": "e4bbase_d3",
+      "source_prompts_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+      "source_answers_sha256": "d11e34627fb3a27a2ca9f5faf0718a5c4f415af63e3e478b1896a28217ec44f7",
+      "file": "parent_control_d3.json",
+      "prompt_sha256": "6886f515817c928e4b0dd67b7600a62253340e92c4aa9472f0f5707a6856917c",
+      "expected": 360,
+      "first_pass_unparsed_or_error": 2
+    },
+    {
+      "id": "sac_parent_control_mx_a1",
+      "source_job": "e4bbase_mx",
+      "source_prompts_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+      "source_answers_sha256": "541960a76220dd7a9a38863218718074c462f6182256c6b3f80babdbd72ee29f",
+      "file": "parent_control_mx.json",
+      "prompt_sha256": "c842ef4c7929f5c0e876b544c5200ff9c4f56e406c39c5e648515b10a6a6914f",
+      "expected": 4014,
+      "first_pass_unparsed_or_error": 1
+    }
+  ],
+  "expected_rows": 13122,
+  "product_adoption": false
+}

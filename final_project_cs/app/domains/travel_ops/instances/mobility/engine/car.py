@@ -18,7 +18,7 @@
 택시 요금 — rules taxi.fare 산식 그대로(15번 방). rules_check.py(저장소 밖 점검 · 82)의 taxi_fare 와 같은 식이고
   규칙 파일의 검산_예시 8건이 둘의 공통 정답이다(final_project_cs/tests/unit/travel/mobility/car_legs_v1.json 이 이 모듈로 다시 검산한다).
   병산: 프로파일 속도가 전환속도(15.72 km/h) 미만인 edge 는 시간요금(slow_s), 이상인 edge 는 거리요금(distance_m − slow_m).
-  요금은 미터 추정에 예산 여유(10%, 최소 1,000원)를 더한 예상액이다. 결제 상한은 아니다.
+  요금은 미터 추정에 설정된 차종별 예산 여유를 더한 예상액이다. 호출·옵션료는 미포함이며 결제 상한이 아니다.
   시계외 할증은 서울 경계 폴리곤이 없어 판정하지 않는다(out_of_city=None → 미적용 추정).
 """
 from __future__ import annotations
@@ -133,10 +133,15 @@ class CarGraph:
 
         ps = [pos(p) for p in sub]
         adv = sum(ps[i + 1][2] - ps[i][2] for i in range(len(ps) - 1))
-        return hw, adv >= 0, [q[1] for q in ps]
+        # 꼭짓점은 앞/뒤 세그먼트와 거리가 같다. 실제 이동 조각 중점으로 고른다.
+        mid = [pos(((a[0] + b[0]) / 2, (a[1] + b[1]) / 2))[1]
+               for a, b in zip(sub, sub[1:])]
+        return hw, adv >= 0, mid + [ps[-1][1]]
 
     def compute(self, route, depart, slow_threshold_kmh=None):
         """GraphHopper /route 응답 → 시각별 소요. 반환값에 좌표·edge 목록은 없다."""
+        if depart.tzinfo is not None:
+            depart = depart.astimezone(dt.timezone(dt.timedelta(hours=9)))
         path = route["paths"][0]
         pts = path["points"]["coordinates"]
         det = path["details"]["osm_way_id"]
@@ -161,7 +166,6 @@ class CarGraph:
             segtab = self.seg.get(way, {})
             for i in range(len(sub) - 1):
                 L = hav(sub[i], sub[i + 1])
-                dtp, h = self.daytype(t), t.hour
                 hw_i = rc_at[a + i] or hw
                 link = None
                 if segidx[i] is not None:
@@ -169,22 +173,34 @@ class CarGraph:
                         link = segtab.get((segidx[i] + k, d))
                         if link:
                             break
-                v = self.prof.get((link, dtp, h)) if link else None
-                if v:
-                    grade = "topis"
-                    links[link] += L
-                elif hw_i in CLASS_MAP:
-                    v = self.cf[CLASS_MAP[hw_i]]["mean_kmh"][dtp][h]
-                    grade = "class"
-                else:
-                    v = DEFAULT_KMH.get(hw_i, 20)
-                    grade = "default"
-                sec = L / max(v, 3.0) * 3.6
-                if slow_threshold_kmh is not None and v < slow_threshold_kmh:
-                    slow_s += sec                       # 병산 — 이 edge 는 시간요금(거리요금 대신)
-                    slow_m += L
-                t = t + dt.timedelta(seconds=sec)
-                cover[grade] += L
+                remaining = L
+                while remaining > 1e-8:
+                    dtp, h = self.daytype(t), t.hour
+                    v = self.prof.get((link, dtp, h)) if link else None
+                    if v is not None:
+                        grade = "topis"
+                    elif hw_i in CLASS_MAP:
+                        v = self.cf[CLASS_MAP[hw_i]]["mean_kmh"][dtp][h]
+                        grade = "class"
+                    else:
+                        v = DEFAULT_KMH.get(hw_i, 20)
+                        grade = "default"
+                    if (isinstance(v, bool) or not isinstance(v, (int, float))
+                            or not math.isfinite(v) or v <= 0):
+                        raise RouterDown("도로 속도 프로파일에 유효한 양수 속도가 필요합니다")
+                    boundary = t.replace(minute=0, second=0, microsecond=0) + dt.timedelta(hours=1)
+                    available = (boundary - t).total_seconds()
+                    required = remaining / v * 3.6
+                    sec = min(required, available)
+                    piece_m = remaining if required <= available else sec * v / 3.6
+                    if slow_threshold_kmh is not None and v < slow_threshold_kmh:
+                        slow_s += sec
+                        slow_m += piece_m
+                    if grade == "topis":
+                        links[link] += piece_m
+                    cover[grade] += piece_m
+                    remaining -= piece_m
+                    t = boundary if required >= available else t + dt.timedelta(seconds=sec)
                 n_edges += 1
         tot = sum(cover.values())
         top = sorted(links.items(), key=lambda kv: -kv[1])[:20]
@@ -274,11 +290,15 @@ def taxi_fare(fare, kind, dist_m, slow_s, hhmm, out_of_city=False):
     extra_m = max(0, dist_m - k["base_dist_m"]["value"])
     dist_won = math.ceil(extra_m / k["dist_unit_m"]["value"]) * k["dist_unit_won"]["value"]
     time_won = math.ceil((slow_s or 0) / k["time_unit_s"]["value"]) * k["time_unit_won"]["value"]
-    meter = base + dist_won + time_won
-    rate = taxi_rate(fare, kind, hhmm) + (k["out_of_city_rate"]["value"] if out_of_city else 0.0)
+    night = taxi_rate(fare, kind, hhmm)
+    rate = night + (k["out_of_city_rate"]["value"] if out_of_city else 0.0)
     rate = min(rate, k["max_combined_rate"]["value"])
     step = k["fare_step_won"]["value"]
-    return int(math.floor(meter * (1 + rate) / step + 0.5) * step)
+    night_key = ("23-02" if night == 0.4 else "22-23_02-04") if kind == "중형" else "22-04"
+    declared = k.get("night_base_fare_won", {}).get("value", {})
+    charged_base = declared.get(night_key, base * (1 + night)) if night else base
+    meter = charged_base + base * (rate - night) + (dist_won + time_won) * (1 + rate)
+    return int(math.floor(meter / step + 0.5) * step)
 
 
 # ── 구간 판정 서비스 ───────────────────────────────────────────────────────
@@ -296,6 +316,40 @@ def taxi_planning_fare(meter_won, toll_won=0, *, reserve_rate, minimum_reserve_w
     return meter_won + reserve + toll_won, reserve
 
 
+def taxi_fare_description(result):
+    """계획·출발 안내에 같은 요금 구성과 미포함 비용을 표시한다.
+
+    호출 서비스가 정하는 옵션료는 이 도로 모델의 입력이 아니다. 누락된
+    구성값이나 옵션료를 0원으로 채우지 않고 계산한 예산의 범위를 밝힌다.
+    """
+    fare = result.get("fare_won")
+    if fare is None:
+        return "예상 요금 계산 안 됨 · 호출·옵션료는 선택한 호출 서비스에서 별도 확인"
+    call = result.get('call_fee')
+    if isinstance(call,dict):
+        lo,hi=call['minimum_won'],call['maximum_won']
+        name='일반호출' if call['product_id']=='kakao_general' else '선택 상품'
+        fee_text=(f'{name} {hi:,}원(사전견적)' if call['actual_fee_known'] else
+                  f'{name} {lo:,}~{hi:,}원(상단반영)' if lo!=hi else f'{name} {hi:,}원')
+        components=[('미터 추정',result.get('meter_won')),
+                    ('예산 여유',result.get('planning_reserve_won')),
+                    ('통행료',result.get('toll_won'))]
+        detail=' + '.join(f'{label} {won:,}원' for label,won in components if won is not None)
+        detail=detail or '예산 여유 포함 · 구성 금액 미전달'
+        return f'예상 총예산 {fare:,}원: {detail} + {fee_text} · 실제 결제 상한 아님'
+    parts = [("미터 추정", result.get("meter_won")),
+             ("예산 여유", result.get("planning_reserve_won")),
+             ("통행료", result.get("toll_won"))]
+    detail = " + ".join(f"{name} {won:,}원" for name, won in parts if won is not None)
+    # 이전 모델 요약에는 예산 구성값이 없을 수 있다. 여유 금액을 역산하지 않는다.
+    detail = detail or "예산 여유 포함 · 구성 금액 미전달"
+    if result.get('option_fee_won') is not None:
+        return (f"예상 요금 {fare:,}원: {detail} + 옵션료 {result['option_fee_won']:,}원"
+                " · 확인 옵션료 포함 · 실제 결제 상한 아님")
+    return (f"예상 요금 {fare:,}원: {detail} · 호출·옵션료 미포함"
+            "·호출앱 별도 확인 · 실제 결제 상한 아님")
+
+
 class CarService:
     """그래프 + 라우터 + 규칙. Verifier 가 자동차/택시 구간과 택시 대안에 쓴다."""
 
@@ -311,9 +365,24 @@ class CarService:
 
     def leg(self, s, e, depart, taxi=False, kind="중형"):
         """s, e = (lng, lat) · depart = datetime. 반환: dict(경로 없음). 라우터가 없으면 RouterDown."""
+        if depart.tzinfo is not None:
+            depart = depart.astimezone(dt.timezone(dt.timedelta(hours=9)))
         thr = self.F[kind]["time_speed_threshold_kmh"]["value"] if taxi else None
         route = self.router.route(s, e)
         r = self.g.compute(route, depart, slow_threshold_kmh=thr)
+        paths = route.get('paths')
+        path = paths[0] if paths else {}
+        turn_data = path.get('turn_restrictions')
+        routing_evidence = None
+        if isinstance(turn_data, dict):
+            from copy import deepcopy
+            routing_evidence = {'turn_restrictions': {key: deepcopy(turn_data[key]) for key in
+                ('status', 'applied_relations', 'source_relations', 'excluded_candidate_relations', 'complete_road_rules')
+                if key in turn_data}}
+            if 'snap_selection' in turn_data:
+                routing_evidence['snap_selection'] = deepcopy(turn_data['snap_selection'])
+            if 'snap_m' in path:
+                routing_evidence['snap_m'] = deepcopy(path['snap_m'])
         del route                                   # 경로는 여기서 끝난다
         cov = r["coverage_pct"]
         warn = []
@@ -330,6 +399,8 @@ class CarService:
                "coverage_m": r["coverage_m"], "coverage_pct": cov, "n_edges": r["n_edges"],
                "links": r["links"], "n_links": r["n_links"],
                "source_id": [SOURCE_ID, GRAPH_SOURCE_ID], "warn": warn}
+        if routing_evidence is not None:
+            out['routing_evidence'] = routing_evidence
         if taxi:
             hhmm = f"{depart.hour:02d}:{depart.minute:02d}"
             toll = 0
@@ -351,7 +422,8 @@ class CarService:
                         "planning_reserve_rate": reserve_rate,
                         "toll_basis": toll_basis, "slow_s": r["slow_s"], "slow_m": r["slow_m"],
                         "night_rate": taxi_rate(self.F, kind, hhmm), "out_of_city": None,
-                        "fare_basis": f"예상 요금(예산 여유 {reserve:,}원 포함) · 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라짐"})
+                        "fare_basis": None})
+            out["fare_basis"] = taxi_fare_description(out)
         return out
 
 

@@ -1,0 +1,4 @@
+실행: node node_modules/typescript/bin/tsc --noEmit
+범위: 관리자웹앱, 임시 빌드 경로를 tsconfig/next-env에서 제거한 뒤
+표준 출력·오류: 없음
+도구에서 확인한 종료 코드: 0

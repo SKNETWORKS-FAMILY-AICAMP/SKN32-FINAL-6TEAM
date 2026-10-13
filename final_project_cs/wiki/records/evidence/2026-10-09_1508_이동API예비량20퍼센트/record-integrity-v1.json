@@ -1,0 +1,18 @@
+{
+  "created_at": "2026-10-09T15:08:55.004411+09:00",
+  "checks": {
+    "prompt": true,
+    "schedule": true,
+    "target": true,
+    "status": true,
+    "name": true
+  },
+  "files": {
+    "final_project_cs/wiki/records/reports/2026-10-09_1508_이동API예비량20퍼센트.md": "54fe1858ff38f4f1df355661b3e890030b5e961257d9fe103685735c54c66752",
+    "final_project_cs/wiki/log.md": "b502209ebef9d838af55cff327f3eb27ebb6279cbeec19796dd0ff495e7757ba",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1508_이동API예비량20퍼센트/saved-automation-v1.json": "4588f5f5932611bca9c128bfcb798a3d9d51efe6a719dc43f441d0165128affb",
+    "final_project_cs/wiki/_backup/2026-10-09_1508_이동API예비량20퍼센트/log.md": "de7889977941362ebb63ea4bde66b15325052d615ba5980c11d5c9927f473a4c"
+  },
+  "local_links_checked": 5,
+  "full_feature_completion": false
+}

@@ -1,0 +1,15 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___________ test_a_change_request_still_answers_with_what_happened ____________
+tests\e2e\test_web_api.py:398: in test_a_change_request_still_answers_with_what_happened
+    assert body["case_status"] == "resolved" and body["status"] == "adjusted", body
+E   AssertionError: {'answer': '\uc9c0\uae08 \uc77c\uc815 \uadf8\ub300\ub85c\ub3c4 \uad1c\ucc2e\uc544\uc694 \u2014 \ubc14\uafb8\uc9c0 \uc54a\uc558\uc5b4\uc694.', 'case_id': '3aaad13c-89d7-4ec9-a1cc-4fd3a5a12649', 'case_status': 'resolved', 'classification': {'intent': 'incident_report', 'issue_code': 'dining_hours'}, ...}
+E   assert ('resolved' == 'resolved'
+E     
+E       resolved and 'still_fits' == 'adjusted'
+E     
+E     - adjusted
+E     + still_fits)
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_api.py::test_a_change_request_still_answers_with_what_happened
+1 failed in 4.75s

@@ -1,0 +1,209 @@
+{
+  "files_verified": 72,
+  "files_total": 72,
+  "jobs": [
+    {
+      "job": "e4bbase_cosine_s20261013_d",
+      "rows": 2735,
+      "expected": 2735,
+      "unique": 2735,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bqat_cosine_s20261013_d",
+      "rows": 2735,
+      "expected": 2735,
+      "unique": 2735,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bbase_cosine_s20261013_d2",
+      "rows": 1000,
+      "expected": 1000,
+      "unique": 1000,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bqat_cosine_s20261013_d2",
+      "rows": 1000,
+      "expected": 1000,
+      "unique": 1000,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bbase_cosine_s20261013_h",
+      "rows": 1316,
+      "expected": 1316,
+      "unique": 1316,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bqat_cosine_s20261013_h",
+      "rows": 1316,
+      "expected": 1316,
+      "unique": 1316,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bbase_cosine_s20261013_mx",
+      "rows": 4014,
+      "expected": 4014,
+      "unique": 4014,
+      "unparsed": 0,
+      "source_id_match": true,
+      "source_kind_counts": {
+        "control": 2007,
+        "mixed": 2007
+      },
+      "normal": {
+        "correct": 930,
+        "total": 1033,
+        "false_pick": null
+      },
+      "none": {
+        "correct": 972,
+        "total": 974,
+        "false_pick": 2
+      }
+    },
+    {
+      "job": "e4bqat_cosine_s20261013_mx",
+      "rows": 4014,
+      "expected": 4014,
+      "unique": 4014,
+      "unparsed": 0,
+      "source_id_match": true,
+      "source_kind_counts": {
+        "control": 2007,
+        "mixed": 2007
+      },
+      "normal": {
+        "correct": 968,
+        "total": 1033,
+        "false_pick": null
+      },
+      "none": {
+        "correct": 972,
+        "total": 974,
+        "false_pick": 2
+      }
+    },
+    {
+      "job": "e4bbase_cosine_s20261014_d3",
+      "rows": 360,
+      "expected": 360,
+      "unique": 360,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bqat_cosine_s20261014_d3",
+      "rows": 360,
+      "expected": 360,
+      "unique": 360,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bbase_cosine_s20261014_d",
+      "rows": 2735,
+      "expected": 2735,
+      "unique": 2735,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bqat_cosine_s20261014_d",
+      "rows": 2735,
+      "expected": 2735,
+      "unique": 2735,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bbase_cosine_s20261014_d2",
+      "rows": 1000,
+      "expected": 1000,
+      "unique": 1000,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bqat_cosine_s20261014_d2",
+      "rows": 1000,
+      "expected": 1000,
+      "unique": 1000,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bbase_cosine_s20261014_h",
+      "rows": 1316,
+      "expected": 1316,
+      "unique": 1316,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bqat_cosine_s20261014_h",
+      "rows": 1316,
+      "expected": 1316,
+      "unique": 1316,
+      "unparsed": 0,
+      "source_id_match": true
+    },
+    {
+      "job": "e4bbase_cosine_s20261014_mx",
+      "rows": 4014,
+      "expected": 4014,
+      "unique": 4014,
+      "unparsed": 0,
+      "source_id_match": true,
+      "source_kind_counts": {
+        "control": 2007,
+        "mixed": 2007
+      },
+      "normal": {
+        "correct": 879,
+        "total": 1033,
+        "false_pick": null
+      },
+      "none": {
+        "correct": 973,
+        "total": 974,
+        "false_pick": 1
+      }
+    },
+    {
+      "job": "e4bqat_cosine_s20261014_mx",
+      "rows": 4014,
+      "expected": 4014,
+      "unique": 4014,
+      "unparsed": 0,
+      "source_id_match": true,
+      "source_kind_counts": {
+        "control": 2007,
+        "mixed": 2007
+      },
+      "normal": {
+        "correct": 948,
+        "total": 1033,
+        "false_pick": null
+      },
+      "none": {
+        "correct": 972,
+        "total": 974,
+        "false_pick": 2
+      }
+    }
+  ],
+  "total_rows": 36980,
+  "total_expected": 36980,
+  "archive_sha256": "e64b79ff663b6441a431acfc099e8627c1126915f21957bf956cb0c672696f0a"
+}

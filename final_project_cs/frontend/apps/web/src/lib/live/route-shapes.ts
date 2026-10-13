@@ -12,7 +12,7 @@ export type RouteMode = "walk" | "bike" | "taxi" | "subway" | "bus" | "mixed" | 
 export type RouteSource = "local_road_graph" | "stations" | "bus_stops" | "transit_stops" | "straight_line";
 
 /** `[2026-10-05 이동 세션 계약]` One ride of a subway or mixed leg (`rides[]`, only where the line follows the stations): 「지하철 3호선 · 경복궁→을지로3가 · 4개 역」; `filled: false` = the stations between could not be filled in (a straight stretch). */
-export interface RouteRide { mode?: "bus" | "subway"; line: string; from: string | null; to: string | null; stations: string[]; count: number | null; filled: boolean }
+export interface RouteRide { mode?: "bus" | "subway"; service?: "local" | "express"; line: string; from: string | null; to: string | null; stations: string[]; count: number | null; filled: boolean }
 
 export interface RouteShape {
   /** The move item itself; the two ends are the stops around it. */
@@ -58,6 +58,7 @@ function ridesOf(raw: unknown): RouteRide[] {
     const count = Number(row.count);
     return [{
       ...(row.mode === "bus" || row.mode === "subway" ? { mode: row.mode } : {}),
+      ...(row.service === "local" || row.service === "express" ? { service: row.service } : {}),
       line, from: text(row.from), to: text(row.to),
       stations: (Array.isArray(row.stations) ? row.stations : []).flatMap((station) => { const name = text(station); return name ? [name] : []; }),
       count: Number.isFinite(count) && count >= 0 ? Math.floor(count) : null,

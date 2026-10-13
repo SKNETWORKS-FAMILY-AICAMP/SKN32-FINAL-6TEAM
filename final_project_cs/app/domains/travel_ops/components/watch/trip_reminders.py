@@ -17,7 +17,9 @@
                    첫 항목 − day_start_lead 로 당긴다                         ~ 첫 항목 시작
                    ★새벽 3시에 모은 전날까지의 이슈(바뀐 일정 · 답을 기다리는 일정)를 함께 싣는다
     ② 다음 일정    각 일정(이동 제외)이 **시작할 때** 그다음 일정을 안내          ~ 그 일정 끝
-    ③ 이동         ★**이동 항목이 시작하는 그 시각**(= 출발 시각)             ~ 이동 항목 끝
+    ③ 이동         ★**이동 항목이 시작하는 그 시각**(= 출발 시각)
+                   현재 재검증 연결 시 미발행 안내는 다음 방문 시작 전까지 재확인한다.
+                   재검증이 없는 기존 경로는 이동 항목 끝까지다.
                    `[2026-09-24 사용자 지시]` 앞 판은 「이동 15분 전」이었다 — 이동이 몇 분인지와 상관없이
                    고정 15분을 앞에 붙인 것이라 틀렸다. 여유는 **일정이 이미 품는다**: 출발 = 다음 일정 시작
                    − 이동 시간 − 여유(생성기가 거꾸로 잡는다, `planner.add_moves`). 알림은 그 출발 시각에 간다.
@@ -41,16 +43,18 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from copy import deepcopy
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, time, timedelta
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from app.infrastructure.notify.phrase import Phrase
 
-from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleDeparture, TripStore
 from app.domains.travel_ops.components.itinerary.itinerary_changes import planned_option, route_of, route_targets
 from app.domains.travel_ops.components.planning.pending import PendingStore
+from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -97,12 +101,15 @@ def _by_day(items: list[Item]) -> dict[date, list[Item]]:
 
 
 def plan_reminders(items: list[Item], *, now: datetime, rules: ReminderRules,
-                   day_starts: dict[date, datetime] | None = None) -> list[Reminder]:
+                   day_starts: dict[date, datetime] | None = None,
+                   revalidate_departures: bool = False) -> list[Reminder]:
     """지금 나가야 할 안내. ★순수 함수 — 읽기·쓰기·조회가 없다(시험과 시나리오가 같은 것을 쓴다).
 
     `day_starts` — 사용자가 정한 그날 시작 시각(여행 제약의 하루 창). 없으면 `rules.day_start_at`(08:00).
+    `revalidate_departures` — 현재 경로를 재검증할 때만 미발행 출발 후보를 다음 방문 전까지 유지한다.
     """
     due: list[Reminder] = []
+    ordered = sorted(items, key=lambda i: i.seq)
     for day, day_items in _by_day(items).items():
         first = day_items[0]
         start_at = (day_starts or {}).get(day) or datetime.combine(day, rules.day_start_at, tzinfo=KST)
@@ -110,7 +117,8 @@ def plan_reminders(items: list[Item], *, now: datetime, rules: ReminderRules,
         start_due = min(start_at, first.starts_at - rules.day_start_lead)
         if start_due <= now < first.starts_at:
             due.append(Reminder("day_start", f"day_start:{day.isoformat()}", start_due, first.starts_at, day))
-        stops = [i for i in day_items if i.kind != "mobility"]
+        # `[2026-10-13]` 숙소는 「다음 일정」 짝에서 뺀다 — 끝(체크아웃)이 며칠 뒤라 그 사이 내내 「다음 일정」 안내 대상이 된다
+        stops = [i for i in day_items if i.kind != "mobility" and i.kind not in STAY_KINDS]
         for current, following in zip(stops, stops[1:]):
             # ★② 다음 일정 — 지금 일정이 **시작할 때**. 그날 마지막 일정은 다음이 없어 보내지 않는다
             until = current.ends_at or following.starts_at
@@ -125,9 +133,16 @@ def plan_reminders(items: list[Item], *, now: datetime, rules: ReminderRules,
             if move.kind != "mobility":
                 continue
             # ★③ 이동 — **출발 시각 그 자체**(이동 항목 시작). 「N분 전」을 붙이지 않는다(D-020).
-            #   틱이 늦게 돌아도 이동이 끝나기 전이면 보낸다 — 끝난 뒤의 「출발하세요」는 보내지 않는다.
-            following = next((i for i in day_items if i.seq > move.seq and i.kind != "mobility"), None)
-            until = move.ends_at or (following.starts_at if following else move.starts_at + timedelta(minutes=1))
+            # 현재 재검증이 있으면 저장된 종료 시각 뒤에도 다음 방문 전까지 후보로 둔다.
+            # 후보 선택은 발행 허가가 아니다. tick의 중복 제외와 현재 도착 가능성 검사를 거친다.
+            candidates = ordered if revalidate_departures else day_items
+            following = next((i for i in candidates if i.seq > move.seq and i.kind != "mobility"), None)
+            if revalidate_departures:
+                if following is None:
+                    continue
+                until = following.starts_at
+            else:
+                until = move.ends_at or (following.starts_at if following else move.starts_at + timedelta(minutes=1))
             if move.starts_at <= now < until:
                 due.append(Reminder("departure", f"departure:{move.item_id}", move.starts_at, until,
                                     day, move))
@@ -176,6 +191,63 @@ def departure_phrase(move: Item, following: Item | None, how: dict[str, Any] | N
     return Phrase(template, values)
 
 
+def _with_boarding_steps(phrase, observation, departure, arrival):
+    """시각·역명은 원값으로 보존하고 구간별 근거만 문구틀로 구분한다."""
+    steps = observation.get('boarding_steps', [])
+    if not isinstance(steps, list):
+        raise ValueError('승차 안내 목록 형식 오류')
+    template, values = phrase.template, dict(phrase.values)
+    previous_idx, previous_arrival = -1, departure
+    def clock(at):
+        local = at.astimezone(KST)
+        return (local.strftime('%Y-%m-%d %H:%M')
+                if local.date() != departure.astimezone(KST).date() else _hm(at))
+    if steps:
+        template += '\n구간별 승차 안내 (하차·환승 시각은 예상):'
+    for position, step in enumerate(steps):
+        if not isinstance(step, dict):
+            raise ValueError('승차 안내 행 형식 오류')
+        idx, mode = step.get('idx'), step.get('mode')
+        if (isinstance(idx, bool) or not isinstance(idx, int) or idx <= previous_idx
+                or mode not in ('bus', 'subway') or step.get('ride_basis') != 'model'):
+            raise ValueError('승차 안내 구간 또는 근거 오류')
+        for key in ('service', 'from', 'to'):
+            if not isinstance(step.get(key), str) or not step[key].strip():
+                raise ValueError('승차 안내 노선·장소 누락')
+        board = datetime.fromisoformat(str(step['board_at']))
+        alight = datetime.fromisoformat(str(step['alight_at']))
+        if (board.utcoffset() is None or alight.utcoffset() is None
+                or not previous_arrival <= board <= alight <= arrival):
+            raise ValueError('승차 안내 시각 역전 또는 범위 오류')
+        basis = step.get('boarding_basis')
+        if basis == 'realtime_arrival_prediction':
+            if (position != 0 or idx != 0 or observation.get('status') != 'realtime'
+                    or mode != observation.get('realtime_mode')):
+                raise ValueError('현재 승차 관측 구간 오표시')
+            certainty = '현재 도착 예측 반영 · 하차 시각 예상'
+        elif basis == 'timetable_model':
+            if position == 0 and observation.get('status') == 'realtime':
+                raise ValueError('현재 승차 관측 근거 누락')
+            certainty = '시간표·이동 모델 예상'
+        else:
+            raise ValueError('승차 안내 근거 누락')
+        prefix = f'boarding_{position}_'
+        kind = '승차' if position == 0 else '환승'
+        template += ('\n{' + prefix + 'service}: {' + prefix + 'board} {' + prefix + 'from} '
+                     + kind + ' → {' + prefix + 'alight} {' + prefix + 'to} 하차 (' + certainty + ')')
+        values.update({prefix+'service': step['service'], prefix+'board': clock(board),
+                       prefix+'alight': clock(alight), prefix+'from': step['from'], prefix+'to': step['to']})
+        if 'train_number' in step or 'towards' in step:
+            if (basis != 'realtime_arrival_prediction' or mode != 'subway'
+                    or any(not isinstance(step.get(k), str) or not step[k].strip()
+                           for k in ('train_number', 'towards'))):
+                raise ValueError('선택 열차 정보 오류')
+            template += ' · {' + prefix + 'towards} 방면 · 열차 {' + prefix + 'train}'
+            values.update({prefix+'towards':step['towards'], prefix+'train':step['train_number']})
+        previous_idx, previous_arrival = idx, alight
+    return Phrase(template, values)
+
+
 def day_text(items: list[Item], day: date, *, eve: bool = False) -> str:
     return day_phrase(items, day, eve=eve).render()
 
@@ -215,6 +287,7 @@ class ReminderTickResult:
     trips: int = 0
     sent: list[dict[str, Any]] = field(default_factory=list)
     already: int = 0
+    stale: list[dict[str, Any]] = field(default_factory=list)
     held: list[dict[str, Any]] = field(default_factory=list)
     fatal: list[dict[str, Any]] = field(default_factory=list)
     no_route: int = 0
@@ -223,15 +296,21 @@ class ReminderTickResult:
     unchecked: list[dict[str, Any]] = field(default_factory=list)
 
 
+class DepartureBasisUnavailable(RuntimeError):
+    """저장 직전 이동 입력 판을 확인하지 못함. 낡은 안내로 대신하지 않는다."""
+
+
 class TripReminders:
     """되잡기 작업 — 한 번 돌 때마다 지금 나가야 할 안내를 바깥함에 넣는다."""
 
     def __init__(self, *, store: TripStore, connection_factory: Callable[[], Any],
                  clock: Callable[[], datetime], route_events: Any = None,
                  rules: ReminderRules | None = None, routes: dict[str, Any] | None = None,
-                 link: Callable[[Any], str] | None = None) -> None:
+                 link: Callable[[Any], str] | None = None,
+                 departure_observer: Callable[..., dict[str, Any]] | None = None) -> None:
         self.store, self._connect, self.clock = store, connection_factory, clock
         self.route_events, self.routes, self.link = route_events, routes or {}, link
+        self.departure_observer = departure_observer
         self.rules = rules or ReminderRules.from_guardrails()
 
     def tick(self) -> ReminderTickResult:
@@ -245,18 +324,61 @@ class TripReminders:
                 trip, items = self.store.latest(conn, trip_id)
                 waiting = {row["item_id"] for row in
                            PendingStore(self.store.tenant_id).list(conn, trip_id, only_open=True)}
+            departure_inputs = deepcopy({"party_size": trip.get("party_size"),
+                                         "constraints": trip.get("constraints")})
             for reminder in plan_reminders(items, now=now, rules=self.rules,
-                                           day_starts=_day_starts(trip.get("constraints"))):
+                                           day_starts=_day_starts(trip.get("constraints")),
+                                           revalidate_departures=self.departure_observer is not None):
+                # 이미 발행한 안내의 외부 조회를 되풀이하지 않는다. 최종 UNIQUE는 그대로 둔다.
+                with self._connect() as conn:
+                    already = self.store.message_exists(conn, trip_id=trip_id, key=reminder.key)
+                if already:
+                    result.already += 1
+                    continue
                 payload = self._payload(trip_id, trip, items, reminder, now, result, waiting=waiting)
                 if payload is None:
                     continue
-                with self._connect() as conn, conn.transaction():
-                    fresh = self.store.enqueue_message(conn, trip_id=trip_id, key=reminder.key, payload=payload)
+                check_basis = reminder.kind == 'departure' and not payload.get('waiting')
+                observation = payload.get('departure_observation')
+                observed_basis = deepcopy(observation.get('basis')) if isinstance(observation, dict) else None
+                try:
+                    with self._connect() as conn, conn.transaction():
+                        if check_basis:
+                            self._check_departure_basis(observed_basis)
+                        check_inputs = ({"expected_departure_inputs": departure_inputs}
+                                        if reminder.kind == "departure" else {})
+                        fresh = self.store.enqueue_message(conn, trip_id=trip_id, key=reminder.key,
+                                                           payload=payload, **check_inputs)
+                        if fresh and check_basis:
+                            # INSERT 뒤 바뀐 급행 표도 COMMIT 전에 발견하면 이 거래 전체를 되돌린다.
+                            self._check_departure_basis(observed_basis)
+                except StaleDeparture as exc:
+                    result.stale.append({"trip_id": str(trip_id), "key": reminder.key, "reason": str(exc)})
+                    continue
+                except DepartureBasisUnavailable:
+                    result.fatal.append({'trip_id': str(trip_id), 'key': reminder.key,
+                                         'failed_categories': ['departure_basis'],
+                                         'reason': 'departure_basis_unavailable'})
+                    continue
                 if fresh:
                     result.sent.append({"trip_id": str(trip_id), "key": reminder.key})
                 else:
                     result.already += 1
         return result
+
+    def _check_departure_basis(self, basis):
+        validator = getattr(self.departure_observer, 'validate_basis', None)
+        if validator is None:
+            return  # 관측 기능이 꺼진 경로와 옛 단순 시험 콜백의 기존 계약.
+        try:
+            matched = validator(deepcopy(basis))
+        except Exception as exc:  # noqa: BLE001 — 치명 상태를 보고하고 거래를 되돌린다
+            raise DepartureBasisUnavailable(type(exc).__name__) from None
+        if matched is True:
+            return
+        if matched is False:
+            raise StaleDeparture('departure express basis changed')
+        raise DepartureBasisUnavailable('invalid_basis_validation_result')
 
     def _changed_since(self, trip_id, due_at: datetime) -> int:
         """하루 시작 전 24시간 동안 바뀐 일정 버전 수(생성 제외). ★새벽 3시 정리의 몫이다."""
@@ -291,11 +413,20 @@ class TripReminders:
         if pending_target is not None:
             return {**base, **notice_fields(waiting_phrase(pending_target)), "waiting": True,
                     "item_id": str(reminder.move.item_id)}
+        observations = []
+        def observed(*args, **kwargs):
+            value = self.departure_observer(*args, **kwargs)
+            observations.append(value)
+            return value
         status, phrase = build_departure(reminder.move, items, route_events=self.route_events,
-                                         routes=self.routes, now=now)
+                                         routes=self.routes, now=now,
+                                         trip=trip,
+                                         departure_observer=observed if self.departure_observer else None)
         entry = {"trip_id": str(trip_id), "item": reminder.move.title}
+        if observations:
+            entry['departure_observation'] = observations[-1]
         if status == "fatal":
-            result.fatal.append({**entry, "failed_categories": ["route_events"]})
+            result.fatal.append({**entry, "failed_categories": ["departure_observer" if observations else "route_events"]})
             return None
         if status == "held":
             result.held.append(entry)
@@ -304,37 +435,86 @@ class TripReminders:
             result.no_route += 1
         if status == "unchecked":
             result.unchecked.append(entry)
-        return {**base, **notice_fields(phrase), "item_id": str(reminder.move.item_id)}
+        return {**base, **notice_fields(phrase), "item_id": str(reminder.move.item_id),
+                **({'departure_observation': observations[-1]} if observations else {})}
 
 
 def build_departure(move: Item, items: list[Item], *, route_events: Any, routes: dict[str, Any] | None,
-                    now: datetime) -> tuple[str, Phrase | None]:
+                    now: datetime, departure_observer=None, trip=None) -> tuple[str, Phrase | None]:
     """출발 안내 문구(틀+원값)와 상태 — `ok` · `no_route`(경로 정의·소스 없음, 어디로·언제만) ·
     `held`(계획한 수단에 사건 — 감시가 고칠 일) · `fatal`(경로 사건을 못 읽음, 결정 15) ·
     `unchecked`(계획한 수단 중 사건 소스가 **확인하지 못하는** 대상이 있다 — 「경로 확인」 없이 보낸다).
 
     ☆`[2026-09-29 이동 계산기 문제목록 #37]` 앞 판은 사건 소스가 지하철·버스를 `unsupported` 로 돌려주는데도
       `affecting()` 의 빈 결과를 「사건 없음」으로 읽어 「경로 확인 ○○:○○」을 붙였다 — 지하철이 멈춰도 확인한 것처럼 안내했다."""
-    following = next((i for i in sorted(items, key=lambda i: i.seq) if i.seq > move.seq), None)
+    following = next((i for i in sorted(items, key=lambda i: i.seq)
+                      if i.seq > move.seq and i.kind != 'mobility'), None)
     route = route_of(move, routes)
     if not route or route_events is None:
-        # ★경로 정의나 경로 사건 소스가 없다 — 어디로·언제만 보낸다. 「모름」 문장은 안 넣는다.
-        return "no_route", departure_phrase(move, following, None)
+        if departure_observer is None:
+            # 관측 기능이 꺼진 기존 안내 계약.
+            return "no_route", departure_phrase(move, following, None)
+        if not route:
+            # 현재 재검증이 필요한 경로에서 저장된 출발 문구로 우회하지 않는다.
+            return "held", None
     _, planned = planned_option(move, route)
-    events = route_events.affecting(route_targets(route))
-    if events is None:
-        # ★결정 15 — 경로를 못 읽었는데 「그럴듯한 경로 문장」을 보내지 않는다.
-        return "fatal", None
-    if any(target in events for target in planned.get("uses", [])):
-        return "held", None
-    unsupported_of = getattr(route_events, "unsupported", None)
-    blind = unsupported_of(list(planned.get("uses", []))) if callable(unsupported_of) else []
     # ☆`[2026-09-30 이동 계산기 실제 흐름 확인 C2]` 확인할 노선·도로(`uses`)가 하나도 없는 이동(어림값·도보)은 사건 소스가 볼 것이
     #   없다 — 「확인 못 한 대상이 없다」를 「확인했다」로 읽어 「경로 확인 HH:MM」을 붙이면 어림값 이동이 확인된 경로처럼 보인다
     no_targets = not planned.get("uses")
+    if departure_observer is not None and no_targets:
+        # 확인할 사건 대상이 없다는 사실과 현재 이동시간 재검증은 별개다.
+        # 불필요한 사건 조회로 도보 재계산을 막거나 예전 안내를 보내지 않는다.
+        events, blind = {}, []
+    else:
+        if route_events is None:
+            return "fatal", None
+        events = route_events.affecting(route_targets(route))
+        if events is None:
+            # ★결정 15 — 경로를 못 읽었는데 「그럴듯한 경로 문장」을 보내지 않는다.
+            return "fatal", None
+        if any(target in events for target in planned.get("uses", [])):
+            return "held", None
+        unsupported_of = getattr(route_events, "unsupported", None)
+        blind = unsupported_of(list(planned.get("uses", []))) if callable(unsupported_of) else []
     how = {"label": planned.get("label") or planned.get("id"), "eta_min": planned.get("eta_min"),
            "checked_at": None if (blind or no_targets) else now}
-    return ("unchecked" if blind else "ok"), departure_phrase(move, following, how)
+    if departure_observer is not None:
+        current = {'trip': trip} if trip is not None else {}
+        observation = departure_observer(move, items, planned=planned, now=now, events=events, **current)
+        if not isinstance(observation, dict) or observation.get('status') == 'fatal':
+            return 'fatal', None
+        if observation.get('status') == 'needs_replan':
+            return 'held', None
+        if observation.get('status') not in ('realtime', 'model_revalidated'):
+            return 'fatal', None
+        try:
+            depart = datetime.fromisoformat(str(observation['departure_at']))
+            arrival = datetime.fromisoformat(str(observation['arrival_at']))
+            eta = observation['eta_min']
+            if (depart.utcoffset() is None or arrival.utcoffset() is None or depart < now
+                    or arrival < depart or isinstance(eta, bool) or not isinstance(eta, int)
+                    or eta < 0 or following is None or arrival > following.starts_at):
+                return 'fatal', None
+        except (ValueError, KeyError, TypeError):
+            return 'fatal', None
+        move = replace(move, starts_at=depart, ends_at=arrival)
+        how['eta_min'] = eta
+        if 'route_label' in observation:
+            label = observation['route_label']
+            if not isinstance(label, str) or not label.strip():
+                return 'fatal', None
+            how['label'] = label
+        realtime_label = (' · 현재 지하철 대기 반영' if observation.get('realtime_mode') == 'subway'
+                          else ' · 현재 버스 대기 반영')
+        how['label'] += (realtime_label if observation['status'] == 'realtime'
+                         else ' · 현재 시각 기준 예상')
+    phrase = departure_phrase(move, following, how)
+    if departure_observer is not None:
+        try:
+            phrase = _with_boarding_steps(phrase, observation, depart, arrival)
+        except (ValueError, TypeError, KeyError, OverflowError):
+            return 'fatal', None
+    return ("unchecked" if blind else "ok"), phrase
 
 
 __all__ = ["Reminder", "ReminderRules", "ReminderTickResult", "TripReminders", "build_departure",

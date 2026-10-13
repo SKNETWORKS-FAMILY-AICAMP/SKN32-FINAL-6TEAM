@@ -1,0 +1,8 @@
+[
+  {
+    "file": "wiki\\records\\evidence\\2026-10-09_0532_출발조건_저장경합\\departure-input-race-regression-v2-part4.log",
+    "backup": "wiki\\records\\evidence\\2026-10-09_0532_출발조건_저장경합\\_backup\\2026-10-09_0553_실행경로_가림\\departure-input-race-regression-v2-part4.log",
+    "sha256": "4fc6bf2cc603011b7ce3504419ff92bbb4adbaf8cf23e4a4ba748895a5441e9c",
+    "reason": "개인 Python 설치 경로만 가림; 진단 스택·시간·시험 결과 보존"
+  }
+]

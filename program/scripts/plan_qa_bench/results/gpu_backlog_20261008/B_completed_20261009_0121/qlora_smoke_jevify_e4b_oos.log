@@ -1,0 +1,14 @@
+학습 문제 16/16 · 평균 길이 1999 토큰 · 정답 토큰 평균 6.8
+Traceback (most recent call last):
+  File "/root/work/qlora_train2.py", line 49, in <module>
+    model = AutoModelForCausalLM.from_pretrained(MODEL, quantization_config=bnb, dtype=torch.bfloat16, device_map={'': 0})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/transformers/models/auto/auto_factory.py", line 409, in from_pretrained
+    return model_class.from_pretrained(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/transformers/modeling_utils.py", line 4243, in from_pretrained
+    checkpoint_files, sharded_metadata = _get_resolved_checkpoint_files(
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/transformers/modeling_utils.py", line 632, in _get_resolved_checkpoint_files
+    raise OSError(
+OSError: Error no file named model.safetensors, or pytorch_model.bin, found in directory /root/hf_models/jevify_e4b.

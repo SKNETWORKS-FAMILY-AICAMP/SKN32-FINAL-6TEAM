@@ -1,0 +1,29 @@
+{
+  "job": {
+    "id": "valen_08b_original_h_a1",
+    "tag": "valen_08b_original_h_a1",
+    "suite": "h",
+    "label": "Valen-0.8B native decision head publisher original",
+    "our_training": false,
+    "publisher_training": "Developer full decision SFT on Qwen3.5-0.8B",
+    "model": "/tmp/tripilot-valen-20261009/smoke_verified_model.safetensors",
+    "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+    "model_revision": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+    "prompts": "/tmp/tripilot-valen-20261009/prompts/h.json",
+    "prompt_sha256": "1034acc0068ff8acc90c7e5755e92f0d83f16aab42f3bfc55f4a013a9d378cc1",
+    "expected": 1316,
+    "script": "/tmp/tripilot-valen-20261009/valen_native_eval_20261009_v2.py",
+    "runner_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+    "port": 8401,
+    "logprobs": "0",
+    "output_contract": "Native choice-head distribution; parsed validates API, content holds native response",
+    "dependency": "/tmp/tripilot-valen-20261009/SMOKE_PASS.json",
+    "automatic_retry": false,
+    "purpose": "Frozen original travel regression; not holdout or adoption",
+    "smoke_gate_attempt": "a2"
+  },
+  "started": "2026-10-09T01:55:43.020503+00:00",
+  "prompt_sha256": "1034acc0068ff8acc90c7e5755e92f0d83f16aab42f3bfc55f4a013a9d378cc1",
+  "script_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

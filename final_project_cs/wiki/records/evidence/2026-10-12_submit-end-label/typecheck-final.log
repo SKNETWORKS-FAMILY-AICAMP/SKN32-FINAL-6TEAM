@@ -1,0 +1,38 @@
+
+<--- Last few GCs --->
+
+[22920:00000154F3FB4000]    21384 ms: Scavenge (during sweeping) 499.7 (533.2) -> 471.1 (534.0) MB, pooled: 0.0 MB, 3.52 / 0.00 ms (average mu = 0.997, current mu = 0.998) allocation failure; 
+[22920:00000154F3FB4000]    21696 ms: Scavenge (during sweeping) 500.9 (534.5) -> 474.7 (537.5) MB, pooled: 0.0 MB, 17.71 / 0.00 ms (average mu = 0.997, current mu = 0.998) allocation failure; 
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+
+<--- Last few GCs --->
+
+[22920:00000154F3FB4000]    21384 ms: Scavenge (during sweeping) 499.7 (533.2) -> 471.1 (534.0) MB, pooled: 0.0 MB, 3.52 / 0.00 ms (average mu = 0.997, current mu = 0.998) allocation failure; 
+[22920:00000154F3FB4000]    21696 ms: Scavenge (during sweeping) 500.9 (534.5) -> 474.7 (537.5) MB, pooled: 0.0 MB, 17.71 / 0.00 ms (average mu = 0.997, current mu = 0.998) allocation failure; 
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+ 1: 00007FF66E7959C9 
+ 2: 00007FF66CFCC10A 
+ 3: 00007FF66C95FEA3 
+ 4: 00007FF66C6A2A17 
+ 5: 00007FF66E00C3CA 
+ 6: 00007FF66E00BF18 
+ 7: 00007FF66E00BAE3 
+ 8: 00007FF66E00B949 
+ 9: 00007FF66DB7E243 
+10: 00007FF66DB75188 
+11: 00007FF66DB7452E 
+12: 00007FF66CF5753F 
+13: 00007FF66CF16FA3 
+14: 00007FF66CF1851E 
+15: 00007FF66D8A097F 
+16: 00007FF66E6D5C8B 
+17: 00007FF66D021E36 
+18: 00007FF66EAFD763 
+19: 00007FFAD92ACD87 
+20: 00007FFADB5ECAEC 

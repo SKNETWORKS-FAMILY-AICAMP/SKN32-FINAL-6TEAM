@@ -1,0 +1,189 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+_ test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[features] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000025A6B8DEAB0>
+mode = 'features'
+caplog = <_pytest.logging.LogCaptureFixture object at 0x0000025A6B904500>
+
+    @pytest.mark.parametrize("mode", ["features", "composition_and_features", "independent_only"])
+    def test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope(monkeypatch, mode, caplog):
+        from app import composition
+        calls = []
+    
+        def build():
+            if mode == "composition_and_features":
+                raise ImportError("private plugin path")
+            if mode == "independent_only":
+                pytest.fail("independent cleanup requires Team assembly")
+            return SimpleNamespace(service_bindings=table())
+    
+        def wire():
+            raise ImportError("private feature path")
+    
+        monkeypatch.setattr(composition, "build_controller", build)
+        monkeypatch.setattr(composition, "wire_optional_features", wire)
+        monkeypatch.setattr(composition, "build_classifier", lambda: object())
+        monkeypatch.setattr(run_sweepers, "get_connection", Connection)
+        monkeypatch.setattr(run_sweepers, "sweep_stuck_classifying", lambda *a, **k: {"classified": 1})
+        for name in ("sweep_stuck_routing", "_watch_if_due", "_run_trip_safety", "_run_trip_dawn", "_run_trip_reminders"):
+            monkeypatch.setattr(run_sweepers, name, lambda *a, **k: pytest.fail("unsafe scope-dependent work executed"))
+        for name in ("_run_place_facts", "_run_catalog_hours", "_run_trip_places", "_run_web_guard"):
+            monkeypatch.setattr(run_sweepers, name, lambda *a, name=name: calls.append(name) or {"scanned": 1})
+>       result = run_sweepers._run_once("travel-test", "web_guard" if mode == "independent_only" else None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_plugin_worker_availability.py:361: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\run_sweepers.py:142: in _run_once
+    return _run_bound_once(tenant_id, only)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts\run_sweepers.py:111: in call
+    composition.wire_optional_features()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def wire():
+>       raise ImportError("private feature path")
+E       ImportError: private feature path
+
+tests\unit\travel\test_plugin_worker_availability.py:350: ImportError
+_ test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[composition_and_features] _
+
+    def build():
+        if mode == "composition_and_features":
+>           raise ImportError("private plugin path")
+E           ImportError: private plugin path
+
+tests\unit\travel\test_plugin_worker_availability.py:344: ImportError
+
+The above exception was the direct cause of the following exception:
+
+tenant_id = 'travel-test', only = None
+
+    def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
+        # ���� ���� �۾��� ��û�� ȸ������ Team ������ �䱸���� �ʴ´�.
+        if only in (None, "routing", "trip", "trip_cases", "trip_dawn", "trip_reminders"):
+            try:
+>               return _run_bound_once(tenant_id, only)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+scripts\run_sweepers.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = ('travel-test', None), kwargs = {}
+composition = <module 'app.composition' from 'C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\composition.py'>
+
+    @wraps(method)
+    def call(*args, **kwargs):
+        if _round_controller.get() is not None:
+            return method(*args, **kwargs)
+        from app import composition
+    
+        try:
+            controller = composition.build_controller()
+        except Exception as exc:
+            logger.error("sweeper_composition_failed error_type=%s", type(exc).__name__)
+>           raise _CompositionFailed() from exc
+E           scripts.run_sweepers._CompositionFailed
+
+scripts\run_sweepers.py:110: _CompositionFailed
+
+During handling of the above exception, another exception occurred:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000025A6B905A90>
+mode = 'composition_and_features'
+caplog = <_pytest.logging.LogCaptureFixture object at 0x0000025A6B907AD0>
+
+    @pytest.mark.parametrize("mode", ["features", "composition_and_features", "independent_only"])
+    def test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope(monkeypatch, mode, caplog):
+        from app import composition
+        calls = []
+    
+        def build():
+            if mode == "composition_and_features":
+                raise ImportError("private plugin path")
+            if mode == "independent_only":
+                pytest.fail("independent cleanup requires Team assembly")
+            return SimpleNamespace(service_bindings=table())
+    
+        def wire():
+            raise ImportError("private feature path")
+    
+        monkeypatch.setattr(composition, "build_controller", build)
+        monkeypatch.setattr(composition, "wire_optional_features", wire)
+        monkeypatch.setattr(composition, "build_classifier", lambda: object())
+        monkeypatch.setattr(run_sweepers, "get_connection", Connection)
+        monkeypatch.setattr(run_sweepers, "sweep_stuck_classifying", lambda *a, **k: {"classified": 1})
+        for name in ("sweep_stuck_routing", "_watch_if_due", "_run_trip_safety", "_run_trip_dawn", "_run_trip_reminders"):
+            monkeypatch.setattr(run_sweepers, name, lambda *a, **k: pytest.fail("unsafe scope-dependent work executed"))
+        for name in ("_run_place_facts", "_run_catalog_hours", "_run_trip_places", "_run_web_guard"):
+            monkeypatch.setattr(run_sweepers, name, lambda *a, name=name: calls.append(name) or {"scanned": 1})
+>       result = run_sweepers._run_once("travel-test", "web_guard" if mode == "independent_only" else None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_plugin_worker_availability.py:361: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\run_sweepers.py:145: in _run_once
+    composition.wire_optional_features()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def wire():
+>       raise ImportError("private feature path")
+E       ImportError: private feature path
+
+tests\unit\travel\test_plugin_worker_availability.py:350: ImportError
+------------------------------ Captured log call ------------------------------
+ERROR    scripts.run_sweepers:run_sweepers.py:109 sweeper_composition_failed error_type=ImportError
+_ test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[independent_only] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000025A6B9068D0>
+mode = 'independent_only'
+caplog = <_pytest.logging.LogCaptureFixture object at 0x0000025A6B906900>
+
+    @pytest.mark.parametrize("mode", ["features", "composition_and_features", "independent_only"])
+    def test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope(monkeypatch, mode, caplog):
+        from app import composition
+        calls = []
+    
+        def build():
+            if mode == "composition_and_features":
+                raise ImportError("private plugin path")
+            if mode == "independent_only":
+                pytest.fail("independent cleanup requires Team assembly")
+            return SimpleNamespace(service_bindings=table())
+    
+        def wire():
+            raise ImportError("private feature path")
+    
+        monkeypatch.setattr(composition, "build_controller", build)
+        monkeypatch.setattr(composition, "wire_optional_features", wire)
+        monkeypatch.setattr(composition, "build_classifier", lambda: object())
+        monkeypatch.setattr(run_sweepers, "get_connection", Connection)
+        monkeypatch.setattr(run_sweepers, "sweep_stuck_classifying", lambda *a, **k: {"classified": 1})
+        for name in ("sweep_stuck_routing", "_watch_if_due", "_run_trip_safety", "_run_trip_dawn", "_run_trip_reminders"):
+            monkeypatch.setattr(run_sweepers, name, lambda *a, **k: pytest.fail("unsafe scope-dependent work executed"))
+        for name in ("_run_place_facts", "_run_catalog_hours", "_run_trip_places", "_run_web_guard"):
+            monkeypatch.setattr(run_sweepers, name, lambda *a, name=name: calls.append(name) or {"scanned": 1})
+>       result = run_sweepers._run_once("travel-test", "web_guard" if mode == "independent_only" else None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_plugin_worker_availability.py:361: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\run_sweepers.py:148: in _run_once
+    composition.wire_optional_features()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def wire():
+>       raise ImportError("private feature path")
+E       ImportError: private feature path
+
+tests\unit\travel\test_plugin_worker_availability.py:350: ImportError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[features]
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[composition_and_features]
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[independent_only]
+3 failed, 20 deselected in 10.06s
+Exception ignored in: <function Console.__del__ at 0x0000025A5BFB1B20>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

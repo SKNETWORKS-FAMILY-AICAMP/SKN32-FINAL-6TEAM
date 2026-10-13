@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item
-from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
+from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS, Part, check_itinerary
 
 KST = ZoneInfo("Asia/Seoul")
 _DEFAULT_LENGTH = timedelta(hours=1)
@@ -57,7 +57,8 @@ def delay_knock_on(items: list[Item], delayed: Item, minutes: int) -> list[Knock
     """`delayed` 가 `minutes` 분 늦어졌을 때 성립하지 않게 되는 뒤 일정들(시각순). 겹치는 것이 없거나 밀려도 괜찮으면 빈 목록."""
     shifted_end = (delayed.ends_at or delayed.starts_at + _DEFAULT_LENGTH) + timedelta(minutes=minutes)
     cursor = shifted_end
-    later = sorted((i for i in items if i.item_id != delayed.item_id and i.starts_at >= delayed.starts_at
+    # `[2026-10-13]` 숙소(며칠에 걸친다)는 앞 일정이 늦어도 밀리지 않는다 — 체크아웃 시각이 커서가 되면 뒤 일정이 전부 「늦는다」가 된다
+    later = sorted((i for i in items if i.item_id != delayed.item_id and i.kind not in STAY_KINDS and i.starts_at >= delayed.starts_at
                     and i.starts_at >= (delayed.ends_at or delayed.starts_at)), key=lambda i: (i.starts_at, i.seq))
     found: list[Knock] = []
     for item in later:

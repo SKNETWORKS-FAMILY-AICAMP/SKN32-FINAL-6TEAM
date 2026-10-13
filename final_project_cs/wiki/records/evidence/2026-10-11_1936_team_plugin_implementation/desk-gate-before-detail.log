@@ -1,0 +1,13 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+______ test_without_ask_first_a_report_still_changes_the_plan_right_away ______
+tests\e2e\test_desk_gate.py:43: in test_without_ask_first_a_report_still_changes_the_plan_right_away
+    assert closed["status"] == "adjusted" and closed["to"] == "���￪ �ѽĴ�(�ó�����)"
+           ^^^^^^^^^^^^^^^^
+E   KeyError: 'status'
+        api        = {'auth': <function api.<locals>.auth at 0x00000292E87A9440>, 'client': <starlette.testclient.TestClient object at 0x00...': UUID('360429fc-d078-4897-b956-362a4c9229cc'), 'notices': <function api.<locals>.notices at 0x00000292E887D760>, ...}
+        closed     = {'error': {'code': 'team_unavailable', 'message': '��û�� ������ ��� ����� ����� �� �����ϴ�', 'reason': 'engine_unavailable', 'retryable': False, ...}}
+        trip_id    = 'bc75a3d6-235d-442d-a99a-d29830bb7d3d'
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_desk_gate.py::test_without_ask_first_a_report_still_changes_the_plan_right_away
+1 failed in 5.41s

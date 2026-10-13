@@ -1,0 +1,300 @@
+{
+  "created_at": "2026-10-12T12:11:43.947779+09:00",
+  "copied_evidence": [
+    {
+      "source": ".tmp\\mobility_web21_20261012\\runtime-tests-v2.xml",
+      "saved": "mobility_web21_20261012-runtime-tests-v2.xml",
+      "sha256": "8084b4c7dca3e0a1fa7ad819d679a43a3e26d24af8b4adbccecfceb6c6dc0ab4",
+      "bytes": 3812
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\selection-tests-v4.xml",
+      "saved": "mobility_web21_20261012-selection-tests-v4.xml",
+      "sha256": "ef809ed42d92c7aa04b11e483991339e405ecf6fd86b350154cf7918b4c3121c",
+      "bytes": 3587
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\selection-tests-v4.log",
+      "saved": "mobility_web21_20261012-selection-tests-v4.log",
+      "sha256": "eb69f7fc257ae63a8811d62b8c66d5ac875b688e4b954f8936deaec603f2afda",
+      "bytes": 514
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\claude-precision-result-v2.json",
+      "saved": "mobility_web21_20261012-claude-precision-result-v2.json",
+      "sha256": "9b615121071185004aa7d425c9a3a4facf53613928af0da6e8260350f37e0e12",
+      "bytes": 7402
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\claude-precision-prompt-v1.txt",
+      "saved": "mobility_web21_20261012-claude-precision-prompt-v1.txt",
+      "sha256": "4571c378b5c55027b87ebfff1e68e377c51e330f279c2543058281bb92260f7a",
+      "bytes": 1254
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\aligned-replay-v1\\bus-result-v2.json",
+      "saved": "aligned-replay-v1-bus-result-v2.json",
+      "sha256": "4d5a1533569780d40de8725bb73e2ccee2e942b213cee35fef8cdd16a27d512d",
+      "bytes": 94434
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\aligned-replay-v1\\result-v1.json",
+      "saved": "aligned-replay-v1-result-v1.json",
+      "sha256": "acf8b1ebf57d4f86e310be3caafcee1655475e899f82cead04f79d672b0f678e",
+      "bytes": 39156
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\aligned-replay-v1\\bus-data-audit-v1.json",
+      "saved": "aligned-replay-v1-bus-data-audit-v1.json",
+      "sha256": "c7524335c09927953bf42e573092e65e0673870d4ec2cf8a55b1f88c9a103972",
+      "bytes": 3354
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\mixed-replay-v1\\comparison-v1.json",
+      "saved": "mixed-replay-v1-comparison-v1.json",
+      "sha256": "13b190724ffbb37383fcc105b04cdfab7e3cd48cecdc9785dc960c31cb4c9ec3",
+      "bytes": 83244
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\mixed-replay-v1\\planner-comparison-v4.json",
+      "saved": "mixed-replay-v1-planner-comparison-v4.json",
+      "sha256": "0d7921782952de6a08ae8c036b55cfd7b49c453e31cefb58b7526288344574ed",
+      "bytes": 49302
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\mixed-replay-v1\\REPORT-final-v2.md",
+      "saved": "mixed-replay-v1-REPORT-final-v2.md",
+      "sha256": "b03a5fc2473c6aef05ccfa2ca937bedd6f477054c5a85f2df2049d29f7acd503",
+      "bytes": 7423
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\mixed-replay-v1\\manifest-final-v2.json",
+      "saved": "mixed-replay-v1-manifest-final-v2.json",
+      "sha256": "420ec898af05e561961d5a2deb8966cdb70052c26659590144f61d1740734deb",
+      "bytes": 5402
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\mixed-replay-v1\\mixed-unit-v3.log",
+      "saved": "mixed-replay-v1-mixed-unit-v3.log",
+      "sha256": "33c365cc0b6f55405ee6bd79fce86ab5d7930414e274955abae5c68d1bf212b0",
+      "bytes": 391
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\aligned-replay-v1\\REPORT.md",
+      "saved": "aligned-replay-v1-REPORT.md",
+      "sha256": "da8f21fb95b32c876be34febc213e25c0cf87cf5a3d803f2f62971b5754c3908",
+      "bytes": 4155
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\aligned-replay-v1\\summary-v1.json",
+      "saved": "aligned-replay-v1-summary-v1.json",
+      "sha256": "f62f29f6851d12426fb915a9c56cefbf666c32a09cc5d4407dd17585475ef224",
+      "bytes": 6395
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\map-replay-v1\\MANIFEST-v3.json",
+      "saved": "map-replay-v1-MANIFEST-v3.json",
+      "sha256": "462aaee7b2c50369ffef2209b1f38555d67644d8090c48bed8f31e222463118c",
+      "bytes": 6457
+    },
+    {
+      "source": ".tmp\\mobility_web21_20261012\\map-replay-v1\\REPORT-service-v1.md",
+      "saved": "map-replay-v1-REPORT-service-v1.md",
+      "sha256": "ec6d3022962a096b29d27d5ad2dd3a9ecc73b915421d64a865222f89099343a0",
+      "bytes": 2979
+    },
+    {
+      "source": "datasets\\mobility\\raw\\subway_train_precision_20261012_v1\\precision-regression-pytest-v1.xml",
+      "saved": "rail-precision-regression-pytest-v1.xml",
+      "sha256": "8f91c92aa543f775f9df5d2f32115284a2f83ef1e04121470a861be19b66a889",
+      "bytes": 17604
+    },
+    {
+      "source": "datasets\\mobility\\raw\\subway_train_precision_20261012_v1\\legacy-baseline-pytest-v1.xml",
+      "saved": "rail-legacy-baseline-pytest-v1.xml",
+      "sha256": "c1837adb90c3a334f552d91fa5cda3ddd6e2bfff52a7e6e58f067d1b24bb8487",
+      "bytes": 2748
+    },
+    {
+      "source": "datasets\\mobility\\raw\\subway_train_precision_20261012_v1\\loop-boundary-pytest-v1.xml",
+      "saved": "rail-loop-boundary-pytest-v1.xml",
+      "sha256": "db3215fa6b7825ec4fa604e81385570236b29ff52e103090c9c3b3c2cad81135",
+      "bytes": 561
+    },
+    {
+      "source": "datasets\\mobility\\raw\\subway_train_precision_20261012_v1\\source-comparison-v1.json",
+      "saved": "rail-source-comparison-v1.json",
+      "sha256": "fabf07807727e4808fdf8a5390bb1cdad8fada487346e7305cff5fb1996c81cc",
+      "bytes": 661
+    },
+    {
+      "source": "datasets\\mobility\\raw\\subway_train_precision_20261012_v1\\fixture-official-facts-v1.json",
+      "saved": "rail-fixture-official-facts-v1.json",
+      "sha256": "11fe8ad04ca079d413ea0063f55526d9a880438f9a71a788852d5d2554e8d6fb",
+      "bytes": 8841
+    },
+    {
+      "source": "datasets\\mobility\\raw\\subway_train_precision_20261012_v1\\manifest-v1.json",
+      "saved": "rail-manifest-v1.json",
+      "sha256": "cea38a72499a561bd5461eb4a49057febcb9733cecb7702c032a3f1df60eb890",
+      "bytes": 608
+    }
+  ],
+  "files": [
+    {
+      "name": "aligned-replay-v1-bus-data-audit-v1.json",
+      "bytes": 3354,
+      "sha256": "c7524335c09927953bf42e573092e65e0673870d4ec2cf8a55b1f88c9a103972"
+    },
+    {
+      "name": "aligned-replay-v1-bus-result-v2.json",
+      "bytes": 94434,
+      "sha256": "4d5a1533569780d40de8725bb73e2ccee2e942b213cee35fef8cdd16a27d512d"
+    },
+    {
+      "name": "aligned-replay-v1-REPORT.md",
+      "bytes": 4155,
+      "sha256": "da8f21fb95b32c876be34febc213e25c0cf87cf5a3d803f2f62971b5754c3908"
+    },
+    {
+      "name": "aligned-replay-v1-result-v1.json",
+      "bytes": 39156,
+      "sha256": "acf8b1ebf57d4f86e310be3caafcee1655475e899f82cead04f79d672b0f678e"
+    },
+    {
+      "name": "aligned-replay-v1-summary-v1.json",
+      "bytes": 6395,
+      "sha256": "f62f29f6851d12426fb915a9c56cefbf666c32a09cc5d4407dd17585475ef224"
+    },
+    {
+      "name": "api-budget-v1.json",
+      "bytes": 557,
+      "sha256": "0886a81db6bcfb2cfd2ebed9c1df599ffd7c1e65b4e4769bed6ffa34006443c4"
+    },
+    {
+      "name": "executed-checks-v1.json",
+      "bytes": 758,
+      "sha256": "5dca61498a5ba8c50e526973c2ac8e17e7a701d904884206c82d3c8469c05bdf"
+    },
+    {
+      "name": "feature-status-v3.json",
+      "bytes": 67533,
+      "sha256": "01c55ad23e523815340bb50eb46d289dd160f7a7c23f934b8754c4d04994b0bf"
+    },
+    {
+      "name": "feature-status-v3.md",
+      "bytes": 20974,
+      "sha256": "b2f6c3c6d3159a9d5b585f282ea06836442df78cfb49ae802779ceae58caa6ac"
+    },
+    {
+      "name": "map-replay-v1-MANIFEST-v3.json",
+      "bytes": 6457,
+      "sha256": "462aaee7b2c50369ffef2209b1f38555d67644d8090c48bed8f31e222463118c"
+    },
+    {
+      "name": "map-replay-v1-REPORT-service-v1.md",
+      "bytes": 3002,
+      "sha256": "ac51b346a58c177f3cd3ebdb641a8d2cd642c7b609c187e5fca9205aa687873b"
+    },
+    {
+      "name": "mixed-replay-v1-comparison-v1.json",
+      "bytes": 83244,
+      "sha256": "13b190724ffbb37383fcc105b04cdfab7e3cd48cecdc9785dc960c31cb4c9ec3"
+    },
+    {
+      "name": "mixed-replay-v1-manifest-final-v2.json",
+      "bytes": 5545,
+      "sha256": "751df91c49909acc1c373c30482ce30f6e1fc15f7af03e71d36cc640637c2fcb"
+    },
+    {
+      "name": "mixed-replay-v1-mixed-unit-v3.log",
+      "bytes": 391,
+      "sha256": "33c365cc0b6f55405ee6bd79fce86ab5d7930414e274955abae5c68d1bf212b0"
+    },
+    {
+      "name": "mixed-replay-v1-planner-comparison-v4.json",
+      "bytes": 49302,
+      "sha256": "0d7921782952de6a08ae8c036b55cfd7b49c453e31cefb58b7526288344574ed"
+    },
+    {
+      "name": "mixed-replay-v1-REPORT-final-v2.md",
+      "bytes": 7479,
+      "sha256": "daf58c6cdfef8049c77df9abff162c7b23d73022fa6b6ef2da81728a818639f8"
+    },
+    {
+      "name": "mobility_web21_20261012-claude-precision-prompt-v1.txt",
+      "bytes": 1254,
+      "sha256": "4571c378b5c55027b87ebfff1e68e377c51e330f279c2543058281bb92260f7a"
+    },
+    {
+      "name": "mobility_web21_20261012-claude-precision-result-v2.json",
+      "bytes": 7402,
+      "sha256": "9b615121071185004aa7d425c9a3a4facf53613928af0da6e8260350f37e0e12"
+    },
+    {
+      "name": "mobility_web21_20261012-runtime-tests-v2.xml",
+      "bytes": 3812,
+      "sha256": "8084b4c7dca3e0a1fa7ad819d679a43a3e26d24af8b4adbccecfceb6c6dc0ab4"
+    },
+    {
+      "name": "mobility_web21_20261012-selection-tests-v4.log",
+      "bytes": 514,
+      "sha256": "eb69f7fc257ae63a8811d62b8c66d5ac875b688e4b954f8936deaec603f2afda"
+    },
+    {
+      "name": "mobility_web21_20261012-selection-tests-v4.xml",
+      "bytes": 3587,
+      "sha256": "ef809ed42d92c7aa04b11e483991339e405ecf6fd86b350154cf7918b4c3121c"
+    },
+    {
+      "name": "rail-fixture-official-facts-v1.json",
+      "bytes": 8841,
+      "sha256": "11fe8ad04ca079d413ea0063f55526d9a880438f9a71a788852d5d2554e8d6fb"
+    },
+    {
+      "name": "rail-legacy-baseline-pytest-v1.xml",
+      "bytes": 2748,
+      "sha256": "c1837adb90c3a334f552d91fa5cda3ddd6e2bfff52a7e6e58f067d1b24bb8487"
+    },
+    {
+      "name": "rail-loop-boundary-pytest-v1.xml",
+      "bytes": 561,
+      "sha256": "db3215fa6b7825ec4fa604e81385570236b29ff52e103090c9c3b3c2cad81135"
+    },
+    {
+      "name": "rail-manifest-v1.json",
+      "bytes": 608,
+      "sha256": "cea38a72499a561bd5461eb4a49057febcb9733cecb7702c032a3f1df60eb890"
+    },
+    {
+      "name": "rail-precision-regression-pytest-v1.xml",
+      "bytes": 17604,
+      "sha256": "8f91c92aa543f775f9df5d2f32115284a2f83ef1e04121470a861be19b66a889"
+    },
+    {
+      "name": "rail-source-comparison-v1.json",
+      "bytes": 661,
+      "sha256": "fabf07807727e4808fdf8a5390bb1cdad8fada487346e7305cff5fb1996c81cc"
+    },
+    {
+      "name": "REPORT.md",
+      "bytes": 9765,
+      "sha256": "d40ff85cc72052acbf31d89845cfafec3b0267f9e8b3124cfdb9241c43fc82b2"
+    },
+    {
+      "name": "source-hashes-v1.json",
+      "bytes": 8777,
+      "sha256": "fd0f4337d682048ab5e368e84e733f30eac1c83d3635f89d5d71dba6b5981a6e"
+    },
+    {
+      "name": "subway-final-comparison-v2.json",
+      "bytes": 73852,
+      "sha256": "90b438d13b6e1b39f296ef96fca3149e6ed0e60b08958d314bd046abe919d4cd"
+    },
+    {
+      "name": "subway-web-comparison-v1.png",
+      "bytes": 79187,
+      "sha256": "e80ef055a18447f0fc58f77e375bbb27045636c60b1b4d72ef6d477e69e16fe4"
+    }
+  ]
+}

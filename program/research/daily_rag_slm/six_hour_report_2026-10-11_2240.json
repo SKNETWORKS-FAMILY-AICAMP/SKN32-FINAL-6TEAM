@@ -1,0 +1,387 @@
+{
+  "recorded_at_utc": "2026-10-11T13:42:46.571234+00:00",
+  "observation_kst": "2026-10-11 22:37–22:38",
+  "report": "final_project_cs/wiki/records/reports/2026-10-11_2240_six-hour-gpu-arm-report.md",
+  "previous_saved_regular_report": "final_project_cs/wiki/records/reports/2026-10-11_1400_six-hour-gpu-arm-report.md",
+  "A": {
+    "observed_at": "2026-10-11T13:37:22.601020+00:00",
+    "gpu_instant": "3478 MiB, 68 %",
+    "registered": 196,
+    "status_counts": {
+      "completed": 156,
+      "completed_with_errors": 33,
+      "failed": 2,
+      "running": 1
+    },
+    "running": 1,
+    "ready_pending": 4,
+    "newly_registered": 3,
+    "current_progress": {
+      "e4bbase_original_appschema800_soak6h_20261011": {
+        "attempted": 1837,
+        "correct": 1837,
+        "failed": 0,
+        "transport_errors": 0,
+        "not_independent_accuracy": true,
+        "elapsed_seconds": 7905.99780084379,
+        "concurrency": 1,
+        "phase_seconds": 3600
+      }
+    },
+    "worker_preserved": true,
+    "free_bytes": 3654438912,
+    "completed_soaks": {
+      "finch_appschema_soak6h_20261011": {
+        "summary": {
+          "attempted": 4773,
+          "correct": 4773,
+          "failed": 0,
+          "transport_errors": 0,
+          "not_independent_accuracy": true,
+          "elapsed_seconds": 21608.005753828213,
+          "stop": "duration_completed",
+          "unique_conditions": 12,
+          "independent_accuracy": false,
+          "slots": 2,
+          "context_total": 8192,
+          "latency_scope": "co-running host; within-job concurrency phases only"
+        },
+        "baseline_rows": 0,
+        "baseline_correct": 0,
+        "observations": 4773,
+        "observations_correct": 4773,
+        "budgets": {
+          "400": {
+            "saved": 0,
+            "correct": 0
+          },
+          "800": {
+            "saved": 0,
+            "correct": 0
+          }
+        }
+      },
+      "saluki_original_appschema800_soak6h_20261011": {
+        "summary": {
+          "attempted": 8874,
+          "correct": 8874,
+          "failed": 0,
+          "transport_errors": 0,
+          "not_independent_accuracy": true,
+          "elapsed_seconds": 21601.76515173167,
+          "stop": "duration_completed",
+          "unique_conditions": 12,
+          "independent_accuracy": false,
+          "slots": 2,
+          "context_total": 8192,
+          "latency_scope": "co-running host; within-job concurrency phases only"
+        },
+        "baseline_rows": 0,
+        "baseline_correct": 0,
+        "observations": 8874,
+        "observations_correct": 8874,
+        "budgets": {
+          "400": {
+            "saved": 0,
+            "correct": 0
+          },
+          "800": {
+            "saved": 0,
+            "correct": 0
+          }
+        }
+      }
+    }
+  },
+  "B": {
+    "observed_at": "2026-10-11T13:37:21.963506+00:00",
+    "gpu_instant": "9851 MiB, 26 %",
+    "old_five_conditions_terminal": true,
+    "initial_idle": true,
+    "running": 1,
+    "ready_pending": 3,
+    "newly_registered": 4,
+    "new_baseline_planned": 192,
+    "conditional_soak_max_hours": 24,
+    "worker_pid": 2814363,
+    "worker_alive": true,
+    "lock_held": true,
+    "free_bytes": 5537116160,
+    "completion_results": {
+      "finch_s20261014_app_completion_v1": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 6,
+        "correct": 32,
+        "stability_eligible": false,
+        "stability_attempted": 0,
+        "stability_correct": 0,
+        "stop": "prerequisite_failed",
+        "peak_gpu_bytes": 9897931776,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T05:27:00.936218+00:00"
+      },
+      "cosine_s20261014_app_completion_v1": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 10,
+        "correct": 28,
+        "stability_eligible": false,
+        "stability_attempted": 0,
+        "stability_correct": 0,
+        "stop": "prerequisite_failed",
+        "peak_gpu_bytes": 9897931776,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T05:47:52.777097+00:00"
+      },
+      "oos2r_app_completion_v1": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 0,
+        "correct": 48,
+        "stability_eligible": true,
+        "stability_attempted": 4960,
+        "stability_correct": 4960,
+        "stop": "duration_completed",
+        "peak_gpu_bytes": 10347614208,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T11:53:15.585824+00:00"
+      },
+      "oos3_app_completion_v1": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 0,
+        "correct": 16,
+        "stability_eligible": false,
+        "stability_attempted": 0,
+        "stability_correct": 0,
+        "stop": "prerequisite_failed",
+        "peak_gpu_bytes": 9897931776,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T11:58:32.498237+00:00"
+      }
+    }
+  },
+  "ARM": {
+    "observed_at": "2026-10-11T13:37:18.936110+00:00",
+    "engine": "CPU llama.cpp",
+    "app_model": "Gemma-4-E4B-it publisher QAT Q4_0; no our additional training",
+    "resources": {
+      "window_s": 300.1735862760106,
+      "cpu_pct_two_cores": 38.09631933932059,
+      "host_cpu_busy_pct": 99.39891820960347,
+      "host_steal_pct": 0.33309005490355187,
+      "memory_current_bytes": 4736626688,
+      "above_20_contiguous_seconds": 3326.8289652980166,
+      "five_minute_target_verified": true
+    },
+    "disk": {
+      "total": 102888095744,
+      "used": 60414648320,
+      "available": 42456670208
+    },
+    "host_memory": {
+      "total_bytes": 12503744512,
+      "available_bytes": 2855591936,
+      "used_pct": 77.16210585349491
+    },
+    "memory_process_details": {
+      "tripilot-arm-app-model.service": [
+        {
+          "pid": 1353353,
+          "memory_kib": {
+            "Rss": 3504468,
+            "Pss": 3276006,
+            "Pss_Dirty": 3038824,
+            "Pss_Anon": 3038824,
+            "Pss_File": 237182,
+            "Pss_Shmem": 0,
+            "Shared_Clean": 453404,
+            "Shared_Dirty": 0,
+            "Private_Clean": 12240,
+            "Private_Dirty": 3038824,
+            "Referenced": 3480024,
+            "Anonymous": 3038824,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 3035136,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 403456,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      ],
+      "tripilot-arm-serving.service": [
+        {
+          "pid": 1265040,
+          "memory_kib": {
+            "Rss": 3787440,
+            "Pss": 3559272,
+            "Pss_Dirty": 3308064,
+            "Pss_Anon": 3308064,
+            "Pss_File": 251208,
+            "Pss_Shmem": 0,
+            "Shared_Clean": 453016,
+            "Shared_Dirty": 0,
+            "Private_Clean": 26360,
+            "Private_Dirty": 3308064,
+            "Referenced": 3752040,
+            "Anonymous": 3308064,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 3303424,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 403456,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        },
+        {
+          "pid": 171515,
+          "memory_kib": {
+            "Rss": 82952,
+            "Pss": 78709,
+            "Pss_Dirty": 77372,
+            "Pss_Anon": 77372,
+            "Pss_File": 1337,
+            "Pss_Shmem": 0,
+            "Shared_Clean": 5564,
+            "Shared_Dirty": 0,
+            "Private_Clean": 16,
+            "Private_Dirty": 77372,
+            "Referenced": 82748,
+            "Anonymous": 77372,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 57344,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 0,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      ]
+    },
+    "units": {
+      "tripilot-arm-app-model.service": "active",
+      "tripilot-arm-cd.timer": "active",
+      "tripilot-arm-refill.timer": "active",
+      "tripilot-arm-work-queue.service": "active",
+      "tripilot-arm-serving.service": "active"
+    },
+    "queue_counts": {
+      "failed": 11,
+      "completed": 67,
+      "pending": 53,
+      "running": 1
+    },
+    "ready_pending": 32,
+    "blocked_pending": 21,
+    "new_v4_http_checks": {
+      "passed": 33,
+      "total": 33,
+      "answers_passed": 12,
+      "answers_total": 12,
+      "repeated_same_fixture": true,
+      "independent_accuracy": false,
+      "latency_min_seconds": 76.76777345797746,
+      "latency_max_seconds": 87.29858503700234
+    },
+    "benchmark_progress": {
+      "at": "2026-10-11T13:32:51.648452+00:00",
+      "job_id": "e4b_qat_original_d3",
+      "engine_pid": 1265040,
+      "expected": 360,
+      "saved": 185
+    },
+    "completed_MX": {
+      "saved": 4014,
+      "expected": 4014,
+      "correct": 3637,
+      "unparsed": 0,
+      "archive_sha256": "39a5d49778c8259b70b2b27903deacc1ffcbb4083aa017e6873c31644f8a6370",
+      "verified_files": 4,
+      "audit": [
+        {
+          "name": "summary.json",
+          "sha256": "6dbd1f0500f179d3b567d2d3d5160809bee5d44ac2061ea33688038257623ccb",
+          "bytes": 371
+        },
+        {
+          "name": "attempt_1791660805262937323.json",
+          "sha256": "4ddc6836c973e6b69b306a7526ac3b182fb8333728bffcbb9a715d29a0450e15",
+          "bytes": 1349
+        },
+        {
+          "name": "engine.log",
+          "sha256": "9f1311ddc099234e266a266fa99b1de02e3840aed454ca4f7ab0f701475171d9",
+          "bytes": 3954715
+        },
+        {
+          "name": "answers.jsonl",
+          "sha256": "7c3cb33629e4e5b78cf591b05ddaff72f26d48ca2066ced4ada15279a705d5f3",
+          "bytes": 1984358
+        }
+      ],
+      "training_lineage": "existing merged e4bt; exact oos recipe unverified",
+      "not_application_accuracy": true,
+      "independent_holdout": false
+    }
+  },
+  "new_baseline_rows_collected": 192,
+  "new_completed_MX_rows_collected": 4014,
+  "raw_verified_files": 49,
+  "model_adoption": false,
+  "independent_validation": false,
+  "new_training": false,
+  "E_human_review": {
+    "completed": 0,
+    "total": 158
+  },
+  "independent_holdout": {
+    "target": 720,
+    "frozen": false,
+    "completed": false
+  },
+  "Saluki_training": {
+    "smoke_completed": 0,
+    "smoke_total": 1,
+    "training_completed": 0,
+    "training_total": 1,
+    "status": "Exact trainable Saluki weights/backward/memory/storage prerequisites still unresolved; no substitute model training"
+  },
+  "registration_incident": {
+    "initial_auto_review_rejected": true,
+    "extra_readonly_audit_performed": true,
+    "revised_safety_checks_approved": true,
+    "A_duplicate_entries_created": 3,
+    "A_duplicate_entries_removed_before_execution": 3,
+    "original193_preserved": true,
+    "scratch_generator_backed_up_and_corrected": true
+  },
+  "raw_evidence": "program/scripts/plan_qa_bench/results/heartbeat_20261011_2230",
+  "next_six_hours": [
+    "Collect terminal GPU A current original and QAT stability without interruption; keep three newly registered missing grammar comparisons",
+    "Collect GPU B four previously unmeasured training-seed full-reply conditions; run bounded6h soak only when fixed24/24 gate passes; preserve all failed48 denominators",
+    "Continue Oracle internal CD/refill/worker and same-trip regression; collect original D3 terminal, do not stop it to free CPU",
+    "Fix mixed-question interpretation and compound-target contract in separately reviewed local changes before environment adoption; human E review and independent720 remain pending"
+  ]
+}

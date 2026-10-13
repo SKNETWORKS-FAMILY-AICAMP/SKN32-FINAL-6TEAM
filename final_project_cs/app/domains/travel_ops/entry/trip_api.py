@@ -251,11 +251,16 @@ class IntakeModeIn(IntakeRevisionIn):
     mode: str = Field(min_length=1, max_length=16)
 
 
+class IntakeRestoreItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    source_id: UUID
+    index: int = Field(ge=0)
 
 
 class IntakeRestoreIn(IntakeRevisionIn):
     """전체 되돌리기 — 현재 판과 같은 접수에서 복원할 완료된 과거 판."""
     restore_revision: int = Field(ge=1)
+    item: IntakeRestoreItem | None = None
 
 
 class IntakeAutofixIn(IntakeRevisionIn):
@@ -401,6 +406,11 @@ class MessageIn(BaseModel):
     expected_version: int | None = Field(default=None, ge=0)
 
 
+class WebMessageIn(MessageIn):
+    # 요약 버튼의 명시적 읽기 요청. 에이전트 자유 문장 계약과 분리한다.
+    summary_day: date | None = None
+
+
 class RollbackIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     request_id: str = Field(min_length=1)
@@ -516,6 +526,8 @@ def _item_view(item: Item, info: dict[str, Any] | None = None) -> dict[str, Any]
             "starts_at": _seoul(item.starts_at).isoformat(),
             "ends_at": _seoul(item.ends_at).isoformat() if item.ends_at else None,
             "changed": item.replaces_item_id is not None,
+            # `[2026-10-13]` 이동 항목이 「그날 묵는 숙소에서 출발」(아침 숙소 → 첫 일정)인가 — 순서상 바로 앞은 전날 마지막 일정이라 화면이 이걸로 출발지를 숙소로 잡는다
+            **({"from_stay": True} if item.kind == "mobility" and item.detail.get("from_stay") else {}),
             # ★`[2026-09-30 · 10-05 병합]` 식당 가격 비교(`same_or_lower` · `higher` · `unknown` · `won`) — 원래 식당 대비.
             #   구글 금액은 내려 주지 않는다(저장 금지 — 비교 결과만 기록돼 있다). 비교하지 않았으면 None
             "price_compare": item.detail.get("price_compare"),
@@ -542,6 +554,10 @@ _CAUSE_FIELDS = ("category", "type", "kind", "summary", "message", "to_version",
 def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
     from app.domains.travel_ops.components.places.place_info import place_info
     trip, items = store.latest(conn, trip_id)
+    from app.domains.travel_ops.components.intake import registered_moves
+    checked = registered_moves.load_trip_review(conn, tenant_id=store.tenant_id,
+                                               customer_id=trip["customer_id"], trip_id=trip_id)
+    items = registered_moves.recover_for_routes(items, checked)
     history = [{"version": row["version"], "reason": row["reason"],
                 "causes": [{k: cause.get(k) for k in _CAUSE_FIELDS if cause.get(k) is not None}
                            for cause in (row["causes"] or [])],
@@ -780,6 +796,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     def _check():
         return _lazy("check", check_factory)
 
+    def _travel_sources():
+        """`[2026-10-13]` 숙소 검색 소스(마이리얼트립 — 키 없음 · 구글 호텔 — SerpApi 키 · 월 250 · 하루 8 예산). 고를 때 숙소 가격 재확인(`_stay_recheck`)만 쓴다. 부를 때만 만든다."""
+        from app.core.settings import get_settings
+        from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+
+        return build_travel_sources(get_settings())
+
     def _desk(store: TripStore) -> TripDesk:
         # ★`[2026-09-29]` 활동 대체 후보를 관광공사 목록에서 넓힐 때 운영시간을 읽는다(`catalog_pool`) — 부를 때만 만든다
         return TripDesk(store=store, connection_factory=get_connection, check=_check(), catalog_pool=True)
@@ -932,6 +955,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                               **({"route": it.route, "route_def": request.routes[it.route]}
                                  if it.route else {})})
                  for it in request.items]
+        # ★`[2026-10-13 사용자 결정 — 숙소 항목 B안]` 묵는 날 아침 「숙소 → 그날 첫 일정」 이동을 넣는다(이동 계산기가 길을 찾을 때만)
+        if any(it.kind == "lodging" for it in request.items):
+            from app.domains.travel_ops.components.itinerary.itinerary_changes import with_stay_moves
+
+            coords = {ids[p.key]: {"place_id": str(ids[p.key]), "name": p.name, "latitude": p.lat, "longitude": p.lon}
+                      for p in request.places if p.lat is not None and p.lon is not None}
+
+            def place_of(item: Item) -> dict[str, Any] | None:
+                place = coords.get(item.place_id)
+                return None if place is None else {"key": place["place_id"], "name": place["name"],
+                                                   "lat": float(place["latitude"]), "lon": float(place["longitude"])}
+
+            items = with_stay_moves(items, place_of=place_of, party_size=request.party_size, constraints=request.constraints)
         trip_id, version = store.create_trip(
             conn, customer_id=request.customer_id, title=request.title, locale=request.locale,
             party_size=request.party_size, items=items, constraints=request.constraints,
@@ -1164,19 +1200,52 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             rows = PendingStore(tenant).list(conn, trip_id)
         return {"trip_id": str(trip_id), "proposals": [_proposal_view(r) for r in rows]}
 
+    def _stay_recheck(store: TripStore, trip_id: UUID, proposal_id: UUID, key: str,
+                      customer_id: UUID | None) -> dict[str, Any] | None:
+        """고른 안이 숙소 「다른 후보」의 마이리얼트립 숙소면 그 날짜 1박 값을 다시 본다(`booking/offers/recheck`). 그 밖에는 None.
+        읽기만 한다(잠그지 않는다) — 고르기 자체의 판정(기준 판 · 열린 제안)은 뒤의 트랜잭션이 다시 한다."""
+        from app.domains.travel_ops.components.booking.offers.recheck import recheck_stay
+        from app.domains.travel_ops.components.planning.pending import PendingStore
+
+        with get_connection() as conn:
+            proposal = PendingStore(store.tenant_id).get(conn, trip_id, proposal_id)
+            if proposal is None or proposal["status"] != "open" or proposal["reason"] != "requested_options":
+                return None
+            try:
+                trip, items = store.latest(conn, trip_id)
+            except KeyError:
+                return None
+        if customer_id is not None and trip["customer_id"] != customer_id:
+            return None
+        item = next((i for i in items if i.item_id == proposal["item_id"]), None)
+        option = next((o for o in proposal["options_json"] or [] if o.get("key") == key), None)
+        if item is None or item.kind != "lodging" or option is None or not str(key).startswith(("myrealtrip:", "google:")):
+            return None
+        check_out = (item.ends_at or item.starts_at + timedelta(days=1))
+        sources = _lazy("travel_sources", _travel_sources)
+        keyword = item.detail.get("area") or (item.place or {}).get("district") or (item.place or {}).get("name")
+        return recheck_stay(getattr(sources, "travel_search", None), option,
+                            check_in=_seoul(item.starts_at).date().isoformat(), check_out=_seoul(check_out).date().isoformat(),
+                            adults=int(trip.get("party_size") or 1), google=getattr(sources, "stay_google", None), keyword=keyword)
+
     def _choose(tenant: str, trip_id: UUID, proposal_id: UUID, key: str | None, by: str,
                 customer_id: UUID | None = None) -> dict[str, Any]:
         """★한 트랜잭션 — 실패하면 아무것도 안 바뀐다. 먼저 고른 쪽이 이기고 나중 쪽은 409."""
         from app.domains.travel_ops.components.planning.pending import PendingStore, ProposalRefused, choose
 
         store = TripStore(tenant)
+        # ★`[2026-10-13]` 숙소 후보는 고르기 **전에** 1박 값을 다시 본다(잠그기 전 — 바깥 검색을 잠근 채 부르지 않는다). 객실이 없으면 바꾸지 않는다
+        price_check = _stay_recheck(store, trip_id, proposal_id, key, customer_id) if key else None
+        if price_check and price_check.get("status") == "gone":
+            raise _error(409, "option_gone", "그 날짜에 남은 객실이 없어요 — 일정은 그대로 두었어요. 다른 후보를 고르거나 「바꿔 줘」라고 해 주세요",
+                         detail={"price_check": price_check})
         try:
             with get_connection() as conn, conn.transaction():
                 _trip_or_404(conn, store, trip_id, customer_id)
                 places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
                 result = choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
                                 proposal_id=proposal_id, key=key, by=by, places_by_id=places,
-                                check=_check())
+                                check=_check(), price_check=price_check)
             # ★`[2026-10-02 결함 인계 #2·#5]` 못 고르는 상태라 **닫은** 제안(`expired` 끝난 일정 · `superseded` 낡은 기준 버전)은 위 트랜잭션이 커밋된 **뒤에**
             #   409 로 알린다 — 예외로 올리면 닫은 기록이 되돌아가 같은 제안이 계속 열려 있었다
             if result.get("status") in ("expired", "superseded"):
@@ -1443,7 +1512,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             with get_connection() as conn:
                 return restore(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                               revision=request.revision, restore_revision=request.restore_revision)
+                               revision=request.revision, restore_revision=request.restore_revision,
+                               item=(request.item.source_id, request.item.index) if request.item else None)
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except IntakeConflict as exc:
@@ -1613,12 +1683,18 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         - 필수값이 비었으면 422 `intake_incomplete` + 문제 목록. 판정기가 막으면 그 422 를 그대로 돌려준다.
         """
         from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, draft, mark_confirmed
+        from app.domains.travel_ops.components.intake import registered_moves, review as review_module
 
         tenant, customer = who
         try:
             with get_connection() as conn:
-                _, _, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                                    revision=request.revision)
+                status, existing_trip, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                                    revision=request.revision)
+                if status == "confirmed" and existing_trip:
+                    store = TripStore(tenant)
+                    _trip_or_404(conn, store, existing_trip, customer)
+                    return {"intake_id": str(intake_id), "status": "confirmed",
+                            "trip": {**_trip_view(conn, store, existing_trip), "created": False}}
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except IntakeConflict as exc:
@@ -1627,7 +1703,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(422, "intake_incomplete", "등록 전에 채워야 할 값이 있습니다",
                          problems=[p.as_dict() for p in built.problems])
         _count("confirm", tenant, customer, http)
-        body = {**built.body, "customer_id": str(customer)}
+        with get_connection() as conn:
+            checked = review_module.load(conn, tenant, intake_id, request.revision)
+        body = {**registered_moves.with_review_moves(built.body, checked), "customer_id": str(customer)}
         survey = _intake_survey(tenant, intake_id, request.survey)
         if survey is not None:
             body["constraints"] = {**body.get("constraints", {}), "survey": survey}
@@ -1683,7 +1761,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
             preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko",
-            constraints={**({"survey": survey} if survey is not None else {}),
+            constraints={**(built.body.get("constraints") or {}), **({"survey": survey} if survey is not None else {}),
                          **({"avoid_districts": list(request.recovery.avoid_districts), "lighter_day": request.recovery.lighter_day}
                             if request.recovery is not None else {})})
         keep = request.keep_read_items and bool(built.body["items"])
@@ -1934,7 +2012,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return {"recorded": saved["recorded"], "choice": request.choice, "lighter_day": request.lighter_day, "proposals": proposals}
 
     @router.post("/v1/web/trips/{trip_id}/messages")
-    def web_message(trip_id: UUID, request: MessageIn, http: Request, background: BackgroundTasks,
+    def web_message(trip_id: UUID, request: WebMessageIn, http: Request, background: BackgroundTasks,
                     who: tuple[str, UUID] = Depends(_web_customer)):
         """「에이전트에게 변경 요청」 — 자유 문장. 에이전트 API 와 **같은 처리**를 탄다.
 
@@ -1973,7 +2051,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 # ★`[2026-09-29]` 사실 질문은 분류(모델)를 기다리지 않고 답한다 — 분류·완료 기록은 응답 뒤에서
                 defer=defer, selected_item_id=request.item_id, location=request.location, progress=progress,
                 controller=controller, resume_case_id=request.case_id, resume_token=request.resume_token,
-                expected_version=request.expected_version)
+                expected_version=request.expected_version, summary_day=getattr(request, "summary_day", None))
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         except TeamUnavailable as exc:
@@ -2457,6 +2535,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         with get_connection() as conn:
             _trip_or_404(conn, store, trip_id, customer)
             _trip, items = store.latest(conn, trip_id)
+            from app.domains.travel_ops.components.intake import registered_moves
+            checked = registered_moves.load_trip_review(conn, tenant_id=tenant, customer_id=customer, trip_id=trip_id)
+            items = registered_moves.recover_for_routes(items, checked)
         from app.domains.travel_ops.components.team_hooks import mobility_shapes
         return {"trip_id": str(trip_id), "detail": detail, "shapes": mobility_shapes.items(items, detail=detail),
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}

@@ -1,0 +1,2 @@
+Command: npx eslint src/features/trip/trip-attention.tsx tests/live/trip.spec.ts tests/live/stub-server.mjs tests/live/serve.mjs
+Observed tool result: exit code 0; stdout/stderr empty.

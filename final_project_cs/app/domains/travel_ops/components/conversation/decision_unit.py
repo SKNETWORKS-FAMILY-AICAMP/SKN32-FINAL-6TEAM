@@ -23,7 +23,7 @@ from zoneinfo import ZoneInfo
 
 KST = ZoneInfo("Asia/Seoul")
 
-ACTIONS = ("apply_change", "propose_alternatives", "rollback", "redo", "answer_fact", "ask_policy",
+ACTIONS = ("apply_change", "propose_alternatives", "rollback", "redo", "answer_fact", "ask_policy", "answer_service",
            "report_delay", "report_closed", "clarify", "other")
 FACTS = ("detail", "address", "phone", "hours", "time", "next", "booking", "day", "move",
          "route_here", "nearby_dining", "nearby_activity", "schedule", "changeability",
@@ -33,6 +33,8 @@ LOCATION_FACTS = ("route_here", "nearby_dining", "nearby_activity")
 KIND_KO = {"dining": "식당", "activity": "활동", "lodging": "숙소"}
 #: 변경 이력에 싣는 최근 변경 수 — ★우리가 고른 값. 고객이 가리키는 변경은 대개 최근이다
 RECENT_CHANGES = 8
+#: 일정 밖 일반 질문·추천의 답은 모델이 쓴 문장이다 — 여행 자료로 확인한 것이 아니라는 말을 코드가 붙인다(모델이 빼먹지 못하게)
+GENERAL_NOTE = "※ 일반 안내예요. 이 여행의 일정·조회 자료로 확인한 내용은 아니에요."
 
 SYSTEM = """너는 여행 일정 서비스의 요청 해석기다. 고객 문장 하나를 읽고 할 일(action)과 대상을 고른다. 추측으로 채우지 말고, 할 일이나 대상이 분명하지 않으면 clarify.
 할 일(action):
@@ -53,13 +55,19 @@ SYSTEM = """너는 여행 일정 서비스의 요청 해석기다. 고객 문장
 - ask_policy: 여행의 규정·이용 조건·장소 선택 기준·확인 절차를 묻는다(취소·위약금·환불·동반·날씨 기준, 식당이 미정일 때 장소를 정하는 방법).
   일반 여행 질문도 검색으로 확인한다. 특정 일정이나 가게 이름이 없어도 target_item=none으로 ask_policy를 쓴다.
   장소를 고르는 기준을 물은 것은 실제 후보 추천이나 일정 변경 실행이 아니다. 여행과 관계없는 일반 상식·투자·잡담은 other다.
+- answer_service: triPilot 자체의 기능·사용법·지원 범위·정체를 묻는다. 「너가 할 수 있는 게 뭐야?」「사용법 알려줘」「뭘 부탁할 수 있어?」「예약도 대신 해 줘?」「너는 누구야」.
+  서비스 사용법 질문에는 일정 대상이 필요 없다: target_item=none, target_change=none, fact=none, choices=[].
+  「식당을 바꿀 수 있어?」처럼 기능 지원을 물으면 answer_service다. 「이 식당 바꿔 줘」처럼 실제 실행 요청은 apply_change다.
+  「경복궁이 뭐야?」는 장소 질문 answer_fact/detail이며, 「이 예약 취소 위약금은?」은 규정 질문 ask_policy다.
 - report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).
 - report_closed: 장소가 닫았다고 알린다.
 - clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**
   1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나
   직전 대화로 정할 수 없으면 clarify.
-- other: 여행 일정과 무관한 말 · 인사. 이 서비스에 대한 일반 질문도 포함한다.
+- other: 여행 일정과 무관한 말 · 인사. 서비스 기능·사용법·정체 질문은 answer_service로 구분한다.
 먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.
+모든 문장에서 change_scope를 함께 분류한다: place(장소), time(시각), date(날짜), mixed(둘 이상), none(변경 요청 아님), unclear(불명확).
+시간·날짜만 바꾸라는 말은 장소 교체가 아니다. action=apply_change 또는 propose_alternatives는 change_scope=place일 때만 쓴다.
 목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,
 변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.
 변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.
@@ -74,7 +82,12 @@ kind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 
 아침·점심·저녁은 그 끼니 표시가 붙은 식당이다. 「마지막 일정」은 목록의 마지막 줄이다.
 확실하지 않은 채로 바꾸지 마라 — 할 일은 분명한데 대상이 둘 이상으로 읽히면 clarify 로 후보를 내라.
 「그 식당」「거기」「방금 바꾼 거」처럼 가리키는 말은 직전 대화와 변경 이력에서 찾는다.
-화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다."""
+화면에서 고른 일정은 문장이 대상을 말하지 않을 때만 쓴다. 문장이 식당을 말했는데 고른 일정이 활동이면 쓰지 않는다.
+추가 경계 규칙:
+- 기존 여행 일정의 끼니·항목을 지칭한 장소 후보 추천은 그 항목을 target_item으로 고르는 propose_alternatives다. 실제 변경 적용은 명시적으로 변경을 실행해 달라고 한 경우에만 한다.
+- nearby_dining과 nearby_activity는 고객이 현재 위치·여기·근처·주변을 기준으로 찾는다고 명시한 경우에만 고른다. 기존 일정의 대체 후보 요청을 현재 위치 주변 검색으로 바꾸지 않는다.
+- 범위 조회의 날짜를 고객이나 앞 대화가 지정하지 않았다면 query.day는 all이다. today나 tomorrow를 추측하지 않는다.
+"""
 
 # 읽기 질문의 범위를 실행 단계까지 보존한다. 예문을 외우는 대신 같은 계약으로 모든 표현을 해석한다.
 SYSTEM += """
@@ -104,6 +117,16 @@ food의 advice는 고객이 말한 식단 조건에 맞는 일반 조언만 짧�
 현재 위치가 필요한 route_here/nearby_dining/nearby_activity는 기존 단일 요청 계약을 사용하므로 reads=[]로 둔다.
 이동에는 origin_text에 고객이 적은 출발지 이름 부분만 그대로 복사한다. 예컨대 출발지를 넓은 종류로 부르면 그 표현을 유지하며 일정의 긴 이름으로 바꾸지 않는다. 출발지를 말하지 않으면 빈 문자열이다.
 transport_mode는 any(수단 미지정), transit(대중교통), subway(지하철), bus(버스), walk(도보), taxi(택시)다. 지정한 수단을 버리지 않는다. 이동 외 질문은 origin_text="", transport_mode=any다.
+"""
+
+# 일정 밖 장소의 역사·유래와 추천 이유는 모델 기억만으로 사실처럼 말하지 않는다. 확인 자료가 있는 경로(규정·여행 자료 검색)로 보내거나, 근거를 밝힌다.
+SYSTEM += """
+일정 목록에 없는 장소·유적·건물의 역사·유래·시기·인물을 사실로 묻는 말(reads가 없는 단독 질문)은 general_requests가 아니라
+action=ask_policy, target_item=none으로 보낸다. 서버가 여행 자료 검색으로 확인하고 자료가 없으면 못 찾았다고 답한다. 일정 목록에 있는 장소의 소개는 description이다.
+general_requests의 answer에는 확인할 수 없는 연도·수치·인명·순위·「가장 유명한」「인기 많은」 같은 평가를 쓰지 않는다. 모르면 모른다고 쓴다.
+추천의 이유는 이 프롬프트에 실제로 있는 근거만 쓴다: 일정 목록(시각·종류·이미 정해진 장소), 직전 대화에서 고객이 직접 한 말.
+그 밖의 이유는 「일반적인 제안」이라고 밝힌다. 영업시간·요금·혼잡·평점·날씨는 추천 이유로 쓰지 않는다.
+고객의 취향을 기억하거나 저장한다고 말하지 않는다. 이번 여행 대화에 있는 말만 참고했다고 쓴다.
 """
 
 
@@ -268,6 +291,7 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "target_item": {"type": "string", "enum": items},
         "target_change": {"type": "string", "enum": change_ids},
         "fact": {"type": "string", "enum": list(FACTS)},
+        "change_scope": {"type": "string", "enum": ["place", "time", "date", "mixed", "none", "unclear"]},
         "minutes": {"type": "integer"},
         "query": query_schema(stops),
         "reads": {"type": "array", "items": read},
@@ -296,6 +320,17 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     action = raw.get("action")
     if action not in ACTIONS:
         raise DecisionFailed(f"할 일이 목록 밖이다: {action!r}")
+    # ★`[2026-10-13]` change_scope 는 응답 형식의 필수 항목이 아니다 — 모델(또는 이전 형식의 답)이 빼면 이 칸이 생기기 전처럼
+    #   변경 요청은 장소 변경으로 본다. 모델이 time · date · mixed · unclear 라고 분명히 말한 경우만 장소 교체를 막는다.
+    #   (전에는 빼면 「해석하지 못했어요」로 떨어져 일정 변경 요청 전체가 막혔다 — CI e2e 18건)
+    change_scope = raw.get("change_scope", "place" if action in {"apply_change", "propose_alternatives"} else "none")
+    if change_scope not in {"place", "time", "date", "mixed", "none", "unclear"}:
+        raise DecisionFailed("변경할 대상이 유효하지 않습니다")
+    scope_blocked = action in {"apply_change", "propose_alternatives"} and change_scope != "place"
+    if scope_blocked:
+        # 변경 범위를 확인하지 못했거나 시간·날짜 요청이면 팀의 장소 교체 실행기로 보내지 않는다.
+        raw = {**raw, "scope_guard": {"requested": change_scope, "blocked_action": action}}
+        action = "other"
     by_alias = {s.alias: s.item for s in stops}
     target = raw.get("target_item") or "none"
     if target != "none" and target not in by_alias:
@@ -318,7 +353,11 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
                 or len(request["question"]) > 1000 or len(request["answer"]) > 2000):
             raise DecisionFailed("일반 요청의 질문·답이 유효하지 않습니다")
         general_answers.append(request["answer"].strip())
-    social = "\n\n".join([str(raw.get("social") or "")[:500], *general_answers]).strip()
+    if general_answers:
+        general_answers.append(GENERAL_NOTE)
+    social ="\n\n".join([str(raw.get("social") or "")[:500], *general_answers]).strip()
+    if raw.get("scope_guard"):
+        social = "시간이나 날짜 변경 요청을 장소 교체로 실행하지 않았습니다. 이 채팅에서는 시간·날짜 변경을 적용하지 못하므로 일정표에서 직접 수정해 주세요."
     reads = []
     for read in raw.get("reads") or []:
         if (action != "answer_fact" or not isinstance(read, dict) or read.get("fact") not in FACTS
@@ -336,6 +375,9 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     if reads:
         first_read = reads[0]
         fact, target, query = first_read["fact"], first_read["target_item"], first_read.get("query")
+    if action == "answer_service" and (target != "none" or change_alias != "none" or raw.get("fact") != "none"
+                                        or raw.get("choices") or query is not None):
+        raise DecisionFailed("서비스 기능 안내에 일정 대상·변경·사실 조회를 섞을 수 없습니다")
     # A validated first/last scope determines one current itinerary item. Redundant
     # in-trip model item hints cannot turn that read into an invalid write request.
     duplicates = raw.get("choices")
@@ -375,7 +417,8 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
             continue
         choices.append({"action": option["action"], "item": item, "change": change,
                         "fact": option.get("fact") if option.get("fact") in FACTS else "none"})
-    decision = Decision(action=action, item=by_alias.get(target), change=changes_by.get(change_alias), fact=fact,
+    decision = Decision(action=action, item=None if scope_blocked else by_alias.get(target),
+                        change=None if scope_blocked else changes_by.get(change_alias), fact=fact,
                         minutes=minutes, question=str(raw.get("question") or "").strip()[:200], raw=raw, seconds=seconds,
                         choices=choices[:3], query=query, reads=reads, social=social)
     return guard_target(decision, stops=stops, changes=changes, history=history, selected=selected, message=message or "")
@@ -519,7 +562,7 @@ def labels(decision: Decision) -> dict[str, str]:
     """
     intent = {"apply_change": "adjust_reject", "propose_alternatives": "adjust_reject", "rollback": "adjust_reject",
               "redo": "adjust_reject", "answer_fact": "confirm_request", "ask_policy": "confirm_request",
-
+              "answer_service": "confirm_request",
               "report_delay": "incident_report", "report_closed": "incident_report"}.get(decision.action, "other")
     kind = getattr(decision.item, "kind", None)
     if decision.action == "report_delay":

@@ -1,0 +1,19 @@
+{
+  "utc": "2026-10-11T15:09:43.106475+00:00",
+  "established_connections_18312": 2,
+  "ss_exit_18312": 0,
+  "established_connections_18314": 2,
+  "ss_exit_18314": 0,
+  "slots_processing": 1,
+  "slot_total": 1,
+  "slots": [
+    {
+      "id": 0,
+      "is_processing": true,
+      "id_task": 7370,
+      "n_prompt_tokens": 385,
+      "n_prompt_tokens_processed": 256,
+      "n_prompt_tokens_cache": 1
+    }
+  ]
+}

@@ -3,6 +3,7 @@
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
     --only      classifying | routing | trip | trip_cases | trip_safety | trip_dawn | trip_reminders | place_facts | catalog_hours | trip_places | web_guard | retention 중 하나만 돌린다.
+                `team:<이름>` 은 팀이 끼운 정기 작업 하나를 시간대와 상관없이 지금 돌린다(`team_hooks/scheduled_jobs`).
 
 ★`retention` 은 **약관의 보관 기간 · 회원 자료 정리**다(`[2026-10-07 사용자 결정]`, 마이그레이션 056). 마지막 이용 뒤 `retention.member_idle_days` 가 지난 회원의 자료를 지우는데,
   **기본 모드는 `dry_run`(대상을 세기만 하고 `retention_runs` 에 건수를 남긴다 — 아무것도 안 지운다)** 이고 `on` 은 사용자가 건수를 보고 승인한 뒤 관리 화면에서 켠다.
@@ -212,7 +213,8 @@ def _run_jobs(tenant_id: str, only: str | None, *, composition_failed=False,
         def classify():
             classifier = composition.build_classifier()
             with get_connection() as conn:
-                return sweep_stuck_classifying(conn, tenant_id=tenant_id, classifier=classifier, actor_id="sweeper")
+                return sweep_stuck_classifying(conn, tenant_id=tenant_id, classifier=classifier, actor_id="sweeper",
+                                               diagnostic_recorder=composition.build_operations_recorder())
         run("classifying", classify)
     if only in (None, "routing"):
         def route():
@@ -254,6 +256,15 @@ def _run_jobs(tenant_id: str, only: str | None, *, composition_failed=False,
     if only in (None, "catalog_hours"):
         # ★`[2026-09-29 사용자 지시]` 관광공사 목록 운영시간 새벽 읽기 — 창(03:00~08:00) 밖이면 아무것도 안 한다
         run("catalog_hours", lambda: _run_catalog_hours(tenant_id))
+    # ★`[2026-10-13]` 에이전트 팀이 끼운 정기 작업(`instances/<팀>/jobs.py` → `team_hooks/scheduled_jobs`). 시간대 밖이면 부르지 않는다.
+    #   `--only team:<이름>` 은 시간대를 보지 않는다(손으로 부르는 것). 활동의 웹 확인 배치 등 — 활동 → 코어 전달 사항(10-13) 2번
+    if only is None or only.startswith("team:"):
+        from app.domains.travel_ops.components.team_hooks import scheduled_jobs
+
+        for job in scheduled_jobs.registered():
+            key = f"team:{job.name}"
+            if only in (None, key):
+                run(key, lambda job=job: _run_team_job(tenant_id, job, forced=only == key))
     # ★끝난 여행의 전용 장소 행(029)에서 외부 서비스 값(좌표·식별자)을 비운다 — 약관, `trip_places.py` 머리
     if only in (None, "trip_places"):
         run("trip_places", lambda: _run_trip_places(tenant_id))
@@ -299,6 +310,32 @@ def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
                        retry_days=int(guard.get("travel.catalog_hours.retry_days")))
 
 
+def _in_window(now, start: str, until: str) -> bool:
+    """서울 시각 `now` 가 `start`~`until`("HH:MM") 안인가. 자정을 넘는 시간대(22:00~02:00)도 받는다."""
+    from datetime import time as clock
+
+    begin, end = clock.fromisoformat(start), clock.fromisoformat(until)
+    at = now.time()
+    return begin <= at < end if begin <= end else (at >= begin or at < end)
+
+
+def _run_team_job(tenant_id: str, job, *, forced: bool = False, now=None) -> dict[str, object]:
+    """팀 정기 작업 한 회차 — 시간대(`guardrails travel.team_jobs.windows.<job.window>`) 밖이면 부르지 않는다."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from app.core.settings import get_guardrails
+
+    now = now or datetime.now(ZoneInfo("Asia/Seoul"))
+    if not forced:
+        window = get_guardrails().get(f"travel.team_jobs.windows.{job.window}")
+        if not isinstance(window, dict) or not window.get("start") or not window.get("until"):
+            raise ValueError(f"team job '{job.name}' window '{job.window}' is not configured")   # 모르는 시간대에 돌지 않는다
+        if not _in_window(now, str(window["start"]), str(window["until"])):
+            return {"outside_window": 1}
+    return dict(job.tick(tenant_id, now))
+
+
 def _run_retention(tenant_id: str, *, forced: bool) -> dict[str, object]:
     """회원 자료 정리(모드에 따라 세기만 · 지움 · 안 함) — 하루에 한 번. `forced` 면 주기 문을 건너뛴다."""
     from app.application.job_gate import claim
@@ -322,7 +359,12 @@ def _run_web_guard(tenant_id: str) -> dict[str, object]:
         # ★`[2026-10-05]` 보관 기간(`consent.evidence_retention_days`)이 지난 동의 기록도 여기서 지운다 — 동의 기록을 지우는 곳은 이 함수 하나뿐이다
         out = {**prune_usage(conn, tenant_id), "guests": cleanup_guests(conn, tenant_id), "consent_events_purged": purge_expired(conn, tenant_id)}
     # ★`[2026-10-07]` 회원 자료 정리 — 하루 한 번(주기 문) · 기본은 세기만(dry_run). 별도 연결로 돈다(위 정리와 트랜잭션이 섞이지 않게)
-    return {**out, "retention": _run_retention(tenant_id, forced=False)}
+    # 원본 정리를 먼저 끝낸다. 합성본 정리 실패가 원본 파기를 막지 않는다.
+    out["retention"] = _run_retention(tenant_id, forced=False)
+    from app.domains.travel_ops.components.customer.service_improvement import prune_expired
+    with get_connection() as conn:
+        out["synthetic_batches_purged"] = prune_expired(conn, tenant_id)
+    return out
 
 
 def _run_trip_places(tenant_id: str) -> dict[str, object]:
@@ -358,6 +400,7 @@ def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
     # ★하루 호출 상한(`ACOP_RATE_GOOGLE_PLACES_PER_DAY`)을 **같은 제한기**로 건다 — 넘으면 부르지 않고
     #   `rate_limited` 로 세며, 그 항목은 `fatal` 로 남아 창 안에서 다시 시도된다(요금이 새지 않게).
     from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, google_caps
+    from app import composition
 
     # ★무료 한도 보호 — DB 예산(027)을 **반드시** 건다. 프로세스 안 제한기는 매분 새로 차서 못 지킨다
     budget = CallBudget(connection_factory=get_connection, caps=google_caps())
@@ -365,7 +408,8 @@ def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
                            match_radius_m=float(get_guardrails().get("travel.dawn_check.match_radius_m")))
               if key else None)
     outcome = DawnCheck(store=TripStore(tenant_id), connection_factory=get_connection,
-                        clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")), source=source).tick()
+                        clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")), source=source,
+                        place_status=composition.build_place_status(source)).tick()
     return outcome.counts()
 
 
@@ -380,14 +424,18 @@ def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
     from app.domains.travel_ops.entry.trip_api import plan_url
     from app.domains.travel_ops.components.watch.trip_reminders import TripReminders
 
-    sources = build_travel_sources(get_settings())
+    from app.composition import build_mobility_departure_observer
+    settings = get_settings()
+    sources = build_travel_sources(settings)
     reminders = TripReminders(store=TripStore(tenant_id), connection_factory=get_connection,
                               clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")),
                               route_events=sources.route_events,
+                              departure_observer=build_mobility_departure_observer(settings, sources),
                               link=lambda trip_id: plan_url(tenant_id, trip_id))
     outcome = reminders.tick()
     return {"trips": outcome.trips, "sent": len(outcome.sent), "already": outcome.already,
-            "held": len(outcome.held), "fatal": len(outcome.fatal), "no_route": outcome.no_route}
+            "held": len(outcome.held), "fatal": len(outcome.fatal), "no_route": outcome.no_route,
+            "stale": len(outcome.stale)}
 
 
 def _watch_if_due(tenant_id: str, *, forced: bool, composition_failed=False) -> dict[str, int]:
@@ -398,6 +446,7 @@ def _watch_if_due(tenant_id: str, *, forced: bool, composition_failed=False) -> 
     """
     from app.application.job_gate import WATCH_GATE, claim, interval_seconds
     from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.watch.monitoring import execute
 
     interval, min_seconds = interval_seconds(get_guardrails())
     if not forced:
@@ -415,7 +464,7 @@ def _watch_if_due(tenant_id: str, *, forced: bool, composition_failed=False) -> 
             logger.error("sweeper_job_failed job=trip_safety error_type=%s", type(exc).__name__)
             counts["safety_errored"] = 1
         return counts
-    return work()
+    return execute(tenant_id, forced=forced, interval=interval, work=work, connection_factory=get_connection)
 
 
 def _run_trip_safety(tenant_id: str) -> dict[str, int]:
@@ -431,7 +480,10 @@ def _run_trip_safety(tenant_id: str) -> dict[str, int]:
     check = DisruptionCheck(build_travel_sources(get_settings()))
     sweep = SafetySweep(store=TripStore(tenant_id), check=check.check_safety, release=check.released,
                         connection_factory=get_connection, clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")))
-    return sweep.tick().counts()
+    outcome = sweep.tick()
+    from app.domains.travel_ops.components.watch.monitoring import outcomes
+    outcomes('safety_action', outcome)
+    return outcome.counts()
 
 
 @_in_round
@@ -446,6 +498,7 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
     from app.domains.travel_ops.components.itinerary.itinerary import TripStore
     from app.domains.travel_ops.components.watch.trip_watch_cases import TripWatchCaseOpener
+    from app import composition
 
     # ★`[2026-10-06 사용자 결정]` 재난 정지 점검은 감시 **앞에** 같은 주기로 돈다 — 정지가 먼저 걸려야 같은 회차의 감시가 그 여행을 건너뛴다(`TripStore.due`).
     #   실패해도 감시는 돈다(정지 점검의 예외가 일정 감시를 막지 않는다 — 실패는 세고 로그에 남긴다). 결과는 `safety_*` 칸으로 감시 결과에 합친다
@@ -466,8 +519,13 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     opener = TripWatchCaseOpener(
         store=TripStore(tenant_id), check=DisruptionCheck(sources).check,
         connection_factory=get_connection, clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")),
-        repository=repository, run_case=run_case, route_events=sources.route_events)
+        repository=repository, run_case=run_case, route_events=sources.route_events,
+        diagnostic_recorder=composition.build_operations_recorder(),
+        place_status=composition.build_place_status(),
+        departure_observer=composition.build_mobility_departure_observer(get_settings(), sources))
     outcome = opener.tick()
+    from app.domains.travel_ops.components.watch.monitoring import outcomes
+    outcomes('schedule_action', outcome)
     escalated = sum(1 for run in outcome.ran if run.get("status") == "escalated")
     return {**safety, "checked": outcome.checked, "opened": len(outcome.opened), "existing": len(outcome.existing),
             "ran": len(outcome.ran), "escalated": escalated, "fatal": len(outcome.fatal),
@@ -540,10 +598,16 @@ def main() -> int:
     parser.add_argument("--once", action="store_true", default=True)
     parser.add_argument("--interval", type=int, default=None,
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
-    parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_safety", "trip_dawn", "place_facts",
-                                           "catalog_hours",
-                                           "trip_reminders", "trip_places", "web_guard", "retention"),
-                        default=None)
+    fixed = ("classifying", "routing", "trip", "trip_cases", "trip_safety", "trip_dawn", "place_facts", "catalog_hours",
+             "trip_reminders", "trip_places", "web_guard", "retention")
+
+    def job_name(value: str) -> str:
+        # `team:<이름>` — 팀이 끼운 정기 작업 하나(시간대를 보지 않고 지금 부른다)
+        if value in fixed or (value.startswith("team:") and len(value) > len("team:")):
+            return value
+        raise argparse.ArgumentTypeError(f"{value!r} 는 {', '.join(fixed)} 또는 team:<이름> 중 하나여야 한다")
+
+    parser.add_argument("--only", type=job_name, default=None)
     args = parser.parse_args()
 
     tenant_id = get_settings().tenant_id

@@ -1,0 +1,23 @@
+{
+  "source": "v10",
+  "source_path": "legacy/deployment_candidates/2026-10-12_012943_plugin_v10",
+  "actual_function": "handle_trip_message",
+  "db_io": false,
+  "http": false,
+  "rows": [
+    {
+      "status": "routing",
+      "stored_answer": false,
+      "exception": "StateConflict",
+      "message": "미완료 요청의 저장된 실행 계획이 없어 자동 재시도할 수 없습니다",
+      "recovery_executed": false
+    },
+    {
+      "status": "classifying",
+      "stored_answer": true,
+      "exception": "StateConflict",
+      "message": "미완료 요청은 원래 실행 또는 답변 요청으로 재시도해 주세요",
+      "recovery_executed": false
+    }
+  ]
+}

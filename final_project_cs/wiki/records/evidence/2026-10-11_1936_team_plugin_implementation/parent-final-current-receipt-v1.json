@@ -1,0 +1,42 @@
+{
+  "created_at": "2026-10-12T00:07:27.202189+09:00",
+  "scope": "JUnit execution counts; source hashes captured AFTER runs only, not a before/after freeze proof",
+  "runs": {
+    "conversation-final-joint-v1": {
+      "collected_and_executed": 16,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 15,
+      "junit_sha256": "6f2597ec52d6f71a194d258e80b975239075010882fd3a6133a281c02f03d427",
+      "log_sha256": "69fb808a90d42614e29fc10becf64941b190629ef36e85cb8df3d7dee43d6681"
+    },
+    "conversation-final-joint-v2": {
+      "collected_and_executed": 16,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 16,
+      "junit_sha256": "11368473dd2cf36009ff1871123f6a1c2fd75669bf45bbd6e263b8745310bf9c",
+      "log_sha256": "93da580b76610296c2994c3ac059211dfe6b4bcf40f7542eb5f9aa060de23e97"
+    },
+    "required-gates-v6": {
+      "collected_and_executed": 464,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 464,
+      "junit_sha256": "d913ec78f593a084db12519911c39edb2be8a0f7a4d9a563450c562bd3ca9f8d",
+      "log_sha256": "c49ee2fe7733e141b43ec06ee3789783ff80571eadb7d05479880e1a146b270b"
+    }
+  },
+  "post_run_source_sha256": {
+    "app/application/case_intake.py": "9abd0180e0d0b59fbe71c6340c597dec8d4307287518dbd3ae84ac431c17cd3d",
+    "app/application/controller.py": "3363b7903ed10e94dfdf288ef601a77da94f800b7874838fe830e4e83a874064",
+    "app/domains/travel_ops/components/conversation/case_dispatch.py": "e51f3bb13f211951e12518901ac1ce3d66e784a48c84feaa7f154bd42472deff",
+    "app/domains/travel_ops/components/conversation/trip_messages.py": "1b5c70f75a2b659ba96a91c257388c601cd3b69223137cdb5f708353b91a3489",
+    "app/domains/travel_ops/components/watch/trip_watch_cases.py": "60a9cd7f498b80123c588968a5da6379a97eddf298a1ad48146415b51101444d",
+    "tests/e2e/test_web_conversation_isolation.py": "009fe2420576d12e1f95419495989d475417d9fa307bdb956f7bd08ebca37e9a",
+    "tests/e2e/test_web_conversation_resume.py": "a3723ff3a39f6de7e1f083028f093bf17822c16d1ec151c029c726763a6778d3"
+  }
+}

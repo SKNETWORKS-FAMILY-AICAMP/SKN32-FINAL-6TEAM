@@ -1,0 +1,383 @@
+FFFFFFFFFFFFFFFFFF                                                       [100%]
+================================== FAILURES ===================================
+______ test_late_unannounced_feasible_walk_reaches_current_guidance_once ______
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4216BB920>)
+
+    def test_late_unannounced_feasible_walk_reaches_current_guidance_once(world):
+        original = deepcopy(world.items)
+        first = world.runner.tick()
+>       assert len(first.sent) == 1 and not first.fatal and not first.held
+E       assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\unit\travel\test_late_departure_notice_v1.py:59: AssertionError
+__________ test_window_ends_at_next_visit_not_old_movement_end[-1-0] __________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F42190F7D0>)
+offset = -1, expected = 0
+
+    @pytest.mark.parametrize('offset, expected', [(-1, 0), (0, 1), (1, 1), (2, 1), (29, 1), (30, 0), (31, 0)])
+    def test_window_ends_at_next_visit_not_old_movement_end(world, offset, expected):
+>       got = departures(world.items, NOW + timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('3c54902b-45e6-4914-a391-3c6f8b56969a'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 9, 59, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+__________ test_window_ends_at_next_visit_not_old_movement_end[0-1] ___________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F421991220>)
+offset = 0, expected = 1
+
+    @pytest.mark.parametrize('offset, expected', [(-1, 0), (0, 1), (1, 1), (2, 1), (29, 1), (30, 0), (31, 0)])
+    def test_window_ends_at_next_visit_not_old_movement_end(world, offset, expected):
+>       got = departures(world.items, NOW + timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('0bbdf122-af85-47d1-a73f-a55eed2c7d60'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 10, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+__________ test_window_ends_at_next_visit_not_old_movement_end[1-1] ___________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4219925D0>)
+offset = 1, expected = 1
+
+    @pytest.mark.parametrize('offset, expected', [(-1, 0), (0, 1), (1, 1), (2, 1), (29, 1), (30, 0), (31, 0)])
+    def test_window_ends_at_next_visit_not_old_movement_end(world, offset, expected):
+>       got = departures(world.items, NOW + timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('2456dfb7-3e57-4305-b53a-f916dd897847'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 10, 1, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+__________ test_window_ends_at_next_visit_not_old_movement_end[2-1] ___________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F421993A70>)
+offset = 2, expected = 1
+
+    @pytest.mark.parametrize('offset, expected', [(-1, 0), (0, 1), (1, 1), (2, 1), (29, 1), (30, 0), (31, 0)])
+    def test_window_ends_at_next_visit_not_old_movement_end(world, offset, expected):
+>       got = departures(world.items, NOW + timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('c365a9ca-ada6-410c-921f-46ed4fdb8922'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+__________ test_window_ends_at_next_visit_not_old_movement_end[29-1] __________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4219AC4D0>)
+offset = 29, expected = 1
+
+    @pytest.mark.parametrize('offset, expected', [(-1, 0), (0, 1), (1, 1), (2, 1), (29, 1), (30, 0), (31, 0)])
+    def test_window_ends_at_next_visit_not_old_movement_end(world, offset, expected):
+>       got = departures(world.items, NOW + timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('44064408-2da4-410e-9395-0417c6df0416'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 10, 29, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+__________ test_window_ends_at_next_visit_not_old_movement_end[30-0] __________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F413138800>)
+offset = 30, expected = 0
+
+    @pytest.mark.parametrize('offset, expected', [(-1, 0), (0, 1), (1, 1), (2, 1), (29, 1), (30, 0), (31, 0)])
+    def test_window_ends_at_next_visit_not_old_movement_end(world, offset, expected):
+>       got = departures(world.items, NOW + timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('dd3b2cd5-16b5-448b-aeb0-9aea32557b8d'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 10, 30, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+__________ test_window_ends_at_next_visit_not_old_movement_end[31-0] __________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F421959550>)
+offset = 31, expected = 0
+
+    @pytest.mark.parametrize('offset, expected', [(-1, 0), (0, 1), (1, 1), (2, 1), (29, 1), (30, 0), (31, 0)])
+    def test_window_ends_at_next_visit_not_old_movement_end(world, offset, expected):
+>       got = departures(world.items, NOW + timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('cf86337c-74ea-4121-b668-5fcd58dbd453'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 10, 31, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+_______________ test_late_candidate_that_cannot_arrive_is_held ________________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 29, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), cal...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4219582C0>)
+
+    def test_late_candidate_that_cannot_arrive_is_held(world):
+        world.now = NOW + timedelta(minutes=29)
+        result = world.runner.tick()
+>       assert len(world.calls) == 1 and len(result.held) == 1
+E       AssertionError: assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = namespace(now=datetime.datetime(2026, 10, 9, 10, 29, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), cal...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4219582C0>).calls
+
+tests\unit\travel\test_late_departure_notice_v1.py:80: AssertionError
+___ test_failed_late_recheck_is_not_published_and_can_recover[fatal-fatal] ____
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F42190FDA0>)
+status = 'fatal', bucket = 'fatal'
+
+    @pytest.mark.parametrize('status, bucket', [('fatal', 'fatal'), ('needs_replan', 'held')])
+    def test_failed_late_recheck_is_not_published_and_can_recover(world, status, bucket):
+        current = world.runner.departure_observer
+        world.runner.departure_observer = lambda *a, **kw: {'status': status, 'reason': 'controlled_failure'}
+        failed = world.runner.tick()
+>       assert len(getattr(failed, bucket)) == 1 and not failed.sent and not world.payloads
+E       AssertionError: assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = getattr(ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]), 'fatal')
+
+tests\unit\travel\test_late_departure_notice_v1.py:89: AssertionError
+_ test_failed_late_recheck_is_not_published_and_can_recover[needs_replan-held] _
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4219B8860>)
+status = 'needs_replan', bucket = 'held'
+
+    @pytest.mark.parametrize('status, bucket', [('fatal', 'fatal'), ('needs_replan', 'held')])
+    def test_failed_late_recheck_is_not_published_and_can_recover(world, status, bucket):
+        current = world.runner.departure_observer
+        world.runner.departure_observer = lambda *a, **kw: {'status': status, 'reason': 'controlled_failure'}
+        failed = world.runner.tick()
+>       assert len(getattr(failed, bucket)) == 1 and not failed.sent and not world.payloads
+E       AssertionError: assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = getattr(ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]), 'held')
+
+tests\unit\travel\test_late_departure_notice_v1.py:89: AssertionError
+_______ test_already_published_late_move_is_skipped_before_observation ________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4219BA030>)
+
+    def test_already_published_late_move_is_skipped_before_observation(world):
+        world.payloads[f'departure:{world.move.item_id}'] = {'existing': True}
+        result = world.runner.tick()
+>       assert result.already == 1 and not result.sent and not world.calls
+E       assert (0 == 1)
+E        +  where 0 = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).already
+
+tests\unit\travel\test_late_departure_notice_v1.py:98: AssertionError
+__ test_late_window_finds_following_visit_across_midnight_in_sequence_order ___
+
+world = namespace(now=datetime.datetime(2026, 10, 10, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F421990A70>)
+
+    def test_late_window_finds_following_visit_across_midnight_in_sequence_order(world):
+        delta = timedelta(hours=13, minutes=58)
+        for item in world.items:
+            item.starts_at += delta
+            if item.ends_at:
+                item.ends_at += delta
+        world.items[-1].ends_at = world.items[-1].starts_at + timedelta(hours=1)
+        world.now = NOW + delta + timedelta(minutes=2)
+        world.items.reverse()
+>       result = world.runner.tick()
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\components\watch\trip_reminders.py:323: in tick
+    payload = self._payload(trip_id, trip, items, reminder, now, result, waiting=waiting)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\trip_reminders.py:390: in _payload
+    changed = self._changed_since(trip_id, reminder.due_at) if reminder.kind == "day_start" else 0
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F421990A70>
+trip_id = UUID('a2e30412-b6a6-4f45-834f-94b848668402')
+due_at = datetime.datetime(2026, 10, 9, 23, 28, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def _changed_since(self, trip_id, due_at: datetime) -> int:
+        """하루 시작 전 24시간 동안 바뀐 일정 버전 수(생성 제외). ★새벽 3시 정리의 몫이다."""
+>       with self._connect() as conn, conn.cursor() as cur:
+                                      ^^^^^^^^^^^
+E       AttributeError: 'Connection' object has no attribute 'cursor'
+
+app\domains\travel_ops\components\watch\trip_reminders.py:370: AttributeError
+_____________ test_without_following_visit_no_extended_candidate ______________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F421991A00>)
+
+    def test_without_following_visit_no_extended_candidate(world):
+>       assert not departures(world.items[:-1], world.now)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('95486094-5866-4cad-9a58-5c66cc4f968e'), seq=0, kind='activity', title='A', place_id=None, starts_a...41, 'path_kind': 'direct_walk', 'legs': [], 'subway_identity': None, 'check': None, 'leg_results': []}}}}, place=None)]
+at = datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+_____________ test_legacy_without_observer_keeps_saved_end_window _____________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F42195BBF0>)
+
+    def test_legacy_without_observer_keeps_saved_end_window(world):
+>       assert not departures(world.items, world.now, revalidate=False)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('3a2236a9-abce-46f8-9c91-62a9783a2f22'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+________ test_next_visit_deadline_also_bounds_overlong_saved_movement _________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4219B8260>)
+
+    def test_next_visit_deadline_also_bounds_overlong_saved_movement(world):
+        world.move.ends_at = NOW + timedelta(hours=2)
+>       assert not departures(world.items, NOW + timedelta(minutes=30))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('fafe5f80-268e-4798-92c7-11c99d4b97bf'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 10, 30, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+____________ test_missing_saved_movement_end_still_uses_next_visit ____________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4219AC530>)
+
+    def test_missing_saved_movement_end_still_uses_next_visit(world):
+        world.move.ends_at = None
+>       assert len(departures(world.items, world.now)) == 1
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:133: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [Item(item_id=UUID('c8612d06-9897-4760-b67a-3bf943550c43'), seq=0, kind='activity', title='A', place_id=None, starts_a...lse, booking_id=None, replaces_item_id=None, detail={}, place={'latitude': 37.5727, 'longitude': 126.98, 'name': 'B'})]
+at = datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def departures(items, at, *, revalidate=True):
+>       return [r for r in notices.plan_reminders(items, now=at, rules=notices.ReminderRules(),
+            revalidate_departures=revalidate) if r.kind == 'departure']
+E       TypeError: plan_reminders() got an unexpected keyword argument 'revalidate_departures'
+
+tests\unit\travel\test_late_departure_notice_v1.py:52: TypeError
+____________ test_late_recovery_still_checks_basis_before_enqueue _____________
+
+world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=<app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x000001F4219905C0>)
+
+    def test_late_recovery_still_checks_basis_before_enqueue(world):
+        world.runner.departure_observer.validate_basis = lambda basis: False
+        result = world.runner.tick()
+>       assert len(result.stale) == 1 and not result.sent and not world.payloads
+E       assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).stale
+
+tests\unit\travel\test_late_departure_notice_v1.py:139: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_0317_미발행출발_지연복구\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_late_unannounced_feasible_walk_reaches_current_guidance_once
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_window_ends_at_next_visit_not_old_movement_end[-1-0]
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_window_ends_at_next_visit_not_old_movement_end[0-1]
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_window_ends_at_next_visit_not_old_movement_end[1-1]
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_window_ends_at_next_visit_not_old_movement_end[2-1]
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_window_ends_at_next_visit_not_old_movement_end[29-1]
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_window_ends_at_next_visit_not_old_movement_end[30-0]
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_window_ends_at_next_visit_not_old_movement_end[31-0]
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_late_candidate_that_cannot_arrive_is_held
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_failed_late_recheck_is_not_published_and_can_recover[fatal-fatal]
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_failed_late_recheck_is_not_published_and_can_recover[needs_replan-held]
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_already_published_late_move_is_skipped_before_observation
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_late_window_finds_following_visit_across_midnight_in_sequence_order
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_without_following_visit_no_extended_candidate
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_legacy_without_observer_keeps_saved_end_window
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_next_visit_deadline_also_bounds_overlong_saved_movement
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_missing_saved_movement_end_still_uses_next_visit
+FAILED tests/unit/travel/test_late_departure_notice_v1.py::test_late_recovery_still_checks_basis_before_enqueue
+18 failed in 7.05s
+Exception ignored in: <function Console.__del__ at 0x000001F412045B20>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

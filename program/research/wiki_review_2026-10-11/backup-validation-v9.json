@@ -1,0 +1,1779 @@
+{
+  "before_backup_checks": 162,
+  "before_backup_passed": 162,
+  "final_path_checks": 238,
+  "final_path_passed": 238,
+  "preserved_subsequent_shared_changes": [
+    "final_project_cs/wiki/index.md",
+    "final_project_cs/wiki/teams/index.md",
+    "final_project_cs/tests/e2e/test_mcp_read_tools.py"
+  ],
+  "reconstructed_intermediates": 2,
+  "archived_source_documents": 74,
+  "backups": [
+    {
+      "path": "final_project_cs/tests/architecture/test_engine_serves_another_domain.py",
+      "backup": "final_project_cs/tests/architecture/_backup/2026-10-11_213423_travel-commerce-cleanup/test_engine_serves_another_domain.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/tools/test_tool_budget.py",
+      "backup": "final_project_cs/tests/unit/tools/_backup/2026-10-11_213423_travel-commerce-cleanup/test_tool_budget.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/contract/test_team_tool_discipline.py",
+      "backup": "final_project_cs/tests/contract/_backup/2026-10-11_213423_travel-commerce-cleanup/test_team_tool_discipline.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/core/test_proposal_verification.py",
+      "backup": "final_project_cs/tests/unit/core/_backup/2026-10-11_213423_travel-commerce-cleanup/test_proposal_verification.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/eval/datasets/attack_fixtures.jsonl",
+      "backup": "final_project_cs/eval/datasets/_backup/2026-10-11_213423_travel-commerce-cleanup/attack_fixtures.jsonl",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/scripts/map_commits_to_phase.py",
+      "backup": "final_project_cs/scripts/_backup/2026-10-11_213423_travel-commerce-cleanup/map_commits_to_phase.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/core/test_commit_phase_mapping.py",
+      "backup": "final_project_cs/tests/unit/core/_backup/2026-10-11_213423_travel-commerce-cleanup/test_commit_phase_mapping.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/presentation/api/mcp.py",
+      "backup": "final_project_cs/app/presentation/api/_backup/2026-10-11_213423_travel-commerce-cleanup/mcp.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/contract/test_mcp_opens_a_classified_case.py",
+      "backup": "final_project_cs/tests/contract/_backup/2026-10-11_213423_travel-commerce-cleanup/test_mcp_opens_a_classified_case.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/presentation/api/cases.py",
+      "backup": "final_project_cs/app/presentation/api/_backup/2026-10-11_213423_travel-commerce-cleanup/cases.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+      "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_213423_travel-commerce-cleanup/test_api_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/contract/test_module_toggles.py",
+      "backup": "final_project_cs/tests/contract/_backup/2026-10-11_213423_travel-commerce-cleanup/test_module_toggles.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/scripts/verify_module_toggles.py",
+      "backup": "final_project_cs/scripts/_backup/2026-10-11_213423_travel-commerce-cleanup/verify_module_toggles.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/security/test_scope_contract.py",
+      "backup": "final_project_cs/tests/security/_backup/2026-10-11_213423_travel-commerce-cleanup/test_scope_contract.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/security/test_auth_and_scope_guards.py",
+      "backup": "final_project_cs/tests/security/_backup/2026-10-11_213423_travel-commerce-cleanup/test_auth_and_scope_guards.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/config/guardrails.yaml",
+      "backup": "final_project_cs/config/_backup/2026-10-11_213423_travel-commerce-cleanup/guardrails.yaml",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/infrastructure/db/migrate.py",
+      "backup": "final_project_cs/app/infrastructure/db/_backup/2026-10-11_213423_travel-commerce-cleanup/migrate.py",
+      "match": true
+    },
+    {
+      "path": "program/scripts/build_wiki_catalogs.py",
+      "backup": "program/scripts/_backup/2026-10-11_213423_travel-commerce-cleanup/build_wiki_catalogs.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/test_engine_serves_another_domain.py",
+      "backup": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/_backup/2026-10-11_213529_travel-commerce-cleanup/test_engine_serves_another_domain.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/architecture/test_engine_serves_another_domain.py",
+      "backup": "final_project_cs/tests/architecture/_backup/2026-10-11_213529_travel-commerce-cleanup/test_engine_serves_another_domain.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/architecture/test_engine_accepts_travel_policies.py",
+      "backup": "final_project_cs/tests/architecture/_backup/2026-10-11_213529_travel-commerce-cleanup/test_engine_accepts_travel_policies.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/scripts/verify_module_toggles.py",
+      "backup": "final_project_cs/scripts/_backup/2026-10-11_213529_travel-commerce-cleanup/verify_module_toggles.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/db/test_migrations_rerun.py",
+      "backup": "final_project_cs/tests/integration/db/_backup/2026-10-11_213529_travel-commerce-cleanup/test_migrations_rerun.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/AGENTS.md",
+      "backup": "final_project_cs/_backup/2026-10-11_213940_travel-commerce-cleanup/AGENTS.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/CLAUDE.md",
+      "backup": "final_project_cs/_backup/2026-10-11_213940_travel-commerce-cleanup/CLAUDE.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/RULE.md",
+      "backup": "final_project_cs/_backup/2026-10-11_213940_travel-commerce-cleanup/RULE.md",
+      "match": true
+    },
+    {
+      "path": "wiki/index.md",
+      "backup": "wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/quickstart.md",
+      "backup": "wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/quickstart.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/index.md",
+      "backup": "final_project_cs/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/index.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_213940_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/context/corpus-authoring.md",
+      "backup": "final_project_cs/wiki/context/_backup/2026-10-11_213940_travel-commerce-cleanup/corpus-authoring.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/external/mcp-tools.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_213940_travel-commerce-cleanup/mcp-tools.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/run.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_213940_travel-commerce-cleanup/run.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/data/migrations.md",
+      "backup": "final_project_cs/wiki/data/_backup/2026-10-11_213940_travel-commerce-cleanup/migrations.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/personas.md",
+      "backup": "wiki/product/_backup/2026-10-11_213940_travel-commerce-cleanup/personas.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/problem.md",
+      "backup": "wiki/product/_backup/2026-10-11_213940_travel-commerce-cleanup/problem.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/pitch-questions.md",
+      "backup": "wiki/product/_backup/2026-10-11_213940_travel-commerce-cleanup/pitch-questions.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/catalog.md",
+      "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/catalog.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/coupang-extension.md",
+      "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/coupang-extension.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/distribution.md",
+      "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/distribution.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/scraper-notes.md",
+      "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/scraper-notes.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/source-selection.md",
+      "backup": "datasets/wiki/_backup/2026-10-11_213940_travel-commerce-cleanup/source-selection.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/blind-spots.md",
+      "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_213940_travel-commerce-cleanup/blind-spots.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/dod-evidence-drift.md",
+      "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_213940_travel-commerce-cleanup/dod-evidence-drift.md",
+      "match": true
+    },
+    {
+      "path": "wiki/decisions/D-001-payment-ownership.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_213940_travel-commerce-cleanup/D-001-payment-ownership.md",
+      "match": true
+    },
+    {
+      "path": "wiki/decisions/D-008-review-spam-out-of-scope.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_213940_travel-commerce-cleanup/D-008-review-spam-out-of-scope.md",
+      "match": true
+    },
+    {
+      "path": "wiki/decisions/D-014-judge-rebaseline.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_213940_travel-commerce-cleanup/D-014-judge-rebaseline.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/scope-verdicts.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_213940_travel-commerce-cleanup/scope-verdicts.md",
+      "match": true
+    },
+    {
+      "path": "wiki/evaluation/dod28-rerun.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_213940_travel-commerce-cleanup/dod28-rerun.md",
+      "match": true
+    },
+    {
+      "path": "wiki/governance/migration-scope/coverage-2026-09.md",
+      "backup": "wiki/governance/migration-scope/_backup/2026-10-11_213940_travel-commerce-cleanup/coverage-2026-09.md",
+      "match": true
+    },
+    {
+      "path": "wiki/governance/type-verification/round-9.md",
+      "backup": "wiki/governance/type-verification/_backup/2026-10-11_213940_travel-commerce-cleanup/round-9.md",
+      "match": true
+    },
+    {
+      "path": "wiki/research/dispute-cases.md",
+      "backup": "wiki/research/_backup/2026-10-11_213940_travel-commerce-cleanup/dispute-cases.md",
+      "match": true
+    },
+    {
+      "path": "wiki/research/legal-basis.md",
+      "backup": "wiki/research/_backup/2026-10-11_213940_travel-commerce-cleanup/legal-basis.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/invariants.md",
+      "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_214803_travel-commerce-cleanup/invariants.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/actions/evidence-check.md",
+      "backup": "final_project_cs/wiki/actions/_backup/2026-10-11_214803_travel-commerce-cleanup/evidence-check.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/actions/tool-gateway.md",
+      "backup": "final_project_cs/wiki/actions/_backup/2026-10-11_214803_travel-commerce-cleanup/tool-gateway.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/context/travel-corpus.md",
+      "backup": "final_project_cs/wiki/context/_backup/2026-10-11_214803_travel-commerce-cleanup/travel-corpus.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/common-utils.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_214803_travel-commerce-cleanup/common-utils.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/build-order.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_214803_travel-commerce-cleanup/build-order.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-boundary.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_214803_travel-commerce-cleanup/team-boundary.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_214803_travel-commerce-cleanup/dining.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/scope.md",
+      "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/scope.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/index.md",
+      "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/positioning.md",
+      "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/positioning.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/glossary.md",
+      "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/glossary.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/index.md",
+      "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/index.md",
+      "backup": "wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/quickstart.md",
+      "backup": "wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/quickstart.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/personas.md",
+      "backup": "wiki/product/_backup/2026-10-11_214803_travel-commerce-cleanup/personas.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/test-map.md",
+      "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_214803_travel-commerce-cleanup/test-map.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/domain-swap.md",
+      "backup": "final_project_cs/wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/domain-swap.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/external/index.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_214803_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/generation.md",
+      "backup": "datasets/wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/generation.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/report-split.md",
+      "backup": "datasets/wiki/_backup/2026-10-11_214803_travel-commerce-cleanup/report-split.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/error-cost.md",
+      "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/error-cost.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/market.md",
+      "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/market.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/measure-review-time.md",
+      "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/measure-review-time.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/pricing.md",
+      "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/pricing.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/unit-economics.md",
+      "backup": "wiki/business/_backup/2026-10-11_214803_travel-commerce-cleanup/unit-economics.md",
+      "match": true
+    },
+    {
+      "path": "wiki/evaluation/judge-second-opinion.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_214803_travel-commerce-cleanup/judge-second-opinion.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/evidence.md",
+      "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_214803_travel-commerce-cleanup/evidence.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/e2e/test_composer_write_channel.py",
+      "backup": "final_project_cs/tests/e2e/_backup/2026-10-11_215100_travel-commerce-cleanup/test_composer_write_channel.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/security/test_pii_redaction_runtime.py",
+      "backup": "final_project_cs/tests/security/_backup/2026-10-11_215100_travel-commerce-cleanup/test_pii_redaction_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/voc/test_feedback_runtime.py",
+      "backup": "final_project_cs/tests/unit/voc/_backup/2026-10-11_215100_travel-commerce-cleanup/test_feedback_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/e2e/test_reload_endpoint.py",
+      "backup": "final_project_cs/tests/e2e/_backup/2026-10-11_215100_travel-commerce-cleanup/test_reload_endpoint.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/e2e/test_operations_ui.py",
+      "backup": "final_project_cs/tests/e2e/_backup/2026-10-11_215100_travel-commerce-cleanup/test_operations_ui.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/core/test_case_reducer.py",
+      "backup": "final_project_cs/tests/unit/core/_backup/2026-10-11_215100_travel-commerce-cleanup/test_case_reducer.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+      "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_213423_recovered_intermediate/test_api_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/db/test_stale_write_conflict.py",
+      "backup": "final_project_cs/tests/integration/db/_backup/2026-10-11_215100_travel-commerce-cleanup/test_stale_write_conflict.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/db/test_db_integration.py",
+      "backup": "final_project_cs/tests/integration/db/_backup/2026-10-11_215100_travel-commerce-cleanup/test_db_integration.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/contract/test_contracts.py",
+      "backup": "final_project_cs/tests/contract/_backup/2026-10-11_215100_travel-commerce-cleanup/test_contracts.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/core/test_context_budget.py",
+      "backup": "final_project_cs/tests/unit/core/_backup/2026-10-11_215100_travel-commerce-cleanup/test_context_budget.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/controller/test_controller_integration.py",
+      "backup": "final_project_cs/tests/integration/controller/_backup/2026-10-11_215100_travel-commerce-cleanup/test_controller_integration.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/controller/test_proposal_guard_blocks.py",
+      "backup": "final_project_cs/tests/integration/controller/_backup/2026-10-11_215100_travel-commerce-cleanup/test_proposal_guard_blocks.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/infrastructure/test_graph_v7_axes.py",
+      "backup": "final_project_cs/tests/unit/infrastructure/_backup/2026-10-11_215100_travel-commerce-cleanup/test_graph_v7_axes.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/core/project_config.py",
+      "backup": "final_project_cs/app/core/_backup/2026-10-11_215100_travel-commerce-cleanup/project_config.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+      "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_215100_travel-commerce-cleanup/test_api_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/e2e/test_mcp_read_tools.py",
+      "backup": "final_project_cs/tests/e2e/_backup/2026-10-11_215100_travel-commerce-cleanup/test_mcp_read_tools.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/db/test_stale_write_conflict.py",
+      "backup": "final_project_cs/tests/integration/db/_backup/2026-10-11_215436_travel-commerce-cleanup/test_stale_write_conflict.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+      "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_215436_travel-commerce-cleanup/test_api_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/controller/test_controller_integration.py",
+      "backup": "final_project_cs/tests/integration/controller/_backup/2026-10-11_215436_travel-commerce-cleanup/test_controller_integration.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+      "backup": "final_project_cs/tests/integration/api/_backup/2026-10-11_220428_travel-commerce-cleanup/test_api_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/test_engine_serves_another_domain.py",
+      "backup": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/_backup/2026-10-11_220428_travel-commerce-cleanup/test_engine_serves_another_domain.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/context/travel-corpus.md",
+      "backup": "final_project_cs/wiki/context/_backup/2026-10-11_220428_travel-commerce-cleanup/travel-corpus.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/context/graph-retrieval.md",
+      "backup": "final_project_cs/wiki/context/_backup/2026-10-11_220428_travel-commerce-cleanup/graph-retrieval.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/external/mcp-tools.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_220428_travel-commerce-cleanup/mcp-tools.md",
+      "match": true
+    },
+    {
+      "path": "README.md",
+      "backup": "_backup/2026-10-11_220428_travel-commerce-cleanup/README.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/external/auth-boundary.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_220428_travel-commerce-cleanup/auth-boundary.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/eval-harness.md",
+      "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_220428_travel-commerce-cleanup/eval-harness.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quickstart.md",
+      "backup": "final_project_cs/wiki/_backup/2026-10-11_220428_travel-commerce-cleanup/quickstart.md",
+      "match": true
+    },
+    {
+      "path": "wiki/architecture/pack-model.md",
+      "backup": "wiki/architecture/_backup/2026-10-11_220428_travel-commerce-cleanup/pack-model.md",
+      "match": true
+    },
+    {
+      "path": "wiki/evaluation/metrics.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_220428_travel-commerce-cleanup/metrics.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/open-items.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_220428_travel-commerce-cleanup/open-items.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/release-gate.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_220428_travel-commerce-cleanup/release-gate.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/todo-user.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_220428_travel-commerce-cleanup/todo-user.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/index.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_220428_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_ui/tests/test_composer.py",
+      "backup": "final_project_ui/tests/_backup/2026-10-11_220428_travel-commerce-cleanup/test_composer.py",
+      "match": true
+    },
+    {
+      "path": "final_project_ui/tests/test_composer_web.py",
+      "backup": "final_project_ui/tests/_backup/2026-10-11_220428_travel-commerce-cleanup/test_composer_web.py",
+      "match": true
+    },
+    {
+      "path": "final_project_ui/tests/test_readers.py",
+      "backup": "final_project_ui/tests/_backup/2026-10-11_220428_travel-commerce-cleanup/test_readers.py",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/acop_dojo/scenarios.py",
+      "backup": "acop_dojo/acop_dojo/_backup/2026-10-11_220428_travel-commerce-cleanup/scenarios.py",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/acop_dojo/boss.py",
+      "backup": "acop_dojo/acop_dojo/_backup/2026-10-11_220428_travel-commerce-cleanup/boss.py",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/acop_dojo/progress.py",
+      "backup": "acop_dojo/acop_dojo/_backup/2026-10-11_220428_travel-commerce-cleanup/progress.py",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/README.md",
+      "backup": "acop_dojo/_backup/2026-10-11_220428_travel-commerce-cleanup/README.md",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/wiki/guide.md",
+      "backup": "acop_dojo/wiki/_backup/2026-10-11_220428_travel-commerce-cleanup/guide.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quickstart.md",
+      "backup": "final_project_cs/wiki/_backup/2026-10-11_221120_travel-commerce-cleanup/quickstart.md",
+      "match": true
+    },
+    {
+      "path": "wiki/architecture/pack-model.md",
+      "backup": "wiki/architecture/_backup/2026-10-11_220428_recovered_intermediate/pack-model.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/eval-harness.md",
+      "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_221120_travel-commerce-cleanup/eval-harness.md",
+      "match": true
+    },
+    {
+      "path": "wiki/evaluation/metrics.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_221120_travel-commerce-cleanup/metrics.md",
+      "match": true
+    },
+    {
+      "path": "wiki/architecture/pack-model.md",
+      "backup": "wiki/architecture/_backup/2026-10-11_221120_travel-commerce-cleanup/pack-model.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/always-on.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221120_travel-commerce-cleanup/always-on.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/index.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221120_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "program/scripts/tests/test_dojo_travel_policy.py",
+      "backup": "program/scripts/tests/_backup/2026-10-11_221456_travel-commerce-cleanup/test_dojo_travel_policy.py",
+      "match": true
+    },
+    {
+      "path": "final_project_ui/tests/test_composer.py",
+      "backup": "final_project_ui/tests/_backup/2026-10-11_221456_travel-commerce-cleanup/test_composer.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/current-state.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221456_travel-commerce-cleanup/current-state.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/always-on.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221456_travel-commerce-cleanup/always-on.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/index.md",
+      "backup": "final_project_cs/wiki/data/schema/_backup/2026-10-11_221456_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/troubleshooting.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_221456_travel-commerce-cleanup/troubleshooting.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/actions/approval.md",
+      "backup": "final_project_cs/wiki/actions/_backup/2026-10-11_221456_travel-commerce-cleanup/approval.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/milestones/final-2026-10-26.md",
+      "backup": "wiki/delivery/milestones/_backup/2026-10-11_221653_travel-commerce-cleanup/final-2026-10-26.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/milestones/index.md",
+      "backup": "wiki/delivery/milestones/_backup/2026-10-11_221653_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/milestones/midterm-2026-09-15.md",
+      "backup": "wiki/delivery/milestones/_backup/2026-10-11_221653_travel-commerce-cleanup/midterm-2026-09-15.md",
+      "match": true
+    },
+    {
+      "path": "wiki/research/index.md",
+      "backup": "wiki/research/_backup/2026-10-11_221653_travel-commerce-cleanup/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/infrastructure-cost.md",
+      "backup": "wiki/business/_backup/2026-10-11_221653_travel-commerce-cleanup/infrastructure-cost.md",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-check-commerce-v5.json",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_221653_travel-commerce-cleanup/wiki-check-commerce-v5.json",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/milestones/final-2026-10-26.md",
+      "backup": "wiki/delivery/milestones/_backup/2026-10-11_222116_travel-commerce-cleanup/final-2026-10-26.md",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v1.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222116_travel-commerce-cleanup/wiki-review-v1.html",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v3.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222116_travel-commerce-cleanup/wiki-review-v3.html",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/log.md",
+      "backup": "final_project_cs/wiki/_backup/2026-10-11_222309_travel-commerce-cleanup/log.md",
+      "match": true
+    },
+    {
+      "path": "wiki/log.md",
+      "backup": "wiki/_backup/2026-10-11_222309_travel-commerce-cleanup/log.md",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v1.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222309_travel-commerce-cleanup/wiki-review-v1.html",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v3.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222309_travel-commerce-cleanup/wiki-review-v3.html",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v6.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222309_travel-commerce-cleanup/wiki-review-v6.html",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/.dockerignore",
+      "backup": "final_project_cs/_backup/2026-10-11_222432_travel-commerce-cleanup/.dockerignore",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/scripts/check_retired_domain_assets.py",
+      "backup": "final_project_cs/scripts/_backup/2026-10-11_222432_travel-commerce-cleanup/check_retired_domain_assets.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/plugin-availability.md",
+      "backup": "final_project_cs/wiki/teams/team-contract/_backup/2026-10-11_222432_travel-commerce-cleanup/plugin-availability.md",
+      "match": true
+    },
+    {
+      "path": "wiki/log.md",
+      "backup": "wiki/_backup/2026-10-11_222432_travel-commerce-cleanup/log.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md",
+      "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-11_222432_travel-commerce-cleanup/2026-10-11_commerce-cleanup-and-W18-v6.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/scripts/ops/jobs.py",
+      "backup": "final_project_cs/scripts/ops/_backup/2026-10-11_222635_travel-commerce-cleanup/jobs.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/deploy/worker.sh",
+      "backup": "final_project_cs/deploy/_backup/2026-10-11_222635_travel-commerce-cleanup/worker.sh",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/commerce-w18-review-v6.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_222635_travel-commerce-cleanup/commerce-w18-review-v6.html",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md",
+      "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-11_222635_travel-commerce-cleanup/2026-10-11_commerce-cleanup-and-W18-v6.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md",
+      "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-11_222752_travel-commerce-cleanup/2026-10-11_commerce-cleanup-and-W18-v6.md",
+      "match": true
+    }
+  ],
+  "current_paths": [
+    {
+      "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/architecture/test_engine_serves_another_domain.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/architecture/test_engine_serves_another_domain.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/tools/test_tool_budget.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/contract/test_team_tool_discipline.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/core/test_proposal_verification.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/eval/datasets/attack_fixtures.jsonl",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/scripts/map_commits_to_phase.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/core/test_commit_phase_mapping.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/app/presentation/api/mcp.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/presentation/api/mcp.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/contract/test_mcp_opens_a_classified_case.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/contract/test_mcp_opens_a_classified_case.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/app/presentation/api/cases.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/presentation/api/cases.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/legacy/commerce_cleanup_2026-10-11/tests/integration/api/test_api_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/api/test_api_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/contract/test_module_toggles.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/scripts/verify_module_toggles.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/security/test_scope_contract.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/security/test_auth_and_scope_guards.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/config/guardrails.yaml",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/infrastructure/db/migrations/migration-plan.json",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/infrastructure/db/migration_plan.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/infrastructure/db/migrate.py",
+      "match": true
+    },
+    {
+      "path": "program/scripts/build_wiki_catalogs.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/architecture/test_engine_accepts_travel_policies.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/core/test_current_migration_plan.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/db/test_migrations_rerun.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/AGENTS.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/AGENTS.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/CLAUDE.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/CLAUDE.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/RULE.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/RULE.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--quickstart.md",
+      "match": true
+    },
+    {
+      "path": "wiki/quickstart.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--context--corpus-authoring.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/context/corpus-authoring.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--external--mcp-tools.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/external/mcp-tools.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--run.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/run.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--data--migrations.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/data/migrations.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--product--personas.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/personas.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--product--problem.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/problem.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--product--pitch-questions.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/pitch-questions.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/records/commerce_2026-10-11/catalog.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/catalog.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/records/commerce_2026-10-11/coupang-extension.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/coupang-extension.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/records/commerce_2026-10-11/distribution.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/distribution.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/records/commerce_2026-10-11/scraper-notes.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/scraper-notes.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/records/commerce_2026-10-11/source-selection.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/source-selection.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--blind-spots.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/blind-spots.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--dod-evidence-drift.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/dod-evidence-drift.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--decisions--D-001-payment-ownership.md",
+      "match": true
+    },
+    {
+      "path": "wiki/decisions/D-001-payment-ownership.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--decisions--D-008-review-spam-out-of-scope.md",
+      "match": true
+    },
+    {
+      "path": "wiki/decisions/D-008-review-spam-out-of-scope.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--decisions--D-014-judge-rebaseline.md",
+      "match": true
+    },
+    {
+      "path": "wiki/decisions/D-014-judge-rebaseline.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--delivery--scope-verdicts.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/scope-verdicts.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--evaluation--dod28-rerun.md",
+      "match": true
+    },
+    {
+      "path": "wiki/evaluation/dod28-rerun.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--governance--migration-scope--coverage-2026-09.md",
+      "match": true
+    },
+    {
+      "path": "wiki/governance/migration-scope/coverage-2026-09.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--governance--type-verification--round-9.md",
+      "match": true
+    },
+    {
+      "path": "wiki/governance/type-verification/round-9.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--research--dispute-cases.md",
+      "match": true
+    },
+    {
+      "path": "wiki/research/dispute-cases.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--research--legal-basis.md",
+      "match": true
+    },
+    {
+      "path": "wiki/research/legal-basis.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--invariants.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/invariants.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--actions--evidence-check.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/actions/evidence-check.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--actions--tool-gateway.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/actions/tool-gateway.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--context--travel-corpus.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/context/travel-corpus.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--common-utils.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/common-utils.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--build-order.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/build-order.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--team-boundary.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-boundary.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--dining.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--product--scope.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/scope.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--product--index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--product--positioning.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/positioning.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--product--glossary.md",
+      "match": true
+    },
+    {
+      "path": "wiki/product/glossary.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--business--index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--test-map.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/test-map.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--domain-swap.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/domain-swap.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--external--index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/external/index.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/records/commerce_2026-10-11/generation.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/generation.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/records/commerce_2026-10-11/report-split.md",
+      "match": true
+    },
+    {
+      "path": "datasets/wiki/report-split.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--business--error-cost.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/error-cost.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--business--market.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/market.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--business--measure-review-time.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/measure-review-time.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--business--pricing.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/pricing.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--business--unit-economics.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/unit-economics.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--evaluation--judge-second-opinion.md",
+      "match": true
+    },
+    {
+      "path": "wiki/evaluation/judge-second-opinion.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--evidence.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/evidence.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/e2e/test_composer_write_channel.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/security/test_pii_redaction_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/voc/test_feedback_runtime.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/e2e/test_reload_endpoint.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/e2e/test_operations_ui.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/core/test_case_reducer.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/db/test_stale_write_conflict.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/db/test_db_integration.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/contract/test_contracts.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/core/test_context_budget.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/controller/test_controller_integration.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/controller/test_proposal_guard_blocks.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/unit/infrastructure/test_graph_v7_axes.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/app/core/project_config.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/e2e/test_mcp_read_tools.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/scripts/check_retired_domain_assets.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/contract/test_retired_domain_assets.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/context/graph-retrieval.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/README.md",
+      "match": true
+    },
+    {
+      "path": "README.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--external--auth-boundary.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/external/auth-boundary.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--eval-harness.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quality/eval-harness.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quickstart.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/quickstart.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--architecture--pack-model.md",
+      "match": true
+    },
+    {
+      "path": "wiki/architecture/pack-model.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--evaluation--metrics.md",
+      "match": true
+    },
+    {
+      "path": "wiki/evaluation/metrics.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--delivery--open-items.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/open-items.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--delivery--release-gate.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/release-gate.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--delivery--todo-user.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/todo-user.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--delivery--index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_ui/tests/test_composer.py",
+      "match": true
+    },
+    {
+      "path": "final_project_ui/tests/test_composer_web.py",
+      "match": true
+    },
+    {
+      "path": "final_project_ui/tests/test_readers.py",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/acop_dojo/scenarios.py",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/acop_dojo/boss.py",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/acop_dojo/progress.py",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/README.md",
+      "match": true
+    },
+    {
+      "path": "acop_dojo/wiki/guide.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--always-on.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/always-on.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/current-state.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/index.md",
+      "match": true
+    },
+    {
+      "path": "program/scripts/tests/test_dojo_travel_policy.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/index.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--troubleshooting.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/operations/troubleshooting.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--actions--approval.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/actions/approval.md",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/w18-evidence-v6.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--delivery--milestones--final-2026-10-26.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/milestones/final-2026-10-26.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--delivery--milestones--index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/milestones/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--delivery--milestones--midterm-2026-09-15.md",
+      "match": true
+    },
+    {
+      "path": "wiki/delivery/milestones/midterm-2026-09-15.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--research--index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/research/index.md",
+      "match": true
+    },
+    {
+      "path": "wiki/records/commerce_2026-10-11/wiki--business--infrastructure-cost.md",
+      "match": true
+    },
+    {
+      "path": "wiki/business/infrastructure-cost.md",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-check-commerce-v5.json",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/tests/integration/api/_backup/2026-10-11_213423_recovered_intermediate/test_api_runtime.py",
+      "match": true
+    },
+    {
+      "path": "wiki/architecture/_backup/2026-10-11_220428_recovered_intermediate/pack-model.md",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/findings-v6.json",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v1.html",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v3.html",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v6.html",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/w18-check-flow-v6.svg",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/commerce-w18-review-v6.html",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-regression-v6.xml",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-regression-v6.log",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-integration-v6.xml",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-integration-v6.log",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-ui-v7.xml",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-ui-v7.log",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-tools-v7.xml",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-tools-v7.log",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-corpus-v6.log",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-eval-v6.log",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-guard-v6.log",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/test-summary-v6.json",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/log.md",
+      "match": true
+    },
+    {
+      "path": "wiki/log.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/.dockerignore",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/plugin-availability.md",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/scripts/ops/jobs.py",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/deploy/worker.sh",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-final-target-v8.xml",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/commerce-final-target-v8.log",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/w18-ops-v9.xml",
+      "match": true
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/validation/w18-ops-v9.log",
+      "match": true
+    }
+  ]
+}

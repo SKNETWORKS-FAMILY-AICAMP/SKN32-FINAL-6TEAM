@@ -1,0 +1,15 @@
+{
+  "jobs": {
+    "e4bbase_cosine_s20261012_d3": {
+      "sha256": "81f0437c1dc68a498864878a8d2c8dddff0e57a729511e413ca28acb1cda0754",
+      "size": 52781
+    },
+    "e4bqat_cosine_s20261012_d3": {
+      "sha256": "df137a2a3ae65d2387c1b3d385fe101ecfe2adc13951dea64541f6f300621e07",
+      "size": 52785
+    }
+  },
+  "remote_local_sha_size_match": true,
+  "saved": 720,
+  "expected": 720
+}

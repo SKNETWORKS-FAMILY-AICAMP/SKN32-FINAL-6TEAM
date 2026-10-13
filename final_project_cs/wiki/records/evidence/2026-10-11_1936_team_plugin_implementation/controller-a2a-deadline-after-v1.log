@@ -1,0 +1,67 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs
+configfile: pytest.ini
+plugins: anyio-4.14.1, langsmith-0.10.0, asyncio-0.25.2
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 6 items
+
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.06] FAILED [ 16%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.08] FAILED [ 33%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.1] FAILED [ 50%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.06] FAILED [ 66%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.08] FAILED [ 83%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.1] FAILED [100%]
+
+================================== FAILURES ===================================
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.06] _
+tests\integration\controller\test_plugin_unavailable.py:556: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert transport.cancel_finished == (0 if hanging_cancel else 1)
+E   assert 0 == 1
+E    +  where 0 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x0000018039E5B020>.cancel_finished
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.remote_team.a2a_executor:a2a_executor.py:89 a2a_cancel_failed
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.08] _
+tests\integration\controller\test_plugin_unavailable.py:556: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert transport.cancel_finished == (0 if hanging_cancel else 1)
+E   assert 0 == 1
+E    +  where 0 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x00000180487A0770>.cancel_finished
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.remote_team.a2a_executor:a2a_executor.py:89 a2a_cancel_failed
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.1] _
+tests\integration\controller\test_plugin_unavailable.py:556: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert transport.cancel_finished == (0 if hanging_cancel else 1)
+E   assert 0 == 1
+E    +  where 0 = <tests.integration.controller.test_plugin_unavailable.test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure.<locals>.Transport object at 0x00000180487A2870>.cancel_finished
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.remote_team.a2a_executor:a2a_executor.py:89 a2a_cancel_failed
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.06] _
+tests\integration\controller\test_plugin_unavailable.py:560: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert last["payload"]["guardrail"] == "remote_deadline_exceeded"
+           ^^^^^^^^^^^^^^^
+E   KeyError: 'payload'
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.remote_team.a2a_executor:a2a_executor.py:89 a2a_cancel_failed
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.08] _
+tests\integration\controller\test_plugin_unavailable.py:560: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert last["payload"]["guardrail"] == "remote_deadline_exceeded"
+           ^^^^^^^^^^^^^^^
+E   KeyError: 'payload'
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.remote_team.a2a_executor:a2a_executor.py:89 a2a_cancel_failed
+_ test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.1] _
+tests\integration\controller\test_plugin_unavailable.py:560: in test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure
+    assert last["payload"]["guardrail"] == "remote_deadline_exceeded"
+           ^^^^^^^^^^^^^^^
+E   KeyError: 'payload'
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.remote_team.a2a_executor:a2a_executor.py:89 a2a_cancel_failed
+=========================== short test summary info ===========================
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.06]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.08]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.1]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.06]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.08]
+FAILED tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.1]
+============================== 6 failed in 4.44s ==============================

@@ -1,0 +1,52 @@
+
+[WebServer] (node:21572) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:20592) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:20592) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:22452) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:16972) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:3952) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:20156) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:4476) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:15272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21000) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:20440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 11 tests using 1 worker
+
+(node:7448) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/11] tests\live\intake-start.spec.ts:36:1 › 누르면 서버의 답을 기다리지 않고 곧바로 진행 화면으로 넘어가고(줄별 목록 없이 막대와 「보내는 중」), 서버가 받으면 그 접수의 실시간 진행으로 이어져 결과가 나온다
+[2/11] tests\live\intake-start.spec.ts:62:1 › 서버가 계획을 거절하면 등록 화면으로 돌아와 서버의 문장을 보이고, 쓴 글과 올리려던 파일이 그대로 있어 고쳐 다시 보낼 수 있다
+[3/11] tests\live\intake-start.spec.ts:85:1 › 보내는 중에 뒤로 가기 화살표를 누르면 등록 화면으로 돌아가 글이 그대로 있고, 오류 문장은 뜨지 않는다
+[4/11] tests\live\intake-start.spec.ts:100:1 › 보내는 중에 새로고침하면(보내던 계획은 메모리에만 있어 사라진다) 등록 화면으로 돌아가고, 쓴 글은 그대로다
+[5/11] tests\live\intake-start.spec.ts:110:1 › 세션이 없는 첫 방문도 누르는 순간 진행 화면으로 넘어가고, 게스트 세션은 그 사이에 만들어진다
+[6/11] tests\live\intake-start.spec.ts:125:1 › 서버가 몇 초 넘게 답이 없으면 진행 화면이 「서버가 답하는 데 시간이 걸리고 있어요」라고 알리고, 답이 오면 그대로 이어진다
+[7/11] tests\live\loading-handoff.spec.ts:8:1 › 전송 요청 전에 클라이언트 진행 화면이 보이고, 첫 조회를 기다리는 동안에도 SSE는 먼저 연결된다
+[8/11] tests\live\loading-handoff.spec.ts:36:1 › 설문에 머무는 동안 재생이 소진되지 않고 다음을 누른 순간부터 축적된 결과를 재생한다
+[9/11] tests\live\loading-handoff.spec.ts:73:1 › 다음 로딩에서는 저장한 설문 답을 유지하고 첫 미응답 질문부터 이어서 보여준다
+[10/11] tests\live\reading-hold.spec.ts:34:1 › 질문이 붙은 계획을 보내면 읽는 화면이 질문과 함께 그대로 있다가 확인 화면으로 한 번만 간다(확인 화면에서 읽는 화면으로 되끌려 오지 않는다)
+[11/11] tests\live\reading-hold.spec.ts:50:1 › 이미 읽은 계획을 뒤로 · 앞으로로 다시 열면 읽는 화면이 5초 뜨지 않고 곧장 확인 화면이며, 한 번 열린 뒤에는 다시 읽는 화면이 되지 않는다
+  11 passed (1.7m)

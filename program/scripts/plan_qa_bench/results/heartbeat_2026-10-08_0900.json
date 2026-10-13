@@ -1,0 +1,37 @@
+{
+  "checked_at_utc": "2026-10-08 00:11:24 UTC",
+  "gpu_a": {
+    "oos2r": {
+      "complete": {
+        "D": 2735,
+        "D2": 1000,
+        "D3": 360,
+        "H": 1316
+      },
+      "saved_complete": 5411,
+      "expected_complete": 5411,
+      "errors": 0,
+      "unparsed": 0,
+      "MX_saved_at_last_check": 2663,
+      "MX_expected": 4014,
+      "job_running": true,
+      "all_expected": 9425,
+      "all_saved_at_last_check": 8074
+    },
+    "strata_restarted": false
+  },
+  "gpu_b": {
+    "oos2r": "ALLDONE_B55",
+    "candidate_queue": "B54 waiting for training-data choice; unchanged default"
+  },
+  "local_archive": "program/scripts/plan_qa_bench/results/resume_2026-10-08_0900",
+  "backup": "program/scripts/plan_qa_bench/_backup/2026-10-08_0901_oos2r_reports_before",
+  "reports_updated": [
+    "oos_report.md",
+    "hard_report.md"
+  ],
+  "partial_comparison": "program/scripts/plan_qa_bench/results/resume_2026-10-08_0900/oos2r_partial_comparison.json",
+  "new_jobs_started": 0,
+  "existing_gpu_jobs_interrupted": 0,
+  "new_rental_or_payment": false
+}

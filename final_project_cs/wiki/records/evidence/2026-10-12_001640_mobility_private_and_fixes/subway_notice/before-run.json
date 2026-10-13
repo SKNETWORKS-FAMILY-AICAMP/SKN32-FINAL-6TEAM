@@ -1,0 +1,14 @@
+{
+  "mode": "before",
+  "args": [
+    "-m",
+    "not live",
+    "tests/unit/travel/test_subway_notice_station_lists_v1.py",
+    "-q",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\subway_notice\\before.xml"
+  ],
+  "exit_code": 1,
+  "elapsed_s": 108.3199110031128,
+  "external_connection_attempts": 0,
+  "api_calls": 0
+}

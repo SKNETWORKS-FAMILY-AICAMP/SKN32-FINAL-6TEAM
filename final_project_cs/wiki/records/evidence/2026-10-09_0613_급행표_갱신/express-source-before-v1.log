@@ -1,0 +1,44 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+________ test_changed_file_is_reloaded_without_clearing_process_cache _________
+
+source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-before-pytest-v1/test_changed_file_is_reloaded_0/express.json.gz')
+
+    def test_changed_file_is_reloaded_without_clearing_process_cache(source):
+        write_runs(source)
+        first = EX.load_line('01호선')
+        assert first['weekday'][0][1] == 600
+        write_runs(source, 300)
+        second = EX.load_line('01호선')
+>       assert second['weekday'][0][1] == 605
+E       assert 600 == 605
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:41: AssertionError
+____________ test_runtime_rebuilds_when_only_express_table_changes ____________
+
+tmp_path = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-before-pytest-v1/test_runtime_rebuilds_when_onl0')
+source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-before-pytest-v1/test_runtime_rebuilds_when_onl0/express.json.gz')
+
+    def test_runtime_rebuilds_when_only_express_table_changes(tmp_path, source):
+        _write_mini_data(tmp_path)
+        write_runs(source)
+        first = RT.get_verifier(quiet=True, data_dir=tmp_path, gh_url='', seoul_key='')
+        assert first._v.tt.departures('01호선', 'A', 'weekday')[0].min == 600
+        write_runs(source, 300)
+        second = RT.get_verifier()
+>       assert second is not first
+E       assert <app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000001FDE035A990> is not <app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000001FDE035A990>
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:53: AssertionError
+---------------------------- Captured stdout call -----------------------------
+[mobility] ! 역 출구표(station_exits_v1.json)가 없다 — 정류장↔역 환승은 역 좌표로 잰다
+[mobility] ! 따릉이 대여소(bike_stations_v1.jsonl)가 없다 — 자전거는 근거없음으로 낸다
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\express-source-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_express_source_reload_v1.py::test_changed_file_is_reloaded_without_clearing_process_cache
+FAILED tests/unit/travel/mobility/test_express_source_reload_v1.py::test_runtime_rebuilds_when_only_express_table_changes
+2 failed in 5.71s
+Exception ignored in: <function Console.__del__ at 0x000001FDD0B15BC0>
+Traceback (most recent call last):
+  File "<python-runtime>\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

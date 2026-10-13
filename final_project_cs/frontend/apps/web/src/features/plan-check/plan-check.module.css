@@ -289,12 +289,12 @@ button.moveHead { cursor: pointer; }
 .changeBody { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 0 24px; }
 .carousel { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 24px 8px; scrollbar-width: none; }
 .carousel::-webkit-scrollbar { display: none; }
-.changeCard { flex: 0 0 min(288px, calc(100% - 24px)); scroll-snap-align: center; padding: 12px 14px; border: 1.5px solid var(--color-border); border-radius: 14px; background: var(--color-surface); transition: border-color .2s, box-shadow .2s; }
+.changeCard { flex: 0 0 min(288px, calc(100% - 24px)); min-width: 0; scroll-snap-align: center; padding: 12px 14px; border: 1.5px solid var(--color-border); border-radius: 14px; background: var(--color-surface); transition: border-color .2s, box-shadow .2s; }
 .changeCard[data-current] { background: var(--color-subtle); }
 .changeCard[data-active] { border-color: var(--color-muted); box-shadow: 0 4px 14px color-mix(in srgb, var(--color-text) 8%, transparent); }
 .changeCard .checks { margin-top: 8px; padding: 4px 0 0; }
 .changeCard .action { width: 100%; margin-top: 10px; }
-.changeTop { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.changeTop { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
 .chip { padding: 2px 7px; border-radius: 6px; background: var(--color-subtle-strong); color: var(--color-text-secondary); font-size: 11.5px; font-weight: 800; white-space: nowrap; }
 .chip[data-source="candidate"] { background: var(--color-success-soft); color: var(--color-success); }
 .chip[data-source="search"] { background: var(--color-selected-soft); color: var(--color-selected); }
@@ -302,7 +302,8 @@ button.moveHead { cursor: pointer; }
 .stepTag[data-basis="similar_experience"] { border-color: var(--color-adjusted-border); color: var(--color-adjusted); }
 .stepTag[data-basis="meal_inferred"] { border-color: var(--color-warning-border); color: var(--color-warning); }
 .changeReason { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
-.distance { font-size: 12px; font-weight: 700; color: var(--color-muted); white-space: nowrap; }
+/* `[2026-10-13]` 긴 기준 장소 이름(「광장시장나주댁 육회랑전이랑에서 1.0km」)이 줄바꿈 없이 카드를 화면 밖(439px)까지 밀었다 — 카드는 폭을 지키고 윗줄 · 거리 문구는 줄을 바꾼다 */
+.distance { min-width: 0; font-size: 12px; font-weight: 700; color: var(--color-muted); overflow-wrap: anywhere; }
 .nameRow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; margin: 8px 0 2px; }
 .nameRow .changeName { margin: 0; }
 .resultBody .nameRow { margin: 0; }
@@ -820,3 +821,7 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 /* B5 — 「오늘」: 오늘 일차 칩 끝의 점 · 목록 일차 제목 옆 꼬리표(여행 날짜 안일 때만, 등록한 여행). */
 .todayDot { width: 6px; height: 6px; margin-left: 1px; border-radius: 50%; background: var(--color-now); }
 .todayTag { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--color-now-soft); color: var(--color-now); font-size: 11px; font-style: normal; font-weight: 750; }
+
+/* `[2026-10-13 사용자 지시]` A day the customer wakes up in a stay: 「○○에서 출발」 at the top of the day, in the stay's soft green (the trip screen's band). */
+.stayBand { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; padding: 8px 12px; list-style: none; border: 1px dashed var(--color-success); border-radius: 10px; background: var(--color-paper); color: var(--color-primary); font-size: 12.5px; font-weight: 600; }
+.stayBand small { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--color-muted); }

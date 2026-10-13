@@ -1,0 +1,18 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/travel/test_subway_identity_v1.py",
+    "-m",
+    "not live and not mobility_fulldata",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-subway-identity-before-v1",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0936_지하철_식별정보_보존\\before-v1.xml"
+  ],
+  "time": "2026-10-09T09:36:56.764522+09:00",
+  "exit_code": 1,
+  "network": "injected transport only; no external provider requested"
+}

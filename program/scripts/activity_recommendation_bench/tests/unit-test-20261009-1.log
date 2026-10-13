@@ -1,0 +1,10 @@
+.......................F......................                           [100%]
+================================== FAILURES ===================================
+C:\Users\playdata2\Documents\final_workspace\program\scripts\activity_recommendation_bench\tests\test_contract.py:184: AssertionError: assert 'ok' == 'failed'
+=========================== short test summary info ===========================
+FAILED program/scripts/activity_recommendation_bench/tests/test_contract.py::test_invalid_rank_contract_is_rejected_not_repaired[answer5]
+1 failed, 45 passed in 1.35s
+Exception ignored in: <function Console.__del__ at 0x000002B631A0D120>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

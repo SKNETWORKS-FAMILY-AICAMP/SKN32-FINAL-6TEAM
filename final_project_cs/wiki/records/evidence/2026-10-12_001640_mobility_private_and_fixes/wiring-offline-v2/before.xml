@@ -1,0 +1,124 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="wiring-before-from-gate-v4" tests="8" failures="3" errors="0" skipped="0"><testcase classname="tests.unit.travel.mobility.test_review_fixes_wiring" name="test_disabled_when_setting_is_empty_and_never_falls_back_to_dotenv" time="0.006" /><testcase classname="tests.unit.travel.mobility.test_review_fixes_wiring" name="test_24_missing_data_stops_startup" time="0.015" /><testcase classname="tests.unit.travel.mobility.test_review_fixes_wiring" name="test_31_enabled_preloads_once" time="0.154" /><testcase classname="tests.unit.travel.mobility.test_review_fixes_wiring" name="test_34_35_team_answers_structured_route_with_engine" time="0.149"><failure message="AssertionError: This validation run forbids network connections">tmp_path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_finish_20261011/final-gate-v4/temp/test_34_35_team_answers_struct0')
+
+    def test_34_35_team_answers_structured_route_with_engine(tmp_path):
+        _write_mini_data(tmp_path)
+        wiring.configure(data_dir=str(tmp_path), gh_url="", seoul_key="")
+        tools = FakeTools({})
+&gt;       result = asyncio.run(MobilityTeam(tools).execute(_mobility_task({"mobility": LEGS})))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_review_fixes_wiring.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\asyncio\runners.py:193: in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+..\..\..\anaconda3\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:787: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\socket.py:623: in _fallback_socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 56367))
+k = {}
+
+    def reject(*a,**k):
+&gt;    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_review_fixes_wiring" name="test_34_team_without_engine_raises_error_not_made_up_answer" time="0.010"><failure message="AssertionError: This validation run forbids network connections">def test_34_team_without_engine_raises_error_not_made_up_answer():
+        wiring.configure(data_dir="")
+&gt;       result = asyncio.run(MobilityTeam(FakeTools({})).execute(_mobility_task({"mobility": LEGS})))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_review_fixes_wiring.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\asyncio\runners.py:193: in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+..\..\..\anaconda3\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:787: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\socket.py:623: in _fallback_socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 52932))
+k = {}
+
+    def reject(*a,**k):
+&gt;    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_review_fixes_wiring" name="test_35_without_structured_input_keeps_old_path" time="0.006"><failure message="AssertionError: This validation run forbids network connections">def test_35_without_structured_input_keeps_old_path():
+        wiring.configure(data_dir="")
+        tools = FakeTools({"read.route": None})
+&gt;       result = asyncio.run(MobilityTeam(tools).execute(_mobility_task({})))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_review_fixes_wiring.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\asyncio\runners.py:193: in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+..\..\..\anaconda3\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:787: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\socket.py:623: in _fallback_socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (&lt;socket.socket [closed] fd=-1, family=2, type=1, proto=0&gt;, ('127.0.0.1', 52940))
+k = {}
+
+    def reject(*a,**k):
+&gt;    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_review_fixes_wiring" name="test_out_of_calendar_date_is_a_no_data_result_not_a_crash" time="0.280" /><testcase classname="tests.unit.travel.mobility.test_review_fixes_wiring" name="test_startup_announces_engine_state_once" time="0.245" /></testsuite></testsuites>

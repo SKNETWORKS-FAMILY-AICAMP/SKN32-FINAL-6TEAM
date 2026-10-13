@@ -1,0 +1,67 @@
+{
+  "scope": "같은 자료·프로세스에서 이전/수정 코드를 교대로 대조한 원인 조사이며 외부 정답 검증이 아닙니다.",
+  "rows": [
+    {
+      "status": "failed",
+      "exception": "AssertionError",
+      "message": "예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다",
+      "test": "test_golden",
+      "code": "before_direct_walk_change",
+      "seconds": 61.437
+    },
+    {
+      "status": "failed",
+      "exception": "AssertionError",
+      "message": "예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다",
+      "test": "test_golden",
+      "code": "after_direct_walk_change",
+      "seconds": 10.438
+    },
+    {
+      "status": "failed",
+      "exception": "AssertionError",
+      "message": "버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다",
+      "test": "test_golden_all_modes",
+      "code": "before_direct_walk_change",
+      "seconds": 27.968
+    },
+    {
+      "status": "failed",
+      "exception": "AssertionError",
+      "message": "버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다",
+      "test": "test_golden_all_modes",
+      "code": "after_direct_walk_change",
+      "seconds": 24.922
+    },
+    {
+      "status": "failed",
+      "exception": "AssertionError",
+      "message": "3호선 경복궁→을지로3가 → 2호선 을지로3가→성수",
+      "test": "test_reasons_axis",
+      "code": "before_direct_walk_change",
+      "seconds": 8.547
+    },
+    {
+      "status": "failed",
+      "exception": "AssertionError",
+      "message": "3호선 경복궁→을지로3가 → 2호선 을지로3가→성수",
+      "test": "test_reasons_axis",
+      "code": "after_direct_walk_change",
+      "seconds": 9.453
+    },
+    {
+      "status": "passed",
+      "test": "test_walk_m_and_fare",
+      "code": "before_direct_walk_change",
+      "seconds": 8.86
+    },
+    {
+      "status": "failed",
+      "exception": "KeyError",
+      "message": "'dinner_to_lotte_mart'",
+      "test": "test_walk_m_and_fare",
+      "code": "after_direct_walk_change",
+      "seconds": 8.437
+    }
+  ]
+}

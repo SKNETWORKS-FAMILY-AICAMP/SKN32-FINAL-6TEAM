@@ -1,0 +1,31 @@
+{
+  "web_api": {
+    "passed": 76,
+    "exit_code": 0,
+    "total": 76
+  },
+  "team_and_architecture": {
+    "passed": 161,
+    "exit_code": 0,
+    "total": 161
+  },
+  "common_resume": {
+    "passed": 32,
+    "total": 32
+  },
+  "frontend_gateway_sse": {
+    "passed": 42,
+    "total": 42
+  },
+  "related_total": {
+    "passed": 311,
+    "total": 311
+  },
+  "production_hashes": {
+    "changed": 0,
+    "total": 13
+  },
+  "root_ruff_exit": 0,
+  "deployed": false,
+  "browser_ui_checked": false
+}

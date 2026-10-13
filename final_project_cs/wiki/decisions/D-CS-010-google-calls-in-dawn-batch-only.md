@@ -2,10 +2,11 @@
 type: decision
 title: 구글 API 는 새벽 3시 확인 창에 몰아서만 부른다
 description: 구글 장소 API 호출은 새벽 확인(03:00~08:00 창)에서 한꺼번에 처리하고, 채팅처럼 요청이 올 때 바로 부르는 경로는 두지 않는다. 그 때문에 비는 값을 어떻게 메울지는 팀이 정한다
-status: accepted
-tags: [travel, google, cost]
+status: draft
+tags: [api, cost]
 owners: [human:미배정]
 domain: travel
+decision_status: accepted
 ---
 
 # D-CS-010 구글 API 는 새벽 3시 확인 창에 몰아서만 부른다

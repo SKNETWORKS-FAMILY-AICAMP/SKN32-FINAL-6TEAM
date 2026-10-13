@@ -1,0 +1,12 @@
+{
+  "checked_at": "2026-10-09T21:14:01.885406+09:00",
+  "matched": 411,
+  "total": 411,
+  "source_test_data_count": 383,
+  "artifact_count": 28,
+  "backups_matched": 7,
+  "backups_total": 7,
+  "final_integrity_sha256": "42a4138de93d853cce6bb5db32b2ec7bdfdf44d15f1d38360d64b87cf19bc1b0",
+  "full_feature_completion": false,
+  "browser_rendered": false
+}

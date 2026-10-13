@@ -1,0 +1,9 @@
+{
+  "observed_at_utc": "2026-10-11T15:45:16.100957+00:00",
+  "apply_receipt.json": null,
+  "engine_log.json": null,
+  "http_answers.jsonl": null,
+  "summary.json": null,
+  "unit": "ActiveState=active\nSubState=running\nExecMainStatus=0\n",
+  "journal": "Started tripilot-arm-cache256-20261012-v1.service - [systemd-run] /usr/bin/python3 -u /home/ubuntu/bench/app-cache256-20261012-v1/runner.py.\n"
+}

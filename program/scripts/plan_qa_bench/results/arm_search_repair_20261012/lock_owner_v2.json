@@ -1,0 +1,1 @@
+{"utc": "2026-10-11T19:32:35.271965+00:00", "lock_owners": [{"pid": 1665706, "command": "python3", "mode": "WRITE*", "start": "01:25", "cmd": "python3 - "}, {"pid": 1664343, "command": "python3", "mode": "WRITE", "start": "02:59", "cmd": "/usr/bin/python3 /home/ubuntu/tripilot-serving/control/deploy.py "}]}

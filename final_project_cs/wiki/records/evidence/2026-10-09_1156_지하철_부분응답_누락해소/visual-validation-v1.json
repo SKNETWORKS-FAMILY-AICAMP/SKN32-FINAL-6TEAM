@@ -1,0 +1,68 @@
+{
+  "created_at": "2026-10-09T12:07:27.342972+09:00",
+  "hash_checks": [
+    {
+      "scope": "source_test_data_hashes",
+      "checked": 256,
+      "matches": 256,
+      "mismatches": []
+    },
+    {
+      "scope": "artifact_hashes",
+      "checked": 36,
+      "matches": 36,
+      "mismatches": []
+    }
+  ],
+  "backup_matches": 10,
+  "feature_cards": 21,
+  "filter_count": 1,
+  "local_links": [
+    {
+      "file": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v42/mobility-readiness.html",
+      "target": "../../2026-10-09_1206_지하철_20행누락_해소와_응답완전성_검증.md",
+      "exists": true
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v42/mobility-readiness.html",
+      "target": "../../../evidence/2026-10-09_1156_지하철_부분응답_누락해소/verification-proof-v1.json",
+      "exists": true
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v42/mobility-readiness.html",
+      "target": "../../../evidence/2026-10-09_1156_지하철_부분응답_누락해소/backup-manifest-v1.json",
+      "exists": true
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v42/mobility-readiness.html",
+      "target": "../2026-10-09_mobility_readiness_v41/mobility-readiness.html",
+      "exists": true
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1206_지하철_20행누락_해소와_응답완전성_검증.md",
+      "target": "assets/2026-10-09_mobility_readiness_v42/mobility-readiness.html",
+      "exists": true
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1206_지하철_20행누락_해소와_응답완전성_검증.md",
+      "target": "../evidence/2026-10-09_1156_지하철_부분응답_누락해소/",
+      "exists": true
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1206_지하철_20행누락_해소와_응답완전성_검증.md",
+      "target": "../../../../datasets/mobility/raw/2026-10-09_1156_지하철_부분응답_누락해소/",
+      "exists": true
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1206_지하철_20행누락_해소와_응답완전성_검증.md",
+      "target": "../evidence/2026-10-09_1156_지하철_부분응답_누락해소/backup-manifest-v1.json",
+      "exists": true
+    }
+  ],
+  "javascript_syntax_exit_code": 0,
+  "credential_files_checked": 38,
+  "credential_matches": 0,
+  "browser_render_checked": false,
+  "browser_policy": "앞 판 file: URL 차단을 우회/재시도하지 않고 정적 검사만 수행했습니다.",
+  "full_feature_completion": false
+}

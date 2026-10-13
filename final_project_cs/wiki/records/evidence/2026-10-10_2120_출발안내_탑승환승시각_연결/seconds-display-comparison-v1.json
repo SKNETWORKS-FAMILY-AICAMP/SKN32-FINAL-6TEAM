@@ -1,0 +1,10 @@
+{
+  "before_boarding_display": "13:00",
+  "after_boarding_display": "12:59",
+  "provider_prediction": "2026-10-09T12:59:26+09:00",
+  "model_departure_min": 780,
+  "eta_and_model_result_preserved": true,
+  "first_replay_clock_failure_preserved": "stored-seoul-replay-v1.json",
+  "second_replay_clock": "이전 실제 조회 종료 시각에서 평가",
+  "limited_api_calls": 0
+}

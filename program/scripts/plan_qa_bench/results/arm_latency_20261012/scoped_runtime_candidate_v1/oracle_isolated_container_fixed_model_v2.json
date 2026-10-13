@@ -1,0 +1,6 @@
+{
+  "error": "Traceback (most recent call last):\n  File \"<stdin>\", line 8, in <module>\n  File \"/srv/app/presentation/api/app.py\", line 13, in <module>\n    from app.presentation.api.introspection import router as introspection_router\n  File \"/srv/app/presentation/api/introspection.py\", line 13, in <module>\n    principal: Principal = Depends(require_scope(\"ops:introspect\"))):\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/srv/app/presentation/security.py\", line 51, in require_scope\n    configured = set(get_guardrails().get(\"security.scopes\"))\n                     ^^^^^^^^^^^^^^^^\n  File \"/srv/app/core/settings.py\", line 483, in get_guardrails\n    raise ConfigError(f\"guardrails 파일 없음: {path}\")\napp.core.settings.ConfigError: guardrails 파일 없음: /srv/var/ops/arm-guardrails.yaml\n",
+  "stdout": "",
+  "returncode": 1,
+  "isolated_container": "tripilot-arm-scope-contract-20261012-v2"
+}

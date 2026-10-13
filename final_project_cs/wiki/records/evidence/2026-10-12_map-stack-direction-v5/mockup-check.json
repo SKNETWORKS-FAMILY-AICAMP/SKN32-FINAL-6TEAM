@@ -1,0 +1,22 @@
+[
+  {
+    "width": 375,
+    "images": 4,
+    "videos": 2,
+    "videoDurations": [
+      11.56,
+      11.52
+    ],
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "images": 4,
+    "videos": 2,
+    "videoDurations": [
+      11.56,
+      11.52
+    ],
+    "overflow": false
+  }
+]

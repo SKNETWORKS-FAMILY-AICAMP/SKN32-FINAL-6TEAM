@@ -1,0 +1,69 @@
+{
+  "utc": "2026-10-12T06:53:48.523726+00:00",
+  "dataset": "E2-v2-ai-reviewed-development",
+  "planned_items_per_model": 467,
+  "models": [
+    {
+      "id": "e2v2_e4bqat_original",
+      "our_training": false,
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "lora_sha256": null
+    },
+    {
+      "id": "e2v2_e4bqat_finch_s20261014",
+      "our_training": true,
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "lora_sha256": "fe7aa1553ee804f4fa6a01354240a4390d5d8950682dad53339adbd07a0b3cce"
+    },
+    {
+      "id": "e2v2_e4bqat_cosine_s20261014",
+      "our_training": true,
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "lora_sha256": "870e79b08a07b16fff1ac046baac184a5672e5e947a15f8feab2c4e70ca7e100"
+    },
+    {
+      "id": "e2v2_e4bqat_oos2r",
+      "our_training": true,
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "lora_sha256": "d6de28e7c665ebc3f8e380c1be14fd10acbd1a1cc41e2f1a52ea36c0f5d6b333"
+    },
+    {
+      "id": "e2v2_e4bqat_oos3",
+      "our_training": true,
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "lora_sha256": "ed780d5f93f7c6e31d01b6605096fd7cc78ac741eb72661b9e2d06edbb0306b6"
+    },
+    {
+      "id": "e2v2_saluki27b_iq2_original",
+      "our_training": false,
+      "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+      "lora_sha256": null
+    }
+  ],
+  "input_sha256": "78b3f9cd0481aae23372ae10319c8e5bea6ea42cf0d7b187590287e7deb8553a",
+  "gold_sha256": "ed4d1388e087806400543c93d2d71d093586f2f954f302d0238086f94824ee67",
+  "prompt_sha256": "2740e85c642a4b2eb7e3469637427af40e75de4d04cedcf1992a0fc7b5ad44e2",
+  "registered_jobs": 6,
+  "planned_total": 2802,
+  "measured": 0,
+  "family_count": 167,
+  "human_reviewed": 0,
+  "independent_holdout": false,
+  "contract": "Raw planner structured JSON diagnostic, not current product schema or execution; incompatible representation is separate review flag, not proved semantic model failure",
+  "logic_tested": false,
+  "factual_answer_tested": false,
+  "training_on_E2": false,
+  "sampling": {
+    "seed": 20261012,
+    "temperature": 0,
+    "max_tokens": 2048,
+    "thinking": false,
+    "repeat": 1
+  },
+  "comparison": "same A4000, same inputs/prompt/budget/engine; sequential, no inference-speed ranking; cold load measured separately",
+  "next": [
+    "Collect outputs including runtime failures and missing planned rows",
+    "Review equivalent representations before attributing model errors",
+    "Inject reviewed correct plans into isolated actual app executor for logic attribution; do not infer it from raw planner scores"
+  ]
+}

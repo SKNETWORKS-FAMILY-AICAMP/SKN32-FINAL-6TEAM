@@ -1,0 +1,38 @@
+{
+  "source_hash_matches": 219,
+  "backup_hash_matches": 5,
+  "local_links": [
+    "final_project_cs/wiki/records/evidence/2026-10-09_0852_혼합요금_조조경계/existing-route-rate-audit-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0852_혼합요금_조조경계",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "final_project_cs/tests/unit/travel/mobility/test_fare_discount_upper_v1.py",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0852_혼합요금_조조경계/owned-source-diff-v1.patch",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v31/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0852_혼합요금_조조경계/backup-manifest-v1.json",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0852_혼합요금_조조경계/options.py",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0852_혼합요금_조조경계/plan.py",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0852_혼합요금_조조경계/mobility.md",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0857_혼합조조_상단검증결과/mobility.md",
+    "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0857_혼합조조_결함종료/2026-10-09_0852_혼합요금_조조경계_버스조조_불확실성으로_혼합상단요금까지_누락.md",
+    "final_project_cs/wiki/records/reports/2026-10-09_0857_혼합경로_조조경계와_할인미적용_예상액_검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v30/mobility-readiness.html"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0857_혼합경로_조조경계와_할인미적용_예상액_검증.md": "08450af3799f6205a649271da4b995e98ca7b25630632ce31a5eb8bcfe16ae57",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v31/mobility-readiness.html": "7e49a551f25d4127e14afa9871a190c3c66be35d5c6918134b4c0f5e04b76f4c",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v31/readiness-catalog.json": "99e1746ec7272d18356d6ee99e7dabbece63e353ef176f0677cd5ce3eb508683",
+    "final_project_cs/wiki/teams/mobility.md": "2d369ebe882b9257544491f153ec3034862f4f070a169cffc8f80a92dcfe1bc6",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0852_혼합요금_조조경계/verification-proof-v1.json": "b9d11150aa8012682010a2a94fcef2ccf3a5299f2a2f4287e0ae9cc171b79c35",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0852_혼합요금_조조경계/backup-manifest-v1.json": "965474f57e290c034d471c8df3136ad149af4440d02a9a6368bacf933887dac7"
+  },
+  "browser_render_verified": false,
+  "scan_scope": [
+    "final_project_cs/wiki/records/reports/2026-10-09_0857_혼합경로_조조경계와_할인미적용_예상액_검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v31/mobility-readiness.html",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v31/readiness-catalog.json",
+    "final_project_cs/wiki/teams/mobility.md",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0852_혼합요금_조조경계/verification-proof-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0852_혼합요금_조조경계/backup-manifest-v1.json"
+  ]
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="5" time="2.490" timestamp="2026-10-12T01:00:58.335295+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_reduce_line9_express_preservation_v1" name="test_cli_default_and_compatibility_flags_match_manifest[flags0-2-False]" time="0.388"><failure message="assert True is False">tmp_path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_web_finish_20261012/reduce-followup/before-v1/temp/test_cli_default_and_compatibi0')
+flags = (), rows = 2, dropped = False
+
+    @pytest.mark.parametrize('flags,rows,dropped', [((),2,False), (('--keep-express',),2,False),
+                                                   (('--drop-express',),1,True)])
+    def test_cli_default_and_compatibility_flags_match_manifest(tmp_path, flags, rows, dropped):
+        src,dst,result = cli_world(tmp_path,flags)
+        assert result.returncode == 0, result.stderr
+        manifest = json.loads((dst/'MANIFEST_git_v1.json').read_text(encoding='utf8'))
+        entry = next(e for e in manifest['files'] if e['path']=='congestion_line9_v1.jsonl')
+&gt;       assert manifest['rule']['row_deletion']['drop_express'] is dropped
+E       assert True is False
+
+tests\unit\travel\mobility\test_reduce_line9_express_preservation_v1.py:49: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_reduce_line9_express_preservation_v1" name="test_cli_default_and_compatibility_flags_match_manifest[flags1-2-False]" time="0.138" /><testcase classname="tests.unit.travel.mobility.test_reduce_line9_express_preservation_v1" name="test_cli_default_and_compatibility_flags_match_manifest[flags2-1-True]" time="0.140" /><testcase classname="tests.unit.travel.mobility.test_reduce_line9_express_preservation_v1" name="test_default_cli_output_remains_distinct_in_the_product_congestion_loader" time="0.127"><failure message="assert (&lt;app.domains.travel_ops.instances.mobility.engine.congestion.Congestion object at 0x0000023A79FBBC80&gt; is not None and 1 == 2)&#10; +  where 1 = &lt;app.domains.travel_ops.instances.mobility.engine.congestion.Congestion object at 0x0000023A79FBBC80&gt;.rows">tmp_path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_web_finish_20261012/reduce-followup/before-v1/temp/test_default_cli_output_remain0')
+
+    def test_default_cli_output_remains_distinct_in_the_product_congestion_loader(tmp_path):
+        _src,dst,result = cli_world(tmp_path)
+        assert result.returncode == 0
+        cg = Congestion.load([dst/'congestion_line9_v1.jsonl'])
+&gt;       assert cg is not None and cg.rows == 2
+E       assert (&lt;app.domains.travel_ops.instances.mobility.engine.congestion.Congestion object at 0x0000023A79FBBC80&gt; is not None and 1 == 2)
+E        +  where 1 = &lt;app.domains.travel_ops.instances.mobility.engine.congestion.Congestion object at 0x0000023A79FBBC80&gt;.rows
+
+tests\unit\travel\mobility\test_reduce_line9_express_preservation_v1.py:62: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_reduce_line9_express_preservation_v1" name="test_cli_refuses_an_occupied_destination_without_replacing_existing_output" time="0.125" /></testsuite></testsuites>

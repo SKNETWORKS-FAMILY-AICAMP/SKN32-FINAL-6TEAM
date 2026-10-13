@@ -1,0 +1,80 @@
+{
+  "root_space": {
+    "path": "/root",
+    "available_bytes": 7871959040,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "temp_space": {
+    "path": "/tmp",
+    "available_bytes": 7871959040,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "ready": [
+    {
+      "id": "e4bqat_finch_s20261012_d",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true,
+        "lora": true
+      }
+    },
+    {
+      "id": "e4bbase_finch_s20261012_d2",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true,
+        "lora": true
+      }
+    },
+    {
+      "id": "e4bqat_finch_s20261012_d2",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true,
+        "lora": true
+      }
+    },
+    {
+      "id": "e4bbase_finch_s20261012_h",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true,
+        "lora": true
+      }
+    },
+    {
+      "id": "e4bqat_finch_s20261012_h",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true,
+        "lora": true
+      }
+    },
+    {
+      "id": "e4bbase_finch_s20261012_mx",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true,
+        "lora": true
+      }
+    },
+    {
+      "id": "e4bqat_finch_s20261012_mx",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true,
+        "lora": true
+      }
+    }
+  ],
+  "blocked": [],
+  "worker_pid": 342497,
+  "observed_at_utc": "2026-10-08T23:06:44.188570+00:00"
+}

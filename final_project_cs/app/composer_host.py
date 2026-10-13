@@ -166,6 +166,19 @@ IMPLEMENTATIONS: tuple[Implementation, ...] = (
         display_name="Flight Team (등록만)",
         description="잠긴 예약으로만 취급한다. 조정 제안을 만들지 않는다.",
     ),
+    # `[2026-10-07~08]` 숙소 · 항공 본체 — `config/project.yaml` 이 이쪽을 쓴다
+    Implementation(
+        id="team.lodging_search",
+        ref="app.domains.travel_ops.instances.lodging:LodgingTeam",
+        display_name="Lodging Team",
+        description="숙소를 찾아 주고(마이리얼트립 · 구글 호텔), 일정 숙소 항목을 새 후보로 바꾼다. 예약은 링크로.",
+    ),
+    Implementation(
+        id="team.flight_search",
+        ref="app.domains.travel_ops.instances.flight:FlightTeam",
+        display_name="Flight Team",
+        description="항공편을 찾아 주고(마이리얼트립 · Ignav · 구글 항공권), 일정 항공편 항목을 새 편으로 바꾼다. 예약은 링크로.",
+    ),
 )
 
 

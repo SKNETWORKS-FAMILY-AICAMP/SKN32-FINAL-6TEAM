@@ -1,0 +1,54 @@
+[
+  {
+    "id": "N022",
+    "from": "송파역",
+    "to": "압구정로데오",
+    "walking_before_m": 892,
+    "walking_after_m": 892,
+    "eta_before_min": 62,
+    "eta_after_min": 62,
+    "start_before": 548,
+    "start_after": 548,
+    "before_label": "버스 301 석촌역→일지아트홀.압구정노인복지관",
+    "after_label": "버스 301 석촌역→일지아트홀.압구정노인복지관"
+  },
+  {
+    "id": "N062",
+    "from": "강남역",
+    "to": "봉천역",
+    "walking_before_m": 962,
+    "walking_after_m": 962,
+    "eta_before_min": 64,
+    "eta_after_min": 64,
+    "start_before": 1447,
+    "start_after": 1447,
+    "before_label": "버스 N61 서초동진흥아파트→KT관악지점",
+    "after_label": "버스 N61 서초동진흥아파트→KT관악지점"
+  },
+  {
+    "id": "N089",
+    "from": "명동성당",
+    "to": "국립현대미술관 서울",
+    "walking_before_m": 1316,
+    "walking_after_m": 1316,
+    "eta_before_min": 37,
+    "eta_after_min": 37,
+    "start_before": 578,
+    "start_after": 578,
+    "before_label": "버스 151 명동.롯데영플라자→안국역6번출구.인사동문화의거리",
+    "after_label": "버스 151 명동.롯데영플라자→안국역6번출구.인사동문화의거리"
+  },
+  {
+    "id": "N100",
+    "from": "압구정로데오",
+    "to": "삼성역",
+    "walking_before_m": 797,
+    "walking_after_m": 438,
+    "eta_before_min": 28,
+    "eta_after_min": 27,
+    "start_before": 587,
+    "start_after": 587,
+    "before_label": "버스 143 청담초등학교앞→무역센터",
+    "after_label": "버스 143 한양아파트.압구정로데오역→삼성역3번출구 — 소요 가장 짧음 · 도보 거리 가장 짧음"
+  }
+]

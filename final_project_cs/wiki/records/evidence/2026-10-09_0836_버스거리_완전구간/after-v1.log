@@ -1,0 +1,25 @@
+...................F.................................................... [ 78%]
+....................                                                     [100%]
+================================== FAILURES ===================================
+__ test_current_departure_with_missing_interior_does_not_use_shortened_ride ___
+
+    def test_current_departure_with_missing_interior_does_not_use_shortened_ride():
+        runtime, context = scene()
+        runtime._v.bus.stops['100'] = [r for r in runtime._v.bus.stops['100'] if r['seq'] != 6]
+        got = call(runtime, context, bus_arrival=prediction)
+>       assert got['status'] == 'needs_replan', got
+E       AssertionError: {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'fixture-a'}, 'checked_at': '2026-10-09T10:00:00+09:00', '...:07:00+09:00', 'confirmed_at': '2026-10-09T10:00:00+09:00', 'route_id': '100', 'source': 'fixture/arrival', ...}], ...}
+E       assert 'fatal' == 'needs_replan'
+E         
+E         - needs_replan
+E         + fatal
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:53: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_0836_버스거리_완전구간\after-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_current_departure_with_missing_interior_does_not_use_shortened_ride
+1 failed, 91 passed in 5.95s
+Exception ignored in: <function Console.__del__ at 0x00000190516D5C60>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

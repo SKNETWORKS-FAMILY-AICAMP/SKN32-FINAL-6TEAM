@@ -1,0 +1,19 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/mobility/test_subway_departure_v1.py",
+    "tests/unit/travel/mobility/test_departure_observer_v1.py",
+    "tests/unit/travel/mobility/test_subway_binding_v1.py",
+    "tests/unit/travel/test_departure_assembly_v1.py",
+    "tests/unit/travel/test_departure_observer_notice_v1.py",
+    "tests/unit/travel/test_subway_boardable_v1.py",
+    "tests/unit/travel/test_subway_envelope_v1.py",
+    "tests/unit/travel/test_departure_watch_assembly_v1.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-subway-depart-v5-after",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1056_\uc9c0\ud558\ucca0_\ud604\uc7ac\ucd9c\ubc1c_\uc81c\ud488\uc5f0\uacb0\\after-v5.xml"
+  ],
+  "exit_code": 1
+}

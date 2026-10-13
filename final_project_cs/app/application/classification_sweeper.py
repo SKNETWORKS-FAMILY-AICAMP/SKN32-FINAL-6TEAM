@@ -21,6 +21,7 @@ def sweep_stuck_classifying(
     actor_id: str,
     stuck_after_seconds: int | None = None,
     limit: int | None = None,
+    diagnostic_recorder=None,
 ) -> dict[str, int]:
     """오래 멈춘 Case를 오래된 순서로 골라 각각 독립적으로 분류한다.
 
@@ -63,6 +64,7 @@ def sweep_stuck_classifying(
                 classifier=classifier,
                 actor_id=actor_id,
                 expected_version=version,
+                diagnostic_recorder=diagnostic_recorder,
             )
         except (StateConflict, InvalidTransition):
             # 그 사이 다른 경로가 이 Case 를 옮겼다. 정상적인 경합이다.

@@ -1,0 +1,30 @@
+{
+  "source_hash_matches": 237,
+  "backup_hash_matches": 5,
+  "local_links": [
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v38/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1039_지하철_접근후열차_선택",
+    "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1039_지하철_접근후열차_선택/seoul_subway.py",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1039_지하철_접근후열차_선택/backup-manifest-v1.json",
+    "final_project_cs/wiki/records/reports/debugs/2026-10-09_1039_지하철_접근후열차_선택.md",
+    "final_project_cs/wiki/records/reports/2026-10-09_1052_지하철_접근후열차선택과_생성시각_계산검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v38/readiness-catalog.json"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_1052_지하철_접근후열차선택과_생성시각_계산검증.md": "be2bda79f28b10a0d16bcbd97f6c4e0be10ec8ad4bbd525e907b1d927c21f946",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v38/mobility-readiness.html": "f11a3aec2c7e9d61977f35900a639fce7d0a80e52dfe562b51acf2baf11851de",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v38/readiness-catalog.json": "8b9664db5f0117c06fe78fb6efe4c588bec59e869df53a2bfc189250df63bd48",
+    "final_project_cs/wiki/teams/mobility.md": "45cc87c0c04cecdcc86fbd98a80d31f92e542204288bbf84c444e1436bdd6b18",
+    "final_project_cs/wiki/records/reports/debugs/2026-10-09_1039_지하철_접근후열차_선택.md": "03cbd88299b7973561b4a8c72713f1cfcbec0be45bba1b8663ae0e39de3040df",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1039_지하철_접근후열차_선택/verification-proof-v1.json": "84c56884d1a4c6765c39370f5a1883bc5972836848e82a27bbbf6df3f76e18c9",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1039_지하철_접근후열차_선택/backup-manifest-v1.json": "088c751873c686297d2517ec4de6f080932ceb2382538edca3d8dfb40a935075"
+  },
+  "visual_cards": 21,
+  "syntax_command": [
+    "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1007-641-0_26.1007.641.0_x64__3k8sg7r9htsxt/dependencies/node/bin/node.exe",
+    "--check",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\subway-selection-visual-script-v1.js"
+  ],
+  "syntax_exit_code": 0,
+  "browser_render_verified": false
+}

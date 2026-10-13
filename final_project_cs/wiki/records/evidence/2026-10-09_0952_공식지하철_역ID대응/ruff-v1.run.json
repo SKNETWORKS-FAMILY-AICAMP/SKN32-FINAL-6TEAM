@@ -1,0 +1,13 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "app/domains/travel_ops/ports/data_sources/seoul_subway.py",
+    "scripts/mobility/build_subway_realtime_stations.py",
+    "tests/unit/travel/test_subway_line_identity_v1.py",
+    "tests/unit/travel/test_subway_station_extract_v1.py"
+  ],
+  "exit_code": 0
+}

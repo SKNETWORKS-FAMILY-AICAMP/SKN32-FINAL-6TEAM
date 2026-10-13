@@ -1,0 +1,16 @@
+from pathlib import Path
+P=Path(__file__).resolve().parent
+s=(P/'paired-counterexample-v1.py').read_text(encoding='utf-8').replace("'paired-counterexample-v1.json'","'paired-counterexample-v2.json'")
+with (P/'paired-counterexample-v2.py').open('x',encoding='utf-8') as f:f.write(s)
+s=(P/'build-report-v1.py').read_text(encoding='utf-8')
+s=s.replace("read('paired-counterexample-v1.json')","read('paired-counterexample-v2.json')")
+s=s.replace("['graph-router-regression-after-v1.xml','graph-router-related-after-v2.xml']","['graph-router-final-v3.xml','goal-boundary-final-v4.xml']")
+s=s.replace('assert len(success)==57','assert len(success)==58')
+s=s.replace('goal-heuristic-change-v1.diff','goal-heuristic-change-v2.diff').replace('summary-v1.json','summary-v2.json').replace('REPORT-v1.md','REPORT-v2.md').replace('MANIFEST-v1.json','MANIFEST-v2.json')
+s=s.replace('57/57 = 100%','58/58 = 100%')
+s=s.replace('이제 실제 하차 후보 전체까지 거리의 최솟값을 계산해 수정 후11.593초로 일치합니다.','이제 실제 하차 후보의 모든 그래프 끝점까지 직선거리 하한과 그 끝점에서 목표까지 남은 실제 비용을 더한 값 중 최솟값을 사용합니다. 수정 후11.593초로 일치합니다. 간선 끝1m 이내에서 잔여 비용을0으로 보는 기존 규칙도 같은 목표 표에 반영됩니다.')
+s=s.replace("link('paired-counterexample-v1.json'","link('paired-counterexample-v2.json'")
+s=s.replace("{link('graph-router-regression-after-v1.xml','새 반례·기존 길찾기22건 성공')}, {link('graph-router-related-after-v2.xml','관련35건 성공')}","{link('graph-router-final-v3.xml','최종판 기존 관련57건 성공')}, {link('goal-boundary-final-v4.xml','복수 목표·끝점1m 경계2건 성공')}")
+s=s.replace('첫 묶음의 metadata/atomic11건은','초기 묶음의 metadata/atomic11건은')
+s=s.replace('보행 계단 비용은 기존 계약에 있으므로 거리 최단과 다를 수 있다는 점을 기록하며 변경하지 않았습니다.','보행 계단 비용은 기존 계약에 있으므로 거리 최단과 다를 수 있다는 점을 기록하며 변경하지 않았습니다. A* 거리 하한은 저장 간선 길이와 형상 길이가 같은 척도라는 전제에 의존합니다. 간선 길이 소수1자리 반올림·좌표 양자화로 미세한 차이가 생길 수 있어 모든 입력의 엄밀한 최적성을 이번 시험만으로 보장하지 않습니다. 이번 수정은 재현한 복수 목표와 끝점0비용 경계에 한정합니다.')
+with (P/'build-report-v2.py').open('x',encoding='utf-8') as f:f.write(s)

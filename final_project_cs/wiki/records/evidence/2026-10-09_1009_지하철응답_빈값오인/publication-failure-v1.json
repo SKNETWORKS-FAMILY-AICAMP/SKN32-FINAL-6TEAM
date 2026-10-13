@@ -1,0 +1,5 @@
+{
+  "failed_check": "relative report link exists",
+  "reason": "source backup and raw folder references climbed one directory too far",
+  "action": "Backed up report/generator/copy and corrected two link prefixes; product code/test results unchanged"
+}

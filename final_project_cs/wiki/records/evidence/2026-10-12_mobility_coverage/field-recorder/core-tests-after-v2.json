@@ -1,0 +1,96 @@
+{
+  "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\scripts\\mobility\\assets\\field_recorder_v1.html",
+  "sha256": "4d2f15d6ef008e3539f1ee027028752927bcce0527fb65739bf86dd2d1e58010",
+  "passed": 22,
+  "total": 22,
+  "results": [
+    {
+      "name": "21개 기능 식별자·단위가 유일하게 등록됨",
+      "pass": true
+    },
+    {
+      "name": "예상 고정 이전 시작 차단",
+      "pass": true
+    },
+    {
+      "name": "고정 이후 예측 숫자 변경 차단",
+      "pass": true
+    },
+    {
+      "name": "고정 이전으로 돌아간 관측 시각 차단",
+      "pass": true
+    },
+    {
+      "name": "재고정 차단",
+      "pass": true
+    },
+    {
+      "name": "시작·종료가 기록 시각·120초 경과를 보존",
+      "pass": true
+    },
+    {
+      "name": "시작 전 종료·중복 시작 차단",
+      "pass": true
+    },
+    {
+      "name": "종료 시계 역행 차단·기록 추가 안 함",
+      "pass": true
+    },
+    {
+      "name": "측정값 누락을 0·통과로 바꾸지 않음",
+      "pass": true
+    },
+    {
+      "name": "예상값 누락·허용 오차 누락도 통과 안 함",
+      "pass": true
+    },
+    {
+      "name": "명시한 0 값과 오차 0은 정상 숫자",
+      "pass": true
+    },
+    {
+      "name": "예산 초과와 미초과 구별",
+      "pass": true
+    },
+    {
+      "name": "근거 5종 보존·공식/개발은 실이용 표시 안 함",
+      "pass": true
+    },
+    {
+      "name": "시간 항목 타이머는 실제 2분으로 환산",
+      "pass": true
+    },
+    {
+      "name": "금액 또는 공식 문서 읽는 시간을 주행시간으로 자동 환산 금지",
+      "pass": true
+    },
+    {
+      "name": "새 예상판은 이전 기록·예상판을 보존",
+      "pass": true
+    },
+    {
+      "name": "음수·NaN·무한대·불리언·문자 숫자를 원문 JSON에서 차단",
+      "pass": true
+    },
+    {
+      "name": "JSON 허용 키만 읽고 개인정보 추가 필드·파일형식·64KB 초과 차단",
+      "pass": true
+    },
+    {
+      "name": "식별란은 주소·태그 삽입용 자유문장을 받지 않음",
+      "pass": true
+    },
+    {
+      "name": "JSON 내보내기 스냅샷과 세션 기록을 분리·지속저장 꺼짐",
+      "pass": true
+    },
+    {
+      "name": "외부 리소스·통신·스토리지 API 코드가 없음",
+      "pass": true
+    },
+    {
+      "name": "선택 식별자의 false·0·null을 빈 식별자로 바꾸지 않음",
+      "pass": true
+    }
+  ]
+}

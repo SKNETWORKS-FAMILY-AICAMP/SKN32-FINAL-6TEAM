@@ -1,0 +1,67 @@
+[WebServer] (node:17048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:24536) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\live\simulation.spec.ts:6:1 › 재난 N종 선택·적용·중지와 실행별 알림을 실제 관리자 화면에서 확인한다 (1.0s)
+(node:17404) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 tests\live\simulation.spec.ts:50:1 › 좁은 화면에서 6개 스위치를 키보드로 조작한다 (851ms)
+
+
+  1) tests\live\simulation.spec.ts:6:1 › 재난 N종 선택·적용·중지와 실행별 알림을 실제 관리자 화면에서 확인한다 ──────────────────
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "적용·중지 사유"
+    Error: strict mode violation: getByRole('alert') resolved to 2 elements:
+        1) <p role="alert" class="error">적용·중지 사유를 입력해 주세요.</p> aka getByText('적용·중지 사유를 입력해 주세요')
+        2) <div role="alert" aria-live="assertive" id="__next-route-announcer__"></div> aka locator('[id="__next-route-announcer__"]')
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+
+
+      34 |   await expect(page.getByRole('group')).toContainText('선택 3/6');
+      35 |   await page.getByRole('button',{name:'선택한 3종 적용'}).click();
+    > 36 |   await expect(page.getByRole('alert')).toContainText('적용·중지 사유');
+         |                                         ^
+      37 |   expect(commands).toHaveLength(0);
+      38 |   await page.getByLabel('적용·중지 사유').fill('현재 일정 복합 재난 시험');
+      39 |   await page.getByRole('button',{name:'선택한 3종 적용'}).click();
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\admin\tests\live\simulation.spec.ts:36:41
+
+    Error Context: test-results\simulation\simulation-재난-N종-선택·적용·중지와-실행별-알림을-실제-관리자-화면에서-확인한다\error-context.md
+
+  2) tests\live\simulation.spec.ts:50:1 › 좁은 화면에서 6개 스위치를 키보드로 조작한다 ────────────────────────────────
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "대상 일정을 선택"
+    Error: strict mode violation: getByRole('alert') resolved to 2 elements:
+        1) <p role="alert" class="error">대상 일정을 선택해 주세요.</p> aka getByText('대상 일정을 선택해 주세요')
+        2) <div role="alert" aria-live="assertive" id="__next-route-announcer__"></div> aka locator('[id="__next-route-announcer__"]')
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+
+
+      65 |   await page.getByLabel('적용·중지 사유').fill('위치 없는 일정 시험');
+      66 |   await page.getByRole('button',{name:'선택한 1종 적용'}).click();
+    > 67 |   await expect(page.getByRole('alert')).toContainText('대상 일정을 선택');
+         |                                         ^
+      68 | });
+      69 |
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\admin\tests\live\simulation.spec.ts:67:41
+
+    Error Context: test-results\simulation\simulation-좁은-화면에서-6개-스위치를-키보드로-조작한다\error-context.md
+
+  2 failed
+    tests\live\simulation.spec.ts:6:1 › 재난 N종 선택·적용·중지와 실행별 알림을 실제 관리자 화면에서 확인한다 ───────────────────
+    tests\live\simulation.spec.ts:50:1 › 좁은 화면에서 6개 스위치를 키보드로 조작한다 ─────────────────────────────────

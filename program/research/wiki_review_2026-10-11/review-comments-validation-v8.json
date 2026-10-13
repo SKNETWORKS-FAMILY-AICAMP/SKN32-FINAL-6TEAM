@@ -1,0 +1,147 @@
+{
+  "checked_at": "2026-10-11T22:45:00+09:00",
+  "scope": "로컬 HTML·JS 격리 실행·링크·백업 정적 검사. 브라우저 렌더·실제 클릭 검증 아님",
+  "browser_verification": "file URL 보안 정책으로 수행하지 못함",
+  "passed": 27,
+  "total": 27,
+  "checks": [
+    {
+      "name": "댓글 9개 기록",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "대상 항목 6개 기록",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "모든 지시·문서 반영 기록",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "모든 수정 전 백업 해시 일치",
+      "pass_": true,
+      "detail": {
+        "checked": 20,
+        "bad": []
+      }
+    },
+    {
+      "name": "최종 저장 파일 해시 일치",
+      "pass_": true,
+      "detail": {
+        "checked": 18,
+        "bad": []
+      }
+    },
+    {
+      "name": "wiki-review-v1.html 대상 6개 상태 표시",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "wiki-review-v1.html 기존 25개 항목 보존",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "wiki-review-v2.html 대상 6개 상태 표시",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "wiki-review-v2.html 기존 25개 항목 보존",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "wiki-review-v3.html 대상 6개 상태 표시",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "wiki-review-v3.html 기존 25개 항목 보존",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "wiki-review-v6.html 대상 6개 상태 표시",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "wiki-review-v6.html 기존 25개 항목 보존",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "철회한 설명 재노출 제거",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "기존 완료 13개를 미실행 선택지로 표시하지 않음",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "PC 콘솔의 모호한 표현 제거",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "W11 미확정 선택 제거",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "수정 영역 로컬 링크 존재",
+      "pass_": true,
+      "detail": {
+        "checked": 20,
+        "bad": []
+      }
+    },
+    {
+      "name": "그림 접근성 제목·설명",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "그림 시작·종료와 판단 조건",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "새 구현·배포 완료로 오표시하지 않음",
+      "pass_": true,
+      "detail": null
+    },
+    {
+      "name": "선택 스크립트 문법",
+      "pass_": true
+    },
+    {
+      "name": "과거 저장값보다 사용자 확정 선택 우선",
+      "pass_": true
+    },
+    {
+      "name": "확정 선택 임의 변경 방지",
+      "pass_": true
+    },
+    {
+      "name": "기본값 복원 뒤 확정 선택 유지",
+      "pass_": true
+    },
+    {
+      "name": "내보내기 확정 선택·W11 후속 지시 보존",
+      "pass_": true
+    },
+    {
+      "name": "지시 반영과 구현 상태 구분 안내",
+      "pass_": true
+    }
+  ]
+}

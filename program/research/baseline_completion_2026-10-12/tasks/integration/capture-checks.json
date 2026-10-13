@@ -1,0 +1,61 @@
+{
+  "captured_at_kst": "2026-10-12T04:06:11.180543+09:00",
+  "phase": "preparation_snapshot",
+  "source_scope": [
+    "wiki",
+    "final_project_cs/wiki",
+    "final_project_cs/app",
+    "final_project_cs/config",
+    "final_project_cs/tests",
+    "final_project_cs/migrations",
+    "final_project_cs/scripts",
+    "final_project_cs/deploy",
+    "final_project_cs/frontend/apps/web/src",
+    "program/scripts"
+  ],
+  "excluded_directory_names": [
+    ".git",
+    ".pytest_cache",
+    "__pycache__",
+    "_backup",
+    "inputs",
+    "legacy",
+    "node_modules",
+    "outputs",
+    "records",
+    "renders",
+    "results",
+    "screens",
+    "source-text",
+    "sources"
+  ],
+  "program_scripts_scope": "Python 검사·생성 코드만. 연구 입력·출력은 담당 실측 근거를 별도로 연결",
+  "source_manifest_sha256": "7077c9e98a74be45e1b072e36afeb5de9385b38840622e642ff4ff41ffc0856b",
+  "warning": "파일 존재·해시 확인은 기능·시험·배포 완료 판정이 아닙니다.",
+  "checks": [
+    {
+      "name": "요구 ID 25개 일치",
+      "passed": true
+    },
+    {
+      "name": "사용자 선택 보존",
+      "passed": true
+    },
+    {
+      "name": "출발점 근거 파일 존재",
+      "passed": true
+    },
+    {
+      "name": "다운로드 11개 무결성",
+      "passed": true
+    },
+    {
+      "name": "출처 텍스트 11개 존재",
+      "passed": true
+    },
+    {
+      "name": "완료 판정 자동 승격 없음",
+      "passed": true
+    }
+  ]
+}

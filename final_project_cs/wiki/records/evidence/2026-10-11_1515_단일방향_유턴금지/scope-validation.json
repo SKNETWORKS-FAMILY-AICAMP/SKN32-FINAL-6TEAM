@@ -1,0 +1,21 @@
+{
+  "checked_reverse_pairs": 2219,
+  "unchanged_other_outgoing_pairs": 4526,
+  "search_comparison": [
+    {
+      "id": "N091",
+      "astar_ms": 247026,
+      "dijkstra_ms": 247026,
+      "astar_m": 3385.83,
+      "dijkstra_m": 3385.83
+    },
+    {
+      "id": "N094",
+      "astar_ms": 920827,
+      "dijkstra_ms": 920827,
+      "astar_m": 10558.78,
+      "dijkstra_m": 10558.78
+    }
+  ],
+  "network_attempts": 0
+}

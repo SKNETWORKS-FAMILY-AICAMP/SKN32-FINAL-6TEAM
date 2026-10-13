@@ -1,0 +1,14 @@
+{
+  "oos2r_cosine_5e5_20261008": {
+    "hf": "datasets\\travel\\train_oos\\oos2r_cosine_5e5_20261008_hf_adapter_2026-10-09_0115",
+    "gguf": "datasets\\travel\\train_oos\\oos2r_cosine_5e5_20261008_lora_f16_2026-10-09_0115.gguf",
+    "sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b",
+    "hf_files_verified": 5
+  },
+  "spark_s1_4b_oos": {
+    "hf": "datasets\\travel\\train_oos\\spark_s1_4b_oos_hf_adapter_2026-10-09_0115",
+    "gguf": "datasets\\travel\\train_oos\\spark_s1_4b_oos_lora_f16_2026-10-09_0115.gguf",
+    "sha256": "0e6449ca7ba70208950cbc7b6f6e662adae6717665dbeeda3e13a34afc76cb60",
+    "hf_files_verified": 3
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "model_sha256_before_evaluation": "0f5ee4096bb7274115aafdb7b031e70f34c85a86de3f9c5d0a6413b4a9891850",
+  "model_sha256_after_evaluation": "0f5ee4096bb7274115aafdb7b031e70f34c85a86de3f9c5d0a6413b4a9891850",
+  "validation_evaluations": 1,
+  "original_split": {
+    "training": 153,
+    "validation": 40,
+    "excluded": 7
+  },
+  "eligible_training": 30,
+  "eligible_validation": 10,
+  "eligible_api_estimate_comparison": {
+    "old_route_meter": {
+      "n": 10,
+      "mae_won": 1150,
+      "mape_percent": 11.488863082513168,
+      "median_ape_percent": 10.665869218500797,
+      "mean_signed_error_won": -310,
+      "under_reference": 5,
+      "within_1000_won": 6
+    },
+    "proxy_route_meter": {
+      "n": 10,
+      "mae_won": 1140,
+      "mape_percent": 12.455396989093327,
+      "median_ape_percent": 8.903714685775471,
+      "mean_signed_error_won": 460,
+      "under_reference": 3,
+      "within_1000_won": 4
+    },
+    "old_reference_distance_meter": {
+      "n": 10,
+      "mae_won": 750,
+      "mape_percent": 6.035387335136516,
+      "median_ape_percent": 4.425837320574162,
+      "mean_signed_error_won": -290,
+      "under_reference": 5,
+      "within_1000_won": 8
+    },
+    "proxy_reference_distance_meter": {
+      "n": 10,
+      "mae_won": 820,
+      "mape_percent": 7.406521562910271,
+      "median_ape_percent": 7.362355953905251,
+      "mean_signed_error_won": 480,
+      "under_reference": 3,
+      "within_1000_won": 8
+    }
+  },
+  "all_40_mixed_definition_proxy_comparison": {
+    "old_route_meter": {
+      "n": 40,
+      "mae_won": 1812.5,
+      "mape_percent": 11.11081302729926,
+      "median_ape_percent": 9.375572239516572,
+      "mean_signed_error_won": -1537.5,
+      "under_reference": 32,
+      "within_1000_won": 18
+    },
+    "proxy_route_meter": {
+      "n": 40,
+      "mae_won": 1290,
+      "mape_percent": 8.618624935710622,
+      "median_ape_percent": 6.581967650669942,
+      "mean_signed_error_won": -695,
+      "under_reference": 24,
+      "within_1000_won": 22
+    },
+    "old_reference_distance_meter": {
+      "n": 40,
+      "mae_won": 1032.5,
+      "mape_percent": 6.779536788611876,
+      "median_ape_percent": 6.501610305958131,
+      "mean_signed_error_won": -817.5,
+      "under_reference": 30,
+      "within_1000_won": 24
+    },
+    "proxy_reference_distance_meter": {
+      "n": 40,
+      "mae_won": 780,
+      "mape_percent": 5.447857407631052,
+      "median_ape_percent": 4.658768915415687,
+      "mean_signed_error_won": 15,
+      "under_reference": 20,
+      "within_1000_won": 31
+    }
+  },
+  "capped_count": 0,
+  "developer_api_calls": 0,
+  "private_receipts_accessed": 0,
+  "product_adoption_allowed": false,
+  "independent_real_payment_validation": false
+}

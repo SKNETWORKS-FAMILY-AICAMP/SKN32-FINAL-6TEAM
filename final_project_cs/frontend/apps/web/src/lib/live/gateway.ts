@@ -5,6 +5,7 @@ import { streamApi } from "./stream";
 
 /** Server trip view (`GET /v1/web/trips/{id}`) — only the fields the web reads. */
 interface ServerItem {
+  badges?: { code: string; label: string; source: string }[];
   item_id: string;
   seq: number;
   kind: string;
@@ -15,12 +16,13 @@ interface ServerItem {
   starts_at: string;
   ends_at: string | null;
   changed: boolean;
+  /** `[2026-10-13]` A move that leaves from the stay of that morning (「숙소 → 그날 첫 일정」), not from the stop before it. */
+  from_stay?: boolean;
   lat?: number | null;
   lon?: number | null;
   booked?: boolean;
   other_options?: { key: string; name: string }[];
   customer_pinned?: boolean;
-  badges?: { code: string; label: string; source: string }[];
   place_info?: ServerPlaceInfo | null;
   map_url?: string | null;
   /** `[2026-10-06]` Falls in a disaster pause. */
@@ -82,10 +84,11 @@ function stop(item: ServerItem, t: Translate): TripStop {
     item.changed ? t("지켜보다 바뀐 일정이에요.", "This stop was changed while we watched your trip.") : ""].filter(Boolean).join(" · ");
   return {
     id: item.item_id, date: start.date, time: start.time, endTime: item.ends_at ? seoul(item.ends_at).time : undefined,
+    // `[2026-10-13]` A stay (kind lodging) runs from its check-in day to its check-out day — the screen draws it on every day between.
+    ...(item.ends_at ? { endDate: seoul(item.ends_at).date } : {}),      // `kind` 는 아래 한 곳에서 싣는다
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
-    // A badge without its label or source is dropped — the screen does not show a mark of unknown origin.
     badges: (item.badges ?? []).filter((badge) => [badge?.code, badge?.label, badge?.source].every((value) => typeof value === "string" && value !== ""))
       .map(({ code, label, source }) => ({ code, label, source })),
     placeInfo: placeInfo(item.place_info, t),
@@ -287,7 +290,7 @@ async function read(tripId: string, language: Language): Promise<Trip> {
   // ★`[2026-10-04]` A trip has an owner: a browser with no session (a link someone kept, or a guest session that ended) is not made a new guest just to be
   //   told "not yours". It is told so at once, with the way back — a login brings an account's trips back; a guest's trips are gone.
   if (!await hasSession(language)) {
-    throw new LiveError("not_found", t("이 여행을 찾지 못했어요. 창을 닫았거나 시간이 지나 게스트 여행이 사라졌을 수 있어요. 계정에 보관한 여행이라면 마이페이지에서 로그인하면 다시 열려요.", "We could not find this trip. A guest trip cannot be continued after the window is closed, and is deleted after a while. If it is kept with an account, sign in on My page to open it again."));
+    throw new LiveError("not_found", t("이 여행을 찾지 못했어요. 창을 닫았거나 시간이 지나 게스트 여행이 사라졌을 수 있어요. 계정에 보관한 여행이라면 메뉴의 「로그인 · 가입」으로 로그인하면 다시 열려요.", "We could not find this trip. A guest trip cannot be continued after the window is closed, and is deleted after a while. If it is kept with an account, sign in with “Sign in or sign up” in the menu to open it again."));
   }
   const server = await api<ServerTrip>(`/v1/web/trips/${encodeURIComponent(tripId)}`, language);
   // ★이동 항목(kind mobility — 출발 시각 = 다음 일정 시작 − 이동 − 여유)은 일정 목록에 섞지 않는다(☆2026-09-28 「A → B」가 일정처럼 끼어 보였다).
@@ -304,6 +307,8 @@ async function read(tripId: string, language: Language): Promise<Trip> {
   for (const move of moves) {
     const at = server.items.findIndex((item) => item.item_id === move.id);
     move.toId = server.items.slice(at + 1).find((item) => item.kind !== "mobility")?.item_id ?? null;
+    // `[2026-10-13]` A morning move 「숙소 → 그날 첫 일정」(`from_stay`) leaves from the stay the customer sleeps in that night before — not from the stop before it in the plan (the day before's last).
+    if (server.items[at]?.from_stay) move.fromId = stops.find((stop) => stop.kind === "lodging" && !!stop.endDate && stop.date < move.date && move.date <= stop.endDate)?.id ?? null;
   }
   // ★The server judged the plan when it was registered (`_create_trip`) — what it found is `warnings`, not a separate check to run.
   return {
@@ -354,7 +359,7 @@ export function createLiveGateway(): TripGateway {
   // Resume credentials belong to one trip and login session. Reloads deliberately leave correlation to the API.
   const pending = new Map<string, { resume: TripMessageResume; session: string | null }>();
   // Failed sends retain the same request id and resume credentials, including on a user-triggered retry.
-  const sending = new Map<string, { message: string; itemId: string | null; requestId: string; resume?: TripMessageResume }>();
+  const sending = new Map<string, { message: string; itemId: string | null; requestId: string; resume?: TripMessageResume; summaryDay?: string }>();
   return {
     async listTrips(language) {
       // ★No session means this browser has registered nothing. Asking with the list would make a guest session — a new server user —
@@ -369,25 +374,25 @@ export function createLiveGateway(): TripGateway {
       pending.delete(tripId);
       sending.delete(tripId);
     },
-    async sendMessage(tripId, message, language, itemId, location, onProgress, explicitResume) {
+    async sendMessage(tripId, message, language, itemId, location, onProgress, explicitResume, summaryDay) {
       const t = translator(language);
       const now = new Date().toISOString();
       const waiting = pending.get(tripId);
       if (waiting && waiting.session !== (currentSession()?.csrf ?? null)) { pending.delete(tripId); sending.delete(tripId); }
       const earlier = sending.get(tripId);
-      const retry = earlier && earlier.message === message && earlier.itemId === (itemId ?? null)
+      const retry = earlier && earlier.message === message && earlier.itemId === (itemId ?? null) && earlier.summaryDay === summaryDay
         && (!explicitResume || (earlier.resume?.case_id === explicitResume.case_id
           && earlier.resume.resume_token === explicitResume.resume_token && earlier.resume.expected_version === explicitResume.expected_version));
       const requestId = retry
         ? earlier.requestId : `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
-      const resume = retry ? earlier.resume : explicitResume ?? pending.get(tripId)?.resume;
-      sending.set(tripId, { message, itemId: itemId ?? null, requestId, resume });
+      const resume = summaryDay ? undefined : retry ? earlier.resume : explicitResume ?? pending.get(tripId)?.resume;
+      sending.set(tripId, { message, itemId: itemId ?? null, requestId, resume, summaryDay });
       // ★`[2026-10-02]` Asked as a stream, the server says what it is doing while the model works (`stream.ts`); a lost line
       //   sends the same `request_id` again, which the server answers without acting twice.
       const result = await streamApi<{ status?: string; case_status?: string; case_id?: string; version?: number; resume_token?: string | null;
         required_input_schema?: Record<string, unknown> | null; answer?: string; basis_sources?: unknown[] | null; choices?: ServerChoice[] | null;
         outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown; needs_location?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(resume ?? {}), ...(itemId ? { item_id: itemId } : {}),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(summaryDay ? { summary_day: summaryDay } : {}), ...(resume ?? {}), ...(itemId ? { item_id: itemId } : {}),
           // ★Only when the customer pressed 「내 위치 알려 주고 다시 묻기」 — never attached on its own.
           ...(location ? { location: { lat: location.lat, lng: location.lng, accuracy_m: location.accuracyM, at: location.at } } : {}) }),
       }, onProgress);
@@ -397,7 +402,7 @@ export function createLiveGateway(): TripGateway {
         pending.set(tripId, { session: currentSession()?.csrf ?? null, resume: { case_id: result.case_id,
           ...(typeof result.resume_token === "string" && result.resume_token ? { resume_token: result.resume_token } : {}),
           ...(typeof result.version === "number" && Number.isInteger(result.version) ? { expected_version: result.version } : {}) } });
-      } else pending.delete(tripId);
+      } else if (!summaryDay) pending.delete(tripId);
       const sent: TripMessage[] = [
         { id: `${requestId}-q`, caseId: result.case_id, role: "user" as const, text: message, createdAt: now },
         { id: `${requestId}-a`, caseId: result.case_id, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString(),
@@ -410,7 +415,7 @@ export function createLiveGateway(): TripGateway {
           // ★A change the customer asked for in chat can be undone from the answer (user decision 2026-09-29).
           ...(result.status === "adjusted" && typeof result.outcome?.version === "number" && result.outcome.version > 1
             ? { changedTo: result.outcome.version } : {}) }];
-      writeMessages(tripId, [...readMessages(tripId).map((previous) => ({ ...previous, awaitingReply: false })), ...sent]);
+      writeMessages(tripId, [...readMessages(tripId).map((previous) => ({ ...previous, awaitingReply: summaryDay ? previous.awaitingReply : false })), ...sent]);
       // ★Sending and re-reading are two steps (2026-09-30, teammate question Q-05). The server has answered; a failed
       //   re-read must not turn that into "not sent" — the customer would send again and the change would run twice.
       //   The caller shows the reply it got (`detail.sent`) and re-reads later.

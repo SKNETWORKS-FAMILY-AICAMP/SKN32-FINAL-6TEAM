@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="8" time="4.184" timestamp="2026-10-11T19:24:11.696886+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_taxi_departure_consistency_v1" name="test_hour_boundary_never_uses_previous_query_time_for_departure" time="0.088"><failure message="AssertionError: 안내할 출발 시각 자체에서 소요를 조회해야 한다&#10;assert []">def test_hour_boundary_never_uses_previous_query_time_for_departure():
+        # 09:10에서 40분→08:50, 08:50에서 29분→09:01로 진동한다.
+        # 수정 전에는 조회하지 않은09:01에29분을 붙여 여유 포함 목표를11분 넘긴다.
+        car = ClockCar(lambda dt: (40 if dt.hour &gt;= 9 else 29) * 60)
+        result, left = option(car)
+        assert result is not None and not left
+&gt;       assert_consistent(car, result, 580, 10)
+
+tests\unit\travel\mobility\test_taxi_departure_consistency_v1.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+car = &lt;tests.unit.travel.mobility.test_taxi_departure_consistency_v1.ClockCar object at 0x0000015873F68DA0&gt;
+result = {'_covered': False, '_fare': 10530, '_key': ('taxi', 0, 0), '_legs': [], ...}
+by = 580, buffer = 10
+
+    def assert_consistent(car, result, by, buffer):
+        departure = datetime.fromisoformat(P.iso_of(DAY, result['_start']))
+        queried = [dt for dt in car.calls if dt == departure]
+&gt;       assert queried, '안내할 출발 시각 자체에서 소요를 조회해야 한다'
+E       AssertionError: 안내할 출발 시각 자체에서 소요를 조회해야 한다
+E       assert []
+
+tests\unit\travel\mobility\test_taxi_departure_consistency_v1.py:39: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_taxi_departure_consistency_v1" name="test_constant_profile_preserves_exact_departure_fare_and_ceiling[1800]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_taxi_departure_consistency_v1" name="test_constant_profile_preserves_exact_departure_fare_and_ceiling[1801]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_taxi_departure_consistency_v1" name="test_constant_profile_preserves_exact_departure_fare_and_ceiling[600]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_taxi_departure_consistency_v1" name="test_constant_profile_preserves_exact_departure_fare_and_ceiling[2460]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_taxi_departure_consistency_v1" name="test_midnight_candidate_uses_the_actual_calendar_date" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_taxi_departure_consistency_v1" name="test_unbounded_duration_growth_does_not_publish_unverified_candidate" time="0.001"><failure message="AssertionError: assert {'_covered': False, '_fare': 10480, '_key': ('taxi', 0, 0), '_legs': [], ...} is None">def test_unbounded_duration_growth_does_not_publish_unverified_candidate():
+        # 매번 그 출발부터 목표까지 남은 시간보다 오래 걸리는 자료다.
+        car = ClockCar(lambda dt: (580 - (dt.hour * 60 + dt.minute) + 60) * 60)
+        result, left = option(car)
+&gt;       assert result is None
+E       AssertionError: assert {'_covered': False, '_fare': 10480, '_key': ('taxi', 0, 0), '_legs': [], ...} is None
+
+tests\unit\travel\mobility\test_taxi_departure_consistency_v1.py:77: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_taxi_departure_consistency_v1" name="test_query_failure_during_refit_is_explicit" time="0.001" /></testsuite></testsuites>

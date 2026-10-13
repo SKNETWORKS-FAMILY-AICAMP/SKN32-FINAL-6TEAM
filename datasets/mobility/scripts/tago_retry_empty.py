@@ -2,9 +2,10 @@
 # 실행: 저장소 루트에서  python datasets/mobility/scripts/tago_retry_empty.py
 # 배경: v1 수집 스크립트는 HTTP 실패·형식 이상도 done 에 넣었다. 2호선 평일 건대입구·잠실나루가 0건인 것은 실패 쪽이 의심된다.
 # 호출 ≈ 빈 조합 수(수도권만, 토요일 02 제외 시 약 500). 결과: 행이 오면 jsonl 에 추가, 안 오면 tago_empty_confirmed.json 에 기록.
-import os, json, time, requests
+import os, json, time
 from datetime import datetime, timezone, timedelta
 from _paths import RAW_MOBILITY, ensure_dirs
+from _tago_checked import CollectionError, backup_existing, fetch_body
 ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KEY = os.environ["DATA_GO_KR_KEY"]
@@ -17,26 +18,16 @@ DONE = RAW_MOBILITY / "tago_timetable_done.json"
 CONFIRMED = RAW_MOBILITY / "tago_empty_confirmed.json"
 EXCLUDE_PREFIX = ("MTRBS", "MTRDG", "MTRDJ", "MTRGJ", "MTRIAM")
 SKIP_DAILY = {"02"}   # 수도권 TAGO 는 토요일(02)이 비어 있고 토·일·공휴일 = 03 이다 (우이신설만 02 제공). 재시도 대상에서 뺀다
+backup_existing((TIMETABLE, CONFIRMED))
 
 
 def call(**p):
-    """(items, status) status ∈ ok / http / format / net"""
-    for attempt in range(5):
-        try:
-            r = requests.get(f"{BASE}/GetSubwaySttnAcctoSchdulList", params={**COMMON, **p}, timeout=30)
-        except requests.RequestException:
-            time.sleep(2 + attempt * 2); continue
-        if r.status_code == 200:
-            try:
-                body = r.json()["response"]["body"]
-            except (KeyError, ValueError):
-                return [], "format:" + r.text[:80]
-            items = body.get("items", {}).get("item", []) if isinstance(body.get("items"), dict) else []
-            return ([items] if isinstance(items, dict) else list(items)), "ok"
-        if "PER_SECOND" in r.text or "SERVICETIMEOUT" in r.text or r.status_code >= 500:
-            time.sleep(2 + attempt * 2); continue
-        return [], f"http:{r.status_code}"
-    return [], "net"
+    """실패는 정상 빈 자료(ok)로 분류하지 않는다. 오류본문/키는 기록하지 않는다."""
+    try:
+        body = fetch_body(BASE, KEY, "GetSubwaySttnAcctoSchdulList", p)
+    except CollectionError as exc:
+        return [], "error:" + str(exc)
+    return body["items"]["item"], "ok"
 
 
 id_map = json.loads(ID_MAP.read_text(encoding="utf-8"))
@@ -68,6 +59,7 @@ with TIMETABLE.open("a", encoding="utf-8") as f:
                 "dep_time": it.get("depTime"), "arr_time": it.get("arrTime"),
                 "daily_type": it.get("dailyTypeCode", d), "updown": it.get("upDownTypeCode", u),
                 "fetched_at": ts, "source": "data.go.kr/1613000/SubwayInfo",
+                "raw_item": it,
             }, ensure_ascii=False) for it in items) + "\n"); f.flush()
             recovered += 1
             confirmed.pop(key, None)

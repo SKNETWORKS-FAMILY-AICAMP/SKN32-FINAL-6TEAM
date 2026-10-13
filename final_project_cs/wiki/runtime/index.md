@@ -80,3 +80,8 @@ app/core/case_runtime/
 ## 관련 결정
 
 - [D-003 Message Broker는 in-process queue](../../../wiki/decisions/D-003-message-broker.md)
+
+## 2026-10-12 목차에 더한 문서
+
+- [case-state-machine.generated.md](case-state-machine.generated.md) — 코드의 상태·전이 표에서 자동으로 만드는 Case 상태 전이도(손으로 고치지 않는다)
+- [langgraph-comparison.md](langgraph-comparison.md) — LangGraph 비교 실험 안내(현재 흐름 제어는 Controller · Case 생명주기)

@@ -1,0 +1,14 @@
+{
+  "policy_reserve_fraction": 0.2,
+  "provider_usage_before": null,
+  "provider_usage_after": null,
+  "remaining_before": null,
+  "remaining_after": null,
+  "reset_time": null,
+  "data_api_budget_allocated": 0,
+  "data_api_calls": 0,
+  "failed_calls": 0,
+  "retry_calls": 0,
+  "reason": "Shared usage and provider daily units/reset clocks unverified; no data API was called",
+  "claude_cli_approved_reviews": 1
+}

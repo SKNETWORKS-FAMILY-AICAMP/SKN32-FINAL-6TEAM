@@ -74,7 +74,7 @@ research policy    dataset  evidence  runbook    reference
 
 ```text
 agent  api  architecture  contract  cost  customer-operations
-data  evaluation  gpu  release  security  state  testing  ui
+data  documentation  evaluation  governance  gpu  release  security  state  testing  ui
 ```
 
 **영역명이나 type을 태그로 반복하지 않는다.** `runtime/` 폴더의 문서에 `runtime` 태그는 불필요하다.
@@ -90,6 +90,8 @@ data  evaluation  gpu  release  security  state  testing  ui
 | `deprecated` | 더 이상 유효하지 않음. 대체 문서를 링크 |
 
 **이관해 온 문서는 기본 `draft`다.** 옛 문서가 새 구조에 들어왔다는 이유로 권위가 생기면 안 된다.
+
+`status`는 문서 검토 상태입니다. 기존 결정의 `accepted` 표시는 `decision_status: accepted`로 보존하고, 문서는 리뷰 전이면 `draft`로 둡니다. 이 정규화는 결정 취소나 구현 완료 선언이 아닙니다. `stable` 승격에는 [리뷰 정책](review-policy.md)의 확인이 필요합니다.
 
 ### `owners`
 유지 책임자. 1명이 원칙이고 공동은 최대 2명.
@@ -155,10 +157,14 @@ automation:
 2. type이 허용 목록에 있는가
 3. status: stable인데 title/description/owners가 없는가
 4. tags가 통제 목록에 있는가
-5. automation.manual_edit: false 문서가 수동 수정됐는가
+5. automation 선언 형식 (생성물 일치는 build_wiki_catalogs.py --check로 별도 확인)
 6. domain 값이 허용 목록에 있는가
 7. domain: neutral 인데 도메인 업무 어휘가 3회 이상인가
 ```
+
+## 결정·구현 상태의 보완 필드
+
+`decision_status`·`implementation_status`·`validation_status`·`verified_at`·`supersedes`와 환경별 본문 표는 [상태 표시 안내](implementation-state.md)를 따릅니다. 기존 `status`의 의미와 초안의 선택 필드 원칙은 유지합니다. 검사기는 구현·검증 상태의 허용값과 시간대 포함 시각 형식만 확인합니다. 결정 채택 근거·구현·배포의 진실성, 소유자 승인, 모든 생성물의 수동 변경을 자동 판정하지 않습니다.
 
 ## 관계
 

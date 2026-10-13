@@ -1,0 +1,27 @@
+{
+  "command": [
+    "C:/Users/playdata2/anaconda3/python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/mobility/test_subway_binding_v1.py",
+    "tests/unit/travel/mobility/test_subway_departure_v1.py",
+    "tests/unit/travel/mobility/test_subway_fare_upper.py",
+    "tests/unit/travel/mobility/test_subway_primary_name_v1.py",
+    "tests/unit/travel/test_seoul_subway_arrival.py",
+    "tests/unit/travel/test_subway_boardable_v1.py",
+    "tests/unit/travel/test_subway_completeness_v1.py",
+    "tests/unit/travel/test_subway_envelope_v1.py",
+    "tests/unit/travel/test_subway_identity_v1.py",
+    "tests/unit/travel/test_subway_line_identity_v1.py",
+    "tests/unit/travel/test_subway_notice.py",
+    "tests/unit/travel/test_subway_observation_time.py",
+    "tests/unit/travel/test_subway_station_extract_v1.py",
+    "tests/unit/travel/test_subway_train_identity_v1.py",
+    "tests/unit/travel/test_departure_observer_notice_v1.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\2026-10-09_1228_지하철_문자열열차번호_선택연결_pytest_v3",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1228_지하철_문자열열차번호_선택연결\\after-v3.xml"
+  ],
+  "cwd": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs",
+  "exit_code": 0
+}

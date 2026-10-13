@@ -34,6 +34,7 @@ def register(*, add_nearby: Callable[..., list[dict[str, Any]]],
              slot_verdicts: Callable[..., Any] | None = None,
              planner_factory: Callable[..., Any] | None = None,
              link_core_place: Callable[..., Any] | None = None,
+             closure_observation: Callable[..., Any] | None = None,
              agent_shadow: Callable[..., Any] | None = None) -> None:
     """조립 때 한 번. 넷을 다 줘야 한다 — 빠뜨리면 여기서 `TypeError` 로 바로 드러난다."""
     if collect_registration("dining_ledger", locals()):
@@ -42,7 +43,8 @@ def register(*, add_nearby: Callable[..., list[dict[str, Any]]],
     _add_nearby, _states, _state, _find_by_name = add_nearby, states, state, find_by_name
     _catalog_state = catalog_state
     _http_providers.update(lookup_factory=lookup_factory, slot_verdicts=slot_verdicts,
-                           planner_factory=planner_factory, link_core_place=link_core_place, agent_shadow=agent_shadow)
+                           planner_factory=planner_factory, link_core_place=link_core_place,
+                           closure_observation=closure_observation, agent_shadow=agent_shadow)
 
 
 def clear() -> None:
@@ -151,6 +153,12 @@ def require_planner_factory() -> None:
 
 def require_link_core_place() -> None:
     _http_provider("link_core_place")
+
+
+def closure_observation(*args, **kwargs):
+    selected = read_binding('dining_ledger', 'closure_observation', _http_providers.get('closure_observation'),
+                            required_team='dining')
+    return selected(*args, **kwargs) if selected is not None else None
 
 
 def agent_shadow_runner() -> Callable[..., Any] | None:

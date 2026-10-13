@@ -1,5 +1,5 @@
 ---
-type: report
+type: guide
 title: type 분류 검증
 description: 분류 체계가 실제로 판별 가능한지 9회에 걸쳐 쟀다. 아직 기준 미달이라 이관을 시작하지 않는다
 status: draft

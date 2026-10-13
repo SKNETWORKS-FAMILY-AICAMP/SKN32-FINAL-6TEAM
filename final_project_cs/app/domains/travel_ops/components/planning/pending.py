@@ -6,9 +6,9 @@
     ① 「변경 안 할 일정」(고객 고정 `customer_pinned` · 잠긴 예약 `locked`) → ask (15번 답과 상관없이 묻는다)
     ② 설문 15번 「먼저 물어봐줘」 + 안전 사건            → safety_alert (바꾸지 않고, 「안전」이 분명한 알림)
     ③ 설문 15번 「먼저 물어봐줘」                       → ask      (바꾸지 않고 안 1·2·3을 보이고 기다린다)
-    ④ 그 밖(15번이 없거나 「비슷한 곳으로」)             → apply    (지금까지처럼 최고 안을 바로 적용하고 알린다)
+    ④ 직접 「비슷한 곳으로」라고 답한 여행                → apply    (최고 안을 바로 적용하고 알린다)
 
-  ★「먼저 물어봐줘」가 아닌 여행은 안전 사건도 **바로 바꾼다** — 사용자 결정(2026-09-24 새벽).
+  ★미응답·옛 기본값만 있는 여행도 먼저 묻는다. 재난으로 정지한 여행은 수동 재개까지 적용기가 막는다.
   ★「변경 안 할 일정」이 안전 사건에 걸리면 ①이다 — 바꾸지 않되 알림의 머리는 「안전」이다(`safety` 칸).
   ★돈이 걸렸는지(예약 연결)는 **따로 따지지 않는다** — 사용자 결정(2026-09-24). 바꾸기 싫은 일정은
     사용자가 「변경 안 할 일정」으로 적는다.
@@ -41,7 +41,8 @@ SAFETY_CATEGORIES = frozenset({"earthquake", "disaster_msg"})
 
 def cause_fingerprint(causes: list[dict[str, Any]]) -> str:
     """원인의 **종류**만으로 지문을 만든다 — 조회 시각 같은 값이 바뀌어도 같은 사건이다. 감시의 항목 정체(`watch:{여행}:{항목}:{지문}`)와 「그대로 두었어요」 알림 키가 쓴다."""
-    keys = sorted({f"{c.get('category')}:{c.get('kind') or c.get('target') or ''}" for c in causes})
+    keys = sorted({f"{c.get('category')}:{c.get('kind') or c.get('target') or ''}"
+                   + (f":sim:{c.get('simulation_id')}" if c.get('mode') == 'simulation' else '') for c in causes})
     return hashlib.sha1(json.dumps(keys, ensure_ascii=False).encode("utf-8")).hexdigest()[:12]
 
 
@@ -61,10 +62,6 @@ def protected_reason(item: Item) -> str | None:
         return "customer_pinned"
     if item.locked:
         return "locked"
-    if item.detail.get("booking"):
-        # ★`[2026-09-27]` 고객 계획에서 읽은 예약번호(`intake/assemble.py`). 업체 확인 전이라 예약 표(`bookings`)에는
-        #   없지만, 돈이 걸렸을 수 있는 일정을 묻지 않고 바꾸지 않는다.
-        return "booked"
     return None
 
 
@@ -94,6 +91,65 @@ WEATHER_ONLY = frozenset({"forecast", "weather_warning", "air_quality"})
 #: 「바꿀까요?」에 「바꿔 줘」로 답하는 키 — 이 키로 고르면 **그때** 대체안을 계산한다
 CONSENT_KEY = "change"
 CONSENT_REASON = "indoor_unknown"
+FORECAST_REASON = "forecast_advisory"
+
+
+def proposal_scope(reason: str, causes: list[dict[str, Any]]) -> str:
+    scope = "forecast" if reason in {FORECAST_REASON, f"{FORECAST_REASON}_options"} else "change"
+    run = next((c.get("simulation_id") for c in causes if c.get("mode") == "simulation"), None)
+    return f"{scope}:sim:{run}" if run else scope
+
+
+def forecast_attention(conn, *, store: TripStore, trip_id: UUID, item: Item,
+                       report: dict[str, Any]) -> dict[str, Any] | None:
+    """예보는 주의로 안내한다. 확정 사건은 기존 경로로 보내고 열린 예보 제안은 닫는다."""
+    if report.get("verdict") == "disrupted":
+        with conn.cursor() as cur:
+            cur.execute("UPDATE pending_changes SET status='superseded', decided_at=now(), "
+                        "chosen_by='system:confirmed_disruption' WHERE tenant_id=%s AND trip_id=%s "
+                        "AND item_id=%s AND proposal_scope LIKE 'forecast%%' AND status='open'",
+                        (store.tenant_id, trip_id, item.item_id))
+        return None
+    causes = [c for c in report.get("advisories") or [] if c.get("category") == "forecast"]
+    if (report.get("verdict") != "clear" or not causes or item.kind != "activity"
+            or (item.place or {}).get("weather_sensitive") is False):
+        return None
+    trip, items = store.latest(conn, trip_id)
+    current = next((i for i in items if i.item_id == item.item_id), None)
+    if current is None or current.starts_at != item.starts_at:
+        return None
+    # 이미 확정 사건 제안이 있으면 그 선택이 우선이다.
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM pending_changes WHERE tenant_id=%s AND trip_id=%s "
+                    "AND item_id=%s AND base_version=%s AND proposal_scope IN ('change',%s) LIMIT 1",
+                    (store.tenant_id, trip_id, item.item_id, trip["version"], proposal_scope('change', causes)))
+        if cur.fetchone():
+            return None
+    pending = PendingStore(store.tenant_id)
+    decision = Decision("ask", FORECAST_REASON, protected_reason(current), False)
+    proposal_id = pending.open(conn, trip_id=trip_id, item=current, base_version=trip["version"],
+                               decision=decision, causes=causes, options=[])
+    if proposal_id is None:
+        return None
+    values = []
+    for cause in causes:
+        value = cause.get("value")
+        if cause.get("field") == "precipitation_probability" and value is not None:
+            values.append(f"강수확률 {value}%")
+        elif cause.get("field") == "wind_speed_kmh" and value is not None:
+            values.append(f"풍속 {value}km/h")
+    detail = " · ".join(values) or "날씨 예보"
+    text = (f"{current.title} — 예보 주의사항이 있어요({detail}). 일정은 그대로 두었어요. "
+            "「예보에 맞게 일정 변경」을 누르면 다른 곳을 찾아 보여 드려요. "
+            "답이 없으면 원래 일정을 그대로 둡니다.")
+    store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}",
+                          payload={"type": "proposal_request", "kind": FORECAST_REASON,
+                                   "reason": FORECAST_REASON, "text": text, "language": "ko",
+                                   "causes": causes, "proposal_id": str(proposal_id),
+                                   "item_id": str(current.item_id), "consent": True,
+                                   "consent_key": CONSENT_KEY, "options": [], "replay": False})
+    return {"trip_id": str(trip_id), "item": current.title, "proposal_id": str(proposal_id),
+            "reason": FORECAST_REASON, "safety": False}
 
 
 def weather_only(report: dict[str, Any] | None) -> bool:
@@ -257,15 +313,16 @@ class PendingStore:
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO pending_changes (tenant_id, trip_id, item_id, base_version, reason, "
-                "protected_by, safety, cause_json, options_json, expires_at) "
-                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
-                "ON CONFLICT (tenant_id, trip_id, item_id, base_version) DO NOTHING "
+                "protected_by, safety, cause_json, options_json, expires_at, proposal_scope) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
+                "ON CONFLICT (tenant_id, trip_id, item_id, base_version, proposal_scope) DO NOTHING "
                 "RETURNING proposal_id",
                 (self.tenant_id, trip_id, item.item_id, base_version, decision.reason,
                  decision.protected_by, decision.safety,
                  json.dumps(causes, ensure_ascii=False, default=str),
                  json.dumps(options, ensure_ascii=False, default=str),
-                 item.ends_at or item.starts_at))
+                 item.ends_at or item.starts_at,
+                 proposal_scope(decision.reason, causes)))
             row = cur.fetchone()
         return row[0] if row else None
 
@@ -311,6 +368,20 @@ class PendingStore:
                          self.tenant_id, proposal_id))
             return cur.rowcount == 1
 
+    def reopen(self, conn, proposal_id: UUID, *, options: list[dict[str, Any]], reason: str,
+               causes: list[dict[str, Any]]) -> bool:
+        """★`[2026-10-13]` 같은 항목 · 같은 기준 판의 제안 자리를 **새 안으로 다시 연다**(숙소 · 항공 「또 바꿔 줘」).
+
+        제안 자리는 항목 · 판마다 하나다(UNIQUE — 닫힌 것도 자리를 차지한다). 판이 그대로인 채 새 후보를 내밀려면 그 자리를 다시 쓴다.
+        고른(`chosen`) 제안은 다시 열지 않는다 — 고르면 판이 올라 자리도 새 판으로 간다."""
+        with conn.cursor() as cur:
+            cur.execute("UPDATE pending_changes SET status='open', options_json=%s, reason=%s, cause_json=%s, "
+                        "chosen_key=NULL, chosen_by=NULL, chosen_version=NULL, decided_at=NULL "
+                        "WHERE tenant_id=%s AND proposal_id=%s AND status <> 'chosen'",
+                        (json.dumps(options, ensure_ascii=False, default=str), reason,
+                         json.dumps(causes, ensure_ascii=False, default=str), self.tenant_id, proposal_id))
+            return cur.rowcount == 1
+
     def expire(self, conn, *, now: datetime) -> list[dict[str, Any]]:
         """무응답 — 그 일정이 끝난 제안을 닫는다. ★바꾸지 않는다. 닫은 것을 돌려준다(조용히 닫지 않는다)."""
         with conn.cursor() as cur:
@@ -334,8 +405,12 @@ class ProposalRefused(Exception):
 
 def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, proposal_id: UUID,
            key: str | None, by: str, places_by_id: dict[str, dict[str, Any]],
-           check: Callable[..., dict[str, Any]] | None, now: datetime | None = None) -> dict[str, Any]:
+           check: Callable[..., dict[str, Any]] | None, now: datetime | None = None,
+           price_check: dict[str, Any] | None = None) -> dict[str, Any]:
     """고객이 안을 고른다. `key=None` 이면 **원래 일정을 그대로 둔다**(kept).
+
+    `price_check` — `[2026-10-13]` 부르는 쪽이 잠그기 **전에** 다시 본 고른 숙소의 1박 값(`booking/offers/recheck.recheck_stay`).
+    바뀌었으면 새 값으로 바꾸고 변경 알림 끝에 그렇다고 적는다(객실이 없으면 부르는 쪽이 여기까지 오지 않게 막는다).
 
     ★한 트랜잭션 안에서 제안을 잠그고(`FOR UPDATE`) → 기존 「다른 안」 경로(`plan_swap`)로 다시 점검 →
       새 버전을 쓰고 → 제안을 닫는다. 어느 단계든 실패하면 **아무것도 안 바뀐다.**
@@ -369,16 +444,30 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
         # 기준 버전이 낡으면 이 제안은 **다시는** 못 고른다 — 닫는다(감시가 새 버전 기준의 새 제안을 연다)
         pending.close(conn, proposal_id, status="superseded", by="system:stale_version")
         return {"status": "superseded", "version": trip["version"], "base_version": proposal["base_version"]}
-    if proposal["reason"] == CONSENT_REASON:
+    if proposal["reason"] in {CONSENT_REASON, FORECAST_REASON}:
         if key != CONSENT_KEY:
             raise ProposalRefused("unknown_option", {"expected": CONSENT_KEY})
         return _consented(conn, store=store, pending=pending, trip_id=trip_id, proposal=proposal,
                           current=current, items=items, places_by_id=places_by_id, check=check)
     # ★`[2026-09-29]` 고른 안이 관광공사 목록 후보면 **지금** 그 여행 전용 장소로 등록한다(같은 트랜잭션 — 실패하면 되돌아간다)
     picked = next((o for o in options if o.get("key") == key), None)
+    if picked is not None and price_check and price_check.get("status") == "changed":
+        if price_check.get("basis") == "sellers":
+            picked["price_from"], picked["price_basis"] = price_check["now"], "sellers"      # 구글 호텔 — 판매처 최저가 「1박 ○원~」
+        else:
+            picked["price_per_night"], picked["price_basis"] = price_check["now"], "detail"
     if picked is not None and picked.get("catalog_place"):
         added = store.add_catalog_place(conn, trip_id, picked["catalog_place"])
         places_by_id = {**places_by_id, str(picked["place_id"]): added}
+    elif picked is not None and current.kind == "lodging" and not picked.get("place_id"):
+        # ★`[2026-10-13]` 숙소 팀 후보(마이리얼트립 · 구글 호텔)는 장소 표에 없다 — 고를 때 숙소 원장이 그 여행 전용 장소로 들여놓는다
+        #   (`team_hooks/lodging_ledger.adopt_option`, 같은 트랜잭션). 좌표를 모르거나 원장이 없으면 장소 없이 바꾼다(지도 핀 없음 — 좌표를 지어내지 않는다)
+        from app.domains.travel_ops.components.team_hooks import lodging_ledger
+
+        added = lodging_ledger.adopt_option(conn, store, trip_id, picked)
+        if added is not None:
+            picked["place_id"] = str(added["place_id"])
+            places_by_id = {**places_by_id, str(added["place_id"]): added}
     # ★기존 경로를 그대로 탄다 — 보관한 안을 「다른 안」 자리에 놓고 고른다
     probe = [i if i.item_id != current.item_id else _with_alternates(i, options) for i in items]
     plan = plan_swap(trip_version=trip["version"], base_version=proposal["base_version"], items=probe,
@@ -392,11 +481,17 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
                                        causes=plan.causes)
     except StaleItinerary as exc:
         raise ProposalRefused("stale", {"message": str(exc)}) from None
+    notice = dict(plan.notice)
+    if price_check:
+        from app.domains.travel_ops.components.booking.offers.recheck import price_note
+        notice["text"] = str(notice.get("text") or "") + price_note(price_check)
+        notice["price_check"] = price_check
     store.enqueue_notice(conn, trip_id=trip_id, version=version,
-                         payload={**plan.notice, "type": "change_notice", "version": version,
+                         payload={**notice, "type": "change_notice", "version": version,
                                   "proposal_id": str(proposal_id)})
     pending.close(conn, proposal_id, status="chosen", key=key, by=by, version=version)
-    return {"status": "chosen", "version": version, "summary": plan.summary}
+    return {"status": "chosen", "version": version, "summary": plan.summary,
+            **({"price_check": price_check} if price_check else {})}
 
 
 def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID, proposal: dict[str, Any],
@@ -443,8 +538,9 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
         return {"status": "no_alternate", "reason": "바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다",
                 "detail": plan.detail}
     options = options_from(plan, current)
-    pending.set_options(conn, proposal["proposal_id"], options=options, reason=f"{CONSENT_REASON}_options")
-    decision = Decision("ask", f"{CONSENT_REASON}_options", None, False)
+    option_reason = f"{proposal['reason']}_options"
+    pending.set_options(conn, proposal["proposal_id"], options=options, reason=option_reason)
+    decision = Decision("ask", option_reason, proposal.get("protected_by"), False)
     store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal['proposal_id']}:options",
                           payload=proposal_notice(item=current, decision=decision, causes=causes,
                                                   options=options, proposal_id=proposal["proposal_id"]))

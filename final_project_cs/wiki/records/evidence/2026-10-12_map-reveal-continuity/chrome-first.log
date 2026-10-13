@@ -1,0 +1,51 @@
+[WebServer] (node:26992) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:12540) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:4012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:30156) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:24264) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22164) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:6008) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:9016) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:25544) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:20996) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21496) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:7164) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+Cannot use({ video }) in a describe group, because it forces a new worker.
+Make it top-level in the test file or put in the configuration file.
+
+   at map-reveal-continuity-20261012.spec.ts:13
+
+  11 | for (const width of [375, 1280]) {
+  12 |   test.describe(`${width}px 순서대로 지도 표시`, () => {
+> 13 |     test.use({ viewport: { width, height: 812 }, video: { mode: "on", size: { width, height: 812 } } });
+     |          ^
+  14 |     test("먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다", async ({ page, request }) => {
+  15 |       test.setTimeout(60000);
+  16 |       const api = mockServer(request);
+Cannot use({ video }) in a describe group, because it forces a new worker.
+Make it top-level in the test file or put in the configuration file.
+
+   at map-reveal-continuity-20261012.spec.ts:13
+
+  11 | for (const width of [375, 1280]) {
+  12 |   test.describe(`${width}px 순서대로 지도 표시`, () => {
+> 13 |     test.use({ viewport: { width, height: 812 }, video: { mode: "on", size: { width, height: 812 } } });
+     |          ^
+  14 |     test("먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다", async ({ page, request }) => {
+  15 |       test.setTimeout(60000);
+  16 |       const api = mockServer(request);
+

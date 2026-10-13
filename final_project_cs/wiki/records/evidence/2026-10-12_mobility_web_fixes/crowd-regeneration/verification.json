@@ -1,0 +1,20 @@
+{
+  "runs": {
+    "before-v1": {
+      "total": 5,
+      "passed": 3,
+      "failed": 2
+    },
+    "after-v1": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0
+    }
+  },
+  "public_data_hashes_unchanged": 3,
+  "public_data_hashes_checked": 3,
+  "external_provider_api_calls": 0,
+  "private_data_accesses": 0,
+  "clean_executions": 0,
+  "notes": "최소 입력은 새 임시 원본·출력 폴더만 사용했고 실제 공개자료를 재생성하지 않음"
+}

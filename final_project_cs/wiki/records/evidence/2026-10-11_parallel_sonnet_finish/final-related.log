@@ -1,0 +1,16 @@
+........................................................................ [ 31%]
+........................................................................ [ 63%]
+........................................................................ [ 95%]
+...........                                                              [100%]
+============================== warnings summary ===============================
+..\..\..\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290
+  C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_parallel_sonnet_finish\final-related.xml -
+227 passed, 1 warning in 92.47s (0:01:32)
+Exception ignored in: <function Console.__del__ at 0x000001C11681BC40>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

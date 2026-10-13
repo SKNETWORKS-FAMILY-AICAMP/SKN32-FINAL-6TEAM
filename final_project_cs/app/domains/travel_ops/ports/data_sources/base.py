@@ -326,7 +326,18 @@ class TravelSources:
     transit: Any | None = None
     #: 서울 열린데이터광장 실시간 지하철 도착정보(「실시간 지하철 인증키」) — **지금 값**. `arrivals(역, line=…)`. 판정에 넣지 않고 같이 놓고 보는 용도(2026-10-05)
     subway_arrival: Any | None = None
+    #: 서울 버스 지금 도착정보. 노선 ID·정류소 ID·순번으로 방향을 구별한다.
+    bus_arrival: Any | None = None
     route: Any | None = None
+    #: 마이리얼트립 MCP — 숙소·항공 **검색 전용**(`myrealtrip.py`). 키가 없어 항상 붙는다. 예약·결제는 하지 않고 링크만 준다(2026-10-07).
+    travel_search: Any | None = None
+    #: Ignav MCP — 항공편 검색 + 판매처(항공사 · OTA) 예약 링크(`ignav.py`). 키(`ignav_api_key`)가 있을 때만 붙는다(2026-10-09).
+    #:  항공 팀이 마이리얼트립 결과와 나란히 놓고 비교한다.
+    flight_offers: Any | None = None
+    #: SerpApi Google Flights — 구글 항공권 한국 설정 검색(`serpapi_flights.py`). 키(`serpapi_api_key`)가 있을 때만(2026-10-09).
+    flight_google: Any | None = None
+    #: SerpApi Google Hotels — 구글 호텔 한국 설정 검색(`serpapi_hotels.py`). 같은 키(`serpapi_api_key`)가 있을 때만(2026-10-10).
+    stay_google: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
     unavailable: dict[str, str] = field(default_factory=dict)
     #: 소스 전부가 같은 것을 공유한다 - 따로 두면 한 키를 두 소스가 나눠
@@ -463,6 +474,26 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     sources = TravelSources(limiter=limiter, cache=cache)
     # ★키를 안 보고 붙인다 — 이 소스는 인증 파라미터 자체가 없다.
     sources.heritage = HeritageSource(limiter=limiter, cache=cache)
+    # ★`[2026-10-07]` 숙소·항공 검색(마이리얼트립 MCP) — 키가 없다. 응답은 캐시에 담지 않는다(가격·잔여).
+    from .myrealtrip import MyRealTripMcp
+    sources.travel_search = MyRealTripMcp(limiter=limiter)
+    # ★`[2026-10-09]` 항공 비교용 두 번째 소스(Ignav MCP). 키가 없으면 붙이지 않고 이유를 남긴다 — 항공 팀은 마이리얼트립만으로 답한다.
+    ignav_key = (getattr(settings, "ignav_api_key", "") or "").strip()
+    if ignav_key:
+        from .ignav import IgnavMcp
+        sources.flight_offers = IgnavMcp(api_key=ignav_key, limiter=limiter)
+    else:
+        sources.unavailable["flight_offers"] = "ignav_api_key 없음 — 항공 비교는 마이리얼트립만"
+    # ★`[2026-10-09]` 항공 비교용 세 번째 소스(SerpApi 구글 항공권). 키가 주소에 실려 캐시를 넘기지 않는다
+    serpapi_key = (getattr(settings, "serpapi_api_key", "") or "").strip()
+    if serpapi_key:
+        from .serpapi_flights import SerpApiFlights
+        sources.flight_google = SerpApiFlights(api_key=serpapi_key, limiter=limiter)
+        from .serpapi_hotels import SerpApiHotels
+        sources.stay_google = SerpApiHotels(api_key=serpapi_key, limiter=limiter)
+    else:
+        sources.unavailable["flight_google"] = "serpapi_api_key 없음 — 구글 항공권 비교 안 함"
+        sources.unavailable["stay_google"] = "serpapi_api_key 없음 — 구글 호텔 비교 안 함"
     # ── 기상: 1차 + 대체 (v11 §0-4 결정 15) ─────────────────────────
     # ★`weather_provider` 는 **어느 쪽이 먼저인가**만 정한다. 붙일 수 있는 것은
     #   전부 붙이고 나머지를 대체로 둔다 — 1차가 못 주면 대체가 값을 낸다.
@@ -597,11 +628,21 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     metro_key = (getattr(settings, "seoul_metro_api_key", "") or "").strip()
     if metro_key:
         from .seoul_subway import SeoulSubwayArrival
-        sources.subway_arrival = SeoulSubwayArrival(service_key=metro_key, limiter=limiter, cache=cache)
+        sources.subway_arrival = SeoulSubwayArrival(service_key=metro_key, limiter=limiter, cache=cache,
+            cache_ttl_seconds=guardrails.get('travel.subway_arrival_cache_seconds'))
     else:
         sources.unavailable["subway_arrival"] = (
             "ACOP_SEOUL_METRO_API_KEY 가 비어 있다. 서울 열린데이터광장 「실시간 지하철 인증키」를 .env.apikeys 에 채운다. "
             "★일반 인증키(ACOP_SEOUL_OPENAPI_KEY)와 **다른 키**다.")
+    bus_key = _public_data_key(settings, "seoul_bus_api_key")
+    if bus_key:
+        from .seoul_bus import SeoulBusArrival
+        sources.bus_arrival = SeoulBusArrival(service_key=bus_key, limiter=limiter, cache=cache,
+                                             cache_ttl_seconds=float(guardrails.get("travel.bus_arrival_cache_seconds") or 30))
+    else:
+        sources.unavailable["bus_arrival"] = (
+            "ACOP_DATA_GO_KR_KEY(또는 ACOP_SEOUL_BUS_API_KEY)가 비어 있다. "
+            "공공데이터포털 「서울특별시_버스도착정보조회 서비스」 활용신청 후 채운다.")
     if len(route_event_sources) == 1:
         sources.route_events = route_event_sources[0]
     elif route_event_sources:

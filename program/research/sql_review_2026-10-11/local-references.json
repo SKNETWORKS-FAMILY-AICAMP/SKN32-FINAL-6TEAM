@@ -1,0 +1,139 @@
+{
+  "code": {
+    "python_files_checked": 1003,
+    "hits": [],
+    "limits": "AST strings/f-string literal segments only; dynamically assembled names, ORM and manual queries are not fully covered. Guard tests and retired-asset checker hits need manual classification."
+  },
+  "views": {
+    "all_view_dependencies": [
+      {
+        "view_schema": "dining",
+        "view_name": "v_attribute_active",
+        "target_schema": "dining",
+        "target_name": "dn_attribute"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_closure_coverage",
+        "target_schema": "dining",
+        "target_name": "dn_place"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_closure_rule_active",
+        "target_schema": "dining",
+        "target_name": "dn_closure_rule"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_holiday",
+        "target_schema": "dining",
+        "target_name": "dn_holiday_stub"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_hours_rule_active",
+        "target_schema": "dining",
+        "target_name": "dn_hours_rule"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_link_candidate",
+        "target_schema": "dining",
+        "target_name": "dn_place"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_link_candidate",
+        "target_schema": "public",
+        "target_name": "places"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_link_gap",
+        "target_schema": "dining",
+        "target_name": "dn_core_place_link"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_link_gap",
+        "target_schema": "dining",
+        "target_name": "dn_place"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_link_gap",
+        "target_schema": "dining",
+        "target_name": "v_link_candidate"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_link_gap",
+        "target_schema": "public",
+        "target_name": "places"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_live_check_asked",
+        "target_schema": "dining",
+        "target_name": "dn_live_check"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_live_check_fresh",
+        "target_schema": "dining",
+        "target_name": "dn_live_check"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_live_check_fresh",
+        "target_schema": "dining",
+        "target_name": "dn_source"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_live_check_fresh_trial",
+        "target_schema": "dining",
+        "target_name": "dn_live_check"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_quality_summary",
+        "target_schema": "dining",
+        "target_name": "dn_quality_result"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_quality_summary",
+        "target_schema": "dining",
+        "target_name": "dn_quality_run"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_truth_gap",
+        "target_schema": "dining",
+        "target_name": "dn_place"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_truth_gap",
+        "target_schema": "dining",
+        "target_name": "dn_truth"
+      },
+      {
+        "view_schema": "dining",
+        "view_name": "v_truth_gap",
+        "target_schema": "dining",
+        "target_name": "v_hours_rule_active"
+      },
+      {
+        "view_schema": "public",
+        "view_name": "consent_current",
+        "target_schema": "public",
+        "target_name": "consent_events"
+      }
+    ],
+    "legacy_view_dependencies": [],
+    "transaction_read_only": "on"
+  }
+}

@@ -1,0 +1,253 @@
+[
+  {
+    "name": "api_health",
+    "status": 200,
+    "seconds": 0.0028087010141462088,
+    "passed": true,
+    "result": {
+      "status": "ok"
+    },
+    "attempted": true
+  },
+  {
+    "name": "without_user_key",
+    "status": 401,
+    "seconds": 0.01690784702077508,
+    "passed": true,
+    "result": {
+      "error": {
+        "code": "unauthenticated",
+        "message": "사용자 키가 없거나 맞지 않는다"
+      }
+    },
+    "attempted": true
+  },
+  {
+    "name": "session_owner",
+    "status": 201,
+    "seconds": 0.046278988011181355,
+    "passed": true,
+    "result": {
+      "customer_id": "d09a27c5-693f-440e-9c76-73f3ad3587cc",
+      "human_check": "skipped",
+      "notice": "이 키를 따로 잘 보관해 주세요. 다시 보여 드리지 않아요 — 다른 기기에서 이어 쓸 때 필요합니다."
+    },
+    "attempted": true
+  },
+  {
+    "name": "session_other",
+    "status": 201,
+    "seconds": 0.04166839300887659,
+    "passed": true,
+    "result": {
+      "customer_id": "06f483ce-3acf-4410-89de-984410d5ecb5",
+      "human_check": "skipped",
+      "notice": "이 키를 따로 잘 보관해 주세요. 다시 보여 드리지 않아요 — 다른 기기에서 이어 쓸 때 필요합니다."
+    },
+    "attempted": true
+  },
+  {
+    "name": "create_synthetic_trip",
+    "status": 201,
+    "seconds": 0.1236832489958033,
+    "passed": true,
+    "result": {
+      "trip_id": "2995b6c8-9cfd-40d9-bf5f-16f1ba51640c",
+      "customer_id": "d09a27c5-693f-440e-9c76-73f3ad3587cc",
+      "title": "ARM 서빙 시험용 서울 여행",
+      "locale": "ko",
+      "party_size": 1,
+      "version": 1,
+      "guardian": {
+        "enabled": false,
+        "since": null,
+        "via": null
+      },
+      "safety": {
+        "paused": false
+      },
+      "items": [
+        {
+          "item_id": "d28c860c-d57a-49fe-9166-34005f5b3637",
+          "seq": 1,
+          "kind": "activity",
+          "kind_label": "활동",
+          "meal": null,
+          "title": "경복궁 관람",
+          "place": null,
+          "starts_at": "2026-10-17T10:00:00+09:00",
+          "ends_at": "2026-10-17T11:00:00+09:00",
+          "changed": false,
+          "price_compare": null,
+          "other_options": [],
+          "customer_pinned": false,
+          "badges": [],
+          "lat": null,
+          "lon": null,
+          "booked": false,
+          "place_info": null,
+          "map_url": null,
+          "paused": false
+        },
+        {
+          "item_id": "34f391c3-bcce-4221-97e7-edf5448ffb9b",
+          "seq": 2,
+          "kind": "dining",
+          "kind_label": "식사",
+          "meal": "점심",
+          "title": "점심 식사",
+          "place": null,
+          "starts_at": "2026-10-17T12:00:00+09:00",
+          "ends_at": "2026-10-17T13:00:00+09:00",
+          "changed": false,
+          "price_compare": null,
+          "other_options": [],
+          "customer_pinned": false,
+          "badges": [],
+          "lat": null,
+          "lon": null,
+          "booked": false,
+          "place_info": null,
+          "map_url": null,
+          "paused": false
+        }
+      ],
+      "map": {
+        "days": [],
+        "note": "구글 지도 링크는 API 키 없이 고객 지도 앱으로 연다 — 한국은 두 곳 사이 대중교통만 경로가 나온다"
+      },
+      "history": [
+        {
+          "version": 1,
+          "reason": "created",
+          "causes": [],
+          "at": "2026-10-09T16:27:19.714709+00:00"
+        }
+      ],
+      "density": [],
+      "warnings": [],
+      "created": true
+    },
+    "attempted": true
+  },
+  {
+    "name": "own_trip",
+    "status": 200,
+    "seconds": 0.04463049495825544,
+    "passed": true,
+    "result": {
+      "trip_id": "2995b6c8-9cfd-40d9-bf5f-16f1ba51640c",
+      "customer_id": "d09a27c5-693f-440e-9c76-73f3ad3587cc",
+      "title": "ARM 서빙 시험용 서울 여행",
+      "locale": "ko",
+      "party_size": 1,
+      "version": 1,
+      "guardian": {
+        "enabled": false,
+        "since": null,
+        "via": null
+      },
+      "safety": {
+        "paused": false
+      },
+      "items": [
+        {
+          "item_id": "d28c860c-d57a-49fe-9166-34005f5b3637",
+          "seq": 1,
+          "kind": "activity",
+          "kind_label": "활동",
+          "meal": null,
+          "title": "경복궁 관람",
+          "place": null,
+          "starts_at": "2026-10-17T10:00:00+09:00",
+          "ends_at": "2026-10-17T11:00:00+09:00",
+          "changed": false,
+          "price_compare": null,
+          "other_options": [],
+          "customer_pinned": false,
+          "badges": [],
+          "lat": null,
+          "lon": null,
+          "booked": false,
+          "place_info": null,
+          "map_url": null,
+          "paused": false
+        },
+        {
+          "item_id": "34f391c3-bcce-4221-97e7-edf5448ffb9b",
+          "seq": 2,
+          "kind": "dining",
+          "kind_label": "식사",
+          "meal": "점심",
+          "title": "점심 식사",
+          "place": null,
+          "starts_at": "2026-10-17T12:00:00+09:00",
+          "ends_at": "2026-10-17T13:00:00+09:00",
+          "changed": false,
+          "price_compare": null,
+          "other_options": [],
+          "customer_pinned": false,
+          "badges": [],
+          "lat": null,
+          "lon": null,
+          "booked": false,
+          "place_info": null,
+          "map_url": null,
+          "paused": false
+        }
+      ],
+      "map": {
+        "days": [],
+        "note": "구글 지도 링크는 API 키 없이 고객 지도 앱으로 연다 — 한국은 두 곳 사이 대중교통만 경로가 나온다"
+      },
+      "history": [
+        {
+          "version": 1,
+          "reason": "created",
+          "causes": [],
+          "at": "2026-10-09T16:27:19.714709+00:00"
+        }
+      ],
+      "density": [],
+      "warnings": []
+    },
+    "attempted": true
+  },
+  {
+    "name": "other_user_denied",
+    "status": 404,
+    "seconds": 0.039616657013539225,
+    "passed": true,
+    "result": {
+      "error": {
+        "code": "not_found",
+        "message": "resource not found"
+      }
+    },
+    "attempted": true
+  },
+  {
+    "name": "travel_message_1",
+    "passed": false,
+    "error": "TimeoutError",
+    "attempted": true
+  },
+  {
+    "name": "travel_message_2",
+    "passed": false,
+    "error": "TimeoutError",
+    "attempted": true
+  },
+  {
+    "name": "travel_message_3",
+    "passed": false,
+    "error": "TimeoutError",
+    "attempted": true
+  },
+  {
+    "name": "travel_message_4",
+    "passed": false,
+    "error": "TimeoutError",
+    "attempted": true
+  }
+]

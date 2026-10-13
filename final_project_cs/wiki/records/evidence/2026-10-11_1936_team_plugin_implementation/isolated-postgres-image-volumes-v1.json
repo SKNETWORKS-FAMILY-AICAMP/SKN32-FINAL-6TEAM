@@ -1,0 +1,1 @@
+{"declared_volume_destinations": ["/var/lib/postgresql/data"], "default_entrypoint": ["docker-entrypoint.sh"], "default_command": ["postgres"]}

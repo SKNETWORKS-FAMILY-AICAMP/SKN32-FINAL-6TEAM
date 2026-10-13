@@ -142,7 +142,8 @@ test("서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안
   await expect(page.getByRole("alert", { name: "약관 확인 진행" })).toContainText("약관이 새로 바뀌었어요");
 });
 
-for (const wait of [{ ms: 500, visible: false }, { ms: 1200, visible: true }]) {
+// `[2026-10-13 develop 병합]` 안내는 확인이 3초를 넘어야 뜬다(role-manager 773d10df — `CHECK_CARD_AFTER_MS = 3000`, 10-12). 시험만 1초 기준으로 남아 있었다.
+for (const wait of [{ ms: 2500, visible: false }, { ms: 3200, visible: true }]) {
   test(`동의 응답 ${wait.ms}ms 대기에서는 준비 안내가 ${wait.visible ? "나타나고 응답 후 닫힌다" : "나타나지 않는다"}`, async ({ page, request }) => {
     const server = mockServer(request);
     await server.scenario({ consents: "on", consentStream: "json" });
@@ -191,12 +192,12 @@ test("약관 SSE를 기다려도 설정 화면은 남고 실제 단계와 완료
   await expect.poll(() => accepts.length).toBeGreaterThan(0);
   await page.clock.runFor(1000);
   const progress = page.getByRole("status", { name: "약관 확인 진행" });
-  await expect(progress.locator('[aria-current="step"]')).toContainText("동의 기록 읽기");
-  await expect(progress).toContainText("2/6단계 완료");
+  // ★`[2026-10-12 사용자 지시]` 진행 카드는 확인이 3초를 넘게 걸릴 때만 뜬다: 처음에는 설정 화면만 보이고 카드는 없다
   await expect(page.getByRole("heading", { name: "설정", exact: true })).toBeVisible();   // `[2026-10-13]` /mypage 는 설정 화면
+  await expect(progress).toHaveCount(0);
   await expect(page.locator('[data-consent-shell]')).toHaveCount(0);
-  await expect(progress.locator('[aria-current="step"]')).toContainText("약관 버전 확인");
-  await expect(progress).toContainText("3/6단계 완료");
+  await expect(progress).toBeVisible({ timeout: 12_000 });                          // 확인이 길어지면 그때 기존 화면 위에 뜬다
+  await expect(progress).toContainText(/[0-6]\/6단계 완료/);
   if (process.env.CONSENT_SHOTS) {
     await page.screenshot({ path: `${process.env.CONSENT_SHOTS}/consent-progress-desktop.png`, fullPage: true });
     await page.setViewportSize({ width: 375, height: 812 });

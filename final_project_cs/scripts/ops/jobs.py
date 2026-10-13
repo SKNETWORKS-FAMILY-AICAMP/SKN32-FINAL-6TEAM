@@ -1,4 +1,7 @@
-"""상시로 돌아야 하는 것들의 **단일 목록**.
+"""로컬 Windows 개발 환경의 서비스·예약 작업 **단일 목록**.
+
+공개 Docker 배포 worker의 반복 실행은 deploy/worker.sh가 소유한다.
+이 목록의 등록·heartbeat 경로가 공개 배포에도 적용된다고 가정하지 않는다.
 
 ★한 곳에만 적는다. 등록(`install_services`)·실행(`tick`)·점검(`healthcheck`)이
   같은 표를 읽어야 「걸어 둔 것」과 「보는 것」이 어긋나지 않는다. 지금까지는
@@ -63,10 +66,10 @@ JOBS: dict[str, Job] = {
         kind="service",
         task_name=PG_SERVICE_NAME,
         max_silence_seconds=None,
-        why="나머지 전부가 이것 위에 선다. 지금은 셸이 띄운 자식이라 그 셸이 사라지면 "
-            "종료 기록도 없이 함께 꺼진다(wiki/records/manuals/운영_로컬DB_기동과_비정상종료.md §4-①).",
+        why="로컬 개발 작업이 사용하는 DB다. 실제 Windows 서비스 등록·재부팅 복구 상태는 확인해야 한다. "
+            "수동 기동의 과거 장애는 wiki/records/manuals/운영_로컬DB_기동과_비정상종료.md에 보존한다.",
         dead_signal="5433 이 안 열린다. 점검의 `db` 줄이 FAIL 이 된다. "
-                    "★죽는 순간은 지금 아무 데도 안 남는다 — 서비스로 올려야 정상 종료 경로가 생긴다.",
+                    "종료 기록·자동 복구는 실제 기동 방식과 등록 설정을 별도로 확인한다.",
     ),
     "sweepers": Job(
         name="sweepers",

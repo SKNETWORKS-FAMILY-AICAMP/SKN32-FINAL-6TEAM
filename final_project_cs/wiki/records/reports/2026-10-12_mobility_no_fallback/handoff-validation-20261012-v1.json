@@ -1,0 +1,12 @@
+{
+  "handoff_file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\2026-10-12_mobility_no_fallback\\CLAUDE-HANDOFF-20261012-v1.md",
+  "feature_rows": 21,
+  "local_links": 21,
+  "valid_links": 21,
+  "missing_links": [],
+  "source_hashes_checked": 13,
+  "source_hashes_matched": 13,
+  "source_hash_drift": [],
+  "japanese_kana_present": false,
+  "product_tests_executed_during_handoff": false
+}

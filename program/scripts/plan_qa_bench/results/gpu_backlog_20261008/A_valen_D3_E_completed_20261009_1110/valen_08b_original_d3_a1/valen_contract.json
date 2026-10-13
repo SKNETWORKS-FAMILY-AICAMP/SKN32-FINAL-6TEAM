@@ -1,0 +1,53 @@
+{
+  "model_revision": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+  "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+  "prompt_sha256": "ada4f58af1f6db27f4ad5e0eccd0a63128988f257f507aa6df2780828326b283",
+  "runner_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+  "original_file_hashes": {
+    "LICENSE": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+    "README.md": "021881b23518a033039d5590b826a31e55bf4b635427a82e05ebc50eeb61a961",
+    "batching.py": "ea45d4724bcafca559fc5a2a18092918b633746771c19da6554c29bc5f2cef64",
+    "compiler.py": "f35bab2e71b6beb1228daaa5b7baecdacf04eaf713aee14e8082b97090f910b4",
+    "config.json": "8a6a766acfe35a6eb3d373e90c43af0f08dbd44301251df71e18b1b5b5381c08",
+    "configuration_valen.py": "8aa80266e8c328b5251d969de80f58e706dcd15a535c877108aab452ff572279",
+    "data_types.py": "b06ce08081d8f7b2bf36abf302410a96086395e75a04f9e9b1c591db519b1641",
+    "heads.py": "63b5970a8bfa121eff94d50ffd35e1fa8387f3af5abccc5f5b75381fb084fc34",
+    "modeling_valen.py": "851f90a089c23060e321e1da192689fd3b405253f219f67723bf57c873612d62",
+    "responses.py": "298016b0070f1000a38d033e1048e038ff5df6fc1dcbe830601105b181f1d228",
+    "runtime_model.py": "2ce5808373505105bedc254bd99671fbeea43c25483e6b63add77b9e32d7baaf",
+    "schema.py": "81659cc31b9673f6b9482095a4bbf6a2fb0b1415f0dfdd1c057278ecdca13595",
+    "model.safetensors": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+    "tokenizer.json": "87a7830d63fcf43bf241c3c5242e96e62dd3fdc29224ca26fed8ea333db72de4",
+    "tokenizer_config.json": "e98f1901ac6f0adff67b1d540bfa0c36ac1a0cf59eb72ed78146ef89aafa1182",
+    "processor_config.json": "d89ef49ce9cd37fbf510158e13c1ef063d9286411c1ec9049932dbe0487143b1",
+    "chat_template.jinja": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80"
+  },
+  "dtype_parameters": {
+    "torch.float32": 854305641
+  },
+  "backbone_autocast": "bfloat16",
+  "head_dtype": "float32",
+  "execution": "shared_state",
+  "temperature": 1.0,
+  "our_training": false,
+  "publisher_training": "Decision SFT by developer",
+  "expected": 360,
+  "local_files_only": true,
+  "processor_explicit": true,
+  "output": "native choice-head probabilities",
+  "max_choices": 255,
+  "max_tokens": 32768,
+  "truncation": false,
+  "repeated_runs": 1,
+  "load_seconds": 9.708511520177126,
+  "memory_after_load": {
+    "used": 26126692352,
+    "limit": 30999998464,
+    "headroom": 4873306112
+  },
+  "torch_version": "2.8.0+cu128",
+  "transformers_version": "5.17.0",
+  "final_ranking": false,
+  "GPU_owner": "existing queue worker",
+  "speed_directly_comparable_to_JSON_generation": false
+}

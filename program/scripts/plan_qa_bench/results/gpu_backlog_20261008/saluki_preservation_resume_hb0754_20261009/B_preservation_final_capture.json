@@ -1,0 +1,15 @@
+{
+  "state": {
+    "status": "complete_verified_tail_resume",
+    "timestamp": 1791500821.7931511,
+    "expected": 7898369152,
+    "saved": 7898369152,
+    "sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+    "original_failure_preserved": "/root/saluki_original_20261009/_backup/hb0754_before_verified_tail_resume",
+    "new_resume_method": "verified prefix and separate bounded tail SCP; no repeated 7.9GB pipe",
+    "GPU_used": false,
+    "storage": "Existing B root disk; not off-machine durable archive"
+  },
+  "available_bytes": 6515253248,
+  "observed_at_utc": "2026-10-08T23:08:48.164352+00:00"
+}

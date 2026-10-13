@@ -1,0 +1,15 @@
+
+[WebServer] (node:20248) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:14824) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+
+(node:15748) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/1] tests\live\plan-check-redesign.spec.ts:194:1 › 고친 게 있으면 「다시 제출」, 없고 확인할 것도 없으면 「여행 등록」 — 다시 제출하면 바뀐 부분만 확인 표시가 다시 켜지고 강조가 풀린다
+  1 passed (13.0s)

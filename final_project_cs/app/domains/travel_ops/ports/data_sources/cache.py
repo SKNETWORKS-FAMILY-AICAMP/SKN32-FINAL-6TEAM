@@ -83,7 +83,8 @@ class DbResponseCache(ResponseCache):
 
     #: 공개 소스 — 감시가 부르는 것들. 소스 이름은 어댑터의 `name`(열쇠의 첫 칸)이다
     SHARED_SOURCES = frozenset({"open_meteo", "open_meteo_air", "kma", "kma_warning", "kma_earthquake", "airkorea",
-                                "disaster_msg", "its", "utic", "kasi_holiday", "airport", "mofa", "khoa"})
+                                "disaster_msg", "its", "utic", "kasi_holiday", "airport", "mofa", "khoa",
+                                "seoul_bus_arrival"})
     RETRY_AFTER_SECONDS = 60.0
     PURGE_EVERY = 100                                 # 쓰기 이만큼마다 만료된 줄을 지운다
 

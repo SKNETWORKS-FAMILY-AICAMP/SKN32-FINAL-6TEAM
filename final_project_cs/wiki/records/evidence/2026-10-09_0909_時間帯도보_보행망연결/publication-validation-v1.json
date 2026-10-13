@@ -1,0 +1,31 @@
+{
+  "source_hash_matches": 220,
+  "backup_hash_matches": 6,
+  "local_links": [
+    "final_project_cs/wiki/records/evidence/2026-10-09_0909_時間帯도보_보행망연결/owned-source-diff-v1.patch",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0909_時間帯도보_보행망연결/native-replay-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0909_時間帯도보_보행망연결",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0909_時間帯도보_보행망연결/research-and-browser-v1.json",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan_estimate.py",
+    "final_project_cs/tests/unit/travel/mobility/test_estimate_walk_network_v1.py",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v32/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0909_時間帯도보_보행망연결/backup-manifest-v1.json",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0909_시간대도보_보행망연결/plan_estimate.py",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0909_시간대도보_보행망연결/mobility.md",
+    "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0910_시험호출수정/test_estimate_walk_network_v1.py",
+    ".tmp/mobility_complete_20261008/_backup/2026-10-09_0910_시험호출수정/run_estimate_walk_network_v1.py",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0913_시간대도보_검증결과/mobility.md",
+    "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0913_시간대도보_결함종료/2026-10-09_0909_시간대도보_보행망시간_미연결.md",
+    "final_project_cs/wiki/records/reports/2026-10-09_0913_시간대별_도보추정_보행망시간_연결검증.md",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0909_時間帯도보_보행망연결/native-replay-v1.json"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0913_시간대별_도보추정_보행망시간_연결검증.md": "c26d742013c96244f765d6dfc89705e6327df54580c71717181c7a140757915c",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v32/mobility-readiness.html": "35624ea559b4eade3c631680b2469539f5a5f9a682edc85ad72c5dfbd7ccb504",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v32/readiness-catalog.json": "eb5092998ab87e4c95c1169acc18acfff06aba573dee3a935cae8a15e9edd4d1",
+    "final_project_cs/wiki/teams/mobility.md": "6d66f6d61d7fdeba3bcfe621fc152f76fcca77a13e95914fa1c5520fea7fc03e",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0909_時間帯도보_보행망연결/verification-proof-v1.json": "ef2901edd267522b5ce6be48485ea4157086cb3954c4f7c23eafbe6c4e7ac1fd",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0909_時間帯도보_보행망연결/backup-manifest-v1.json": "2931460a4ee8c983835c2242476ef0abde98c96331f068bf6252b96f981b1186"
+  },
+  "browser_render_verified": false
+}

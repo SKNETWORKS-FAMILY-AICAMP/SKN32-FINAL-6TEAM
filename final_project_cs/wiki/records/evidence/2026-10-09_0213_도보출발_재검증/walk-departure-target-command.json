@@ -1,0 +1,15 @@
+[
+  "C:\\Users\\playdata2\\anaconda3\\python.exe",
+  "-m",
+  "pytest",
+  "tests/unit/travel/mobility/test_departure_walk_v1.py",
+  "tests/unit/travel/test_departure_walk_assembly_v1.py",
+  "tests/scenario/test_departure_walk_db_v1.py",
+  "tests/scenario/test_departure_assembly_db_v1.py",
+  "tests/unit/travel/mobility/test_departure_observer_v1.py",
+  "tests/unit/travel/test_departure_context_storage_v1.py",
+  "tests/unit/travel/mobility/test_walk_duration_contract_v1.py",
+  "-q",
+  "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\walk-departure-target-v2.xml",
+  "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest_walk_departure_v2"
+]

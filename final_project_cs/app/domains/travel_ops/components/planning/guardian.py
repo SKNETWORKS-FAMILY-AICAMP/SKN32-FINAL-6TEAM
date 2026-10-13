@@ -7,9 +7,9 @@
   판정(`pending.decide` · `survey.auto_on_disruption`)은 그대로 이 값을 읽는다. 이 모듈이 하는 일은 둘이다.
     ① 등록된 여행의 `constraints.survey.on_disruption` 을 바꾸고 `survey_answered` 에 넣는다 — **직접 고른 것**이 된다(2026-09-29 규칙).
     ② **누가 · 언제 · 어디서(via)** 눌렀는지를 `trip_guardian_changes`(추가만 하는 표)에 남긴다.
-★「건너뛰기 = 꺼짐」은 값을 안 보내는 것이 아니라 `ask_first` 를 **명시**한다 — 미응답은 기본 `replace` 로 읽혀 휴무 · 재난 · 교통 통제가 자동 적용된다.
+★「건너뛰기 = 꺼짐」은 `ask_first` 로 기록한다. 미응답·옛 기본 `replace`만 있는 여행도 먼저 묻는다.
 ★고정한 일정(`protected`)과 안전 사건은 켜져 있어도 먼저 묻는다 — 그 판정은 `pending.decide` 가 한다(여기서 건드리지 않는다).
-★옛 여행(설문이 없는 여행)의 동작은 그대로다 — 이 모듈은 부를 때만 값을 바꾼다.
+★옛 여행도 직접 켠 기록이 있어야 자동 변경한다. 화면과 적용 판정은 같은 함수를 읽는다.
 """
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def annotate(payload: dict[str, Any], *, constraints: Mapping[str, Any] | None, 
 
       ① 우리가 **자동으로 바꾼** 알림이고 항로 지킴이가 **켜져 있으면** → `{"changed": true}` (「항로 지킴이가 바꿨어요 · 되돌리기」)
       ② 「다른 안」을 보내며 먼저 묻는 알림(이유 `ask_first`)이고 **꺼져 있으면** → `{"offer": {label, via, path, url}}` (「항로 지킴이 켜기」)
-    ★켜 두지 않은 여행의 자동 변경(옛 여행의 기본 `replace`)에는 ①을 싣지 않는다 — 항로 지킴이가 한 일이 아니다.
+    ★직접 켜지 않은 여행에는 ①을 싣지 않는다.
     ★고정한 일정(`protected`) · 안전 알림 · 「바꿀까요?」(실내외 모름)에는 ②를 싣지 않는다 — 켜도 그 경우는 먼저 묻거나 달라지지 않는다.
     부르는 쪽이 이미 `guardian` 을 줬으면 그대로 둔다. 알림이 만들어지는 **모든 길**(`TripStore.enqueue_*` · Case 버전의 `itinerary_actions`)이 이 한 곳을 쓴다."""
     if "guardian" in payload:

@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "app/domains/travel_ops/components/watch/trip_reminders.py",
+    "tests/unit/travel/test_late_departure_notice_v1.py"
+  ],
+  "returncode": 0
+}

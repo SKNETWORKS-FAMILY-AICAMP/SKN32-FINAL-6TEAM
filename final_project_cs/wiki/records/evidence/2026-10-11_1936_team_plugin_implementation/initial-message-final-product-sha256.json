@@ -1,0 +1,14 @@
+[
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\application\\case_intake.py",
+    "Hash": "9ABD0180E0D0B59FBE71C6340C597DEC8D4307287518DBD3AE84AC431C17CD3D"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py",
+    "Hash": "1B5C70F75A2B659BA96A91C257388C601CD3B69223137CDB5F708353B91A3489"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\case_dispatch.py",
+    "Hash": "79201223BD6BECF1C523BA269DC8794DEFCA631BD6FBD287DB3B21B397298CB4"
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "changed": [
+    "wiki/research/index.md",
+    "final_project_cs/wiki/quality/index.md",
+    "final_project_cs/wiki/operations/index.md",
+    "wiki/research/rag-slm-improvements.md",
+    "final_project_cs/wiki/quality/slm-model-evaluation.md",
+    "final_project_cs/wiki/operations/gpu-work-queue.md",
+    "program/research/daily_rag_slm/index.md",
+    "program/research/daily_rag_slm/신모델_원본비교와_추가학습_절차.md",
+    "program/research/index.md",
+    "final_project_cs/wiki/quality/eval-harness.md",
+    "wiki/log.md",
+    "final_project_cs/wiki/log.md",
+    "final_project_cs/wiki/records/reports/2026-10-08_rag-wiki-document-audit.md"
+  ],
+  "backups": [
+    "wiki/research/_backup/2026-10-08_1014_rag_wiki_links/index.md",
+    "final_project_cs/wiki/quality/_backup/2026-10-08_1014_rag_wiki_links/index.md",
+    "final_project_cs/wiki/operations/_backup/2026-10-08_1014_rag_wiki_links/index.md",
+    "program/research/daily_rag_slm/_backup/2026-10-08_1014_rag_wiki_links/신모델_원본비교와_추가학습_절차.md",
+    "program/research/_backup/2026-10-08_1014_rag_wiki_links/index.md",
+    "final_project_cs/wiki/quality/_backup/2026-10-08_1014_rag_wiki_links/eval-harness.md",
+    "wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md",
+    "final_project_cs/wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md"
+  ],
+  "stamp": "2026-10-08_1014_rag_wiki_links"
+}

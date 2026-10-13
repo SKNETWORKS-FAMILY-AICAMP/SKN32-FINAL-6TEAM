@@ -1,0 +1,30 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+_____ test_policy_rejected_legacy_diagnostic_is_not_a_product_comparison ______
+
+    def test_policy_rejected_legacy_diagnostic_is_not_a_product_comparison():
+        row = {"bucket": "short", "ours_walk": {"m": 300, "min": 5}, "kakao": reference()}
+        got = comparison.summarise([row])
+>       assert got["walk_minutes_vs_kakao_shortest"]["n"] == 0
+E       assert 1 == 0
+
+tests\unit\travel\mobility\test_walk_comparison_scope_v1.py:12: AssertionError
+__________ test_product_duration_is_not_reconstructed_from_distance ___________
+
+    def test_product_duration_is_not_reconstructed_from_distance():
+        row = {"bucket": "short", "ours_walk": {"m": 300, "min": 5},
+               "ours_walk_product": {"m": 300, "min": 9}, "kakao": reference()}
+        got = comparison.summarise([row])
+>       assert got["walk_minutes_vs_kakao_shortest"]["median"] == 4
+E       assert 0 == 4
+
+tests\unit\travel\mobility\test_walk_comparison_scope_v1.py:21: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\walk-evaluation-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_walk_comparison_scope_v1.py::test_policy_rejected_legacy_diagnostic_is_not_a_product_comparison
+FAILED tests/unit/travel/mobility/test_walk_comparison_scope_v1.py::test_product_duration_is_not_reconstructed_from_distance
+2 failed in 4.14s
+Exception ignored in: <function Console.__del__ at 0x0000026984D31BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

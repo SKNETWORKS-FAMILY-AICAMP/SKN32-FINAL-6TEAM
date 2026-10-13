@@ -1,0 +1,263 @@
+{
+  "model": "Winnow-E4B publisher release Q8_0",
+  "our_training": false,
+  "publisher_training": "See publisher model card; exact training method not verified in this run",
+  "suite": "D2",
+  "saved": 1000,
+  "expected": 1000,
+  "missing": 0,
+  "failed_or_unparsed": 13,
+  "single_choice_expected": 1000,
+  "compound_diagnostic_total": 0,
+  "positive": {
+    "total": 0,
+    "correct": 0,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.0,
+      1.0
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      1.0
+    ]
+  },
+  "negative": {
+    "total": 1000,
+    "correct": 910,
+    "false_pick": 77,
+    "failed_or_missing": 13,
+    "correct_wilson95": [
+      0.8906582073569279,
+      0.926203850684917
+    ],
+    "false_pick_wilson95": [
+      0.062047907060605895,
+      0.09518953061817373
+    ]
+  },
+  "subtypes": {
+    "chitchat_holdout_aihub": {
+      "total": 700,
+      "correct": 627,
+      "false_pick": 62,
+      "failed_or_missing": 11,
+      "correct_wilson95": [
+        0.8708723180925915,
+        0.9162367574771291
+      ],
+      "false_pick_wilson95": [
+        0.06970686529504064,
+        0.11192702003319227
+      ]
+    },
+    "chitchat_holdout_kocul": {
+      "total": 300,
+      "correct": 283,
+      "false_pick": 15,
+      "failed_or_missing": 2,
+      "correct_wilson95": [
+        0.9111340419775253,
+        0.9643225235367106
+      ],
+      "false_pick_wilson95": [
+        0.03053164062934728,
+        0.08084703347274415
+      ]
+    }
+  },
+  "failed_records": [
+    {
+      "i": 900028,
+      "set": "d2",
+      "qi": 28,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"null\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 460,
+      "p_null": 0.95755,
+      "p_mass": 0.9773
+    },
+    {
+      "i": 900066,
+      "set": "d2",
+      "qi": 66,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"17\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 332,
+      "p_null": 0.09447,
+      "p_mass": 0.9976
+    },
+    {
+      "i": 900117,
+      "set": "d2",
+      "qi": 117,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"10\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 305,
+      "p_null": 0.007085,
+      "p_mass": 0.9888
+    },
+    {
+      "i": 900121,
+      "set": "d2",
+      "qi": 121,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"null\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 306,
+      "p_null": 0.994153,
+      "p_mass": 0.956
+    },
+    {
+      "i": 900174,
+      "set": "d2",
+      "qi": 174,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"4\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 306,
+      "p_null": 0.178754,
+      "p_mass": 0.9921
+    },
+    {
+      "i": 900298,
+      "set": "d2",
+      "qi": 298,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": [18, 43]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 454,
+      "p_null": 0.0,
+      "p_mass": 0.9991
+    },
+    {
+      "i": 900347,
+      "set": "d2",
+      "qi": 347,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"31\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 341,
+      "p_null": 0.161655,
+      "p_mass": 0.9826
+    },
+    {
+      "i": 900496,
+      "set": "d2",
+      "qi": 496,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"null\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 275,
+      "p_null": 0.974865,
+      "p_mass": 0.9965
+    },
+    {
+      "i": 900498,
+      "set": "d2",
+      "qi": 498,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"14\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 472,
+      "p_null": 0.018547,
+      "p_mass": 0.9981
+    },
+    {
+      "i": 900593,
+      "set": "d2",
+      "qi": 593,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"1\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 341,
+      "p_null": 0.07162,
+      "p_mass": 0.9988
+    },
+    {
+      "i": 900692,
+      "set": "d2",
+      "qi": 692,
+      "type": "chitchat_holdout_aihub",
+      "gold": null,
+      "content": "{\"item\": \"1\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 271,
+      "p_null": 0.323273,
+      "p_mass": 0.9424
+    },
+    {
+      "i": 900944,
+      "set": "d2",
+      "qi": 944,
+      "type": "chitchat_holdout_kocul",
+      "gold": null,
+      "content": "{\"item\": \"1\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 274,
+      "p_null": 0.002712,
+      "p_mass": 0.9955
+    },
+    {
+      "i": 900970,
+      "set": "d2",
+      "qi": 970,
+      "type": "chitchat_holdout_kocul",
+      "gold": null,
+      "content": "{\"item\": \"null\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 272,
+      "p_null": 0.974207,
+      "p_mass": 0.9951
+    }
+  ],
+  "answer_sha256": "5e5e37791abd32e9da759bd706269b240c77af402d8858d925ab774b837317f3",
+  "gold_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+  "execution": {
+    "job": {
+      "id": "winnow_original_d2",
+      "label": "Winnow-E4B publisher release Q8_0",
+      "our_training": false,
+      "model": "/workspace/deciders/winnow_e4b/gguf/Winnow-E4B-Q8_0.gguf",
+      "prompts": "/workspace/heavy/all_prompts_d2.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "d2_backlog_winnow_original",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1000
+    },
+    "started": "2026-10-08T04:56:54.129943+00:00",
+    "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

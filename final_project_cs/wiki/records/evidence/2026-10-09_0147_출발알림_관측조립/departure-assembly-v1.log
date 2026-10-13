@@ -1,0 +1,12 @@
+..................................................                       [100%]
+============================== warnings summary ===============================
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\departure-assembly-v1.xml -
+50 passed, 1 warning in 4.43s
+Exception ignored in: <function Console.__del__ at 0x000001C2F7E85BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

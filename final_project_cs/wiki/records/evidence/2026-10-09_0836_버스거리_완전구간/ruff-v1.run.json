@@ -1,0 +1,13 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "app/domains/travel_ops/instances/mobility/engine/bus.py",
+    "app/domains/travel_ops/instances/mobility/engine/bus_profile.py",
+    "tests/unit/travel/mobility/test_bus_distance_completeness_v1.py",
+    "tests/unit/travel/mobility/test_bus_profile_completeness_v1.py"
+  ],
+  "exit_code": 0
+}

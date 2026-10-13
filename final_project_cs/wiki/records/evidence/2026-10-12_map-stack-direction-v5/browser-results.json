@@ -1,0 +1,706 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.stack-v5.config.ts"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\playwright.stack-v5.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/submit-end-20261012-v1/runtime/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/map-stack-direction-20261012-v5/browser-evidence",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/submit-end-20261012-v1/runtime/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "uiux-sonnet-map-crowded-20261012.spec.ts",
+          "checking-read-list-20261012.spec.ts",
+          "map-reveal-continuity-20261012.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../map-stack-direction-20261012-v5/browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "checking-read-list-20261012.spec.ts",
+      "file": "checking-read-list-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13496,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:01:03.356Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "first-marker-list-geometry",
+                      "contentType": "application/json",
+                      "body": "eyJjdXJyZW50WSI6Mjg2LjA3ODEyNSwiZnV0dXJlWSI6NDYxLjc4MTI1LCJ0b3AiOjI0OC42NDA2MjUsImJvdHRvbSI6ODEyLCJzY3JvbGxUb3AiOjAsInNjcm9sbEhlaWdodCI6NjMzLCJoZWlnaHQiOjU2M30="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\checking-read-list-2026101-f5328--접혀-있고-현재-검증-카드만-펼쳐진다-375px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "75d14824361448ae0a7f-2b4a9b96cc13c3f8d493",
+          "file": "checking-read-list-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12192,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:01:18.585Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "first-marker-list-geometry",
+                      "contentType": "application/json",
+                      "body": "eyJjdXJyZW50WSI6Mjk5LjA3ODEyNSwiZnV0dXJlWSI6NDc0Ljc4MTI1LCJ0b3AiOjI2MS42NDA2MjUsImJvdHRvbSI6Nzg3LCJzY3JvbGxUb3AiOjAsInNjcm9sbEhlaWdodCI6NjE0LCJoZWlnaHQiOjUyNX0="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\checking-read-list-2026101-0a0c8-접혀-있고-현재-검증-카드만-펼쳐진다-1280px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "75d14824361448ae0a7f-6e8fbcca5191aa6683f0",
+          "file": "checking-read-list-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "map-reveal-continuity-20261012.spec.ts",
+      "file": "map-reveal-continuity-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "375px 순서대로 지도 표시 · 동작 줄이기 false",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11243,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-12T03:01:30.829Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIxMTkwLDI2OSIsIjEwOTEsMjUzIiwiMTAyOSwyNDMiLCI5MjQsMjI2IiwiODM4LDIxMyIsIjc1NiwyMDAiLCI2OTUsMTg5IiwiNjI4LDE3OSIsIjU4MiwxNzIiLCI1MzcsMTY0IiwiNDg1LDE1NiIsIjQ2MywxNTIiLCI0MzEsMTQ3IiwiMzk1LDE0MSIsIjM4MywxMzkiLCIzNjEsMTM2IiwiMzQzLDEzMiIsIjMyNSwxMzAiLCIzMTIsMTI4IiwiMjk4LDEyNSIsIjI4NywxMjQiLCIyNzAsMTIxIiwiMjY1LDEyMCIsIjI1OCwxMTkiLCIyNTEsMTE3IiwiMjQ0LDExNyIsIjIzNywxMTUiLCIyMzAsMTE0IiwiMjI1LDExNCIsIjIyMCwxMTMiLCIyMTUsMTEyIiwiMjExLDExMiIsIjIwNywxMTEiLCIyMDMsMTEwIiwiMjAwLDEwOSIsIjE5NiwxMDkiLCIxOTQsMTA5IiwiMTkxLDEwOCIsIjE5MCwxMDgiLCIxODgsMTA4IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE5NiwxMDYiLCIyMDAsMTA0IiwiMjA3LDEwMiIsIjIxOCwxMDAiLCIyMjYsOTgiLCIyMzYsOTUiLCIyNDUsOTMiLCIyNTQsOTEiLCIyNjQsODgiLCIyNzMsODYiLCIyODYsODMiLCIyOTYsODAiLCIzMDYsNzciLCIzMTgsNzQiLCIzMzAsNzEiLCIzNDEsNjkiLCIzNTIsNjUiLCIzNjgsNjIiLCIzNzksNTkiLCIzOTMsNTUiLCI0MDgsNTEiLCI0MjIsNDgiLCI0MzcsNDQiLCI0NTMsNDAiLCI0NjcsMzYiLCI0ODQsMzIiLCI1MDIsMjciLCI1MTQsMjUiLCI1MzEsMjEiLCI1NDcsMTciLCI1NjIsMTIiLCI1NzcsOSIsIjU5NCw0IiwiNjA3LDIiLCI2MjAsLTMiLCI2MzIsLTUiLCI2NDUsLTkiLCI2NTMsLTEwIiwiNjYwLC0xMiIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2OTAsOCIsIjcxMywxOCIsIjczNCw0NSIsIjY4MSw2NSIsIjY1Myw4MSIsIjYzMCw5NCIsIjYxOCwxMDQiLCI2MDQsMTE4IiwiNTkxLDEyNCIsIjU3NCwxMzEiLCI1NjMsMTM1IiwiNTUyLDEzOSIsIjU0NCwxNDIiLCI1MzYsMTQ1IiwiNTI4LDE0NyIsIjUxNywxNTAiLCI1MTMsMTUxIiwiNTA3LDE1MyIsIjUwMSwxNTUiLCI0OTYsMTU2IiwiNDg3LDE1OCIsIjQ4MiwxNTkiLCI0NzQsMTYwIiwiNDY5LDE2MSIsIjQ2MywxNjIiLCI0NTQsMTYzIiwiNDQ2LDE2NSIsIjQzOCwxNjciLCI0MzEsMTY4IiwiNDI0LDE3MCIsIjQxNywxNzEiLCI0MTEsMTcyIiwiNDA0LDE3MyIsIjM5OCwxNzQiLCIzOTMsMTc2IiwiMzg3LDE3NyIsIjM4MiwxNzciLCIzNzcsMTc5IiwiMzczLDE4MCIsIjM2OSwxODEiLCIzNjQsMTgxIiwiMzYwLDE4MyIsIjM1NiwxODQiLCIzNTMsMTg0IiwiMzQ5LDE4NSIsIjM0NSwxODciLCIzNDIsMTg3IiwiMzQwLDE4OCIsIjMzNSwxODkiLCIzMzQsMTg5IiwiMzMxLDE5MCIsIjMzMCwxOTAiLCIzMjcsMTkxIiwiMzI0LDE5MiIsIjMyMywxOTIiLCIzMjEsMTkyIiwiMzE5LDE5MyIsIjMxOCwxOTMiLCIzMTcsMTk0IiwiMzE1LDE5NCIsIjMxNCwxOTUiLCIzMTMsMTk1IiwiMzEyLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1Il0sImFuaW1hdGlvbnMiOlszMDAsMzAwLDMwMCwzMDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMF0sInN0b3AiOnRydWV9"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\map-reveal-continuity-2026-7c8e4-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-109d3099443eaf843eb3",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "375px 순서대로 지도 표시 · 동작 줄이기 true",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9914,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-12T03:01:42.094Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI0MTk1LDI2NyIsIjQxOTUsMjY3IiwiNDE5NSwyNjciLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1Il0sImFuaW1hdGlvbnMiOltdLCJzdG9wIjp0cnVlfQ=="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\map-reveal-continuity-2026-c6a76-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-f5bf04c95f0c9f68a6b7",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "1280px 순서대로 지도 표시 · 동작 줄이기 false",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 12141,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-12T03:01:52.034Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIxMTk0LDI2MiIsIjkyOCwyMTkiLCI4OTYsMjE0IiwiODIzLDIwMiIsIjc0NiwxODkiLCI2ODYsMTgwIiwiNjI4LDE3MSIsIjU4NSwxNjQiLCI1MzMsMTU1IiwiNDk4LDE1MCIsIjQ2NywxNDUiLCI0NDIsMTQxIiwiNDE0LDEzNiIsIjM5MiwxMzIiLCIzNzQsMTI5IiwiMzUyLDEyNyIsIjMzMCwxMjIiLCIzMjAsMTIxIiwiMzEyLDExOSIsIjMwMSwxMTgiLCIyODksMTE2IiwiMjgxLDExNSIsIjI2NCwxMTIiLCIyNTQsMTEwIiwiMjUwLDExMCIsIjI0MywxMDgiLCIyMzYsMTA4IiwiMjI5LDEwNyIsIjIyNiwxMDUiLCIyMTgsMTA1IiwiMjE1LDEwNCIsIjIxMSwxMDMiLCIyMDMsMTAyIiwiMjAxLDEwMiIsIjIwMCwxMDIiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMSwxMDEiLCIyMjIsOTYiLCIyMzUsOTMiLCIyNDEsOTEiLCIyNDgsOTAiLCIyNTgsODciLCIyNjUsODUiLCIyNzgsODIiLCIyODUsODAiLCIzMDEsNzUiLCIzMjksNjkiLCIzMzcsNjYiLCIzNDMsNjUiLCIzNTQsNjMiLCIzNjcsNTkiLCIzODAsNTYiLCIzOTIsNTMiLCI0MDcsNDkiLCI0MjAsNDYiLCI0MzUsNDIiLCI0NDcsMzkiLCI0NjQsMzQiLCI0NzcsMzEiLCI0OTYsMjYiLCI1MTQsMjIiLCI1MjIsMjAiLCI1MzksMTYiLCI1NTUsMTIiLCI1NzksNSIsIjU4OCwzIiwiNjAzLDAiLCI2MTcsLTQiLCI2MzEsLTgiLCI2NDIsLTExIiwiNjU0LC0xNCIsIjY2MywtMTUiLCI2NzAsLTE4IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNzIzLDkiLCI3NzMsMjgiLCI4MTQsNTAiLCI4NjgsODIiLCI3ODQsMTA3IiwiNzM1LDExOSIsIjcxMiwxMjMiLCI2OTEsMTI5IiwiNjU1LDEzMyIsIjYzNiwxMzYiLCI2MjgsMTM4IiwiNjA2LDE0MCIsIjU5NCwxNDIiLCI1NjQsMTQ0IiwiNTU4LDE0NSIsIjU0NywxNDciLCI1MzQsMTQ4IiwiNTE3LDE1MCIsIjUwNiwxNTEiLCI0OTUsMTUxIiwiNDgwLDE1MyIsIjQ3MywxNTQiLCI0NjcsMTU0IiwiNDU2LDE1NSIsIjQ0OCwxNTYiLCI0NDAsMTU2IiwiNDMxLDE1OCIsIjQyNSwxNTgiLCI0MTYsMTU5IiwiNDEwLDE2MCIsIjQwMywxNjAiLCIzOTYsMTYxIiwiMzkzLDE2MiIsIjM4NywxNjIiLCIzODIsMTYzIiwiMzc2LDE2NCIsIjM3MiwxNjQiLCIzNjcsMTY0IiwiMzU5LDE2NSIsIjM1NiwxNjYiLCIzNTEsMTY2IiwiMzQ3LDE2NyIsIjM0NCwxNjciLCIzNDIsMTY4IiwiMzQwLDE2OCIsIjMzOCwxNjkiLCIzMzUsMTY5IiwiMzMzLDE2OSIsIjMzMSwxNjkiLCIzMjksMTY5IiwiMzI4LDE3MCIsIjMyNywxNzAiLCIzMjYsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIl0sImFuaW1hdGlvbnMiOlszMDAsMzAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsOTAwLDkwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDBdLCJzdG9wIjp0cnVlfQ=="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\map-reveal-continuity-2026-53e1a-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-d2e9801dd61538e6b103",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "1280px 순서대로 지도 표시 · 동작 줄이기 true",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 120017,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded while setting up \"page\".\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded while setting up \"page\".\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded while setting up \"page\".\u001b[39m"
+                        },
+                        {
+                          "message": "\u001b[31mTearing down \"context\" exceeded the test timeout of 60000ms.\u001b[39m"
+                        },
+                        {
+                          "message": "Error: browserContext.close: Test timeout of 60000ms exceeded.\nBrowser logs:\n\n<launching> C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=C:\\Users\\PLAYDA~1\\AppData\\Local\\Temp\\playwright_chromiumdev_profile-qENmTx --remote-debugging-pipe --no-startup-window\n<launched> pid=15208\n[pid=15208][err] [15208:25920:1012/120115.417:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: QUOTA_EXCEEDED\n[pid=15208][err] [15208:27316:1012/120204.406:ERROR:gpu\\command_buffer\\client\\implementation_base.cc:267] ContextResult::kFatalFailure: TransferBuffer::Initialize() failed\n[pid=15208] <gracefully close start>\n[pid=15208] <kill>\n[pid=15208] <will force kill>\n[pid=15208] taskkill stdout: ����: PID 21036�� ���μ���(PID 15208�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.\r\n����: PID 26520�� ���μ���(PID 15208�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.\r\n����: PID 26800�� ���μ���(PID 15208�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.\r\n����: PID 15208�� ���μ���(PID 16988�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.\r\n"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-12T03:02:04.203Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\map-reveal-continuity-2026-aa6f1-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-c71b620788ee559ebb86",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-map-crowded-20261012.spec.ts",
+      "file": "uiux-sonnet-map-crowded-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "180px 지도에서 같은 방향의 이전 4개 일정 스택을 누를 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2528,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:05:22.853Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "crowded-number-hit-evidence",
+                      "contentType": "application/json",
+                      "body": "W3siaWQiOiIxIiwiYnV0dG9uIjp7IngiOi0zLjg5MDYyNSwieSI6MjY3LCJ3aWR0aCI6OTkuNzgxMjUsImhlaWdodCI6MzQsInRvcCI6MjY3LCJyaWdodCI6OTUuODkwNjI1LCJib3R0b20iOjMwMSwibGVmdCI6LTMuODkwNjI1fSwibnVtYmVyIjp7IngiOjQ4Ljg5MDYyNSwieSI6MjczLCJ3aWR0aCI6MjIsImhlaWdodCI6MjIsInRvcCI6MjczLCJyaWdodCI6NzAuODkwNjI1LCJib3R0b20iOjI5NSwibGVmdCI6NDguODkwNjI1fSwibnVtYmVyQ2VudHJlSGl0c093bkJ1dHRvbiI6dHJ1ZX1d"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1e040c3df919cbae9f80-11c786c17c4006295b4a",
+          "file": "uiux-sonnet-map-crowded-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "180px 지도에서 같은 방향의 이전 5개 일정 스택을 누를 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2766,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:05:25.731Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "crowded-number-hit-evidence",
+                      "contentType": "application/json",
+                      "body": "W3siaWQiOiIxIiwiYnV0dG9uIjp7IngiOi0zLjg5MDYyNSwieSI6MjY3LCJ3aWR0aCI6OTkuNzgxMjUsImhlaWdodCI6MzQsInRvcCI6MjY3LCJyaWdodCI6OTUuODkwNjI1LCJib3R0b20iOjMwMSwibGVmdCI6LTMuODkwNjI1fSwibnVtYmVyIjp7IngiOjQ4Ljg5MDYyNSwieSI6MjczLCJ3aWR0aCI6MjIsImhlaWdodCI6MjIsInRvcCI6MjczLCJyaWdodCI6NzAuODkwNjI1LCJib3R0b20iOjI5NSwibGVmdCI6NDguODkwNjI1fSwibnVtYmVyQ2VudHJlSGl0c093bkJ1dHRvbiI6dHJ1ZX1d"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1e040c3df919cbae9f80-cdc8b3927ad3b543ff80",
+          "file": "uiux-sonnet-map-crowded-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 거리 스택으로 남는다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11347,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:04:35.581Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "current-pin-body-center",
+                      "contentType": "application/json",
+                      "body": "eyJib2R5RGVsdGEiOlsxNi41LDE2LjQ0NTMxMjVdLCJleHBlY3RlZFNpZGVzIjpbImxlZnQiLCJsZWZ0Il19"
+                    },
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjI5OSwidGhpcmRGcmFtZXMiOjg3LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MSwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIxIiwiMiJdXSwiY2VudGVyRGVsdGEiOlswLjUsMC41NTQ2ODc1XSwicHJldmlvdXNIaWRkZW4iOlt0cnVlLHRydWVdLCJwcmV2aW91c1JldGFpbmVkIjpbdHJ1ZSx0cnVlXX0sImZhaWx1cmVDb3VudCI6MCwiZmFpbHVyZXMiOltdLCJzdG9wIjp0cnVlfQ=="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\uiux-sonnet-map-reveal-202-19c20-정은-실제-방향의-거리-스택으로-남는다-375px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-382a0b3b80c423b13d4c",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 29,
+          "column": 3
+        },
+        {
+          "title": "세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 거리 스택으로 남는다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11051,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:04:47.286Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "current-pin-body-center",
+                      "contentType": "application/json",
+                      "body": "eyJib2R5RGVsdGEiOlsxNywxNi40NDUzMTI1XSwiZXhwZWN0ZWRTaWRlcyI6WyJsZWZ0IiwibGVmdCJdfQ=="
+                    },
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjMwNiwidGhpcmRGcmFtZXMiOjg3LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MSwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIxIiwiMiJdXSwiY2VudGVyRGVsdGEiOlswLDAuNTU0Njg3NV0sInByZXZpb3VzSGlkZGVuIjpbdHJ1ZSx0cnVlXSwicHJldmlvdXNSZXRhaW5lZCI6W3RydWUsdHJ1ZV19LCJmYWlsdXJlQ291bnQiOjAsImZhaWx1cmVzIjpbXSwic3RvcCI6dHJ1ZX0="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\uiux-sonnet-map-reveal-202-3e0a1-은-실제-방향의-거리-스택으로-남는다-1280px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-1e9bcd0543f011f62a2b",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 29,
+          "column": 3
+        },
+        {
+          "title": "세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 거리 스택으로 남는다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11297,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:04:58.368Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "current-pin-body-center",
+                      "contentType": "application/json",
+                      "body": "eyJib2R5RGVsdGEiOlsxNy41LDE2LjQ0NTMxMjVdLCJleHBlY3RlZFNpZGVzIjpbImxlZnQiLCJyaWdodCJdfQ=="
+                    },
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjMwMiwidGhpcmRGcmFtZXMiOjg2LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MCwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIyIl0sWyIxIl1dLCJjZW50ZXJEZWx0YSI6WzAuNSwwLjU1NDY4NzVdLCJwcmV2aW91c0hpZGRlbiI6W3RydWUsdHJ1ZV0sInByZXZpb3VzUmV0YWluZWQiOlt0cnVlLHRydWVdfSwiZmFpbHVyZUNvdW50IjowLCJmYWlsdXJlcyI6W10sInN0b3AiOnRydWV9"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\uiux-sonnet-map-reveal-202-688ed-번은-실제-방향의-거리-스택으로-남는다-375px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-8ab18b739101f228ef44",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 29,
+          "column": 3
+        },
+        {
+          "title": "세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 거리 스택으로 남는다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11795,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T03:05:09.688Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "current-pin-body-center",
+                      "contentType": "application/json",
+                      "body": "eyJib2R5RGVsdGEiOlsxNywxNi40NDUzMTI1XSwiZXhwZWN0ZWRTaWRlcyI6WyJsZWZ0IiwicmlnaHQiXX0="
+                    },
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjMwMywidGhpcmRGcmFtZXMiOjg3LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MCwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIyIl0sWyIxIl1dLCJjZW50ZXJEZWx0YSI6WzAsMC41NTQ2ODc1XSwicHJldmlvdXNIaWRkZW4iOlt0cnVlLHRydWVdLCJwcmV2aW91c1JldGFpbmVkIjpbdHJ1ZSx0cnVlXX0sImZhaWx1cmVDb3VudCI6MCwiZmFpbHVyZXMiOltdLCJzdG9wIjp0cnVlfQ=="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-stack-direction-20261012-v5\\browser-evidence\\uiux-sonnet-map-reveal-202-6122b-은-실제-방향의-거리-스택으로-남는다-1280px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-93860ed861ea251a6adf",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 29,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-12T03:00:51.349Z",
+    "duration": 278456.848,
+    "expected": 11,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

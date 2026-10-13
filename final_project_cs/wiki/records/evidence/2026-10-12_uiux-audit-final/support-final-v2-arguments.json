@@ -1,0 +1,10 @@
+[
+  "test",
+  "-c",
+  "playwright.support-final-v2.config.ts",
+  "support.spec.ts",
+  "uiux-sonnet-trip-20261012.spec.ts",
+  "uiux-route-audit-20261012.spec.ts",
+  "--grep",
+  "재전송|공개 공지와 점검|문의 목록 실패|문의 전송|전체 경로 · support"
+]

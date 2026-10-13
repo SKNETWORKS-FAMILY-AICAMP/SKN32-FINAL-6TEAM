@@ -1,0 +1,18 @@
+{
+  "job": {
+    "id": "winnow_original_d2",
+    "label": "Winnow-E4B publisher release Q8_0",
+    "our_training": false,
+    "model": "/workspace/deciders/winnow_e4b/gguf/Winnow-E4B-Q8_0.gguf",
+    "prompts": "/workspace/heavy/all_prompts_d2.json",
+    "script": "/workspace/heavy/d_test_llama_lp.py",
+    "tag": "d2_backlog_winnow_original",
+    "port": 8401,
+    "logprobs": "1",
+    "expected": 1000
+  },
+  "started": "2026-10-08T04:56:54.129943+00:00",
+  "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+  "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

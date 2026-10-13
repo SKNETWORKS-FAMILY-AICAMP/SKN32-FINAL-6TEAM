@@ -6,7 +6,7 @@
 
 ★지키려는 것
  ①켜기 = `on_disruption=replace` · 끄기 = **`ask_first` 를 명시**하고 둘 다 「직접 답한 문항」(`survey_answered`)에 들어간다. 건너뛰기(끄고 진행)는 값을 안 보내는 것이 아니라 `ask_first` 다 —
-   미응답은 기본 `replace` 로 읽혀 휴무 · 교통 통제가 자동 적용된다.
+   미응답·옛 기본 replace만 있는 여행도 먼저 묻는다.
  ②누가 · 언제 · 어디서(via)가 **추가만 하는 표**에 남는다. 같은 값을 다시 눌러도 행이 늘지 않고 「언제부터」가 밀리지 않는다.
  ③**쿠키 세션**으로만 켠다 — 사용자 키 · 인증 없음 · CSRF 없는 쿠키는 막히고, 남의 여행 · 없는 여행은 같은 404.
  ④옛 여행(설문 없음)은 불변 — 꺼짐이고 `since`·`via` 는 null. 등록 때 카드가 보낸 값은 `registration` 으로 읽힌다.
@@ -93,11 +93,11 @@ def test_on_and_off_change_the_stored_choice_and_leave_a_record(cookies):
     assert _rows(trip_id) == [(True, "header"), (False, "settings")]
 
 
-def test_skip_sends_ask_first_explicitly_so_it_does_not_fall_back_to_the_replace_default(cookies):
-    """★건너뛰기 = 꺼짐은 `ask_first` 를 **명시**해야 한다. 답을 안 하면 기본 `replace` 로 읽혀 휴무 · 교통 통제는 자동 적용된다(`pending.decide` 는 답했는지를 보지 않는다)."""
+def test_unanswered_is_off_and_explicit_skip_records_the_choice(cookies):
+    """미응답도 먼저 묻는다. 명시적 건너뛰기는 꺼짐을 고른 기록을 추가한다."""
     trip_id = _trip(cookies, constraints=NO_SURVEY)
     untouched = _stored(trip_id)
-    assert on_disruption(untouched) == "replace" and decide(constraints=untouched, item=_item(), report=DUST).action == "apply"
+    assert on_disruption(untouched) == "ask_first" and decide(constraints=untouched, item=_item(), report=DUST).action == "ask"
 
     assert _post(cookies, trip_id, {"enabled": False, "via": "card"}).json()["enabled"] is False
     skipped = _stored(trip_id)

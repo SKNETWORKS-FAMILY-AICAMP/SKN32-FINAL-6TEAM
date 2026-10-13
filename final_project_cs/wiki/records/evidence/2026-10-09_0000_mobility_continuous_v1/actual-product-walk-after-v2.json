@@ -1,0 +1,1806 @@
+{
+  "started_at": "2026-10-08T23:53:13.444304+09:00",
+  "finished_at": "2026-10-08T23:55:18.939966+09:00",
+  "arrive": "2026-10-08T10:30:00+09:00",
+  "development_reused": true,
+  "independent_holdout": false,
+  "public_repetitions_per_pair": 2,
+  "public_repeats_equal": true,
+  "private_diagnostic_repetitions_per_pair": 1,
+  "requested_n": 30,
+  "completed_n": 30,
+  "network_attempts": [],
+  "engine_edits": 0,
+  "configured_speed_mps": 1.04,
+  "detour": 1.4,
+  "graph_source": "osm_road_graph_v2@2026-10-03",
+  "source_hashes_at_start": {
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\adapter.py": "9b2b39c0c765c43a30527af38db718d642994615a50e51a716433b871fae6253",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bike.py": "ee97a0ffb7ef68ff74b19f8510363b77792909d7a7f18e0117848ce62d14d871",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus.py": "750a89399a5dfdcc84d9e8fb6468684932a4e3e68f3c22018329440ef49c28c4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus_profile.py": "18a4298ed54f0e64c1e6d3fb78bf47e2af1a70fe5a95f7ecdcba57ad34853d87",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\candidates.py": "1e49079b54d9ae8cbde6d7db643125bb27541c956668b7809a1f7962dd2aea0c",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car.py": "83e2021e25916e794624dffebe39986c175ad04fc96b06f07c2e865860cad00e",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car_fixtures.py": "bfcdce00518e8aec0a5dc63cf36cd7b8a236395de358c60461bf62d76b375af0",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\congestion.py": "9a059d6d93f905b995919538784f8313a206d5379e37f373989490fb18fbd314",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\connectors.py": "7ec5eeb90eb13edfa05a7e03ade78292c33881ad2d5107960a9a42ca947b986e",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\datacheck.py": "2729d4b4a5c2408cd863e444eaea5f2906032812f99960b17d0061d7230e78c6",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\errors.py": "bd7aa589e9417f6b2ea6cb9f6754c961f9c0f1b61a87d91303b746bc9fbe8a1a",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\exits.py": "cc2068c85b2b40cae263e2f59fa6c06978aa36e3e746ad617f9714b3963bb7b1",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\express.py": "6dbdbede71753f4a28fa8c766228092e6093a501ba76cbe436b06e65b90ec378",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\fold.py": "6818eafd4449445b5b75042d7aca79df46ff60011b52c19dab3d186c56b1f5eb",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\geo.py": "df940f8a21efd4487839e0a5cee5deacb56041027d30199d6f11d57df84dff51",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py": "93e46fc0cbb876fa205e636c66d14b6a944fdbb581b07c07d1ebca0c7a942a18",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\guardrails.py": "9c153447273208890906ea9e36b03ca6849298f62c9e666c9fabd689cbfddad8",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\line_order.py": "3c3819e9f0cddb542863fe2a32bc56d7514cd25b54f952650add9ca9b27e6abf",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\options.py": "d245e3536e087534e6f8efc6ade70044cb127bd5308c846be97d918fcc752ea3",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\paths.py": "c9256063c22fd9d9bbd54b7f5497f6d1a3f8fe3161afbd96e5df12498d282bdc",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan.py": "e79e8c81f428fcf478b8262ed6cd2323642518be6eceb9f5715a77d7c23c2d8d",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan_estimate.py": "31ab9342d737dad96b7d40ff3fe1d8dbb3b42bd31925feba28eb6ed057c5abf4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\runtime.py": "1fcafda8997df6711798632bcb16a187604f683c41d84355e3f8da36b2171bd5",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\special_rail.py": "61a8580f62b22d874db74768f251b9a8406fc2fce811dfd40072be7e30710ea0",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\timeutil.py": "f41e35926e55b393bfb084d762b4e5718c99855fdada148d38b0ba6b7aaba36f",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\transfer_walk.py": "60d0e945a8650cebd08dcf48d17c1fb9231b26679dab968e03bdfe74d76c90a2",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time.py": "b8428471f6a66b6ea6408611acd1a3daf9678d6c6dfbca1b8b39c2e40b763e50",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time_cli.py": "bc996c0360ac6a0733e3d52d4f3cd1d57881d41a71777ccbe6ddd1381fa3a3b5",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\__init__.py": "267fe36a5319a62ef3902a5664ef661cedfef9a69bcaaaca629c6587c825efc5",
+    "final_project_cs\\scripts\\mobility\\compare_kakao_golden.py": "5cd9e156377a91b0981a5939898092333857ca7a4049d12d40cf68c3faf6250f",
+    ".tmp\\mobility_walk_diagnosis_20261008\\remeasure_product_walk_v2.py": "1291dd45ab3338fbd8b207d86449689506f198dcf76886bad5e09ee5af6da4ea"
+  },
+  "source_hashes_at_end": {
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\adapter.py": "9b2b39c0c765c43a30527af38db718d642994615a50e51a716433b871fae6253",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bike.py": "ee97a0ffb7ef68ff74b19f8510363b77792909d7a7f18e0117848ce62d14d871",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus.py": "750a89399a5dfdcc84d9e8fb6468684932a4e3e68f3c22018329440ef49c28c4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus_profile.py": "18a4298ed54f0e64c1e6d3fb78bf47e2af1a70fe5a95f7ecdcba57ad34853d87",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\candidates.py": "1e49079b54d9ae8cbde6d7db643125bb27541c956668b7809a1f7962dd2aea0c",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car.py": "83e2021e25916e794624dffebe39986c175ad04fc96b06f07c2e865860cad00e",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car_fixtures.py": "bfcdce00518e8aec0a5dc63cf36cd7b8a236395de358c60461bf62d76b375af0",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\congestion.py": "9a059d6d93f905b995919538784f8313a206d5379e37f373989490fb18fbd314",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\connectors.py": "7ec5eeb90eb13edfa05a7e03ade78292c33881ad2d5107960a9a42ca947b986e",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\datacheck.py": "2729d4b4a5c2408cd863e444eaea5f2906032812f99960b17d0061d7230e78c6",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\errors.py": "bd7aa589e9417f6b2ea6cb9f6754c961f9c0f1b61a87d91303b746bc9fbe8a1a",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\exits.py": "cc2068c85b2b40cae263e2f59fa6c06978aa36e3e746ad617f9714b3963bb7b1",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\express.py": "6dbdbede71753f4a28fa8c766228092e6093a501ba76cbe436b06e65b90ec378",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\fold.py": "6818eafd4449445b5b75042d7aca79df46ff60011b52c19dab3d186c56b1f5eb",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\geo.py": "df940f8a21efd4487839e0a5cee5deacb56041027d30199d6f11d57df84dff51",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py": "93e46fc0cbb876fa205e636c66d14b6a944fdbb581b07c07d1ebca0c7a942a18",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\guardrails.py": "9c153447273208890906ea9e36b03ca6849298f62c9e666c9fabd689cbfddad8",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\line_order.py": "3c3819e9f0cddb542863fe2a32bc56d7514cd25b54f952650add9ca9b27e6abf",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\options.py": "d245e3536e087534e6f8efc6ade70044cb127bd5308c846be97d918fcc752ea3",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\paths.py": "c9256063c22fd9d9bbd54b7f5497f6d1a3f8fe3161afbd96e5df12498d282bdc",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan.py": "e79e8c81f428fcf478b8262ed6cd2323642518be6eceb9f5715a77d7c23c2d8d",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan_estimate.py": "31ab9342d737dad96b7d40ff3fe1d8dbb3b42bd31925feba28eb6ed057c5abf4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\runtime.py": "1fcafda8997df6711798632bcb16a187604f683c41d84355e3f8da36b2171bd5",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\special_rail.py": "61a8580f62b22d874db74768f251b9a8406fc2fce811dfd40072be7e30710ea0",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\timeutil.py": "f41e35926e55b393bfb084d762b4e5718c99855fdada148d38b0ba6b7aaba36f",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\transfer_walk.py": "60d0e945a8650cebd08dcf48d17c1fb9231b26679dab968e03bdfe74d76c90a2",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time.py": "b8428471f6a66b6ea6408611acd1a3daf9678d6c6dfbca1b8b39c2e40b763e50",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time_cli.py": "bc996c0360ac6a0733e3d52d4f3cd1d57881d41a71777ccbe6ddd1381fa3a3b5",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\__init__.py": "267fe36a5319a62ef3902a5664ef661cedfef9a69bcaaaca629c6587c825efc5",
+    "final_project_cs\\scripts\\mobility\\compare_kakao_golden.py": "5cd9e156377a91b0981a5939898092333857ca7a4049d12d40cf68c3faf6250f",
+    ".tmp\\mobility_walk_diagnosis_20261008\\remeasure_product_walk_v2.py": "1291dd45ab3338fbd8b207d86449689506f198dcf76886bad5e09ee5af6da4ea"
+  },
+  "input_hashes_at_start": {
+    "datasets\\mobility\\processed\\mobility\\transfer_walk_v1.json": "03a13259fc182df08eff16eccdc2add597b6012d7aaf160b38596f0708fc3f43",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1_meta.json": "6cc106e94be7b76ce921c884818617f8bb4473a3419d9ce64c33acb9d5045836",
+    "datasets\\mobility\\processed\\mobility\\rail_edge_track_v2.jsonl.gz": "dd2d0eda1aaa956ba5d09d5410539ee863f8c4b023773b7c66a31caf3eb9e096",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\rules_v0.3.json": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd",
+    "datasets\\mobility\\processed\\mobility\\station_coords.json": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d",
+    "datasets\\mobility\\processed\\mobility\\rail_distance_overlay_v1.json": "78cbe18455c12bf1d25c795427559c1b86049997cca2c1b26498739caff44c82",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+    "datasets\\mobility\\processed\\mobility\\bus_seg_profile_v1.jsonl.gz": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+    "datasets\\mobility\\processed\\mobility\\station_exits_v1.json": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38",
+    "datasets\\mobility\\raw\\kakao_golden\\fresh_web_100_v1.json": "e6a084921f95ab9c334c49685db40a23b7be56700505ead261d969999d632fc2",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\special_rail_fares_v1.json": "5f487d3df34979ae54455f5dcc7f522e7eb1554e0800924d9b476a268480093d",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\holidays_2026_2027.json": "b2539a7e6835bd6dd2ac3fef654d1c7f063305bbcdb9a17a7b2d4254ee67d8f4",
+    "datasets\\mobility\\processed\\mobility\\bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+    "final_project_cs\\config\\guardrails.yaml": "64cff70262767224dda583a4485c9c4272c53834fcdc9c92af0c6bbccb92ce6d",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb",
+    "datasets\\mobility\\processed\\mobility\\bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "datasets\\mobility\\processed\\mobility\\bike_stations_v1.jsonl": "8752290317c8700ad1d2a99cfe4f21fca9dea4e01ecab717972aad21603af6d7",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\region_v1.geojson": "827a39de6d1cf23a8b910dc3edeca73534e3e8b8490228fdaf53abb3efc5c9b8",
+    "datasets\\mobility\\raw\\kakao_golden\\fresh_ours_transit_100_v1.json": "36bf8d1fcfb819ee3ec9a1b11ad03c7c4a423134a47c615ff5e0e906541534bd",
+    ".tmp\\mobility_walk_diagnosis_20261008\\diagnosis-v1.json": "5f46555617845ee9381d0a27e4c58f71a3975c323f482a50ea95af3a9dc15751",
+    "datasets\\mobility\\processed\\mobility\\line_station_order_v1.json": "693c616fa1a538d564b84c12cae1f8c744140da87f91574cfbb795394448d3e8",
+    "datasets\\mobility\\raw\\kakao_golden\\fresh_experiment_100_design.json": "af6fcf5460a71e3fd18cf3cf1eabe6ef03851e56c71e69ff06620dd2fc6dbe74",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\build_report.json": "5f63b0009a7e9a958f162b4f756e4f60538772115e95c6f86eb7ed421e4b4399"
+  },
+  "input_hashes_at_end": {
+    "datasets\\mobility\\processed\\mobility\\transfer_walk_v1.json": "03a13259fc182df08eff16eccdc2add597b6012d7aaf160b38596f0708fc3f43",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1_meta.json": "6cc106e94be7b76ce921c884818617f8bb4473a3419d9ce64c33acb9d5045836",
+    "datasets\\mobility\\processed\\mobility\\rail_edge_track_v2.jsonl.gz": "dd2d0eda1aaa956ba5d09d5410539ee863f8c4b023773b7c66a31caf3eb9e096",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\rules_v0.3.json": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd",
+    "datasets\\mobility\\processed\\mobility\\station_coords.json": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d",
+    "datasets\\mobility\\processed\\mobility\\rail_distance_overlay_v1.json": "78cbe18455c12bf1d25c795427559c1b86049997cca2c1b26498739caff44c82",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+    "datasets\\mobility\\processed\\mobility\\bus_seg_profile_v1.jsonl.gz": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+    "datasets\\mobility\\processed\\mobility\\station_exits_v1.json": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38",
+    "datasets\\mobility\\raw\\kakao_golden\\fresh_web_100_v1.json": "e6a084921f95ab9c334c49685db40a23b7be56700505ead261d969999d632fc2",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\special_rail_fares_v1.json": "5f487d3df34979ae54455f5dcc7f522e7eb1554e0800924d9b476a268480093d",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\holidays_2026_2027.json": "b2539a7e6835bd6dd2ac3fef654d1c7f063305bbcdb9a17a7b2d4254ee67d8f4",
+    "datasets\\mobility\\processed\\mobility\\bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+    "final_project_cs\\config\\guardrails.yaml": "64cff70262767224dda583a4485c9c4272c53834fcdc9c92af0c6bbccb92ce6d",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb",
+    "datasets\\mobility\\processed\\mobility\\bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "datasets\\mobility\\processed\\mobility\\bike_stations_v1.jsonl": "8752290317c8700ad1d2a99cfe4f21fca9dea4e01ecab717972aad21603af6d7",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\region_v1.geojson": "827a39de6d1cf23a8b910dc3edeca73534e3e8b8490228fdaf53abb3efc5c9b8",
+    "datasets\\mobility\\raw\\kakao_golden\\fresh_ours_transit_100_v1.json": "36bf8d1fcfb819ee3ec9a1b11ad03c7c4a423134a47c615ff5e0e906541534bd",
+    ".tmp\\mobility_walk_diagnosis_20261008\\diagnosis-v1.json": "5f46555617845ee9381d0a27e4c58f71a3975c323f482a50ea95af3a9dc15751",
+    "datasets\\mobility\\processed\\mobility\\line_station_order_v1.json": "693c616fa1a538d564b84c12cae1f8c744140da87f91574cfbb795394448d3e8",
+    "datasets\\mobility\\raw\\kakao_golden\\fresh_experiment_100_design.json": "af6fcf5460a71e3fd18cf3cf1eabe6ef03851e56c71e69ff06620dd2fc6dbe74",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\build_report.json": "5f63b0009a7e9a958f162b4f756e4f60538772115e95c6f86eb7ed421e4b4399"
+  },
+  "source_changes_during_run": [],
+  "input_changes_during_run": [],
+  "ci_note": "OD bootstrap10000,seed20261008; development sampling uncertainty,not real walking prediction interval.",
+  "rows": [
+    {
+      "id": "N002",
+      "a": "서울시립미술관",
+      "b": "동대문디자인플라자",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3168.9605354735168,
+      "design_straight_m": 3169,
+      "reference_min": 62,
+      "reference_distance_m": 4000,
+      "before_saved_raw_min": 71.09935897435896,
+      "before_saved_distance_m": 4436.599999999999,
+      "before_diagnostic_ceiled_min": 72,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 71.09923426594432,
+      "after_internal_distance_m": 4436.544749662923,
+      "after_diagnostic_ceiled_min": 72,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2563.9190421093545
+      },
+      "before_raw_delta_min": 9.099358974358964,
+      "after_raw_delta_min": 9.099234265944318,
+      "raw_change_min": -0.00012470841464562454,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 10.914999999999985,
+      "after_raw_distance_delta_percent": 10.913618741573083,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.055250337076358846,
+      "elapsed_s": 16.60899999999674
+    },
+    {
+      "id": "N012",
+      "a": "광장시장",
+      "b": "시청역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2031.0271507138793,
+      "design_straight_m": 2031,
+      "reference_min": 39,
+      "reference_distance_m": 2400.0,
+      "before_saved_raw_min": 38.62980769230769,
+      "before_saved_distance_m": 2410.5,
+      "before_diagnostic_ceiled_min": 39,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 38.62980769230769,
+      "after_internal_distance_m": 2410.5,
+      "after_diagnostic_ceiled_min": 39,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 1734.1568488015823
+      },
+      "before_raw_delta_min": -0.3701923076923066,
+      "after_raw_delta_min": -0.3701923076923066,
+      "raw_change_min": 0.0,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 0.4375000000000018,
+      "after_raw_distance_delta_percent": 0.4375000000000018,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.01999999999998181,
+      "elapsed_s": 3.922000000005937
+    },
+    {
+      "id": "N017",
+      "a": "N서울타워",
+      "b": "종묘",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2636.3354569933063,
+      "design_straight_m": 2636,
+      "reference_min": 68,
+      "reference_distance_m": 3600.0,
+      "before_saved_raw_min": 63.53365384615384,
+      "before_saved_distance_m": 3964.5,
+      "before_diagnostic_ceiled_min": 64,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 68.1807004539097,
+      "after_internal_distance_m": 3964.5,
+      "after_diagnostic_ceiled_min": 69,
+      "stairs_m": 434.95243015502393,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 434.95243015502393,
+        "seconds": 3060.773890880551
+      },
+      "before_raw_delta_min": -4.46634615384616,
+      "after_raw_delta_min": 0.1807004539096937,
+      "raw_change_min": 4.647046607755854,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 10.125000000000007,
+      "after_raw_distance_delta_percent": 10.125000000000007,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.010000000000218279,
+      "elapsed_s": 0.875
+    },
+    {
+      "id": "N030",
+      "a": "동묘앞역",
+      "b": "종각역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2968.8286093459515,
+      "design_straight_m": 2969,
+      "reference_min": 51,
+      "reference_distance_m": 3200.0,
+      "before_saved_raw_min": 48.88621794871794,
+      "before_saved_distance_m": 3050.5,
+      "before_diagnostic_ceiled_min": 49,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 48.88621794871794,
+      "after_internal_distance_m": 3050.5,
+      "after_diagnostic_ceiled_min": 49,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2194.5949687775924
+      },
+      "before_raw_delta_min": -2.113782051282058,
+      "after_raw_delta_min": -2.113782051282058,
+      "raw_change_min": 0.0,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -4.6718750000000036,
+      "after_raw_distance_delta_percent": -4.6718750000000036,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.010000000000218279,
+      "elapsed_s": 3.4060000000026776
+    },
+    {
+      "id": "N037",
+      "a": "용산역",
+      "b": "공덕역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 1949.5817405472724,
+      "design_straight_m": 1950,
+      "reference_min": 35,
+      "reference_distance_m": 2100.0,
+      "before_saved_raw_min": 45.57371794871795,
+      "before_saved_distance_m": 2843.8,
+      "before_diagnostic_ceiled_min": 46,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 45.93266364904038,
+      "after_internal_distance_m": 2843.8,
+      "after_diagnostic_ceiled_min": 46,
+      "stairs_m": 33.567851711502804,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 33.567851711502804,
+        "seconds": 2062.0131019425326
+      },
+      "before_raw_delta_min": 10.573717948717949,
+      "after_raw_delta_min": 10.932663649040379,
+      "raw_change_min": 0.3589457003224297,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 35.41904761904762,
+      "after_raw_distance_delta_percent": 35.41904761904762,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.01999999999998181,
+      "elapsed_s": 1.5160000000032596
+    },
+    {
+      "id": "N041",
+      "a": "길상사",
+      "b": "인사동",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "도보 상한 안에 지하철역이 없다(길상사)"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "도보 상한 안에 지하철역이 없다(길상사)"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2747.16056679072,
+      "design_straight_m": 2747,
+      "reference_min": 62,
+      "reference_distance_m": 3800.0,
+      "before_saved_raw_min": 59.527243589743584,
+      "before_saved_distance_m": 3714.5,
+      "before_diagnostic_ceiled_min": 60,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 59.527243589743584,
+      "after_internal_distance_m": 3714.5,
+      "after_diagnostic_ceiled_min": 60,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2672.273533140771
+      },
+      "before_raw_delta_min": -2.472756410256416,
+      "after_raw_delta_min": -2.472756410256416,
+      "raw_change_min": 0.0,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -2.2499999999999964,
+      "after_raw_distance_delta_percent": -2.2499999999999964,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.03999999999996362,
+      "elapsed_s": 0.09399999999732245
+    },
+    {
+      "id": "N042",
+      "a": "노량진역",
+      "b": "용산역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2701.452514609134,
+      "design_straight_m": 2701,
+      "reference_min": 52,
+      "reference_distance_m": 3300.0,
+      "before_saved_raw_min": 60.59935897435897,
+      "before_saved_distance_m": 3781.3999999999996,
+      "before_diagnostic_ceiled_min": 61,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 60.96826232054209,
+      "after_internal_distance_m": 3782.0335204527873,
+      "after_diagnostic_ceiled_min": 61,
+      "stairs_m": 33.567851711502804,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 33.567851711502804,
+        "seconds": 2519.2705383806037
+      },
+      "before_raw_delta_min": 8.599358974358971,
+      "after_raw_delta_min": 8.968262320542088,
+      "raw_change_min": 0.36890334618311726,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 14.587878787878772,
+      "after_raw_distance_delta_percent": 14.607076377357187,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.6335204527877067,
+      "elapsed_s": 3.577999999994063
+    },
+    {
+      "id": "N050",
+      "a": "잠실종합운동장",
+      "b": "어린이대공원",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3586.633978612014,
+      "design_straight_m": 3587,
+      "reference_min": 103,
+      "reference_distance_m": 6500.0,
+      "before_saved_raw_min": 105.53685897435896,
+      "before_saved_distance_m": 6585.5,
+      "before_diagnostic_ceiled_min": 106,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 105.53685897435896,
+      "after_internal_distance_m": 6585.5,
+      "after_diagnostic_ceiled_min": 106,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 4737.7478198637555
+      },
+      "before_raw_delta_min": 2.536858974358964,
+      "after_raw_delta_min": 2.536858974358964,
+      "raw_change_min": 0.0,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 1.3153846153846072,
+      "after_raw_distance_delta_percent": 1.3153846153846072,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.02999999999974534,
+      "elapsed_s": 5.73399999999674
+    },
+    {
+      "id": "N053",
+      "a": "이화여대",
+      "b": "국립현대미술관 서울",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3529.1704481122474,
+      "design_straight_m": 3529,
+      "reference_min": 83,
+      "reference_distance_m": 4500.0,
+      "before_saved_raw_min": 74.91826923076923,
+      "before_saved_distance_m": 4674.9,
+      "before_diagnostic_ceiled_min": 75,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 74.91842431640558,
+      "after_internal_distance_m": 4674.9,
+      "after_diagnostic_ceiled_min": 75,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 3363.244372189718
+      },
+      "before_raw_delta_min": -8.081730769230774,
+      "after_raw_delta_min": -8.081575683594423,
+      "raw_change_min": 0.00015508563635080463,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 3.8866666666666605,
+      "after_raw_distance_delta_percent": 3.8866666666666605,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.010000000000218279,
+      "elapsed_s": 6.547000000005937
+    },
+    {
+      "id": "N058",
+      "a": "익선동",
+      "b": "성신여대입구역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3202.0757856975206,
+      "design_straight_m": 3202,
+      "reference_min": 64,
+      "reference_distance_m": 4000,
+      "before_saved_raw_min": 71.83974358974358,
+      "before_saved_distance_m": 4482.799999999999,
+      "before_diagnostic_ceiled_min": 72,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 71.84144390988027,
+      "after_internal_distance_m": 4482.906099976529,
+      "after_diagnostic_ceiled_min": 72,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2852.0809434942094
+      },
+      "before_raw_delta_min": 7.839743589743577,
+      "after_raw_delta_min": 7.841443909880269,
+      "raw_change_min": 0.0017003201366918574,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 12.06999999999998,
+      "after_raw_distance_delta_percent": 12.072652499413227,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.10609997652954917,
+      "elapsed_s": 3.547000000005937
+    },
+    {
+      "id": "N063",
+      "a": "광화문",
+      "b": "N서울타워",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2439.5023555969806,
+      "design_straight_m": 2440,
+      "reference_min": 75,
+      "reference_distance_m": 3200.0,
+      "before_saved_raw_min": 49.95192307692307,
+      "before_saved_distance_m": 3117.0,
+      "before_diagnostic_ceiled_min": 50,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 54.59829863016689,
+      "after_internal_distance_m": 3117.0,
+      "after_diagnostic_ceiled_min": 55,
+      "stairs_m": 434.95243015502393,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 434.95243015502393,
+        "seconds": 2451.031535627636
+      },
+      "before_raw_delta_min": -25.048076923076927,
+      "after_raw_delta_min": -20.401701369833113,
+      "raw_change_min": 4.646375553243814,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -2.5937499999999947,
+      "after_raw_distance_delta_percent": -2.5937499999999947,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.03000000000020009,
+      "elapsed_s": 1.5159999999887077
+    },
+    {
+      "id": "N064",
+      "a": "길상사",
+      "b": "동묘앞역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "도보 상한 안에 지하철역이 없다(길상사)"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "도보 상한 안에 지하철역이 없다(길상사)"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3601.5325664953084,
+      "design_straight_m": 3602,
+      "reference_min": 74,
+      "reference_distance_m": 4400.0,
+      "before_saved_raw_min": 72.52724358974359,
+      "before_saved_distance_m": 4525.7,
+      "before_diagnostic_ceiled_min": 73,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 73.64884470743905,
+      "after_internal_distance_m": 4525.7,
+      "after_diagnostic_ceiled_min": 74,
+      "stairs_m": 105.04808234833521,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 105.04808234833521,
+        "seconds": 3306.250294779998
+      },
+      "before_raw_delta_min": -1.4727564102564088,
+      "after_raw_delta_min": -0.35115529256094646,
+      "raw_change_min": 1.1216011176954623,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 2.856818181818177,
+      "after_raw_distance_delta_percent": 2.856818181818177,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.03999999999996362,
+      "elapsed_s": 0.014999999999417923
+    },
+    {
+      "id": "N066",
+      "a": "종묘",
+      "b": "서대문역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2596.1728349272785,
+      "design_straight_m": 2596,
+      "reference_min": 53,
+      "reference_distance_m": 3300.0,
+      "before_saved_raw_min": 58.24358974358974,
+      "before_saved_distance_m": 3634.3999999999996,
+      "before_diagnostic_ceiled_min": 59,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 58.2474674502915,
+      "after_internal_distance_m": 3634.6419688981896,
+      "after_diagnostic_ceiled_min": 59,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2122.1478487625463
+      },
+      "before_raw_delta_min": 5.243589743589737,
+      "after_raw_delta_min": 5.247467450291502,
+      "raw_change_min": 0.0038777067017647937,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 10.133333333333328,
+      "after_raw_distance_delta_percent": 10.14066572418757,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.2419688981899526,
+      "elapsed_s": 3.2190000000118744
+    },
+    {
+      "id": "N071",
+      "a": "서울역",
+      "b": "북촌한옥마을",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3289.987628789822,
+      "design_straight_m": 3290,
+      "reference_min": 67,
+      "reference_distance_m": 3900.0,
+      "before_saved_raw_min": 73.81410256410255,
+      "before_saved_distance_m": 4606.0,
+      "before_diagnostic_ceiled_min": 74,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 74.21972643365022,
+      "after_internal_distance_m": 4605.98268030575,
+      "after_diagnostic_ceiled_min": 75,
+      "stairs_m": 38.01662202014187,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 38.01662202014187,
+        "seconds": 2726.9987403985783
+      },
+      "before_raw_delta_min": 6.814102564102555,
+      "after_raw_delta_min": 7.219726433650223,
+      "raw_change_min": 0.40562386954766794,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 18.102564102564102,
+      "after_raw_distance_delta_percent": 18.10212000783975,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.017319694249636086,
+      "elapsed_s": 1.7339999999967404
+    },
+    {
+      "id": "N073",
+      "a": "여의도한강공원",
+      "b": "마포역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 1718.6385366519792,
+      "design_straight_m": 1719,
+      "reference_min": 35,
+      "reference_distance_m": 2200.0,
+      "before_saved_raw_min": 71.63461538461539,
+      "before_saved_distance_m": 4470.0,
+      "before_diagnostic_ceiled_min": 72,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 71.63461538461539,
+      "after_internal_distance_m": 4470.0,
+      "after_diagnostic_ceiled_min": 72,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 3215.8025285518293
+      },
+      "before_raw_delta_min": 36.63461538461539,
+      "after_raw_delta_min": 36.63461538461539,
+      "raw_change_min": 0.0,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 103.18181818181817,
+      "after_raw_distance_delta_percent": 103.18181818181817,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.03999999999996362,
+      "elapsed_s": 1.4219999999913853
+    },
+    {
+      "id": "N079",
+      "a": "남산골한옥마을",
+      "b": "동대문역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 1872.6246368161942,
+      "design_straight_m": 1873,
+      "reference_min": 40,
+      "reference_distance_m": 2500.0,
+      "before_saved_raw_min": 39.8525641025641,
+      "before_saved_distance_m": 2486.8,
+      "before_diagnostic_ceiled_min": 40,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 39.89762130224502,
+      "after_internal_distance_m": 2486.8,
+      "after_diagnostic_ceiled_min": 40,
+      "stairs_m": 4.2400925971479735,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 4.2400925971479735,
+        "seconds": 1791.087459899345
+      },
+      "before_raw_delta_min": -0.1474358974358978,
+      "after_raw_delta_min": -0.10237869775497899,
+      "raw_change_min": 0.045057199680918814,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -0.5279999999999951,
+      "after_raw_distance_delta_percent": -0.5279999999999951,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.010000000000218279,
+      "elapsed_s": 3.9690000000118744
+    },
+    {
+      "id": "N080",
+      "a": "익선동",
+      "b": "아현역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3431.059010983791,
+      "design_straight_m": 3431,
+      "reference_min": 65,
+      "reference_distance_m": 4000,
+      "before_saved_raw_min": 76.9775641025641,
+      "before_saved_distance_m": 4803.4,
+      "before_diagnostic_ceiled_min": 77,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 76.97888806694401,
+      "after_internal_distance_m": 4803.4826153773065,
+      "after_diagnostic_ceiled_min": 77,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2770.2631660409797
+      },
+      "before_raw_delta_min": 11.977564102564102,
+      "after_raw_delta_min": 11.978888066944009,
+      "raw_change_min": 0.0013239643799067835,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 20.084999999999997,
+      "after_raw_distance_delta_percent": 20.087065384432655,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.08261537730686541,
+      "elapsed_s": 3.202999999994063
+    },
+    {
+      "id": "N081",
+      "a": "이화여대",
+      "b": "용산역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3896.869636948451,
+      "design_straight_m": 3897,
+      "reference_min": 71,
+      "reference_distance_m": 4500.0,
+      "before_saved_raw_min": 87.43269230769229,
+      "before_saved_distance_m": 5455.799999999999,
+      "before_diagnostic_ceiled_min": 88,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 87.78888139624725,
+      "after_internal_distance_m": 5455.617491727831,
+      "after_diagnostic_ceiled_min": 88,
+      "stairs_m": 33.567851711502804,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 33.567851711502804,
+        "seconds": 3783.6753290633073
+      },
+      "before_raw_delta_min": 16.432692307692292,
+      "after_raw_delta_min": 16.78888139624725,
+      "raw_change_min": 0.3561890885549559,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 21.23999999999999,
+      "after_raw_distance_delta_percent": 21.235944260618478,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.18250827216797916,
+      "elapsed_s": 7.327999999994063
+    },
+    {
+      "id": "N083",
+      "a": "선릉역",
+      "b": "잠실새내역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3370.1636071612356,
+      "design_straight_m": 3370,
+      "reference_min": 58,
+      "reference_distance_m": 3600.0,
+      "before_saved_raw_min": 55.12179487179487,
+      "before_saved_distance_m": 3439.6,
+      "before_diagnostic_ceiled_min": 56,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 55.1219026174786,
+      "after_internal_distance_m": 3439.6,
+      "after_diagnostic_ceiled_min": 56,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2474.5372110292556
+      },
+      "before_raw_delta_min": -2.8782051282051313,
+      "after_raw_delta_min": -2.8780973825214033,
+      "raw_change_min": 0.00010774568372795557,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -4.4555555555555575,
+      "after_raw_distance_delta_percent": -4.4555555555555575,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.010000000000218279,
+      "elapsed_s": 3.313000000009197
+    },
+    {
+      "id": "N088",
+      "a": "낙산공원",
+      "b": "삼청동",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2355.953617640144,
+      "design_straight_m": 2356,
+      "reference_min": 57,
+      "reference_distance_m": 3500.0,
+      "before_saved_raw_min": 56.49839743589744,
+      "before_saved_distance_m": 3525.5,
+      "before_diagnostic_ceiled_min": 57,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 57.59060087740808,
+      "after_internal_distance_m": 3525.5,
+      "after_diagnostic_ceiled_min": 58,
+      "stairs_m": 102.16800390549224,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 102.16800390549224,
+        "seconds": 2585.362226439039
+      },
+      "before_raw_delta_min": -0.5016025641025621,
+      "after_raw_delta_min": 0.5906008774080789,
+      "raw_change_min": 1.092203441510641,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 0.728571428571434,
+      "after_raw_distance_delta_percent": 0.728571428571434,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.03999999999996362,
+      "elapsed_s": 1.389999999999418
+    },
+    {
+      "id": "N089",
+      "a": "명동성당",
+      "b": "국립현대미술관 서울",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 1858.3718742489004,
+      "design_straight_m": 1858,
+      "reference_min": 35,
+      "reference_distance_m": 2200.0,
+      "before_saved_raw_min": 35.7227564102564,
+      "before_saved_distance_m": 2229.1,
+      "before_diagnostic_ceiled_min": 36,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 35.975455019613506,
+      "after_internal_distance_m": 2229.1,
+      "after_diagnostic_ceiled_min": 36,
+      "stairs_m": 23.68770827562851,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 23.68770827562851,
+        "seconds": 1615.0132325351676
+      },
+      "before_raw_delta_min": 0.7227564102564017,
+      "after_raw_delta_min": 0.9754550196135057,
+      "raw_change_min": 0.252698609357104,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 1.3227272727272643,
+      "after_raw_distance_delta_percent": 1.3227272727272643,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.02999999999974534,
+      "elapsed_s": 3.4069999999919673
+    },
+    {
+      "id": "N090",
+      "a": "공덕역",
+      "b": "청계천 광통교",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3682.5888535148447,
+      "design_straight_m": 3683,
+      "reference_min": 65,
+      "reference_distance_m": 4100.0,
+      "before_saved_raw_min": 66.47435897435896,
+      "before_saved_distance_m": 4148.0,
+      "before_diagnostic_ceiled_min": 67,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 66.47435897435896,
+      "after_internal_distance_m": 4148.0,
+      "after_diagnostic_ceiled_min": 67,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2984.149147176391
+      },
+      "before_raw_delta_min": 1.4743589743589638,
+      "after_raw_delta_min": 1.4743589743589638,
+      "raw_change_min": 0.0,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 1.1707317073170742,
+      "after_raw_distance_delta_percent": 1.1707317073170742,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.02999999999974534,
+      "elapsed_s": 3.7340000000112923
+    },
+    {
+      "id": "N091",
+      "a": "회현역",
+      "b": "광장시장",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2233.4317365525103,
+      "design_straight_m": 2233,
+      "reference_min": 44,
+      "reference_distance_m": 2800.0,
+      "before_saved_raw_min": 42.89583333333333,
+      "before_saved_distance_m": 2676.7,
+      "before_diagnostic_ceiled_min": 43,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 42.89583333333333,
+      "after_internal_distance_m": 2676.7,
+      "after_diagnostic_ceiled_min": 43,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 1925.659916191278
+      },
+      "before_raw_delta_min": -1.1041666666666714,
+      "after_raw_delta_min": -1.1041666666666714,
+      "raw_change_min": 0.0,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -4.40357142857144,
+      "after_raw_distance_delta_percent": -4.40357142857144,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.02999999999974534,
+      "elapsed_s": 3.8589999999967404
+    },
+    {
+      "id": "N092",
+      "a": "종묘",
+      "b": "덕수궁",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 1938.1947524883026,
+      "design_straight_m": 1938,
+      "reference_min": 47,
+      "reference_distance_m": 2900.0,
+      "before_saved_raw_min": 43.48076923076922,
+      "before_saved_distance_m": 2713.2,
+      "before_diagnostic_ceiled_min": 44,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 43.48565084088886,
+      "after_internal_distance_m": 2713.4726534836236,
+      "after_diagnostic_ceiled_min": 44,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 1856.4258697754256
+      },
+      "before_raw_delta_min": -3.5192307692307807,
+      "after_raw_delta_min": -3.5143491591111413,
+      "raw_change_min": 0.00488161011963939,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -6.44137931034483,
+      "after_raw_distance_delta_percent": -6.431977466081939,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.2726534836237988,
+      "elapsed_s": 3.2660000000032596
+    },
+    {
+      "id": "N093",
+      "a": "시청역",
+      "b": "혜화역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2842.9024528050627,
+      "design_straight_m": 2843,
+      "reference_min": 61,
+      "reference_distance_m": 3900.0,
+      "before_saved_raw_min": 60.77564102564102,
+      "before_saved_distance_m": 3792.4,
+      "before_diagnostic_ceiled_min": 61,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 60.77608262772651,
+      "after_internal_distance_m": 3792.4,
+      "after_diagnostic_ceiled_min": 61,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2728.365148179953
+      },
+      "before_raw_delta_min": -0.224358974358978,
+      "after_raw_delta_min": -0.2239173722734904,
+      "raw_change_min": 0.0004416020854876024,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -2.758974358974353,
+      "after_raw_distance_delta_percent": -2.758974358974353,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.02999999999974534,
+      "elapsed_s": 2.9689999999973224
+    },
+    {
+      "id": "N096",
+      "a": "용리단길",
+      "b": "서울역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2305.152147887832,
+      "design_straight_m": 2305,
+      "reference_min": 40,
+      "reference_distance_m": 2400.0,
+      "before_saved_raw_min": 51.714743589743584,
+      "before_saved_distance_m": 3227.0,
+      "before_diagnostic_ceiled_min": 52,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 51.98750198641678,
+      "after_internal_distance_m": 3227.213007042965,
+      "after_diagnostic_ceiled_min": 52,
+      "stairs_m": 25.223402495929488,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 25.223402495929488,
+        "seconds": 1995.8324582082323
+      },
+      "before_raw_delta_min": 11.714743589743584,
+      "after_raw_delta_min": 11.987501986416781,
+      "raw_change_min": 0.272758396673197,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 34.45833333333332,
+      "after_raw_distance_delta_percent": 34.4672086267902,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.21300704296481854,
+      "elapsed_s": 2.952999999994063
+    },
+    {
+      "id": "N097",
+      "a": "청량리역",
+      "b": "왕십리역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2271.205986845543,
+      "design_straight_m": 2271,
+      "reference_min": 45,
+      "reference_distance_m": 2800.0,
+      "before_saved_raw_min": 50.95192307692307,
+      "before_saved_distance_m": 3179.3999999999996,
+      "before_diagnostic_ceiled_min": 51,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 51.28592415519847,
+      "after_internal_distance_m": 3179.68838158376,
+      "after_diagnostic_ceiled_min": 52,
+      "stairs_m": 30.826249256484903,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 30.826249256484903,
+        "seconds": 2056.081500504047
+      },
+      "before_raw_delta_min": 5.951923076923073,
+      "after_raw_delta_min": 6.285924155198472,
+      "raw_change_min": 0.33400107827539927,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 13.549999999999995,
+      "after_raw_distance_delta_percent": 13.560299342277137,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.28838158376038336,
+      "elapsed_s": 5.10899999999674
+    },
+    {
+      "id": "N098",
+      "a": "양재시민의숲",
+      "b": "양재역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 1617.02685381353,
+      "design_straight_m": 1617,
+      "reference_min": 27,
+      "reference_distance_m": 1700.0,
+      "before_saved_raw_min": 32.280448717948715,
+      "before_saved_distance_m": 2014.3,
+      "before_diagnostic_ceiled_min": 33,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 32.280782713590426,
+      "after_internal_distance_m": 2014.3,
+      "after_diagnostic_ceiled_min": 33,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 1449.151684408664
+      },
+      "before_raw_delta_min": 5.280448717948715,
+      "after_raw_delta_min": 5.280782713590426,
+      "raw_change_min": 0.00033399564171077145,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": 18.48823529411765,
+      "after_raw_distance_delta_percent": 18.48823529411765,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.01999999999998181,
+      "elapsed_s": 0.5630000000091968
+    },
+    {
+      "id": "N099",
+      "a": "덕수궁",
+      "b": "이태원역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 3886.1705339897294,
+      "design_straight_m": 3886,
+      "reference_min": 88,
+      "reference_distance_m": 4900.0,
+      "before_saved_raw_min": 72.71634615384616,
+      "before_saved_distance_m": 4537.5,
+      "before_diagnostic_ceiled_min": 73,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 72.71634615384616,
+      "after_internal_distance_m": 4537.5,
+      "after_diagnostic_ceiled_min": 73,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 3264.381854861258
+      },
+      "before_raw_delta_min": -15.28365384615384,
+      "after_raw_delta_min": -15.28365384615384,
+      "raw_change_min": 0.0,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -7.397959183673475,
+      "after_raw_distance_delta_percent": -7.397959183673475,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": 0.010000000000218279,
+      "elapsed_s": 13.48399999999674
+    },
+    {
+      "id": "N100",
+      "a": "압구정로데오",
+      "b": "삼성역",
+      "bucket": "short",
+      "status": "policy_excluded",
+      "public_repeats": [
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        },
+        {
+          "provided": false,
+          "reason": {
+            "code": "no_data",
+            "reason": "고른 수단(walk) 안의 후보가 없다"
+          }
+        }
+      ],
+      "public_walk_limit_m": 1200,
+      "actual_straight_m": 2892.2783786264295,
+      "design_straight_m": 2892,
+      "reference_min": 57,
+      "reference_distance_m": 3600.0,
+      "before_saved_raw_min": 54.45352564102564,
+      "before_saved_distance_m": 3397.9,
+      "before_diagnostic_ceiled_min": 55,
+      "before_eligible_reconstructed_public_min": null,
+      "after_public_eta_min": null,
+      "after_public_distance_m": null,
+      "after_internal_raw_min": 54.454061964321475,
+      "after_internal_distance_m": 3397.9,
+      "after_diagnostic_ceiled_min": 55,
+      "stairs_m": 0.0,
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 0.0,
+        "seconds": 2444.5564507724175
+      },
+      "before_raw_delta_min": -2.5464743589743577,
+      "after_raw_delta_min": -2.5459380356785246,
+      "raw_change_min": 0.0005363232958330855,
+      "after_public_delta_min": null,
+      "before_distance_delta_percent": -5.613888888888885,
+      "after_raw_distance_delta_percent": -5.613888888888885,
+      "after_public_distance_delta_percent": null,
+      "distance_change_m_vs_prior_diagnosis": -0.02999999999974534,
+      "elapsed_s": 3.75
+    }
+  ],
+  "summary": {
+    "public_scope": {
+      "requested_n": 30,
+      "provided_n": 0,
+      "policy_excluded_n": 30,
+      "defect_n": 0,
+      "policy_limit_m": 1200
+    },
+    "public_before_reconstructed": {
+      "n": 0,
+      "not_applicable": true,
+      "reason": "No public walking option in this development cohort"
+    },
+    "public_after": {
+      "n": 0,
+      "not_applicable": true,
+      "reason": "No public walking option in this development cohort"
+    },
+    "public_after_distance": {
+      "n": 0,
+      "not_applicable": true
+    },
+    "raw_diagnostic_before": {
+      "n": 30,
+      "within_5_min_n": 15,
+      "mae_min": 7.037553418803417,
+      "median_delta_min": 0.28766025641025195,
+      "median_delta_bootstrap95": [
+        -1.28846153846154,
+        5.616185897435894
+      ],
+      "mae_bootstrap95": [
+        4.495057425213674,
+        10.221888354700848
+      ]
+    },
+    "raw_diagnostic_after": {
+      "n": 30,
+      "within_5_min_n": 15,
+      "mae_min": 6.782234343579654,
+      "median_delta_min": 0.7830279485107923,
+      "median_delta_bootstrap95": [
+        -0.36067380012662653,
+        5.783353434394449
+      ],
+      "mae_bootstrap95": [
+        4.2841283322091845,
+        9.885309067838364
+      ]
+    },
+    "raw_diagnostic_before_ceiled": {
+      "n": 30,
+      "within_5_min_n": 15,
+      "mae_min": 7.066666666666666,
+      "median_delta_min": 0.5,
+      "median_delta_bootstrap95": [
+        -1.0,
+        6.0
+      ],
+      "mae_bootstrap95": [
+        4.433333333333334,
+        10.3
+      ]
+    },
+    "raw_diagnostic_after_ceiled": {
+      "n": 30,
+      "within_5_min_n": 15,
+      "mae_min": 6.866666666666666,
+      "median_delta_min": 1.0,
+      "median_delta_bootstrap95": [
+        0.0,
+        6.5
+      ],
+      "mae_bootstrap95": [
+        4.365833333333334,
+        9.966666666666667
+      ]
+    },
+    "raw_distance_before": {
+      "n": 30,
+      "within_10_percent_n": 17,
+      "median_delta_percent": 2.0897727272727207,
+      "mean_absolute_percent": 12.506318808352889
+    },
+    "raw_distance_after": {
+      "n": 30,
+      "within_10_percent_n": 17,
+      "median_delta_percent": 2.0897727272727207,
+      "mean_absolute_percent": 12.507490127123452
+    },
+    "prior_15_of_30_is_not_public_provision_rate": true,
+    "raw_metrics_are_not_product_readiness": true,
+    "paired_raw_absolute_error_change": {
+      "n": 30,
+      "mean_min": -0.2553190752237628,
+      "bootstrap95": [
+        -0.7265473329408612,
+        0.0856159266132309
+      ],
+      "improved_n": 10,
+      "worsened_n": 12,
+      "same_within_1e6_min_n": 8
+    }
+  }
+}

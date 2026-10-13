@@ -1,0 +1,344 @@
+.............................EEEE                                        [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_code_expands_before_reading_and_remains_scoped_through_recheck _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001C9BC34BD10>
+
+    @pytest.fixture()
+    def api(monkeypatch):
+        """�ó������� CRUD�����ѡ����������� ����. ���� �̵� ��� ��Ȯ���� �������� �ʴ´�.
+    
+        HTTP ��û���� ����� ���� �̵� ����� ���������� �����Ѵ�. ���� watcher�� ���
+        route_def����� �ҽ��� �״�δ�. ���� ���� ������ ���� �� �Ǵ� ���� off ǥ�� ����.
+        """
+        original = settings_module.get_settings()
+        tenant = "trip_api_" + uuid4().hex[:12]
+        test_settings = original.model_copy(update={"tenant_id": tenant})
+        monkeypatch.setattr(settings_module, "get_settings", lambda: test_settings)
+        monkeypatch.setattr(security, "get_settings", lambda: test_settings)
+        customer = uuid4()
+>       with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\e2e\test_trip_api.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=acop_cs host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = False, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+params = {'dbname': 'acop_cs', 'host': '127.0.0.1', 'port': '5433', 'user': 'postgres'}
+timeout = 130
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_ ERROR at setup of test_rejected_code_does_not_create_empty_intake[test16-unknown_test_scenario] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001C9BC36F560>
+
+    @pytest.fixture()
+    def api(monkeypatch):
+        """�ó������� CRUD�����ѡ����������� ����. ���� �̵� ��� ��Ȯ���� �������� �ʴ´�.
+    
+        HTTP ��û���� ����� ���� �̵� ����� ���������� �����Ѵ�. ���� watcher�� ���
+        route_def����� �ҽ��� �״�δ�. ���� ���� ������ ���� �� �Ǵ� ���� off ǥ�� ����.
+        """
+        original = settings_module.get_settings()
+        tenant = "trip_api_" + uuid4().hex[:12]
+        test_settings = original.model_copy(update={"tenant_id": tenant})
+        monkeypatch.setattr(settings_module, "get_settings", lambda: test_settings)
+        monkeypatch.setattr(security, "get_settings", lambda: test_settings)
+        customer = uuid4()
+>       with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\e2e\test_trip_api.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=acop_cs host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = False, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+params = {'dbname': 'acop_cs', 'host': '127.0.0.1', 'port': '5433', 'user': 'postgres'}
+timeout = 130
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_ ERROR at setup of test_rejected_code_does_not_create_empty_intake[test1rt-live_test_not_ready] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001C9BC3F7AA0>
+
+    @pytest.fixture()
+    def api(monkeypatch):
+        """�ó������� CRUD�����ѡ����������� ����. ���� �̵� ��� ��Ȯ���� �������� �ʴ´�.
+    
+        HTTP ��û���� ����� ���� �̵� ����� ���������� �����Ѵ�. ���� watcher�� ���
+        route_def����� �ҽ��� �״�δ�. ���� ���� ������ ���� �� �Ǵ� ���� off ǥ�� ����.
+        """
+        original = settings_module.get_settings()
+        tenant = "trip_api_" + uuid4().hex[:12]
+        test_settings = original.model_copy(update={"tenant_id": tenant})
+        monkeypatch.setattr(settings_module, "get_settings", lambda: test_settings)
+        monkeypatch.setattr(security, "get_settings", lambda: test_settings)
+        customer = uuid4()
+>       with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\e2e\test_trip_api.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=acop_cs host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = False, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+params = {'dbname': 'acop_cs', 'host': '127.0.0.1', 'port': '5433', 'user': 'postgres'}
+timeout = 130
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_______ ERROR at setup of test_disabled_codes_and_file_mix_are_refused ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001C9BC36F3B0>
+
+    @pytest.fixture()
+    def api(monkeypatch):
+        """�ó������� CRUD�����ѡ����������� ����. ���� �̵� ��� ��Ȯ���� �������� �ʴ´�.
+    
+        HTTP ��û���� ����� ���� �̵� ����� ���������� �����Ѵ�. ���� watcher�� ���
+        route_def����� �ҽ��� �״�δ�. ���� ���� ������ ���� �� �Ǵ� ���� off ǥ�� ����.
+        """
+        original = settings_module.get_settings()
+        tenant = "trip_api_" + uuid4().hex[:12]
+        test_settings = original.model_copy(update={"tenant_id": tenant})
+        monkeypatch.setattr(settings_module, "get_settings", lambda: test_settings)
+        monkeypatch.setattr(security, "get_settings", lambda: test_settings)
+        customer = uuid4()
+>       with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+             ^^^^^^^^^^^^^^^^
+
+tests\e2e\test_trip_api.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=acop_cs host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = False, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+params = {'dbname': 'acop_cs', 'host': '127.0.0.1', 'port': '5433', 'user': 'postgres'}
+timeout = 130
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+=========================== short test summary info ===========================
+ERROR tests/e2e/test_intake_test_plans.py::test_code_expands_before_reading_and_remains_scoped_through_recheck
+ERROR tests/e2e/test_intake_test_plans.py::test_rejected_code_does_not_create_empty_intake[test16-unknown_test_scenario]
+ERROR tests/e2e/test_intake_test_plans.py::test_rejected_code_does_not_create_empty_intake[test1rt-live_test_not_ready]
+ERROR tests/e2e/test_intake_test_plans.py::test_disabled_codes_and_file_mix_are_refused
+29 passed, 4 errors in 13.49s
+Exception ignored in: <function Console.__del__ at 0x000001C9AA9D1BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

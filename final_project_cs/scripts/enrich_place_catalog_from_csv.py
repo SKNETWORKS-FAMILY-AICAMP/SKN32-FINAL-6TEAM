@@ -13,6 +13,9 @@
   3. `[2026-10-05]` **우리 목록에 없는 브랜드 매장**(이름·위치가 같은 행이 없는 올리브영·다이소·아트박스·무신사)은 새 행으로 넣는다 —
      출처는 `oliveyoung`·`daiso`·`artbox`·`musinsa`(관광공사 `tour_api` 와 섞지 않는다). 번호(`OY…`)는 관광공사 번호가 아니다.
      새 행의 `raw_json` 에는 사실 칸(이름·주소·좌표·분류·브랜드)만 넣는다. 영업시간은 `catalog_hours` 로.
+★`[2026-10-12 사용자]` 영업시간·휴무를 사람이 TourAPI 밖(공식 홈페이지 등)에서 채운 행(CSV `field_sources`, `wiki/teams/db_column.md` 30번)은
+  `catalog_hours.hours_read` 에 `source="official_web"` 과 그 칸들의 출처(`field_sources` — url · 확인한 날)를 함께 적는다.
+  관광공사 값으로 적지 않는다(출처를 섞으면 화면·답변이 사람 값을 「관광공사 안내」로 말한다). `field_sources` 형식이 틀리면 적지 않고 멈춘다.
 ★안 옮기는 것: 소개글(`overview`) — 관광공사 소개글은 저장하지 않기로 했다(2026-09-28 결정). 요금(`fee`)도 안 넣는다.
 ★팀 적재 스크립트(`load_place_catalog_csv`)를 그대로 쓰지 않은 까닭: CSV 한 행 전체(소개글 포함)를 `raw_json` 에 넣고 같은 출처면
   기존 `raw_json` 을 통째로 바꾼다.
@@ -35,15 +38,20 @@ from psycopg.types.json import Json
 
 from app.core.settings import get_settings
 from app.infrastructure.db.session import get_connection
+from app.domains.travel_ops.instances.activity.data_processing.fill_tourapi_details import read_sources, source_errors
 from app.domains.travel_ops.instances.activity.hours_text import read_week
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BRAND_ID_PREFIXES = ("OY", "DS", "AB", "MS")
 SOURCE_BY_PREFIX = {"OY": "oliveyoung", "DS": "daiso", "AB": "artbox", "MS": "musinsa"}
 #: 새 행의 `raw_json` 에 넣는 칸 — 사실 정보만(소개글·요금·영업시간 글은 넣지 않는다)
-NEW_ROW_KEYS = ("contentid", "contenttypeid", "title", "addr1", "addr2", "sigungucode", "mapx", "mapy",
+NEW_ROW_KEYS = ("contentid", "contenttypeid", "title", "addr1", "addr2", "lDongSignguCd", "mapx", "mapy",
                 "lclsSystm1", "lclsSystm2", "lclsSystm3", "brand")
 MATCH_M = 150          # 브랜드 매장 행을 우리 목록의 같은 매장으로 보는 거리 — ★우리가 고른 값
+#: DB 로 가는 칸 중 사람이 채울 수 있는 것 — 영업시간 글 두 칸(`catalog_hours` 로 간다)
+HOURS_COLUMNS = ("business_hours", "closed_days")
+#: 사람이 공식 페이지에서 확인한 영업시간의 `hours_read.source`
+HUMAN_HOURS_SOURCE = "official_web"
 
 
 def _norm(title: str) -> str:
@@ -57,6 +65,23 @@ def _meters(a_lat: float, a_lon: float, b_lat: float, b_lon: float) -> float:
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open(encoding="utf-8-sig", newline="") as fh:
         return list(csv.DictReader(fh))
+
+
+def hours_sources(row: dict[str, str]) -> dict[str, dict[str, str]]:
+    """영업시간 글 두 칸 중 사람이 채운 칸의 출처. 없으면 빈 dict(= 둘 다 관광공사 원문)."""
+    # ★「해당 없음」(`na`) 표시는 빈 칸에 붙는다 — 옮길 값이 없으니 출처로 싣지 않는다(db_column.md)
+    return {column: source for column, source in read_sources(row).items()
+            if column in HOURS_COLUMNS and not source.get("na")}
+
+
+def hours_record(read: Any, now: datetime, sources: dict[str, dict[str, str]]) -> dict[str, Any]:
+    """`catalog_hours.hours_read` 에 적을 기록. 사람이 채운 칸이 하나라도 있으면 출처를 `official_web` 으로 하고 그 출처를 싣는다."""
+    if sources:
+        return {**read.as_record(source=HUMAN_HOURS_SOURCE, read_at=now.isoformat()), "method": "csv_rule",
+                "field_sources": sources,
+                "note": "사람이 공식 페이지에서 확인해 활동 CSV 에 넣은 값 — 칸별 출처는 field_sources(나머지 칸은 관광공사 원문)"}
+    return {**read.as_record(source="activity_csv", read_at=now.isoformat()), "method": "csv_rule",
+            "note": "조직 develop 활동 CSV 의 관광공사 원문 — 규칙으로 읽음(모델 호출 없음)"}
 
 
 def build_plan(rows: list[dict[str, str]], catalog: list[tuple[str, str, float | None, float | None]]) -> dict[str, Any]:
@@ -79,6 +104,9 @@ def build_plan(rows: list[dict[str, str]], catalog: list[tuple[str, str, float |
                 entry["brand"] = row["brand"].strip()
             if (row.get("business_hours") or "").strip() or (row.get("closed_days") or "").strip():
                 entry["text"] = (row.get("business_hours") or "").strip(), (row.get("closed_days") or "").strip()
+                if sources := hours_sources(row):
+                    entry["hours_sources"] = sources
+                    stats["hours_from_official_web"] += 1
             continue
         if not cid[:2] in BRAND_ID_PREFIXES:
             stats["skipped_other_id"] += 1
@@ -101,8 +129,11 @@ def build_plan(rows: list[dict[str, str]], catalog: list[tuple[str, str, float |
         entry = plan.setdefault(twins[0], {})
         if (row.get("brand") or "").strip():
             entry.setdefault("brand", row["brand"].strip())
-        if (row.get("business_hours") or "").strip() or (row.get("closed_days") or "").strip():
-            entry.setdefault("text", ((row.get("business_hours") or "").strip(), (row.get("closed_days") or "").strip()))
+        if ((row.get("business_hours") or "").strip() or (row.get("closed_days") or "").strip()) and "text" not in entry:
+            entry["text"] = (row.get("business_hours") or "").strip(), (row.get("closed_days") or "").strip()
+            if sources := hours_sources(row):
+                entry["hours_sources"] = sources
+                stats["hours_from_official_web"] += 1
     return {"plan": plan, "stats": stats, "new_stores": new_stores}
 
 
@@ -157,8 +188,7 @@ def apply(tenant: str, plan: dict[str, dict[str, Any]], new_stores: list[dict[st
                 if read is None:
                     out["hours_unreadable"] += 1
                     continue
-                record = {**read.as_record(source="activity_csv", read_at=now.isoformat()), "method": "csv_rule",
-                          "note": "조직 develop 활동 CSV 의 관광공사 원문 — 규칙으로 읽음(모델 호출 없음)"}
+                record = hours_record(read, now, entry.get("hours_sources") or {})
                 cur.execute(
                     "INSERT INTO catalog_hours (tenant_id, source, content_id, content_type_id, hours_week, hours_read, "
                     "hours_origin, source_modified_at, read_at) "
@@ -172,6 +202,8 @@ def apply(tenant: str, plan: dict[str, dict[str, Any]], new_stores: list[dict[st
                 if existing is None:
                     inserted.append(cid)
                 out["hours_written"] += 1
+                if entry.get("hours_sources"):
+                    out["hours_written_official_web"] += 1
         new_ids = _insert_new_stores(cur, tenant, new_stores or [], now, out)
         (backup / "catalog_hours_inserted.json").write_text(json.dumps(inserted), encoding="utf-8")
         (backup / "new_store_ids.json").write_text(json.dumps(new_ids), encoding="utf-8")
@@ -204,7 +236,7 @@ def _insert_new_stores(cur, tenant: str, stores: list[dict[str, str]], now: date
         if read is None:
             out["new_store_hours_unreadable"] += 1
             continue
-        record = {**read.as_record(source="activity_csv", read_at=now.isoformat()), "method": "csv_rule"}
+        record = hours_record(read, now, hours_sources(row))
         cur.execute(
             "INSERT INTO catalog_hours (tenant_id, source, content_id, content_type_id, hours_week, hours_read, "
             "hours_origin, read_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
@@ -263,14 +295,18 @@ def main(argv: list[str] | None = None) -> int:
         cur.execute("SELECT content_id, title, latitude, longitude FROM place_catalog "
                     "WHERE tenant_id=%s AND source='tour_api'", (tenant,))
         catalog = [(r[0], r[1], r[2], r[3]) for r in cur.fetchall()]
-    built = build_plan(read_csv(args.csv), catalog)
+    rows = read_csv(args.csv)
+    errors = source_errors(rows)
+    if errors:
+        raise SystemExit("field_sources 형식 오류 — CSV 를 고친 뒤 다시 돌린다(DB 에 쓰지 않음):\n  " + "\n  ".join(errors))
+    built = build_plan(rows, catalog)
     plan, stats, new_stores = built["plan"], built["stats"], built["new_stores"]
     week_ok = sum(1 for e in plan.values() if "text" in e and read_week(*e["text"]) is not None)
     print(f"목록 {len(catalog)}행 · 붙일 행 {len(plan)} (브랜드 {sum(1 for e in plan.values() if e.get('brand'))}, "
           f"영업시간 글 {sum(1 for e in plan.values() if 'text' in e)} → 요일별 칸으로 읽힘 {week_ok})")
     print(f"브랜드 매장 행 맞춤: 같은 매장 {stats['brand_matched']} · 못 찾음 {stats['brand_unmatched']} · 여럿 {stats['brand_ambiguous']}"
           f" · 우리 목록에 없는 관광공사 행 {stats['csv_only_tourapi']}")
-    print(f"새로 넣을 브랜드 매장 {len(new_stores)}행")
+    print(f"새로 넣을 브랜드 매장 {len(new_stores)}행 · 사람이 채운 영업시간(official_web) {stats['hours_from_official_web']}행")
     if not args.apply:
         print("--apply 가 없어 DB 에 쓰지 않았다")
         return 0

@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="9" skipped="0" tests="13" time="26.082" timestamp="2026-10-11T21:53:57.522451+09:00" hostname="playdata"><testcase classname="tests.scenario.test_case_version_day" name="test_the_case_version_runs_the_whole_day_like_the_trip_version" time="4.351"><failure message="app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable">tests\scenario\test_case_version_day.py:220: in test_the_case_version_runs_the_whole_day_like_the_trip_version
+    outcomes = _run_case_day(case_world)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 늦게 오는 중 — 앞 일정 동선은 이미 지났다
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable</failure></testcase><testcase classname="tests.scenario.test_case_version_day" name="test_re_requests_run_through_cases" time="1.745"><failure message="app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable">tests\scenario\test_case_version_day.py:259: in test_re_requests_run_through_cases
+    _run_case_day(case_world)
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 늦게 오는 중 — 앞 일정 동선은 이미 지났다
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable</failure></testcase><testcase classname="tests.scenario.test_case_version_day" name="test_a_stale_base_version_is_escalated_not_applied" time="2.024"><failure message="app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable">tests\scenario\test_case_version_day.py:298: in test_a_stale_base_version_is_escalated_not_applied
+    _run_case_day(case_world)
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 늦게 오는 중 — 앞 일정 동선은 이미 지났다
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable</failure></testcase><testcase classname="tests.scenario.test_case_version_day" name="test_another_customers_trip_is_not_found" time="0.439" /><testcase classname="tests.scenario.test_case_version_day" name="test_the_same_disruption_opens_one_case" time="1.301"><failure message="AssertionError: assert 'running' == 'resolved'&#10;  &#10;  - resolved&#10;  + running">tests\scenario\test_case_version_day.py:325: in test_the_same_disruption_opens_one_case
+    assert repository.get_case(conn, tenant_id=case_world["tenant"],
+E   AssertionError: assert 'running' == 'resolved'
+E     
+E     - resolved
+E     + running</failure></testcase><testcase classname="tests.scenario.test_case_version_day" name="test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong" time="2.454"><failure message="app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable">tests\scenario\test_case_version_day.py:349: in test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong
+    outcomes = _run_case_day(world)
+               ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 늦게 오는 중 — 앞 일정 동선은 이미 지났다
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable</failure></testcase><testcase classname="tests.scenario.test_case_version_day" name="test_a_failing_interpreter_is_recorded_and_the_case_still_routes_by_classification" time="0.758" /><testcase classname="tests.scenario.test_case_version_day" name="test_every_notice_carries_the_plan_link_whichever_path_made_it" time="2.598"><failure message="app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable">tests\scenario\test_case_version_day.py:393: in test_every_notice_carries_the_plan_link_whichever_path_made_it
+    _run_case_day(case_world)
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 늦게 오는 중 — 앞 일정 동선은 이미 지났다
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable</failure></testcase><testcase classname="tests.scenario.test_travel_eval_scenarios" name="test_a_scenario_runs_without_breaking_a_hard_constraint[t-confirmed]" time="2.686"><failure message="app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable">tests\scenario\test_travel_eval_scenarios.py:31: in test_a_scenario_runs_without_breaking_a_hard_constraint
+    outcome = run_case(SPECS[case_id])
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+eval\runners\travel_scenarios.py:224: in run_case
+    result = _step(step, engine=engine, store=store, trip_id=trip_id,
+eval\runners\travel_scenarios.py:260: in _step
+    view = engine.message(customer_id=customer, trip_id=trip_id, text=text,
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 늦게 오는 중 — 앞 일정 동선은 이미 지났다
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable</failure></testcase><testcase classname="tests.scenario.test_travel_eval_scenarios" name="test_a_scenario_runs_without_breaking_a_hard_constraint[t-quiet]" time="1.647" /><testcase classname="tests.scenario.test_travel_eval_scenarios" name="test_a_scenario_runs_without_breaking_a_hard_constraint[t-cash-only]" time="0.843"><failure message="app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable">tests\scenario\test_travel_eval_scenarios.py:31: in test_a_scenario_runs_without_breaking_a_hard_constraint
+    outcome = run_case(SPECS[case_id])
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+eval\runners\travel_scenarios.py:224: in run_case
+    result = _step(step, engine=engine, store=store, trip_id=trip_id,
+eval\runners\travel_scenarios.py:260: in _step
+    view = engine.message(customer_id=customer, trip_id=trip_id, text=text,
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:129: in handle_report
+    plan = plan_closed(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:717: in plan_closed
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 가게 앞 — 앞 일정 동선은 이미 지났다
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable</failure></testcase><testcase classname="tests.scenario.test_travel_eval_scenarios" name="test_a_scenario_runs_without_breaking_a_hard_constraint[t-swap-rollback]" time="0.688"><failure message="app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable">tests\scenario\test_travel_eval_scenarios.py:31: in test_a_scenario_runs_without_breaking_a_hard_constraint
+    outcome = run_case(SPECS[case_id])
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+eval\runners\travel_scenarios.py:224: in run_case
+    result = _step(step, engine=engine, store=store, trip_id=trip_id,
+eval\runners\travel_scenarios.py:260: in _step
+    view = engine.message(customer_id=customer, trip_id=trip_id, text=text,
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # 늦게 오는 중 — 앞 일정 동선은 이미 지났다
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable</failure></testcase><testcase classname="tests.scenario.test_travel_eval_scenarios" name="test_the_dataset_and_the_runner_still_match" time="0.002" /></testsuite></testsuites>

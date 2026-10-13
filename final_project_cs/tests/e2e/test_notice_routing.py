@@ -5,7 +5,7 @@
 ★텔레그램과 디스코드는 **mock 서버**(`httpx.MockTransport`)다 — 실제 봇 · 실제 디스코드 채널로 보낸 것이 아니다(「실서버 확인: 안 했음」). DB 는 실제 개발 DB 다.
 
 지키려는 것
- ①스위치(`travel.notice_per_customer_enabled`)가 **꺼져 있으면(기본)** 옛 동작 그대로 — 운영자 채널 발행자가 불리고 고객 채널로는 아무것도 안 나간다
+ ①스위치(`travel.notice_per_customer_enabled`)가 **꺼져 있으면(기본)** 외부 발송만 건너뛴다 — 운영자 채널로 우회하지 않고 앱 알림은 남는다
  ②켜져 있으면 여행 → 고객 → `notice_channel` 로 **한 곳에만** 보낸다(텔레그램 평문 · 디스코드 `allowed_mentions` 막음) — 문구 · 번역 · `[재생]` 은 운영자 채널과 같은 규칙
  ③보낼 수 없는 것은 `NoticeSuppressed`(= 일꾼이 `skipped`): 연결 없음 · 여행 없음 · 허용 안 된 테넌트 · 키 모양 이상 · 동의 없음 · 저장값 못 풂 · 규칙에 안 맞는 웹훅 · 막힌 텔레그램 · 거부된 웹훅
  ④막힘 · 거부를 알게 되면 프로필 상태를 `blocked` / `invalid` 로 남기고, 성공하면 `ok`
@@ -139,21 +139,25 @@ def test_the_per_customer_switch_is_off_by_default():
     assert settings_module.get_guardrails().get("travel.notice_per_customer_enabled") is False
 
 
-def test_with_the_switch_off_the_operator_channel_is_used_exactly_as_before(rt):
-    _profile(rt, channel="telegram", telegram=True)
+@pytest.mark.parametrize("connected", [False, True])
+def test_with_the_switch_off_customer_notices_never_fall_back_to_the_operator(rt, connected):
+    if connected:
+        _profile(rt, channel="telegram", telegram=True)
     seen = []
     message = _message(rt)
-    assert _router(rt, enabled=False, operator=seen.append)(message) is None
-    assert seen == [message]                                                  # 옛 동작 — 운영자 채널 발행자가 같은 메시지를 받는다
-    _no_requests(rt)                                                          # 고객 채널로는 아무것도 안 나간다
-    assert _statuses(rt) == ("untested", "untested", "telegram")              # 프로필도 안 건드린다
+    with pytest.raises(NoticeSuppressed, match="외부 알림이 꺼져"):
+        _router(rt, enabled=False, operator=seen.append)(message)
+    assert seen == []
+    _no_requests(rt)
+    assert _statuses(rt) == (("untested", "untested", "telegram") if connected else None)
 
 
-def test_with_the_switch_on_other_topics_still_go_to_the_operator(rt):
+@pytest.mark.parametrize("enabled", [False, True])
+def test_other_topics_still_go_to_the_operator(rt, enabled):
     _profile(rt, channel="telegram", telegram=True)
     seen = []
     other = _message(rt, topic="case.escalated")
-    _router(rt, enabled=True, operator=seen.append)(other)
+    _router(rt, enabled=enabled, operator=seen.append)(other)
     assert seen == [other]
     _no_requests(rt)
 
@@ -467,10 +471,27 @@ def test_the_worker_retries_a_server_error_and_gives_up_into_dead_letter_after_t
     assert _row(message_id)["status"] == "dead_letter" and _row(message_id)["attempts"] == 2
 
 
-def test_with_the_switch_off_the_worker_still_delivers_through_the_operator_channel(rt):
-    _profile(rt, channel="telegram", telegram=True)
+@pytest.mark.parametrize("enabled,connected", [(False, False), (False, True), (True, False)])
+def test_without_external_delivery_the_worker_keeps_the_app_notice_without_operator_fallback_or_retry(rt, enabled, connected):
+    from app.domains.travel_ops.modules.web_account.web_session import add_key
+
+    if connected:
+        _profile(rt, channel="telegram", telegram=True)
+    with get_connection() as conn, conn.transaction():
+        key = add_key(conn, tenant_id=rt["tenant"], customer_id=rt["customer"])
     seen = []
     message_id = _enqueue(rt, 2)
-    _worker(rt, _router(rt, enabled=False, operator=seen.append)).process_once()
-    assert _row(message_id)["status"] == "delivered" and len(seen) == 1 and seen[0]["dedupe_key"] == f"{rt['trip_id']}:v2"
+    worker = _worker(rt, _router(rt, enabled=enabled, operator=seen.append))
+    assert worker.process_once() is True
+    row = _row(message_id)
+    assert row["status"] == "skipped"
+    assert ("외부 알림이 꺼져" if not enabled else "연결하지 않았다") in row["error"]
+    assert worker.process_once() is False
+    assert _row(message_id)["attempts"] == row["attempts"]
+    assert seen == []
     _no_requests(rt)
+
+    response = rt["client"].get(f"/v1/web/trips/{rt['trip_id']}/notices", headers={"X-User-Key": key})
+    assert response.status_code == 200, response.text
+    [notice] = response.json()["notices"]
+    assert notice["key"] == "v2" and notice["text"] == PAYLOAD["text"] and notice["delivery"] == "skipped"

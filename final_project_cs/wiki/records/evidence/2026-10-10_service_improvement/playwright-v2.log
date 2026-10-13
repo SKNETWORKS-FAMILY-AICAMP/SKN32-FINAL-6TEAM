@@ -1,0 +1,34 @@
+[WebServer] (node:25528) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19320) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] (node:26772) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:8484) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 19 tests using 1 worker
+
+(node:25748) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\consent.spec.ts:17:1 › 처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아오고, 약관 화면에는 필수 둘 · 선택 넷과 초안 표시가 있다 (2.5s)
+  ok  2 tests\live\consent.spec.ts:34:1 › 동의하고 다음으로를 누르면 여섯 항목이 서버에 기록된다: 고른 것만 true, 본 한국어 글의 지문(sha256)과 함께 (5.4s)
+  ok  3 tests\live\consent.spec.ts:56:1 › 관리자가 보관 기간을 고친 cs 프로젝트 서버면 약관 글에 서버의 기간이 실리고, 동의는 서버의 약관 버전과 그 글의 지문으로 기록된다 (5.3s)
+  ok  4 tests\live\consent.spec.ts:75:1 › 선택 항목을 하나도 안 골라도 필수 둘만으로 앱을 쓸 수 있다 (5.0s)
+  ok  5 tests\live\consent.spec.ts:89:1 › 옛 서버(동의 기록을 모름, 404)에서도 동의는 이 브라우저에 남고 앱은 열린다 (4.5s)
+  ok  6 tests\live\consent.spec.ts:98:1 › 서버에 동의 기록이 있으면 이 브라우저에 사본이 없어도 앱이 열리고, 선택 항목은 서버 기록대로 보인다(서버가 이긴다) (1.6s)
+  ok  7 tests\live\consent.spec.ts:111:1 › 다른 기기에서 필수 동의를 철회했으면 이 브라우저의 사본이 있어도 약관 화면으로 돌아간다 (1.4s)
+  ok  8 tests\live\consent.spec.ts:120:1 › 서버가 동의 없이는 막는데(gate) 이 브라우저에 사본만 있으면, 사본을 서버에 기록하고 통과한다 (981ms)
+  ok  9 tests\live\consent.spec.ts:129:1 › 서버가 필수 동의가 없다고 막으면(403 consent_required) 약관 화면으로 보낸다 (1.9s)
+  ok 10 tests\live\consent.spec.ts:138:1 › 서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안내한다(옛 약관으로 동의를 받지 않는다) (929ms)
+  ok 11 tests\live\consent.spec.ts:145:1 › 약관 SSE를 기다려도 마이페이지는 남고 실제 단계와 완료 수를 기존 화면 위에 보인다 (4.8s)
+  ok 12 tests\live\consent.spec.ts:175:1 › 동의 사본 없이 확인하는 첫 화면은 열린 약관이고, 보호 조회는 동의 확인이 끝난 다음 시작한다 (4.7s)
+  ok 13 tests\live\consent.spec.ts:188:1 › 동의 조회 실패를 미동의로 바꾸지 않고 같은 화면에서 다시 확인한다 (1.5s)
+  ok 14 tests\live\consent.spec.ts:205:3 › 마이페이지의 약관 동의 관리 › 서비스 개선 선택 동의는 기본 꺼짐이며 켜고 철회해도 기본 서비스를 계속 이용한다 (1.5s)
+  ok 15 tests\live\consent.spec.ts:229:3 › 마이페이지의 약관 동의 관리 › 선택 항목은 언제든 켜고 끌 수 있고, 바꿀 때마다 서버에 기록된다(철회도 새 기록) (1.4s)
+  ok 16 tests\live\consent.spec.ts:250:3 › 마이페이지의 약관 동의 관리 › 필수 항목 요약과 철회는 관리 목록에서 빼고 선택 넷만 수정한다 (1.1s)
+  ok 17 tests\live\consent.spec.ts:260:3 › 마이페이지의 약관 동의 관리 › 약관 전문을 다시 읽을 수 있다(읽기만, 동의 단추 없음) (1.2s)
+  ok 18 tests\live\consent.spec.ts:274:1 › 알림 채널(디스코드·텔레그램)을 연결하려는 순간에야 선택 동의를 받고, 동의 없이는 연결 단추가 없다 (1.3s)
+  ok 19 tests\live\consent.spec.ts:291:1 › 알림 채널 동의를 철회하면 연결해 둔 웹훅이 지워진 것으로 다시 읽힌다 (1.6s)
+
+  19 passed (57.6s)

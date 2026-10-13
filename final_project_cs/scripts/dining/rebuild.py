@@ -262,7 +262,7 @@ def check() -> bool:
             ready = False
     data = DINING_DATA
     for name in ("tourapi_음식점_소개정보.json", "tourapi_서울_음식점_목록.json",
-                 "holidays_2026_2027.json"):
+                 "holidays_2026_2027.json", os.path.join("nopo", "노포_서울_카카오맵.csv")):
         if not os.path.isfile(os.path.join(data, name)):
             say("!!", f"없는 원본 {name}")
             ready = False

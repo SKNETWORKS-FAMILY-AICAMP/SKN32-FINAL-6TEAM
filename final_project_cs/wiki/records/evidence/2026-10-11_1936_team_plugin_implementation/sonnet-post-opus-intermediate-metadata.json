@@ -1,0 +1,28 @@
+{
+  "phase": "intermediate_before_readtool_fix",
+  "requested_model": "claude-sonnet-5-5",
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 48,
+      "outputTokens": 21241,
+      "cacheReadInputTokens": 1616355,
+      "cacheCreationInputTokens": 104295,
+      "webSearchRequests": 0,
+      "costUSD": 0.9529569999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 10096,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "is_error": false,
+  "subtype": "success",
+  "permission_denials": [
+    "Bash",
+    "Bash",
+    "Bash",
+    "Bash"
+  ]
+}

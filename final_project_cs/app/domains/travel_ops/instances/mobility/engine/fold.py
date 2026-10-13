@@ -31,7 +31,7 @@ SRC_OF = [("timetable_v1", "timetable"), ("tago_subway", "timetable"),
           ("bikeseoul_foreigner_guide", "bike")]
 CAR_KEYS = ("mode", "distance_m", "topis_time_s", "gh_time_s", "day_type", "hour_start", "coverage_m", "coverage_pct",
             "n_edges", "n_links", "links", "source_id", "fare_kind", "fare_won", "meter_won", "toll_won", "toll_basis",
-            "slow_s", "slow_m", "night_rate", "out_of_city", "fare_basis")   # car_leg 로 올리는 필드 — 경로·좌표는 없다
+            "slow_s", "slow_m", "night_rate", "out_of_city", "fare_basis", "routing_evidence")   # car_leg 로 올리는 필드 — 경로·좌표는 없다
 
 
 def _car_value(car, leg_id, depart_min, arrive_min, warnings, basis):

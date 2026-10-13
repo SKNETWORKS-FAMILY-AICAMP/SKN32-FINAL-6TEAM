@@ -1,0 +1,142 @@
+Respond concisely in Korean. User approved exporting up to 12 specific source/test files, excluding secrets. These are approved excerpts only. No tools or external files. Review correction, do not invent hidden helper facts. State concrete failing inputs if any.
+Review taxi bounded fixed-point refit with TAXI_REFIT_MAX_QUERIES=6. It must only publish a queried feasible departure, with duration and fare from that same query. Traffic can jump at hour boundaries. Find counterexamples to safety, not global optimum. Separately prior review claimed UTC board_at makes customer notice wrong: inspect supplied notice formatter and explicitly accept or reject this claim.
+
+FILE: app/domains/travel_ops/instances/mobility/engine/plan.py
+    def _taxi_option(self, a_place, b_place, sdate, arrive_by, buf, left):
+        """택시 후보 하나 또는 None(이유는 left). 판정기의 택시 서비스(`v.car` — 로컬 도로 그래프 또는 GraphHopper + TOPIS 속도 + 요금 산식)로
+        잰다. 출발 자체를 조회해 성립한 후보만 반환한다. 시간대 경계에서 진동해도
+        조회하지 않은 새 출발에 이전 소요를 붙이지 않는다. 제한 탐색이라 최적 출발 보장은 없다."""
+        from .car import RouterDown
+        car = getattr(self.v, "car", None)
+        if car is None:
+            left.append({"_o": {"_legs": []}, "label": "택시", "code": "taxi_unavailable",
+                         "reason": "택시 소요를 잴 도로 그래프·속도 자료가 없다(길찾기 꺼짐) — 택시 후보를 싣지 않았다"})
+            return None
+        s, e = (a_place["lon"], a_place["lat"]), (b_place["lon"], b_place["lat"])
+        guess, best, seen, failed = arrive_by - 30, None, set(), []
+        for _ in range(TAXI_REFIT_MAX_QUERIES):
+            if guess in seen:
+                break
+            seen.add(guess)
+            try:
+                c = car.leg(s, e, datetime.fromisoformat(iso_of(sdate, guess)), taxi=True)
+            except RouterDown as ex:
+                left.append({"_o": {"_legs": []}, "label": "택시", "code": "taxi_no_route",
+                             "reason": f"택시 경로를 못 구했다 — {str(ex)[:100]}"})
+                return None
+            ride = max(1, math.ceil(c["topis_time_s"] / 60))
+            slack = arrive_by - guess - ride - buf
+            if slack >= 0 and (best is None or guess > best[0]):
+                best = (guess, c, ride, slack)
+            elif slack < 0:
+                failed.append(guess)
+            if slack == 0:
+                break
+            later_failed = [at for at in failed if best is not None and at > best[0]]
+            if later_failed:
+                lo, hi = best[0], min(later_failed)
+                if hi - lo <= 1:
+                    break
+                guess = (lo + hi) // 2
+            else:
+                guess += slack
+        if best is None:
+            left.append({"_o": {"_legs": []}, "label": "택시", "code": "taxi_no_feasible_departure",
+                         "reason": "제한된 택시 재조회에서 목표와 여유를 만족하는 출발을 확인하지 못했다"})
+            return None
+        guess, c, ride, slack = best
+        fare = c.get("fare_won")
+        note = f"예상 요금 {fare:,}원(예산 여유 포함 · 교통·대기·호출료에 따라 달라짐)" if fare is not None else "요금 모름"
+        return {"eta_min": ride, "uses": [], "_legs": [], "_taxi": True, "_n": 300, "_key": ("taxi", 0, 0),
+                "_route": f"택시 {c['distance_m'] / 1000:.1f}km · {note} [{c.get('grade', '근거없음')}]",
+                "_start": guess, "_transfers": 0, "_margin": buf, "_slack": slack, "_walk_min": 0, "_walk_m": 0,
+                "_fare": fare, "_severe": [], "_covered": False}
+
+FILE: app/domains/travel_ops/instances/mobility/engine/departure_observer.py
+def _boarding_steps(legs, results, midnight, *, observed, rail_service, observation):
+    """재검증의 승차 행만 사용한다. 별도 환승 도보 행에는 승차 시각이 없다."""
+    steps = []
+    for result in results:
+        if result.depart_min is None or result.arrive_min is None:
+            continue
+        idx = result.idx
+        if isinstance(idx, bool) or not isinstance(idx, int) or not 0 <= idx < len(legs):
+            raise ValueError('승차 결과의 구간 번호가 맞지 않는다')
+        leg = legs[idx]
+        mode = leg.get('mode', 'subway')
+        if mode not in ('bus', 'subway'):
+            continue
+        for minute in (result.depart_min, result.arrive_min):
+            if isinstance(minute, bool) or not isinstance(minute, (int, float)) or not 0 <= minute <= SERVICE_DAY_MAX_MIN:
+                raise ValueError('승차 결과 시각이 운행일 범위를 벗어났다')
+        current = idx == 0 and observed
+        step = {'idx': idx, 'mode': mode, 'service': leg.get('route' if mode == 'bus' else 'line'),
+                'from': leg.get('from'), 'to': leg.get('to'),
+                'board_at': (midnight + timedelta(minutes=result.depart_min)).isoformat(),
+                'alight_at': (midnight + timedelta(minutes=result.arrive_min)).isoformat(),
+                'boarding_basis': 'realtime_arrival_prediction' if current else 'timetable_model',
+                'ride_basis': 'model'}
+        if current:
+            # 검증은 보수적으로 분 단위 올림을 쓰지만 안내가 열차 예측보다 늦어져서는 안 된다.
+            step['board_at'] = observation['arrival_at']
+        if current and rail_service is not None:
+            step.update(train_number=observation['train_number'], towards=rail_service['terminal'])
+        steps.append(step)
+    return steps
+
+FILE: app/domains/travel_ops/components/watch/trip_reminders.py
+def _with_boarding_steps(phrase, observation, departure, arrival):
+    """시각·역명은 원값으로 보존하고 구간별 근거만 문구틀로 구분한다."""
+    steps = observation.get('boarding_steps', [])
+    if not isinstance(steps, list):
+        raise ValueError('승차 안내 목록 형식 오류')
+    template, values = phrase.template, dict(phrase.values)
+    previous_idx, previous_arrival = -1, departure
+    def clock(at):
+        local = at.astimezone(KST)
+        return (local.strftime('%Y-%m-%d %H:%M')
+                if local.date() != departure.astimezone(KST).date() else _hm(at))
+    if steps:
+        template += '\n구간별 승차 안내 (하차·환승 시각은 예상):'
+    for position, step in enumerate(steps):
+        if not isinstance(step, dict):
+            raise ValueError('승차 안내 행 형식 오류')
+        idx, mode = step.get('idx'), step.get('mode')
+        if (isinstance(idx, bool) or not isinstance(idx, int) or idx <= previous_idx
+                or mode not in ('bus', 'subway') or step.get('ride_basis') != 'model'):
+            raise ValueError('승차 안내 구간 또는 근거 오류')
+        for key in ('service', 'from', 'to'):
+            if not isinstance(step.get(key), str) or not step[key].strip():
+                raise ValueError('승차 안내 노선·장소 누락')
+        board = datetime.fromisoformat(str(step['board_at']))
+        alight = datetime.fromisoformat(str(step['alight_at']))
+        if (board.utcoffset() is None or alight.utcoffset() is None
+                or not previous_arrival <= board <= alight <= arrival):
+            raise ValueError('승차 안내 시각 역전 또는 범위 오류')
+        basis = step.get('boarding_basis')
+        if basis == 'realtime_arrival_prediction':
+            if (position != 0 or idx != 0 or observation.get('status') != 'realtime'
+                    or mode != observation.get('realtime_mode')):
+                raise ValueError('현재 승차 관측 구간 오표시')
+            certainty = '현재 도착 예측 반영 · 하차 시각 예상'
+        elif basis == 'timetable_model':
+            if position == 0 and observation.get('status') == 'realtime':
+                raise ValueError('현재 승차 관측 근거 누락')
+            certainty = '시간표·이동 모델 예상'
+        else:
+            raise ValueError('승차 안내 근거 누락')
+        prefix = f'boarding_{position}_'
+        kind = '승차' if position == 0 else '환승'
+        template += ('\n{' + prefix + 'service}: {' + prefix + 'board} {' + prefix + 'from} '
+                     + kind + ' → {' + prefix + 'alight} {' + prefix + 'to} 하차 (' + certainty + ')')
+        values.update({prefix+'service': step['service'], prefix+'board': clock(board),
+                       prefix+'alight': clock(alight), prefix+'from': step['from'], prefix+'to': step['to']})
+        if 'train_number' in step or 'towards' in step:
+            if (basis != 'realtime_arrival_prediction' or mode != 'subway'
+                    or any(not isinstance(step.get(k), str) or not step[k].strip()
+                           for k in ('train_number', 'towards'))):
+                raise ValueError('선택 열차 정보 오류')
+            template += ' · {' + prefix + 'towards} 방면 · 열차 {' + prefix + 'train}'
+            values.update({prefix+'towards':step['towards'], prefix+'train':step['train_number']})
+        previous_idx, previous_arrival = idx, alight
+    return Phrase(template, values)

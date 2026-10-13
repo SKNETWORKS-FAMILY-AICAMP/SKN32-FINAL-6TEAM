@@ -302,6 +302,23 @@ describe("live trip gateway", () => {
     expect(bodies[1]).not.toHaveProperty("item_id");
   });
 
+  it("carries restaurant marks with their source and drops a mark it cannot credit", async () => {
+    replies.push({
+      ...TRIP,
+      items: [{ ...TRIP.items[0], badges: [
+        { code: "michelin", label: "미쉐린 빕 구르망 (2026)", source: "미쉐린 가이드 서울" },
+        { code: "nopo", label: "노포" },
+        { code: "nopo", label: "노포", source: "카카오맵 노포 지도", extra: 1 },
+      ] }, TRIP.items[1]],
+    });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops[0].badges).toEqual([
+      { code: "michelin", label: "미쉐린 빕 구르망 (2026)", source: "미쉐린 가이드 서울" },
+      { code: "nopo", label: "노포", source: "카카오맵 노포 지도" },
+    ]);
+    expect(trip.stops[1].badges).toEqual([]);
+  });
+
   it("does not quietly become a new user when the session has ended", async () => {
     useBrowser(true);
     replies.push(new Response(JSON.stringify({ error: { code: "unauthenticated", message: "no" } }), { status: 401 }));
@@ -414,6 +431,30 @@ describe("live trip gateway", () => {
       resume_token: "resume-private", answer: "몇 분쯤 늦으세요?", required_input_schema: { required: ["minutes"] } };
     const resume = { case_id: wait.case_id, resume_token: wait.resume_token, expected_version: wait.version };
     const bodies = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)) as Record<string, unknown>);
+
+    it("sends the explicit summary day without consuming a pending change reply", async () => {
+      const gateway = createLiveGateway();
+      replies.push(wait);
+      await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko");
+      replies.push({ status: "answered", answer: "하루 일정", case_status: "completed" });
+      await gateway.sendMessage(TRIP.trip_id, "2026-10-15 하루 일정을 요약해 주세요.", "ko", null, null, undefined, undefined, "2026-10-15");
+      expect(bodies()[1]).toMatchObject({ summary_day: "2026-10-15" });
+      expect(bodies()[1]).not.toHaveProperty("resume_token");
+      expect(bodies()[1]).not.toHaveProperty("case_id");
+      replies.push({ status: "answered", answer: "반영했어요" });
+      await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko");
+      expect(bodies()[2]).toMatchObject(resume);
+    });
+
+    it("retries a summary with its date and the same request id", async () => {
+      const gateway = createLiveGateway();
+      replies.push(new Response("{}", { status: 503 }));
+      await expect(gateway.sendMessage(TRIP.trip_id, "2026-10-15 하루 일정을 요약해 주세요.", "ko", null, null, undefined, undefined, "2026-10-15")).rejects.toBeInstanceOf(LiveError);
+      replies.push({ status: "answered", answer: "하루 일정" });
+      await gateway.sendMessage(TRIP.trip_id, "2026-10-15 하루 일정을 요약해 주세요.", "ko", null, null, undefined, undefined, "2026-10-15");
+      expect(bodies()[1].request_id).toBe(bodies()[0].request_id);
+      expect(bodies()[1].summary_day).toBe("2026-10-15");
+    });
 
     it("continues the same Case and clears it after completion without storing its token", async () => {
       const gateway = createLiveGateway();

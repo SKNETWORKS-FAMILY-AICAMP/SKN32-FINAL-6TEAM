@@ -1,0 +1,6 @@
+missing_actual_vectors 17 cached 157
+loaded_original_weights_fp16_low_peak
+encoded 1 / 17
+encoded 11 / 17
+loader_reference_cosine 1.000000238418579
+saved datasets\travel\baseline_completion_20261012\embeddings-2026-10-12_213211.json 173

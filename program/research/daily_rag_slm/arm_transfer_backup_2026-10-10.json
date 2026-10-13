@@ -1,0 +1,17 @@
+{
+  "created_at": "2026-10-10T01:32:21.621358",
+  "paths": [
+    "program/research/daily_rag_slm/_backup/2026-10-10_013221_approved_mobility_transfer/arm_serving_queue_2026-10-10.json",
+    "final_project_cs/wiki/operations/_backup/2026-10-10_013221_approved_mobility_transfer/arm-develop-cd.md",
+    "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-10_013221_approved_mobility_transfer/2026-10-10_0124_arm-worker-healthcheck-deploy-wait.md",
+    "program/research/daily_rag_slm/_backup/2026-10-10_013221_approved_mobility_transfer/2026-10-10.md",
+    "program/research/daily_rag_slm/_backup/2026-10-10_013221_approved_mobility_transfer/index.md",
+    "final_project_cs/wiki/_backup/2026-10-10_013221_approved_mobility_transfer/log.md",
+    "program/research/daily_rag_slm/_backup/2026-10-10_013221_approved_mobility_transfer/scheduled_instructions_2026-10-08.json",
+    "program/research/daily_rag_slm/_backup/2026-10-10_013432_transfer_final_observation/arm_serving_queue_2026-10-10.json",
+    "program/research/daily_rag_slm/_backup/2026-10-10_013432_transfer_final_observation/arm_develop_cd_2026-10-10.json",
+    "final_project_cs/wiki/records/reports/_backup/2026-10-10_013432_transfer_final_observation/2026-10-10_0130_arm-approved-mobility-transfer-and-deployment.md"
+  ],
+  "code_backup": "final_project_cs/deploy/arm/_backup/2026-10-10_012519_worker_health_wait",
+  "remote_backup_relative": "mobility/_backup/20261009T162232Z_before_approved_transfer"
+}

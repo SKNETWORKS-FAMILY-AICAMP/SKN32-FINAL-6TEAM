@@ -1,0 +1,67 @@
+[
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0704_급행안내_저장대조/departure_context.py",
+    "sha256": "b07d0e72a2ed4e4d95e07922e41728131d5b7976021a413901c7b074a869d793"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/_backup/2026-10-09_0704_급행안내_저장대조/wiring.py",
+    "sha256": "d0ed6dca374ad2e2d0c4fbc242a77e822fbaca4138976f468ba13ded763c0d67"
+  },
+  {
+    "file": "final_project_cs/app/composition.py",
+    "backup": "final_project_cs/app/_backup/2026-10-09_0704_급행안내_저장대조/composition.py",
+    "sha256": "bbe529d6b9d6215de6166a1295df5e8288e2cfaa070dde19bed637d68615b08d"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_reminders.py",
+    "backup": "final_project_cs/app/domains/travel_ops/components/watch/_backup/2026-10-09_0704_급행안내_저장대조/trip_reminders.py",
+    "sha256": "2ce55016b35d05ca61d24c4fa31639caf177f017a6be5feb33554b30390772e4"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/components/watch/departure_revalidation.py",
+    "backup": "final_project_cs/app/domains/travel_ops/components/watch/_backup/2026-10-09_0704_급행안내_저장대조/departure_revalidation.py",
+    "sha256": "f023b1e9974994851693da8e12d146bd82887bcb8b8fd51619b1d8a7fae2863f"
+  },
+  {
+    "file": "final_project_cs/tests/scenario/test_departure_express_db_v1.py",
+    "backup": "final_project_cs/tests/scenario/_backup/2026-10-09_0704_급행안내_저장대조/test_departure_express_db_v1.py",
+    "sha256": "44e138d723652b54e25bb7600d68ba9406aa41ada9ab8f2a5d17e0c7d6232cad"
+  },
+  {
+    "file": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0704_급행안내_저장대조/mobility.md",
+    "sha256": "5684e1496b393f8f0e24d2c4bd1afb03c53bf5505b1208ca77c19c440cdd8dad"
+  },
+  {
+    "file": "final_project_cs/tests/scenario/test_departure_express_race_db_v1.py",
+    "backup": "final_project_cs/tests/scenario/_backup/2026-10-09_0706_급행저장_시험보강/test_departure_express_race_db_v1.py",
+    "sha256": "40871f39f8f9fe3e5611b5b1a79311e67776bf119098a13c4bfd58cadd5bc105"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/_backup/2026-10-09_0708_급행저장_오류검증/wiring.py",
+    "sha256": "1b98227651ffb9fadc3d3819a560f91b2101c57249ac30fef60b5db9d2b3c25b"
+  },
+  {
+    "file": "final_project_cs/tests/scenario/test_departure_express_race_db_v1.py",
+    "backup": "final_project_cs/tests/scenario/_backup/2026-10-09_0708_급행저장_오류검증/test_departure_express_race_db_v1.py",
+    "sha256": "201c284aa1ca0f657d911c4dcb57989ef6810ea5668dfecad058b761696fa51b"
+  },
+  {
+    "file": ".tmp/mobility_complete_20261008/publish_express_notice_race_v1.py",
+    "backup": ".tmp/mobility_complete_20261008/_backup/2026-10-09_0715_급행기록_파일명/publish_express_notice_race_v1.py",
+    "sha256": "f9b7f35f565a0ed629321f2c72be5e32c1a33613868cbd3a3a9c0be669713020"
+  },
+  {
+    "file": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0717_급행저장_결과기록/mobility.md",
+    "sha256": "33513b3d1aeacd61a8996e23d3c96168b157ca7b33bb653a1bbe8b18e061072c"
+  },
+  {
+    "file": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0704_급행조회후_안내저장사이_표교체를_놓침.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0717_급행저장_결과기록/2026-10-09_0704_급행조회후_안내저장사이_표교체를_놓침.md",
+    "sha256": "5cdfaaad43028bdac71548885735e52c53a75b501e2d645bf01f4e3d1be0a155"
+  }
+]

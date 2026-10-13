@@ -1,0 +1,14 @@
+[
+  "test",
+  "-c",
+  "playwright.completion-audit.config.ts",
+  "checking-read-list-20261012.spec.ts",
+  "first-map-reveal-20261011.spec.ts",
+  "uiux-sonnet-map-reveal-20261012.spec.ts",
+  "map-reveal-continuity-20261012.spec.ts",
+  "loading-handoff.spec.ts",
+  "map-status-bar.spec.ts",
+  "uiux-sonnet-plan-20261012.spec.ts",
+  "uiux-time-boundary-20261012.spec.ts",
+  "uiux-route-audit-20261012.spec.ts"
+]
