@@ -51,13 +51,24 @@ def _leg(segments: list[Any], total: Any) -> dict[str, Any] | None:
 
 
 class SerpApiFlights(TravelSource):
-    name = SOURCE
+    #: `[2026-10-13 사용자 지시]` 호출 예산 이름 — **구글 호텔 · 구글 항공권이 같은 SerpApi 계정**(무료 월 250회)을 쓰므로 같은 칸을 센다(`settings.rate_serpapi_*`).
+    #:  응답에 찍는 출처(`SOURCE`)는 그대로 둔다
+    name = "serpapi"
 
     def __init__(self, *, api_key: str, transport: Callable[..., httpx.Response] | None = None, **kwargs: Any) -> None:
         kwargs.pop("cache", None)                    # 캐시 열쇠에 키가 실리므로 받지 않는다
         super().__init__(timeout=TIMEOUT_SECONDS, transport=transport, **kwargs)
         self._key = api_key
 
+
+    def _quota_signal(self, response: Any) -> str | None:
+        """`[2026-10-13]` SerpApi 는 계정 검색 횟수가 다 떨어지면 「Your account has run out of searches.」 오류를 돌려준다 — 그 달 줄을 멈춘다(헛호출 방지).
+        ★문구로 알아본다(상태 코드는 확인 안 함 — 글자가 있으면 상태와 상관없이 본다)."""
+        try:
+            text = response.text.lower()
+        except Exception:                                  # noqa: BLE001
+            return None
+        return "month" if "run out of searches" in text else None
     def flight_search(self, *, origin: str, destination: str, depart_date: str, return_date: str | None = None,
                       domestic: bool | None = None, direct_only: bool | None = None, cabin: str | None = None,
                       max_results: int = 10, adults: int | None = None, children: int | None = None,

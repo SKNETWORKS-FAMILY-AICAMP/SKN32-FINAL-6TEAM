@@ -22,6 +22,14 @@ describe("trip timeline", () => {
   };
   const ids = (date: string) => dayTimeline(stayTrip, date).map((entry) => entry.type === "stop" ? entry.stop.id : entry.type === "leg" ? "leg" : `${entry.stay.phase}:${entry.stay.night}/${entry.stay.nights}`);
 
+  it("puts the server's morning move from the hotel right under the band", () => {
+    const withMove = { ...stayTrip, moves: [{ id: "m-am", fromId: "h", toId: "tower", date: "2026-11-07", departAt: "09:30", arriveAt: "09:50", title: "롯데호텔 → 남산" }] };
+    const entries = dayTimeline(withMove, "2026-11-07");
+    expect(entries.map((entry) => entry.type === "stop" ? entry.stop.id : entry.type === "leg" ? entry.leg.id : entry.stay.phase)).toEqual(["from", "m-am", "tower"]);
+    const leg = entries[1];
+    expect(leg.type === "leg" && leg.leg).toMatchObject({ minutes: 20, slack: 10, from: { id: "h" }, to: { id: "tower" } });
+  });
+
   it("lists every day a stay runs over, even a day with nothing else", () => {
     expect(tripDays(stayTrip)).toEqual(["2026-11-06", "2026-11-07", "2026-11-08", "2026-11-09"]);
   });

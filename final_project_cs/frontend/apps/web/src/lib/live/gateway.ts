@@ -14,6 +14,8 @@ interface ServerItem {
   starts_at: string;
   ends_at: string | null;
   changed: boolean;
+  /** `[2026-10-13]` A move that leaves from the stay of that morning (「숙소 → 그날 첫 일정」), not from the stop before it. */
+  from_stay?: boolean;
   lat?: number | null;
   lon?: number | null;
   booked?: boolean;
@@ -293,6 +295,8 @@ async function read(tripId: string, language: Language): Promise<Trip> {
   for (const move of moves) {
     const at = server.items.findIndex((item) => item.item_id === move.id);
     move.toId = server.items.slice(at + 1).find((item) => item.kind !== "mobility")?.item_id ?? null;
+    // `[2026-10-13]` A morning move 「숙소 → 그날 첫 일정」(`from_stay`) leaves from the stay the customer sleeps in that night before — not from the stop before it in the plan (the day before's last).
+    if (server.items[at]?.from_stay) move.fromId = stops.find((stop) => stop.kind === "lodging" && !!stop.endDate && stop.date < move.date && move.date <= stop.endDate)?.id ?? null;
   }
   // ★The server judged the plan when it was registered (`_create_trip`) — what it found is `warnings`, not a separate check to run.
   return {

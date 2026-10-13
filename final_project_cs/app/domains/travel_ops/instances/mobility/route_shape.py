@@ -328,6 +328,11 @@ def shapes_for_items(items, *, detail: bool = False) -> list[dict[str, Any]]:
         if it.kind != "mobility":
             continue
         before = next((x for x in reversed(ordered[:n]) if x.kind != "mobility" and xy(x)), None)
+        if (it.detail or {}).get("from_stay"):
+            # `[2026-10-13]` 아침 「숙소 → 첫 일정」 — 출발지는 순서상 앞(전날 마지막 일정)이 아니라 그날 묵는 숙소다
+            from app.domains.travel_ops.components.itinerary.itinerary_checks import origin_of
+            before = origin_of(ordered, it)
+            before = before if before is not None and xy(before) else None
         after = next((x for x in ordered[n + 1:] if x.kind != "mobility" and xy(x)), None)
         if before is None or after is None:
             continue

@@ -80,7 +80,6 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
               {stop.badges?.map((badge) => <span className={pc.pill} key={badge.code}>{badge.label}</span>)}
               {stop.booking === "booked" && <span className={pc.pill} data-booked>{bookingLabel(stop, t)}</span>}
               {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
-              {stop.badges?.map((badge) => <span key={badge.code} className={pc.pill}>{badge.label}</span>)}
               {stop.paused && <span className={pc.pill} data-state="review">{t("일정 정지", "Paused")}</span>}
             </span>}
           </span>

@@ -325,6 +325,26 @@ function mapItems() {
   ];
 }
 
+/** `[2026-10-13 사용자 결정 — 숙소 항목 B안]` `tripItems: "stay"` — 4일 여행: 1일차 15:00 롯데호텔 서울 체크인(4일차 11:00 체크아웃 — 한 항목), 2일차 · 4일차 아침 「숙소 → 첫 일정」 이동(`from_stay`), 3일차는 일정 없음. */
+function stayItems() {
+  const base = { changed: false, other_options: [], customer_pinned: false, booked: false };
+  const stop = (id, seq, kind, title, start, end, lat, lon, extra = {}) => ({ ...base, item_id: id, seq, kind, title, place: title, starts_at: start, ends_at: end, lat, lon, ...extra });
+  const move = (id, seq, title, start, end, extra = {}) => ({ ...base, item_id: id, seq, kind: "mobility", title, place: null, starts_at: start, ends_at: end, lat: null, lon: null, ...extra });
+  return [
+    stop("s1", 1, "activity", "경복궁", at(10), at(12), 37.5796, 126.977),
+    stop("s2", 2, "dining", "토속촌 삼계탕", at(12, 30), at(13, 30), 37.5779, 126.9718),
+    move("s3", 3, "토속촌 삼계탕 → 롯데호텔 서울", at(14, 20), at(14, 40)),
+    stop("s4", 4, "lodging", "롯데호텔 서울", at(15), at(11, 0, 4), 37.5653, 126.981),
+    move("s5", 5, "롯데호텔 서울 → 명동교자", at(17, 40), at(17, 52)),
+    stop("s6", 6, "dining", "명동교자", at(18), at(19), 37.5636, 126.9858),
+    move("s7", 7, "롯데호텔 서울 → 남산서울타워", at(9, 35, 2), at(9, 50, 2), { from_stay: true }),
+    stop("s8", 8, "activity", "남산서울타워", at(10, 0, 2), at(12, 0, 2), 37.5512, 126.9882),
+    move("s9", 9, "롯데호텔 서울 → 광장시장", at(9, 10, 4), at(9, 25, 4), { from_stay: true }),
+    stop("s10", 10, "activity", "광장시장", at(9, 30, 4), at(10, 30, 4), 37.5701, 126.9996),
+    stop("s11", 11, "activity", "창덕궁", at(13, 0, 4), at(15, 0, 4), 37.5794, 126.991),
+  ];
+}
+
 function tripView(id = TRIP_ID) {
   const view = {
     trip_id: id, customer_id: "cust-1", title: "내 여행", locale: "ko", party_size: 2, version: scenario.proposals === "open" ? 2 : 1,
@@ -347,6 +367,7 @@ function tripView(id = TRIP_ID) {
     warnings: scenario.warnings === "some" ? [{ code: "density_exceeded", date: "2026-10-01", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }] : [],
   };
   const withGuardian = scenario.guardian === "absent" ? view : { ...view, guardian: guardianState ?? { enabled: scenario.guardian === "on", since: null, via: null } };
+  if (scenario.tripItems === "stay") return { ...withGuardian, items: stayItems(), warnings: [], history: view.history.slice(0, 1), map: { days: [] } };
   return scenario.tripItems === "map" ? { ...withGuardian, items: mapItems(), warnings: [], history: view.history.slice(0, 1) } : withGuardian;
 }
 

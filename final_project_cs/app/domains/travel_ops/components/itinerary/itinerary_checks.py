@@ -35,6 +35,27 @@ logger = logging.getLogger(__name__)
 STAY_KINDS = frozenset({"lodging"})
 
 
+#: `[2026-10-13]` 이동 항목 표시 — 「그날 묵는 숙소에서 출발」(아침 숙소 → 첫 일정). 숙소를 id 로 가리키지 않는다:
+#:  숙소를 바꾸면 새 항목 id 가 생기므로, 날짜로 그날의 숙소를 찾는다(`stay_on`)
+FROM_STAY = "from_stay"
+
+
+def stay_on(items: Iterable[Any], day: Any) -> Any | None:
+    """`day`(서울 날짜) 아침에 묵고 있는 숙소 — 체크인 다음 날부터 체크아웃 날까지. 없으면 None."""
+    found = [i for i in items if getattr(i, "kind", None) in STAY_KINDS and getattr(i, "ends_at", None) is not None
+             and _seoul(i.starts_at).date() < day <= _seoul(i.ends_at).date()]
+    return max(found, key=lambda i: i.starts_at) if found else None
+
+
+def origin_of(items: Iterable[Any], move: Any) -> Any | None:
+    """이동 항목의 출발지 — 「숙소에서 출발」 표시면 그날 묵는 숙소, 아니면 순서상 바로 앞의 장소 일정(이동 아님)."""
+    items = list(items)
+    if ((getattr(move, "detail", None) or {}).get(FROM_STAY)):
+        return stay_on(items, _seoul(move.starts_at).date())
+    earlier = [i for i in items if i.seq < move.seq and i.kind != "mobility"]
+    return max(earlier, key=lambda i: i.seq) if earlier else None
+
+
 def leave_at(item: Any) -> datetime:
     """이 일정을 **떠나는** 시각 — 다음 일정으로 가는 이동의 출발 하한. 보통은 끝 시각(없으면 시작).
     ★`[2026-10-13]` 숙소는 체크인 시각이다 — 끝(체크아웃)은 며칠 뒤라, 그대로 쓰면 체크인 날 저녁 이동이 체크아웃 날로 밀린다."""

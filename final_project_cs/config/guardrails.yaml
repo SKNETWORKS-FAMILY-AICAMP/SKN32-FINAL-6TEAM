@@ -611,13 +611,16 @@ travel:
   # ★DB 로 세는 소스(어댑터 이름 = env 한도 이름). 키가 있고 하루 한도가 낮은 공공 API 들 — 여기 없는 소스는 안 센다.
   #   빠진 것: `open_meteo`·`open_meteo_air`(키 없음 · 하루 10,000 · 장소마다 불러 DB 쓰기만 늘어난다) · `kakao`(자체 예산 `kakao_budget` 이 있다) · 구글(자체 예산).
   source_budget_sources: [its, utic, subway_notice, seoul_subway_arrival, seoul_bus_arrival, tour_api, kma, kma_warning, kma_earthquake, airkorea,
-                          khoa, tago, airport, mofa, kasi_holiday, disaster_msg, heritage_khs]
+                          khoa, tago, airport, mofa, kasi_holiday, disaster_msg, heritage_khs,
+                          serpapi]   # `[2026-10-13]` SerpApi(구글 호텔 · 구글 항공권 공용) — 무료 월 250회
   # ★소스마다 몰림 허용을 따로 줄 때(없으면 `rate_burst`). 하루 합계는 여전히 그 소스 한도 안이다.
   #   관광공사: 계획 읽기 한 건이 장소마다 연달아 부른다 — 9개 질의에 11번(2026-09-27 실측). 10 으로는
   #   11번째가 거절됐다. 30 이면 접수 둘이 연달아 와도 들어간다. 보충 간격은 86.4초 → 89.0초로 늘어난다.
   # ★출처: **우리가 고른 값**.
   rate_burst_by_source:
     tour_api: 30
+    # `[2026-10-13]` SerpApi — 「바꿔 줘」 한 번이 목록 1 + 상세 최대 3 을 연달아 부른다. 하루 합계는 DB 줄(8)이 지킨다
+    serpapi: 8
   # ── 위임 범위 (v11 §12 DoD-18~21 · wiki `teams/booking-handoff.md` 「위임 범위」) ──
   # ★무엇을 재는 값인가. 승인 뒤 **공급자 원장을 사람 손 없이 바꾸는 분기**(자동 실행)가
   #   열리는 한계다. 여기를 하나라도 벗어나면 원장을 건드리지 않고 사람에게 간다.

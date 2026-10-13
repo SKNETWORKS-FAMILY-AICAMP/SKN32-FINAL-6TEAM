@@ -381,6 +381,11 @@ class Settings(BaseSettings):
     #      초과 $10/1,000 → 5,000 / 31 / 2 = 80.  TRANSIT 모드의 등급은 문서에 없다(미확인)
     rate_google_places_per_day: int = 16
     rate_google_routes_per_day: int = 80
+    #  ★`[2026-10-13 사용자 지시]` SerpApi(구글 호텔 · 구글 항공권 — 한 계정) — **무료 월 250회**. 월 줄 250 · 하루 줄 250 / 31 = 8.
+    #    DB 로 센다(가드레일 `travel.source_budget_sources` 의 `serpapi`) — 프로세스 · 재시작을 건너 같은 줄이다. 월 · 일 중 하나라도 차면 부르지 않는다
+    #    (「바꿔 줘」 한 번 = 목록 1 + 상세 최대 3, 고를 때 재확인 1).
+    rate_serpapi_per_day: int = 8
+    rate_serpapi_per_month: int = 250
 
     #: 간격이 안 찼을 때 기다려 볼 최대 시간(초). 고객 요청이 여기서 멈춘다.
     #:  넘으면 기다리지 않고 거부하고, Team 은 「모름」으로 넘어간다.
@@ -388,7 +393,8 @@ class Settings(BaseSettings):
 
     def source_monthly_limits(self) -> dict[str, int]:
         """`TravelSource.name` -> 월 한도(알려진 것만). DB 예산(`source_budget.py`)이 월 줄로 쓴다."""
-        return {name: value for name, value in {"its": self.rate_its_per_month}.items() if value and value > 0}
+        return {name: value for name, value in {"its": self.rate_its_per_month,
+                                                "serpapi": self.rate_serpapi_per_month}.items() if value and value > 0}
 
     def source_rate_limits(self) -> dict[str, int]:
         """`TravelSource.name` -> 하루 한도. 어댑터 이름과 정확히 맞춘다.
@@ -421,6 +427,7 @@ class Settings(BaseSettings):
             "naver_search": self.rate_naver_search_per_day,
             "google_places": self.rate_google_places_per_day,
             "google_routes": self.rate_google_routes_per_day,
+            "serpapi": self.rate_serpapi_per_day,
         }
 
     def utic_key(self, *, proxied: bool) -> str:

@@ -24,12 +24,13 @@ if TYPE_CHECKING:
     from app.domains.travel_ops.components.planning.replan import Candidate
 
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from typing import Any, Callable
-from uuid import UUID
+from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item
-from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS, leave_at, seoul
+from app.domains.travel_ops.components.itinerary.itinerary_checks import FROM_STAY, STAY_KINDS, leave_at, origin_of, seoul, stay_on
 from app.domains.travel_ops.components.planning.replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, DiningStateLookup, activity_candidates, alternate_record,
                      apply_google_prices, brand_of, change_notice, choose, dining_candidates, dining_fits, dining_notice,
                      MealRoute, meal_route, route_candidates, route_notice, store_candidates)
@@ -135,6 +136,14 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
             for j in (k - 1, k + 1):
                 if 0 <= j < len(seq_sorted) and seq_sorted[j].kind == "mobility":
                     targets[j] = targets.get(j, False) or far_of_new[it.item_id]
+    # `[2026-10-13]` 숙소가 바뀌면 그 숙소에서 출발하는 아침 이동(「숙소에서 출발」)도 새 숙소 기준으로 다시 만든다 — 순서상 옆이 아니다
+    for new_id, far in far_of_new.items():
+        stay = next((i for i in seq_sorted if i.item_id == new_id and i.kind in STAY_KINDS), None)
+        if stay is None:
+            continue
+        for j, it in enumerate(seq_sorted):
+            if it.kind == "mobility" and (it.detail or {}).get(FROM_STAY) and stay_on([stay], seoul(it.starts_at).date()) is stay:
+                targets[j] = targets.get(j, False) or far
     if not targets:
         return after
     from app.domains.travel_ops.components.team_hooks import legs
@@ -142,7 +151,7 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
     fresh: dict[UUID, Item] = {}
     for j, far in sorted(targets.items()):
         move = seq_sorted[j]
-        prev = next((i for i in reversed(seq_sorted[:j]) if i.kind != "mobility"), None)
+        prev = origin_of(seq_sorted, move)          # `[2026-10-13]` 「숙소에서 출발」이면 그날 숙소
         nxt = next((i for i in seq_sorted[j + 1:] if i.kind != "mobility"), None)
         a, b = (_leg_place(prev) if prev else None), (_leg_place(nxt) if nxt else None)
         if a is None or b is None:
@@ -188,6 +197,64 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
             detail.pop("departure_context", None)
             fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}", detail=detail)
     return [fresh.get(i.item_id, i) for i in after]
+
+
+#: `[2026-10-13]` 아침 「숙소 → 첫 일정」 이동의 출발 하한 — 그날 06:00 서울(계산기가 첫 일정 도착 시각에 맞춰 늦게 고른다)
+STAY_MORNING_FLOOR = time(6, 0)
+
+
+def with_stay_moves(items: list[Item], *, place_of: Callable[[Item], dict[str, Any] | None] | None = None,
+                    party_size: int | None = None, constraints: dict[str, Any] | None = None) -> list[Item]:
+    """`[2026-10-13 사용자 결정 — 숙소 항목 B안]` 묵는 날 아침 「숙소 → 그날 첫 일정」 이동을 넣는다(체크인 다음 날 ~ 체크아웃 날).
+
+    ★이동 항목은 순서상 그날 첫 일정 바로 앞에 놓고 `detail.from_stay` 로 출발지가 「그날 묵는 숙소」임을 적는다 — 순서상 바로 앞은
+      전날 마지막 일정이라, 이 표시가 없으면 경로선 · 출발 재검증 · 경로 다시 짜기가 전날 저녁 장소에서 출발하는 것으로 읽는다(`origin_of`).
+    ★이동 계산기가 없거나 길을 못 찾으면 넣지 않는다(지어내지 않는다 — 화면은 「숙소에서 출발」 띠만 보인다).
+    ★그날 첫 일정 바로 앞에 이미 이동 항목이 있으면 두지 않는다(다시 불러도 같다). `place_of` — 항목 → 좌표 있는 장소(등록 중에는 항목에 장소 값이 아직 없다)."""
+    stays = [i for i in items if i.kind in STAY_KINDS and i.ends_at is not None]
+    if not stays:
+        return items
+    from app.core.team_availability import TeamUnavailable
+    from app.domains.travel_ops.components.team_hooks import legs
+    try:
+        engine = legs.leg_planner(party_size, constraints or {})
+    except TeamUnavailable:
+        engine = None            # 이동 팀이 없거나 계산기가 준비 안 됐다 — 아침 이동 없이 등록한다(등록을 막지 않는다)
+    if engine is None:
+        return items
+    where = place_of or _leg_place
+    ordered = sorted(items, key=lambda i: i.seq)
+    stops = [i for i in ordered if i.kind != "mobility" and i.kind not in STAY_KINDS]
+    added: dict[UUID, Item] = {}
+    for day in sorted({seoul(s.starts_at).date() for s in stops}):
+        stay = stay_on(stays, day)
+        if stay is None:
+            continue
+        first = min((s for s in stops if seoul(s.starts_at).date() == day), key=lambda s: (s.starts_at, s.seq))
+        at = ordered.index(first)
+        if at > 0 and ordered[at - 1].kind == "mobility" and seoul(ordered[at - 1].starts_at).date() == day:
+            continue
+        a, b = where(stay), where(first)
+        if a is None or b is None:
+            continue
+        got, _why = engine(a, b, first.starts_at, datetime.combine(day, STAY_MORNING_FLOOR, tzinfo=ZoneInfo("Asia/Seoul")))
+        if got is None:
+            continue
+        detail: dict[str, Any] = {FROM_STAY: True, "route_def": got["route"], "route_basis": "rejudged",
+                                  "planner": {"transfer_basis": "시간표 판정(이동 계산기) — 묵는 숙소에서 그날 첫 일정",
+                                              "travel_min": int(got["eta_min"])}}
+        if got.get("departure_context") is not None:
+            detail["departure_context"] = got["departure_context"]
+        added[first.item_id] = Item(item_id=uuid4(), seq=0, kind="mobility", title=f"{a['name']} → {b['name']}", place_id=None,
+                                    starts_at=got["starts_at"], ends_at=got["ends_at"], detail=detail)
+    if not added:
+        return items
+    out: list[Item] = []
+    for item in ordered:
+        if item.item_id in added:
+            out.append(added[item.item_id])
+        out.append(item)
+    return [replace(item, seq=n) for n, item in enumerate(out, start=1)]
 
 
 @dataclass
@@ -264,7 +331,10 @@ def next_after(items: list[Item], item: Item) -> Item | None:
 
 
 def place_before(items: list[Item], item: Item) -> Item | None:
-    """이 항목 앞의 **장소 항목**(이동 아님) — 경로를 다시 찾을 때 출발지(#38·#39)."""
+    """이 항목 앞의 **장소 항목**(이동 아님) — 경로를 다시 찾을 때 출발지(#38·#39).
+    `[2026-10-13]` 「숙소에서 출발」 이동이면 그날 묵는 숙소다(`origin_of`)."""
+    if item.kind == "mobility" and (item.detail or {}).get(FROM_STAY):
+        return origin_of(items, item)
     earlier = [other for other in items if other.seq < item.seq and other.kind != "mobility"]
     return max(earlier, key=lambda other: other.seq) if earlier else None
 

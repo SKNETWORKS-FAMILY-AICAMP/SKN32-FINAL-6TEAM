@@ -75,6 +75,10 @@ export function dayTimeline(trip: Pick<Trip, "stops" | "moves" | "legs">, date: 
   // `[2026-10-13]` A stay checked in on an earlier day: the day starts from the hotel, and on the check-out day the check-out stands at its time.
   for (const stay of trip.stops.filter((stop) => isStay(stop) && stop.date < date && date <= stop.endDate!)) {
     const nights = stayNights(stay), night = daysBetween(stay.date, date).length;
+    // The move from the hotel to the day's first stop, when the server keeps one (`from_stay`) — right under the band.
+    const first = stops[0];
+    const morning = first && trip.moves?.some((move) => move.fromId === stay.id && move.toId === first.id) ? legOf(trip, stay, first, shapes) : null;
+    if (morning) entries.unshift({ type: "leg", leg: morning });
     entries.unshift({ type: "stay", stay: { stop: stay, phase: "from", night, nights } });
     if (date !== stay.endDate) continue;
     const out: TimelineEntry = { type: "stay", stay: { stop: stay, phase: "checkout", night, nights } };

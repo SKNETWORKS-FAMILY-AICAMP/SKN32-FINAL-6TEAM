@@ -5,6 +5,7 @@ import logging
 import math
 
 from app.domains.travel_ops.components.team_hooks import legs
+from app.domains.travel_ops.components.itinerary.itinerary_checks import origin_of
 
 
 def _place(item):
@@ -32,7 +33,9 @@ def build_observer(*, bus_arrival, subway_arrival=None, basis_validator=None):
         after = [item for item in ordered if item.seq > move.seq and item.kind != 'mobility']
         if not before or not after:
             return {'status': 'needs_replan', 'reason': 'adjacent_visit_missing'}
-        origin, destination = _place(before[-1]), _place(after[0])
+        # `[2026-10-13]` 아침 「숙소 → 첫 일정」 이동은 그날 묵는 숙소에서 출발한다(순서상 앞은 전날 마지막 일정)
+        start = origin_of(ordered, move) if (move.detail or {}).get("from_stay") else before[-1]
+        origin, destination = (_place(start) if start is not None else None), _place(after[0])
         if origin is None or destination is None:
             return {'status': 'needs_replan', 'reason': 'current_place_missing'}
         try:

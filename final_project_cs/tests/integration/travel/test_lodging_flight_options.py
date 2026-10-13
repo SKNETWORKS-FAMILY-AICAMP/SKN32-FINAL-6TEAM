@@ -162,3 +162,33 @@ def test_flight_options_ask_first_and_choosing_moves_the_departure():
             assert new.detail["key"] == option["key"] and new.detail["chosen"]["name"] == "제주항공 7C101 11:00"
     finally:
         cleanup_tenant(tenant)
+
+
+def test_a_price_rechecked_before_choosing_is_applied_and_said_in_the_change_notice():
+    """`[2026-10-13]` 화면 고르기 앞에서 다시 본 1박 값(`booking/offers/recheck`)이 바뀌었으면 새 값으로 바꾸고 변경 알림 끝에 적는다."""
+    tenant = "lodgopt_" + uuid4().hex[:8]
+    try:
+        with standalone_services():
+            lodging_ledger.register(remember=ledger.remember_shown, shown=ledger.shown_keys, adopt=ledger.adopt_option,
+                                    item_key=ledger.item_key, offers=ledger.shown_offers)
+            store, customer, trip_id, items = _setup(tenant)
+            asked = _ask(store, customer, trip_id, items[1],
+                         [_option(1, "myrealtrip:11", "해밀톤 호텔", lat=37.5345, lon=126.9946, link="https://example.test/11")])
+            check = {"status": "changed", "before": 150001, "now": 171000, "basis": "detail"}
+            with get_connection() as conn:
+                places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
+                with conn.transaction():
+                    done = choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
+                                  proposal_id=asked.summary["proposal_id"], key="myrealtrip:11", by="c",
+                                  places_by_id=places, check=None, price_check=check)
+                _, after = store.latest(conn, trip_id)
+                with conn.cursor() as cur:
+                    cur.execute("SELECT payload_json FROM outbox WHERE tenant_id=%s AND payload_json->>'type'='change_notice'", (tenant,))
+                    notices = [row[0] for row in cur.fetchall()]
+            new = next(i for i in after if i.kind == "lodging")
+            assert done["status"] == "chosen" and done["price_check"]["now"] == 171000
+            assert new.detail["chosen"]["price_per_night"] == 171000, "고른 숙소의 1박 값은 다시 본 값"
+            assert notices and notices[-1]["text"].endswith(" 보여 드릴 때 1박 150,001원이던 가격이 지금 1박 171,000원이에요.")
+    finally:
+        lodging_ledger.clear()
+        cleanup_tenant(tenant)

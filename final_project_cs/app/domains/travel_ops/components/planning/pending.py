@@ -405,8 +405,12 @@ class ProposalRefused(Exception):
 
 def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, proposal_id: UUID,
            key: str | None, by: str, places_by_id: dict[str, dict[str, Any]],
-           check: Callable[..., dict[str, Any]] | None, now: datetime | None = None) -> dict[str, Any]:
+           check: Callable[..., dict[str, Any]] | None, now: datetime | None = None,
+           price_check: dict[str, Any] | None = None) -> dict[str, Any]:
     """고객이 안을 고른다. `key=None` 이면 **원래 일정을 그대로 둔다**(kept).
+
+    `price_check` — `[2026-10-13]` 부르는 쪽이 잠그기 **전에** 다시 본 고른 숙소의 1박 값(`booking/offers/recheck.recheck_stay`).
+    바뀌었으면 새 값으로 바꾸고 변경 알림 끝에 그렇다고 적는다(객실이 없으면 부르는 쪽이 여기까지 오지 않게 막는다).
 
     ★한 트랜잭션 안에서 제안을 잠그고(`FOR UPDATE`) → 기존 「다른 안」 경로(`plan_swap`)로 다시 점검 →
       새 버전을 쓰고 → 제안을 닫는다. 어느 단계든 실패하면 **아무것도 안 바뀐다.**
@@ -447,6 +451,11 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
                           current=current, items=items, places_by_id=places_by_id, check=check)
     # ★`[2026-09-29]` 고른 안이 관광공사 목록 후보면 **지금** 그 여행 전용 장소로 등록한다(같은 트랜잭션 — 실패하면 되돌아간다)
     picked = next((o for o in options if o.get("key") == key), None)
+    if picked is not None and price_check and price_check.get("status") == "changed":
+        if price_check.get("basis") == "sellers":
+            picked["price_from"], picked["price_basis"] = price_check["now"], "sellers"      # 구글 호텔 — 판매처 최저가 「1박 ○원~」
+        else:
+            picked["price_per_night"], picked["price_basis"] = price_check["now"], "detail"
     if picked is not None and picked.get("catalog_place"):
         added = store.add_catalog_place(conn, trip_id, picked["catalog_place"])
         places_by_id = {**places_by_id, str(picked["place_id"]): added}
@@ -472,11 +481,17 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
                                        causes=plan.causes)
     except StaleItinerary as exc:
         raise ProposalRefused("stale", {"message": str(exc)}) from None
+    notice = dict(plan.notice)
+    if price_check:
+        from app.domains.travel_ops.components.booking.offers.recheck import price_note
+        notice["text"] = str(notice.get("text") or "") + price_note(price_check)
+        notice["price_check"] = price_check
     store.enqueue_notice(conn, trip_id=trip_id, version=version,
-                         payload={**plan.notice, "type": "change_notice", "version": version,
+                         payload={**notice, "type": "change_notice", "version": version,
                                   "proposal_id": str(proposal_id)})
     pending.close(conn, proposal_id, status="chosen", key=key, by=by, version=version)
-    return {"status": "chosen", "version": version, "summary": plan.summary}
+    return {"status": "chosen", "version": version, "summary": plan.summary,
+            **({"price_check": price_check} if price_check else {})}
 
 
 def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID, proposal: dict[str, Any],
