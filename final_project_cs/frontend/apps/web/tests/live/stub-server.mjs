@@ -230,7 +230,10 @@ let attempts = new Map();
 // ── 동의 기록 (2026-10-05) ── 시작
 /** The terms version the page under test carries (`src/features/consent/terms-content.ts` `TERMS_VERSION`) - keep the two the same; a different one is what "server_ahead" plays. */
 const TERMS_VERSION = "2026-10-10.1";   // 웹 `terms-content.ts` 와 같은 값(2026-10-07 보관 기간 확정)
-const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel", "service_improvement"];
+// `[2026-10-12]` The codes the cs server records (`consents.py` `CODES`) - not the page's list. The page's sixth, `service_improvement`, is
+// not on the server yet and the server refuses the whole save when it comes (wiki/records/reports/debugs/2026-10-12_2024_동의저장_422_웹6항목_서버5항목.md);
+// the stub had it, which is why the browser tests passed. Add it here when the server takes it.
+const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel"];
 const CONSENT_REQUIRED = ["service_terms", "privacy"];
 /** code → { agreed, version, at } - the latest line of the append-only record (the stub keeps only that; the requests it received are the log). */
 let consentRecords = new Map();
@@ -868,6 +871,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
       if (body.version !== consentVersion()) return json(response, 409, { error: { code: "terms_version_changed", message: "약관이 새 버전이에요", current_version: consentVersion() } }, origin);
       const items = Array.isArray(body.items) ? body.items : null;
       if (!items) return json(response, 422, { error: { code: "invalid_items", message: "items 가 필요해요" } }, origin);
+      // Like the server (`consents.py` record): empty or more items than it knows → 422 `invalid_items`, before any code is looked at.
+      if (items.length === 0 || items.length > CONSENT_CODES.length) return json(response, 422, { error: { code: "invalid_items", message: "동의 항목이 비었거나 모양이 틀려요" } }, origin);
       for (const item of items) {
         if (!CONSENT_CODES.includes(item?.code)) return json(response, 422, { error: { code: "unknown_code", message: String(item?.code) } }, origin);
         if (typeof item.agreed !== "boolean") return json(response, 422, { error: { code: "invalid_items", message: "agreed 는 true/false 예요" } }, origin);

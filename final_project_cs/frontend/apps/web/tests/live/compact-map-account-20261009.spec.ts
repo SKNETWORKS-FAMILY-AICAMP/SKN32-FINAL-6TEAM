@@ -86,11 +86,12 @@ for (const width of [375, 1280]) {
   test(`흰 소셜 버튼과 분리한 선택 약관 ${width}px`, async ({ page, request }) => {
     await mockServer(request).scenario({ consents: "on" });
     await page.setViewportSize({ width, height: 812 });
-    await start(page); await page.goto("/mypage#accounts");
+    await start(page); await page.goto("/mypage/account");
     const kakao = page.getByRole("button", { name: "Kakao 계정으로 계속", exact: true });
     await expect(kakao).toHaveCSS("background-color", "rgb(255, 255, 255)");
     const google = page.getByRole("button", { name: "Google 계정으로 계속", exact: true });
     await expect(google).toHaveCSS("border-radius", "24px");
+    await page.goto("/mypage/consents");                                   // `[2026-10-13 마이페이지 A안]` 약관 카드는 「약관 · 동의」 화면
     await page.locator("#consents").scrollIntoViewIfNeeded();
     await expect(page.getByRole("list", { name: "선택 동의 항목" })).toHaveCount(0);
     await capture(page, `04-social-and-terms-${width}`);
@@ -102,7 +103,7 @@ for (const width of [375, 1280]) {
     const optional = dialog.locator("li[data-doc]");
     await expect(optional).toHaveCount(4);
     expect(await optional.evaluateAll(nodes => nodes.map(node => (node as HTMLElement).dataset.doc))).toEqual(["sensitive", "location", "alert_channel", "service_improvement"]);
-    await expect(dialog.locator('[data-doc="service_improvement"]')).toContainText("동의 안 함");
+    await expect(dialog.locator('[data-doc="service_improvement"]')).toContainText("준비 중");   // `[2026-10-12 임시]` 서버가 아직 기록하지 못한다
     await expect(dialog).toContainText("동의하지 않아도");
     await capture(page, `05-optional-dialog-${width}`);
     await close.focus(); await page.keyboard.press("Shift+Tab");

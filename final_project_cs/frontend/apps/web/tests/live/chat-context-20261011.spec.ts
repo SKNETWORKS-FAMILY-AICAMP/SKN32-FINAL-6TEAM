@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockServer, paneTab, start, TRIP_ID, tripScreen } from "./helpers";
+import { mockServer, start, TRIP_ID, tripScreen, openPane } from "./helpers";
 
 test("채팅 선택지는 화면 선택 대신 자기 일정 ID를 보내고 새로고침 뒤에도 복구된다", async ({ page, request }, testInfo) => {
   await mockServer(request).reset();
@@ -18,9 +18,9 @@ test("채팅 선택지는 화면 선택 대신 자기 일정 ID를 보내고 새
   });
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
-  await paneTab(page, "일정").click();
+  await openPane(page, "일정");
   await page.locator("#stop-button-i-b").click();
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   await page.getByRole("button", { name: "자세히 알려줘", exact: true }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toMatchObject({ item_id: "i-c", message: "자세히 알려줘" });
@@ -31,7 +31,7 @@ test("채팅 선택지는 화면 선택 대신 자기 일정 ID를 보내고 새
   // A full reload gets the structured choices from the API, without relying on tab extras.
   await page.evaluate(() => sessionStorage.clear());
   await page.reload();
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   await expect(page.getByRole("button", { name: "자세히 알려줘", exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("restored-chat.png"), fullPage: true });
   await page.getByRole("button", { name: "자세히 알려줘", exact: true }).click();

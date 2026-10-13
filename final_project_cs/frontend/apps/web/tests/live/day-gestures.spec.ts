@@ -32,7 +32,8 @@ const trackShift = (page: Page) => page.evaluate(() => {
   return track ? new DOMMatrixReadOnly(getComputedStyle(track).transform).m41 : null;
 });
 const markerLeft = (page: Page) => page.evaluate(() => new DOMMatrixReadOnly(getComputedStyle(document.querySelector("span[class*=dayMarker]")!).transform).m41);
-const zoomOf = (page: Page) => page.evaluate(() => Number(getComputedStyle(document.querySelector("div[class*=dayZoom]")!).zoom));
+// `[2026-10-13 CI 점검]` 새로 고친 직후에는 목록이 아직 없을 수 있다 — 그때는 null 을 돌려 expect.poll 이 다시 묻게 한다(예외로 끝나면 다시 묻지 않는다).
+const zoomOf = (page: Page) => page.evaluate(() => { const list = document.querySelector("div[class*=dayZoom]"); return list ? Number(getComputedStyle(list).zoom) : null; });
 const withDays = (view: Json) => { view.review.items.push(DAY_TWO_STOP); };
 
 test("끄는 동안 목록이 손가락을 따라 움직이고 옆 날이 함께 밀려 들어온다 — 기준선을 못 넘기면 되돌아가고, 넘으면 날이 바뀐다", async ({ page, request }) => {

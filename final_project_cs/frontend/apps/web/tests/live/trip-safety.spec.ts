@@ -1,11 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, start, TRIP_ID, tripScreen } from "./helpers";
+import { beforeTheTrip, mockServer, start, TRIP_ID, tripScreen } from "./helpers";
 
 /**
  * `[2026-10-06 사용자 결정 — 재난 시 일정 정지 + 대피 안내]` 여행 화면: 정지 중 표시 · 정지된 일정 표시 · 안전 알림의 안내(대피 장소 · 119) · 「일정 다시 시작」. mock 서버 시험이다 — 화면 반응만 본다.
  * mock 서버에 이 응답이 아직 없어서 여행 조회 · 알림 조회 · 다시 시작을 시험 안에서 바꿔 끼운다(`page.route`). ★서버가 실제로 이 모양을 내는지(로컬 개발 DB 시험은 cs 개발 세션이 했다)와
  * 실제 재난문자는 못 봤다 — 계약 정본은 `wiki/external/rest-endpoints.md` 「재난 시 일정 정지」.
  */
+// `[2026-10-13]` 가짜 서버 여행(2026-10-01)이 「지난 일정」으로 그려지지 않게 여행 전날로 시계를 고정한다(helpers.ts beforeTheTrip).
+test.beforeEach(async ({ page }) => { await beforeTheTrip(page); });
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 const PAUSE = {

@@ -23,14 +23,6 @@ export const DAY_END = 1440;
 export const SNAP = 5;
 /** A stop with no known end takes this long for the maths. */
 export const ASSUMED_MINUTES = 60;
-/**
- * Space between two stops on screen: `GAP_BASE_PX` even with no free time, growing with the free time along a curve that flattens out toward
- * `GAP_BASE_PX + GAP_EXTRA_PX` (`[2026-10-04]` codex: a straight line made long idle stretches 120 px each and the list too long to scroll; the curve
- * still tells 30 minutes from 2 hours - about 40 px and 71 px - and never passes 80 px). `GAP_SCALE_MINUTES` is how fast it flattens.
- */
-export const GAP_BASE_PX = 14, GAP_EXTRA_PX = 66, GAP_SCALE_MINUTES = 60;
-/** The most space a gap can take (the curve reaches it only in the limit). */
-export const GAP_MAX_PX = GAP_BASE_PX + GAP_EXTRA_PX;
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Reading and writing a time
@@ -128,26 +120,8 @@ export function slackAfter(stops: readonly TimedStop[], legs: readonly TimedLeg[
   return next.start - (stop.start + occupancy(stop) + legLookup(legs)(stop.id, next.id));
 }
 
-/**
- * `[2026-10-07 사용자 지시 — 이동 줄은 앞뒤 일정 중 시각이 더 가까운 쪽에 붙는다]` The free space between two stops (`extra` px, see `gapPx`) is split above and below the leg in proportion to WHEN it leaves between the
- * two start times on the timeline: 12:30 → 15:00 with the leg leaving 14:12 is 102 of 150 minutes in, so it stands 68 % of the way down - nearer 15:00; exactly in the middle it stands in the middle. How far the leg stands
- * from the top of the space is returned (the rest is below it). 0 when a time is missing or the stops do not follow each other - the leg then stays at the top, as it always did.
- */
-export function leadPx(extra: number, prevStart: string, nextStart: string, depart: string): number {
-  if (!(extra > 0)) return 0;
-  const from = parseHm(prevStart), to = parseHm(nextStart), at = parseHm(depart);
-  if (from === null || to === null || at === null || to <= from) return 0;
-  return Math.round(extra * Math.min(1, Math.max(0, (at - from) / (to - from))));
-}
-
-/**
- * Space on screen for the free time between two stops, in whole px: `GAP_BASE_PX + GAP_EXTRA_PX * (1 - e^(-free / GAP_SCALE_MINUTES))`.
- * No slack (null), none left (0) or negative slack (already late) gets the base space only - the wording says "late", the distance does not.
- */
-export function gapPx(slackMinutes: number | null): number {
-  if (slackMinutes === null || !(slackMinutes > 0)) return GAP_BASE_PX;
-  return Math.round(GAP_BASE_PX + GAP_EXTRA_PX * (1 - Math.exp(-slackMinutes / GAP_SCALE_MINUTES)));
-}
+// `[2026-10-12 사용자 결정 — 멘토링 코멘트]` The space between two stops is no longer drawn from the free time along a curve (`gapPx` · `leadPx`, 2026-10-04 · 10-07):
+// the line is drawn to scale, 1 minute = 0.8 px since `[2026-10-13 ④]` (was 1.2), long free time folded (`time-rail.ts`).
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // How far a stop can go

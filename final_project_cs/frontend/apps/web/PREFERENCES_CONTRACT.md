@@ -1,6 +1,6 @@
 # 여행 취향 설문 · 백엔드 `constraints.survey` 대응
 
-최신 확인: 2026-09-29 · SKN32 `develop` `fc1ac0a` 코드 기준. 화면별 요구·사용 API·협의와 연결 상태는 [공유 연동 문서](../../../wiki/external/web-screen-api.md)에서 관리한다.
+최신 확인: 2026-10-08 · SKN32 `role-eval-ui` `68bce77`(ST4F-203 — 기준 커밋만 갱신했다. 설문 판 `2026-09-24.v1` 과 `payload.ts` 는 백엔드 계약 시험 `tests/contract/test_web_client_contract.py` 가 서버 `TripSurvey` 와 맞춰 보며 2026-10-08 통과했고, 본문 재검토는 하지 않았다) · 앞선 확인 2026-09-29 `develop` `fc1ac0a`. 화면별 요구·사용 API·협의와 연결 상태는 [공유 연동 문서](../../../wiki/external/web-screen-api.md)에서 관리한다.
 
 작성일: 2026-09-28 · 상태: 백엔드 설문 계약에 맞춤(TeamFlow `ST4F-156`). 같은 날 앞선 판(`ST4F-155`)의 프론트 자체 형식과 온보딩 끝 별도 전송은 없앴다.
 

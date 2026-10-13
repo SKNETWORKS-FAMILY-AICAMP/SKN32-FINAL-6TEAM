@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { chatLimitFor, formatNumber, watchState, type AdminCommand, type AdminSnapshot, type ApiUsage, type ScreenProps, type User, type WatchRule } from '../../lib/model';
+import { chatLimitFor, formatNumber, watchState, type AdminCommand, type AdminSnapshot, type ApiUsage, type ScreenProps, type User, type UsersListState, type WatchRule } from '../../lib/model';
 import styles from './screens.module.css';
 
 const NEAR_CAP_PERCENT = 80; // 화면 검토용 제안값. 실제 운영 기준은 팀 합의 전이다.
@@ -44,11 +44,11 @@ function useCommand(onCommand: ScreenProps['onCommand']) {
   const [error, setError] = useState('');
   async function run(make: () => AdminCommand, success: string) {
     setError(''); setMessage(''); setBusy(true);
-    try { await onCommand(make()); setMessage(success); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : '변경하지 못했습니다. 입력을 확인하고 다시 시도하세요.'); }
+    try { await onCommand(make()); setMessage(success); return true; }
+    catch (cause) { setError(cause instanceof Error ? cause.message : '변경하지 못했습니다. 입력을 확인하고 다시 시도하세요.'); return false; }
     finally { setBusy(false); }
   }
-  return { run, busy, feedback: <>{error && <p className="error" role="alert">{error}</p>}{message && <p className="success" role="status">{message}</p>}</> };
+  return { run, busy, clear: () => { setError(''); setMessage(''); }, feedback: <>{error && <p className="error" role="alert">{error}</p>}{message && <p className="success" role="status">{message}</p>}</> };
 }
 
 function Heading({ eyebrow, title, children, action }: { eyebrow: string; title: string; children: ReactNode; action?: ReactNode }) {
@@ -112,11 +112,12 @@ export function HomeScreen({ data, navigate }: ScreenProps) {
   </div>;
 }
 
-export function UsersScreen({ data, navigate }: ScreenProps) {
-  const [query, setQuery] = useState('');
-  const [status, setStatus] = useState('전체');
-  const [quick, setQuick] = useState('전체');
-  const [order, setOrder] = useState('마지막 사용순');
+export function UsersScreen({ data, navigate, listState, onListStateChange }: ScreenProps & { listState: UsersListState; onListStateChange: (state: UsersListState) => void }) {
+  const { query, status, quick, order } = listState;
+  const setQuery = (query: string) => onListStateChange({ ...listState, query });
+  const setStatus = (status: string) => onListStateChange({ ...listState, status });
+  const setQuick = (quick: string) => onListStateChange({ ...listState, quick });
+  const setOrder = (order: string) => onListStateChange({ ...listState, order });
   const inquiries = (id: string) => data.inquiries.filter(item => item.userId === id).length;
   const users = data.users.filter(user => user.id.toLowerCase().includes(query.trim().toLowerCase()) && (status === '전체' || user.blocked === (status === '차단')) && (quick !== '채팅 한도 도달' || user.chat >= chatLimitFor(user, data)) && (quick !== '문의 있음' || inquiries(user.id) > 0))
     .sort((a, b) => order === '마지막 사용순' ? b.lastUsed.localeCompare(a.lastUsed) : (b.chat + b.web) - (a.chat + a.web));
@@ -146,10 +147,16 @@ function UserDetail({ data, user, onCommand, navigate }: ScreenProps & { user: U
   const limit = chatLimitFor(user, data);
   const nextDay = new Date(new Date(`${kstDay(data.clock)}T00:00:00+09:00`).getTime() + MILLISECONDS_PER_DAY);
   function saveLimit(event: FormEvent) { event.preventDefault(); void limitAction.run(() => ({ type: 'user-limit', userId: user.id, limit: integer(exception, '예외 한도'), period, reason: reasonRequired(limitReason) }), '예외 한도를 데모에 반영하고 운영 기록에 남겼습니다.'); }
+  async function confirmBlock(event: FormEvent) {
+    event.preventDefault();
+    if (await block.run(() => ({ type: 'block-user', userId: user.id, blocked: !user.blocked, reason: reasonRequired(blockReason) }), `${user.blocked ? '차단 해제' : '차단'}를 데모에 반영했습니다.`)) {
+      setBlockOpen(false); setBlockReason('');
+    }
+  }
   return <div className={styles.screen}><button className={styles.back} onClick={() => navigate('/users')}>← 사용자 목록</button>
-    <Heading eyebrow="OPERATIONS / USER DETAIL" title="사용자 상세" action={<button className={user.blocked ? 'primary' : 'danger'} onClick={() => setBlockOpen(!blockOpen)}>{user.blocked ? '차단 해제' : '사용자 차단'}</button>}><strong>{user.id}</strong> · 키 발급 {timestamp(user.issuedAt)} · 마지막 사용 {timestamp(user.lastUsed)} · <span className="badge">{user.blocked ? '차단' : '정상'}</span></Heading>
+    <Heading eyebrow="OPERATIONS / USER DETAIL" title="사용자 상세" action={<button className={user.blocked ? 'primary' : 'danger'} onClick={() => { block.clear(); setBlockOpen(!blockOpen); }}>{user.blocked ? '차단 해제' : '사용자 차단'}</button>}><strong>{user.id}</strong> · 키 발급 {timestamp(user.issuedAt)} · 마지막 사용 {timestamp(user.lastUsed)} · <span className="badge">{user.blocked ? '차단' : '정상'}</span></Heading>
     <p className="notice">서버는 키 원문을 보관하지 않습니다. 사용자 ID는 키 재발급 뒤에도 유지됩니다. 운영 차단 해제는 폐기한 옛 키를 되살리지 않습니다.</p>
-    {blockOpen && <form noValidate className={`${styles.cautionPanel} panel`} onSubmit={event => { event.preventDefault(); void block.run(() => ({ type: 'block-user', userId: user.id, blocked: !user.blocked, reason: reasonRequired(blockReason) }), `${user.blocked ? '차단 해제' : '차단'}를 데모에 반영했습니다.`); }}><h2>{user.blocked ? '차단 해제 확인' : '차단 확인'}</h2><p>{user.blocked ? '사용자가 같은 키로 다시 접근할 수 있습니다.' : '이 사용자의 요청을 거절합니다. 데이터는 삭제하지 않습니다.'} 진행 중인 여행 감시를 함께 멈출지는 미정입니다.</p><label>차단·해제 사유 (필수)<input value={blockReason} onChange={event => setBlockReason(event.target.value)} placeholder="처리 근거를 적어 주세요" /></label><div className="toolbar"><button className="danger" disabled={block.busy}>{block.busy ? '반영 중…' : user.blocked ? '차단 해제 확정' : '차단 확정'}</button><button type="button" onClick={() => setBlockOpen(false)}>닫기</button></div>{block.feedback}</form>}
+    {blockOpen && <form noValidate className={`${styles.cautionPanel} panel`} onSubmit={confirmBlock}><h2>{user.blocked ? '차단 해제 확인' : '차단 확인'}</h2><p>{user.blocked ? '사용자가 같은 키로 다시 접근할 수 있습니다.' : '이 사용자의 요청을 거절합니다. 데이터는 삭제하지 않습니다.'} 진행 중인 여행 감시를 함께 멈출지는 미정입니다.</p><label>차단·해제 사유 (필수)<input value={blockReason} onChange={event => setBlockReason(event.target.value)} placeholder="처리 근거를 적어 주세요" /></label><div className="toolbar"><button className="danger" disabled={block.busy}>{block.busy ? '반영 중…' : user.blocked ? '차단 해제 확정' : '차단 확정'}</button><button type="button" onClick={() => setBlockOpen(false)}>닫기</button></div>{block.feedback}</form>}
     <div className={styles.twoColumns}><section className="panel"><h2>② 채팅 호출</h2><p className={styles.largeNumber}>{number(user.chat)} <span>/ {number(limit)}회</span></p><Meter value={user.chat} max={limit} label="오늘 채팅 사용률" /><p className={user.chat >= limit ? styles.warning : 'muted'}>{user.chat >= limit ? `한도 도달 · 요청 거절 · ${timestamp(nextDay.toISOString())}부터 다시 이용` : `오늘 ${number(Math.max(0, limit - user.chat))}회 더 이용할 수 있습니다.`}</p></section><section className="panel"><h2>③ 웹 호출</h2><p className={styles.largeNumber}>{number(user.web)} <span>회 · 집계만</span></p><h3>자주 부른 경로</h3>{user.paths.length ? <ul className={styles.pathList}>{[...user.paths].sort((a, b) => b.count - a.count).slice(0, 3).map(path => <li key={path.path}><code>{path.path}</code><strong>{number(path.count)}</strong></li>)}</ul> : <Empty>실제 HTTP 경로별 계측은 연결되지 않았습니다.</Empty>}</section></div>
     <section className="panel"><PanelTitle title="이 사용자 여행의 감시" aside={<button onClick={() => navigate('/limits')}>서비스 전체 감시 상태 →</button>} /><div className={styles.inlineStats}><span>진행 중 여행 <strong>{user.trips.filter(trip => trip.status === '진행 중').length}개</strong></span><span>감시 대상 장소 <strong>{sum(user.trips, trip => trip.places)}개</strong></span></div><p>서비스 전체 감시: 간격 늘림 {data.apis.filter(api => watchState(api, data.watchRules).startsWith('간격')).length}개 API · 멈춤 {data.apis.filter(api => watchState(api, data.watchRules) === '멈춤').length}개 API</p><p className="muted">외부 API 호출은 사용자·여행별로 나누지 않습니다. 서비스 전체 상태를 참고하세요.</p></section>
     <form noValidate className="panel" onSubmit={saveLimit}><PanelTitle title="사용자 예외 한도" aside={<span className="badge">현재 {user.exceptionLimit === null ? '기본 한도 사용' : `예외 ${number(user.exceptionLimit)}회`}</span>} /><div className={styles.filters}><label>② 채팅 하루 한도<input type="number" min="1" max={MAX_QUOTA} step="1" value={exception} onChange={event => setException(event.target.value)} /></label><label>적용 기간 · 정책 미정<select value={period} onChange={event => setPeriod(event.target.value as typeof period)}><option value="today">오늘만 · 데모</option><option value="until-cleared">해제할 때까지 · 데모</option></select></label></div><p className="muted">③ 웹 호출은 집계만 합니다. 예외 한도 기간은 화면 검토를 위한 제안입니다.</p><label>예외 한도 사유 (필수)<input value={limitReason} onChange={event => setLimitReason(event.target.value)} placeholder="변경하거나 해제하는 이유" /></label><div className="toolbar"><button className="primary" disabled={limitAction.busy}>예외 한도 저장</button><button type="button" disabled={limitAction.busy || user.exceptionLimit === null} onClick={() => void limitAction.run(() => ({ type: 'user-limit', userId: user.id, limit: null, period, reason: reasonRequired(limitReason) }), '예외를 해제하고 기본 한도로 돌렸습니다.')}>예외 해제 · 기본값 적용</button></div>{limitAction.feedback}</form>

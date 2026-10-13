@@ -116,6 +116,11 @@ export function useConsent(code: ConsentCode): boolean {
   return useSyncExternalStore(subscribe, () => readConsents()[code], () => false);
 }
 
+/** 이 항목들 중 몇 개에 동의했나(마이페이지 상태 줄). 서버 렌더에서는 0. */
+export function useAgreedCount(codes: readonly ConsentCode[]): number {
+  return useSyncExternalStore(subscribe, () => codes.filter((code) => readConsents()[code]).length, () => 0);
+}
+
 /** 필수 동의가 모두 있나(앱을 쓸 수 있나). 서버 렌더에서는 false. */
 export function useRequiredConsents(): boolean {
   return useSyncExternalStore(subscribe, () => readConsents().service_terms && readConsents().privacy, () => false);

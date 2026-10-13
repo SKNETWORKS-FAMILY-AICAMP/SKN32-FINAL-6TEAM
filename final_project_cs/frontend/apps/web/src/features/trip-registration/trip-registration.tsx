@@ -130,7 +130,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   async function continueWithAccount() {
     try {
       await keepLoginDraft({ text: value, files, ask, active });
-      router.push(`${routes.myPage}?returnTo=${encodeURIComponent(routes.newTrip)}#accounts`);
+      router.push(`${routes.myPageAccount}?returnTo=${encodeURIComponent(routes.newTrip)}`);
     } catch {
       setDraftWarning(t("로그인 전에 입력을 보관하지 못했어요. 파일을 다시 선택하지 않도록 이 화면에서 다시 시도해 주세요.", "Could not keep your input before sign-in. Try again here to avoid selecting your files again."));
     }
