@@ -52,3 +52,12 @@ Codex main 계정(gpt-6-sol) 2회. 1회차: 둘 다 「멈춰 두고 develop 반
 
 mock 서버 시험(화면 반응): 해당 없음.
 실서버 확인(서버 응답): 했음 — 오라클 서버에서 배포 · 건강 검사 · `/health` 200 · 웹 200 · 컨테이너 안 코드 확인. 고객 채팅 · 검색 응답은 확인 안 함.
+
+## 이어서 — develop 반영 뒤 덧씌움 제거 (같은 날 23시대)
+
+- 사용자 지시로 commit 세션이 role-manager 를 develop 에 합쳐 팀 SKN · 개인 A-COP develop 모두 `b37a0552` 로 올렸다(강제 푸시 없음). 덧씌움으로만 있던 3가지(정확한 이름 정렬 · 지식 문서 적재 · 하루 요약 날짜 전달)와 지식 문서를 이미지에 넣는 Dockerfile 줄이 develop 에 들어갔다.
+- 오라클 서버 `control/search-overlay.json` 을 `{}` 로 비웠다(백업 `control/_backup/2026-10-13_2330_overlay_retire/`). 비우기 직전 5분 회차가 옛 목록으로 검사해 `knowledge changed` 로 한 번 막혔다(develop 의 안내 문서가 서버 사본과 다름 — develop 판이 정본). 새 장치대로 한 번만 실패로 남았고 앱은 이전 판으로 계속 동작했다. 차단 기록을 풀고 다시 배포.
+- 결과: `b37a0552` 반영(이전 판 `ea4eba89` 보존), api · web · worker 새 이미지, healthy, `/health` 200, 웹 200. 컨테이너 안 — 정렬 2곳 · 안내 문서 읽기 · summary_day · develop 식사 처리(`_landmark_meal`) · 안내 문서 6개 확인, 최근 5분 오류 로그 0건. 디스크 16GB 남음.
+- 이제 오라클 서버는 덧씌울 코드가 없다. `prepare_search_release.py` 와 빈 목록은 남겨 두었다(다시 서버 전용 수정이 생기면 쓰는 자리 · 비어 있으면 아무것도 안 바꾼다).
+
+실서버 확인(서버 응답): 했음 — 배포 · 건강 검사 · 컨테이너 안 코드. 고객 채팅 · 검색 응답은 확인 안 함(상시 HTTP 검사 대기열 몫).
