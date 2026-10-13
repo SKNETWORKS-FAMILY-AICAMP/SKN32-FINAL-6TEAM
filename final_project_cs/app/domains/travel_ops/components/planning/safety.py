@@ -163,4 +163,5 @@ def classify(causes: list[Mapping[str, Any]] | None, rules: SafetyRules | None =
     return sorted(found, key=lambda e: (e.level != "trip",))[0]
 
 
-__all__ = ["Level", "SafetyEvent", "SafetyRules", "ShelterType", "classify"]
+# `notice_status` — 에이전트 팀이 「끝났나」 공용 판정을 쓰는 문(팀은 ports 를 직접 import 하지 않는다 — `test_team_tool_discipline`). `[2026-10-13]`
+__all__ = ["Level", "SafetyEvent", "SafetyRules", "ShelterType", "classify", "notice_status"]

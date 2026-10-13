@@ -22,6 +22,9 @@ exclude = [
     "program",
     # 얼린 사본. 고치면 백업이 아니게 된다.
     "_backup",
+    # 작업 기록에 딸린 일회용 스크립트(`wiki/records/reports/…/scripts`). 기록은 고치지 않는다(cs CLAUDE.md) —
+    # 2026-10-13 develop 병합 때 role-manager 기록의 F401 2건이 처음 CI 범위에 들어왔다(role-manager 는 CI 를 돌리지 않는다).
+    "final_project_cs/wiki/records",
     "architecture-images",
     ".venv",
     "node_modules",

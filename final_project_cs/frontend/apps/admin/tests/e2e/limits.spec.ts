@@ -7,12 +7,26 @@ test('차단·해제와 예외 한도는 사유를 요구하고 사용자와 운
   await page.getByRole('button', { name: '차단 확정', exact: true }).click();
   await expect(main(page).getByRole('alert')).toContainText('사유');
   await expect(page.getByRole('button', { name: '사용자 차단', exact: true })).toBeVisible();
+  const invalidReason = '검토'.repeat(501);
+  await page.getByLabel('차단·해제 사유 (필수)', { exact: true }).fill(invalidReason);
+  await page.getByRole('button', { name: '차단 확정', exact: true }).click();
+  await expect(main(page).getByRole('alert')).toBeVisible();
+  await expect(page.getByLabel('차단·해제 사유 (필수)', { exact: true })).toHaveValue(invalidReason);
+  await expect(page.getByRole('button', { name: '사용자 차단', exact: true })).toBeVisible();
   await page.getByLabel('차단·해제 사유 (필수)', { exact: true }).fill('반복 요청 확인 후 임시 차단');
   await page.getByRole('button', { name: '차단 확정', exact: true }).click();
+  await expect(page.getByRole('button', { name: '차단 해제', exact: true })).toBeVisible();
+  await expect(page.getByLabel('차단·해제 사유 (필수)', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: '차단 해제', exact: true }).click();
+  await expect(page.getByLabel('차단·해제 사유 (필수)', { exact: true })).toHaveValue('');
+  await expect(main(page).getByRole('status')).toHaveCount(0);
+  await page.getByRole('button', { name: '차단 해제 확정', exact: true }).click();
+  await expect(main(page).getByRole('alert')).toContainText('사유');
   await expect(page.getByRole('button', { name: '차단 해제', exact: true })).toBeVisible();
   await page.getByLabel('차단·해제 사유 (필수)', { exact: true }).fill('사용자 요청 확인 후 차단 해제');
   await page.getByRole('button', { name: '차단 해제 확정', exact: true }).click();
   await expect(page.getByRole('button', { name: '사용자 차단', exact: true })).toBeVisible();
+  await expect(page.getByLabel('차단·해제 사유 (필수)', { exact: true })).toHaveCount(0);
 
   await page.getByLabel('② 채팅 하루 한도', { exact: true }).fill('75');
   await page.getByRole('button', { name: '예외 한도 저장', exact: true }).click();
@@ -22,6 +36,7 @@ test('차단·해제와 예외 한도는 사유를 요구하고 사용자와 운
   await page.getByRole('button', { name: '예외 한도 저장', exact: true }).click();
   await expect(page.getByRole('meter', { name: '오늘 채팅 사용률', exact: true })).toHaveAttribute('aria-valuetext', '50 / 75');
   await page.getByRole('navigation', { name: '운영 메뉴' }).getByRole('button', { name: '운영 기록', exact: true }).click();
+  await expect(main(page).getByRole('row').filter({ hasText: '사용자 차단' }).filter({ hasText: 'demo-user-01' })).toHaveCount(2);
   await expect(main(page).getByRole('row').filter({ hasText: '사용자 차단 해제' })).toContainText('사용자 요청 확인 후 차단 해제');
   await expect(main(page).getByRole('row').filter({ hasText: '예외 한도 변경' })).toContainText('오늘 여행 상담을 위한 한도 조정');
 });

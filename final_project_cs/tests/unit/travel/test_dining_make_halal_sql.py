@@ -90,3 +90,30 @@ def test_사람_확인_행은_웹_규칙을_타지_않는다(mh):
 def test_술은_판정에_쓰지_않고_상세에_적는다(mh):
     state, detail = mh.halal_state(row(**{"[확인] 등급": "무슬림 프렌들리", "[확인] 술": "팖"}), TODAY)
     assert state == "limited" and "술 팖" in detail
+
+
+def test_일반_식당은_가게만_넣고_목록과_할랄_속성은_넣지_않는다(mh, tmp_path, monkeypatch):
+    """할랄이 아니라고 본 곳 — 원장에는 남기되 할랄 목록 · 속성에서 뺀다(2026-10-12, 「고삼이」)."""
+    import csv
+    sheet, out = tmp_path / "할랄.csv", tmp_path / "halal.sql"
+    head = ["번호", "식당", "판정", "자치구", "주소", "원장", "원장상호", "관리번호", "위도", "경도", "전화",
+            "웹 근거 등급(초안)", "근거 출처", "[확인] 등급", "[확인] 인증 유효기간", "[확인] 돼지고기", "[확인] 술", "확인일", "메모"]
+    base = {k: "" for k in head}
+    rows = [{**base, "번호": "1", "식당": "할랄집", "판정": "영업", "자치구": "용산구", "주소": "서울 용산구 이태원로 1",
+             "원장": "일반", "관리번호": "M-HALAL", "위도": "37.5", "경도": "126.9",
+             "[확인] 등급": "무슬림 프렌들리", "확인일": "웹 2026-09-28"},
+            {**base, "번호": "2", "식당": "생선집", "판정": mh.GENERAL, "자치구": "서대문구", "주소": "서울 서대문구 연세로 1",
+             "원장": "일반", "관리번호": "M-PLAIN", "위도": "37.6", "경도": "126.9",
+             "[확인] 등급": "무슬림 프렌들리", "확인일": "웹 2026-09-28"}]
+    with open(sheet, "w", encoding="utf-8-sig", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=head)
+        w.writeheader()
+        w.writerows(rows)
+    monkeypatch.setattr(sys, "argv", ["make_halal_sql.py", "--sheet", str(sheet), "--out", str(out), "--today", "2026-09-28"])
+    mh.main()
+    sql = out.read_text(encoding="utf-8")
+    plain = [line for line in sql.splitlines() if "M-PLAIN" in line]
+    assert any(line.startswith("INSERT INTO dining.dn_place") for line in plain)       # 가게는 남는다
+    assert any("'localdata_food'" in line for line in plain)                          # 영업 근거도
+    assert not any("halal_curated" in line or "'halal'" in line for line in plain)    # 목록 · 속성은 없다
+    assert any("'halal'" in line for line in sql.splitlines() if "M-HALAL" in line)

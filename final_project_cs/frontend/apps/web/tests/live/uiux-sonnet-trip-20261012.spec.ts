@@ -1,11 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, openTitle, start, TRIP_ID, tripScreen } from "./helpers";
+import { beforeTheTrip, mockServer, openTitle, start, TRIP_ID, tripScreen, openPane, chatButton } from "./helpers";
 
 async function openTrip(page: Page) {
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
 }
 
+// `[2026-10-13]` 가짜 서버 여행(2026-10-01)이 「지난 일정」으로 그려지지 않게 여행 전날로 시계를 고정한다(helpers.ts beforeTheTrip).
+test.beforeEach(async ({ page }) => { await beforeTheTrip(page); });
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
   await start(page);
@@ -50,7 +52,7 @@ for (const width of [375, 1280]) test(`알림 센터 탭·재렌더 초점 유�
 test("알림의 일정에서 보기는 채팅·상세에서 목록을 열고 해당 제목으로 키보드 초점을 옮긴다", async ({ page, request }) => {
   await mockServer(request).scenario({ proposals: "open" });
   await openTrip(page);
-  await page.getByRole("tab", { name: "채팅", exact: true }).click();
+  await openPane(page, "채팅");
   const target = page.locator("#stop-button-i-c");
   async function goFromNotice() {
     await page.locator("#trip-bell").click();
@@ -62,7 +64,7 @@ test("알림의 일정에서 보기는 채팅·상세에서 목록을 열고 해
     await expect(target).toHaveAttribute("aria-expanded", "true");
     await expect(target).toBeFocused();
     expect(await target.evaluate(element => Boolean(element.closest("[inert]")))).toBe(false);
-    await expect(page.getByRole("tab", { name: "일정", exact: true })).toHaveAttribute("aria-selected", "true");
+    await expect(chatButton(page)).toHaveAttribute("aria-pressed", "false");
   }
   await goFromNotice();
   await page.getByRole("button", { name: "점심 식당 상세 보기", exact: true }).click();
@@ -134,7 +136,7 @@ test("채팅 Enter 전송 동안 입력 초점·초안을 유지하고 중복 �
   let sent = 0;
   await page.route(`**/v1/web/trips/${TRIP_ID}/messages`, async route => { sent += 1; await waiting; await route.continue(); });
   await openTrip(page);
-  await page.getByRole("tab", { name: "채팅", exact: true }).click();
+  await openPane(page, "채팅");
   const input = page.getByRole("textbox", { name: "여행 메시지", exact: true });
   await input.fill("다음 여행 일정을 알려 주세요");
   await input.press("Enter");
@@ -162,7 +164,7 @@ for (const failure of [false, true]) test(`문의 전송 ${failure ? "실패" : 
     await waiting;
     return failure ? route.fulfill({ status: 503, json: { error: { code: "busy", message: "잠시 뒤 다시 시도해 주세요." } } }) : route.fulfill({ json: { inquiry } });
   });
-  await page.goto("/support");
+  await page.goto("/support/new");   // `[2026-10-12]` the form is its own screen; the list is `/support`
   const title = page.getByRole("textbox", { name: "제목", exact: true });
   const body = page.getByRole("textbox", { name: "신고·건의 내용", exact: true });
   await title.fill(inquiry.title); await body.fill(inquiry.body);
@@ -175,15 +177,15 @@ for (const failure of [false, true]) test(`문의 전송 ${failure ? "실패" : 
   await pending.press("Enter");
   expect(sent).toBe(1);
   release();
-  await expect(body).toHaveJSProperty("readOnly", false);
   if (failure) {
+    await expect(body).toHaveJSProperty("readOnly", false);
     await expect(page.locator("#main-content").getByRole("alert")).toContainText("입력한 내용은 그대로예요");
     await expect(send).toBeFocused();
     await expect(body).toHaveValue(inquiry.body);
   } else {
+    // `[2026-10-12]` A recorded inquiry goes back to the list, which says so once.
+    await expect(page).toHaveURL(/\/support$/);
     await expect(page.locator("#main-content").getByRole("status")).toContainText("내용을 기록했어요");
-    await expect(title).toBeFocused();
-    await expect(body).toHaveValue("");
   }
   expect(sent).toBe(1);
 });

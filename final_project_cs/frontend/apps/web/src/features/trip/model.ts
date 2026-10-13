@@ -28,6 +28,8 @@ export interface TripStop {
   kind?: string;
   /** `[2026-10-13]` The day the stop ends (Seoul) when the server sent an end — a stay ends on its check-out day. */
   endDate?: string;
+  /** `[2026-10-08]` The place's ref for its registered photos (「tour:<ID>」) — only when the server sends one (`place_ref`, asked of the backend). */
+  placeRef?: string;
 }
 
 /**

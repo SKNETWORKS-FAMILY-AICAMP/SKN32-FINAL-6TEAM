@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
 import type { Translate } from "@/lib/i18n";
 import { useSettings, useT } from "@/lib/settings";
-import type { ConsentCode } from "./consent-model";
+import { serverPending, type ConsentCode } from "./consent-model";
 import { consentedAt, readConsents, useConsent } from "./consent-store";
 import { saveConsents, type SendResult } from "./consent-sync";
 import { plainTitle } from "./terms-text";
@@ -43,6 +43,8 @@ function Row({ doc }: { doc: TermsDoc }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const at = agreed ? consentedAt() : null;
+  // `[2026-10-12 임시]` 서버가 아직 기록하지 못하는 항목: 전문만 보이고 동의 · 철회는 「준비 중」(`SERVER_PENDING_CONSENTS`).
+  const pending = serverPending(doc.code);
 
   async function change(next: boolean) {
     if (doc.required) return;                       // management edits optional items only
@@ -60,13 +62,14 @@ function Row({ doc }: { doc: TermsDoc }) {
   return <li className={styles.item} data-doc={doc.code}>
     <div className={styles.itemHead}>
       <span className={styles.itemName}><span className={styles.itemTag} data-required={doc.required || undefined}>{doc.required ? t("[필수]", "[Required]") : t("[선택]", "[Optional]")}</span>{t(...plainTitle(doc.title))}</span>
-      <span className={styles.itemState}>{agreed ? t(`동의함${at ? ` · ${at.slice(0, 10)}` : ""}`, `Agreed${at ? ` · ${at.slice(0, 10)}` : ""}`) : t("동의 안 함", "Not agreed")}</span>
+      <span className={styles.itemState}>{pending ? t("준비 중", "Coming soon") : agreed ? t(`동의함${at ? ` · ${at.slice(0, 10)}` : ""}`, `Agreed${at ? ` · ${at.slice(0, 10)}` : ""}`) : t("동의 안 함", "Not agreed")}</span>
     </div>
     <p className={styles.managerNote}>{t(doc.summary[0], doc.summary[1])}</p>
+    {pending && <p className={styles.managerNote}>{t("서버가 아직 이 동의를 기록하지 못해 동의 · 철회를 받지 않아요. 동의하지 않아도 앱을 쓸 수 있어요.", "The server cannot record this consent yet, so it cannot be given or withdrawn here. You can use the app without it.")}</p>}
     {confirming && <p className={styles.failed} role="alert">{t(...WITHDRAW[doc.code])}</p>}
     <div className={styles.itemActions}>
       <Button variant="quiet" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? t("전문 접기", "Hide full text") : t("전문 보기", "Read in full")}</Button>
-      {agreed
+      {pending ? null : agreed
         ? (confirming
           ? <><Button variant="primary" disabled={busy} onClick={() => void change(false)}>{t("철회하기", "Withdraw")}</Button><Button disabled={busy} onClick={() => setConfirming(false)}>{t("취소", "Cancel")}</Button></>
           : <Button variant="quiet" disabled={busy} onClick={() => setConfirming(true)}>{t("동의 철회", "Withdraw")}</Button>)

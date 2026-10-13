@@ -120,7 +120,10 @@ def _three() -> str:
     """원장에 없을 한글 세 글자 — 시험마다 새로."""
     import random
 
-    return "".join(chr(random.randint(0xAC00, 0xD7A3)) for _ in range(3))
+    while True:                          # 끝말이 동네 이름(동 · 구 · 역 · 로 · 길)이면 앞부분 찾기를 안 한다 — 다시 뽑는다
+        word = "".join(chr(random.randint(0xAC00, 0xD7A3)) for _ in range(3))
+        if word[-1] not in "동구역로길":
+            return word
 
 
 def test_a_three_letter_name_is_found_by_its_head_only_when_one_shop_has_it(conn, shop):
@@ -135,6 +138,14 @@ def test_a_three_letter_name_shared_by_two_shops_is_not_guessed(conn, shop):
     head = _three()
     shop(f"{head}플래그십티하우스")
     shop(f"{head}두번째가게본관")
+    assert find_place_by_name(conn, head) is None
+
+
+def test_a_three_letter_neighbourhood_name_is_not_a_shop_head(conn, shop):
+    """`[2026-10-12]` 「성수동 소문난 감자탕」 → 접수가 「성수동」으로 좁힘 → 「성수동」으로 시작하는 가게 하나(갤러리)를 골랐다(평가 PL-034).
+    동네 · 역 · 길 이름은 하나뿐이어도 앞부분으로 받지 않는다."""
+    head = _three()[:2] + "동"
+    shop(f"{head} 대림창고 갤러리")
     assert find_place_by_name(conn, head) is None
 
 

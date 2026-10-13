@@ -7,8 +7,6 @@ import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
 import { isGuess, MODE_NAMES, rideLines } from "@/features/map/route-lines";
 import { freeText } from "@/features/plan-check/day-times";
-import { GAP_BASE_PX, gapPx } from "@/features/plan-check/time-plan";
-import { Act } from "@/features/plan-check/parts";
 import pc from "@/features/plan-check/plan-check.module.css";
 import { distanceText, isStay, stayNights, type StayMark, type TripLeg } from "./trip-timeline";
 import type { TripStop } from "./model";
@@ -53,21 +51,24 @@ export function bookingLabel(stop: TripStop, t: Translate) {
 }
 
 /**
- * `[2026-10-07 사용자 결정 — 목업 C안]` One stop of a registered trip, on the plan check's timeline: its time at the left (start, and the end small; it stays at the top of the list while
- * the stop is in view), the card with its name and badges, 「상세 보기」, and — opened — the facts of the old trip screen's card with its three buttons.
+ * `[2026-10-07 사용자 결정 — 목업 C안]` One stop of a registered trip, on the plan check's timeline: its time at the left (start, and `[2026-10-12]` always its end small under it; it stays at
+ * the top of the list while the opened stop is in view), the card with its name and badges, and — opened — the facts of the old trip screen's card with its three buttons.
+ * `[2026-10-12 사용자 결정 — E]` 「상세 보기」 is no longer in the card's head: it takes the place of 「지도에서 보기」 among the buttons (that button only lowered the sheet — the customer sets its height).
+ * `past` (its end has passed): the same card in grey with 「지난 일정」 at the right of its head; `started` fills its dot (now has passed its start).
  */
-export function StopRow({ stop, next, open, selected, onToggle, onDetail, detailWhy, explain, onShowOnMap, onAsk, askBusy }: {
-  stop: TripStop; next: TripStop | undefined; open: boolean; selected: boolean;
-  onToggle: () => void; onDetail: () => void; detailWhy: string | null; explain: (why: string) => void;
-  onShowOnMap: () => void; onAsk: () => void; askBusy: boolean;
+export function StopRow({ stop, next, open, selected, past = false, started = false, onToggle, onDetail, onAsk, askBusy }: {
+  stop: TripStop; next: TripStop | undefined; open: boolean; selected: boolean; past?: boolean; started?: boolean;
+  onToggle: () => void; onDetail: () => void; onAsk: () => void; askBusy: boolean;
 }) {
   const t = useT();
   const id = `trip-stop-${stop.id}`;
   const timeFocused = open || selected;
   const stay = isStay(stop);
   const hasTags = stay || stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
-  return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}>
-    <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end aria-hidden={!timeFocused}>~{stay ? `${monthDay(stop.endDate!)} ` : ""}{stop.endTime || "—"}</time></span></span>
+  // `[2026-10-13]` A stay's end is on its check-out day — it is not this day's end, so the line does not read it (`data-end`).
+  return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}
+    data-rail="stay" data-start={stop.time} data-end={(!stay && stop.endTime) || undefined} data-rail-open={open || undefined} data-past-open={past || undefined} data-passed={started || undefined}>
+    <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end>~{stay ? `${monthDay(stop.endDate!)} ` : ""}{stop.endTime || "—"}</time></span></span>
     <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${styles.stopDot}`} data-stay={stay || undefined} /></span>
     <article id={`trip-card-${stop.id}`} className={`${pc.card} ${styles.stopCard}`} data-stay={stay || undefined} data-open={open || undefined} aria-labelledby={`${id}-title`}>
       <div className={`${pc.cardTop} ${styles.stopHead}`}>
@@ -84,20 +85,41 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
             </span>}
           </span>
         </button>
-        {/* `[2026-10-08 사용자 지시]` 「상세 보기」는 카드를 펼쳤을 때만 나오고, ＋/－ 는 늘 맨 오른쪽이다. 오른쪽 끝의 ＋/－ 는 같은 접기 단추의 누르는 자리일 뿐이라
-             화면 읽기와 키보드에는 앞의 이름 단추 하나만 있다. */}
-        {open && <Act className={styles.detailButton} why={detailWhy} explain={explain} onPress={onDetail} aria-label={t(`${stop.title} 상세 보기`, `Details of ${stop.title}`)}>{t("상세 보기", "Details")}<ChevronRight size={15} strokeWidth={1.8} aria-hidden="true" /></Act>}
+        {/* `[2026-10-08 사용자 지시]` ＋/－ 는 늘 맨 오른쪽이다. 오른쪽 끝의 ＋/－ 는 같은 접기 단추의 누르는 자리일 뿐이라 화면 읽기와 키보드에는 앞의 이름 단추 하나만 있다.
+             `[2026-10-12 사용자 지시]` 지난 일정은 그 앞(머리 오른쪽)에 「지난 일정」 표시. */}
+        {past && <span className={pc.pill} data-state="past">{t("지난 일정", "Past")}</span>}
         <button type="button" className={styles.toggleEnd} onClick={onToggle} tabIndex={-1} aria-hidden="true" data-toggle-mark><span className={styles.toggleMark}>{open ? "−" : "+"}</span></button>
       </div>
       {open && <div className={styles.stopBody} id={`stop-detail-${stop.id}`}>
         <StopFacts stop={stop} next={next} />
         <div className={styles.detailActions}>
-          <button type="button" className={styles.action} onClick={onShowOnMap}><MapPin size={16} strokeWidth={1.6} aria-hidden="true" />{t("지도에서 보기", "Show on map")}</button>
+          <button type="button" className={styles.action} onClick={onDetail} aria-label={t(`${stop.title} 상세 보기`, `Details of ${stop.title}`)}>{t("상세 보기", "Details")}<ChevronRight size={16} strokeWidth={1.6} aria-hidden="true" /></button>
           <button type="button" className={styles.action} disabled={askBusy} onClick={onAsk}><MessageCircle size={16} strokeWidth={1.6} aria-hidden="true" />{t("이 일정 질문하기", "Ask about this stop")}</button>
           {stop.mapUrl && <a className={styles.action} href={stop.mapUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} strokeWidth={1.6} aria-hidden="true" />{t("지도 앱으로 열기", "Open in maps app")}</a>}
         </div>
       </div>}
     </article>
+  </li>;
+}
+
+/**
+ * `[2026-10-12 사용자 결정 — B 지난 일정]` A stop whose end has passed, folded: one thin grey line (its name, 「~end」, ＋) — not to scale. Pressed, it opens as the same card as before
+ * (`StopRow` with `past`), the same facts and buttons, in grey.
+ */
+export function PastStopRow({ stop, onToggle }: { stop: TripStop; onToggle: () => void }) {
+  const t = useT();
+  return <li className={pc.entry} data-type="item" data-entry-id={stop.id} data-rail="stay" data-start={stop.time} data-end={stop.endTime || undefined} data-past data-passed>
+    <span className={pc.time}>{stop.time}</span>
+    <span className={pc.rail} aria-hidden="true"><span className={pc.dot} /></span>
+    <div><button type="button" className={pc.pastLine} id={`stop-button-${stop.id}`} aria-expanded={false} onClick={onToggle} aria-label={t(`${stop.title} · 지난 일정 · 펼치기`, `${stop.title} · past · open`)}>
+      <span>{stop.title}</span><small>~{stop.endTime || "—"}</small><b aria-hidden="true">+</b></button></div>
+  </li>;
+}
+
+/** The way between two past stops: a small gap (not to scale). */
+export function PastLegRow({ id }: { id: string }) {
+  return <li className={pc.entry} data-type="move" data-entry-id={id} data-rail="move" data-past aria-hidden="true">
+    <span className={pc.time} /><span className={pc.rail} /><div className={pc.pastGap} />
   </li>;
 }
 
@@ -177,9 +199,10 @@ export function legSummary(leg: TripLeg, t: Translate): string | null {
 }
 
 /**
- * `[2026-10-07 사용자 결정 — 목업 C안 · 계획 확인 화면과 같게]` The way from one stop to the next: 「출발」 time at the left (it stays at the top while the leg is in view), the mode, how long and
- * how far, and the free time after it (15 minutes or more; late says so) — the space after it grows with the free time. Opened: the server's own line for the move, when to leave and arrive,
- * what it rides, whether the line is a guess, and the customer's map app. A plan that keeps no moves (typed in) shows only the way to the next stop, as the old screen did.
+ * `[2026-10-07 사용자 결정 — 목업 C안 · 계획 확인 화면과 같게]` The way from one stop to the next: its time with 「출발」 under it at the left (it stays at the top while the leg is in view),
+ * the mode, how long and how far, and the free time after it (15 minutes or more; late says so). `[2026-10-12]` The space it takes is its time to scale (`RailList` — dashes only while
+ * travelling). Opened: the server's own line for the move, when to leave and arrive, what it rides, whether the line is a guess, and the customer's map app. A plan that keeps no moves
+ * (typed in) shows only the way to the next stop, as the old screen did.
  */
 export function LegRow({ leg, open, onToggle }: { leg: TripLeg; open: boolean; onToggle: () => void }) {
   const t = useT();
@@ -187,11 +210,11 @@ export function LegRow({ leg, open, onToggle }: { leg: TripLeg; open: boolean; o
   const late = leg.slack !== null && leg.slack < 0;
   const free = leg.slack !== null && !late ? freeText(leg.slack) : null;
   const freeSays = late ? t(`${Math.abs(leg.slack!)}분 늦어요`, `${Math.abs(leg.slack!)} min late`) : free ? t(`여유 ${free}`, `${free} free`) : null;
-  const extra = gapPx(leg.slack) - GAP_BASE_PX;
   const directions = leg.directions && <a className={styles.legLink} href={leg.directions} target="_blank" rel="noopener noreferrer"><ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" />{t("지도 앱에서 길찾기", "Directions in maps app")}</a>;
-  const time: ReactNode = leg.move ? <span className={pc.timeStack}><time data-move-departure>{leg.move.departAt || t("미정", "TBD")}</time><time className={pc.rangeEnd} data-move-arrival aria-hidden={!open}>{leg.move.arriveAt ? `~${leg.move.arriveAt}` : t("미정", "TBD")}</time></span> : null;
+  const time: ReactNode = leg.move ? <span className={pc.timeStack}><time data-move-departure>{leg.move.departAt || t("미정", "TBD")}</time>{leg.move.departAt && <small className={pc.departWord}>{t("출발", "Leave")}</small>}<time className={pc.rangeEnd} data-move-arrival aria-hidden={!open}>{leg.move.arriveAt ? `~${leg.move.arriveAt}` : t("미정", "TBD")}</time></span> : null;
+  const rail = { "data-rail": "move", "data-dep": leg.move?.departAt || undefined, "data-arr": leg.move?.arriveAt || undefined, "data-rail-open": open || undefined };
   if (!summary) {
-    return <li className={`${pc.entry} ${styles.legEntry}`} data-type="move" data-entry-id={leg.id}>
+    return <li className={`${pc.entry} ${styles.legEntry}`} data-type="move" data-entry-id={leg.id} {...rail}>
       <span className={pc.time} />
       <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${pc.departureMark}`}>−</span></span>
       <div className={pc.moveCol}><p className={`${pc.move} ${styles.legPlain}`}><span className={pc.modeIcon}><ModeIcon mode={null} /></span>{t("이동 정보가 아직 없어요", "Travel details are not available yet")}{directions && <><br />{directions}</>}</p></div>
@@ -203,11 +226,11 @@ export function LegRow({ leg, open, onToggle }: { leg: TripLeg; open: boolean; o
     leg.move ? [t(`${leg.move.departAt} 출발`, `Leave ${leg.move.departAt}`), leg.move.arriveAt && t(`${leg.move.arriveAt} 도착`, `arrive ${leg.move.arriveAt}`)].filter(Boolean).join(" → ") : null,
     ...(leg.shape ? rideLines(leg.shape, t) : []),
   ].filter(Boolean) as string[];
-  return <li className={`${pc.entry} ${styles.legEntry}`} data-type="move" data-entry-id={leg.id} data-time-focused={open || undefined}>
+  return <li className={`${pc.entry} ${styles.legEntry}`} data-type="move" data-entry-id={leg.id} data-time-focused={open || undefined} {...rail}>
     <div className={pc.moveClock}><span className={pc.time}>{time}</span></div>
     <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${pc.departureMark}`}>−</span></span>
     <div className={pc.moveCol}>
-      <div className={pc.move} data-open={open || undefined}>
+      <div className={pc.move} data-open={open || undefined} data-rail-box>
         <button type="button" className={pc.moveHead} aria-expanded={open} aria-controls={`trip-leg-${leg.id}`} onClick={onToggle}>
           <span className={pc.modeIcon}><ModeIcon mode={leg.shape?.mode ?? null} /></span>
           <span className={pc.moveText}>{summary}</span>
@@ -219,7 +242,6 @@ export function LegRow({ leg, open, onToggle }: { leg: TripLeg; open: boolean; o
           {directions}
         </div>}
       </div>
-      {extra > 0 && <div className={pc.freeGap} aria-hidden="true" style={{ height: `${extra}px` }} />}
     </div>
   </li>;
 }

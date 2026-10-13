@@ -1,7 +1,7 @@
 "use client";
 
 import { Bike, Bus, Car, Check, ChevronsUpDown, Footprints, Lock, LockOpen, Minus, Pencil, Plus, Sparkles, Trash2, TrainFront, Undo2, X } from "lucide-react";
-import { Fragment, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { Fragment, type MouseEvent, type ReactNode } from "react";
 import type { MoveOptionMode } from "@/lib/live/move-options";
 import { ro } from "@/lib/josa";
 import { useT } from "@/lib/settings";
@@ -10,8 +10,8 @@ import { timeline, type CheckRow, type PlanCheckView, type PlanDay, type PlanIte
 import { MoveModeBox } from "./move-mode";
 import { Act, Checks, NeedsLine, needsOf, VerdictMark } from "./parts";
 import type { PlanCheckActions } from "./plan-check";
-import { gapPx, GAP_BASE_PX, leadPx } from "./time-plan";
 import { insertionPoints, type InsertionPoint } from "./insertion-points";
+import { RailList } from "./rail-list";
 import { StopKind } from "./stop-kind";
 import type { Grab, TimeEditHandles, TimeKind } from "./use-time-edit";
 import styles from "./plan-check.module.css";
@@ -108,7 +108,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
       <h3 id={`${ctx.prefix}plan-day-${day.day}`} className={styles.day}>{ctx.done
         ? <button type="button" className={styles.dayButton} aria-pressed={mapDay === day.day} onClick={() => onShowDay(day.day)}>{heading(day)}</button>
         : heading(day)}</h3>
-      <ol className={styles.timeline}>{(() => {
+      <RailList className={styles.timeline}>{(() => {
         const times = dayTimes(view, day.day);
         const points = ctx.insertion ? insertionPoints(view, day) : [];
         return <>{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
@@ -117,7 +117,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
             ? <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
             : <MoveRow move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={{ ...ctx, revision: view.revision }} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />}
         </Fragment>)}{points.at(-1) && ctx.insertion?.(points.at(-1)!)}</>;
-      })()}</ol>
+      })()}</RailList>
     </section>)}</>;
 }
 
@@ -186,12 +186,15 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
     if ((event.target as HTMLElement).closest("button, a, input, select, textarea, label, form, [data-details]")) return;
     ctx.onPick(item.id);
   };
-  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-reveal-current={current || undefined} data-reveal-waiting={waiting || undefined} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-time-follow={done && (open || review || showUndo || removed || Boolean(changedFrom && actions.canUndoAll?.())) || undefined} data-time-focused={timeFocused || undefined} data-changed={changed || undefined} data-removed={removed || undefined}>
+  // `[2026-10-12 사용자 결정]` The rail (`rail-list.tsx`) reads the stop's start and end to draw it to scale; an opened card carries its line to the card's end.
+  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-reveal-current={current || undefined} data-reveal-waiting={waiting || undefined} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-time-follow={done && (open || review || showUndo || removed || Boolean(changedFrom && actions.canUndoAll?.())) || undefined} data-time-focused={timeFocused || undefined} data-changed={changed || undefined} data-removed={removed || undefined}
+    data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-rail-open={(open && !checking) || undefined}>
     {done
+      // `[2026-10-12 사용자 결정 — A]` Every stop shows its end under its start (it was only the picked or opened one, 2026-10-10).
       ? <Act className={styles.time} data-editing={(ctx.time?.id === item.id && ctx.time.kind === "start") || undefined} data-adjusted={adjusted || undefined} data-grab={grab ? true : undefined} {...grab} why={timeWhy} explain={explain}
           onPress={() => { if (!ctx.dragEnded()) ctx.onOpenTime(item); }}
-          title={t("눌러서 시간 고치기 · 잡고 위아래로 끌어도 돼요", "Press to change the time · or take it and drag up or down")} aria-label={t(`${item.title} 시간 고치기 · 지금 ${item.startsAt || "시간 없음"}${timeFocused ? ` · 끝 ${item.endsAt || "시간 없음"}` : ""}`, `Change the time of ${item.title} · now ${item.startsAt || "no time"}${timeFocused ? ` · ends ${item.endsAt || "no time"}` : ""}`)}>
-          <span className={styles.timeStack}><time data-stop-start>{item.startsAt || "–"}</time><time className={styles.rangeEnd} data-stop-end aria-hidden={!timeFocused}>~{item.endsAt || "—"}</time></span></Act>
+          title={t("눌러서 시간 고치기 · 잡고 위아래로 끌어도 돼요", "Press to change the time · or take it and drag up or down")} aria-label={t(`${item.title} 시간 고치기 · 지금 ${item.startsAt || "시간 없음"} · 끝 ${item.endsAt || "시간 없음"}`, `Change the time of ${item.title} · now ${item.startsAt || "no time"} · ends ${item.endsAt || "no time"}`)}>
+          <span className={styles.timeStack}><time data-stop-start>{item.startsAt || "–"}</time><time className={styles.rangeEnd} data-stop-end>~{item.endsAt || "—"}</time></span></Act>
       : <span className={styles.time}>{item.startsAt || "–"}</span>}
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} data-grab={grab ? true : undefined} {...grab} /></span>
     <article id={`${ctx.prefix}plan-card-${item.id}`} className={styles.card} data-locked={item.locked || undefined} data-pickable={done && !checking && !removed ? true : undefined} data-open={open && !checking ? true : undefined} aria-labelledby={`${ctx.prefix}plan-item-${item.id}`} aria-busy={checking && !waiting} onClick={pickCard}>
@@ -323,8 +326,9 @@ export function legText(summary: string): string {
 }
 
 /**
- * `slack` = the free minutes after this leg (next stop's start minus the time the traveller gets there). ★`[2026-10-04 사용자 지시]` The space after a leg grows with it
- * (`gapPx`), and 15 minutes or more is said once, quietly (「여유 1시간 42분」); a leg that arrives late says so instead (「10분 늦어요」).
+ * `slack` = the free minutes after this leg (next stop's start minus the time the traveller gets there). ★`[2026-10-04 사용자 지시]` 15 minutes or more is said once, quietly
+ * (「여유 1시간 42분」); a leg that arrives late says so instead (「10분 늦어요」). `[2026-10-12 사용자 결정]` The space the leg takes is its time to scale (`rail-list.tsx` — dashes only while
+ * travelling, a thin line for waiting and the free time), and its time, 「−」 and line of text stand where it leaves (`--dep`).
  */
 function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: PlanItem | undefined; to: PlanItem | undefined; ctx: RowContext; slack: number | null; dim: boolean }) {
   const t = useT();
@@ -333,13 +337,10 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
   const checking = move.verdict === null;
   // Only a leg that needs a look is marked: a fine one stays quiet, so the eye goes to the stops first.
   const mark = checking || move.verdict !== "review" ? null : <VerdictMark verdict={move.verdict} />;
-  const extra = gapPx(slack) - GAP_BASE_PX;
-  // ★`[2026-10-07 사용자 지시]` The free space is split above and below the leg by when it leaves between the two stops' start times (`leadPx`): it stands nearer the stop whose time is closer.
-  const lead = done && !checking ? leadPx(extra, from?.startsAt ?? "", to?.startsAt ?? "", move.departAt) : 0;
   const free = freeText(slack);
   const late = slack !== null && slack < 0;
   // ★`[2026-10-05 사용자 지시]` One line says it all: the way, how long, how far - and how much time is left after it (「지하철 4호선 50분 · 3.5km  여유 1시간 40분」). The free time was a second line
-  //   under the leg that took room and said nothing the first line could not; the space between the stops still grows with it (`freeGap`).
+  //   under the leg that took room and said nothing the first line could not.
   const freeSays = done && !checking ? (late ? t(`${Math.abs(slack!)}분 늦어요`, `${Math.abs(slack!)} min late`) : free ? t(`여유 ${free}`, `${free} free`) : null) : null;
   const line = checking ? null : <>
     <span className={styles.modeIcon}><ModeIcon mode={move.mode} /></span>
@@ -349,8 +350,9 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
   // ★`[2026-10-05 사용자 지시]` The time of leaving can be changed like the time of a stop: leaving later uses the free time first, then the next stops are pushed.
   const leaveEditing = ctx.time?.id === move.fromId && ctx.time.kind === "depart";
   const timeFocused = done && (ctx.time ? leaveEditing : open);
+  // `[2026-10-12 사용자 결정 — A]` 「HH:MM」 and 「출발」 under it (the 44 px column holds no 「HH:MM 출발」 on one line); opened, 「~도착」 under that.
   const leaving = <span className={styles.timeStack}>
-    {move.departAt ? <time data-move-departure>{move.departAt}</time> : <span data-move-departure>{t("미정", "TBD")}</span>}
+    {move.departAt ? <><time data-move-departure>{move.departAt}</time><small className={styles.departWord}>{t("출발", "Leave")}</small></> : <span data-move-departure>{t("미정", "TBD")}</span>}
     {(move.departAt || move.arriveAt) && (move.arriveAt
       ? <time className={styles.rangeEnd} data-move-arrival aria-hidden={!timeFocused}>~{move.arriveAt}</time>
       : <span className={styles.rangeEnd} data-move-arrival aria-hidden={!timeFocused}>{t("미정", "TBD")}</span>)}
@@ -360,7 +362,8 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
       : from.locked ? t("고정한 일정에서 나서는 시각이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요", "Locked · unlock the stop to change when to leave")
         : from.booked === true ? t("예약한 일정에서 나서는 시각이라 바꿀 수 없어요", "Booked: when to leave cannot be changed") : ctx.frozen;
   const grab = done && !checking && from && !leaveWhy ? ctx.timeHandle(from, "depart") : undefined;
-  return <li className={styles.entry} data-type="move" data-entry-id={move.id} data-reveal-current={!done && ctx.reveal?.activeId === move.id || undefined} data-verdict={move.verdict ?? "checking"} data-time-focused={timeFocused || undefined} data-dim={dim || undefined} style={lead > 0 ? { "--lead": `${lead}px` } as CSSProperties : undefined}>
+  return <li className={styles.entry} data-type="move" data-entry-id={move.id} data-reveal-current={!done && ctx.reveal?.activeId === move.id || undefined} data-verdict={move.verdict ?? "checking"} data-time-focused={timeFocused || undefined} data-dim={dim || undefined}
+    data-rail="move" data-dep={move.departAt || undefined} data-arr={move.arriveAt || undefined} data-rail-open={open || undefined}>
     <div className={styles.moveClock}>
     {done && !checking && from
       ? <Act className={styles.time} data-editing={leaveEditing || undefined} data-grab={grab ? true : undefined} {...grab} why={leaveWhy} explain={ctx.explain} onPress={() => { if (!ctx.dragEnded()) ctx.onOpenDepart(move.fromId); }}
@@ -369,8 +372,7 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
     </div>
     <span className={styles.rail} aria-hidden="true"><span className={`${styles.dot} ${styles.departureMark}`} data-departure-mark title={t("출발", "Depart")} data-grab={grab ? true : undefined} {...grab}><Minus size={16} strokeWidth={2} /></span></span>
     <div className={styles.moveCol}>
-    {lead > 0 && <div className={styles.freeGap} aria-hidden="true" style={{ height: `${lead}px` }} />}
-    <div className={styles.move} data-open={open || undefined}>{checking
+    <div className={styles.move} data-open={open || undefined} data-rail-box>{checking
       ? <span className={styles.waiting}>{done ? t("이동 경로 다시 찾는 중…", "Finding the way again…") : t("이동 경로를 찾는 중…", "Finding the way…")}</span>
       : done
         ? <><button type="button" className={styles.moveHead} aria-expanded={open} aria-controls={`${ctx.prefix}plan-move-${move.id}-checks`} onClick={() => ctx.onToggleMove(move.id)}>{line}</button>
@@ -380,7 +382,6 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
           {open && <Checks id={`${ctx.prefix}plan-move-${move.id}-checks`} rows={move.checks} />}</>
         : <div className={styles.moveHead}>{line}</div>}</div>
     {done && !checking && leaveEditing && !ctx.time!.direct && from && <TimeEditor item={from} ui={ctx.time!} />}
-    {done && !checking && extra - lead > 0 && <div className={styles.freeGap} aria-hidden="true" style={{ height: `${extra - lead}px` }} />}
     </div>
   </li>;
 }

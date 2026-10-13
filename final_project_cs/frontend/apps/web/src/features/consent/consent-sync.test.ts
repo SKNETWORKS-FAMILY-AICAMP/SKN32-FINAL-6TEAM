@@ -80,7 +80,7 @@ describe("the browser's copy of the consents and the server's record", () => {
     expect(post.init.method).toBe("POST");
     const body = JSON.parse(String(post.init.body)) as { version: string; items: { code: string; agreed: boolean; text_sha256: string }[] };
     expect(body.version).toBe(TERMS_VERSION);
-    expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false], ["service_improvement", false]]);
+    expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false]]);   // `[2026-10-12 임시]` service_improvement 는 서버가 아직 몰라 보내지 않는다
     for (const item of body.items) expect(item.text_sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(consentsSynced()).toBe(true);
   });

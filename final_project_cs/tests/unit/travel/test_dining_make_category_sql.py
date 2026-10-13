@@ -98,3 +98,30 @@ def test_결_칸은_원장_제약과_같다(mc):
                encoding="utf-8").read()
     block = sql.split("dn_place_style_chk CHECK", 1)[1].split(");", 1)[0]
     assert tuple(re.findall(r"'([^']+)'", block)) == mc.STYLES
+
+
+def test_엑셀_판도_같은_규칙으로_읽고_날짜가_된_확인일을_돌린다(mc, tmp_path):
+    """`[2026-10-12]` 드롭다운이 있는 .xlsx 검수 시트 — 「검수」 시트를 읽는다. 엑셀이 확인일을 날짜로 바꿔도 받는다."""
+    from datetime import datetime
+
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = mc.XLSX_SHEET
+    ws.append(STYLE_COLS)
+    ws.append(["1", "u1", "가", "", "한식", datetime(2026, 10, 13), "고기구이"])
+    ws.append(["2", "u2", "나", "", "", None, ""])                       # 확인 전
+    path = tmp_path / "분류_검수_20261013.xlsx"
+    wb.save(path)
+    lines, n = mc.build(str(path))
+    assert n == {"분류": 1, "결": 1, "확인 전": 1}
+    assert any("style = '고기구이'" in line and "'u1'" in line for line in lines)
+
+
+def test_같은_이름이면_엑셀_판을_읽는다(mc, tmp_path, monkeypatch):
+    for name in ("분류_검수_20261012.csv", "분류_검수_20261012_결.csv", "분류_검수_20261012_결.xlsx"):
+        (tmp_path / name).write_text("", encoding="utf-8")
+    patterns = [str(tmp_path / ("분류_검수_[0-9]*." + ext)) for ext in ("csv", "xlsx")]
+    import glob
+    assert sorted(p for pat in patterns for p in glob.glob(pat))[-1].endswith("_결.xlsx")

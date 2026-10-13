@@ -47,6 +47,10 @@ class FakeDb:
     def execute(self, sql, params):
         self.queries.append(sql)
         self._result = None
+        self._rows = []
+        if "FROM itinerary_items" in sql or "FROM trips" in sql:
+            # `[2026-10-13 develop 병합]` read.booking 이 그 예약의 여행(`trip`)을 찾는다(활동 전달 8번 회신) — 이 흉내에는 여행이 없다
+            return
         if "FROM customer_cases" in sql:
             tenant, customer, case_id = params
             ref = self.case_subject or {}
@@ -68,6 +72,9 @@ class FakeDb:
 
     def fetchone(self):
         return self._result
+
+    def fetchall(self):
+        return self._rows
 
 
 SOON_ID, LATER_ID = str(uuid4()), str(uuid4())
