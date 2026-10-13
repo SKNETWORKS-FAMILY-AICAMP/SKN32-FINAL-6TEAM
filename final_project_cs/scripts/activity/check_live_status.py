@@ -6,7 +6,7 @@
 
 ★대상. 지금부터 `travel.activity_judge.live_status_within_hours`(기본 72시간) 안에 시작하는 활동 일정 항목의 (장소, 날짜).
   이미 `--recheck-hours`(기본 6시간) 안에 확인한 줄은 건너뛴다. 모름(`unknown`)도 줄로 남겨 같은 곳을 계속 다시 부르지 않는다.
-★예산. 호출마다 `activity_judge_web` 예산(`build_activity_judge_budget` — DB)을 확인한다. 넘으면 거기서 멈추고 남은 곳을 보고한다.
+★예산. 호출마다 `activity_judge_web` 예산(`CallBudget` — DB)을 확인한다. 넘으면 거기서 멈추고 남은 곳을 보고한다.
 ★켜는 법. 전역 `ACOP_ACTIVITY_JUDGE_MODE` 가 `rule` 이면(기본) 판정 LLM 이 없어 아무것도 하지 않는다 — `shadow` 로 두고 돌린다.
   `kind_modes.live_status` 가 `rule` 이면 이 배치도 돌지 않는다. 저장 결과를 고객 답에 쓰는 것은 `llm` 일 때만이다(`shadow` 는 기록만).
 
@@ -126,6 +126,19 @@ def _judge_factory():
     return run
 
 
+def _budget():
+    """웹 검색 호출 예산 — 판정 종류 → 「불러도 되나」. `external_call_budget` 의 줄(`activity_judge_web`)을 DB 로 센다.
+
+    ★조립(`app.composition.build_activity_judge_budget`)은 코어 파일이라 develop 에 없을 수 있어 쓰지 않는다 — 같은 부품(`CallBudget` ·
+      `budget_caps` · `budget_meter`)을 직접 쓴다. 상한은 `guardrails.yaml travel.activity_judge.budget`. 넘거나 세지 못하면 부르지 않는다."""
+    from app.domains.travel_ops.instances.activity.judge.modes import budget_caps, budget_meter
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget
+    from app.infrastructure.db.session import get_connection
+
+    budget = CallBudget(connection_factory=get_connection, caps=budget_caps())
+    return lambda kind: budget.try_reserve(budget_meter(kind))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--dry-run", action="store_true", help="대상만 센다 — 웹을 부르지 않고 저장도 하지 않는다")
@@ -155,8 +168,6 @@ def main() -> None:
     judge = _judge_factory()
     if judge is None:
         raise SystemExit("판정 LLM 이 없다 — ACOP_ACTIVITY_JUDGE_MODE 를 shadow 로 두고 OpenAI 키를 확인한다")
-    from app.composition import build_activity_judge_budget
-
     model = os.environ.get("ACOP_ACTIVITY_JUDGE_MODEL") or None
 
     def read_row(target: Target):
@@ -173,7 +184,7 @@ def main() -> None:
             live_store.record(conn, target.content_id, target.visit_date, value, citations=citations,
                               basis=verdict.basis or verdict.failure_code, model=model)
 
-    result = check_targets(targets, read_row=read_row, judge=judge, budget=build_activity_judge_budget(),
+    result = check_targets(targets, read_row=read_row, judge=judge, budget=_budget(),
                            record=record, now=now, recheck_hours=args.recheck_hours, limit=args.limit)
     print(f"확인 {result['checked']:,}곳 (닫힘 {result['closed']:,} · 열림 {result['open']:,} · 모름 {result['unknown']:,})"
           f" · 최근에 확인해 건너뜀 {result['fresh']:,} · 실패 {result['failed']:,} · 남음 {result['left']:,}")

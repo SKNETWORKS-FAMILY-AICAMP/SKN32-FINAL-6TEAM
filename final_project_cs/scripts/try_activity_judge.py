@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import sys
 import time
 from datetime import UTC, datetime, timedelta
@@ -44,7 +45,7 @@ from zoneinfo import ZoneInfo
 
 KST = ZoneInfo("Asia/Seoul")
 KIND_LABEL = {"closure": "휴무", "operating_hours": "운영시간", "weather_sensitive": "실내외",
-              "disaster_effect": "재난문자", "live_status": "실시간(웹)"}
+              "disaster_effect": "재난문자", "live_status": "실시간(웹)", "alternative_order": "대체 후보 순서"}
 
 
 class Tools:
@@ -226,14 +227,17 @@ def build_values(args: argparse.Namespace, starts: datetime) -> tuple[dict[str, 
     return values, found
 
 
-def make_task(team_cls):
+def make_task(team_cls, *, text: str = "성립 점검(try_activity_judge)", survey: dict[str, Any] | None = None):
     from app.core.contracts import ContextPack, TeamTask
 
+    state: dict[str, Any] = {"status": "running"}
+    if survey:
+        state["survey"] = survey                      # 여행 설문 — 대체 후보 순서가 취향으로 읽는다
     context = ContextPack(pack_id=uuid4(), case_id=uuid4(), team_id="activity", tenant_id="try-activity-judge",
-                          knowledge_scope=["travel_activity"], current_state={"status": "running"},
+                          knowledge_scope=["travel_activity"], current_state=state,
                           estimated_input_tokens=10)
     return TeamTask(task_id=uuid4(), run_id=uuid4(), case_id=context.case_id, team_id="activity",
-                    capability="activity.check_feasible", case_version=1, input_text="성립 점검(try_activity_judge)",
+                    capability="activity.check_feasible", case_version=1, input_text=text,
                     context=context, allowed_tools=list(team_cls.manifest.allowed_tools),
                     deadline_at=datetime.now(UTC) + timedelta(seconds=90))
 
@@ -292,6 +296,8 @@ def print_judgments(records: list[dict[str, Any]], outputs: dict[str, Any]) -> N
     for kind, out in outputs.items():
         cites = [c.get("url") for c in out.get("citations") or []]
         print(f"   · {KIND_LABEL[kind]} — LLM 이유: {out.get('reason')}")
+        if kind == "alternative_order":                # 순서 · 취향을 썼나 — 이유가 비면 왜 비었는지 보인다
+            print(f"       order={out.get('order')} used_preference={out.get('used_preference')}")
         if out.get("quotes"):
             print(f"       인용: {out['quotes']}")
         if cites:
@@ -324,6 +330,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--party", type=int, default=2)
     parser.add_argument("--capacity", type=int, default=10)
     parser.add_argument("--mode", choices=["shadow", "rule"], default="shadow")
+    parser.add_argument("--text", default="성립 점검(try_activity_judge)",
+                        help="고객 문장 — 대체 후보 순서가 취향 단서로 읽는다(예: 아이랑 갈 만한 곳으로)")
+    parser.add_argument("--survey", help="여행 설문 JSON — 예: {\"party\":\"아이 동반\",\"theme\":\"체험\"}")
+    parser.add_argument("--order-mode", choices=["shadow", "llm"], default=None,
+                        help="이번 실행만 대체 후보 순서의 모드를 덮는다(llm 이면 고객 결과에 LLM 순서가 쓰인다)")
     parser.add_argument("--no-db", action="store_true", help="섀도 기록 표에 쓰지 않는다")
     args = parser.parse_args(argv)
 
@@ -339,6 +350,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.weather_sensitive != "indoor" and not args.forecast:
         print("   ★실외이거나 실내외를 모르는데 --forecast 가 없다 — develop 판은 예보를 못 읽으면 치명(사람에게 넘김)이다")
 
+    if args.order_mode:
+        from app.domains.travel_ops.instances.activity import replacement as replacement_module
+        from app.domains.travel_ops.instances.activity.judge import modes as judge_modes
+
+        original = judge_modes.kind_mode
+        replacement_module.kind_mode = (
+            lambda kind, _m=None: args.order_mode if kind == "alternative_order" else original(kind, _m))
+    survey = json.loads(args.survey) if args.survey else None
     team = ActivityTeam(Tools(values))
     records: list[dict[str, Any]] = []
     outputs: dict[str, Any] = {}
@@ -348,7 +367,7 @@ def main(argv: list[str] | None = None) -> int:
         team.judge_shadow_sink = make_sink(records, write_db=not args.no_db, eval_run=eval_run)
 
     started = time.monotonic()
-    result = asyncio.run(team.execute(make_task(ActivityTeam)))
+    result = asyncio.run(team.execute(make_task(ActivityTeam, text=args.text, survey=survey)))
     print_result(result, time.monotonic() - started)
 
     if args.mode == "shadow":
