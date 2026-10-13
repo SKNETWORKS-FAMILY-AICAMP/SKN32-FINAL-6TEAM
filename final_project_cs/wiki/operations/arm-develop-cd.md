@@ -92,3 +92,7 @@ Oracle ARM 기계에서 다음 명령을 사용한다. 무료 기존 자원만 �
 
 
 [실측 2026-10-12] 지식 자료를 이미지에 포함하고 승인한 최소 검색 수정을 보존하는 소스 충돌 검사를 추가했습니다. 변경된 develop 파일은 조용히 덮어쓰지 않고 재검토합니다. [적용·실제 해시·실패·재개](../records/reports/2026-10-12_0454_arm-search-model-repair.md).
+
+`[2026-10-13]` 구글 드라이브 공유 폴더(dataset)를 서버 `datasets/` 로 경로 그대로 10분마다 맞추는 예약(`tripilot-arm-dataset-sync.timer`)을 설치했습니다. 앱 자료 자리는 바꾸지 않았고 구글 로그인 한 번이 남았습니다. [설치·안전장치·로그인 안내](../records/reports/2026-10-13_arm-gdrive-dataset-sync.md).
+
+`[2026-10-13]` develop `ea4eba89` 부터 서버 전용 덧씌움 충돌로 자동 배포가 멈췄다. 덧씌움을 develop 에 없는 2가지(정확한 이름 정렬 · 지식 문서 적재)로 줄여 재개했고, 충돌 시 같은 SHA 를 반복 시도하지 않게 했다. [원인 · 합의 · 남은 일](../records/reports/2026-10-13_arm-cd-overlay-conflict.md).
