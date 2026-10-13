@@ -75,6 +75,8 @@ function stop(item: ServerItem, t: Translate): TripStop {
     item.changed ? t("지켜보다 바뀐 일정이에요.", "This stop was changed while we watched your trip.") : ""].filter(Boolean).join(" · ");
   return {
     id: item.item_id, date: start.date, time: start.time, endTime: item.ends_at ? seoul(item.ends_at).time : undefined,
+    // `[2026-10-13]` A stay (kind lodging) runs from its check-in day to its check-out day — the screen draws it on every day between.
+    ...(item.kind ? { kind: item.kind } : {}), ...(item.ends_at ? { endDate: seoul(item.ends_at).date } : {}),
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),

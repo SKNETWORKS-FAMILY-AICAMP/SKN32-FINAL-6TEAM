@@ -49,6 +49,8 @@ export interface ReviewItem {
   date: string | null;
   starts_at: string | null;
   ends_at: string | null;
+  /** `[2026-10-13]` The day it ends when that is another day — a stay (kind lodging) ends on its check-out day. Missing or null otherwise. */
+  end_date?: string | null;
   locked: boolean;
   edited?: boolean;
   /** null while the check is still running (stream events before the check finished). */

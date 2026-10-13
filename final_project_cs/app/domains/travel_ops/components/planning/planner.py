@@ -48,7 +48,7 @@ from app.domains.travel_ops.components.itinerary.density import measure_density
 from app.domains.travel_ops.components.places.place_hours import DayHours, find_tour_id, hours_on, knows_hours
 from app.domains.travel_ops.components.places.place_hours import fits as hours_fit
 from app.domains.travel_ops.components.itinerary.itinerary import hides_scenario_places
-from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, Violation, check_itinerary, with_ledger
+from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS, Part, Violation, check_itinerary, with_ledger
 from app.domains.travel_ops.components.planning.replan import distance_m, walk_minutes
 
 KST = ZoneInfo("Asia/Seoul")
@@ -1686,6 +1686,8 @@ def plan_around(outcome: PlanOutcome, *, fixed_items: list[dict[str, Any]],
     def clashes(item) -> str | None:
         start, end = item["starts_at"], item["ends_at"] or item["starts_at"]
         for f in fixed:
+            if f["kind"] in STAY_KINDS:
+                continue                    # `[2026-10-13]` 숙소는 며칠에 걸친다 — 그 사이 일정과 겹치는 것이 정상이다
             f_end = f["ends_at"] or f["starts_at"]
             if start < f_end + margin and f["starts_at"] - margin < end:
                 return f"「{f['title']}」 시간과 겹친다"
@@ -1734,8 +1736,8 @@ def _refuse_overflow(items: list[dict[str, Any]], *, rounds: int, fixed: list[st
     """★★`check_itinerary` 는 **하루가 몇 시에 끝나야 하는지 모른다** — 그건 우리 상품의 약속이지
     일정의 성립 조건이 아니다. 고치는 과정이나 이동 자리를 내는 과정에서 뒤로 민 항목이 한밤중으로
     넘어갈 수 있으므로 따로 본다. 넘으면 「고쳤다」고 하지 않고 거절한다."""
-    overflow = [item for item in items
-                if (item["ends_at"] or item["starts_at"])
+    overflow = [item for item in items if item["kind"] not in STAY_KINDS   # `[2026-10-13]` 숙소 끝은 체크아웃 날이다
+                and (item["ends_at"] or item["starts_at"])
                 > _at(date.fromisoformat(_planned_day(item)), DAY_END)]
     if overflow:
         raise PlanRefused(

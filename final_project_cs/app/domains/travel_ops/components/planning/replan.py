@@ -62,6 +62,7 @@ from app.core.team_availability import TeamUnavailable
 
 from app.domains.travel_ops.components.planning.meal_likeness import LIKENESS_KEYS, likeness
 from app.domains.travel_ops.components.places.place_hours import break_span
+from app.domains.travel_ops.components.itinerary.itinerary_checks import leave_at
 
 KST = ZoneInfo("Asia/Seoul")
 WALK_M_PER_MIN = 80
@@ -611,7 +612,7 @@ def meal_route(items: list[Any], meal: Any, *, from_before: bool = True, leg: Le
     prev = before[-1] if before and from_before else None
     nxt = after[0] if after else None
     return MealRoute(planned_end=meal.ends_at or meal.starts_at + timedelta(hours=1),
-                     before=(prev.place, prev.ends_at or prev.starts_at) if prev else None,
+                     before=(prev.place, leave_at(prev)) if prev else None,   # `[2026-10-13]` 숙소면 체크인 시각
                      after=(nxt.place, nxt.starts_at) if nxt else None, leg=leg)
 
 

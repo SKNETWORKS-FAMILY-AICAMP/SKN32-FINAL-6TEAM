@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ArrowRight, Bike, Bus, Car, ChevronRight, ExternalLink, Footprints, MapPin, MessageCircle, TrainFront } from "lucide-react";
+import { ArrowRight, BedDouble, Bike, Bus, Car, ChevronRight, ExternalLink, Footprints, MapPin, MessageCircle, TrainFront } from "lucide-react";
 import type { RouteShape } from "@/lib/live/route-shapes";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
@@ -10,7 +10,7 @@ import { freeText } from "@/features/plan-check/day-times";
 import { GAP_BASE_PX, gapPx } from "@/features/plan-check/time-plan";
 import { Act } from "@/features/plan-check/parts";
 import pc from "@/features/plan-check/plan-check.module.css";
-import { distanceText, type TripLeg } from "./trip-timeline";
+import { distanceText, isStay, stayNights, type StayMark, type TripLeg } from "./trip-timeline";
 import type { TripStop } from "./model";
 import styles from "./trip-screen.module.css";
 
@@ -38,6 +38,15 @@ export function placeRows(stop: TripStop, t: Translate, where = true) {
   </>;
 }
 
+/** "2026-11-06" → "11/6". */
+const monthDay = (iso: string) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
+
+/** `[2026-10-13 사용자 결정 — 숙소 항목 B안]` The stay's nights and days as a pill: 「3박 · 11/6~11/9」. */
+export function stayPill(stop: TripStop, t: Translate): string {
+  const nights = stayNights(stop);
+  return t(`${nights}박 · ${monthDay(stop.date)}~${monthDay(stop.endDate!)}`, `${nights} night${nights === 1 ? "" : "s"} · ${monthDay(stop.date)}–${monthDay(stop.endDate!)}`);
+}
+
 export function bookingLabel(stop: TripStop, t: Translate) {
   if (stop.booking === "booked") return t("예약 있음", "Booking noted");
   return null;
@@ -55,17 +64,19 @@ export function StopRow({ stop, next, open, selected, onToggle, onDetail, detail
   const t = useT();
   const id = `trip-stop-${stop.id}`;
   const timeFocused = open || selected;
-  const hasTags = stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
+  const stay = isStay(stop);
+  const hasTags = stay || stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
   return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}>
-    <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end aria-hidden={!timeFocused}>~{stop.endTime || "—"}</time></span></span>
-    <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${styles.stopDot}`} /></span>
-    <article id={`trip-card-${stop.id}`} className={`${pc.card} ${styles.stopCard}`} data-open={open || undefined} aria-labelledby={`${id}-title`}>
+    <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end aria-hidden={!timeFocused}>~{stay ? `${monthDay(stop.endDate!)} ` : ""}{stop.endTime || "—"}</time></span></span>
+    <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${styles.stopDot}`} data-stay={stay || undefined} /></span>
+    <article id={`trip-card-${stop.id}`} className={`${pc.card} ${styles.stopCard}`} data-stay={stay || undefined} data-open={open || undefined} aria-labelledby={`${id}-title`}>
       <div className={`${pc.cardTop} ${styles.stopHead}`}>
         <button type="button" className={`${pc.cardHead} ${styles.stopToggle}`} id={`stop-button-${stop.id}`} aria-expanded={open} aria-controls={`stop-detail-${stop.id}`} onClick={onToggle}>
-          <MapPin size={18} strokeWidth={1.8} aria-hidden="true" />
+          {stay ? <BedDouble size={18} strokeWidth={1.8} aria-hidden="true" /> : <MapPin size={18} strokeWidth={1.8} aria-hidden="true" />}
           <span className={styles.stopName}>
-            <strong id={`${id}-title`} className={pc.cardTitle}>{stop.title}</strong>
+            <strong id={`${id}-title`} className={pc.cardTitle}>{stay ? t(`${stop.title} 체크인`, `Check in · ${stop.title}`) : stop.title}</strong>
             {hasTags && <span className={styles.stopTags}>
+              {stay && <span className={pc.pill} data-stay-nights>{stayPill(stop, t)}</span>}
               {stop.badges?.map((badge) => <span className={pc.pill} key={badge.code}>{badge.label}</span>)}
               {stop.booking === "booked" && <span className={pc.pill} data-booked>{bookingLabel(stop, t)}</span>}
               {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
@@ -108,6 +119,40 @@ export function StopFacts({ stop, next, brief = false }: { stop: TripStop; next:
     {marks.length > 0 && <><dt>{t("식당 표시", "Restaurant marks")}</dt><dd>{marks.map((badge) => badge.label).join(" · ")}</dd></>}
     <dt>{t("입력한 메모", "Your notes")}</dt><dd>{stop.notes || t("등록된 메모가 없어요.", "No notes added.")}</dd>
   </dl>;
+}
+
+/**
+ * `[2026-10-13 사용자 결정 — 숙소 항목 B안]` A stay on a day after its check-in. 「from」: a band at the top — the day starts from the hotel (the move from it is drawn only when the server keeps one).
+ * 「checkout」: the check-out at its time, as a stop-like row. Pressing either shows the stay itself (`onShow`) — the stay is one item.
+ */
+export function StayRow({ stay, onShow }: { stay: StayMark; onShow: () => void }) {
+  const t = useT();
+  const { stop, phase, night, nights } = stay;
+  if (phase === "from") {
+    const which = night > nights ? t("마지막 날", "Last day") : t(`${night}박째`, `Night ${night}`);
+    return <li className={styles.stayBand} data-type="stay" data-entry-id={`${stop.id}:from`}>
+      <button type="button" className={styles.stayBandButton} onClick={onShow} aria-label={t(`${stop.title}에서 출발 — 숙소 보기`, `Leaving from ${stop.title} — show the stay`)}>
+        <BedDouble size={16} strokeWidth={1.8} aria-hidden="true" />
+        <span>{t(`${stop.title}에서 출발`, `Leaving from ${stop.title}`)}</span>
+        <small>{which}</small>
+      </button>
+    </li>;
+  }
+  return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="stay" data-entry-id={`${stop.id}:checkout`}>
+    <span className={pc.time}><span className={pc.timeStack}><time data-stay-checkout>{stop.endTime || "—"}</time></span></span>
+    <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${styles.stopDot}`} data-stay /></span>
+    <article className={`${pc.card} ${styles.stopCard}`} data-stay>
+      <div className={`${pc.cardTop} ${styles.stopHead}`}>
+        <button type="button" className={`${pc.cardHead} ${styles.stopToggle}`} onClick={onShow}>
+          <BedDouble size={18} strokeWidth={1.8} aria-hidden="true" />
+          <span className={styles.stopName}>
+            <strong className={pc.cardTitle}>{t(`${stop.title} 체크아웃`, `Check out · ${stop.title}`)}</strong>
+            <span className={styles.stayNote}>{t("퇴실 마감", "Check-out time")}</span>
+          </span>
+        </button>
+      </div>
+    </article>
+  </li>;
 }
 
 /** The icon of how a leg is travelled (the route line's mode); a plain arrow when the server did not say. */

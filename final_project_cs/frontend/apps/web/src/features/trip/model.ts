@@ -24,6 +24,10 @@ export interface TripStop {
   placeInfo?: PlaceInfo | null;
   /** `[2026-10-06]` The trip is paused for a disaster and this stop falls in the pause (a day's pause pauses only that day's stops). The plan itself is not changed. */
   paused?: boolean;
+  /** `[2026-10-13]` The server's item kind ("activity" · "dining" · "lodging" …). A lodging stop is one stay: `date` is the check-in day and `endDate` the check-out day. */
+  kind?: string;
+  /** `[2026-10-13]` The day the stop ends (Seoul) when the server sent an end — a stay ends on its check-out day. */
+  endDate?: string;
 }
 
 /**

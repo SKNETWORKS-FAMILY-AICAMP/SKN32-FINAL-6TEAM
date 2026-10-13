@@ -46,6 +46,8 @@ export interface PlanItem {
   startsAt: string;
   /** "HH:MM", or "" when there is none. */
   endsAt: string;
+  /** `[2026-10-13]` "YYYY-MM-DD" of the end when it is another day — a stay (kind lodging) ends on its check-out day. */
+  endDate?: string;
   /**
    * What the card is called. ★`[2026-10-03 사용자]` Once the customer picked a place for the stop, this is that place's name —
    * the card used to keep the words they had written ("성수 예약 식당") after the place had changed.

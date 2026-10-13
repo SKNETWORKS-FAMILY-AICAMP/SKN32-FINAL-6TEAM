@@ -373,7 +373,7 @@ def _item_id(row: dict[str, Any], positions: dict[str, int]) -> str:
 
 
 #: 진행 이벤트로 내보내는 일정 칸 — 실시간 진행(`stream.Feed`)이 DB 에서 읽어 내는 `item` 이벤트와 **같은 칸**이다(같은 키가 나중 값으로 덮인다)
-_ITEM_EVENT_FIELDS = ("id", "source_id", "index", "title", "kind", "day", "date", "starts_at", "ends_at", "locked", "status",
+_ITEM_EVENT_FIELDS = ("id", "source_id", "index", "title", "kind", "day", "date", "starts_at", "ends_at", "end_date", "locked", "status",
                       "can_lock", "place_state", "place", "candidates_hint", "booked", "parts", "rereads")
 
 
@@ -428,7 +428,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     parts: list[Part] = []
     seq_of: dict[int, int] = {}
     for i, r in enumerate(rows):
-        start, end = _dt(r["date"], r["start"]), _dt(r["date"], r["end"])
+        start, end = _dt(r["date"], r["start"]), _dt(r.get("end_date") or r["date"], r["end"])   # 숙소는 끝이 체크아웃 날이다
         facts[i] = facts_for(conn, tenant_id, r["place"], r["kind"], start, end)
         note("progress", {"phase": "hours", "done": i + 1, "total": len(rows),
                           "current": {"id": _item_id(r, positions), "title": r["title"]}})
@@ -488,6 +488,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         items.append({
             "id": _item_id(r, positions), "source_id": r["source_id"], "index": r["index"], "title": r["title"],
             "kind": r["kind"], "day": day_no.get(r["date"]), "date": r["date"], "starts_at": r["start"], "ends_at": r["end"],
+            # `[2026-10-13]` 끝이 다른 날인 항목(숙소 — 체크아웃 날). 그 밖에는 None — `ends_at` 은 그대로 「시:분」이다
+            "end_date": r.get("end_date"),
             "locked": bool(r["locked"]), "edited": edited, "status": status,
             "can_lock": state in ("found", "customer") and not review,
             "place_state": state,
@@ -527,7 +529,9 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         if not a["date"] or a["date"] != b["date"]:
             continue
         ia, ib = items[i], items[i + 1]
-        a_end, b_start = _dt(a["date"], a["end"] or a["start"]), _dt(b["date"], b["start"])
+        # `[2026-10-13]` 숙소는 체크인 시각에 떠난다고 본다 — 끝(체크아웃)은 며칠 뒤다
+        a_end = _dt(a["date"], a["start"] if a["kind"] == "lodging" else (a["end"] or a["start"]))
+        b_start = _dt(b["date"], b["start"])
         if a["place"] is None or b["place"] is None or a_end is None or b_start is None:
             add_move(_waiting_move(ia, ib, mode_pick.get(f"{ia['id']}~{ib['id']}")), ia, ib)
             continue

@@ -29,7 +29,7 @@ import type { Notice, Proposal } from "@/lib/live/extras";
 import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
-import { LegRow, legSummary, StopRow } from "./trip-rows";
+import { LegRow, legSummary, StayRow, StopRow } from "./trip-rows";
 import { dayTimeline, tripDays, type TripLeg } from "./trip-timeline";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
@@ -413,7 +413,9 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
     const stops = trip.stops.filter((stop) => stop.date === date);
     return <section key={date} aria-labelledby={`trip-day-${date}`}>
       <h3 id={`trip-day-${date}`} className={pc.day}><button type="button" className={pc.dayButton} aria-pressed={mapDay === date} onClick={() => showDay(date)}>{dayName(index, t)}<small>{dayLabel(date, language)}</small></button></h3>
-      <ol className={pc.timeline}>{dayTimeline(trip, date, shapes).map((entry) => entry.type === "stop"
+      <ol className={pc.timeline}>{dayTimeline(trip, date, shapes).map((entry) => entry.type === "stay"
+        ? <StayRow key={`${entry.stay.stop.id}:${entry.stay.phase}`} stay={entry.stay} onShow={() => pick(entry.stay.stop.id, "list")} />
+        : entry.type === "stop"
         ? <StopRow key={entry.stop.id} stop={entry.stop} next={stops[stops.indexOf(entry.stop) + 1]} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
             onToggle={() => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); }}
             onDetail={() => openDetail(entry.stop.id)} detailWhy={null} explain={explain}

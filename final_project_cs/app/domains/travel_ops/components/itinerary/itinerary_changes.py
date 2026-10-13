@@ -29,7 +29,7 @@ from typing import Any, Callable
 from uuid import UUID
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item
-from app.domains.travel_ops.components.itinerary.itinerary_checks import seoul
+from app.domains.travel_ops.components.itinerary.itinerary_checks import leave_at, seoul
 from app.domains.travel_ops.components.planning.replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, DiningStateLookup, activity_candidates, alternate_record,
                      apply_google_prices, brand_of, change_notice, choose, dining_candidates, dining_fits, dining_notice,
                      MealRoute, meal_route, route_candidates, route_notice, store_candidates)
@@ -149,7 +149,7 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
             continue
         got = None
         if engine is not None:
-            got, _why = engine(a, b, nxt.starts_at, prev.ends_at or prev.starts_at)
+            got, _why = engine(a, b, nxt.starts_at, leave_at(prev))   # `[2026-10-13]` 숙소면 체크인 시각
         if got is not None:
             detail = {**move.detail, "route_def": got["route"], "refreshed_for": "place_changed",
                       "route_basis": "rejudged",
@@ -548,7 +548,7 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
         if current_departure:
             raise DepartureReplanUnavailable("mobility_engine_unavailable")
         return None
-    start_floor = max(now, previous.ends_at or previous.starts_at)
+    start_floor = max(now, leave_at(previous))   # `[2026-10-13]` 숙소면 체크인 시각
     got, _why = leg(a, b, following.starts_at, start_floor)
     if got is None:
         if current_departure and (_why or {}).get("code") == "no_data":

@@ -1879,6 +1879,11 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
     stay = sorted((it for it in its if it.get("kind") != "mobility"), key=_key_time)
     moves_in = sorted((it for it in its if it.get("kind") == "mobility"), key=_key_time)
 
+    def _leave(a):
+        """`[2026-10-13]` 이 항목을 떠나는 시각 — 숙소(며칠에 걸친다)는 체크인 시각, 나머지는 끝(없으면 시작).
+        체크아웃 시각을 쓰면 체크인 날 저녁 이동이 「운행일이 바뀐다」로 끊기거나 체크아웃 날 이후로 밀린다."""
+        return _parse_dt(a["starts_at"] if a.get("kind") == "lodging" else (a.get("ends_at") or a["starts_at"]))
+
     def moves_between(a, b):
         """입력에 있던 이동 항목 중 a 시작 ~ b 시작 사이의 것 — 우리가 그 구간을 못 만들면 그대로 남긴다."""
         lo, hi = _parse_dt(a["starts_at"]), _parse_dt(b["starts_at"])
@@ -1927,7 +1932,7 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
         b = stay[i + 1]
         # ☆`[2026-09-29 문제목록 #45]` 운행일이 바뀌는 두 항목(1일차 저녁 → 2일차 아침) 사이는 잇지 않는다 — 그 사이에
         #   숙소로 가지만 숙소 위치를 모른다. 앞 판은 날짜를 가리지 않아 전날 마지막 장소 → 다음 날 첫 장소 이동을 만들었다.
-        if service_day(_parse_dt(a.get("ends_at") or a["starts_at"]))[0] != service_day(_parse_dt(b["starts_at"]))[0]:
+        if service_day(_leave(a))[0] != service_day(_parse_dt(b["starts_at"]))[0]:
             not_linked.append({"from": a.get("title"), "to": b.get("title"), "code": "day_boundary",
                                "reason": "운행일이 바뀐다 — 사이에 숙소로 가지만 숙소 위치를 모른다"})
             keep_as_is(a, b, "day_boundary")
@@ -1945,7 +1950,7 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
             continue
         got, why = P.leg(pa, pb, _parse_dt(b["starts_at"]), party, first_visit,
                          case_id=f"{a.get('place')}_to_{b.get('place')}",
-                         not_before_dt=_parse_dt(a.get("ends_at") or a["starts_at"]),
+                         not_before_dt=_leave(a),
                          earliest_on_late=earliest_on_late)
         if got is None:
             skip(a, b, {"from": pa["name"], "to": pb["name"], **why})

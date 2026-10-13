@@ -127,6 +127,18 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
  * 2026-10-08: 제목 옆에는 바뀐 일정의 체크만 둔다. 확인 필요와 시간 되돌리기는 카드 하단 오른쪽에 놓는다.
  * A stop marked for deletion is grey and has Undo where the bin is.
  */
+/** `[2026-10-13 사용자 결정 — 숙소 항목 B안]` A stay (kind lodging with a later end day): 「○○ 체크인」 and its nights 「3박 · 11/6~11/9」. Other stops keep their title. */
+const isStayItem = (item: PlanItem) => item.kind === "lodging" && !!item.endDate && item.endDate > item.date;
+const monthDay = (iso: string) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
+function stayTitle(item: PlanItem, t: ReturnType<typeof useT>): string {
+  return isStayItem(item) ? t(`${item.title} 체크인`, `Check in · ${item.title}`) : item.title;
+}
+function stayPillOf(item: PlanItem, t: ReturnType<typeof useT>): string | null {
+  if (!isStayItem(item)) return null;
+  const nights = Math.round((Date.parse(`${item.endDate}T00:00:00Z`) - Date.parse(`${item.date}T00:00:00Z`)) / 86_400_000);
+  return t(`${nights}박 · ${monthDay(item.date)}~${monthDay(item.endDate!)}`, `${nights} night${nights === 1 ? "" : "s"} · ${monthDay(item.date)}–${monthDay(item.endDate!)}`);
+}
+
 function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; rechecking: boolean }) {
   const t = useT();
   const { done, actions, explain, frozen } = ctx;
@@ -190,7 +202,8 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
               {item.locked ? <Lock size={18} strokeWidth={1.8} aria-hidden="true" /> : <LockOpen size={18} strokeWidth={1.8} aria-hidden="true" />}</Act> : <StopKind item={item} />}
             <h4 className={styles.cardHeading}><button type="button" className={styles.cardHead} title={item.title} aria-labelledby={`${ctx.prefix}plan-item-${item.id}`} aria-expanded={open} aria-controls={`${ctx.prefix}plan-item-${item.id}-checks`} onClick={() => ctx.onPick(item.id)}>
               <span className={styles.cardName}>
-                <span className={styles.cardTitleLine}><span id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</span>{changedMark}</span>
+                <span className={styles.cardTitleLine}><span id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{stayTitle(item, t)}</span>{changedMark}</span>
+                {stayPillOf(item, t) && <small className={styles.pill} data-stay-nights>{stayPillOf(item, t)}</small>}
                 {item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}
               </span>
             </button></h4>
@@ -205,7 +218,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
               : <Act id={`${ctx.prefix}plan-delete-${item.id}`} className={styles.icon} why={deleteWhy} explain={explain} onPress={() => ctx.onDelete(item)} aria-label={t(`${item.title} 삭제`, `Delete ${item.title}`)} tooltip={t(`${item.title} 삭제`, `Delete ${item.title}`)}><Trash2 size={16} strokeWidth={1.8} aria-hidden="true" /></Act>}
             </span>
           </div>
-        : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
+        : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{stayTitle(item, t)}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights>{stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
       {done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed && <TimeEditor item={item} ui={ctx.time} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
         {rows.length

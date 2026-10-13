@@ -187,3 +187,13 @@
 .prompts { position: relative; }
 .prompts .chatLatest { bottom: calc(100% + 8px); right: 14px; }
 .chatLog:focus-visible { outline: 2px solid var(--color-selected); outline-offset: -2px; }
+
+/* `[2026-10-13 사용자 결정 — 숙소 항목 B안]` A stay: the check-in card and the check-out row in the stay's soft green, and on the days between a band 「○○에서 출발」 at the top. */
+.stopCard[data-stay] { border-color: var(--color-selected-soft); background: var(--color-paper); }
+.stopCard[data-stay] .stopToggle > svg { color: var(--color-primary); }
+.stopDot[data-stay] { border-color: var(--color-primary); background: var(--color-soft); }
+.stayNote { font-size: 12px; font-weight: 500; color: var(--color-muted); }
+.stayBand { list-style: none; margin: 2px 0 6px; }
+.stayBandButton { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border: 1px dashed var(--color-success); border-radius: 10px; background: var(--color-paper); color: var(--color-primary); font: inherit; font-size: 12.5px; font-weight: 600; text-align: left; cursor: pointer; }
+.stayBandButton small { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--color-muted); }
+.stayBandButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }

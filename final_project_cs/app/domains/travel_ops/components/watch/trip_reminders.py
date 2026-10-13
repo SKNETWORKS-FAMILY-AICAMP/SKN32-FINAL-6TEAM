@@ -54,6 +54,7 @@ from app.infrastructure.notify.phrase import Phrase
 from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleDeparture, TripStore
 from app.domains.travel_ops.components.itinerary.itinerary_changes import planned_option, route_of, route_targets
 from app.domains.travel_ops.components.planning.pending import PendingStore
+from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -116,7 +117,8 @@ def plan_reminders(items: list[Item], *, now: datetime, rules: ReminderRules,
         start_due = min(start_at, first.starts_at - rules.day_start_lead)
         if start_due <= now < first.starts_at:
             due.append(Reminder("day_start", f"day_start:{day.isoformat()}", start_due, first.starts_at, day))
-        stops = [i for i in day_items if i.kind != "mobility"]
+        # `[2026-10-13]` 숙소는 「다음 일정」 짝에서 뺀다 — 끝(체크아웃)이 며칠 뒤라 그 사이 내내 「다음 일정」 안내 대상이 된다
+        stops = [i for i in day_items if i.kind != "mobility" and i.kind not in STAY_KINDS]
         for current, following in zip(stops, stops[1:]):
             # ★② 다음 일정 — 지금 일정이 **시작할 때**. 그날 마지막 일정은 다음이 없어 보내지 않는다
             until = current.ends_at or following.starts_at

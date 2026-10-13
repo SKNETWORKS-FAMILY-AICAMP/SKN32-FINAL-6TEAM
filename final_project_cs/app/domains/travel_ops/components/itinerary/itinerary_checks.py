@@ -31,6 +31,16 @@ from zoneinfo import ZoneInfo
 
 KST = ZoneInfo("Asia/Seoul")
 logger = logging.getLogger(__name__)
+#: `[2026-10-13]` 며칠에 걸치는 항목 — 숙소(한 항목 = 한 숙박). 앞뒤 일정끼리의 검사(겹침 · 이동 시간)에서 뺀다
+STAY_KINDS = frozenset({"lodging"})
+
+
+def leave_at(item: Any) -> datetime:
+    """이 일정을 **떠나는** 시각 — 다음 일정으로 가는 이동의 출발 하한. 보통은 끝 시각(없으면 시작).
+    ★`[2026-10-13]` 숙소는 체크인 시각이다 — 끝(체크아웃)은 며칠 뒤라, 그대로 쓰면 체크인 날 저녁 이동이 체크아웃 날로 밀린다."""
+    if getattr(item, "kind", None) in STAY_KINDS:
+        return item.starts_at
+    return item.ends_at or item.starts_at
 
 
 @dataclass(frozen=True)
@@ -119,8 +129,19 @@ def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | N
                                    "끝나는 시각을 시작 뒤로 보내거나 비워 둔다"))
         found += _place_violations(part)
 
-    for earlier, later in zip(items, items[1:]):
+    # ★`[2026-10-13 사용자 결정 — 숙소 항목 B안]` 숙소는 체크인부터 체크아웃까지 며칠에 걸친다(한 항목 = 한 숙박) — 그 사이 낮 일정과
+    #   시간이 겹치는 것이 정상이다. 그래서 앞뒤 일정끼리의 겹침 · 이동 시간 검사에서 빼고, 숙소끼리만 겹치지 않는지 본다(같은 밤 두 곳)
+    timed = [part for part in items if part.kind not in STAY_KINDS]
+    for earlier, later in zip(timed, timed[1:]):
         found += _pair_violations(earlier, later)
+    stays = [part for part in items if part.kind in STAY_KINDS]
+    for earlier, later in zip(stays, stays[1:]):
+        out = earlier.ends_at or earlier.starts_at
+        if later.starts_at < out:
+            found.append(Violation("stay_overlap", (earlier.seq, later.seq),
+                                   f"{earlier.title}(체크아웃 {seoul(out):%m-%d %H:%M})과 {later.title}"
+                                   f"(체크인 {seoul(later.starts_at):%m-%d %H:%M}) 숙박 기간이 겹친다",
+                                   f"{earlier.title} 체크아웃을 {later.title} 체크인 전으로 맞추거나 한 곳을 뺀다"))
 
     found += _trip_violations(items, constraints, party_size)
     return found
@@ -314,4 +335,4 @@ def _ledger_key(part: Part) -> dict[str, str] | None:
     return None
 
 
-__all__ = ["Part", "Violation", "check_itinerary", "parts_from_items", "seoul", "seoul_part", "with_ledger"]
+__all__ = ["STAY_KINDS", "Part", "Violation", "check_itinerary", "parts_from_items", "seoul", "seoul_part", "with_ledger"]

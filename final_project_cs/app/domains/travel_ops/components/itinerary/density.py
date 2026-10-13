@@ -13,7 +13,7 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from app.core.settings import get_guardrails
-from app.domains.travel_ops.components.itinerary.itinerary_checks import Part
+from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS, Part
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -105,6 +105,8 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
     buckets: dict[date, list[Part]] = {day: [] for day in spec.days}
     outside: dict[date | None, list[str]] = {}
     for part in parts:
+        if part.kind in STAY_KINDS:
+            continue        # `[2026-10-13]` 숙소는 하루 일정의 빽빽함에 세지 않는다(며칠에 걸친다 — `itinerary_quality._DAY_KINDS` 와 같은 뜻)
         if part.starts_at.tzinfo is None:
             outside.setdefault(None, []).append(f"항목 {part.seq}: 시작 시간대 누락")
             continue
