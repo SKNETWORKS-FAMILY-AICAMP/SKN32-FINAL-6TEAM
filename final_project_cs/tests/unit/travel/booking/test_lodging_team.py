@@ -692,10 +692,11 @@ def test_google_options_carry_seller_prices_photo_and_address():
                                             "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
     (asked,) = [a for name, a in tools.calls if name == "read.stay_google_details"]
     assert asked["tokens"] == ["tok-2"] and asked["keyword"] == "중구", "구글 호텔 후보만, 한 번에"
-    assert "1) 가까운 호텔(1박 120,000원 · 원래 숙소에서 2.0km · 판매처 공식 사이트 117,000원 · 트립닷컴 118,000원 · 아고다 125,000원)" in result.answer, \
-        "Vio.com 처럼 목록에 없는 판매처는 빼고, 싼 순 3곳"
+    assert "1) 가까운 호텔(1박 117,000원~ · 원래 숙소에서 2.0km · 판매처 공식 사이트 117,000원 · 트립닷컴 118,000원 · 아고다 125,000원)" in result.answer, \
+        "Vio.com 처럼 목록에 없는 판매처는 빼고, 싼 순 3곳. `[2026-10-13 사용자 결정]` 대표 가격은 가장 싼 곳 「○원~」(목록 120,000원보다 공식 117,000원)"
     option = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"][0]
     assert (option["image"], option["address"]) == ("https://img/2.jpg", "서울 용산구 어딘가")
+    assert (option["price_from"], option["price_per_night"]) == (117000.0, 120000), "순서 · 재확인은 목록 값 그대로"
     assert (option["link"], option["link_seller"]) == ("https://us.trip.com/hotels/redirect?hotelid=1", "트립닷컴"), \
         "예약 버튼은 바로 갈 주소가 있는 가장 싼 판매처 — 공식 사이트(117,000원)는 주소가 없어 트립닷컴(118,000원)"
     assert result.action_proposals[0].arguments["summary"]["google_details"] == {"asked": 1, "read": 1}

@@ -300,6 +300,8 @@ def _lodging_option(rank: int, pick: dict[str, Any], item: Any) -> dict[str, Any
             # `[2026-10-13]` 화면용 — 사진 · 판매처별 가격(구글 호텔 후보만, 상세를 읽었을 때) · 주소
             "image": pick.get("image"), "sellers": pick.get("sellers") or [], "address": pick.get("address"),
             "link_seller": pick.get("link_seller"),
+            # `[2026-10-13 사용자 결정]` 판매처를 읽은 곳의 「1박 ○원~」 — 목록 최저가와 판매처 가격 중 가장 싼 값. 없으면 `None`
+            "price_from": pick.get("price_from"),
             "property_token": pick.get("property_token")}
 
 
@@ -661,6 +663,12 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     direct = next((seller for seller in pick["sellers"] if seller.get("link")), None)
                     if direct:
                         pick["link"], pick["link_seller"] = direct["link"], direct["name"]
+                    # `[2026-10-13 사용자 결정]` 대표 가격은 가장 싼 곳 「1박 ○원~」 — ☆10:40 playdata 스테이7 명동: 목록 255,093원인데
+                    #   판매처 최저는 아고다 245,429원이라 대표 가격과 판매처 가격이 어긋나 보였다. 순서 · 재확인은 목록 값(`price_per_night`) 그대로
+                    prices = [p for p in [pick.get("price_per_night"), *(s["price_per_night"] for s in pick["sellers"])]
+                              if isinstance(p, (int, float))]
+                    if pick["sellers"] and prices:
+                        pick["price_from"] = min(prices)
         record = {"itinerary": "lodging_options", "item": item.title, "query": query, "shown_before": len(shown),
                   "sizes": sizes_used, "options": [pick["name"] for pick in picks],
                   "anchor": anchor["kind"] if anchor else None, "reference_price": reference_price, "details_read": len(details),
@@ -676,7 +684,10 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                                 answer=f"{item.title} 대신 갈 수 있는 {asked + ' ' if asked else ''}숙소를 더 찾지 못했어요. 일정은 그대로 두었어요.")
         options = [_lodging_option(rank, pick, item) for rank, pick in enumerate(picks, start=1)]
         def note(option: dict[str, Any]) -> str:
-            parts = [f"1박 {_won(option['price_per_night'])}"] if option.get("price_per_night") is not None else []
+            if option.get("price_from") is not None:
+                parts = [f"1박 {_won(option['price_from'])}~"]
+            else:
+                parts = [f"1박 {_won(option['price_per_night'])}"] if option.get("price_per_night") is not None else []
             if option.get("distance_km") is not None and anchor:
                 parts.append(f"{anchor['kind']}에서 {option['distance_km']}km")
             if option.get("sellers"):
