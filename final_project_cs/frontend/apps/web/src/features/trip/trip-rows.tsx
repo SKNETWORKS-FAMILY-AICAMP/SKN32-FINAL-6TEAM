@@ -139,11 +139,14 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
  */
 export function PastStopRow({ stop, onToggle }: { stop: TripStop; onToggle: () => void }) {
   const t = useT();
-  return <li className={pc.entry} data-type="item" data-entry-id={stop.id} data-rail="stay" data-start={stop.time} data-end={stop.endTime || undefined} data-past data-passed>
+  // `[2026-10-13 숙소 B안 × 지난 일정]` A past check-in still says it is the check-in, and its nights stand where the end would (the end is on the check-out day, not this one).
+  const stay = isStay(stop);
+  const title = stay ? t(`${stop.title} 체크인`, `Check in · ${stop.title}`) : stop.title;
+  return <li className={pc.entry} data-type="item" data-entry-id={stop.id} data-rail="stay" data-start={stop.time} data-end={(!stay && stop.endTime) || undefined} data-past data-passed>
     <span className={pc.time}>{stop.time}</span>
     <span className={pc.rail} aria-hidden="true"><span className={pc.dot} /></span>
-    <div><button type="button" className={pc.pastLine} id={`stop-button-${stop.id}`} aria-expanded={false} onClick={onToggle} aria-label={t(`${stop.title} · 지난 일정 · 펼치기`, `${stop.title} · past · open`)}>
-      <span>{stop.title}</span><small>~{stop.endTime || "—"}</small><b aria-hidden="true">+</b></button></div>
+    <div><button type="button" className={pc.pastLine} id={`stop-button-${stop.id}`} aria-expanded={false} onClick={onToggle} aria-label={t(`${title} · 지난 일정 · 펼치기`, `${title} · past · open`)}>
+      <span>{title}</span><small>{stay ? stayPill(stop, t) : `~${stop.endTime || "—"}`}</small><b aria-hidden="true">+</b></button></div>
   </li>;
 }
 

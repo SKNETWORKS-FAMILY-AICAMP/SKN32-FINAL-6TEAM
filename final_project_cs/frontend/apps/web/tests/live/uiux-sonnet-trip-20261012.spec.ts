@@ -166,9 +166,9 @@ for (const failure of [false, true]) test(`문의 전송 ${failure ? "실패" : 
   });
   await page.goto("/support/new");   // `[2026-10-12]` the form is its own screen; the list is `/support`
   const title = page.getByRole("textbox", { name: "제목", exact: true });
-  const body = page.getByRole("textbox", { name: "신고·건의 내용", exact: true });
+  const body = page.getByRole("textbox", { name: "문의 내용", exact: true });
   await title.fill(inquiry.title); await body.fill(inquiry.body);
-  const send = page.getByRole("button", { name: "내용 기록하기", exact: true });
+  const send = page.getByRole("button", { name: "문의 보내기", exact: true });
   await send.focus(); await send.press("Enter");
   const pending = page.getByRole("button", { name: "접수 중…", exact: true });
   await expect(pending).toBeFocused();
