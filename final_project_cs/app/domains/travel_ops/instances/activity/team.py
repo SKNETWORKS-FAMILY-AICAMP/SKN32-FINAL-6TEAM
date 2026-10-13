@@ -137,6 +137,10 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
     #: ★`[2026-10-12]` 판정 LLM 호출 예산 — 판정 종류 → 「불러도 되나」. 조립이 `external_call_budget` 으로 만들어 넣는다
     #:  (`judge.modes.budget_meter` · `budget_caps`, 코어 협의). `None` 이면 세지 않는다(지금까지와 같다).
     judge_budget: Any | None = None
+    #: ★`[2026-10-13]` 저장된 실시간 운영 상태(웹 공지) 읽기 — `(tenant_id, place_id, 방문 날짜) -> 저장된 값 | None`.
+    #:  조립이 `live_store.build_lookup(get_connection)` 으로 만들어 넣는다(코어 협의). `None` 이면 이 확인은 꺼져 있다(경고도 없다).
+    #:  ★고객 요청은 웹을 부르지 않는다 — 웹 확인은 장소 · 날짜당 한 번 배치(`scripts/activity/check_live_status.py`)가 한다.
+    live_lookup: Any | None = None
     #: 이 팀이 받는 판정 LLM 모드. ★`llm` 은 D-CS-015 범위 밖이다 — 조립이 기동 때 막는다(조용히 섀도로 바꾸지 않는다).
     #:  ★`[2026-10-12]` 종류별 `llm`(실시간 운영 · 휴무 · 재난)은 전역 `shadow` 로 판정 LLM 을 꽂은 뒤 `kind_modes` 로 켠다.
     judge_modes = ("rule", "shadow")
@@ -523,7 +527,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             # ★`[2026-10-12 사용자 결정]` DB 에 있는 운영 정보로 규칙이 먼저 판정하고(위), 닫혔다고 정하지 못했을 때(연다 · 모름)
             #   웹 검색 LLM 으로 그 날짜의 운영 · 폐업(임시휴무 · 공지)을 본다. 규칙이 막으면 웹 검색을 부르지 않는다(비용 · 방침 —
             #   LLM 은 데이터의 보조). 10-12 실측: 웹을 맨 앞에 두었더니 정기휴무(매주 화요일)까지 웹이 먼저 정했다.
-            live_decision, evidence, stop = self._live_status_check(task, booking, place, seen, evidence, indoor, place_class)
+            live_decision, evidence, stop = self._live_status_check(task, booking, place, seen, evidence)
             if stop is not None:
                 return stop
         # ★`[2026-10-11]` 고객 확인은 계약대로 `waiting` · `customer_input` 이다(D4 · 수정본 §12). 전에는 `completed` 로 답하며
@@ -577,6 +581,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             warnings.append("고객이 운영 정보를 확인하지 못한 채로 그대로 진행하기로 했다 — 휴무 · 운영시간은 판정하지 않았다")
         if live_decision is not None:
             decisions["live_status"] = live_decision
+            if live_decision.get("value") in ("unchecked", "unknown"):
+                warnings.append("정기 운영 정보 기준이다 — 임시휴무 · 폐업은 확인하지 못했다")
         if indoor:
             decisions["indoor"] = indoor
             if indoor.get("source") == "class":
@@ -598,7 +604,6 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                 "confirmed_at": forecast.get("confirmed_at"),
             }
 
-        self._shadow_live_status(task, booking, place, seen, indoor, place_class, remaining)
         return self._result(
             task, outcome="completed", confidence=0.8, evidence=evidence,
             next_action=NextAction.RESPOND, answer=answer,
@@ -633,36 +638,43 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                              LLMJudge(self.judge_llm), budget=budget)
         return verdict if verdict.known else None
 
-    def _live_status_check(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list,
-                           indoor: dict[str, Any], place_class: dict[str, Any] | None
+    def _live_status_check(self, task: TeamTask, booking: dict, place: dict, seen: set[str], evidence: list
                            ) -> tuple[dict[str, Any] | None, list, TeamResult | None]:
-        """⑤ 실시간 운영 · 폐업(웹 검색) — 규칙이 휴무 · 운영시간을 본 **뒤**, 닫혔다고 못 정했을 때. `kind_modes.live_status = llm` 일 때만.
-        `[2026-10-12 사용자 결정]`
+        """⑤ 실시간 운영 · 폐업(웹 공지) — **저장된 값만 읽는다.** `[2026-10-13 사용자 결정 A안]`
 
-        ★섀도 때와 달리 실외 · 72시간 조건을 두지 않는다 — 폐업 · 장기 휴관은 날짜와 상관없이 알아야 한다. 비용은 웹 예산
-          (`travel.activity_judge.budget.web`)이 막는다. 넘으면 부르지 않고 「모름」으로 아래를 계속한다.
-        ★「닫혔다」만 받는다(`modes.CAUTIOUS_VALUES`) — 웹 출처를 근거에 싣고 대체 장소를 붙여 바꾸자고 제안한다(승인 대기).
-        ★주소는 관광공사 분류(`read.place_class`)에서 — 실내외 판정이 이미 읽었으면 그 값을 쓴다(같은 도구를 두 번 부르면
-          `ToolLoopExceeded`). 장소 행에 실내외가 있으면(`source == "place"`) 실내외 판정이 읽지 않았으니 여기서 읽는다.
+        ★전에는 고객 요청마다 웹 검색을 불렀다(요청 수에 비례 · p95 40.7초 · 429). 이제 웹 확인은 장소 · 날짜당 한 번 배치가 하고
+          (`scripts/activity/check_live_status.py` → `activity.ac_live_status`), 여기서는 `live_lookup` 으로 읽기만 한다.
+        ★`rule` · 읽기 함수 없음 → 꺼져 있다(`None`, 경고도 없다). 켜져 있는데 값이 없거나 모르면 숨기지 않는다 — `unchecked` ·
+          `unknown` 으로 남기고 「임시휴무는 확인하지 못했다」 경고를 붙인다(근거 없이 성립을 확정하지 않는다).
+        ★`shadow` → 값만 기록하고 고객 결과는 그대로다. `llm` → 「닫혔다」(인용이 있는 것만 저장돼 있다)이면 대체 장소를 붙여
+          바꾸자고 제안한다(승인 대기). 「열었다」는 막지도 풀지도 않는다 — 규칙의 휴무 판정을 바꾸지 않는다.
         반환: (`decisions.live_status` 에 실을 값 | None, 근거, 여기서 멈출 결과 | None).
         """
-        if self.judge_llm is None or not place.get("name") or kind_mode(LIVE_STATUS) != "llm":
+        mode = kind_mode(LIVE_STATUS)
+        if mode == "rule" or self.live_lookup is None or not place.get("name"):
             return None, evidence, None
-        found = place_class
-        if indoor.get("source") == "place":
-            found = self._read(task, "read.place_class", {"place_id": booking.get("place_id")}, seen)
-        address = found.get("address") if isinstance(found, dict) else None
-        verdict = self._rule_first(task, judge_requests.live_status(place.get("name"), "activity", address,
-                                                                   booking.get("starts_at")),
-                                   basis="develop_does_not_read_web_notices")
-        if verdict is None:
-            return {"value": "unknown", "source": "llm"}, evidence, None
+        day = self._visit_date(booking.get("starts_at"))
+        if day is None:
+            return {"value": "unchecked", "source": "stored", "why": "visit_date_unknown"}, evidence, None
+        try:
+            stored = self.live_lookup(task.context.tenant_id, booking.get("place_id"), day)
+        except Exception as exc:  # noqa: BLE001 — 읽지 못한 것을 「열었다」로 보지 않는다. 종류만 남기고 모름
+            _failure_log.warning("live_status_lookup_failed %s", type(exc).__name__)
+            return {"value": "unknown", "source": "stored", "why": f"lookup_failed:{type(exc).__name__}"}, evidence, None
+        if stored is None:
+            return {"value": "unchecked", "source": "stored", "visit_date": day.isoformat()}, evidence, None
         citations = [{"url": c.get("url"), "quote": c.get("quote"), "published_at": c.get("published_at")}
-                     for c in verdict.citations if isinstance(c, dict)]
-        evidence = self._evidence(task, source_id="judge.live_status", claim="웹 공지상 운영 상태",
-                                  value={"value": verdict.value, "citations": citations}, base=evidence)
-        decision = {"value": verdict.value, "source": "llm", "citations": citations}
-        if verdict.value != "closed":       # ★`rule_first` 가 이미 거르지만, 막는 결정은 「닫혔다」에서만 한다
+                     for c in stored.get("citations") or [] if isinstance(c, dict)]
+        checked_at = stored.get("checked_at")
+        decision = {"value": stored.get("value"), "source": "stored", "visit_date": day.isoformat(),
+                    "checked_at": checked_at.isoformat() if hasattr(checked_at, "isoformat") else checked_at,
+                    "citations": citations}
+        if decision["value"] == "unknown":
+            return decision, evidence, None
+        evidence = self._evidence(task, source_id="judge.live_status", claim="웹 공지상 운영 상태(저장된 확인)",
+                                  value={"value": decision["value"], "checked_at": decision["checked_at"],
+                                         "citations": citations}, base=evidence)
+        if decision["value"] != "closed" or mode != "llm":
             return decision, evidence, None
         quote = next((c["quote"] for c in citations if c.get("quote")), None)
         stop = self._closed_place_change(
@@ -673,26 +685,19 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                        "failure_code": self._record_failure(task, fc.LIVE_CLOSED), "live_status": decision})
         return decision, evidence, stop
 
-    def _shadow_live_status(self, task: TeamTask, booking: dict, place: Any, seen: set[str], indoor: dict[str, Any],
-                            place_class: dict[str, Any] | None, remaining: float) -> None:
-        """⑤ 실시간 운영 상태(웹 검색) — 성립으로 답하는 자리에서, 실외이거나 시작까지 `live_status_within_hours` 안일 때만.
-        develop 판은 웹 공지를 보지 않는다 — 비교 기준은 「모름」이다. 주소는 관광공사 목록(`read.place_class`)에서."""
-        if self.judge_llm is None or not isinstance(place, dict) or not place.get("name"):
-            return
-        if kind_mode(LIVE_STATUS) != "shadow":       # ★`[2026-10-12]` 꺼져 있으면 주소를 읽으러 도구도 부르지 않는다
-            return
-        from app.core.settings import get_guardrails
+    @staticmethod
+    def _visit_date(starts_at: Any):
+        """방문 시각 → 한국 날짜. 읽지 못하면 `None`."""
+        from .judge.requests import KST
 
-        within = float(get_guardrails().get("travel.activity_judge.live_status_within_hours"))
-        if not (indoor.get("value") is True or remaining <= within):
-            return
-        if place_class is None:
-            # ★섀도에서만 부른다 — 근거에 싣지 않으므로 고객 결과는 그대로다
-            found = self._read(task, "read.place_class", {"place_id": booking.get("place_id")}, seen)
-            place_class = found if isinstance(found, dict) else None
-        self._shadow(task, judge_requests.live_status(place.get("name"), "activity", (place_class or {}).get("address"),
-                                                      booking.get("starts_at")),
-                     value="unknown", basis="develop_does_not_read_web_notices")
+        if isinstance(starts_at, str):
+            try:
+                starts_at = datetime.fromisoformat(starts_at)
+            except ValueError:
+                return None
+        if not isinstance(starts_at, datetime):
+            return None
+        return (starts_at.astimezone(KST) if starts_at.tzinfo else starts_at).date()
 
     def _disaster_impact(self, task: TeamTask, booking: dict, place: dict, report: dict[str, Any],
                          indoor: dict[str, Any], seen: set[str], evidence: list
