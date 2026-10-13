@@ -121,6 +121,11 @@ def specs() -> dict[str, LimitSpec]:
     # ★`[2026-10-07 사용자 결정 — 약관 보관 기간]` 회원 자료 정리 모드 — off · dry_run(세기만) · on(지움). 기본 dry_run, on 은 사용자가 건수를 보고 승인한 뒤에(`member_cleanup`)
     out["retention.purge_mode"] = LimitSpec("retention.purge_mode", "회원 자료 정리 모드(지움은 승인 뒤에만 on)", "", "choice",
                                             _mode_text(guard.get("retention.purge_mode")), choices=("off", "dry_run", "on"))
+    # ★`[2026-10-13 사용자 지시]` 식당 대체 후보의 구글 가격 비교 — 유료 결제 뒤 관리 콘솔에서 켠다. 기본은 가드레일(꺼짐).
+    #   읽는 곳은 `settings_hook.google_price_enabled` 하나다(도구 `read.place_price` · 새벽 확인)
+    out["travel.dining.google_price_enabled"] = LimitSpec(
+        "travel.dining.google_price_enabled", "식당 대체 후보 구글 가격 비교(유료 호출 — 결제 뒤 켜기)", "", "bool",
+        guard.get("travel.dining.google_price_enabled") is True)
     return out
 
 

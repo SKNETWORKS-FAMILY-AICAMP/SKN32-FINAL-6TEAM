@@ -365,13 +365,15 @@ class ReadToolbox:
         """
         if self.google_places is None or not place_ids:
             return None
-        from app.core.settings import google_price_enabled
+        # ★`[2026-10-13]` 관리 콘솔에서 켠 값이 먼저다(없으면 가드레일). 여기서 정한 값을 그대로 넘긴다 —
+        #   넘기지 않으면 `prices_for` 가 가드레일만 다시 보고 콘솔에서 켠 것을 꺼진 것으로 읽는다
+        from app.domains.travel_ops.components.settings_hook import google_price_enabled
 
-        if not google_price_enabled():
+        if not google_price_enabled(scope.tenant_id):
             return None
         from app.domains.travel_ops.ports.data_sources.google_places import prices_for
 
-        return prices_for(self.connection_factory, scope.tenant_id, self.google_places, list(place_ids))
+        return prices_for(self.connection_factory, scope.tenant_id, self.google_places, list(place_ids), enabled=True)
 
     def _fill_coordinates(self, row: dict[str, Any] | None) -> dict[str, Any] | None:
         """좌표가 비었으면 국가유산청에서 채운다. ★**어디서 왔는지 남긴다.**

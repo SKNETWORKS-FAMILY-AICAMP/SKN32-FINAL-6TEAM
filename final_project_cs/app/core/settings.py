@@ -205,6 +205,9 @@ class Settings(BaseSettings):
     #: Jev(TypeSafe AI 의 판정용 모델) API 키 — `[2026-09-30]` `.env` 에 키가 먼저 적혀 앱이 기동 못 했다(`extra="forbid"`).
     #:  ★자리만 선언했다 — 아직 어느 코드도 읽지 않는다(질의 해석 개선 후보로 조사 중). 값은 `.env` 에만 둔다.
     jev_api_key: str = ""
+    #: SerpApi — 구글 호텔 · 구글 항공권 조회(한 계정 공용). `[2026-10-13]` `.env.apikeys` 에 키가 먼저 적혀 앱이 기동 못 했다(`extra="forbid"`).
+    #:  ★자리만 선언했다 — 아직 어느 코드도 읽지 않는다. 값은 `.env.apikeys` 에만 둔다.
+    serpapi_api_key: str = ""
     tour_api_key: str = ""
     #: 기상청 단기예보 — Open-Meteo 대안            data.go.kr/data/15084084
     kma_api_key: str = ""
