@@ -1,0 +1,1146 @@
+{
+ "eval": "dining_alternatives",
+ "dataset": "dining_alternatives_v1.jsonl",
+ "dataset_sha": "98839bd8e55b1362",
+ "label": "p3-v1-always",
+ "seeds": 3,
+ "mobility": false,
+ "env": {
+  "run_at": "2026-10-13T16:24:48+09:00",
+  "git_commit": "687561a0",
+  "git_branch": "role-dining",
+  "git_dirty": true
+ },
+ "summary": {
+  "accuracy": {
+   "num": 17,
+   "den": 17,
+   "rate": 1.0
+  },
+  "acceptable": {
+   "num": 17,
+   "den": 17,
+   "rate": 1.0
+  },
+  "violations": {
+   "num": 0,
+   "den": 17,
+   "rate": 0.0
+  },
+  "violations_any_seed": {
+   "num": 0,
+   "den": 17,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct": 16,
+   "ok": 0,
+   "correct_no_change": 1,
+   "wrong_violation": 0,
+   "wrong": 0,
+   "missed": 0,
+   "wrong_change": 0,
+   "unstable": 0
+  },
+  "by_group": {
+   "brand": {
+    "num": 3,
+    "den": 3,
+    "rate": 1.0
+   },
+   "move": {
+    "num": 5,
+    "den": 5,
+    "rate": 1.0
+   },
+   "sanity": {
+    "num": 3,
+    "den": 3,
+    "rate": 1.0
+   },
+   "similar": {
+    "num": 6,
+    "den": 6,
+    "rate": 1.0
+   }
+  },
+  "added_walk_min_mean": -0.7,
+  "skipped": [
+   "DA-018",
+   "DA-019"
+  ]
+ },
+ "picker": {
+  "picker": "openai",
+  "model": "gpt-4o-mini",
+  "gate": "always",
+  "runs_with_meal": 48,
+  "asked": 33,
+  "by": {
+   "rule": 15,
+   "llm": 25,
+   "rule_fallback": 8
+  },
+  "failures": {
+   "cited_unknown_field": 5,
+   "override_without_preference": 3
+  },
+  "overrides": 0,
+  "override_vs_rule": {},
+  "seconds_mean": 1.31,
+  "seconds_p95": 1.929,
+  "usage": {
+   "prompt_tokens": 20277,
+   "completion_tokens": 2837,
+   "calls": 33
+  }
+ },
+ "results": [
+  {
+   "id": "DA-001",
+   "group": "move",
+   "why": "다음 일정이 동쪽 — 원래 식당에 더 가까운 서쪽 가게는 다음 일정에 늦는다",
+   "picked": "E",
+   "picked_name": "동쪽 국밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "E",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "E",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "E",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "E",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "E",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "E",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-002",
+   "group": "move",
+   "why": "앞 일정이 서쪽 멀리 — 동쪽 가게는 식사 시작에 늦게 도착한다",
+   "picked": "W",
+   "picked_name": "서쪽 국밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": -3,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "W",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "W",
+      "llm_key": "W",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으니 규칙 1위인 서쪽 국밥집을 선택합니다.",
+      "seconds": 2.695,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "W",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "W",
+      "llm_key": "W",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으니 규칙 1위인 서쪽 국밥집을 선택합니다.",
+      "seconds": 1.929,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "W",
+     "label": "correct",
+     "pick": {
+      "by": "rule_fallback",
+      "rule_key": "W",
+      "llm_key": null,
+      "asked": 2,
+      "failure": "cited_unknown_field",
+      "reason": null,
+      "seconds": 1.795,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-003",
+   "group": "move",
+   "why": "가게 앞에서 휴무 신고 — 다음 일정이 북쪽이면 남쪽 가게는 늦는다",
+   "picked": "U",
+   "picked_name": "북쪽 칼국수집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 1,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "U",
+     "label": "correct",
+     "pick": {
+      "by": "rule_fallback",
+      "rule_key": "U",
+      "llm_key": null,
+      "asked": 2,
+      "failure": "cited_unknown_field",
+      "reason": null,
+      "seconds": 1.85,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "U",
+     "label": "correct",
+     "pick": {
+      "by": "rule_fallback",
+      "rule_key": "U",
+      "llm_key": null,
+      "asked": 2,
+      "failure": "cited_unknown_field",
+      "reason": null,
+      "seconds": 1.786,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "U",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "U",
+      "llm_key": "U",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 후보를 선택합니다.",
+      "seconds": 1.548,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-004",
+   "group": "move",
+   "why": "30분 늦어 원래 식당이 문을 닫는다 — 다음 일정 쪽 가게여야 다음에 안 늦는다",
+   "picked": "W",
+   "picked_name": "서쪽 백반집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": -4,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "W",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "W",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "W",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "W",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "W",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "W",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-005",
+   "group": "move",
+   "why": "다음 일정이 없다 — 가까운 같은 종류(대조군)",
+   "picked": "A",
+   "picked_name": "가까운 국밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 후보를 선택합니다.",
+      "seconds": 1.353,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 후보를 선택합니다.",
+      "seconds": 1.458,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 가까운 국밥집을 선택합니다.",
+      "seconds": 1.083,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-006",
+   "group": "similar",
+   "why": "삼계탕 → 같은 삼계탕집이 조금 멀어도 카페 · 국밥보다 낫다",
+   "picked": "S",
+   "picked_name": "다른 삼계탕집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "S",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "S",
+      "llm_key": "S",
+      "asked": 3,
+      "failure": null,
+      "reason": "취향이 없으니 원래와 비슷한 후보를 선택했습니다.",
+      "seconds": 1.181,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "S",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "S",
+      "llm_key": "S",
+      "asked": 3,
+      "failure": null,
+      "reason": "취향이 없으니 원래와 비슷한 후보를 선택했습니다.",
+      "seconds": 1.175,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "S",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "S",
+      "llm_key": "S",
+      "asked": 3,
+      "failure": null,
+      "reason": "취향이 없으니 원래와 비슷한 후보를 선택했습니다.",
+      "seconds": 1.156,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-007",
+   "group": "similar",
+   "why": "같은 삼계탕집이 다음 일정 반대쪽 멀리 — 동선이 크게 늘면 가까운 한식이 낫다",
+   "picked": "G",
+   "picked_name": "다음 일정 쪽 국밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": -5,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "G",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "G",
+      "llm_key": "G",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 국밥집을 선택합니다.",
+      "seconds": 0.962,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "G",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "G",
+      "llm_key": "G",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 국밥집을 선택합니다.",
+      "seconds": 1.199,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "G",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "G",
+      "llm_key": "G",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 국밥집을 선택합니다.",
+      "seconds": 0.966,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-008",
+   "group": "similar",
+   "why": "짜장면 → 가까운 한식 · 일식보다 중식",
+   "picked": "C",
+   "picked_name": "다른 중국집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "C",
+      "llm_key": "C",
+      "asked": 3,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 다른 중국집을 선택합니다.",
+      "seconds": 1.678,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "C",
+      "llm_key": "C",
+      "asked": 3,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 다른 중국집을 선택합니다.",
+      "seconds": 1.62,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "C",
+      "llm_key": "C",
+      "asked": 3,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 다른 중국집을 선택합니다.",
+      "seconds": 1.565,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-009",
+   "group": "similar",
+   "why": "카페 → 가까운 한식당보다 카페",
+   "picked": "C",
+   "picked_name": "다른 카페",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "C",
+      "llm_key": "C",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 다른 카페를 선택합니다.",
+      "seconds": 0.925,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "C",
+      "llm_key": "C",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 다른 카페를 선택합니다.",
+      "seconds": 1.267,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "C",
+      "llm_key": "C",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 다른 카페를 선택합니다.",
+      "seconds": 1.059,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-010",
+   "group": "similar",
+   "why": "파스타 → 같은 파스타가 먼저, 피자는 차선",
+   "picked": "T",
+   "picked_name": "다른 파스타집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "T",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "T",
+      "llm_key": "T",
+      "asked": 3,
+      "failure": null,
+      "reason": "취향이 없으므로 원래와 비슷한 후보를 선택했습니다.",
+      "seconds": 0.918,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "T",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "T",
+      "llm_key": "T",
+      "asked": 3,
+      "failure": null,
+      "reason": "취향이 없으므로 원래와 비슷한 후보를 선택했습니다.",
+      "seconds": 0.932,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "T",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "T",
+      "llm_key": "T",
+      "asked": 3,
+      "failure": null,
+      "reason": "취향이 없으므로 원래와 비슷한 후보를 선택했습니다.",
+      "seconds": 1.019,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-011",
+   "group": "similar",
+   "why": "원래 식당의 종류를 모른다 — 가까운 곳(대조군)",
+   "picked": "A",
+   "picked_name": "가까운 식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "rule_fallback",
+      "rule_key": "A",
+      "llm_key": null,
+      "asked": 2,
+      "failure": "cited_unknown_field",
+      "reason": null,
+      "seconds": 1.806,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 2,
+      "failure": null,
+      "reason": "취향이 없으므로 규칙 1위인 가까운 식당을 선택합니다.",
+      "seconds": 1.071,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "rule_fallback",
+      "rule_key": "A",
+      "llm_key": null,
+      "asked": 2,
+      "failure": "cited_unknown_field",
+      "reason": null,
+      "seconds": 1.568,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-012",
+   "group": "brand",
+   "why": "스타벅스 → 가까운 다른 카페보다 같은 브랜드 다른 지점",
+   "picked": "B",
+   "picked_name": "스타벅스 다라점",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "rule_fallback",
+      "rule_key": "B",
+      "llm_key": null,
+      "asked": 2,
+      "failure": "override_without_preference",
+      "reason": null,
+      "seconds": 0.931,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "rule_fallback",
+      "rule_key": "B",
+      "llm_key": null,
+      "asked": 2,
+      "failure": "override_without_preference",
+      "reason": null,
+      "seconds": 1.075,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "rule_fallback",
+      "rule_key": "B",
+      "llm_key": null,
+      "asked": 2,
+      "failure": "override_without_preference",
+      "reason": null,
+      "seconds": 1.049,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-013",
+   "group": "brand",
+   "why": "교촌치킨 → 같은 브랜드가 먼저, 다른 치킨집은 차선",
+   "picked": "B",
+   "picked_name": "교촌치킨 다라점",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "B",
+      "llm_key": "B",
+      "asked": 2,
+      "failure": null,
+      "reason": "원래 식당과 같은 브랜드이므로 선택했습니다.",
+      "seconds": 0.813,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "B",
+      "llm_key": "B",
+      "asked": 2,
+      "failure": null,
+      "reason": "원래 식당과 같은 브랜드이므로 선택했습니다.",
+      "seconds": 0.848,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "B",
+      "llm_key": "B",
+      "asked": 2,
+      "failure": null,
+      "reason": "원래 식당과 같은 브랜드이므로 선택했습니다.",
+      "seconds": 0.833,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-014",
+   "group": "brand",
+   "why": "같은 브랜드가 반경 밖 — 반경 안의 같은 종류",
+   "picked": "X",
+   "picked_name": "동네 카페",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "X",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "X",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "X",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "X",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "X",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "X",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-015",
+   "group": "sanity",
+   "why": "가장 가까운 곳이 브레이크타임 — 여는 곳으로",
+   "picked": "A",
+   "picked_name": "여는 식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "A",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "A",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "A",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-016",
+   "group": "sanity",
+   "why": "카드만 쓰는 여행 — 현금만 받는 가까운 곳은 탈락",
+   "picked": "A",
+   "picked_name": "카드 식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "A",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "A",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "rule",
+      "rule_key": "A",
+      "llm_key": null,
+      "asked": 0,
+      "failure": null,
+      "reason": null,
+      "seconds": 0.0,
+      "final_label": "correct",
+      "rule_label": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "DA-017",
+   "group": "sanity",
+   "why": "근처가 모두 닫았다 — 바꾸지 않는다",
+   "picked": null,
+   "picked_name": null,
+   "status": "unresolved",
+   "route": null,
+   "label": "correct_no_change",
+   "runs": [
+    {
+     "picked": null,
+     "label": "correct_no_change"
+    },
+    {
+     "picked": null,
+     "label": "correct_no_change"
+    },
+    {
+     "picked": null,
+     "label": "correct_no_change"
+    }
+   ]
+  },
+  {
+   "id": "DA-018",
+   "group": "transit",
+   "why": "다음 일정이 잠실(교통) — 직선으로는 필동이 가깝지만 역 앞 가게가 실제로 빠르다(이동 계산기)",
+   "picked": null,
+   "label": "skipped"
+  },
+  {
+   "id": "DA-019",
+   "group": "transit",
+   "why": "가게 앞 휴무 신고 · 다음 일정 잠실 — 역 앞 가게여야 안 늦는다(이동 계산기)",
+   "picked": null,
+   "label": "skipped"
+  }
+ ]
+}

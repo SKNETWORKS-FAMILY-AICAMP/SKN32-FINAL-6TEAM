@@ -489,6 +489,20 @@ def get_guardrails() -> Guardrails:
     return Guardrails(data, path)
 
 
+def dining_agent_shadow() -> dict[str, Any] | None:
+    """요식 판정 에이전트 그림자 운행 설정 — 가드레일 `travel.dining.agent_shadow`. 켜져 있으면 `{model, deadline_s}`, 아니면 None. ★기본 꺼짐.
+
+    `[2026-10-13]` 접수 확인의 규칙 검사와 나란히 판정해 기록만 한다(고객 결과는 그대로). 가드레일을 못 읽어도 **꺼짐**으로 본다.
+    """
+    try:
+        section = get_guardrails().get("travel.dining.agent_shadow")
+    except ConfigError:
+        return None
+    if not isinstance(section, dict) or section.get("enabled") is not True:
+        return None
+    return {"model": str(section.get("model") or "openai:gpt-4o-mini"), "deadline_s": float(section.get("deadline_s") or 120)}
+
+
 def google_price_enabled() -> bool:
     """식당 대안의 구글 가격 조회를 켰나 — 가드레일 `travel.dining.google_price_enabled`. ★기본 꺼짐.
 

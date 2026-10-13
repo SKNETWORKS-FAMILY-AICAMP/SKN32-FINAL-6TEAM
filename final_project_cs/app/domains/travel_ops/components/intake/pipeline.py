@@ -207,6 +207,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("UPDATE trip_intakes SET status='review', stage='review', updated_at=now() "
                         "WHERE tenant_id=%s AND intake_id=%s AND status='reading'", (tenant_id, intake_id))
+        _dining_shadow(connect, tenant_id, intake_id, sources)
         return "review"
     except _Abandoned:                               # 읽는 사이 실패로 확정됐다(`reap_stalled`) — 값도 상태도 더 건드리지 않는다
         return "fatal"
@@ -221,6 +222,26 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         if "beat" in locals():
             beat.__exit__()
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
+
+
+def _dining_shadow(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]]) -> None:
+    """요식 판정 에이전트 **그림자** — 확인 화면으로 넘긴 **뒤에** 규칙 검사와 나란히 판정해 요식 표에만 기록한다. `[2026-10-13 · 설계 §10 단계 5]`
+    ★가드레일 `travel.dining.agent_shadow.enabled` 를 켜야 돈다(기본 꺼짐 — 꽂히지 않으면 아무것도 안 한다). 고객 결과 · 상태는 바꾸지 않고,
+      실패해도 접수에 영향이 없다(경고만 남긴다)."""
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+    runner = dining_ledger.agent_shadow_runner()
+    if runner is None:
+        return
+    try:
+        with connect() as conn:
+            payload = review_module.load(conn, tenant_id, intake_id, 1)
+        if not payload:
+            return
+        notes = "\n".join(s.get("transcript") or "" for s in sources)
+        runner(connect, tenant_id=tenant_id, intake_id=intake_id, revision=1, review=payload, notes=notes)
+    except Exception:                                  # noqa: BLE001 — 그림자 장애가 접수를 건드리지 않는다
+        log.warning("dining agent shadow failed intake=%s", intake_id, exc_info=True)
 
 
 def reap_stalled(conn, *, tenant_id: str, intake_id: UUID) -> None:

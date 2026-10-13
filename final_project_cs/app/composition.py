@@ -532,6 +532,34 @@ def wire_domain_teams(*, config: ProjectConfig | None = None, registry: TeamRegi
     return connected
 
 
+def _dining_agent_shadow():
+    """요식 판정 에이전트 그림자 운행 — 가드레일 `travel.dining.agent_shadow.enabled` 를 켰을 때만 실행기를 만든다(기본 꺼짐 → None). `[2026-10-13]`
+
+    모델은 가드레일 `model` 로 고른다 — `openai:<모델>`(키 `ACOP_OPENAI_API_KEY`) · `ollama:<모델>`(주소 `ACOP_OLLAMA_BASE_URL`).
+    ★키 · 주소가 없으면 만들지 않고 경고만 남긴다(그림자는 없어도 되는 것이다 — 기동을 막지 않는다)."""
+    from app.core.settings import dining_agent_shadow, get_settings
+
+    shadow_settings = dining_agent_shadow()
+    if shadow_settings is None:
+        return None
+    from functools import partial
+
+    from app.domains.travel_ops.instances.dining import shadow as dining_shadow
+    from app.infrastructure.llm.tool_chat import OllamaToolChat, OpenAIToolChat
+
+    settings = get_settings()
+    kind, _, model = shadow_settings["model"].partition(":")
+    if kind == "openai" and (settings.openai_api_key or "").strip():
+        chat = OpenAIToolChat(api_key=settings.openai_api_key, model=model or "gpt-4o-mini")
+    elif kind == "ollama" and (settings.ollama_base_url or "").strip():
+        chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model)
+    else:
+        logging.getLogger(__name__).warning("dining agent shadow enabled but model %s has no key/address — shadow is off",
+                                            shadow_settings["model"])
+        return None
+    return partial(dining_shadow.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"])
+
+
 def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> list[str]:
     """Connect only active, loaded providers; collect_services isolates candidate assembly.
 
@@ -582,7 +610,8 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                lookup_factory=LedgerPlaceLookup,
                                slot_verdicts=dining_ledger_impl.slot_verdicts,
                                planner_factory=dining_ledger_impl.PlannerLedger,
-                               link_core_place=dining_ledger_impl.link_core_place_to)
+                               link_core_place=dining_ledger_impl.link_core_place_to,
+                               agent_shadow=_dining_agent_shadow())
 
     if "activity" in active_ids:
         # 활동 — 비슷한 곳 순서와 설문 선호.
