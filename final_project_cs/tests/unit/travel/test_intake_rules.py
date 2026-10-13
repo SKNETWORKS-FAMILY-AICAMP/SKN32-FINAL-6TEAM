@@ -112,3 +112,43 @@ def test_a_line_that_is_only_a_date_is_not_the_trip_title(text, title):
     from app.domains.travel_ops.components.intake.assemble import _title
 
     assert _title({}, [{"transcript": text}]) == title
+
+
+# ── 2026-10-13 끼니 말이 어디에 있든 — 붙여 씀 · 가운뎃점 · 앞머리 ─────────────
+def _meal_kind(read, index):
+    return [c.value for c in read.claims if c.field == f"items[{index}].kind"]
+
+
+@pytest.mark.parametrize("text, title", [
+    ("12:00 광장시장 점심식사", "광장시장"),          # ☆붙여 쓴 「점심식사」를 이름에 남겼다(테스트 서버)
+    ("12:00 광장시장·점심", "광장시장"),              # ☆가운뎃점으로 붙인 끼니 말
+    ("12:00 점심 · 광장시장", "광장시장"),            # ☆앞머리 끼니 말 — 「점심」만 이름으로 남겼다
+    ("12:00 광장시장에서 점심식사", "광장시장"),
+    ("12:00 광장시장에서 점심", "광장시장"),          # 이름은 전에도 맞았지만 식사 단서를 잃었다
+    ("12:00 점심 식사 광장시장", "광장시장"),
+    ("12:30 토속촌삼계탕 점심", "토속촌삼계탕"),
+])
+def test_a_meal_word_anywhere_around_the_name_is_cut_and_marks_a_meal(text, title):
+    read = read_plan(text)
+    assert [i.title.text for i in read.items] == [title]
+    assert _meal_kind(read, 0) == ["dining"]
+    item = read.items[0]
+    assert text[item.title.start:item.title.end] == item.title.text      # ★잘라 낼 뿐 바꾸지 않는다
+
+
+@pytest.mark.parametrize("text, title, kind", [
+    ("10:00 아침고요수목원", "아침고요수목원", []),        # 이름 안의 끼니 글자는 끼니 말이 아니다
+    ("12:00 북경중식", "북경중식", []),
+    ("19:00 저녁노을카페", "저녁노을카페", []),
+    ("12:00 점심", "점심", ["dining"]),                   # 끼니 말뿐이면 떼지 않는다(이름이 비면 안 된다) — 식사 단서는 남긴다
+])
+def test_meal_letters_inside_a_name_are_not_cut(text, title, kind):
+    read = read_plan(text)
+    assert [i.title.text for i in read.items] == [title]
+    assert _meal_kind(read, 0) == kind
+
+
+def test_an_untimed_line_between_stops_also_drops_a_joined_meal_word():
+    r = read_plan(chr(10).join(["09:30 경복궁", "광장시장 점심식사", "15:00 인사동"]))
+    assert [i.title.text for i in r.items] == ["경복궁", "인사동", "광장시장"]
+    assert _meal_kind(r, 2) == ["dining"]
