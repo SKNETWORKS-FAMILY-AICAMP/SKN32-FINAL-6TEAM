@@ -48,14 +48,24 @@ _failure_log = logging.getLogger(fc.LOGGER_NAME)
 ASK_STARTS_AT: dict[str, Any] = {
     "type": "object", "required": ["starts_at"],
     "properties": {"starts_at": {"type": "string", "format": "date-time", "description": "방문 시각"}}}
+#: ★`[2026-10-13]` 코어 회신 5번 — 고객 답은 선택지(`choices`)와 맞춰 읽는다(자유 글을 해석하는 모델은 쓰지 않는다 ·
+#:   다른 팀의 `conversation_work.wait_for_input` 과 같은 모양). 답이 선택지와 같지 않으면 다시 묻는다.
+#:   `outdoor` 는 「야외면 True」 — 장소의 `weather_sensitive` 와 같은 뜻이다.
+OUTDOOR_CHOICES: list[dict[str, Any]] = [
+    {"label": "실내", "message": "실내", "outdoor": False},
+    {"label": "야외", "message": "야외", "outdoor": True}]
+PROCEED_CHOICES: list[dict[str, Any]] = [
+    {"label": "그대로 진행", "message": "그대로 진행", "proceed": "keep"},
+    {"label": "다른 장소 보기", "message": "다른 장소 보기", "proceed": "change"}]
 ASK_OUTDOOR: dict[str, Any] = {      # 수정본 UC-A3 `3b2`
     "type": "object", "required": ["outdoor"],
-    "properties": {"outdoor": {"type": "boolean", "description": "야외 활동이면 true, 실내 활동이면 false"}}}
+    "properties": {"outdoor": {"type": "boolean", "description": "야외 활동이면 true, 실내 활동이면 false"}},
+    "choices": OUTDOOR_CHOICES}
 ASK_PROCEED: dict[str, Any] = {      # 수정본 UC-A3 `4a`
     "type": "object", "required": ["proceed"],
     "properties": {"proceed": {"type": "string", "enum": ["keep", "change"],
-                               "description": "keep: 운영 정보 미확인인 채로 그대로 진행 · change: 다른 장소를 본다"}}}
-
+                               "description": "keep: 운영 정보 미확인인 채로 그대로 진행 · change: 다른 장소를 본다"}},
+    "choices": PROCEED_CHOICES}
 
 class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
     manifest = TeamManifest(
@@ -408,6 +418,12 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         disaster_warnings: list[str] = []
         if isinstance(place, dict):
             indoor, evidence, place_class = self._indoor_outdoor(task, booking, place, seen, evidence)
+            # ★`[2026-10-13]` 코어 회신 5번 — 이전 재개에서 고객이 실내 · 야외로 답했으면 그 값을 쓴다(같은 질문을 되풀이하지 않는다).
+            #   장소 기록이나 관광공사 분류가 알려 주지 못한 경우에만 쓴다 — 기록이 있으면 기록이 앞선다.
+            if indoor.get("value") is None:
+                answered = self._answered(task, "outdoor", OUTDOOR_CHOICES)
+                if answered is not None:
+                    indoor = {"value": bool(answered["outdoor"]), "source": "customer"}
             report = self._read(task, "read.disruptions", {
                 "place_id": booking.get("place_id"),
                 "latitude": place.get("latitude"),
@@ -518,17 +534,29 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             return self._ask_customer(
                 task, evidence, fc.INDOOR_UNKNOWN, schema=ASK_OUTDOOR, reason="indoor_unknown_weather",
                 answer=(f"현재 {self._REGION}에 {kinds}가 발효 중입니다. 이 장소가 실내인지 확인하지 못해 일정을 바꿔야 "
-                        f"하는지는 판정하지 않았습니다. 야외 활동인지 알려 주세요."),
+                        f"하는지는 판정하지 않았습니다. 야외 활동인지 알려 주세요. 1) 실내 2) 야외 — 번호나 글자로 답해 주세요."),
                 disruptions=pending, indoor=indoor,
                 warnings=["실내외를 모르는 장소에 야외에만 영향을 주는 사건이 걸렸다 — 변경을 단정하지 않고 고객에게 먼저 묻는다",
                           *disaster_warnings])
+        kept_unknown_hours = False
         if hours_decision is not None and hours_decision.get("empty"):
-            return self._ask_customer(
-                task, evidence, fc.HOURS_UNKNOWN, schema=ASK_PROCEED, reason="hours_unknown", hours=hours_decision,
-                answer=("이 장소의 운영 정보(운영시간 · 휴무)를 확인하지 못해 그 부분은 판정하지 않았습니다. "
-                        "그대로 진행할지, 다른 장소를 볼지 알려 주세요."),
-                warnings=["운영 정보가 비어 휴무 · 운영시간을 판정하지 못했다 — 「성립」으로 답하지 않고 고객에게 묻는다",
-                          *headcount_warnings, *disaster_warnings])
+            # ★`[2026-10-13]` 코어 회신 5번 — 고객이 이미 골랐으면 다시 묻지 않는다. 「다른 장소 보기」는 변경 제안(승인 대기)에
+            #   대체 후보를 붙이고, 「그대로 진행」은 모르는 채로 성립을 답하되 경고를 남긴다(운영 정보를 지어내지 않는다).
+            proceed = self._answered(task, "proceed", PROCEED_CHOICES)
+            if proceed is None:
+                return self._ask_customer(
+                    task, evidence, fc.HOURS_UNKNOWN, schema=ASK_PROCEED, reason="hours_unknown", hours=hours_decision,
+                    answer=("이 장소의 운영 정보(운영시간 · 휴무)를 확인하지 못해 그 부분은 판정하지 않았습니다. "
+                            "그대로 진행할지, 다른 장소를 볼지 알려 주세요. 1) 그대로 진행 2) 다른 장소 보기 — 번호나 글자로 답해 주세요."),
+                    warnings=["운영 정보가 비어 휴무 · 운영시간을 판정하지 못했다 — 「성립」으로 답하지 않고 고객에게 묻는다",
+                              *headcount_warnings, *disaster_warnings])
+            if proceed["proceed"] == "change" and isinstance(place, dict):
+                return self._closed_place_change(
+                    task, booking, place, seen, evidence, reason="고객 요청 — 운영 정보를 확인하지 못한 장소를 바꾼다",
+                    answer=("운영 정보를 확인하지 못한 장소라 다른 장소를 보겠다고 하셔서 변경 제안을 만들었습니다. "
+                            "승인 뒤에 진행됩니다."),
+                    decisions={"feasible": None, "reason": "customer_chose_change", "hours": hours_decision})
+            kept_unknown_hours = True
 
         forecast = self._checked_value(report, "forecast")
         warnings: list[str] = [*headcount_warnings, *disaster_warnings]
@@ -544,12 +572,17 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             warnings.append("운영시간 · 휴무를 확인하지 못했다 — 판정에 넣지 않았다")
         if hours_decision is not None:
             decisions["hours"] = hours_decision
+        if kept_unknown_hours:
+            decisions["customer_choice"] = "keep"
+            warnings.append("고객이 운영 정보를 확인하지 못한 채로 그대로 진행하기로 했다 — 휴무 · 운영시간은 판정하지 않았다")
         if live_decision is not None:
             decisions["live_status"] = live_decision
         if indoor:
             decisions["indoor"] = indoor
             if indoor.get("source") == "class":
                 warnings.append("실내외는 관광공사 분류로 정한 값이다 — 장소에 적힌 값이 아니다")
+            elif indoor.get("source") == "customer":
+                warnings.append("실내외는 고객이 알려 준 값이다 — 장소 기록이 아니다")
             elif indoor.get("value") is None and forecast is not None:
                 warnings.append("실내인지 확인하지 못해 야외 기준으로 날씨를 봤다")
         if forecast is not None:
@@ -725,13 +758,35 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         return {"value": bool(value), "source": "class", "lcls1": found.get("lcls1"),
                 "lcls2": found.get("lcls2")}, evidence, found
 
+    @staticmethod
+    def _answered(task: TeamTask, field: str, choices: list[dict[str, Any]]) -> dict[str, Any] | None:
+        """고객이 `choices` 중 하나로 답했나 — 맞는 선택지를 돌려준다. 없으면 `None`(다시 묻는다). `[2026-10-13]` 코어 회신 5번.
+
+        ★글자(「야외」 · 「그대로 진행」)는 이전 답 어디에 있어도 쓴다 — 질문이 둘 이어지면 앞 답을 잃지 않게.
+        ★번호(「2번」)는 **방금 물은 질문**이 이 칸일 때만 쓴다 — 두 질문의 1번 · 2번이 다르다. 자유 글은 해석하지 않는다."""
+        from app.domains.travel_ops.instances._shared.conversation_work import _choice, replies
+
+        answers = replies(task)
+        found: dict[str, Any] | None = None
+        for answer in answers:
+            exact = [c for c in choices if answer.strip() in (c["message"], c["label"])]
+            if len(exact) == 1:
+                found = exact[0]
+        pending = task.context.current_state.get("required_input_schema") or {}
+        if answers and pending.get("required") == [field]:
+            option = _choice(choices, answers[-1])
+            if option is not None:
+                found = option
+        return found
+
     def _ask_customer(self, task: TeamTask, evidence: list, code: str, *, schema: dict[str, Any], answer: str,
                       warnings: list[str], **decisions: Any) -> TeamResult:
         """고객 확인 요청 — `waiting` · `wait_for_input` · `wait_reason='customer_input'`(수정본 §12 · 계약 04 §5). `[2026-10-11]`
 
         ★전에는 `completed` + `status: insufficient_info`(계약에 없는 값)로 답했다(D4). 성립을 단정하지 않는 것은 그대로다 —
           `feasible` 은 `None`(판정하지 않음)이다. 실패 코드는 `decisions` 와 로그에만 싣는다 — 넘김(`escalated`)이 아니다.
-        ★고객의 답으로 다시 판정하는 것(재개)은 아직 없다 — 코어가 답을 Team 입력으로 넘기는 경로가 없다(구현 계획 4.4 · 코어 협의).
+        ★`[2026-10-13]` 재개는 `_answered` 가 읽는다 — 코어는 답을 `customer_input` 으로 이미 넘긴다(코어 회신 5번). 질문에 선택지
+          (`choices`)를 붙여 두었고, 고객 답이 선택지와 같으면 그 값으로 다시 판정한다.
         """
         return self._result(
             task, outcome="waiting", confidence=0.5, evidence=evidence,
