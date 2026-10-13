@@ -32,6 +32,9 @@ KNOWN_IMPLEMENTATION_REFS = frozenset({
     "app.domains.travel_ops.instances.dining:DiningTeam",
     "app.domains.travel_ops.instances.locked:LodgingTeam",
     "app.domains.travel_ops.instances.locked:FlightTeam",
+    # `[2026-10-07~08]` 숙소 · 항공 본체 — `config/project.yaml` 이 이쪽을 쓴다(옛 locked 두 줄은 되돌릴 때를 위해 남긴다)
+    "app.domains.travel_ops.instances.lodging:LodgingTeam",
+    "app.domains.travel_ops.instances.flight:FlightTeam",
 })
 
 

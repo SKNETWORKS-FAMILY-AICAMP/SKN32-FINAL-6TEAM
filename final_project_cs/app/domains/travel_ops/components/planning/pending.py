@@ -368,6 +368,20 @@ class PendingStore:
                          self.tenant_id, proposal_id))
             return cur.rowcount == 1
 
+    def reopen(self, conn, proposal_id: UUID, *, options: list[dict[str, Any]], reason: str,
+               causes: list[dict[str, Any]]) -> bool:
+        """★`[2026-10-13]` 같은 항목 · 같은 기준 판의 제안 자리를 **새 안으로 다시 연다**(숙소 · 항공 「또 바꿔 줘」).
+
+        제안 자리는 항목 · 판마다 하나다(UNIQUE — 닫힌 것도 자리를 차지한다). 판이 그대로인 채 새 후보를 내밀려면 그 자리를 다시 쓴다.
+        고른(`chosen`) 제안은 다시 열지 않는다 — 고르면 판이 올라 자리도 새 판으로 간다."""
+        with conn.cursor() as cur:
+            cur.execute("UPDATE pending_changes SET status='open', options_json=%s, reason=%s, cause_json=%s, "
+                        "chosen_key=NULL, chosen_by=NULL, chosen_version=NULL, decided_at=NULL "
+                        "WHERE tenant_id=%s AND proposal_id=%s AND status <> 'chosen'",
+                        (json.dumps(options, ensure_ascii=False, default=str), reason,
+                         json.dumps(causes, ensure_ascii=False, default=str), self.tenant_id, proposal_id))
+            return cur.rowcount == 1
+
     def expire(self, conn, *, now: datetime) -> list[dict[str, Any]]:
         """무응답 — 그 일정이 끝난 제안을 닫는다. ★바꾸지 않는다. 닫은 것을 돌려준다(조용히 닫지 않는다)."""
         with conn.cursor() as cur:
@@ -436,6 +450,15 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
     if picked is not None and picked.get("catalog_place"):
         added = store.add_catalog_place(conn, trip_id, picked["catalog_place"])
         places_by_id = {**places_by_id, str(picked["place_id"]): added}
+    elif picked is not None and current.kind == "lodging" and not picked.get("place_id"):
+        # ★`[2026-10-13]` 숙소 팀 후보(마이리얼트립 · 구글 호텔)는 장소 표에 없다 — 고를 때 숙소 원장이 그 여행 전용 장소로 들여놓는다
+        #   (`team_hooks/lodging_ledger.adopt_option`, 같은 트랜잭션). 좌표를 모르거나 원장이 없으면 장소 없이 바꾼다(지도 핀 없음 — 좌표를 지어내지 않는다)
+        from app.domains.travel_ops.components.team_hooks import lodging_ledger
+
+        added = lodging_ledger.adopt_option(conn, store, trip_id, picked)
+        if added is not None:
+            picked["place_id"] = str(added["place_id"])
+            places_by_id = {**places_by_id, str(added["place_id"]): added}
     # ★기존 경로를 그대로 탄다 — 보관한 안을 「다른 안」 자리에 놓고 고른다
     probe = [i if i.item_id != current.item_id else _with_alternates(i, options) for i in items]
     plan = plan_swap(trip_version=trip["version"], base_version=proposal["base_version"], items=probe,

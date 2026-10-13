@@ -188,6 +188,23 @@ class ReadToolbox:
             "read.place_catalog": self.place_catalog,
             "read.route_events": self.route_events_for,
             "read.customer_report": self.customer_report,
+            # ★`[2026-10-07]` 숙소·항공 검색(마이리얼트립 MCP · 검색 전용) — 숙소 팀 · 항공 팀이 쓴다
+            "read.stay_search": self.stay_search,
+            "read.stay_detail": self.stay_detail,
+            "read.flight_search": self.flight_search,
+            # ★`[2026-10-09]` 항공편 비교용 두 번째 소스(Ignav MCP) — 판매처(항공사 · OTA) 예약 링크가 붙는다. 항공 팀이 쓴다
+            "read.flight_offers": self.flight_offers,
+            "read.flight_google": self.flight_google,
+            "read.stay_google": self.stay_google,
+            # ★`[2026-10-10]` booking 모듈 — 여러 판매처를 한 번에 비교(팀 피드백: 에이전트 → booking → 어댑터). 항공 팀 · 숙소 팀이 쓴다
+            "read.booking_search_flights": self.booking_search_flights,
+            "read.booking_search_stays": self.booking_search_stays,
+            # ★`[2026-10-13]` 숙소 이름 → 주소 · 좌표(카카오 로컬 → 관광공사). 숙소 팀이 마이리얼트립을 못 쓸 때 「내 숙소」 위치에만 쓴다
+            "read.stay_lookup": self.stay_lookup,
+            # ★`[2026-10-13]` 구글 호텔 숙소 여럿의 상세(판매처별 가격 · 주소 · 사진)를 동시에 — 숙소 팀이 후보마다 판매처 가격을 붙일 때
+            "read.stay_google_details": self.stay_google_details,
+            # ★`[2026-10-13]` 숙소 · 항공 일정 항목에 앞서 보여 준 후보(숙소 · 항공 원장) — 「또 바꿔 줘」에서 뺀다
+            "read.offers_shown": self.offers_shown,
         }
 
     #: 여행 예약의 컬럼. ★`_one()` 이 zip 으로 붙이므로 SELECT 순서와 **같아야** 한다.
@@ -788,6 +805,158 @@ class ReadToolbox:
             return None
         return self.travel.advisory.country(iso2=str(country_iso2))
 
+    # ── 숙소·항공 검색 (마이리얼트립 MCP) ─────────────────────────
+    #   ★인자 이름은 어댑터(`ports/data_sources/myrealtrip.py`)와 같다. 소스가 없으면 `None`(모름) — 바깥으로 나가지 않는다.
+    #   ★날짜·키워드·공항 코드가 비면 **묻지 않는다** — 기본 날짜로 채워 부르지 않는다(되묻기는 팀의 일).
+    def _travel_search(self) -> Any | None:
+        return getattr(self.travel, "travel_search", None) if self.travel else None
+
+    def stay_search(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
+                    check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 목록(이름 · 1박 가격 · 5점 만점 평점). 좌표 · 링크는 `read.stay_detail` 이 준다."""
+        source = self._travel_search()
+        if source is None or not keyword or not check_in or not check_out:
+            return None
+        wanted = ("adults", "children", "domestic", "size", "min_price", "max_price", "min_review_rating")
+        return source.stay_search(keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
+                                  **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def stay_detail(self, scope: ToolContext, *, gid: Any = None, check_in: str | None = None,
+                    check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 한 곳의 좌표 · 주소 · 예약 페이지 링크 · 그 날짜의 가격."""
+        source = self._travel_search()
+        if source is None or gid is None or not check_in or not check_out:
+            return None
+        try:
+            gid = int(gid)
+        except (TypeError, ValueError):
+            return None
+        return source.stay_detail(gid=gid, check_in=str(check_in), check_out=str(check_out),
+                                  **{key: options[key] for key in ("adults", "children") if options.get(key) is not None})
+
+    def flight_search(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                      depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 목록(항공사 · 시각 · 총액 · 검색 페이지 링크). 공항 코드는 3글자."""
+        source = self._travel_search()
+        if source is None or not origin or not destination or not depart_date:
+            return None
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return source.flight_search(origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                                    **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def flight_offers(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                      depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 목록(Ignav) — `read.flight_search` 와 같은 인자 · 같은 모양에 판매처(`seller`)와 판매처 링크가 붙는다.
+        키가 없어 소스가 없으면 `None`(모름)."""
+        source = getattr(self.travel, "flight_offers", None) if self.travel else None
+        if source is None or not origin or not destination or not depart_date:
+            return None
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return source.flight_search(origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                                    **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def flight_google(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                      depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 목록(SerpApi 구글 항공권, 한국 설정) — `read.flight_search` 와 같은 인자 · 같은 모양. 링크는 구글 항공권 결과 페이지.
+        키가 없어 소스가 없으면 `None`(모름). `[2026-10-09]`"""
+        source = getattr(self.travel, "flight_google", None) if self.travel else None
+        if source is None or not origin or not destination or not depart_date:
+            return None
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return source.flight_search(origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                                    **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def stay_google(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
+                    check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 목록(SerpApi 구글 호텔, 한국 설정) — 이름 · 1박 · 전체 · 평점 · 좌표 · 링크. 키가 없어 소스가 없으면 `None`. `[2026-10-10]`"""
+        source = getattr(self.travel, "stay_google", None) if self.travel else None
+        if source is None or not keyword or not check_in or not check_out:
+            return None
+        wanted = ("adults", "children", "size", "max_price")
+        return source.stay_search(keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
+                                  **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def stay_lookup(self, scope: ToolContext, *, name: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """숙소 이름 → 주소 · 좌표. `[2026-10-13]` 숙소 팀의 「내 숙소」가 마이리얼트립을 못 쓸 때(쉬는 중 · 실패 · 못 찾음).
+
+        ① 카카오 로컬 — 숙박(`AD5`)으로 좁혀 서울 전역을 관련도 순으로(서울 밖은 어댑터가 뺀다). 응답은 저장하지 않는다(카카오 약관).
+        ② 관광공사 — 숙박(32)에서 제목이 정확히 같은 한 곳(애매하면 없음).
+        돌려주는 것: `{"source": "kakao"|"tour_api", "stays": [{name, address, latitude, longitude}]}`.
+        둘 다 부를 수 없었으면 `None`(모름). 카카오가 답했는데 둘 다 못 찾았으면 빈 목록.
+        """
+        if not name or not str(name).strip():
+            return None
+        answered = False
+        if self.kakao is not None:
+            found = self.kakao.search(str(name), size=5, category_group_code="AD5", anywhere=True)
+            if found is not None:
+                answered = True
+                if found:
+                    return {"source": "kakao", "stays": [{key: row.get(key) for key in ("name", "address", "latitude", "longitude")}
+                                                         for row in found]}
+        place = getattr(self.travel, "place", None) if self.travel else None
+        if place is not None and hasattr(place, "find"):
+            hit = place.find(str(name), content_type_id="32")
+            if hit:
+                return {"source": "tour_api", "stays": [{"name": hit.get("matched_title"), "address": hit.get("address"),
+                                                         "latitude": hit.get("latitude"), "longitude": hit.get("longitude")}]}
+        return {"source": None, "stays": []} if answered else None
+
+    def stay_google_details(self, scope: ToolContext, *, tokens: Any = None, keyword: str | None = None,
+                            check_in: str | None = None, check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """구글 호텔 숙소 여럿의 상세(booking 모듈 `google_details`) — 판매처별 1박 가격 · 주소 · 사진. 소스가 없으면 `None`. `[2026-10-13]`"""
+        if not self.travel or not tokens or not keyword or not check_in or not check_out:
+            return None
+        from app.domains.travel_ops.components.booking.offers import google_details
+
+        return google_details(self.travel, tokens=[str(token) for token in tokens], keyword=str(keyword),
+                              check_in=str(check_in), check_out=str(check_out),
+                              adults=options.get("adults"), children=options.get("children"))
+
+    def offers_shown(self, scope: ToolContext, *, trip_id: Any = None, item_key: str | None = None,
+                     **_: Any) -> dict[str, Any] | None:
+        """그 여행 한 항목에 앞서 보여 준 숙소 · 항공 후보(key · 이름, 보여 준 순서). `[2026-10-13]`
+
+        이 고객의 여행이 아니거나 원장이 없으면(숙소 팀 미등록) `None`(모름) — 부르는 쪽은 항목 상세의 `shown` 만 쓴다."""
+        if not trip_id or not item_key:
+            return None
+        from app.domains.travel_ops.components.team_hooks import lodging_ledger
+
+        if not lodging_ledger.is_registered():
+            return None
+        store = self._trip_store(scope)
+        with self.connection_factory() as conn:
+            try:
+                trip, _items = store.latest(conn, UUID(str(trip_id)))
+            except (KeyError, ValueError):
+                return None
+            if str(trip["customer_id"]) != str(scope.customer_id):
+                return None
+            offers = lodging_ledger.shown_offers(conn, scope.tenant_id, trip["trip_id"], str(item_key))
+        return {"item_key": str(item_key), "offers": offers}
+
+    def booking_search_flights(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                               depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 비교(booking 모듈) — 마이리얼트립 · Ignav · 구글 항공권을 불러 같은 편끼리 묶은 결과. 소스가 없으면 `None`. `[2026-10-10]`"""
+        if not self.travel or not origin or not destination or not depart_date:
+            return None
+        from app.domains.travel_ops.components.booking.offers import search_flights
+
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return search_flights(self.travel, origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                              **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def booking_search_stays(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
+                             check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 비교(booking 모듈) — 마이리얼트립 목록 · 구글 호텔 목록 · 다른 곳 링크. 소스가 없으면 `None`. `[2026-10-10]`"""
+        if not self.travel or not keyword or not check_in or not check_out:
+            return None
+        from app.domains.travel_ops.components.booking.offers import search_stays
+
+        wanted = ("adults", "children", "domestic", "size", "max_price", "min_review_rating")
+        return search_stays(self.travel, keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
+                            **{key: options[key] for key in wanted if options.get(key) is not None})
+
     def route(self, scope: ToolContext, **_: Any) -> None:
         """이동 시간. `[미구현]` — Routes API 를 붙일 자리."""
         return None
@@ -856,6 +1025,9 @@ ALLOWED_PROMPT_KEYS = frozenset({
     "activity_judge.disaster_effect", "activity_judge.live_status",
     # ★`[2026-10-13]` 대체 후보 순서(활동 코어 전달 사항 11번) — 기본 `kind_modes.alternative_order: rule` 이면 부르지 않는다.
     "activity_judge.alternative_order",
+    # ★`[2026-10-07]` `lodging.interpret` · `[2026-10-08]` `flight.interpret` — 숙소 · 항공 팀이 고객 문장을 구조로 옮길 때 쓰는 프롬프트
+    #   (`prompts/lodging/interpret.v<N>.md` · `prompts/flight/interpret.v<N>.md`)
+    "lodging.interpret", "flight.interpret",
 })
 
 

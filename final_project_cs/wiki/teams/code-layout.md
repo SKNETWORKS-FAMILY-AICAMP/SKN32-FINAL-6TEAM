@@ -19,7 +19,7 @@ domain: travel
 | Dining | [instances/dining/](../../app/domains/travel_ops/instances/dining/) | [tests/unit/travel/dining/](../../tests/unit/travel/dining/) 및 [travel/](../../tests/unit/travel/)의 `test_dining_*.py` |
 | Mobility | [instances/mobility/](../../app/domains/travel_ops/instances/mobility/) | [tests/unit/travel/mobility/](../../tests/unit/travel/mobility/). 출발·이동 공통 시험은 [travel/](../../tests/unit/travel/)에도 있음 |
 | Booking Handoff | [instances/booking_handoff/](../../app/domains/travel_ops/instances/booking_handoff/) | [근거 누적 시험](../../tests/unit/travel/test_evidence_accumulates.py), [승인 대기 연결 시험](../../tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py). 등록·코드 존재를 MVP 제공 완료로 해석하지 않음 |
-| Lodging·Flight | [instances/locked/](../../app/domains/travel_ops/instances/locked/) | 등록 전용·잠긴 예약 경계는 아래 등록 도달성 시험에서 확인. 자체 변경 기능 완료를 뜻하지 않음 |
+| Lodging·Flight | [instances/lodging/](../../app/domains/travel_ops/instances/lodging/) · [instances/flight/](../../app/domains/travel_ops/instances/flight/). `[2026-10-13]` 옛 등록 전용 [instances/locked/](../../app/domains/travel_ops/instances/locked/)는 등록에서 빠졌고 코드는 남김 | [tests/unit/travel/booking/](../../tests/unit/travel/booking/) · [다른 후보 통합 시험](../../tests/integration/travel/test_lodging_flight_options.py) |
 
 [project.yaml](../../config/project.yaml)의 `implementation_ref`가 등록할 클래스의 정본입니다. 파일 하나·패키지·파일과 별도 엔진의 구조가 가능하므로 클래스가 실제로 정의된 곳은 import 결과로 확인합니다. 같은 이름의 파일과 패키지 폴더를 동시에 남기지 않습니다.
 

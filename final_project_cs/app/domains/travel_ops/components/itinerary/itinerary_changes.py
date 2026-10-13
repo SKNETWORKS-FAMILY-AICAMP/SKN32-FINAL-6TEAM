@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.domains.travel_ops.components.planning.replan import Candidate
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from typing import Any, Callable
 from uuid import UUID
@@ -970,12 +970,27 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
     warnings = [f"{name}: {warning}" for warning in pick.get("warnings") or []]
     if warnings:
         text += " " + " ".join(warnings)
+    # ★`[2026-10-13]` 숙소 · 항공 후보(외부 소스 — 예약 전)는 고른 안을 그대로 남기고 예약 링크를 알린다(숙소 · 항공 팀의 `_choose` 와 같은 칸)
+    outside = current.kind in ("lodging", "flight")
+    if outside:
+        detail["chosen"] = {k: v for k, v in pick.items() if k != "rank"}
+        detail["booked"] = False
+        if current.kind == "flight":
+            detail["key"] = pick["key"]
+        if pick.get("link"):
+            text += f" 아직 예약 전이에요 — 예약은 이 링크에서 해 주세요: {pick['link']}"
     notice = {"text": text, "language": "ko", "causes": [cause],
               "changed": {"from": applied["name"], "to": name, "at": starts.isoformat()},
               "other_options": [a["name"] for a in remaining], "replay": False,
               **({"warnings": warnings} if warnings else {})}
-    replacement = current.replaced_by(place=place, title=title_for(current, name),
+    replacement = current.replaced_by(place=place, title=current.title if current.kind == "flight" else title_for(current, name),
                                       detail=detail, starts_at=starts, ends_at=ends)
+    if outside and place is None:
+        # 장소 표에 들여놓지 못한 후보(좌표 없음) — 원래 숙소 핀을 남기지 않는다(`replaced_by` 는 장소가 없으면 원래 장소를 둔다)
+        replacement = replace(replacement, place_id=None, place=None)
+    if current.kind == "flight":
+        # 도착 시각은 비운다 — 편 응답의 도착은 도착 공항 현지 시각이다(항공 팀 `_choose` 와 같다)
+        replacement = replace(replacement, ends_at=None)
     return ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                            replacements={current.item_id: replacement, **shifted},
                            summary={"to": name, "rechecked": rechecked})

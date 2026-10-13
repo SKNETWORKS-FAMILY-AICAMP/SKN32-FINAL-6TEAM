@@ -699,7 +699,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     Outside collection this remains the explicit standalone/unit-test assembly seam.
     Production stores the returned registrations in a per-controller BindingTable.
     """
-    from app.domains.travel_ops.components.team_hooks import activity_ledger, dining_ledger, legs, mobility_shapes, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import activity_ledger, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
 
     if active_ids is not None:
         pass
@@ -773,12 +773,24 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     if "mobility" in active_ids:
         from app.domains.travel_ops.instances.mobility.team import plan_mobility_trigger
         watch_planners.register("mobility", plan_mobility_trigger)
+    if "lodging" in active_ids:
+        # 숙소 · 항공(확장) — 보여 준 후보 기억 · 고른 MCP 숙소를 그 여행 전용 장소로 들여놓기. `[2026-10-12]` 요식 원장과 같은 모양.
+        #   `[2026-10-13]` 부르는 곳: 「다른 후보」 제안(`itinerary_actions._ask_options`) · 고르기(`pending.choose`) · `read.offers_shown`
+        from app.domains.travel_ops.instances.lodging import ledger as lodging_ledger_impl
+
+        lodging_ledger.register(remember=lodging_ledger_impl.remember_shown,
+                                shown=lodging_ledger_impl.shown_keys,
+                                adopt=lodging_ledger_impl.adopt_option,
+                                item_key=lodging_ledger_impl.item_key,
+                                offers=lodging_ledger_impl.shown_offers)
     names = {"mobility": ("legs",), "dining": ("dining_ledger",), "activity": ("similarity", "activity_ledger")}
-    connected = [name for owner, hooks in names.items() if owner in active_ids for name in hooks]
+    # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
+    hook_names = {**names, "lodging": ("lodging_ledger",)}
+    connected = [name for owner, hooks in hook_names.items() if owner in active_ids for name in hooks]
     connected += [f"watch:{kind}" for kind in sorted(active_ids & names.keys())]
     for declaration in (config.teams if config else []):
         if declaration.active and declaration.team_id in active_ids and declaration.hooks is not None:
-            actual = {name for name in connected if name in names.get(declaration.team_id, ())
+            actual = {name for name in connected if name in hook_names.get(declaration.team_id, ())
                       or name == f"watch:{declaration.team_id}"}
             if set(declaration.hooks) != actual:
                 raise CompositionError(f"declared hooks do not match provider: {declaration.team_id}")

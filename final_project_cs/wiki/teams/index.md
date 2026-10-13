@@ -16,7 +16,7 @@ Team은 **업무 요청을 판정하고 제안을 반환하는 에이전트 팀*
 | Dining | MVP | [식당 판정](dining.md)·[설계](dining-agent-design.md) |
 | Mobility | MVP | [이동 판정](mobility.md) |
 | Booking Handoff | MVP 다음 단계 | [예약 인계](booking-handoff.md) |
-| Lodging·Flight | 잠긴 예약 취급 | [현재 선언](../../config/project.yaml) |
+| Lodging·Flight | 확장 — 숙소 · 항공편 찾기, 일정 숙소 · 항공 항목의 「다른 후보」(예약은 링크로). `[2026-10-13]` role-manager 등록 · 일정에 항목을 만드는 웹 입구는 아직 없음 | [현재 선언](../../config/project.yaml) · [반영 기록](../records/reports/2026-10-13_숙소항공_role-manager_반영.md) |
 
 범위는 [제품 범위](../../../wiki/product/scope.md)와 후속 확정 결정을 따릅니다. 등록·코드 존재를 기능 완료나 배포 완료로 해석하지 않습니다.
 

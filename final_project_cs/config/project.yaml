@@ -78,25 +78,29 @@ teams:
   hooks:
   - dining_ledger
   - watch:dining
+# ★2026-10-07 숙소 팀 — 숙소 찾기 · 내 숙소 위치 · 일정 숙소 항목(마이리얼트립 · 구글 호텔, 예약은 링크로). 본체는 instances/lodging/
 - team_id: lodging
   active: true
-  required: false
-  capabilities: [lodging.status]
-  hooks: []
-  implementation_ref: app.domains.travel_ops.instances.locked:LodgingTeam
+  implementation_ref: app.domains.travel_ops.instances.lodging:LodgingTeam
   required: false
   capabilities:
+  - lodging.assist
   - lodging.status
-  hooks: []
+  - lodging.itinerary
+  - lodging.itinerary_question
+  hooks:
+  - lodging_ledger
+# ★2026-10-08 항공 팀 — 항공편 찾기 · 일정 항공편 항목(마이리얼트립 · Ignav · 구글 항공권, 예약은 링크로). 본체는 instances/flight/
+#   옛 「등록만」 두 팀(`instances/locked/`)은 등록에서 빠졌고 코드는 그대로 둔다.
 - team_id: flight
   active: true
-  required: false
-  capabilities: [flight.status]
-  hooks: []
-  implementation_ref: app.domains.travel_ops.instances.locked:FlightTeam
+  implementation_ref: app.domains.travel_ops.instances.flight:FlightTeam
   required: false
   capabilities:
+  - flight.assist
   - flight.status
+  - flight.itinerary
+  - flight.itinerary_question
   hooks: []
 response_review:
   enabled: false
