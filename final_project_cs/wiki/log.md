@@ -8,6 +8,10 @@ domain: travel
 
 # cs wiki 변경 기록
 
+## 2026-10-14 — 활동 판정 LLM 호출 예산이 원격 매니저 브랜치에서 확인됐다
+
+판정 LLM 호출을 DB 두 줄(원문 해석 · 웹 검색)로 세는 연결(`81287d2f`)이 활동 판정 연결과 함께 원격 role-manager 에 들어갔고, 최신 판 `56103694` 의 구조 · 계약 · 단위 시험이 실패 0 으로 통과했다. 실서버(x600 서버의 cs 프로젝트 서버)에서는 판정 LLM 이 꺼져 있어 확인하지 않았다. 근거: [2026-10-14 활동 판정 LLM 호출 예산](records/reports/2026-10-14_activity_judge_budget.md).
+
 ## 2026-10-13 — role-manager 를 develop 에 합침 · 팀 정기 작업 자리 · 활동 전달(10-13) 회신
 
 `[실측]` 코어 작업이 role-manager 에만 쌓여(develop 보다 125커밋 앞섬) develop 기반 팀이 코어 연결 자리를 못 보던 것을 합쳐 develop 에 올렸다. 팀이 코어를 고치지 않고 정기 작업을 더하는 자리(`instances/<팀>/jobs.py` → `team_hooks/scheduled_jobs` → 작업 실행기, 시간대 `travel.team_jobs.windows`)와 활동 실시간 운영 상태 읽기 연결을 넣었다. 충돌 14파일(식사 장소 찾기 · 여행 화면 숙소 표시 등)을 양쪽 작업을 살려 풀었다 — [활동 전달 10-13 회신](records/reports/2026-10-13_활동_전달사항_1013_회신.md)
