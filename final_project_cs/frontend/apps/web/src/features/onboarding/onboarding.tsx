@@ -185,7 +185,7 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
           </section>
           <div className={styles.stack}>
             {card(0, false,
-              cardHead(0, t("디스코드 알림", "Discord alerts"), state.webhook.trim() ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : t("여행 알림을 받을 디스코드 채널.", "The Discord channel for your trip alerts."), false, false,
+              cardHead(0, t("디스코드 알림", "Discord alerts"), state.webhook.trim() ? t("입력했어요 · 설정에서 바꿀 수 있어요", "Entered · you can change it in Settings") : t("여행 알림을 받을 디스코드 채널.", "The Discord channel for your trip alerts."), false, false,
                 <span className={styles.optional}>{t("선택", "Optional")}</span>),
               <ContactBody t={t} webhook={state.webhook} webhookError={webhookError} webhookInput={webhookInput}
                 onWebhook={editWebhook} onContinue={() => openCard(1)} />)}

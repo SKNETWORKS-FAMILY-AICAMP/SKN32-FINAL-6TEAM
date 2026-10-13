@@ -53,7 +53,7 @@ function returnText(result: DiscordReturn, t: Translate): { ok: boolean; text: s
  * My page's Discord webhook row: whether one is saved (masked — the server never returns the address), whether Discord
  * took the last test, and a test message on request. Alerts about plan changes are the server's next step, not built yet.
  */
-export function WebhookView({ hasSession, guest = false }: { hasSession: boolean; guest?: boolean }) {
+export function WebhookView({ hasSession }: { hasSession: boolean }) {
   const t = useT();
   const { language } = useSettings();
   const queryClient = useQueryClient();
@@ -72,10 +72,8 @@ export function WebhookView({ hasSession, guest = false }: { hasSession: boolean
     onMutate: captureProfile,
     onSuccess: (answer, _variables, context) => keep(answer.profile, context),
   });
-  // ★`[2026-10-04]` 서버는 게스트의 여행을 감시·안내하지 않는다(외부 호출 비용) — 웹훅을 넣어도 알림은 로그인한 사용자만 받는다.
-  const later = <span className={styles.note}>{guest
-    ? t("게스트는 일정 알림을 받지 않아요. 「로그인 · 계정」에서 로그인하면 알림을 받을 수 있어요.", "Guests get no schedule alerts. Sign in under “Sign-in & accounts” to get them.")
-    : t("일정이 바뀔 때 디스코드로 알림을 보내는 기능은 준비 중이에요.", "Alerts about plan changes through Discord are still being prepared.")}</span>;
+  // ★`[2026-10-04]` 서버는 게스트의 여행을 감시·안내하지 않는다(외부 호출 비용) — `[2026-10-13 사용자 판단]` 그래서 게스트에게는 이 줄 대신 「알림 받는 곳」 화면이 잠긴 안내를 보인다.
+  const later = <span className={styles.note}>{t("일정이 바뀔 때 디스코드로 알림을 보내는 기능은 준비 중이에요.", "Alerts about plan changes through Discord are still being prepared.")}</span>;
   // ★`[2026-10-05 사용자 지시]` 「디스코드로 연결」: 서버가 연결할 수 있다고 말할 때만(`discord_connect.available`) 단추가 있다. 디스코드 창에서 서버·채널을 고르면 서버가 웹훅을 받아 저장한다.
   const [returned, setReturned] = useState<DiscordReturn | null>(null);
   useEffect(() => {
