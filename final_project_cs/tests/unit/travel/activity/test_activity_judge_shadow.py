@@ -178,17 +178,18 @@ def test_indoor_shadow_compares_against_unknown_and_live_status_is_not_called_fo
     assert "operating_hours" not in llm.kinds
 
 
-def test_quiet_disaster_message_and_live_status_shadows():
+def test_quiet_disaster_message_shadows_and_live_status_is_not_asked_per_request():
+    """★`[2026-10-13 사용자 결정 A안]` 실시간 운영(웹)은 고객 요청마다 부르지 않는다 — 장소 · 날짜당 한 번 배치가 한다
+    (`test_activity_live_status_stored.py`). 요청 경로의 섀도는 재난 · 휴무 · 실내외만이다."""
     records, llm = _records("quiet_message_outdoor")
 
     assert records["disaster_effect"]["rule"] == "no_effect" and records["disaster_effect"]["llm"] == "blocks"
-    assert records["live_status"]["rule"] == "unknown" and records["live_status"]["llm"] == "closed"
-    assert records["live_status"]["citations"] == 1
+    assert "live_status" not in records and "live_status" not in llm.kinds
     assert "operating_hours" not in llm.kinds
 
 
 def test_live_status_is_skipped_for_a_known_indoor_place_far_off():
-    """실내로 알고 72시간보다 먼 일정은 웹 검색을 부르지 않는다(비용)."""
+    """고객 요청 경로는 웹 검색을 부르지 않는다(비용 — 장소 · 날짜당 한 번 배치가 한다, 2026-10-13)."""
     _, llm = _records("open_with_text")
 
     assert "live_status" not in llm.kinds and llm.kinds == ["closure"]
@@ -248,12 +249,12 @@ def test_an_unaccepted_kind_mode_stops_instead_of_guessing(bad):
 
 
 def test_over_budget_kinds_are_not_called_and_are_recorded_as_skipped():
-    """예산(4.6)이 웹 판정을 막으면 실시간은 부르지 않고 `skipped`(budget_exhausted)로 남는다 — 나머지는 그대로 부른다."""
+    """예산(4.6)이 막은 종류는 부르지 않고 `skipped`(budget_exhausted)로 남는다 — 나머지는 그대로 부른다."""
     asked: list[str] = []
 
     def budget(kind):
         asked.append(kind)
-        return kind != "live_status"
+        return kind != "disaster_effect"
 
     records: list[dict] = []
     llm = ContraryJudgeLLM()
@@ -261,8 +262,8 @@ def test_over_budget_kinds_are_not_called_and_are_recorded_as_skipped():
     team.judge_llm, team.judge_runner, team.judge_shadow_sink, team.judge_budget = llm, Inline(), records.append, budget
     asyncio.run(team.execute(_request()))
 
-    assert "live_status" in asked and "live_status" not in llm.kinds and "disaster_effect" in llm.kinds
-    [skipped] = [r for r in records if r["kind"] == "live_status"]
+    assert "disaster_effect" in asked and "disaster_effect" not in llm.kinds
+    [skipped] = [r for r in records if r["kind"] == "disaster_effect"]
     assert skipped["event"] == "activity_judge_shadow_skipped" and skipped["llm_error"] == "budget_exhausted"
 
 
