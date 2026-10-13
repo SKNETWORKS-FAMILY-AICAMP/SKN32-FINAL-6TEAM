@@ -434,6 +434,8 @@ NAME_PREFIX_UNIQUE_MIN = 3          # ★`[2026-10-10 사용자 결정]` 이 글
 #:  좁혔을 때 「성수동」으로 시작하는 가게가 하나(「성수동 대림창고 갤러리」)라 그 가게가 골라졌다(장소 찾기 평가 PL-034)
 AREA_TAIL = re.compile(r"(동|구|역|로|길)$")
 DISH_RADIUS_M = 800                 # 「근처 칼국수집」 · 「통인시장 기름떡볶이」 — 기준 좌표에서 이 안의 원장 가게
+#: 시장 · 동네 이름의 식사(「광장시장 점심」)에서 고르지 않는 큰 종류 — 끼니가 아니라 카페 · 디저트다 `[2026-10-13]`
+NOT_A_MEAL = frozenset({"카페디저트"})
 _BRANCH_TAIL = re.compile(r"(본점|직영점|분점|별관|본관|신관|[가-힣a-z0-9]{1,8}점)")
 _NEAR_WORDS = ("근처", "주변", "가까운", "아무")
 
@@ -590,6 +592,30 @@ def dish_words(text: str | None) -> list[str]:
         if out:
             break
     return out
+
+
+def find_meal_near(conn, near: tuple[float, float], *, radius_m: int = DISH_RADIUS_M,
+                   shops: list[dict[str, Any]] | None = None) -> dict[str, Any] | None:
+    """`near`(시장 · 동네 좌표)에서 가장 가까운 원장 식당(반경 안, 카페 · 디저트 제외). `[2026-10-13]`
+
+    「광장시장 점심」 — 원문은 가게를 말하지 않았다. 그 자리 **안이나 근처**의 식당 하나를 고르고 언제나 확인 필요로 둔다.
+    ☆테스트 서버에서 「광장시장 바베큐 용산점」(이름만 「광장시장」으로 시작하는 용산 가게)이 골라졌다 — 기준점이 시장이 아니었다.
+    ★영업 판정은 여기서 하지 않는다 — 등록 뒤 `dining_states` 가 방문 시각으로 하고, 닫혀 있으면 대체가 바꾼다.
+    """
+    if shops is None:
+        try:
+            shops = _shops(conn)
+        except Exception as exc:   # noqa: BLE001
+            logger.warning("dining find_meal_near not read reason=%s", type(exc).__name__)
+            return None
+    hits = sorted(((_metres(near, (s["latitude"], s["longitude"])), s) for s in shops
+                   if s.get("category") not in NOT_A_MEAL), key=lambda h: h[0])
+    hits = [h for h in hits if h[0] <= radius_m]
+    if not hits:
+        return None
+    metres, shop = hits[0]
+    return _found(shop, match="meal_near", review=True, others=len(hits) - 1,
+                  note=f"가장 가까운 식당 「{shop['name']}」({round(metres):,}m) — 다르면 고쳐 주세요")
 
 
 def find_dish_near(conn, text: str | None, near: tuple[float, float], *, radius_m: int = DISH_RADIUS_M,
