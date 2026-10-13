@@ -93,9 +93,10 @@ CAUTIOUS_VALUES: dict[str, frozenset[str]] = {"closure": frozenset({"closed"}),
 
 
 def kind_mode(kind: str, modes: Any = None) -> str:
-    """그 판정 종류를 섀도로 돌리나 — `rule` · `shadow`(구현 계획 1.4). `modes` 를 안 주면 가드레일에서 읽는다.
+    """그 판정 종류의 모드 — `rule`(부르지 않음) · `shadow`(뒤에서 비교만) · `llm`(규칙이 모를 때만 부르고 쓴다). `modes` 를 안 주면 가드레일에서 읽는다.
     ★표에 없는 종류는 `rule`(부르지 않는다) — 새 종류가 설정 없이 몰래 LLM 을 부르지 않게.
-    ★받지 않는 값(`llm` · 오타 · YAML 이 `off` 를 읽은 `False`)은 **멈춘다**(`ValueError`) — 조용히 끄거나 켜지 않는다."""
+    ★받지 않는 값(오타 · YAML 이 `off` 를 읽은 `False`)은 **멈춘다**(`ValueError`) — 조용히 끄거나 켜지 않는다.
+    ★`llm` 을 받지 않는 종류는 `_NO_LLM_KINDS` 에 둔다(지금은 없다) — 그 종류에 `llm` 을 쓰면 멈춘다."""
     if modes is None:
         from app.core.settings import get_guardrails
 
