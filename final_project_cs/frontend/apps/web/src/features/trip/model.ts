@@ -27,6 +27,10 @@ export interface TripStop {
   paused?: boolean;
   /** `[2026-10-08]` The place's ref for its registered photos (「tour:<ID>」) — only when the server sends one (`place_ref`, asked of the backend). */
   placeRef?: string;
+  /** `[2026-10-13 사용자 결정 — 목업 A]` What kind of stop the server classes it (`items[].kind`: dining · activity · lodging · flight …) — the icon before its name. */
+  kind?: string;
+  /** The server's name for that kind (`kind_label`: 식사 · 활동 · 숙소 · 항공), said for the icon as it came. */
+  kindLabel?: string;
 }
 
 /**
@@ -64,6 +68,8 @@ export interface PlaceInfo {
   category?: string;
   /** Opening hours in the server's words, one line per rule ("월 11:00–21:00"). */
   hours: string[];
+  /** `[2026-10-13]` The same lines with the day each is for (ISO weekday, 월 = 1 … 일 = 7) — the folded card shows only its visit day's. Rules the server sent no day for are left out. */
+  dayHours?: { weekday: number; line: string }[];
   /** Hours the source gave only as text, or conditions the weekly table cannot hold ("공휴일 휴무"). */
   hoursNotes: string[];
   /** Facility badges as the server named them ("card_payment", "parking", …). */
