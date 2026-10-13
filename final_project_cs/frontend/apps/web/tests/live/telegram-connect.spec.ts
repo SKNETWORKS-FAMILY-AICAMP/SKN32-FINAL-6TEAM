@@ -8,10 +8,10 @@ import { agree, mockServer, start } from "./helpers";
  * 계약: `wiki/records/plans/2026-10-05_텔레그램_연결_백엔드_요청.md`.
  */
 const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-def_123456789012345";
-const GUEST = "게스트는 일정 알림을 받지 않아요. 아래 소셜 계정을 연결하면 알림을 받을 수 있어요.";
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
+  await mockServer(request).scenario({ sessionKind: "member" });       // `[2026-10-13]` 「알림 받는 곳」은 회원만 쓴다(게스트는 잠긴 안내) - 이 시험들은 회원이다
   await agree(page, { alert_channel: true });          // 알림 채널을 연결하려면 선택 동의(`alert_channel`)가 먼저다 - 이 시험들은 이미 동의한 고객이다
   await start(page);
 });
@@ -47,7 +47,7 @@ async function tapStart(page: Page) {
 async function connected(page: Page, request: APIRequestContext, scene = "on") {
   await mockServer(request).scenario({ telegram: scene });
   await blockPopups(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   await connectButton(page).click();
   await tapStart(page);
   await expect(connectedBadge(page)).toBeVisible();
@@ -55,7 +55,7 @@ async function connected(page: Page, request: APIRequestContext, scene = "on") {
 
 test("서버가 텔레그램을 알리지 않으면(옛 서버) 텔레그램 줄이 통째로 없다", async ({ page, request }) => {
   const server = mockServer(request);
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   await expect(page.getByRole("link", { name: "웹훅 등록하기" })).toBeVisible();           // 프로필을 다 읽은 뒤의 화면이다
   await expect(telegram(page)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "텔레그램으로 연결" })).toHaveCount(0);
@@ -64,7 +64,7 @@ test("서버가 텔레그램을 알리지 않으면(옛 서버) 텔레그램 줄
 
 test("프로필 자체를 못 읽는 서버면 텔레그램 줄도 없다 - 단추를 그리지 않는다", async ({ page, request }) => {
   await mockServer(request).scenario({ telegram: "on", profile: "off" });
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   await expect(page.getByText("이 서버는 웹훅 저장을 지원하지 않아요.")).toBeVisible();
   await expect(telegram(page)).toHaveCount(0);
 });
@@ -73,7 +73,7 @@ test("연결 단추를 누르면 눈에 보이는 링크 단추와 남은 시간
   const server = mockServer(request);
   await server.scenario({ telegram: "on" });
   await blockPopups(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   await expect(connectButton(page)).toBeVisible();
   await expect(telegram(page)).toContainText("텔레그램 앱이 열려요. 「시작」을 한 번 누르면 끝이에요.");
   await expect(telegram(page)).toContainText("텔레그램이 없으면 먼저 설치해 주세요(무료).");
@@ -109,7 +109,7 @@ test("연결 단추를 누르면 눈에 보이는 링크 단추와 남은 시간
 
 test("브라우저가 창을 열게 해 주면 링크를 따로 누르지 않아도 텔레그램이 열리고 연결된다", async ({ page, request }) => {
   await mockServer(request).scenario({ telegram: "on" });
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   const popup = page.context().waitForEvent("page");
   await connectButton(page).click();
   const tab = await popup;
@@ -122,7 +122,7 @@ test("대기 중 「취소」를 누르면 연결 단추로 돌아오고, 서버
   const server = mockServer(request);
   await server.scenario({ telegram: "on" });
   await blockPopups(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   await connectButton(page).click();
   await expect(openLink(page)).toBeVisible();
   await telegram(page).getByRole("button", { name: "취소" }).click();
@@ -183,7 +183,7 @@ test("연결 풀기는 두 단계다 - 첫 누름은 확인만 묻고 서버를 
 test("연결 시작이 실패하면 서버 문장을 보이고 텔레그램 창도 링크 단추도 만들지 않는다", async ({ page, request }) => {
   await mockServer(request).scenario({ telegram: "start_fails" });
   await blockPopups(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   await connectButton(page).click();
   await expect(telegram(page).getByRole("alert").filter({ hasText: "텔레그램 연결을 시작하지 못했어요" })).toBeVisible();
   await expect(openLink(page)).toHaveCount(0);
@@ -194,7 +194,7 @@ test("연결 시작이 실패하면 서버 문장을 보이고 텔레그램 창�
 test("서버가 텔레그램 것이 아닌 주소를 주면 따라가지 않는다", async ({ page, request }) => {
   await mockServer(request).scenario({ telegram: "bad_link" });
   await blockPopups(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   await connectButton(page).click();
   await expect(telegram(page).getByRole("alert").filter({ hasText: "서버가 텔레그램 연결 주소를 주지 않았어요." })).toBeVisible();
   await expect(openLink(page)).toHaveCount(0);
@@ -206,7 +206,7 @@ test("연결 시간이 지나면 그렇게 말하고 단추가 돌아오며, 다
   const server = mockServer(request);
   await server.scenario({ telegram: "short" });                                                 // 시작 뒤 2초면 코드가 끝난다
   await blockPopups(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   await connectButton(page).click();
   await expect(telegram(page).getByRole("alert").filter({ hasText: "연결 시간이 지났어요. 다시 눌러 주세요." })).toBeVisible();
   await expect(openLink(page)).toHaveCount(0);
@@ -225,10 +225,10 @@ test("디스코드 웹훅도 있으면 알림은 한 곳으로만 간다 - 마�
   const server = mockServer(request);
   await server.scenario({ telegram: "on" });
   await blockPopups(page);
-  await page.goto("/mypage/edit");                                                              // 디스코드 웹훅을 먼저 저장한다
+  await page.goto("/mypage/alerts");                                                              // 디스코드 웹훅을 먼저 저장한다
   await page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" }).fill(WEBHOOK);
   await page.getByRole("button", { name: "저장" }).click();
-  await expect(page).toHaveURL(/\/mypage$/);
+  await expect(page).toHaveURL(/\/mypage\/alerts(#webhook-address)?$/);
   const hook = discord(page), line = telegram(page);
   await expect(tag(hook)).toBeVisible();
   await expect(hook.getByRole("button", { name: "이 채널로 받기" })).toHaveCount(0);
@@ -255,26 +255,28 @@ test("디스코드 웹훅도 있으면 알림은 한 곳으로만 간다 - 마�
 });
 
 test("옛 서버라서 텔레그램을 모르면 디스코드 줄에는 꼬리표도 「이 채널로 받기」도 생기지 않는다", async ({ page, request }) => {
-  await page.goto("/mypage/edit");
+  await page.goto("/mypage/alerts");
   await page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" }).fill(WEBHOOK);
   await page.getByRole("button", { name: "저장" }).click();
-  await expect(page).toHaveURL(/\/mypage$/);
+  await expect(page).toHaveURL(/\/mypage\/alerts(#webhook-address)?$/);
   await expect(discord(page).getByRole("button", { name: "시험 메시지 보내기" })).toBeVisible();
   await expect(tag(discord(page))).toHaveCount(0);
   await expect(discord(page).getByRole("button", { name: "이 채널로 받기" })).toHaveCount(0);
   expect(await mockServer(request).received("PUT", "/v1/web/profile")).toHaveLength(1);
 });
 
-test("게스트에게는 줄 맨 아래에 일정 알림을 받지 않는다는 문장이 있고, 회원에게는 없다", async ({ page, request }) => {
+test("게스트에게는 알림 화면이 잠겨 연결 단추 없이 「로그인 · 가입」만 있고, 회원에게는 연결 단추가 있다", async ({ page, request }) => {
+  // `[2026-10-13 사용자 결정]` 게스트에게는 알림을 보내지 않는다 - 전에는 텔레그램 줄 맨 아래에 그렇게 적고 단추는 보였다.
   const server = mockServer(request);
-  await server.scenario({ telegram: "on" });                                                    // 기본 세션 = 게스트
-  await page.goto("/mypage");
-  await expect(connectButton(page)).toBeVisible();
-  await expect(telegram(page).getByText(GUEST)).toBeVisible();
-  await expect(telegram(page).locator("dd > span").last()).toHaveText(GUEST);                   // 맨 아래
+  await server.scenario({ telegram: "on", sessionKind: "guest" });
+  await page.goto("/mypage/alerts");
+  await expect(page.getByText("게스트는 일정 알림을 받지 않아요. 로그인하면 디스코드나 텔레그램으로 받을 수 있어요.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "로그인 · 가입", exact: true })).toHaveAttribute("href", "/mypage/account?returnTo=%2Fmypage%2Falerts");
+  await expect(connectButton(page)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "디스코드로 연결" })).toHaveCount(0);
 
   await server.scenario({ sessionKind: "member" });
   await page.reload();
   await expect(connectButton(page)).toBeVisible();
-  await expect(telegram(page).getByText("게스트는 일정 알림을 받지 않아요")).toHaveCount(0);
+  await expect(page.getByText("게스트는 일정 알림을 받지 않아요")).toHaveCount(0);
 });

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { finishOnboarding, openNotices, openTitle, paneTab, start, tripScreen } from "../live/helpers";
+import { finishOnboarding, openNotices, openPane, openTitle, start, tripScreen } from "../live/helpers";
 
 /**
  * A brand-new customer on the REAL server: first visit → survey → plan → read → confirm → trip screen → chat → map.
@@ -97,7 +97,7 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   await expect(tripScreen(page)).toBeVisible();
 
   // 채팅: 화면의 빠른 질문 4개에 서버가 이 여행의 사실로 답한다(규정 검색으로 새지 않는다)
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   const chat = page.locator("#trip-pane-chat");
   const last = () => chat.locator("article[data-role=assistant]").last();
   const notRule = /규정에서 이 질문에 맞는 내용은 찾지 못했어요|담당자에게 넘겼어요/;
@@ -122,9 +122,9 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   expect(booking).toContain("예약 기록 없음");
   expect(booking).toContain("광장시장");
 
-  await paneTab(page, "일정").click();
+  await openPane(page, "일정");
   await schedule.getByText("경복궁").first().click();
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   const detail = await ask("선택 일정");
   expect(detail).toContain("경복궁 관람");
   expect(detail).toMatch(/주소|운영시간/);            // 주소·운영시간 줄이 있다 — 값은 관광공사 식별자가 있어야 채워진다(2026-09-28 실측: 식별자 없는 장소는 「모름」)

@@ -14,36 +14,19 @@
 .board > * + * { border-top: 1px solid var(--color-border); }
 /* Rows touch the board's edge, so their focus ring is drawn inside it. */
 .board :is(a, button):focus-visible { outline-offset: -3px; }
-.link { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; padding: 12px 15px; color: var(--color-primary); font-size: 14px; font-weight: 650; text-decoration: none; }
-.link:hover { background: var(--color-soft); }
-/* The survey row is a button (it opens the start screen's preferences card), drawn like the links. */
-button.link { width: 100%; border: 0; background: transparent; font-family: inherit; text-align: left; cursor: pointer; }
-button.link:hover { background: var(--color-soft); }
-.profile { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 15px; color: var(--color-text); text-decoration: none; }
-.profile:hover { background: var(--color-soft); }
-.profile > svg { flex: none; color: var(--color-muted); }
-.profileText { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.profileText strong { font-size: 15px; font-weight: 700; letter-spacing: -.3px; overflow-wrap: anywhere; }
-.profileText small { font-size: 11px; color: var(--color-muted); }
-.switchRow { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 15px; cursor: pointer; }
-.switchText { flex: 1; min-width: 0; display: grid; gap: 3px; }
-.switchText strong { font-size: 13px; font-weight: 650; }
-.switchText small { font-size: 11px; line-height: 1.6; color: var(--color-muted); }
-/* The checkbox itself draws the switch; ON/OFF is written in the track. */
-.switch { appearance: none; position: relative; flex: none; width: 58px; height: 30px; margin: 0; border-radius: 15px; background: var(--color-border); cursor: pointer; transition: background .2s; }
-.switch::before { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--color-surface); box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 20%, transparent); transition: transform .2s; }
-.switch::after { content: "OFF"; position: absolute; top: 0; right: 7px; line-height: 30px; font-size: 9px; font-weight: 700; letter-spacing: .5px; color: var(--color-muted); }
-.switch:checked { background: var(--color-primary); }
-.switch:checked::before { transform: translateX(28px); }
-.switch:checked::after { content: "ON"; right: auto; left: 9px; color: var(--color-on-primary); }
-.switch:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
-.note { margin-top: auto; font-size: 10px; line-height: 1.7; color: var(--color-muted); }
-.listZoom { padding: 12px 15px; display: grid; gap: 10px; }
-.zoomHeading { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
-.zoomHeading output { color: var(--color-muted); font-variant-numeric: tabular-nums; }
-.zoomButtons { display: flex; gap: 8px; }
-.zoomButtons button { min-width: 44px; min-height: 44px; border: 1px solid var(--color-border); border-radius: 10px; color: var(--color-primary); background: var(--color-surface); }
-.zoomButtons button:nth-child(2) { flex: 1; font-size: 13px; }
-.zoomButtons button:disabled { opacity: .45; cursor: default; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes slide { from { transform: translateX(24px); opacity: .6; } }
+/* `[2026-10-13 회의 확정 — 메뉴 = 마이페이지(목업 C안)]` 판의 첫 칸 = 프로필 칸(가운데 정렬 · 이미지 · 이름 · 로그인 상태 칩 · 단추 하나), 그 아래 줄 넷(이름 + 회색 보조 문구 · ›).
+   줄 사이 선은 줄의 `border: 0`(단추 기본 테두리 지우기) 뒤에 둔다 — 앞에 두면 단추 줄(여행 취향) 위의 선이 지워진다. */
+.profile { display: grid; justify-items: center; gap: 8px; padding: 18px 15px 15px; text-align: center; }
+.name { max-width: 100%; font-size: 17px; font-weight: 700; letter-spacing: -.4px; overflow-wrap: anywhere; }
+.chip { padding: 1px 10px; border-radius: 999px; background: var(--color-soft); color: var(--color-primary); font-size: 11px; font-weight: 650; line-height: 1.8; }
+.guestChip { background: var(--color-warning-soft); color: var(--color-warning); }
+.cellButton { width: 100%; margin-top: 4px; }
+.row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 60px; padding: 10px 15px; border: 0; background: transparent; color: var(--color-text); font-family: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.board > * + .row { border-top: 1px solid var(--color-border); }
+.row:hover { background: var(--color-soft); }
+.row > svg { flex: none; color: var(--color-muted); }
+.rowText { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.rowText strong { font-size: 14px; font-weight: 650; letter-spacing: -.2px; }
+.rowText small { font-size: 11px; line-height: 1.6; color: var(--color-muted); overflow-wrap: anywhere; }

@@ -8,6 +8,8 @@ interface ServerItem {
   item_id: string;
   seq: number;
   kind: string;
+  /** The server's name for `kind` (식사 · 활동 · 숙소 · 항공). */
+  kind_label?: string | null;
   title: string;
   place: string | null;
   starts_at: string;
@@ -23,11 +25,16 @@ interface ServerItem {
   map_url?: string | null;
   /** `[2026-10-06]` Falls in a disaster pause. */
   paused?: boolean;
+  /**
+   * `[2026-10-08 웹 제안 — 서버에 아직 없음]` The place's ref for its registered photos (`GET /v1/web/places/photos?ref=`), as the plan check's candidates give it: 「tour:<관광공사 콘텐츠 ID>」.
+   * The server keeps that ID on the place (`source_content_id`) but does not send it with a trip yet — asked of the backend (`wiki/external/web-screen-api.md`).
+   */
+  place_ref?: string | null;
 }
 /** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
 interface ServerPlaceInfo {
   address?: string | null; phone?: string | null; category?: string | null;
-  hours?: { day?: string; open?: string; close?: string; closed?: boolean; last_order?: string | null; last_entry?: string | null }[] | null;
+  hours?: { day?: string; weekday?: number; open?: string; close?: string; closed?: boolean; last_order?: string | null; last_entry?: string | null }[] | null;
   /** Opening-hours text as the source wrote it (places outside the dining ledger). */
   hours_text?: string[] | string | null;
   /** Conditions the server could not turn into a weekly table, in the source's words. */
@@ -84,6 +91,9 @@ function stop(item: ServerItem, t: Translate): TripStop {
     placeInfo: placeInfo(item.place_info, t),
     mapUrl: mapLink(item.map_url),
     ...(item.paused === true ? { paused: true } : {}),
+    ...(text(item.place_ref) ? { placeRef: text(item.place_ref) } : {}),
+    ...(text(item.kind) ? { kind: text(item.kind) } : {}),
+    ...(text(item.kind_label) ? { kindLabel: text(item.kind_label) } : {}),
   };
 }
 
@@ -122,20 +132,22 @@ const text = (value: unknown): string | undefined => (typeof value === "string" 
 /** The server's place facts, keeping only what it actually sent — an empty field is left out, not shown as "unknown". */
 export function placeInfo(raw: ServerPlaceInfo | null | undefined, t: Translate = translator("ko")): TripStop["placeInfo"] {
   if (!raw || typeof raw !== "object") return null;
-  const hours = Array.isArray(raw.hours)
-    ? raw.hours.map((rule) => [text(rule?.day),
+  const rules = Array.isArray(raw.hours)
+    ? raw.hours.map((rule) => ({ weekday: typeof rule?.weekday === "number" && Number.isInteger(rule.weekday) ? rule.weekday : null, line: [text(rule?.day),
       rule?.closed === true ? t("휴무", "Closed") : text(rule?.open) && text(rule?.close) ? `${rule.open}–${rule.close}` : undefined,
       rule?.closed !== true && text(rule?.last_order) ? t(`(주문 마감 ${rule.last_order})`, `(last order ${rule.last_order})`) : undefined,
       rule?.closed !== true && text(rule?.last_entry) ? t(`(입장 마감 ${rule.last_entry})`, `(last entry ${rule.last_entry})`) : undefined,
-    ].filter(Boolean).join(" ")).filter(Boolean)
+    ].filter(Boolean).join(" ") })).filter((rule) => rule.line)
     : [];
+  const hours = rules.map((rule) => rule.line);
+  const dayHours = rules.flatMap((rule) => rule.weekday === null ? [] : [{ weekday: rule.weekday, line: rule.line }]);
   const lines = (value: unknown): string[] =>
     (Array.isArray(value) ? value : [value]).map(text).filter((line): line is string => !!line);
   // ★With a weekly table the source text only adds its conditions; without one, the source text is the hours.
   const hoursNotes = hours.length ? lines(raw.hours_conditions) : [...lines(raw.hours_text), ...lines(raw.hours_conditions)];
   const level = text(raw.michelin?.level);
   const info = {
-    address: text(raw.address), phone: text(raw.phone), category: text(raw.category), hours, hoursNotes: [...new Set(hoursNotes)],
+    address: text(raw.address), phone: text(raw.phone), category: text(raw.category), hours, dayHours, hoursNotes: [...new Set(hoursNotes)],
     tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === "string" && !!tag) : [],
     michelin: level ? { level, year: typeof raw.michelin?.year === "number" ? raw.michelin.year : undefined } : null,
     sourceNote: text(raw.source_note),
@@ -316,11 +328,11 @@ async function read(tripId: string, language: Language): Promise<Trip> {
 }
 
 /**
- * ★`[2026-10-03]` 여행 삭제 — 서버에 아직 없다(`DELETE`도 `POST …/delete`도 `app/` 의 라우트에 없음, 백엔드 요청서
- *   `wiki/records/plans/2026-10-03_1920_웹_실서버_전환_백엔드_요청.md`). 웹은 요청한 모양 그대로 연결해 둔다:
- *   `POST /v1/web/trips/{id}/delete`(본인 여행만, 이미 없으면 404 `not_found`). 서버에 그 경로가 없으면 FastAPI 가 본문
- *   `{"detail":"Not Found"}` 의 404(`HTTP_404`)를 주므로 — 여행이 없다는 서버 문장(`not_found`)과 갈라 — 「지원하지 않음」으로 말한다.
- *   (실서버 8042 에서 확인: 없는 경로 POST → 404 `{"detail":"Not Found"}`.) `POST` 로 한 것은 서버 CORS 가 GET·POST·PUT 만 열어서다.
+ * ★`[2026-10-08 정정]` 여행 삭제 — **서버에 있다**: `POST /v1/web/trips/{trip_id}/delete`(`app/domains/travel_ops/entry/trip_api.py`,
+ *   `role-manager` 스냅숏 `64fd0dc` 2026-10-04). 웹이 `[2026-10-03]` 에 요청서(`wiki/records/plans/2026-10-03_1920_웹_실서버_전환_백엔드_요청.md`)의
+ *   모양 그대로 연결해 둔 것이라 그대로 동작한다(본인 여행만, 이미 없으면 404 `not_found`).
+ *   그 경로가 없는 옛 서버는 FastAPI 본문 `{"detail":"Not Found"}` 의 404(`HTTP_404`)를 주므로 — 여행이 없다는 서버 문장(`not_found`)과 갈라 —
+ *   「지원하지 않음」으로 말하는 갈래(`delete_unsupported`)를 남겨 둔다. `POST` 로 한 것은 서버 CORS 가 GET·POST·PUT 만 열어서다.
  */
 async function removeTrip(tripId: string, language: Language): Promise<void> {
   const t = translator(language);

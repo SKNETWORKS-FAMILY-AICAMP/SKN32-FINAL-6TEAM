@@ -1,5 +1,9 @@
 export type ViewState = 'normal' | 'loading' | 'empty' | 'error';
 export type InquiryStatus = '접수' | '처리 중' | '답변 완료';
+export interface UsersListState { query: string; status: string; quick: string; order: string }
+export interface InquiriesListState { query: string; status: InquiryStatus | '전체'; owner: string }
+export const INITIAL_USERS_LIST: UsersListState = { query: '', status: '전체', quick: '전체', order: '마지막 사용순' };
+export const INITIAL_INQUIRIES_LIST: InquiriesListState = { query: '', status: '전체', owner: 'all' };
 export interface User {
   id: string; blocked: boolean; issuedAt: string; lastUsed: string;
   chat: number; web: number; exceptionLimit: number | null;

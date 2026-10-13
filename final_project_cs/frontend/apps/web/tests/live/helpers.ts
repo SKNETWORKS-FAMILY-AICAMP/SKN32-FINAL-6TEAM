@@ -170,37 +170,35 @@ export async function agreeTerms(page: Page, optional: Array<"sensitive" | "loca
   await openPreferencesFromMenu(page);
 }
 
-/** `[2026-10-06]` In the open menu, the 「여행 취향 설문」 row opens the start screen on its preferences card (the survey is done on its own, not in the first run). */
+/**
+ * `[2026-10-06]` In the menu, the preferences row opens the start screen on its preferences card (the survey is done on its own, not in the first run).
+ * `[2026-10-13 메뉴 = 마이페이지]` The row 「여행 취향 설문」 now has a note under it (what was chosen); the preferences line on My page is gone (My page is the settings screen now).
+ */
 export async function openPreferencesFromMenu(page: Page) {
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: "여행 취향 설문" }).click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: /^여행 취향 설문/ }).click();
   await expect(page).toHaveURL(/\/start$/);
   await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toHaveAttribute("aria-expanded", "true");
 }
 
-/** In the open menu, unfolds the language card and picks a language by its own name. */
-export async function pickMenuLanguage(page: Page, menu: "메뉴" | "Menu", language: "한국어" | "English") {
-  const dialog = page.getByRole("dialog", { name: menu });
-  await dialog.getByRole("button", { name: /LANGUAGE/ }).click();
-  await dialog.getByRole("button", { name: language, exact: true }).click();
+/**
+ * `[2026-10-13 메뉴 = 마이페이지]` The language card left the menu for the settings screen (menu › 설정): open it there, pick a language by its own name,
+ * and come back to the screen the test was on (in-app back). `menu` is the menu button's name in the language shown now.
+ */
+export async function pickLanguage(page: Page, menu: "메뉴" | "Menu", language: "한국어" | "English") {
+  await page.getByRole("button", { name: menu, exact: true }).click();
+  await page.getByRole("dialog", { name: menu }).getByRole("link", { name: menu === "메뉴" ? /^설정/ : /^Settings/ }).click();
+  await expect(page).toHaveURL(/\/mypage$/);
+  await page.getByRole("button", { name: /LANGUAGE/ }).click();
+  await page.getByRole("button", { name: language, exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", language === "English" ? "en" : "ko");
+  await page.goBack();
 }
 
 /** The start screen is asked once and kept in this browser. For a test that needs the first-time screen again: forget what it kept, then reload. */
 export async function forgetStartScreen(page: Page) {
   await page.evaluate(() => localStorage.removeItem("tripilot.web.onboarding.v1"));
   await page.reload();
-}
-
-/**
- * Open the start screen's preferences from My page (menu → My page → the preferences card's 수정). Done inside the app, so the page-only
- * state (the active trip) stays. ★The intro button no longer leads here once the terms are agreed.
- */
-export async function openPreferencesFromMyPage(page: Page) {
-  await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ }).click();
-  await expect(page).toHaveURL(/\/mypage$/);
-  await page.locator("section").filter({ has: page.getByRole("heading", { name: "여행 취향", exact: true }) }).getByRole("button", { name: "수정", exact: true }).click();
-  await expect(page).toHaveURL(/\/start$/);
 }
 
 /**
@@ -228,8 +226,19 @@ export async function openNotices(page: Page) {
   return page.getByRole("dialog", { name: "알림" });
 }
 
-/** The two panes of the trip's sheet: 「일정 | 채팅」. */
-export const paneTab = (page: Page, name: "일정" | "채팅") => page.getByRole("tab", { name, exact: true });
+/**
+ * The two panes of the trip's sheet. `[2026-10-13 일정 줄 — 채팅 버튼 하나]` The 「일정 | 채팅」 tabs became ONE chat button at the end of the day-chip row: pressed while
+ * the chat pane is open; pressing it again (or a day chip) goes back to the schedule.
+ */
+export const chatButton = (page: Page) => page.locator("#trip-pane-button-chat");
+
+/** Opens a pane of the trip's sheet (nothing to do when it is open already). */
+export async function openPane(page: Page, name: "일정" | "채팅") {
+  const button = chatButton(page);
+  const chat = name === "채팅";
+  if (((await button.getAttribute("aria-pressed")) === "true") !== chat) await button.click();
+  await expect(button).toHaveAttribute("aria-pressed", String(chat));
+}
 
 /** `[2026-10-07 목업 C안 B]` Open the trip's name in the header: the row 「여행계획서 열기 · 공유하기」 under it. */
 export async function openTitle(page: Page) {
@@ -245,7 +254,18 @@ export const dayTab = (page: Page, name: RegExp) => page.getByRole("tablist", { 
  * Register a trip the way a customer does, against the test mock server: write a plan, 「계획 확인하기」, wait for the plan-check screen's result,
  * 「여행 등록」, and land on the trip screen (the mock's one trip, `TRIP_ID`). Needs the mock's default scenario (a plan whose check passes).
  */
+/**
+ * `[2026-10-13]` The mock server's trip is on 2026-10-01. Since the 10-12 timeline (「지난 일정」 — a stop whose end has passed by the device clock is one grey line), the trip
+ * screen draws every stop of it as past once that day is over: no card, no booking tag, no way row. A test of the trip screen as it looks before the trip starts the page's
+ * clock on the day before and lets it run (a stopped clock would also stop gestures that time the pointer).
+ */
+export async function beforeTheTrip(page: Page) {
+  await page.clock.install({ time: new Date("2026-09-30T12:00:00+09:00") });
+  await page.clock.resume();
+}
+
 export async function registerStubTrip(page: Page, plan = "10/1 09:00 경복궁 관람") {
+  await beforeTheTrip(page);
   await openRegistration(page);
   await page.getByLabel("나의 여행 계획").fill(plan);
   await checkPlan(page);

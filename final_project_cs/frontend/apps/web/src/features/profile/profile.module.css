@@ -5,8 +5,7 @@
 .notice { margin-bottom: 14px; padding: 11px 14px; border-radius: 12px; background: var(--color-soft); color: var(--color-primary); font-size: 12px; line-height: 1.8; }
 .card { display: grid; gap: 22px; }
 .identity { display: grid; justify-items: center; gap: 10px; text-align: center; }
-.name { max-width: 100%; font-size: 18px; font-weight: 700; letter-spacing: -.4px; overflow-wrap: anywhere; }
-/* The edit screen's name line: the same place and weight as `.name`, as a field. */
+/* The edit screen's name line, as a field. */
 .nameInput { width: min(100%, 260px); min-height: 46px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); font-size: 17px; font-weight: 700; letter-spacing: -.3px; text-align: center; }
 .nameInput::placeholder { color: var(--color-muted); font-weight: 600; }
 .nameInput[aria-invalid="true"] { border-color: var(--color-error-border); }
@@ -30,6 +29,18 @@
 /* The token management card sits under the profile card on My page. */
 .card + .card { margin-top: 16px; }
 
+/* `[2026-10-13 마이페이지 A안]` 상태 줄: 한 판에 줄마다 이름 · 지금 상태 · ›, 누르면 그 항목의 화면(메뉴 판과 같은 모양). 줄 사이 선은 줄의 `border: 0` 뒤에 둔다 — 앞에 두면 단추 줄(여행 취향)의 선이 지워진다. */
+.rows { display: grid; margin-top: 16px; border: 1px solid var(--color-border); border-radius: 20px; background: var(--color-surface); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 12px 18px; border: 0; background: transparent; color: var(--color-text); font-family: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.rows > * + * { border-top: 1px solid var(--color-border); }
+.row:hover { background: var(--color-soft); }
+.row:disabled { cursor: default; opacity: .6; }
+.row:focus-visible { outline-offset: -3px; }
+.row > svg { flex: none; color: var(--color-muted); }
+.rowText { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.rowText strong { font-size: 14px; font-weight: 650; letter-spacing: -.2px; }
+.rowText small { font-size: 12px; line-height: 1.6; color: var(--color-muted); overflow-wrap: anywhere; }
+
 /* My page: a card with a title row (title left, action right) and answer lines under each question. */
 .sectionHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .sectionTitle { min-width: 0; font-size: 16px; font-weight: 700; letter-spacing: -.3px; line-height: 1.5; overflow-wrap: anywhere; }
@@ -46,3 +57,8 @@
 .tag { display: inline-block; padding: 2px 9px; border-radius: 999px; background: var(--color-soft); color: var(--color-primary); font-size: 11px; font-weight: 650; line-height: 1.7; }
 .fields dd > .tag { margin-top: 6px; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+/* `[2026-10-13 회의 확정 — 설정 화면]` 묶음 이름(「내 계정」 · 「앱 · 이 브라우저에 저장돼요」) — 상태 줄 판과 앱 설정 판 위에 하나씩. */
+.sectionLabel { margin: 18px 4px 8px; font-size: 12px; font-weight: 700; letter-spacing: .2px; color: var(--color-primary); }
+.sectionLabel + .rows { margin-top: 0; }
+/* `[2026-10-13 사용자 판단]` 게스트의 「알림 받는 곳」: 안내 한 줄과 로그인 단추. */
+.locked { display: grid; gap: 12px; justify-items: start; }

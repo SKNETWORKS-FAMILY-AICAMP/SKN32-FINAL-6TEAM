@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { alsoAgree, APP, start, mockServer, openNotices, openTitle, paneTab, TRIP_ID, tripScreen } from "./helpers";
+import { beforeTheTrip, alsoAgree, APP, start, mockServer, openNotices, openTitle, TRIP_ID, tripScreen, openPane } from "./helpers";
 
+// `[2026-10-13]` 가짜 서버 여행(2026-10-01)이 「지난 일정」으로 그려지지 않게 여행 전날로 시계를 고정한다(helpers.ts beforeTheTrip).
+test.beforeEach(async ({ page }) => { await beforeTheTrip(page); });
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
   await start(page);
@@ -55,21 +57,29 @@ test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안
 
   // 고정한 일정 표시와 서버가 남겨 둔 다른 안
   await expect(page.locator("#stop-button-i-b").getByText("고정한 일정")).toBeVisible();
+  // `[2026-10-13 카드 A안]` 접힌 카드 아래 줄은 분류 · 방문일 영업시간 · 주소이고(서버가 안 보냈으면 「… 정보 없음」), 펼치면 단추만 — 다른 안 · 장소 사실은 「상세 보기」 화면에 있다.
+  await expect(page.locator("#stop-button-i-b")).toContainText("주소 정보 없음");
   await page.locator("#stop-button-i-b").click();
-  await expect(page.locator("#stop-detail-i-b")).toContainText("다른 안");
-  await expect(page.locator("#stop-detail-i-b")).toContainText("창덕궁");
-  await expect(page.locator("#stop-detail-i-b")).not.toContainText("주소");           // 서버가 장소 사실을 안 보냈으면 줄 자체가 없다
+  await expect(page.locator("#stop-detail-i-b")).not.toContainText("다른 안");
   await expect(page.locator("#stop-detail-i-b").getByRole("button", { name: "이 일정 질문하기" })).toBeVisible();   // 상세가 열려 있는데
   await expect(page.locator("#stop-detail-i-b").getByRole("link", { name: "지도 앱으로 열기" })).toHaveCount(0);  // 지도 링크가 없으면 단추도 없다
+  await page.getByRole("button", { name: "경복궁 관람 상세 보기" }).click();
+  await expect(page.locator('[data-card-id="i-b"]')).toContainText("다른 안");
+  await expect(page.locator('[data-card-id="i-b"]')).toContainText("창덕궁");
+  await page.keyboard.press("Escape");
 
-  // 서버가 보낸 장소 사실(요식 원장) — 주소·전화·분류·영업시간·미쉐린·편의
+  // 서버가 보낸 장소 사실(요식 원장) — 접힌 카드에 분류 · 주소, 상세 보기 화면에 전화 · 영업시간 · 미쉐린 · 편의
+  for (const text of ["한식", "서울특별시 종로구 율곡로1길 7"]) await expect(page.locator("#stop-button-i-a")).toContainText(text);
   await page.locator("#stop-button-i-a").click();
   const detail = page.locator("#stop-detail-i-a");
-  for (const text of ["서울특별시 종로구 율곡로1길 7", "02-000-0000", "한식", "월 08:00–21:00", "셀렉티드 (2026)", "카드 결제"]) await expect(detail).toContainText(text);
-  await expect(detail).not.toContainText("michelin_selected");
   // 지도 앱으로 열기 — 서버가 준 구글 지도 링크를 새 창으로(서버가 링크를 안 준 일정에는 단추가 없다)
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("href", "https://www.google.com/maps/search/?api=1&query=%EC%95%84%EC%B9%A8");
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("target", "_blank");
+  await page.getByRole("button", { name: "아침 식당 상세 보기" }).click();
+  const facts = page.locator('[data-card-id="i-a"]');
+  for (const text of ["서울특별시 종로구 율곡로1길 7", "02-000-0000", "한식", "월 08:00–21:00", "셀렉티드 (2026)", "카드 결제"]) await expect(facts).toContainText(text);
+  await expect(facts).not.toContainText("michelin_selected");
+  await page.keyboard.press("Escape");
 
   // 종 — 알림 센터: 할 일 · 탭 셋(서버가 찾은 것 · 보낸 것 · 바꾼 것)
   const notices = await openNotices(page);
@@ -239,7 +249,7 @@ test("지도는 서버 좌표가 있는 그날의 일정만 실제 지도(OpenSt
 test("채팅: 빠른 질문 세 개와 일정 상세가 화면 문장 그대로 서버로 가고, 서버 답이 그대로 보인다", async ({ page, request }) => {
   const server = mockServer(request);
   await openTrip(page);
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   const chat = page.locator("#trip-pane-chat");
   const last = () => chat.locator("article[data-role=assistant]").last();
 
@@ -249,9 +259,9 @@ test("채팅: 빠른 질문 세 개와 일정 상세가 화면 문장 그대로 
   await expect(last()).toContainText("서버 답: 2026-10-01 예약 표시를 알려 주세요.");
 
   // 일정을 고른 뒤: 「선택 일정」(상세)·「다음 일정」
-  await paneTab(page, "일정").click();
+  await openPane(page, "일정");
   await page.locator("#stop-button-i-b").click();
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   await chat.getByRole("button", { name: "선택 일정" }).click();
   await expect(last()).toContainText("서버 답: 2026-10-01 09:30 경복궁 관람 일정의 상세를 알려 주세요.");
   await chat.getByRole("button", { name: "다음 일정" }).click();
@@ -270,14 +280,14 @@ test("채팅: 빠른 질문 세 개와 일정 상세가 화면 문장 그대로 
   const answers = async () => chat.locator("article[data-role=assistant] p:nth-child(2)").allInnerTexts();
   expect((await answers()).filter((text) => text.startsWith("서버 답:"))).toHaveLength(4);
   await page.reload();
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   await expect.poll(async () => (await answers()).filter((text) => text.startsWith("서버 답:")).length).toBe(4);
 });
 
 test("직접 쓴 질문도 보내고, 옛 서버처럼 answer 없이 escalated 만 오면 화면이 「담당자에게 넘겼어요」를 지어내지 않는다", async ({ page, request }) => {
   await mockServer(request).scenario({ chat: "escalated_bare" });
   await openTrip(page);
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   const chat = page.locator("#trip-pane-chat");
   await page.getByPlaceholder("일정에 대해 궁금한 점을 입력하세요").fill("뭐라고요?");             // 입력은 화면 아래 채팅 막대
   await page.getByRole("button", { name: "메시지 전송" }).click();
@@ -298,7 +308,7 @@ test("옛 검증 결과·진행 주소는 그 여행 화면으로 보낸다 — 
 
 test("여행을 다시 읽다 실패하면(연결·서버 오류) 보이던 일정과 채팅 초안은 그대로 두고 「마지막으로 확인한 내용」이라 알리며, 다시 불러오면 알림이 사라진다", async ({ page }) => {
   await openTrip(page);
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   await page.locator("#trip-chat-message").fill("초안으로 남겨 둘 질문");                              // 보내지 않은 초안
   let failing = true;
   await page.route((url) => url.pathname.endsWith(`/v1/web/trips/${TRIP_ID}`), async (route) => {
@@ -310,7 +320,7 @@ test("여행을 다시 읽다 실패하면(연결·서버 오류) 보이던 일�
   await expect(banner).toBeAttached();
   await expect(page.locator("#trip-chat-message")).toHaveValue("초안으로 남겨 둘 질문");             // 쓰던 초안도 그대로
   failing = false;
-  await paneTab(page, "일정").click();                                                                // 알림은 일정 칸 맨 위에 있다
+  await openPane(page, "일정");                                                                // 알림은 일정 칸 맨 위에 있다
   await banner.getByRole("button", { name: "다시 불러오기" }).click();
   await expect(banner).toHaveCount(0);
   await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toBeVisible();          // 보이던 일정은 그대로
@@ -428,7 +438,7 @@ test("채팅: 서버가 답한 뒤 일정 다시 읽기만 실패하면 답은 �
   const server = mockServer(request);
   await server.scenario({ rereadFails: 1 });
   await openTrip(page);
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   const chat = page.locator("#trip-pane-chat");
   await chat.getByRole("button", { name: "하루 요약" }).click();
   await expect(chat.locator("article[data-role=assistant]").last()).toContainText("서버 답: 2026-10-01 하루 일정을 요약해 주세요.");
@@ -444,7 +454,7 @@ test("채팅: 보내기가 실패해 「다시 보내기」를 누르면 같은 
   const server = mockServer(request);
   await server.scenario({ fail: "messages" });
   await openTrip(page);
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   const chat = page.locator("#trip-pane-chat");
   await chat.getByRole("button", { name: "하루 요약" }).click();
   const failed = chat.getByRole("alert").filter({ hasText: "메시지를 보내지 못했어요" });
@@ -464,7 +474,7 @@ test("채팅: 서버가 현재 위치가 필요하다고 하면 버튼을 누를
   await context.grantPermissions(["geolocation"], { origin: APP });
   await context.setGeolocation({ latitude: 37.5704, longitude: 126.9921, accuracy: 25 });
   await openTrip(page);
-  await paneTab(page, "채팅").click();
+  await openPane(page, "채팅");
   const chat = page.locator("#trip-pane-chat");
   await page.locator("#trip-chat-message").fill("여기서 경복궁 어떻게 가?");
   await page.locator("#trip-chat-message").press("Enter");

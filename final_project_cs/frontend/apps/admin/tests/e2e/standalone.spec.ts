@@ -5,6 +5,23 @@ import { collectBrowserFailures, demoLabel, expectNoHorizontalOverflow, loginLab
 
 const standaloneUrl = pathToFileURL(resolve('mockups/admin-scenario.html')).href;
 
+test('오프라인 차단 확인은 성공 후 닫히고 반대 작업에 새 사유를 요구한다', async ({ page, context }) => {
+  const failures = collectBrowserFailures(page);
+  await context.setOffline(true);
+  await page.goto(`${standaloneUrl}#/users/demo-user-01`);
+  await page.getByRole('button', { name: '사용자 차단', exact: true }).click();
+  await page.getByLabel('차단·해제 사유 (필수)', { exact: true }).fill('오프라인 차단 흐름 확인');
+  await page.getByRole('button', { name: '차단 확정', exact: true }).click();
+  await expect(page.getByLabel('차단·해제 사유 (필수)', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: '차단 해제', exact: true }).click();
+  await expect(page.getByLabel('차단·해제 사유 (필수)', { exact: true })).toHaveValue('');
+  await page.getByRole('button', { name: '차단 해제 확정', exact: true }).click();
+  await expect(main(page).getByRole('alert')).toContainText('사유');
+  await expect(page.getByRole('button', { name: '차단 해제', exact: true })).toBeVisible();
+  expect(failures.errors).toEqual([]);
+  expect(failures.forbiddenRequests).toEqual([]);
+});
+
 test('단일 HTML은 오프라인에서 키보드 로그인·예외 한도·문의 답변·감사 기록을 연결한다', async ({ page, context }, testInfo) => {
   const failures = collectBrowserFailures(page);
   await context.setOffline(true);

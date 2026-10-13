@@ -9,18 +9,19 @@ const TOKEN = WEBHOOK.split("/").pop() ?? "";
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
+  await mockServer(request).scenario({ sessionKind: "member" });       // `[2026-10-13]` 「알림 받는 곳」은 회원만 쓴다(게스트는 잠긴 안내) - 이 시험들은 회원이다
   await agree(page, { alert_channel: true });          // 알림 채널을 연결하려면 선택 동의(`alert_channel`)가 먼저다 - 이 시험들은 이미 동의한 고객이다
   await start(page);
 });
 
 test("마이페이지에서 웹훅을 등록하면 가린 모양만 보이고, 시험 메시지 결과와 상태가 보인다", async ({ page, request }) => {
   const server = mockServer(request);
-  await page.goto("/mypage");
+  await page.goto("/mypage/alerts");
   const row = page.locator("dd").filter({ has: page.getByRole("link", { name: "웹훅 등록하기" }) });
   await expect(row).toContainText("등록된 웹훅이 없어요.");
   await row.getByRole("link", { name: "웹훅 등록하기" }).click();
 
-  await expect(page).toHaveURL(/\/mypage\/edit$/);
+  await expect(page).toHaveURL(/\/mypage\/alerts#webhook-address$/);
   const field = page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" });
   await field.fill("https://example.com/hook");
   await field.blur();
@@ -29,7 +30,7 @@ test("마이페이지에서 웹훅을 등록하면 가린 모양만 보이고, �
   await field.fill(WEBHOOK);
   await page.getByRole("button", { name: "저장" }).click();
 
-  await expect(page).toHaveURL(/\/mypage$/);
+  await expect(page).toHaveURL(/\/mypage\/alerts(#webhook-address)?$/);
   await expect(page.getByText("https://discord.com/api/web" + "hooks/1234…/••••")).toBeVisible();
   await expect(page.getByText("아직 시험 메시지를 보내지 않았어요.")).toBeVisible();
   await page.getByRole("button", { name: "시험 메시지 보내기" }).click();
@@ -45,10 +46,10 @@ test("마이페이지에서 웹훅을 등록하면 가린 모양만 보이고, �
 
 test("디스코드가 웹훅을 거절하면 바꿔 달라고 하고, 너무 빨리 다시 누르면 서버 문장을 보인다", async ({ page, request }) => {
   const server = mockServer(request);
-  await page.goto("/mypage/edit");
+  await page.goto("/mypage/alerts");
   await page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" }).fill(WEBHOOK);
   await page.getByRole("button", { name: "저장" }).click();
-  await expect(page).toHaveURL(/\/mypage$/);
+  await expect(page).toHaveURL(/\/mypage\/alerts(#webhook-address)?$/);
 
   await server.scenario({ webhookTest: "invalid" });
   await page.getByRole("button", { name: "시험 메시지 보내기" }).click();
@@ -62,12 +63,12 @@ test("디스코드가 웹훅을 거절하면 바꿔 달라고 하고, 너무 빨
 
 test("수정 화면에서 비워 두면 등록된 웹훅을 그대로 두고, 「등록된 웹훅 지우기」로 지운다", async ({ page, request }) => {
   const server = mockServer(request);
-  await page.goto("/mypage/edit");
+  await page.goto("/mypage/alerts");
   await page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" }).fill(WEBHOOK);
   await page.getByRole("button", { name: "저장" }).click();
   await expect(page.getByText("https://discord.com/api/web" + "hooks/1234…/••••")).toBeVisible();
 
-  await page.goto("/mypage/edit");
+  await page.goto("/mypage/alerts");
   const field = page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" });
   await expect(field).toHaveValue("");
   await expect(field).toHaveAttribute("placeholder", "등록됨: https://discord.com/api/web" + "hooks/1234…/••••");
@@ -75,7 +76,7 @@ test("수정 화면에서 비워 두면 등록된 웹훅을 그대로 두고, �
   await page.getByRole("checkbox", { name: "등록된 웹훅 지우기" }).check();
   await expect(field).toBeDisabled();
   await page.getByRole("button", { name: "저장" }).click();
-  await expect(page).toHaveURL(/\/mypage$/);
+  await expect(page).toHaveURL(/\/mypage\/alerts(#webhook-address)?$/);
   await expect(page.getByText("등록된 웹훅이 없어요.")).toBeVisible();
   expect((await server.received("PUT", "/v1/web/profile")).map((entry) => entry.body)).toEqual([{ discord_webhook_url: WEBHOOK }, { discord_webhook_url: null }]);
 });

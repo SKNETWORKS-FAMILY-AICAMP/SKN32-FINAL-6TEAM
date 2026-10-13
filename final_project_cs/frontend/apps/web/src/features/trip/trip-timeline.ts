@@ -1,4 +1,5 @@
 import type { RouteShape } from "@/lib/live/route-shapes";
+import { railSpans, type RailRow } from "@/features/plan-check/time-rail";
 import type { Trip, TripMove, TripStop } from "./model";
 
 /**
@@ -63,6 +64,40 @@ function legOf(trip: Pick<Trip, "moves" | "legs">, from: TripStop, to: TripStop,
     directions: trip.legs?.[`${from.id}>${to.id}`] ?? null,
   };
 }
+
+// ── `[2026-10-12 사용자 결정 — 목업 2026-10-12_타임라인_지금시각_목업.html B]` Now on the registered trip: what is over, what is going on, what opens by itself. ──
+
+/** The Seoul wall clock: the date ("YYYY-MM-DD") and the minute of that day (the server keeps trips in Seoul time and sends no clock — the device's is used). */
+export interface SeoulNow { date: string; minute: number }
+
+/** Orders two Seoul times (a date and a minute): compared as text. */
+export const seoulKey = (at: SeoulNow) => `${at.date}T${String(at.minute).padStart(4, "0")}`;
+
+/** `past` = its end has passed (a past stop is locked and drawn small), `now` = going on, `next` = still to come. `started`: its start has passed (its dot is filled). */
+export interface EntryTime { state: "past" | "now" | "next"; started: boolean; from: number; to: number }
+
+/** The day's last minute (24:00): a last stop with no end lasts until then. */
+const DAY_END = 1440;
+
+/**
+ * The time each entry of a day stands for and where now stands against it. A stop runs from its start to its end — with no end, until the way after it leaves, else until the next stop
+ * starts, else to the end of the day; a way runs from the end of the stop before to the start of the next. The same spans draw the line (`railSpans`), so what is filled and what is over agree.
+ */
+export function entryTimes(entries: readonly TimelineEntry[], date: string, now: SeoulNow): EntryTime[] {
+  const spans = railSpans(entries.map((entry): RailRow => entry.type === "stop"
+    ? { kind: "stay", start: toMinutes(entry.stop.time), end: entry.stop.endTime ? toMinutes(entry.stop.endTime) : null }
+    : { kind: "move", depart: entry.leg.move?.departAt ? toMinutes(entry.leg.move.departAt) : null, arrive: entry.leg.move?.arriveAt ? toMinutes(entry.leg.move.arriveAt) : null }));
+  return spans.map(({ from, to }) => {
+    const start = from ?? 0, end = to ?? DAY_END;
+    const at = date < now.date ? DAY_END + 1 : date > now.date ? -1 : now.minute;
+    return { state: at >= end ? "past" : at >= start ? "now" : "next", started: at >= start, from: start, to: end };
+  });
+}
+
+/*
+ * `[2026-10-13 사용자 결정]` The screen no longer opens what is going on now on entering, nor follows now as time passes (`currentEntry` · `followNow`, 2026-10-12 — removed): only the
+ * customer opens and closes a card.
+ */
 
 /** The leg's distance as people say it (「850m」 · 「2.1km」); null when the server gave none. */
 export function distanceText(meters: number | null | undefined): string | null {

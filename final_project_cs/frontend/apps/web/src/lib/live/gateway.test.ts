@@ -155,6 +155,13 @@ describe("live trip gateway", () => {
     expect(trip.moves).toEqual([{ id: "m", fromId: TRIP.items[0].item_id, toId: TRIP.items[1].item_id, date: "2026-10-16", departAt: "18:25", arriveAt: "18:50", title: "경복궁 → 명동난타극장" }]);
   });
 
+  it("reads a stop's photo ref when the server sends one (place_ref), and has none when it is empty or missing", async () => {
+    replies.push({ ...TRIP, items: [{ ...TRIP.items[0], place_ref: " tour:126508 " }, { ...TRIP.items[1], place_ref: "  " }] });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops[0].placeRef).toBe("tour:126508");
+    expect(trip.stops[1]).not.toHaveProperty("placeRef");
+  });
+
   it("reads the trip's name the server keeps", async () => {
     replies.push({ ...TRIP, title: " 내 여행 " });
     expect((await createLiveGateway().getTrip(TRIP.trip_id, "ko")).title).toBe("내 여행");
@@ -216,17 +223,27 @@ describe("live trip gateway", () => {
     expect(trip.stops[1].badges).toEqual([]);
   });
 
+  it("carries the stop's kind and the server's name for it (2026-10-13 — the icon before the name)", async () => {
+    replies.push({ ...TRIP, items: [{ ...TRIP.items[0], kind: "dining", kind_label: "식사" }, TRIP.items[1]] });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect([trip.stops[0].kind, trip.stops[0].kindLabel]).toEqual(["dining", "식사"]);
+    // no `kind_label` from the server: the screen names the kind itself
+    expect([trip.stops[1].kind, trip.stops[1].kindLabel]).toEqual(["activity", undefined]);
+  });
+
   it("carries the place facts the server sent (dining ledger) and leaves out what it did not", async () => {
     replies.push({
       ...TRIP,
       items: [
-        { ...TRIP.items[0], place_info: { address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: [{ day: "월", open: "11:30", close: "21:00", last_order: "20:30" }, { day: "화" }],
+        { ...TRIP.items[0], place_info: { address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: [{ day: "월", weekday: 1, open: "11:30", close: "21:00", last_order: "20:30" }, { day: "화" }],
           tags: ["michelin_selected", "card_payment", 3], michelin: { level: "셀렉티드", year: 2026 }, source_note: "" } },
         { ...TRIP.items[1], place_info: { address: "", hours: null, tags: [] } },
       ],
     });
     const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
     expect(trip.stops[0].placeInfo).toEqual({ address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: ["월 11:30–21:00 (주문 마감 20:30)", "화"],
+      // `[2026-10-13]` the line kept with its day for the folded card; a rule the server sent no day for is left out
+      dayHours: [{ weekday: 1, line: "월 11:30–21:00 (주문 마감 20:30)" }],
       hoursNotes: [], tags: ["michelin_selected", "card_payment"], michelin: { level: "셀렉티드", year: 2026 }, sourceNote: undefined });
     // ★nothing real was sent — no block at all, not a row of "unknown"
     expect(trip.stops[1].placeInfo).toBeNull();

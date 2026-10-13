@@ -2,7 +2,7 @@
 
 import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Bell, ChevronsRight, OctagonAlert } from "lucide-react";
+import { ArrowLeft, Bell, ChevronsRight, MessageCircle, OctagonAlert } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { OverlayRoot } from "@/components/layout/overlay-root";
 import { JourneyShell } from "@/components/layout/journey-shell";
@@ -20,6 +20,7 @@ import { useQuietDayStrip } from "@/features/plan-check/use-quiet-day-strip";
 import { useDayGestures } from "@/features/plan-check/use-day-gestures";
 import { useTripGuardian } from "@/features/guardian/trip-guardian";
 import pc from "@/features/plan-check/plan-check.module.css";
+import { RailList, type RailNow } from "@/features/plan-check/rail-list";
 import { LiveError } from "@/lib/live/client";
 import { getRouteShapes } from "@/lib/live/route-shapes";
 import type { Language, Translate } from "@/lib/i18n";
@@ -29,8 +30,9 @@ import type { Notice, Proposal } from "@/lib/live/extras";
 import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
-import { LegRow, legSummary, StopRow } from "./trip-rows";
-import { dayTimeline, tripDays, type TripLeg } from "./trip-timeline";
+import { LegRow, legSummary, PastLegRow, PastStopRow, StopRow } from "./trip-rows";
+import { dayTimeline, entryTimes, seoulKey, tripDays, type TripLeg } from "./trip-timeline";
+import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
 import { DetailHeader, TripDetail } from "./trip-detail";
@@ -55,6 +57,10 @@ const SHEETS = ["half", "full", "peek"] as const;
 type Sheet = (typeof SHEETS)[number];
 const COMPACT_BELOW = 190;
 const SHEET_MIN = 104;
+/** `[2026-10-12]` After the list was last touched (wheel, finger, press) this long, a change of its shape that time brought (a stop going past, a card opening by itself) is shown. */
+const TOUCH_QUIET_MS = 1_200;
+/** Where an entry the screen brings into view stands: just under the floating day chips. */
+const UNDER_CHIPS = 96;
 
 /**
  * `[2026-10-07 사용자 결정 — 목업 C안(mockups/tripilot-registered-c-attention.html)]` The registered trip: it stays on the plan check's screen — the map, and the sheet over it with the day chips,
@@ -98,14 +104,21 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
   const shapes = routeDetail.routes?.shapes ?? [];
 
   const days = tripDays(trip);
-  const [day, setDay] = useState(days[0] ?? "");
+  // `[2026-10-12 사용자 결정 — B]` Now (the device's clock in Seoul). `shapeNow` is the now the list is drawn by (past rows): it catches up with `now`
+  // once the list has not been touched for a moment, so the list does not change under the finger. The 「지금」 mark follows `now` itself.
+  const now = useSeoulNow();
+  const [shapeNow, setShapeNow] = useState(now);
+  const today = days.includes(now.date) ? now.date : null;
+  // On entering: today's day while the trip is on (else the first day).
+  const [day, setDay] = useState(() => days.includes(now.date) ? now.date : days[0] ?? "");
   const [all, setAll] = useState(false);
   const listZoom = useListZoom();
   const mapDay = days.includes(day) ? day : days[0] ?? "";
   const dayAt = days.indexOf(mapDay);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
-  // One thing open in the list at a time: a stop's card or a leg.
+  // One thing open in the list at a time: a stop's card or a leg. `[2026-10-13 사용자 결정]` Only the customer opens and closes them — nothing opens on entering or as time passes
+  // (it used to open what was going on now and follow it).
   const [openId, setOpenId] = useState<string | null>(null);
   const [pane, setPane] = useState<"plan" | "chat">("plan");
   const [instant, setInstant] = useState(false);
@@ -278,6 +291,64 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
     onTurn: (delta) => { if (delta === -1) goPane("plan", true); },
   });
 
+  // ── `[2026-10-12 사용자 결정 — B]` Time passing while the screen is open ──
+  // A minute passing only moves the 「지금」 mark (`RailList`); the list is redrawn only when its shape changes (a stop going past, the card that follows now), never while it is
+  // being touched, and then the row at the top of the view stays where it was (2026-10-12 사용자 지적 — a list rebuilt every minute stopped the scroll and jumped).
+  const lastTouch = useRef(0);
+  useEffect(() => {
+    const body = bodyBox.current;
+    if (!body) return;
+    const touched = () => { lastTouch.current = performance.now(); };
+    const kinds = ["wheel", "touchstart", "touchmove", "pointerdown"] as const;
+    kinds.forEach((kind) => body.addEventListener(kind, touched, { passive: true, capture: true }));
+    return () => kinds.forEach((kind) => body.removeEventListener(kind, touched, { capture: true }));
+  }, []);
+  const held = useRef<{ id: string; top: number } | null>(null);
+  /**
+   * The row to keep in place, and where it stands now: the first row that starts in the list's view (under the floating chips) — a row cut by the top edge is often the one going past
+   * and shrinking, and holding it would still move everything under it — else the row the edge cuts.
+   */
+  function topRow() {
+    const body = bodyBox.current;
+    if (!body) return null;
+    const edge = body.getBoundingClientRect().top + UNDER_CHIPS - 8, bottom = body.getBoundingClientRect().bottom;
+    const rows = Array.from(body.querySelectorAll<HTMLElement>("[data-rail][data-entry-id]")).filter((entry) => !entry.closest("[inert]"));
+    const row = rows.find((entry) => entry.getBoundingClientRect().top >= edge && entry.getBoundingClientRect().top < bottom) ?? rows.find((entry) => entry.getBoundingClientRect().bottom > edge);
+    return row ? { id: row.dataset.entryId!, top: row.getBoundingClientRect().top } : null;
+  }
+  const catchUp = useEffectEvent(() => {
+    held.current = topRow();
+    setShapeNow(now);
+  });
+  useEffect(() => {
+    if (seoulKey(now) === seoulKey(shapeNow)) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const apply = () => {
+      const quiet = performance.now() - lastTouch.current;
+      if (quiet < TOUCH_QUIET_MS) { timer = setTimeout(apply, TOUCH_QUIET_MS - quiet); return; }
+      catchUp();
+    };
+    apply();
+    return () => clearTimeout(timer);
+  }, [now, shapeNow]);
+  useLayoutEffect(() => {
+    const body = bodyBox.current, before = held.current;
+    held.current = null;
+    if (!body || !before) return;
+    const row = Array.from(body.querySelectorAll<HTMLElement>(`[data-entry-id="${CSS.escape(before.id)}"]`)).find((entry) => !entry.closest("[inert]"));
+    if (row) body.scrollTop += row.getBoundingClientRect().top - before.top;
+  }, [shapeNow]);
+  // On entering: today's 「지금」 mark 40 % down the list. Only here — time passing never scrolls the list.
+  const entered = useRef(false);
+  useLayoutEffect(() => {
+    const body = bodyBox.current;
+    if (entered.current || !body) return;
+    entered.current = true;
+    const top = (element: Element) => element.getBoundingClientRect().top - body.getBoundingClientRect().top;
+    const mark = Array.from(body.querySelectorAll<HTMLElement>("[data-now-mark]")).find((entry) => !entry.closest("[inert]") && entry.style.display !== "none");
+    if (mark) body.scrollTop += top(mark) - body.clientHeight * 0.4;
+  });
+
   // ── Picks on the map and in the list ──
   const mapStops = trip.stops.filter((stop) => stop.date === mapDay);
   const legsOf = (date: string) => dayTimeline(trip, date, shapes).flatMap((entry) => entry.type === "leg" ? [entry.leg] : []);
@@ -408,18 +479,33 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
 
   const drawn = visibleShapes(shapes, mapStops);
   const unlocated = mapStops.filter((stop) => !hasValidCoordinates(stop.coordinates));
+  /** `[2026-10-12 사용자 결정 — B]` 「지금」 on a day: the mark at now on today (`[2026-10-13]` the dot alone, no 「지금 HH:MM」), the line filled to the end on a day that is over, nothing on a day to come. */
+  const railNow = (date: string): RailNow | null => date < now.date ? { kind: "over" } : date === now.date ? { kind: "today", minute: now.minute } : null;
   const dayList = (date: string) => {
     const index = days.indexOf(date);
-    const stops = trip.stops.filter((stop) => stop.date === date);
+    const entries = dayTimeline(trip, date, shapes);
+    // The entries whose end has passed come first in a day: they are drawn small and grey (a stop opens as its own card when pressed).
+    const times = entryTimes(entries, date, shapeNow);
+    const live = times.findIndex((time) => time.state !== "past");
+    const pastCount = live < 0 ? entries.length : live;
     return <section key={date} aria-labelledby={`trip-day-${date}`}>
-      <h3 id={`trip-day-${date}`} className={pc.day}><button type="button" className={pc.dayButton} aria-pressed={mapDay === date} onClick={() => showDay(date)}>{dayName(index, t)}<small>{dayLabel(date, language)}</small></button></h3>
-      <ol className={pc.timeline}>{dayTimeline(trip, date, shapes).map((entry) => entry.type === "stop"
-        ? <StopRow key={entry.stop.id} stop={entry.stop} next={stops[stops.indexOf(entry.stop) + 1]} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
-            onToggle={() => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); }}
-            onDetail={() => openDetail(entry.stop.id)} detailWhy={null} explain={explain}
-            onShowOnMap={() => pick(entry.stop.id, "list")} onAsk={() => { setSelectedId(entry.stop.id); chat.askAbout(entry.stop); }} askBusy={chat.message.isPending} />
-        : <LegRow key={entry.leg.id} leg={entry.leg} open={openId === entry.leg.id}
-            onToggle={() => { setOpenId((current) => current === entry.leg.id ? null : entry.leg.id); setSelectedLine((current) => entry.leg.shape && current !== entry.leg.shape.itemId ? entry.leg.shape.itemId : null); setSelectedId(null); }} />)}</ol>
+      <h3 id={`trip-day-${date}`} className={pc.day}><button type="button" className={pc.dayButton} aria-pressed={mapDay === date} onClick={() => showDay(date)}>{dayName(index, t)}<small>{dayLabel(date, language)}</small></button>
+        {date === today && <em className={pc.todayTag}>{t("오늘", "Today")}</em>}</h3>
+      <RailList className={`${pc.timeline} ${styles.tripTimeline}`} now={railNow(date)}>{entries.map((entry, at) => {
+        const past = at < pastCount;
+        if (entry.type === "stop") {
+          const toggle = () => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); };
+          return past && openId !== entry.stop.id
+            ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
+            : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
+                past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)}
+                onAsk={() => { setSelectedId(entry.stop.id); chat.askAbout(entry.stop); }} askBusy={chat.message.isPending} />;
+        }
+        return past
+          ? <PastLegRow key={entry.leg.id} id={entry.leg.id} />
+          : <LegRow key={entry.leg.id} leg={entry.leg} open={openId === entry.leg.id}
+              onToggle={() => { setOpenId((current) => current === entry.leg.id ? null : entry.leg.id); setSelectedLine((current) => entry.leg.shape && current !== entry.leg.shape.itemId ? entry.leg.shape.itemId : null); setSelectedId(null); }} />;
+      })}</RailList>
     </section>;
   };
   const near = peek.side === 0 ? undefined : days[dayAt + peek.side];
@@ -454,12 +540,13 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
         <section ref={sheetBox} className={pc.sheet} aria-label={t("일정 목록", "Itinerary")}>
           <button type="button" className={pc.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
             onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>
-          {/* `[2026-10-07 사용자 결정]` 머리는 날짜 칩 줄 하나: 칩은 옆으로 스크롤되고 오른쪽 「일정 | 채팅」은 고정(자리는 정하는 중이라 임시). 「등록 완료」 표시는 두지 않는다. */}
+          {/* `[2026-10-07 사용자 결정]` 머리는 날짜 칩 줄 하나: 칩은 옆으로 스크롤되고 오른쪽 버튼은 고정. 「등록 완료」 표시는 두지 않는다.
+               `[2026-10-08 사용자 지시 · 2026-10-12 반영 — C]` 「일정 | 채팅」 대신 채팅 버튼 하나: 칩을 누르면 일정 칸, 채팅 버튼은 채팅 칸(채팅 칸에서는 버튼이 눌린 표시, 칩은 선택 표시 없음). */}
           {detailStop && <TripDetail trip={trip} stopId={detailStop.id} dayNumber={days.indexOf(detailStop.date) + 1} onStop={detailTo}
             onAsk={(stop) => { setDetailId(null); setSelectedId(stop.id); chat.askAbout(stop); }} askBusy={chat.message.isPending} onSheetFull={() => { setCustom(null); setSheet("full"); }} />}
           {/* The list and the chat stay mounted under the detail (their gestures and scroll are kept), only hidden. */}
           <header className={`${pc.sheetHead} ${styles.sharedHead} ${detailStop ? styles.away : ""}`} data-float data-done onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
-            {days.length > 0 && <div ref={stripBox} className={pc.dayStrip} data-at-top={quietDays.atTop || undefined} data-quiet={quietDays.hidden || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
+            {days.length > 0 && <div ref={stripBox} className={pc.dayStrip} data-at-top={quietDays.atTop || undefined} data-quiet={quietDays.hidden || undefined} data-chat={!plan || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
               onKeyDown={(event) => {
                 if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
                 const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
@@ -467,23 +554,23 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
                 if (target) { event.preventDefault(); target.focus(); target.click(); }
               }}>
               <span ref={markerBox} className={pc.dayMarker} aria-hidden="true" />
-              <button type="button" role="tab" className={pc.dayChip} aria-selected={all} tabIndex={all ? 0 : -1} onClick={() => { chooseAll(); goPane("plan"); }}>{t("전체", "All")}</button>
-              {days.map((date, index) => <button key={date} type="button" role="tab" className={pc.dayChip} aria-selected={!all && date === mapDay} tabIndex={!all && date === mapDay ? 0 : -1}
-                onClick={() => { goDay(date); goPane("plan"); }}>{dayName(index, t)}<small>{dayLabel(date, language)}</small></button>)}
+              <button type="button" role="tab" className={pc.dayChip} aria-selected={plan && all} tabIndex={all ? 0 : -1} onClick={() => { chooseAll(); goPane("plan"); }}>{t("전체", "All")}</button>
+              {/* `[2026-10-12 사용자 결정 — B5]` 오늘(여행 날짜 안일 때만) 칩 끝에 점. */}
+              {days.map((date, index) => <button key={date} type="button" role="tab" className={pc.dayChip} aria-selected={plan && !all && date === mapDay} tabIndex={!all && date === mapDay ? 0 : -1}
+                onClick={() => { goDay(date); goPane("plan"); }}>{dayName(index, t)}<small>{dayLabel(date, language)}</small>
+                {date === today && <><span className={pc.todayDot} aria-hidden="true" /><span className="sr-only">{t("오늘", "today")}</span></>}</button>)}
             </div>}
             <div className={styles.headTools}>
-              {/* `[2026-10-07 목업 C안]` 재난으로 정지된 동안만 「일정 | 채팅」 앞에 — 누르면 알림 센터(할 일 맨 위가 정지 패널). */}
+              {/* `[2026-10-07 목업 C안]` 재난으로 정지된 동안만 채팅 버튼 앞에 — 누르면 알림 센터(할 일 맨 위가 정지 패널). */}
               {trip.safety?.paused && <button type="button" className={styles.pausedChip} onClick={() => openCenter()} aria-label={t("일정 정지 중 · 알림 센터 열기", "Itinerary paused · open notices")}>
                 <OctagonAlert size={16} strokeWidth={2} aria-hidden="true" />{t("일정 정지 중", "Paused")}</button>}
-              <div className={styles.paneSwitch} role="tablist" aria-label={t("일정과 채팅 바꾸기", "Itinerary or chat")}>
-                <button type="button" role="tab" id="trip-pane-button-schedule" aria-selected={plan} aria-controls="trip-pane-schedule" onClick={() => goPane("plan")}>{t("일정", "Schedule")}</button>
-                <button type="button" role="tab" id="trip-pane-button-chat" aria-selected={!plan} aria-controls="trip-pane-chat" onClick={() => goPane("chat")}>{t("채팅", "Chat")}</button>
-              </div>
+              <button type="button" className={styles.chatButton} id="trip-pane-button-chat" aria-pressed={!plan} aria-controls="trip-pane-chat" onClick={() => goPane(plan ? "chat" : "plan")}>
+                <MessageCircle size={15} strokeWidth={2} aria-hidden="true" />{t("채팅", "Chat")}</button>
             </div>
           </header>
           <div className={`${styles.pager} ${detailStop || compact ? styles.away : ""}`}>
             <div ref={pagerTrack} className={styles.pagerTrack} data-pane={pane} data-instant={instant || undefined}>
-              <div className={styles.pane} id="trip-pane-schedule" role="tabpanel" aria-labelledby="trip-pane-button-schedule" inert={!plan}>
+              <div className={styles.pane} id="trip-pane-schedule" role="group" aria-label={t("일정", "Schedule")} inert={!plan}>
                 <div ref={bodyBox} className={`${pc.sheetBody} ${styles.planBody}`} data-under-float>
                   {stale && <div className={styles.stale} role="alert"><p>{t("최신 여행 정보를 불러오지 못했어요. 마지막으로 확인한 내용을 보여 드리고 있어요.", "The latest trip could not be loaded. This is what we last saw.")}</p>
                     <button type="button" className={styles.action} onClick={stale.reload} disabled={stale.fetching}>{t("다시 불러오기", "Reload")}</button></div>}
@@ -500,7 +587,7 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
                   <p className={pc.dayHint}>{nextDay ? t(`옆으로 밀면 ${dayName(dayAt + 1, t)} ${dayLabel(nextDay, language)} 일정이 나와요`, `Swipe sideways for day ${dayAt + 2}`) : t("옆으로 밀면 채팅이 나와요", "Swipe sideways for the chat")}<ChevronsRight size={15} strokeWidth={1.8} aria-hidden="true" /></p>
                 </div>
               </div>
-              <div ref={chatBox} className={`${styles.pane} ${styles.chatPane}`} id="trip-pane-chat" role="tabpanel" aria-labelledby="trip-pane-button-chat" inert={plan}>
+              <div ref={chatBox} className={`${styles.pane} ${styles.chatPane}`} id="trip-pane-chat" role="group" aria-labelledby="trip-pane-button-chat" inert={plan}>
                 <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} selected={selected} logRef={chatLog} active={!plan} />
               </div>
             </div>

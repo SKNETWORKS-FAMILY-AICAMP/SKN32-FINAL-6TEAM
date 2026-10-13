@@ -396,7 +396,8 @@ def test_concurrent_code_exchange_has_only_one_winner(env):
 
 
 @pytest.mark.parametrize("field,value", [("resource", BASE + "/different"), ("customer", str(uuid4())),
-                                        ("client_id", "other-ai"), ("scopes", ["travel:write"])])
+                                        ("client_id", "other-ai"), ("scopes", ["travel:write"])],
+                         ids=["resource", "customer", "client_id", "scopes"])  # `[2026-10-13]` 무작위 값이 시험 이름에 들어가면 병렬 작업자마다 목록이 달라 시작도 못 한다
 def test_access_record_must_match_its_grant_audience_owner_client_and_scope(env, field, value):
     first = tokens(env)
     row = env.store.get("access", digest(first["access_token"]))

@@ -95,7 +95,7 @@ test("디스코드 웹훅을 넣으면 앞뒤 공백을 지우고 받으며, 카
   await page.getByRole("button", { name: "계속" }).click();
   await expect(termsHead(page)).toHaveAttribute("aria-expanded", "true");
   await termsHead(page).click();
-  await expect(alertsHead(page)).toContainText("입력했어요 · 마이페이지에서 바꿀 수 있어요");
+  await expect(alertsHead(page)).toContainText("입력했어요 · 설정에서 바꿀 수 있어요");
   await expect(alertsHead(page)).not.toContainText("discord.com");      // the URL carries a token: the head never shows it
   await alertsHead(page).click();
   await expect(webhook(page)).toHaveValue(WEBHOOK);
@@ -166,7 +166,7 @@ test("잘못된 값을 둔 채 카드를 접거나 약관·취향으로 가려 �
 test("카드를 오가도 초안이 남는다 — 이 브라우저 저장소에는 어떤 모양으로도 쓰지 않는다", async ({ page }) => {
   await page.goto("/start");
   await alertsHead(page).click();
-  await expect(page.getByText(/마이페이지에서 언제든 추가하거나 바꿀 수 있어요\. 첫 여행을 등록하면 서버에 저장돼요\./)).toBeVisible();
+  await expect(page.getByText(/설정 › 「알림 받는 곳」에서 언제든 추가하거나 바꿀 수 있어요\. 첫 여행을 등록하면 서버에 저장돼요\./)).toBeVisible();
   await webhook(page).fill(WEBHOOK);
   await page.getByRole("button", { name: "계속" }).click();
   await agreeTerms(page, ["alert_channel"]);                         // ★입력한 주소는 알림 채널 동의를 해야 남는다(동의하지 않으면 버려진다 - consent.spec)
@@ -218,11 +218,10 @@ test("영어와 PC 기기 틀·375px·320px에서 세 카드와 펼친 알림 �
     await expect(termsHead(page)).toHaveAttribute("aria-expanded", "true");
   }
 
-  await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: /LANGUAGE/ }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: "English", exact: true }).click();
-  await page.keyboard.press("Escape");
-  await page.keyboard.press("Escape");
+  // `[2026-10-13 사용자 결정]` 약관 동의 전인 시작 화면은 메뉴 옆 지구본으로 언어를 바꾼다(설정 화면은 동의 뒤에 열린다).
+  await page.getByRole("banner").getByRole("button", { name: /^언어 · / }).click();
+  await page.getByRole("button", { name: "English", exact: true }).click();
+  await page.keyboard.press("Escape");                                              // 열린 약관 카드를 접는다 — 카드가 열려 있으면 다른 카드는 눌리지 않는다(inert)
   const english = page.getByRole("button", { name: /Discord alerts/ });
   await expect(english).toContainText("Optional");
   await english.click();
@@ -230,5 +229,5 @@ test("영어와 PC 기기 틀·375px·320px에서 세 카드와 펼친 알림 �
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.getByText("Please check the Discord webhook URL, e.g. https://discord.com/api/webhooks/…")).toBeVisible();
   await expect(page.getByText("To leave it out, clear the field and continue.")).toHaveCount(1);
-  await expect(page.getByText(/You can add or change it on My page any time\. It is saved to the server when you register your first trip\./)).toBeVisible();
+  await expect(page.getByText(/You can add or change it in Settings → “Where alerts go” any time\. It is saved to the server when you register your first trip\./)).toBeVisible();
 });

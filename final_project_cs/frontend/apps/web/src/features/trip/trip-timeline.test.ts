@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RouteShape } from "@/lib/live/route-shapes";
 import type { Trip, TripStop } from "./model";
-import { between, dayTimeline, distanceText, tripDays } from "./trip-timeline";
+import { between, dayTimeline, distanceText, entryTimes, tripDays } from "./trip-timeline";
 
 const stop = (id: string, date: string, time: string, endTime?: string): TripStop => ({ id, date, time, endTime, title: id, booking: "unknown", notes: "" });
 const shape = (itemId: string, from: string, to: string): RouteShape => ({ itemId, fromItemId: from, toItemId: to, from, to, mode: "subway", source: "stations", grade: "추정", distanceM: 2100, note: null, points: [], rides: [] });
@@ -41,4 +41,22 @@ describe("trip timeline", () => {
     expect(distanceText(null)).toBeNull();
     expect(distanceText(0)).toBeNull();
   });
+});
+
+describe("now on the trip (2026-10-12 사용자 결정)", () => {
+  const at = (date: string, hm: string) => ({ date, minute: Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3)) });
+  const states = (date: string, now: ReturnType<typeof at>) => entryTimes(dayTimeline(trip, date), date, now).map((time) => time.state);
+
+  it("a stop is over when its end passes, a way when the next stop starts; days before today are over, days after are to come", () => {
+    // a 10:00–11:30, m1 11:30→11:45, b 12:30–13:40, b>c (no move), c 15:00–(no end)
+    expect(states("2026-10-14", at("2026-10-14", "11:40"))).toEqual(["past", "now", "next", "next", "next"]);
+    expect(states("2026-10-14", at("2026-10-14", "13:40"))).toEqual(["past", "past", "past", "now", "next"]);
+    expect(states("2026-10-14", at("2026-10-15", "08:00"))).toEqual(["past", "past", "past", "past", "past"]);
+    expect(states("2026-10-15", at("2026-10-14", "23:00"))).toEqual(["next"]);
+  });
+
+  it("a last stop with no end lasts until the end of the day", () => {
+    expect(states("2026-10-14", at("2026-10-14", "23:59"))).toEqual(["past", "past", "past", "past", "now"]);
+  });
+
 });

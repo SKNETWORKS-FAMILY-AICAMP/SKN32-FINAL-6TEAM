@@ -45,7 +45,7 @@ test("첫 방문: 계획을 올리면 게스트 세션이 만들어지고(쿠키
   expect(await server.received("POST", "/v1/web/auth/session")).toHaveLength(1);       // 게스트 세션은 한 번만 만들어졌다
 
   // 마이페이지: 게스트라고 말하고, 키는 보여 주지도 받지도 않는다.
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");                                   // `[2026-10-13]` 로그인 상태는 「로그인 · 계정」 화면
   await expect(page.getByRole("group", { name: "로그인 상태" })).toContainText("게스트로 쓰고 있어요");
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
   await expect(page.getByText("발급된 토큰")).toHaveCount(0);
@@ -108,7 +108,7 @@ test("디스코드 알림 카드의 웹훅은 알림 채널 동의와 함께 약
     await head.click();
     await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
     await head.click();                                              // fold it; the terms step checks the field and passes
-    await expect(head).toContainText("입력했어요 · 마이페이지에서 바꿀 수 있어요");
+    await expect(head).toContainText("입력했어요 · 설정에서 바꿀 수 있어요");
   }, ["alert_channel"]);                                             // ★알림 채널 정보는 그 선택 동의를 해야 보낸다(`alert_channel`)
   // ★`[2026-10-05]` Agreeing to the terms records the consent on the server, which makes the guest session; the webhook (agreed to as the alert-channel item) goes up right behind it:
   //   no waiting in page memory for a first plan any more. Once, with the cookie and the CSRF token, no key.

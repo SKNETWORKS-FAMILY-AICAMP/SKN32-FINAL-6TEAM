@@ -83,7 +83,7 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   const showPage = open || (ready && result !== "outdated" && (agreed || (checking && admitted)));
   const showError = result === "failed" || result === "outdated";
   const step = progress?.step ?? 0;
-  const title = pathname.startsWith(routes.myPage) ? t("마이페이지", "My page")
+  const title = pathname.startsWith(routes.myPage) ? t("설정", "Settings")
     : pathname === routes.newTrip ? t("새 여행", "New trip") : t("나의 여행", "My trips");
   return <>
     {showPage ? children : ready && !agreed && result !== "outdated" ? <Onboarding termsRequired /> : <DeviceFrame scroll headerInert>

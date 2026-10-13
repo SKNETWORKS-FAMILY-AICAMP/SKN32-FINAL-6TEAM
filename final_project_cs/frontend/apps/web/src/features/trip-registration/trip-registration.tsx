@@ -38,7 +38,7 @@ function Preferences() {
   //   this browser, so this shows only when the questions were never finished.
   if (!complete) return <><div className={styles.preferences}>
     <Eyebrow>{t("여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
-    <p>{t("취향 설문을 마치지 않아서 이번 등록에는 취향이 반영되지 않아요. 마이페이지에서도 설정할 수 있어요.", "The preference questions are not finished, so this registration goes without them. You can also set them on My page.")}</p>
+    <p>{t("취향 설문을 마치지 않아서 이번 등록에는 취향이 반영되지 않아요. 메뉴의 「여행 취향 설문」에서도 설정할 수 있어요.", "The preference questions are not finished, so this registration goes without them. You can also set them from “Travel preferences survey” in the menu.")}</p>
     <p><ButtonLink href={routes.start}>{t("취향 설정하기", "Set my preferences")}</ButtonLink></p>
   </div><hr /></>;
   const labels: Record<string, string> = { food: t("맛집 탐방", "Food"), nature: t("자연과 힐링", "Nature"), culture: t("문화와 역사", "Culture"), activity: t("액티비티", "Activities"), shopping: t("쇼핑", "Shopping"), local: t("로컬 일상", "Local life") };
@@ -130,7 +130,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   async function continueWithAccount() {
     try {
       await keepLoginDraft({ text: value, files, ask, active });
-      router.push(`${routes.myPage}?returnTo=${encodeURIComponent(routes.newTrip)}#accounts`);
+      router.push(`${routes.myPageAccount}?returnTo=${encodeURIComponent(routes.newTrip)}`);
     } catch {
       setDraftWarning(t("로그인 전에 입력을 보관하지 못했어요. 파일을 다시 선택하지 않도록 이 화면에서 다시 시도해 주세요.", "Could not keep your input before sign-in. Try again here to avoid selecting your files again."));
     }

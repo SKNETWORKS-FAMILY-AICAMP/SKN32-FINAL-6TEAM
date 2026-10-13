@@ -72,7 +72,7 @@ export function SocialDone() {
     <p role="status">{text}</p>
     <div className={styles.actions}>
       <ButtonLink href={state.back} variant="primary">{t("계속하기", "Continue")}</ButtonLink>
-      {result.outcome !== "linked" && <ButtonLink href={routes.myPage}>{t("마이페이지", "My page")}</ButtonLink>}
+      {result.outcome !== "linked" && <ButtonLink href={routes.myPage}>{t("설정", "Settings")}</ButtonLink>}
     </div>
   </Panel>;
 }

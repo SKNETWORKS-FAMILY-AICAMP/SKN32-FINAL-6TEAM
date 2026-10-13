@@ -3,17 +3,17 @@
 import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight, Menu, X } from "lucide-react";
-import { Avatar } from "@/components/ui";
-import { useAuthProviders } from "@/features/account/use-auth-providers";
-import { useOnboarding } from "@/features/onboarding/onboarding-state";
-import { LanguagePicker } from "@/components/ui/language-picker";
-import { ThemePicker } from "@/components/ui/theme-picker";
-import { nicknameLabel, useProfile } from "@/lib/profile";
-import { updateSettings, useSettings, useT } from "@/lib/settings";
+import { Avatar, ButtonLink } from "@/components/ui";
+import { idleText } from "@/features/account/session-card";
+import { answerLines, questions } from "@/features/onboarding/model";
+import { useOnboarding, useOnboardingReady } from "@/features/onboarding/onboarding-state";
+import { useTrips } from "@/features/trip/use-trip";
+import { DATA_MODE } from "@/lib/data-mode";
+import { nicknameLabel, useProfile, type Profile } from "@/lib/profile";
+import { useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
-import { useListZoom, writeListZoom } from "@/features/plan-check/list-zoom";
 import { OverlayRoot } from "./overlay-root";
 import styles from "./settings-menu.module.css";
 
@@ -23,25 +23,24 @@ export { OverlayRoot };
 /** The drawer's way to close itself, for what a screen puts in its head (`tools`): a press that opens a card of its own closes the drawer first (the drawer takes the focus and covers the frame). */
 export const CloseMenu = createContext<() => void>(() => undefined);
 
-/** `tools` (`[2026-10-07 사용자 결정 — 목업 C안]`): a screen's own icon in the drawer's head, left of the close button (a registered trip's Course Keeper). It reads `CloseMenu`. */
+/**
+ * `tools` (`[2026-10-07 사용자 결정 — 목업 C안]`): a screen's own icon in the drawer's head, left of the close button (a registered trip's Course Keeper). It reads `CloseMenu`.
+ * `[2026-10-13 회의 확정 — 메뉴 = 마이페이지(목업 C안)]` The drawer is My page: one board, its first cell the profile (image · name · sign-in chip · one button),
+ * then four rows — 여행 목록 보기 · 여행 취향 설문 · 문의함 · 설정 (`[2026-10-13 사용자 지시]` the first three keep the names they had before, with a note under each).
+ * The app settings (language · theme · list size · skip animations) moved to the settings screen, and signing out is only on 「설정 › 로그인 · 계정」.
+ */
 export function SettingsMenu({ className = "", tools }: { className?: string; tools?: ReactNode }) {
   const t = useT();
-  const { skipAnimation } = useSettings();
-  const listZoom = useListZoom();
-  const profile = useProfile();
   const [open, setOpen] = useState(false);
-  // `[2026-10-03 사용자 지시]` 「계정 연결 · 로그인」 줄은 서버가 로그인 방법을 하나라도 설정했을 때만 있다(메뉴를 열 때 한 번 물어본다).
-  const providers = useAuthProviders(open);
   const root = useContext(OverlayRoot);
-  const router = useRouter();
-  const [{ agreed }, setOnboarding] = useOnboarding();
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
-  const first = useRef<HTMLAnchorElement>(null);
+  const board = useRef<HTMLDivElement>(null);
   const id = useId();
 
+  // The first thing on the board takes the focus: the profile cell's button, or 「여행 목록 보기」 while the profile is still being read.
   useEffect(() => {
-    if (open) first.current?.focus();
+    if (open) board.current?.querySelector<HTMLElement>("a[href], button")?.focus();
   }, [open]);
 
   function close() {
@@ -49,21 +48,10 @@ export function SettingsMenu({ className = "", tools }: { className?: string; to
     button.current?.focus({ preventScroll: true });
   }
 
-  /**
-   * `[2026-10-06 사용자 지시]` 취향 설문은 첫 진행에서 빠졌다 — 따로 하고 싶을 때 이 메뉴에서 연다(마이페이지의 「여행 취향」과 같은 화면: 시작 화면의 취향 카드).
-   * 약관에 아직 동의하지 않았으면 카드를 열지 않고 시작 화면(약관)으로 간다.
-   */
-  function openSurvey() {
-    setOnboarding((current) => ({ ...current, open: agreed ? 2 : null }));      // ★`agreed` 는 동의 저장소에서 온 파생 값이다
-    setOpen(false);
-    router.push(routes.start);
-  }
-
   function trapFocus(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") { event.stopPropagation(); close(); return; }
     if (event.key !== "Tab" || !panel.current) return;
-    // A closed language list is inert, so its options are not part of the cycle.
-    const focusable = [...panel.current.querySelectorAll<HTMLElement>("a[href], button, input")].filter((element) => !element.closest("[inert]"));
+    const focusable = [...panel.current.querySelectorAll<HTMLElement>("a[href], button, input")];
     const head = focusable[0], last = focusable.at(-1);
     if (event.shiftKey && document.activeElement === head) { event.preventDefault(); last?.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); head?.focus(); }
@@ -76,36 +64,8 @@ export function SettingsMenu({ className = "", tools }: { className?: string; to
         <div className={styles.headTools}><CloseMenu.Provider value={close}>{tools}</CloseMenu.Provider>
           <button type="button" className={styles.close} onClick={close} aria-label={t("메뉴 닫기", "Close menu")}><X size={20} aria-hidden="true" /></button></div>
       </header>
-      {/* One board; its rows are divided by lines only. */}
-      <div className={styles.board}>
-        {/* Links close the menu on the way, also when their page is already open. */}
-        <Link ref={first} href={routes.myPage} className={styles.profile} onClick={close}>
-          <Avatar size={48} />
-          <span className={styles.profileText}><strong>{nicknameLabel(profile, t)}</strong><small>{t("마이페이지", "My page")}</small></span>
-          <ChevronRight size={18} aria-hidden="true" />
-        </Link>
-        <Link href={routes.trips} className={styles.link} onClick={close}>{t("여행 목록 보기", "View trip list")}<ChevronRight size={18} aria-hidden="true" /></Link>
-        <button type="button" className={styles.link} onClick={openSurvey}>{t("여행 취향 설문", "Travel preferences survey")}<ChevronRight size={18} aria-hidden="true" /></button>
-        {(providers.data?.length ?? 0) > 0 && <Link href={`${routes.myPage}#accounts`} className={styles.link} onClick={close}>{t("계정 연결 · 로그인", "Link account · Sign in")}<ChevronRight size={18} aria-hidden="true" /></Link>}
-        {/* The same card as the home intro, caption included. */}
-        <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />
-        <ThemePicker />
-        <div className={styles.listZoom} role="group" aria-label={t("일정 목록 크기", "Schedule list size")}>
-          <div className={styles.zoomHeading}><strong>{t("일정 목록 크기", "Schedule list size")}</strong><output aria-live="polite">{Math.round(listZoom * 100)}%</output></div>
-          <div className={styles.zoomButtons}>
-            <button type="button" aria-label={t("일정 목록 축소", "Reduce schedule list size")} disabled={listZoom <= 0.8} onClick={() => writeListZoom(listZoom - 0.1)}>−</button>
-            <button type="button" disabled={listZoom === 1} onClick={() => writeListZoom(1)}>{t("기본 크기", "Default size")}</button>
-            <button type="button" aria-label={t("일정 목록 확대", "Increase schedule list size")} disabled={listZoom >= 1.3} onClick={() => writeListZoom(listZoom + 0.1)}>+</button>
-          </div>
-        </div>
-        {/* `[2026-10-03 사용자 결정]` 계획 확인 화면의 단계별 재생을 건너뛰고 서버 결과를 바로 본다. 시스템의 「동작 줄이기」가 아니라 이 스위치가 정한다. */}
-        <label className={styles.switchRow}>
-          <span className={styles.switchText}><strong id={`${id}-skip`}>{t("애니메이션 건너뛰기", "Skip animations")}</strong><small id={`${id}-skip-note`}>{t("켜면 계획 확인 화면이 단계별 재생 없이 바로 떠요.", "When on, the plan check appears at once, without the step-by-step replay.")}</small></span>
-          <input type="checkbox" role="switch" className={styles.switch} checked={skipAnimation} aria-labelledby={`${id}-skip`} aria-describedby={`${id}-skip-note`}
-            onChange={(event) => updateSettings({ skipAnimation: event.target.checked })} />
-        </label>
-      </div>
-      <p className={styles.note}>{t("설정은 이 브라우저에 저장돼요.", "Settings are saved in this browser.")}</p>
+      {/* One board; its cells are divided by lines only. */}
+      <div ref={board} className={styles.board}><MenuBoard onClose={close} onHide={() => setOpen(false)} /></div>
     </div>
   </div>;
 
@@ -115,4 +75,77 @@ export function SettingsMenu({ className = "", tools }: { className?: string; to
     </button>
     {drawer && createPortal(drawer, root ?? document.body)}
   </>;
+}
+
+/** The board's cells; mounted only while the drawer is open, so what the rows say (the trip count) is read when the menu is opened. Links close the menu on the way, also when their page is already open. */
+/** `onClose` closes the drawer and gives the focus back to the menu button (links); `onHide` only closes it (the survey row, which moves to the start screen). */
+function MenuBoard({ onClose, onHide }: { onClose: () => void; onHide: () => void }) {
+  const t = useT();
+  const router = useRouter();
+  const profile = useProfile();
+  const [{ complete, answers, agreed }, setOnboarding] = useOnboarding();
+  const ready = useOnboardingReady();
+
+  /**
+   * `[2026-10-06 사용자 지시]` 취향 설문은 첫 진행에서 빠졌다 — 따로 하고 싶을 때 이 메뉴에서 연다(시작 화면의 취향 카드).
+   * 약관에 아직 동의하지 않았으면 카드를 열지 않고 시작 화면(약관)으로 간다.
+   */
+  function openSurvey() {
+    setOnboarding((current) => ({ ...current, open: agreed ? 2 : null }));      // ★`agreed` 는 동의 저장소에서 온 파생 값이다
+    onHide();
+    router.push(routes.start);
+  }
+
+  // `[2026-10-13 정한 것 ③]` 줄의 보조 문구: 여행 개수 · 취향 요약(이 브라우저 값) · 문의함 · 설정은 고정 설명 — 메뉴를 열 때 서버 읽기를 늘리지 않는다.
+  const preferences = !ready ? t("불러오고 있어요", "Loading")
+    : complete ? questions.slice(0, 3).map((question) => answerLines(question.id, answers, t)[0]).join(" · ")
+      : t("아직 설정하지 않았어요", "Not set yet");
+  const row = (title: string, note: ReactNode) => <><span className={styles.rowText}><strong>{title}</strong><small>{note}</small></span><ChevronRight size={18} aria-hidden="true" /></>;
+  return <>
+    <ProfileCell profile={profile} onClose={onClose} />
+    <Link href={routes.trips} className={styles.row} onClick={onClose}>{row(t("여행 목록 보기", "View trip list"), <TripCount />)}</Link>
+    <button type="button" className={styles.row} onClick={openSurvey}>{row(t("여행 취향 설문", "Travel preferences survey"), preferences)}</button>
+    {/* `[2026-10-12 사용자 지시]` 문의함(옛 「문의하기」)은 마이페이지 카드에서 이 메뉴로 옮겼다. */}
+    <Link href={routes.support} className={styles.row} onClick={onClose}>{row(t("문의함", "Inquiries"), t("보낸 문의와 답변", "Your inquiries and the answers"))}</Link>
+    <Link href={routes.myPage} className={styles.row} onClick={onClose}>{row(t("설정", "Settings"), t("계정 · 알림 · 약관 동의 · 에이전트 · 언어 · 테마", "Account · alerts · consents · agents · language · theme"))}</Link>
+  </>;
+}
+
+/**
+ * The profile cell: the default image, the name, a chip with how this browser is signed in, and one button —
+ * 「프로필 수정」 for a signed-in member, `[2026-10-13 사용자 결정]` 「로그인 · 가입」 for everyone else (the sign-in & accounts screen, back to the screen the menu was opened on).
+ * A server with no sign-in method set up still shows the button — that screen says 「설정된 로그인 방법이 아직 없어요」.
+ */
+function ProfileCell({ profile, onClose }: { profile: Profile | undefined; onClose: () => void }) {
+  const t = useT();
+  const pathname = usePathname();
+  const live = DATA_MODE === "live";
+  const session = profile?.session ?? null;
+  const member = session?.kind === "member";
+  const chip = !live || !session ? null
+    : member ? <span className={styles.chip}>{t("로그인됨", "Signed in")}</span>
+      : <span className={`${styles.chip} ${styles.guestChip}`}>{session.guestIdleHours
+        ? t(`게스트 · ${idleText(session.guestIdleHours, t)} 뒤 지워져요`, `Guest · deleted after ${idleText(session.guestIdleHours, t)}`)
+        : t("게스트 · 이 기기에서만", "Guest · this device only")}</span>;
+  // While the profile is being read nothing is offered: which button it is depends on who this is.
+  const action = live && profile === undefined ? null
+    : live && !member
+      ? <ButtonLink href={`${routes.myPageAccount}?returnTo=${encodeURIComponent(pathname)}`} variant="primary" className={styles.cellButton} onClick={onClose}>{t("로그인 · 가입", "Sign in or sign up")}</ButtonLink>
+      : <ButtonLink href={routes.myPageEdit} className={styles.cellButton} onClick={onClose}>{t("프로필 수정", "Edit profile")}</ButtonLink>;
+  return <div className={styles.profile}>
+    <Avatar size={64} />
+    <strong className={styles.name}>{nicknameLabel(profile, t)}</strong>
+    {chip}
+    {action}
+  </div>;
+}
+
+/** 「여행 목록 보기」's note: how many trips this browser has (the same list as the 「내 여행」 screen, read when the menu opens). */
+function TripCount() {
+  const t = useT();
+  const trips = useTrips();
+  if (trips.isPending) return t("불러오고 있어요", "Loading");
+  if (trips.isError) return t("목록을 불러오지 못했어요", "Could not load the list");
+  const count = trips.data.length;
+  return count ? t(`${count}개`, `${count} trip${count === 1 ? "" : "s"}`) : t("아직 등록한 여행이 없어요", "No trips yet");
 }

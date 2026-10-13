@@ -5,13 +5,16 @@
 #   보안(scope · PII · 추적 파일)은 RULE.md §5 에 따라 같은 시험 DB 에서 검사한다 — `[2026-10-05]` 팀 저장소 develop 판에서 가져옴(우리 로컬에서 22개 통과 확인).
 #   통합·e2e 와 Docker 빌드는 main 관문(ci-main.yml)에서 본다.
 #   실제 LLM 호출 시험(live)은 pytest.ini 가 기본으로 빼 둔다.
+#
+# ★언제 도나 `[2026-10-13 사용자 결정]` — **손으로 돌릴 때만**(Actions 탭 → Run workflow). 자동으로는 돌지 않는다.
+#   role-manager 는 검사하지 않고, develop · main 은 전체 관문(ci-main.yml)이 1번 본다.
 name: CI (develop)
 
 on:
-  push:
-    branches: [role-manager, develop]
-  pull_request:
-    branches: [role-manager, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-develop-${{ github.ref }}
@@ -21,6 +24,7 @@ jobs:
   lint:
     name: ruff (F·E9)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -33,6 +37,8 @@ jobs:
   test:
     name: architecture · contract · unit
     runs-on: ubuntu-latest
+    # 기본 제한은 6시간이다 — 멈춘 시험 하나가 러너를 6시간 붙잡지 않게 평소(약 2분)의 여러 배로 끊는다.
+    timeout-minutes: 20
     services:
       postgres:
         # pgvector 확장이 들어 있는 이미지. 기본 postgres 이미지로는 벡터 열을 만들지 못한다.

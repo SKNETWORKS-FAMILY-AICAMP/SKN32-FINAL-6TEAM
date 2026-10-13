@@ -63,3 +63,4 @@ pyproj==3.7.2
 osmium==4.3.1             # pyosmium — OSM(.pbf)을 읽어 도로 그래프 · 선로 길이를 만든다
 pytest==8.4.2
 pytest-asyncio==0.25.2
+pytest-xdist==3.8.0       # 시험을 여러 일꾼으로 나눠 돌린다(CI 전체 관문 `-n auto`) — 일꾼별 DB 는 final_project_cs/conftest.py

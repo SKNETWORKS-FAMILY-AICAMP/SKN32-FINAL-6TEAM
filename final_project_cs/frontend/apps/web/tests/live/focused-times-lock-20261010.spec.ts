@@ -45,13 +45,14 @@ for(const width of [375,1280]) {
     await head(page,'서울 숙소').click();await expect(card(page,'서울 숙소').locator('[data-stop-kind=lodging]')).toBeVisible();
     await expect(unlock).toHaveCount(0);await noHorizontalScroll(page);
   });
-  test(`선택한 일정·이동만 시각 두 줄·애니메이션 ${width}px`,async({page,request})=>{
+  test(`일정은 늘 「~끝」, 이동은 고를 때만 「~도착」·애니메이션 ${width}px`,async({page,request})=>{
     await page.setViewportSize({width,height:812});await page.emulateMedia({reducedMotion:'no-preference'});
     const tiles=shots?await useMapTiles(page):async()=>{};
     await openFinished(page,request,undefined,{intakeEvents:'off',intakeRoutes:'on'});await tiles();
     const first=page.locator('li[data-type=item]').first(),move=page.locator('li[data-type=move]').first();
     await expect(page.locator('[data-move-end]')).toHaveCount(0);
-    await expect(first.locator('[data-stop-end]')).toHaveCSS('opacity','0');
+    // `[2026-10-12 사용자 결정 — 일정 줄 A]` 모든 일정이 시작 아래 「~끝」을 늘 보인다(10-10 의 「고른 일정만」을 바꿈).
+    await expect(first.locator('[data-stop-end]')).toHaveCSS('opacity','1');
     await expect(first.locator('[data-stop-start]')).toHaveCSS('font-weight','400');
     await expect(move.locator('[data-move-departure]')).toHaveText('10:30');
     await expect(move.locator('[data-move-arrival]')).toHaveCSS('opacity','0');
@@ -66,7 +67,7 @@ for(const width of [375,1280]) {
     await capture(page,`03-stop-range-${width}`);
     await move.locator('[class*=moveHead]').click();
     await expect(page.locator('[data-time-focused]')).toHaveCount(1);
-    await expect(first.locator('[data-stop-end]')).toHaveCSS('opacity','0');
+    await expect(first.locator('[data-stop-end]')).toHaveCSS('opacity','1');            // 이동을 골라도 일정의 끝 시각은 남는다
     await expect(first.locator('[data-stop-end]')).toHaveCSS('transition-duration','0.15s, 0.15s');
     await expect(move.locator('[data-move-arrival]')).toHaveText('~10:39');
     await expect(move.locator('[data-move-arrival]')).toHaveCSS('opacity','1');
@@ -74,7 +75,9 @@ for(const width of [375,1280]) {
     const geometry=await move.evaluate(el=>{
       const depart=el.querySelector('[data-move-departure]')!.getBoundingClientRect(),arrive=el.querySelector('[data-move-arrival]')!.getBoundingClientRect(),header=el.querySelector('[class*=moveHead]')!.getBoundingClientRect();
       return {centre:depart.top+depart.height/2-header.top-header.height/2,gap:arrive.top-depart.bottom};
-    });expect(Math.abs(geometry.centre)).toBeLessThan(1);expect(geometry.gap).toBe(2);
+    });expect(Math.abs(geometry.centre)).toBeLessThan(1);
+    // `[2026-10-12 결정 A]` 출발 시각과 「~도착」 사이에 「출발」 글자 한 줄이 든다(10-10 은 바로 붙은 두 줄, 2px).
+    expect(geometry.gap).toBeGreaterThanOrEqual(2);expect(geometry.gap).toBeLessThanOrEqual(18);
     await capture(page,`04-move-range-${width}`);
     await page.emulateMedia({reducedMotion:'reduce'});
     await expect(move.locator('[data-move-arrival]')).toHaveCSS('transform','none');
