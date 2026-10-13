@@ -140,8 +140,13 @@ def run(team, kind, view, item_id, request, text, source, offers, google):
                     case_version=1, input_text=text, context=pack, allowed_tools=team.manifest.allowed_tools,
                     deadline_at=datetime.now(UTC) + timedelta(seconds=90))
     print(f"일감 {capability}")
+    # `[2026-10-13]` role-manager 부터 팀이 원장 도구(`read.offers_shown`)를 부른다 — 조립 없이 돌리는 이 스크립트는 시험(conftest)처럼
+    #   `standalone_services()` 안에서 돌려야 미등록 끼움 자리가 빈 값으로 지나간다(아니면 「service access requires a bound composition」)
+    from app.core.service_bindings import standalone_services
+
     started = time.perf_counter()
-    result = asyncio.run(team.execute(task))
+    with standalone_services():
+        result = asyncio.run(team.execute(task))
     took = time.perf_counter() - started
     print(f"[결과] {took:.1f}초 · outcome {result.outcome} · next_action {result.next_action.value}"
           + (f" · failure_code {result.failure_code}" if result.failure_code else "")
@@ -156,13 +161,22 @@ def run(team, kind, view, item_id, request, text, source, offers, google):
             states = {name: state.get("status") for name, state in value["sources"].items()}
             print(f"[소스] {item.source_id} · 상태 {states} · 걸린 초 {value.get('elapsed')}")
     for proposal in result.action_proposals:
-        new = proposal.arguments["replacements"][0]["item"]
-        print(f"[제안] {proposal.action_type} · 승인 필요 {proposal.approval_required} · 이유 {proposal.arguments['reason']}"
-              f" · 항목 종류 {new['kind']} · 제목 {new['title']}")
-        if proposal.arguments.get("summary", {}).get("price_check"):
-            print(f"[가격 재확인] {proposal.arguments['summary']['price_check']}")
-        print(f"[다음 --shown] {';'.join(new['detail'].get('shown') or [])}")
-        for option in new["detail"].get("alternates") or []:
+        asked = proposal.arguments.get("ask_options")
+        if asked:
+            # `[2026-10-13]` role-manager — 후보는 일정에 싣지 않고 「선택이 필요해요」 보류 제안(`ask_options`)으로 낸다(판 그대로)
+            options = asked.get("options") or []
+            print(f"[제안] {proposal.action_type} · ask_options(판 그대로) · 승인 필요 {proposal.approval_required} · 이유 {proposal.arguments['reason']}"
+                  f" · 후보 {len(options)} · shown_key {asked.get('shown_key')}")
+            print(f"[다음 --shown] {';'.join(str(o.get('name')) for o in options)}")
+        else:
+            new = proposal.arguments["replacements"][0]["item"]
+            print(f"[제안] {proposal.action_type} · 승인 필요 {proposal.approval_required} · 이유 {proposal.arguments['reason']}"
+                  f" · 항목 종류 {new['kind']} · 제목 {new['title']}")
+            if proposal.arguments.get("summary", {}).get("price_check"):
+                print(f"[가격 재확인] {proposal.arguments['summary']['price_check']}")
+            print(f"[다음 --shown] {';'.join(new['detail'].get('shown') or [])}")
+            options = new["detail"].get("alternates") or []
+        for option in options:
             if option.get("sellers") or option.get("image"):
                 print(f"[후보] {option.get('rank')}) {option.get('name')} · 사진 {'있음' if option.get('image') else '없음'} · "
                       f"주소 {'있음' if option.get('address') else '없음'} · 링크 {option.get('link')}")

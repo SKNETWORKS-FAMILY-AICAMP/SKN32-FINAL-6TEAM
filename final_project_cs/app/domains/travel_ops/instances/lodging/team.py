@@ -145,6 +145,39 @@ _NOT_NAME = re.compile(r"\(.*?\)|\[.*?\]|호텔|hotel|서울|seoul|[\s\-_·,.&']
 SAME_STAY_M = 100
 
 
+_HANGUL = re.compile(r"[가-힣]")
+_CJK = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]")   # 가나 · 한자
+
+
+def _korean_name(listed: Any, candidate: Any) -> str:
+    """구글 호텔 목록 이름이 **원어**(가나 · 한자, 한글 없음)로 왔고 숙소 상세 이름이 한글이면 상세 이름을 보인다. 그 밖은 목록 이름 그대로(지어내지 않는다).
+    ☆`[2026-10-13]` 14:03 playdata 명동: hl=ko 인데도 「相鉄フレッサイン ソウル明洞」(소테츠 프레사 인)이 일본어로 왔다. 상세 이름이 한글로 오는지는 확인 안 함."""
+    listed, candidate = str(listed or ""), str(candidate or "")
+    if _HANGUL.search(listed) or not _CJK.search(listed) or not _HANGUL.search(candidate):
+        return listed
+    return candidate
+
+
+_SOURCE_NAMES = {"myrealtrip": "마이리얼트립", "google": "구글 호텔"}
+
+
+def _eun(word: str) -> str:
+    """「은 / 는」 — 마지막 글자에 받침이 있으면 「은」."""
+    last = str(word or "").rstrip()[-1:]
+    return "은" if last and "가" <= last <= "힣" and (ord(last) - 0xAC00) % 28 else "는"
+
+
+def _missing_note(sources: dict[str, Any] | None) -> str:
+    """「바꿔 줘」 답 끝 한 문장 — 쉬는 중(429)인 소스를 적는다(항공 팀 `_missing_note` 와 같은 꼴). 조회 실패는 기록에만. 둘 다 괜찮으면 빈 문자열.
+    `[2026-10-13]` 검색 답(`_search`)에는 있었고 「바꿔 줘」 답에는 없었다 — 고객이 한쪽 소스가 빠진 줄 모르고 고르게 된다."""
+    parts = []
+    for name, state in (sources or {}).items():
+        status, label = (state or {}).get("status"), _SOURCE_NAMES.get(name, name)
+        if status == "resting":
+            parts.append(f"{label}{_eun(label)} 요청 한도로 잠시 쉬는 중이에요")
+    return (" " + " · ".join(parts) + " — 그쪽 숙소는 빠져 있어요.") if parts else ""
+
+
 def _core(name: str) -> str:
     """숙소 이름 핵심 — 「밀리오레 호텔 서울 명동」 · 「밀리오레호텔 명동」 → 「밀리오레명동」. 영어 · 한국어 표기가 다르면 못 묶는다(확인 안 함)."""
     return _NOT_NAME.sub("", str(name or "")).casefold()
@@ -277,6 +310,12 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, An
 def _price_note(check: dict[str, Any]) -> str:
     """고를 때 가격 재확인 결과 한 문장(앞에 빈칸). 1박 값을 모르면 아무것도 적지 않는다."""
     before, now = check.get("before"), check.get("now")
+    if check.get("basis") == "sellers":
+        # `[2026-10-13]` 구글 호텔 — 판매처 최저가끼리 비교(「1박 ○원~」)
+        if check["status"] == "same":
+            return f" 지금도 판매처 최저가 1박 {_won(now)}~ 그대로예요."
+        if check["status"] == "changed":
+            return f" 보여 드릴 때 1박 {_won(before)}~이던 판매처 최저가가 지금 1박 {_won(now)}~이에요."
     if check["status"] == "changed" and check.get("basis") == "list":
         # 목록 값과 예약 화면(상세) 값이 다른 것일 수 있다 — 「가격이 바뀌었다」고 하지 않는다
         return f" 목록에서는 1박 {_won(before)}이었는데, 예약 화면 기준으로 지금 1박 {_won(now)}이에요."
@@ -301,6 +340,8 @@ def _lodging_option(rank: int, pick: dict[str, Any], item: Any) -> dict[str, Any
             # `[2026-10-13]` 화면용 — 사진 · 판매처별 가격(구글 호텔 후보만, 상세를 읽었을 때) · 주소
             "image": pick.get("image"), "sellers": pick.get("sellers") or [], "address": pick.get("address"),
             "link_seller": pick.get("link_seller"),
+            # `[2026-10-13]` 목록 이름이 원어라 상세 이름으로 바꿔 보인 경우 원래(목록) 이름 — 다음 「바꿔 줘」에서 같은 곳을 빼는 데 쓴다
+            "source_name": pick.get("source_name"),
             # `[2026-10-13 사용자 결정]` 판매처를 읽은 곳의 「1박 ○원~」 — 목록 최저가와 판매처 가격 중 가장 싼 값. 없으면 `None`
             "price_from": pick.get("price_from"),
             "property_token": pick.get("property_token")}
@@ -669,6 +710,10 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         ledger = self._read(task, "read.offers_shown", {"trip_id": trip["trip_id"], "item_key": shown_key}, ctx["seen"])             if shown_key else None
         shown += [str(offer["name"]) for offer in (ledger or {}).get("offers") or [] if offer.get("name")]
         exclude = {_key(name) for name in [*shown, item.title, (item.place or {}).get("name") or ""] if name}
+        # `[2026-10-13]` 구글 호텔 후보는 원어 이름 대신 상세의 한글 이름으로 보일 수 있다 — 원장에는 보인 이름이 남으므로
+        #   후보 key(`google:<목록 이름 열쇠>`)의 열쇠로도 뺀다(다음 목록은 원어 이름으로 온다)
+        exclude |= {str(offer["key"]).split(":", 1)[1] for offer in (ledger or {}).get("offers") or []
+                    if str(offer.get("key") or "").startswith("google:")}
         picks: list[dict[str, Any]] = []
         booked: dict[str, Any] = {}
         sizes_used: list[int] = []
@@ -715,6 +760,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                 found = (got.get("details") or {}).get(pick.get("property_token")) if pick["source"] == "구글 호텔" else None
                 if found:
                     google_read += 1
+                    shown_name = _korean_name(pick["name"], found.get("name"))
+                    if shown_name != pick["name"]:
+                        pick["source_name"], pick["name"] = pick["name"], shown_name
                     pick["sellers"] = _sellers(found)
                     pick["address"] = found.get("address") or None
                     pick["image"] = pick.get("image") or found.get("image")
@@ -733,7 +781,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                   "anchor": anchor["kind"] if anchor else None, "reference_price": reference_price, "details_read": len(details),
                   "conditions": {**conditions, "price_limit": price_limit, "by_price": by_price},
                   "near": sum(1 for pick in picks if pick["distance_km"] is not None and pick["distance_km"] <= NEAR_KM),
-                  "google_details": {"asked": len(tokens), "read": google_read}}
+                  "google_details": {"asked": len(tokens), "read": google_read},
+                  "sources": {name: (state or {}).get("status") for name, state in (booked.get("sources") or {}).items()}}
         if not picks:
             if not booked:
                 return self._unknown(task, "숙소 검색 결과", ctx["evidence"])
@@ -760,14 +809,15 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             said = f" 원래 숙소(1박 {_won(reference_price)})보다 싼 곳만 골랐어요."
         elif price_limit is not None:
             said = f" 말씀하신 대로 1박 {_won(price_limit)} 이하만 골랐어요."
-        answer = f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}.{said} 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."
+        answer = (f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}.{said}{_missing_note(booked.get('sources'))}"
+                  " 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
         cause = with_request({"category": "customer_request", "type": "requested_options", "from": item.title,
                               "message": task.input_text}, task.context.current_state.get("request_id"))
         # ★`[2026-10-13]` 일정은 바꾸지 않는다 — 식당 · 활동의 「다른 후보」처럼 「선택이 필요해요」 제안으로 내민다(일정 판 그대로).
         #   고르면 고르기 경로가 숙소 원장으로 그 숙소를 여행 전용 장소로 들여놓고(좌표가 있을 때) 바꾼다(`pending.choose`)
         return self.offer(task, ctx, item, options=options, text=answer, causes=[cause], decision=record, shown_key=shown_key,
                           summary={"lodging_options": [o["name"] for o in options], "shown_total": len(shown) + len(options),
-                                   **{k: v for k, v in record.items() if k in ("sizes", "shown_before", "anchor", "near", "details_read", "conditions", "google_details")}})
+                                   **{k: v for k, v in record.items() if k in ("sizes", "shown_before", "anchor", "near", "details_read", "conditions", "google_details", "sources")}})
 
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:
         """후보 중 고른 숙소로 항목을 바꾼다 — `plan_swap` 과 같은 일(원래 숙소는 「다른 안」 끝으로, 알림 문장도 같은 꼴)."""
@@ -813,9 +863,11 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         확인 결과 `status`: `same` · `changed`(새 값으로) · `gone`(그 날짜 객실 없음 · 매진) · `unchecked`(구글 호텔 · 상세를 못 읽음 · 조건 모름)."""
         before = pick.get("price_per_night")
         source, _, gid = str(pick.get("key") or "").partition(":")
+        query = item.detail.get("query") or self._stay_query(item, ctx["trip"])
+        if source == "google" and pick.get("property_token"):
+            return self._recheck_google(task, ctx, pick, query)
         if source != "myrealtrip" or not gid:
             return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_recheck_tool"}
-        query = item.detail.get("query") or self._stay_query(item, ctx["trip"])
         if not query:
             return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_query"}
         detail = self._read(task, "read.stay_detail", {"gid": gid, "check_in": query["check_in"], "check_out": query["check_out"],
@@ -834,6 +886,35 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         status = "same" if now == before else "changed"
         check = {"status": status, "before": before, "now": now, "basis": pick.get("price_basis") or "list"}
         return ({**pick, "price_per_night": now, "price_basis": "detail"} if status == "changed" else pick), check
+
+    def _recheck_google(self, task: TeamTask, ctx: dict[str, Any], pick: dict[str, Any],
+                        query: dict[str, Any] | None) -> tuple[dict[str, Any], dict[str, Any]]:
+        """`[2026-10-13]` 구글 호텔 후보를 고를 때 — 숙소 상세(`read.stay_google_details`, SerpApi 1회)를 다시 읽어 **판매처 최저가끼리** 비교한다.
+        전에는 다시 볼 도구가 없어 「확인 못 함」이었다. 판매처가 하나도 없으면 「없어졌다」고 하지 않고 확인 못 함(`no_price`) — 구글 상세에
+        가격이 없는 까닭(매진 · 표시 안 됨)을 가를 수 없다. 바뀌었으면 판매처 · 예약 버튼 · 「1박 ○원~」도 새 값으로."""
+        before = pick.get("price_from") if pick.get("price_from") is not None else pick.get("price_per_night")
+        if not query:
+            return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_query"}
+        token = pick["property_token"]
+        got = self._read(task, "read.stay_google_details", {"tokens": [token], "keyword": query["keyword"], "check_in": query["check_in"],
+                                                            "check_out": query["check_out"], "adults": query["adults"]}, ctx["seen"])
+        ctx["evidence"] = self._evidence(task, source_id="read.stay_google_details:recheck", claim="고른 숙소 가격 재확인(구글 호텔 상세)",
+                                         value=got, base=ctx["evidence"])
+        detail = ((got or {}).get("details") or {}).get(token)
+        if not detail:
+            return pick, {"status": "unchecked", "before": before, "now": None, "reason": "detail_unreadable"}
+        sellers = _sellers(detail)
+        if not sellers or before is None:
+            return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_price"}
+        now = sellers[0]["price_per_night"]
+        status = "same" if now == before else "changed"
+        check = {"status": status, "before": before, "now": now, "basis": "sellers"}
+        if status == "same":
+            return pick, check
+        direct = next((seller for seller in sellers if seller.get("link")), None)
+        fresh = {**pick, "sellers": sellers, "price_from": now, "price_basis": "sellers",
+                 **({"link": direct["link"], "link_seller": direct["name"]} if direct else {})}
+        return fresh, check
 
     @staticmethod
     def _stay_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:

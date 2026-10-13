@@ -675,10 +675,55 @@ def test_a_chosen_stay_without_rooms_now_is_not_applied():
 
 
 def test_a_chosen_google_hotel_is_not_rechecked_and_says_so():
+    """구글 후보에 `property_token` 이 없으면(옛 판 후보) 다시 볼 수 없다 — 그렇다고 적는다."""
     result, _, tools = _choose("google:가까운호텔", DETAIL)
-    assert [name for name, _ in tools.calls] == ["read.itinerary"], "구글 호텔 한 곳만 다시 볼 도구가 없다"
+    assert [name for name, _ in tools.calls] == ["read.itinerary"], "token 이 없으면 다시 볼 도구가 없다"
     assert result.answer.endswith(" 지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1박 120,000원) — 예약 전에 링크에서 확인해 주세요.")
     assert result.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_recheck_tool"
+
+
+def _choose_google(detail_now, *, listed=120000.0):
+    """구글 후보(token 있음)를 보여 준 뒤 고른다. 고를 때 상세(`read.stay_google_details`)는 `detail_now` 를 돌려준다."""
+    google = {**NEAR_GOOGLE, "stays": [{**row, "property_token": f"tok-{i}", "image": None} for i, row in enumerate(NEAR_GOOGLE["stays"])]}
+    shown = {"address": None, "image": None, "sellers": [
+        {"seller": "Agoda", "price_per_night": listed - 5000, "link": None, "official": False},
+        {"seller": "Trip.com", "price_per_night": listed, "link": "https://kr.trip.com/x", "official": False}]}
+    calls = {"n": 0}
+
+    def details(a):
+        calls["n"] += 1
+        return {"details": {t: (shown if calls["n"] == 1 else detail_now) for t in a["tokens"]}}
+    plan = _plan()
+    first, _, _ = _itinerary(plan, {"read.stay_google": google, "read.stay_google_details": details})
+    plan["items"][1]["detail"] = _held(first, plan)
+    state = {**ITEM_STATE, "subject_ref": {**ITEM_STATE["subject_ref"], "request": {"type": "change", "choice": "google:가까운호텔"}}}
+    return _run({"task": "unclear"}, {"read.itinerary": plan, "read.stay_google": google, "read.stay_google_details": details},
+                text="고를게", capability="lodging.itinerary", state=state)
+
+
+def test_a_chosen_google_hotel_is_rechecked_by_its_seller_prices():
+    """`[2026-10-13]` 구글 후보도 고를 때 상세를 다시 읽어 **판매처 최저가끼리** 비교한다(SerpApi 1회). 전에는 「확인 못 함」."""
+    same_detail = {"address": None, "image": None, "sellers": [
+        {"seller": "Agoda", "price_per_night": 115000.0, "link": None, "official": False},
+        {"seller": "Trip.com", "price_per_night": 120000.0, "link": "https://kr.trip.com/x", "official": False}]}
+    same, _, tools = _choose_google(same_detail)
+    recheck = [a for name, a in tools.calls if name == "read.stay_google_details"]
+    assert recheck[-1]["tokens"] == ["tok-2"] and recheck[-1]["check_in"] == IN
+    assert same.answer.endswith(" 지금도 판매처 최저가 1박 115,000원~ 그대로예요.")
+    assert same.action_proposals[0].arguments["summary"]["price_check"] == {"status": "same", "before": 115000.0, "now": 115000.0, "basis": "sellers"}
+    changed_detail = {"address": None, "image": None, "sellers": [
+        {"seller": "Trip.com", "price_per_night": 131000.0, "link": "https://kr.trip.com/y", "official": False},
+        {"seller": "Agoda", "price_per_night": 140000.0, "link": None, "official": False}]}
+    changed, _, _ = _choose_google(changed_detail)
+    assert changed.answer.endswith(" 보여 드릴 때 1박 115,000원~이던 판매처 최저가가 지금 1박 131,000원~이에요.")
+    chosen = changed.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["chosen"]
+    assert (chosen["price_from"], chosen["link"], chosen["link_seller"], [s["name"] for s in chosen["sellers"]]) == \
+        (131000.0, "https://kr.trip.com/y", "트립닷컴", ["트립닷컴", "아고다"]), "바뀌면 판매처 · 예약 버튼 · 「1박 ○원~」도 새 값"
+    assert "예약은 이 링크에서 해 주세요: https://kr.trip.com/y" in changed.answer
+    empty, _, _ = _choose_google({"address": None, "image": None, "sellers": []})
+    assert empty.action_proposals and empty.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_price", \
+        "판매처가 없으면 「없어졌다」가 아니라 확인 못 함 — 매진인지 표시만 안 된 건지 가를 수 없다"
+    assert "지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1박 115,000원)" in empty.answer
 
 
 def test_the_same_stay_from_both_sources_is_shown_once_as_myrealtrip():
@@ -744,6 +789,41 @@ def test_google_options_carry_seller_prices_photo_and_address():
     assert (option["link"], option["link_seller"]) == ("https://us.trip.com/hotels/redirect?hotelid=1", "트립닷컴"), \
         "예약 버튼은 바로 갈 주소가 있는 가장 싼 판매처 — 공식 사이트(117,000원)는 주소가 없어 트립닷컴(118,000원)"
     assert result.action_proposals[0].arguments["summary"]["google_details"] == {"asked": 1, "read": 1}
+
+
+def test_a_google_option_named_in_japanese_is_shown_with_the_detail_korean_name():
+    """`[2026-10-13]` ☆14:03 playdata 명동: 구글 목록이 hl=ko 인데도 「相鉄フレッサイン ソウル明洞」로 왔다 — 상세 이름이 한글이면 그걸 보이고,
+    원래 이름은 `source_name` · `shown` 에 남겨 다음 「바꿔 줘」에서 같은 곳이 다시 안 나오게 한다. 상세도 원어면 그대로."""
+    rows = [{**row, "property_token": f"tok-{i}", "image": None} for i, row in enumerate(NEAR_GOOGLE["stays"])]
+    rows[2] = {**rows[2], "name": "相鉄フレッサイン ソウル明洞"}
+    detail = {"name": "소테츠 프레사 인 서울 명동", "address": "서울 중구", "image": None,
+              "sellers": [{"seller": "Agoda", "price_per_night": 125000.0, "link": None, "official": False}]}
+    result, _, _ = _itinerary(_plan(), {"read.stay_google": {**NEAR_GOOGLE, "stays": rows},
+                                        "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
+    option = result.action_proposals[0].arguments["ask_options"]["options"][0]
+    assert (option["name"], option["source_name"], option["key"]) == ("소테츠 프레사 인 서울 명동", "相鉄フレッサイン ソウル明洞", "google:相鉄フレッサインソウル明洞"), \
+        "보이는 이름은 한글, 키 · source_name 은 목록 이름 그대로"
+    assert "1) 소테츠 프레사 인 서울 명동(" in result.answer and "相鉄" not in result.answer
+    # `[2026-10-13]` 보여 준 후보는 원장에 「보인 이름」으로 남는다 — 다음 「바꿔 줘」는 후보 key(google:<목록 이름 열쇠>)로도 뺀다
+    shown = {"offers": [{"key": option["key"], "name": option["name"]}]}
+    again, _, _ = _itinerary(_plan(), {"read.stay_google": {**NEAR_GOOGLE, "stays": rows}, "read.offers_shown": shown,
+                                       "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
+    assert "소테츠" not in again.answer and "相鉄" not in again.answer, "원어 이름으로 다시 와도 같은 곳은 빠진다"
+    same, _, _ = _itinerary(_plan(), {"read.stay_google": {**NEAR_GOOGLE, "stays": rows},
+                                      "read.stay_google_details": lambda a: {"details": {t: {**detail, "name": "相鉄フレッサイン"} for t in a["tokens"]}}})
+    option = same.action_proposals[0].arguments["ask_options"]["options"][0]
+    assert (option["name"], option["source_name"]) == ("相鉄フレッサイン ソウル明洞", None), "상세도 원어면 목록 이름 그대로(지어내지 않는다)"
+
+
+def test_a_resting_source_is_said_in_the_change_answer():
+    """`[2026-10-13]` 마이리얼트립이 쉬는 중(429)이면 「바꿔 줘」 답 끝에 그렇다고 적는다(항공 팀과 같은 꼴). 조회 실패(시험의 빈 구글)는 적지 않는다."""
+    resting = {"cooldown_seconds": 540, "source": "myrealtrip"}
+    result, _, _ = _itinerary(_plan(), {"read.stay_search": resting, "read.stay_google": NEAR_GOOGLE})
+    assert "마이리얼트립은 요청 한도로 잠시 쉬는 중이에요 — 그쪽 숙소는 빠져 있어요. 고르시면 바꿀게요." in result.answer
+    assert result.decisions[0]["sources"] == {"myrealtrip": "resting", "google": "ok"}
+    assert [o["source"] for o in result.action_proposals[0].arguments["ask_options"]["options"]] == ["구글 호텔"] * 3
+    plain, _, _ = _itinerary(_plan())
+    assert "쉬는 중" not in plain.answer and plain.decisions[0]["sources"] == {"myrealtrip": "ok", "google": "ok"}
 
 
 def test_change_again_skips_what_was_already_shown():
