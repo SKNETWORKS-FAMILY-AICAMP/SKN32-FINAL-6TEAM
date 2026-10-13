@@ -132,7 +132,7 @@ def create_prompt(conn: Connection, *, prompt_key: str, version: str, template: 
         cur.execute("INSERT INTO prompts (prompt_key, version, template, sha256, model_family, active) VALUES (%s,%s,%s,%s,%s,%s) RETURNING prompt_id", (prompt_key, version, template, sha256, model_family, active)); return cur.fetchone()[0]
 
 
-#: 섀도 로그의 사건 이름 → 표의 `event` 값(`031_activity_judge_shadow.sql`).
+#: 섀도 로그의 사건 이름 → 표의 `event` 값(`305_activity_judge_shadow.sql`).
 _SHADOW_EVENTS = {"activity_judge_shadow": "shadow", "activity_judge_shadow_skipped": "skipped",
                   "activity_judge_shadow_error": "error"}
 #: 표에 싣는 칸 — 이 밖의 키는 버린다(장소명·원문이 실수로 섞여 와도 저장되지 않게).

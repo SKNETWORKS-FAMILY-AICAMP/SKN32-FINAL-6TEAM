@@ -26,6 +26,7 @@ teams:
   - activity.propose_change
   - activity.itinerary
   - activity.itinerary_question
+  - activity.submit_itinerary
   hooks:
   - similarity
   - watch:activity
