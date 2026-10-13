@@ -38,6 +38,8 @@ _PURGE: tuple[tuple[str, str], ...] = (
     ("dining.dn_notice", "trip_id"),
     ("ops_lookup_usage", "trip_id"),
     ("ops_lookup_checks", "trip_id"),
+    ("lg_offer_shown", "trip_id"),                   # ★`[2026-10-13]` 숙소 · 항공 원장(240) — 보여 준 후보. trips 외래키가 없어 이름을 대어 지운다
+    ("lg_core_place_link", "trip_id"),               #   고른 숙소와 여행 전용 장소의 연결(장소 자체는 아래 places 삭제)
 )
 
 

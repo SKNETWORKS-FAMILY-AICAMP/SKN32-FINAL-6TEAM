@@ -222,6 +222,7 @@ def test_every_table_that_carries_a_trip_number_is_accounted_for():
         "places",                                                                      # trip_scope — trip_delete 가 지운다
         "ops_lookup_usage", "ops_lookup_checks",                                      # 명시 파기 + trips 외래 키 CASCADE
         "ops_diagnostic_events",                                                       # trips 외래 키 SET NULL, 보존 기한까지 발생 보존
+        "lg_offer_shown", "lg_core_place_link",                                        # 숙소 · 항공 원장(240) — trip_delete._PURGE
     }
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT table_schema, table_name FROM information_schema.columns WHERE column_name IN ('trip_id','trip_scope') "
