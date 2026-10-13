@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { agreeTerms, forgetStartScreen, mockServer, noHorizontalScroll, openPreferencesFromMyPage, pickMenuLanguage, registerStubTrip, TRIP_ID, useKorean } from "./helpers";
+import { agreeTerms, forgetStartScreen, mockServer, noHorizontalScroll, openPreferencesFromMenu, pickLanguage, registerStubTrip, TRIP_ID, useKorean } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); });
 
@@ -249,9 +249,7 @@ test("영어·키보드로 통합 카드를 쓰고, PC 기기 틀·375px·320px�
   await expect(rank(detail(page, "대중교통"))).toHaveText("1");
   await expect(next(page)).toBeEnabled();
 
-  await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await pickMenuLanguage(page, "메뉴", "English");
-  await page.keyboard.press("Escape");
+  await pickLanguage(page, "메뉴", "English");                                   // `[2026-10-13]` 언어는 설정 화면에서 고르고 뒤로 온다
   await expect(page.getByRole("heading", { name: "What matters more to you?", exact: true })).toBeVisible();
   await expect(page.getByText("Pick areas and details in order of importance.")).toBeVisible();
   await expect(page.getByRole("button", { name: /^Getting around/ })).toHaveAttribute("aria-pressed", "true");
@@ -407,9 +405,7 @@ test("영어와 PC 기기 틀·375px·320px에서 긴 답도 카드 안에서 �
   await next(page).click();
   await skipRest(page, INDOOR);
 
-  await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await pickMenuLanguage(page, "메뉴", "English");
-  await page.keyboard.press("Escape");
+  await pickLanguage(page, "메뉴", "English");                                   // `[2026-10-13]` 언어는 설정 화면에서 고르고 뒤로 온다
   await expect(heading(page, "Travel preferences set")).toBeVisible();
   const cards = summaryCards(page, "Your travel preferences");
   await expect(cards.locator("p[aria-live]")).toHaveText("1 / 2 · The basics");
@@ -449,9 +445,9 @@ test("여행을 등록해 관리를 시작한 뒤 다시 요약을 열면 주 �
   const tripId = TRIP_ID;
 
   // ★「내 여행 이어보기」 follows the server's trip list (the newest trip), not something this page remembers. The intro button
-  // now goes straight to registering once the terms are agreed, so the preferences are reached from My page.
+  // now goes straight to registering once the terms are agreed, so the preferences are reached from the menu (`[2026-10-13]` once My page).
   await page.getByRole("banner").getByRole("link", { name: "triPilot — 소개 화면으로 돌아가기" }).click();
-  await openPreferencesFromMyPage(page);
+  await openPreferencesFromMenu(page);
   const preferences = page.getByRole("button", { name: /여행 취향 알아보기/ }).first();
   if (await preferences.getAttribute("aria-expanded") !== "true") await preferences.click();
   await expect(heading(page, "여행 취향 설정 완료")).toBeVisible();

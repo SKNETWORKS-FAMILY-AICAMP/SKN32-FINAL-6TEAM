@@ -1,22 +1,15 @@
 /**
- * `[2026-10-12 사용자 결정 — 멘토링 코멘트 「줄 길이에 실제 시간을 반영」]` The time each row of a day's timeline stands for, so the line at the left can be drawn to scale
- * (1 minute = `RAIL_PX_PER_MIN` px): a stop from its start to its end, the way to the next stop from the end of the stop before to the start of the next one.
- * Pure (no DOM): the screen measures the rows and draws the line from these spans (`rail-list.tsx`).
+ * `[2026-10-12 사용자 결정 — 멘토링 코멘트 「줄 길이에 실제 시간을 반영」]` The time each row of a day's timeline stands for: a stop from its start to its end, the way to the next stop
+ * from the end of the stop before to the start of the next one. Pure (no DOM): the screen measures the rows and draws the line from these spans (`rail-list.tsx`), and the 「지금」 mark
+ * moves along the drawn line by them.
  */
 
 /**
- * How long a minute is on the line. `[2026-10-13 사용자 결정 — 줄 간격 ④]` 0.8 px (90 minutes = 72 px; it was 1.2 px): a stop's card is as tall as its time (`rail-list.tsx`),
- * so the empty room under a short card stays inside its frame.
+ * `[2026-10-13 사용자 결정 — 줄 간격 ② 일정한 간격 · 목업 Tripilot_personal/travel-careops/mockups/2026-10-13_타임라인_일정간격_접힌카드_목업_v2.html]` The line is no longer to scale:
+ * a stop's solid line runs to its card's end, and the way to the next stop takes these fixed lengths (px) whatever its minutes — waiting to leave, travelling (dashed), the free time
+ * after arriving, and the whole gap when the way is not known. Its minutes are said in words (「여유 45분」). Replaced ④ (0.8 px a minute, long free time folded).
  */
-export const RAIL_PX_PER_MIN = 0.8;
-/** `[2026-10-13 ④]` Free time longer than this (waiting to leave, after arriving, or between two stops with no way known) is folded: drawn this short, with a break mark — its length is said in words. */
-export const RAIL_FOLD_OVER_MIN = 60;
-export const RAIL_FOLD_PX = 30;
-
-/** The length of free time on the line: to scale, or folded when it is long. */
-export function freePx(minutes: number): number {
-  return minutes > RAIL_FOLD_OVER_MIN ? RAIL_FOLD_PX : Math.max(0, minutes) * RAIL_PX_PER_MIN;
-}
+export const RAIL_GAP = { wait: 8, travel: 36, slack: 12, none: 56 } as const;
 
 /** One row as the line reads it: a stop (start and end) or the way after it (when it leaves and arrives). Minutes since midnight; null = not known. */
 export type RailRow =

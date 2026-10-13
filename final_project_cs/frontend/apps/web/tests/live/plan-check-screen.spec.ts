@@ -75,8 +75,8 @@ async function openReading(page: Page, request: APIRequestContext) {
 
 // ── 읽는 중 ──────────────────────────────────────────────────────────────────
 
-// `[2026-10-03 사용자 결정]` 단계별 재생을 건너뛸지는 시스템의 「동작 줄이기」가 아니라 메뉴의 「애니메이션 건너뛰기」가 정한다.
-test("메뉴의 「애니메이션 건너뛰기」를 켜면 읽는 중에서 결과로 넘어갈 때 다시 그리지 않고 서버 결과를 바로 보인다", async ({ page, request }) => {
+// `[2026-10-03 사용자 결정]` 단계별 재생을 건너뛸지는 시스템의 「동작 줄이기」가 아니라 설정 화면(`[2026-10-13]` 전에는 메뉴)의 「애니메이션 건너뛰기」가 정한다.
+test("설정의 「애니메이션 건너뛰기」를 켜면 읽는 중에서 결과로 넘어갈 때 다시 그리지 않고 서버 결과를 바로 보인다", async ({ page, request }) => {
   await mockServer(request).scenario({ review: "on", board: "rich", intakeEvents: "on", readingPolls: 1 });
   await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", skipAnimation: true })));
   await start(page);

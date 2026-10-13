@@ -8,6 +8,8 @@ interface ServerItem {
   item_id: string;
   seq: number;
   kind: string;
+  /** The server's name for `kind` (식사 · 활동 · 숙소 · 항공). */
+  kind_label?: string | null;
   title: string;
   place: string | null;
   starts_at: string;
@@ -32,7 +34,7 @@ interface ServerItem {
 /** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
 interface ServerPlaceInfo {
   address?: string | null; phone?: string | null; category?: string | null;
-  hours?: { day?: string; open?: string; close?: string; closed?: boolean; last_order?: string | null; last_entry?: string | null }[] | null;
+  hours?: { day?: string; weekday?: number; open?: string; close?: string; closed?: boolean; last_order?: string | null; last_entry?: string | null }[] | null;
   /** Opening-hours text as the source wrote it (places outside the dining ledger). */
   hours_text?: string[] | string | null;
   /** Conditions the server could not turn into a weekly table, in the source's words. */
@@ -90,6 +92,8 @@ function stop(item: ServerItem, t: Translate): TripStop {
     mapUrl: mapLink(item.map_url),
     ...(item.paused === true ? { paused: true } : {}),
     ...(text(item.place_ref) ? { placeRef: text(item.place_ref) } : {}),
+    ...(text(item.kind) ? { kind: text(item.kind) } : {}),
+    ...(text(item.kind_label) ? { kindLabel: text(item.kind_label) } : {}),
   };
 }
 
@@ -128,20 +132,22 @@ const text = (value: unknown): string | undefined => (typeof value === "string" 
 /** The server's place facts, keeping only what it actually sent — an empty field is left out, not shown as "unknown". */
 export function placeInfo(raw: ServerPlaceInfo | null | undefined, t: Translate = translator("ko")): TripStop["placeInfo"] {
   if (!raw || typeof raw !== "object") return null;
-  const hours = Array.isArray(raw.hours)
-    ? raw.hours.map((rule) => [text(rule?.day),
+  const rules = Array.isArray(raw.hours)
+    ? raw.hours.map((rule) => ({ weekday: typeof rule?.weekday === "number" && Number.isInteger(rule.weekday) ? rule.weekday : null, line: [text(rule?.day),
       rule?.closed === true ? t("휴무", "Closed") : text(rule?.open) && text(rule?.close) ? `${rule.open}–${rule.close}` : undefined,
       rule?.closed !== true && text(rule?.last_order) ? t(`(주문 마감 ${rule.last_order})`, `(last order ${rule.last_order})`) : undefined,
       rule?.closed !== true && text(rule?.last_entry) ? t(`(입장 마감 ${rule.last_entry})`, `(last entry ${rule.last_entry})`) : undefined,
-    ].filter(Boolean).join(" ")).filter(Boolean)
+    ].filter(Boolean).join(" ") })).filter((rule) => rule.line)
     : [];
+  const hours = rules.map((rule) => rule.line);
+  const dayHours = rules.flatMap((rule) => rule.weekday === null ? [] : [{ weekday: rule.weekday, line: rule.line }]);
   const lines = (value: unknown): string[] =>
     (Array.isArray(value) ? value : [value]).map(text).filter((line): line is string => !!line);
   // ★With a weekly table the source text only adds its conditions; without one, the source text is the hours.
   const hoursNotes = hours.length ? lines(raw.hours_conditions) : [...lines(raw.hours_text), ...lines(raw.hours_conditions)];
   const level = text(raw.michelin?.level);
   const info = {
-    address: text(raw.address), phone: text(raw.phone), category: text(raw.category), hours, hoursNotes: [...new Set(hoursNotes)],
+    address: text(raw.address), phone: text(raw.phone), category: text(raw.category), hours, dayHours, hoursNotes: [...new Set(hoursNotes)],
     tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === "string" && !!tag) : [],
     michelin: level ? { level, year: typeof raw.michelin?.year === "number" ? raw.michelin.year : undefined } : null,
     sourceNote: text(raw.source_note),
