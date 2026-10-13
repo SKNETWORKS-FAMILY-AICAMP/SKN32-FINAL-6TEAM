@@ -677,6 +677,29 @@ def test_a_stay_shown_before_does_not_come_back_under_the_other_sources_name():
     assert _fresh_picks(booked, {"밀리오레호텔서울명동"}, None, {"check_in": IN, "check_out": OUT}, {"adults": 2, "children": None}) == []
 
 
+def test_google_options_carry_seller_prices_photo_and_address():
+    """`[2026-10-13 사용자 결정]` 후보 3곳 모두 판매처 가격 — 구글 호텔 후보는 상세를 한 번에 읽어 한국인이 많이 쓰는 판매처 · 공식 사이트를
+    싼 순 3곳까지 붙인다. 화면에 보일 것은 이름 · 가격 · 링크 · 사진."""
+    google = {**NEAR_GOOGLE, "stays": [{**row, "property_token": f"tok-{i}", "image": f"https://img/{i}.jpg"}
+                                       for i, row in enumerate(NEAR_GOOGLE["stays"])]}
+    detail = {"address": "서울 용산구 어딘가", "image": None, "sellers": [
+        {"seller": "Agoda", "price_per_night": 125000.0, "link": "https://www.google.com/a", "official": False},
+        {"seller": "Trip.com", "price_per_night": 118000.0, "link": "https://www.google.com/t", "official": False},
+        {"seller": "Vio.com", "price_per_night": 99000.0, "link": "https://www.google.com/v", "official": False},
+        {"seller": "가까운 호텔", "price_per_night": 117000.0, "link": "https://www.google.com/o", "official": True},
+        {"seller": "Booking.com", "price_per_night": 130000.0, "link": "https://www.google.com/b", "official": False}]}
+    result, _, tools = _itinerary(_plan(), {"read.stay_google": google,
+                                            "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
+    (asked,) = [a for name, a in tools.calls if name == "read.stay_google_details"]
+    assert asked["tokens"] == ["tok-2"] and asked["keyword"] == "중구", "구글 호텔 후보만, 한 번에"
+    assert "1) 가까운 호텔(1박 120,000원 · 원래 숙소에서 2.0km · 판매처 공식 사이트 117,000원 · 트립닷컴 118,000원 · 아고다 125,000원)" in result.answer, \
+        "Vio.com 처럼 목록에 없는 판매처는 빼고, 싼 순 3곳"
+    option = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"][0]
+    assert (option["image"], option["address"], option["sellers"][0]["link"]) == (
+        "https://img/2.jpg", "서울 용산구 어딘가", "https://www.google.com/o")
+    assert result.action_proposals[0].arguments["summary"]["google_details"] == {"asked": 1, "read": 1}
+
+
 def test_change_again_skips_what_was_already_shown():
     result, _, _ = _itinerary(_plan(stay_detail={"shown": ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]}))
     assert result.answer.startswith("기존 호텔 대신 갈 수 있는 곳이에요 — 1) 먼 호텔(1박 100,000원 · 원래 숙소에서 11.5km) · "

@@ -162,6 +162,12 @@ def run(team, kind, view, item_id, request, text, source, offers, google):
         if proposal.arguments.get("summary", {}).get("price_check"):
             print(f"[가격 재확인] {proposal.arguments['summary']['price_check']}")
         print(f"[다음 --shown] {';'.join(new['detail'].get('shown') or [])}")
+        for option in new["detail"].get("alternates") or []:
+            if option.get("sellers") or option.get("image"):
+                print(f"[후보] {option.get('rank')}) {option.get('name')} · 사진 {'있음' if option.get('image') else '없음'} · "
+                      f"주소 {'있음' if option.get('address') else '없음'} · 링크 {option.get('link')}")
+                for seller in option.get("sellers") or []:
+                    print(f"        {seller['name']} 1박 {int(seller['price_per_night']):,}원 · {seller.get('link')}")
     print("[답]")
     print(result.answer or "(없음)")
     return result

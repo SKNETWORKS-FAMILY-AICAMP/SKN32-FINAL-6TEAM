@@ -9,6 +9,6 @@
 이미 있는 `read.booking`(잠긴 예약 조회)과 겹치지 않게 동사를 붙였다.
 """
 from .flights import search_flights
-from .stays import search_stays
+from .stays import google_details, search_stays
 
-__all__ = ["search_flights", "search_stays"]
+__all__ = ["google_details", "search_flights", "search_stays"]

@@ -167,3 +167,27 @@ def test_a_source_slower_than_the_limit_is_left_out_as_timeout(monkeypatch):
     assert [offer["source"] for offer in found["options"][0]["offers"]] == ["myrealtrip"], "늦은 소스의 편은 묶지 않는다"
     assert found["elapsed"]["ignav"] is None and isinstance(found["elapsed"]["myrealtrip"], float)
 
+
+def test_google_details_are_read_at_the_same_time_and_a_missing_source_is_none():
+    """`[2026-10-13]` 구글 호텔 후보 셋의 상세를 동시에 — 전체 시간 ≈ 가장 느린 한 곳."""
+    import time
+
+    class Detail:
+        def __init__(self):
+            self.calls = []
+
+        def stay_detail(self, **arguments):
+            self.calls.append(arguments["property_token"])
+            time.sleep(0.2)
+            return {"property_token": arguments["property_token"], "sellers": []}
+
+    from app.domains.travel_ops.components.booking.offers import google_details
+
+    adapter = Detail()
+    begun = time.perf_counter()
+    got = google_details(SimpleNamespace(stay_google=adapter), tokens=["a", "b", "a", "c"], keyword="서울 명동",
+                         check_in="2026-11-06", check_out="2026-11-09", adults=2)
+    assert time.perf_counter() - begun < 0.5
+    assert sorted(adapter.calls) == ["a", "b", "c"], "같은 열쇠는 한 번만"
+    assert set(got["details"]) == {"a", "b", "c"}
+    assert google_details(SimpleNamespace(), tokens=["a"], keyword="x", check_in="2026-11-06", check_out="2026-11-09") is None

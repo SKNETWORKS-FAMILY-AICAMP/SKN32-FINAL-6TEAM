@@ -178,6 +178,8 @@ class ReadToolbox:
             "read.booking_search_stays": self.booking_search_stays,
             # ★`[2026-10-13]` 숙소 이름 → 주소 · 좌표(카카오 로컬 → 관광공사). 숙소 팀이 마이리얼트립을 못 쓸 때 「내 숙소」 위치에만 쓴다
             "read.stay_lookup": self.stay_lookup,
+            # ★`[2026-10-13]` 구글 호텔 숙소 여럿의 상세(판매처별 가격 · 주소 · 사진)를 동시에 — 숙소 팀이 후보마다 판매처 가격을 붙일 때
+            "read.stay_google_details": self.stay_google_details,
         }
 
     #: 여행 예약의 컬럼. ★`_one()` 이 zip 으로 붙이므로 SELECT 순서와 **같아야** 한다.
@@ -645,6 +647,17 @@ class ReadToolbox:
                 return {"source": "tour_api", "stays": [{"name": hit.get("matched_title"), "address": hit.get("address"),
                                                          "latitude": hit.get("latitude"), "longitude": hit.get("longitude")}]}
         return {"source": None, "stays": []} if answered else None
+
+    def stay_google_details(self, scope: ToolContext, *, tokens: Any = None, keyword: str | None = None,
+                            check_in: str | None = None, check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """구글 호텔 숙소 여럿의 상세(booking 모듈 `google_details`) — 판매처별 1박 가격 · 주소 · 사진. 소스가 없으면 `None`. `[2026-10-13]`"""
+        if not self.travel or not tokens or not keyword or not check_in or not check_out:
+            return None
+        from app.domains.travel_ops.components.booking.offers import google_details
+
+        return google_details(self.travel, tokens=[str(token) for token in tokens], keyword=str(keyword),
+                              check_in=str(check_in), check_out=str(check_out),
+                              adults=options.get("adults"), children=options.get("children"))
 
     def booking_search_flights(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
                                depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:

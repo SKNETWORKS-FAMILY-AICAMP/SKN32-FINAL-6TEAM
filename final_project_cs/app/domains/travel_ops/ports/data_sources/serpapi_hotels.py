@@ -10,6 +10,11 @@
 - 숙소 이름 하나로 찾으면(「롯데호텔 서울」) 「결과 없음」 오류가 왔다(14:22) — 이름 찾기(내 숙소)에는 쓰지 않는다.
 - 가격에 세금이 들었는지는 **확인 안 함**. 단위는 받은 그대로(원).
 - 폴백 금지(`base.py` ①~④): 못 가져오면 `None` 이고 이유를 센다.
+- `[2026-10-13]` **숙소 상세**(`stay_detail`, 목록의 `property_token` 으로 1번 더) — 판매처별 1박 가격 · 주소 · 전화.
+  ☆10-13 10:26 playdata 명동 3박 2명(`scripts/probe_google_hotel_prices.py --detail`): 목록 20곳 중 판매처 가격(`prices`)이 온 곳은
+  숙박 공유 3곳뿐이었고, 호텔스카이파크 센트럴명동점 상세(7.2초)에는 판매처 11곳(아고다 · 트립닷컴 · 클룩 · 트립비토즈 · 부킹닷컴 ·
+  공식 사이트 등)과 주소 · 전화가 왔다. 판매처 링크는 모두 `google.com` 을 거친다 — 판매처 화면으로 이어지는지는 **확인 안 함**.
+  상세 1번 = SerpApi 1회(무료 월 250회).
 """
 from __future__ import annotations
 
@@ -27,6 +32,13 @@ TIMEOUT_SECONDS = 20.0
 
 def _number(value: Any) -> float | None:
     return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def _image(row: dict[str, Any]) -> str | None:
+    """대표 사진 — `images[0]` 의 작은 그림(없으면 원본). 없으면 `None`."""
+    images = row.get("images") if isinstance(row.get("images"), list) else []
+    first = images[0] if images and isinstance(images[0], dict) else {}
+    return str(first.get("thumbnail") or first.get("original_image") or "") or None
 
 
 class SerpApiHotels(TravelSource):
@@ -73,10 +85,43 @@ class SerpApiHotels(TravelSource):
                 "rating": _number(row.get("overall_rating")), "review_count": row.get("reviews"),
                 "hotel_class": row.get("extracted_hotel_class"),
                 "latitude": _number(gps.get("latitude")), "longitude": _number(gps.get("longitude")),
-                "link": str(row.get("link") or "")})
+                "link": str(row.get("link") or ""),
+                # `[2026-10-13]` 상세를 부를 열쇠 · 대표 사진(작은 그림 주소)
+                "property_token": str(row.get("property_token") or "") or None,
+                "image": _image(row)})
         page = str((data.get("search_metadata") or {}).get("google_hotels_url") or "")
         return self.stamp({"stays": stays, "page": page, "keyword": keyword, "check_in": check_in,
                            "check_out": check_out}, source=SOURCE)
+
+    def stay_detail(self, *, property_token: str, keyword: str, check_in: str, check_out: str,
+                    adults: int | None = None, children: int | None = None) -> dict[str, Any] | None:
+        """숙소 하나의 상세 — 판매처별 1박 가격 · 주소 · 전화 · 사진. `[2026-10-13]` 판매처는 `featured_prices` · `prices` 를 합치고
+        이름이 같은 것은 한 번만. 못 가져오면 `None`."""
+        if not property_token or not keyword or not check_in or not check_out:
+            self._miss("missing_input", f"{property_token!r} {keyword!r}")
+            return None
+        params: dict[str, Any] = {"engine": "google_hotels", "q": str(keyword).strip(), "property_token": property_token,
+                                  "check_in_date": check_in, "check_out_date": check_out, "currency": "KRW", "hl": "ko",
+                                  "gl": "kr", "api_key": self._key}
+        if adults is not None:
+            params["adults"] = int(adults)
+        if children:
+            params["children"] = int(children)
+        data = self._fetch_json(URL, params)
+        if data is None:
+            return None
+        sellers, seen = [], set()
+        for group in ("featured_prices", "prices"):
+            for row in data.get(group) or []:
+                if not isinstance(row, dict) or not row.get("source") or str(row["source"]) in seen:
+                    continue
+                seen.add(str(row["source"]))
+                sellers.append({"seller": str(row["source"]),
+                                "price_per_night": _number((row.get("rate_per_night") or {}).get("extracted_lowest")),
+                                "link": str(row.get("link") or ""), "official": row.get("official") is True})
+        return self.stamp({"property_token": property_token, "name": str(data.get("name") or ""),
+                           "address": str(data.get("address") or ""), "phone": str(data.get("phone") or ""),
+                           "image": _image(data), "sellers": sellers}, source=SOURCE)
 
     @staticmethod
     def _body_error(payload: dict[str, Any]) -> str | None:

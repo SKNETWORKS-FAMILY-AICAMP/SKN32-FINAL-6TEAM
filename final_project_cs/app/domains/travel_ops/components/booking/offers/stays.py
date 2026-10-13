@@ -21,6 +21,7 @@
 """
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
@@ -86,4 +87,30 @@ def search_stays(travel: Any, *, keyword: str, check_in: str, check_out: str, ad
             "confirmed_at": datetime.now(UTC).isoformat(), "source": "booking"}
 
 
-__all__ = ["elsewhere", "search_stays"]
+#: `[2026-10-13]` 구글 호텔 상세를 기다리는 최대 시간(초) — 상세 한 번 7.2초(10-13 playdata). 여럿을 **동시에** 부르므로 전체도 이만큼. 우리가 고른 값
+DETAIL_WAIT_SECONDS = 15.0
+
+
+def google_details(travel: Any, *, tokens: list[str], keyword: str, check_in: str, check_out: str,
+                   adults: int | None = None, children: int | None = None) -> dict[str, Any] | None:
+    """구글 호텔 숙소 여럿의 상세(판매처별 가격 · 주소 · 사진)를 **동시에**. `[2026-10-13]` 사용자 결정 — 후보 3곳 모두 판매처 가격을 보여 준다.
+    돌려주는 것: `details`(열쇠 → 상세, 못 받았거나 늦으면 `None`) · `elapsed`(초). 소스가 없으면 `None`."""
+    adapter = getattr(travel, "stay_google", None) if travel is not None else None
+    if adapter is None or not hasattr(adapter, "stay_detail"):
+        return None
+    tokens = list(dict.fromkeys(token for token in tokens if token))
+    if not tokens:
+        return {"details": {}, "elapsed": 0.0}
+    import time
+
+    started = time.perf_counter()
+    pool = ThreadPoolExecutor(max_workers=len(tokens), thread_name_prefix="booking-stay-detail")
+    futures = {token: pool.submit(adapter.stay_detail, property_token=token, keyword=keyword, check_in=check_in,
+                                  check_out=check_out, adults=adults, children=children) for token in tokens}
+    done, _ = wait(list(futures.values()), timeout=DETAIL_WAIT_SECONDS)
+    pool.shutdown(wait=False, cancel_futures=True)
+    details = {token: (future.result() if future in done else None) for token, future in futures.items()}
+    return {"details": details, "elapsed": round(time.perf_counter() - started, 1)}
+
+
+__all__ = ["DETAIL_WAIT_SECONDS", "elsewhere", "google_details", "search_stays"]

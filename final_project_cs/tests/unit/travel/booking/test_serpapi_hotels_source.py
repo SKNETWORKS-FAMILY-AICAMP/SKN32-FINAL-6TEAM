@@ -43,7 +43,7 @@ def test_properties_come_back_as_stays_with_the_page():
     rental, hotel = found["stays"]
     assert hotel == {"name": "밀리오레호텔 명동", "type": "hotel", "price_per_night": 241878.0, "total_price": 725634.0,
                      "rating": 3.3, "review_count": 1076, "hotel_class": 4, "latitude": 37.56, "longitude": 126.98,
-                     "link": "https://migliorehotel.co.kr"}
+                     "link": "https://migliorehotel.co.kr", "property_token": "t", "image": None}
     assert (rental["type"], rental["rating"], rental["latitude"]) == ("vacation rental", None, None)
 
 
@@ -58,3 +58,23 @@ def test_the_tool_is_absent_without_the_source():
     toolbox = ReadToolbox.__new__(ReadToolbox)
     toolbox.travel = TravelSources()
     assert toolbox.stay_google(None, keyword="서울", check_in="2026-11-06", check_out="2026-11-09") is None
+
+
+DETAIL = {"name": "호텔스카이파크 센트럴명동점", "address": "서울 중구 퇴계로 139", "phone": "02-0000-0000",
+          "images": [{"thumbnail": "https://img/t.jpg", "original_image": "https://img/o.jpg"}],
+          "featured_prices": [{"source": "Agoda", "link": "https://www.google.com/a", "rate_per_night": {"extracted_lowest": 365696}}],
+          "prices": [{"source": "Agoda", "link": "https://www.google.com/a2", "rate_per_night": {"extracted_lowest": 365696}},
+                     {"source": "Hotel Skypark", "official": True, "link": "https://www.google.com/o",
+                      "rate_per_night": {"extracted_lowest": 341147}},
+                     {"source": "Trip.com", "link": "https://www.google.com/t", "rate_per_night": {"extracted_lowest": 347363}}]}
+
+
+def test_a_property_detail_gives_sellers_address_and_photo():
+    """`[2026-10-13]` ☆10:26 playdata 상세 응답의 항목 이름(featured_prices · prices · address · images)을 흉내 냈다."""
+    fake = Fake(DETAIL)
+    got = SerpApiHotels(api_key="k", transport=fake).stay_detail(property_token="tok", keyword="서울 명동",
+                                                                 check_in="2026-11-06", check_out="2026-11-09", adults=2)
+    assert fake.sent[0]["property_token"] == "tok" and fake.sent[0]["gl"] == "kr"
+    assert (got["address"], got["image"]) == ("서울 중구 퇴계로 139", "https://img/t.jpg")
+    assert [(row["seller"], row["price_per_night"], row["official"]) for row in got["sellers"]] == [
+        ("Agoda", 365696.0, False), ("Hotel Skypark", 341147.0, True), ("Trip.com", 347363.0, False)], "같은 판매처는 한 번만"
