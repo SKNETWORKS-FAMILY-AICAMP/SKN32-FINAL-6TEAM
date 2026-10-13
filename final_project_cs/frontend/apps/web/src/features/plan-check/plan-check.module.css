@@ -760,3 +760,7 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 @media (prefers-reduced-motion: reduce) { .mapChips { transition: none; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) { .mapChips[data-muted] { transform: none; } }
+
+/* `[2026-10-13 사용자 지시]` A day the customer wakes up in a stay: 「○○에서 출발」 at the top of the day, in the stay's soft green (the trip screen's band). */
+.stayBand { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; padding: 8px 12px; list-style: none; border: 1px dashed var(--color-success); border-radius: 10px; background: var(--color-paper); color: var(--color-primary); font-size: 12.5px; font-weight: 600; }
+.stayBand small { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--color-muted); }

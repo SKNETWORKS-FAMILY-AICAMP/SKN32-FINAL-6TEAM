@@ -60,7 +60,10 @@ function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanIt
 
 function planMove(move: ReviewMove, dayOf: Map<string, number>): PlanMove {
   return {
-    id: `${move.from}:${move.to}`, fromId: move.from, toId: move.to, day: dayOf.get(move.from) ?? move.day ?? 1,
+    id: `${move.from}:${move.to}`, fromId: move.from, toId: move.to,
+    // `[2026-10-13]` A morning move from the stay belongs to the day it opens (its `to`), not the check-in day of the stay.
+    day: move.from_stay ? (move.day ?? dayOf.get(move.to) ?? 1) : (dayOf.get(move.from) ?? move.day ?? 1),
+    ...(move.from_stay ? { fromStay: true } : {}),
     departAt: move.depart ?? "", mode: move.mode_label ?? "", summary: move.summary,
     minutes: move.minutes ?? null, arriveAt: move.arrive ?? "", slackMin: move.slack_min ?? null, estimated: move.basis === "estimate",
     modeKey: move.mode ?? null, recommendedMode: move.recommended_mode ?? null, modeChoice: modeChoiceOf(move.mode_choice),

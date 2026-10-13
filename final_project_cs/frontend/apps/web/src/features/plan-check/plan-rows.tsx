@@ -1,6 +1,6 @@
 "use client";
 
-import { Bike, Bus, Car, Check, ChevronsUpDown, Footprints, Lock, LockOpen, Minus, Pencil, Plus, Sparkles, Trash2, TrainFront, Undo2, X } from "lucide-react";
+import { BedDouble, Bike, Bus, Car, Check, ChevronsUpDown, Footprints, Lock, LockOpen, Minus, Pencil, Plus, Sparkles, Trash2, TrainFront, Undo2, X } from "lucide-react";
 import { Fragment, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import type { MoveOptionMode } from "@/lib/live/move-options";
 import { ro } from "@/lib/josa";
@@ -103,6 +103,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
   onShowDay: (day: number) => void;
   heading: (day: PlanDay) => ReactNode;
 }) {
+  const t = useT();
   return <>{days.filter((day) => (listDay === "all" || day.day === listDay) && timeline(view, day.day).some(ctx.visible)).map((day) =>
     <section key={day.day} aria-labelledby={`${ctx.prefix}plan-day-${day.day}`}>
       <h3 id={`${ctx.prefix}plan-day-${day.day}`} className={styles.day}>{ctx.done
@@ -111,7 +112,13 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
       <ol className={styles.timeline}>{(() => {
         const times = dayTimes(view, day.day);
         const points = ctx.insertion ? insertionPoints(view, day) : [];
-        return <>{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
+        // `[2026-10-13 사용자 지시]` A day the customer wakes up in a stay: 「○○에서 출발」 at the top (the move from it follows, when the check found one).
+        const stay = view.items.find((item) => isStayItem(item) && item.date < day.date && day.date <= item.endDate!);
+        return <>{stay && <li className={styles.stayBand} data-entry-id={`${stay.id}:from`}>
+          <BedDouble size={16} strokeWidth={1.8} aria-hidden="true" />
+          <span>{t(`${stay.title}에서 출발`, `Leaving from ${stay.title}`)}</span>
+          <small>{day.date === stay.endDate ? t("마지막 날", "Last day") : t(`${nightOf(stay, day.date)}박째`, `Night ${nightOf(stay, day.date)}`)}</small>
+        </li>}{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
           {points[index] && ctx.insertion?.(points[index])}
           {entry.type === "item"
             ? <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
@@ -129,6 +136,8 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
  */
 /** `[2026-10-13 사용자 결정 — 숙소 항목 B안]` A stay (kind lodging with a later end day): 「○○ 체크인」 and its nights 「3박 · 11/6~11/9」. Other stops keep their title. */
 const isStayItem = (item: PlanItem) => item.kind === "lodging" && !!item.endDate && item.endDate > item.date;
+/** Which night of the stay the morning of `date` follows (the day after check-in is night 2 …, as the trip screen says it). */
+const nightOf = (stay: PlanItem, date: string) => Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${stay.date}T00:00:00Z`)) / 86_400_000) + 1;
 const monthDay = (iso: string) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
 function stayTitle(item: PlanItem, t: ReturnType<typeof useT>): string {
   return isStayItem(item) ? t(`${item.title} 체크인`, `Check in · ${item.title}`) : item.title;
