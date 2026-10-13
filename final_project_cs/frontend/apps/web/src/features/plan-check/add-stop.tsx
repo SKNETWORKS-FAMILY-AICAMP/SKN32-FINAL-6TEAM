@@ -152,3 +152,4 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
       <summary>{t("+ 일정 추가", "+ Add a stop")}</summary>{content}
     </details>;
 }
+

@@ -1,0 +1,17 @@
+{
+  "hashes_checked": 326,
+  "hashes_matched": 326,
+  "backups_checked": 16,
+  "backups_matched": 16,
+  "feature_tests": {
+    "passed": 505,
+    "new": 38,
+    "deselected": 165
+  },
+  "document_tests": {
+    "passed": 89,
+    "failed": 9
+  },
+  "visual_self_check": true,
+  "browser_rendered": false
+}

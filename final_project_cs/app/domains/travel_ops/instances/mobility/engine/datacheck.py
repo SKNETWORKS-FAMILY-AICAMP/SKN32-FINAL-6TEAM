@@ -21,12 +21,12 @@ from pathlib import Path
 
 MANIFEST_NAME = "manifest_v1.json"
 # runtime.build_verifier 가 없으면 멈추는 것(나머지는 없어도 돌고 근거없음으로 낸다)
-OPTIONAL = ("meta", "station_exits", "bike_stations", "bus_profile")
+OPTIONAL = ("meta", "station_exits", "bike_stations", "bus_profile", "subway_stations", "published_boarding", "train_precision")
 
 
 def _paths():
     from .runtime import default_paths
-    return {k: Path(v) for k, v in default_paths().items() if k not in ("rules", "holidays")}
+    return {k: Path(v) for k, v in default_paths().items() if k not in ("rules", "holidays", "special_rail_fares")}
 
 
 def _sha256(p: Path) -> str:
@@ -63,6 +63,15 @@ def _git_manifest_files(P: dict) -> tuple[Path | None, dict]:
             continue
         if rel in by_path:
             out[k] = {"bytes": by_path[rel].get("bytes"), "sha256": by_path[rel].get("sha256")}
+    # 적재 경로는 존재하는 보강 파일만 고른다. 명세에 등록된 보강 파일이
+    # 사라져도 검사 대상에서 조용히 빠지거나 옛 판으로 돌아가면 안 된다.
+    for key, names in {
+        'rail_track': ('rail_edge_track_v2.jsonl.gz', 'rail_edge_track_v1.jsonl.gz'),
+        'rail_distance_overlay': ('rail_distance_overlay_v1.json',),
+    }.items():
+        entry = next((by_path[name] for name in names if name in by_path), None)
+        if entry is not None:
+            out[key] = {'name': entry['path'], 'bytes': entry.get('bytes'), 'sha256': entry.get('sha256')}
     return mp, out
 
 
@@ -97,8 +106,11 @@ def check(*, verify_hash: bool = True) -> dict:
         for k, want in wanted_files.items():
             p = P.get(k)
             if p is None or not p.exists():
-                if k not in OPTIONAL:
+                if k not in OPTIONAL or k in ('published_boarding', 'train_precision'):
                     mismatched.append({"file": k, "why": "명세에 있는데 없다"})
+                continue
+            if want.get('name') and p.name != Path(want['name']).name:
+                mismatched.append({'file': k, 'why': '적재한 파일 이름이 명세와 다르다'})
                 continue
             if p.stat().st_size != want.get("bytes"):
                 mismatched.append({"file": k, "why": f"크기 {p.stat().st_size} ≠ 명세 {want.get('bytes')}"})

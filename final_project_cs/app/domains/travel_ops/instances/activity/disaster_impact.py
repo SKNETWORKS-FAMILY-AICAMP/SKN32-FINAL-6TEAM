@@ -68,9 +68,15 @@ class ImpactRules:
                    closure_words=words("travel.safety.impact.place_closure_keywords"))
 
     def is_released(self, text: Any) -> bool:
-        """훈련 · 해제 문자(재난 정지와 같은 낱말)와 ① 상황이 끝났다는 문자."""
+        """훈련 문자(재난 정지와 같은 낱말)와 ① 상황이 끝났다는 문자.
+
+        ★`[2026-10-13]` 「끝났나」는 공용 판정(`notice_status`)도 본다 — 재난 정지 제외 낱말에서 「해제」를 뺐기 때문이다
+          (「해제 시까지 대피」 · 「해제 예정」은 끝이 아니다). 「통제가 완전 해제되었음」 · 「교통통제 해제」는 공용 판정이 끝으로 본다."""
+        from app.domains.travel_ops.ports.data_sources.notice_status import notice_status
+
         return (any(word in str(text or "") for word in self.exclude_words)
-                or any(word in _key(text) for word in self.release_words))
+                or any(word in _key(text) for word in self.release_words)
+                or notice_status(str(text or "")).ended)
 
     def kind_class(self, kind: Any, text: Any = "") -> str:
         if self.is_released(text):

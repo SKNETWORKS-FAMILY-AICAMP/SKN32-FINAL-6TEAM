@@ -1,0 +1,13 @@
+ISOLATED_LINUX_BEGIN {"python": "3.12.15", "platform": "linux", "verified_files": 433, "selected_tests": ["tests/integration/controller/test_conversation_resume.py::test_latest_reply_original_request_and_masked_history_reach_team", "tests/integration/controller/test_conversation_resume.py::test_same_request_same_reply_executes_once_different_reply_conflicts", "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs", "tests/integration/controller/test_plugin_unavailable.py::test_reactivation_same_reply_changes_real_itinerary_only_once", "tests/integration/controller/test_plugin_unavailable.py::test_inflight_disable_keeps_old_team_and_applies_real_itinerary_once", "tests/e2e/test_web_conversation_resume.py::test_missing_minutes_waits_and_reply_reaches_same_real_team", "tests/e2e/test_web_conversation_resume.py::test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice"], "database": "ephemeral-synthetic-only", "inherited_environment_cleared": true}
+Traceback (most recent call last):
+  File "<stdin>", line 24, in <module>
+  File "/usr/local/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/tmp/candidate-check/app/infrastructure/db/session.py", line 21, in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/psycopg/connection.py", line 122, in connect
+    raise last_ex.with_traceback(None)
+psycopg.OperationalError: connection failed: connection to server at "172.20.0.2", port 5432 failed: FATAL:  no pg_hba.conf entry for host "172.20.0.3", user "synthetic", database "synthetic", no encryption
+ISOLATED_DB_ORCHESTRATION {"operating_database_connected": false, "operating_volumes_connected": false, "operating_environment_forwarded": false, "image_pull": false, "images": ["sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294", "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"], "network_internal": true, "database_tmpfs_destinations": ["/tmp", "/var/lib/postgresql/data"], "database_mounts": [], "pytest_process_exit_code": 1, "remaining_temporary_containers": [], "remaining_temporary_network": false, "cleanup_errors": []}

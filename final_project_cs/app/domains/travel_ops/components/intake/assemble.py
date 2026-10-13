@@ -128,9 +128,11 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
             key = f"p{len(places) + 1}"
             places.append(_place_in(key, row["place"], row["kind"]))
         detail: dict[str, Any] = {"provenance": row["provenance"],
-                                  "intake": {"intake_id": intake_id, "revision": revision}}
-        if row["booking_no"]:
-            detail["booking"] = {"booking_no": row["booking_no"], "declared_by": "customer_plan"}
+                                  "intake": {"intake_id": intake_id, "revision": revision,
+                                             "source_id": row["source_id"], "index": row["index"]}}
+        if row["booking_no"] or row["booked"] is True:
+            detail["booking"] = {"declared_by": "customer_plan",
+                                 **({"booking_no": row["booking_no"]} if row["booking_no"] else {})}
         if row["locked"]:
             # ★`[2026-10-02 사용자 지시]` 고객이 「꼭 넣을 일정」으로 고정했다 — 등록되면 **감시 루프가 다시 자동으로 바꾸지 않고**
             #   바꾸기 전에 묻는다(`pending.protected_reason` 「customer_pinned」 · `trip_watch`). 되살린 항목과 같은 표시다.
@@ -143,6 +145,10 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
     body = {"request_id": f"intake:{intake_id}:r{revision}", "title": _title(trip, sources),
             "locale": "ko", "party_size": _int_value(trip.get("party_size")),
             "places": places, "items": items}
+    from . import taxi_pricing
+    pricing = taxi_pricing.from_trip(trip)
+    if pricing is not None:
+        body["constraints"] = taxi_pricing.constraints(pricing, body.get("constraints"))
     plan = _plan_basis(trip, rows, sources, first_day)
     if not rows and not plan["requested"]:
         problems.append(Problem("no_items", "items", "읽은 일정이 없습니다 — 항목을 하나 이상 넣어 주세요"))

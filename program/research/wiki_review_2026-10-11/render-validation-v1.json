@@ -1,0 +1,23 @@
+{
+  "observations": [
+    {
+      "width": 1280,
+      "documentWidth": 1280,
+      "articles": 25,
+      "svgTitle": "wiki부터 베이스라인까지의 정리 순서",
+      "font": "Geist, \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    },
+    {
+      "width": 375,
+      "documentWidth": 375,
+      "articles": 25,
+      "svgTitle": "wiki부터 베이스라인까지의 정리 순서",
+      "font": "Geist, \"Noto Sans KR\", \"Malgun Gothic\", sans-serif"
+    }
+  ],
+  "expanded": true,
+  "printReady": true,
+  "errors": [],
+  "passed": true,
+  "scratch": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\wiki-review-2026-10-11"
+}

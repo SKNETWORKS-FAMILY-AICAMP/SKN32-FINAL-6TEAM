@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Oracle ARM 기계 내부의 시험 관리</title>
+<style>
+body{background:#fbfcfd;color:#161c28;font-family:Geist,'Noto Sans KR','Malgun Gothic',sans-serif;max-width:760px;margin:32px auto;padding:0 20px}h1{font-family:'Instrument Serif','Noto Serif KR',serif;font-weight:400;font-size:28px}p{line-height:1.6;color:#6b7488}svg{width:100%;height:auto}text{font-family:Geist,'Noto Sans KR','Malgun Gothic',sans-serif;text-anchor:middle;fill:#161c28;font-size:16px}.node{fill:#fbfcfd;stroke:#161c28;stroke-width:1.5}.focal{fill:#f6eddd;stroke:#a8720c}.arrow{fill:none;stroke:#6b7488;stroke-width:1.5;marker-end:url(#arm-queue-arrow)}.label{font-size:12px;fill:#6b7488}.line{stroke:#dbe0ea;stroke-width:1}
+</style>
+<h1>Oracle ARM 기계가 직접 시험을 이어갑니다</h1>
+<p>PC·Codex가 꺼져 있어도 일감을 보충하고 실행합니다. 등록한 시간은 추정이며 실제 완료 시간으로 수량을 보정합니다.</p>
+<svg viewBox="0 0 720 1040" role="img" aria-labelledby="arm-queue-title arm-queue-desc">
+<title id="arm-queue-title">Oracle ARM의 6시간 공급과 상시 실행</title>
+<desc id="arm-queue-desc">기계 내부 타이머가 6시간분 일감을 보충하고 상시 작업자가 배포와 자원 조건을 확인하여 회차별로 실행하거나 대기합니다.</desc>
+<defs><marker id="arm-queue-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#6b7488"/></marker></defs>
+<path class="arrow" d="M360 112 V152"/><path class="arrow" d="M360 224 V264"/>
+<path class="arrow" d="M360 448 V496"/>
+<path class="arrow" d="M360 624 V676"/>
+<path class="arrow" d="M488 560 H568 Q576 560 576 568 V676"/>
+<path class="arrow" d="M360 748 V796"/>
+<rect x="344" y="636" width="32" height="24" fill="#fbfcfd"/><text x="360" y="652" class="label">예</text>
+<rect x="504" y="528" width="56" height="24" fill="#fbfcfd"/><text x="532" y="544" class="label">아니요</text>
+<rect class="node" x="176" y="48" width="368" height="64" rx="32"/><text x="360" y="76">공급 회차 시작</text><text x="360" y="96" class="label">한국 시간 00·06·12·18시 / 부팅 후</text>
+<rect class="node focal" x="176" y="152" width="368" height="72" rx="8"/><text x="360" y="180">남은 시간을 재고 6시간분까지 보충</text><text x="360" y="204" class="label">같은 ID 중복 등록 방지 · 원자적 저장</text>
+<rect class="node" x="240" y="264" width="240" height="56" rx="28"/><text x="360" y="300">공급 회차 종료</text>
+<line class="line" x1="48" y1="352" x2="672" y2="352"/>
+<rect class="node" x="224" y="392" width="272" height="56" rx="28"/><text x="360" y="428">작업 회차 시작</text>
+<path class="node" d="M360 496 L488 560 L360 624 L232 560 Z"/><text x="360" y="552">앱·공간·잠금 조건</text><text x="360" y="576">충족?</text>
+<rect class="node" x="200" y="676" width="320" height="72" rx="8"/><text x="360" y="704">질의 1회차 실행 · 성공과 실패 보관</text><text x="360" y="728" class="label">실측 시간 보정 · 부족한 일감 중간 보충</text>
+<rect class="node" x="536" y="676" width="144" height="72" rx="28"/><text x="608" y="704">대기 회차 종료</text><text x="608" y="728" class="label">60초 후 재확인</text>
+<rect class="node" x="224" y="796" width="272" height="56" rx="28"/><text x="360" y="832">작업 회차 종료</text>
+<text x="360" y="892" class="label">자동 배포에 실행 기회를 준 뒤 10초 후 다음 작업 회차 시작</text>
+<text x="360" y="932" class="label">앱 조건 대기는 시험 성공이 아닙니다. 기존 추론 시험은 별도로 계속 실행됩니다.</text>
+<text x="360" y="972" class="label">반복 회차는 지연·오류·격리 안정성 검사이며 독립 정확도 표본이 아닙니다.</text>
+</svg>
+<p>운영 절차는 <a href="arm-develop-cd.md">Oracle ARM 자동 배포·질의 검사</a>를 확인합니다. 글꼴은 설치된 브랜드 글꼴을 우선하고, 없으면 한글 시스템 글꼴을 사용합니다.</p>
+</html>

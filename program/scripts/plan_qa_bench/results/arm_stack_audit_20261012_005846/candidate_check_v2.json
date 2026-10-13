@@ -1,0 +1,2658 @@
+{
+  "utc": "2026-10-11T16:05:22.699056+00:00",
+  "intake_id": "00c4f1b3-9523-4c4c-a6f2-d698b44db267",
+  "new_intake_created": false,
+  "correction": "Use review source_id UUID and index fields, not display id 0-N",
+  "checks": {
+    "activity_search": {
+      "http": 200,
+      "seconds": 0.40286799101158977,
+      "value": {
+        "revision": 1,
+        "item": "0-0",
+        "query": "경복궁",
+        "results": [
+          {
+            "rank": 1,
+            "place": {
+              "name": "경복궁 별빛야행",
+              "latitude": 37.5760307,
+              "longitude": 126.9767218661,
+              "source": "tour_api",
+              "kind": "activity",
+              "address": "서울특별시 종로구 사직로 161 (세종로)",
+              "category": "축제·공연",
+              "content_id": "2648460",
+              "content_type_id": "15",
+              "ref": "tour:2648460"
+            },
+            "distance_m": 6,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "관광공사 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "관광공사 운영시간을 아직 읽지 못했어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 119
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 2,
+            "place": {
+              "name": "경복궁 생과방",
+              "latitude": 37.576030700049394,
+              "longitude": 126.97672186606306,
+              "source": "tour_api",
+              "kind": "activity",
+              "address": "서울특별시 종로구 사직로 161 (세종로)",
+              "category": "축제·공연",
+              "content_id": "2615461",
+              "content_type_id": "15",
+              "ref": "tour:2615461"
+            },
+            "distance_m": 6,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "관광공사 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "관광공사 운영시간을 아직 읽지 못했어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 119
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 3,
+            "place": {
+              "name": "경복궁",
+              "latitude": 37.576,
+              "longitude": 126.9767,
+              "source": "places",
+              "kind": "activity",
+              "address": null,
+              "category": null,
+              "content_id": null,
+              "content_type_id": null,
+              "ref": null
+            },
+            "distance_m": 8,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "우리 장소 목록 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "운영시간 정보를 아직 못 찾았어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 119
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 4,
+            "place": {
+              "name": "경복궁 수문장청",
+              "latitude": 37.5761418847981,
+              "longitude": 126.976494182233,
+              "source": "kakao",
+              "kind": "activity",
+              "address": "서울 종로구 사직로 161",
+              "category": "여행 > 관광,명소 > 문화유적",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:26991158"
+            },
+            "distance_m": 29,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 119
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 5,
+            "place": {
+              "name": "경복궁 광화문 월대",
+              "latitude": 37.5757437132805,
+              "longitude": 126.976838447752,
+              "source": "kakao",
+              "kind": "activity",
+              "address": "서울 종로구 세종로 1-58",
+              "category": "여행 > 관광,명소 > 문화유적",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:1584902744"
+            },
+            "distance_m": 31,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 119
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 6,
+            "place": {
+              "name": "경복궁 매표소1",
+              "latitude": 37.5763619164035,
+              "longitude": 126.977463147886,
+              "source": "kakao",
+              "kind": "activity",
+              "address": "서울 종로구 사직로 161",
+              "category": "서비스,산업 > 관리,운영 > 매표소",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:17938488"
+            },
+            "distance_m": 71,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 119
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 7,
+            "place": {
+              "name": "경복궁 매표소",
+              "latitude": 37.576368223574256,
+              "longitude": 126.977464278035,
+              "source": "kakao",
+              "kind": "activity",
+              "address": "서울 종로구 사직로 161",
+              "category": "서비스,산업 > 관리,운영 > 매표소",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:73167807"
+            },
+            "distance_m": 71,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 119
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 8,
+            "place": {
+              "name": "경복궁 초관처소",
+              "latitude": 37.576044797383,
+              "longitude": 126.97762625797,
+              "source": "kakao",
+              "kind": "activity",
+              "address": "서울 종로구 사직로 161",
+              "category": "여행 > 관광,명소 > 문화유적",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:26991160"
+            },
+            "distance_m": 74,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 119
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          }
+        ],
+        "notes": []
+      }
+    },
+    "activity_alternatives": {
+      "http": 200,
+      "seconds": 9.852121078001801,
+      "value": {
+        "revision": 1,
+        "item": "0-0",
+        "current": {
+          "kind": "activity",
+          "name": "경복궁",
+          "source": "places",
+          "category": null,
+          "latitude": 37.576,
+          "longitude": 126.9767,
+          "content_id": null,
+          "content_type_id": null
+        },
+        "reference": {
+          "before": null,
+          "after": "광화문"
+        },
+        "candidates": [
+          {
+            "rank": 1,
+            "place": {
+              "name": "경희궁 숭정전",
+              "latitude": 37.5717690679936,
+              "longitude": 126.96798487452,
+              "source": "tour_api",
+              "kind": "activity",
+              "address": "서울특별시 종로구 새문안로 45 (신문로2가)",
+              "category": "관광지",
+              "content_id": "1606042",
+              "content_type_id": "12",
+              "ref": "tour:1606042"
+            },
+            "distance_m": 908,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "관광공사 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "ok",
+                "text": "09:00–18:00 안에 머물러요"
+              },
+              {
+                "row": "closed",
+                "result": "ok",
+                "text": "월요일 휴무 · 방문은 일요일"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 10
+            },
+            "estimated": false,
+            "similarity": 3,
+            "basis": "same_kind",
+            "experience": null,
+            "taste": null,
+            "class_grade": null,
+            "reason": "경복궁과 같은 소분류(관광공사 분류)의 곳이에요 · 광화문에서 908m · 09:00–18:00 안에 머물러요 · 다음 일정까지 10분 여유가 있어요",
+            "reason_by": "template"
+          },
+          {
+            "rank": 2,
+            "place": {
+              "name": "서울 운현궁",
+              "latitude": 37.5764588036,
+              "longitude": 126.9871421746,
+              "source": "tour_api",
+              "kind": "activity",
+              "address": "서울특별시 종로구 삼일대로 464",
+              "category": "관광지",
+              "content_id": "127454",
+              "content_type_id": "12",
+              "ref": "tour:127454"
+            },
+            "distance_m": 914,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "관광공사 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "ok",
+                "text": "09:00–18:00 안에 머물러요"
+              },
+              {
+                "row": "closed",
+                "result": "ok",
+                "text": "쉬는 요일이 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 13
+            },
+            "estimated": false,
+            "similarity": 3,
+            "basis": "same_kind",
+            "experience": null,
+            "taste": null,
+            "class_grade": null,
+            "reason": "경복궁과 같은 소분류(관광공사 분류)의 곳이에요 · 광화문에서 914m · 09:00–18:00 안에 머물러요 · 다음 일정까지 13분 여유가 있어요",
+            "reason_by": "template"
+          },
+          {
+            "rank": 3,
+            "place": {
+              "name": "경희궁",
+              "latitude": 37.5703879399457,
+              "longitude": 126.968491756842,
+              "source": "tour_api",
+              "kind": "activity",
+              "address": "서울특별시 종로구 새문안로 45",
+              "category": "관광지",
+              "content_id": "126484",
+              "content_type_id": "12",
+              "ref": "tour:126484"
+            },
+            "distance_m": 963,
+            "reference": "광화문",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "관광공사 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "ok",
+                "text": "09:00–18:00 안에 머물러요"
+              },
+              {
+                "row": "closed",
+                "result": "ok",
+                "text": "월요일 휴무 · 방문은 일요일"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": null,
+              "after": 10
+            },
+            "estimated": false,
+            "similarity": 3,
+            "basis": "same_kind",
+            "experience": null,
+            "taste": null,
+            "class_grade": null,
+            "reason": "경복궁과 같은 소분류(관광공사 분류)의 곳이에요 · 광화문에서 963m · 09:00–18:00 안에 머물러요 · 다음 일정까지 10분 여유가 있어요",
+            "reason_by": "template"
+          }
+        ],
+        "notes": []
+      }
+    },
+    "dining_search": {
+      "http": 200,
+      "seconds": 1.2638976769521832,
+      "value": {
+        "revision": 1,
+        "item": "0-1",
+        "query": "한식",
+        "results": [
+          {
+            "rank": 1,
+            "place": {
+              "name": "두레에프엔씨",
+              "latitude": 37.57963661995172,
+              "longitude": 126.98019957771263,
+              "source": "kakao",
+              "kind": "dining",
+              "address": "서울 종로구 삼청로 30",
+              "category": "음식점 > 한식 > 한정식",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:439735612"
+            },
+            "distance_m": 254,
+            "reference": "국립민속박물관과 국립민속박물관 어린이박물관",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 113,
+              "after": 56
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 2,
+            "place": {
+              "name": "황생가칼국수",
+              "latitude": 37.58006016029821,
+              "longitude": 126.98064098689737,
+              "source": "kakao",
+              "kind": "dining",
+              "address": "서울 종로구 북촌로5길 78",
+              "category": "음식점 > 한식 > 국수 > 칼국수",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:7904353"
+            },
+            "distance_m": 237,
+            "reference": "국립민속박물관과 국립민속박물관 어린이박물관",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 112,
+              "after": 57
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 3,
+            "place": {
+              "name": "홈코리안퀴진",
+              "latitude": 37.57787067639941,
+              "longitude": 126.98022834716734,
+              "source": "kakao",
+              "kind": "dining",
+              "address": "서울 종로구 삼청로 22-9",
+              "category": "음식점 > 한식",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:1492356072"
+            },
+            "distance_m": 374,
+            "reference": "경복궁",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 115,
+              "after": 54
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 4,
+            "place": {
+              "name": "사간원",
+              "latitude": 37.5778707022739,
+              "longitude": 126.980383441143,
+              "source": "kakao",
+              "kind": "dining",
+              "address": "서울 종로구 삼청로 22-15",
+              "category": "음식점 > 한식 > 육류,고기",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:829042590"
+            },
+            "distance_m": 386,
+            "reference": "경복궁",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 115,
+              "after": 54
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 5,
+            "place": {
+              "name": "꽃누리들밥 경복궁점",
+              "latitude": 37.5773490098517,
+              "longitude": 126.980282824221,
+              "source": "kakao",
+              "kind": "dining",
+              "address": "서울 종로구 율곡로1길 31",
+              "category": "음식점 > 한식",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:94399204"
+            },
+            "distance_m": 350,
+            "reference": "경복궁",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 115,
+              "after": 53
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 6,
+            "place": {
+              "name": "더룸탁트인",
+              "latitude": 37.5763127794179,
+              "longitude": 126.979769147076,
+              "source": "kakao",
+              "kind": "dining",
+              "address": "서울 종로구 삼청로 4",
+              "category": "음식점 > 한식",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:1487838869"
+            },
+            "distance_m": 273,
+            "reference": "경복궁",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 116,
+              "after": 52
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 7,
+            "place": {
+              "name": "룻 안국",
+              "latitude": 37.578262730712666,
+              "longitude": 126.9809697551173,
+              "source": "kakao",
+              "kind": "dining",
+              "address": "서울 종로구 율곡로1길 54-1",
+              "category": "음식점 > 한식",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:807357330"
+            },
+            "distance_m": 421,
+            "reference": "국립민속박물관과 국립민속박물관 어린이박물관",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 114,
+              "after": 54
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          },
+          {
+            "rank": 8,
+            "place": {
+              "name": "무구옥 본점",
+              "latitude": 37.5763938907664,
+              "longitude": 126.97989704684,
+              "source": "kakao",
+              "kind": "dining",
+              "address": "서울 종로구 율곡로1길 7",
+              "category": "음식점 > 한식",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "kakao:1490558390"
+            },
+            "distance_m": 285,
+            "reference": "경복궁",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "카카오 지도 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "unknown",
+                "text": "카카오 지도 정보에는 운영시간이 없어요"
+              },
+              {
+                "row": "closed",
+                "result": "unknown",
+                "text": "휴무 정보가 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 116,
+              "after": 52
+            },
+            "estimated": true,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null
+          }
+        ],
+        "notes": []
+      }
+    },
+    "dining_alternatives": {
+      "http": 200,
+      "seconds": 14.068069063010626,
+      "value": {
+        "revision": 1,
+        "item": "0-1",
+        "current": {
+          "kind": "activity",
+          "name": "광화문",
+          "source": "tour_api",
+          "category": "관광지",
+          "latitude": 37.5760179589,
+          "longitude": 126.9767880089,
+          "content_id": "126512",
+          "content_type_id": "12"
+        },
+        "reference": {
+          "before": "경복궁",
+          "after": "국립민속박물관과 국립민속박물관 어린이박물관"
+        },
+        "candidates": [
+          {
+            "rank": 1,
+            "place": {
+              "name": "황생가 칼국수",
+              "latitude": 37.58003,
+              "longitude": 126.98065,
+              "source": "places",
+              "kind": "dining",
+              "address": "서울특별시 종로구 북촌로5길 78",
+              "category": "음식점 > 한식",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "place:cfccdbc3-18c4-459b-a3a8-065afd89adb7"
+            },
+            "distance_m": 240,
+            "reference": "국립민속박물관과 국립민속박물관 어린이박물관",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "우리 장소 목록 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "ok",
+                "text": "11:00–21:30 안에 머물러요"
+              },
+              {
+                "row": "closed",
+                "result": "ok",
+                "text": "쉬는 요일이 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 10,
+              "after": 10
+            },
+            "estimated": false,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null,
+            "reason": "국립민속박물관과 국립민속박물관 어린이박물관에서 240m · 11:00–21:30 안에 머물러요 · 다음 일정까지 10분 여유가 있어요",
+            "reason_by": "template"
+          },
+          {
+            "rank": 2,
+            "place": {
+              "name": "무구옥",
+              "latitude": 37.57638,
+              "longitude": 126.9799,
+              "source": "places",
+              "kind": "dining",
+              "address": "서울특별시 종로구 율곡로1길 7",
+              "category": "음식점 > 한식",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "place:43fd13ce-5030-463d-ab8d-8bdf1a5ffdec"
+            },
+            "distance_m": 285,
+            "reference": "경복궁",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "우리 장소 목록 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "ok",
+                "text": "11:30–21:00 안에 머물러요 · 브레이크 15:00–17:30"
+              },
+              {
+                "row": "closed",
+                "result": "ok",
+                "text": "쉬는 요일이 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 10,
+              "after": 10
+            },
+            "estimated": false,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null,
+            "reason": "경복궁에서 285m · 11:30–21:00 안에 머물러요 · 브레이크 15:00–17:30 · 다음 일정까지 10분 여유가 있어요",
+            "reason_by": "template"
+          },
+          {
+            "rank": 3,
+            "place": {
+              "name": "두가헌 레스토랑",
+              "latitude": 37.5773002409,
+              "longitude": 126.9798039302,
+              "source": "places",
+              "kind": "dining",
+              "address": "서울특별시 종로구 삼청로 14",
+              "category": "음식점",
+              "content_id": null,
+              "content_type_id": null,
+              "ref": "place:e234c40c-8b54-4b6e-934e-3a815903a208"
+            },
+            "distance_m": 309,
+            "reference": "경복궁",
+            "rows": [
+              {
+                "row": "place",
+                "result": "ok",
+                "text": "우리 장소 목록 정보로 찾았어요"
+              },
+              {
+                "row": "hours",
+                "result": "ok",
+                "text": "12:00–22:00 안에 머물러요 · 브레이크 14:30–18:00"
+              },
+              {
+                "row": "closed",
+                "result": "ok",
+                "text": "쉬는 요일이 없어요"
+              }
+            ],
+            "fits": true,
+            "status": "ok",
+            "slack": {
+              "before": 10,
+              "after": 10
+            },
+            "estimated": false,
+            "similarity": null,
+            "basis": null,
+            "experience": null,
+            "taste": null,
+            "class_grade": null,
+            "reason": "경복궁에서 309m · 12:00–22:00 안에 머물러요 · 브레이크 14:30–18:00 · 다음 일정까지 10분 여유가 있어요",
+            "reason_by": "template"
+          }
+        ],
+        "notes": []
+      }
+    },
+    "intake_route_shapes": {
+      "http": 200,
+      "seconds": 0.09828602900961414,
+      "value": {
+        "intake_id": "00c4f1b3-9523-4c4c-a6f2-d698b44db267",
+        "revision": 1,
+        "detail": false,
+        "shapes": [
+          {
+            "from_item_id": "0-0",
+            "to_item_id": "0-1",
+            "from": "경복궁",
+            "to": "광화문",
+            "mode": "walk",
+            "line": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  126.97673699418102,
+                  37.57599887780166
+                ],
+                [
+                  126.97678536319276,
+                  37.576027972022544
+                ]
+              ]
+            },
+            "source": "local_road_graph",
+            "grade": "추정",
+            "distance_m": 5,
+            "note": null
+          },
+          {
+            "from_item_id": "0-1",
+            "to_item_id": "0-2",
+            "from": "광화문",
+            "to": "국립민속박물관과 국립민속박물관 어린이박물관",
+            "mode": "walk",
+            "line": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  126.97678536319276,
+                  37.576027972022544
+                ],
+                [
+                  126.976839,
+                  37.576037
+                ],
+                [
+                  126.976878,
+                  37.576507
+                ],
+                [
+                  126.977557,
+                  37.576497
+                ],
+                [
+                  126.977614,
+                  37.576506
+                ],
+                [
+                  126.977672,
+                  37.57658
+                ],
+                [
+                  126.977802,
+                  37.576616
+                ],
+                [
+                  126.978027,
+                  37.576611
+                ],
+                [
+                  126.978021,
+                  37.577185
+                ],
+                [
+                  126.978118,
+                  37.577266
+                ],
+                [
+                  126.97814,
+                  37.578099
+                ],
+                [
+                  126.97855,
+                  37.578073
+                ],
+                [
+                  126.978557,
+                  37.578366
+                ],
+                [
+                  126.978661,
+                  37.5787
+                ],
+                [
+                  126.978714,
+                  37.579317
+                ],
+                [
+                  126.978706,
+                  37.579441
+                ],
+                [
+                  126.978641,
+                  37.579551
+                ],
+                [
+                  126.978639,
+                  37.580203
+                ],
+                [
+                  126.978602,
+                  37.580382
+                ],
+                [
+                  126.978478,
+                  37.580522
+                ],
+                [
+                  126.977899,
+                  37.580968
+                ],
+                [
+                  126.977759,
+                  37.581138
+                ],
+                [
+                  126.97771,
+                  37.581277
+                ],
+                [
+                  126.978505,
+                  37.58127
+                ],
+                [
+                  126.978543,
+                  37.581296
+                ],
+                [
+                  126.978556,
+                  37.581492
+                ]
+              ]
+            },
+            "source": "local_road_graph",
+            "grade": "추정",
+            "distance_m": 854,
+            "note": null
+          }
+        ],
+        "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"
+      }
+    }
+  },
+  "before": {
+    "http": 200,
+    "seconds": 0.13455614598933607,
+    "value": {
+      "intake_id": "00c4f1b3-9523-4c4c-a6f2-d698b44db267",
+      "status": "review",
+      "stage": "review",
+      "stage_label": "확인해 주세요",
+      "test_scenario": null,
+      "revision": 1,
+      "fatal": null,
+      "trip_id": null,
+      "received_at": "2026-10-11T16:02:54.261708+00:00",
+      "sources": [
+        {
+          "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+          "kind": "chat",
+          "filename": null,
+          "transcribed": false,
+          "missing": [],
+          "differs": [],
+          "seconds": null,
+          "lines": [
+            {
+              "no": 1,
+              "text": "2026-10-18 서울 여행, 1명",
+              "read": true
+            },
+            {
+              "no": 2,
+              "text": "09:00~10:00 경복궁 관람",
+              "read": true
+            },
+            {
+              "no": 3,
+              "text": "12:00~13:00 광화문 근처 한식 점심",
+              "read": true
+            },
+            {
+              "no": 4,
+              "text": "14:00~15:00 국립민속박물관 관람",
+              "read": true
+            }
+          ],
+          "items": [
+            {
+              "index": 0,
+              "fields": {
+                "ends_at": {
+                  "value": "10:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 11,
+                    "line": 2,
+                    "text": "10:00",
+                    "start": 6,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "title": {
+                  "value": "경복궁 관람",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 18,
+                    "line": 2,
+                    "text": "경복궁 관람",
+                    "start": 12,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "starts_at": {
+                  "value": "09:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 5,
+                    "line": 2,
+                    "text": "09:00",
+                    "start": 0,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "date": {
+                  "value": "2026-10-18",
+                  "method": "rule",
+                  "evidence": {
+                    "how": "written",
+                    "line": 2,
+                    "source": "rule",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "place": {
+                  "value": {
+                    "kind": "activity",
+                    "name": "경복궁",
+                    "source": "places",
+                    "latitude": 37.576,
+                    "place_id": "60dc7085-d3d5-51ba-89fa-f39a3ea2496a",
+                    "longitude": 126.9767,
+                    "content_id": null,
+                    "content_type_id": null
+                  },
+                  "method": "lookup",
+                  "evidence": {
+                    "name": "경복궁",
+                    "query": "경복궁",
+                    "tried": [
+                      "places:경복궁 관람",
+                      "tour_api:경복궁 관람",
+                      "dining_ledger:경복궁 관람",
+                      "kakao:경복궁 관람",
+                      "places:경복궁"
+                    ],
+                    "method": "places",
+                    "source": "places",
+                    "blocked": [],
+                    "place_id": "60dc7085-d3d5-51ba-89fa-f39a3ea2496a",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+                    "content_id": null
+                  },
+                  "needs_review": false,
+                  "note": "원문 「경복궁 관람」에서 「경복궁」로 좁혔다"
+                }
+              },
+              "line": 2,
+              "day": null,
+              "date": "2026-10-18"
+            },
+            {
+              "index": 1,
+              "fields": {
+                "title": {
+                  "value": "광화문 근처 한식",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 21,
+                    "line": 3,
+                    "text": "광화문 근처 한식",
+                    "start": 12,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "kind": {
+                  "value": "dining",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 24,
+                    "line": 3,
+                    "text": "점심",
+                    "start": 22,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": "이름 뒤의 끼니 말"
+                },
+                "ends_at": {
+                  "value": "13:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 11,
+                    "line": 3,
+                    "text": "13:00",
+                    "start": 6,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "starts_at": {
+                  "value": "12:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 5,
+                    "line": 3,
+                    "text": "12:00",
+                    "start": 0,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "date": {
+                  "value": "2026-10-18",
+                  "method": "rule",
+                  "evidence": {
+                    "how": "written",
+                    "line": 3,
+                    "source": "rule",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "place": {
+                  "value": {
+                    "kind": "activity",
+                    "name": "광화문",
+                    "source": "tour_api",
+                    "latitude": 37.5760179589,
+                    "place_id": null,
+                    "longitude": 126.9767880089,
+                    "content_id": "126512",
+                    "content_type_id": "12"
+                  },
+                  "method": "lookup",
+                  "evidence": {
+                    "name": "광화문",
+                    "query": "광화문",
+                    "tried": [
+                      "places:광화문 근처 한식",
+                      "dining_ledger:광화문 근처 한식",
+                      "tour_api:광화문 근처 한식",
+                      "kakao:광화문 근처 한식",
+                      "places:광화문 근처",
+                      "dining_ledger:광화문 근처",
+                      "tour_api:광화문 근처",
+                      "places:광화문",
+                      "dining_ledger:광화문",
+                      "tour_api:광화문",
+                      "dining_ledger:광화문 근처 근처 한식"
+                    ],
+                    "method": "tour_api",
+                    "source": "tour_api",
+                    "blocked": [],
+                    "place_id": null,
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+                    "content_id": "126512"
+                  },
+                  "needs_review": true,
+                  "note": "원문 「광화문 근처 한식」에서 「광화문」로 좁혔다"
+                }
+              },
+              "line": 3,
+              "day": null,
+              "date": "2026-10-18"
+            },
+            {
+              "index": 2,
+              "fields": {
+                "ends_at": {
+                  "value": "15:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 11,
+                    "line": 4,
+                    "text": "15:00",
+                    "start": 6,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "starts_at": {
+                  "value": "14:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 5,
+                    "line": 4,
+                    "text": "14:00",
+                    "start": 0,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "title": {
+                  "value": "국립민속박물관 관람",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 22,
+                    "line": 4,
+                    "text": "국립민속박물관 관람",
+                    "start": 12,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "date": {
+                  "value": "2026-10-18",
+                  "method": "rule",
+                  "evidence": {
+                    "how": "written",
+                    "line": 4,
+                    "source": "rule",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "place": {
+                  "value": {
+                    "kind": "activity",
+                    "name": "국립민속박물관과 국립민속박물관 어린이박물관",
+                    "source": "tour_api",
+                    "latitude": 37.5816745310255,
+                    "place_id": null,
+                    "longitude": 126.978889955558,
+                    "content_id": "2608977",
+                    "content_type_id": "12"
+                  },
+                  "method": "lookup",
+                  "evidence": {
+                    "name": "국립민속박물관과 국립민속박물관 어린이박물관",
+                    "query": "국립민속박물관",
+                    "tried": [
+                      "places:국립민속박물관 관람",
+                      "tour_api:국립민속박물관 관람",
+                      "dining_ledger:국립민속박물관 관람",
+                      "kakao:국립민속박물관 관람",
+                      "places:국립민속박물관",
+                      "tour_api:국립민속박물관",
+                      "dining_ledger:국립민속박물관 근처 관람"
+                    ],
+                    "method": "tour_api",
+                    "source": "tour_api",
+                    "blocked": [],
+                    "place_id": null,
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+                    "content_id": "2608977"
+                  },
+                  "needs_review": false,
+                  "note": "원문 「국립민속박물관 관람」에서 「국립민속박물관」로 좁혔다"
+                }
+              },
+              "line": 4,
+              "day": null,
+              "date": "2026-10-18"
+            }
+          ],
+          "trip": {
+            "party_size": {
+              "value": 1,
+              "evidence": {
+                "end": 20,
+                "line": 1,
+                "text": "1명",
+                "start": 18,
+                "source": "text",
+                "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+              }
+            }
+          },
+          "reading": null
+        }
+      ],
+      "check": {
+        "ready": true,
+        "problems": [],
+        "filled": [],
+        "items": 3,
+        "title": "2026-10-18 서울 여행, 1명",
+        "plan": {
+          "requested": false,
+          "start_date": "2026-10-18",
+          "days": 1,
+          "party_size": 1,
+          "preferences": "2026-10-18 서울 여행, 1명\n09:00~10:00 경복궁 관람\n12:00~13:00 광화문 근처 한식 점심\n14:00~15:00 국립민속박물관 관람"
+        }
+      },
+      "review": {
+        "items": [
+          {
+            "id": "0-0",
+            "day": 1,
+            "date": "2026-10-18",
+            "kind": "activity",
+            "rows": [
+              {
+                "row": "place",
+                "text": "「경복궁 관람」 중 「경복궁」 부분을 우리 장소 목록 정보로 찾았어요",
+                "result": "ok"
+              },
+              {
+                "row": "hours",
+                "text": "09:00–17:00 안에 머물러요",
+                "result": "ok"
+              },
+              {
+                "row": "closed",
+                "text": "화요일 휴무 · 방문은 일요일",
+                "result": "ok"
+              }
+            ],
+            "index": 0,
+            "parts": null,
+            "place": {
+              "kind": "activity",
+              "name": "경복궁",
+              "source": "places",
+              "category": null,
+              "latitude": 37.576,
+              "longitude": 126.9767,
+              "content_id": null,
+              "content_type_id": null
+            },
+            "title": "경복궁 관람",
+            "booked": null,
+            "edited": false,
+            "locked": false,
+            "status": "keep",
+            "ends_at": "10:00",
+            "rereads": [],
+            "can_lock": true,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "starts_at": "09:00",
+            "place_state": "found",
+            "candidates_hint": null
+          },
+          {
+            "id": "0-1",
+            "day": 1,
+            "date": "2026-10-18",
+            "kind": "dining",
+            "rows": [
+              {
+                "row": "place",
+                "text": "가게 이름이 없어 광화문으로 잡았어요",
+                "result": "ok"
+              },
+              {
+                "row": "hours",
+                "text": "09:00–17:00 안에 머물러요",
+                "result": "ok"
+              },
+              {
+                "row": "closed",
+                "text": "화요일 휴무 · 방문은 일요일",
+                "result": "ok"
+              }
+            ],
+            "index": 1,
+            "parts": null,
+            "place": {
+              "kind": "activity",
+              "name": "광화문",
+              "source": "tour_api",
+              "category": "관광지",
+              "latitude": 37.5760179589,
+              "longitude": 126.9767880089,
+              "content_id": "126512",
+              "content_type_id": "12"
+            },
+            "title": "광화문 근처 한식",
+            "booked": null,
+            "edited": false,
+            "locked": false,
+            "status": "keep",
+            "ends_at": "13:00",
+            "rereads": [],
+            "can_lock": true,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "starts_at": "12:00",
+            "place_state": "found",
+            "candidates_hint": null
+          },
+          {
+            "id": "0-2",
+            "day": 1,
+            "date": "2026-10-18",
+            "kind": "activity",
+            "rows": [
+              {
+                "row": "place",
+                "text": "「국립민속박물관 관람」 중 「국립민속박물관」 부분을 관광공사 정보로 찾았어요",
+                "result": "ok"
+              },
+              {
+                "row": "hours",
+                "text": "관광공사 운영시간을 아직 읽지 못했어요",
+                "result": "unknown"
+              },
+              {
+                "row": "closed",
+                "text": "휴무 정보가 없어요",
+                "result": "unknown"
+              }
+            ],
+            "index": 2,
+            "parts": null,
+            "place": {
+              "kind": "activity",
+              "name": "국립민속박물관과 국립민속박물관 어린이박물관",
+              "source": "tour_api",
+              "category": "관광지",
+              "latitude": 37.5816745310255,
+              "longitude": 126.978889955558,
+              "content_id": "2608977",
+              "content_type_id": "12"
+            },
+            "title": "국립민속박물관 관람",
+            "booked": null,
+            "edited": false,
+            "locked": false,
+            "status": "keep",
+            "ends_at": "15:00",
+            "rereads": [],
+            "can_lock": true,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "starts_at": "14:00",
+            "place_state": "found",
+            "candidates_hint": null
+          }
+        ],
+        "moves": [
+          {
+            "km": 0.0,
+            "to": "0-1",
+            "day": 1,
+            "date": "2026-10-18",
+            "from": "0-0",
+            "mode": "walk",
+            "rows": [
+              {
+                "row": "route",
+                "text": "도보",
+                "result": "ok"
+              },
+              {
+                "row": "mode",
+                "text": "도보 1분 · 0.0km",
+                "result": "ok"
+              },
+              {
+                "row": "arrival",
+                "text": "11:49에 나서면 11:50 도착 · 10분 여유",
+                "result": "ok"
+              }
+            ],
+            "basis": "timetable",
+            "arrive": "11:50",
+            "depart": "11:49",
+            "status": "keep",
+            "minutes": 1,
+            "summary": "도보 1분 · 0.0km",
+            "fare_krw": 0,
+            "slack_min": 10,
+            "mode_label": "도보",
+            "mode_choice": null,
+            "recommended_mode": "walk"
+          },
+          {
+            "km": 0.9,
+            "to": "0-2",
+            "day": 1,
+            "date": "2026-10-18",
+            "from": "0-1",
+            "mode": "walk",
+            "rows": [
+              {
+                "row": "route",
+                "text": "도보",
+                "result": "ok"
+              },
+              {
+                "row": "mode",
+                "text": "도보 15분 · 0.9km",
+                "result": "ok"
+              },
+              {
+                "row": "arrival",
+                "text": "13:35에 나서면 13:50 도착 · 10분 여유",
+                "result": "ok"
+              }
+            ],
+            "basis": "timetable",
+            "arrive": "13:50",
+            "depart": "13:35",
+            "status": "keep",
+            "minutes": 15,
+            "summary": "도보 15분 · 0.9km",
+            "fare_krw": 0,
+            "slack_min": 10,
+            "mode_label": "도보",
+            "mode_choice": null,
+            "recommended_mode": "walk"
+          }
+        ],
+        "needs": {
+          "items": 0,
+          "moves": 0,
+          "total": 0
+        },
+        "ready": true,
+        "engine": "timetable",
+        "built_at": "2026-10-12T01:03:02+09:00",
+        "revision": 1
+      },
+      "review_error": null,
+      "questions": [
+        {
+          "id": "preferred_mobility",
+          "kind": "single",
+          "title": "이동은 주로 어떻게 하세요?",
+          "why": "계획서만으로는 이동 방법을 알 수 없어서 여쭤요",
+          "options": [
+            {
+              "id": "public",
+              "label": "대중교통"
+            },
+            {
+              "id": "taxi",
+              "label": "택시"
+            },
+            {
+              "id": "walk",
+              "label": "걷기 위주"
+            }
+          ],
+          "allow_custom": true,
+          "custom_max_length": 1000,
+          "answer": null,
+          "custom_answer": null
+        },
+        {
+          "id": "priority",
+          "kind": "single",
+          "title": "일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요?",
+          "why": "계획서만으로는 알 수 없어요",
+          "options": [
+            {
+              "id": "activity",
+              "label": "하고 싶은 활동이 비슷한 곳"
+            },
+            {
+              "id": "mobility",
+              "label": "이동이 편한 곳"
+            }
+          ],
+          "allow_custom": true,
+          "custom_max_length": 1000,
+          "answer": null,
+          "custom_answer": null
+        }
+      ],
+      "questions_version": "2",
+      "needs_review": [
+        {
+          "field": "items[1].place",
+          "value": {
+            "kind": "activity",
+            "name": "광화문",
+            "source": "tour_api",
+            "latitude": 37.5760179589,
+            "place_id": null,
+            "longitude": 126.9767880089,
+            "content_id": "126512",
+            "content_type_id": "12"
+          },
+          "note": "원문 「광화문 근처 한식」에서 「광화문」로 좁혔다",
+          "evidence": {
+            "name": "광화문",
+            "query": "광화문",
+            "tried": [
+              "places:광화문 근처 한식",
+              "dining_ledger:광화문 근처 한식",
+              "tour_api:광화문 근처 한식",
+              "kakao:광화문 근처 한식",
+              "places:광화문 근처",
+              "dining_ledger:광화문 근처",
+              "tour_api:광화문 근처",
+              "places:광화문",
+              "dining_ledger:광화문",
+              "tour_api:광화문",
+              "dining_ledger:광화문 근처 근처 한식"
+            ],
+            "method": "tour_api",
+            "source": "tour_api",
+            "blocked": [],
+            "place_id": null,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "content_id": "126512"
+          }
+        }
+      ]
+    }
+  },
+  "after": {
+    "http": 200,
+    "seconds": 0.10078936797799543,
+    "value": {
+      "intake_id": "00c4f1b3-9523-4c4c-a6f2-d698b44db267",
+      "status": "review",
+      "stage": "review",
+      "stage_label": "확인해 주세요",
+      "test_scenario": null,
+      "revision": 1,
+      "fatal": null,
+      "trip_id": null,
+      "received_at": "2026-10-11T16:02:54.261708+00:00",
+      "sources": [
+        {
+          "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+          "kind": "chat",
+          "filename": null,
+          "transcribed": false,
+          "missing": [],
+          "differs": [],
+          "seconds": null,
+          "lines": [
+            {
+              "no": 1,
+              "text": "2026-10-18 서울 여행, 1명",
+              "read": true
+            },
+            {
+              "no": 2,
+              "text": "09:00~10:00 경복궁 관람",
+              "read": true
+            },
+            {
+              "no": 3,
+              "text": "12:00~13:00 광화문 근처 한식 점심",
+              "read": true
+            },
+            {
+              "no": 4,
+              "text": "14:00~15:00 국립민속박물관 관람",
+              "read": true
+            }
+          ],
+          "items": [
+            {
+              "index": 0,
+              "fields": {
+                "ends_at": {
+                  "value": "10:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 11,
+                    "line": 2,
+                    "text": "10:00",
+                    "start": 6,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "title": {
+                  "value": "경복궁 관람",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 18,
+                    "line": 2,
+                    "text": "경복궁 관람",
+                    "start": 12,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "starts_at": {
+                  "value": "09:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 5,
+                    "line": 2,
+                    "text": "09:00",
+                    "start": 0,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "date": {
+                  "value": "2026-10-18",
+                  "method": "rule",
+                  "evidence": {
+                    "how": "written",
+                    "line": 2,
+                    "source": "rule",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "place": {
+                  "value": {
+                    "kind": "activity",
+                    "name": "경복궁",
+                    "source": "places",
+                    "latitude": 37.576,
+                    "place_id": "60dc7085-d3d5-51ba-89fa-f39a3ea2496a",
+                    "longitude": 126.9767,
+                    "content_id": null,
+                    "content_type_id": null
+                  },
+                  "method": "lookup",
+                  "evidence": {
+                    "name": "경복궁",
+                    "query": "경복궁",
+                    "tried": [
+                      "places:경복궁 관람",
+                      "tour_api:경복궁 관람",
+                      "dining_ledger:경복궁 관람",
+                      "kakao:경복궁 관람",
+                      "places:경복궁"
+                    ],
+                    "method": "places",
+                    "source": "places",
+                    "blocked": [],
+                    "place_id": "60dc7085-d3d5-51ba-89fa-f39a3ea2496a",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+                    "content_id": null
+                  },
+                  "needs_review": false,
+                  "note": "원문 「경복궁 관람」에서 「경복궁」로 좁혔다"
+                }
+              },
+              "line": 2,
+              "day": null,
+              "date": "2026-10-18"
+            },
+            {
+              "index": 1,
+              "fields": {
+                "title": {
+                  "value": "광화문 근처 한식",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 21,
+                    "line": 3,
+                    "text": "광화문 근처 한식",
+                    "start": 12,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "kind": {
+                  "value": "dining",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 24,
+                    "line": 3,
+                    "text": "점심",
+                    "start": 22,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": "이름 뒤의 끼니 말"
+                },
+                "ends_at": {
+                  "value": "13:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 11,
+                    "line": 3,
+                    "text": "13:00",
+                    "start": 6,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "starts_at": {
+                  "value": "12:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 5,
+                    "line": 3,
+                    "text": "12:00",
+                    "start": 0,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "date": {
+                  "value": "2026-10-18",
+                  "method": "rule",
+                  "evidence": {
+                    "how": "written",
+                    "line": 3,
+                    "source": "rule",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "place": {
+                  "value": {
+                    "kind": "activity",
+                    "name": "광화문",
+                    "source": "tour_api",
+                    "latitude": 37.5760179589,
+                    "place_id": null,
+                    "longitude": 126.9767880089,
+                    "content_id": "126512",
+                    "content_type_id": "12"
+                  },
+                  "method": "lookup",
+                  "evidence": {
+                    "name": "광화문",
+                    "query": "광화문",
+                    "tried": [
+                      "places:광화문 근처 한식",
+                      "dining_ledger:광화문 근처 한식",
+                      "tour_api:광화문 근처 한식",
+                      "kakao:광화문 근처 한식",
+                      "places:광화문 근처",
+                      "dining_ledger:광화문 근처",
+                      "tour_api:광화문 근처",
+                      "places:광화문",
+                      "dining_ledger:광화문",
+                      "tour_api:광화문",
+                      "dining_ledger:광화문 근처 근처 한식"
+                    ],
+                    "method": "tour_api",
+                    "source": "tour_api",
+                    "blocked": [],
+                    "place_id": null,
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+                    "content_id": "126512"
+                  },
+                  "needs_review": true,
+                  "note": "원문 「광화문 근처 한식」에서 「광화문」로 좁혔다"
+                }
+              },
+              "line": 3,
+              "day": null,
+              "date": "2026-10-18"
+            },
+            {
+              "index": 2,
+              "fields": {
+                "ends_at": {
+                  "value": "15:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 11,
+                    "line": 4,
+                    "text": "15:00",
+                    "start": 6,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "starts_at": {
+                  "value": "14:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 5,
+                    "line": 4,
+                    "text": "14:00",
+                    "start": 0,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "title": {
+                  "value": "국립민속박물관 관람",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 22,
+                    "line": 4,
+                    "text": "국립민속박물관 관람",
+                    "start": 12,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "date": {
+                  "value": "2026-10-18",
+                  "method": "rule",
+                  "evidence": {
+                    "how": "written",
+                    "line": 4,
+                    "source": "rule",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "place": {
+                  "value": {
+                    "kind": "activity",
+                    "name": "국립민속박물관과 국립민속박물관 어린이박물관",
+                    "source": "tour_api",
+                    "latitude": 37.5816745310255,
+                    "place_id": null,
+                    "longitude": 126.978889955558,
+                    "content_id": "2608977",
+                    "content_type_id": "12"
+                  },
+                  "method": "lookup",
+                  "evidence": {
+                    "name": "국립민속박물관과 국립민속박물관 어린이박물관",
+                    "query": "국립민속박물관",
+                    "tried": [
+                      "places:국립민속박물관 관람",
+                      "tour_api:국립민속박물관 관람",
+                      "dining_ledger:국립민속박물관 관람",
+                      "kakao:국립민속박물관 관람",
+                      "places:국립민속박물관",
+                      "tour_api:국립민속박물관",
+                      "dining_ledger:국립민속박물관 근처 관람"
+                    ],
+                    "method": "tour_api",
+                    "source": "tour_api",
+                    "blocked": [],
+                    "place_id": null,
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+                    "content_id": "2608977"
+                  },
+                  "needs_review": false,
+                  "note": "원문 「국립민속박물관 관람」에서 「국립민속박물관」로 좁혔다"
+                }
+              },
+              "line": 4,
+              "day": null,
+              "date": "2026-10-18"
+            }
+          ],
+          "trip": {
+            "party_size": {
+              "value": 1,
+              "evidence": {
+                "end": 20,
+                "line": 1,
+                "text": "1명",
+                "start": 18,
+                "source": "text",
+                "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+              }
+            }
+          },
+          "reading": null
+        }
+      ],
+      "check": {
+        "ready": true,
+        "problems": [],
+        "filled": [],
+        "items": 3,
+        "title": "2026-10-18 서울 여행, 1명",
+        "plan": {
+          "requested": false,
+          "start_date": "2026-10-18",
+          "days": 1,
+          "party_size": 1,
+          "preferences": "2026-10-18 서울 여행, 1명\n09:00~10:00 경복궁 관람\n12:00~13:00 광화문 근처 한식 점심\n14:00~15:00 국립민속박물관 관람"
+        }
+      },
+      "review": {
+        "items": [
+          {
+            "id": "0-0",
+            "day": 1,
+            "date": "2026-10-18",
+            "kind": "activity",
+            "rows": [
+              {
+                "row": "place",
+                "text": "「경복궁 관람」 중 「경복궁」 부분을 우리 장소 목록 정보로 찾았어요",
+                "result": "ok"
+              },
+              {
+                "row": "hours",
+                "text": "09:00–17:00 안에 머물러요",
+                "result": "ok"
+              },
+              {
+                "row": "closed",
+                "text": "화요일 휴무 · 방문은 일요일",
+                "result": "ok"
+              }
+            ],
+            "index": 0,
+            "parts": null,
+            "place": {
+              "kind": "activity",
+              "name": "경복궁",
+              "source": "places",
+              "category": null,
+              "latitude": 37.576,
+              "longitude": 126.9767,
+              "content_id": null,
+              "content_type_id": null
+            },
+            "title": "경복궁 관람",
+            "booked": null,
+            "edited": false,
+            "locked": false,
+            "status": "keep",
+            "ends_at": "10:00",
+            "rereads": [],
+            "can_lock": true,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "starts_at": "09:00",
+            "place_state": "found",
+            "candidates_hint": null
+          },
+          {
+            "id": "0-1",
+            "day": 1,
+            "date": "2026-10-18",
+            "kind": "dining",
+            "rows": [
+              {
+                "row": "place",
+                "text": "가게 이름이 없어 광화문으로 잡았어요",
+                "result": "ok"
+              },
+              {
+                "row": "hours",
+                "text": "09:00–17:00 안에 머물러요",
+                "result": "ok"
+              },
+              {
+                "row": "closed",
+                "text": "화요일 휴무 · 방문은 일요일",
+                "result": "ok"
+              }
+            ],
+            "index": 1,
+            "parts": null,
+            "place": {
+              "kind": "activity",
+              "name": "광화문",
+              "source": "tour_api",
+              "category": "관광지",
+              "latitude": 37.5760179589,
+              "longitude": 126.9767880089,
+              "content_id": "126512",
+              "content_type_id": "12"
+            },
+            "title": "광화문 근처 한식",
+            "booked": null,
+            "edited": false,
+            "locked": false,
+            "status": "keep",
+            "ends_at": "13:00",
+            "rereads": [],
+            "can_lock": true,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "starts_at": "12:00",
+            "place_state": "found",
+            "candidates_hint": null
+          },
+          {
+            "id": "0-2",
+            "day": 1,
+            "date": "2026-10-18",
+            "kind": "activity",
+            "rows": [
+              {
+                "row": "place",
+                "text": "「국립민속박물관 관람」 중 「국립민속박물관」 부분을 관광공사 정보로 찾았어요",
+                "result": "ok"
+              },
+              {
+                "row": "hours",
+                "text": "관광공사 운영시간을 아직 읽지 못했어요",
+                "result": "unknown"
+              },
+              {
+                "row": "closed",
+                "text": "휴무 정보가 없어요",
+                "result": "unknown"
+              }
+            ],
+            "index": 2,
+            "parts": null,
+            "place": {
+              "kind": "activity",
+              "name": "국립민속박물관과 국립민속박물관 어린이박물관",
+              "source": "tour_api",
+              "category": "관광지",
+              "latitude": 37.5816745310255,
+              "longitude": 126.978889955558,
+              "content_id": "2608977",
+              "content_type_id": "12"
+            },
+            "title": "국립민속박물관 관람",
+            "booked": null,
+            "edited": false,
+            "locked": false,
+            "status": "keep",
+            "ends_at": "15:00",
+            "rereads": [],
+            "can_lock": true,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "starts_at": "14:00",
+            "place_state": "found",
+            "candidates_hint": null
+          }
+        ],
+        "moves": [
+          {
+            "km": 0.0,
+            "to": "0-1",
+            "day": 1,
+            "date": "2026-10-18",
+            "from": "0-0",
+            "mode": "walk",
+            "rows": [
+              {
+                "row": "route",
+                "text": "도보",
+                "result": "ok"
+              },
+              {
+                "row": "mode",
+                "text": "도보 1분 · 0.0km",
+                "result": "ok"
+              },
+              {
+                "row": "arrival",
+                "text": "11:49에 나서면 11:50 도착 · 10분 여유",
+                "result": "ok"
+              }
+            ],
+            "basis": "timetable",
+            "arrive": "11:50",
+            "depart": "11:49",
+            "status": "keep",
+            "minutes": 1,
+            "summary": "도보 1분 · 0.0km",
+            "fare_krw": 0,
+            "slack_min": 10,
+            "mode_label": "도보",
+            "mode_choice": null,
+            "recommended_mode": "walk"
+          },
+          {
+            "km": 0.9,
+            "to": "0-2",
+            "day": 1,
+            "date": "2026-10-18",
+            "from": "0-1",
+            "mode": "walk",
+            "rows": [
+              {
+                "row": "route",
+                "text": "도보",
+                "result": "ok"
+              },
+              {
+                "row": "mode",
+                "text": "도보 15분 · 0.9km",
+                "result": "ok"
+              },
+              {
+                "row": "arrival",
+                "text": "13:35에 나서면 13:50 도착 · 10분 여유",
+                "result": "ok"
+              }
+            ],
+            "basis": "timetable",
+            "arrive": "13:50",
+            "depart": "13:35",
+            "status": "keep",
+            "minutes": 15,
+            "summary": "도보 15분 · 0.9km",
+            "fare_krw": 0,
+            "slack_min": 10,
+            "mode_label": "도보",
+            "mode_choice": null,
+            "recommended_mode": "walk"
+          }
+        ],
+        "needs": {
+          "items": 0,
+          "moves": 0,
+          "total": 0
+        },
+        "ready": true,
+        "engine": "timetable",
+        "built_at": "2026-10-12T01:03:02+09:00",
+        "revision": 1
+      },
+      "review_error": null,
+      "questions": [
+        {
+          "id": "preferred_mobility",
+          "kind": "single",
+          "title": "이동은 주로 어떻게 하세요?",
+          "why": "계획서만으로는 이동 방법을 알 수 없어서 여쭤요",
+          "options": [
+            {
+              "id": "public",
+              "label": "대중교통"
+            },
+            {
+              "id": "taxi",
+              "label": "택시"
+            },
+            {
+              "id": "walk",
+              "label": "걷기 위주"
+            }
+          ],
+          "allow_custom": true,
+          "custom_max_length": 1000,
+          "answer": null,
+          "custom_answer": null
+        },
+        {
+          "id": "priority",
+          "kind": "single",
+          "title": "일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요?",
+          "why": "계획서만으로는 알 수 없어요",
+          "options": [
+            {
+              "id": "activity",
+              "label": "하고 싶은 활동이 비슷한 곳"
+            },
+            {
+              "id": "mobility",
+              "label": "이동이 편한 곳"
+            }
+          ],
+          "allow_custom": true,
+          "custom_max_length": 1000,
+          "answer": null,
+          "custom_answer": null
+        }
+      ],
+      "questions_version": "2",
+      "needs_review": [
+        {
+          "field": "items[1].place",
+          "value": {
+            "kind": "activity",
+            "name": "광화문",
+            "source": "tour_api",
+            "latitude": 37.5760179589,
+            "place_id": null,
+            "longitude": 126.9767880089,
+            "content_id": "126512",
+            "content_type_id": "12"
+          },
+          "note": "원문 「광화문 근처 한식」에서 「광화문」로 좁혔다",
+          "evidence": {
+            "name": "광화문",
+            "query": "광화문",
+            "tried": [
+              "places:광화문 근처 한식",
+              "dining_ledger:광화문 근처 한식",
+              "tour_api:광화문 근처 한식",
+              "kakao:광화문 근처 한식",
+              "places:광화문 근처",
+              "dining_ledger:광화문 근처",
+              "tour_api:광화문 근처",
+              "places:광화문",
+              "dining_ledger:광화문",
+              "tour_api:광화문",
+              "dining_ledger:광화문 근처 근처 한식"
+            ],
+            "method": "tour_api",
+            "source": "tour_api",
+            "blocked": [],
+            "place_id": null,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "content_id": "126512"
+          }
+        }
+      ]
+    }
+  },
+  "intake_unchanged": true,
+  "finished_at_utc": "2026-10-11T16:05:48.623000+00:00"
+}

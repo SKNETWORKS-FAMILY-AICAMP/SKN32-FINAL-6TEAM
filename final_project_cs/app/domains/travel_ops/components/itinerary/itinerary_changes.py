@@ -156,6 +156,9 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
                       "planner": _basis_of(move, "시간표 판정(이동 계산기)", int(got["eta_min"]))}
             detail.pop("route", None)
             detail.pop("option", None)
+            detail.pop("departure_context", None)
+            if got.get("departure_context") is not None:
+                detail["departure_context"] = got["departure_context"]
             fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}",
                                                    starts_at=got["starts_at"], ends_at=got["ends_at"], detail=detail)
         elif not far:
@@ -165,6 +168,7 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
                       "planner": _basis_of(move, "옛 경로 유지 — 새 장소가 걸어갈 거리 안이라 다시 판정하지 않았다 [추정]", None)}
             if isinstance(detail.get("route_def"), dict):
                 detail["route_def"] = {**detail["route_def"], "from": a["name"], "to": b["name"]}
+            detail.pop("departure_context", None)     # 옛 장소의 접근 시간을 새 장소 관측에 쓰지 않는다
             fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}{suffix}",
                                                    detail=detail)
         else:
@@ -181,6 +185,7 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
                       "planner": _basis_of(move, basis, min(m, TRANSFER_MAX_MIN))}
             detail.pop("route", None)
             detail.pop("option", None)
+            detail.pop("departure_context", None)
             fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}", detail=detail)
     return [fresh.get(i.item_id, i) for i in after]
 
@@ -484,6 +489,10 @@ def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str
         return NoChange("clear")
     causes = [{"category": "route_event", "target": target, **event}
               for target, event in hit.items()]
+    if any(event.get("route_match", {}).get("status") == "unverified"
+           or (event.get("source") == "utic" and not event.get("route_match")) for event in hit.values()):
+        # 반대 방향·다른 구간 사건으로 후보 선택 또는 계산기 재탐색을 시작하지 않는다.
+        return NoChange("unresolved", {"causes": causes, "reason": "route_applicability_unverified"})
     candidates = route_candidates(
         route={**route, "planned": chosen}, depart=item.starts_at,
         planned_arrival=item.ends_at or item.starts_at,
@@ -519,7 +528,9 @@ def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str
 
 
 def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None, events: dict[str, Any],
-                    now: datetime, causes: list[dict[str, Any]], rejected: list, planned: dict[str, Any]
+                    now: datetime, causes: list[dict[str, Any]], rejected: list, planned: dict[str, Any],
+                    party_size: int | None = None, constraints: dict[str, Any] | None = None,
+                    current_departure: bool = False
                     ) -> ItineraryChange | None:
     """저장된 후보가 다 막혔을 때 이동 계산기로 사고를 피하는 새 경로를 찾는다. 못 찾으면 None(종전 unresolved)."""
     if previous is None or following is None:
@@ -530,13 +541,29 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
     if a is None or b is None:
         return None
     disruptions, unmapped = legs.disruptions_from_events(events)
-    leg = legs.leg_planner(None, {}, disruptions=disruptions)
+    if current_departure and unmapped:
+        raise DepartureReplanUnavailable("disruption_not_mapped")
+    leg = legs.leg_planner(party_size, constraints or {}, disruptions=disruptions)
     if leg is None:
+        if current_departure:
+            raise DepartureReplanUnavailable("mobility_engine_unavailable")
         return None
     start_floor = max(now, previous.ends_at or previous.starts_at)
     got, _why = leg(a, b, following.starts_at, start_floor)
     if got is None:
+        if current_departure and (_why or {}).get("code") == "no_data":
+            raise DepartureReplanUnavailable("mobility_source_unavailable")
         return None
+    if current_departure:
+        try:
+            start, end = got["starts_at"], got["ends_at"]
+            if (start.utcoffset() is None or end.utcoffset() is None or start < start_floor or end < start
+                    or end > following.starts_at or not isinstance(got.get("departure_context"), dict)
+                    or got["departure_context"].get("schema_version") != 1
+                    or got["departure_context"].get("timing_unit") != "model_minutes"):
+                raise DepartureReplanUnavailable("invalid_current_route")
+        except (KeyError, TypeError, AttributeError) as exc:
+            raise DepartureReplanUnavailable("invalid_current_route") from exc
     new_route = got["route"]
     option = next(o for o in new_route["options"] if o["id"] == new_route["planned"])
     best = Candidate(key=option["id"], place=None, changed_items=1, extra_cost_krw=None,
@@ -550,12 +577,31 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
               "rerouted_by": "mobility_engine", **({"unmapped_events": unmapped} if unmapped else {}),
               "planner": _basis_of(item, "시간표 판정(이동 계산기)", int(got["eta_min"]))}
     detail.pop("route", None)                    # 새 경로 정의를 들고 간다 — 옛 routes 키를 가리키지 않는다
+    detail.pop("departure_context", None)
+    if got.get("departure_context") is not None:
+        detail["departure_context"] = got["departure_context"]
     replacement = item.replaced_by(place=None, title=f"{a['name']} → {b['name']} · {option.get('label')}",
                                    starts_at=got["starts_at"], ends_at=got["ends_at"], detail=detail)
     return ItineraryChange(reason="auto_adjusted", causes=causes, notice=notice,
                            replacements={item.item_id: replacement},
                            summary={"from": planned.get("label"), "to": option.get("label"),
                                     "rerouted_by": "mobility_engine"})
+
+
+class DepartureReplanUnavailable(RuntimeError):
+    """현재 경로를 계산할 소스/유효한 계산 결과가 없어 기존 일정으로 우회할 수 없다."""
+
+
+def plan_departure_adjustment(*, item: Item, previous: Item | None, following: Item | None,
+                              events: dict[str, Any], now: datetime, trip: dict[str, Any]) -> Plan:
+    """옛 출발·저장된 후보 대신 최신 여행 조건으로 새 구간을 만든다. 쓰기는 하지 않는다."""
+    route = route_of(item) or {}
+    _, planned = planned_option(item, route) if route else (None, {"label": item.title})
+    causes = [{"category": "departure_revalidation", "kind": "current_route_replan"}]
+    change = _engine_reroute(item=item, previous=previous, following=following, events=events,
+        now=now, causes=causes, rejected=[], planned=planned, party_size=trip.get("party_size"),
+        constraints=trip.get("constraints") or {}, current_departure=True)
+    return change or NoChange("unresolved", {"causes": causes})
 
 
 # ── 고객 신고 — 식당 ───────────────────────────────────────────

@@ -1,0 +1,89 @@
+{
+  "observed_at": "2026-10-09T17:36:57.379129+00:00",
+  "checks": [
+    {
+      "name": "web",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "seconds": 0.64
+    },
+    {
+      "name": "javascript_asset",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "seconds": 0.563
+    },
+    {
+      "name": "api_health",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "seconds": 0.375
+    },
+    {
+      "name": "unauthenticated_denied",
+      "status": 401,
+      "expected": 401,
+      "passed": true,
+      "seconds": 0.641
+    },
+    {
+      "name": "api_docs_hidden",
+      "status": 404,
+      "expected": 404,
+      "passed": true,
+      "seconds": 0.922
+    },
+    {
+      "name": "api_introspection_hidden",
+      "status": 404,
+      "expected": 404,
+      "passed": true,
+      "seconds": 0.437
+    },
+    {
+      "name": "guest_cookie_session",
+      "status": 201,
+      "expected": 201,
+      "passed": true,
+      "seconds": 1.0
+    },
+    {
+      "name": "cookie_security",
+      "passed": true
+    },
+    {
+      "name": "cookie_authenticated",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "seconds": 1.468
+    },
+    {
+      "name": "own_trip_list",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "seconds": 0.703
+    },
+    {
+      "name": "csrf_missing_denied",
+      "status": 403,
+      "expected": 403,
+      "passed": true,
+      "seconds": 0.969
+    },
+    {
+      "name": "csrf_logout",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "seconds": 0.281
+    }
+  ],
+  "passed": 12,
+  "total": 12,
+  "scope": "external_https_real_app_contract_no_llm_quality_test"
+}

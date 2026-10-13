@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="26" time="5.063" timestamp="2026-10-09T09:55:20.351020+09:00" hostname="playdata"><testcase classname="tests.unit.travel.test_subway_line_identity_v1" name="test_official_line_id_is_not_lost_by_named_filter[1081-\uacbd\uac15\uc120]" time="0.266"><failure message="assert 0 == 1&#10; +  where 0 = len([])">line_id = '1081', line = '경강선'
+
+    @pytest.mark.parametrize('line_id,line', [('1081', '경강선'), ('1093', '서해선'), ('1094', '신림선')])
+    def test_official_line_id_is_not_lost_by_named_filter(line_id, line):
+        def transport(url, params):
+            return httpx.Response(200, json={'realtimeArrivalList': [{'subwayId': line_id, 'barvlDt': '180'}]},
+                                  request=httpx.Request('GET', url))
+        got = SeoulSubwayArrival(service_key='controlled-test-key', transport=transport).arrivals('테스트역', line=line)
+&gt;       assert len(got['trains']) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests\unit\travel\test_subway_line_identity_v1.py:14: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_line_identity_v1" name="test_official_line_id_is_not_lost_by_named_filter[1093-\uc11c\ud574\uc120]" time="0.001"><failure message="assert 0 == 1&#10; +  where 0 = len([])">line_id = '1093', line = '서해선'
+
+    @pytest.mark.parametrize('line_id,line', [('1081', '경강선'), ('1093', '서해선'), ('1094', '신림선')])
+    def test_official_line_id_is_not_lost_by_named_filter(line_id, line):
+        def transport(url, params):
+            return httpx.Response(200, json={'realtimeArrivalList': [{'subwayId': line_id, 'barvlDt': '180'}]},
+                                  request=httpx.Request('GET', url))
+        got = SeoulSubwayArrival(service_key='controlled-test-key', transport=transport).arrivals('테스트역', line=line)
+&gt;       assert len(got['trains']) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests\unit\travel\test_subway_line_identity_v1.py:14: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_line_identity_v1" name="test_official_line_id_is_not_lost_by_named_filter[1094-\uc2e0\ub9bc\uc120]" time="0.001"><failure message="assert 0 == 1&#10; +  where 0 = len([])">line_id = '1094', line = '신림선'
+
+    @pytest.mark.parametrize('line_id,line', [('1081', '경강선'), ('1093', '서해선'), ('1094', '신림선')])
+    def test_official_line_id_is_not_lost_by_named_filter(line_id, line):
+        def transport(url, params):
+            return httpx.Response(200, json={'realtimeArrivalList': [{'subwayId': line_id, 'barvlDt': '180'}]},
+                                  request=httpx.Request('GET', url))
+        got = SeoulSubwayArrival(service_key='controlled-test-key', transport=transport).arrivals('테스트역', line=line)
+&gt;       assert len(got['trains']) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests\unit\travel\test_subway_line_identity_v1.py:14: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_line_identity_v1" name="test_unknown_line_id_remains_explicit" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_homonyms_keep_line_and_exact_official_ids" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_string_id_leading_zero_and_official_query_name_survive" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[None]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[True]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[False]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[-1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[12.0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[1.0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[\xb2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_row_is_rejected[row0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_row_is_rejected[row1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_row_is_rejected[row2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_row_is_rejected[row3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_duplicate_and_conflicting_identity_are_rejected[rows0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_duplicate_and_conflicting_identity_are_rejected[rows1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_duplicate_and_conflicting_identity_are_rejected[rows2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_duplicate_and_conflicting_identity_are_rejected[rows3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_missing_or_wrong_header_is_rejected" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_line_normalization_does_not_merge_other_lines" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_existing_output_is_preserved_before_source_read" time="0.327" /></testsuite></testsuites>

@@ -1,0 +1,16 @@
+Loading weights:   0%|          | 0/506 [00:00<?, ?it/s]Loading weights:  97%|█████████▋| 493/506 [00:00<00:00, 4927.67it/s]Loading weights: 100%|██████████| 506/506 [00:00<00:00, 4983.69it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+valen_08b_original_h_a1 100 / 1316
+valen_08b_original_h_a1 200 / 1316
+valen_08b_original_h_a1 300 / 1316
+valen_08b_original_h_a1 400 / 1316
+valen_08b_original_h_a1 500 / 1316
+valen_08b_original_h_a1 600 / 1316
+valen_08b_original_h_a1 700 / 1316
+valen_08b_original_h_a1 800 / 1316
+valen_08b_original_h_a1 900 / 1316
+valen_08b_original_h_a1 1000 / 1316
+valen_08b_original_h_a1 1100 / 1316
+valen_08b_original_h_a1 1200 / 1316
+valen_08b_original_h_a1 1300 / 1316
+{"expected": 1316, "saved": 1316, "parsed": 1316, "errors": 0, "missing": 0, "correct": 255, "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48", "smoke": false, "max_gpu_allocated": 4729505280, "memory": {"used": 26615549952, "limit": 30999998464, "headroom": 4384448512}}

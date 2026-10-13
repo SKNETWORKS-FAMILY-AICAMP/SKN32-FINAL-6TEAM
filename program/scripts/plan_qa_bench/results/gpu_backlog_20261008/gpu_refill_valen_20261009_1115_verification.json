@@ -1,0 +1,16 @@
+{
+  "report_links_checked": 13,
+  "report_links_expected": 13,
+  "new_jobs_registered": 3,
+  "new_questions_registered": 2505,
+  "existing_worker_preserved": true,
+  "A_ready": 4,
+  "A_blocked": 0,
+  "completed_native_answers_verified": 5690,
+  "expected_completed_native_answers": 5690,
+  "archive_SHA": 22,
+  "archive_SHA_expected": 22,
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_1115_gpu-missing-multi-role-refill-and-valen-results.md",
+  "observed_at_utc": "2026-10-09T02:11:36.533805+00:00",
+  "model_or_environment_changed_this_refill": false
+}

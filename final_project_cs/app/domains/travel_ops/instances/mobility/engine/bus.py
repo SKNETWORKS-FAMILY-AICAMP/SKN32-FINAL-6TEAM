@@ -12,6 +12,7 @@
 #   거리는 `sect_dist_m` 누적(확정), 속도는 rules.bus.표정속도(추정), 환산한 소요는 추정이다.
 #   값_우선순위: **노선별 실측 > 노선유형별 통계 > 근거없음**.
 import json, collections
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -82,14 +83,33 @@ class BusRoutes:
 
     def distance_m(self, route_id, a_seq, b_seq):
         """a → b 구간 거리(m). `sect_dist_m` 은 **직전 정류장에서 이 정류장까지**의 거리라
-        seq 가 a 보다 크고 b 이하인 행만 더한다(첫 행은 0 이다)."""
+        seq 가 a 보다 크고 b 이하인 행만 더한다. 완전한 연속 구간만 합산한다."""
+        if (route_id not in self.by_id or any(isinstance(x, bool) or not isinstance(x, int)
+                or x <= 0 for x in (a_seq, b_seq)) or a_seq >= b_seq):
+            return None
+        rows = self.stops.get(route_id, [])
+        if any(isinstance(s.get("seq"), bool) or not isinstance(s.get("seq"), int)
+               or s["seq"] <= 0 for s in rows):
+            return None
+        segment = sorted((s for s in rows if a_seq <= s["seq"] <= b_seq), key=lambda s: s["seq"])
+        if len(segment) != b_seq - a_seq + 1:
+            return None
+        if any(s["seq"] != a_seq + i or s.get("route_id") != route_id
+               for i, s in enumerate(segment)):
+            return None
         tot = 0
-        for s in self.stops.get(route_id, []):
-            if a_seq < s["seq"] <= b_seq:
-                d = s.get("sect_dist_m")
-                if d is None:
+        for s in segment[1:]:
+            d = s.get("sect_dist_m")
+            if isinstance(d, bool) or not isinstance(d, (int, float)):
+                return None
+            try:
+                if d < 0 or not math.isfinite(d):
                     return None
                 tot += d
+                if not math.isfinite(tot):
+                    return None
+            except OverflowError:
+                return None
         return tot
 
     @staticmethod
@@ -132,15 +152,19 @@ class BusRoutes:
         out.sort(key=lambda x: x[0])
         return out
 
-    def routes_between(self, a_lat, a_lng, b_lat, b_lng, within_m):
+    def routes_between(self, a_lat, a_lng, b_lat, b_lng, within_m, include_access=False):
         """두 좌표를 **한 노선으로** 잇는 후보. (route, 타는 정류장, 내리는 정류장, 정거장 수, 도보 m).
 
         ★ seq 증가만 보면 안 된다 — 목적지에 가지 않는 노선이 잡힌다(시연 v0.1 의 성동10).
           여기서는 **양쪽 정류장이 목적지 반경 안에 있어야** 하므로 그 사례가 구조적으로 걸러진다.
+        include_access=True면 노선당 최소 접근 도보 쌍도 최대 하나 추가한다.
+        최소 승차 구간이 장소에서 멀 수 있으므로 실제 운행 판정 전에 버리지 않는다.
+        기본 동작과 최소 승차 구간은 보존하며 전체 조합 최적해를 보장하지 않는다.
         """
         A = self.stops_near(a_lat, a_lng, within_m)
         B = self.stops_near(b_lat, b_lng, within_m)
         bybus = {}
+        byaccess = {}
         for da, x in A:
             for db, y in B:
                 if x["route_id"] != y["route_id"] or x["seq"] >= y["seq"]:
@@ -152,7 +176,19 @@ class BusRoutes:
                 cur = bybus.get(r.route_nm)
                 if cur is None or span < cur[3]:
                     bybus[r.route_nm] = (r, x, y, span, round(da), round(db))
-        return sorted(bybus.values(), key=lambda t: t[3])
+                if include_access:
+                    access_key = (da + db, span, da, db, x["seq"], y["seq"])
+                    prev = byaccess.get(r.route_nm)
+                    if prev is None or access_key < prev[0]:
+                        byaccess[r.route_nm] = (access_key, (r, x, y, span, round(da), round(db)))
+        candidates = list(bybus.values())
+        if include_access:
+            selected = {(r.route_id, x["seq"], y["seq"]) for r, x, y, *_ in candidates}
+            for _key, candidate in byaccess.values():
+                r, x, y, *_ = candidate
+                if (r.route_id, x["seq"], y["seq"]) not in selected:
+                    candidates.append(candidate)
+        return sorted(candidates, key=lambda t: t[3])
 
     def segment(self, route_id, from_nm, to_nm):
         """from → to 로 **순서가 증가하는** 구간을 찾는다. 없으면 None.

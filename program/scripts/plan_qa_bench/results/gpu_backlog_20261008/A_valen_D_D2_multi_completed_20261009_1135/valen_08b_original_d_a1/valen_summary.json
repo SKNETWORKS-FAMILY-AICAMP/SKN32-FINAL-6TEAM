@@ -1,0 +1,16 @@
+{
+  "expected": 2735,
+  "saved": 2735,
+  "parsed": 2735,
+  "errors": 0,
+  "missing": 0,
+  "correct": 564,
+  "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+  "smoke": false,
+  "max_gpu_allocated": 4727671296,
+  "memory": {
+    "used": 30981279744,
+    "limit": 30999998464,
+    "headroom": 18718720
+  }
+}

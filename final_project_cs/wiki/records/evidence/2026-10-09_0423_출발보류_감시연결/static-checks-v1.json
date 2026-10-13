@@ -1,0 +1,28 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "app/domains/travel_ops/components/itinerary/itinerary.py",
+    "app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+    "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+    "app/domains/travel_ops/instances/mobility/team.py",
+    "scripts/run_sweepers.py",
+    "tests/unit/travel/test_departure_watch_v1.py",
+    "tests/unit/travel/test_departure_replan_v1.py",
+    "tests/scenario/test_departure_watch_db_v1.py",
+    "tests/unit/travel/test_departure_watch_assembly_v1.py",
+    "scripts/mobility/build_readiness_visual_v17.py"
+  ],
+  "files": 10,
+  "exit_code": 0,
+  "stdout": "All checks passed!\n",
+  "stderr": "",
+  "before_fixture_fixes": [
+    "schema 대신 schema_version 사용",
+    "일정 적용 작업 종류로 분모 한정"
+  ],
+  "diagram_self_check": "OK",
+  "html_render_checked": false
+}

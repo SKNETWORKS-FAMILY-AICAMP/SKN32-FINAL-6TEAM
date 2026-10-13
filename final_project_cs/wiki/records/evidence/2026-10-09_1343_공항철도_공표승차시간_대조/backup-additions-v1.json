@@ -1,0 +1,27 @@
+[
+  {
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/datacheck.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1345_공표승차_명세누락검사/datacheck.py",
+    "sha256": "2994388c1aae3e534835f79ee94fcad4460a3befcac5d5aceda1e876e7e4b987"
+  },
+  {
+    "source": "datasets/mobility/processed/mobility/MANIFEST_git_v1.json",
+    "backup": "datasets/mobility/processed/mobility/_backup/2026-10-09_1345_공표승차_명세누락검사/MANIFEST_git_v1.json",
+    "sha256": "cbd438b9f9151ef1def72c530064db27fca0e014ea45259da677e5b9f3fc31fb"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1345_공표승차_명세누락검사/mobility.md",
+    "sha256": "0114226f0fade408e9905a69a13168c48fd6baed90034a336c4fafa06809e380"
+  },
+  {
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/runtime.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1345_공표승차_명세누락검사/runtime.py",
+    "sha256": "22ec0823cb8f702e8cb10dbb809bb52fbe34590f4c68dee452310ce9004821e5"
+  },
+  {
+    "source": "final_project_cs/tests/unit/travel/mobility/test_published_boarding_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_1345_공표승차_명세누락검사/test_published_boarding_v1.py",
+    "sha256": "c41e2ddb8801bb67417949bc4ce746dab3feb98146752932a012a909691eca5b"
+  }
+]

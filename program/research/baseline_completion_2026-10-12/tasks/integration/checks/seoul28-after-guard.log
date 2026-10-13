@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\scripts\replay_seoul_alert_cases.py", line 375, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\scripts\replay_seoul_alert_cases.py", line 367, in main
+    print(json.dumps({"output": str(out.relative_to(CS)).replace("\\", "/"),
+                                    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\pathlib.py", line 682, in relative_to
+    raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+ValueError: 'var\\alert-snapshots\\analysis\\2026-10-12-seoul28-after-applicability-guard' is not in the subpath of 'C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs'

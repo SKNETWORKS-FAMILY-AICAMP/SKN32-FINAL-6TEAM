@@ -1,0 +1,18 @@
+{
+  "files": [
+    28,
+    28
+  ],
+  "jobs": [
+    "winnow_oos_multi_items_bc_a1",
+    "e4bqat_oos1_multi_items_bc_a1",
+    "e4bqat_oos3_multi_items_bc_a1",
+    "e4bqat_oos2r_multi_items_bc_a1",
+    "valen_08b_original_d2_a2"
+  ],
+  "answers": [
+    4340,
+    4340
+  ],
+  "archive_sha256": "ed6116298de208f325d9dc06a14f098147398268411ad6a0b697262f8951819c"
+}

@@ -1,0 +1,15 @@
+{
+  "artifact_matches": 14,
+  "full_feature_completion": false,
+  "prior_tests_reexecuted": false,
+  "total_matches": 286,
+  "numeric_web_rows": 30,
+  "api_raw_rows": 17,
+  "backups_verified": 2,
+  "checked_at": "2026-10-09T13:22:23.0074205+09:00",
+  "source_test_data_matches": 272,
+  "api_airport_rows": 5,
+  "product_fallback_connected": false,
+  "same_train_pairs": 0,
+  "browser_render_checked": false
+}

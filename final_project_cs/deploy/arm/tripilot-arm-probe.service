@@ -1,0 +1,11 @@
+[Unit]
+Description=triPilot ARM actual HTTP travel serving checks
+After=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/tripilot-arm-cd.env
+ExecStart=/usr/bin/python3 ${DEPLOY_BASE}/control/serving_probe.py
+TimeoutStartSec=45min
+MemoryMax=256M
+UMask=0077

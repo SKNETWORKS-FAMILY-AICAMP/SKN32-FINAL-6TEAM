@@ -1,0 +1,15 @@
+{
+  "created_at": "2026-10-09T09:56:45.296817+09:00",
+  "raw_sha256": "537c1ab9f58b9b4d9bf35c34ac5d9de2e8b24bc25e3058d726f4a5bbae787da8",
+  "exact_source_row_matches": 696,
+  "station_count": 696,
+  "sheet": "Data",
+  "range": "A2:D697",
+  "columns": [
+    "SUBWAY_ID",
+    "STATN_ID",
+    "STATN_NM",
+    "호선이름"
+  ],
+  "read_only": true
+}

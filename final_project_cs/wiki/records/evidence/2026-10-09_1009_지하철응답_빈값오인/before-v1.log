@@ -1,0 +1,249 @@
+FFFFFFFFFFFFFF....FF........                                             [100%]
+================================== FAILURES ===================================
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload0] __
+
+payload = {}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+>       assert src.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T01:09:40.525484+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T01:09:40.525484+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001677FD8C9E0>.arrivals
+
+tests\unit\travel\test_subway_envelope_v1.py:59: AssertionError
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload1] __
+
+payload = {'errorMessage': {'code': 'INFO-000'}}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+>       assert src.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T01:09:43.465941+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T01:09:43.465941+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001677FD8E6C0>.arrivals
+
+tests\unit\travel\test_subway_envelope_v1.py:59: AssertionError
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload2] __
+
+payload = {'code': 'INFO-000', 'realtimeArrivalList': None}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+>       assert src.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T01:09:43.481958+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T01:09:43.481958+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001677FD8DFA0>.arrivals
+
+tests\unit\travel\test_subway_envelope_v1.py:59: AssertionError
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload3] __
+
+payload = {'realtimeArrivalList': None}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+>       assert src.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T01:09:43.481958+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T01:09:43.481958+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001677FD8E510>.arrivals
+
+tests\unit\travel\test_subway_envelope_v1.py:59: AssertionError
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload4] __
+
+payload = {'realtimeArrivalList': {}}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+        assert src.arrivals('서울') is None
+>       assert src.misses['body_error'] == 1
+E       assert 0 == 1
+
+tests\unit\travel\test_subway_envelope_v1.py:60: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.ports.data_sources.base:base.py:130 travel source miss: seoul_subway_arrival: malformed_arrivals
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload5] __
+
+payload = {'realtimeArrivalList': 'not a list'}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+        assert src.arrivals('서울') is None
+>       assert src.misses['body_error'] == 1
+E       assert 0 == 1
+
+tests\unit\travel\test_subway_envelope_v1.py:60: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.ports.data_sources.base:base.py:130 travel source miss: seoul_subway_arrival: malformed_arrivals
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload6] __
+
+payload = {'realtimeArrivalList': [None]}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+        assert src.arrivals('서울') is None
+>       assert src.misses['body_error'] == 1
+E       assert 0 == 1
+
+tests\unit\travel\test_subway_envelope_v1.py:60: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.ports.data_sources.base:base.py:130 travel source miss: seoul_subway_arrival: malformed_arrivals
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload7] __
+
+payload = {'realtimeArrivalList': [{'barvlDt': 180}, 'bad']}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+        assert src.arrivals('서울') is None
+>       assert src.misses['body_error'] == 1
+E       assert 0 == 1
+
+tests\unit\travel\test_subway_envelope_v1.py:60: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.ports.data_sources.base:base.py:130 travel source miss: seoul_subway_arrival: malformed_arrivals
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload8] __
+
+payload = {'code': 'INFO-200', 'realtimeArrivalList': [{'barvlDt': 180}]}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+>       assert src.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T01:09:43.529757+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T01:09:43.529757+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001677FE08650>.arrivals
+
+tests\unit\travel\test_subway_envelope_v1.py:59: AssertionError
+_ test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload9] __
+
+payload = {'errorMessage': {'code': 'INFO-200'}, 'realtimeArrivalList': [{'barvlDt': 180}]}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache(payload):
+        src, cache, budget, seen = source([payload, GOOD])
+>       assert src.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T01:09:43.557693+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T01:09:43.557693+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001677FE08D10>.arrivals
+
+tests\unit\travel\test_subway_envelope_v1.py:59: AssertionError
+_ test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload0] _
+
+payload = {}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_preexisting_bad_cache_is_rejected_without_a_new_provider_call(payload):
+        src, cache, budget, seen = source([GOOD])
+        src.arrivals('서울')
+        key = next(iter(cache._items))
+        cache.put(key, payload, fetched_at=datetime(2026, 10, 9, 0, tzinfo=UTC))
+        got = src.arrivals('서울')
+>       assert got is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:00:00+00:00', 'from_cache': True, 'kind': 'subway_arrival', 'line': None, ...} is None
+
+tests\unit\travel\test_subway_envelope_v1.py:74: AssertionError
+_ test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload1] _
+
+payload = {'errorMessage': {'code': 'INFO-000'}}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_preexisting_bad_cache_is_rejected_without_a_new_provider_call(payload):
+        src, cache, budget, seen = source([GOOD])
+        src.arrivals('서울')
+        key = next(iter(cache._items))
+        cache.put(key, payload, fetched_at=datetime(2026, 10, 9, 0, tzinfo=UTC))
+        got = src.arrivals('서울')
+>       assert got is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:00:00+00:00', 'from_cache': True, 'kind': 'subway_arrival', 'line': None, ...} is None
+
+tests\unit\travel\test_subway_envelope_v1.py:74: AssertionError
+_ test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload2] _
+
+payload = {'code': 'INFO-000', 'realtimeArrivalList': None}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_preexisting_bad_cache_is_rejected_without_a_new_provider_call(payload):
+        src, cache, budget, seen = source([GOOD])
+        src.arrivals('서울')
+        key = next(iter(cache._items))
+        cache.put(key, payload, fetched_at=datetime(2026, 10, 9, 0, tzinfo=UTC))
+        got = src.arrivals('서울')
+>       assert got is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:00:00+00:00', 'from_cache': True, 'kind': 'subway_arrival', 'line': None, ...} is None
+
+tests\unit\travel\test_subway_envelope_v1.py:74: AssertionError
+_ test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload3] _
+
+payload = {'realtimeArrivalList': None}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_preexisting_bad_cache_is_rejected_without_a_new_provider_call(payload):
+        src, cache, budget, seen = source([GOOD])
+        src.arrivals('서울')
+        key = next(iter(cache._items))
+        cache.put(key, payload, fetched_at=datetime(2026, 10, 9, 0, tzinfo=UTC))
+        got = src.arrivals('서울')
+>       assert got is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:00:00+00:00', 'from_cache': True, 'kind': 'subway_arrival', 'line': None, ...} is None
+
+tests\unit\travel\test_subway_envelope_v1.py:74: AssertionError
+_ test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload8] _
+
+payload = {'code': 'INFO-200', 'realtimeArrivalList': [{'barvlDt': 180}]}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_preexisting_bad_cache_is_rejected_without_a_new_provider_call(payload):
+        src, cache, budget, seen = source([GOOD])
+        src.arrivals('서울')
+        key = next(iter(cache._items))
+        cache.put(key, payload, fetched_at=datetime(2026, 10, 9, 0, tzinfo=UTC))
+        got = src.arrivals('서울')
+>       assert got is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:00:00+00:00', 'from_cache': True, 'kind': 'subway_arrival', 'line': None, ...} is None
+
+tests\unit\travel\test_subway_envelope_v1.py:74: AssertionError
+_ test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload9] _
+
+payload = {'errorMessage': {'code': 'INFO-200'}, 'realtimeArrivalList': [{'barvlDt': 180}]}
+
+    @pytest.mark.parametrize('payload', BAD)
+    def test_preexisting_bad_cache_is_rejected_without_a_new_provider_call(payload):
+        src, cache, budget, seen = source([GOOD])
+        src.arrivals('서울')
+        key = next(iter(cache._items))
+        cache.put(key, payload, fetched_at=datetime(2026, 10, 9, 0, tzinfo=UTC))
+        got = src.arrivals('서울')
+>       assert got is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:00:00+00:00', 'from_cache': True, 'kind': 'subway_arrival', 'line': None, ...} is None
+
+tests\unit\travel\test_subway_envelope_v1.py:74: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1009_지하철응답_빈값오인\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload0]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload1]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload2]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload3]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload4]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload5]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload6]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload7]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload8]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload9]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload0]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload1]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload2]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload3]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload8]
+FAILED tests/unit/travel/test_subway_envelope_v1.py::test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload9]
+16 failed, 12 passed in 4.93s
+Exception ignored in: <function Console.__del__ at 0x000001677A5E5D00>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

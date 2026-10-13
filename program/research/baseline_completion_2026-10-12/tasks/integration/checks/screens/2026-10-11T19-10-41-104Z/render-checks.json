@@ -1,0 +1,102 @@
+{
+  "captured_at_utc": "2026-10-11T19:11:06.752Z",
+  "scope": "로컬 검토 준비본 렌더링. 고객 제품 화면 시험 아님",
+  "checks": [
+    {
+      "filename": "finalization-flow.html",
+      "width": 1440,
+      "bodyWidth": 1440,
+      "viewport": 1440,
+      "title": "triPilot 최종 통합·문서 확정 절차",
+      "font": "\"Instrument Serif\", \"Noto Serif KR\", serif",
+      "svgs": [
+        {
+          "width": 1280,
+          "title": "triPilot 통합 결과 수령부터 v12·기준선 확정까지",
+          "desc": "담당 결과의 필수 근거가 충족되고 통합 시험의 최종 해시가 일치할 때 v12와 단일 기준선을 작성하며, 부족한 근거와 변경된 해시는 각각 보완과 재검증 대기로 종료합니다."
+        }
+      ],
+      "errors": [],
+      "bodyOverflow": false,
+      "screenshot": "checks/screens/2026-10-11T19-10-41-104Z/finalization-flow-1440.png"
+    },
+    {
+      "filename": "finalization-flow.html",
+      "width": 375,
+      "bodyWidth": 375,
+      "viewport": 375,
+      "title": "triPilot 최종 통합·문서 확정 절차",
+      "font": "\"Instrument Serif\", \"Noto Serif KR\", serif",
+      "svgs": [
+        {
+          "width": 960,
+          "title": "triPilot 통합 결과 수령부터 v12·기준선 확정까지",
+          "desc": "담당 결과의 필수 근거가 충족되고 통합 시험의 최종 해시가 일치할 때 v12와 단일 기준선을 작성하며, 부족한 근거와 변경된 해시는 각각 보완과 재검증 대기로 종료합니다."
+        }
+      ],
+      "errors": [],
+      "bodyOverflow": false,
+      "screenshot": "checks/screens/2026-10-11T19-10-41-104Z/finalization-flow-375.png"
+    },
+    {
+      "filename": "v12-outline.html",
+      "width": 1440,
+      "bodyWidth": 1440,
+      "viewport": 1440,
+      "title": "triPilot v12 안내서 — 검토 준비본",
+      "font": "\"Noto Sans KR\", \"Malgun Gothic\", sans-serif",
+      "svgs": [],
+      "errors": [],
+      "bodyOverflow": false,
+      "screenshot": "checks/screens/2026-10-11T19-10-41-104Z/v12-outline-1440.png"
+    },
+    {
+      "filename": "v12-outline.html",
+      "width": 375,
+      "bodyWidth": 375,
+      "viewport": 375,
+      "title": "triPilot v12 안내서 — 검토 준비본",
+      "font": "\"Noto Sans KR\", \"Malgun Gothic\", sans-serif",
+      "svgs": [],
+      "errors": [],
+      "bodyOverflow": false,
+      "screenshot": "checks/screens/2026-10-11T19-10-41-104Z/v12-outline-375.png"
+    },
+    {
+      "filename": "baseline-outline.html",
+      "width": 1440,
+      "bodyWidth": 1440,
+      "viewport": 1440,
+      "title": "제품 전체 단일 기준선 — 작성 준비본",
+      "font": "\"Noto Sans KR\", \"Malgun Gothic\", sans-serif",
+      "svgs": [
+        {
+          "width": 976,
+          "title": "triPilot 통합 결과 수령부터 v12·기준선 확정까지",
+          "desc": "담당 결과의 필수 근거가 충족되고 통합 시험의 최종 해시가 일치할 때 v12와 단일 기준선을 작성하며, 부족한 근거와 변경된 해시는 각각 보완과 재검증 대기로 종료합니다."
+        }
+      ],
+      "errors": [],
+      "bodyOverflow": false,
+      "screenshot": "checks/screens/2026-10-11T19-10-41-104Z/baseline-outline-1440.png"
+    },
+    {
+      "filename": "baseline-outline.html",
+      "width": 375,
+      "bodyWidth": 375,
+      "viewport": 375,
+      "title": "제품 전체 단일 기준선 — 작성 준비본",
+      "font": "\"Noto Sans KR\", \"Malgun Gothic\", sans-serif",
+      "svgs": [
+        {
+          "width": 900,
+          "title": "triPilot 통합 결과 수령부터 v12·기준선 확정까지",
+          "desc": "담당 결과의 필수 근거가 충족되고 통합 시험의 최종 해시가 일치할 때 v12와 단일 기준선을 작성하며, 부족한 근거와 변경된 해시는 각각 보완과 재검증 대기로 종료합니다."
+        }
+      ],
+      "errors": [],
+      "bodyOverflow": false,
+      "screenshot": "checks/screens/2026-10-11T19-10-41-104Z/baseline-outline-375.png"
+    }
+  ]
+}

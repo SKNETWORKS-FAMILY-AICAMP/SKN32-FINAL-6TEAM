@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import threading
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -28,9 +29,14 @@ GATE = job_gate.WATCH_GATE
 @pytest.fixture()
 def tenant():
     name = "cadence_" + uuid4().hex[:10]
+    with get_connection() as conn, conn.transaction():
+        conn.execute((Path(__file__).parents[2]/'app/infrastructure/db/migrations/228_watch_run_history.sql').read_text(encoding='utf-8'))
+        conn.execute("INSERT INTO tenants(tenant_id,name) VALUES(%s,'감시 주기 시험')", (name,))
     yield name
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM job_gates WHERE tenant_id=%s", (name,))
+        cur.execute("DELETE FROM travel_watch_runs WHERE tenant_id=%s", (name,))
+        cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (name,))
 
 
 def _claim(tenant: str, min_seconds: float = 150.0) -> bool:

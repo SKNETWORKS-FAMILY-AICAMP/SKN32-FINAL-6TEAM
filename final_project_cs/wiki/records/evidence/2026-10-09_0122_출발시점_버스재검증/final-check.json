@@ -1,0 +1,44 @@
+{
+  "checked_at": "2026-10-09T01:42:02.641062+09:00",
+  "source_checks": [
+    {
+      "path": "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/instances/mobility/engine/runtime.py",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_reminders.py",
+      "unchanged": true
+    },
+    {
+      "path": "tests/unit/travel/mobility/test_departure_observer_v1.py",
+      "unchanged": true
+    },
+    {
+      "path": "tests/unit/travel/mobility/test_departure_source_to_notice_v1.py",
+      "unchanged": true
+    },
+    {
+      "path": "tests/unit/travel/test_departure_observer_notice_v1.py",
+      "unchanged": true
+    },
+    {
+      "path": "tests/scenario/test_departure_observer_reminders_v1.py",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/mobility/build_readiness_visual_v10.py",
+      "unchanged": true
+    }
+  ],
+  "ruff_exit_code": 0,
+  "png_directly_viewed": true,
+  "html_browser_render": "not_confirmed; Codex open queued"
+}

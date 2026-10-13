@@ -1,0 +1,17 @@
+[
+  {
+    "file": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0609_회전탐색_검증반영/mobility.md",
+    "sha256": "9b040009dbee8ca2b80592a49e2fec8a9ffe5e42126d1c9fdf53827dd48f8bf9"
+  },
+  {
+    "file": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0600_회전탐색_同位置_거리반복.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0609_회전탐색_검증반영/2026-10-09_0600_회전탐색_同位置_거리반복.md",
+    "sha256": "668df8e9b4e1287567563ea6b23c6fdf6896dc9f274b35006a773d68492be8aa"
+  },
+  {
+    "file": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0550_택시대체_계산지연_추가검증.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0609_회전탐색_검증반영/2026-10-09_0550_택시대체_계산지연_추가검증.md",
+    "sha256": "d204e5fd9f53275c29ffbc3a6a2cdc965ccd1f4f4b71d3485d961ba08acb7c81"
+  }
+]

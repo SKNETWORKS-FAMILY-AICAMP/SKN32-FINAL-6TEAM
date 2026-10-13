@@ -1,0 +1,6 @@
+{
+  "pid": 350700,
+  "root": "/tmp/tripilot-saluki-20261009",
+  "model_storage": "existing /dev/shm, no mount change",
+  "GPU_used": false
+}

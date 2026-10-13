@@ -1,0 +1,106 @@
+.FFFFFFFFF                                                               [100%]
+================================== FAILURES ===================================
+________ test_access_pair_is_added_without_discarding_shortest_section ________
+
+    def test_access_pair_is_added_without_discarding_shortest_section():
+>       rows = network().routes_between(37.5, 127., 37.52, 127., 500, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:23: TypeError
+______________________ test_same_pair_is_not_duplicated _______________________
+
+    def test_same_pair_is_not_duplicated():
+>       rows = network().routes_between(37.5, 127., 37.52, 127., 50, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:30: TypeError
+_______ test_radius_direction_and_two_pairs_per_route_are_preserved[0] ________
+
+radius = 0
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+>       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError
+_______ test_radius_direction_and_two_pairs_per_route_are_preserved[50] _______
+
+radius = 50
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+>       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError
+______ test_radius_direction_and_two_pairs_per_route_are_preserved[200] _______
+
+radius = 200
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+>       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError
+______ test_radius_direction_and_two_pairs_per_route_are_preserved[500] _______
+
+radius = 500
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+>       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError
+______ test_radius_direction_and_two_pairs_per_route_are_preserved[1000] ______
+
+radius = 1000
+
+    @pytest.mark.parametrize('radius', [0, 50, 200, 500, 1000])
+    def test_radius_direction_and_two_pairs_per_route_are_preserved(radius):
+>       rows = network().routes_between(37.5, 127., 37.52, 127., radius, True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:37: TypeError
+_______________ test_backwards_stops_cannot_make_an_access_pair _______________
+
+    def test_backwards_stops_cannot_make_an_access_pair():
+>       assert network().routes_between(37.52, 127., 37.5, 127., 500, True) == []
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:45: TypeError
+_______________ test_equal_access_distance_has_stable_tie_break _______________
+
+    def test_equal_access_distance_has_stable_tie_break():
+        bus = network()
+>       a = bus.routes_between(37.502, 127., 37.518, 127., 500, True)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BusRoutes.routes_between() takes 6 positional arguments but 7 were given
+
+tests\unit\travel\mobility\test_bus_access_pairs_v1.py:50: TypeError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_0918_�������ٹ���_����\unit-before.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_bus_access_pairs_v1.py::test_access_pair_is_added_without_discarding_shortest_section
+FAILED tests/unit/travel/mobility/test_bus_access_pairs_v1.py::test_same_pair_is_not_duplicated
+FAILED tests/unit/travel/mobility/test_bus_access_pairs_v1.py::test_radius_direction_and_two_pairs_per_route_are_preserved[0]
+FAILED tests/unit/travel/mobility/test_bus_access_pairs_v1.py::test_radius_direction_and_two_pairs_per_route_are_preserved[50]
+FAILED tests/unit/travel/mobility/test_bus_access_pairs_v1.py::test_radius_direction_and_two_pairs_per_route_are_preserved[200]
+FAILED tests/unit/travel/mobility/test_bus_access_pairs_v1.py::test_radius_direction_and_two_pairs_per_route_are_preserved[500]
+FAILED tests/unit/travel/mobility/test_bus_access_pairs_v1.py::test_radius_direction_and_two_pairs_per_route_are_preserved[1000]
+FAILED tests/unit/travel/mobility/test_bus_access_pairs_v1.py::test_backwards_stops_cannot_make_an_access_pair
+FAILED tests/unit/travel/mobility/test_bus_access_pairs_v1.py::test_equal_access_distance_has_stable_tie_break
+9 failed, 1 passed in 5.42s
+Exception ignored in: <function Console.__del__ at 0x000001F50BF75BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

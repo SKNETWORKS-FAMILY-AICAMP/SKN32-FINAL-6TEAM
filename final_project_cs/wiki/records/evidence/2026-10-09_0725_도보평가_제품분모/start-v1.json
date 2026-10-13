@@ -1,0 +1,17 @@
+{
+  "tag": "2026-10-09_0725_도보평가_제품분모",
+  "created_at": "2026-10-09T07:25:21.760923+09:00",
+  "prior_hash_matches": 206,
+  "backups": [
+    {
+      "source": "final_project_cs/scripts/mobility/compare_kakao_golden.py",
+      "backup": "final_project_cs/scripts/mobility/_backup/2026-10-09_0725_도보평가_제품분모/compare_kakao_golden.py",
+      "sha256": "5cd9e156377a91b0981a5939898092333857ca7a4049d12d40cf68c3faf6250f"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0725_도보평가_제품분모/mobility.md",
+      "sha256": "9db7e8741efb04b259eb2351cb1a180b5691f929fafaeab99469c7e549d27116"
+    }
+  ]
+}

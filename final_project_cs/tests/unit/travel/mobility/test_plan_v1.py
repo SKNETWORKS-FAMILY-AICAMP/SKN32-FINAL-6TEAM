@@ -19,9 +19,12 @@ import json
 import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3]))
+
+from app.domains.travel_ops.instances.mobility.engine.verify_time import Verifier
 
 from app.domains.travel_ops.instances.mobility.engine.plan import (  # noqa: E402
     iso_of, label_of, line_name, party_of, plan, service_day, station_name, uses_of)
@@ -101,7 +104,7 @@ def _runtime():
     if _RT is None:
         from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
-            _RT = build_verifier(quiet=True)
+            _RT = build_verifier(quiet=True, local_router=True, seoul_key='', gh_url='')
         except RuntimeError as e:          # 시간표가 없는 기기 — 데이터 축은 SKIP
             _RT = e
     return None if isinstance(_RT, Exception) else _RT
@@ -130,10 +133,25 @@ def _walk_keys(x, path=""):
     if isinstance(x, dict):
         for k, v in x.items():
             yield k, path
+            if k == "departure_context" and path == ".items.detail":
+                continue     # v1 내부 재검증 문맥은 test_contract_keys가 별도로 검사한다
             yield from _walk_keys(v, f"{path}.{k}")
     elif isinstance(x, list):
         for v in x:
             yield from _walk_keys(v, path)
+
+
+def _customer_values(out):
+    """새 내부 문맥만 분리한다. 기존 고객 값은 골든 내용 그대로 비교한다."""
+    from copy import deepcopy
+    result = deepcopy(out)
+    for item in result["items"]:
+        detail = item.get("detail")
+        if isinstance(detail, dict) and "departure_context" in detail:
+            detail.pop("departure_context")
+            if not detail:
+                item.pop("detail")
+    return result
 
 
 def test_golden():
@@ -141,7 +159,7 @@ def test_golden():
     _, got = _run()
     got.pop("basis")
     want = json.loads(GOLD.read_text(encoding="utf-8"))
-    assert got == want, "예시 출력이 골든과 다르다 — 시간표·규칙이 바뀌었으면 골든을 다시 뽑고 이유를 적는다"
+    assert _customer_values(got) == want, "예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다"
 
 
 def test_contract_keys():
@@ -160,6 +178,22 @@ def test_contract_keys():
     mob = [it for it in got["items"] if it["kind"] == "mobility"]
     for it in mob:
         assert it["route"] in got["routes"]
+        context = it["detail"]["departure_context"]
+        assert context["schema_version"] == 1 and context["timing_unit"] == "model_minutes"
+        assert datetime.fromisoformat(context["captured_at"]).utcoffset() is not None
+        route = got["routes"][it["route"]]
+        assert set(context["options"]) == {o["id"] for o in route["options"]}
+        for option in route["options"]:
+            saved = context["options"][option["id"]]
+            assert saved["option_id"] == option["id"] and saved["eta_min"] == option["eta_min"]
+            if saved["check"] is not None:
+                assert saved["check"]["legs"] == saved["legs"]
+        from app.domains.travel_ops.instances.mobility.engine.departure_context import input_basis
+        assert context['basis'] == input_basis(_runtime())
+        assert set(context["basis"]) == {"timetable_built_at", "rules_version", "express_version", "subway_station_version"}
+        assert context['basis']['subway_station_version'] == _runtime().subway_station_source[1]
+        assert len(context["basis"]["express_version"]) == 64
+        assert all(c in '0123456789abcdef' for c in context["basis"]["express_version"])
         for k in ("starts_at", "ends_at"):
             assert it[k].endswith(":00+09:00"), f"시각 표기 {it[k]}"
         r = got["routes"][it["route"]]
@@ -491,7 +525,12 @@ def test_cli_passes_routes():
     assert "g_to_s" not in by_cli["routes"] and list(by_cli["routes"]) == ["g_to_s_2"], list(by_cli["routes"])
     for r in (by_cli, by_fn):
         r.pop("basis")
-    assert by_cli == by_fn
+    assert _customer_values(by_cli) == _customer_values(by_fn)
+    for result in (by_cli, by_fn):
+        for item in result["items"]:
+            if item["kind"] == "mobility":
+                item["detail"]["departure_context"].pop("captured_at")
+    assert by_cli == by_fn     # 호출 시각을 제외한 내부 계산값도 일치한다
 
 
 def test_not_before_seconds():
@@ -528,7 +567,7 @@ _NT = [{"key": "ns", "name": "남산타워", "kind": "activity", "lat": 37.5512,
 
 
 def _ns_it(**kw):
-    """남산타워 → 이태원 15:00 — 버스 405 가 계획 수단, 지하철이 같은 출발로 같이 실린다(9/29 화 · 실데이터)."""
+    """남산타워 → 이태원 15:00 — 현재 보행망에서는 전체 수단과 버스 전용의 계획 출발이 다르다."""
     items = [{"seq": 1, "kind": "activity", "title": "A", "place": "ns",
               "starts_at": "2026-09-29T11:00:00+09:00", "ends_at": "2026-09-29T12:00:00+09:00"},
              {"seq": 2, "kind": "activity", "title": "B", "place": "it", "starts_at": "2026-09-29T15:00:00+09:00"}]
@@ -543,7 +582,7 @@ def test_golden_all_modes():
                runtime=_runtime(), modes=MODES_ALL)
     got.pop("basis")
     want = json.loads(GOLD_ALL.read_text(encoding="utf-8"))
-    assert got == want, "버스 포함 예시가 골든과 다르다 — 시간표·버스 프로파일·규칙이 바뀌었으면 다시 뽑고 이유를 적는다"
+    assert _customer_values(got) == want, "버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다"
 
 
 def test_option_ids_mode_tag():
@@ -555,14 +594,20 @@ def test_option_ids_mode_tag():
             assert len(ids) == len(set(ids)), f"{key}: id 중복 {ids}"
             for o in r["options"]:
                 assert o["id"].split("_")[0] in ID_PREFIX, o["id"]
-                if o["id"].startswith("bus_"):          # id 로 노선번호를 복원하지 않는다(GPT 23 #9) — 접두만 본다
+                mixed = 'bus_subway_' in o['id'] or 'subway_bus_' in o['id']
+                if mixed:
+                    assert any(u.startswith('버스:') for u in o['uses']), o
+                    assert any(not u.startswith('버스:') for u in o['uses']), o
+                elif o["id"].startswith("bus_"):          # 단일 버스와 버스·지하철 혼합을 구분한다.
                     assert len(o["uses"]) == 1 and o["uses"][0].startswith("버스:"), o
                     assert o["id"] == f"bus_{o['uses'][0][3:]}" or o["id"].startswith(f"bus_{o['uses'][0][3:]}_"), o
-                if o["id"].startswith("subway"):
+                if o["id"].startswith("subway") and not mixed:
                     assert o["uses"] and not any(u.startswith("버스:") for u in o["uses"]), o
     _, got = _ns_it(modes=MODES_ALL)
     r = got["routes"]["ns_to_it"]
-    assert r["planned"] == "bus_405" and {o["id"] for o in r["options"]} == {"bus_405", "subway_1"}, r
+    assert r["planned"] == "subway_1" and {o["id"] for o in r["options"]} == {"bus_subway_1", "subway_1"}, r
+    assert any(x['code'] == 'earlier_departure' and x['label'].startswith('버스 405 ')
+               for x in got['left_out']['ns_to_it']), got['left_out']
 
 
 def test_uses_self_check():
@@ -648,7 +693,7 @@ def test_walk_m_and_fare():
     else:
         assert fare_of(v, l9, r9) is None, "선로 길이 자료가 없으면 거리 모르는 노선(9호선)은 요금을 뺀다"
     lsb = [{"line": "신분당선", "from": "강남", "to": "양재"}]
-    assert fare_of(v, lsb, [_FLR("신분당선 강남→양재", 600)]) is None, "별도운임 노선(신분당선)은 길이를 알아도 요금을 안 낸다"
+    assert fare_of(v, lsb, [_FLR("신분당선 강남→양재", 600)]) == 2550, "공식 거리와 강남~정자 추가운임 1,000원을 함께 적용한다"
     legs = [{"line": "03호선", "from": "경복궁", "to": "을지로3가"}, {"line": "02호선", "from": "을지로3가", "to": "성수"}]
     d = v.tw.lookup("을지로3가", "03호선", "02호선").distance_m
     assert transfer_walk_m(v, legs) == d
@@ -676,9 +721,9 @@ def test_bus_from_place_recheck():
     """결정 4 — 버스는 장소에서 바로 찾는다(이중 도보 없음). 출력 출발에서 판정기를 따로 불러 성립 · eta 일치."""
     _skip_if_no_data()
     tr = []
-    items, got = _ns_it(modes=MODES_ALL, trace=tr)
+    items, got = _ns_it(modes=['bus'], trace=tr)
     n = _recheck(got, tr, items, 1, {})
-    assert n == 2, n
+    assert n == 1, n
     chk = next(o["check"] for o in tr[0]["options"] if o["id"] == "bus_405")
     assert chk["walk_stop_in"] == 0 and chk["walk_stop_out"] == 0, "장소→정류장 한 번만 걷는다"
 
@@ -743,7 +788,7 @@ class _LR:
         self.label, self.depart_min, self.arrive_min, self.verdict = label, dep, arr, verdict
 
 
-class _FakeV:
+class _FakeV(Verifier):
     """ridden_path 합성 시험용 — 판정기의 candidates()·travel_min_on_path() 모양만 흉내 낸다(간선 1개 = 2분)."""
     def __init__(self, deps):
         self.deps = deps
@@ -819,12 +864,14 @@ def test_left_out_rechecked():
     assert n >= 1
 
 
-def test_bus_cap_after_eligibility():
+def test_bus_cap_after_eligibility(monkeypatch):
     """GPT 23 #2 — 버스 상한은 자격 검사(앞 일정·uses) 뒤에 자른다. 도보 짧은 버스 셋이 앞 일정과 겹쳐도 넷째가 실린다."""
     _skip_if_no_data()
     from app.domains.travel_ops.instances.mobility.engine import plan as P
     rt = _runtime()
     pl = P.Planner(rt, modes=["bus"])
+    # 직행 후보의 자격 검사·상한만 검증한다. 버스 환승은 별도 회귀에서 검증한다.
+    monkeypatch.setattr(pl, "_mix_gen", lambda *_args: None)
     arrive = datetime(2026, 9, 29, 15, 0, tzinfo=KST)
     sdate, by = P.service_day(arrive)
     real = pl._bus_direct(_NT[0], _NT[1], arrive, sdate, by, {}, True, "cap", pl._walk_limit({}))
@@ -864,7 +911,9 @@ def test_recheck_revives():
     pl = P.Planner(rt, modes=["bus"])
     arrive = datetime(2026, 9, 29, 15, 0, tzinfo=KST)
     sdate, by = P.service_day(arrive)
-    o = pl._bus_direct(_NT[0], _NT[1], arrive, sdate, by, {}, True, "rv", pl._walk_limit({}))[0]
+    direct = pl._bus_direct(_NT[0], _NT[1], arrive, sdate, by, {}, True, "rv", pl._walk_limit({}))
+    # 반환 순서는 접근 도보 순이다. 복구 시험의 기준은 가장 늦게 떠나는 직행이다.
+    o = max(direct, key=lambda candidate: candidate["_start"])
     early = dict(o, _start=o["_start"] - 30, eta_min=o["eta_min"] + 7, _route="살릴 후보", _n=700, _lr=None)
     orig = P.Planner._bus_direct
     tr = []
@@ -902,8 +951,25 @@ def test_replan_fare_known_locked():
     떨어뜨리지 않는다. 405 무정차 → 지하철이 대안으로 뽑히고 추가 비용 = 1,550 − 1,500 = 50(티머니 실측 환승 +50 과 같은 값)."""
     _skip_if_no_data()
     from app.domains.travel_ops.components.planning.replan import choose, route_candidates
-    items, got = _ns_it(modes=MODES_ALL)
-    route = got["routes"]["ns_to_it"]
+    from app.domains.travel_ops.instances.mobility.engine import plan as P
+    items, got = _ns_it(modes=['bus'])
+    route = got['routes']['ns_to_it']
+    mob = next(it for it in got['items'] if it['kind'] == 'mobility')
+    # 전체 수단 탐색은14:00 출발을 선택하므로13:58이 필요한405를 제외한다.
+    # 비용 비교는405의 실제 성립 출발에서 지하철도 다시 판정한 동일 시각 후보로 한다.
+    _, all_got = _ns_it(modes=MODES_ALL)
+    rail_move = next(it for it in all_got['items'] if it['kind'] == 'mobility')
+    rail_route = all_got['routes']['ns_to_it']
+    rail = dict(next(o for o in rail_route['options'] if o['id'] == 'subway_1'))
+    saved = rail_move['detail']['departure_context']['options']['subway_1']
+    day, start = service_day(datetime.fromisoformat(mob['starts_at']))
+    by_day, by = service_day(datetime.fromisoformat(items[1]['starts_at']))
+    assert day == by_day
+    checked, why = P.Planner(_runtime())._recheck_at(
+        {'_check': saved['check'], '_legs': saved['legs']}, start, by, {'size': 1}, True, 'fare_common')
+    assert checked is not None, why
+    rail.update(eta_min=checked['eta_min'], fare_krw=checked['_fare'])
+    route = dict(route, options=[*route['options'], rail])
     fares = {o["id"]: o.get("fare_krw") for o in route["options"]}
     assert fares.get("bus_405") == 1500 and fares.get("subway_1") == 1550, fares
     mob = next(it for it in got["items"] if it["kind"] == "mobility")
@@ -944,7 +1010,7 @@ class _FakeCg:
     def __bool__(self):
         return True
 
-    def lookup(self, line, station, dir, day_type, date, minute, levels, is_holiday=False):
+    def lookup(self, line, station, dir, day_type, date, minute, levels, is_holiday=False, service=None):
         return self.hit
 
 
@@ -955,6 +1021,7 @@ def test_congestion_checked_needs_cell():
     leg = {"line": "09호선", "from": "A", "to": "C"}
     lr = [_LR("09호선 A→C", 10, 14)]
     one = _FakeV([(_D(10, "U"), ["A", "B", "C"])])
+    one.deps[0][0].run = SimpleNamespace(express=False, ride_min=lambda a, b: 4)
     one.R, one.holidays = {"congestion": {"levels": {}}}, set()
     one.cg_data = _FakeCg((55.0, "보통", {}))
     assert congestion_checked(one, [leg], lr, date(2026, 9, 29), "weekday") is True
@@ -1002,7 +1069,7 @@ def test_bus_cap_zero_keeps_planned():
     old = R["value"]
     try:
         R["value"] = 0
-        _, got = _ns_it(modes=MODES_ALL)
+        _, got = _ns_it(modes=['bus'])
     finally:
         R["value"] = old
     r = got["routes"]["ns_to_it"]
@@ -1064,7 +1131,7 @@ def test_fare_distance_steps():
 
 def test_fare_transfer_tmoney():
     """통합환승 합성 — 티머니 실측 태그(25 · 9/08~10 퇴근): 버스 1,500 → 지하철 +50 · 버스→버스 0.
-    창 초과 · 광역·심야 · 거리 모름 · 6회 승차 → None."""
+    서울 광역은 30km 기본구간. 창 초과 · 심야 · 거리 모름 · 6회 승차 → None."""
     from app.domains.travel_ops.instances.mobility.engine.options import transfer_fare
     F = _rules()["fare"]
     bus = lambda typ, m, b, a: {"kind": typ, "base": F["bus"]["by_type"]["value"].get(typ), "m": m, "board": b, "alight": a}
@@ -1074,7 +1141,7 @@ def test_fare_transfer_tmoney():
     assert transfer_fare(F, [bus("지선", 6000, 600, 620), sub(6000, 630, 650)]) == 1650, "합산 12km → +100"
     assert transfer_fare(F, [bus("지선", 4000, 600, 620), sub(2000, 651, 660)]) is None, "낮 31분 → 환승 아님(값 안 냄)"
     assert transfer_fare(F, [bus("지선", 4000, 1300, 1320), sub(2000, 1370, 1380)]) == 1550, "21시 뒤 60분 창"
-    assert transfer_fare(F, [bus("광역", 4000, 600, 620), sub(2000, 630, 640)]) is None, "광역 섞인 환승은 규칙 밖"
+    assert transfer_fare(F, [bus("광역", 4000, 600, 620), sub(2000, 630, 640)]) == 3000, "서울 광역 포함 30km 기본구간"
     assert transfer_fare(F, [bus("심야", 4000, 1500, 1520), bus("지선", 2000, 1530, 1540)]) is None
     assert transfer_fare(F, [bus("지선", None, 600, 620), sub(2000, 630, 640)]) is None, "버스 거리 모름"
     assert transfer_fare(F, [bus("지선", 30000, 600, 640), bus("간선", 26000, 650, 690)]) == 2500, \
@@ -1154,8 +1221,8 @@ def test_fare_subway_bracket():
     assert f(short, 420) == 1550
     via_sb = [{"line": "02호선", "from": "교대", "to": "강남"}, {"line": "신분당선", "from": "강남", "to": "양재"},
               {"line": "03호선", "from": "양재", "to": "매봉"}]
-    assert net.ridden_m(via_sb) is None and net.upper_m(via_sb) is not None
-    assert f(via_sb) is None, "GPT 54 #1 — 거리 모르는 노선(신분당선 · 별도운임)을 실제로 타면 다른 경로 상한으로 대신하지 않는다"
+    assert net.ridden_m(via_sb) == 3900 and net.upper_m(via_sb) is not None
+    assert f(via_sb) == 2550, "공식 거리 자료로 연결한 신분당선 구간의 추가운임도 빠뜨리지 않는다"
     assert O.fare_of(v, short, None) is None, "첫 승차 시각을 모르면 뺀다(조조를 가를 수 없다)"
 
 
@@ -1182,14 +1249,17 @@ def test_fare_lb_unknown_zero():
     v = _runtime()._v
     net = O.fare_net(v)
     k = n = 0
+    from app.domains.travel_ops.instances.mobility.engine.special_rail import confirmed_distances
+    supplement = confirmed_distances(v)
     for ln, doc in v.lo.doc["lines"].items():
         for e in doc["edges"]:
             w = net.lb[(ln, e["a"])][(ln, e["b"])]
-            if e.get("distance_m") is None:
+            public = supplement.get((ln, e['a'], e['b']), supplement.get((ln, e['b'], e['a'])))
+            if e.get("distance_m") is None and public is None:
                 assert w == 0, (ln, e["a"], e["b"], w)
                 k += 1
             else:
-                assert w in (0, int(e["distance_m"])), (ln, e["a"], e["b"])
+                assert w in (0, int(e['distance_m'] if e.get('distance_m') is not None else public)), (ln, e['a'], e['b'])
                 n += 1
     assert k >= 400 and n >= 250
 

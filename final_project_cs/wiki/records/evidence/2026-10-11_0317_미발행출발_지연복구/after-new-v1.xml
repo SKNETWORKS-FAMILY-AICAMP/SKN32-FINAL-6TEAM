@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="18" time="5.949" timestamp="2026-10-11T03:19:04.876355+09:00" hostname="playdata"><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_late_unannounced_feasible_walk_reaches_current_guidance_once" time="0.071"><failure message="AssertionError: assert (0 == 1)&#10; +  where 0 = len([])&#10; +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[{'trip_id': '06673bdd-5644-4177-9b7f-ccd5bdd23061', 'i..., 'party_check': 'changed', 'status': 'needs_replan', 'reason': 'party_changed'}}], fatal=[], no_route=0, unchecked=[]).sent">world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=&lt;app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x0000024C1F0FAB10&gt;)
+
+    def test_late_unannounced_feasible_walk_reaches_current_guidance_once(world):
+        original = deepcopy(world.items)
+        first = world.runner.tick()
+&gt;       assert len(first.sent) == 1 and not first.fatal and not first.held
+E       AssertionError: assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[{'trip_id': '06673bdd-5644-4177-9b7f-ccd5bdd23061', 'i..., 'party_check': 'changed', 'status': 'needs_replan', 'reason': 'party_changed'}}], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\unit\travel\test_late_departure_notice_v1.py:59: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_window_ends_at_next_visit_not_old_movement_end[-1-0]" time="0.006" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_window_ends_at_next_visit_not_old_movement_end[0-1]" time="0.020" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_window_ends_at_next_visit_not_old_movement_end[1-1]" time="0.010" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_window_ends_at_next_visit_not_old_movement_end[2-1]" time="0.006" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_window_ends_at_next_visit_not_old_movement_end[29-1]" time="0.018" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_window_ends_at_next_visit_not_old_movement_end[30-0]" time="0.006" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_window_ends_at_next_visit_not_old_movement_end[31-0]" time="0.008" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_late_candidate_that_cannot_arrive_is_held" time="0.009" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_failed_late_recheck_is_not_published_and_can_recover[fatal-fatal]" time="0.011"><failure message="AssertionError: assert 0 == 1&#10; +  where 0 = len([])&#10; +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[{'trip_id': '92d0214c-0269-457c-8420-57fa5e3a5e7b', 'i..., 'party_check': 'changed', 'status': 'needs_replan', 'reason': 'party_changed'}}], fatal=[], no_route=0, unchecked=[]).sent">world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=&lt;app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x0000024C1F154AA0&gt;)
+status = 'fatal', bucket = 'fatal'
+
+    @pytest.mark.parametrize('status, bucket', [('fatal', 'fatal'), ('needs_replan', 'held')])
+    def test_failed_late_recheck_is_not_published_and_can_recover(world, status, bucket):
+        current = world.runner.departure_observer
+        world.runner.departure_observer = lambda *a, **kw: {'status': status, 'reason': 'controlled_failure'}
+        failed = world.runner.tick()
+        assert len(getattr(failed, bucket)) == 1 and not failed.sent and not world.payloads
+        world.runner.departure_observer = current
+        recovered = world.runner.tick()
+&gt;       assert len(recovered.sent) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[{'trip_id': '92d0214c-0269-457c-8420-57fa5e3a5e7b', 'i..., 'party_check': 'changed', 'status': 'needs_replan', 'reason': 'party_changed'}}], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\unit\travel\test_late_departure_notice_v1.py:92: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_failed_late_recheck_is_not_published_and_can_recover[needs_replan-held]" time="0.009"><failure message="AssertionError: assert 0 == 1&#10; +  where 0 = len([])&#10; +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[{'trip_id': 'f1bbbbb5-b44b-4834-973d-52ebdfb19abd', 'i..., 'party_check': 'changed', 'status': 'needs_replan', 'reason': 'party_changed'}}], fatal=[], no_route=0, unchecked=[]).sent">world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=&lt;app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x0000024C1F13B200&gt;)
+status = 'needs_replan', bucket = 'held'
+
+    @pytest.mark.parametrize('status, bucket', [('fatal', 'fatal'), ('needs_replan', 'held')])
+    def test_failed_late_recheck_is_not_published_and_can_recover(world, status, bucket):
+        current = world.runner.departure_observer
+        world.runner.departure_observer = lambda *a, **kw: {'status': status, 'reason': 'controlled_failure'}
+        failed = world.runner.tick()
+        assert len(getattr(failed, bucket)) == 1 and not failed.sent and not world.payloads
+        world.runner.departure_observer = current
+        recovered = world.runner.tick()
+&gt;       assert len(recovered.sent) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[{'trip_id': 'f1bbbbb5-b44b-4834-973d-52ebdfb19abd', 'i..., 'party_check': 'changed', 'status': 'needs_replan', 'reason': 'party_changed'}}], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\unit\travel\test_late_departure_notice_v1.py:92: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_already_published_late_move_is_skipped_before_observation" time="0.006" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_late_window_finds_following_visit_across_midnight_in_sequence_order" time="0.018"><failure message="AttributeError: 'Connection' object has no attribute 'cursor'">world = namespace(now=datetime.datetime(2026, 10, 10, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=&lt;app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x0000024C1F0F95B0&gt;)
+
+    def test_late_window_finds_following_visit_across_midnight_in_sequence_order(world):
+        delta = timedelta(hours=13, minutes=58)
+        for item in world.items:
+            item.starts_at += delta
+            if item.ends_at:
+                item.ends_at += delta
+        world.items[-1].ends_at = world.items[-1].starts_at + timedelta(hours=1)
+        world.now = NOW + delta + timedelta(minutes=2)
+        world.items.reverse()
+&gt;       result = world.runner.tick()
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_late_departure_notice_v1.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\components\watch\trip_reminders.py:336: in tick
+    payload = self._payload(trip_id, trip, items, reminder, now, result, waiting=waiting)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\trip_reminders.py:403: in _payload
+    changed = self._changed_since(trip_id, reminder.due_at) if reminder.kind == "day_start" else 0
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x0000024C1F0F95B0&gt;
+trip_id = UUID('86015e05-99b3-4a5b-8265-d2568713d0d6')
+due_at = datetime.datetime(2026, 10, 9, 23, 28, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+
+    def _changed_since(self, trip_id, due_at: datetime) -&gt; int:
+        """하루 시작 전 24시간 동안 바뀐 일정 버전 수(생성 제외). ★새벽 3시 정리의 몫이다."""
+&gt;       with self._connect() as conn, conn.cursor() as cur:
+                                      ^^^^^^^^^^^
+E       AttributeError: 'Connection' object has no attribute 'cursor'
+
+app\domains\travel_ops\components\watch\trip_reminders.py:383: AttributeError</failure></testcase><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_without_following_visit_no_extended_candidate" time="0.005" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_legacy_without_observer_keeps_saved_end_window" time="0.006" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_next_visit_deadline_also_bounds_overlong_saved_movement" time="0.006" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_missing_saved_movement_end_still_uses_next_visit" time="0.023" /><testcase classname="tests.unit.travel.test_late_departure_notice_v1" name="test_late_recovery_still_checks_basis_before_enqueue" time="0.009"><failure message="AssertionError: assert (0 == 1)&#10; +  where 0 = len([])&#10; +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[{'trip_id': 'e4f20c0c-64a4-445f-9e3a-9005c3b4095a', 'i..., 'party_check': 'changed', 'status': 'needs_replan', 'reason': 'party_changed'}}], fatal=[], no_route=0, unchecked=[]).stale">world = namespace(now=datetime.datetime(2026, 10, 9, 10, 2, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), call...uses': []}, runner=&lt;app.domains.travel_ops.components.watch.trip_reminders.TripReminders object at 0x0000024C1F156780&gt;)
+
+    def test_late_recovery_still_checks_basis_before_enqueue(world):
+        world.runner.departure_observer.validate_basis = lambda basis: False
+        result = world.runner.tick()
+&gt;       assert len(result.stale) == 1 and not result.sent and not world.payloads
+E       AssertionError: assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = ReminderTickResult(trips=1, sent=[], already=0, stale=[], held=[{'trip_id': 'e4f20c0c-64a4-445f-9e3a-9005c3b4095a', 'i..., 'party_check': 'changed', 'status': 'needs_replan', 'reason': 'party_changed'}}], fatal=[], no_route=0, unchecked=[]).stale
+
+tests\unit\travel\test_late_departure_notice_v1.py:139: AssertionError</failure></testcase></testsuite></testsuites>

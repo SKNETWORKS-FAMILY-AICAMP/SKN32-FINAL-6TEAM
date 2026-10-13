@@ -1,0 +1,8 @@
+{
+  "stream": "departure",
+  "exit_code": 0,
+  "elapsed_seconds": 132.55,
+  "requested_model": "claude-sonnet-5-5",
+  "approved_source_files": 6,
+  "tools_enabled": false
+}

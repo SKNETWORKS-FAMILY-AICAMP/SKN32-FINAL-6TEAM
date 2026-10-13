@@ -1,0 +1,13 @@
+
+ RUN  v5.0.1 C:/Users/playdata2/Documents/final_workspace/.tmp/baseline-manager-20261012/team/final_project_cs/frontend/apps/web
+
+
+ Test Files  87 passed (87)
+      Tests  712 passed (712)
+   Start at  13:30:34
+   Duration  23.63s (import 37%, transform 34%, tests 24%, worker 5%)
+
+     Import  255 modules were evaluated 574 times · 3.83s total, 37% of tracked time
+             ~2.13s faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+             learn more: https://vitest.dev/guide/improving-performance#test-isolation
+

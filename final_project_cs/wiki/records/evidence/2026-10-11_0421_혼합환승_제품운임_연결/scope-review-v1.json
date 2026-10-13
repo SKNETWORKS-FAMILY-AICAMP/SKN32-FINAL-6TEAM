@@ -1,0 +1,30 @@
+{
+  "non_fare_rules_unchanged": true,
+  "single_bus_fare_rules_unchanged": true,
+  "subway_fare_rules_unchanged": true,
+  "changed_transfer_fields": [
+    "distance_steps",
+    "types",
+    "bus_distance",
+    "max_ride_min"
+  ],
+  "scripts": {
+    "audit_transfer_replay_20261011.py": "c83761a8a9f3e63f37794593fb2982f098e70273a9bc1de8c5684bcdb8a63b97",
+    "baseline_plan_transfer_20261011.py": "bedb2409cbdf05fd266dd182f1862aee88ec3d515db08197aab4b27ceb471c3d",
+    "baseline_plan_transfer_20261011_v2.py": "7ce626aee3adfa5888e6b326c973f0859ce9bf7e85e4e4980fc88cbea4377504",
+    "prepare_transfer_product_20261011.py": "d143c057e2c88c4f198765101e0d199fdf4f78e98f808b74b033c63e7bfa5185",
+    "publish_transfer_product_20261011.py": "3112c8d943b807f3701b15b4308cc8216401fa4568bdf3ac8fca966648c80384",
+    "publish_transfer_product_20261011_v3.py": "68f2e03eff09cc3097d07ba52caf8164528e8eec78f8d10a5bcc8b1dacb85e42",
+    "render_transfer_product_20261011.py": "e457049abda7e4a94360e2914ff8c8238de216a216ed0f0bafe05fc9ed3f7480",
+    "replay_transfer_product_20261011.py": "b333fd26250d4deb2a29bbb35f0531212ac2cb13c6dac3e912d5b44731542556",
+    "replay_transfer_product_20261011_v2.py": "87b5ee0bf044af7a255a4a57667e4874fcd4ba7878433d5f428d5be593a192a6",
+    "replay_transfer_product_20261011_v3.py": "ba945605e00326276bd47d70545d7b109937e72a9903a6fdc302fe88f3a41bef",
+    "run_transfer_product_20261011.py": "9cf35602ed317c56b9c8458e64a0aede38baefe37d4ecbe48e88158f24802b65",
+    "run_transfer_product_20261011_v2.py": "3b3844c336cee84b030d828fb6028d746f99ceea48aaf8dba7b156cd430d1232",
+    "run_transfer_product_20261011_v3.py": "e4e65bce6c664f5f552e55ff0d44e6e4adb9bc45cc1045f0c97705d45dd1ac0f",
+    "test_transfer_fare_product_v1.py": "60fbb50a648fc458eaec4b799bd4a14486cd8bec4bb2d2f690a7a6bce8b2ee62"
+  },
+  "replay_command": "python .tmp/mobility_complete_20261008/replay_transfer_product_20261011_v3.py",
+  "test_command": "python .tmp/mobility_complete_20261008/run_transfer_product_20261011_v3.py related-v3",
+  "rerun_note": "기존 로그/임시 폴더를 덮지 않도록 새 실행 stage와 새 출력 이름으로 복사 후 실행한다."
+}

@@ -1,0 +1,27 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-c",
+    "import socket,sys,json\nfrom pathlib import Path\ncalls=[]\ndef deny(*a,**kw):\n    calls.append(1);raise RuntimeError('offline network denied')\nsocket.socket.connect=deny;socket.socket.connect_ex=deny\nfrom app.domains.travel_ops.instances.mobility.engine import runtime\noriginal=runtime.build_verifier\ndef offline(**kw):\n    kw.setdefault('local_router',True);kw.setdefault('seoul_key','');kw.setdefault('gh_url','')\n    return original(**kw)\nruntime.build_verifier=offline\nimport pytest\ncode=pytest.main(sys.argv[1:])\nPath('C:\\\\Users\\\\playdata2\\\\Documents\\\\final_workspace\\\\final_project_cs\\\\wiki\\\\records\\\\evidence\\\\2026-10-11_0918_\ubc84\uc2a4\uc811\uadfc\ubc29\ud5a5_\uc9c4\ub2e8\\\\related-after-network.json').write_text(json.dumps({'network_attempts':len(calls),'limited_api_calls':0}),encoding='utf8')\nsys.exit(code)\n",
+    "tests\\unit\\travel\\mobility\\test_bus_access_pairs_v1.py",
+    "tests\\unit\\travel\\mobility\\test_bus_boarding_window.py",
+    "tests\\unit\\travel\\mobility\\test_bus_bus_walk_v1.py",
+    "tests\\unit\\travel\\mobility\\test_bus_candidate_day_type.py",
+    "tests\\unit\\travel\\mobility\\test_bus_distance_completeness_v1.py",
+    "tests\\unit\\travel\\mobility\\test_bus_only_planner_candidates.py",
+    "tests\\unit\\travel\\mobility\\test_bus_profile_completeness_v1.py",
+    "tests\\unit\\travel\\mobility\\test_bus_profile_unit.py",
+    "tests\\unit\\travel\\mobility\\test_bus_service_direction.py",
+    "tests\\unit\\travel\\mobility\\test_bus_stop_identity_v1.py",
+    "tests\\unit\\travel\\mobility\\test_bus_to_bus.py",
+    "tests\\unit\\travel\\mobility\\test_bus_window_norm.py",
+    "tests/unit/travel/mobility/test_plan_access_walk.py",
+    "tests/unit/travel/mobility/test_plan_v1.py",
+    "tests/unit/travel/mobility/test_review_fixes_plan.py",
+    "tests/unit/travel/mobility/test_transfer_fare_product_v1.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-bus-access-related-after",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_0918_\ubc84\uc2a4\uc811\uadfc\ubc29\ud5a5_\uc9c4\ub2e8\\related-after.xml"
+  ],
+  "exit_code": 1
+}

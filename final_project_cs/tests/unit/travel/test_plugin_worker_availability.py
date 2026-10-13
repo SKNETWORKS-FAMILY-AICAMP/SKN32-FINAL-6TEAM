@@ -111,6 +111,10 @@ class Connection:
     def transaction(self):
         return nullcontext()
 
+    def execute(self, *args, **kwargs):
+        # `[2026-10-13]` 감시 회차 기록(`monitoring.execute` 의 travel_watch_runs INSERT·UPDATE)이 쓰는 자리 — 이 시험은 기록을 보지 않는다
+        return self
+
 
 @pytest.mark.parametrize("watcher_module, watcher_type", [
     (trip_watch_cases, trip_watch_cases.TripWatchCaseOpener), (trip_watch, trip_watch.TripWatcher)])

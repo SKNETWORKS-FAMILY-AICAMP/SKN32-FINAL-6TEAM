@@ -1,0 +1,7 @@
+{
+  "status": "blocked_by_auto_review",
+  "reason": "내부 설계 정보의 외부 Codex CLI 전송에 구체적 사용자 승인이 없다는 자동 승인 검토 차단",
+  "bypass_attempted": false,
+  "independent_review_completed": false,
+  "local_alternative": "계약 대조·재현·현재 소스 시험·로컬 개발 DB 종단·확대 회귀"
+}

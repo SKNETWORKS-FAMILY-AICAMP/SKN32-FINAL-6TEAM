@@ -1,0 +1,14 @@
+{
+  "request": {
+    "total": 1033,
+    "trained_only_correct": 69,
+    "original_only_correct": 14,
+    "exact_p": 6.802593482929839e-10
+  },
+  "no_request": {
+    "total": 974,
+    "trained_only_correct": 171,
+    "original_only_correct": 5,
+    "exact_p": 2.8574415530930506e-44
+  }
+}

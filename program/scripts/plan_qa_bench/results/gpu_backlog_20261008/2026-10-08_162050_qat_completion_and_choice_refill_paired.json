@@ -1,0 +1,42 @@
+{
+  "e4bqat_oos2_mx": {
+    "control_request": {
+      "total": 1033,
+      "trained_only_correct": 16,
+      "original_only_correct": 12,
+      "exact_p": 0.5715881884098053
+    },
+    "control_no_request": {
+      "total": 974,
+      "trained_only_correct": 211,
+      "original_only_correct": 13,
+      "exact_p": 3.180293608536909e-47
+    },
+    "mixed_request": {
+      "total": 1033,
+      "trained_only_correct": 21,
+      "original_only_correct": 60,
+      "exact_p": 1.69358312158601e-05
+    },
+    "mixed_no_request": {
+      "total": 974,
+      "trained_only_correct": 164,
+      "original_only_correct": 22,
+      "exact_p": 4.877110717955509e-28
+    }
+  },
+  "e4bqat_oos3_h": {
+    "positive": {
+      "total": 461,
+      "trained_only_correct": 18,
+      "original_only_correct": 17,
+      "exact_p": 1.0
+    },
+    "negative": {
+      "total": 855,
+      "trained_only_correct": 288,
+      "original_only_correct": 28,
+      "exact_p": 1.5539856743593486e-55
+    }
+  }
+}

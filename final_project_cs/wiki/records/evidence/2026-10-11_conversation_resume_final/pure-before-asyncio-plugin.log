@@ -1,0 +1,42 @@
+........................................................................ [ 44%]
+........................................................................ [ 89%]
+...........FF....                                                        [100%]
+================================== FAILURES ===================================
+_____ test_closed_report_finishes_when_optional_reads_have_no_budget_left _____
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________ test_team_reports_unknown_original_without_a_change_proposal _________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+============================== warnings summary ===============================
+tests\unit\travel\test_dining_alternative_opening.py:122
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_dining_alternative_opening.py:122: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\travel\test_dining_review_fixes.py:48
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_dining_review_fixes.py:48: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\travel\test_dining_review_fixes.py:60
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_dining_review_fixes.py:60: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_conversation_resume_final\pure.junit.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_dining_review_fixes.py::test_closed_report_finishes_when_optional_reads_have_no_budget_left
+FAILED tests/unit/travel/test_dining_review_fixes.py::test_team_reports_unknown_original_without_a_change_proposal
+2 failed, 159 passed, 4 warnings in 10.47s

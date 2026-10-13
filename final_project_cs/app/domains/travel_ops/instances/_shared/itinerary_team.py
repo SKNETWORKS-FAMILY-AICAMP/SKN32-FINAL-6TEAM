@@ -435,7 +435,9 @@ def customer_lines() -> dict[str, str]:
 
         manifest = Path(__file__).resolve().parents[5] / "knowledge" / "travel" / "manifest.json"
         found: dict[str, str] = {}
-        for document in load_corpus(manifest):
+        current = manifest.parent.parent / "current-travel" / "manifest.json"
+        manifests = [manifest] + ([current] if current.is_file() else [])
+        for document in (doc for path in manifests for doc in load_corpus(path)):
             answers = document.frontmatter.get("customer_answers") or {}
             for section in document.sections:
                 line = answers.get(section.title)

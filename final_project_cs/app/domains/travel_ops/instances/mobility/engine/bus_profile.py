@@ -18,6 +18,7 @@
 """
 import gzip
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -128,6 +129,28 @@ class BusSegProfile:
         pick       : 요일형 후보가 둘일 때 고르는 법 — 소요는 느린 쪽(max). 부른 쪽이 목적에 맞게 준다
         """
         w = Walk()
+        if any(isinstance(x, bool) or not isinstance(x, int) or x <= 0
+               for x in (a_seq, b_seq)) or a_seq > b_seq:
+            w.fail_seq = a_seq
+            return w
+        if a_seq != b_seq:
+            if any(isinstance(s.get("seq"), bool) or not isinstance(s.get("seq"), int)
+                   or s["seq"] <= 0 for s in stops):
+                w.fail_seq = a_seq
+                return w
+            segment = [s for s in stops if a_seq <= s["seq"] <= b_seq]
+            if not segment or segment[0]["seq"] != a_seq:
+                w.fail_seq = a_seq
+                return w
+            if segment[-1]["seq"] != b_seq:
+                w.fail_seq = b_seq
+                return w
+            if (len(segment) != b_seq - a_seq + 1
+                    or any(s["seq"] != a_seq + i or s.get("route_id", route_id) != route_id
+                           for i, s in enumerate(segment))):
+                w.fail_seq = a_seq
+                return w
+            stops = segment
         t = float(depart_min)
         reached = a_seq == b_seq
         started = reached
@@ -160,7 +183,14 @@ class BusSegProfile:
                 else:
                     w.half += 1
             else:
-                m = fallback(nxt.get("sect_dist_m"))
+                distance = nxt.get("sect_dist_m")
+                try:
+                    valid_distance = (not isinstance(distance, bool)
+                                      and isinstance(distance, (int, float))
+                                      and distance >= 0 and math.isfinite(distance))
+                except OverflowError:
+                    valid_distance = False
+                m = fallback(distance) if valid_distance else None
                 if m is None:
                     w.fb += 1
                     w.fail_seq = s["seq"]

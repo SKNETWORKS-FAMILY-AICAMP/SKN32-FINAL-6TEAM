@@ -1,6 +1,7 @@
 import type { Language } from "../i18n";
 import { api } from "./client";
 import type { IntakeView } from "./intake";
+import type { WebTaxiPricing } from "./taxi-pricing";
 
 /**
  * The plan-check screen's server data (`wiki/external/rest-endpoints.md` 「확인 화면 검사 · 대체 후보 …」).
@@ -98,6 +99,7 @@ export interface ReviewMove {
 export interface ReviewNeeds { items: number; moves: number; total: number }
 
 export interface Review {
+  taxi_pricing?: WebTaxiPricing;
   revision: number;
   built_at: string;
   engine: "timetable" | "estimate" | "mixed" | null;

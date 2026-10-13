@@ -1,0 +1,60 @@
+--- before/app/domains/travel_ops/instances/mobility/engine/plan.py
++++ after/app/domains/travel_ops/instances/mobility/engine/plan.py
+@@ -1141,15 +1141,15 @@
+ 
+     def _station_pairs(self, a_place, b_place, wlim):
+         """(GPT 86 Q3) 역 목록·역 짝 — leg() 와 earliest 가 같이 쓴다. (sa, sb, pairs).
+-        pairs = [(ia, ib, 역a, 역b)] 가까운 짝부터((0,0) 이 늘 먼저) · 역이 없거나 양쪽 첫 역이 같으면 [](이유는 leg() 가 만든다).
++        pairs = [(ia, ib, 역a, 역b)] 가까운 짝부터 · 동일 물리적 역끼리만 제외한다.
+         ★ 탐색 중단 정책은 쓰는 쪽이 정한다 — leg() 는 실을 수 있는 짝에서 멈추고(STATION_PAIR_MODE), 가장 이른 도착
+           목표 생성(_earliest_targets)은 짝 전부를 본다(목표 후보를 넓게 · 확인은 leg() 가 한다)."""
+         sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
+-        if not sa or not sb or same_station(sa[0][0], sa[0][2], sb[0][0], sb[0][2]):
++        if not sa or not sb:
+             return sa, sb, []
+         pairs = [(ia, ib, x, y) for ia, x in enumerate(sa) for ib, y in enumerate(sb)
+                  if not same_station(x[0], x[2], y[0], y[2])]
+-        pairs.sort(key=lambda t: (t[0] + t[1], t[2][1] + t[3][1], t[0]))   # (0,0) 이 늘 먼저 — 앞 판과 같은 첫 짝
++        pairs.sort(key=lambda t: (t[0] + t[1], t[2][1] + t[3][1], t[0]))   # (0,0)이 유효하면 앞 판과 같은 첫 짝
+         return sa, sb, pairs
+ 
+     def _earliest_targets(self, a_place, b_place, not_before_dt, party, first_visit, case_id):
+@@ -1509,8 +1509,7 @@
+         # ② 대중교통 — 장소마다 도보 상한 안 역 **가까운 순 여럿**(막힌 역 뺌 · E1) → 역 짝마다 다목적 후보(판정기
+         #   verify_multi) → 후보마다 마지막 성립 출발로 다시 판정. 짝은 가까운 짝부터 보고, **실을 수 있는 대중교통 후보가
+         #   앞 일정 끝 뒤에 떠날 수 있는 짝에서 멈춘다**(_pair_settles · STATION_PAIR_MODE) — 그런 짝이 첫 짝이면 앞 판과
+-        #   같다. ★같은 역 조기 종료(아래)는 앞 판 정책 그대로 — 막힌 역을 뺀 뒤 양쪽 첫 역이 같아도 도보만 본다(사각지대 ·
+-        #   85 닫힘 전달에 적음).
++        #   같다. 양쪽 첫 역이 같아도 다른 물리적 역 조합은 같은 판정에 넘긴다.
+         sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
+         oa, ob = (sa[0] if sa else None), (sb[0] if sb else None)
+         why, r, n_mode = None, None, 0
+@@ -1524,8 +1523,8 @@
+             else:
+                 why = {"code": "no_data", "reason": "도보 상한 안에 지하철역이 없다"
+                        + (f"({a_place['name']})" if oa is None else f"({b_place['name']})")}
+-        elif same_station(oa[0], oa[2], ob[0], ob[2]):          # 55 GPT #2 — 동명이역은 역명이 같아도 다른 역
+-            why = {"code": "no_data", "reason": f"두 장소의 가장 가까운 역이 같다({oa[0]}) — 도보만 본다"}
++        elif not pairs:
++            why = {"code": "no_data", "reason": f"도보 상한 안에 다른 물리적 역 조합이 없다({oa[0]})"}
+         visited = []
+         for pi, (_ia, _ib, xa, xb) in enumerate(pairs):
+             got, r_, nm_ = self._transit_pair(xa, xb, pi, arrive_dt, sdate, arrive_by, party, first_visit, case_id, left)
+--- before/tests/unit/travel/mobility/test_station_fallback_v1.py
++++ after/tests/unit/travel/mobility/test_station_fallback_v1.py
+@@ -277,12 +277,12 @@
+     assert any("버스" in x for x in labels) and len(labels) == len(set(labels)), labels
+ 
+ 
+-def test_same_nearest_station_still_walk_only():
+-    """앞 판 정책 유지(사각지대로 기록) — 막힌 역을 뺀 뒤 양쪽 첫 역이 같으면 다른 짝을 보지 않는다."""
++def test_same_nearest_station_checks_other_pairs():
++    """최근접역이 같아도 서로 다른 역 조합을 검증한다. 같은 물리적 역끼리는 제외한다."""
+     pl, seen = _pair_planner({0: [_opt(0, 650)]})
+     pl._near_stations = lambda place, limit, k=None: [("같은역", 100.0, None), ("B2", 300.0, None)]
+     got, why = pl.leg(A_, B_, ARR, {}, True, "a_to_b")
+-    assert got is None and seen == [] and "가장 가까운 역이 같다" in why["reason"], why
++    assert got is not None and seen == [0], why
+ 
+ 
+ @pytest.mark.parametrize("bad", [0, -1, 2.5, True, "3"])

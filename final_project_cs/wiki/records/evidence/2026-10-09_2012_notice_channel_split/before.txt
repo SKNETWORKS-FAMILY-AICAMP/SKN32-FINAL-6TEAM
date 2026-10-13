@@ -1,0 +1,90 @@
+FFFF.                                                                    [100%]
+================================== FAILURES ===================================
+_ test_with_the_switch_off_customer_notices_never_fall_back_to_the_operator[False] _
+
+rt = {'auth': <function api.<locals>.auth at 0x000001E0C3882FC0>, 'box': {'dc': {'body': {}, 'headers': {}, 'raise': None, ...tte.testclient.TestClient object at 0x000001E0C37D0D40>, 'customer': UUID('b0384155-7d32-40bd-84d4-1d4df19fa253'), ...}
+connected = False
+
+    @pytest.mark.parametrize("connected", [False, True])
+    def test_with_the_switch_off_customer_notices_never_fall_back_to_the_operator(rt, connected):
+        if connected:
+            _profile(rt, channel="telegram", telegram=True)
+        seen = []
+        message = _message(rt)
+>       with pytest.raises(NoticeSuppressed, match="�ܺ� �˸��� ����"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'app.infrastructure.notify.suppressed.NoticeSuppressed'>
+
+tests\e2e\test_notice_routing.py:148: Failed
+_ test_with_the_switch_off_customer_notices_never_fall_back_to_the_operator[True] _
+
+rt = {'auth': <function api.<locals>.auth at 0x000001E0C37BA8E0>, 'box': {'dc': {'body': {}, 'headers': {}, 'raise': None, ...tte.testclient.TestClient object at 0x000001E0C39F4080>, 'customer': UUID('052cf3df-7d40-41dd-8a3c-89b99e7911e3'), ...}
+connected = True
+
+    @pytest.mark.parametrize("connected", [False, True])
+    def test_with_the_switch_off_customer_notices_never_fall_back_to_the_operator(rt, connected):
+        if connected:
+            _profile(rt, channel="telegram", telegram=True)
+        seen = []
+        message = _message(rt)
+>       with pytest.raises(NoticeSuppressed, match="�ܺ� �˸��� ����"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'app.infrastructure.notify.suppressed.NoticeSuppressed'>
+
+tests\e2e\test_notice_routing.py:148: Failed
+_ test_without_external_delivery_the_worker_keeps_the_app_notice_without_operator_fallback_or_retry[False-False] _
+
+rt = {'auth': <function api.<locals>.auth at 0x000001E0C3831DA0>, 'box': {'dc': {'body': {}, 'headers': {}, 'raise': None, ...tte.testclient.TestClient object at 0x000001E0C378DF10>, 'customer': UUID('203e55c5-e026-46c5-9c9f-8d4a4ecd3736'), ...}
+enabled = False, connected = False
+
+    @pytest.mark.parametrize("enabled,connected", [(False, False), (False, True), (True, False)])
+    def test_without_external_delivery_the_worker_keeps_the_app_notice_without_operator_fallback_or_retry(rt, enabled, connected):
+        from app.domains.travel_ops.modules.web_account.web_session import add_key
+    
+        if connected:
+            _profile(rt, channel="telegram", telegram=True)
+        with get_connection() as conn, conn.transaction():
+            key = add_key(conn, tenant_id=rt["tenant"], customer_id=rt["customer"])
+        seen = []
+        message_id = _enqueue(rt, 2)
+        worker = _worker(rt, _router(rt, enabled=enabled, operator=seen.append))
+        assert worker.process_once() is True
+        row = _row(message_id)
+>       assert row["status"] == "skipped"
+E       AssertionError: assert 'delivered' == 'skipped'
+E         
+E         - skipped
+E         + delivered
+
+tests\e2e\test_notice_routing.py:487: AssertionError
+_ test_without_external_delivery_the_worker_keeps_the_app_notice_without_operator_fallback_or_retry[False-True] _
+
+rt = {'auth': <function api.<locals>.auth at 0x000001E0C3C525C0>, 'box': {'dc': {'body': {}, 'headers': {}, 'raise': None, ...tte.testclient.TestClient object at 0x000001E0C3BAAC30>, 'customer': UUID('1dda4551-494e-4f56-ab07-b1eda55ee173'), ...}
+enabled = False, connected = True
+
+    @pytest.mark.parametrize("enabled,connected", [(False, False), (False, True), (True, False)])
+    def test_without_external_delivery_the_worker_keeps_the_app_notice_without_operator_fallback_or_retry(rt, enabled, connected):
+        from app.domains.travel_ops.modules.web_account.web_session import add_key
+    
+        if connected:
+            _profile(rt, channel="telegram", telegram=True)
+        with get_connection() as conn, conn.transaction():
+            key = add_key(conn, tenant_id=rt["tenant"], customer_id=rt["customer"])
+        seen = []
+        message_id = _enqueue(rt, 2)
+        worker = _worker(rt, _router(rt, enabled=enabled, operator=seen.append))
+        assert worker.process_once() is True
+        row = _row(message_id)
+>       assert row["status"] == "skipped"
+E       AssertionError: assert 'delivered' == 'skipped'
+E         
+E         - skipped
+E         + delivered
+
+tests\e2e\test_notice_routing.py:487: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_notice_routing.py::test_with_the_switch_off_customer_notices_never_fall_back_to_the_operator[False]
+FAILED tests/e2e/test_notice_routing.py::test_with_the_switch_off_customer_notices_never_fall_back_to_the_operator[True]
+FAILED tests/e2e/test_notice_routing.py::test_without_external_delivery_the_worker_keeps_the_app_notice_without_operator_fallback_or_retry[False-False]
+FAILED tests/e2e/test_notice_routing.py::test_without_external_delivery_the_worker_keeps_the_app_notice_without_operator_fallback_or_retry[False-True]
+4 failed, 1 passed, 47 deselected in 7.26s

@@ -1,0 +1,71 @@
+{
+  "scope": "고정 예제; 실제 운행 측정 아님",
+  "saved_model": {
+    "option_id": "p",
+    "observations": [],
+    "timing_unit": "model_minutes",
+    "basis": {
+      "timetable_built_at": "fixture-a",
+      "rules_version": "v0.9.2"
+    },
+    "checked_at": "2026-10-09T09:50:00+09:00",
+    "verdict": "feasible",
+    "reason": "예정 10:04 +@15분(최악 10:09 + 버퍼 10분) · 여유 39분",
+    "leg_results": [
+      {
+        "idx": 0,
+        "verdict": "feasible",
+        "depart_min": 601,
+        "arrive_min": 604,
+        "wait_min": 5,
+        "ride_min": 3,
+        "ride_src": "profile"
+      }
+    ],
+    "status": "model_revalidated",
+    "departure_at": "2026-10-09T09:50:00+09:00",
+    "arrival_at": "2026-10-09T10:06:00+09:00",
+    "worst_arrival_at": "2026-10-09T10:11:00+09:00",
+    "eta_min": 16
+  },
+  "wait_only_counterfactual_min": 12,
+  "current_revalidated": {
+    "option_id": "p",
+    "observations": [
+      {
+        "status": "predicted",
+        "source": "fixture/arrival",
+        "route_id": "100",
+        "stop_id": "1005",
+        "stop_sequence": 5,
+        "confirmed_at": "2026-10-09T10:00:00+09:00",
+        "arrival_at": "2026-10-09T10:07:00+09:00"
+      }
+    ],
+    "timing_unit": "model_minutes",
+    "basis": {
+      "timetable_built_at": "fixture-a",
+      "rules_version": "v0.9.2"
+    },
+    "checked_at": "2026-10-09T10:00:00+09:00",
+    "verdict": "feasible",
+    "reason": "예정 10:19 +@10분(최악 10:19 + 버퍼 10분) · 여유 29분",
+    "leg_results": [
+      {
+        "idx": 0,
+        "verdict": "feasible",
+        "depart_min": 607,
+        "arrive_min": 619,
+        "wait_min": 1,
+        "ride_min": 12,
+        "ride_src": "profile"
+      }
+    ],
+    "status": "realtime",
+    "departure_at": "2026-10-09T10:00:00+09:00",
+    "arrival_at": "2026-10-09T10:21:00+09:00",
+    "worst_arrival_at": "2026-10-09T10:21:00+09:00",
+    "eta_min": 21
+  },
+  "rule": "접근6·이탈2; 구간 승차 시각607분 이후 소요12, 이전3분"
+}

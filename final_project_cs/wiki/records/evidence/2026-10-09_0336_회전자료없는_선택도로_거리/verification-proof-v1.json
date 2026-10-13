@@ -1,0 +1,437 @@
+{
+  "created_at": "2026-10-09T03:47:39.473730+09:00",
+  "report": "2026-10-09_0347_차량_대체경로_선택거리와_좌표이동_통제실험.md",
+  "regression": {
+    "passed": 695,
+    "total": 695,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "process_groups": 4
+  },
+  "target_passed": 57,
+  "target_total": 57,
+  "target_source": "subset of final expanded JUnit cases",
+  "before_failed": 4,
+  "before_total": 4,
+  "real_probe": {
+    "created_at": "2026-10-09T03:38:27.466969+09:00",
+    "queries": 2,
+    "repetitions": 3,
+    "calls": 6,
+    "api_calls": 0,
+    "independent_holdout": false,
+    "observations": [
+      {
+        "repeat": 1,
+        "label": "original",
+        "requested_start": [
+          126.81659695671017,
+          37.56103677313472
+        ],
+        "requested_end": [
+          126.81649055992263,
+          37.561935578472514
+        ],
+        "distance_m": 98.29,
+        "model_seconds": 9.175,
+        "snap_m": [
+          8.8,
+          0.0
+        ],
+        "quality": {
+          "access_max_m": 8.8,
+          "arterial_pct": 0.0,
+          "optimistic": false
+        },
+        "turns": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 2487,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false,
+          "arc_codes": [
+            187112,
+            187174
+          ],
+          "search_cost_seconds": 9.175276625678396,
+          "snap_selection": {
+            "candidate_counts": [
+              2,
+              2
+            ],
+            "selected_candidate_ranks": [
+              1,
+              0
+            ],
+            "used_non_nearest": [
+              true,
+              false
+            ],
+            "nearest_snap_m": [
+              0.0,
+              0.0
+            ],
+            "physical_access_verified": false
+          }
+        }
+      },
+      {
+        "repeat": 1,
+        "label": "on_selected_road",
+        "requested_start": [
+          126.81668092135571,
+          37.56107982631504
+        ],
+        "requested_end": [
+          126.81649055992263,
+          37.561935578472514
+        ],
+        "distance_m": 87.32,
+        "model_seconds": 7.859,
+        "snap_m": [
+          10.9,
+          0.0
+        ],
+        "quality": {
+          "access_max_m": 10.9,
+          "arterial_pct": 0.0,
+          "optimistic": false
+        },
+        "turns": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 2487,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false,
+          "arc_codes": [],
+          "search_cost_seconds": 7.85880010989319,
+          "snap_selection": {
+            "candidate_counts": [
+              3,
+              2
+            ],
+            "selected_candidate_ranks": [
+              2,
+              0
+            ],
+            "used_non_nearest": [
+              true,
+              false
+            ],
+            "nearest_snap_m": [
+              0.0,
+              0.0
+            ],
+            "physical_access_verified": false
+          }
+        }
+      },
+      {
+        "repeat": 2,
+        "label": "original",
+        "requested_start": [
+          126.81659695671017,
+          37.56103677313472
+        ],
+        "requested_end": [
+          126.81649055992263,
+          37.561935578472514
+        ],
+        "distance_m": 98.29,
+        "model_seconds": 9.175,
+        "snap_m": [
+          8.8,
+          0.0
+        ],
+        "quality": {
+          "access_max_m": 8.8,
+          "arterial_pct": 0.0,
+          "optimistic": false
+        },
+        "turns": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 2487,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false,
+          "arc_codes": [
+            187112,
+            187174
+          ],
+          "search_cost_seconds": 9.175276625678396,
+          "snap_selection": {
+            "candidate_counts": [
+              2,
+              2
+            ],
+            "selected_candidate_ranks": [
+              1,
+              0
+            ],
+            "used_non_nearest": [
+              true,
+              false
+            ],
+            "nearest_snap_m": [
+              0.0,
+              0.0
+            ],
+            "physical_access_verified": false
+          }
+        }
+      },
+      {
+        "repeat": 2,
+        "label": "on_selected_road",
+        "requested_start": [
+          126.81668092135571,
+          37.56107982631504
+        ],
+        "requested_end": [
+          126.81649055992263,
+          37.561935578472514
+        ],
+        "distance_m": 87.32,
+        "model_seconds": 7.859,
+        "snap_m": [
+          10.9,
+          0.0
+        ],
+        "quality": {
+          "access_max_m": 10.9,
+          "arterial_pct": 0.0,
+          "optimistic": false
+        },
+        "turns": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 2487,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false,
+          "arc_codes": [],
+          "search_cost_seconds": 7.85880010989319,
+          "snap_selection": {
+            "candidate_counts": [
+              3,
+              2
+            ],
+            "selected_candidate_ranks": [
+              2,
+              0
+            ],
+            "used_non_nearest": [
+              true,
+              false
+            ],
+            "nearest_snap_m": [
+              0.0,
+              0.0
+            ],
+            "physical_access_verified": false
+          }
+        }
+      },
+      {
+        "repeat": 3,
+        "label": "original",
+        "requested_start": [
+          126.81659695671017,
+          37.56103677313472
+        ],
+        "requested_end": [
+          126.81649055992263,
+          37.561935578472514
+        ],
+        "distance_m": 98.29,
+        "model_seconds": 9.175,
+        "snap_m": [
+          8.8,
+          0.0
+        ],
+        "quality": {
+          "access_max_m": 8.8,
+          "arterial_pct": 0.0,
+          "optimistic": false
+        },
+        "turns": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 2487,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false,
+          "arc_codes": [
+            187112,
+            187174
+          ],
+          "search_cost_seconds": 9.175276625678396,
+          "snap_selection": {
+            "candidate_counts": [
+              2,
+              2
+            ],
+            "selected_candidate_ranks": [
+              1,
+              0
+            ],
+            "used_non_nearest": [
+              true,
+              false
+            ],
+            "nearest_snap_m": [
+              0.0,
+              0.0
+            ],
+            "physical_access_verified": false
+          }
+        }
+      },
+      {
+        "repeat": 3,
+        "label": "on_selected_road",
+        "requested_start": [
+          126.81668092135571,
+          37.56107982631504
+        ],
+        "requested_end": [
+          126.81649055992263,
+          37.561935578472514
+        ],
+        "distance_m": 87.32,
+        "model_seconds": 7.859,
+        "snap_m": [
+          10.9,
+          0.0
+        ],
+        "quality": {
+          "access_max_m": 10.9,
+          "arterial_pct": 0.0,
+          "optimistic": false
+        },
+        "turns": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 2487,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false,
+          "arc_codes": [],
+          "search_cost_seconds": 7.85880010989319,
+          "snap_selection": {
+            "candidate_counts": [
+              3,
+              2
+            ],
+            "selected_candidate_ranks": [
+              2,
+              0
+            ],
+            "used_non_nearest": [
+              true,
+              false
+            ],
+            "nearest_snap_m": [
+              0.0,
+              0.0
+            ],
+            "physical_access_verified": false
+          }
+        }
+      }
+    ],
+    "scope": "기존 좌표·도로 위로 옮긴 좌표 교대; 정적 모델; 웹 신규 결과 미확보; 합법 진입 미확인"
+  },
+  "initial_hash_checks": [
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car.py",
+      "original_backup_used": false,
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car_turn_search.py",
+      "original_backup_used": false,
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py",
+      "original_backup_used": true,
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\fold.py",
+      "original_backup_used": false,
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\turn_restrictions.py",
+      "original_backup_used": false,
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\mobility\\test_car_selected_snap_evidence_v1.py",
+      "original_backup_used": false,
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v14.py",
+      "original_backup_used": false,
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "original_backup_used": false,
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "original_backup_used": false,
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "original_backup_used": false,
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "original_backup_used": false,
+      "matches": true
+    }
+  ],
+  "source_hashes": [
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py",
+      "sha256": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8"
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\mobility\\test_car_legacy_selected_snap_v1.py",
+      "sha256": "7afed3834ace40cbc9ba1a6c5af0283fc353b14c7923d412e02b1ea3059f8970"
+    },
+    {
+      "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v15.py",
+      "sha256": "c7612518d31a327fb97d5a7e85c660054e5917d281eba7d58bc50d403c07f239"
+    }
+  ],
+  "data_hashes": [
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+    }
+  ],
+  "existing_web_hashes_verified": 7,
+  "fresh_web_routes": 0,
+  "aligned_accuracy_rows": 0,
+  "independent_holdout": false,
+  "api_direct_calls": 0
+}

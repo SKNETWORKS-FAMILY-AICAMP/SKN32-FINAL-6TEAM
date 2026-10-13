@@ -21,6 +21,8 @@ import { dayTimes, withTimes } from "./day-times";
 import { DayList, type RowContext } from "./plan-rows";
 import { checkingList } from "./checking-list";
 import { PreviewHint, ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
+import { TaxiPricing } from "./taxi-pricing";
+import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 import { dampedScrollTo } from "@/lib/damped-scroll";
 import type { MoveOptions, MoveOptionMode } from "@/lib/live/move-options";
 import { moveToast } from "./map-description";
@@ -108,7 +110,7 @@ export interface PlanCheckActions {
   /** Take one stop out. */
   remove?: (id: string) => Promise<void>;
   /** Answer a trip-wide detail. */
-  editTrip?: (field: "first_day" | "party_size" | "title", value: string | number) => Promise<void>;
+  editTrip?: (field: "first_day" | "party_size" | "title" | "taxi_pricing", value: string | number | WebTaxiPricing) => Promise<void>;
   /** The alternatives for one stop, best first (mockup 「대체 후보 A · B · C」). */
   candidates?: (id: string) => Promise<PlanCandidate[]>;
   /** Why the list for a stop is short or empty (the server's `notes`: `no_same_kind` · `booked_needs_name` · …) — read after `candidates` has answered. */
@@ -1407,6 +1409,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
             </div>}
             {done && !registered && !previewing && !view.items.length && actions.add && <AddStop date={days[0]?.date ?? ""} blocked={frozen} onSave={actions.add} />}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
+            {done && !registered && !previewing && view.taxiPricing && actions.editTrip &&
+              <TaxiPricing value={view.taxiPricing} locked={frozen} onSave={(value) => actions.editTrip!("taxi_pricing", value)} />}
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}
               <button type="button" onClick={() => setFilter(null)}>{t("전체 보기", "Show all")}</button></p>}
             {(() => {

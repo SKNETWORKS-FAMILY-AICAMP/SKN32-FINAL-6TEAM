@@ -1,0 +1,200 @@
+수정판 a6b5a716f5d7dba2949c14f2c9e93227956e935d
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 9 files:  11%|█         | 1/9 [00:00<00:02,  3.47it/s]Fetching 9 files:  67%|██████▋   | 6/9 [00:00<00:00, 18.84it/s]Fetching 9 files:  89%|████████▉ | 8/9 [00:19<00:00, 18.84it/s]Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Trying to resume download...
+Error while downloading from https://huggingface.co/kushalpatil/jevify-gemma4-e4b/resolve/a6b5a716f5d7dba2949c14f2c9e93227956e935d/model.safetensors: The read operation timed out
+Max retries exceeded.
+Fetching 9 files:  89%|████████▉ | 8/9 [1:11:23<08:55, 535.41s/it]
+Traceback (most recent call last):
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpx/_transports/default.py", line 127, in __iter__
+    for part in self._httpcore_stream:
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 407, in __iter__
+    raise exc from None
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 403, in __iter__
+    for part in self._stream:
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpcore/_sync/http11.py", line 342, in __iter__
+    raise exc
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpcore/_sync/http11.py", line 334, in __iter__
+    for chunk in self._connection._receive_response_body(**kwargs):
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpcore/_sync/http11.py", line 203, in _receive_response_body
+    event = self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpcore/_backends/sync.py", line 126, in read
+    with map_exceptions(exc_map):
+  File "/usr/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_http.py", line 266, in _inner
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/_snapshot_download.py", line 532, in snapshot_download
+    hf_thread_map(
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/tqdm.py", line 441, in hf_thread_map
+    results[future_to_index[future]] = future.result()
+                                       ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/_snapshot_download.py", line 512, in _inner_hf_hub_download
+    hf_hub_download(  # type: ignore
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_http.py", line 266, in _inner
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 1026, in hf_hub_download
+    return _hf_hub_download_to_local_dir(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 1505, in _hf_hub_download_to_local_dir
+    _download_to_tmp_and_move(
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 2032, in _download_to_tmp_and_move
+    http_get(
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 475, in http_get
+    return http_get(
+           ^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 459, in http_get
+    for chunk in response.iter_bytes(chunk_size=constants.DOWNLOAD_CHUNK_SIZE):
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpx/_models.py", line 897, in iter_bytes
+    for raw_bytes in self.iter_raw():
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpx/_models.py", line 951, in iter_raw
+    for raw_stream_bytes in self.stream:
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpx/_client.py", line 153, in __iter__
+    for chunk in self._stream:
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpx/_transports/default.py", line 126, in __iter__
+    with map_httpcore_exceptions():
+  File "/usr/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/root/venv_imajev/lib/python3.12/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out

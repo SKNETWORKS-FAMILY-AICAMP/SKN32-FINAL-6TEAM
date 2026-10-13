@@ -1,0 +1,21 @@
+{
+  "records": 1700,
+  "unique_set_row_variant": 1700,
+  "counts": {
+    "('A', 'dense_E')": 180,
+    "('A', 'RRF_dense_BM25')": 180,
+    "('A', 'RNG_gamma0')": 180,
+    "('A', 'adaptive_MMR_h1')": 180,
+    "('A', 'adaptive_MMR_h2_assumed_diagnostic')": 180,
+    "('B', 'dense_E')": 160,
+    "('B', 'RRF_dense_BM25')": 160,
+    "('B', 'RNG_gamma0')": 160,
+    "('B', 'adaptive_MMR_h1')": 160,
+    "('B', 'adaptive_MMR_h2_assumed_diagnostic')": 160
+  },
+  "input_SHA_matches": 5,
+  "input_SHA_expected": 5,
+  "link_checks": 69,
+  "broken_links": 0,
+  "inspection_note": "Initial verification used suite key; actual schema set inspected and correct field used; experiment outputs unchanged"
+}

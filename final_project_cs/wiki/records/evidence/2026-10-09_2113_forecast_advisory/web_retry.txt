@@ -1,0 +1,112 @@
+[WebServer] (node:17040) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21660) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:23656) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:23656) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:17212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:4568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:13496) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:888) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:25368) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:3008) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:24196) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] (node:5252) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:13492) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:24300) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\live\trip.spec.ts:122:1 › 실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘」가 key change 를 보내고, 서버가 채운 다른 곳을 다시 읽어 보인다 (2ms)
+(node:22876) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 tests\live\trip.spec.ts:137:1 › 예보 주의 알림은 외부 발송을 건너뛰어도 변경 버튼을 보이고 누르면 대체안을 요청한다 (1ms)
+(node:18408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  3 tests\live\trip.spec.ts:154:1 › 「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔다고 알린다 (1ms)
+
+
+  1) tests\live\trip.spec.ts:122:1 › 실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘」가 key change 를 보내고, 서버가 채운 다른 곳을 다시 읽어 보인다 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\trip-실내·야외를-모르는-일정의-「바꿀까요--19cdf--보내고-서버가-채운-다른-곳을-다시-읽어-보인다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\trip-실내·야외를-모르는-일정의-「바꿀까요--19cdf--보내고-서버가-채운-다른-곳을-다시-읽어-보인다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\trip-실내·야외를-모르는-일정의-「바꿀까요--19cdf--보내고-서버가-채운-다른-곳을-다시-읽어-보인다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\live\trip.spec.ts:137:1 › 예보 주의 알림은 외부 발송을 건너뛰어도 변경 버튼을 보이고 누르면 대체안을 요청한다 ───────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\trip-예보-주의-알림은-외부-발송을-건너뛰어도-변경-버튼을-보이고-누르면-대체안을-요청한다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\trip-예보-주의-알림은-외부-발송을-건너뛰어도-변경-버튼을-보이고-누르면-대체안을-요청한다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\trip-예보-주의-알림은-외부-발송을-건너뛰어도-변경-버튼을-보이고-누르면-대체안을-요청한다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests\live\trip.spec.ts:154:1 › 「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔다고 알린다 ──────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\playdata2\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: test-results\trip-「바꿔-줘」에-다른-곳이-없으면-원래-일정을-그대로-둔다고-알린다\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\trip-「바꿔-줘」에-다른-곳이-없으면-원래-일정을-그대로-둔다고-알린다\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\trip-「바꿔-줘」에-다른-곳이-없으면-원래-일정을-그대로-둔다고-알린다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    tests\live\trip.spec.ts:122:1 › 실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘」가 key change 를 보내고, 서버가 채운 다른 곳을 다시 읽어 보인다 
+    tests\live\trip.spec.ts:137:1 › 예보 주의 알림은 외부 발송을 건너뛰어도 변경 버튼을 보이고 누르면 대체안을 요청한다 ────────────────
+    tests\live\trip.spec.ts:154:1 › 「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔다고 알린다 ───────────────────────────

@@ -1,0 +1,32 @@
+{
+  "snapshot_observed_at_utc": "2026-10-08T17:32:49.017338+00:00",
+  "snapshot_SHA_verified": [
+    14,
+    14
+  ],
+  "reference_metadata_matches_saved_rows": true,
+  "counts": {
+    "saluki_original_smoke12_a1": {
+      "saved": 12,
+      "expected": 12,
+      "errors": 0,
+      "parsed": 12,
+      "correct_among_saved": 9,
+      "no_missing_rows_removed": true,
+      "max_prompt_tokens": 1953
+    },
+    "saluki_original_d3_a1": {
+      "saved": 184,
+      "expected": 360,
+      "errors": 0,
+      "parsed": 184,
+      "correct_among_saved": 173,
+      "no_missing_rows_removed": true,
+      "max_prompt_tokens": 2007
+    }
+  },
+  "partial_D3_accuracy_not_a_final_score": true,
+  "main_expected_total": 9425,
+  "main_saved_total": 184,
+  "smoke_not_added_to_main_accuracy_denominator": true
+}

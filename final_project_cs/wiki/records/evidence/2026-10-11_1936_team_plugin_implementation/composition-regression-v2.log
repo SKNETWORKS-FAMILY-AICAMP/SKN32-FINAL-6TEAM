@@ -1,0 +1,35 @@
+........................................................................ [ 27%]
+........................................................................ [ 55%]
+........................F............................................... [ 83%]
+........F..................................                              [100%]
+================================== FAILURES ===================================
+___________________ test_layer_directions_do_not_get_worse ____________________
+tests\architecture\test_basement_layers.py:99: in test_layer_directions_do_not_get_worse
+    assert not report, "층끼리 부르는 방향:\n" + "\n".join(report)
+E   AssertionError: 층끼리 부르는 방향:
+E       domains → presentation: 4 > 상한 3 — 늘었다 (도메인의 HTTP 입구 셋(`delegation_api` · `trip_api` · `web_limits_api`)이 인증 의존(`Principal` · `require_scope`)을 `presentation/security.py` 에서 쓴다. 인증을 중립 자리로 옮겨야 0 이 된다)
+E           domains/travel_ops/entry/delegation_api.py → app.presentation.security
+E           domains/travel_ops/entry/trip_api.py → app.presentation.errors
+E           domains/travel_ops/entry/trip_api.py → app.presentation.security
+E           domains/travel_ops/modules/web_account/web_limits_api.py → app.presentation.security
+E   assert not ['  domains → presentation: 4 > 상한 3 — 늘었다 (도메인의 HTTP 입구 셋(`delegation_api` · `trip_api` · `web_limits_api`)이 인증 의존(`P...app.presentation.security\n      domains/travel_ops/modules/web_account/web_limits_api.py → app.presentation.security']
+______________________ test_cell_rules_do_not_get_worse _______________________
+tests\architecture\test_travel_ops_cells.py:93: in test_cell_rules_do_not_get_worse
+    assert not report, "칸끼리 부르는 규칙:\n" + "\n".join(report)
+E   AssertionError: 칸끼리 부르는 규칙:
+E       필수 부품 → 끌 수 있는 기능·입구: 1 > 상한 0 — 늘었다
+E           components/customer/service_improvement.py → modules.web_account
+E       바꿔 끼우는 자리 → 기능·부품·입구·팀 속: 1 > 상한 0 — 늘었다
+E           ports/data_sources/disruptions.py → components.watch
+E   assert not ['  필수 부품 → 끌 수 있는 기능·입구: 1 > 상한 0 — 늘었다\n      components/customer/service_improvement.py → modules.web_account', '  바꿔 끼우는 자리 → 기능·부품·입구·팀 속: 1 > 상한 0 — 늘었다\n      ports/data_sources/disruptions.py → components.watch']
+============================== warnings summary ===============================
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+tests/architecture/test_composer_stays_out_of_this_repo.py::test_only_the_management_seam_knows_the_package
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+FAILED tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+2 failed, 257 passed, 3 warnings in 70.24s (0:01:10)

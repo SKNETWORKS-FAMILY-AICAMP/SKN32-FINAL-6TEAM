@@ -1,0 +1,289 @@
+FFFFFFFFFFFFFFFFF..F                                                     [100%]
+================================== FAILURES ===================================
+_______________ test_invalid_interval_has_no_distance[999-5-8] ________________
+
+route = '999', start = 5, end = 8
+
+    @pytest.mark.parametrize('route,start,end', [('999', 5, 8), ('100', 8, 5), ('100', 5, 5),
+        ('100', True, 8), ('100', 5.0, 8), ('100', 0, 8), ('100', 5, 99)])
+    def test_invalid_interval_has_no_distance(route, start, end):
+        bus, _, _ = world()
+>       assert bus.distance_m(route, start, end) is None
+E       AssertionError: assert 0 is None
+E        +  where 0 = distance_m('999', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95C4A0>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:12: AssertionError
+_______________ test_invalid_interval_has_no_distance[100-8-5] ________________
+
+route = '100', start = 8, end = 5
+
+    @pytest.mark.parametrize('route,start,end', [('999', 5, 8), ('100', 8, 5), ('100', 5, 5),
+        ('100', True, 8), ('100', 5.0, 8), ('100', 0, 8), ('100', 5, 99)])
+    def test_invalid_interval_has_no_distance(route, start, end):
+        bus, _, _ = world()
+>       assert bus.distance_m(route, start, end) is None
+E       AssertionError: assert 0 is None
+E        +  where 0 = distance_m('100', 8, 5)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95E600>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:12: AssertionError
+_______________ test_invalid_interval_has_no_distance[100-5-5] ________________
+
+route = '100', start = 5, end = 5
+
+    @pytest.mark.parametrize('route,start,end', [('999', 5, 8), ('100', 8, 5), ('100', 5, 5),
+        ('100', True, 8), ('100', 5.0, 8), ('100', 0, 8), ('100', 5, 99)])
+    def test_invalid_interval_has_no_distance(route, start, end):
+        bus, _, _ = world()
+>       assert bus.distance_m(route, start, end) is None
+E       AssertionError: assert 0 is None
+E        +  where 0 = distance_m('100', 5, 5)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95E2A0>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:12: AssertionError
+______________ test_invalid_interval_has_no_distance[100-True-8] ______________
+
+route = '100', start = True, end = 8
+
+    @pytest.mark.parametrize('route,start,end', [('999', 5, 8), ('100', 8, 5), ('100', 5, 5),
+        ('100', True, 8), ('100', 5.0, 8), ('100', 0, 8), ('100', 5, 99)])
+    def test_invalid_interval_has_no_distance(route, start, end):
+        bus, _, _ = world()
+>       assert bus.distance_m(route, start, end) is None
+E       AssertionError: assert 7000 is None
+E        +  where 7000 = distance_m('100', True, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95F0B0>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:12: AssertionError
+______________ test_invalid_interval_has_no_distance[100-5.0-8] _______________
+
+route = '100', start = 5.0, end = 8
+
+    @pytest.mark.parametrize('route,start,end', [('999', 5, 8), ('100', 8, 5), ('100', 5, 5),
+        ('100', True, 8), ('100', 5.0, 8), ('100', 0, 8), ('100', 5, 99)])
+    def test_invalid_interval_has_no_distance(route, start, end):
+        bus, _, _ = world()
+>       assert bus.distance_m(route, start, end) is None
+E       AssertionError: assert 3000 is None
+E        +  where 3000 = distance_m('100', 5.0, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95FAA0>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:12: AssertionError
+_______________ test_invalid_interval_has_no_distance[100-0-8] ________________
+
+route = '100', start = 0, end = 8
+
+    @pytest.mark.parametrize('route,start,end', [('999', 5, 8), ('100', 8, 5), ('100', 5, 5),
+        ('100', True, 8), ('100', 5.0, 8), ('100', 0, 8), ('100', 5, 99)])
+    def test_invalid_interval_has_no_distance(route, start, end):
+        bus, _, _ = world()
+>       assert bus.distance_m(route, start, end) is None
+E       AssertionError: assert 7000 is None
+E        +  where 7000 = distance_m('100', 0, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95EAE0>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:12: AssertionError
+_______________ test_invalid_interval_has_no_distance[100-5-99] _______________
+
+route = '100', start = 5, end = 99
+
+    @pytest.mark.parametrize('route,start,end', [('999', 5, 8), ('100', 8, 5), ('100', 5, 5),
+        ('100', True, 8), ('100', 5.0, 8), ('100', 0, 8), ('100', 5, 99)])
+    def test_invalid_interval_has_no_distance(route, start, end):
+        bus, _, _ = world()
+>       assert bus.distance_m(route, start, end) is None
+E       AssertionError: assert 3000 is None
+E        +  where 3000 = distance_m('100', 5, 99)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95FE60>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:12: AssertionError
+_______ test_missing_endpoint_or_interior_is_not_a_partial_distance[5] ________
+
+sequence = 5
+
+    @pytest.mark.parametrize('sequence', [5, 6, 8])
+    def test_missing_endpoint_or_interior_is_not_a_partial_distance(sequence):
+        bus, _, _ = world()
+        bus.stops['100'] = [r for r in bus.stops['100'] if r['seq'] != sequence]
+>       assert bus.distance_m('100', 5, 8) is None
+E       AssertionError: assert 3000 is None
+E        +  where 3000 = distance_m('100', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95F110>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:19: AssertionError
+_______ test_missing_endpoint_or_interior_is_not_a_partial_distance[6] ________
+
+sequence = 6
+
+    @pytest.mark.parametrize('sequence', [5, 6, 8])
+    def test_missing_endpoint_or_interior_is_not_a_partial_distance(sequence):
+        bus, _, _ = world()
+        bus.stops['100'] = [r for r in bus.stops['100'] if r['seq'] != sequence]
+>       assert bus.distance_m('100', 5, 8) is None
+E       AssertionError: assert 2000 is None
+E        +  where 2000 = distance_m('100', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95CEF0>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:19: AssertionError
+_______ test_missing_endpoint_or_interior_is_not_a_partial_distance[8] ________
+
+sequence = 8
+
+    @pytest.mark.parametrize('sequence', [5, 6, 8])
+    def test_missing_endpoint_or_interior_is_not_a_partial_distance(sequence):
+        bus, _, _ = world()
+        bus.stops['100'] = [r for r in bus.stops['100'] if r['seq'] != sequence]
+>       assert bus.distance_m('100', 5, 8) is None
+E       AssertionError: assert 2000 is None
+E        +  where 2000 = distance_m('100', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F95D790>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:19: AssertionError
+________________ test_duplicate_interior_is_not_double_counted ________________
+
+    def test_duplicate_interior_is_not_double_counted():
+        bus, _, rows = world()
+        bus.stops['100'].append(dict(rows[5]))
+>       assert bus.distance_m('100', 5, 8) is None
+E       AssertionError: assert 4000 is None
+E        +  where 4000 = distance_m('100', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F9D1370>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:25: AssertionError
+___________________ test_different_route_row_is_not_summed ____________________
+
+    def test_different_route_row_is_not_summed():
+        bus, _, _ = world()
+        bus.stops['100'][5]['route_id'] = '200'
+>       assert bus.distance_m('100', 5, 8) is None
+E       AssertionError: assert 3000 is None
+E        +  where 3000 = distance_m('100', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F9D2F60>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:31: AssertionError
+______________ test_invalid_distance_does_not_enter_the_sum[-1] _______________
+
+value = -1
+
+    @pytest.mark.parametrize('value', [-1, float('nan'), float('inf'), True, '1000', None])
+    def test_invalid_distance_does_not_enter_the_sum(value):
+        bus, _, _ = world()
+        bus.stops['100'][5]['sect_dist_m'] = value
+>       assert bus.distance_m('100', 5, 8) is None
+E       AssertionError: assert 1999 is None
+E        +  where 1999 = distance_m('100', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F9D2660>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:38: AssertionError
+______________ test_invalid_distance_does_not_enter_the_sum[nan] ______________
+
+value = nan
+
+    @pytest.mark.parametrize('value', [-1, float('nan'), float('inf'), True, '1000', None])
+    def test_invalid_distance_does_not_enter_the_sum(value):
+        bus, _, _ = world()
+        bus.stops['100'][5]['sect_dist_m'] = value
+>       assert bus.distance_m('100', 5, 8) is None
+E       AssertionError: assert nan is None
+E        +  where nan = distance_m('100', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F9D3500>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:38: AssertionError
+______________ test_invalid_distance_does_not_enter_the_sum[inf] ______________
+
+value = inf
+
+    @pytest.mark.parametrize('value', [-1, float('nan'), float('inf'), True, '1000', None])
+    def test_invalid_distance_does_not_enter_the_sum(value):
+        bus, _, _ = world()
+        bus.stops['100'][5]['sect_dist_m'] = value
+>       assert bus.distance_m('100', 5, 8) is None
+E       AssertionError: assert inf is None
+E        +  where inf = distance_m('100', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07F9D1580>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:38: AssertionError
+_____________ test_invalid_distance_does_not_enter_the_sum[True] ______________
+
+value = True
+
+    @pytest.mark.parametrize('value', [-1, float('nan'), float('inf'), True, '1000', None])
+    def test_invalid_distance_does_not_enter_the_sum(value):
+        bus, _, _ = world()
+        bus.stops['100'][5]['sect_dist_m'] = value
+>       assert bus.distance_m('100', 5, 8) is None
+E       AssertionError: assert 2001 is None
+E        +  where 2001 = distance_m('100', 5, 8)
+E        +    where distance_m = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07FA05010>.distance_m
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:38: AssertionError
+_____________ test_invalid_distance_does_not_enter_the_sum[1000] ______________
+
+value = '1000'
+
+    @pytest.mark.parametrize('value', [-1, float('nan'), float('inf'), True, '1000', None])
+    def test_invalid_distance_does_not_enter_the_sum(value):
+        bus, _, _ = world()
+        bus.stops['100'][5]['sect_dist_m'] = value
+>       assert bus.distance_m('100', 5, 8) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.bus.BusRoutes object at 0x000001D07FA056A0>
+route_id = '100', a_seq = 5, b_seq = 8
+
+    def distance_m(self, route_id, a_seq, b_seq):
+        """a → b 구간 거리(m). `sect_dist_m` 은 **직전 정류장에서 이 정류장까지**의 거리라
+        seq 가 a 보다 크고 b 이하인 행만 더한다(첫 행은 0 이다)."""
+        tot = 0
+        for s in self.stops.get(route_id, []):
+            if a_seq < s["seq"] <= b_seq:
+                d = s.get("sect_dist_m")
+                if d is None:
+                    return None
+>               tot += d
+E               TypeError: unsupported operand type(s) for +=: 'int' and 'str'
+
+app\domains\travel_ops\instances\mobility\engine\bus.py:92: TypeError
+__ test_current_departure_with_missing_interior_does_not_use_shortened_ride ___
+
+    def test_current_departure_with_missing_interior_does_not_use_shortened_ride():
+        runtime, context = scene()
+        runtime._v.bus.stops['100'] = [r for r in runtime._v.bus.stops['100'] if r['seq'] != 6]
+        got = call(runtime, context, bus_arrival=prediction)
+>       assert got['status'] == 'needs_replan', got
+E       AssertionError: {'arrival_at': '2026-10-09T10:11:00+09:00', 'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'fixture-a'}, 'checked_at': '2026-10-09T10:00:00+09:00', 'departure_at': '2026-10-09T10:00:00+09:00', ...}
+E       assert 'realtime' == 'needs_replan'
+E         
+E         - needs_replan
+E         + realtime
+
+tests\unit\travel\mobility\test_bus_distance_completeness_v1.py:53: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_0836_버스거리_완전구간\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_interval_has_no_distance[999-5-8]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_interval_has_no_distance[100-8-5]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_interval_has_no_distance[100-5-5]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_interval_has_no_distance[100-True-8]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_interval_has_no_distance[100-5.0-8]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_interval_has_no_distance[100-0-8]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_interval_has_no_distance[100-5-99]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_missing_endpoint_or_interior_is_not_a_partial_distance[5]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_missing_endpoint_or_interior_is_not_a_partial_distance[6]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_missing_endpoint_or_interior_is_not_a_partial_distance[8]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_duplicate_interior_is_not_double_counted
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_different_route_row_is_not_summed
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_distance_does_not_enter_the_sum[-1]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_distance_does_not_enter_the_sum[nan]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_distance_does_not_enter_the_sum[inf]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_distance_does_not_enter_the_sum[True]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_invalid_distance_does_not_enter_the_sum[1000]
+FAILED tests/unit/travel/mobility/test_bus_distance_completeness_v1.py::test_current_departure_with_missing_interior_does_not_use_shortened_ride
+18 failed, 2 passed in 6.42s
+Exception ignored in: <function Console.__del__ at 0x000001D072155BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

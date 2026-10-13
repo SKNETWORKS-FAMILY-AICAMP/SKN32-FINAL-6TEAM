@@ -1,0 +1,65 @@
+{
+  "scope": "Independent parent recount of collected row IDs, parsed flags, stored gold/pick and archive hashes; not human adjudication",
+  "archive_files_verified": 72,
+  "archive_files_expected": 72,
+  "answer_files": 13,
+  "saved_rows": 27555,
+  "saluki": {
+    "d": {
+      "saved": 2735,
+      "expected": 2735,
+      "positive_correct": 771,
+      "positive_expected": 883,
+      "null_false_pick": 76,
+      "null_expected": 1786,
+      "failed_unparsed_missing": 0,
+      "answer_sha256": "b0ffe4268f6869c8417724955b820c361f45e6203b3eaa3a7911ec407e3fac3f",
+      "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0"
+    },
+    "d2": {
+      "saved": 1000,
+      "expected": 1000,
+      "positive_correct": 0,
+      "positive_expected": 0,
+      "null_false_pick": 68,
+      "null_expected": 1000,
+      "failed_unparsed_missing": 0,
+      "answer_sha256": "3f8fe49d2da397b787019d7b4763fa1401f7d934f757a3ba774c8a6fa88fd2e8",
+      "gold_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7"
+    },
+    "d3": {
+      "saved": 360,
+      "expected": 360,
+      "positive_correct": 107,
+      "positive_expected": 120,
+      "null_false_pick": 17,
+      "null_expected": 240,
+      "failed_unparsed_missing": 0,
+      "answer_sha256": "5b86af3ef778caff431196a0f9274be815f54e6ea405e1b1f77bebef4798335f",
+      "gold_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea"
+    },
+    "h": {
+      "saved": 1316,
+      "expected": 1316,
+      "positive_correct": 434,
+      "positive_expected": 461,
+      "null_false_pick": 305,
+      "null_expected": 855,
+      "failed_unparsed_missing": 0,
+      "answer_sha256": "99b238b1f5454a88092cb820d15d71a467a4c4aa0082cbb07e35888beb139dca",
+      "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26"
+    },
+    "mx": {
+      "saved": 4014,
+      "expected": 4014,
+      "positive_correct": 997,
+      "positive_expected": 1033,
+      "null_false_pick": 157,
+      "null_expected": 974,
+      "failed_unparsed_missing": 0,
+      "answer_sha256": "759f2daf6261b207f4050d72b068beb3dbe294e221bd53d5044032a183658c2e",
+      "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087"
+    }
+  },
+  "product_adoption": false
+}

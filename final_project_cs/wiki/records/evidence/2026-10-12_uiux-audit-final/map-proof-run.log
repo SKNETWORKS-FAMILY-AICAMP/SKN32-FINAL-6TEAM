@@ -1,0 +1,41 @@
+[WebServer] (node:6780) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19588) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:16920) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\live\map-status-bar.spec.ts:10:1 › 위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다 (3.6s)
+(node:22064) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 2 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:24:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 375px (11.1s)
+  ok 3 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:24:3 › 세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 1280px (10.7s)
+
+
+  1) tests\live\map-status-bar.spec.ts:10:1 › 위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다 ────
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 375
+    Received:    402.359375
+
+      53 |   const panel = await page.getByRole("region", { name: "변경 관리" }).boundingBox();
+      54 |   expect(panel!.x).toBeGreaterThanOrEqual(0);
+    > 55 |   expect(panel!.x + panel!.width).toBeLessThanOrEqual(375);
+         |                                   ^
+      56 |   await shot(page, "02-time-reset-menu");
+      57 |   const before = (await server.received("POST", "/edits")).length;
+      58 |   await reset.click();
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\map-status-bar.spec.ts:55:35
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\map-proof-evidence\map-status-bar-위치·확인·변경-표시-a1d5c-란히-놓이고-시간-초기화는-변경-메뉴에서-동작한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\map-proof-evidence\map-status-bar-위치·확인·변경-표시-a1d5c-란히-놓이고-시간-초기화는-변경-메뉴에서-동작한다\error-context.md
+
+  1 failed
+    tests\live\map-status-bar.spec.ts:10:1 › 위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다 ─────
+  2 passed (32.4s)

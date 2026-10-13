@@ -1,0 +1,54 @@
+{
+  "fixed_conversion_matches": [
+    1000,
+    1000
+  ],
+  "answer_mapping_matches": [
+    1000,
+    1000
+  ],
+  "NONE_chosen": [
+    1,
+    1000
+  ],
+  "U_FFFD_in_fixed_input": 0,
+  "samples": [
+    {
+      "i": 900000,
+      "question": "그런 것 같아 아무래도",
+      "NONE_text": "이 질문이 기존 일정의 어떤 항목도 실제로 요청하지 않음. 일정에 없는 장소·일반 정보·잡담·범위 밖 문의 또는 확실하지 않은 경우.",
+      "picked": 36,
+      "p_NONE": 0.0007782796105629165,
+      "choice_keys": 43,
+      "source_prompt_sha256": "0eae1b487cb803bf0777449c7d214e0c231f788e349d714b1fb054e008187ff5"
+    },
+    {
+      "i": 900299,
+      "question": "진짜 사고 많이 나서",
+      "NONE_text": "이 질문이 기존 일정의 어떤 항목도 실제로 요청하지 않음. 일정에 없는 장소·일반 정보·잡담·범위 밖 문의 또는 확실하지 않은 경우.",
+      "picked": 37,
+      "p_NONE": 0.0005138225767319586,
+      "choice_keys": 44,
+      "source_prompt_sha256": "0b73db50baaa0d576d8c54a46a0ecf50ddda69a9311e1df43231af9676c5d543"
+    },
+    {
+      "i": 900699,
+      "question": "그래그래 너네 오기 전까지 그러면 핸들링 연습도 많이 해야겠다.",
+      "NONE_text": "이 질문이 기존 일정의 어떤 항목도 실제로 요청하지 않음. 일정에 없는 장소·일반 정보·잡담·범위 밖 문의 또는 확실하지 않은 경우.",
+      "picked": 34,
+      "p_NONE": 0.0002783627941188683,
+      "choice_keys": 44,
+      "source_prompt_sha256": "c86e3dd7e47aaaf47aea568713c9e7757098f7af0db38d9dd560b182d0f23252"
+    },
+    {
+      "i": 900999,
+      "question": "오늘 회식 참석 인원 조사합니다~ 댓글 남겨주세요",
+      "NONE_text": "이 질문이 기존 일정의 어떤 항목도 실제로 요청하지 않음. 일정에 없는 장소·일반 정보·잡담·범위 밖 문의 또는 확실하지 않은 경우.",
+      "picked": 37,
+      "p_NONE": 0.00034503223891618154,
+      "choice_keys": 44,
+      "source_prompt_sha256": "d9a8e08dc86fc3deb901d2fb28e076a665ee9b7fc11e01e36dca3b80fab5bb6e"
+    }
+  ],
+  "interpretation": "Observed failure of this fixed travel/native-choice path; underlying cause not isolated, no general model capability claim"
+}

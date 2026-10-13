@@ -1,0 +1,6 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+COPY release-overlay/ /srv/
+COPY public-assets/tokenizer/9b5ad71b2ce5302211f9c61530b329a4922fc6a4 /opt/tripilot/tokenizer-cache/9b5ad71b2ce5302211f9c61530b329a4922fc6a4
+ENV TIKTOKEN_CACHE_DIR=/opt/tripilot/tokenizer-cache
+RUN python -B -c "import hashlib,pathlib,os; p=pathlib.Path('/opt/tripilot/tokenizer-cache/9b5ad71b2ce5302211f9c61530b329a4922fc6a4'); assert hashlib.sha256(p.read_bytes()).hexdigest()=='223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7'; os.chmod(p,0o444); os.chmod(p.parent,0o555); import tiktoken; assert len(tiktoken.get_encoding('cl100k_base').encode('Seoul travel'))>0"

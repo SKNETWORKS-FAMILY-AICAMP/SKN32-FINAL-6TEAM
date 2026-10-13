@@ -1,0 +1,179 @@
+{
+  "_id": "6a79d0256e470f50c6c39b28",
+  "id": "CohereLabs/North-Micro-Vision-Instruct",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "cohere_compass",
+    "image-text-to-text",
+    "vision",
+    "multimodal",
+    "conversational",
+    "multilingual",
+    "native-resolution",
+    "en",
+    "de",
+    "fr",
+    "es",
+    "it",
+    "pt",
+    "hi",
+    "ja",
+    "ko",
+    "zh",
+    "ar",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 134010,
+  "likes": 151,
+  "modelId": "CohereLabs/North-Micro-Vision-Instruct",
+  "author": "CohereLabs",
+  "sha": "fa548d9aa62c1220bfd21fc6cfc465f1bd2a1a40",
+  "lastModified": "2026-09-30T13:30:59.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "CohereCompassForConditionalGeneration"
+    ],
+    "model_type": "cohere_compass",
+    "tokenizer_config": {
+      "bos_token": "<BOS_TOKEN>",
+      "eos_token": "<|END_OF_TURN_TOKEN|>",
+      "pad_token": "<PAD>",
+      "unk_token": "<UNK>",
+      "use_default_system_prompt": false
+    },
+    "chat_template_jinja": "{{ bos_token }}{%- for message in messages %}{%- if message.role == 'system' %}{{- '<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>' }}{%- if message.content is string %}{{- message.content }}{%- else %}{%- for content in message.content %}{%- if 'text' in content %}{{- content.text }}{%- endif %}{%- endfor %}{%- endif %}{{- '<|END_OF_TURN_TOKEN|>' }}{%- elif message.role == 'user' %}{{- '<|START_OF_TURN_TOKEN|><|USER_TOKEN|>' }}{%- if message.content is string %}{{- message.content }}{%- else %}{%- for content in message.content %}{%- if content.type == 'image' or 'image' in content or 'image_url' in content %}<|VISION_START|><|IMAGE_PAD|><|VISION_END|>{%- elif content.type == 'video' or 'video' in content %}<|VISION_START|><|VIDEO_PAD|><|VISION_END|>{%- elif 'text' in content %}{{- content.text }}{%- endif %}{%- endfor %}{%- endif %}{{- '<|END_OF_TURN_TOKEN|>' }}{%- elif message.role == 'assistant' or message.role == 'chatbot' %}{{- '<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>' }}{% generation %}{%- if message.content is string %}{{- message.content }}{%- else %}{%- for content in message.content %}{%- if 'text' in content %}{{- content.text }}{%- endif %}{%- endfor %}{%- endif %}{{- '<|END_OF_TURN_TOKEN|>' }}{% endgeneration %}{%- endif %}{%- endfor %}{%- if add_generation_prompt %}{{- '<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>' }}{%- endif %}"
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en",
+      "de",
+      "fr",
+      "es",
+      "it",
+      "pt",
+      "hi",
+      "ja",
+      "ko",
+      "zh",
+      "ar"
+    ],
+    "tags": [
+      "vision",
+      "multimodal",
+      "conversational",
+      "multilingual",
+      "native-resolution"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "9e2dbd305b4d75a5ea1bd41fa24660c6b19fa552",
+      "size": 19961
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "c0a95ec2fb1e21834078be34d615207a1b42fea6",
+      "size": 1356
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "cdc940e6a7185a3575550d27dbbf0e68dd6475a4",
+      "size": 3731
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "ea585de9520f55a6706a021d158a3207573d5bac",
+      "size": 156
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "f3526a1c7c7eb149fe7788f734923c54c0cc884f",
+      "size": 4969765248,
+      "lfs": {
+        "sha256": "cd9a9ed867111bbc6b6e062bf0b3b9c88af183eb41003083501a76c84e912046",
+        "size": 4969765248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "7cfcc2d7125e8d4ad45449cf4299860dc6261a81",
+      "size": 747
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "4faf36b5e4313fb21feb5df3fe8e9515d2cccf1a",
+      "size": 724
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "3cc095331435f420a2ad22ac837c46c825232847",
+      "size": 19550662,
+      "lfs": {
+        "sha256": "6fcc5292908e0c8ad1400c67fe9413825c656486fe4190dce7d8d62c38bfbbf6",
+        "size": 19550662,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "a38fc2f7110777839a5a98534e92066d5e36cfbb",
+      "size": 8181
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "e5cd23bc05d3ae95d87e98b75c250e232a116d12",
+      "size": 344
+    }
+  ],
+  "spaces": [
+    "tardellirs/model-pulse",
+    "akhaliq/North-Micro-Vision-Instruct",
+    "fastgpu/vram-and-gpu-cost-calculator"
+  ],
+  "createdAt": "2026-08-10T13:20:37.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 2484847856
+    },
+    "total": 2484847856
+  },
+  "usedStorage": 4989315910
+}

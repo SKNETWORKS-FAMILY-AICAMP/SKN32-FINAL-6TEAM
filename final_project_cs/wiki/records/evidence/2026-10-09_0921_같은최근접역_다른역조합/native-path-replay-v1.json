@@ -1,0 +1,161 @@
+{
+  "created_at": "2026-10-09T09:23:23.051241+09:00",
+  "inputs": {
+    "datasets/mobility/processed/mobility/bike_stations_v1.jsonl": "8752290317c8700ad1d2a99cfe4f21fca9dea4e01ecab717972aad21603af6d7",
+    "datasets/mobility/processed/mobility/bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "datasets/mobility/processed/mobility/bus_seg_profile_v1.jsonl.gz": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+    "datasets/mobility/processed/mobility/bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+    "datasets/mobility/processed/mobility/line_station_order_v1.json": "693c616fa1a538d564b84c12cae1f8c744140da87f91574cfbb795394448d3e8",
+    "datasets/mobility/processed/mobility/rail_distance_overlay_v1.json": "78cbe18455c12bf1d25c795427559c1b86049997cca2c1b26498739caff44c82",
+    "datasets/mobility/processed/mobility/rail_edge_track_v2.jsonl.gz": "dd2d0eda1aaa956ba5d09d5410539ee863f8c4b023773b7c66a31caf3eb9e096",
+    "datasets/mobility/processed/mobility/road_graph_v2/edges.jsonl.gz": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb",
+    "datasets/mobility/processed/mobility/road_graph_v2/MANIFEST.json": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd",
+    "datasets/mobility/processed/mobility/road_graph_v2/nodes.jsonl.gz": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38",
+    "datasets/mobility/processed/mobility/road_graph_v2/turn_restrictions_v1.json": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c",
+    "datasets/mobility/processed/mobility/station_coords.json": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d",
+    "datasets/mobility/processed/mobility/station_exits_v1.json": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+    "datasets/mobility/processed/mobility/timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+    "datasets/mobility/processed/mobility/timetable_v1_meta.json": "6cc106e94be7b76ce921c884818617f8bb4473a3419d9ce64c33acb9d5045836",
+    "datasets/mobility/processed/mobility/transfer_walk_v1.json": "03a13259fc182df08eff16eccdc2add597b6012d7aaf160b38596f0708fc3f43",
+    "datasets/mobility/raw/kakao_golden/compare_resume_200_v5.json": "d4d8affedfceabfd97fa9528d14465df9b2e573afe4cc717d48ff89f227be83a",
+    "datasets/mobility/raw/kakao_golden/2026-10-09_0725_도보평가_제품분모_G04_product_v2.json": "e8d9a6482e2ecb8fe50d2e502f7c2db050bd078ea65dcc0eaed9235fbb739e1c",
+    "final_project_cs/tests/unit/travel/mobility/golden_pairs_v1.json": "77d706489ee0afaa2cdbe98565697ad3bdfdf442bbd6db32e226ffaf5e8fb380"
+  },
+  "stored_pairs": 200,
+  "same_first_station_pairs": 1,
+  "opened_pairs": 1,
+  "pair_records": [
+    {
+      "id": "G04",
+      "a": {
+        "key": "G04-a",
+        "name": "잠실역 8번출구 앞",
+        "lat": 37.5133,
+        "lon": 127.1002
+      },
+      "b": {
+        "key": "G04-b",
+        "name": "잠실 롯데월드몰",
+        "lat": 37.5131,
+        "lon": 127.104
+      },
+      "straight_m": 336,
+      "before_pairs": 0,
+      "after_pairs": 7,
+      "pairs": [
+        [
+          "잠실",
+          "송파나루"
+        ],
+        [
+          "잠실나루",
+          "잠실"
+        ],
+        [
+          "잠실",
+          "잠실나루"
+        ],
+        [
+          "석촌",
+          "잠실"
+        ],
+        [
+          "잠실나루",
+          "송파나루"
+        ],
+        [
+          "석촌",
+          "송파나루"
+        ],
+        [
+          "석촌",
+          "잠실나루"
+        ]
+      ]
+    }
+  ],
+  "replay_order": "ABBA",
+  "replays": [
+    {
+      "id": "G04",
+      "variants": [
+        {
+          "variant": "before",
+          "available": false,
+          "route": null,
+          "why": {
+            "code": "no_data",
+            "reason": "두 장소의 가장 가까운 역이 같다(잠실) — 도보만 본다"
+          },
+          "start_min": null
+        },
+        {
+          "variant": "after",
+          "available": true,
+          "route": {
+            "from": "잠실역 8번출구 앞",
+            "to": "잠실 롯데월드몰",
+            "planned": "subway_1",
+            "options": [
+              {
+                "id": "subway_1",
+                "label": "8호선 잠실→석촌 → 9호선 석촌→송파나루 · 요금은 선로 길이 추정",
+                "eta_min": 32,
+                "walk_m": 1229,
+                "fare_krw": 1550,
+                "uses": [
+                  "8호선:잠실",
+                  "8호선:석촌",
+                  "9호선:석촌",
+                  "9호선:송파나루"
+                ]
+              }
+            ]
+          },
+          "why": null,
+          "start_min": 584
+        },
+        {
+          "variant": "after",
+          "available": true,
+          "route": {
+            "from": "잠실역 8번출구 앞",
+            "to": "잠실 롯데월드몰",
+            "planned": "subway_1",
+            "options": [
+              {
+                "id": "subway_1",
+                "label": "8호선 잠실→석촌 → 9호선 석촌→송파나루 · 요금은 선로 길이 추정",
+                "eta_min": 32,
+                "walk_m": 1229,
+                "fare_krw": 1550,
+                "uses": [
+                  "8호선:잠실",
+                  "8호선:석촌",
+                  "9호선:석촌",
+                  "9호선:송파나루"
+                ]
+              }
+            ]
+          },
+          "why": null,
+          "start_min": 584
+        },
+        {
+          "variant": "before",
+          "available": false,
+          "route": null,
+          "why": {
+            "code": "no_data",
+            "reason": "두 장소의 가장 가까운 역이 같다(잠실) — 도보만 본다"
+          },
+          "start_min": null
+        }
+      ]
+    }
+  ],
+  "network_attempts": 0,
+  "new_web_samples": 0,
+  "actual_trips": 0,
+  "scope": "Stored development coordinates and local timetable replay, not independent route accuracy."
+}

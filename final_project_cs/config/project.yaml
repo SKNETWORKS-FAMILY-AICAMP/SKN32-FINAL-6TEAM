@@ -18,6 +18,9 @@ ports:
 teams:
 - team_id: activity
   active: true
+  required: false
+  capabilities: [activity.check_cancelable, activity.check_feasible, activity.propose_change, activity.itinerary, activity.itinerary_question, activity.submit_itinerary]
+  hooks: [similarity, activity_ledger, watch:activity]
   implementation_ref: app.domains.travel_ops.instances.activity:ActivityTeam
   required: false
   capabilities:
@@ -26,11 +29,16 @@ teams:
   - activity.propose_change
   - activity.itinerary
   - activity.itinerary_question
+  - activity.submit_itinerary
   hooks:
   - similarity
+  - activity_ledger
   - watch:activity
 - team_id: booking_handoff
   active: true
+  required: false
+  capabilities: [booking.verify, booking.prepare_change, booking.prepare_cancel, booking.prepare_revert]
+  hooks: []
   implementation_ref: app.domains.travel_ops.instances.booking_handoff:BookingHandoffTeam
   required: false
   capabilities:
@@ -41,6 +49,9 @@ teams:
   hooks: []
 - team_id: mobility
   active: true
+  required: false
+  capabilities: [mobility.check_route, mobility.status, mobility.exception, mobility.itinerary, mobility.itinerary_question]
+  hooks: [legs, watch:mobility]
   implementation_ref: app.domains.travel_ops.instances.mobility:MobilityTeam
   required: false
   capabilities:
@@ -54,6 +65,9 @@ teams:
   - watch:mobility
 - team_id: dining
   active: true
+  required: false
+  capabilities: [dining.check_open, dining.check_conditions, dining.itinerary, dining.itinerary_question]
+  hooks: [dining_ledger, watch:dining]
   implementation_ref: app.domains.travel_ops.instances.dining:DiningTeam
   required: false
   capabilities:
@@ -66,6 +80,9 @@ teams:
   - watch:dining
 - team_id: lodging
   active: true
+  required: false
+  capabilities: [lodging.status]
+  hooks: []
   implementation_ref: app.domains.travel_ops.instances.locked:LodgingTeam
   required: false
   capabilities:
@@ -73,6 +90,9 @@ teams:
   hooks: []
 - team_id: flight
   active: true
+  required: false
+  capabilities: [flight.status]
+  hooks: []
   implementation_ref: app.domains.travel_ops.instances.locked:FlightTeam
   required: false
   capabilities:

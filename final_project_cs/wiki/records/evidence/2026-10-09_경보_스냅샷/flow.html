@@ -1,0 +1,12 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>triPilot 경보 점검 흐름</title>
+<style>body{margin:0;background:#fbfcfd;font-family:'Malgun Gothic',sans-serif;color:#161c28}main{max-width:1050px;margin:48px auto;padding:24px}h1{font-size:28px;margin:0 0 12px}p{color:#6b7488;line-height:1.6}svg{width:100%;height:auto}text{font-family:'Malgun Gothic',sans-serif;fill:#161c28;font-size:18px}.small{font-size:14px;fill:#6b7488}</style>
+<main><h1>경보 근거가 있는 일정만 검증합니다</h1><p>수집 실패와 영향 없음도 기록합니다. 점검용 접수에서만 대체안을 미리 보고, 실제 여행은 등록하지 않습니다.</p>
+<svg viewBox="0 0 1000 470" role="img" aria-labelledby="t d"><title id="t">경보 수집부터 화면 보관까지</title><desc id="d">실경보 원본 수집, 서울 장소와 시간 매칭, 대체안 미리 보기와 경보 재검사, 전후 화면 보관 순서입니다. 근거 부족이나 대체안 실패는 별도로 보관합니다.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="#6b7488"/></marker></defs>
+<g fill="#f1f4f8" stroke="#dbe0ea"><rect x="20" y="80" width="190" height="100" rx="6"/><rect x="270" y="80" width="190" height="100" rx="6"/><rect x="730" y="80" width="245" height="100" rx="6"/></g>
+<rect x="500" y="70" width="190" height="120" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
+<g text-anchor="middle"><text x="115" y="120">실경보 원본 수집</text><text x="115" y="150" class="small">본문 · 출처 · 확인 시각</text><text x="365" y="120">서울 장소·시간 매칭</text><text x="365" y="150" class="small">당일 실제 영향 판정</text><text x="595" y="107">대체안 미리 보기</text><text x="595" y="135">실경보 재검사</text><text x="595" y="164" class="small">점검용 접수 · 저장 안 함</text><text x="852" y="120">전후 화면과 결과 보관</text><text x="852" y="150" class="small">실제 점검 / mock 화면 구분</text></g>
+<g stroke="#6b7488" fill="none" marker-end="url(#arrow)"><path d="M210 130H270"/><path d="M460 130H500"/><path d="M690 130H730"/><path d="M365 180V285"/><path d="M595 190V285"/></g>
+<g class="small" text-anchor="middle"><text x="365" y="230">근거 부족 · 매칭 없음</text><text x="595" y="230">대체안 실패 · 확인 불가</text></g>
+<rect x="245" y="290" width="485" height="95" rx="20" fill="#f1f4f8" stroke="#dbe0ea"/><text x="487" y="330" text-anchor="middle">실패·미매칭 기록을 남기고 다음 회차 확인</text><text x="487" y="360" text-anchor="middle" class="small">성공을 만들거나 실제 사건으로 꾸미지 않음</text>
+</svg></main></html>

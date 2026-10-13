@@ -1,0 +1,1177 @@
+{
+  "created_at": "2026-10-09T13:01:44.155647+09:00",
+  "prior_evidence": "final_project_cs/wiki/records/evidence/2026-10-09_1228_지하철_문자열열차번호_선택연결/live-source-retry-v2.json",
+  "prior_sha256": "a29b5d3f8b42aacefa9ec8952806eeb7401e4c7a85edbcbf7fee7e2437e95079",
+  "native_identity": {
+    "status": "matched",
+    "line_id": "1065",
+    "station_id": "1065006502",
+    "target_station_id": "1065006503",
+    "query_station": "공덕",
+    "target_station": "홍대입구",
+    "line": "공항철도"
+  },
+  "native_services": [
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구"
+      ],
+      "terminal": "홍대입구",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "홍대입구"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티"
+      ],
+      "terminal": "디지털미디어시티",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "디지털미디어시티"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루"
+      ],
+      "terminal": "마곡나루",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "마곡나루"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042",
+        "1065006505"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루",
+        "김포공항"
+      ],
+      "terminal": "김포공항",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "김포공항"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042",
+        "1065006505",
+        "1065006506"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루",
+        "김포공항",
+        "계양"
+      ],
+      "terminal": "계양",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "계양"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042",
+        "1065006505",
+        "1065006506",
+        "1065006507"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루",
+        "김포공항",
+        "계양",
+        "검암"
+      ],
+      "terminal": "검암",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "검암"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042",
+        "1065006505",
+        "1065006506",
+        "1065006507",
+        "1065065071"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루",
+        "김포공항",
+        "계양",
+        "검암",
+        "청라국제도시"
+      ],
+      "terminal": "청라국제도시",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "청라국제도시"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042",
+        "1065006505",
+        "1065006506",
+        "1065006507",
+        "1065065071",
+        "1065065072"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루",
+        "김포공항",
+        "계양",
+        "검암",
+        "청라국제도시",
+        "영종"
+      ],
+      "terminal": "영종",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "영종"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042",
+        "1065006505",
+        "1065006506",
+        "1065006507",
+        "1065065071",
+        "1065065072",
+        "1065006508"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루",
+        "김포공항",
+        "계양",
+        "검암",
+        "청라국제도시",
+        "영종",
+        "운서"
+      ],
+      "terminal": "운서",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "운서"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042",
+        "1065006505",
+        "1065006506",
+        "1065006507",
+        "1065065071",
+        "1065065072",
+        "1065006508",
+        "1065006509"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루",
+        "김포공항",
+        "계양",
+        "검암",
+        "청라국제도시",
+        "영종",
+        "운서",
+        "공항화물청사"
+      ],
+      "terminal": "공항화물청사",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "공항화물청사"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042",
+        "1065006505",
+        "1065006506",
+        "1065006507",
+        "1065065071",
+        "1065065072",
+        "1065006508",
+        "1065006509",
+        "1065006510"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루",
+        "김포공항",
+        "계양",
+        "검암",
+        "청라국제도시",
+        "영종",
+        "운서",
+        "공항화물청사",
+        "인천공항1터미널"
+      ],
+      "terminal": "인천공항1터미널",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "인천공항1터미널"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    },
+    {
+      "train_status": "일반",
+      "path_station_ids": [
+        "1065006502",
+        "1065006503",
+        "1065006504",
+        "1065065042",
+        "1065006505",
+        "1065006506",
+        "1065006507",
+        "1065065071",
+        "1065065072",
+        "1065006508",
+        "1065006509",
+        "1065006510",
+        "1065006511"
+      ],
+      "path_stations": [
+        "공덕",
+        "홍대입구",
+        "디지털미디어시티",
+        "마곡나루",
+        "김포공항",
+        "계양",
+        "검암",
+        "청라국제도시",
+        "영종",
+        "운서",
+        "공항화물청사",
+        "인천공항1터미널",
+        "인천공항2터미널"
+      ],
+      "terminal": "인천공항2터미널",
+      "next_station_names": [
+        "홍대입구"
+      ],
+      "terminal_station_names": [
+        "인천공항2터미널"
+      ],
+      "boarding_neighbor_ids": [
+        "1065006501",
+        "1065006503"
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "scenario": "saved_actual",
+      "version": "before",
+      "result": {
+        "source": "seoul_subway_arrival",
+        "line_id": "1065",
+        "station_id": "1065006502",
+        "target_station_id": "1065006503",
+        "confirmed_at": "2026-10-09T03:33:39.379567+00:00",
+        "observation_age_seconds": 0.0,
+        "ready_at": "2026-10-09T12:35:39.379567+09:00",
+        "excluded": [
+          {
+            "train_number": "A3013",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1019",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6098",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5558",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5054",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6100",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5070",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5056",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2106",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1020",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6097",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5067",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5059",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A3014",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5573",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6099",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1022",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5061",
+            "reason": "boarding_identity_mismatch"
+          }
+        ],
+        "status": "no_boardable_prediction",
+        "reason": "no_vehicle_after_ready"
+      }
+    },
+    {
+      "scenario": "saved_actual",
+      "version": "after",
+      "result": {
+        "source": "seoul_subway_arrival",
+        "line_id": "1065",
+        "station_id": "1065006502",
+        "target_station_id": "1065006503",
+        "confirmed_at": "2026-10-09T03:33:39.379567+00:00",
+        "observation_age_seconds": 0.0,
+        "ready_at": "2026-10-09T12:35:39.379567+09:00",
+        "excluded": [
+          {
+            "train_number": "A3013",
+            "reason": "departed_or_unknown_state"
+          },
+          {
+            "train_number": "A1019",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6098",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5558",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5054",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6100",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5070",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5056",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2106",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1020",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6097",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5067",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5059",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A3014",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5573",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6099",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1022",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5061",
+            "reason": "boarding_identity_mismatch"
+          }
+        ],
+        "status": "no_boardable_prediction",
+        "reason": "no_vehicle_after_ready"
+      }
+    },
+    {
+      "scenario": "saved_actual",
+      "version": "after",
+      "result": {
+        "source": "seoul_subway_arrival",
+        "line_id": "1065",
+        "station_id": "1065006502",
+        "target_station_id": "1065006503",
+        "confirmed_at": "2026-10-09T03:33:39.379567+00:00",
+        "observation_age_seconds": 0.0,
+        "ready_at": "2026-10-09T12:35:39.379567+09:00",
+        "excluded": [
+          {
+            "train_number": "A3013",
+            "reason": "departed_or_unknown_state"
+          },
+          {
+            "train_number": "A1019",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6098",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5558",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5054",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6100",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5070",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5056",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2106",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1020",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6097",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5067",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5059",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A3014",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5573",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6099",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1022",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5061",
+            "reason": "boarding_identity_mismatch"
+          }
+        ],
+        "status": "no_boardable_prediction",
+        "reason": "no_vehicle_after_ready"
+      }
+    },
+    {
+      "scenario": "saved_actual",
+      "version": "before",
+      "result": {
+        "source": "seoul_subway_arrival",
+        "line_id": "1065",
+        "station_id": "1065006502",
+        "target_station_id": "1065006503",
+        "confirmed_at": "2026-10-09T03:33:39.379567+00:00",
+        "observation_age_seconds": 0.0,
+        "ready_at": "2026-10-09T12:35:39.379567+09:00",
+        "excluded": [
+          {
+            "train_number": "A3013",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1019",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6098",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5558",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5054",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6100",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5070",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5056",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2106",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1020",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6097",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5067",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5059",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A3014",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5573",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6099",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1022",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5061",
+            "reason": "boarding_identity_mismatch"
+          }
+        ],
+        "status": "no_boardable_prediction",
+        "reason": "no_vehicle_after_ready"
+      }
+    },
+    {
+      "scenario": "controlled_future",
+      "version": "before",
+      "result": {
+        "source": "seoul_subway_arrival",
+        "line_id": "1065",
+        "station_id": "1065006502",
+        "target_station_id": "1065006503",
+        "confirmed_at": "2026-10-09T12:33:39.379567+09:00",
+        "observation_age_seconds": 0.0,
+        "ready_at": "2026-10-09T12:35:39.379567+09:00",
+        "excluded": [
+          {
+            "train_number": "A3013",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1019",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6098",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5558",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5054",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6100",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5070",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5056",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2106",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1020",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6097",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5067",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5059",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A3014",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5573",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6099",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1022",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5061",
+            "reason": "boarding_identity_mismatch"
+          }
+        ],
+        "status": "no_boardable_prediction",
+        "reason": "no_vehicle_after_ready"
+      }
+    },
+    {
+      "scenario": "controlled_future",
+      "version": "after",
+      "result": {
+        "source": "seoul_subway_arrival",
+        "line_id": "1065",
+        "station_id": "1065006502",
+        "target_station_id": "1065006503",
+        "confirmed_at": "2026-10-09T12:33:39.379567+09:00",
+        "observation_age_seconds": 0.0,
+        "ready_at": "2026-10-09T12:35:39.379567+09:00",
+        "excluded": [
+          {
+            "train_number": "A1019",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6098",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5558",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5054",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6100",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5070",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5056",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2106",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1020",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6097",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5067",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5059",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A3014",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5573",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6099",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1022",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5061",
+            "reason": "boarding_identity_mismatch"
+          }
+        ],
+        "direction_basis": "route_label_and_neighbor_ids",
+        "provider_next_station_id": "1065006501",
+        "provider_previous_station_id": "1065006503",
+        "route_label": "검암행 - 홍대입구방면",
+        "status": "predicted",
+        "train_number": "A3013",
+        "next_station_id": "1065006503",
+        "terminal_station_id": "1065006507",
+        "train_status": "일반",
+        "path_station_ids": [
+          "1065006502",
+          "1065006503",
+          "1065006504",
+          "1065065042",
+          "1065006505",
+          "1065006506",
+          "1065006507"
+        ],
+        "arrival_at": "2026-10-09T12:41:39.379567+09:00",
+        "remaining_seconds": 480.0,
+        "wait_after_access_seconds": 360.0,
+        "provider_received_at": "2026-10-09T12:33:39.379567+09:00",
+        "provider_received_at_normalized": "2026-10-09T12:33:39.379567+09:00",
+        "provider_age_seconds": 0.0,
+        "eta_basis": "provider_generation_time",
+        "claim": "접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님"
+      }
+    },
+    {
+      "scenario": "controlled_future",
+      "version": "after",
+      "result": {
+        "source": "seoul_subway_arrival",
+        "line_id": "1065",
+        "station_id": "1065006502",
+        "target_station_id": "1065006503",
+        "confirmed_at": "2026-10-09T12:33:39.379567+09:00",
+        "observation_age_seconds": 0.0,
+        "ready_at": "2026-10-09T12:35:39.379567+09:00",
+        "excluded": [
+          {
+            "train_number": "A1019",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6098",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5558",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5054",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6100",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5070",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5056",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2106",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1020",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6097",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5067",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5059",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A3014",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5573",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6099",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1022",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5061",
+            "reason": "boarding_identity_mismatch"
+          }
+        ],
+        "direction_basis": "route_label_and_neighbor_ids",
+        "provider_next_station_id": "1065006501",
+        "provider_previous_station_id": "1065006503",
+        "route_label": "검암행 - 홍대입구방면",
+        "status": "predicted",
+        "train_number": "A3013",
+        "next_station_id": "1065006503",
+        "terminal_station_id": "1065006507",
+        "train_status": "일반",
+        "path_station_ids": [
+          "1065006502",
+          "1065006503",
+          "1065006504",
+          "1065065042",
+          "1065006505",
+          "1065006506",
+          "1065006507"
+        ],
+        "arrival_at": "2026-10-09T12:41:39.379567+09:00",
+        "remaining_seconds": 480.0,
+        "wait_after_access_seconds": 360.0,
+        "provider_received_at": "2026-10-09T12:33:39.379567+09:00",
+        "provider_received_at_normalized": "2026-10-09T12:33:39.379567+09:00",
+        "provider_age_seconds": 0.0,
+        "eta_basis": "provider_generation_time",
+        "claim": "접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님"
+      }
+    },
+    {
+      "scenario": "controlled_future",
+      "version": "before",
+      "result": {
+        "source": "seoul_subway_arrival",
+        "line_id": "1065",
+        "station_id": "1065006502",
+        "target_station_id": "1065006503",
+        "confirmed_at": "2026-10-09T12:33:39.379567+09:00",
+        "observation_age_seconds": 0.0,
+        "ready_at": "2026-10-09T12:35:39.379567+09:00",
+        "excluded": [
+          {
+            "train_number": "A3013",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1019",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6098",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5558",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5054",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6100",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5070",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5056",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2106",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "A1020",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6097",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5067",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5059",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A3014",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5573",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6099",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1022",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5061",
+            "reason": "boarding_identity_mismatch"
+          }
+        ],
+        "status": "no_boardable_prediction",
+        "reason": "no_vehicle_after_ready"
+      }
+    }
+  ],
+  "run_count": 8,
+  "controlled_changes": {
+    "train_number": "A3013",
+    "arrival_code": "99",
+    "eta_seconds": 480,
+    "received_at": "2026-10-09T12:33:39.379567+09:00",
+    "confirmed_at": "2026-10-09T12:33:39.379567+09:00"
+  },
+  "new_independent_samples": 0,
+  "actual_boardings": 0,
+  "claim": "저장 응답1개와 그 응답의 시각/상태를 바꾼 통제1상황을 ABBA로 재생. 실제 신선 응답·탑승·오차 자료가 아님."
+}

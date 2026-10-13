@@ -1,0 +1,48 @@
+[WebServer] (node:19992) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:26188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:23620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:21568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:23504) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 
+[WebServer] <--- Last few GCs --->
+[WebServer] 
+[WebServer] [24392:0000025D91E5C000]       37 ms: Mark-Compact 4.3 (5.4) -> 4.0 (5.6) MB, pooled: 0.0 MB, 3.12 / 0.00 ms (average mu = 0.822, current mu = 0.720) allocation failure; GC in old space requested
+[WebServer] [24392:0000025D91E5C000]       53 ms: Mark-Compact 4.5 (5.9) -> 4.3 (6.1) MB, pooled: 0.0 MB, 5.19 / 0.00 ms (average mu = 0.748, current mu = 0.671) background allocation failure; GC in old space requested
+[WebServer] 
+[WebServer] FATAL ERROR: AlignedAlloc Allocation failed - process out of memory
+[WebServer] ----- Native stack trace -----
+[WebServer] 
+[WebServer]  1: 00007FF66E7959C9 
+[WebServer]  2: 00007FF66CFCC10A 
+[WebServer]  3: 00007FF66C963C0C 
+[WebServer]  4: 00007FF66CAF25BB 
+[WebServer]  5: 00007FF66CAF06DC 
+[WebServer]  6: 00007FF66CE0D4D7 
+[WebServer]  7: 00007FF66CFC26B1 
+[WebServer]  8: 00007FF66CFC318B 
+[WebServer]  9: 00007FF66CA9F887 
+[WebServer] 10: 00007FF66CAA6323 
+[WebServer] 11: 00007FF66CA9EE2E 
+[WebServer] 12: 00007FF66CF5EEAE 
+[WebServer] 13: 00007FF66CF5F9BC 
+[WebServer] 14: 00007FF66C9E982B 
+[WebServer] 15: 00007FF66E989BBA 
+[WebServer] 16: 00007FF66E8DA130 
+[WebServer] 17: 00007FF66E8D8DE4 
+[WebServer] 18: 00007FF66E8D8DE4 
+[WebServer] 19: 00007FF66E8D8DE4 
+[WebServer] 20: 00007FF66E8D8DE4 
+[WebServer] 21: 0000025D9A7005F3 
+[WebServer] ⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit
+[WebServer]     at ignore-listed frames {
+[WebServer]   type: 'WorkerError',
+[WebServer]   page: '/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+[WebServer] }

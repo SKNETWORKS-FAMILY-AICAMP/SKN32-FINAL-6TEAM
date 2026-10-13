@@ -5,6 +5,7 @@ import { streamApi } from "./stream";
 
 /** Server trip view (`GET /v1/web/trips/{id}`) — only the fields the web reads. */
 interface ServerItem {
+  badges?: { code: string; label: string; source: string }[];
   item_id: string;
   seq: number;
   kind: string;
@@ -18,7 +19,6 @@ interface ServerItem {
   booked?: boolean;
   other_options?: { key: string; name: string }[];
   customer_pinned?: boolean;
-  badges?: { code: string; label: string; source: string }[];
   place_info?: ServerPlaceInfo | null;
   map_url?: string | null;
   /** `[2026-10-06]` Falls in a disaster pause. */
@@ -83,7 +83,6 @@ function stop(item: ServerItem, t: Translate): TripStop {
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
-    // A badge without its label or source is dropped — the screen does not show a mark of unknown origin.
     badges: (item.badges ?? []).filter((badge) => [badge?.code, badge?.label, badge?.source].every((value) => typeof value === "string" && value !== ""))
       .map(({ code, label, source }) => ({ code, label, source })),
     placeInfo: placeInfo(item.place_info, t),
@@ -348,7 +347,7 @@ export function createLiveGateway(): TripGateway {
   // Resume credentials belong to one trip and login session. Reloads deliberately leave correlation to the API.
   const pending = new Map<string, { resume: TripMessageResume; session: string | null }>();
   // Failed sends retain the same request id and resume credentials, including on a user-triggered retry.
-  const sending = new Map<string, { message: string; itemId: string | null; requestId: string; resume?: TripMessageResume }>();
+  const sending = new Map<string, { message: string; itemId: string | null; requestId: string; resume?: TripMessageResume; summaryDay?: string }>();
   return {
     async listTrips(language) {
       // ★No session means this browser has registered nothing. Asking with the list would make a guest session — a new server user —
@@ -363,25 +362,25 @@ export function createLiveGateway(): TripGateway {
       pending.delete(tripId);
       sending.delete(tripId);
     },
-    async sendMessage(tripId, message, language, itemId, location, onProgress, explicitResume) {
+    async sendMessage(tripId, message, language, itemId, location, onProgress, explicitResume, summaryDay) {
       const t = translator(language);
       const now = new Date().toISOString();
       const waiting = pending.get(tripId);
       if (waiting && waiting.session !== (currentSession()?.csrf ?? null)) { pending.delete(tripId); sending.delete(tripId); }
       const earlier = sending.get(tripId);
-      const retry = earlier && earlier.message === message && earlier.itemId === (itemId ?? null)
+      const retry = earlier && earlier.message === message && earlier.itemId === (itemId ?? null) && earlier.summaryDay === summaryDay
         && (!explicitResume || (earlier.resume?.case_id === explicitResume.case_id
           && earlier.resume.resume_token === explicitResume.resume_token && earlier.resume.expected_version === explicitResume.expected_version));
       const requestId = retry
         ? earlier.requestId : `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
-      const resume = retry ? earlier.resume : explicitResume ?? pending.get(tripId)?.resume;
-      sending.set(tripId, { message, itemId: itemId ?? null, requestId, resume });
+      const resume = summaryDay ? undefined : retry ? earlier.resume : explicitResume ?? pending.get(tripId)?.resume;
+      sending.set(tripId, { message, itemId: itemId ?? null, requestId, resume, summaryDay });
       // ★`[2026-10-02]` Asked as a stream, the server says what it is doing while the model works (`stream.ts`); a lost line
       //   sends the same `request_id` again, which the server answers without acting twice.
       const result = await streamApi<{ status?: string; case_status?: string; case_id?: string; version?: number; resume_token?: string | null;
         required_input_schema?: Record<string, unknown> | null; answer?: string; basis_sources?: unknown[] | null; choices?: ServerChoice[] | null;
         outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown; needs_location?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(resume ?? {}), ...(itemId ? { item_id: itemId } : {}),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(summaryDay ? { summary_day: summaryDay } : {}), ...(resume ?? {}), ...(itemId ? { item_id: itemId } : {}),
           // ★Only when the customer pressed 「내 위치 알려 주고 다시 묻기」 — never attached on its own.
           ...(location ? { location: { lat: location.lat, lng: location.lng, accuracy_m: location.accuracyM, at: location.at } } : {}) }),
       }, onProgress);
@@ -391,7 +390,7 @@ export function createLiveGateway(): TripGateway {
         pending.set(tripId, { session: currentSession()?.csrf ?? null, resume: { case_id: result.case_id,
           ...(typeof result.resume_token === "string" && result.resume_token ? { resume_token: result.resume_token } : {}),
           ...(typeof result.version === "number" && Number.isInteger(result.version) ? { expected_version: result.version } : {}) } });
-      } else pending.delete(tripId);
+      } else if (!summaryDay) pending.delete(tripId);
       const sent: TripMessage[] = [
         { id: `${requestId}-q`, caseId: result.case_id, role: "user" as const, text: message, createdAt: now },
         { id: `${requestId}-a`, caseId: result.case_id, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString(),
@@ -404,7 +403,7 @@ export function createLiveGateway(): TripGateway {
           // ★A change the customer asked for in chat can be undone from the answer (user decision 2026-09-29).
           ...(result.status === "adjusted" && typeof result.outcome?.version === "number" && result.outcome.version > 1
             ? { changedTo: result.outcome.version } : {}) }];
-      writeMessages(tripId, [...readMessages(tripId).map((previous) => ({ ...previous, awaitingReply: false })), ...sent]);
+      writeMessages(tripId, [...readMessages(tripId).map((previous) => ({ ...previous, awaitingReply: summaryDay ? previous.awaitingReply : false })), ...sent]);
       // ★Sending and re-reading are two steps (2026-09-30, teammate question Q-05). The server has answered; a failed
       //   re-read must not turn that into "not sent" — the customer would send again and the change would run twice.
       //   The caller shows the reply it got (`detail.sent`) and re-reads later.

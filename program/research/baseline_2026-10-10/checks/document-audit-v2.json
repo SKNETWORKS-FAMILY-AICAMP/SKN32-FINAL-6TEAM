@@ -1,0 +1,268 @@
+{
+  "date_kst": "2026-10-10",
+  "checks": [
+    {
+      "name": "source-S01",
+      "passed": true,
+      "detail": {
+        "bytes": 6015672,
+        "sha256": "0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511",
+        "pages": 411
+      }
+    },
+    {
+      "name": "source-S02",
+      "passed": true,
+      "detail": {
+        "bytes": 321114,
+        "sha256": "8f2e5d5de99a610c94a5498a80ffd9c9a431fbc6260652112aa5c3bb9ffe96d0",
+        "pages": 59
+      }
+    },
+    {
+      "name": "source-S03",
+      "passed": true,
+      "detail": {
+        "bytes": 34414226,
+        "sha256": "655d58c2c3fbcc659be3a2e95a3067d39b6870ada7e574ed0fb49104dd38a2a7",
+        "pages": 302
+      }
+    },
+    {
+      "name": "source-S04",
+      "passed": true,
+      "detail": {
+        "bytes": 139486,
+        "sha256": "29b76a1addb09a03b4ecb9229d3ab0d68b17e30816f8b88ba36af80a084bf4bf",
+        "pages": null
+      }
+    },
+    {
+      "name": "source-S05",
+      "passed": true,
+      "detail": {
+        "bytes": 199180,
+        "sha256": "95e175f4835407e3f4915e785ec5c42567a1aa49c22743ae513a62e20bf22bb0",
+        "pages": null
+      }
+    },
+    {
+      "name": "source-S06",
+      "passed": true,
+      "detail": {
+        "bytes": 23387,
+        "sha256": "90ee04c8e4a9afdd14241e5d8b4cd962bffbc24157a2a7877276b3839b4ee947",
+        "pages": null
+      }
+    },
+    {
+      "name": "source-S07",
+      "passed": true,
+      "detail": {
+        "bytes": 20576,
+        "sha256": "59dfdbb7780ba64e91f2186a7ac57bc5a7414a821f338559e653ff93946c1822",
+        "pages": null
+      }
+    },
+    {
+      "name": "source-S08",
+      "passed": true,
+      "detail": {
+        "bytes": 152618,
+        "sha256": "94b0b0f8d9bf3a0a89ffc1f0dea40dd48ced8771d533122a98ea61d80ad2919e",
+        "pages": null
+      }
+    },
+    {
+      "name": "source-S09",
+      "passed": true,
+      "detail": {
+        "bytes": 133263,
+        "sha256": "ed9c9cfe95f385543be25e8ddcfe1ee0a285525438f2074f938c741d3b082139",
+        "pages": null
+      }
+    },
+    {
+      "name": "source-S10",
+      "passed": true,
+      "detail": {
+        "bytes": 490842,
+        "sha256": "a8cb8cd575d559532e68c63db92edbcf2fd4e9261903c1315c5df22399e34b38",
+        "pages": null
+      }
+    },
+    {
+      "name": "source-S11",
+      "passed": true,
+      "detail": {
+        "bytes": 138101,
+        "sha256": "3ad2de243def62892458a058b4e8b0a9b98a76b3507bdf0ecc835da551e9787d",
+        "pages": null
+      }
+    },
+    {
+      "name": "project-snapshot",
+      "passed": false,
+      "detail": {
+        "frozen_files": 1313,
+        "current_files": 1313,
+        "changed_paths": [
+          "final_project_cs/frontend/apps/web/src/features/plan-check/plan-check.module.css"
+        ],
+        "current_tree_sha256": "12cdea8d1a05c810ebfca44be35a9ed090ef3899c737b6fa1288744157861878"
+      }
+    },
+    {
+      "name": "triPilot-baseline-v2.html:links",
+      "passed": true,
+      "detail": {
+        "local": 83,
+        "remote_citations": 11,
+        "broken": []
+      }
+    },
+    {
+      "name": "triPilot-baseline-v2.html:unique-ids",
+      "passed": true,
+      "detail": {
+        "duplicate": []
+      }
+    },
+    {
+      "name": "triPilot-baseline-v2.html:accessible-svg",
+      "passed": true,
+      "detail": {
+        "diagrams": 2,
+        "errors": []
+      }
+    },
+    {
+      "name": "triPilot-baseline-v2.html:offline",
+      "passed": true,
+      "detail": {
+        "external_asset_tags": 0
+      }
+    },
+    {
+      "name": "triPilot-baseline-v2.html:document-structure",
+      "passed": true,
+      "detail": {
+        "sections": 13
+      }
+    },
+    {
+      "name": "triPilot-baseline-v2.html:status-and-evidence",
+      "passed": true,
+      "detail": "후보·채택 지위, 현재 시험 분모, AI 초안과 출처 구분"
+    },
+    {
+      "name": "baseline-writing-guide-v2.html:links",
+      "passed": true,
+      "detail": {
+        "local": 52,
+        "remote_citations": 11,
+        "broken": []
+      }
+    },
+    {
+      "name": "baseline-writing-guide-v2.html:unique-ids",
+      "passed": true,
+      "detail": {
+        "duplicate": []
+      }
+    },
+    {
+      "name": "baseline-writing-guide-v2.html:accessible-svg",
+      "passed": true,
+      "detail": {
+        "diagrams": 2,
+        "errors": []
+      }
+    },
+    {
+      "name": "baseline-writing-guide-v2.html:offline",
+      "passed": true,
+      "detail": {
+        "external_asset_tags": 0
+      }
+    },
+    {
+      "name": "baseline-writing-guide-v2.html:document-structure",
+      "passed": true,
+      "detail": {
+        "sections": 7
+      }
+    },
+    {
+      "name": "baseline-writing-guide-v2.html:status-and-evidence",
+      "passed": true,
+      "detail": "후보·채택 지위, 현재 시험 분모, AI 초안과 출처 구분"
+    },
+    {
+      "name": "mvp-18",
+      "passed": true,
+      "detail": {
+        "ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          22,
+          23,
+          24,
+          25,
+          26
+        ],
+        "total": 18
+      }
+    },
+    {
+      "name": "v2-version-identity",
+      "passed": true,
+      "detail": "관측 시각·기준선 ID·현재 파일 수·집합 해시 대조"
+    },
+    {
+      "name": "current-consent-policy",
+      "passed": true,
+      "detail": "현재 동의 판·자료 범위·운영 적용 한계가 본문에 있음"
+    },
+    {
+      "name": "v1-preserved",
+      "passed": true,
+      "detail": "v1 기준선과 원래 상태 명세 별도 보존"
+    },
+    {
+      "name": "source-scope-language",
+      "passed": true,
+      "detail": "다운로드 범위 한국어 표시"
+    }
+  ],
+  "passed": 28,
+  "total": 29,
+  "document_passed": 28,
+  "document_total": 28,
+  "state_observations": [
+    {
+      "name": "project-snapshot",
+      "passed": false,
+      "detail": {
+        "frozen_files": 1313,
+        "current_files": 1313,
+        "changed_paths": [
+          "final_project_cs/frontend/apps/web/src/features/plan-check/plan-check.module.css"
+        ],
+        "current_tree_sha256": "12cdea8d1a05c810ebfca44be35a9ed090ef3899c737b6fa1288744157861878"
+      }
+    }
+  ],
+  "limitations": "문서·원문 동일성 검사이며 제품 출시, 사람 정답 검수, 팀 채택을 대신하지 않음. project-snapshot은 문서 합격 항목과 별도로 표시하는 현재 작업 상태 관측임"
+}

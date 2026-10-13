@@ -1,0 +1,35 @@
+{
+  "scope": "Support follow-up v2 Chrome 7 cases after support copy changes; 3 ordinary/result images",
+  "entries": [
+    {
+      "bytes": 34877,
+      "screenshot": "support-followup/support-previous-reply.png",
+      "sha256": "8B05E5857B14C487A45053B5A427E6315D8936C715A135845428AB7DA7C2DBAC",
+      "reviewer": "root agent: all 3 support follow-up images viewed; delegated confirmation 2026-10-12",
+      "screenshotVisuallyReviewed": true,
+      "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-evidence/support-문제-신고-재전송은-같은-요청-번호를-사용하고-기록-완료를-안내한다/support-previous-reply.png"
+    },
+    {
+      "bytes": 41584,
+      "screenshot": "support-followup/support-1280.png",
+      "sha256": "3B3FC33A44C808AD17AEB5D5583509E38CA9CCAF6389EAB47AF8EC0D2A519F08",
+      "reviewer": "root agent: all 3 support follow-up images viewed; delegated confirmation 2026-10-12",
+      "screenshotVisuallyReviewed": true,
+      "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-evidence/uiux-route-audit-20261012--19225--·-1280px-화면-표시·가로-넘침·실행-오류/support-1280.png"
+    },
+    {
+      "bytes": 26814,
+      "screenshot": "support-followup/support-375.png",
+      "sha256": "F881EDAAC16EE31F9068BAC0D1C0319F25303B4B96C9298F1A20D5C51171E576",
+      "reviewer": "root agent: all 3 support follow-up images viewed; delegated confirmation 2026-10-12",
+      "screenshotVisuallyReviewed": true,
+      "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-evidence/uiux-route-audit-20261012--ebd94-t-·-375px-화면-표시·가로-넘침·실행-오류/support-375.png"
+    }
+  ],
+  "sourceCopy": "support-final-v2-results.json",
+  "counts": {
+    "copied": 3,
+    "screenshotsVisuallyReviewed": 3,
+    "zeroByteScreenshots": 0
+  }
+}

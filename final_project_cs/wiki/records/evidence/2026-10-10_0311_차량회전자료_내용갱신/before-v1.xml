@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="5" time="5.887" timestamp="2026-10-10T03:12:32.812116+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_turn_policy_content_reload_v1" name="test_valid_content_replacement_recalculates_vehicle_route" time="0.365"><failure message="AssertionError: assert {'paths': [{'...False}, ...}]} == {'paths': [{'...False}, ...}]}&#10;  &#10;  Differing items:&#10;  {'paths': [{'details': {'osm_way_id': [[0, 1, 2], [1, 2, 8], [2, 3, 10], [3, 4, 6]], 'road_class': [[0, 1, 'residentia....002, 37.5]], 'type': 'LineString'}, 'quality': {'access_max_m': 0.0, 'arterial_pct': 0.0, 'optimistic': False}, ...}]} != {'paths': [{'details': {'osm_way_id': [[0, 1, 1], [1, 2, 3]], 'road_class': [[0, 1, 'residential'], [1, 2, 'residentia....002, 37.5]], 'type': 'LineString'}, 'quality': {'access_max_m': 0.0, 'arterial_pct': 0.0, 'optimistic': False}, ...}]}&#10;  Use -v to get more diff">tmp_path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_complete_20261008/turn_reload_before_v1/test_valid_content_replacement0')
+
+    def test_valid_content_replacement_recalculates_vehicle_route(tmp_path):
+        path, data, router, before = prepared(tmp_path)
+        changed = deepcopy(data)
+        changed['rules'] = [rule(make_records(), (1, 0), (1, 1), (1, 2))]
+        replace_preserving_metadata(path, changed)
+        after = router.route(xy(0, 0), xy(0, 2))
+        fresh = GraphRouter(tmp_path).route(xy(0, 0), xy(0, 2))
+        assert before['paths'][0]['distance'] &gt; fresh['paths'][0]['distance']
+&gt;       assert after == fresh
+E       AssertionError: assert {'paths': [{'...False}, ...}]} == {'paths': [{'...False}, ...}]}
+E         
+E         Differing items:
+E         {'paths': [{'details': {'osm_way_id': [[0, 1, 2], [1, 2, 8], [2, 3, 10], [3, 4, 6]], 'road_class': [[0, 1, 'residentia....002, 37.5]], 'type': 'LineString'}, 'quality': {'access_max_m': 0.0, 'arterial_pct': 0.0, 'optimistic': False}, ...}]} != {'paths': [{'details': {'osm_way_id': [[0, 1, 1], [1, 2, 3]], 'road_class': [[0, 1, 'residential'], [1, 2, 'residentia....002, 37.5]], 'type': 'LineString'}, 'quality': {'access_max_m': 0.0, 'arterial_pct': 0.0, 'optimistic': False}, ...}]}
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_turn_policy_content_reload_v1.py:47: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_turn_policy_content_reload_v1" name="test_invalid_same_metadata_content_never_uses_cached_policy[corrupt]" time="0.058"><failure message="Failed: DID NOT RAISE &lt;class 'app.domains.travel_ops.instances.mobility.engine.car.RouterDown'&gt;">tmp_path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_complete_20261008/turn_reload_before_v1/test_invalid_same_metadata_con0')
+fault = 'corrupt'
+
+    @pytest.mark.parametrize('fault', ['corrupt', 'graph_binding', 'invalid_rule'])
+    def test_invalid_same_metadata_content_never_uses_cached_policy(tmp_path, fault):
+        path, data, router, _ = prepared(tmp_path)
+        if fault == 'corrupt':
+            data = b'{'
+        elif fault == 'graph_binding':
+            data['graph_sha256']['edges.jsonl.gz'] = '0' * 64
+        else:
+            data['rules'][0]['outgoing'] = 9999
+        replace_preserving_metadata(path, data)
+&gt;       with pytest.raises(RouterDown, match='turn_restrictions'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'app.domains.travel_ops.instances.mobility.engine.car.RouterDown'&gt;
+
+tests\unit\travel\mobility\test_turn_policy_content_reload_v1.py:60: Failed</failure></testcase><testcase classname="tests.unit.travel.mobility.test_turn_policy_content_reload_v1" name="test_invalid_same_metadata_content_never_uses_cached_policy[graph_binding]" time="0.022"><failure message="Failed: DID NOT RAISE &lt;class 'app.domains.travel_ops.instances.mobility.engine.car.RouterDown'&gt;">tmp_path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_complete_20261008/turn_reload_before_v1/test_invalid_same_metadata_con1')
+fault = 'graph_binding'
+
+    @pytest.mark.parametrize('fault', ['corrupt', 'graph_binding', 'invalid_rule'])
+    def test_invalid_same_metadata_content_never_uses_cached_policy(tmp_path, fault):
+        path, data, router, _ = prepared(tmp_path)
+        if fault == 'corrupt':
+            data = b'{'
+        elif fault == 'graph_binding':
+            data['graph_sha256']['edges.jsonl.gz'] = '0' * 64
+        else:
+            data['rules'][0]['outgoing'] = 9999
+        replace_preserving_metadata(path, data)
+&gt;       with pytest.raises(RouterDown, match='turn_restrictions'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'app.domains.travel_ops.instances.mobility.engine.car.RouterDown'&gt;
+
+tests\unit\travel\mobility\test_turn_policy_content_reload_v1.py:60: Failed</failure></testcase><testcase classname="tests.unit.travel.mobility.test_turn_policy_content_reload_v1" name="test_invalid_same_metadata_content_never_uses_cached_policy[invalid_rule]" time="0.024"><failure message="Failed: DID NOT RAISE &lt;class 'app.domains.travel_ops.instances.mobility.engine.car.RouterDown'&gt;">tmp_path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_complete_20261008/turn_reload_before_v1/test_invalid_same_metadata_con2')
+fault = 'invalid_rule'
+
+    @pytest.mark.parametrize('fault', ['corrupt', 'graph_binding', 'invalid_rule'])
+    def test_invalid_same_metadata_content_never_uses_cached_policy(tmp_path, fault):
+        path, data, router, _ = prepared(tmp_path)
+        if fault == 'corrupt':
+            data = b'{'
+        elif fault == 'graph_binding':
+            data['graph_sha256']['edges.jsonl.gz'] = '0' * 64
+        else:
+            data['rules'][0]['outgoing'] = 9999
+        replace_preserving_metadata(path, data)
+&gt;       with pytest.raises(RouterDown, match='turn_restrictions'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'app.domains.travel_ops.instances.mobility.engine.car.RouterDown'&gt;
+
+tests\unit\travel\mobility\test_turn_policy_content_reload_v1.py:60: Failed</failure></testcase><testcase classname="tests.unit.travel.mobility.test_turn_policy_content_reload_v1" name="test_identical_content_keeps_loaded_policy_without_rehashing_graph" time="0.025" /></testsuite></testsuites>

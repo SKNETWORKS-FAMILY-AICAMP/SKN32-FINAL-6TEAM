@@ -1,0 +1,4821 @@
+{
+  "counts": {
+    "e4bbase_cosine": {
+      "d": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "suite": "D",
+        "saved": 2735,
+        "expected": 2735,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 2669,
+        "compound_diagnostic_total": 66,
+        "positive": {
+          "total": 883,
+          "correct": 765,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8423273262477106,
+            0.8872281016868034
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004331618444859839
+          ]
+        },
+        "negative": {
+          "total": 1786,
+          "correct": 1772,
+          "false_pick": 14,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9868850140295948,
+            0.9953248858116603
+          ],
+          "false_pick_wilson95": [
+            0.0046751141883397,
+            0.01311498597040514
+          ]
+        },
+        "subtypes": {
+          "absent_but_plausible": {
+            "total": 78,
+            "correct": 77,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.930891429982978,
+              0.9977332682461664
+            ],
+            "false_pick_wilson95": [
+              0.0022667317538337325,
+              0.06910857001702223
+            ]
+          },
+          "change_request": {
+            "total": 79,
+            "correct": 77,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9123141537110886,
+              0.9930296326934152
+            ],
+            "false_pick_wilson95": [
+              0.006970367306584818,
+              0.08768584628891136
+            ]
+          },
+          "chitchat": {
+            "total": 1300,
+            "correct": 1294,
+            "false_pick": 6,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.989967101971016,
+              0.997883062852687
+            ],
+            "false_pick_wilson95": [
+              0.002116937147313035,
+              0.010032898028984012
+            ]
+          },
+          "compound_intent": {
+            "total": 66,
+            "correct": 63,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8746668588675778,
+              0.9844217256655664
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05500255701354129
+            ]
+          },
+          "confusable_name": {
+            "total": 77,
+            "correct": 74,
+            "false_pick": 3,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8916001812736711,
+              0.986662049959409
+            ],
+            "false_pick_wilson95": [
+              0.013337950040590962,
+              0.10839981872632877
+            ]
+          },
+          "context_pronoun": {
+            "total": 71,
+            "correct": 71,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9486720478031097,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05132795219689034
+            ]
+          },
+          "duplicate_place": {
+            "total": 79,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9317242812303406,
+              0.9977620061449501
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04637121165392266
+            ]
+          },
+          "nameless_description": {
+            "total": 75,
+            "correct": 69,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8362520966647771,
+              0.9628198756496662
+            ],
+            "false_pick_wilson95": [
+              3.469446951953614e-18,
+              0.04872384248280587
+            ]
+          },
+          "negation": {
+            "total": 72,
+            "correct": 69,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8845072325868389,
+              0.9857291925330748
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05065117259645781
+            ]
+          },
+          "ordinal_relative": {
+            "total": 80,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9133556701442198,
+              0.9931171067970292
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0458181295355271
+            ]
+          },
+          "out_of_scope": {
+            "total": 80,
+            "correct": 80,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9541818704644728,
+              0.9999999999999999
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0458181295355271
+            ]
+          },
+          "tourist_synth_in": {
+            "total": 300,
+            "correct": 194,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.5910330291100347,
+              0.698591699330765
+            ],
+            "false_pick_wilson95": [
+              8.673617379884035e-19,
+              0.012642971224546034
+            ]
+          },
+          "tourist_synth_out": {
+            "total": 300,
+            "correct": 298,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9760224167496929,
+              0.998169851642088
+            ],
+            "false_pick_wilson95": [
+              0.0018301483579117855,
+              0.023977583250306973
+            ]
+          },
+          "typo_slang": {
+            "total": 78,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9530621902878059,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04693780971219429
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "ef333e1b3bba387bfe3560ce37c73cac92baa39d2003140011370c16d8a93cd1",
+        "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+        "execution": {
+          "job": {
+            "id": "e4bbase_cosine_s20261012_d",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "d_backlog_e4bbase_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 2735,
+            "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T16:22:34.450539+00:00",
+          "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "d2": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "suite": "D2",
+        "saved": 1000,
+        "expected": 1000,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 1000,
+        "compound_diagnostic_total": 0,
+        "positive": {
+          "total": 0,
+          "correct": 0,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.0,
+            1.0
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            1.0
+          ]
+        },
+        "negative": {
+          "total": 1000,
+          "correct": 992,
+          "false_pick": 8,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9842936654690199,
+            0.995940804181194
+          ],
+          "false_pick_wilson95": [
+            0.004059195818806103,
+            0.015706334530980144
+          ]
+        },
+        "subtypes": {
+          "chitchat_holdout_aihub": {
+            "total": 700,
+            "correct": 693,
+            "false_pick": 7,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9795035835273034,
+              0.9951477266546971
+            ],
+            "false_pick_wilson95": [
+              0.004852273345302922,
+              0.020496416472696698
+            ]
+          },
+          "chitchat_holdout_kocul": {
+            "total": 300,
+            "correct": 299,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9813633063054688,
+              0.9994113422781488
+            ],
+            "false_pick_wilson95": [
+              0.0005886577218511581,
+              0.018636693694531237
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "6fb26541cabc3043436289599044883efc9a5af59e2c39b24b8f15720f7d1ca6",
+        "gold_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+        "execution": {
+          "job": {
+            "id": "e4bbase_cosine_s20261012_d2",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts_d2.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "d2_backlog_e4bbase_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 1000,
+            "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T16:45:13.523582+00:00",
+          "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "d3": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "suite": "D3",
+        "saved": 360,
+        "expected": 360,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 360,
+        "compound_diagnostic_total": 0,
+        "positive": {
+          "total": 120,
+          "correct": 105,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8039705979199262,
+            0.9227650272660463
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.031019166418703486
+          ]
+        },
+        "negative": {
+          "total": 240,
+          "correct": 236,
+          "false_pick": 4,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9579378181116581,
+            0.9935000592781683
+          ],
+          "false_pick_wilson95": [
+            0.006499940721831639,
+            0.04206218188834188
+          ]
+        },
+        "subtypes": {
+          "change_request": {
+            "total": 7,
+            "correct": 7,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6456695649333126,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              5.551115123125783e-17,
+              0.35433043506668743
+            ]
+          },
+          "confusable_name": {
+            "total": 14,
+            "correct": 14,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7846891972623643,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.3877787807814457e-17,
+              0.2153108027376358
+            ]
+          },
+          "context_pronoun": {
+            "total": 6,
+            "correct": 6,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6096657120978346,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.3903342879021653
+            ]
+          },
+          "duplicate_place": {
+            "total": 9,
+            "correct": 9,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7008549515804559,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.2991450484195441
+            ]
+          },
+          "nameless_description": {
+            "total": 16,
+            "correct": 15,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7167126242970107,
+              0.9888806552353576
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.1936076805344365
+            ]
+          },
+          "negation": {
+            "total": 6,
+            "correct": 6,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6096657120978346,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.3903342879021653
+            ]
+          },
+          "ordinal_relative": {
+            "total": 12,
+            "correct": 12,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7575059933447592,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.24249400665524085
+            ]
+          },
+          "synth_chat_A": {
+            "total": 120,
+            "correct": 120,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9689808335812966,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          },
+          "synth_chat_B": {
+            "total": 120,
+            "correct": 116,
+            "false_pick": 4,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.917419662440894,
+              0.9869624489016494
+            ],
+            "false_pick_wilson95": [
+              0.0130375510983506,
+              0.082580337559106
+            ]
+          },
+          "tourist_synth_in": {
+            "total": 41,
+            "correct": 27,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.5054983651982969,
+              0.7844119174261515
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.08566757018443186
+            ]
+          },
+          "typo_slang": {
+            "total": 9,
+            "correct": 9,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7008549515804559,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.2991450484195441
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "81f0437c1dc68a498864878a8d2c8dddff0e57a729511e413ca28acb1cda0754",
+        "gold_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "execution": {
+          "job": {
+            "id": "e4bbase_cosine_s20261012_d3",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts_d3.json",
+            "script": "/workspace/heavy/d_test_llama.py",
+            "tag": "d3_backlog_e4bbase_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "0",
+            "expected": 360,
+            "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T16:18:26.070198+00:00",
+          "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+          "script_sha256": "e84b538e2069a60563357d322ba32537bdb7896e99a9503589ba5b8498372ea8",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "h": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "saved": 1316,
+        "expected": 1316,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "positive": {
+          "total": 461,
+          "correct": 446,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9470137277004386,
+            0.9801841196977904
+          ],
+          "false_pick_wilson95": [
+            8.673617379884035e-19,
+            0.008264019372196129
+          ]
+        },
+        "negative": {
+          "total": 855,
+          "correct": 852,
+          "false_pick": 3,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9897350075412281,
+            0.9988059988114371
+          ],
+          "false_pick_wilson95": [
+            0.0011940011885629206,
+            0.010264992458771926
+          ]
+        },
+        "subtypes": {
+          "hard_N1": {
+            "total": 118,
+            "correct": 117,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.953554427584598,
+              0.9985024594780347
+            ],
+            "false_pick_wilson95": [
+              0.0014975405219652578,
+              0.04644557241540204
+            ]
+          },
+          "hard_N2": {
+            "total": 150,
+            "correct": 150,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9750297556319235,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.0249702443680766
+            ]
+          },
+          "hard_N3": {
+            "total": 150,
+            "correct": 150,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9750297556319235,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.0249702443680766
+            ]
+          },
+          "hard_N4": {
+            "total": 150,
+            "correct": 148,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9526930912996325,
+              0.9963358708487731
+            ],
+            "false_pick_wilson95": [
+              0.0036641291512270503,
+              0.04730690870036751
+            ]
+          },
+          "hard_N5": {
+            "total": 150,
+            "correct": 150,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9750297556319235,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.0249702443680766
+            ]
+          },
+          "hard_N6": {
+            "total": 137,
+            "correct": 137,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9727249429758839,
+              0.9999999999999999
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.027275057024116055
+            ]
+          },
+          "hard_P1": {
+            "total": 118,
+            "correct": 118,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9684716609775057,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03152833902249433
+            ]
+          },
+          "hard_P2": {
+            "total": 110,
+            "correct": 108,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9361198354061878,
+              0.994999645124672
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.033743935298164184
+            ]
+          },
+          "hard_P3": {
+            "total": 113,
+            "correct": 101,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8235144111649058,
+              0.9382015148282823
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03287753216595198
+            ]
+          },
+          "hard_P4": {
+            "total": 120,
+            "correct": 119,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9543037087549505,
+              0.998527444266658
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "28b5ff9dc2acc0e2a594311d28adbf76a5232333dcf7335a350fd01f82deee03",
+        "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+        "execution": {
+          "job": {
+            "id": "e4bbase_cosine_s20261012_h",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts_h.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "h_backlog_e4bbase_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 1316,
+            "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T16:56:33.813242+00:00",
+          "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "mx": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "saved": 4014,
+        "expected": 4014,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "repetitions": 1,
+        "counts": {
+          "control": {
+            "request": {
+              "total": 1033,
+              "correct": 1018,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9761802965348747,
+                0.9911807126794123
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.0037049625938602128
+              ]
+            },
+            "no_request": {
+              "total": 974,
+              "correct": 964,
+              "false_pick": 10,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9812045092505314,
+                0.9944137685330189
+              ],
+              "false_pick_wilson95": [
+                0.005586231466981153,
+                0.01879549074946857
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 1033,
+              "correct": 947,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.8983168330191483,
+                0.932089776087034
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.0037049625938602128
+              ]
+            },
+            "no_request": {
+              "total": 974,
+              "correct": 971,
+              "false_pick": 3,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9909835739544985,
+                0.9989519531885589
+              ],
+              "false_pick_wilson95": [
+                0.0010480468114411846,
+                0.009016426045501513
+              ]
+            }
+          }
+        },
+        "paired": {
+          "request": {
+            "pairs": 1033,
+            "itineraries": 59,
+            "correct_control": 1018,
+            "correct_mixed": 947,
+            "loss_pp": 6.873184898354308,
+            "loss_cluster95_pp": [
+              5.348394859098113,
+              8.446635321494643
+            ],
+            "mixed_accuracy_cluster95": [
+              0.9015283416063069,
+              0.9323021095894958
+            ],
+            "paired_exact": {
+              "a_only": 72,
+              "b_only": 1,
+              "p": 1.5670109524204556e-20
+            },
+            "bootstrap_replicates": 2000,
+            "bootstrap_seed": 7
+          },
+          "no_request": {
+            "pairs": 974,
+            "itineraries": 59,
+            "correct_control": 964,
+            "correct_mixed": 971,
+            "loss_pp": -0.7186858316221766,
+            "loss_cluster95_pp": [
+              -1.6129846855653294,
+              0.0
+            ],
+            "mixed_accuracy_cluster95": [
+              0.9928203285420945,
+              1.0
+            ],
+            "paired_exact": {
+              "a_only": 2,
+              "b_only": 9,
+              "p": 0.0654296875
+            },
+            "bootstrap_replicates": 2000,
+            "bootstrap_seed": 7
+          }
+        },
+        "subtypes_mixed": {
+          "MX1": {
+            "total": 525,
+            "correct": 461,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8473291271807746,
+              0.9033684465028433
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0072639138944599795
+            ]
+          },
+          "MX2": {
+            "total": 474,
+            "correct": 457,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9433184645211541,
+              0.977489037376889
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.008039191137108092
+            ]
+          },
+          "MX3": {
+            "total": 457,
+            "correct": 455,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9841854555926877,
+              0.9987990205853874
+            ],
+            "false_pick_wilson95": [
+              0.001200979414612579,
+              0.01581454440731228
+            ]
+          },
+          "MX4": {
+            "total": 121,
+            "correct": 120,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9546693563957512,
+              0.9985396266145802
+            ],
+            "false_pick_wilson95": [
+              0.0014603733854198359,
+              0.04533064360424888
+            ]
+          },
+          "MX5a": {
+            "total": 236,
+            "correct": 236,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9839833411638562,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.01601665883614395
+            ]
+          },
+          "MX5b": {
+            "total": 160,
+            "correct": 160,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9765538048284949,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.02344619517150519
+            ]
+          },
+          "MX6a": {
+            "total": 34,
+            "correct": 29,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6987194350454783,
+              0.9355055855521753
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.10151455415332376
+            ]
+          }
+        },
+        "sources": {
+          "code": {
+            "control": {
+              "request": {
+                "total": 940,
+                "correct": 926,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9751562227074283,
+                  0.9911077525363811
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.004070025516249234
+                ]
+              },
+              "no_request": {
+                "total": 828,
+                "correct": 820,
+                "false_pick": 8,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9810513170568598,
+                  0.9950962305193052
+                ],
+                "false_pick_wilson95": [
+                  0.004903769480694855,
+                  0.018948682943140165
+                ]
+              }
+            },
+            "mixed": {
+              "request": {
+                "total": 940,
+                "correct": 855,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.889535408846493,
+                  0.9262795702518986
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.004070025516249234
+                ]
+              },
+              "no_request": {
+                "total": 828,
+                "correct": 825,
+                "false_pick": 3,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9894020287794217,
+                  0.9987670403186172
+                ],
+                "false_pick_wilson95": [
+                  0.0012329596813827944,
+                  0.010597971220578274
+                ]
+              }
+            }
+          },
+          "llm": {
+            "control": {
+              "request": {
+                "total": 93,
+                "correct": 92,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.94158082764513,
+                  0.9980993579713445
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.03966750261173514
+                ]
+              },
+              "no_request": {
+                "total": 146,
+                "correct": 144,
+                "false_pick": 2,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9514330288265526,
+                  0.9962352675020522
+                ],
+                "false_pick_wilson95": [
+                  0.00376473249794778,
+                  0.04856697117344738
+                ]
+              }
+            },
+            "mixed": {
+              "request": {
+                "total": 93,
+                "correct": 92,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.94158082764513,
+                  0.9980993579713445
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.03966750261173514
+                ]
+              },
+              "no_request": {
+                "total": 146,
+                "correct": 146,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9743631779153262,
+                  1.0
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.025636822084673896
+                ]
+              }
+            }
+          }
+        },
+        "aggregate_gates": {
+          "request_accuracy": false,
+          "false_pick": true,
+          "request_loss": false,
+          "false_pick_increase": true
+        },
+        "aggregate_gates_passed": 2,
+        "aggregate_gates_total": 4,
+        "subtype_gates": {
+          "MX3": true,
+          "MX4": true,
+          "MX5a": true
+        },
+        "complete_valid": true,
+        "failed_records": [],
+        "false_pick_increase_pp": -0.7186858316221765,
+        "answer_sha256": "aeecc361c924590476ad349c85924a19b6578c0156389307faeb047b233954ae",
+        "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+        "execution": {
+          "job": {
+            "id": "e4bbase_cosine_s20261012_mx",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts_mx.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "mx_backlog_e4bbase_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 4014,
+            "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T17:07:53.881621+00:00",
+          "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "limits": [
+          "one run",
+          "existing developer/regression suite; not new independent final holdout",
+          "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+          "no complete matched original cohort ranking",
+          "token p_null is not verbal confidence or calibrated option probability"
+        ]
+      }
+    },
+    "e4bbase_finch": {
+      "d": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "suite": "D",
+        "saved": 2735,
+        "expected": 2735,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 2669,
+        "compound_diagnostic_total": 66,
+        "positive": {
+          "total": 883,
+          "correct": 777,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8568548197670909,
+            0.8997629424339273
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004331618444859839
+          ]
+        },
+        "negative": {
+          "total": 1786,
+          "correct": 1778,
+          "false_pick": 8,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9911858581387091,
+            0.9977285461383226
+          ],
+          "false_pick_wilson95": [
+            0.0022714538616773632,
+            0.008814141861290991
+          ]
+        },
+        "subtypes": {
+          "absent_but_plausible": {
+            "total": 78,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9530621902878059,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04693780971219429
+            ]
+          },
+          "change_request": {
+            "total": 79,
+            "correct": 79,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9536287883460772,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04637121165392266
+            ]
+          },
+          "chitchat": {
+            "total": 1300,
+            "correct": 1297,
+            "false_pick": 3,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9932370785085828,
+              0.999214872797218
+            ],
+            "false_pick_wilson95": [
+              0.0007851272027819085,
+              0.006762921491417141
+            ]
+          },
+          "compound_intent": {
+            "total": 66,
+            "correct": 63,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8746668588675778,
+              0.9844217256655664
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05500255701354129
+            ]
+          },
+          "confusable_name": {
+            "total": 77,
+            "correct": 74,
+            "false_pick": 3,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8916001812736711,
+              0.986662049959409
+            ],
+            "false_pick_wilson95": [
+              0.013337950040590962,
+              0.10839981872632877
+            ]
+          },
+          "context_pronoun": {
+            "total": 71,
+            "correct": 69,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9029849988335054,
+              0.9922407364173166
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05132795219689034
+            ]
+          },
+          "duplicate_place": {
+            "total": 79,
+            "correct": 79,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9536287883460772,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04637121165392266
+            ]
+          },
+          "nameless_description": {
+            "total": 75,
+            "correct": 69,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8362520966647771,
+              0.9628198756496662
+            ],
+            "false_pick_wilson95": [
+              3.469446951953614e-18,
+              0.04872384248280587
+            ]
+          },
+          "negation": {
+            "total": 72,
+            "correct": 69,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8845072325868389,
+              0.9857291925330748
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05065117259645781
+            ]
+          },
+          "ordinal_relative": {
+            "total": 80,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9133556701442198,
+              0.9931171067970292
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0458181295355271
+            ]
+          },
+          "out_of_scope": {
+            "total": 80,
+            "correct": 80,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9541818704644728,
+              0.9999999999999999
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0458181295355271
+            ]
+          },
+          "tourist_synth_in": {
+            "total": 300,
+            "correct": 207,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6355391960366674,
+              0.739656474898005
+            ],
+            "false_pick_wilson95": [
+              8.673617379884035e-19,
+              0.012642971224546034
+            ]
+          },
+          "tourist_synth_out": {
+            "total": 300,
+            "correct": 298,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9760224167496929,
+              0.998169851642088
+            ],
+            "false_pick_wilson95": [
+              0.0018301483579117855,
+              0.023977583250306973
+            ]
+          },
+          "typo_slang": {
+            "total": 78,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9530621902878059,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04693780971219429
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "bb70c7cbfefe17fbee0c0f1fcb04caf6e713311b9952d94c69352464b947607c",
+        "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+        "execution": {
+          "job": {
+            "id": "e4bbase_finch_s20261012_d",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "d_backlog_e4bbase_finch_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 2735,
+            "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T23:05:49.328955+00:00",
+          "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "d2": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "suite": "D2",
+        "saved": 1000,
+        "expected": 1000,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 1000,
+        "compound_diagnostic_total": 0,
+        "positive": {
+          "total": 0,
+          "correct": 0,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.0,
+            1.0
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            1.0
+          ]
+        },
+        "negative": {
+          "total": 1000,
+          "correct": 998,
+          "false_pick": 2,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9927371921365079,
+            0.9994513564118793
+          ],
+          "false_pick_wilson95": [
+            0.000548643588120728,
+            0.007262807863492177
+          ]
+        },
+        "subtypes": {
+          "chitchat_holdout_aihub": {
+            "total": 700,
+            "correct": 698,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9896429368497794,
+              0.9992161183786059
+            ],
+            "false_pick_wilson95": [
+              0.0007838816213942045,
+              0.010357063150220568
+            ]
+          },
+          "chitchat_holdout_kocul": {
+            "total": 300,
+            "correct": 300,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9873570287754538,
+              0.9999999999999998
+            ],
+            "false_pick_wilson95": [
+              8.673617379884035e-19,
+              0.012642971224546034
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "712d14b57ac80768b695605f20d1f8cbc4d6f387c18cf8d83d86fbea756b0aaa",
+        "gold_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+        "execution": {
+          "job": {
+            "id": "e4bbase_finch_s20261012_d2",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts_d2.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "d2_backlog_e4bbase_finch_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 1000,
+            "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T23:28:34.558274+00:00",
+          "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "d3": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "suite": "D3",
+        "saved": 360,
+        "expected": 360,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 360,
+        "compound_diagnostic_total": 0,
+        "positive": {
+          "total": 120,
+          "correct": 105,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8039705979199262,
+            0.9227650272660463
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.031019166418703486
+          ]
+        },
+        "negative": {
+          "total": 240,
+          "correct": 240,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9842460800584412,
+            1.0
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.015753919941558815
+          ]
+        },
+        "subtypes": {
+          "change_request": {
+            "total": 7,
+            "correct": 7,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6456695649333126,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              5.551115123125783e-17,
+              0.35433043506668743
+            ]
+          },
+          "confusable_name": {
+            "total": 14,
+            "correct": 14,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7846891972623643,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.3877787807814457e-17,
+              0.2153108027376358
+            ]
+          },
+          "context_pronoun": {
+            "total": 6,
+            "correct": 6,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6096657120978346,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.3903342879021653
+            ]
+          },
+          "duplicate_place": {
+            "total": 9,
+            "correct": 9,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7008549515804559,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.2991450484195441
+            ]
+          },
+          "nameless_description": {
+            "total": 16,
+            "correct": 14,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.639771727342413,
+              0.9650225122567595
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.1936076805344365
+            ]
+          },
+          "negation": {
+            "total": 6,
+            "correct": 6,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6096657120978346,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.3903342879021653
+            ]
+          },
+          "ordinal_relative": {
+            "total": 12,
+            "correct": 11,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.646120088858883,
+              0.9851349055950829
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.24249400665524085
+            ]
+          },
+          "synth_chat_A": {
+            "total": 120,
+            "correct": 120,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9689808335812966,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          },
+          "synth_chat_B": {
+            "total": 120,
+            "correct": 120,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9689808335812966,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          },
+          "tourist_synth_in": {
+            "total": 41,
+            "correct": 29,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.5552053227700284,
+              0.8239081237388657
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.08566757018443186
+            ]
+          },
+          "typo_slang": {
+            "total": 9,
+            "correct": 9,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7008549515804559,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.2991450484195441
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "26b6e598d9fae5c97596ff93636ae774b89ec7d07648e888270d4a58cfca2440",
+        "gold_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "execution": {
+          "job": {
+            "id": "e4bbase_finch_s20261012_d3",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts_d3.json",
+            "script": "/workspace/heavy/d_test_llama.py",
+            "tag": "d3_backlog_e4bbase_finch_s20261012",
+            "port": 8401,
+            "logprobs": "0",
+            "expected": 360,
+            "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T23:01:35.557827+00:00",
+          "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+          "script_sha256": "e84b538e2069a60563357d322ba32537bdb7896e99a9503589ba5b8498372ea8",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "h": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "saved": 1316,
+        "expected": 1316,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "positive": {
+          "total": 461,
+          "correct": 440,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.931367536746754,
+            0.9700150573596449
+          ],
+          "false_pick_wilson95": [
+            8.673617379884035e-19,
+            0.008264019372196129
+          ]
+        },
+        "negative": {
+          "total": 855,
+          "correct": 854,
+          "false_pick": 1,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9934049346789209,
+            0.9997935086883627
+          ],
+          "false_pick_wilson95": [
+            0.0002064913116375188,
+            0.006595065321079353
+          ]
+        },
+        "subtypes": {
+          "hard_N1": {
+            "total": 118,
+            "correct": 118,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9684716609775057,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03152833902249433
+            ]
+          },
+          "hard_N2": {
+            "total": 150,
+            "correct": 149,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9632071602251817,
+              0.9988221986649826
+            ],
+            "false_pick_wilson95": [
+              0.0011778013350174366,
+              0.03679283977481815
+            ]
+          },
+          "hard_N3": {
+            "total": 150,
+            "correct": 150,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9750297556319235,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.0249702443680766
+            ]
+          },
+          "hard_N4": {
+            "total": 150,
+            "correct": 150,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9750297556319235,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.0249702443680766
+            ]
+          },
+          "hard_N5": {
+            "total": 150,
+            "correct": 150,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9750297556319235,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.0249702443680766
+            ]
+          },
+          "hard_N6": {
+            "total": 137,
+            "correct": 137,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9727249429758839,
+              0.9999999999999999
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.027275057024116055
+            ]
+          },
+          "hard_P1": {
+            "total": 118,
+            "correct": 118,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9684716609775057,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03152833902249433
+            ]
+          },
+          "hard_P2": {
+            "total": 110,
+            "correct": 107,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9228691583032443,
+              0.9906820301421276
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.033743935298164184
+            ]
+          },
+          "hard_P3": {
+            "total": 113,
+            "correct": 97,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7823201133188827,
+              0.910926965394019
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03287753216595198
+            ]
+          },
+          "hard_P4": {
+            "total": 120,
+            "correct": 118,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.941264037027841,
+              0.9954174354340789
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "b8c10f3071e1deb4b1e7c147656c1eb259d52306a54df9825a41b2ff5946d18f",
+        "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+        "execution": {
+          "job": {
+            "id": "e4bbase_finch_s20261012_h",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts_h.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "h_backlog_e4bbase_finch_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 1316,
+            "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T23:40:04.336183+00:00",
+          "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "mx": {
+        "model": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "saved": 4014,
+        "expected": 4014,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "repetitions": 1,
+        "counts": {
+          "control": {
+            "request": {
+              "total": 1033,
+              "correct": 1024,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9835249754927251,
+                0.995409644998303
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.0037049625938602128
+              ]
+            },
+            "no_request": {
+              "total": 974,
+              "correct": 969,
+              "false_pick": 5,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9880395298392661,
+                0.9978053546296461
+              ],
+              "false_pick_wilson95": [
+                0.0021946453703537497,
+                0.01196047016073381
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 1033,
+              "correct": 932,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.8825965630078124,
+                0.9188760179065169
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.0037049625938602128
+              ]
+            },
+            "no_request": {
+              "total": 974,
+              "correct": 970,
+              "false_pick": 4,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9894883748478578,
+                0.9984018309581273
+              ],
+              "false_pick_wilson95": [
+                0.001598169041872822,
+                0.010511625152142306
+              ]
+            }
+          }
+        },
+        "paired": {
+          "request": {
+            "pairs": 1033,
+            "itineraries": 59,
+            "correct_control": 1024,
+            "correct_mixed": 932,
+            "loss_pp": 8.906098741529526,
+            "loss_cluster95_pp": [
+              7.326549147310164,
+              10.54663273990898
+            ],
+            "mixed_accuracy_cluster95": [
+              0.8844621513944223,
+              0.9190758487419577
+            ],
+            "paired_exact": {
+              "a_only": 94,
+              "b_only": 2,
+              "p": 1.1755920753965606e-25
+            },
+            "bootstrap_replicates": 2000,
+            "bootstrap_seed": 7
+          },
+          "no_request": {
+            "pairs": 974,
+            "itineraries": 59,
+            "correct_control": 969,
+            "correct_mixed": 970,
+            "loss_pp": -0.1026694045174538,
+            "loss_cluster95_pp": [
+              -0.49123193582705477,
+              0.20876826722338038
+            ],
+            "mixed_accuracy_cluster95": [
+              0.9916054564533053,
+              0.9989949748743718
+            ],
+            "paired_exact": {
+              "a_only": 1,
+              "b_only": 2,
+              "p": 1.0
+            },
+            "bootstrap_replicates": 2000,
+            "bootstrap_seed": 7
+          }
+        },
+        "subtypes_mixed": {
+          "MX1": {
+            "total": 525,
+            "correct": 453,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8307846633907793,
+              0.8896580962400985
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0072639138944599795
+            ]
+          },
+          "MX2": {
+            "total": 474,
+            "correct": 451,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9282428881770549,
+              0.9674516818510416
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.008039191137108092
+            ]
+          },
+          "MX3": {
+            "total": 457,
+            "correct": 453,
+            "false_pick": 4,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9777135838332237,
+              0.9965911177207626
+            ],
+            "false_pick_wilson95": [
+              0.0034088822792374095,
+              0.022286416166776412
+            ]
+          },
+          "MX4": {
+            "total": 121,
+            "correct": 121,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9692293020525218,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03077069794747827
+            ]
+          },
+          "MX5a": {
+            "total": 236,
+            "correct": 236,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9839833411638562,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.01601665883614395
+            ]
+          },
+          "MX5b": {
+            "total": 160,
+            "correct": 160,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9765538048284949,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.02344619517150519
+            ]
+          },
+          "MX6a": {
+            "total": 34,
+            "correct": 28,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6648626260015724,
+              0.9165103095462768
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.10151455415332376
+            ]
+          }
+        },
+        "sources": {
+          "code": {
+            "control": {
+              "request": {
+                "total": 940,
+                "correct": 932,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9832966360258777,
+                  0.9956813388921923
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.004070025516249234
+                ]
+              },
+              "no_request": {
+                "total": 828,
+                "correct": 823,
+                "false_pick": 5,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9859424864124652,
+                  0.9974179740768242
+                ],
+                "false_pick_wilson95": [
+                  0.0025820259231758604,
+                  0.014057513587534792
+                ]
+              }
+            },
+            "mixed": {
+              "request": {
+                "total": 940,
+                "correct": 841,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.8734253984633222,
+                  0.9127235813951278
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.004070025516249234
+                ]
+              },
+              "no_request": {
+                "total": 828,
+                "correct": 824,
+                "false_pick": 4,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9876449701478351,
+                  0.9981197946458289
+                ],
+                "false_pick_wilson95": [
+                  0.0018802053541710564,
+                  0.012355029852164804
+                ]
+              }
+            }
+          },
+          "llm": {
+            "control": {
+              "request": {
+                "total": 93,
+                "correct": 92,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.94158082764513,
+                  0.9980993579713445
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.03966750261173514
+                ]
+              },
+              "no_request": {
+                "total": 146,
+                "correct": 146,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9743631779153262,
+                  1.0
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.025636822084673896
+                ]
+              }
+            },
+            "mixed": {
+              "request": {
+                "total": 93,
+                "correct": 91,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9249453736530886,
+                  0.9940825001915952
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.03966750261173514
+                ]
+              },
+              "no_request": {
+                "total": 146,
+                "correct": 146,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9743631779153262,
+                  1.0
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.025636822084673896
+                ]
+              }
+            }
+          }
+        },
+        "aggregate_gates": {
+          "request_accuracy": false,
+          "false_pick": true,
+          "request_loss": false,
+          "false_pick_increase": true
+        },
+        "aggregate_gates_passed": 2,
+        "aggregate_gates_total": 4,
+        "subtype_gates": {
+          "MX3": true,
+          "MX4": true,
+          "MX5a": true
+        },
+        "complete_valid": true,
+        "failed_records": [],
+        "false_pick_increase_pp": -0.10266940451745377,
+        "answer_sha256": "3eca3af56468cf89e3b6ebe1c48668d768745d9c2d7b139508013e62e86f73d9",
+        "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+        "execution": {
+          "job": {
+            "id": "e4bbase_finch_s20261012_mx",
+            "label": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "prompts": "/workspace/heavy/all_prompts_mx.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "mx_backlog_e4bbase_finch_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 4014,
+            "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+            "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption"
+          },
+          "started": "2026-10-08T23:51:24.731831+00:00",
+          "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "limits": [
+          "one run",
+          "existing developer/regression suite; not new independent final holdout",
+          "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+          "no complete matched original cohort ranking",
+          "token p_null is not verbal confidence or calibrated option probability"
+        ]
+      }
+    },
+    "e4bqat_cosine": {
+      "d": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "suite": "D",
+        "saved": 2735,
+        "expected": 2735,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 2669,
+        "compound_diagnostic_total": 66,
+        "positive": {
+          "total": 883,
+          "correct": 768,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8459516455998412,
+            0.8903693659012989
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004331618444859839
+          ]
+        },
+        "negative": {
+          "total": 1786,
+          "correct": 1764,
+          "false_pick": 22,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9814191944847233,
+            0.99185136610883
+          ],
+          "false_pick_wilson95": [
+            0.008148633891170085,
+            0.018580805515276737
+          ]
+        },
+        "subtypes": {
+          "absent_but_plausible": {
+            "total": 78,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9530621902878059,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04693780971219429
+            ]
+          },
+          "change_request": {
+            "total": 79,
+            "correct": 75,
+            "false_pick": 4,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8769228272429488,
+              0.9801359572199815
+            ],
+            "false_pick_wilson95": [
+              0.019864042780018548,
+              0.12307717275705116
+            ]
+          },
+          "chitchat": {
+            "total": 1300,
+            "correct": 1290,
+            "false_pick": 10,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9858980840502198,
+              0.9958163654640191
+            ],
+            "false_pick_wilson95": [
+              0.004183634535980886,
+              0.014101915949780153
+            ]
+          },
+          "compound_intent": {
+            "total": 66,
+            "correct": 65,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9190407973793359,
+              0.9973203594560177
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05500255701354129
+            ]
+          },
+          "confusable_name": {
+            "total": 77,
+            "correct": 73,
+            "false_pick": 4,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8739071685752308,
+              0.9796152814963542
+            ],
+            "false_pick_wilson95": [
+              0.020384718503645788,
+              0.12609283142476915
+            ]
+          },
+          "context_pronoun": {
+            "total": 71,
+            "correct": 70,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.92443949479751,
+              0.9975093967294558
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05132795219689034
+            ]
+          },
+          "duplicate_place": {
+            "total": 79,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9317242812303406,
+              0.9977620061449501
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04637121165392266
+            ]
+          },
+          "nameless_description": {
+            "total": 75,
+            "correct": 68,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.819653131504585,
+              0.9540514766093995
+            ],
+            "false_pick_wilson95": [
+              3.469446951953614e-18,
+              0.04872384248280587
+            ]
+          },
+          "negation": {
+            "total": 72,
+            "correct": 68,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8656798403400208,
+              0.9781857840186834
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05065117259645781
+            ]
+          },
+          "ordinal_relative": {
+            "total": 80,
+            "correct": 79,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9325372992233133,
+              0.9977900244795476
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0458181295355271
+            ]
+          },
+          "out_of_scope": {
+            "total": 80,
+            "correct": 80,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9541818704644728,
+              0.9999999999999999
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0458181295355271
+            ]
+          },
+          "tourist_synth_in": {
+            "total": 300,
+            "correct": 199,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6080919973085686,
+              0.7144446320914131
+            ],
+            "false_pick_wilson95": [
+              8.673617379884035e-19,
+              0.012642971224546034
+            ]
+          },
+          "tourist_synth_out": {
+            "total": 300,
+            "correct": 296,
+            "false_pick": 4,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9662244697474675,
+              0.9948030382606411
+            ],
+            "false_pick_wilson95": [
+              0.005196961739358857,
+              0.03377553025253262
+            ]
+          },
+          "typo_slang": {
+            "total": 78,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9530621902878059,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04693780971219429
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "7dd61307b101136e746f0c3e167ee61d1947e63fd986fd4b3d68ea2e386c11ac",
+        "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+        "execution": {
+          "job": {
+            "id": "e4bqat_cosine_s20261012_d",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "d_backlog_e4bqat_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 2735,
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b"
+          },
+          "started": "2026-10-08T16:34:16.020987+00:00",
+          "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "d2": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "suite": "D2",
+        "saved": 1000,
+        "expected": 1000,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 1000,
+        "compound_diagnostic_total": 0,
+        "positive": {
+          "total": 0,
+          "correct": 0,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.0,
+            1.0
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            1.0
+          ]
+        },
+        "negative": {
+          "total": 1000,
+          "correct": 992,
+          "false_pick": 8,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9842936654690199,
+            0.995940804181194
+          ],
+          "false_pick_wilson95": [
+            0.004059195818806103,
+            0.015706334530980144
+          ]
+        },
+        "subtypes": {
+          "chitchat_holdout_aihub": {
+            "total": 700,
+            "correct": 693,
+            "false_pick": 7,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9795035835273034,
+              0.9951477266546971
+            ],
+            "false_pick_wilson95": [
+              0.004852273345302922,
+              0.020496416472696698
+            ]
+          },
+          "chitchat_holdout_kocul": {
+            "total": 300,
+            "correct": 299,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9813633063054688,
+              0.9994113422781488
+            ],
+            "false_pick_wilson95": [
+              0.0005886577218511581,
+              0.018636693694531237
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "8c10f2685ef28fe9079d3cf1eed3fd2c676401fe915b8c70afe76eec1f48333a",
+        "gold_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+        "execution": {
+          "job": {
+            "id": "e4bqat_cosine_s20261012_d2",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts_d2.json",
+            "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "d2_backlog_e4bqat_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 1000,
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b"
+          },
+          "started": "2026-10-08T16:51:03.891758+00:00",
+          "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "d3": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "suite": "D3",
+        "saved": 360,
+        "expected": 360,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 360,
+        "compound_diagnostic_total": 0,
+        "positive": {
+          "total": 120,
+          "correct": 105,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8039705979199262,
+            0.9227650272660463
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.031019166418703486
+          ]
+        },
+        "negative": {
+          "total": 240,
+          "correct": 238,
+          "false_pick": 2,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9701302620111081,
+            0.9977117167130258
+          ],
+          "false_pick_wilson95": [
+            0.0022882832869742294,
+            0.029869737988891934
+          ]
+        },
+        "subtypes": {
+          "change_request": {
+            "total": 7,
+            "correct": 7,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6456695649333126,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              5.551115123125783e-17,
+              0.35433043506668743
+            ]
+          },
+          "confusable_name": {
+            "total": 14,
+            "correct": 14,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7846891972623643,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.3877787807814457e-17,
+              0.2153108027376358
+            ]
+          },
+          "context_pronoun": {
+            "total": 6,
+            "correct": 6,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6096657120978346,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.3903342879021653
+            ]
+          },
+          "duplicate_place": {
+            "total": 9,
+            "correct": 9,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7008549515804559,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.2991450484195441
+            ]
+          },
+          "nameless_description": {
+            "total": 16,
+            "correct": 14,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.639771727342413,
+              0.9650225122567595
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.1936076805344365
+            ]
+          },
+          "negation": {
+            "total": 6,
+            "correct": 6,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6096657120978346,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.3903342879021653
+            ]
+          },
+          "ordinal_relative": {
+            "total": 12,
+            "correct": 12,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7575059933447592,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.24249400665524085
+            ]
+          },
+          "synth_chat_A": {
+            "total": 120,
+            "correct": 120,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9689808335812966,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          },
+          "synth_chat_B": {
+            "total": 120,
+            "correct": 118,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.941264037027841,
+              0.9954174354340789
+            ],
+            "false_pick_wilson95": [
+              0.004582564565921141,
+              0.0587359629721589
+            ]
+          },
+          "tourist_synth_in": {
+            "total": 41,
+            "correct": 28,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.5301580035565572,
+              0.8043538610101142
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.08566757018443186
+            ]
+          },
+          "typo_slang": {
+            "total": 9,
+            "correct": 9,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7008549515804559,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.2991450484195441
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "df137a2a3ae65d2387c1b3d385fe101ecfe2adc13951dea64541f6f300621e07",
+        "gold_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "execution": {
+          "job": {
+            "id": "e4bqat_cosine_s20261012_d3",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts_d3.json",
+            "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+            "script": "/workspace/heavy/d_test_llama.py",
+            "tag": "d3_backlog_e4bqat_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "0",
+            "expected": 360,
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b"
+          },
+          "started": "2026-10-08T16:20:31.460727+00:00",
+          "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+          "script_sha256": "e84b538e2069a60563357d322ba32537bdb7896e99a9503589ba5b8498372ea8",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "h": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "saved": 1316,
+        "expected": 1316,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "positive": {
+          "total": 461,
+          "correct": 444,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9417419830947236,
+            0.9768507798728951
+          ],
+          "false_pick_wilson95": [
+            8.673617379884035e-19,
+            0.008264019372196129
+          ]
+        },
+        "negative": {
+          "total": 855,
+          "correct": 848,
+          "false_pick": 7,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9831975354880164,
+            0.9960285968354129
+          ],
+          "false_pick_wilson95": [
+            0.00397140316458711,
+            0.016802464511983688
+          ]
+        },
+        "subtypes": {
+          "hard_N1": {
+            "total": 118,
+            "correct": 118,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9684716609775057,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03152833902249433
+            ]
+          },
+          "hard_N2": {
+            "total": 150,
+            "correct": 149,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9632071602251817,
+              0.9988221986649826
+            ],
+            "false_pick_wilson95": [
+              0.0011778013350174366,
+              0.03679283977481815
+            ]
+          },
+          "hard_N3": {
+            "total": 150,
+            "correct": 149,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9632071602251817,
+              0.9988221986649826
+            ],
+            "false_pick_wilson95": [
+              0.0011778013350174366,
+              0.03679283977481815
+            ]
+          },
+          "hard_N4": {
+            "total": 150,
+            "correct": 145,
+            "false_pick": 5,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9243482038212211,
+              0.9856795681019074
+            ],
+            "false_pick_wilson95": [
+              0.01432043189809255,
+              0.07565179617877894
+            ]
+          },
+          "hard_N5": {
+            "total": 150,
+            "correct": 150,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9750297556319235,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.0249702443680766
+            ]
+          },
+          "hard_N6": {
+            "total": 137,
+            "correct": 137,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9727249429758839,
+              0.9999999999999999
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.027275057024116055
+            ]
+          },
+          "hard_P1": {
+            "total": 118,
+            "correct": 117,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.953554427584598,
+              0.9985024594780347
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03152833902249433
+            ]
+          },
+          "hard_P2": {
+            "total": 110,
+            "correct": 108,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9361198354061878,
+              0.994999645124672
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.033743935298164184
+            ]
+          },
+          "hard_P3": {
+            "total": 113,
+            "correct": 100,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8130759219184795,
+              0.9315227922546372
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03287753216595198
+            ]
+          },
+          "hard_P4": {
+            "total": 120,
+            "correct": 119,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9543037087549505,
+              0.998527444266658
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "3209ba253e2f86e6fd2f05c7b40608901c4ff05a20cb98be7017129f566e735f",
+        "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+        "execution": {
+          "job": {
+            "id": "e4bqat_cosine_s20261012_h",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts_h.json",
+            "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "h_backlog_e4bqat_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 1316,
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b"
+          },
+          "started": "2026-10-08T17:02:24.939038+00:00",
+          "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "mx": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+        "saved": 4014,
+        "expected": 4014,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "repetitions": 1,
+        "counts": {
+          "control": {
+            "request": {
+              "total": 1033,
+              "correct": 1021,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9798053504016225,
+                0.993342464451035
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.0037049625938602128
+              ]
+            },
+            "no_request": {
+              "total": 974,
+              "correct": 960,
+              "false_pick": 14,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9760181533573589,
+                0.9914188390779015
+              ],
+              "false_pick_wilson95": [
+                0.008581160922098372,
+                0.02398184664264108
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 1033,
+              "correct": 991,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9454986679823524,
+                0.969781090486599
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.0037049625938602128
+              ]
+            },
+            "no_request": {
+              "total": 974,
+              "correct": 964,
+              "false_pick": 10,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9812045092505314,
+                0.9944137685330189
+              ],
+              "false_pick_wilson95": [
+                0.005586231466981153,
+                0.01879549074946857
+              ]
+            }
+          }
+        },
+        "paired": {
+          "request": {
+            "pairs": 1033,
+            "itineraries": 59,
+            "correct_control": 1021,
+            "correct_mixed": 991,
+            "loss_pp": 2.904162633107454,
+            "loss_cluster95_pp": [
+              1.8427373285030573,
+              4.019692359702509
+            ],
+            "mixed_accuracy_cluster95": [
+              0.9480888354362312,
+              0.9706717817538154
+            ],
+            "paired_exact": {
+              "a_only": 33,
+              "b_only": 3,
+              "p": 2.2721360437572002e-07
+            },
+            "bootstrap_replicates": 2000,
+            "bootstrap_seed": 7
+          },
+          "no_request": {
+            "pairs": 974,
+            "itineraries": 59,
+            "correct_control": 960,
+            "correct_mixed": 964,
+            "loss_pp": -0.4106776180698152,
+            "loss_cluster95_pp": [
+              -1.2537294929972942,
+              0.4162656766286056
+            ],
+            "mixed_accuracy_cluster95": [
+              0.9824189443340067,
+              0.9958763948315585
+            ],
+            "paired_exact": {
+              "a_only": 6,
+              "b_only": 10,
+              "p": 0.454498291015625
+            },
+            "bootstrap_replicates": 2000,
+            "bootstrap_seed": 7
+          }
+        },
+        "subtypes_mixed": {
+          "MX1": {
+            "total": 525,
+            "correct": 501,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9328812969360218,
+              0.9690903470112975
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0072639138944599795
+            ]
+          },
+          "MX2": {
+            "total": 474,
+            "correct": 459,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9484482774105987,
+              0.9807302017774266
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.008039191137108092
+            ]
+          },
+          "MX3": {
+            "total": 457,
+            "correct": 449,
+            "false_pick": 8,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9658415468623841,
+              0.9911036054434242
+            ],
+            "false_pick_wilson95": [
+              0.008896394556575836,
+              0.03415845313761592
+            ]
+          },
+          "MX4": {
+            "total": 121,
+            "correct": 120,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9546693563957512,
+              0.9985396266145802
+            ],
+            "false_pick_wilson95": [
+              0.0014603733854198359,
+              0.04533064360424888
+            ]
+          },
+          "MX5a": {
+            "total": 236,
+            "correct": 235,
+            "false_pick": 1,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9763928767029154,
+              0.9992516225866709
+            ],
+            "false_pick_wilson95": [
+              0.0007483774133292126,
+              0.0236071232970847
+            ]
+          },
+          "MX5b": {
+            "total": 160,
+            "correct": 160,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9765538048284949,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.02344619517150519
+            ]
+          },
+          "MX6a": {
+            "total": 34,
+            "correct": 31,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7703951343719113,
+              0.9695340563253514
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.10151455415332376
+            ]
+          }
+        },
+        "sources": {
+          "code": {
+            "control": {
+              "request": {
+                "total": 940,
+                "correct": 930,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9805286095568103,
+                  0.9942113654698396
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.004070025516249234
+                ]
+              },
+              "no_request": {
+                "total": 828,
+                "correct": 815,
+                "false_pick": 13,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9733240944638971,
+                  0.9908019315903941
+                ],
+                "false_pick_wilson95": [
+                  0.00919806840960603,
+                  0.02667590553610295
+                ]
+              }
+            },
+            "mixed": {
+              "request": {
+                "total": 940,
+                "correct": 899,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.94136381436682,
+                  0.9676871623428164
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.004070025516249234
+                ]
+              },
+              "no_request": {
+                "total": 828,
+                "correct": 818,
+                "false_pick": 10,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9779121086641546,
+                  0.9934268303032608
+                ],
+                "false_pick_wilson95": [
+                  0.006573169696739164,
+                  0.02208789133584544
+                ]
+              }
+            }
+          },
+          "llm": {
+            "control": {
+              "request": {
+                "total": 93,
+                "correct": 91,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9249453736530886,
+                  0.9940825001915952
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.03966750261173514
+                ]
+              },
+              "no_request": {
+                "total": 146,
+                "correct": 145,
+                "false_pick": 1,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9622258343645365,
+                  0.9987899027574292
+                ],
+                "false_pick_wilson95": [
+                  0.0012100972425709428,
+                  0.03777416563546358
+                ]
+              }
+            },
+            "mixed": {
+              "request": {
+                "total": 93,
+                "correct": 92,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.94158082764513,
+                  0.9980993579713445
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.03966750261173514
+                ]
+              },
+              "no_request": {
+                "total": 146,
+                "correct": 146,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9743631779153262,
+                  1.0
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.025636822084673896
+                ]
+              }
+            }
+          }
+        },
+        "aggregate_gates": {
+          "request_accuracy": true,
+          "false_pick": false,
+          "request_loss": false,
+          "false_pick_increase": true
+        },
+        "aggregate_gates_passed": 2,
+        "aggregate_gates_total": 4,
+        "subtype_gates": {
+          "MX3": true,
+          "MX4": true,
+          "MX5a": true
+        },
+        "complete_valid": true,
+        "failed_records": [],
+        "false_pick_increase_pp": -0.41067761806981523,
+        "answer_sha256": "89bd585e56b00688cdeef3210c1c17dc9438cac97c2e1088cd1da4b5bebcf7d9",
+        "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+        "execution": {
+          "job": {
+            "id": "e4bqat_cosine_s20261012_mx",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts_mx.json",
+            "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "mx_backlog_e4bqat_cosine_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 4014,
+            "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+            "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b"
+          },
+          "started": "2026-10-08T22:01:07.055118+00:00",
+          "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "limits": [
+          "one run",
+          "existing developer/regression suite; not new independent final holdout",
+          "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+          "no complete matched original cohort ranking",
+          "token p_null is not verbal confidence or calibrated option probability"
+        ]
+      }
+    },
+    "e4bqat_finch": {
+      "d": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "suite": "D",
+        "saved": 2735,
+        "expected": 2735,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 2669,
+        "compound_diagnostic_total": 66,
+        "positive": {
+          "total": 883,
+          "correct": 775,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8544278246373106,
+            0.8976795485192902
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004331618444859839
+          ]
+        },
+        "negative": {
+          "total": 1786,
+          "correct": 1779,
+          "false_pick": 7,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9919316555841659,
+            0.9981001660988286
+          ],
+          "false_pick_wilson95": [
+            0.0018998339011714834,
+            0.008068344415834124
+          ]
+        },
+        "subtypes": {
+          "absent_but_plausible": {
+            "total": 78,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9530621902878059,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04693780971219429
+            ]
+          },
+          "change_request": {
+            "total": 79,
+            "correct": 79,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9536287883460772,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04637121165392266
+            ]
+          },
+          "chitchat": {
+            "total": 1300,
+            "correct": 1298,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9944078832123694,
+              0.9995779969207975
+            ],
+            "false_pick_wilson95": [
+              0.00042200307920248247,
+              0.005592116787630568
+            ]
+          },
+          "compound_intent": {
+            "total": 66,
+            "correct": 64,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8960747808829028,
+              0.9916500898013463
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05500255701354129
+            ]
+          },
+          "confusable_name": {
+            "total": 77,
+            "correct": 74,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8916001812736711,
+              0.986662049959409
+            ],
+            "false_pick_wilson95": [
+              0.007152159807893181,
+              0.08984582779753134
+            ]
+          },
+          "context_pronoun": {
+            "total": 71,
+            "correct": 69,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9029849988335054,
+              0.9922407364173166
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05132795219689034
+            ]
+          },
+          "duplicate_place": {
+            "total": 79,
+            "correct": 77,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9123141537110886,
+              0.9930296326934152
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04637121165392266
+            ]
+          },
+          "nameless_description": {
+            "total": 75,
+            "correct": 67,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8033863715352693,
+              0.9449508723782568
+            ],
+            "false_pick_wilson95": [
+              3.469446951953614e-18,
+              0.04872384248280587
+            ]
+          },
+          "negation": {
+            "total": 72,
+            "correct": 71,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9254339785252386,
+              0.9975440481170943
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.05065117259645781
+            ]
+          },
+          "ordinal_relative": {
+            "total": 80,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9133556701442198,
+              0.9931171067970292
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0458181295355271
+            ]
+          },
+          "out_of_scope": {
+            "total": 80,
+            "correct": 80,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9541818704644728,
+              0.9999999999999999
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0458181295355271
+            ]
+          },
+          "tourist_synth_in": {
+            "total": 300,
+            "correct": 208,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6389838112035251,
+              0.7427942399229839
+            ],
+            "false_pick_wilson95": [
+              8.673617379884035e-19,
+              0.012642971224546034
+            ]
+          },
+          "tourist_synth_out": {
+            "total": 300,
+            "correct": 297,
+            "false_pick": 3,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9710165066376601,
+              0.9965933815622847
+            ],
+            "false_pick_wilson95": [
+              0.003406618437715286,
+              0.02898349336233983
+            ]
+          },
+          "typo_slang": {
+            "total": 78,
+            "correct": 78,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9530621902878059,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.04693780971219429
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "d780f0d5a2b487c66d73a477022bdd2699a0034af113f8eb11d597518a29ce55",
+        "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+        "execution": {
+          "job": {
+            "id": "e4bqat_finch_s20261012_d",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts.json",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "d_backlog_e4bqat_finch_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 2735,
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd"
+          },
+          "started": "2026-10-08T23:17:35.074444+00:00",
+          "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "d2": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "suite": "D2",
+        "saved": 1000,
+        "expected": 1000,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 1000,
+        "compound_diagnostic_total": 0,
+        "positive": {
+          "total": 0,
+          "correct": 0,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.0,
+            1.0
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            1.0
+          ]
+        },
+        "negative": {
+          "total": 1000,
+          "correct": 997,
+          "false_pick": 3,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9912169859464969,
+            0.9989792161188614
+          ],
+          "false_pick_wilson95": [
+            0.0010207838811386186,
+            0.008783014053503173
+          ]
+        },
+        "subtypes": {
+          "chitchat_holdout_aihub": {
+            "total": 700,
+            "correct": 697,
+            "false_pick": 3,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9874760835631917,
+              0.9985414226559166
+            ],
+            "false_pick_wilson95": [
+              0.0014585773440834934,
+              0.012523916436808249
+            ]
+          },
+          "chitchat_holdout_kocul": {
+            "total": 300,
+            "correct": 300,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9873570287754538,
+              0.9999999999999998
+            ],
+            "false_pick_wilson95": [
+              8.673617379884035e-19,
+              0.012642971224546034
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "2c72b61eba15d63de6bddaa37ad994fd708845b5a6cd7e5a8a66565c8ba88d24",
+        "gold_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+        "execution": {
+          "job": {
+            "id": "e4bqat_finch_s20261012_d2",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts_d2.json",
+            "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "d2_backlog_e4bqat_finch_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 1000,
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd"
+          },
+          "started": "2026-10-08T23:34:31.859397+00:00",
+          "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "d3": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "suite": "D3",
+        "saved": 360,
+        "expected": 360,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "single_choice_expected": 360,
+        "compound_diagnostic_total": 0,
+        "positive": {
+          "total": 120,
+          "correct": 106,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8136664838239611,
+            0.9292188219216995
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.031019166418703486
+          ]
+        },
+        "negative": {
+          "total": 240,
+          "correct": 240,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9842460800584412,
+            1.0
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.015753919941558815
+          ]
+        },
+        "subtypes": {
+          "change_request": {
+            "total": 7,
+            "correct": 7,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6456695649333126,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              5.551115123125783e-17,
+              0.35433043506668743
+            ]
+          },
+          "confusable_name": {
+            "total": 14,
+            "correct": 14,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7846891972623643,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.3877787807814457e-17,
+              0.2153108027376358
+            ]
+          },
+          "context_pronoun": {
+            "total": 6,
+            "correct": 6,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6096657120978346,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.3903342879021653
+            ]
+          },
+          "duplicate_place": {
+            "total": 9,
+            "correct": 9,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7008549515804559,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.2991450484195441
+            ]
+          },
+          "nameless_description": {
+            "total": 16,
+            "correct": 13,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.5699111903802586,
+              0.9340840092857187
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.1936076805344365
+            ]
+          },
+          "negation": {
+            "total": 6,
+            "correct": 6,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6096657120978346,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.3903342879021653
+            ]
+          },
+          "ordinal_relative": {
+            "total": 12,
+            "correct": 11,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.646120088858883,
+              0.9851349055950829
+            ],
+            "false_pick_wilson95": [
+              2.7755575615628914e-17,
+              0.24249400665524085
+            ]
+          },
+          "synth_chat_A": {
+            "total": 120,
+            "correct": 120,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9689808335812966,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          },
+          "synth_chat_B": {
+            "total": 120,
+            "correct": 120,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9689808335812966,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          },
+          "tourist_synth_in": {
+            "total": 41,
+            "correct": 31,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6065666377742431,
+              0.8617499726190967
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.08566757018443186
+            ]
+          },
+          "typo_slang": {
+            "total": 9,
+            "correct": 9,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7008549515804559,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.2991450484195441
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "c54625b81cc3c33cb2c6736e42e9effad3fe13bd995c88c991ba8433cdb49c75",
+        "gold_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+        "execution": {
+          "job": {
+            "id": "e4bqat_finch_s20261012_d3",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts_d3.json",
+            "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+            "script": "/workspace/heavy/d_test_llama.py",
+            "tag": "d3_backlog_e4bqat_finch_s20261012",
+            "port": 8401,
+            "logprobs": "0",
+            "expected": 360,
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd"
+          },
+          "started": "2026-10-08T23:03:41.965037+00:00",
+          "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+          "script_sha256": "e84b538e2069a60563357d322ba32537bdb7896e99a9503589ba5b8498372ea8",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "h": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "saved": 1316,
+        "expected": 1316,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "positive": {
+          "total": 461,
+          "correct": 443,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9391288594309108,
+            0.975161361321403
+          ],
+          "false_pick_wilson95": [
+            8.673617379884035e-19,
+            0.008264019372196129
+          ]
+        },
+        "negative": {
+          "total": 855,
+          "correct": 851,
+          "false_pick": 4,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9880330706333326,
+            0.9981792172120237
+          ],
+          "false_pick_wilson95": [
+            0.001820782787976323,
+            0.01196692936666751
+          ]
+        },
+        "subtypes": {
+          "hard_N1": {
+            "total": 118,
+            "correct": 118,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9684716609775057,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03152833902249433
+            ]
+          },
+          "hard_N2": {
+            "total": 150,
+            "correct": 148,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9526930912996325,
+              0.9963358708487731
+            ],
+            "false_pick_wilson95": [
+              0.0036641291512270503,
+              0.04730690870036751
+            ]
+          },
+          "hard_N3": {
+            "total": 150,
+            "correct": 150,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9750297556319235,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.0249702443680766
+            ]
+          },
+          "hard_N4": {
+            "total": 150,
+            "correct": 148,
+            "false_pick": 2,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9526930912996325,
+              0.9963358708487731
+            ],
+            "false_pick_wilson95": [
+              0.0036641291512270503,
+              0.04730690870036751
+            ]
+          },
+          "hard_N5": {
+            "total": 150,
+            "correct": 150,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9750297556319235,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.0249702443680766
+            ]
+          },
+          "hard_N6": {
+            "total": 137,
+            "correct": 137,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9727249429758839,
+              0.9999999999999999
+            ],
+            "false_pick_wilson95": [
+              1.734723475976807e-18,
+              0.027275057024116055
+            ]
+          },
+          "hard_P1": {
+            "total": 118,
+            "correct": 118,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9684716609775057,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03152833902249433
+            ]
+          },
+          "hard_P2": {
+            "total": 110,
+            "correct": 108,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9361198354061878,
+              0.994999645124672
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.033743935298164184
+            ]
+          },
+          "hard_P3": {
+            "total": 113,
+            "correct": 99,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8027361011146767,
+              0.9247454012383682
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03287753216595198
+            ]
+          },
+          "hard_P4": {
+            "total": 120,
+            "correct": 118,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.941264037027841,
+              0.9954174354340789
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.031019166418703486
+            ]
+          }
+        },
+        "failed_records": [],
+        "answer_sha256": "0b1795b5b40f7a20cd93457f69100e1d3d85dc4e1b1e1a0887c23f7e86a50254",
+        "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+        "execution": {
+          "job": {
+            "id": "e4bqat_finch_s20261012_h",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts_h.json",
+            "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "h_backlog_e4bqat_finch_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 1316,
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd"
+          },
+          "started": "2026-10-08T23:45:55.141172+00:00",
+          "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "repetitions": 1,
+        "final_ranking": false
+      },
+      "mx": {
+        "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+        "our_training": true,
+        "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+        "saved": 4014,
+        "expected": 4014,
+        "missing": 0,
+        "failed_or_unparsed": 0,
+        "repetitions": 1,
+        "counts": {
+          "control": {
+            "request": {
+              "total": 1033,
+              "correct": 1025,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9847929099072416,
+                0.9960706457965766
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.0037049625938602128
+              ]
+            },
+            "no_request": {
+              "total": 974,
+              "correct": 972,
+              "false_pick": 2,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9925441422869772,
+                0.9994367061931526
+              ],
+              "false_pick_wilson95": [
+                0.0005632938068474273,
+                0.0074558577130228385
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 1033,
+              "correct": 960,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9120617820516536,
+                0.9434209848208014
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.0037049625938602128
+              ]
+            },
+            "no_request": {
+              "total": 974,
+              "correct": 971,
+              "false_pick": 3,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9909835739544985,
+                0.9989519531885589
+              ],
+              "false_pick_wilson95": [
+                0.0010480468114411846,
+                0.009016426045501513
+              ]
+            }
+          }
+        },
+        "paired": {
+          "request": {
+            "pairs": 1033,
+            "itineraries": 59,
+            "correct_control": 1025,
+            "correct_mixed": 960,
+            "loss_pp": 6.292352371732817,
+            "loss_cluster95_pp": [
+              4.916342694425968,
+              7.752105052125103
+            ],
+            "mixed_accuracy_cluster95": [
+              0.9143025861546848,
+              0.943050193050193
+            ],
+            "paired_exact": {
+              "a_only": 67,
+              "b_only": 2,
+              "p": 8.185726402265558e-18
+            },
+            "bootstrap_replicates": 2000,
+            "bootstrap_seed": 7
+          },
+          "no_request": {
+            "pairs": 974,
+            "itineraries": 59,
+            "correct_control": 972,
+            "correct_mixed": 971,
+            "loss_pp": 0.1026694045174538,
+            "loss_cluster95_pp": [
+              0.0,
+              0.3157894736842026
+            ],
+            "mixed_accuracy_cluster95": [
+              0.9927756842681557,
+              1.0
+            ],
+            "paired_exact": {
+              "a_only": 1,
+              "b_only": 0,
+              "p": 1.0
+            },
+            "bootstrap_replicates": 2000,
+            "bootstrap_seed": 7
+          }
+        },
+        "subtypes_mixed": {
+          "MX1": {
+            "total": 525,
+            "correct": 472,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8703094237111434,
+              0.9219885192949925
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0072639138944599795
+            ]
+          },
+          "MX2": {
+            "total": 474,
+            "correct": 459,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9484482774105987,
+              0.9807302017774266
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.008039191137108092
+            ]
+          },
+          "MX3": {
+            "total": 457,
+            "correct": 454,
+            "false_pick": 3,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9808795889404179,
+              0.9977649999256127
+            ],
+            "false_pick_wilson95": [
+              0.0022350000743873097,
+              0.019120411059582034
+            ]
+          },
+          "MX4": {
+            "total": 121,
+            "correct": 121,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9692293020525218,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.03077069794747827
+            ]
+          },
+          "MX5a": {
+            "total": 236,
+            "correct": 236,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9839833411638562,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.01601665883614395
+            ]
+          },
+          "MX5b": {
+            "total": 160,
+            "correct": 160,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9765538048284949,
+              1.0
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.02344619517150519
+            ]
+          },
+          "MX6a": {
+            "total": 34,
+            "correct": 29,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.6987194350454783,
+              0.9355055855521753
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.10151455415332376
+            ]
+          }
+        },
+        "sources": {
+          "code": {
+            "control": {
+              "request": {
+                "total": 940,
+                "correct": 933,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9847088097078205,
+                  0.9963881651559596
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.004070025516249234
+                ]
+              },
+              "no_request": {
+                "total": 828,
+                "correct": 826,
+                "false_pick": 2,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9912360294788745,
+                  0.9993373439235393
+                ],
+                "false_pick_wilson95": [
+                  0.0006626560764606462,
+                  0.008763970521125632
+                ]
+              }
+            },
+            "mixed": {
+              "request": {
+                "total": 940,
+                "correct": 868,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9046270214545886,
+                  0.9387349569380343
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.004070025516249234
+                ]
+              },
+              "no_request": {
+                "total": 828,
+                "correct": 825,
+                "false_pick": 3,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9894020287794217,
+                  0.9987670403186172
+                ],
+                "false_pick_wilson95": [
+                  0.0012329596813827944,
+                  0.010597971220578274
+                ]
+              }
+            }
+          },
+          "llm": {
+            "control": {
+              "request": {
+                "total": 93,
+                "correct": 92,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.94158082764513,
+                  0.9980993579713445
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.03966750261173514
+                ]
+              },
+              "no_request": {
+                "total": 146,
+                "correct": 146,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9743631779153262,
+                  1.0
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.025636822084673896
+                ]
+              }
+            },
+            "mixed": {
+              "request": {
+                "total": 93,
+                "correct": 92,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.94158082764513,
+                  0.9980993579713445
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.03966750261173514
+                ]
+              },
+              "no_request": {
+                "total": 146,
+                "correct": 146,
+                "false_pick": 0,
+                "failed_or_missing": 0,
+                "correct_wilson95": [
+                  0.9743631779153262,
+                  1.0
+                ],
+                "false_pick_wilson95": [
+                  0.0,
+                  0.025636822084673896
+                ]
+              }
+            }
+          }
+        },
+        "aggregate_gates": {
+          "request_accuracy": false,
+          "false_pick": true,
+          "request_loss": false,
+          "false_pick_increase": true
+        },
+        "aggregate_gates_passed": 2,
+        "aggregate_gates_total": 4,
+        "subtype_gates": {
+          "MX3": true,
+          "MX4": true,
+          "MX5a": true
+        },
+        "complete_valid": true,
+        "failed_records": [],
+        "false_pick_increase_pp": 0.10266940451745381,
+        "answer_sha256": "7e01a219348207d60343571b72b34d60eaaa7dbeaf432257636d5917e252922e",
+        "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+        "execution": {
+          "job": {
+            "id": "e4bqat_finch_s20261012_mx",
+            "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel finch 5e-5 seed20261012 adapter",
+            "our_training": true,
+            "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+            "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+            "prompts": "/workspace/heavy/all_prompts_mx.json",
+            "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+            "script": "/workspace/heavy/d_test_llama_lp.py",
+            "tag": "mx_backlog_e4bqat_finch_s20261012",
+            "port": 8401,
+            "logprobs": "1",
+            "expected": 4014,
+            "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+            "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+            "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd"
+          },
+          "started": "2026-10-09T00:09:00.642975+00:00",
+          "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+          "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+          "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+        },
+        "limits": [
+          "one run",
+          "existing developer/regression suite; not new independent final holdout",
+          "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+          "no complete matched original cohort ranking",
+          "token p_null is not verbal confidence or calibrated option probability"
+        ]
+      }
+    }
+  },
+  "fixed_single_training_seed": 20261012,
+  "all_new_answers": 18130,
+  "all_new_files_SHA_match": [
+    32,
+    32
+  ],
+  "new_role": {
+    "registered_jobs": 6,
+    "registered_questions": 5010,
+    "saved_in_partial_snapshot": 151,
+    "expected": 5010,
+    "completed_jobs": 0,
+    "contract": "Strict JSON items list; 64 output tokens, no grammar forcing",
+    "counts_per_job": {
+      "single": 583,
+      "no_request": 186,
+      "compound": 66
+    },
+    "source_question_matches": [
+      835,
+      835
+    ],
+    "parser_tests": [
+      8,
+      8
+    ],
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "same_as_previous_D_E_contract": false,
+    "independent_holdout": false,
+    "query_and_itinerary_changed": false,
+    "source_order_matched_by_query_not_index": true,
+    "originals": 2,
+    "our_finetuned": 4,
+    "corpus": "datasets/travel/multi_items_eval_20261009/contract.json",
+    "registration": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/multi_items_registration_daily0957_20261009.json",
+    "resume_report_tool": "program/scripts/plan_qa_bench/backlog_multi_items_report.py"
+  },
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_1010_finch-completion-and-multi-item-role.md",
+  "product_adoption": false,
+  "final_ranking": false
+}

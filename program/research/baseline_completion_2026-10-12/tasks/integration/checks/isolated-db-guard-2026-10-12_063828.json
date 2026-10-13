@@ -1,0 +1,66 @@
+{
+  "rows": [
+    {
+      "label": "own database",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "label": "own cluster administration",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "label": "new migration fixture",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "label": "new improvement fixture",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "label": "business name refused",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "label": "existing port refused",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "label": "foreign address refused",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "label": "default port refused",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "label": "default host refused",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "label": "unbounded scratch name refused",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    }
+  ],
+  "runner_sha256": "98bb1bba0c26a33fd51410ce992e2951f8ccb25aba1aa738bbd5962265246c71",
+  "scope": "연결 함수를 대역으로 바꾼 순수 경계 검사; 실제 DB·외부 통신 없음"
+}

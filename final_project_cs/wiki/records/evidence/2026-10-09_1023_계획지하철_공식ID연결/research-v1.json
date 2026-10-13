@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-10-09T10:32:14.969423+09:00",
+  "sources": [
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "scope": "Full official identifiers/next/previous station/terminal/train type/ETA fields read."
+    },
+    {
+      "url": "https://gtfs.org/documentation/realtime/reference/",
+      "scope": "TripDescriptor and StopTimeUpdate identity fields; design reference only, Seoul provider is not GTFS."
+    }
+  ],
+  "new_route_web_samples": 0,
+  "map_developer_api_calls": 0,
+  "new_live_arrival_snapshots": 0,
+  "actual_boarding_payment_samples": 0,
+  "method": "Exact identity join and content version checks; no new route/prediction algorithm requiring paper implementation."
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "path": "app/application/controller.py",
+    "sha256": "c1ad476afb283bf75da5c07468b724bd7ccbdb18079fe2a939996aca6f514116"
+  },
+  {
+    "path": "app/core/remote_team/a2a_executor.py",
+    "sha256": "55207f95df494ba87e4e82b195bc242cae32da20923fb5a576d554ccadb64928"
+  },
+  {
+    "path": "config/guardrails.yaml",
+    "sha256": "68dc5618ca9b12c5b9cbc83dbcf8b65f5ab4e3f461a357a29a1753b683c374f7"
+  },
+  {
+    "path": "tests/integration/controller/test_plugin_unavailable.py",
+    "sha256": "b4eeb500330c64e69dbc348512f30c1e2cbe08991e575d8ec0c5c0c196c0ec67"
+  },
+  {
+    "path": "wiki/teams/team-contract/plugin-availability.md",
+    "sha256": "897fd52db4027faa08cd84c1505b17f859633fbc6a7aa9cf48f7a4f601c525de"
+  },
+  {
+    "path": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-mapping.json",
+    "sha256": "04ef9d9bb6aa7bfe087d0c90fae35ff36ee088694fa5098b74305729d0408f05"
+  }
+]

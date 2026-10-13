@@ -1,0 +1,327 @@
+IEEE Computer Society SWEBOK
+https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf
+
+=== PDF page 1 ===
+Guide to the 
+Software 
+Engineering 
+Body of 
+Knowledge 
+v4.0a
+Released August 2026
+EDITOR
+Hironori Washizaki  
+Waseda University, IEEE Computer Society 
+2025 President
+
+=== PDF page 190 ===
+8-6   SWEBOK ® GUIDE V4.0a
+1.5.1 SCM Measures and Measurement  
+ [3*, c9s2, c25s2-s3]
+SCM measures can be designed to provide 
+specific information on the evolving product, 
+but they can also provide insight into how 
+well the SCM process functions and iden -
+tify opportunities for process improvement. 
+SCM process measurements enable teams to 
+monitor the effectiveness of SCM activities 
+on an ongoing basis. These measurements 
+are useful in characterizing the current 
+state of the process and providing a basis for 
+comparison over time. Measurement anal -
+ysis may produce insights that lead to pro -
+cess changes and corresponding updates 
+to the SCMP.
+Software libraries and the various SCM 
+tool capabilities enable teams to extract useful 
+information about SCM process characteris -
+tics (as well as project and management infor -
+mation). For example, information about the 
+time required to accomplish various types of 
+changes would be useful in evaluating criteria 
+for determining what levels of authority are 
+optimal for authorizing certain changes and 
+in estimating the resources needed to make 
+future changes.
+Care must be taken to keep the surveillance 
+focused on the insights that can be gained from 
+the measurements, not on the measurements 
+themselves. Software process and product 
+measurement is further discussed in the 
+Software Engineering Process KA. Software 
+measurement programs are described in the 
+Software Engineering Management KA.
+1.5.2 In-Process Audits of SCM
+[3*, c1s1]
+Audits can be carried out during the software 
+engineering process to investigate the status 
+of specific configuration elements or to assess 
+the SCM process implementation. In-process 
+SCM auditing provides a more formal mech -
+anism for monitoring selected aspects of the 
+process and may be coordinated with the 
+SQA function. (See Software Configuration 
+Auditing.)
+2. Software Configuration Identification 
+ [2, c8]
+Software configuration identification identi -
+fies items to be controlled, establishes iden -
+tification schemes for the items and their 
+versions, and establishes the tools and tech -
+niques to be used in acquiring and managing 
+controlled items. These activities provide the 
+basis for other SCM activities.
+2.1 Identifying Items to Be Controlled  
+ [2, c8s2.2]
+A first step in controlling change is identi -
+fying the software items to be controlled. This 
+involves understanding the software configu -
+ration within the context of the system con -
+figuration, selecting SCIs and developing a 
+strategy for labeling software items.
+2.1.1. Software Configuration
+Software  configuration is the functional and 
+physical characteristics of hardware or soft -
+ware as set forth in technical documentation 
+or achieved in a product. It can be viewed as 
+part of an overall system configuration.
+2.1.2 Software Configuration Item   
+ [2, c8s2.1] [3*, c9]
+A CI is an item or aggregation of hardware, 
+software or both, designed to be managed as 
+a single entity. An SCI is a software entity 
+that has been established as a CI [1]. The 
+SCM controls various items in addition to 
+the code itself. Software items with potential 
+to become SCIs include plans, specifications 
+and design documentation, testing materials, 
+software tools, source and executable code, 
+code libraries, data and data dictionaries, and 
+documentation for installation, maintenance, 
+operations and software use. 
+Selecting SCIs is an important process in 
+which a balance must be achieved between 
+providing adequate visibility for project con -
+trol purposes and providing a manageable 
+number of controlled items. 
+
+=== PDF page 191 ===
+SOFTWARE CONFIGURATION MANAGEMENT   8-7
+2.2 Configuration Item Identifiers and 
+Attributes 
+ [2, c8s2.3, c8s2.4] [3*, c9]
+Status accounting activity (explained later) 
+gathers information about CIs while they 
+are developed. The CIs’ scheme is defined 
+in order to establish what information must 
+be gathered and tracked for each CI. Unique 
+identifiers and versions are tracked.
+An example scheme may include the 
+following: 
+CI name
+CI unique identifier
+CI description
+CI date(s) 
+CI type
+CI owner
+The CI’s unique Identifier can use sig -
+nificant or nonsignificant codification. An 
+example of significant codification could be 
+XX-YY, where XX is the iteration abbrevia -
+tion (in case of using an iterative development 
+method) and YY is the CI abbreviation.
+2.3 Baseline Identification 
+ [2, c8s2.5.4, c8s2.5.5, c8s2.5.6]
+A software baseline is a formally approved 
+version of a CI (regardless of media type) that 
+is formally designated and fixed at a specific 
+time during the CI’s life cycle. The term also 
+refers to a particular version of an agreed-
+upon SCI. The baseline can be changed only 
+through formal change control procedures. 
+A baseline, with all approved changes to the 
+baseline, represents the current approved con -
+figuration. A baseline consists of one or more 
+related CIs.
+2.4 Baseline Attributes 
+ [2, c8s2.5.4]
+Baseline attributes are used in the status 
+accounting activity and specify information 
+about the baseline established.
+Example baseline attributes may include 
+the following:
+Baseline name
+Baseline unique identifier
+Baseline description
+Baseline date of creation
+Baseline CIs
+2.5 Relationships Scheme Definition 
+ [3*, c7s4]
+Relationships provide the connections 
+required to create and sustain structure. The 
+ability to communicate intent and manage the 
+results are significantly enhanced when effec -
+tive relationships (structuring) are in place 
+(e.g., model-based experience (MBX) plat -
+forms). Relationship information exchange 
+and interoperability are needed to support 
+the applicable relationship types. The status 
+accounting activity is responsible for gathering 
+information about relationships among CIs.
+Common types of relationships can be 
+described according to the following schemes: 
+Dependencies : CI-1 and CI-2 depend mutu-
+ally on each other.
+Example: CI-1 depends on C1-2, and vice 
+versa, for instance a class model depends on a 
+sequence diagram, because any change on any 
+of both types of models, affect the other. 
+CI-1 Code CI-2 Code Date
+Derivation: One CI derives from another, 
+typically in a sequential relationship, not 
+because of a lack of resources to handle both 
+CIs but because of a constraint that requires 
+that, for instance, CI-1 is completed before 
+CI-2 is developed. 
+Example: CI-1 derives from CI-2. 
+CI-1 Code CI-2 Code Date
+Succession: Software items evolve as a soft -
+ware project proceeds. A software item ver -
+sion is an identified instance of an item. It 
+can be thought of as a state of an evolving 
+item. This is what the succession relationship 
+
+=== PDF page 193 ===
+SOFTWARE CONFIGURATION MANAGEMENT   8-9
+The definitive media library  contains the 
+release baseline(s) of the artifacts that can 
+be deployed to the test, stage and produc -
+tion systems. 
+The release management process depends 
+on these software libraries to manage the arti -
+facts deployed. In terms of access control and 
+the backup facilities, security is a key aspect of 
+library management.
+3. Software Configuration Change Control  
+ [2, c9] [3*,c8] [4*, c25s3] [5, c11.s3.3]
+Software configuration change control is con -
+cerned with changes required to CIs during 
+the software life cycle. It covers the pro -
+cess for determining what changes to make, 
+the authority for approving certain changes, 
+support for implementing those changes, 
+and the concept of formal deviations from 
+project requirements as well as waivers of 
+them. Information derived from these activ -
+ities is useful in measuring change traffic and 
+breakage, as well as aspects of rework.
+Given that change to CIs can follow spe -
+cific rules depending on the industrial sector, 
+area, company, etc., it is very important to 
+identify those rules in the context of the 
+software project for which the SCM pro -
+cess is being developed and to adhere strictly 
+to those rules. The rest of this section can 
+be useful when no specific rules regarding 
+change control exist in the company or the 
+industrial sector where the software project 
+under development is allocated.
+3.1 Requesting, Evaluating, and Approving 
+Software Changes  
+ [2, c9s2.4] [3*, c11s1] [4*, c25s3]
+The first step in managing changes to con -
+trolled items is determining what changes to 
+make. The software change request (SCR) 
+process (Figure 8.3) provides formal pro -
+cedures for submitting and recording CRs; 
+evaluating the potential cost and impact of a 
+proposed change; and accepting, modifying, 
+deferring or rejecting the proposed change. 
+A CR is a request to expand or reduce the 
+project scope; modify policies, processes, 
+plans or procedures; modify costs or budgets; 
+modify implemented code; or revise schedules 
+[1]. Requests for changes to SCIs may be orig-
+inated by anyone at any point in the software 
+life cycle and may include a suggested solution 
+and requested priority. One source of a CR is 
+the initiation of corrective action in response 
+to problem reports. Regardless of the source, 
+the type of change (e.g., defect or enhance -
+ment) is usually recorded on the SCR.
+“Emergency Path”
+usually also exists
+Changes can be
+implemented with 
+change process
+performed afterward
+Incomplete
+Complete
+Approved
+Rejected Inform
+Requester
+Assign
+to Software
+Engineer
+Schedule, 
+Design, Test,
+Complete Change
+CCB
+Review
+Preliminary
+Investigation
+Need for
+Change
+Change
+identi/f_ied for
+controlled item
+SCR Generated
+or Upgraded
+SCR
+Evaluated
+Figure 8.3. Flow of a Change Control Process
+
+=== PDF page 200 ===
+8-16   SWEBOK ® GUIDE V4.0a
+2.1.2. Software Configuration Item c9
+2.2. Configuration Item Identifiers and Attributes c9
+2.3. Baseline Identification
+2.4. Baseline Attributes
+2.5. Relationships Scheme Definition c7s4
+2.6. Software Libraries c1s3
+3. Software Configuration Change Control c8 c25s3
+3.1. Requesting, Evaluating and Approving 
+Software Changes c11s1 c25s3
+3.1.1. Software Configuration Control Board c11s1 c25s3
+3.1.2. Software Change Request Process c1s4, c8s4 c25s3
+3.1.3. Software Change Request Forms Definition c8s4 c25s3
+3.2. Implementing Software Changes c25s3
+3.3. Deviations and Waivers
+4. Software Configuration Status Accounting c9
+4.1. Software Configuration Status Information
+4.2. Software Configuration Status Reporting c1s5; c9s1
+5. Software Configuration Auditing
+5.1. Software Functional Configuration Audit
+5.2. Software Physical Configuration Audit
+5.3. In-Process Audits of a Software Baseline
+6. Software Release Management and Delivery c8s2 c25s4
+6.1. Software Building c25s2
+6.2. Software Release Management c25s2
+7. Software Configuration Management Tools c26s1
+FURTHER READINGS
+S.P. Berczuk and B. Appleton, Software 
+Configuration Management Patterns: Effective 
+Teamwork, Practical Integration [6].
+This book expresses useful SCM practices 
+and strategies as patterns. The patterns can be 
+implemented using various tools, but they are 
+expressed in a tool-agnostic fashion.
+CMMI for Development, Version 2.0 - 2.1, pp. 
+66–80 [7].
+This model presents a collection of best prac -
+tices to help software development organi -
+zations improve their processes. At maturity 
+level 2, it suggests CM activities.
+B. Aiello and L. A. Sachs, Configuration man-
+agement best practices: Practical methods that 
+work in the real world (1st edition), 2011 [8].

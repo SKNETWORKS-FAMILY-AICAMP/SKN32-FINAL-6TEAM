@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-10-09T06:09:01.792928+09:00",
+  "sources": [
+    {
+      "title": "Computing the Shortest Path: A* Search Meets Graph Theory",
+      "publication_year": 2004,
+      "url": "https://www.microsoft.com/en-us/research/publication/computing-the-shortest-path-a-search-meets-graph-theory/",
+      "used": "목표까지 하한을 이용한 탐색 연구. ALT 알고리즘을 이번에 구현한 것은 아님."
+    },
+    {
+      "title": "Efficient Routing in Road Networks with Turn Costs",
+      "publication_year": 2011,
+      "url": "https://publikationen.bibliothek.kit.edu/1000097647",
+      "used": "회전 비용의 정확한 표현과 재사용을 함께 고려한 연구. 논문의 축약·전처리 알고리즘이나 배수 효과를 이번 수치로 사용하지 않음."
+    },
+    {
+      "title": "Python 3.12 functools",
+      "url": "https://docs.python.org/3.12/library/functools.html",
+      "used": "같은 인자의 재계산을 줄이는 사전 기반 메모이제이션 설명. 제품은 요청 안 지역 사전을 사용하며 전역 decorator를 붙이지 않음."
+    }
+  ]
+}

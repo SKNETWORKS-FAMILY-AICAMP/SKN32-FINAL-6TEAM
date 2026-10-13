@@ -1,7 +1,7 @@
 ---
 type: concept
 title: 승인 경계
-description: 무엇이 사람 승인 대상인가. 승인은 버그가 아니라 제품의 일부다
+description: 업체 거래의 고객 승인과 여행 일정 자동 적용 조건을 구분한다
 status: draft
 tags: [security, architecture]
 owners: [human:미배정]
@@ -17,13 +17,11 @@ domain_note: 승인 경계 규칙은 도메인 무관이다. 「승인 없이 �
 
 `app/core/`
 
-## 승인은 실패가 아니다
+## 고객 승인과 자동 적용을 구분합니다
 
-`[실측 2026-09-10]` 골든셋 기대 라벨 중 **`wait_for_approval` 이 15/72 = 20.8%** 다(`eval/datasets/golden.jsonl` 의 `expected_next_action`). ★**이건 정답 라벨의 분포이지 실제로 사람에게 넘어간 비율이 아니다** — 운영에서 잰 인계율은 `[미확보]`. 그리고 **그 72건은 쇼핑몰 시나리오**다 — 여행 골든셋은 0건이라 여행에서 몇 %가 승인으로 가는지는 아직 모른다. `[정정]` 이 줄은 분모 없이 「21%가 사람에게 간다」로 적혀 있었다.
+여행 일정 자동 변경과 업체 예약·결제·환급의 고객 승인은 다른 경계입니다. 고객이 필요한 정보를 직접 입력하는 경우에도 가능한 추천안을 먼저 제공합니다. 고객 문제를 대신 고치는 상주 상담원·운영 관리자에게 인계하는 제품 구조를 만들지 않습니다. 개발자·QA의 결함 사후 분석은 고객 승인을 대체하지 않습니다.
 
-이걸 "자동화 실패율"로 읽으면 안 된다. **승인 경계가 일부러 보내는 것**이다.
-
-[중앙 허브 포지셔닝](../../../wiki/product/positioning.md)의 human-on-the-loop이 여기서 구현된다. 고위험 Action만 사람이 승인하고 나머지는 자동 처리한다.
+과거 쇼핑몰 골든셋의 `wait_for_approval` 분포는 현재 여행 승인율·인계율 근거로 쓰지 않습니다. 현재 실사용 승인율은 실제 여행 요청·환경·확인 시각을 붙여 따로 측정해야 합니다.
 
 ## 무엇이 승인 대상인가
 
@@ -224,3 +222,5 @@ seed 스크립트가 화면 표시·버튼 활성화용으로 `arguments_json.ev
 - [evidence-check.md](evidence-check.md) — 승인 직전 재검증
 - [../runtime/case-lifecycle.md](../runtime/case-lifecycle.md) — `waiting_approval` 상태
 - [../../../wiki/product/personas.md](../../../wiki/product/personas.md) — 승인하는 사람
+
+개정 전 승인 설명·수치: [보존 기록](../records/commerce_2026-10-11/wiki--actions--approval.md).

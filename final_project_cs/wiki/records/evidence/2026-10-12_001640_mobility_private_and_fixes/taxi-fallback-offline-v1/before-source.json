@@ -1,0 +1,7 @@
+{
+  "source": ".tmp\\mobility_finish_20261011\\final-gate-v4\\result.xml",
+  "sha256": "e18ae48da32885d9634d1344e15f121e1c2c7d266a6779c9179c265cbe934bcf",
+  "operation": "original testcase elements copied; not a new test execution",
+  "tests": 5,
+  "skipped": 4
+}

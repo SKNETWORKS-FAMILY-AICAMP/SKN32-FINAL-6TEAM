@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/tmp/tripilot-valen-20261009/valen_native_eval_20261009_v2.py", line 139, in <module>
+    main()
+  File "/tmp/tripilot-valen-20261009/valen_native_eval_20261009_v2.py", line 50, in main
+    assert memory()['headroom'] > 4*2**30
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

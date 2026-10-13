@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/travel/mobility/test_bus_profile_completeness_v1.py",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\profile-before-v1-temp",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0836_버스거리_완전구간\\profile-before-v1.xml"
+  ],
+  "exit_code": 1
+}

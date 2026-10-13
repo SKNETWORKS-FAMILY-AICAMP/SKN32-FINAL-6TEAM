@@ -1,0 +1,638 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="43" skipped="0" tests="43" time="4.879" timestamp="2026-10-09T09:36:51.415003+09:00" hostname="playdata"><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[subwayId-line_id]" time="0.253"><failure message="KeyError: 'line_id'">raw = 'subwayId', normalized = 'line_id'
+
+    @pytest.mark.parametrize('raw,normalized', FIELDS.items())
+    def test_matching_fields_survive_normalization(raw, normalized):
+        value = '00123' if raw != 'bstatnNm' else '성수'
+        row = {'barvlDt': '180', raw: value}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert got[normalized] == value
+               ^^^^^^^^^^^^^^^
+E       KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:30: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[statnId-station_id]" time="0.001"><failure message="KeyError: 'station_id'">raw = 'statnId', normalized = 'station_id'
+
+    @pytest.mark.parametrize('raw,normalized', FIELDS.items())
+    def test_matching_fields_survive_normalization(raw, normalized):
+        value = '00123' if raw != 'bstatnNm' else '성수'
+        row = {'barvlDt': '180', raw: value}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert got[normalized] == value
+               ^^^^^^^^^^^^^^^
+E       KeyError: 'station_id'
+
+tests\unit\travel\test_subway_identity_v1.py:30: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[statnFid-previous_station_id]" time="0.001"><failure message="KeyError: 'previous_station_id'">raw = 'statnFid', normalized = 'previous_station_id'
+
+    @pytest.mark.parametrize('raw,normalized', FIELDS.items())
+    def test_matching_fields_survive_normalization(raw, normalized):
+        value = '00123' if raw != 'bstatnNm' else '성수'
+        row = {'barvlDt': '180', raw: value}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert got[normalized] == value
+               ^^^^^^^^^^^^^^^
+E       KeyError: 'previous_station_id'
+
+tests\unit\travel\test_subway_identity_v1.py:30: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[statnTid-next_station_id]" time="0.001"><failure message="KeyError: 'next_station_id'">raw = 'statnTid', normalized = 'next_station_id'
+
+    @pytest.mark.parametrize('raw,normalized', FIELDS.items())
+    def test_matching_fields_survive_normalization(raw, normalized):
+        value = '00123' if raw != 'bstatnNm' else '성수'
+        row = {'barvlDt': '180', raw: value}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert got[normalized] == value
+               ^^^^^^^^^^^^^^^
+E       KeyError: 'next_station_id'
+
+tests\unit\travel\test_subway_identity_v1.py:30: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[bstatnId-terminal_station_id]" time="0.001"><failure message="KeyError: 'terminal_station_id'">raw = 'bstatnId', normalized = 'terminal_station_id'
+
+    @pytest.mark.parametrize('raw,normalized', FIELDS.items())
+    def test_matching_fields_survive_normalization(raw, normalized):
+        value = '00123' if raw != 'bstatnNm' else '성수'
+        row = {'barvlDt': '180', raw: value}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert got[normalized] == value
+               ^^^^^^^^^^^^^^^
+E       KeyError: 'terminal_station_id'
+
+tests\unit\travel\test_subway_identity_v1.py:30: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[bstatnNm-terminal_station]" time="0.001"><failure message="KeyError: 'terminal_station'">raw = 'bstatnNm', normalized = 'terminal_station'
+
+    @pytest.mark.parametrize('raw,normalized', FIELDS.items())
+    def test_matching_fields_survive_normalization(raw, normalized):
+        value = '00123' if raw != 'bstatnNm' else '성수'
+        row = {'barvlDt': '180', raw: value}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert got[normalized] == value
+               ^^^^^^^^^^^^^^^
+E       KeyError: 'terminal_station'
+
+tests\unit\travel\test_subway_identity_v1.py:30: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[btrainNo-train_number]" time="0.001"><failure message="KeyError: 'train_number'">raw = 'btrainNo', normalized = 'train_number'
+
+    @pytest.mark.parametrize('raw,normalized', FIELDS.items())
+    def test_matching_fields_survive_normalization(raw, normalized):
+        value = '00123' if raw != 'bstatnNm' else '성수'
+        row = {'barvlDt': '180', raw: value}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert got[normalized] == value
+               ^^^^^^^^^^^^^^^
+E       KeyError: 'train_number'
+
+tests\unit\travel\test_subway_identity_v1.py:30: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[ordkey-arrival_order]" time="0.001"><failure message="KeyError: 'arrival_order'">raw = 'ordkey', normalized = 'arrival_order'
+
+    @pytest.mark.parametrize('raw,normalized', FIELDS.items())
+    def test_matching_fields_survive_normalization(raw, normalized):
+        value = '00123' if raw != 'bstatnNm' else '성수'
+        row = {'barvlDt': '180', raw: value}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert got[normalized] == value
+               ^^^^^^^^^^^^^^^
+E       KeyError: 'arrival_order'
+
+tests\unit\travel\test_subway_identity_v1.py:30: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[None]" time="0.001"><failure message="KeyError: 'line_id'">value = None
+
+    @pytest.mark.parametrize('value', [None, '', ' ', True, False, 1.5, -1, {}, []])
+    def test_bad_identity_is_not_invented(value):
+        row = {key: value for key in FIELDS}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;dict_valueiterator object at 0x000002ABE5B86CF0&gt;
+
+&gt;   assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^
+E   KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:38: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[]" time="0.001"><failure message="KeyError: 'line_id'">value = ''
+
+    @pytest.mark.parametrize('value', [None, '', ' ', True, False, 1.5, -1, {}, []])
+    def test_bad_identity_is_not_invented(value):
+        row = {key: value for key in FIELDS}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;dict_valueiterator object at 0x000002ABE5B86FC0&gt;
+
+&gt;   assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^
+E   KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:38: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[ ]" time="0.001"><failure message="KeyError: 'line_id'">value = ' '
+
+    @pytest.mark.parametrize('value', [None, '', ' ', True, False, 1.5, -1, {}, []])
+    def test_bad_identity_is_not_invented(value):
+        row = {key: value for key in FIELDS}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;dict_valueiterator object at 0x000002ABE5B871A0&gt;
+
+&gt;   assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^
+E   KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:38: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[True]" time="0.001"><failure message="KeyError: 'line_id'">value = True
+
+    @pytest.mark.parametrize('value', [None, '', ' ', True, False, 1.5, -1, {}, []])
+    def test_bad_identity_is_not_invented(value):
+        row = {key: value for key in FIELDS}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;dict_valueiterator object at 0x000002ABE5B873D0&gt;
+
+&gt;   assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^
+E   KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:38: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[False]" time="0.001"><failure message="KeyError: 'line_id'">value = False
+
+    @pytest.mark.parametrize('value', [None, '', ' ', True, False, 1.5, -1, {}, []])
+    def test_bad_identity_is_not_invented(value):
+        row = {key: value for key in FIELDS}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;dict_valueiterator object at 0x000002ABE5B87600&gt;
+
+&gt;   assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^
+E   KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:38: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[1.5]" time="0.001"><failure message="KeyError: 'line_id'">value = 1.5
+
+    @pytest.mark.parametrize('value', [None, '', ' ', True, False, 1.5, -1, {}, []])
+    def test_bad_identity_is_not_invented(value):
+        row = {key: value for key in FIELDS}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;dict_valueiterator object at 0x000002ABE5B87830&gt;
+
+&gt;   assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^
+E   KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:38: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[-1]" time="0.001"><failure message="KeyError: 'line_id'">value = -1
+
+    @pytest.mark.parametrize('value', [None, '', ' ', True, False, 1.5, -1, {}, []])
+    def test_bad_identity_is_not_invented(value):
+        row = {key: value for key in FIELDS}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;dict_valueiterator object at 0x000002ABE5B87970&gt;
+
+&gt;   assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^
+E   KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:38: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[value7]" time="0.001"><failure message="KeyError: 'line_id'">value = {}
+
+    @pytest.mark.parametrize('value', [None, '', ' ', True, False, 1.5, -1, {}, []])
+    def test_bad_identity_is_not_invented(value):
+        row = {key: value for key in FIELDS}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;dict_valueiterator object at 0x000002ABE5B87B50&gt;
+
+&gt;   assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^
+E   KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:38: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[value8]" time="0.001"><failure message="KeyError: 'line_id'">value = []
+
+    @pytest.mark.parametrize('value', [None, '', ' ', True, False, 1.5, -1, {}, []])
+    def test_bad_identity_is_not_invented(value):
+        row = {key: value for key in FIELDS}
+        got = source([row]).arrivals('강남')['trains'][0]
+&gt;       assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;dict_valueiterator object at 0x000002ABE5B87E20&gt;
+
+&gt;   assert all(got[key] is None for key in FIELDS.values())
+               ^^^^^^^^
+E   KeyError: 'line_id'
+
+tests\unit\travel\test_subway_identity_v1.py:38: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_missing_identity_and_numeric_id_are_explicit" time="0.001"><failure message="KeyError: 'station_id'">def test_missing_identity_and_numeric_id_are_explicit():
+        got = source([{'statnId': 1002000222}]).arrivals('강남')['trains'][0]
+&gt;       assert got['station_id'] == '1002000222'
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'station_id'
+
+tests\unit\travel\test_subway_identity_v1.py:43: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_valid_eta_preserves_zero[0-0_0]" time="0.002"><failure message="KeyError: 'eta_status'">value = 0, expected = 0
+
+    @pytest.mark.parametrize('value,expected', [(0, 0), ('0', 0), (180, 180), ('0180', 180)])
+    def test_valid_eta_preserves_zero(value, expected):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] == expected and got['eta_status'] == 'valid'
+                                                  ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:50: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_valid_eta_preserves_zero[0-0_1]" time="0.002"><failure message="KeyError: 'eta_status'">value = '0', expected = 0
+
+    @pytest.mark.parametrize('value,expected', [(0, 0), ('0', 0), (180, 180), ('0180', 180)])
+    def test_valid_eta_preserves_zero(value, expected):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] == expected and got['eta_status'] == 'valid'
+                                                  ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:50: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_valid_eta_preserves_zero[180-180]" time="0.001"><failure message="KeyError: 'eta_status'">value = 180, expected = 180
+
+    @pytest.mark.parametrize('value,expected', [(0, 0), ('0', 0), (180, 180), ('0180', 180)])
+    def test_valid_eta_preserves_zero(value, expected):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] == expected and got['eta_status'] == 'valid'
+                                                  ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:50: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_valid_eta_preserves_zero[0180-180]" time="0.001"><failure message="KeyError: 'eta_status'">value = '0180', expected = 180
+
+    @pytest.mark.parametrize('value,expected', [(0, 0), ('0', 0), (180, 180), ('0180', 180)])
+    def test_valid_eta_preserves_zero(value, expected):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] == expected and got['eta_status'] == 'valid'
+                                                  ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:50: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[True]" time="0.001"><failure message="KeyError: 'eta_status'">value = True
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[False]" time="0.001"><failure message="KeyError: 'eta_status'">value = False
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[-1_0]" time="0.001"><failure message="KeyError: 'eta_status'">value = -1
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[-1_1]" time="0.001"><failure message="KeyError: 'eta_status'">value = '-1'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[1.0]" time="0.001"><failure message="KeyError: 'eta_status'">value = 1.0
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[1.5]" time="0.001"><failure message="KeyError: 'eta_status'">value = 1.5
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[]" time="0.002"><failure message="KeyError: 'eta_status'">value = ''
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[180.0]" time="0.001"><failure message="KeyError: 'eta_status'">value = '180.0'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[\xb2]" time="0.001"><failure message="ValueError: invalid literal for int() with base 10: '²'">value = '²'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+&gt;       got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5C17260&gt;
+station = '강남'
+
+    def arrivals(self, station: str, *, line: str | None = None) -&gt; dict[str, Any] | None:
+        """그 역의 **지금 도착 예정 열차**(상·하행). 못 읽으면 `None`, 열차가 없으면 `trains: []`(실패가 아니라 빈 결과).
+    
+        `line` 을 주면(「2호선」) 그 호선만 남긴다. 값은 정규화 — 원값(`raw`)은 싣지 않는다(키·주소가 안 섞이게)."""
+        if not self._key:
+            self._miss("no_service_key")
+            return None
+        name = clean_station(station)
+        if not name:
+            self._miss("empty_station")
+            return None
+        url = f"{BASE}/{self._key}/json/realtimeStationArrival/0/{PAGE_SIZE}/{urllib.parse.quote(name)}"
+        payload = self._fetch_json(url, {})
+        if payload is None:
+            return None
+        rows = payload.get("realtimeArrivalList")
+        if rows is None:                              # INFO-200 — 빈 결과
+            rows = []
+        trains = []
+        checked = self._now()
+        if checked.tzinfo is None:
+            checked = checked.replace(tzinfo=KST)
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            line_name = SUBWAY_ID.get(str(row.get("subwayId") or ""), str(row.get("subwayId") or ""))
+            if line and line_name != line:
+                continue
+            seconds = row.get("barvlDt")
+            received = row.get("recptnDt")
+            age = None
+            try:
+                received_dt = datetime.fromisoformat(str(received))
+                if received_dt.tzinfo is None:
+                    received_dt = received_dt.replace(tzinfo=KST)
+                age = int((checked - received_dt).total_seconds())
+            except (ValueError, TypeError):
+                pass
+            trains.append({
+                "line": line_name, "direction": row.get("updnLine"), "route_label": row.get("trainLineNm"),
+                "message": row.get("arvlMsg2"), "position": row.get("arvlMsg3"), "arrival_code": row.get("arvlCd"),
+&gt;               "eta_seconds": int(seconds) if seconds is not None and str(seconds).isdigit() else None,
+                               ^^^^^^^^^^^^
+                "received_at": received, "received_age_seconds": age,
+                "source_clock_ahead": age &lt; 0 if age is not None else None,
+                "train_status": row.get("btrainSttus")})
+E           ValueError: invalid literal for int() with base 10: '²'
+
+app\domains\travel_ops\ports\data_sources\seoul_subway.py:114: ValueError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[\u0661\u0668\u0660]" time="0.001"><failure message="assert (180 is None)">value = '١٨٠'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+E       assert (180 is None)
+
+tests\unit\travel\test_subway_identity_v1.py:57: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[NaN]" time="0.002"><failure message="KeyError: 'eta_status'">value = 'NaN'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[value11]" time="0.001"><failure message="KeyError: 'eta_status'">value = []
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[value12]" time="0.001"><failure message="KeyError: 'eta_status'">value = {}
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+        got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+&gt;       assert got['eta_seconds'] is None and got['eta_status'] == 'invalid'
+                                              ^^^^^^^^^^^^^^^^^
+E       KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:57: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999]" time="0.001"><failure message="ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5000 digits; use sys.set_int_max_str_digits() to increase the limit">value = '999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999...9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, 1.5, '', '180.0',
+                                      '\u00b2', '\u0661\u0668\u0660', 'NaN', [], {}, '9' * 5000])
+    def test_invalid_eta_is_visible_without_crashing(value):
+&gt;       got = source([{'barvlDt': value}]).arrivals('강남')['trains'][0]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5BE2FF0&gt;
+station = '강남'
+
+    def arrivals(self, station: str, *, line: str | None = None) -&gt; dict[str, Any] | None:
+        """그 역의 **지금 도착 예정 열차**(상·하행). 못 읽으면 `None`, 열차가 없으면 `trains: []`(실패가 아니라 빈 결과).
+    
+        `line` 을 주면(「2호선」) 그 호선만 남긴다. 값은 정규화 — 원값(`raw`)은 싣지 않는다(키·주소가 안 섞이게)."""
+        if not self._key:
+            self._miss("no_service_key")
+            return None
+        name = clean_station(station)
+        if not name:
+            self._miss("empty_station")
+            return None
+        url = f"{BASE}/{self._key}/json/realtimeStationArrival/0/{PAGE_SIZE}/{urllib.parse.quote(name)}"
+        payload = self._fetch_json(url, {})
+        if payload is None:
+            return None
+        rows = payload.get("realtimeArrivalList")
+        if rows is None:                              # INFO-200 — 빈 결과
+            rows = []
+        trains = []
+        checked = self._now()
+        if checked.tzinfo is None:
+            checked = checked.replace(tzinfo=KST)
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            line_name = SUBWAY_ID.get(str(row.get("subwayId") or ""), str(row.get("subwayId") or ""))
+            if line and line_name != line:
+                continue
+            seconds = row.get("barvlDt")
+            received = row.get("recptnDt")
+            age = None
+            try:
+                received_dt = datetime.fromisoformat(str(received))
+                if received_dt.tzinfo is None:
+                    received_dt = received_dt.replace(tzinfo=KST)
+                age = int((checked - received_dt).total_seconds())
+            except (ValueError, TypeError):
+                pass
+            trains.append({
+                "line": line_name, "direction": row.get("updnLine"), "route_label": row.get("trainLineNm"),
+                "message": row.get("arvlMsg2"), "position": row.get("arvlMsg3"), "arrival_code": row.get("arvlCd"),
+&gt;               "eta_seconds": int(seconds) if seconds is not None and str(seconds).isdigit() else None,
+                               ^^^^^^^^^^^^
+                "received_at": received, "received_age_seconds": age,
+                "source_clock_ahead": age &lt; 0 if age is not None else None,
+                "train_status": row.get("btrainSttus")})
+E           ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5000 digits; use sys.set_int_max_str_digits() to increase the limit
+
+app\domains\travel_ops\ports\data_sources\seoul_subway.py:114: ValueError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_missing_eta_is_distinct_from_invalid" time="0.001"><failure message="KeyError: 'eta_status'">def test_missing_eta_is_distinct_from_invalid():
+        got = source([{}, {'barvlDt': None}]).arrivals('강남')['trains']
+&gt;       assert all(t['eta_seconds'] is None and t['eta_status'] == 'missing' for t in got)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:62: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;list_iterator object at 0x000002ABE5BE2BC0&gt;
+
+&gt;   assert all(t['eta_seconds'] is None and t['eta_status'] == 'missing' for t in got)
+                                            ^^^^^^^^^^^^^^^
+E   KeyError: 'eta_status'
+
+tests\unit\travel\test_subway_identity_v1.py:62: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[rows0]" time="0.001"><failure message="AssertionError: assert {'confirmed_at': '2026-10-09T00:36:56.224235+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} is None&#10; +  where {'confirmed_at': '2026-10-09T00:36:56.224235+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} = arrivals('강남')&#10; +    where arrivals = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5C26630&gt;.arrivals">rows = {}
+
+    @pytest.mark.parametrize('rows', [{}, 'not a list', 17, [None], [{'barvlDt': 180}, 'bad row']])
+    def test_malformed_list_is_not_reported_as_no_trains(rows):
+        src = source(rows)
+&gt;       assert src.arrivals('강남') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:36:56.224235+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T00:36:56.224235+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} = arrivals('강남')
+E        +    where arrivals = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5C26630&gt;.arrivals
+
+tests\unit\travel\test_subway_identity_v1.py:68: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[not a list]" time="0.001"><failure message="AssertionError: assert {'confirmed_at': '2026-10-09T00:36:56.240017+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} is None&#10; +  where {'confirmed_at': '2026-10-09T00:36:56.240017+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} = arrivals('강남')&#10; +    where arrivals = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5C27920&gt;.arrivals">rows = 'not a list'
+
+    @pytest.mark.parametrize('rows', [{}, 'not a list', 17, [None], [{'barvlDt': 180}, 'bad row']])
+    def test_malformed_list_is_not_reported_as_no_trains(rows):
+        src = source(rows)
+&gt;       assert src.arrivals('강남') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:36:56.240017+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T00:36:56.240017+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} = arrivals('강남')
+E        +    where arrivals = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5C27920&gt;.arrivals
+
+tests\unit\travel\test_subway_identity_v1.py:68: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[17]" time="0.001"><failure message="TypeError: 'int' object is not iterable">rows = 17
+
+    @pytest.mark.parametrize('rows', [{}, 'not a list', 17, [None], [{'barvlDt': 180}, 'bad row']])
+    def test_malformed_list_is_not_reported_as_no_trains(rows):
+        src = source(rows)
+&gt;       assert src.arrivals('강남') is None
+               ^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_identity_v1.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5C27BC0&gt;
+station = '강남'
+
+    def arrivals(self, station: str, *, line: str | None = None) -&gt; dict[str, Any] | None:
+        """그 역의 **지금 도착 예정 열차**(상·하행). 못 읽으면 `None`, 열차가 없으면 `trains: []`(실패가 아니라 빈 결과).
+    
+        `line` 을 주면(「2호선」) 그 호선만 남긴다. 값은 정규화 — 원값(`raw`)은 싣지 않는다(키·주소가 안 섞이게)."""
+        if not self._key:
+            self._miss("no_service_key")
+            return None
+        name = clean_station(station)
+        if not name:
+            self._miss("empty_station")
+            return None
+        url = f"{BASE}/{self._key}/json/realtimeStationArrival/0/{PAGE_SIZE}/{urllib.parse.quote(name)}"
+        payload = self._fetch_json(url, {})
+        if payload is None:
+            return None
+        rows = payload.get("realtimeArrivalList")
+        if rows is None:                              # INFO-200 — 빈 결과
+            rows = []
+        trains = []
+        checked = self._now()
+        if checked.tzinfo is None:
+            checked = checked.replace(tzinfo=KST)
+&gt;       for row in rows:
+                   ^^^^
+E       TypeError: 'int' object is not iterable
+
+app\domains\travel_ops\ports\data_sources\seoul_subway.py:95: TypeError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[rows3]" time="0.001"><failure message="AssertionError: assert {'confirmed_at': '2026-10-09T00:36:56.255988+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} is None&#10; +  where {'confirmed_at': '2026-10-09T00:36:56.255988+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} = arrivals('강남')&#10; +    where arrivals = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5BE1BB0&gt;.arrivals">rows = [None]
+
+    @pytest.mark.parametrize('rows', [{}, 'not a list', 17, [None], [{'barvlDt': 180}, 'bad row']])
+    def test_malformed_list_is_not_reported_as_no_trains(rows):
+        src = source(rows)
+&gt;       assert src.arrivals('강남') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:36:56.255988+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T00:36:56.255988+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} = arrivals('강남')
+E        +    where arrivals = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5BE1BB0&gt;.arrivals
+
+tests\unit\travel\test_subway_identity_v1.py:68: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[rows4]" time="0.001"><failure message="AssertionError: assert {'confirmed_at': '2026-10-09T00:36:56.255988+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} is None&#10; +  where {'confirmed_at': '2026-10-09T00:36:56.255988+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} = arrivals('강남')&#10; +    where arrivals = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5BE3C20&gt;.arrivals">rows = [{'barvlDt': 180}, 'bad row']
+
+    @pytest.mark.parametrize('rows', [{}, 'not a list', 17, [None], [{'barvlDt': 180}, 'bad row']])
+    def test_malformed_list_is_not_reported_as_no_trains(rows):
+        src = source(rows)
+&gt;       assert src.arrivals('강남') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T00:36:56.255988+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T00:36:56.255988+00:00', 'kind': 'subway_arrival', 'line': None, 'source': 'seoul_subway_arrival', ...} = arrivals('강남')
+E        +    where arrivals = &lt;app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000002ABE5BE3C20&gt;.arrivals
+
+tests\unit\travel\test_subway_identity_v1.py:68: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_schema_and_other_line_identity_survive_filter" time="0.002"><failure message="KeyError: 'schema_version'">def test_schema_and_other_line_identity_survive_filter():
+        rows = [{'subwayId': '1002', 'statnId': '1002000222', 'barvlDt': '180'},
+                {'subwayId': '1007', 'statnId': '1007000000', 'barvlDt': '0'}]
+        got = source(rows).arrivals('강남', line='7호선')
+&gt;       assert got['schema_version'] == '1.1'
+               ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'schema_version'
+
+tests\unit\travel\test_subway_identity_v1.py:76: KeyError</failure></testcase></testsuite></testsuites>

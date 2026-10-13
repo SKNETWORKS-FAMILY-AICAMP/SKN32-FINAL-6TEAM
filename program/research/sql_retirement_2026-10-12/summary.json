@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-12",
+  "environments": {
+    "local": {
+      "before_tables": 96,
+      "after_tables": 91,
+      "views": 13,
+      "legacy_tables_before": 5,
+      "legacy_tables_after": 0,
+      "columns": 960,
+      "foreign_keys": 75,
+      "non_retired_schema_differences": {
+        "tables": 0,
+        "columns": 0,
+        "constraints": 0,
+        "indexes": 0,
+        "triggers": 0
+      },
+      "isolated_reruns": 2,
+      "successful_business_db_reruns": 0,
+      "stable_critical_tables": [
+        "trips",
+        "itinerary_versions",
+        "itinerary_items",
+        "bookings",
+        "places",
+        "place_catalog"
+      ],
+      "observed_critical_tables": 8,
+      "critical_row_counts": {
+        "customers": 579,
+        "customer_cases": 647,
+        "trips": 109,
+        "itinerary_versions": 159,
+        "itinerary_items": 1501,
+        "bookings": 11,
+        "places": 2706,
+        "place_catalog": 8370
+      },
+      "captured_at_utc": "2026-10-11T18:08:44.707711+00:00"
+    },
+    "deployed": {
+      "before_tables": 92,
+      "after_tables": 87,
+      "views": 13,
+      "legacy_tables_before": 5,
+      "legacy_tables_after": 0,
+      "columns": 929,
+      "foreign_keys": 72,
+      "non_retired_schema_differences": {
+        "tables": 0,
+        "columns": 0,
+        "constraints": 0,
+        "indexes": 0,
+        "triggers": 0
+      },
+      "isolated_reruns": 2,
+      "successful_business_db_reruns": 2,
+      "stable_critical_tables": [
+        "customers",
+        "customer_cases",
+        "trips",
+        "itinerary_versions",
+        "itinerary_items",
+        "bookings",
+        "places",
+        "place_catalog"
+      ],
+      "observed_critical_tables": 8,
+      "critical_row_counts": {
+        "customers": 32,
+        "customer_cases": 59,
+        "trips": 14,
+        "itinerary_versions": 20,
+        "itinerary_items": 148,
+        "bookings": 0,
+        "places": 1365,
+        "place_catalog": 7996
+      },
+      "captured_at_utc": "2026-10-11T18:07:49.449263+00:00"
+    }
+  },
+  "focused_tests": {
+    "passed": 29,
+    "total": 29
+  },
+  "limitations": [
+    "Local additional real-DB full migration reruns rejected by automatic review; restored isolated DB reruns passed twice.",
+    "Existing dining SQL contains explicit COMMIT; runner does not guarantee all SQL atomicity.",
+    "Exact retired table names, SQL references and schema dependencies checked; other names or JSON business values not exhaustively audited.",
+    "No full test suite or real customer transaction scenario executed."
+  ],
+  "deployment": {
+    "services": [
+      {
+        "name": "/tripilot-tripilot-api-1",
+        "state": "running",
+        "health": "healthy",
+        "restart_count": 0,
+        "same_original_image": true,
+        "migration_mounts": 3
+      },
+      {
+        "name": "/tripilot-tripilot-worker-1",
+        "state": "running",
+        "health": null,
+        "restart_count": 0,
+        "same_original_image": true,
+        "migration_mounts": 3
+      }
+    ],
+    "api_probe": {
+      "current": 81,
+      "historical": [
+        "002_domain_commerce.sql",
+        "006_products_catalog.sql",
+        "007_returns_order_item.sql",
+        "008_products_return_restriction.sql"
+      ],
+      "health_status": 200,
+      "files": {
+        "app/infrastructure/db/migrate.py": "fd3d0b4369c4f4a5a162fa68a7c1fea6ccf3ed8a8376429b7833036c3ac43d7c",
+        "app/infrastructure/db/migration_plan.py": "00876e2387b91a57482c87896311169ded73b83ad590283406ba74c217c446e3",
+        "/srv/app/infrastructure/db/migrations/migration-plan.json": "31963e12fa2d8d7a178d1c3ba18de713449f0d7959a3e00235b64c4cb7a9cd58"
+      }
+    },
+    "future_deployment_image_not_pinned": true,
+    "persistent_override_sha256": "c9f66d7022d97ad8b6ac1cf6bc6cb574459697a9fc7e5c2c22afc3ae58891e94"
+  }
+}

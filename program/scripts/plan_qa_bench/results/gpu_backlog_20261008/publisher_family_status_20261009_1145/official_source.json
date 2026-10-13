@@ -1,0 +1,16 @@
+{
+  "repo": "abhishek085/spark-s1-4b-v6",
+  "revision": "93d49ddbfb29212e3296635a75a3e80cf69da027",
+  "files": {
+    "README.md": {
+      "url": "https://huggingface.co/abhishek085/spark-s1-4b-v6/resolve/93d49ddbfb29212e3296635a75a3e80cf69da027/README.md",
+      "SHA256": "57e3c39a675090508f5b94a1e945ebb7281f40bcbacd5c80a8d52dd12a339da7",
+      "bytes": 5939
+    },
+    "config.json": {
+      "url": "https://huggingface.co/abhishek085/spark-s1-4b-v6/resolve/93d49ddbfb29212e3296635a75a3e80cf69da027/config.json",
+      "SHA256": "5d771b1a9a6db58fd6fdfd6500e49de2a43e34fd9c0380f07f7f099c1d720f77",
+      "bytes": 1980
+    }
+  }
+}

@@ -1,0 +1,22 @@
+Loading weights:   0%|          | 0/2076 [00:00<?, ?it/s]Loading weights:   0%|          | 3/2076 [00:00<02:16, 15.19it/s]Loading weights:   5%|▍         | 103/2076 [00:00<00:04, 428.43it/s]Loading weights:   9%|▊         | 179/2076 [00:00<00:03, 552.63it/s]Loading weights:  15%|█▍        | 305/2076 [00:00<00:02, 779.19it/s]Loading weights:  25%|██▌       | 525/2076 [00:00<00:01, 1241.33it/s]Loading weights:  36%|███▋      | 754/2076 [00:00<00:01, 974.69it/s] Loading weights:  42%|████▏     | 870/2076 [00:02<00:03, 303.15it/s]Loading weights:  46%|████▌     | 951/2076 [00:02<00:03, 329.78it/s]Loading weights:  49%|████▉     | 1023/2076 [00:02<00:02, 354.29it/s]Loading weights:  52%|█████▏    | 1088/2076 [00:02<00:02, 375.02it/s]Loading weights:  55%|█████▌    | 1148/2076 [00:02<00:02, 405.37it/s]Loading weights:  58%|█████▊    | 1207/2076 [00:02<00:02, 417.81it/s]Loading weights:  61%|██████    | 1263/2076 [00:02<00:01, 421.39it/s]Loading weights:  63%|██████▎   | 1315/2076 [00:02<00:01, 422.49it/s]Loading weights:  66%|██████▌   | 1364/2076 [00:03<00:01, 407.86it/s]Loading weights:  68%|██████▊   | 1410/2076 [00:03<00:01, 416.82it/s]Loading weights:  85%|████████▌ | 1769/2076 [00:03<00:00, 1185.57it/s]Loading weights: 100%|██████████| 2076/2076 [00:03<00:00, 608.89it/s] 
+  mix10 lora 50문제 · 1.62s/q
+  mix10 lora 100문제 · 1.64s/q
+  mix10 lora 150문제 · 1.61s/q
+mix10 lora 160문제 1.61s/q 읽기실패 0
+  mix11 lora 50문제 · 1.61s/q
+  mix11 lora 100문제 · 1.61s/q
+  mix11 lora 150문제 · 1.62s/q
+mix11 lora 163문제 1.61s/q 읽기실패 0
+  mix12 lora 50문제 · 1.68s/q
+  mix12 lora 100문제 · 1.71s/q
+  mix12 lora 150문제 · 1.70s/q
+mix12 lora 176문제 1.69s/q 읽기실패 0
+  mix8 lora 50문제 · 1.64s/q
+  mix8 lora 100문제 · 1.65s/q
+  mix8 lora 150문제 · 1.64s/q
+mix8 lora 171문제 1.63s/q 읽기실패 0
+  mix9 lora 50문제 · 1.59s/q
+  mix9 lora 100문제 · 1.59s/q
+  mix9 lora 150문제 · 1.59s/q
+mix9 lora 165문제 1.58s/q 읽기실패 0
+EVAL_DONE oos2r_finch_5e5_20261008

@@ -152,7 +152,8 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
     blocked: list[str] = []
     candidates: list[dict[str, Any]] = []
     full_hits: list[dict[str, Any]] = []
-    by_name = {normalize(p["name"]): p for p in our_places if p.get("name")}
+    by_name = {normalize(p["name"]): p for p in our_places
+               if p.get("name") and (not meal or p.get("kind") == "dining")}
     # ★`[2026-09-28]` 요식 식당이 공용 장소가 되면서 같은 이름 지점이 여럿일 수 있다 — 고른 뒤 「확인 필요」로 남긴다
     seen: dict[str, int] = {}
     for p in our_places:
@@ -197,6 +198,9 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                 shop = _dish_inside(dining, query, title, found, tried)
                 if shop is not None:
                     return shop
+                # 식사 장소는 관광지를 검색 중심으로만 쓴다. 관광지 자체로 확정하지 않는다.
+                if meal and str(found.get("content_type_id")) != "39":
+                    continue
                 done = _from_tour(found, query, title, tried)
                 done.item_kind = _food_hint(query, title, full_hits)
                 return done
@@ -212,10 +216,12 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                 blocked.append("kakao:" + (max(kakao.misses, key=kakao.misses.get)
                                            if getattr(kakao, "misses", None) else "unavailable"))
                 hits = []
+            if meal:
+                hits = [hit for hit in hits if hit.get("category_group") in ("FD6", "CE7")]
             full_hits = hits
             landmarks = set(by_name) | set((aliases or {}).keys())
             if not _HANGUL.search(query):
-                found = _romanized(query, title, hits, tour, tried, blocked, dining=dining)
+                found = _romanized(query, title, hits, tour, tried, blocked, dining=dining, require_dining=meal)
                 if found is not None:
                     return found
                 found = _chain_branch(query, hits, kakao, near, landmarks, tried, blocked)
@@ -246,7 +252,7 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                                               method="dining_license" if again.get("license") else "dining_ledger")
                         continue
                     again = _tour(tour, match["name"], blocked) if match["name"] != query else None
-                    if again is not None:
+                    if again is not None and (not food or str(again.get("content_type_id")) == "39"):
                         tried.append(f"tour_api:{match['name']}")
                         return _from_tour(again, query, title, tried, via=match["name"])
                 exact = normalize(match["name"]) == key
@@ -265,7 +271,7 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
 
 
 def _romanized(query: str, title: str, hits: list[dict[str, Any]], tour: Any, tried: list[str],
-               blocked: list[str], *, dining: Any = None) -> Resolved | None:
+               blocked: list[str], *, dining: Any = None, require_dining: bool = False) -> Resolved | None:
     """로마자 이름(「Gyeongbokgung」) — 원문과 글자가 같을 수 없어서 카카오 이름을 **관광공사 확인용으로만** 쓴다.
 
     ☆2026-09-27 실측: 설계서 실측 8 에서는 카카오 1위가 경복궁이었는데, 다시 재니 1~5위가 모두 식당 체인
@@ -286,7 +292,7 @@ def _romanized(query: str, title: str, hits: list[dict[str, Any]], tour: Any, tr
     for name in names[:6]:                      # 확인할 이름 수 상한(관광공사 자리가 실제 API 인 판에서 호출을 아낀다)
         again = _tour(tour, name, blocked)
         tried.append(f"tour_api:{name}")
-        if again is not None:
+        if again is not None and (not require_dining or str(again.get("content_type_id")) == "39"):
             return _from_tour(again, query, title, tried, via=name)
         # ★`[2026-10-07]` 결과가 대부분 음식점이면 요식 원장에서도 확인한다(「Tosokchon Samgyetang」 → 토속촌삼계탕).
         #   관광공사 자리가 액티비티 CSV 라 식당은 여기서만 확인된다. 원장이 확인한 곳만 받는다(카카오 값은 싣지 않는다)

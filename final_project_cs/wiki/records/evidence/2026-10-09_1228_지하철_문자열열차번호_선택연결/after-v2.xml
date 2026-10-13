@@ -1,0 +1,939 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="7" failures="0" skipped="0" tests="337" time="8.955" timestamp="2026-10-09T12:30:19.476955+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_homonyms_use_official_line_ids_and_lookup_returns_a_copy" time="0.039" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_no_fuzzy_alias_or_generated_id[05\ud638\uc120-\uc591\ud3c9\uc5ed]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_no_fuzzy_alias_or_generated_id[5\ud638\uc120- \uc591\ud3c9]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_no_fuzzy_alias_or_generated_id[\uacbd\uc758\uc120-\uc591\ud3c9]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_no_fuzzy_alias_or_generated_id[005\ud638\uc120-\uc591\ud3c9]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_no_fuzzy_alias_or_generated_id[5-\uc591\ud3c9]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_no_fuzzy_alias_or_generated_id[5\ud638\uc120-None]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[schema]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[rows]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[count_bool]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[count]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[line_count]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[duplicate_id]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[duplicate_name]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[bad_line_id]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[bad_station_id]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[blank_name]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[line_id_conflict]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_invalid_official_index_is_an_explicit_load_failure[line_name_conflict]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_default_path_registers_the_authoritative_file" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_capture_carries_exact_ids_and_content_version_without_mutating_legs" time="0.044"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x000001DCCA254720&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:246: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\logging.py:843: in pytest_runtest_setup
+    yield
+..\..\..\anaconda3\Lib\site-packages\_pytest\capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:164: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:514: in setup
+    col.setup()
+..\..\..\anaconda3\Lib\site-packages\_pytest\python.py:1674: in setup
+    self._request._fillfixtures()
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:720: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:549: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:640: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1128: in execute
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1196: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:923: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:264: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:251: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:130: in mktemp
+    basename = self._ensure_relative_to_basetemp(basename)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:111: in _ensure_relative_to_basetemp
+    if (self.getbasetemp() / basename).resolve().parent != self.getbasetemp():
+        ^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:186: in getbasetemp
+    basetemp = make_numbered_dir_with_cleanup(
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:407: in make_numbered_dir_with_cleanup
+    raise e
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:388: in make_numbered_dir_with_cleanup
+    p = make_numbered_dir(root, prefix, mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/playdata2/AppData/Local/Packages/sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}/AC/Temp/pytest-of-playdata2')
+prefix = 'pytest-', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the folder
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:240: OSError</error></testcase><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_absent_index_is_explicit_in_captured_rail_option" time="0.030"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x000001DCCA254CC0&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:246: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\logging.py:843: in pytest_runtest_setup
+    yield
+..\..\..\anaconda3\Lib\site-packages\_pytest\capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:164: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:514: in setup
+    col.setup()
+..\..\..\anaconda3\Lib\site-packages\_pytest\python.py:1674: in setup
+    self._request._fillfixtures()
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:720: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:549: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:640: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1128: in execute
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1196: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:923: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:264: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:251: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:130: in mktemp
+    basename = self._ensure_relative_to_basetemp(basename)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:111: in _ensure_relative_to_basetemp
+    if (self.getbasetemp() / basename).resolve().parent != self.getbasetemp():
+        ^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:186: in getbasetemp
+    basetemp = make_numbered_dir_with_cleanup(
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:407: in make_numbered_dir_with_cleanup
+    raise e
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:388: in make_numbered_dir_with_cleanup
+    p = make_numbered_dir(root, prefix, mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/playdata2/AppData/Local/Packages/sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}/AC/Temp/pytest-of-playdata2')
+prefix = 'pytest-', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the folder
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:240: OSError</error></testcase><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_runtime_detects_content_change_even_if_mtime_is_identical" time="0.031"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x000001DCCA2C60C0&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:246: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\logging.py:843: in pytest_runtest_setup
+    yield
+..\..\..\anaconda3\Lib\site-packages\_pytest\capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:164: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:514: in setup
+    col.setup()
+..\..\..\anaconda3\Lib\site-packages\_pytest\python.py:1674: in setup
+    self._request._fillfixtures()
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:720: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:549: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:640: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1128: in execute
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1196: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:923: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:264: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:251: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:130: in mktemp
+    basename = self._ensure_relative_to_basetemp(basename)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:111: in _ensure_relative_to_basetemp
+    if (self.getbasetemp() / basename).resolve().parent != self.getbasetemp():
+        ^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:186: in getbasetemp
+    basetemp = make_numbered_dir_with_cleanup(
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:407: in make_numbered_dir_with_cleanup
+    raise e
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:388: in make_numbered_dir_with_cleanup
+    p = make_numbered_dir(root, prefix, mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/playdata2/AppData/Local/Packages/sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}/AC/Temp/pytest-of-playdata2')
+prefix = 'pytest-', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the folder
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:240: OSError</error></testcase><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_runtime_detects_deletion_and_later_creation" time="0.030"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x000001DCCA2C7100&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:246: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\logging.py:843: in pytest_runtest_setup
+    yield
+..\..\..\anaconda3\Lib\site-packages\_pytest\capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:164: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:514: in setup
+    col.setup()
+..\..\..\anaconda3\Lib\site-packages\_pytest\python.py:1674: in setup
+    self._request._fillfixtures()
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:720: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:549: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:640: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1128: in execute
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1196: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:923: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:264: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:251: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:130: in mktemp
+    basename = self._ensure_relative_to_basetemp(basename)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:111: in _ensure_relative_to_basetemp
+    if (self.getbasetemp() / basename).resolve().parent != self.getbasetemp():
+        ^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:186: in getbasetemp
+    basetemp = make_numbered_dir_with_cleanup(
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:407: in make_numbered_dir_with_cleanup
+    raise e
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:388: in make_numbered_dir_with_cleanup
+    p = make_numbered_dir(root, prefix, mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/playdata2/AppData/Local/Packages/sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}/AC/Temp/pytest-of-playdata2')
+prefix = 'pytest-', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the folder
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:240: OSError</error></testcase><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_save_gate_checks_station_content_without_loading_timetable" time="0.027"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x000001DCCA2C6C00&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:246: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\logging.py:843: in pytest_runtest_setup
+    yield
+..\..\..\anaconda3\Lib\site-packages\_pytest\capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:164: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:514: in setup
+    col.setup()
+..\..\..\anaconda3\Lib\site-packages\_pytest\python.py:1674: in setup
+    self._request._fillfixtures()
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:720: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:549: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:640: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1128: in execute
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1196: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:923: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:264: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:251: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:130: in mktemp
+    basename = self._ensure_relative_to_basetemp(basename)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:111: in _ensure_relative_to_basetemp
+    if (self.getbasetemp() / basename).resolve().parent != self.getbasetemp():
+        ^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:186: in getbasetemp
+    basetemp = make_numbered_dir_with_cleanup(
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:407: in make_numbered_dir_with_cleanup
+    raise e
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:388: in make_numbered_dir_with_cleanup
+    p = make_numbered_dir(root, prefix, mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/playdata2/AppData/Local/Packages/sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}/AC/Temp/pytest-of-playdata2')
+prefix = 'pytest-', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the folder
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:240: OSError</error></testcase><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_save_gate_rejects_invalid_station_version[True]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_save_gate_rejects_invalid_station_version[17]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_save_gate_rejects_invalid_station_version[a]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_save_gate_rejects_invalid_station_version[GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_tampered_saved_identity_is_rejected_before_model_or_source" time="0.027"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x000001DCCA2C71A0&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:246: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\logging.py:843: in pytest_runtest_setup
+    yield
+..\..\..\anaconda3\Lib\site-packages\_pytest\capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:164: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:514: in setup
+    col.setup()
+..\..\..\anaconda3\Lib\site-packages\_pytest\python.py:1674: in setup
+    self._request._fillfixtures()
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:720: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:549: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:640: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1128: in execute
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1196: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:923: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:264: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:251: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:130: in mktemp
+    basename = self._ensure_relative_to_basetemp(basename)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:111: in _ensure_relative_to_basetemp
+    if (self.getbasetemp() / basename).resolve().parent != self.getbasetemp():
+        ^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:186: in getbasetemp
+    basetemp = make_numbered_dir_with_cleanup(
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:407: in make_numbered_dir_with_cleanup
+    raise e
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:388: in make_numbered_dir_with_cleanup
+    p = make_numbered_dir(root, prefix, mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/playdata2/AppData/Local/Packages/sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}/AC/Temp/pytest-of-playdata2')
+prefix = 'pytest-', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the folder
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:240: OSError</error></testcase><testcase classname="tests.unit.travel.mobility.test_subway_binding_v1" name="test_manual_runtime_keeps_legacy_basis" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_selected_current_train_changes_first_boarding_and_eta_without_borrowing_run" time="0.051" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_later_segment_is_recalculated_from_current_arrival_not_old_total" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_failure_explicitly_revalidates_model[unavailable]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_failure_explicitly_revalidates_model[stale]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_failure_explicitly_revalidates_model[no_boardable_prediction]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[line_id-1002]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[station_id-other]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[target_station_id-other]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[terminal_station_id-other]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[path_station_ids-value4]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[train_status-\uae09\ud589]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[train_number-None]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[arrival_at-2026-10-09T10:01:00+09:00]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_query_completion_recomputes_access_before_applying_prediction" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_station_mapping_failure_is_visible_and_does_not_query" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_loop_is_modelled_without_querying_current_ambiguous_direction" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_observed_train_cannot_cross_disruption" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_unrelated_express_runtime_is_not_reused_as_current_regular_ride" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_invalid_empty_callback_has_failure_evidence" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_query_consuming_deadline_never_emits_departure" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_future_subway_after_bus_is_not_queried_as_current" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_real_factory_hook_and_notice_display_subway_wait" time="0.016" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_subway_cache_policy_is_validated[0]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_subway_cache_policy_is_validated[-1]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_subway_cache_policy_is_validated[True]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_subway_cache_policy_is_validated[30]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_subway_cache_policy_is_validated[inf]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_subway_cache_policy_is_validated[10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_existing_long_cache_entry_is_refreshed_under_short_policy" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_crowding_future_wait_remains_model_and_does_not_make_worst_before_best" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_rail_to_rail_transfer_is_recalculated_after_current_boarding" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_live_short_turn_uses_matching_ridden_segment_without_static_terminal_record[False]" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_live_short_turn_uses_matching_ridden_segment_without_static_terminal_record[True]" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_subway_fare_upper" name="test_distance_crossing_band_keeps_exact_unknown_but_provides_estimated_upper" time="0.002" /><testcase classname="tests.unit.travel.mobility.test_subway_fare_upper" name="test_missing_distance_does_not_turn_into_base_fare" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_fare_upper" name="test_early_bird_boundary_uses_full_base_for_budget" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_fare_upper" name="test_unapproved_line_cannot_borrow_estimated_distance_fare" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uc2e0\uc815-\uc2e0\uc815(\uc740\ud589\uc815)]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uc624\ubaa9\uad50-\uc624\ubaa9\uad50(\ubaa9\ub3d9\uc6b4\ub3d9\uc7a5\uc55e)]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uad70\uc790-\uad70\uc790(\ub2a5\ub3d9)]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uc544\ucc28\uc0b0-\uc544\ucc28\uc0b0(\uc5b4\ub9b0\uc774\ub300\uacf5\uc6d0\ud6c4\ubb38)]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uad11\ub098\ub8e8-\uad11\ub098\ub8e8(\uc7a5\uc2e0\ub300)]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\ucc9c\ud638-\ucc9c\ud638(\ud48d\ub0a9\ud1a0\uc131)]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uad7d\uc740\ub2e4\ub9ac-\uad7d\uc740\ub2e4\ub9ac(\uac15\ub3d9\uad6c\ubbfc\ud68c\uad00\uc55e)]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uc62c\ub9bc\ud53d\uacf5\uc6d0-\uc62c\ub9bc\ud53d\uacf5\uc6d0(\ud55c\uad6d\uccb4\ub300)]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_same_primary_name_is_ambiguous_but_exact_names_still_resolve" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_exact_primary_name_is_never_overridden_by_different_official_id" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790()-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5\ub3d9)(\ubcd1\uae30)-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5(\ub3d9))-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[(\ub2a5\ub3d9)-\ub2a5\ub3d9]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790\uff08\ub2a5\ub3d9\uff09-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790 (\ub2a5\ub3d9)-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5\ub3d9)-\uad70\uc790\uc5ed]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5\ub3d9)- \uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5\ub3d9)-\ub2a5\ub3d9]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_alias_is_limited_to_documented_one_to_eight_lines[9\ud638\uc120]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_alias_is_limited_to_documented_one_to_eight_lines[\uacbd\uc758\uc911\uc559\uc120]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_alias_is_limited_to_documented_one_to_eight_lines[\uacf5\ud56d\ucca0\ub3c4]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_parenthetical_terminal_beyond_target_restores_full_service_and_current_departure" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_old_unavailable_boarding_binding_requires_replan_before_query" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_missing_middle_identity_still_excludes_service_without_synthetic_id" time="0.004" /><testcase classname="tests.unit.travel.test_seoul_subway_arrival" name="test_arrivals_are_normalized_and_the_key_stays_in_the_path_only" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_subway_arrival" name="test_line_filter_keeps_only_that_line" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_subway_arrival" name="test_no_data_code_is_an_empty_result_not_a_failure" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_subway_arrival" name="test_auth_or_request_errors_are_unreadable_and_never_leak_the_key" time="0.002" /><testcase classname="tests.unit.travel.test_seoul_subway_arrival" name="test_missing_key_or_station_is_unknown" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_provider_generation_time_is_eta_origin_and_cache_age_not_subtracted_twice" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_missed_first_train_selects_second_without_using_old_age_summary" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[line_id-1002-boarding_identity_mismatch]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[station_id-1005000500-boarding_identity_mismatch]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[next_station_id-1005000521-service_path_mismatch]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[terminal_station_id-1005000523-service_path_mismatch]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[train_status-\uae09\ud589-service_path_mismatch]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[train_status-ITX-service_path_mismatch]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[train_number-None-train_identity_missing]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[arrival_code-2-departed_or_unknown_state]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[arrival_code-None-departed_or_unknown_state]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[arrival_code-True-departed_or_unknown_state]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[received_at-bad-invalid_provider_received_at]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[eta_seconds-True-no_numeric_eta]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[eta_seconds--1-no_numeric_eta]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[eta_seconds-inf-no_numeric_eta]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[eta_seconds-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000-invalid_arrival_time]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unrelated_or_invalid_train_is_not_selected[eta_status-missing-no_numeric_eta]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[line_id-True-boarding_identity_invalid]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[station_id-bad-boarding_identity_invalid]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[target_station_id-1005000522-boarding_identity_invalid]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[max_age_seconds-0-invalid_freshness_policy]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[max_provider_age_seconds-nan-invalid_freshness_policy]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[max_provider_clock_ahead_seconds--1-invalid_freshness_policy]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[now-value6-timezone_required]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[ready_at-value7-invalid_ready_at]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value8-service_path_invalid]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value9-service_path_invalid]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value10-service_path_invalid]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value11-service_path_invalid]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_provider_freshness_is_separate_from_recent_http_confirmation[-3-no_boardable_prediction-provider_clock_in_future]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_provider_freshness_is_separate_from_recent_http_confirmation[91-no_boardable_prediction-provider_refresh_required]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_cache_age_boundary_and_future_confirmation[30-stale-refresh_required]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_cache_age_boundary_and_future_confirmation[-1-unavailable-confirmation_in_future]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_duplicate_train_number_cannot_invent_a_choice" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_zero_eta_needs_station_arrival_state_and_zero_access" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_no_train_after_ready_is_not_no_service_claim" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_query_completion_preserves_whole_access_and_does_not_shift_provider_eta" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_selection_input_never_spends_an_http_call" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_snapshot_is_not_an_empty_service[None-invalid_snapshot]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_snapshot_is_not_an_empty_service[data1-invalid_snapshot]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_snapshot_is_not_an_empty_service[data2-invalid_snapshot]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_snapshot_is_not_an_empty_service[data3-invalid_snapshot]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_snapshot_is_not_an_empty_service[data4-invalid_confirmed_at]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_snapshot_is_not_an_empty_service[data5-timezone_required]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_snapshot_is_not_an_empty_service[data6-invalid_trains]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_snapshot_is_not_an_empty_service[data7-invalid_trains]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_malformed_path_is_not_invented[None]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_malformed_path_is_not_invented[path1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_malformed_path_is_not_invented[path2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_malformed_path_is_not_invented[path3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_malformed_path_is_not_invented[path4]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unusable_freshness_policy_never_overflows[inf]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unusable_freshness_policy_never_overflows[True]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_unusable_freshness_policy_never_overflows[10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_ambiguous_service_identity_is_refused" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_malformed_train_identity_does_not_crash[next_station_id-value0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_malformed_train_identity_does_not_crash[train_status-value1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_malformed_train_identity_does_not_crash[train_number-value2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_query_clock_is_explicit[evaluated0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_query_clock_is_explicit[evaluated1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_invalid_query_clock_is_explicit[bad]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_boardable_v1" name="test_normalized_http_response_flows_through_source_to_selection" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_documented_maximum_is_requested_once_not_extra_pages[controlled-test-key-1000]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_documented_maximum_is_requested_once_not_extra_pages[sample-5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_full_response_preserves_count_before_line_filter[1_0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_full_response_preserves_count_before_line_filter[1_1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_full_response_preserves_count_before_line_filter[0001]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_partial_response_is_preserved_without_claiming_complete" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[True]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[False]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[-1_0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[-1_1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[1.0_0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[1.0_1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[None]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[value8]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[value9]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[\xb2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[\uff11]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_invalid_provider_total_is_not_cached_as_normal[99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_total_smaller_than_rows_is_provider_contradiction" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_compatible_root_and_nested_counts_agree" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_conflicting_root_and_nested_counts_are_rejected" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_official_or_declared_zero_is_complete_empty[data0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_official_or_declared_zero_is_complete_empty[data1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_official_or_declared_zero_is_complete_empty[data2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_official_or_declared_zero_is_complete_empty[data3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_empty_code_with_positive_total_is_not_normal_empty" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_missing_count_is_explicit_unknown_not_invented_complete" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_partial_or_unknown_cannot_pick_even_an_otherwise_boardable_train[False-incomplete_arrivals]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_partial_or_unknown_cannot_pick_even_an_otherwise_boardable_train[None-arrival_total_unknown]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_train_after_old_twenty_row_boundary_is_selected_from_full_request" time="0.001" /><testcase classname="tests.unit.travel.test_subway_completeness_v1" name="test_partial_source_result_reaches_model_revalidation_with_reason" time="0.004" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload0]" time="0.003" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload4]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload6]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload7]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload8]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_bad_response_is_failure_and_recovery_is_not_hidden_by_cache[payload9]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload4]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload6]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload7]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload8]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_preexisting_bad_cache_is_rejected_without_a_new_provider_call[payload9]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_real_empty_contract_is_preserved_and_can_be_reused[payload0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_real_empty_contract_is_preserved_and_can_be_reused[payload1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_real_empty_contract_is_preserved_and_can_be_reused[payload2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_real_empty_contract_is_preserved_and_can_be_reused[payload3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_real_empty_contract_is_preserved_and_can_be_reused[payload4]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_real_empty_contract_is_preserved_and_can_be_reused[payload5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_real_empty_contract_is_preserved_and_can_be_reused[payload6]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_envelope_v1" name="test_real_empty_contract_is_preserved_and_can_be_reused[payload7]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[subwayId-line_id]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[statnId-station_id]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[statnFid-previous_station_id]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[statnTid-next_station_id]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[bstatnId-terminal_station_id]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[bstatnNm-terminal_station]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[btrainNo-train_number]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_matching_fields_survive_normalization[ordkey-arrival_order]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[None]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[ ]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[True]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[False]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[1.5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[-1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[value7]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_bad_identity_is_not_invented[value8]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_missing_identity_and_numeric_id_are_explicit" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_valid_eta_preserves_zero[0-0_0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_valid_eta_preserves_zero[0-0_1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_valid_eta_preserves_zero[180-180]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_valid_eta_preserves_zero[0180-180]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[True]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[False]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[-1_0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[-1_1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[1.0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[1.5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[180.0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[\xb2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[\u0661\u0668\u0660]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[NaN]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[value11]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[value12]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_invalid_eta_is_visible_without_crashing[99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_missing_eta_is_distinct_from_invalid" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[rows0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[not a list]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[17]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[rows3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_malformed_list_is_not_reported_as_no_trains[rows4]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_identity_v1" name="test_schema_and_other_line_identity_survive_filter" time="0.001" /><testcase classname="tests.unit.travel.test_subway_line_identity_v1" name="test_official_line_id_is_not_lost_by_named_filter[1081-\uacbd\uac15\uc120]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_line_identity_v1" name="test_official_line_id_is_not_lost_by_named_filter[1093-\uc11c\ud574\uc120]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_line_identity_v1" name="test_official_line_id_is_not_lost_by_named_filter[1094-\uc2e0\ub9bc\uc120]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_line_identity_v1" name="test_unknown_line_id_remains_explicit" time="0.001" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_a_running_nonstop_notice_for_the_station_becomes_a_skip_station_event" time="0.002" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_the_latest_notice_decides_so_a_resolved_nonstop_is_not_active" time="0.001" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_nonstop_yn_alone_is_not_the_signal_because_end_notices_carry_it_too" time="0.001" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_a_notice_older_than_the_window_or_in_the_future_is_not_active" time="0.001" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_station_matching_needs_the_full_name_and_the_right_line" time="0.002" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_a_station_list_title_only_catches_the_last_station_a_documented_limit" time="0.002" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_unsupported_targets_are_reported_not_answered_as_no_event" time="0.001" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_an_unreadable_feed_is_unknown_not_no_event" time="0.001" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_the_composite_asks_each_source_only_its_own_targets_and_merges" time="0.005" /><testcase classname="tests.unit.travel.test_subway_notice" name="test_the_composite_is_unknown_when_any_source_cannot_read_its_own_targets" time="0.001" /><testcase classname="tests.unit.travel.test_subway_observation_time" name="test_zero_and_provider_clock_are_preserved" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_homonyms_keep_line_and_exact_official_ids" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_string_id_leading_zero_and_official_query_name_survive" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[None]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[True]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[False]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[-1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[12.0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[1.0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_id_is_rejected[\xb2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_row_is_rejected[row0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_row_is_rejected[row1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_row_is_rejected[row2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_malformed_row_is_rejected[row3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_duplicate_and_conflicting_identity_are_rejected[rows0]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_duplicate_and_conflicting_identity_are_rejected[rows1]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_duplicate_and_conflicting_identity_are_rejected[rows2]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_duplicate_and_conflicting_identity_are_rejected[rows3]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_missing_or_wrong_header_is_rejected" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_line_normalization_does_not_merge_other_lines" time="0.001" /><testcase classname="tests.unit.travel.test_subway_station_extract_v1" name="test_existing_output_is_preserved_before_source_read" time="0.029"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x000001DCCA66A2A0&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:246: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\logging.py:843: in pytest_runtest_setup
+    yield
+..\..\..\anaconda3\Lib\site-packages\_pytest\capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:164: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:514: in setup
+    col.setup()
+..\..\..\anaconda3\Lib\site-packages\_pytest\python.py:1674: in setup
+    self._request._fillfixtures()
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:720: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:549: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:640: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1128: in execute
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1196: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:923: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:264: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:251: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:130: in mktemp
+    basename = self._ensure_relative_to_basetemp(basename)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:111: in _ensure_relative_to_basetemp
+    if (self.getbasetemp() / basename).resolve().parent != self.getbasetemp():
+        ^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:186: in getbasetemp
+    basetemp = make_numbered_dir_with_cleanup(
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:407: in make_numbered_dir_with_cleanup
+    raise e
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:388: in make_numbered_dir_with_cleanup
+    p = make_numbered_dir(root, prefix, mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/playdata2/AppData/Local/Packages/sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}/AC/Temp/pytest-of-playdata2')
+prefix = 'pytest-', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the folder
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{e9020bad-bae7-4050-890c-02754caeab4d}\AC\Temp\pytest-of-playdata2 after 10 tries
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:240: OSError</error></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[A2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[X2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[a2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[12A]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[001A02]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[0005010]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[None]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[True]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[2.5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[number4]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[number5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[ ]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[ A2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[A2099 ]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[A 2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[A-2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[\uff212099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[A\uff12\uff10\uff19\uff19]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[0000]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_duplicate_literal_number_does_not_invent_a_vehicle" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_prefix_is_not_removed_to_merge_different_trains" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_letter_number_does_not_relax_station_ids_or_allow_express" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_departure_callback_recheck_accepts_literal_number_and_keeps_path_model[A2099]" time="0.004" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_departure_callback_recheck_accepts_literal_number_and_keeps_path_model[X2099]" time="0.004" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_actual_source_normalizer_and_selector_accept_letter_without_extra_http_calls" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_letter_number_reaches_departure_notice_with_new_eta" time="0.004" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_fresh_departure_and_eta_are_displayed_without_mutating_saved_item" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value0-held]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value1-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value2-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value3-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value4-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[None-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_model_fallback_is_labelled_and_default_consumer_preserves_saved_eta" time="0.001" /></testsuite></testsuites>

@@ -1,0 +1,19 @@
+{
+  "tag": "2026-10-09_0822_도보비교_입력검증",
+  "created_at": "2026-10-09T08:22:43.708401+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/scripts/mobility/compare_kakao_golden.py",
+      "backup": "final_project_cs/scripts/mobility/_backup/2026-10-09_0822_도보비교_입력검증/compare_kakao_golden.py",
+      "sha256": "bea6f328c292311c4ca087c9fdc10991af21652e66a297e5cea8bd36eeb0ac70"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0822_도보비교_입력검증/mobility.md",
+      "sha256": "037a6dc74f97dc597a0ad39550d46f95af42c08031a1f57cc8465477e777e9ce"
+    }
+  ],
+  "debug": "wiki/records/reports/debugs/2026-10-09_0822_도보비교_입력검증_논리값과_비정상수치를_도보비교에_집계.md",
+  "initial_source_matches": 213,
+  "initial_artifact_matches": 6
+}

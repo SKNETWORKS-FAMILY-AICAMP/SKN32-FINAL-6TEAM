@@ -1,0 +1,362 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.location.config.ts",
+      "tests/live/location-entry.spec.ts",
+      "--workers=1",
+      "--trace=off",
+      "--reporter=line,json",
+      "--output=location-results"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\playwright.location.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/location-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "location-entry.spec.ts",
+      "file": "location-entry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 16588,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:22:51",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                      "column": 51,
+                      "line": 22
+                    },
+                    "snippet": "  20 |   if (await tools(page).getAttribute(\"data-layout\") === \"row\") expect(boxes.at(-1)!.box.x).toBeLessThan(boxes.at(-2)!.box.x);\n  21 |   await locate(page).focus();\n> 22 |   await expect(locate(page).getByRole(\"tooltip\")).toBeVisible();\n     |                                                   ^\n  23 |   const foldBefore = (await tools(page).getByRole(\"button\", { name: \"지도 단추 접기\" }).boundingBox())!;\n  24 |   await mkdir(\"mockups/location-entry-2026-10-11-v1\", { recursive: true });\n  25 |   await page.screenshot({ path: `mockups/location-entry-2026-10-11-v1/tools-${width}.png` });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                        "column": 51,
+                        "line": 22
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\u001b[22m\n\n\n  20 |   if (await tools(page).getAttribute(\"data-layout\") === \"row\") expect(boxes.at(-1)!.box.x).toBeLessThan(boxes.at(-2)!.box.x);\n  21 |   await locate(page).focus();\n> 22 |   await expect(locate(page).getByRole(\"tooltip\")).toBeVisible();\n     |                                                   ^\n  23 |   const foldBefore = (await tools(page).getByRole(\"button\", { name: \"지도 단추 접기\" }).boundingBox())!;\n  24 |   await mkdir(\"mockups/location-entry-2026-10-11-v1\", { recursive: true });\n  25 |   await page.screenshot({ path: `mockups/location-entry-2026-10-11-v1/tools-${width}.png` });\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:22:51"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:36:32.118Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results\\location-entry-375px-동의-전에-95b59-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results\\location-entry-375px-동의-전에-95b59-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                    "column": 51,
+                    "line": 22
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-417062ffd04295ed0f25",
+          "file": "location-entry.spec.ts",
+          "line": 13,
+          "column": 34
+        },
+        {
+          "title": "1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 15308,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:22:51",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                      "column": 51,
+                      "line": 22
+                    },
+                    "snippet": "  20 |   if (await tools(page).getAttribute(\"data-layout\") === \"row\") expect(boxes.at(-1)!.box.x).toBeLessThan(boxes.at(-2)!.box.x);\n  21 |   await locate(page).focus();\n> 22 |   await expect(locate(page).getByRole(\"tooltip\")).toBeVisible();\n     |                                                   ^\n  23 |   const foldBefore = (await tools(page).getByRole(\"button\", { name: \"지도 단추 접기\" }).boundingBox())!;\n  24 |   await mkdir(\"mockups/location-entry-2026-10-11-v1\", { recursive: true });\n  25 |   await page.screenshot({ path: `mockups/location-entry-2026-10-11-v1/tools-${width}.png` });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                        "column": 51,
+                        "line": 22
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')\u001b[22m\n\n\n  20 |   if (await tools(page).getAttribute(\"data-layout\") === \"row\") expect(boxes.at(-1)!.box.x).toBeLessThan(boxes.at(-2)!.box.x);\n  21 |   await locate(page).focus();\n> 22 |   await expect(locate(page).getByRole(\"tooltip\")).toBeVisible();\n     |                                                   ^\n  23 |   const foldBefore = (await tools(page).getByRole(\"button\", { name: \"지도 단추 접기\" }).boundingBox())!;\n  24 |   await mkdir(\"mockups/location-entry-2026-10-11-v1\", { recursive: true });\n  25 |   await page.screenshot({ path: `mockups/location-entry-2026-10-11-v1/tools-${width}.png` });\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:22:51"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:36:50.294Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results\\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results\\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                    "column": 51,
+                    "line": 22
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-6906293f434971e6391f",
+          "file": "location-entry.spec.ts",
+          "line": 13,
+          "column": 34
+        },
+        {
+          "title": "버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으로 이동하며 동의 철회 뒤에는 지운다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5063,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:37:06.912Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-5531396c0a8821cdcb67",
+          "file": "location-entry.spec.ts",
+          "line": 40,
+          "column": 1
+        },
+        {
+          "title": "시간 초과 뒤에도 버튼을 다시 눌러 성공하면 점과 카메라를 복구한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4817,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:37:12.305Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-e67b2a50a56203bec83c",
+          "file": "location-entry.spec.ts",
+          "line": 60,
+          "column": 1
+        },
+        {
+          "title": "denied: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2786,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:37:17.143Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-adb86e2ce5f7c7c99919",
+          "file": "location-entry.spec.ts",
+          "line": 84,
+          "column": 58
+        },
+        {
+          "title": "unsupported: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3005,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:37:19.949Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-14942cb91f52801fbc79",
+          "file": "location-entry.spec.ts",
+          "line": 84,
+          "column": 58
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T12:35:44.972Z",
+    "duration": 99428.796,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

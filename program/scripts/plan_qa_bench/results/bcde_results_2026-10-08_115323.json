@@ -1,0 +1,1054 @@
+{
+  "observed_at": "2026-10-08T11:53:24.184249",
+  "E_alias": "User E = mixed/free-text request MX suite",
+  "BC": [
+    {
+      "model": "Gemma E4B 기존 학습 시드1",
+      "our_training": true,
+      "tag": "r16e2",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        816,
+        835
+      ],
+      "C": [
+        750,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        750,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Gemma E4B 기존 학습 시드2",
+      "our_training": true,
+      "tag": "e4bs2",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        826,
+        835
+      ],
+      "C": [
+        760,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        760,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Gemma E4B 기존 학습 시드3",
+      "our_training": true,
+      "tag": "e4bs3",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        814,
+        835
+      ],
+      "C": [
+        748,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        748,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Gemma E4B 잡담 보강 시드1",
+      "our_training": true,
+      "tag": "oos1",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        823,
+        835
+      ],
+      "C": [
+        757,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        757,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Gemma E4B 잡담 보강 시드2",
+      "our_training": true,
+      "tag": "oos2",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        818,
+        835
+      ],
+      "C": [
+        752,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        752,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Gemma E4B 잡담 보강 시드3",
+      "our_training": true,
+      "tag": "oos3",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        825,
+        835
+      ],
+      "C": [
+        759,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        759,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Gemma E4B 어려운 문장 보강 oos2r",
+      "our_training": true,
+      "tag": "oos2r",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        825,
+        835
+      ],
+      "C": [
+        759,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        759,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Gemma E4B 여러 항목 학습판",
+      "our_training": true,
+      "tag": "e4bm",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        813,
+        835
+      ],
+      "C": [
+        804,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        57,
+        66
+      ],
+      "single_correct": [
+        747,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Jev 계열 Winnow-E4B 우리 학습 이전판",
+      "our_training": true,
+      "tag": "winnow_e4b",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        821,
+        835
+      ],
+      "C": [
+        756,
+        835
+      ],
+      "compound_B": [
+        65,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        756,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "spark-s1-4b-v6 우리 학습 이전판",
+      "our_training": true,
+      "tag": "spark_s1_4b",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        807,
+        835
+      ],
+      "C": [
+        741,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        741,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Jev 계열 jevify-gemma4-e4b 우리 학습 이전판",
+      "our_training": true,
+      "tag": "jevify_e4b",
+      "execution": "HF 4bit adapter basic evaluation",
+      "B": [
+        822,
+        835
+      ],
+      "C": [
+        756,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "single_correct": [
+        756,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Claude Opus 5.5",
+      "our_training": false,
+      "execution": "Cloud CLI, multi-item prompt; author-family bias",
+      "B": [
+        833,
+        835
+      ],
+      "C": [
+        819,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        60,
+        66
+      ],
+      "single_correct": [
+        759,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Claude Fable 5.1",
+      "our_training": false,
+      "execution": "Cloud CLI, multi-item prompt; author-family bias",
+      "B": [
+        832,
+        835
+      ],
+      "C": [
+        821,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        59,
+        66
+      ],
+      "single_correct": [
+        762,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Codex gpt-6-luna",
+      "our_training": false,
+      "execution": "Cloud CLI, multi-item prompt; author-family bias",
+      "B": [
+        813,
+        835
+      ],
+      "C": [
+        793,
+        835
+      ],
+      "compound_B": [
+        65,
+        66
+      ],
+      "compound_C": [
+        59,
+        66
+      ],
+      "single_correct": [
+        734,
+        769
+      ],
+      "missing_or_invalid": 1
+    },
+    {
+      "model": "Codex gpt-6-sol",
+      "our_training": false,
+      "execution": "Cloud CLI, multi-item prompt; author-family bias",
+      "B": [
+        828,
+        835
+      ],
+      "C": [
+        814,
+        835
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        61,
+        66
+      ],
+      "single_correct": [
+        753,
+        769
+      ],
+      "missing_or_invalid": 0
+    },
+    {
+      "model": "Codex gpt-6-astra",
+      "our_training": false,
+      "execution": "Cloud CLI, multi-item prompt; author-family bias",
+      "B": [
+        832,
+        835
+      ],
+      "C": [
+        823,
+        835
+      ],
+      "compound_B": [
+        65,
+        66
+      ],
+      "compound_C": [
+        58,
+        66
+      ],
+      "single_correct": [
+        765,
+        769
+      ],
+      "missing_or_invalid": 0
+    }
+  ],
+  "DE": [
+    {
+      "model": "Gemma E4B 기존 학습 시드1",
+      "our_training": true,
+      "D": {
+        "saved": 2735,
+        "expected": 2735,
+        "all_failures": 0,
+        "positive_correct": [
+          787,
+          883
+        ],
+        "false_pick": [
+          77,
+          1786
+        ],
+        "failed_or_missing": 0
+      },
+      "E": {
+        "saved": 4014,
+        "expected": 4014,
+        "all_failures": 0,
+        "positive_correct": [
+          969,
+          1033
+        ],
+        "false_pick": [
+          127,
+          974
+        ],
+        "failed_or_missing": 0,
+        "control": {
+          "positive_correct": [
+            979,
+            1033
+          ],
+          "false_pick": [
+            143,
+            974
+          ],
+          "failed_or_missing": 0
+        },
+        "request_loss_pp": 0.9680542110358181,
+        "false_pick_increase_pp": -1.642710472279263,
+        "gates_passed": 2
+      },
+      "E_natural": {
+        "positive_correct": [
+          92,
+          93
+        ],
+        "false_pick": [
+          30,
+          146
+        ],
+        "failed_or_missing": 0
+      }
+    },
+    {
+      "model": "Gemma E4B 기존 학습 시드2",
+      "our_training": true,
+      "D": {
+        "saved": 2735,
+        "expected": 2735,
+        "all_failures": 0,
+        "positive_correct": [
+          796,
+          883
+        ],
+        "false_pick": [
+          200,
+          1786
+        ],
+        "failed_or_missing": 0
+      },
+      "E": {
+        "saved": 4014,
+        "expected": 4014,
+        "all_failures": 0,
+        "positive_correct": [
+          965,
+          1033
+        ],
+        "false_pick": [
+          191,
+          974
+        ],
+        "failed_or_missing": 0,
+        "control": {
+          "positive_correct": [
+            1003,
+            1033
+          ],
+          "false_pick": [
+            132,
+            974
+          ],
+          "failed_or_missing": 0
+        },
+        "request_loss_pp": 3.6786060019361133,
+        "false_pick_increase_pp": 6.0574948665297725,
+        "gates_passed": 0
+      },
+      "E_natural": {
+        "positive_correct": [
+          92,
+          93
+        ],
+        "false_pick": [
+          30,
+          146
+        ],
+        "failed_or_missing": 0
+      }
+    },
+    {
+      "model": "Gemma E4B 기존 학습 시드3",
+      "our_training": true,
+      "D": {
+        "saved": 2735,
+        "expected": 2735,
+        "all_failures": 0,
+        "positive_correct": [
+          779,
+          883
+        ],
+        "false_pick": [
+          112,
+          1786
+        ],
+        "failed_or_missing": 0
+      },
+      "E": {
+        "saved": 4014,
+        "expected": 4014,
+        "all_failures": 0,
+        "positive_correct": [
+          969,
+          1033
+        ],
+        "false_pick": [
+          111,
+          974
+        ],
+        "failed_or_missing": 0,
+        "control": {
+          "positive_correct": [
+            993,
+            1033
+          ],
+          "false_pick": [
+            114,
+            974
+          ],
+          "failed_or_missing": 0
+        },
+        "request_loss_pp": 2.3233301064859657,
+        "false_pick_increase_pp": -0.3080082135523618,
+        "gates_passed": 1
+      },
+      "E_natural": {
+        "positive_correct": [
+          92,
+          93
+        ],
+        "false_pick": [
+          30,
+          146
+        ],
+        "failed_or_missing": 0
+      }
+    },
+    {
+      "model": "Gemma E4B 잡담 보강 시드1",
+      "our_training": true,
+      "D": {
+        "saved": 2735,
+        "expected": 2735,
+        "all_failures": 0,
+        "positive_correct": [
+          797,
+          883
+        ],
+        "false_pick": [
+          10,
+          1786
+        ],
+        "failed_or_missing": 0
+      },
+      "E": {
+        "saved": 4014,
+        "expected": 4014,
+        "all_failures": 0,
+        "positive_correct": [
+          882,
+          1033
+        ],
+        "false_pick": [
+          20,
+          974
+        ],
+        "failed_or_missing": 0,
+        "control": {
+          "positive_correct": [
+            998,
+            1033
+          ],
+          "false_pick": [
+            44,
+            974
+          ],
+          "failed_or_missing": 0
+        },
+        "request_loss_pp": 11.229428848015498,
+        "false_pick_increase_pp": -2.4640657084188917,
+        "gates_passed": 1
+      },
+      "E_natural": {
+        "positive_correct": [
+          91,
+          93
+        ],
+        "false_pick": [
+          2,
+          146
+        ],
+        "failed_or_missing": 0
+      }
+    },
+    {
+      "model": "Gemma E4B 잡담 보강 시드2",
+      "our_training": true,
+      "D": {
+        "saved": 2735,
+        "expected": 2735,
+        "all_failures": 0,
+        "positive_correct": [
+          801,
+          883
+        ],
+        "false_pick": [
+          14,
+          1786
+        ],
+        "failed_or_missing": 0
+      },
+      "E": {
+        "saved": 4014,
+        "expected": 4014,
+        "all_failures": 0,
+        "positive_correct": [
+          928,
+          1033
+        ],
+        "false_pick": [
+          46,
+          974
+        ],
+        "failed_or_missing": 0,
+        "control": {
+          "positive_correct": [
+            998,
+            1033
+          ],
+          "false_pick": [
+            96,
+            974
+          ],
+          "failed_or_missing": 0
+        },
+        "request_loss_pp": 6.776379477250726,
+        "false_pick_increase_pp": -5.13347022587269,
+        "gates_passed": 1
+      },
+      "E_natural": {
+        "positive_correct": [
+          93,
+          93
+        ],
+        "false_pick": [
+          18,
+          146
+        ],
+        "failed_or_missing": 0
+      }
+    },
+    {
+      "model": "Gemma E4B 잡담 보강 시드3",
+      "our_training": true,
+      "D": {
+        "saved": 2735,
+        "expected": 2735,
+        "all_failures": 0,
+        "positive_correct": [
+          796,
+          883
+        ],
+        "false_pick": [
+          20,
+          1786
+        ],
+        "failed_or_missing": 0
+      },
+      "E": {
+        "saved": 4014,
+        "expected": 4014,
+        "all_failures": 0,
+        "positive_correct": [
+          981,
+          1033
+        ],
+        "false_pick": [
+          68,
+          974
+        ],
+        "failed_or_missing": 0,
+        "control": {
+          "positive_correct": [
+            990,
+            1033
+          ],
+          "false_pick": [
+            101,
+            974
+          ],
+          "failed_or_missing": 0
+        },
+        "request_loss_pp": 0.871248789932233,
+        "false_pick_increase_pp": -3.3880903490759757,
+        "gates_passed": 2
+      },
+      "E_natural": {
+        "positive_correct": [
+          92,
+          93
+        ],
+        "false_pick": [
+          21,
+          146
+        ],
+        "failed_or_missing": 0
+      }
+    },
+    {
+      "model": "Gemma E4B 어려운 문장 보강 oos2r",
+      "our_training": true,
+      "D": {
+        "saved": 2735,
+        "expected": 2735,
+        "all_failures": 0,
+        "positive_correct": [
+          782,
+          883
+        ],
+        "false_pick": [
+          3,
+          1786
+        ],
+        "failed_or_missing": 0
+      },
+      "E": {
+        "saved": 4014,
+        "expected": 4014,
+        "all_failures": 0,
+        "positive_correct": [
+          936,
+          1033
+        ],
+        "false_pick": [
+          2,
+          974
+        ],
+        "failed_or_missing": 0,
+        "control": {
+          "positive_correct": [
+            1004,
+            1033
+          ],
+          "false_pick": [
+            1,
+            974
+          ],
+          "failed_or_missing": 0
+        },
+        "request_loss_pp": 6.582768635043568,
+        "false_pick_increase_pp": 0.10266940451745381,
+        "gates_passed": 2
+      },
+      "E_natural": {
+        "positive_correct": [
+          93,
+          93
+        ],
+        "false_pick": [
+          0,
+          146
+        ],
+        "failed_or_missing": 0
+      }
+    },
+    {
+      "model": "FrogNano-4B-2609 원본",
+      "our_training": false,
+      "D": {
+        "saved": 2735,
+        "expected": 2735,
+        "all_failures": 0,
+        "positive_correct": [
+          684,
+          883
+        ],
+        "false_pick": [
+          16,
+          1786
+        ],
+        "failed_or_missing": 0
+      },
+      "E": {
+        "saved": 4014,
+        "expected": 4014,
+        "all_failures": 0,
+        "positive_correct": [
+          898,
+          1033
+        ],
+        "false_pick": [
+          167,
+          974
+        ],
+        "failed_or_missing": 0,
+        "control": {
+          "positive_correct": [
+            955,
+            1033
+          ],
+          "false_pick": [
+            173,
+            974
+          ],
+          "failed_or_missing": 0
+        },
+        "request_loss_pp": 5.517909002904153,
+        "false_pick_increase_pp": -0.6160164271047236,
+        "gates_passed": 1
+      },
+      "E_natural": {
+        "positive_correct": [
+          91,
+          93
+        ],
+        "false_pick": [
+          29,
+          146
+        ],
+        "failed_or_missing": 0
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it Q4_K_M 원본",
+      "our_training": false,
+      "D": {
+        "saved": 2735,
+        "expected": 2735,
+        "all_failures": 13,
+        "positive_correct": [
+          738,
+          883
+        ],
+        "false_pick": [
+          75,
+          1786
+        ],
+        "failed_or_missing": 13
+      },
+      "E": {
+        "saved": 4014,
+        "expected": 4014,
+        "all_failures": 1,
+        "positive_correct": [
+          960,
+          1033
+        ],
+        "false_pick": [
+          154,
+          974
+        ],
+        "failed_or_missing": 0,
+        "control": {
+          "positive_correct": [
+            984,
+            1033
+          ],
+          "false_pick": [
+            233,
+            974
+          ],
+          "failed_or_missing": 1
+        },
+        "request_loss_pp": 2.3233301064859657,
+        "false_pick_increase_pp": -8.110882956878848,
+        "gates_passed": 1
+      },
+      "E_natural": {
+        "positive_correct": [
+          92,
+          93
+        ],
+        "false_pick": [
+          33,
+          146
+        ],
+        "failed_or_missing": 0
+      }
+    }
+  ],
+  "E_natural_expected": 239,
+  "original_gemma12b_E_saved_at_observation": 2459,
+  "original_gemma12b_E_expected": 4014,
+  "sources_sha256": {
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_r16e2_mix8.json": "d605b5803c66e66c6b4cec9f72e7490ae8e29bfe93c0c7501e3041994ef2cb8c",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_r16e2_mix9.json": "ae99eb81ebe6edb78944f10636ae8e2e75dfab1eede67e6220e7e822bbcf4c7a",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_r16e2_mix10.json": "da82cc31de8a7e1b6b3879bb22875f7f4fdcb3978c6a0fc4bfb16c2537c65615",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_r16e2_mix11.json": "64274c3636e7a921edaf9a9f1ea9abdb990c7bb9b4e3e3cfe2f2d01bca6917e5",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_r16e2_mix12.json": "3b0fbeacec71473f92ef2f69bb98ba3b2f9ce5368d9559e862b58b5fd847675f",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs2_mix8.json": "52d556e0fe25c08597cbc914d2e19c7f364cbf38a7dcf58ae7d389a33d1e03da",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs2_mix9.json": "bf91d6a9d90a96ce3326be7f3e5cd6ab543732ddab9ba4ec8d67493f3e142fc2",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs2_mix10.json": "4b29db6c0ab957648c12c7e2aed73280e704a9aed5dadb61e2d25611bcd485a1",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs2_mix11.json": "7d6a27d32ab0daeb54670130c017d3b3f8d30f096b39d8f24623ea09ea1eb9b9",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs2_mix12.json": "ef85a75f5906e3511c18a66375a5b7a634720d08176f3a91b54092bd0bc75acf",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs3_mix8.json": "1e961e2c75ad3f8a456648b4b78257831ddc4ee7b97212c34c89c2c795b15706",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs3_mix9.json": "85925c4dd542e3ca3d8d992f16b648579fdc4ecb4ffe290ca123c4268c9615ee",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs3_mix10.json": "25c0cdfdc2c46d3887c675b403619eb89f4df99239a931ddb6c0169527034fc5",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs3_mix11.json": "83b9fce68b8865a62a81c17a60af54d299a07bbad7c01dcdee19d122b5c4f18b",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bs3_mix12.json": "a7f52997d379f6a4cae2ad294cf7b2c244f2470590ea76f932fc256f33e7301a",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos1_mix8.json": "9f891a301e0dca2edf904df9ab80454a3481655a584cfe9304027d132f7c18be",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos1_mix9.json": "92e2ea8c1bd62247aaef0efcc67d934ec561a06effec6076922a4959b417c574",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos1_mix10.json": "fd4130ef06ddc34f1729ca47c45015ecbdd5b032f06935cd52aa7f7fbae38665",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos1_mix11.json": "9b94f272b4e2dade620f28c71886efad739986c71960f0ecc9955860c165ae98",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos1_mix12.json": "eb916cafecae602c724b65f081f4765645f0dafd033d98dfe12771367217b22e",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2_mix8.json": "ecf09bcc351b0ae8e49d56a384b6accc09cc74f3f150739884b0e27d85990d4f",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2_mix9.json": "2c3b5a38bbc1a4e3475a2201458c86debb442582dd739e5c825921371026cf47",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2_mix10.json": "ffa4ab2ea5bfd413d41d2c8610d8a09f05e2624c3b8f84d4a3c18e9352a5236f",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2_mix11.json": "9eb0334f575aa9e92ecc77cdd7411685e819182b789d0d0819d87f58319fe09e",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2_mix12.json": "ba34e6137680c64e7fbe31e415d859bebf618bb19cd619d4270fda509b0b660e",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos3_mix8.json": "8e55db4532fe1ecf81bab9ad2dc22ee00f906f5ceae91ca995ffe7e54f0fcd29",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos3_mix9.json": "203aa5ae5d32399cb6de0320a429a09115102aeaa0876e461a0837d95a6e68db",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos3_mix10.json": "0ad5f71a3be8cf7e50231c96800abf89e975d024cf799c2610372062cdde5894",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos3_mix11.json": "9830a8c13a733839c820c5c920b24e50a818f6960e586ea402265bd1e3983b2e",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos3_mix12.json": "f1a87c7b5ae37c7cabaded8627fb3582609838b7784eaa6b3243a3d3b8b20c9f",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2r_mix8.json": "1bb906729d3f595da1b079e33518ff6d9d6322f4316feac8849fefaaa09dfa7e",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2r_mix9.json": "b96fdbf0151b2e2086af4f5186d1ff5be725568122c6274c2af08bd3b3de2261",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2r_mix10.json": "e001a91f0a2fd4194f33e59b3979c11479f770c02a0f559bac07cf79b0da5816",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2r_mix11.json": "8e663e4c758fc66a538a115b7c537c265e3b2bde21cdd255a171a47673466594",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_oos2r_mix12.json": "8fbf0441a139cd8856ea8ae258ff6f63c5448d42f1690a5eaca2cd3195110678",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bm_mix8.json": "3953da69603df8fa3e3d8964f20b0977495a07f5c39178c820325e34f997a39a",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bm_mix9.json": "86fdb75e087d9af38d2de8c964777a39d483dc6de47dc975a46b92bca0c47552",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bm_mix10.json": "ae505d0e99958125c05225ff83a28c64bfed9e83fd73c0684d8f6e1125aea1f8",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bm_mix11.json": "1e45b49e44e992610723a4ef48babc92fcacd167f94cee3318a6e53389120b78",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_e4bm_mix12.json": "8a8d1c3ad92ce853518a8b1c464f9899931823fb8f36a70988c7fbc94eca4cc5",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_winnow_e4b_mix8.json": "5e4fc9aea482f2f0c0b6781647601a3ae41a0887be222c1f7b1dab0834b21410",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_winnow_e4b_mix9.json": "eba145ecfe7b50d1b2519b2ef6fbb49cff2b4d6f2e06598065b605acbd62a9db",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_winnow_e4b_mix10.json": "959761bcbb47861fb23edd2ae3e05d2e20bb014d27a6eee791e69bb1c581fd6b",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_winnow_e4b_mix11.json": "6f385fc54532f3952e28567fdd710c42fd8fcf67491ec67cd41a5fcc3d1aa04f",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_winnow_e4b_mix12.json": "3248580153f45d53961505890153ec7052a0cf853a0b2d85fd884a3afcb88820",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_spark_s1_4b_mix8.json": "84bda9677c31cdec5878470d5d4ceb0698ec97c7c1065a3b43eb67a1a2463193",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_spark_s1_4b_mix9.json": "5a47067f2e39a146e59ee1a8a0f0dd377449e36e5f50d3c55d3f2b1ad7f0deb9",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_spark_s1_4b_mix10.json": "e968b7b2df4d11f5d0ddcf0a08e7b952b3f3234f20a0b60f1ba4d199e9f13ebb",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_spark_s1_4b_mix11.json": "9664779906e5e50bcb1504eab1844dcfda8bcc6653e2b963005be67bad50c7e8",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_spark_s1_4b_mix12.json": "782e9fb5e98da84cfa9573bf97718d6ae6695ac3ca88802adaecbb80742b68d5",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_jevify_e4b_mix8.json": "93dea9e06a6a6d8cd57871e7d59d2cff88a0a8c68e10557e43bd9fc3d196a29e",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_jevify_e4b_mix9.json": "4aaaa069c802e5e70779588d414924cc45b68c13e107d6841dd58b4d2b3b1ec2",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_jevify_e4b_mix10.json": "9e2bbf992c3842841bb64d4237adcae8df28ce8452cd7e56622a4846957333f0",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_jevify_e4b_mix11.json": "2f7ba4a75d434d0912918e6bc2b69ffd6245cb666703054701b3669d44b051d1",
+    "program/scripts/plan_qa_bench/results/_pull/distill_eval/eval_jevify_e4b_mix12.json": "2ba76a540eb28d48c197deaf56f9ca368a48b79f94de71f51bb54b0101696659",
+    "program/scripts/plan_qa_bench/results/claude_claude_opus_5_5_mix8_multi.json": "6e569cac9d74cb8d274d8a027ab8ba5b5d48916c2fb2a3bccdd158eae8b7f3f9",
+    "program/scripts/plan_qa_bench/results/claude_claude_opus_5_5_mix9_multi.json": "7265a0f45795682cb94b0a696f275f4d283a1d83228cef387e5a509a938738e1",
+    "program/scripts/plan_qa_bench/results/claude_claude_opus_5_5_mix10_multi.json": "f40c05329e9b351067d9d8a52df1d6df0ffa9f08369dc5596312770685c9cb35",
+    "program/scripts/plan_qa_bench/results/claude_claude_opus_5_5_mix11_multi.json": "2721bdd1dc6bfcf40f23a7ad2b33dd494831700f3854489ceab0030afb407ec3",
+    "program/scripts/plan_qa_bench/results/claude_claude_opus_5_5_mix12_multi.json": "5cd4292f61e020d4e0423e84e3045205320f877689115855625975390ecab821",
+    "program/scripts/plan_qa_bench/results/claude_claude_fable_5_1_mix8_multi.json": "f0af3ee301ea6884448b661ee7a7a31f4f276026a532e14812a8770b315c30e8",
+    "program/scripts/plan_qa_bench/results/claude_claude_fable_5_1_mix9_multi.json": "d0fa42e1a46efe59e776cf9de3923a03e1c72843f6aafdef91a5b0d1d548366d",
+    "program/scripts/plan_qa_bench/results/claude_claude_fable_5_1_mix10_multi.json": "a8a2959f9fedc05366f5e7ec16805264be136eba7abfa598d526be3cadbe8854",
+    "program/scripts/plan_qa_bench/results/claude_claude_fable_5_1_mix11_multi.json": "50c821dc273c071d2436ab22df6ad6c05c4922a28bafb41a6521e1b23259e6d9",
+    "program/scripts/plan_qa_bench/results/claude_claude_fable_5_1_mix12_multi.json": "ebf97c501f217e049bb7ab274dd965af6e9fb1ba0e2d119bd8393d1d4b789136",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-luna_mix8_multi.json": "600ed3b0ac3b9b9613397e5087b7967e0358f7dae143557c456c93d377b807c9",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-luna_mix9_multi.json": "47569486571dc8925fc474dd858add15812aefb0c288828bdeb3b80241eddd96",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-luna_mix10_multi.json": "85ea8f1140e5fdffd5edd3a67045cb9ddf99ba1c63014572a56f1bfdcc695a14",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-luna_mix11_multi.json": "0accc9e84ae10c5c914f175e9e6402005b6f474e2e5699e85cb4e9786527f31c",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-luna_mix12_multi.json": "ea98b35aa3e43d794b17ac2eb12b3e55327e46f3cd2b24017381abe5405c90f5",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-sol_mix8_multi.json": "72cedd797a1dac990081040a468d9153f597db53e7b7e1c3e206925e0b795f84",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-sol_mix9_multi.json": "e7be5cd30fd42f1558344e6e9b2c6ed852229d67959a4c576e777b6f93ec13be",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-sol_mix10_multi.json": "3a1e73b0a12d3aa202e2e282388d074f6aaa6faaa411e7df8c24cd3e32977477",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-sol_mix11_multi.json": "7a795278466f58e0a2f9d92629e051d90982e050b34f956b073fdf057ae7bdbd",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-sol_mix12_multi.json": "31e6294fc5d0406633ad40d7c23680efcd081373fbecc3fd22ee142b41d88104",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-astra_mix8_multi.json": "3b55358c15b6aed78425f3b6fa0e183ab92e6a5648d0137c3de51141b55c3795",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-astra_mix9_multi.json": "1968d940a9cfb5978e31c51f9b807ec88e670cb4a1bbbb920d7e723069bb8812",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-astra_mix10_multi.json": "c07154c956c6870287abd81538e1f2aa75dceafe798153e8614f860788ec7aa6",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-astra_mix11_multi.json": "ba5eb4ac1ebfea728f6b231ae057ba463e08c3ecfb23e0456f3c4f0e6e4d4a4c",
+    "program/scripts/plan_qa_bench/results/codexcli_gpt-6-astra_mix12_multi.json": "20bf79c9f6d04951e7e4e9a542fba46a46ddecdee6ca99b75db7cdf5c369210e",
+    "program/scripts/plan_qa_bench/results/empty_probe/all_prompts.json": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+    "datasets/travel/mx_testset/mx_main_prompts.json": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_q4km_e4bt.jsonl": "19b38b666bf046fb8ce578050068a4eaef3f1604107f9f45b94fdafad839d096",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_mx_q4km_e4bt.jsonl": "42926a7a1f6cc80a925a461c951c1c82b0d21d514b574ecf3c643bcb4d716936",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_q4km_e4bs2.jsonl": "c066b05ef5a36d41200a2bbe51d551089b843d24a61e073b0a0aa56c73fee7b4",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_mx_q4km_e4bs2.jsonl": "accb164f1aa06f1ec349c51e427e0317ccbe20105c0c73c07e0823715de61aaf",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_q4km_e4bs3.jsonl": "07237aa491426cbdac4050374ce5286f44b78372483f346bcb2ba508ab0893d2",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_mx_q4km_e4bs3.jsonl": "0d5b58a5496db2a7532f6103e525c1c3166270d12191c5c981cb422916719f9c",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_q4km_oos1.jsonl": "0e8a0853de682183e8ddd4b58d25dfe48d371b4cbdfe0f692317ef67e3696ae4",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_mx_q4km_oos1.jsonl": "6497830455bedcef393d8663698000020293913febed0149fa7fd5b9af1e87ff",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_q4km_oos2.jsonl": "bcb7109da5052a79830a503562519e666d4b0eecea6d8bfce80e50988a1f7d01",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_mx_q4km_oos2.jsonl": "3f369bbb0bbd346f94aae72efd5a81c2e3f092ba3c6ae5338b2deb422863b71b",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_q4km_oos3.jsonl": "a64711c7cc0144e30898ca6664c4ec1e47ab1a913d725842a31379bcaa7d9a2e",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_mx_q4km_oos3.jsonl": "9dddee6f5571592d54129c884665dacc68436d7ba5b07ec24714157aa3f039af",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_q4km_oos2r.jsonl": "a8b217d60169322959372c38294472bd2ba9be75ec52a573b8edbe01ce76a39f",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_lp_mx_q4km_oos2r.jsonl": "55fc7fa9c862ca750a0b72a2262c8ff8be8658fb6831765b9cfe30f3676bca48",
+    "program/scripts/plan_qa_bench/results/d_test/d_test_a_frognano.jsonl": "fa6ea862029f1bd504da8f8b29069c04d9f227cb512e1d803043115fe3f2307a",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/frog_mx/d_test_mx_backlog_frog.jsonl": "46aefc1479b5ccc378fd1f9178a761955b98976f968992dfab2928e0a26d59df",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bbase_d/d_test_d_backlog_e4bbase.jsonl": "0aa347270a46aa08b57ff36aed5aef7697fc1862dd9c7d0d0cb133b5f7ad06cf",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bbase_mx/d_test_mx_backlog_e4bbase.jsonl": "541960a76220dd7a9a38863218718074c462f6182256c6b3f80babdbd72ee29f",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_user_b_c_d_e.json": "b5a99ee241c09ed53bcc01a7d7f854115959ea89bd4e4329b3707483dc505b44"
+  }
+}

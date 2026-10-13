@@ -1,0 +1,269 @@
+FFFFFFFF............FFFFFFFFFFF.FF...                                    [100%]
+================================== FAILURES ===================================
+__________ test_a_shared_station_suffix_covers_each_list_member[, ] ___________
+
+separator = ', '
+
+    @pytest.mark.parametrize('separator', [', ', ',', '·', 'ㆍ', '、', ' / '])
+    def test_a_shared_station_suffix_covers_each_list_member(separator):
+        title = f'4호선 혜화{separator}한성대입구역(하선) 무정차 통과'
+>       assert mentions_station(title, '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('4호선 혜화, 한성대입구역(하선) 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:21: AssertionError
+___________ test_a_shared_station_suffix_covers_each_list_member[,] ___________
+
+separator = ','
+
+    @pytest.mark.parametrize('separator', [', ', ',', '·', 'ㆍ', '、', ' / '])
+    def test_a_shared_station_suffix_covers_each_list_member(separator):
+        title = f'4호선 혜화{separator}한성대입구역(하선) 무정차 통과'
+>       assert mentions_station(title, '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('4호선 혜화,한성대입구역(하선) 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:21: AssertionError
+_________ test_a_shared_station_suffix_covers_each_list_member[\xb7] __________
+
+separator = '·'
+
+    @pytest.mark.parametrize('separator', [', ', ',', '·', 'ㆍ', '、', ' / '])
+    def test_a_shared_station_suffix_covers_each_list_member(separator):
+        title = f'4호선 혜화{separator}한성대입구역(하선) 무정차 통과'
+>       assert mentions_station(title, '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('4호선 혜화·한성대입구역(하선) 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:21: AssertionError
+________ test_a_shared_station_suffix_covers_each_list_member[\u318d] _________
+
+separator = 'ㆍ'
+
+    @pytest.mark.parametrize('separator', [', ', ',', '·', 'ㆍ', '、', ' / '])
+    def test_a_shared_station_suffix_covers_each_list_member(separator):
+        title = f'4호선 혜화{separator}한성대입구역(하선) 무정차 통과'
+>       assert mentions_station(title, '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('4호선 혜화ㆍ한성대입구역(하선) 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:21: AssertionError
+________ test_a_shared_station_suffix_covers_each_list_member[\u3001] _________
+
+separator = '、'
+
+    @pytest.mark.parametrize('separator', [', ', ',', '·', 'ㆍ', '、', ' / '])
+    def test_a_shared_station_suffix_covers_each_list_member(separator):
+        title = f'4호선 혜화{separator}한성대입구역(하선) 무정차 통과'
+>       assert mentions_station(title, '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('4호선 혜화、한성대입구역(하선) 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:21: AssertionError
+__________ test_a_shared_station_suffix_covers_each_list_member[ / ] __________
+
+separator = ' / '
+
+    @pytest.mark.parametrize('separator', [', ', ',', '·', 'ㆍ', '、', ' / '])
+    def test_a_shared_station_suffix_covers_each_list_member(separator):
+        title = f'4호선 혜화{separator}한성대입구역(하선) 무정차 통과'
+>       assert mentions_station(title, '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('4호선 혜화 / 한성대입구역(하선) 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:21: AssertionError
+_ test_three_members_and_optional_station_suffix[\uc131\uc2e0\uc5ec\ub300\uc785\uad6c] _
+
+station = '성신여대입구'
+
+    @pytest.mark.parametrize('station', ['성신여대입구', '혜화', '한성대입구'])
+    def test_three_members_and_optional_station_suffix(station):
+>       assert mentions_station('4호선 성신여대입구, 혜화, 한성대입구역 무정차 통과', station)
+E       AssertionError: assert False
+E        +  where False = mentions_station('4호선 성신여대입구, 혜화, 한성대입구역 무정차 통과', '성신여대입구')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:27: AssertionError
+________ test_three_members_and_optional_station_suffix[\ud61c\ud654] _________
+
+station = '혜화'
+
+    @pytest.mark.parametrize('station', ['성신여대입구', '혜화', '한성대입구'])
+    def test_three_members_and_optional_station_suffix(station):
+>       assert mentions_station('4호선 성신여대입구, 혜화, 한성대입구역 무정차 통과', station)
+E       AssertionError: assert False
+E        +  where False = mentions_station('4호선 성신여대입구, 혜화, 한성대입구역 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:27: AssertionError
+_________ test_shared_station_suffix_before_a_korean_particle[\uc740] _________
+
+particle = '은'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역은 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+_________ test_shared_station_suffix_before_a_korean_particle[\ub294] _________
+
+particle = '는'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역는 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+_________ test_shared_station_suffix_before_a_korean_particle[\uc774] _________
+
+particle = '이'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역이 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+_________ test_shared_station_suffix_before_a_korean_particle[\uac00] _________
+
+particle = '가'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역가 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+_________ test_shared_station_suffix_before_a_korean_particle[\uc744] _________
+
+particle = '을'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역을 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+_________ test_shared_station_suffix_before_a_korean_particle[\ub97c] _________
+
+particle = '를'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역를 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+_________ test_shared_station_suffix_before_a_korean_particle[\uc758] _________
+
+particle = '의'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역의 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+______ test_shared_station_suffix_before_a_korean_particle[\uc5d0\uc11c] ______
+
+particle = '에서'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역에서 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+_________ test_shared_station_suffix_before_a_korean_particle[\uc5d0] _________
+
+particle = '에'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역에 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+______ test_shared_station_suffix_before_a_korean_particle[\uc73c\ub85c] ______
+
+particle = '으로'
+
+    @pytest.mark.parametrize('particle', ['은', '는', '이', '가', '을', '를', '의', '에서', '에', '으로'])
+    def test_shared_station_suffix_before_a_korean_particle(particle):
+>       assert mentions_station(f'혜화, 한성대입구역{particle} 무정차 통과', '혜화')
+E       AssertionError: assert False
+E        +  where False = mentions_station('혜화, 한성대입구역으로 무정차 통과', '혜화')
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:50: AssertionError
+__________ test_the_recorded_list_title_produces_both_station_events __________
+
+    def test_the_recorded_list_title_produces_both_station_events():
+        events = _events([_row(RECORDED_TITLE)])
+        found = events.affecting(['4호선:혜화', '4호선:한성대입구'], NOW)
+>       assert list(found) == ['4호선:혜화', '4호선:한성대입구']
+E       AssertionError: assert ['4호선:한성대입구'] == ['4호선:혜화', '4호선:한성대입구']
+E         
+E         At index 0 diff: '4호선:한성대입구' != '4호선:혜화'
+E         Right contains one more item: '4호선:한성대입구'
+E         Use -v to get more diff
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:66: AssertionError
+__________ test_an_end_notice_for_one_station_does_not_clear_another __________
+
+    def test_an_end_notice_for_one_station_does_not_clear_another():
+        events = _events([
+            _row(RECORDED_TITLE),
+            _row('4호선 한성대입구역 정상운행', '2026-09-22T21:28:00'),
+        ])
+>       assert list(events.affecting(['4호선:혜화', '4호선:한성대입구'], NOW)) == ['4호선:혜화']
+E       AssertionError: assert [] == ['4호선:혜화']
+E         
+E         Right contains one more item: '4호선:혜화'
+E         Use -v to get more diff
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:84: AssertionError
+_________ test_a_list_in_notice_content_uses_the_same_station_matcher _________
+
+    def test_a_list_in_notice_content_uses_the_same_station_matcher():
+        events = _events([_row('4호선 열차 무정차 통과', content='혜화, 한성대입구역(하선)')])
+>       assert list(events.affecting(['4호선:혜화', '4호선:한성대입구'], NOW)) == ['4호선:혜화', '4호선:한성대입구']
+E       AssertionError: assert ['4호선:한성대입구'] == ['4호선:혜화', '4호선:한성대입구']
+E         
+E         At index 0 diff: '4호선:한성대입구' != '4호선:혜화'
+E         Right contains one more item: '4호선:한성대입구'
+E         Use -v to get more diff
+
+tests\unit\travel\test_subway_notice_station_lists_v1.py:89: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_finish_20261011\subway_notice\before.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_a_shared_station_suffix_covers_each_list_member[, ]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_a_shared_station_suffix_covers_each_list_member[,]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_a_shared_station_suffix_covers_each_list_member[\xb7]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_a_shared_station_suffix_covers_each_list_member[\u318d]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_a_shared_station_suffix_covers_each_list_member[\u3001]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_a_shared_station_suffix_covers_each_list_member[ / ]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_three_members_and_optional_station_suffix[\uc131\uc2e0\uc5ec\ub300\uc785\uad6c]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_three_members_and_optional_station_suffix[\ud61c\ud654]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\uc740]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\ub294]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\uc774]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\uac00]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\uc744]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\ub97c]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\uc758]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\uc5d0\uc11c]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\uc5d0]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_shared_station_suffix_before_a_korean_particle[\uc73c\ub85c]
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_the_recorded_list_title_produces_both_station_events
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_an_end_notice_for_one_station_does_not_clear_another
+FAILED tests/unit/travel/test_subway_notice_station_lists_v1.py::test_a_list_in_notice_content_uses_the_same_station_matcher
+21 failed, 16 passed in 37.91s

@@ -1,0 +1,61 @@
+{
+  "source": ".tmp/baseline-manager-20261012/web-c463-failure.private.log",
+  "total": 792,
+  "passed": 753,
+  "failed": 21,
+  "skipped": 18,
+  "scope": "통합 커밋 c46327eb의 mock 서버 브라우저 CI이며 공개 실화면 결과와 구분합니다.",
+  "groups": [
+    {
+      "confidence": "source-and-CI-confirmed",
+      "decision": "전체 일정을 접어서 보여 달라는 요청을 유지하고 현재 검증 카드와 지도 마커의 순차 표시를 측정합니다.",
+      "file": "survey-release-20261011.spec.ts",
+      "count": 10,
+      "observation": "전체 일정 3개가 유지되는데 시험은 0개부터 증가하기를 기대합니다."
+    },
+    {
+      "confidence": "CI-confirmed",
+      "decision": "화면과 CSS 배치 의도를 대조하여 수정합니다.",
+      "file": "bottom-pending-threshold-20261010.spec.ts / uiux-time-boundary-20261012.spec.ts",
+      "count": 4,
+      "observation": "시각 고정 경계 차이 5px이며 시험은 4px 이내를 기대합니다."
+    },
+    {
+      "confidence": "CI-confirmed",
+      "decision": "화면과 CSS 배치 의도를 대조하여 수정합니다.",
+      "file": "focused-times-lock-20261010.spec.ts",
+      "count": 2,
+      "observation": "시각 줄 간격 3px이며 시험은 2px을 기대합니다."
+    },
+    {
+      "confidence": "CI-confirmed",
+      "decision": "보내기 라벨과 수정안 안내의 실제 겹침을 측정합니다.",
+      "file": "bottom-pending-threshold-20261010.spec.ts",
+      "count": 2,
+      "observation": "하단 여백 48.7969px이며 시험은 0px을 기대합니다."
+    },
+    {
+      "decision": "응답 완료 후 저장 영역을 비우고 새로고침하여 기록 복구를 검증합니다.",
+      "count": 1,
+      "observation": "새로고침 뒤 채팅 선택지가 표시되지 않습니다.",
+      "confidence": "hypothesis-requires-browser-recheck",
+      "hypothesis": "요청 수신 직후 저장 영역을 비우는 동작과 아직 끝나지 않은 응답 저장이 경쟁할 가능성이 있습니다.",
+      "file": "chat-context-20261011.spec.ts"
+    },
+    {
+      "decision": "starting을 제외한 실제 접수 ID 화면과 POST 완료를 기다립니다.",
+      "count": 1,
+      "observation": "접수 POST 기록이 0개이며 시험은 2개 이상을 기대합니다.",
+      "confidence": "hypothesis-requires-browser-recheck",
+      "hypothesis": "starting으로 먼저 이동한 것만 보고 다른 화면으로 떠나 접수 전송을 중단할 가능성이 있습니다.",
+      "file": "layout-mobile.spec.ts"
+    },
+    {
+      "confidence": "CI-confirmed",
+      "decision": "실패 알림 상태를 수정하고 재등장을 검증합니다.",
+      "file": "uiux-sonnet-plan-20261012.spec.ts",
+      "count": 1,
+      "observation": "해소된 뒤 동일한 실패가 다시 생겨도 알림이 나타나지 않습니다."
+    }
+  ]
+}

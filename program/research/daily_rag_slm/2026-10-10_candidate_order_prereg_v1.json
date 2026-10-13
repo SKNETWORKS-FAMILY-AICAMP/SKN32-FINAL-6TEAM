@@ -1,0 +1,42 @@
+{
+  "recorded_at_utc": "2026-10-10T05:03:47.539716+00:00",
+  "purpose": "Missing candidate display-order robustness; reverse display order with IDs/questions/facts unchanged; never renumber or use gold",
+  "models": [
+    "saluki_original",
+    "e4bbase",
+    "e4bbase_cosine_s20261014",
+    "e4bbase_finch_s20261014"
+  ],
+  "conditions": 8,
+  "rows": 17496,
+  "logic_checks": {
+    "round_trip_rows": 4374,
+    "metadata_and_question_preserved_rows": 4374,
+    "malformed_rejected": 1
+  },
+  "same_items_not_independent": true,
+  "no_prompt_or_training_tuning": true,
+  "adoption": false,
+  "diagnostic_limits": {
+    "normal_loss_pp": 2,
+    "false_pick_increase_pp": 1,
+    "pick_agreement": 0.99
+  },
+  "statistical_plan": "paired exact plus itinerary-cluster bootstrap seed7 repeats2000; retain all failures/missing and report fixed original baseline",
+  "audits": [
+    {
+      "suite": "d3",
+      "rows": 360,
+      "source_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+      "prompt_sha256": "7348e3a71f2e8e28ecf8d56b00d32270a41396107ac01a00afc22e4471f041c7",
+      "output": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\travel\\candidate_order_20261010_v3\\processed\\d3.json"
+    },
+    {
+      "suite": "mx",
+      "rows": 4014,
+      "source_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+      "prompt_sha256": "b86093846c88a7dbe985ffabcef7275e007f9cf8b66bd43242f9ab61a8bfd65f",
+      "output": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\travel\\candidate_order_20261010_v3\\processed\\mx.json"
+    }
+  ]
+}

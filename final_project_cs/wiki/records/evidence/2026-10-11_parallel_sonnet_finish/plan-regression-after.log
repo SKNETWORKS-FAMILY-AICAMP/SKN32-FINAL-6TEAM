@@ -1,0 +1,9 @@
+........................................................                 [100%]
+============================== warnings summary ===============================
+..\..\..\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290
+  C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_parallel_sonnet_finish\plan-regression-after.xml -
+56 passed, 1 warning in 366.34s (0:06:06)

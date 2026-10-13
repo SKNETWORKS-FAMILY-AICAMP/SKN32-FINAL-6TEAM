@@ -1,0 +1,50 @@
+--- before/final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py
++++ after/final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py
+@@ -2,6 +2,7 @@
+ from __future__ import annotations
+ 
+ from app.domains.travel_ops.ports.subway_train_identity import valid_train_number
++from app.domains.travel_ops.ports.subway_route_identity import matched_arrival_service
+ 
+ from .subway_identity import boarding_identity
+ 
+@@ -16,6 +17,11 @@
+         return {'status': 'unavailable', 'reason': 'line_order_missing'}, []
+     if lo.is_loop(line):
+         return {'status': 'unavailable', 'reason': 'loop_realtime_not_supported'}, []
++    neighbor_names = {e['b'] if e['a'] == origin else e['a']
++                      for e in lo.doc['lines'][line]['edges'] if origin in (e['a'], e['b'])}
++    neighbor_rows = [runtime.subway_stations.lookup(line, name) for name in sorted(neighbor_names)]
++    neighbors = ([r['station_id'] for r in neighbor_rows]
++                 if len(neighbor_rows) >= 2 and all(r is not None for r in neighbor_rows) else [])
+     services = {}
+     for terminal in lo.stations(line):
+         verdict = lo.passes(line, origin, terminal, target)
+@@ -29,7 +35,11 @@
+             continue
+         key = (ids[1], ids[-1], '일반')
+         candidate = {'train_status': '일반', 'path_station_ids': ids,
+-                     'path_stations': list(verdict.path), 'terminal': terminal}
++                     'path_stations': list(verdict.path), 'terminal': terminal,
++                     'next_station_names': sorted({verdict.path[1], rows[1]['station'], rows[1]['query_station']}),
++                     'terminal_station_names': sorted({terminal, rows[-1]['station'], rows[-1]['query_station']})}
++        if neighbors:
++            candidate['boarding_neighbor_ids'] = sorted(neighbors)
+         # 같은 ID 조합이 서로 다른 경로라면 방향을 결정하지 않는다.
+         if key in services and services[key] != candidate:
+             return {'status': 'unavailable', 'reason': 'service_path_ambiguous'}, []
+@@ -51,4 +61,14 @@
+                if observation.get('next_station_id') == s['path_station_ids'][1]
+                and observation.get('terminal_station_id') == s['path_station_ids'][-1]
+                and observation.get('path_station_ids') == s['path_station_ids']]
++    if any(k in observation for k in ('direction_basis', 'provider_next_station_id',
++                                      'provider_previous_station_id', 'route_label')):
++        if (observation.get('direction_basis') != 'route_label_and_neighbor_ids'
++                or not all(k in observation for k in ('provider_next_station_id',
++                                                      'provider_previous_station_id', 'route_label'))):
++            return None
++        raw = dict(observation, next_station_id=observation.get('provider_next_station_id'),
++                   previous_station_id=observation.get('provider_previous_station_id'))
++        verified = matched_arrival_service(raw, services)
++        return verified if len(matches) == 1 and verified == matches[0] else None
+     return matches[0] if len(matches) == 1 else None

@@ -1,0 +1,110 @@
+{
+  "observed_at_utc": "2026-10-09T14:55:03Z",
+  "deployment": {
+    "failed_at": 1791557058.923952,
+    "failed": "210b020067a1e42f2622262adeb60d1f3d371668",
+    "blocked_on": "mobility_data_missing",
+    "missing_files": [
+      "line_station_order_v1.json",
+      "transfer_walk_v1.json",
+      "bus_route_v1.jsonl",
+      "bus_stops_v1.jsonl",
+      "station_coords.json",
+      "timetable"
+    ]
+  },
+  "images": [
+    {
+      "id": "sha256:f93e08678d55289b49dcfaa009fc98a4b2ffe5546552d9da9a42ee4b9ca3720a",
+      "architecture": "arm64",
+      "bytes": 260611898,
+      "tags": [
+        "tripilot-arm-api:210b020067a1"
+      ]
+    },
+    {
+      "id": "sha256:9c946f4e621aae96c0ae26874b49f56c733abaaddcbe0bdbe2b1024faceeef9f",
+      "architecture": "arm64",
+      "bytes": 286859446,
+      "tags": [
+        "tripilot-arm-web:210b020067a1"
+      ]
+    }
+  ],
+  "containers": [
+    {
+      "name": "/tripilot-arm-db-1",
+      "state": "running",
+      "health": "healthy",
+      "restarts": 0
+    },
+    {
+      "name": "/tripilot-arm-model-adapter-1",
+      "state": "running",
+      "health": null,
+      "restarts": 0
+    },
+    {
+      "name": "/tripilot-arm-api-1",
+      "state": "exited",
+      "health": "unhealthy",
+      "restarts": 11
+    },
+    {
+      "name": "/tripilot-arm-worker-1",
+      "state": "exited",
+      "health": null,
+      "restarts": 0
+    },
+    {
+      "name": "/tripilot-arm-web-1",
+      "state": "running",
+      "health": "healthy",
+      "restarts": 0
+    }
+  ],
+  "services": {
+    "tripilot-arm-serving.service": "active",
+    "tripilot-arm-cd.timer": "active",
+    "tripilot-arm-probe.timer": "active",
+    "tripilot-arm-embedding.service": "active"
+  },
+  "memory": {
+    "total_bytes": 12503744512,
+    "used_excluding_available_bytes": 5356150784,
+    "used_pct": 42.83637416663173
+  },
+  "disk": {
+    "total_bytes": 102888095744,
+    "used_bytes": 55930400768,
+    "available_bytes": 46940917760
+  },
+  "unit_checks": {
+    "adapter": {
+      "passed": 8,
+      "total": 8
+    },
+    "rollback_scenarios": {
+      "passed": 2,
+      "total": 2
+    }
+  },
+  "real_http_query_checks": {
+    "passed": 0,
+    "total": 4,
+    "state": "not_started_data_transfer_approval_pending"
+  },
+  "blocked_transfer": {
+    "files": 67,
+    "bytes": 203806783,
+    "approval": "pending"
+  },
+  "audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 2,
+    "critical": 1,
+    "total": 3
+  }
+}

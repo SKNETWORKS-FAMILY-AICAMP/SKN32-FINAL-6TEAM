@@ -1,0 +1,95 @@
+{
+  "checked_at": "2026-10-09T12:43:22.071485+09:00",
+  "source_test_data_matches": 262,
+  "prior_artifacts_preserved": 14,
+  "backups_verified": 10,
+  "related_tests": 337,
+  "new_tests_subset": 28,
+  "architecture_tests": 2,
+  "local_markdown_links_checked": [
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../../../app/domains/travel_ops/ports/data_sources/subway_boarding.py"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../../../app/domains/travel_ops/instances/mobility/engine/subway_departure.py"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../../../app/domains/travel_ops/ports/subway_train_identity.py"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../../../tests/unit/travel/test_subway_train_identity_v1.py"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../evidence/2026-10-09_1228_지하철_문자열열차번호_선택연결/"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../evidence/2026-10-09_1228_지하철_문자열열차번호_선택연결/actual-source-assessment-v1.json"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../../../../datasets/mobility/raw/2026-10-09_1228_지하철_문자열열차번호_선택연결_retry_v2/"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../../../../datasets/mobility/raw/2026-10-09_1228_지하철_문자열열차번호_선택연결/"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "assets/2026-10-09_mobility_readiness_v44/mobility-readiness.html"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../../teams/mobility.md"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../evidence/2026-10-09_1228_지하철_문자열열차번호_선택연결/backup-manifest-v1.json"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md",
+      "target": "../evidence/2026-10-09_1228_지하철_문자열열차번호_선택연결/backup-manifest-v2.json"
+    },
+    {
+      "file": "final_project_cs/wiki/teams/mobility.md",
+      "target": "../records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md"
+    },
+    {
+      "file": "final_project_cs/wiki/teams/mobility.md",
+      "target": "../records/evidence/2026-10-09_1228_지하철_문자열열차번호_선택연결/"
+    },
+    {
+      "file": "final_project_cs/wiki/teams/mobility.md",
+      "target": "../records/reports/assets/2026-10-09_mobility_readiness_v44/mobility-readiness.html"
+    },
+    {
+      "file": "datasets/mobility/REPORT.md",
+      "target": "raw/2026-10-09_1228_지하철_문자열열차번호_선택연결_retry_v2/"
+    },
+    {
+      "file": "datasets/mobility/REPORT.md",
+      "target": "raw/2026-10-09_1228_지하철_문자열열차번호_선택연결/"
+    },
+    {
+      "file": "datasets/mobility/REPORT.md",
+      "target": "../../final_project_cs/wiki/records/reports/2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1228_지하철_문자열열차번호_선택연결.md",
+      "target": "../2026-10-09_1241_지하철_문자열열차번호_두단계_복구검증.md"
+    },
+    {
+      "file": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1228_지하철_문자열열차번호_선택연결.md",
+      "target": "../../evidence/2026-10-09_1228_지하철_문자열열차번호_선택연결/"
+    }
+  ],
+  "visual_cards": 21,
+  "js_syntax_checked": true,
+  "browser_render_checked": false,
+  "full_feature_completion": false
+}

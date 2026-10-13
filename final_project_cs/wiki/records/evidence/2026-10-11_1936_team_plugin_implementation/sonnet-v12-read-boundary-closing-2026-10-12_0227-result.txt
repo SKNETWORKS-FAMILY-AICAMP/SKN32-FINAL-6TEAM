@@ -1,0 +1,57 @@
+**결과: 이 좁은 델타(v12 `_run_decision` 변경)에서는 확정 결함을 찾지 못했습니다.** 아래 정적 검토는 읽은 코드 기준이고, 실행으로 확인한 것은 합성 순수 단위 테스트 94건뿐입니다.
+
+## 실행 증거
+- 지정한 명령을 한 번, 백그라운드 없이 실행했습니다. 출력은 다음과 같습니다.
+  - `94 passed in 3.73s`
+  - `PYTEST_EXIT=0`
+- 기대한 94건과 일치합니다.
+- 대상 파일은 `test_fact_read_recovery.py`, `test_fact_context.py`, `test_initial_retry_boundaries.py`, `test_controller_resume_recovery.py`, `test_implicit_reply_recency.py`입니다.
+- 이 94건은 메모리 seam과 가짜 연결 위의 단위 테스트입니다. 실제 PostgreSQL·HTTP 테스트는 제가 실행하지 않았습니다.
+- v12 전체 격리 Linux 결과는 접근하지 않았고 확인하지 못했으니 통과했다고 말하지 않습니다.
+
+## 정적 검토 (후보 `app/domains/travel_ops/components/conversation/` 기준, 파일명은 `trip_messages.py`, `fact_read_retry.py`)
+1. **첫 번째 버전 검사**는 `trip_messages.py:721-724`에 있습니다.
+   - `lock_read_case` 뒤, `fact_context.resolve`와 `classify_case` 앞에서 `current_context["version"]`과 `read_snapshot["base_version"]`을 비교합니다.
+   - 다르면 `StateConflict(NEW_REQUEST)`를 냅니다.
+   - 이 지점은 아직 분류나 라우팅 전이가 없는 상태입니다.
+2. **두 번째 버전 검사**는 `trip_messages.py:760-766`에 있습니다.
+   - `classify_case`(739-742)와 `move(ROUTED)`(757-759) 뒤, 답변 생성 앞에서 fresh 연결의 `current.version`을 비교합니다.
+   - safe_read에서는 `conn.commit()`이 생략됩니다(743-744).
+   - 그래서 StateConflict가 나면 `handle_trip_message`의 `with get_connection() as conn` 종료 시 psycopg가 바깥 트랜잭션 전체를 롤백합니다. Case는 `classifying`으로 돌아가고 `agent_runs`도 없습니다.
+   - `transition_case`는 commit/rollback을 직접 호출하지 않습니다. `classification.py`도 마찬가지입니다.
+   - 입력은 `_open_message_case`(646·657)가 이미 커밋한 Case와 `fact_read_snapshot`에 남습니다. 같은 요청 번호로 다시 보내면 `restore`(`fact_read_retry.py:94`)나 이 검사가 다시 거절합니다.
+3. **savepoint**: `move()`의 `conn.transaction()`은 바깥 트랜잭션 안에서 savepoint로 동작합니다. 내부 `conn.rollback()`을 savepoint가 막아 준다고 믿는 코드는 없습니다. 롤백이 가능한 `place_info`는 별도 연결(808-809)로 분리되어 있습니다.
+4. **별도 보강 연결**: `trip_messages.py:806-811`의 `_place_extras(extra_conn, ...)`는 `place_info`와 `_catalog_row`만 호출합니다.
+   - `place_info.py:98·152`에서 알려진 SQL 오류(UndefinedTable 등) 때 `conn.rollback()`을 호출하는 대상이 이 별도 연결입니다.
+   - 두 함수는 SELECT만 하고, LLM·Team 호출이나 Case 변경은 없습니다.
+   - 화이트리스트 밖 오류는 그대로 전파되고, 바깥 롤백으로 Case가 재시도 가능한 상태로 남습니다.
+   - 비 safe_read 경로는 기존대로 `conn`을 씁니다.
+5. **GPS**: `read_snapshot`에는 좌표가 없습니다. `LOCATION_FACTS`는 `recoverable=False`가 되어 safe_read에서 제외되고, `here`는 메모리에만 있습니다.
+6. **업무 게이팅과 부작용 1회**: `BUSINESS_ACTIONS`의 `prepare_only` 계획과 `case_dispatch.execute` 경로는 v11과 같습니다. safe_read는 `answer_fact`이면서 위치 사실이 아닐 때만 켜집니다.
+7. **새 HTTP 테스트** (`tests/e2e/test_fact_read_recovery_web.py:203-239`)
+   - 별도 실제 DB 연결에서 `store.append_version`을 호출합니다. 조회 결과를 꾸미지 않습니다.
+   - 호출 순서는 2번째 `latest`(context)와 3번째 `latest`(fresh)이고, `len(calls)==change_on`으로 고정합니다.
+   - `_public_conflict`(61-64)로 현재 공개 409 JSON(`state_conflict`와 고정 문구)을 검사합니다.
+   - `_unchanged`는 Case 저장 상태와 `agent_runs` 0건을 확인합니다.
+   - rollback 완료 케이스(242-262)는 `created`, `classified`, `routed`, `completed` 이벤트와 `resolved` 상태를 확인합니다.
+   - 단위 테스트(`test_fact_read_recovery.py:215-223`)는 `extra_conn is not conn`, `extra_conn.rollbacks==1`, `conn.rollbacks==0`, `conn.commits==0`을 확인합니다.
+
+## 잔여 사항 (결함 아님)
+- 두 번째 검사와 답변 생성 사이의 짧은 구간에서 일정이 바뀔 수 있습니다. 시점 읽기로 허용되는 범위이고, 이번 혼합 버전 버그와는 다릅니다. 전역 일정 락은 요구하지 않습니다.
+- 단위 테스트는 `conn.rollbacks`·`commits` 카운터와 가짜 reducer로 검증합니다. 롤백으로 Case 전이가 실제로 복원되는지는 실제 PostgreSQL 테스트 몫이고, 저는 실행하지 않았습니다.
+- safe_read에서는 요청당 연결이 최대 3개(바깥, fresh, extra)입니다. 풀 고갈은 운영상 확인 사항일 뿐 정합성 문제는 아닙니다.
+
+## 읽은 파일
+- `trip_messages.py` (`handle_trip_message` 255-374, `_open_message_case`, `_run_decision` 665-925, `_dispatch_decision`, `_place_extras`)
+- `fact_read_retry.py` 전체
+- `place_info.py` 85-165
+- `session.py`의 `get_connection`
+- `tests/unit/travel/test_fact_read_recovery.py` (136-235와 grep)
+- `tests/e2e/test_fact_read_recovery_web.py` (1-75, 160-264)
+- `review-notes/read-boundary-followup.md`
+- v11 소스는 비교용으로 읽지 않았습니다. 필요 없었습니다.
+
+## 모델과 권한
+- 모델은 Sonnet 5.5(`claude-sonnet-5-5`)입니다. Opus가 아닙니다.
+- 권한 거부는 없었습니다.
+- 소스 수정, DB·네트워크 접근, 비밀·고객 데이터 읽기도 없었습니다.

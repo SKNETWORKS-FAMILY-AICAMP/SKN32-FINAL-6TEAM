@@ -1,0 +1,146 @@
+[
+  {
+    "frame": 1,
+    "time": "2026-10-12T05:20:35.073Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 2,
+    "time": "2026-10-12T05:20:35.401Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 3,
+    "time": "2026-10-12T05:20:35.733Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 4,
+    "time": "2026-10-12T05:20:35.903Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 5,
+    "time": "2026-10-12T05:20:36.296Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 6,
+    "time": "2026-10-12T05:20:38.739Z",
+    "map": false,
+    "progress": [
+      "paragraph: 6/6 · 창덕궁 관람 운영시간 확인 중"
+    ],
+    "pins": 0
+  },
+  {
+    "frame": 7,
+    "time": "2026-10-12T05:20:39.306Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 8,
+    "time": "2026-10-12T05:20:39.740Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 9,
+    "time": "2026-10-12T05:20:40.068Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 10,
+    "time": "2026-10-12T05:20:40.303Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 11,
+    "time": "2026-10-12T05:20:40.556Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 12,
+    "time": "2026-10-12T05:20:40.829Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 13,
+    "time": "2026-10-12T05:20:41.533Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 14,
+    "time": "2026-10-12T05:20:42.068Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 15,
+    "time": "2026-10-12T05:20:42.382Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 16,
+    "time": "2026-10-12T05:20:42.686Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 17,
+    "time": "2026-10-12T05:20:43.038Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 18,
+    "time": "2026-10-12T05:20:43.284Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 19,
+    "time": "2026-10-12T05:20:43.546Z",
+    "map": false,
+    "progress": null,
+    "pins": 0
+  },
+  {
+    "frame": 20,
+    "time": "2026-10-12T05:20:44.489Z",
+    "map": true,
+    "progress": [
+      "paragraph: 장소 0/6 · 이동 0/4"
+    ],
+    "pins": 0
+  }
+]

@@ -1,0 +1,40 @@
+{
+  "checked_at_kst": "2026-10-12T00:35:24+09:00/2026-10-12T00:35:26+09:00",
+  "capture_kind": "공식 웹 검색·열람 결과의 짧은 원문 발췌와 적용 사실. 전체 HTML 바이트 보관 또는 API 응답 확보가 아님",
+  "developer_api_calls": 0,
+  "sources": [
+    {
+      "title": "서울특별시 노선정보조회 서비스",
+      "url": "https://www.data.go.kr/data/15000193/openapi.do",
+      "original_excerpt": "노선별 경유 정류소 조회 서비스",
+      "fields_confirmed": {
+        "busRouteId": "노선ID",
+        "seq": "순번",
+        "station": "정류소 고유 ID",
+        "gpsX": "좌표X (WGS84)",
+        "gpsY": "좌표Y (WGS84)",
+        "direction": "진행방향"
+      },
+      "application": "기존 가공자료의 route_id·seq·station_id·좌표로 선택된 승하차 구간만 추출. 동명 정류소를 다른 순번으로 바꾸지 않음",
+      "license_display": "공공저작물 출처표시 제1유형",
+      "limits": "오늘 노선자료를 새로 수집한 것이 아님. 보유 가공자료의 수집일은 2026-09-10으로 유지"
+    },
+    {
+      "title": "GTFS Schedule Reference",
+      "url": "https://gtfs.org/documentation/schedule/reference/",
+      "original_excerpt": "A stop may be serviced multiple times in the same trip",
+      "facts": "stop_times는 trip_id·stop_sequence로 구분하고 stop_sequence가 운행 순서를 나타냄. shapes는 별도 차량 경로 좌표열임",
+      "application": "정류장 이름이나 정류장ID 단독으로 순환 구간을 정하지 않음. 정류장 경유선과 실제 도로 형상을 구분",
+      "limits": "GTFS는 순번이 연속일 필요가 없지만 이 제품의 서울 가공자료 계약은 연속 seq임. GTFS 자체에 연속 순번을 강제하지 않음"
+    },
+    {
+      "title": "OpenStreetMap Relation:route",
+      "url": "https://wiki.openstreetmap.org/wiki/Relation:route",
+      "original_excerpt": "The order of the members in the relation should be identical to the order in the timetable.",
+      "facts": "왕복·변형 경로는 별도 route 관계로 구별할 수 있고 정류장·플랫폼 구성원 순서는 시간표 순서를 따름",
+      "application": "차량 최단도로 경로를 실제 버스노선 형상으로 대신하지 않음. 선택 방향의 정류장 순서를 보존",
+      "limits": "이번 구현에서 OSM 버스 route relation 형상을 신규 추출하거나 완전성을 검증한 것은 아님"
+    }
+  ],
+  "correction": "v1의 분 단위 확인 시각은 계측값이 아니므로 사용하지 않습니다. v2는 공식 3개 페이지를 다시 열고 도구 시계로 조회 직전·직후를 계측했습니다."
+}

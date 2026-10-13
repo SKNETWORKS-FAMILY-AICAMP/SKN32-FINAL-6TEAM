@@ -1,0 +1,8 @@
+{
+  "report": "wiki/records/reports/2026-10-12_0236_team_plugin_operating_release.md",
+  "report_sha256": "ace6204cf71c66540fec1a317c8df4d028d6c8a21bd979ae62a9ab1aa3b138dc",
+  "local_links": 23,
+  "missing_links": [],
+  "backup": "wiki/records/reports/_backup/2026-10-12_024144_before_final_dod_update",
+  "operating_summary": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/candidate-v12-operating-verification-v2.json"
+}

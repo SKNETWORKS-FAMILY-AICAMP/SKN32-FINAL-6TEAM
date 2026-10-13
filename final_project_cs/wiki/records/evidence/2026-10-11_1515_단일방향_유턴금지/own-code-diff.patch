@@ -1,0 +1,72 @@
+--- before/build_car_turn_policy_v1.py
++++ after/build_car_turn_policy_v1.py
+@@ -10,7 +10,27 @@
+     return hashlib.sha256(path.read_bytes()).hexdigest()
+ 
+ 
+-def build(audit_dir, graph_dir, output):
++def unique_same_way_uturn(row):
++    """동일 도로의 유일한 역방향 회전만 해석한다. 중간점 양방향은 고르지 않는다."""
++    audit = row['graph_audit']
++    roles = {role: [m for m in row['members'] if m['role'] == role]
++             for role in ('from', 'to', 'via')}
++    if (audit['effective_motorcar_value_candidate'] != 'no_u_turn'
++            or audit['unsupported_or_unresolved_reasons'] != ['same_way_turn_requires_arc_geometry_semantics']
++            or audit['conditional_tags'] or audit['except_modes'] or audit['via_form'] != 'node'
++            or any(len(roles[role]) != 1 for role in roles)):
++        return False
++    before, after, via = (roles[role][0] for role in ('from', 'to', 'via'))
++    if (before['type'] != 'w' or after['type'] != 'w' or via['type'] != 'n'
++            or before['ref'] != after['ref']):
++        return False
++    inc, out = audit['incoming_arc_codes'], audit['outgoing_arc_codes']
++    return (len(inc) == len(out) == 1
++            and all(isinstance(a, int) and not isinstance(a, bool) and a >= 0 for a in inc + out)
++            and out[0] == inc[0] ^ 1)
++
++
++def build(audit_dir, graph_dir, output, *, include_same_way_uturn=False):
+     manifest = json.loads((audit_dir/'manifest.json').read_text(encoding='utf8'))
+     nodes, edges = graph_dir/'nodes.jsonl.gz', graph_dir/'edges.jsonl.gz'
+     bound = {path.name: digest(path) for path in (nodes, edges)}
+@@ -36,12 +56,31 @@
+         rules.append(dict(relation_id=row['relation_id'], incoming=audit['incoming_arc_codes'][0],
+                           outgoing=audit['outgoing_arc_codes'][0],
+                           value=audit['effective_motorcar_value_candidate']))
++    extra, audit_hash = [], None
++    if include_same_way_uturn:
++        full_path = audit_dir/'restrictions-graph-audit.jsonl'
++        expected = next(row['sha256'] for row in manifest['outputs'] if row['name'] == full_path.name)
++        audit_hash = digest(full_path)
++        if audit_hash != expected:
++            raise ValueError('전체 회전 원자료 해시가 다릅니다')
++        full_rows = [json.loads(line) for line in full_path.read_text(encoding='utf8').splitlines()]
++        if len(full_rows) != manifest['counts']['graph_relevant_relations']:
++            raise ValueError('전체 회전 원자료 분모가 다릅니다')
++        extra = [dict(relation_id=row['relation_id'], incoming=row['graph_audit']['incoming_arc_codes'][0],
++                      outgoing=row['graph_audit']['outgoing_arc_codes'][0], value='no_u_turn')
++                 for row in full_rows if unique_same_way_uturn(row)]
++        rules.extend(extra)
++        if len({row['relation_id'] for row in rules}) != len(rules):
++            raise ValueError('적용 회전 관계 ID가 중복됩니다')
++        rules.sort(key=lambda row: row['relation_id'])
+     result = dict(schema_version=1, created_at=datetime.now().astimezone().isoformat(),
+                   license='ODbL 1.0 © OpenStreetMap contributors',
+                   osm_data_at=manifest['osm_data_at'], graph_sha256=bound,
+                   source_audit_sha256=digest(rows_path), source_relations=manifest['counts']['graph_relevant_relations'],
+                   applied_relations=len(rules), excluded_candidate_relations=len(excluded),
+                   excluded_candidate_ids=excluded, complete_road_rules=False, rules=rules)
++    if include_same_way_uturn:
++        result.update(same_way_uturn_relations=len(extra), full_audit_sha256=audit_hash)
+     with output.open('x', encoding='utf8') as out:
+         json.dump(result, out, ensure_ascii=False, separators=(',', ':'))
+     return result
+@@ -52,6 +91,7 @@
+     parser.add_argument('--audit', type=Path, required=True)
+     parser.add_argument('--graph', type=Path, required=True)
+     parser.add_argument('--out', type=Path, required=True)
++    parser.add_argument('--include-same-way-uturn', action='store_true')
+     args = parser.parse_args()
+-    data = build(args.audit, args.graph, args.out)
++    data = build(args.audit, args.graph, args.out, include_same_way_uturn=args.include_same_way_uturn)
+     print(json.dumps({key: data[key] for key in ('applied_relations', 'source_relations', 'excluded_candidate_relations')}))

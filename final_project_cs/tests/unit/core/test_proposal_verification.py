@@ -135,15 +135,11 @@ def test_non_finite_refund_amount_is_rejected_without_crashing(amount):
     assert "refund_amount" in fields(problems)
 
 
-def test_commerce_vocabulary_is_not_silently_accepted():
-    """★옛 커머스 어휘(`order_id`)는 여기서 '선언되지 않은 필드' 로 거부된다.
-
-    엔진이 커머스 어휘를 알고 있었다면 이게 조용히 통과했을 것이다. 도메인을
-    갈아끼웠는데 옛 어휘가 그대로 도는지 보는 검사이기도 하다.
-    """
+def test_undeclared_travel_identifier_is_rejected():
+    """여행 식별자라도 현재 정책에 선언되지 않은 permit_id는 거부한다."""
     problems = verify(
-        arguments={"order_id": "ord-1"}, rationale_evidence_ids=["ev-1"], facts=facts())
-    assert "order_id" in fields(problems)
+        arguments={"permit_id": "permit-1"}, rationale_evidence_ids=["ev-1"], facts=facts())
+    assert "permit_id" in fields(problems)
     assert any("선언되지 않은" in p.reason for p in problems)
 
 

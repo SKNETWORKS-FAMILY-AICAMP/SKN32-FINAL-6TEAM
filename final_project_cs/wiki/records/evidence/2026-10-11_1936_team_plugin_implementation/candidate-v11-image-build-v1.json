@@ -1,0 +1,59 @@
+{
+  "created_at": "2026-10-12T02:18:47.955819+09:00",
+  "preparation": {
+    "candidate": "legacy/deployment_candidates/2026-10-12_015017_plugin_v11",
+    "candidate_manifest_sha256": "9ae31e99e93884b027eea248612f8a60059ed608171efd1dfcd3aa62f97fd94c",
+    "base_image_id": "sha256:a7c6414e5d7ab15fe26ca7d358b754cff73de6c31d31484e2155b3e9d52989b1",
+    "target_tag": "tripilot-plugin-validated:20261012-021720-v11",
+    "context": "legacy/release_build_contexts/2026-10-12_021719",
+    "context_files": 54,
+    "context_tar_sha256": "8a4fd01f154196bed758084eae9f745d4b24a91dfcd91679010cbea01f28a36d",
+    "script": ".tmp/plugin_release_20261011/build-20261012-021720-v11.py"
+  },
+  "verification": {
+    "operating_service_modified": false,
+    "operating_database_connected": false,
+    "operating_volumes_connected": false,
+    "operating_environment_forwarded": false,
+    "package_install": false,
+    "image_pull": false,
+    "build_network": "none",
+    "image_id": "sha256:91939ad3596a103c41f59211d47fef499ce2499b8f77c816e2827f5bf5fe46a5",
+    "inherited_config_matches": {
+      "Entrypoint": true,
+      "Cmd": true,
+      "WorkingDir": true,
+      "User": true,
+      "Volumes": true
+    },
+    "inherited_environment_matches": true,
+    "runtime_hash_verification": {
+      "verified_runtime_files": 52,
+      "packages": {
+        "fastapi": "0.116.1",
+        "pydantic": "2.13.4",
+        "psycopg": "3.3.4",
+        "httpx": "0.28.1",
+        "PyYAML": "6.0.2",
+        "uvicorn": "0.35.0",
+        "starlette": "0.47.3",
+        "pytest": "8.4.2"
+      }
+    },
+    "offline_tokenizer_smoke": {
+      "public_asset_sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7",
+      "token_counts": [
+        8,
+        4,
+        3
+      ],
+      "network_attempts": 0,
+      "read_only_cache": true,
+      "cache_file_bytes": 1681126,
+      "package_install": false,
+      "model_calls": 0
+    },
+    "public_assets": 1,
+    "success": true
+  }
+}

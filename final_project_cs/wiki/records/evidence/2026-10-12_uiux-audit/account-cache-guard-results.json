@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-10-11T16:26:32.319Z",
+  "method": "Product TSX transpiled and executed with installed QueryClient; controlled UI hooks and request completion",
+  "browserVerified": false,
+  "externalRequests": 0,
+  "passed": 6,
+  "total": 6,
+  "cases": [
+    {
+      "feature": "chat",
+      "scenario": "normal",
+      "before": "old-response",
+      "after": "old-response",
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "chat",
+      "scenario": "logout",
+      "before": "old-response",
+      "after": "empty",
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "chat",
+      "scenario": "new-session",
+      "before": "old-response",
+      "after": "new-account",
+      "expected": "new-account",
+      "pass": true
+    },
+    {
+      "feature": "support",
+      "scenario": "normal",
+      "before": "old-response",
+      "after": "old-response",
+      "expected": "old-response",
+      "pass": true
+    },
+    {
+      "feature": "support",
+      "scenario": "logout",
+      "before": "old-response",
+      "after": "empty",
+      "expected": "empty",
+      "pass": true
+    },
+    {
+      "feature": "support",
+      "scenario": "new-session",
+      "before": "old-response",
+      "after": "new-account",
+      "expected": "new-account",
+      "pass": true
+    }
+  ]
+}

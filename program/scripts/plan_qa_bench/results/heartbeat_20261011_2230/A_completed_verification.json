@@ -1,0 +1,159 @@
+{
+  "observed_at_utc": "2026-10-11T13:30:10.229143+00:00",
+  "archive_sha256": "e1925f659298371748a62d37799f7f2e78f780f80bf94d8e0e2452a6d0a45450",
+  "verified_files": 18,
+  "summaries": {
+    "finch_appschema_soak6h_20261011": {
+      "summary": {
+        "attempted": 4773,
+        "correct": 4773,
+        "failed": 0,
+        "transport_errors": 0,
+        "not_independent_accuracy": true,
+        "elapsed_seconds": 21608.005753828213,
+        "stop": "duration_completed",
+        "unique_conditions": 12,
+        "independent_accuracy": false,
+        "slots": 2,
+        "context_total": 8192,
+        "latency_scope": "co-running host; within-job concurrency phases only"
+      },
+      "baseline_rows": 0,
+      "baseline_correct": 0,
+      "observations": 4773,
+      "observations_correct": 4773,
+      "budgets": {
+        "400": {
+          "saved": 0,
+          "correct": 0
+        },
+        "800": {
+          "saved": 0,
+          "correct": 0
+        }
+      }
+    },
+    "saluki_original_appschema800_soak6h_20261011": {
+      "summary": {
+        "attempted": 8874,
+        "correct": 8874,
+        "failed": 0,
+        "transport_errors": 0,
+        "not_independent_accuracy": true,
+        "elapsed_seconds": 21601.76515173167,
+        "stop": "duration_completed",
+        "unique_conditions": 12,
+        "independent_accuracy": false,
+        "slots": 2,
+        "context_total": 8192,
+        "latency_scope": "co-running host; within-job concurrency phases only"
+      },
+      "baseline_rows": 0,
+      "baseline_correct": 0,
+      "observations": 8874,
+      "observations_correct": 8874,
+      "budgets": {
+        "400": {
+          "saved": 0,
+          "correct": 0
+        },
+        "800": {
+          "saved": 0,
+          "correct": 0
+        }
+      }
+    }
+  },
+  "audit": [
+    {
+      "name": "finch_appschema_soak6h_20261011/started.json",
+      "bytes": 1714,
+      "sha256": "b4c5c9128be3f6514c87f3279e673ea942152094609fa38bc095035ce1a08e64"
+    },
+    {
+      "name": "finch_appschema_soak6h_20261011/job.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "finch_appschema_soak6h_20261011/engine.log",
+      "bytes": 4715160,
+      "sha256": "ebf7a0f272382a3914b4d27a692fecf8be125931c40bf375ab73234319539a80"
+    },
+    {
+      "name": "finch_appschema_soak6h_20261011/observations.jsonl",
+      "bytes": 10956557,
+      "sha256": "b775b28f8f6db366292123e8e0c66a08371f12f81ab764396f400112a35d17b0"
+    },
+    {
+      "name": "finch_appschema_soak6h_20261011/resources.jsonl",
+      "bytes": 48306,
+      "sha256": "db0a0efc346dcfe846a44dd3d2e32d8f05044e11dfebe1ae85801688a4a5c06d"
+    },
+    {
+      "name": "finch_appschema_soak6h_20261011/progress.json",
+      "bytes": 186,
+      "sha256": "c49dc775c3e174d17e98039a4417cadcc1d7dbbae5e390563026396b9b793858"
+    },
+    {
+      "name": "finch_appschema_soak6h_20261011/summary.json",
+      "bytes": 364,
+      "sha256": "6e7b74755cfeb21fddc53ac53224bf54a4d38a35bb6b7716c988e37cc9534efa"
+    },
+    {
+      "name": "finch_appschema_soak6h_20261011/d_test_finch_appschema_soak6h_20261011.jsonl",
+      "bytes": 405,
+      "sha256": "8bcd687f8dbd9c64bd8eb5185e3d8966fa7b9051c8bd2fa44e8b3dbad47c0bd4"
+    },
+    {
+      "name": "saluki_original_appschema800_soak6h_20261011/started.json",
+      "bytes": 1776,
+      "sha256": "93c89a57ff43a1e942ed1e8c216cbdd722b49a62944a20c087ff4d056b0c6d87"
+    },
+    {
+      "name": "saluki_original_appschema800_soak6h_20261011/job.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "saluki_original_appschema800_soak6h_20261011/engine.log",
+      "bytes": 7433997,
+      "sha256": "1bd3808bc60caae5cfe45f15849aa9ccdfae2d545b325c8cd06be9a0cb4874cf"
+    },
+    {
+      "name": "saluki_original_appschema800_soak6h_20261011/observations.jsonl",
+      "bytes": 14905927,
+      "sha256": "2929a1c62a6a586a955144bce61ed9e8d5f7b29d467e111315dc7b0a71ee99d2"
+    },
+    {
+      "name": "saluki_original_appschema800_soak6h_20261011/resources.jsonl",
+      "bytes": 49674,
+      "sha256": "d043db8eb19b7e307a6ba0d1e9c15e3e77b8f90264ce1f40aec8ffa90206b689"
+    },
+    {
+      "name": "saluki_original_appschema800_soak6h_20261011/progress.json",
+      "bytes": 186,
+      "sha256": "1e0d95cb89f8209da68a8deceb15a3a0eb7c213adc926b96d62f99635478c212"
+    },
+    {
+      "name": "saluki_original_appschema800_soak6h_20261011/summary.json",
+      "bytes": 363,
+      "sha256": "b455ed1e462045ff8d1112641b256f80fa0852a77a62a9ad440e2bf59af708cc"
+    },
+    {
+      "name": "saluki_original_appschema800_soak6h_20261011/d_test_saluki_original_appschema800_soak6h_20261011.jsonl",
+      "bytes": 404,
+      "sha256": "59f1537be2e8d94f8cbd88bf4f69a7e6134fc2e2ba6f0e1bf1302ba637cf6f36"
+    },
+    {
+      "name": "tripilot-a-backlog-20261008/manifest.json",
+      "bytes": 224869,
+      "sha256": "512ce5653048d69361f801ff280af328a8c0ccb2f2884fedd23f2b86bdce61f6"
+    },
+    {
+      "name": "tripilot-a-backlog-20261008/state.json",
+      "bytes": 37110,
+      "sha256": "ca701fa901a6cea9cb607c763038e8539da4301b13445c1990ae9c747b2dddf6"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+[WebServer] (node:15224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:5396) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 12 tests using 1 worker
+
+(node:16988) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\checking-read-list-20261012.spec.ts:9:3 › 첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 375px (13.5s)
+  ok  2 tests\live\checking-read-list-20261012.spec.ts:9:3 › 첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 1280px (12.2s)
+  ok  3 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (11.2s)
+  ok  4 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (9.9s)
+  ok  5 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (12.1s)
+  x   6 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (2.0m)
+(node:26904) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  7 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 거리 스택으로 남는다 375px (11.3s)
+  ok  8 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 거리 스택으로 남는다 1280px (11.1s)
+  ok  9 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 거리 스택으로 남는다 375px (11.3s)
+  ok 10 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 거리 스택으로 남는다 1280px (11.8s)
+(node:17540) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 11 tests\live\uiux-sonnet-map-crowded-20261012.spec.ts:9:3 › 180px 지도에서 같은 방향의 이전 4개 일정 스택을 누를 수 있다 (2.5s)
+  ok 12 tests\live\uiux-sonnet-map-crowded-20261012.spec.ts:9:3 › 180px 지도에서 같은 방향의 이전 5개 일정 스택을 누를 수 있다 (2.8s)
+
+
+  1) tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 
+
+    Test timeout of 60000ms exceeded while setting up "page".
+
+    Tearing down "context" exceeded the test timeout of 60000ms.
+
+    Error: browserContext.close: Test timeout of 60000ms exceeded.
+    Browser logs:
+
+    <launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=C:\Users\PLAYDA~1\AppData\Local\Temp\playwright_chromiumdev_profile-qENmTx --remote-debugging-pipe --no-startup-window
+    <launched> pid=15208
+    [pid=15208][err] [15208:25920:1012/120115.417:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: QUOTA_EXCEEDED
+    [pid=15208][err] [15208:27316:1012/120204.406:ERROR:gpu\command_buffer\client\implementation_base.cc:267] ContextResult::kFatalFailure: TransferBuffer::Initialize() failed
+    [pid=15208] <gracefully close start>
+    [pid=15208] <kill>
+    [pid=15208] <will force kill>
+    [pid=15208] taskkill stdout: ����: PID 21036�� ���μ���(PID 15208�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+    ����: PID 26520�� ���μ���(PID 15208�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+    ����: PID 26800�� ���μ���(PID 15208�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+    ����: PID 15208�� ���μ���(PID 16988�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+
+
+    Error Context: ..\..\map-stack-direction-20261012-v5\browser-evidence\map-reveal-continuity-2026-aa6f1-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\error-context.md
+
+  1 failed
+    tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 
+  11 passed (4.6m)

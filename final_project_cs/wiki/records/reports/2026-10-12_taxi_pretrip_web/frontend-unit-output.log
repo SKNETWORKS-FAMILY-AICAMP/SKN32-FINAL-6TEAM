@@ -1,0 +1,17 @@
+
+ RUN  v5.0.1 C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web
+
+ ✓ src/lib/live/move-options.test.ts (8 tests) 22ms
+ ✓ src/lib/live/taxi-pricing.test.ts (12 tests) 12ms
+ ✓ src/features/plan-check/from-review.test.ts (19 tests) 153ms
+
+ Test Files  3 passed (3)
+      Tests  39 passed (39)
+   Start at  04:35:33
+   Duration  10.10s (transform 82%, import 14%, tests 3%, worker 1%)
+
+  Transform  transforming modules took 5.69s · 82% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
+JUNIT report written to C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_taxi_practical_20261012/review-new/mycap-web-vitest-v3.xml

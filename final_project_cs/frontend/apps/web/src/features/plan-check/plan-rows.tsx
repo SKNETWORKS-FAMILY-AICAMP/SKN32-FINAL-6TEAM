@@ -18,6 +18,7 @@ import styles from "./plan-check.module.css";
 
 /** Everything a row of the list needs from the screen, in one place (the list is drawn twice when a preview stands under the plan). */
 export interface RowContext {
+  revision?: number;
   done: boolean;
   /** Only the currently revealed check opens; future read stops remain quiet and folded. */
   reveal?: { activeId: string | null; waiting: ReadonlySet<string> };
@@ -114,7 +115,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
           {points[index] && ctx.insertion?.(points[index])}
           {entry.type === "item"
             ? <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
-            : <MoveRow move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={ctx} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />}
+            : <MoveRow move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={{ ...ctx, revision: view.revision }} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />}
         </Fragment>)}{points.at(-1) && ctx.insertion?.(points.at(-1)!)}</>;
       })()}</RailList>
     </section>)}</>;
@@ -363,7 +364,7 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
       : done
         ? <><button type="button" className={styles.moveHead} aria-expanded={open} aria-controls={`${ctx.prefix}plan-move-${move.id}-checks`} onClick={() => ctx.onToggleMove(move.id)}>{line}</button>
           {/* `[2026-10-07 사용자 지시 — 이동수단 고르기]` 펼친 칸 맨 위: 「이동 수단」 박스(서버가 이 기능을 주지 않으면 없다). 확인 중 · 삭제 예정 일정 옆 구간은 잠기고 이유를 말한다. */}
-          {open && ctx.actions.moveOptions && <MoveModeBox move={move} to={to} ctx={ctx}
+          {open && ctx.actions.moveOptions && <MoveModeBox key={`${move.id}:${ctx.revision ?? "preview"}`} move={move} to={to} ctx={ctx}
             locked={dim ? t("삭제할 일정 앞뒤의 이동이라 바꿀 수 없어요", "This leg belongs to a stop marked for deletion") : ctx.frozen} />}
           {open && <Checks id={`${ctx.prefix}plan-move-${move.id}-checks`} rows={move.checks} />}</>
         : <div className={styles.moveHead}>{line}</div>}</div>

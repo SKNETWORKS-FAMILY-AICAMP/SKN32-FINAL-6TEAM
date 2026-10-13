@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>진단 기록을 잃지 않기 위한 한 회차의 처리</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:32px;background:#fbfcfd;color:#161c28;font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif}main{max-width:1280px;margin:auto}h1{font-family:"Instrument Serif","Noto Serif KR",Batang,serif;font-size:32px;font-weight:400;margin:0 0 12px}p{font-size:16px;line-height:1.6;max-width:76ch;margin:0 0 16px;color:#6b7488}svg{width:100%;height:auto;display:block;background:#fbfcfd;border:1px solid #dbe0ea;border-radius:8px}text{font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif;font-size:16px;fill:#161c28}.shape{fill:#f1f4f8;stroke:#dbe0ea;stroke-width:1.2}.decision{fill:#fff;stroke:#a8720c;stroke-width:1.2}.end{fill:#fbfcfd;stroke:#2f5bd8;stroke-width:1.2}.line{fill:none;stroke:#6b7488;stroke-width:1.2;marker-end:url(#diag-arrow)}.condition{fill:#6b7488}.small{font-size:12px;fill:#6b7488}footer{margin-top:16px;font-size:12px;line-height:1.6;color:#6b7488}@media(max-width:600px){body{padding:16px}h1{font-size:24px}}
+</style>
+</head>
+<body><main>
+<h1>진단 기록을 잃지 않기 위한 한 회차의 처리</h1>
+<p>진단 DB가 일시적으로 응답하지 않으면 디스크에 보관합니다. 디스크에도 쓸 수 없으면 수집 실패를 드러냅니다.</p>
+<svg viewBox="0 0 1280 720" role="img" aria-labelledby="diag-title diag-desc">
+<title id="diag-title">진단 수집 한 회차의 시작과 세 종료 경로</title>
+<desc id="diag-desc">수집 시작 후 허용 항목을 검사하고 마스킹합니다. 진단 DB 저장 성공이면 저장 완료로 끝납니다. 실패하면 디스크 보관을 시도합니다. 보관 성공이면 재전송 대기로 끝나고 실패하면 수집 저하 표시로 끝납니다. 재전송의 자동 실행 연결은 인계 대기입니다.</desc>
+<defs><marker id="diag-arrow" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#6b7488"/></marker></defs>
+<!-- Connectors precede all boxes. -->
+<g class="line">
+<path d="M360 72 V100"/><path d="M360 148 V176"/><path d="M360 224 V268"/>
+<path d="M480 300 H736"/><path d="M360 332 V372"/>
+<path d="M360 420 V460"/><path d="M480 492 H736"/><path d="M360 524 V584"/>
+</g>
+<!-- Branch labels have an opaque mask and an 8px gap from the line. -->
+<g>
+<rect x="580" y="276" width="56" height="16" fill="#fbfcfd"/><text class="condition" x="608" y="288" text-anchor="middle">성공</text>
+<rect x="368" y="344" width="56" height="20" fill="#fbfcfd"/><text class="condition" x="396" y="360" text-anchor="middle">실패</text>
+<rect x="580" y="468" width="56" height="16" fill="#fbfcfd"/><text class="condition" x="608" y="480" text-anchor="middle">성공</text>
+<rect x="368" y="544" width="56" height="20" fill="#fbfcfd"/><text class="condition" x="396" y="560" text-anchor="middle">실패</text>
+</g>
+<ellipse class="end" cx="360" cy="48" rx="128" ry="24"/><text x="360" y="52" text-anchor="middle">수집 시작</text>
+<rect class="shape" x="232" y="100" width="256" height="48" rx="8"/><text x="360" y="128" text-anchor="middle">허용 항목 검사·마스킹</text>
+<rect class="shape" x="232" y="176" width="256" height="48" rx="8"/><text x="360" y="204" text-anchor="middle">진단 DB 저장 시도</text>
+<path class="decision" d="M360 268 L480 300 L360 332 L240 300 Z"/><text x="360" y="304" text-anchor="middle">저장됐나요?</text>
+<ellipse class="end" cx="864" cy="300" rx="128" ry="24"/><text x="864" y="304" text-anchor="middle">저장 완료 · 종료</text>
+<rect class="shape" x="232" y="372" width="256" height="48" rx="8"/><text x="360" y="400" text-anchor="middle">디스크 보관 시도</text>
+<path class="decision" d="M360 460 L480 492 L360 524 L240 492 Z"/><text x="360" y="496" text-anchor="middle">보관됐나요?</text>
+<ellipse class="end" cx="864" cy="492" rx="128" ry="24"/><text x="864" y="496" text-anchor="middle">재전송 대기 · 종료</text>
+<ellipse class="end" cx="360" cy="608" rx="128" ry="24"/><text x="360" y="612" text-anchor="middle">수집 저하 표시 · 종료</text>
+<text class="small" x="736" y="548">다음 회차: 재전송 작업이 시작될 때</text>
+<text class="small" x="736" y="572">같은 발생 번호로 다시 제출합니다.</text>
+<text class="small" x="736" y="596">자동 실행 연결은 인계 대기입니다.</text>
+<line x1="32" y1="656" x2="1248" y2="656" stroke="#dbe0ea"/>
+<ellipse class="end" cx="64" cy="688" rx="24" ry="12"/><text class="small" x="104" y="692">시작·종료</text>
+<rect class="shape" x="280" y="676" width="48" height="24" rx="4"/><text class="small" x="344" y="692">처리</text>
+<path class="decision" d="M520 672 L548 688 L520 704 L492 688 Z"/><text class="small" x="564" y="692">판단 · 모든 분기 조건 표시</text>
+</svg>
+<footer>로컬 구현의 수집 동작입니다. 업무 DB 적용·실제 외부 자료 조회·배포 완료를 뜻하지 않습니다. acop 프로필 색상과 서체 계층을 사용하며, 외부 글꼴 다운로드 없이 설치된 서체로 표시합니다.</footer>
+</main></body></html>

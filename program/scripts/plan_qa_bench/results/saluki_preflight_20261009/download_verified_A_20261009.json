@@ -1,0 +1,476 @@
+{
+  "state": {
+    "status": "verified",
+    "timestamp_utc": "2026-10-08T17:17:48Z",
+    "revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+    "expected_bytes": 7898369152,
+    "expected_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+    "model_path": "/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+    "ephemeral_ram_storage": true,
+    "GPU_used": false,
+    "memory": {
+      "cgroup_limit": 30999998464,
+      "cgroup_used": 24564072448,
+      "cgroup_headroom": 6435926016,
+      "host_available": 226432888832
+    },
+    "bytes_saved": 7898369152,
+    "sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+    "elapsed_seconds": 150.65
+  },
+  "download_log": "{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:15:17Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 16533041152, \"cgroup_headroom\": 14466957312, \"host_available\": 230442115072}, \"bytes_saved\": 0, \"initial_ram_filesystem_free\": 15000002560}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:15:27Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 17069584384, \"cgroup_headroom\": 13930414080, \"host_available\": 229811367936}, \"bytes_saved\": 528482304, \"elapsed_seconds\": 10.02}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:15:37Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 17620770816, \"cgroup_headroom\": 13379227648, \"host_available\": 229234425856}, \"bytes_saved\": 1056964608, \"elapsed_seconds\": 20.1}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:15:47Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 18112655360, \"cgroup_headroom\": 12887343104, \"host_available\": 228759494656}, \"bytes_saved\": 1581252608, \"elapsed_seconds\": 30.1}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:15:57Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 18633748480, \"cgroup_headroom\": 12366249984, \"host_available\": 228275904512}, \"bytes_saved\": 2109734912, \"elapsed_seconds\": 40.18}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:16:07Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 19163664384, \"cgroup_headroom\": 11836334080, \"host_available\": 227655364608}, \"bytes_saved\": 2638217216, \"elapsed_seconds\": 50.26}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:16:17Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 19735195648, \"cgroup_headroom\": 11264802816, \"host_available\": 227123097600}, \"bytes_saved\": 3166699520, \"elapsed_seconds\": 60.34}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:16:27Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 20218888192, \"cgroup_headroom\": 10781110272, \"host_available\": 226672603136}, \"bytes_saved\": 3690987520, \"elapsed_seconds\": 70.34}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:16:37Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 20748718080, \"cgroup_headroom\": 10251280384, \"host_available\": 226117451776}, \"bytes_saved\": 4219469824, \"elapsed_seconds\": 80.42}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:16:47Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 21274906624, \"cgroup_headroom\": 9725091840, \"host_available\": 225633009664}, \"bytes_saved\": 4743757824, \"elapsed_seconds\": 90.42}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:16:57Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 21825810432, \"cgroup_headroom\": 9174188032, \"host_available\": 225097863168}, \"bytes_saved\": 5272240128, \"elapsed_seconds\": 100.5}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:17:08Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 22355099648, \"cgroup_headroom\": 8644898816, \"host_available\": 224445812736}, \"bytes_saved\": 5800722432, \"elapsed_seconds\": 110.58}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:17:18Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 22881071104, \"cgroup_headroom\": 8118927360, \"host_available\": 223970664448}, \"bytes_saved\": 6325010432, \"elapsed_seconds\": 120.58}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:17:28Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 23524659200, \"cgroup_headroom\": 7475339264, \"host_available\": 224600838144}, \"bytes_saved\": 6853492736, \"elapsed_seconds\": 130.66}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:17:38Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 24050139136, \"cgroup_headroom\": 6949859328, \"host_available\": 227581591552}, \"bytes_saved\": 7377780736, \"elapsed_seconds\": 140.66}\n{\"status\": \"verified\", \"timestamp_utc\": \"2026-10-08T17:17:48Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 24564072448, \"cgroup_headroom\": 6435926016, \"host_available\": 226432888832}, \"bytes_saved\": 7898369152, \"sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"elapsed_seconds\": 150.65}\n",
+  "download_pid": "350700",
+  "GPU": "3462 MiB, 82 %",
+  "memory_limit": "30999998464",
+  "memory_current": "24925233152",
+  "queue_state": {
+    "jobs": {
+      "frog_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "frog_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_h": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bbase_mx": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bbase_d": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 13
+      },
+      "e4bbase_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_d3": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 2
+      },
+      "g12bbase_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "g12bbase_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "g12bbase_d": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 2
+      },
+      "g12bbase_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "g12bbase_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_original_h": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 19
+      },
+      "winnow_original_mx": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 42
+      },
+      "winnow_original_d": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 53
+      },
+      "winnow_original_d2": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 13
+      },
+      "winnow_original_d3": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 13
+      },
+      "winnow_oos_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_oos_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_oos_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_oos_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_oos_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_original_d2": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bqat_original_h": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bqat_original_mx": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 4
+      },
+      "e4bqat_original_d3": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bqat_oos1_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos1_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_original_d": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 17
+      },
+      "e4bqat_oos1_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos1_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos1_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_mx": {
+        "status": "running",
+        "pid": 350523,
+        "expected": 4014,
+        "saved": 0
+      }
+    }
+  }
+}

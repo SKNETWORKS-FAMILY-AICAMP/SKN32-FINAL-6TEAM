@@ -1,0 +1,58 @@
+{
+  "checked_at": "2026-10-12T04:41:46.782815+09:00",
+  "python": {
+    "passed": 279,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "collected": 279
+  },
+  "python_execution": {
+    "started_at": "2026-10-12T04:34:18.563393+09:00",
+    "completed_at": "2026-10-12T04:38:53.335636+09:00",
+    "exit_code": 0,
+    "args": [
+      "-m",
+      "not live",
+      "-q",
+      "tests/unit/travel/mobility/test_taxi_call_product_flow_v1.py",
+      "tests/unit/travel/mobility/test_taxi_call_policy_v1.py",
+      "tests/unit/travel/mobility/test_taxi_option_fee_v1.py",
+      "tests/unit/travel/mobility/test_taxi_cost_components_v1.py",
+      "tests/unit/travel/mobility/test_departure_taxi_v1.py",
+      "tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py",
+      "tests/unit/travel/mobility/test_plan_taxi.py",
+      "tests/unit/travel/mobility/test_taxi_meter_audit_v1.py",
+      "tests/unit/travel/mobility/test_car_profile_piecewise_v1.py",
+      "tests/unit/travel/mobility/test_taxi_fallback.py",
+      "tests/unit/travel/mobility/test_taxi_billing_mode.py",
+      "tests/unit/travel/mobility/test_taxi_budget_calibration.py",
+      "tests/unit/travel/test_web_taxi_pricing_v1.py",
+      "tests/unit/travel/test_web_taxi_persisted_v1.py",
+      "tests/unit/travel/test_registered_moves.py",
+      "tests/unit/travel/test_intake_review_units.py",
+      "-m",
+      "not live and not slow and not mobility_full",
+      "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_taxi_practical_20261012\\flow-v5\\temp",
+      "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_taxi_practical_20261012\\flow-v5\\result.xml"
+    ],
+    "network": "blocked; standard socketpair IPC only"
+  },
+  "browser_execution": {
+    "started_at": "2026-10-12T04:34:05.536301+09:00",
+    "args": [
+      "C:\\Program Files\\nodejs\\npx.cmd",
+      "playwright",
+      "test",
+      "-c",
+      "playwright.live.config.ts",
+      "tests/live/taxi-pricing-20261012.spec.ts",
+      "--output=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_taxi_practical_20261012\\frontend-browser-v4\\screens"
+    ],
+    "kind": "browser",
+    "completed_at": "2026-10-12T04:40:17.965139+09:00",
+    "exit_code": 0
+  },
+  "mock_browser_expected_tests": 4,
+  "real_cs_response_verified": false
+}

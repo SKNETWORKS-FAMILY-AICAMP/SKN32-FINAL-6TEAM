@@ -1,0 +1,60 @@
+{
+  "model": "Winnow-E4B our-travel oos adapter",
+  "our_training": true,
+  "B": [
+    826,
+    835
+  ],
+  "C": [
+    760,
+    835
+  ],
+  "single_correct": [
+    760,
+    769
+  ],
+  "compound_B": [
+    66,
+    66
+  ],
+  "compound_C": [
+    0,
+    66
+  ],
+  "missing": 0,
+  "errors": 0,
+  "repetitions": 1,
+  "final_ranking": false,
+  "sets": [
+    {
+      "set": "mix10",
+      "saved": 160,
+      "errors": 0,
+      "sha256": "17938be4036e556b11558b581024febd5f536b6a8182335521d30379e431924b"
+    },
+    {
+      "set": "mix11",
+      "saved": 163,
+      "errors": 0,
+      "sha256": "625de932d09897be682b2f8fa88061d4bf98b91a0fdb5937de47928126bffd3b"
+    },
+    {
+      "set": "mix12",
+      "saved": 176,
+      "errors": 0,
+      "sha256": "6ac3e18b6e777dc9bf6e638ee01838362f72af15605d50b8a2db2005b21ef1e2"
+    },
+    {
+      "set": "mix8",
+      "saved": 171,
+      "errors": 0,
+      "sha256": "0f531b44afb08eacc29b73d9840ea5e7ec5efc19ca2ca505a454c0bbc5740f93"
+    },
+    {
+      "set": "mix9",
+      "saved": 165,
+      "errors": 0,
+      "sha256": "18f7e8a6fe92beafb0c9a38f71622462d76457a6a632404ea7972e6ac796d554"
+    }
+  ]
+}

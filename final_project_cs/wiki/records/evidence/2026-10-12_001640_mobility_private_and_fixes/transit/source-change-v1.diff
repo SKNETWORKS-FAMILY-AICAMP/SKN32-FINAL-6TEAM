@@ -1,0 +1,12 @@
+--- before/departure_observer.py
++++ after/departure_observer.py
+@@ -199,7 +199,8 @@
+         base['basis'] = basis
+         return _observe_walk(runtime, context, option, base, now=now, deadline=deadline,
+                              origin=origin, destination=destination)
+-    if not isinstance(check, dict) or not legs or check.get('legs') != legs:
++    if (not isinstance(check, dict) or not isinstance(legs, list) or not legs
++            or any(not isinstance(leg, dict) for leg in legs) or check.get('legs') != legs):
+         return fail('needs_replan', 'route_check_missing_or_changed')
+     if 'subway_identity' in option or 'subway_station_version' in basis:
+         from .subway_identity import boarding_identity

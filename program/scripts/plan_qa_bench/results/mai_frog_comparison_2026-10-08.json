@@ -1,0 +1,72 @@
+{
+  "direct": {
+    "MAI-Code-1.1-Flash": {
+      "actual_request": {
+        "n": 120,
+        "completed": 120,
+        "correct": 102,
+        "wrong_item_selected": 5,
+        "missing_or_failed": 0
+      },
+      "chitchat": {
+        "n": 240,
+        "completed": 240,
+        "correct": 226,
+        "wrong_item_selected": 14,
+        "missing_or_failed": 0
+      }
+    },
+    "FrogNano-4B-2609": {
+      "actual_request": {
+        "n": 120,
+        "completed": 120,
+        "correct": 95,
+        "wrong_item_selected": 10,
+        "missing_or_failed": 0
+      },
+      "chitchat": {
+        "n": 240,
+        "completed": 240,
+        "correct": 231,
+        "wrong_item_selected": 9,
+        "missing_or_failed": 0
+      }
+    }
+  },
+  "verification": {
+    "MAI-Code-1.1-Flash": {
+      "retain_correct": {
+        "n": 112,
+        "completed": 112,
+        "correct": 89,
+        "missing_or_failed": 0
+      },
+      "reject_wrong": {
+        "n": 92,
+        "completed": 92,
+        "correct": 76,
+        "missing_or_failed": 0
+      }
+    },
+    "FrogNano-4B-2609": {
+      "retain_correct": {
+        "n": 112,
+        "completed": 112,
+        "correct": 97,
+        "missing_or_failed": 0
+      },
+      "reject_wrong": {
+        "n": 92,
+        "completed": 92,
+        "correct": 80,
+        "missing_or_failed": 0
+      }
+    }
+  },
+  "limitations": [
+    "MAI through Copilot CLI, FrogNano through local llama.cpp; latency paths differ.",
+    "Neither model was trained with our data. FrogNano has publisher coding RL.",
+    "Synthetic D3; one pass. MAI p_yes is declared confidence, not token probability.",
+    "Incomplete, parsing and transport failures remain in denominators."
+  ]
+}

@@ -7,6 +7,7 @@
 ★바깥을 부르지 않는다(관광공사 · 카카오 · 구글 호출 없음). 요청 자리는 DB 만 본다(2026-09-29 사용자 지시와 같다):
     ① 그 장소 행(`places` — 우리 장소 표 · 요식 원장에서 올린 식당) 의 속성  ② 관광공사 운영시간 표(`catalog_hours`, 새벽 작업)
     ③ 다른 여행에서 이미 읽어 둔 같은 관광공사 id 의 장소 행(14일 안)  ④ 요식 원장(`dining_state` — 식당만, 이름·150m 로 이은 곳 포함)
+    ⑤ 활동 원장(`activity_ledger.state` — 관광지만. `[2026-10-13]` 활동 팀이 꽂은 자리, 미등록이면 건너뛴다)
 ★모르는 것은 모른다고 돌려준다(`known=False` + 이유) — 「열려 있다」고 지어내지 않는다. 카카오로만 찾은 곳은 운영시간이 없다.
 ★판정은 **등록 판정과 같은 함수**(`itinerary_checks.check_itinerary`)가 한다 — 여기서는 사실만 모은다. 그래서 확인 화면의 「주의」와
   등록 때의 거절이 어긋나지 않는다.
@@ -33,7 +34,7 @@ class HoursFacts:
 
     known: bool
     attributes: dict[str, Any] = field(default_factory=dict)
-    source: str | None = None                  # tour_api | dining_ledger | places
+    source: str | None = None                  # tour_api | dining_ledger | activity_ledger | places
     #: 요식 원장 판정 — 그 시각에 여는가(None = 모름) · 마지막 주문 여유 · 종료 임박 확인 필요
     open_at_slot: bool | None = None
     order_ok: bool | None = None
@@ -42,6 +43,9 @@ class HoursFacts:
     why_unknown: str | None = None
     #: 요일표로 펴지 않은 조건 원문(공휴일 등)
     conditions: list[str] = field(default_factory=list)
+    #: 활동 원장 판정(`activity_ledger.state` 반환 — `closed` · `within_hours` · `cut_short` · `closes_at` · `usable_minutes` · `quote` …).
+    #  None 은 판정을 못 받았다(미등록 · 원장에 없는 곳 · 관광지가 아님)
+    activity: dict[str, Any] | None = None
 
 
 def _tenants(tenant_id: str) -> list[str]:
@@ -52,8 +56,11 @@ def _tenants(tenant_id: str) -> list[str]:
 
 
 def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, start: datetime | None,
-              end: datetime | None) -> HoursFacts:
-    """`place` = 읽은 장소 값(`{name, kind, latitude, longitude, place_id, content_id, source}`). 못 알면 `known=False` + 이유."""
+              end: datetime | None, *, activity_verdict: bool = True) -> HoursFacts:
+    """`place` = 읽은 장소 값(`{name, kind, latitude, longitude, place_id, content_id, source}`). 못 알면 `known=False` + 이유.
+
+    `activity_verdict=False` 는 활동 원장 판정(⑤)을 섞지 않는다 — 활동 팀 자신이 읽는 사실 도구(`read.place_hours`)가 쓴다.
+    판정하는 쪽에 자기 판정을 사실로 되돌려 주지 않기 위해서다."""
     if not place:
         return HoursFacts(False, why_unknown="장소를 정하면 확인해요")
     if start is None:
@@ -87,6 +94,9 @@ def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, sta
             _apply_ledger(conn, tenant_id, core_id, start, end, out)
         else:
             _apply_ledger_by_uid(conn, content_id, place, start, end, out)
+    # ⑤ 활동 원장 — 관광지만. 장소 행이 있으면 그 행으로, 없거나 원장과 안 이어졌으면 관광공사 번호로
+    if kind == "activity" and activity_verdict:
+        _apply_activity_ledger(conn, tenant_id, core_id, content_id, start, end, out)
     if not out.known:
         out.why_unknown = _why_unknown(place, kind, content_id)
     return out
@@ -166,6 +176,42 @@ def _apply_ledger_by_uid(conn, content_id: str | None, place: dict[str, Any], st
         return
     if state:
         _merge_state(state, start, out)
+
+
+def _apply_activity_ledger(conn, tenant_id: str, core_id: str | None, content_id: str | None, start: datetime,
+                           end: datetime | None, out: HoursFacts) -> None:
+    """활동 원장 판정을 사실에 싣는다. `[2026-10-13]` 활동 코어 전달 사항 3번.
+
+    ★판정은 활동 팀이 한다(휴무 원문 · 「둘째 주 월요일」 · 공휴일 조건 · 끝나는 시각까지 운영 · 중간에 닫힘).
+      여기서는 받은 답을 화면 · 등록 판정이 읽는 모양으로 옮기기만 한다.
+    ★공휴일 소스는 넘기지 않는다 — 확인 화면은 DB 만 본다(이 모듈 머리말). 공휴일 조건은 활동 판정이 「모름」으로 두고
+      `needs_caveat` 로 알린다 → 휴무 줄에 「공휴일 조건이 있어요」.
+    ★「쉰다」만 요일표에 더한다. 원장이 「연다」고 해도 다른 자료가 쉰다고 적은 칸은 지우지 않는다 — 헛걸음 쪽으로 틀리지 않게."""
+    from app.domains.travel_ops.components.team_hooks import activity_ledger
+
+    try:
+        # ★세이브포인트 안에서 부른다 — 원장 스키마가 없는 DB(시험 · 다른 조립)여도 바깥 트랜잭션을 망가뜨리지 않는다
+        with conn.transaction():
+            state = activity_ledger.state(conn, tenant_id, core_id, start, end) if core_id else None
+            if state is None and content_id:
+                state = activity_ledger.state_by_content(conn, content_id, start, end)
+    except Exception as exc:                    # noqa: BLE001 — 원장 표가 없는 DB 면 원장 없이 간다
+        if type(exc).__name__ not in ("UndefinedTable", "UndefinedFunction", "InvalidSchemaName"):
+            raise
+        logger.warning("intake hours: activity ledger not readable reason=%s", type(exc).__name__)
+        return
+    if not state:
+        return
+    out.activity = dict(state)
+    if state.get("closed") is True:
+        week: dict[str, Any] = dict(out.attributes.get("hours_week") or {})
+        week[_DAYS[start.astimezone(_seoul()).weekday() if start.tzinfo else start.weekday()]] = "closed"
+        out.attributes = {**out.attributes, "hours_week": week}
+        out.known, out.source = True, "activity_ledger"
+    elif state.get("closed") is False and not out.known:
+        out.known, out.source = True, "activity_ledger"
+    if state.get("needs_caveat") and state.get("restdate_text"):
+        out.conditions.append(str(state["restdate_text"]))
 
 
 def _merge_state(state: dict[str, Any], start: datetime, out: HoursFacts) -> None:

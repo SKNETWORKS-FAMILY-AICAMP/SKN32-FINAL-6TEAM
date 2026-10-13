@@ -1,0 +1,152 @@
+FF...............F..FF.......FF......................................... [ 36%]
+........................................................................ [ 72%]
+.......................................................                  [100%]
+================================== FAILURES ===================================
+_ test_selected_current_train_changes_first_boarding_and_eta_without_borrowing_run _
+
+    def test_selected_current_train_changes_first_boarding_and_eta_without_borrowing_run():
+        rt, context = scene()
+        original = deepcopy(context)
+        got = call(rt, context, subway_arrival=source)
+>       assert got['status'] == 'realtime' and got['realtime_mode'] == 'subway', got
+E       AssertionError: {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'checked_at': '2026-10-09T10:00:0... 도착 예측; 실제 탑승 관측 아님', 'confirmed_at': '2026-10-09T10:00:00+09:00', 'eta_basis': 'provider_generation_time', ...}], ...}
+E       assert ('needs_replan' == 'realtime'
+E         
+E         - realtime
+E         + needs_replan)
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:72: AssertionError
+____ test_later_segment_is_recalculated_from_current_arrival_not_old_total ____
+
+    def test_later_segment_is_recalculated_from_current_arrival_not_old_total():
+        rt, context = scene()
+        leg = {'mode': 'subway', 'line': '05호선', 'from': '영등포구청', 'to': '영등포시장'}
+        context['options']['p']['legs'].append(leg)
+        context['options']['p']['check']['legs'].append(deepcopy(leg))
+        calls = []
+        def current(*args, **kw):
+            calls.append(args[0])
+            return source(*args, **kw)
+        got = call(rt, context, subway_arrival=current)
+>       assert got['status'] == 'realtime' and calls == ['양평'], got
+E       AssertionError: {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'checked_at': '2026-10-09T10:00:0... 도착 예측; 실제 탑승 관측 아님', 'confirmed_at': '2026-10-09T10:00:00+09:00', 'eta_basis': 'provider_generation_time', ...}], ...}
+E       assert ('needs_replan' == 'realtime'
+E         
+E         - realtime
+E         + needs_replan)
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:88: AssertionError
+____ test_unrelated_express_runtime_is_not_reused_as_current_regular_ride _____
+
+    def test_unrelated_express_runtime_is_not_reused_as_current_regular_ride():
+        rt, context = scene()
+        for d in rt._v.tt.by_key[('05호선', '양평', 'holiday')]:
+            d.run = SimpleNamespace(express=False, serves=lambda *a: True, ride_min=lambda *a: 1)
+        got = call(rt, context, subway_arrival=source)
+>       assert got['status'] == 'realtime' and got['leg_results'][0]['ride_min'] == 3
+E       AssertionError: assert ('needs_replan' == 'realtime'
+E         
+E         - realtime
+E         + needs_replan)
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:151: AssertionError
+___________ test_future_subway_after_bus_is_not_queried_as_current ____________
+
+    def test_future_subway_after_bus_is_not_queried_as_current():
+        rt, context = scene()
+        bus = {'mode': 'bus', 'route': '통제 노선', 'from': '승차', 'to': '하차'}
+        context['options']['p']['legs'].insert(0, bus)
+        context['options']['p']['check']['legs'].insert(0, deepcopy(bus))
+        rt.verify_case = lambda *a, **kw: SimpleNamespace(verdict='feasible', code=None, reason='controlled', legs=[], arrive_min=615, arrive_worst_min=615)
+        got = call(rt, context, subway_arrival=lambda *a, **kw: pytest.fail('미래 지하철 조회 금지'))
+>       assert got['status'] == 'model_revalidated' and got['observations'] == []
+E       AssertionError: assert ('needs_replan' == 'model_revalidated'
+E         
+E         - model_revalidated
+E         + needs_replan)
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:175: AssertionError
+____________ test_real_factory_hook_and_notice_display_subway_wait ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002854A60BBF0>
+
+    def test_real_factory_hook_and_notice_display_subway_wait(monkeypatch):
+        from app import composition
+        from app.domains.travel_ops.instances.mobility import wiring
+        from app.domains.travel_ops.components.watch.trip_reminders import build_departure
+        from ..test_departure_assembly_v1 import setup, POLICY
+        from ..test_departure_observer_notice_v1 import NoEvents
+        rt, context = scene()
+        _, move, items, _, _ = setup(monkeypatch)
+        monkeypatch.setattr(wiring.engine_runtime, 'get_verifier', lambda **kw: rt)
+        move.detail['departure_context'] = context
+        move.detail['route_def']['options'][0].update(label='지하철', uses=['05호선'])
+        calls = []
+        class Arrival:
+            def boardable_arrival(self, station, **kwargs):
+                calls.append((station, deepcopy(kwargs)))
+                for key in ('max_age_seconds', 'max_provider_age_seconds', 'max_provider_clock_ahead_seconds'):
+                    kwargs.pop(key)
+                return source(station, **kwargs)
+        policy = dict(POLICY, **{'travel.subway_arrival_cache_seconds': 30})
+        observer = composition.build_mobility_departure_observer(SimpleNamespace(mobility_data_dir='controlled'),
+            SimpleNamespace(bus_arrival=None, subway_arrival=Arrival()), guardrails=policy)
+        original = deepcopy(move)
+        status, phrase = build_departure(move, items, route_events=NoEvents(), routes=None, now=NOW, departure_observer=observer)
+>       text = phrase.render()
+               ^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'render'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:201: AttributeError
+_ test_crowding_future_wait_remains_model_and_does_not_make_worst_before_best _
+
+    def test_crowding_future_wait_remains_model_and_does_not_make_worst_before_best():
+        rt, context = scene()
+        rt._v._congestion_hit = lambda *a: (110, '매우혼잡', {'source_id': 'controlled/crowd', 'fetched_at': NOW.isoformat()}, 'board_wait_extra_headway')
+        got = call(rt, context, subway_arrival=source)
+>       assert got['status'] == 'realtime' and got['arrival_at'].endswith('10:13:00+09:00')
+E       AssertionError: assert ('needs_replan' == 'realtime'
+E         
+E         - realtime
+E         + needs_replan)
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:237: AssertionError
+______ test_rail_to_rail_transfer_is_recalculated_after_current_boarding ______
+
+    def test_rail_to_rail_transfer_is_recalculated_after_current_boarding():
+        rt, context = scene()
+        # 실제 노선망 성능이 아니라 내부 환승 시각 연결을 통제한다.
+        line = {'is_loop': False, 'stations': [{'station_nm': s} for s in ['영등포구청', '당산']],
+                'edges': [{'a': '영등포구청', 'b': '당산', 'grade': '확정', 'travel_min': 3,
+                           'travel_min_grade': '추정', 'dir_a_to_b': 'U', 'dir_b_to_a': 'D'}]}
+        rt._v.lo = LineOrder({'built_at': 'controlled/static', 'lines': {'05호선': rt._v.lo.doc['lines']['05호선'], '02호선': line}})
+        for name in ['영등포구청', '당산']:
+            rt._v.tt.stations.add(('02호선', name))
+            rt._v.tt.by_key[('02호선', name, 'holiday')] = [Dep(590, 'U', '당산'), Dep(620, 'U', '당산'), Dep(630, 'U', '당산')]
+        rt._v.tw = SimpleNamespace(lookup=lambda *a: {'walk_min': 3, 'grade': '추정', 'source_id': 'controlled/transfer'}, built_at='controlled')
+        leg = {'mode': 'subway', 'line': '02호선', 'from': '영등포구청', 'to': '당산'}
+        context['options']['p']['legs'].append(leg)
+        context['options']['p']['check']['legs'].append(deepcopy(leg))
+        got = call(rt, context, subway_arrival=source)
+>       assert got['status'] == 'realtime', got
+E       AssertionError: {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'checked_at': '2026-10-09T10:00:0... 도착 예측; 실제 탑승 관측 아님', 'confirmed_at': '2026-10-09T10:00:00+09:00', 'eta_basis': 'provider_generation_time', ...}], ...}
+E       assert 'needs_replan' == 'realtime'
+E         
+E         - realtime
+E         + needs_replan
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:256: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1056_지하철_현재출발_제품연결\after-v3.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_subway_departure_v1.py::test_selected_current_train_changes_first_boarding_and_eta_without_borrowing_run
+FAILED tests/unit/travel/mobility/test_subway_departure_v1.py::test_later_segment_is_recalculated_from_current_arrival_not_old_total
+FAILED tests/unit/travel/mobility/test_subway_departure_v1.py::test_unrelated_express_runtime_is_not_reused_as_current_regular_ride
+FAILED tests/unit/travel/mobility/test_subway_departure_v1.py::test_future_subway_after_bus_is_not_queried_as_current
+FAILED tests/unit/travel/mobility/test_subway_departure_v1.py::test_real_factory_hook_and_notice_display_subway_wait
+FAILED tests/unit/travel/mobility/test_subway_departure_v1.py::test_crowding_future_wait_remains_model_and_does_not_make_worst_before_best
+FAILED tests/unit/travel/mobility/test_subway_departure_v1.py::test_rail_to_rail_transfer_is_recalculated_after_current_boarding
+7 failed, 192 passed in 6.87s
+Exception ignored in: <function Console.__del__ at 0x000002854A121E40>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

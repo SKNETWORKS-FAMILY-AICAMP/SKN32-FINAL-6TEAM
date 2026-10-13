@@ -1,0 +1,307 @@
+{
+  "observed_at": "2026-10-09T17:13:24.618621+00:00",
+  "benchmark_state": {
+    "jobs": {
+      "e4bt_q4_d3": {
+        "status": "completed",
+        "job": {
+          "id": "e4bt_q4_d3",
+          "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+          "model_size_bytes": 5309487136,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+          "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+          "expected": 360,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": true,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "ARM serving development and regression; no product adoption"
+        },
+        "finished": "2026-10-08T16:56:12.981015+00:00",
+        "expected": 360,
+        "saved": 360,
+        "correct": 318,
+        "normal_correct": 107,
+        "normal_total": 120,
+        "null_correct": 211,
+        "null_total": 240,
+        "false_positive": 29,
+        "errors_or_unparsed": 0,
+        "latency_p50_s": 156.1710728800099,
+        "latency_p95_s": 174.68819515200448,
+        "latency_max_s": 179.91505146201234,
+        "repeated_soak_not_independent_accuracy": true
+      },
+      "e4bt_q8_d3": {
+        "status": "completed",
+        "job": {
+          "id": "e4bt_q8_d3",
+          "model": "/home/ubuntu/bench/e4bt-Q8_0.gguf",
+          "model_size_bytes": 8005437472,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+          "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+          "expected": 360,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": true,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "ARM serving development and regression; no product adoption"
+        },
+        "finished": "2026-10-09T01:06:49.408807+00:00",
+        "expected": 360,
+        "saved": 360,
+        "correct": 315,
+        "normal_correct": 106,
+        "normal_total": 120,
+        "null_correct": 209,
+        "null_total": 240,
+        "false_positive": 31,
+        "errors_or_unparsed": 0,
+        "latency_p50_s": 110.71452203500667,
+        "latency_p95_s": 124.32256508199498,
+        "latency_max_s": 130.77805902500404,
+        "repeated_soak_not_independent_accuracy": true
+      },
+      "e4bt_q4_grouped60_cache_ABBA_1": {
+        "status": "completed",
+        "job": {
+          "id": "e4bt_q4_grouped60_cache_ABBA_1",
+          "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+          "model_size_bytes": 5309487136,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+          "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+          "expected": 60,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": true,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+          "diagnostic": {
+            "version": "20261009-v1",
+            "repeat_index": 1,
+            "context_groups": 5,
+            "independent_questions": 60,
+            "repeated_calls_not_independent": true
+          }
+        },
+        "finished": "2026-10-09T01:31:19.786824+00:00",
+        "expected": 60,
+        "saved": 60,
+        "correct": 58,
+        "normal_correct": 18,
+        "normal_total": 20,
+        "null_correct": 40,
+        "null_total": 40,
+        "false_positive": 0,
+        "errors_or_unparsed": 0,
+        "latency_p50_s": 10.174135704000946,
+        "latency_p95_s": 159.50080920101027,
+        "latency_max_s": 174.16298046999145,
+        "repeated_soak_not_independent_accuracy": true
+      },
+      "e4bt_q4_grouped60_cache_ABBA_2": {
+        "status": "completed",
+        "job": {
+          "id": "e4bt_q4_grouped60_cache_ABBA_2",
+          "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+          "model_size_bytes": 5309487136,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+          "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+          "expected": 60,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": false,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+          "diagnostic": {
+            "version": "20261009-v1",
+            "repeat_index": 2,
+            "context_groups": 5,
+            "independent_questions": 60,
+            "repeated_calls_not_independent": true
+          }
+        },
+        "finished": "2026-10-09T04:12:10.797430+00:00",
+        "expected": 60,
+        "saved": 60,
+        "correct": 58,
+        "normal_correct": 18,
+        "normal_total": 20,
+        "null_correct": 40,
+        "null_total": 40,
+        "false_positive": 0,
+        "errors_or_unparsed": 0,
+        "latency_p50_s": 159.18410884501645,
+        "latency_p95_s": 175.07272277999436,
+        "latency_max_s": 175.35801538801752,
+        "repeated_soak_not_independent_accuracy": true
+      },
+      "e4bt_q4_grouped60_cache_ABBA_3": {
+        "status": "completed",
+        "job": {
+          "id": "e4bt_q4_grouped60_cache_ABBA_3",
+          "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+          "model_size_bytes": 5309487136,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+          "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+          "expected": 60,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": false,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+          "diagnostic": {
+            "version": "20261009-v1",
+            "repeat_index": 3,
+            "context_groups": 5,
+            "independent_questions": 60,
+            "repeated_calls_not_independent": true
+          }
+        },
+        "finished": "2026-10-09T06:53:03.222226+00:00",
+        "expected": 60,
+        "saved": 60,
+        "correct": 58,
+        "normal_correct": 18,
+        "normal_total": 20,
+        "null_correct": 40,
+        "null_total": 40,
+        "false_positive": 0,
+        "errors_or_unparsed": 0,
+        "latency_p50_s": 159.39558990500518,
+        "latency_p95_s": 175.09745149998344,
+        "latency_max_s": 175.57327338599134,
+        "repeated_soak_not_independent_accuracy": true
+      },
+      "e4bt_q4_grouped60_cache_ABBA_4": {
+        "status": "completed",
+        "job": {
+          "id": "e4bt_q4_grouped60_cache_ABBA_4",
+          "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+          "model_size_bytes": 5309487136,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3_grouped60_cache_diagnostic_20261009.json",
+          "prompt_sha256": "3243c20e1ffbf37a98cfd1523673e6623782d4bed772aa9559933d41a4e7516f",
+          "expected": 60,
+          "slots": 1,
+          "clients": 1,
+          "cache_prompt": true,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "Cache locality development diagnostic; matched ABBA repeats, 60 unique inputs",
+          "diagnostic": {
+            "version": "20261009-v1",
+            "repeat_index": 4,
+            "context_groups": 5,
+            "independent_questions": 60,
+            "repeated_calls_not_independent": true
+          }
+        },
+        "finished": "2026-10-09T07:15:50.845518+00:00",
+        "expected": 60,
+        "saved": 60,
+        "correct": 58,
+        "normal_correct": 18,
+        "normal_total": 20,
+        "null_correct": 40,
+        "null_total": 40,
+        "false_positive": 0,
+        "errors_or_unparsed": 0,
+        "latency_p50_s": 10.106455533008557,
+        "latency_p95_s": 158.81058613900677,
+        "latency_max_s": 174.08877246198244,
+        "repeated_soak_not_independent_accuracy": true
+      },
+      "e4bt_q4_d3_concurrent2": {
+        "status": "running",
+        "job": {
+          "id": "e4bt_q4_d3_concurrent2",
+          "model": "/home/ubuntu/bench/e4bt-Q4_K_M.gguf",
+          "model_size_bytes": 5309487136,
+          "prompts": "/home/ubuntu/bench/continuous-travel-20261008/d3.json",
+          "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+          "expected": 360,
+          "slots": 2,
+          "clients": 2,
+          "cache_prompt": true,
+          "context_per_slot": 4096,
+          "seed": 20261008,
+          "request_timeout_s": 900,
+          "training": "existing_trained_e4b_recipe_not_yet_matched",
+          "purpose": "ARM serving development and regression; no product adoption"
+        },
+        "started": "2026-10-09T07:15:50.846839+00:00"
+      }
+    },
+    "cycle": 0
+  },
+  "benchmark_active": {
+    "at": "2026-10-09T17:12:13.422609+00:00",
+    "job_id": "e4bt_q4_d3_concurrent2",
+    "engine_pid": 182474,
+    "expected": 360,
+    "saved": 350
+  },
+  "slots": [
+    {
+      "id": 0,
+      "n_ctx": 4096,
+      "speculative": false,
+      "is_processing": true,
+      "id_task": 2000,
+      "n_prompt_tokens": 1492,
+      "n_prompt_tokens_processed": 0,
+      "n_prompt_tokens_cache": 1
+    },
+    {
+      "id": 1,
+      "n_ctx": 4096,
+      "speculative": false,
+      "is_processing": true,
+      "id_task": 1987,
+      "n_prompt_tokens": 1208,
+      "n_prompt_tokens_processed": 154,
+      "n_prompt_tokens_cache": 1045
+    }
+  ],
+  "processes": " 171515       1  128346  0.0  0.2 python3\n 182474  171515   35850  177 48.2 llama-server\n 187827       1    9367  0.0  6.6 llama-server\n 194852  194828    8576  0.0  0.2 python\n 226083       1    3605  0.0  0.2 python3\n 230818  230772    3017  1.0  8.3 uvicorn\n 254406  254404       0 16.6  0.2 python3",
+  "engine_log_candidates": [
+    "e4bt_q4_d3_concurrent2/engine.log"
+  ],
+  "queue_counts": {
+    "pending": 44,
+    "running": 1,
+    "failed": 1
+  },
+  "failed_profiles": {
+    "context_cache": "210b020067a1e42f2622262adeb60d1f3d371668"
+  },
+  "running": [
+    {
+      "id": "w82942-00000002",
+      "window": 82942,
+      "profile": "mixed_travel",
+      "created": 1791562398.7464688,
+      "status": "running",
+      "planned_checks": 11,
+      "sha": "210b020067a1e42f2622262adeb60d1f3d371668",
+      "started": 1791565650.272205
+    }
+  ]
+}

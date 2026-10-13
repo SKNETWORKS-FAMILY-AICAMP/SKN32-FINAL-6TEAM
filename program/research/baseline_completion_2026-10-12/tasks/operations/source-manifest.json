@@ -1,0 +1,131 @@
+{
+  "captured_at_kst": "2026-10-12T04:44:38+09:00",
+  "scope": "operations W05/W09 전용 변경과 인계 자료",
+  "files": [
+    {
+      "path": "final_project_cs/app/application/operations_policy.py",
+      "bytes": 9132,
+      "sha256": "7b0d252379ff6cc6796637dff3e33279b24b1f078c065c68abcbecf87d7673a1"
+    },
+    {
+      "path": "final_project_cs/app/application/operations_diagnostics.py",
+      "bytes": 11348,
+      "sha256": "b78d2901004078b9d0ad5ed338ace1e527a77440d709d876b5ebb0d474dc7f58"
+    },
+    {
+      "path": "final_project_cs/app/presentation/admin_operations_api.py",
+      "bytes": 6907,
+      "sha256": "364035326b4312e1922dc7ab185396b4ffc92e272f55a6bd4649b533d34970a8"
+    },
+    {
+      "path": "final_project_cs/app/infrastructure/db/migrations/902_unattended_operations.sql",
+      "bytes": 2709,
+      "sha256": "9485069976d069ac2ae1bb685824edb9c207c4adf0c8ed9bc940691be5f2b2ed"
+    },
+    {
+      "path": "final_project_cs/config/operations-policy.yaml",
+      "bytes": 306,
+      "sha256": "c3f89e09cb05866434e530e02aa908ba0165ef60c996ffa4520370a6c23683cf"
+    },
+    {
+      "path": "final_project_cs/scripts/replay_operations_diagnostics.py",
+      "bytes": 924,
+      "sha256": "c17ed4e8cae54957f529d4215df3e293c0155fc66e90074a30ddfadbc4ada0b1"
+    },
+    {
+      "path": "final_project_cs/app/ops_entrypoint.py",
+      "bytes": 5240,
+      "sha256": "b9d896d3b38c08e0d51745705a9e11d8e4ae7edf0538a112cb00b1fe0f74cd98"
+    },
+    {
+      "path": "final_project_cs/app/application/admin_service.py",
+      "bytes": 9846,
+      "sha256": "5b2eb7c168af9fb8de6c9e635adf3be1608e2c615eeefd0700924d587597a3c5"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/modules/web_account/admin_customer_api.py",
+      "bytes": 5485,
+      "sha256": "4b99a043ca6596a107834e087037b4146e47e52481aa319c470f71b7c479e583"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/admin/src/features/operations/source-policy.tsx",
+      "bytes": 9689,
+      "sha256": "64349f9288fd8e67db2a2d4fbe2540b31eefbf940aa65b154429fdfc4bc35687"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/admin/src/features/operations/connected.tsx",
+      "bytes": 6741,
+      "sha256": "c4e654cbbd55e23a057b777e2ba48af51df53ada63eee32b6576d44a765299e9"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/admin/src/lib/gateway.ts",
+      "bytes": 14731,
+      "sha256": "e493a5c719f3b925ed1880a1d9bdcddeb80639d571d4bec97eee780101e899a5"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/admin/src/components/AdminApp.tsx",
+      "bytes": 18432,
+      "sha256": "7e72d7cbc087fe13ff9949be724e36df266c0769e3709f6b324bb2edccc4fdc0"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/support/support.tsx",
+      "bytes": 7383,
+      "sha256": "28c1194ff4814bfe5a3b97a6a8ebb0e1f3be241d830c241f6dcb9c5d016bdc26"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/support/client.ts",
+      "bytes": 2054,
+      "sha256": "fcf9aeb5af61c1ae01d82c8cebedf8cf6aaec05b5fcdfd59574e03009730382d"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/support/support.test.ts",
+      "bytes": 1845,
+      "sha256": "7643cd5dd006d9f01ed193f1715c79640f0a298dae10854a06b37e246621be92"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/tests/live/support.spec.ts",
+      "bytes": 4967,
+      "sha256": "dfbb2c9b028641d3dd3e8f5f28b1a00b4f78822fd56d013fd8dad2236d5de20c"
+    },
+    {
+      "path": "final_project_cs/tests/unit/test_operations_diagnostics.py",
+      "bytes": 4145,
+      "sha256": "1994fc90552ba92f7f6566746c29b8753194f56337ba221d4b502466bb129461"
+    },
+    {
+      "path": "final_project_cs/tests/security/test_unattended_operations.py",
+      "bytes": 4495,
+      "sha256": "962ed925b990af4ede635a295b247d762de4a60b11f499efcf0ba31beb65f223"
+    },
+    {
+      "path": "final_project_cs/tests/security/test_admin_json_gateway.py",
+      "bytes": 7276,
+      "sha256": "5e2efb02c55e0d834887d9945433d04f977cff9f07d9a323ca68196ef6757a20"
+    },
+    {
+      "path": "final_project_cs/tests/integration/db/operations_pglite.mjs",
+      "bytes": 775,
+      "sha256": "2e057d6ccf51f21bae3312f3a49b7543d3fdfda724f1b1f136eae21737cb20bc"
+    },
+    {
+      "path": "final_project_cs/tests/integration/db/test_unattended_operations.py",
+      "bytes": 15630,
+      "sha256": "67e88d32dd23aa10ed9e53a89f5b6942f004c942284ddcbe87278ff6a6c57927"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/unattended-operations.md",
+      "bytes": 5925,
+      "sha256": "a87e3e42b48c3a1e904dff5b350e840b6b50fe7b9f9017248b5506b467f0b48e"
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/operations/handoff.md",
+      "bytes": 8349,
+      "sha256": "30c900de8f318d605d6f7224f5f0ac513fcd34b7519845930c9e74f28ecdfb7e"
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/operations/diagnostic-flow.html",
+      "bytes": 5283,
+      "sha256": "0452abcd9da6d7a0c3a9aeec939d74edb2703fc406f6609139dd950a3f1f16c0"
+    }
+  ]
+}

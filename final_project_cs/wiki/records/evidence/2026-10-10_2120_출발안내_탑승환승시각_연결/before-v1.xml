@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="15" skipped="0" tests="16" time="4.858" timestamp="2026-10-10T21:18:18.122640+09:00" hostname="playdata"><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_actual_recalculated_boarding_times_reach_template_values" time="0.111"><failure message="KeyError: 'boarding_steps'">def test_actual_recalculated_boarding_times_reach_template_values():
+        rt, context = two_legs()
+        original = deepcopy(context)
+        got = call(rt, context, subway_arrival=source)
+&gt;       steps = got['boarding_steps']
+                ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:32: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_source_unavailable_uses_model_boarding_without_current_train_claim" time="0.005"><failure message="KeyError: 'boarding_steps'">def test_source_unavailable_uses_model_boarding_without_current_train_claim():
+        rt, context = two_legs()
+        got = call(rt, context, subway_arrival=lambda *a, **kw: {'status':'unavailable'})
+&gt;       assert all(s['boarding_basis']=='timetable_model' for s in got['boarding_steps'])
+                                                                   ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:54: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_later_current_train_changes_displayed_transfer_not_saved_time" time="0.006"><failure message="KeyError: 'boarding_steps'">def test_later_current_train_changes_displayed_transfer_not_saved_time():
+        rt, context = two_legs()
+        def late(*args, **kw):
+            got=source(*args, **kw)
+            got['arrival_at']=(NOW+timedelta(minutes=14)).isoformat()
+            return got
+        got=call(rt, context, subway_arrival=late)
+&gt;       assert got['boarding_steps'][1]['board_at'][11:16]=='10:20'
+               ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:67: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_bus_uses_exact_recalculated_stop_names_and_model_alighting" time="0.005"><failure message="KeyError: 'boarding_steps'">def test_bus_uses_exact_recalculated_stop_names_and_model_alighting():
+        from .mobility.test_departure_observer_v1 import scene as bus_scene, call as bus_call, prediction
+        rt, context=bus_scene()
+        got=bus_call(rt,context,bus_arrival=prediction)
+&gt;       step=got['boarding_steps'][0]
+             ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:77: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[reverse]" time="0.005"><failure message="KeyError: 'boarding_steps'">mutation = 'reverse'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[before_departure]" time="0.005"><failure message="KeyError: 'boarding_steps'">mutation = 'before_departure'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[past_final_arrival]" time="0.005"><failure message="KeyError: 'boarding_steps'">mutation = 'past_final_arrival'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[duplicate]" time="0.006"><failure message="KeyError: 'boarding_steps'">mutation = 'duplicate'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[naive]" time="0.006"><failure message="KeyError: 'boarding_steps'">mutation = 'naive'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[missing_station]" time="0.005"><failure message="KeyError: 'boarding_steps'">mutation = 'missing_station'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[false_realtime]" time="0.005"><failure message="KeyError: 'boarding_steps'">mutation = 'false_realtime'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[false_ride_basis]" time="0.005"><failure message="KeyError: 'boarding_steps'">mutation = 'false_ride_basis'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[bad_idx]" time="0.005"><failure message="KeyError: 'boarding_steps'">mutation = 'bad_idx'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_invalid_detailed_guidance_never_emits_partial_or_stale_notice[unknown_basis]" time="0.005"><failure message="KeyError: 'boarding_steps'">mutation = 'unknown_basis'
+
+    @pytest.mark.parametrize('mutation', ['reverse','before_departure','past_final_arrival','duplicate','naive','missing_station','false_realtime','false_ride_basis','bad_idx','unknown_basis'])
+    def test_invalid_detailed_guidance_never_emits_partial_or_stale_notice(mutation):
+        rt, context=two_legs()
+        got=call(rt,context,subway_arrival=source)
+&gt;       steps=got['boarding_steps']
+              ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_steps'
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:88: KeyError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_old_callback_without_detail_preserves_compatibility" time="0.001" /><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_factory_to_notice_preserves_selected_train_and_transfer_time" time="0.033"><failure message="AssertionError: assert ('ok' == 'ok'&#10;  &#10;    ok and '10:15 영등포구청 환승' in '10:00 출발 — A → B (10:00–10:20).\n다음 일정: 11:00 B 관람.\n가는 방법: 버스 · 현재 지하철 대기 반영 · 약 20분 (경로 확인 10:00)')&#10; +  where '10:00 출발 — A → B (10:00–10:20).\n다음 일정: 11:00 B 관람.\n가는 방법: 버스 · 현재 지하철 대기 반영 · 약 20분 (경로 확인 10:00)' = render()&#10; +    where render = Phrase(template='{leave} 출발 — {title} ({leave}–{ends}).\n다음 일정: {next_at} {next_title}.\n가는 방법: {how} · 약 {eta_min}분 (...ext_at': '11:00', 'next_title': 'B 관람', 'how': '버스 · 현재 지하철 대기 반영', 'eta_min': 20, 'checked': '10:00'}, cacheable=True).render">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000243E7C6A5A0&gt;
+
+    def test_factory_to_notice_preserves_selected_train_and_transfer_time(monkeypatch):
+        from app import composition
+        from app.domains.travel_ops.instances.mobility import wiring
+        from .test_departure_assembly_v1 import setup,POLICY
+        rt,context=two_legs()
+        _,move,items,_,_=setup(monkeypatch)
+        monkeypatch.setattr(wiring.engine_runtime,'get_verifier',lambda **kw:rt)
+        move.detail['departure_context']=context
+        queries=[]
+        class Arrival:
+            def boardable_arrival(self,station,**kw):
+                queries.append(station)
+                for key in ('max_age_seconds','max_provider_age_seconds','max_provider_clock_ahead_seconds'):
+                    kw.pop(key)
+                return source(station,**kw)
+        observer=composition.build_mobility_departure_observer(SimpleNamespace(mobility_data_dir='controlled'),SimpleNamespace(bus_arrival=None,subway_arrival=Arrival()),guardrails=dict(POLICY,**{'travel.subway_arrival_cache_seconds':30}))
+        status,phrase=build_departure(move,items,route_events=NoEvents(),routes=None,now=NOW,departure_observer=observer)
+&gt;       assert status=='ok' and '10:15 영등포구청 환승' in phrase.render()
+E       AssertionError: assert ('ok' == 'ok'
+E         
+E           ok and '10:15 영등포구청 환승' in '10:00 출발 — A → B (10:00–10:20).\n다음 일정: 11:00 B 관람.\n가는 방법: 버스 · 현재 지하철 대기 반영 · 약 20분 (경로 확인 10:00)')
+E        +  where '10:00 출발 — A → B (10:00–10:20).\n다음 일정: 11:00 B 관람.\n가는 방법: 버스 · 현재 지하철 대기 반영 · 약 20분 (경로 확인 10:00)' = render()
+E        +    where render = Phrase(template='{leave} 출발 — {title} ({leave}–{ends}).\n다음 일정: {next_at} {next_title}.\n가는 방법: {how} · 약 {eta_min}분 (...ext_at': '11:00', 'next_title': 'B 관람', 'how': '버스 · 현재 지하철 대기 반영', 'eta_min': 20, 'checked': '10:00'}, cacheable=True).render
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:126: AssertionError</failure></testcase></testsuite></testsuites>

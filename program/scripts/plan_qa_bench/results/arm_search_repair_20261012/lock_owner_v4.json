@@ -1,0 +1,1 @@
+{"utc": "2026-10-11T19:53:36.926665+00:00", "lock_owners": [{"pid": 1397419, "command": "python3", "mode": "WRITE", "start": "06:32:16", "cmd": "/usr/bin/python3 /home/ubuntu/tripilot-serving/control/serving_queue.py "}]}

@@ -19,8 +19,8 @@ from datetime import date, timedelta
 import re
 from typing import Any
 
-RELATIVE = {"오늘": 0, "내일": 1, "모레": 2, "글피": 3}
-_RELATIVE = re.compile(r"(오늘|내일|모레|글피)")
+RELATIVE = {"오늘": 0, "지금": 0, "당장": 0, "내일": 1, "모레": 2, "글피": 3}   # 「지금 간다」「당장 간다」 = 오늘 (2026-10-12 사용자 보고)
+_RELATIVE = re.compile(r"(오늘|지금|당장|내일|모레|글피)")
 #: 일차 머리줄 — 상대 날짜를 찾으러 올라갈 때 여기서 멈춘다(`rules.DAY_HEADING` 과 같은 모양의 앞머리)
 _HEADING = re.compile(r"^\s*(?:\d+\s*일\s*차|DAY\s*\d+|첫째\s*날|둘째\s*날|셋째\s*날)", re.IGNORECASE)
 

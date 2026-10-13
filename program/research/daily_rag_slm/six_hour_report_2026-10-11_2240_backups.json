@@ -1,0 +1,42 @@
+[
+  {
+    "original": "program/research/daily_rag_slm/gpu_backlog_2026-10-11.json",
+    "backup": "program/research/daily_rag_slm/_backup/2026-10-11_224246_six_hour_verified/gpu_backlog_2026-10-11.json",
+    "sha256": "f1d27a7608721f6ba7ef287045e76142b9312e4c20434b270c6a8f867967bed9"
+  },
+  {
+    "original": "program/research/daily_rag_slm/arm_serving_2026-10-11.json",
+    "backup": "program/research/daily_rag_slm/_backup/2026-10-11_224246_six_hour_verified/arm_serving_2026-10-11.json",
+    "sha256": "f14ef0f597f312c13ab49f28b1903d84c080903a820928f1c58a6baca1440d14"
+  },
+  {
+    "original": "final_project_cs/wiki/operations/gpu-work-queue.md",
+    "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_224246_six_hour_verified/gpu-work-queue.md",
+    "sha256": "e6ca0a885ee4b450b83e5a9a2ef4ca0ece891a431267031aa8e346ef8ef9b162"
+  },
+  {
+    "original": "final_project_cs/wiki/operations/arm-serving-queue.md",
+    "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_224246_six_hour_verified/arm-serving-queue.md",
+    "sha256": "2dd52ecdbbe6ce3eb69cc772ea871a5a4723271a64f41e780f15a2ab22713b70"
+  },
+  {
+    "original": "final_project_cs/wiki/log.md",
+    "backup": "final_project_cs/wiki/_backup/2026-10-11_224246_six_hour_verified/log.md",
+    "sha256": "9d7c04bd8b80754f22773ee0cbc709743f3e1430608a196677ed3bd31fa6b9d8"
+  },
+  {
+    "original": "program/research/daily_rag_slm/index.md",
+    "backup": "program/research/daily_rag_slm/_backup/2026-10-11_224246_six_hour_verified/index.md",
+    "sha256": "32865536c87d439771aa79b03fd281ab3953aae9c014df9ff57ce2f6d51ae6d7"
+  },
+  {
+    "original": "program/research/daily_rag_slm/2026-10-11.json",
+    "backup": "program/research/daily_rag_slm/_backup/2026-10-11_224246_six_hour_verified/2026-10-11.json",
+    "sha256": "0f2c4b7006dc7b32434fead0809250e5049b52638e6d1a0ab471d6b2c0d842f2"
+  },
+  {
+    "original": "program/research/daily_rag_slm/2026-10-11.md",
+    "backup": "program/research/daily_rag_slm/_backup/2026-10-11_224246_six_hour_verified/2026-10-11.md",
+    "sha256": "2a455f940abeed91b1990941e912eaa60bc54247f757088b62e386cdfc8d738a"
+  }
+]

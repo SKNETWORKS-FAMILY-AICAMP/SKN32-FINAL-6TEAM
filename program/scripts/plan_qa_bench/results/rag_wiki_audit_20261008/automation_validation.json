@@ -1,0 +1,28 @@
+[
+  {
+    "id": "rag",
+    "passed": true,
+    "preserved_fields": {
+      "kind": true,
+      "name": true,
+      "rrule": true,
+      "status": true,
+      "destination": true,
+      "target_thread_id": true,
+      "notification_policy": true
+    }
+  },
+  {
+    "id": "rag-strata",
+    "passed": true,
+    "preserved_fields": {
+      "kind": true,
+      "name": true,
+      "rrule": true,
+      "status": true,
+      "destination": true,
+      "target_thread_id": true,
+      "notification_policy": true
+    }
+  }
+]

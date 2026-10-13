@@ -1,0 +1,21 @@
+[WebServer] (node:11828) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:26760) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:22404) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (5.0s)
+  ok  2 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 일반 recheck: 목록 끝에서 버튼 이름까지 즉시 표시 (4.7s)
+  ok  3 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 동작 줄임 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (2.0s)
+  ok  4 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 동작 줄임 recheck: 목록 끝에서 버튼 이름까지 즉시 표시 (1.9s)
+  ok  5 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 1280px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (4.6s)
+  ok  6 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 1280px 일반 recheck: 목록 끝에서 버튼 이름까지 즉시 표시 (4.6s)
+  ok  7 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 1280px 동작 줄임 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (1.9s)
+  ok  8 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 1280px 동작 줄임 recheck: 목록 끝에서 버튼 이름까지 즉시 표시 (2.0s)
+  ok  9 tests\live\submit-end-registration-20261012.spec.ts:61:1 › 등록 불가여도 끝에서는 안내를 표시하고 스크롤로는 전송하지 않는다 (1.6s)
+  ok 10 tests\live\submit-end-registration-20261012.spec.ts:73:1 › 목록 끝에서도 최소 접힘 중에는 안내를 숨기고 펼치면 복귀한다 (2.8s)
+
+  10 passed (34.8s)

@@ -1,0 +1,267 @@
+{
+  "model": "Winnow-E4B our-travel oos adapter Q8_0 base",
+  "our_training": true,
+  "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+  "suite": "D",
+  "saved": 2735,
+  "expected": 2735,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "single_choice_expected": 2669,
+  "compound_diagnostic_total": 66,
+  "positive": {
+    "total": 883,
+    "correct": 793,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8763635811570745,
+      0.9163372933992828
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.004331618444859839
+    ]
+  },
+  "negative": {
+    "total": 1786,
+    "correct": 1773,
+    "false_pick": 13,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9875860545806908,
+      0.9957412626665271
+    ],
+    "false_pick_wilson95": [
+      0.004258737333472927,
+      0.012413945419309168
+    ]
+  },
+  "subtypes": {
+    "absent_but_plausible": {
+      "total": 78,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9530621902878059,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    },
+    "change_request": {
+      "total": 79,
+      "correct": 79,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9536287883460772,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "chitchat": {
+      "total": 1300,
+      "correct": 1294,
+      "false_pick": 6,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.989967101971016,
+        0.997883062852687
+      ],
+      "false_pick_wilson95": [
+        0.002116937147313035,
+        0.010032898028984012
+      ]
+    },
+    "compound_intent": {
+      "total": 66,
+      "correct": 63,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8746668588675778,
+        0.9844217256655664
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05500255701354129
+      ]
+    },
+    "confusable_name": {
+      "total": 77,
+      "correct": 75,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9101541722024686,
+        0.9928478401921068
+      ],
+      "false_pick_wilson95": [
+        0.007152159807893181,
+        0.08984582779753134
+      ]
+    },
+    "context_pronoun": {
+      "total": 71,
+      "correct": 71,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9486720478031097,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05132795219689034
+      ]
+    },
+    "duplicate_place": {
+      "total": 79,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9317242812303406,
+        0.9977620061449501
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "nameless_description": {
+      "total": 75,
+      "correct": 68,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.819653131504585,
+        0.9540514766093995
+      ],
+      "false_pick_wilson95": [
+        3.469446951953614e-18,
+        0.04872384248280587
+      ]
+    },
+    "negation": {
+      "total": 72,
+      "correct": 72,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9493488274035422,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05065117259645781
+      ]
+    },
+    "ordinal_relative": {
+      "total": 80,
+      "correct": 76,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8783772379535698,
+        0.9803864454644556
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "out_of_scope": {
+      "total": 80,
+      "correct": 80,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9541818704644728,
+        0.9999999999999999
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 300,
+      "correct": 222,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6875519770721528,
+        0.7863793967400652
+      ],
+      "false_pick_wilson95": [
+        8.673617379884035e-19,
+        0.012642971224546034
+      ]
+    },
+    "tourist_synth_out": {
+      "total": 300,
+      "correct": 295,
+      "false_pick": 5,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9615846051669054,
+        0.9928605226493666
+      ],
+      "false_pick_wilson95": [
+        0.00713947735063333,
+        0.0384153948330945
+      ]
+    },
+    "typo_slang": {
+      "total": 78,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9530621902878059,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "dc2a1d98480f105f054c1440add79e32007c3716b79a3fea9f0ab91cf9802906",
+  "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+  "execution": {
+    "job": {
+      "id": "winnow_oos_d",
+      "label": "Winnow-E4B our-travel oos adapter Q8_0 base",
+      "our_training": true,
+      "model": "/workspace/deciders/winnow_e4b/gguf/Winnow-E4B-Q8_0.gguf",
+      "prompts": "/workspace/heavy/all_prompts.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "d_backlog_winnow_oos",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 2735,
+      "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+      "lora": "/tmp/tripilot-trained-adapters-20261008/winnow_e4b_oos_f16.gguf",
+      "training_base_revision": "aabbd52f5dfce0f7d9d22ca9e53e75259d865239",
+      "base_revision": "1b257e8fa80b270a62338362a8b35e37f7890273",
+      "base_same_blob_across_revisions": true,
+      "adapter_sha256": "3a4f2646ed55ce3758bc0c6e66b6ee005840886c499da4189e2503b2301ef963"
+    },
+    "started": "2026-10-08T05:07:53.574072+00:00",
+    "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

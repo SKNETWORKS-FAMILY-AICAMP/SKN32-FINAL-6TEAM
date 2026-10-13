@@ -1,0 +1,61 @@
+
+[WebServer] (node:4848) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:15840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+
+(node:19268) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/1] tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다
+tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다
+reset-count 시간 조정 1곳 모두 처음으로
+
+reset-requests [{"revision":1,"edits":[{"source_id":"s1","field":"items[0].starts_at","value":"08:35"},{"source_id":"s1","field":"items[0].ends_at","value":"10:05"},{"source_id":"s1","field":"items[1].starts_at","value":"10:14"},{"source_id":"s1","field":"items[1].ends_at","value":"11:14"},{"source_id":"s1","field":"items[2].starts_at","value":"11:30"},{"source_id":"s1","field":"items[2].ends_at","value":"12:30"}]},{"revision":2,"edits":[{"source_id":"s1","field":"items[0].starts_at","value":"09:00"},{"source_id":"s1","field":"items[0].ends_at","value":"10:30"}]}]
+
+  1) tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다 ─────
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('button', { name: /^바뀐 일정 \d+곳$/ })
+    Expected: 0
+    Received: 1
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveCount" getByRole('button', { name: /^바뀐 일정 \d+곳$/ }) with timeout 12000ms
+      - waiting for getByRole('button', { name: /^바뀐 일정 \d+곳$/ })
+        27 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      80 |   await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(2);
+      81 |   console.log("reset-requests", JSON.stringify((await server.received("POST", "/edits")).map((entry) => entry.body)));
+    > 82 |   await expect(changedBadge(page)).toHaveCount(0);
+         |                                    ^
+      83 |   await expect(needsBadge(page)).toBeFocused();
+      84 | });
+      85 |
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\web\tests\live\map-status-bar.spec.ts:82:36
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\trace.zip
+    Usage:
+
+        npx playwright show-trace .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다 ──────

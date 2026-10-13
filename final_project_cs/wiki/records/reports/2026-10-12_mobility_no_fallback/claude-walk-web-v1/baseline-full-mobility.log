@@ -1,0 +1,1003 @@
+﻿........................................................................ [  4%]
+........................................................................ [  9%]
+....F................................................................... [ 14%]
+........................................................................ [ 18%]
+........................................................................ [ 23%]
+........................................................................ [ 28%]
+...........................F..F......................................... [ 33%]
+........................................................................ [ 37%]
+........................................................................ [ 42%]
+......................................FFF...FFFF........................ [ 47%]
+F..................F...F.F.............................................. [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 61%]
+......FFFF.............................................................. [ 66%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+........................................................................ [ 85%]
+................................EEEE.................................... [ 90%]
+........................................................................ [ 94%]
+........................................................................ [ 99%]
+........                                                                 [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_next_train_boundary_uses_exact_ready_second[39299-655] _
+
+    @pytest.fixture(scope='module')
+    def real_runtime():
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
+        root=next(p for p in Path(__file__).resolve().parents if (p/'datasets/mobility/processed').exists())
+>       rt=build_verifier(data_dir=str(root/'datasets/mobility/processed'),gh_url='',seoul_key='',quiet=True,local_router=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+final_project_cs\tests\unit\travel\mobility\test_train_precision_v1.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\runtime.py:300: in build_verifier
+    bus_prof = BusSegProfile.load(P["bus_profile"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\bus_profile.py:79: in load
+    arr = np.full((len(recs), 2, 4, 24), np.nan, dtype=np.float32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+shape = (40776, 2, 4, 24), fill_value = nan, dtype = <class 'numpy.float32'>
+order = 'C'
+
+    @set_array_function_like_doc
+    @set_module('numpy')
+    def full(shape, fill_value, dtype=None, order='C', *, like=None):
+        """
+        Return a new array of given shape and type, filled with `fill_value`.
+    
+        Parameters
+        ----------
+        shape : int or sequence of ints
+            Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+        fill_value : scalar or array_like
+            Fill value.
+        dtype : data-type, optional
+            The desired data-type for the array  The default, None, means
+             ``np.array(fill_value).dtype``.
+        order : {'C', 'F'}, optional
+            Whether to store multidimensional data in C- or Fortran-contiguous
+            (row- or column-wise) order in memory.
+        ${ARRAY_FUNCTION_LIKE}
+    
+            .. versionadded:: 1.20.0
+    
+        Returns
+        -------
+        out : ndarray
+            Array of `fill_value` with the given shape, dtype, and order.
+    
+        See Also
+        --------
+        full_like : Return a new array with shape of input filled with value.
+        empty : Return a new uninitialized array.
+        ones : Return a new array setting values to one.
+        zeros : Return a new array setting values to zero.
+    
+        Examples
+        --------
+        >>> np.full((2, 2), np.inf)
+        array([[inf, inf],
+               [inf, inf]])
+        >>> np.full((2, 2), 10)
+        array([[10, 10],
+               [10, 10]])
+    
+        >>> np.full((2, 2), [1, 2])
+        array([[1, 2],
+               [1, 2]])
+    
+        """
+        if like is not None:
+            return _full_with_like(
+                    like, shape, fill_value, dtype=dtype, order=order)
+    
+        if dtype is None:
+            fill_value = asarray(fill_value)
+            dtype = fill_value.dtype
+>       a = empty(shape, dtype, order)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       numpy.core._exceptions._ArrayMemoryError: Unable to allocate 29.9 MiB for an array with shape (40776, 2, 4, 24) and data type float32
+
+..\..\anaconda3\Lib\site-packages\numpy\core\numeric.py:329: MemoryError
+_ ERROR at setup of test_next_train_boundary_uses_exact_ready_second[39300-655] _
+
+    @pytest.fixture(scope='module')
+    def real_runtime():
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
+        root=next(p for p in Path(__file__).resolve().parents if (p/'datasets/mobility/processed').exists())
+>       rt=build_verifier(data_dir=str(root/'datasets/mobility/processed'),gh_url='',seoul_key='',quiet=True,local_router=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+final_project_cs\tests\unit\travel\mobility\test_train_precision_v1.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\runtime.py:300: in build_verifier
+    bus_prof = BusSegProfile.load(P["bus_profile"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\bus_profile.py:79: in load
+    arr = np.full((len(recs), 2, 4, 24), np.nan, dtype=np.float32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+shape = (40776, 2, 4, 24), fill_value = nan, dtype = <class 'numpy.float32'>
+order = 'C'
+
+    @set_array_function_like_doc
+    @set_module('numpy')
+    def full(shape, fill_value, dtype=None, order='C', *, like=None):
+        """
+        Return a new array of given shape and type, filled with `fill_value`.
+    
+        Parameters
+        ----------
+        shape : int or sequence of ints
+            Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+        fill_value : scalar or array_like
+            Fill value.
+        dtype : data-type, optional
+            The desired data-type for the array  The default, None, means
+             ``np.array(fill_value).dtype``.
+        order : {'C', 'F'}, optional
+            Whether to store multidimensional data in C- or Fortran-contiguous
+            (row- or column-wise) order in memory.
+        ${ARRAY_FUNCTION_LIKE}
+    
+            .. versionadded:: 1.20.0
+    
+        Returns
+        -------
+        out : ndarray
+            Array of `fill_value` with the given shape, dtype, and order.
+    
+        See Also
+        --------
+        full_like : Return a new array with shape of input filled with value.
+        empty : Return a new uninitialized array.
+        ones : Return a new array setting values to one.
+        zeros : Return a new array setting values to zero.
+    
+        Examples
+        --------
+        >>> np.full((2, 2), np.inf)
+        array([[inf, inf],
+               [inf, inf]])
+        >>> np.full((2, 2), 10)
+        array([[10, 10],
+               [10, 10]])
+    
+        >>> np.full((2, 2), [1, 2])
+        array([[1, 2],
+               [1, 2]])
+    
+        """
+        if like is not None:
+            return _full_with_like(
+                    like, shape, fill_value, dtype=dtype, order=order)
+    
+        if dtype is None:
+            fill_value = asarray(fill_value)
+            dtype = fill_value.dtype
+>       a = empty(shape, dtype, order)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       numpy.core._exceptions._ArrayMemoryError: Unable to allocate 29.9 MiB for an array with shape (40776, 2, 4, 24) and data type float32
+
+..\..\anaconda3\Lib\site-packages\numpy\core\numeric.py:329: MemoryError
+_ ERROR at setup of test_next_train_boundary_uses_exact_ready_second[39301-662] _
+
+    @pytest.fixture(scope='module')
+    def real_runtime():
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
+        root=next(p for p in Path(__file__).resolve().parents if (p/'datasets/mobility/processed').exists())
+>       rt=build_verifier(data_dir=str(root/'datasets/mobility/processed'),gh_url='',seoul_key='',quiet=True,local_router=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+final_project_cs\tests\unit\travel\mobility\test_train_precision_v1.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\runtime.py:300: in build_verifier
+    bus_prof = BusSegProfile.load(P["bus_profile"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\bus_profile.py:79: in load
+    arr = np.full((len(recs), 2, 4, 24), np.nan, dtype=np.float32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+shape = (40776, 2, 4, 24), fill_value = nan, dtype = <class 'numpy.float32'>
+order = 'C'
+
+    @set_array_function_like_doc
+    @set_module('numpy')
+    def full(shape, fill_value, dtype=None, order='C', *, like=None):
+        """
+        Return a new array of given shape and type, filled with `fill_value`.
+    
+        Parameters
+        ----------
+        shape : int or sequence of ints
+            Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+        fill_value : scalar or array_like
+            Fill value.
+        dtype : data-type, optional
+            The desired data-type for the array  The default, None, means
+             ``np.array(fill_value).dtype``.
+        order : {'C', 'F'}, optional
+            Whether to store multidimensional data in C- or Fortran-contiguous
+            (row- or column-wise) order in memory.
+        ${ARRAY_FUNCTION_LIKE}
+    
+            .. versionadded:: 1.20.0
+    
+        Returns
+        -------
+        out : ndarray
+            Array of `fill_value` with the given shape, dtype, and order.
+    
+        See Also
+        --------
+        full_like : Return a new array with shape of input filled with value.
+        empty : Return a new uninitialized array.
+        ones : Return a new array setting values to one.
+        zeros : Return a new array setting values to zero.
+    
+        Examples
+        --------
+        >>> np.full((2, 2), np.inf)
+        array([[inf, inf],
+               [inf, inf]])
+        >>> np.full((2, 2), 10)
+        array([[10, 10],
+               [10, 10]])
+    
+        >>> np.full((2, 2), [1, 2])
+        array([[1, 2],
+               [1, 2]])
+    
+        """
+        if like is not None:
+            return _full_with_like(
+                    like, shape, fill_value, dtype=dtype, order=order)
+    
+        if dtype is None:
+            fill_value = asarray(fill_value)
+            dtype = fill_value.dtype
+>       a = empty(shape, dtype, order)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       numpy.core._exceptions._ArrayMemoryError: Unable to allocate 29.9 MiB for an array with shape (40776, 2, 4, 24) and data type float32
+
+..\..\anaconda3\Lib\site-packages\numpy\core\numeric.py:329: MemoryError
+_ ERROR at setup of test_public_case_catches_valid_transfer_without_changing_walk_speed _
+
+    @pytest.fixture(scope='module')
+    def real_runtime():
+        from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
+        root=next(p for p in Path(__file__).resolve().parents if (p/'datasets/mobility/processed').exists())
+>       rt=build_verifier(data_dir=str(root/'datasets/mobility/processed'),gh_url='',seoul_key='',quiet=True,local_router=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+final_project_cs\tests\unit\travel\mobility\test_train_precision_v1.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\runtime.py:300: in build_verifier
+    bus_prof = BusSegProfile.load(P["bus_profile"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\bus_profile.py:79: in load
+    arr = np.full((len(recs), 2, 4, 24), np.nan, dtype=np.float32)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+shape = (40776, 2, 4, 24), fill_value = nan, dtype = <class 'numpy.float32'>
+order = 'C'
+
+    @set_array_function_like_doc
+    @set_module('numpy')
+    def full(shape, fill_value, dtype=None, order='C', *, like=None):
+        """
+        Return a new array of given shape and type, filled with `fill_value`.
+    
+        Parameters
+        ----------
+        shape : int or sequence of ints
+            Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+        fill_value : scalar or array_like
+            Fill value.
+        dtype : data-type, optional
+            The desired data-type for the array  The default, None, means
+             ``np.array(fill_value).dtype``.
+        order : {'C', 'F'}, optional
+            Whether to store multidimensional data in C- or Fortran-contiguous
+            (row- or column-wise) order in memory.
+        ${ARRAY_FUNCTION_LIKE}
+    
+            .. versionadded:: 1.20.0
+    
+        Returns
+        -------
+        out : ndarray
+            Array of `fill_value` with the given shape, dtype, and order.
+    
+        See Also
+        --------
+        full_like : Return a new array with shape of input filled with value.
+        empty : Return a new uninitialized array.
+        ones : Return a new array setting values to one.
+        zeros : Return a new array setting values to zero.
+    
+        Examples
+        --------
+        >>> np.full((2, 2), np.inf)
+        array([[inf, inf],
+               [inf, inf]])
+        >>> np.full((2, 2), 10)
+        array([[10, 10],
+               [10, 10]])
+    
+        >>> np.full((2, 2), [1, 2])
+        array([[1, 2],
+               [1, 2]])
+    
+        """
+        if like is not None:
+            return _full_with_like(
+                    like, shape, fill_value, dtype=dtype, order=order)
+    
+        if dtype is None:
+            fill_value = asarray(fill_value)
+            dtype = fill_value.dtype
+>       a = empty(shape, dtype, order)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       numpy.core._exceptions._ArrayMemoryError: Unable to allocate 29.9 MiB for an array with shape (40776, 2, 4, 24) and data type float32
+
+..\..\anaconda3\Lib\site-packages\numpy\core\numeric.py:329: MemoryError
+================================== FAILURES ===================================
+______ test_bus_only_earliest_sources_include_bus_transfer_and_no_subway ______
+
+    def test_bus_only_earliest_sources_include_bus_transfer_and_no_subway():
+        pl = P.Planner.__new__(P.Planner)
+        pl.modes = {'bus'}
+        candidate = SimpleNamespace(est_min=20)
+        def forbidden(*a, **kw):
+            raise AssertionError('버스만 선택했는데 지하철 후보를 생성했다')
+        gen = SimpleNamespace(bus_to_subway=forbidden, subway_to_bus=forbidden,
+                              bus_to_bus=lambda *a: [candidate], materialize=lambda c: True)
+        pl._mix_gen = lambda *a: gen
+        pl._in_service = lambda *a: True
+        place = {'lat': 37.5, 'lon': 127.0}
+        stations = [('역', 100, {'02호선'})]
+>       assert pl._mixed_sources(place, place, stations, stations, 600, {}, False, 1200) == [candidate]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+final_project_cs\tests\unit\travel\mobility\test_bus_only_planner_candidates.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.plan.Planner object at 0x000002A7F6F23B00>
+a_place = {'lat': 37.5, 'lon': 127.0}, b_place = {'lat': 37.5, 'lon': 127.0}
+sa = [('역', 100, {'02호선'})], sb = [('역', 100, {'02호선'})], nb = 600, party = {}
+first_visit = False, wlim = 1200, when = None
+
+    def _mixed_sources(self, a_place, b_place, sa, sb, nb, party, first_visit, wlim, when=None):
+        """가장 이른 도착(86) 목표 생성용 혼합 후보 — 앞 일정 끝(nb) 무렵 운행하는 노선 · 구간열이 나오는 것 · 추정 소요 순
+        MIX_VERIFY_MAX 개. 생성기가 없으면 []."""
+        gen = self._mix_gen(party, first_visit, when)
+        if gen is None:
+            return []
+        gen.service_check = lambda mc: self._in_service(mc, nb, nb + EARLIEST_WAIT_MAX_MIN + mc.est_min)
+        ca = (gen.bus_to_subway(a_place["lat"], a_place["lon"], [(nm, ls, d) for nm, d, ls in sb], wlim,
+                                excl_st=self._phys_set(sa)) if sb and "subway" in self.modes else [])
+        cb = (gen.subway_to_bus([(nm, ls, d) for nm, d, ls in sa], b_place["lat"], b_place["lon"], wlim,
+                                excl_st=self._phys_set(sb)) if sa and "subway" in self.modes else [])
+        cc = gen.bus_to_bus(a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], wlim)
+        cands = interleave(ca, cb, cc)
+        # (GPT 87 #4) 거르지 않고 순서만 — 앞 일정 끝(nb)부터 대기 상한까지(다음 운행일 첫차 포함) 탈 수 있어 보이는 노선을 먼저
+        hi = nb + EARLIEST_WAIT_MAX_MIN
+        cands = ([mc for mc in cands if self._in_service(mc, nb, hi + mc.est_min)]
+                 + [mc for mc in cands if not self._in_service(mc, nb, hi + mc.est_min)])
+        out = []
+        for i, mc in enumerate(cands):
+            if len(out) >= MIX_VERIFY_MAX:
+                break
+            if gen.materialize(mc):
+                out.append(mc)
+>               regular = gen.regular_alternative(mc)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'types.SimpleNamespace' object has no attribute 'regular_alternative'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py:963: AttributeError
+_________________ test_leg_attaches_earliest_only_when_asked __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002A7F6F71790>
+
+    def test_leg_attaches_earliest_only_when_asked(monkeypatch):
+        """기본(끄기)은 앞 판과 같다 — earliest 를 부르지 않는다. 켜면 arrive_late 이유에 earliest 를 붙인다."""
+        pl = _bare()
+        calls = []
+        monkeypatch.setattr(pl, "earliest", lambda *a, **k: (calls.append(1), (None, {"code": "before_first", "reason": "r"}))[1])
+        walk_far = {"key": "c", "name": "C", "lat": 0.0, "lon": 0.0005}          # 약 55 m — 도보 직행만
+        arrive, prev_end = D("2026-09-23T11:30:00+09:00"), D("2026-09-23T11:29:00+09:00")
+        got, why = pl.leg(A, walk_far, arrive, {}, True, "c", not_before_dt=prev_end)
+>       assert got is None and why["code"] == "arrive_late" and "earliest" not in why and not calls
+E       AssertionError: assert (None is None and 'no_data' == 'arrive_late'
+E         
+E         - arrive_late
+E         + no_data)
+
+final_project_cs\tests\unit\travel\mobility\test_earliest_v1.py:266: AssertionError
+____________________ test_walk_only_earliest_real_planner _____________________
+
+    def test_walk_only_earliest_real_planner():
+        """도보만 되는 짧은 구간 — 가장 이른 도착 목표 = 앞 일정 끝 + 도보 분 + 정책 버퍼(데이터 없이 도는 실제 계산)."""
+        pl = _bare()
+        near = {"key": "c", "name": "C", "lat": 0.0, "lon": 0.0005}
+        prev_end = D("2026-09-23T11:29:00+09:00")
+        got, why = pl.earliest(A, near, prev_end, {}, True, "c")
+>       assert why is None, why
+E       AssertionError: {'code': 'no_data', 'reason': '앞 항목이 끝난 뒤(11:29) 떠날 후보(도보·역·버스)가 없다', 'searched': {'calls': 0, 'causes': [], 'checked': [], 'stop': 'no_targets'}}
+E       assert {'code': 'no_data', 'reason': '앞 항목이 끝난 뒤(11:29) 떠날 후보(도보·역·버스)가 없다', 'searched': {'calls': 0, 'causes': [], 'checked': [], 'stop': 'no_targets'}} is None
+
+final_project_cs\tests\unit\travel\mobility\test_earliest_v1.py:291: AssertionError
+_____________________________ test_bike_lfd_rule ______________________________
+
+    def test_bike_lfd_rule():
+        """출발 = 목표 − (eta + @). 13:30 도착 · eta 30 · @ 10 → 12:50 출발 · 13:20 도착 · 그 출발에서 다시 판정."""
+        rt, v, calls = _fake()
+        P = Planner(rt, modes=["bike"])
+>       got, why = P.leg(A, B, _dt("13:30"), {}, True, "a_to_b")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+legs = [{'from': {'lat': 37.5636, 'lng': 126.9826, 'name': 'A'}, 'mode': 'bike', 'to': {'lat': 37.5445, 'lng': 127.056, 'name': 'B'}}]
+legs_result = [namespace(walk_min=8, ride_min=None)]
+
+    def ride_results(legs, legs_result):
+        """판정기 구간 결과에서 「환승 …」 줄만 빼고, 남은 탄 구간이 legs 와 **개수·순서·표기 모두** 같을 때만 짝지어 준다
+        (같은 표기가 두 번이어도 순서로 · GPT 23 #5 · 2차 #5 — 예상 밖 승차 결과를 건너뛰어 맞추지 않는다). 아니면 None."""
+>       rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                             ^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:782: AttributeError
+__________________________ test_bike_after_prev_end ___________________________
+
+    def test_bike_after_prev_end():
+        """앞 일정이 12:55 에 끝나면 12:50 출발 자전거는 자격이 없다 → 12:55 재판정 → 늦음(5분) → 구간 못 만듦."""
+        rt, _v, _ = _fake()
+        P = Planner(rt, modes=["bike"])
+        got, why = P.leg(A, B, _dt("13:30"), {}, True, "a_to_b", not_before_dt=_dt("12:55"))
+        assert got is None and why["code"] == "arrive_late", why
+>       got, why = P.leg(A, B, _dt("13:30"), {}, True, "a_to_b", not_before_dt=_dt("12:50"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+legs = [{'from': {'lat': 37.5636, 'lng': 126.9826, 'name': 'A'}, 'mode': 'bike', 'to': {'lat': 37.5445, 'lng': 127.056, 'name': 'B'}}]
+legs_result = [namespace(walk_min=8, ride_min=None)]
+
+    def ride_results(legs, legs_result):
+        """판정기 구간 결과에서 「환승 …」 줄만 빼고, 남은 탄 구간이 legs 와 **개수·순서·표기 모두** 같을 때만 짝지어 준다
+        (같은 표기가 두 번이어도 순서로 · GPT 23 #5 · 2차 #5 — 예상 밖 승차 결과를 건너뛰어 맞추지 않는다). 아니면 None."""
+>       rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                             ^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:782: AttributeError
+________________________ test_bike_not_feasible_reason ________________________
+
+    def test_bike_not_feasible_reason():
+        """자전거만 고른 구간에서 자전거가 안 되면 그 이유를 낸다(역이 없다는 이유로 덮지 않는다) · 소요 모름도 불성립."""
+        for kw, code in (({"feasible": False}, "mode_unavailable"), ({"ride": False}, "no_data")):
+            rt, _v, _ = _fake(**kw)
+            got, why = Planner(rt, modes=["bike"]).leg(A, B, _dt("13:30"), {}, True, "a_to_b")
+            assert got is None and why["code"] == code and why["reason"].startswith("자전거"), (kw, why)
+        rt, _v, _ = _fake(feasible=False)
+        got, why = Planner(rt, modes=["subway", "bike"]).leg(A, B, _dt("13:30"), {}, True, "a_to_b")
+        assert got is None and not why["reason"].startswith("자전거"), "지하철도 고른 구간은 역 이유를 그대로"
+        # 다른 후보(도보)는 실리고 자전거가 안 되면 — 봉투 left_out 에 자전거 이유 한 줄(코어로는 안 나감)
+        near = {"name": "C", "lat": 37.5650, "lon": 126.9826}             # A 에서 약 160 m
+        got, why = Planner(rt, modes=["walk", "bike"]).leg(A, near, _dt("13:30"), {}, True, "a_to_c")
+>       assert why is None and got[0]["planned"] == "walk", (why, got)
+E       AssertionError: ({'code': 'mode_unavailable', 'left_out': [{'code': 'walk_source_unavailable', 'label': '도보', 'reason': '검증 가능한 보행 경로를...outer_unavailable', 'source': 'walking_network', 'status': 'unavailable'}}], 'reason': '자전거 — 반경 300m 안 대여소 없음'}, None)
+E       assert ({'code': 'mode_unavailable', 'left_out': [{'code': 'walk_source_unavailable', 'label': '도보', 'reason': '검증 가능한 보행 경로를 ...lking_router_unavailable', 'source': 'walking_network', 'status': 'unavailable'}}], 'reason': '자전거 — 반경 300m 안 대여소 없음'} is None)
+
+final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py:139: AssertionError
+_______________________ test_bike_eta_changes_recompute _______________________
+
+    def test_bike_eta_changes_recompute():
+        """GPT 58 #3 — 재판정 소요가 첫 판정과 다르면 새 값으로 한 번 더 · 같아질 때만 싣는다(그때 slack 0 = 마지막 성립 출발).
+        줄어듦 40→30: 13:10 이 아니라 13:20 · 늘어남 30→40: 13:20 불성립에서 버리지 않고 13:10 · 계속 바뀜: 뺀다."""
+        for seq, want in (([40, 30, 30], 810 - 40), ([30, 40, 40], 810 - 50)):
+            rt, _v, calls = _fake(seq=seq)
+>           got, why = Planner(rt, modes=["bike"]).leg(A, B, _dt("13:30"), {}, True, "a_to_b")
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py:173: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+legs = [{'from': {'lat': 37.5636, 'lng': 126.9826, 'name': 'A'}, 'mode': 'bike', 'to': {'lat': 37.5445, 'lng': 127.056, 'name': 'B'}}]
+legs_result = [namespace(walk_min=8, ride_min=None)]
+
+    def ride_results(legs, legs_result):
+        """판정기 구간 결과에서 「환승 …」 줄만 빼고, 남은 탄 구간이 legs 와 **개수·순서·표기 모두** 같을 때만 짝지어 준다
+        (같은 표기가 두 번이어도 순서로 · GPT 23 #5 · 2차 #5 — 예상 밖 승차 결과를 건너뛰어 맞추지 않는다). 아니면 None."""
+>       rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                             ^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:782: AttributeError
+_____________________ test_bike_recheck_fails_not_listed ______________________
+
+    def test_bike_recheck_fails_not_listed():
+        """GPT 58 #7 — 첫 판정은 되고 재판정에서 소요를 못 내면 싣지 않는다 · 도보가 실리면 봉투 left_out 에 자전거 이유."""
+        rt, _v, _ = _fake(fail_at=1)
+        got, why = Planner(rt, modes=["bike"]).leg(A, B, _dt("13:30"), {}, True, "a_to_b")
+        assert got is None and why["code"] == "no_data" and "소요를 못 냈다" in why["reason"], why
+        near = {"name": "C", "lat": 37.5650, "lon": 126.9826}
+        rt, _v, _ = _fake(fail_at=1)                         # 새 판정기(호출 순번을 처음부터)
+        got, why = Planner(rt, modes=["walk", "bike"]).leg(A, near, _dt("13:30"), {}, True, "a_to_c")
+>       assert why is None and [o["id"] for o in got[0]["options"]] == ["walk"], got
+E       AssertionError: None
+E       assert ({'code': 'no_data', 'left_out': [{'code': 'walk_source_unavailable', 'label': '도보', 'reason': '검증 가능한 보행 경로를 확보하지 못해 도...ilable', 'source': 'walking_network', 'status': 'unavailable'}}], 'reason': '자전거 — 역산 출발에서 다시 보니 소요를 못 냈다: 승차 소요 근거없음'} is None)
+
+final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py:189: AssertionError
+____________________ test_bike_service_day_boundary_exact _____________________
+
+    def test_bike_service_day_boundary_exact():
+        """GPT 58 #4 — 04:00 출발(240)은 보고 03:59(239)는 안 본다(운행일 축 제한 · 운행 불가가 아님을 이유에 적는다)."""
+        rt, _v, _ = _fake()
+>       got, why = Planner(rt, modes=["bike"]).leg(A, B, _dt("04:40"), {}, True, "a_to_b")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py:196: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+legs = [{'from': {'lat': 37.5636, 'lng': 126.9826, 'name': 'A'}, 'mode': 'bike', 'to': {'lat': 37.5445, 'lng': 127.056, 'name': 'B'}}]
+legs_result = [namespace(walk_min=8, ride_min=None)]
+
+    def ride_results(legs, legs_result):
+        """판정기 구간 결과에서 「환승 …」 줄만 빼고, 남은 탄 구간이 legs 와 **개수·순서·표기 모두** 같을 때만 짝지어 준다
+        (같은 표기가 두 번이어도 순서로 · GPT 23 #5 · 2차 #5 — 예상 밖 승차 결과를 건너뛰어 맞추지 않는다). 아니면 None."""
+>       rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                             ^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:782: AttributeError
+__________________ test_bike_stage_buffer_and_prev_end_exact __________________
+
+    def test_bike_stage_buffer_and_prev_end_exact():
+        """GPT 58 #8 — 진행 중 버퍼 15: 13:30 − (30+15) = 12:45 출발 · 앞 일정이 정확히 12:45 에 끝나면 싣는다(경계 포함)
+        · 출발 전·진행 중은 「출발 때 확인」 문구를 안 붙인다(실시간을 본다)."""
+        rt, _v, _ = _fake(buf=15)
+>       got, why = Planner(rt, modes=["bike"], stage="in_progress").leg(A, B, _dt("13:30"), {}, True, "a_to_b",
+                                                                         not_before_dt=_dt("12:45"))
+
+final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+legs = [{'from': {'lat': 37.5636, 'lng': 126.9826, 'name': 'A'}, 'mode': 'bike', 'to': {'lat': 37.5445, 'lng': 127.056, 'name': 'B'}}]
+legs_result = [namespace(walk_min=8, ride_min=None)]
+
+    def ride_results(legs, legs_result):
+        """판정기 구간 결과에서 「환승 …」 줄만 빼고, 남은 탄 구간이 legs 와 **개수·순서·표기 모두** 같을 때만 짝지어 준다
+        (같은 표기가 두 번이어도 순서로 · GPT 23 #5 · 2차 #5 — 예상 밖 승차 결과를 건너뛰어 맞추지 않는다). 아니면 None."""
+>       rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                             ^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:782: AttributeError
+_________________________________ test_golden _________________________________
+
+    def test_golden():
+        _skip_if_no_data()
+        _, got = _run()
+        got.pop("basis")
+        want = json.loads(GOLD.read_text(encoding="utf-8"))
+>       assert _customer_values(got) == want, "예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다"
+E       AssertionError: 예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다
+E       assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:48:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]} != {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:48:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]}
+E         {'left_out': {'gyeongbokgung_to_s...
+E         
+E         ...Full output truncated (4 lines hidden), use '-vv' to show
+
+final_project_cs\tests\unit\travel\mobility\test_plan_v1.py:162: AssertionError
+____________________________ test_golden_all_modes ____________________________
+
+    def test_golden_all_modes():
+        """버스 포함 예시(27 손일 「버스 포함 예시 재추출」) — 자전거는 실시간 조회라 뺀다."""
+        _skip_if_no_data()
+        doc = json.loads(IN.read_text(encoding="utf-8"))
+        got = plan(doc["places"], doc["items"], doc.get("party_size"), doc.get("constraints"),
+                   runtime=_runtime(), modes=MODES_ALL)
+        got.pop("basis")
+        want = json.loads(GOLD_ALL.read_text(encoding="utf-8"))
+>       assert _customer_values(got) == want, "버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다"
+E       AssertionError: 버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다
+E       assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:48:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]} != {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:48:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]}
+E         {'left_out': {'gyeongbokgung_to_s...
+E         
+E         ...Full output truncated (4 lines hidden), use '-vv' to show
+
+final_project_cs\tests\unit\travel\mobility\test_plan_v1.py:585: AssertionError
+______________________________ test_reasons_axis ______________________________
+
+    def test_reasons_axis():
+        """이유 = 축별 사실(실린 후보끼리) · 순위 말 없음 · 후보 하나면 비교 문구 없음."""
+        _skip_if_no_data()
+        _, got = _run()
+        r = got["routes"]["gyeongbokgung_to_seongsu"]["options"]
+>       assert "소요 가장 짧음" in r[0]["label"] and "환승 가장 적음(1회)" in r[0]["label"], r[0]["label"]
+E       AssertionError: 3호선 경복궁→을지로3가 → 2호선 을지로3가→성수
+E       assert ('소요 가장 짧음' in '3호선 경복궁→을지로3가 → 2호선 을지로3가→성수')
+
+final_project_cs\tests\unit\travel\mobility\test_plan_v1.py:647: AssertionError
+____________________________ test_walk_m_and_fare _____________________________
+
+    def test_walk_m_and_fare():
+        """walk_m = 장소↔역(직선×우회) + 환승 거리표 m · 거리표 밖 환승이면 키를 뺀다 · 요금은 규칙 근거가 있을 때만(54 — 지하철 1,550)."""
+        _skip_if_no_data()
+        from app.domains.travel_ops.instances.mobility.engine.options import transfer_walk_m
+        v = _runtime()._v
+        _, got = _run()
+>       w = got["routes"]["dinner_to_lotte_mart"]["options"][0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'dinner_to_lotte_mart'
+
+final_project_cs\tests\unit\travel\mobility\test_plan_v1.py:679: KeyError
+_ test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths0-604-expected0] _
+
+paths = [(600, ['시청', '반대방향경유역', '아현'])], arrive = 604
+expected = ['시청', '반대방향경유역', '아현']
+
+    @pytest.mark.parametrize('paths,arrive,expected', [
+        ([(600, ['시청', '반대방향경유역', '아현'])], 604, RAIL_LEG['station_path']),
+        ([(600, ['시청', '反対', '아현']), (600, ['시청', '최단경유역', '아현'])], 604, None),
+        ([(600, ['시청', '반대방향경유역', '아현'])], 609, None),
+        ([(590, ['시청', '최단경유역', '아현']), (600, ['시청', '반대방향경유역', '아현'])],
+         604, RAIL_LEG['station_path']),
+    ])
+    def test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival(paths, arrive, expected):
+        from app.domains.travel_ops.instances.mobility.engine.departure_context import capture
+        from app.domains.travel_ops.instances.mobility.engine.verify_time import leg_txt
+    
+        class Verifier:
+            def __init__(self):
+                self.lo = self
+    
+            def candidates(self, line, start, end, day_type):
+                assert day_type == 'weekday'
+                return [(SimpleNamespace(min=minute), SimpleNamespace(path=path), False)
+                        for minute, path in paths], {}, False
+    
+            def travel_min_on_path(self, line, path, target):
+                return 2 * path.index(target)
+    
+        leg = {k: v for k, v in RAIL_LEG.items() if k != 'station_path'}
+        option = {'id': 'subway_1', 'eta_min': 10, '_start': 595, '_legs': [leg],
+                  '_day_type': 'weekday', '_check': {'legs': [leg]},
+                  '_lr': [SimpleNamespace(label=leg_txt(leg), verdict='feasible', depart_min=600, arrive_min=arrive)]}
+        runtime = SimpleNamespace(_v=Verifier(), timetable_built_at='v1', rules_version='r1')
+>       saved = capture([option], runtime=runtime, origin={}, destination={}, stage='planning', party={},
+                        first_visit=True, service_date=date(2026, 10, 12), start_min=595)['options']['subway_1']
+
+final_project_cs\tests\unit\travel\mobility\test_route_shape_context_v1.py:181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:103: in capture
+    "station_paths": _station_paths(option, runtime),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:58: in _station_paths
+    paths[index] = route_options.ridden_path(verifier, leg, result, day_type)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:921: in ridden_path
+    for _d, verd in chosen_departures(v, leg, lr, day_type):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+v = <tests.unit.travel.mobility.test_route_shape_context_v1.test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival.<locals>.Verifier object at 0x000002A7D153DCD0>
+leg = {'from': '시청', 'line': '02호선', 'to': '아현'}
+lr = namespace(label='02호선 시청→아현', verdict='feasible', depart_min=600, arrive_min=604)
+day_type = 'weekday'
+
+    def chosen_departures(v, leg, lr, day_type):
+        """판정기가 고른 편성 후보 — 그 승차 분에 떠나 그 도착 분에 닿는 (출발, 경로 판정) 목록.
+        판정기와 같은 공식 도착초/급행/평균 소요 규칙으로 다시 찾는다."""
+        if lr is None or lr.verdict != "feasible" or lr.depart_min is None or lr.arrive_min is None:
+            return []
+        line, a, b = leg["line"], leg["from"], leg["to"]
+        cands, _drop, _o = v.candidates(line, a, b, day_type)
+        out = []
+        for d, verd, _f in cands:
+            if d.min != lr.depart_min:
+                continue
+>           ride = v.ride_of(line, d, verd, a, b)
+                   ^^^^^^^^^
+E           AttributeError: 'Verifier' object has no attribute 'ride_of'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:799: AttributeError
+_ test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths1-604-None] _
+
+paths = [(600, ['시청', '反対', '아현']), (600, ['시청', '최단경유역', '아현'])], arrive = 604
+expected = None
+
+    @pytest.mark.parametrize('paths,arrive,expected', [
+        ([(600, ['시청', '반대방향경유역', '아현'])], 604, RAIL_LEG['station_path']),
+        ([(600, ['시청', '反対', '아현']), (600, ['시청', '최단경유역', '아현'])], 604, None),
+        ([(600, ['시청', '반대방향경유역', '아현'])], 609, None),
+        ([(590, ['시청', '최단경유역', '아현']), (600, ['시청', '반대방향경유역', '아현'])],
+         604, RAIL_LEG['station_path']),
+    ])
+    def test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival(paths, arrive, expected):
+        from app.domains.travel_ops.instances.mobility.engine.departure_context import capture
+        from app.domains.travel_ops.instances.mobility.engine.verify_time import leg_txt
+    
+        class Verifier:
+            def __init__(self):
+                self.lo = self
+    
+            def candidates(self, line, start, end, day_type):
+                assert day_type == 'weekday'
+                return [(SimpleNamespace(min=minute), SimpleNamespace(path=path), False)
+                        for minute, path in paths], {}, False
+    
+            def travel_min_on_path(self, line, path, target):
+                return 2 * path.index(target)
+    
+        leg = {k: v for k, v in RAIL_LEG.items() if k != 'station_path'}
+        option = {'id': 'subway_1', 'eta_min': 10, '_start': 595, '_legs': [leg],
+                  '_day_type': 'weekday', '_check': {'legs': [leg]},
+                  '_lr': [SimpleNamespace(label=leg_txt(leg), verdict='feasible', depart_min=600, arrive_min=arrive)]}
+        runtime = SimpleNamespace(_v=Verifier(), timetable_built_at='v1', rules_version='r1')
+>       saved = capture([option], runtime=runtime, origin={}, destination={}, stage='planning', party={},
+                        first_visit=True, service_date=date(2026, 10, 12), start_min=595)['options']['subway_1']
+
+final_project_cs\tests\unit\travel\mobility\test_route_shape_context_v1.py:181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:103: in capture
+    "station_paths": _station_paths(option, runtime),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:58: in _station_paths
+    paths[index] = route_options.ridden_path(verifier, leg, result, day_type)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:921: in ridden_path
+    for _d, verd in chosen_departures(v, leg, lr, day_type):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+v = <tests.unit.travel.mobility.test_route_shape_context_v1.test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival.<locals>.Verifier object at 0x000002A7D153E210>
+leg = {'from': '시청', 'line': '02호선', 'to': '아현'}
+lr = namespace(label='02호선 시청→아현', verdict='feasible', depart_min=600, arrive_min=604)
+day_type = 'weekday'
+
+    def chosen_departures(v, leg, lr, day_type):
+        """판정기가 고른 편성 후보 — 그 승차 분에 떠나 그 도착 분에 닿는 (출발, 경로 판정) 목록.
+        판정기와 같은 공식 도착초/급행/평균 소요 규칙으로 다시 찾는다."""
+        if lr is None or lr.verdict != "feasible" or lr.depart_min is None or lr.arrive_min is None:
+            return []
+        line, a, b = leg["line"], leg["from"], leg["to"]
+        cands, _drop, _o = v.candidates(line, a, b, day_type)
+        out = []
+        for d, verd, _f in cands:
+            if d.min != lr.depart_min:
+                continue
+>           ride = v.ride_of(line, d, verd, a, b)
+                   ^^^^^^^^^
+E           AttributeError: 'Verifier' object has no attribute 'ride_of'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:799: AttributeError
+_ test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths2-609-None] _
+
+paths = [(600, ['시청', '반대방향경유역', '아현'])], arrive = 609, expected = None
+
+    @pytest.mark.parametrize('paths,arrive,expected', [
+        ([(600, ['시청', '반대방향경유역', '아현'])], 604, RAIL_LEG['station_path']),
+        ([(600, ['시청', '反対', '아현']), (600, ['시청', '최단경유역', '아현'])], 604, None),
+        ([(600, ['시청', '반대방향경유역', '아현'])], 609, None),
+        ([(590, ['시청', '최단경유역', '아현']), (600, ['시청', '반대방향경유역', '아현'])],
+         604, RAIL_LEG['station_path']),
+    ])
+    def test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival(paths, arrive, expected):
+        from app.domains.travel_ops.instances.mobility.engine.departure_context import capture
+        from app.domains.travel_ops.instances.mobility.engine.verify_time import leg_txt
+    
+        class Verifier:
+            def __init__(self):
+                self.lo = self
+    
+            def candidates(self, line, start, end, day_type):
+                assert day_type == 'weekday'
+                return [(SimpleNamespace(min=minute), SimpleNamespace(path=path), False)
+                        for minute, path in paths], {}, False
+    
+            def travel_min_on_path(self, line, path, target):
+                return 2 * path.index(target)
+    
+        leg = {k: v for k, v in RAIL_LEG.items() if k != 'station_path'}
+        option = {'id': 'subway_1', 'eta_min': 10, '_start': 595, '_legs': [leg],
+                  '_day_type': 'weekday', '_check': {'legs': [leg]},
+                  '_lr': [SimpleNamespace(label=leg_txt(leg), verdict='feasible', depart_min=600, arrive_min=arrive)]}
+        runtime = SimpleNamespace(_v=Verifier(), timetable_built_at='v1', rules_version='r1')
+>       saved = capture([option], runtime=runtime, origin={}, destination={}, stage='planning', party={},
+                        first_visit=True, service_date=date(2026, 10, 12), start_min=595)['options']['subway_1']
+
+final_project_cs\tests\unit\travel\mobility\test_route_shape_context_v1.py:181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:103: in capture
+    "station_paths": _station_paths(option, runtime),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:58: in _station_paths
+    paths[index] = route_options.ridden_path(verifier, leg, result, day_type)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:921: in ridden_path
+    for _d, verd in chosen_departures(v, leg, lr, day_type):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+v = <tests.unit.travel.mobility.test_route_shape_context_v1.test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival.<locals>.Verifier object at 0x000002A80BF32AB0>
+leg = {'from': '시청', 'line': '02호선', 'to': '아현'}
+lr = namespace(label='02호선 시청→아현', verdict='feasible', depart_min=600, arrive_min=609)
+day_type = 'weekday'
+
+    def chosen_departures(v, leg, lr, day_type):
+        """판정기가 고른 편성 후보 — 그 승차 분에 떠나 그 도착 분에 닿는 (출발, 경로 판정) 목록.
+        판정기와 같은 공식 도착초/급행/평균 소요 규칙으로 다시 찾는다."""
+        if lr is None or lr.verdict != "feasible" or lr.depart_min is None or lr.arrive_min is None:
+            return []
+        line, a, b = leg["line"], leg["from"], leg["to"]
+        cands, _drop, _o = v.candidates(line, a, b, day_type)
+        out = []
+        for d, verd, _f in cands:
+            if d.min != lr.depart_min:
+                continue
+>           ride = v.ride_of(line, d, verd, a, b)
+                   ^^^^^^^^^
+E           AttributeError: 'Verifier' object has no attribute 'ride_of'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:799: AttributeError
+_ test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths3-604-expected3] _
+
+paths = [(590, ['시청', '최단경유역', '아현']), (600, ['시청', '반대방향경유역', '아현'])]
+arrive = 604, expected = ['시청', '반대방향경유역', '아현']
+
+    @pytest.mark.parametrize('paths,arrive,expected', [
+        ([(600, ['시청', '반대방향경유역', '아현'])], 604, RAIL_LEG['station_path']),
+        ([(600, ['시청', '反対', '아현']), (600, ['시청', '최단경유역', '아현'])], 604, None),
+        ([(600, ['시청', '반대방향경유역', '아현'])], 609, None),
+        ([(590, ['시청', '최단경유역', '아현']), (600, ['시청', '반대방향경유역', '아현'])],
+         604, RAIL_LEG['station_path']),
+    ])
+    def test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival(paths, arrive, expected):
+        from app.domains.travel_ops.instances.mobility.engine.departure_context import capture
+        from app.domains.travel_ops.instances.mobility.engine.verify_time import leg_txt
+    
+        class Verifier:
+            def __init__(self):
+                self.lo = self
+    
+            def candidates(self, line, start, end, day_type):
+                assert day_type == 'weekday'
+                return [(SimpleNamespace(min=minute), SimpleNamespace(path=path), False)
+                        for minute, path in paths], {}, False
+    
+            def travel_min_on_path(self, line, path, target):
+                return 2 * path.index(target)
+    
+        leg = {k: v for k, v in RAIL_LEG.items() if k != 'station_path'}
+        option = {'id': 'subway_1', 'eta_min': 10, '_start': 595, '_legs': [leg],
+                  '_day_type': 'weekday', '_check': {'legs': [leg]},
+                  '_lr': [SimpleNamespace(label=leg_txt(leg), verdict='feasible', depart_min=600, arrive_min=arrive)]}
+        runtime = SimpleNamespace(_v=Verifier(), timetable_built_at='v1', rules_version='r1')
+>       saved = capture([option], runtime=runtime, origin={}, destination={}, stage='planning', party={},
+                        first_visit=True, service_date=date(2026, 10, 12), start_min=595)['options']['subway_1']
+
+final_project_cs\tests\unit\travel\mobility\test_route_shape_context_v1.py:181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:103: in capture
+    "station_paths": _station_paths(option, runtime),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\departure_context.py:58: in _station_paths
+    paths[index] = route_options.ridden_path(verifier, leg, result, day_type)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:921: in ridden_path
+    for _d, verd in chosen_departures(v, leg, lr, day_type):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+v = <tests.unit.travel.mobility.test_route_shape_context_v1.test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival.<locals>.Verifier object at 0x000002A7D155C230>
+leg = {'from': '시청', 'line': '02호선', 'to': '아현'}
+lr = namespace(label='02호선 시청→아현', verdict='feasible', depart_min=600, arrive_min=604)
+day_type = 'weekday'
+
+    def chosen_departures(v, leg, lr, day_type):
+        """판정기가 고른 편성 후보 — 그 승차 분에 떠나 그 도착 분에 닿는 (출발, 경로 판정) 목록.
+        판정기와 같은 공식 도착초/급행/평균 소요 규칙으로 다시 찾는다."""
+        if lr is None or lr.verdict != "feasible" or lr.depart_min is None or lr.arrive_min is None:
+            return []
+        line, a, b = leg["line"], leg["from"], leg["to"]
+        cands, _drop, _o = v.candidates(line, a, b, day_type)
+        out = []
+        for d, verd, _f in cands:
+            if d.min != lr.depart_min:
+                continue
+>           ride = v.ride_of(line, d, verd, a, b)
+                   ^^^^^^^^^
+E           AttributeError: 'Verifier' object has no attribute 'ride_of'
+
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\options.py:799: AttributeError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_claude_resume_20261012_201012\baseline-full-mobility.xml -
+=========================== short test summary info ===========================
+FAILED final_project_cs\tests\unit\travel\mobility\test_bus_only_planner_candidates.py::test_bus_only_earliest_sources_include_bus_transfer_and_no_subway
+FAILED final_project_cs\tests\unit\travel\mobility\test_earliest_v1.py::test_leg_attaches_earliest_only_when_asked
+FAILED final_project_cs\tests\unit\travel\mobility\test_earliest_v1.py::test_walk_only_earliest_real_planner
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py::test_bike_lfd_rule
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py::test_bike_after_prev_end
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py::test_bike_not_feasible_reason
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py::test_bike_eta_changes_recompute
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py::test_bike_recheck_fails_not_listed
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py::test_bike_service_day_boundary_exact
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_bike_v1.py::test_bike_stage_buffer_and_prev_end_exact
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_v1.py::test_golden
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_v1.py::test_golden_all_modes
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_v1.py::test_reasons_axis
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_v1.py::test_walk_m_and_fare
+FAILED final_project_cs\tests\unit\travel\mobility\test_route_shape_context_v1.py::test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths0-604-expected0]
+FAILED final_project_cs\tests\unit\travel\mobility\test_route_shape_context_v1.py::test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths1-604-None]
+FAILED final_project_cs\tests\unit\travel\mobility\test_route_shape_context_v1.py::test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths2-609-None]
+FAILED final_project_cs\tests\unit\travel\mobility\test_route_shape_context_v1.py::test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths3-604-expected3]
+ERROR final_project_cs\tests\unit\travel\mobility\test_train_precision_v1.py::test_next_train_boundary_uses_exact_ready_second[39299-655]
+ERROR final_project_cs\tests\unit\travel\mobility\test_train_precision_v1.py::test_next_train_boundary_uses_exact_ready_second[39300-655]
+ERROR final_project_cs\tests\unit\travel\mobility\test_train_precision_v1.py::test_next_train_boundary_uses_exact_ready_second[39301-662]
+ERROR final_project_cs\tests\unit\travel\mobility\test_train_precision_v1.py::test_public_case_catches_valid_transfer_without_changing_walk_speed
+18 failed, 1498 passed, 221 deselected, 4 errors in 673.65s (0:11:13)

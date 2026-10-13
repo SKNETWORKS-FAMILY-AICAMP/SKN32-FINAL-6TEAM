@@ -1,0 +1,13 @@
+{
+  "remote_hash_match": true,
+  "frozen_input_hash_match": true,
+  "exact_ids_gold_type_match": true,
+  "independent_direct_recount": true,
+  "matched_original_input_script_engine_model": true,
+  "adapter_matches_registered_hash": true,
+  "our_training": true,
+  "saved": 4014,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "repetitions": 1
+}

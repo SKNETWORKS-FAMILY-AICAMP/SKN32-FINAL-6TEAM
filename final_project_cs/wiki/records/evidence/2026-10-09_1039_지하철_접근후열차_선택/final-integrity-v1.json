@@ -1,0 +1,12 @@
+{
+  "checked_at": "2026-10-09T10:53:24.174067+09:00",
+  "source_and_artifact_hash_matches": 244,
+  "source_hashes": 237,
+  "artifacts": 7,
+  "backup_hashes": 5,
+  "local_links": 7,
+  "script_syntax_exit_code": 0,
+  "browser_render_verified": false,
+  "new_live_api_calls": 0,
+  "deployed": false
+}

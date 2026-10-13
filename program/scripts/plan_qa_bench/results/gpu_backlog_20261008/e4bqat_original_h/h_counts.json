@@ -1,0 +1,220 @@
+{
+  "model": "Gemma-4-E4B-it QAT Q4_0 original",
+  "our_training": false,
+  "publisher_training": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+  "saved": 1316,
+  "expected": 1316,
+  "missing": 0,
+  "failed_or_unparsed": 1,
+  "positive": {
+    "total": 461,
+    "correct": 424,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8913296207129106,
+      0.9412122979486081
+    ],
+    "false_pick_wilson95": [
+      8.673617379884035e-19,
+      0.008264019372196129
+    ]
+  },
+  "negative": {
+    "total": 855,
+    "correct": 365,
+    "false_pick": 489,
+    "failed_or_missing": 1,
+    "correct_wilson95": [
+      0.39414559212026823,
+      0.46030950117292013
+    ],
+    "false_pick_wilson95": [
+      0.5385147257885741,
+      0.6047014624109286
+    ]
+  },
+  "subtypes": {
+    "hard_N1": {
+      "total": 118,
+      "correct": 2,
+      "false_pick": 116,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.004660442504200446,
+        0.059697444348039835
+      ],
+      "false_pick_wilson95": [
+        0.9403025556519603,
+        0.9953395574957996
+      ]
+    },
+    "hard_N2": {
+      "total": 150,
+      "correct": 100,
+      "false_pick": 50,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.5878975668678504,
+        0.7371123516761239
+      ],
+      "false_pick_wilson95": [
+        0.262887648323876,
+        0.41210243313214945
+      ]
+    },
+    "hard_N3": {
+      "total": 150,
+      "correct": 139,
+      "false_pick": 11,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8734642066329596,
+        0.9585611848396149
+      ],
+      "false_pick_wilson95": [
+        0.041438815160384994,
+        0.12653579336704038
+      ]
+    },
+    "hard_N4": {
+      "total": 150,
+      "correct": 15,
+      "false_pick": 135,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.061541383826314106,
+        0.15843481166814719
+      ],
+      "false_pick_wilson95": [
+        0.8415651883318529,
+        0.9384586161736859
+      ]
+    },
+    "hard_N5": {
+      "total": 150,
+      "correct": 57,
+      "false_pick": 92,
+      "failed_or_missing": 1,
+      "correct_wilson95": [
+        0.3062372724644591,
+        0.45975558618387935
+      ],
+      "false_pick_wilson95": [
+        0.5334979124018292,
+        0.6875088322080735
+      ]
+    },
+    "hard_N6": {
+      "total": 137,
+      "correct": 52,
+      "false_pick": 85,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.3026352620733648,
+        0.463058729764561
+      ],
+      "false_pick_wilson95": [
+        0.536941270235439,
+        0.6973647379266352
+      ]
+    },
+    "hard_P1": {
+      "total": 118,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9684716609775057,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_P2": {
+      "total": 110,
+      "correct": 108,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9361198354061878,
+        0.994999645124672
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.033743935298164184
+      ]
+    },
+    "hard_P3": {
+      "total": 113,
+      "correct": 82,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.637003024173307,
+        0.7994858772385199
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03287753216595198
+      ]
+    },
+    "hard_P4": {
+      "total": 120,
+      "correct": 116,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.917419662440894,
+        0.9869624489016494
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    }
+  },
+  "failed_records": [
+    {
+      "i": 951127,
+      "set": "h",
+      "qi": 1127,
+      "type": "hard_N5",
+      "gold": null,
+      "content": "{\"item\": [10, 17, 31, ",
+      "parsed": false,
+      "pick": null,
+      "ms": 367,
+      "p_null": 0.0,
+      "p_mass": 0.9991
+    }
+  ],
+  "answer_sha256": "68f3f8e2ca5f25c26f336f5c5e274b7937c9aa951797862283ce810688f45ec3",
+  "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "execution": {
+    "job": {
+      "id": "e4bqat_original_h",
+      "label": "Gemma-4-E4B-it QAT Q4_0 original",
+      "our_training": false,
+      "publisher_training": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+      "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "prompts": "/workspace/heavy/all_prompts_h.json",
+      "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "h_backlog_e4bqat_original",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1316,
+      "purpose": "Fill missing original QAT coverage; compare fixed travel data against existing Q4_K_M original and our trained variants; no product adoption"
+    },
+    "started": "2026-10-08T06:02:23.053327+00:00",
+    "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

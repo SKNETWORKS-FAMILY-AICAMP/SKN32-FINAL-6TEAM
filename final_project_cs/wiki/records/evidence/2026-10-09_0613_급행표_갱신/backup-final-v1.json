@@ -1,0 +1,87 @@
+[
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/express.py",
+    "sha256": "6dbdbede71753f4a28fa8c766228092e6093a501ba76cbe436b06e65b90ec378",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0613_급행표_갱신/express.py"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/runtime.py",
+    "sha256": "fcb88e9c62732bab6c408429fd811c02a92c278e55ecc83893d286cca78e9120",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0613_급행표_갱신/runtime.py"
+  },
+  {
+    "file": "final_project_cs/wiki/teams/mobility.md",
+    "sha256": "ca786076c24f1af6d4e4e531cb03f38e65253f49c3381d85dd25d32dfcb1d906",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0613_급행표_갱신/mobility.md"
+  },
+  {
+    "file": "final_project_cs/tests/unit/travel/mobility/test_express_source_reload_v1.py",
+    "sha256": "8fc66999cb2e8eadea5a3dc64430c7c6dbe52fb49808ee707051184dd2007c11",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0613_급행표_갱신/test_express_source_reload_v1.py"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/express.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0627_급행표_내용판_보강/express.py",
+    "sha256": "29a32bb638dfc320aee9b16a72ac24b55bdb9013f662dd122158eba2e4deb62b"
+  },
+  {
+    "file": "final_project_cs/tests/unit/travel/mobility/test_express_source_reload_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0627_급행표_내용판_보강/test_express_source_reload_v1.py",
+    "sha256": "d29b522dad24bbc0ff390e6b3445dc6125a61ece21d04ff214dd489a7f228f8e"
+  },
+  {
+    "file": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0627_급행표_내용판_보강/mobility.md",
+    "sha256": "894d5b322fa7fee487a1b4e60fa0be0c04088718e1d2e6a8775c75e5ffabe95f"
+  },
+  {
+    "file": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0613_급행_운행표_변경이_다음계산에_반영되지않음.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0627_급행표_내용판_보강/2026-10-09_0613_급행_운행표_변경이_다음계산에_반영되지않음.md",
+    "sha256": "e870f4c35799b661b35c03cb477a7cd98c8335d3f1fe67646701e51bb5c02f8a"
+  },
+  {
+    "file": "final_project_cs/scripts/mobility/build_readiness_visual_v22.py",
+    "backup": "final_project_cs/scripts/mobility/_backup/2026-10-09_0627_급행표_내용판_보강/build_readiness_visual_v22.py",
+    "sha256": "b1e7b558fe1e2665285f92e6d860480659c5ea646e608fcb5f842b87247388fe"
+  },
+  {
+    "file": "final_project_cs/wiki/records/evidence/2026-10-09_0613_급행표_갱신/source-signature-cost-v1.json",
+    "backup": "final_project_cs/wiki/records/evidence/2026-10-09_0613_급행표_갱신/_backup/2026-10-09_0632_경로_비식별/source-signature-cost-v1.json",
+    "sha256": "38d5ea7c7ab0c116a4a8dadfbca12da6d35dd69879115f379e14d6400ee27724"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/express.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0615_급행표_검증보강/express.py",
+    "sha256": "e89e4b725a927335c1fdd3647b19e9fa727be9929bedd9032ea888cd6d7515f9"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/runtime.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0615_급행표_검증보강/runtime.py",
+    "sha256": "876190e75bac0d35c2f96629229b79ff1d1a4442d231444e3e94c82114b08e38"
+  },
+  {
+    "file": "final_project_cs/tests/unit/travel/mobility/test_express_source_reload_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0615_급행표_검증보강/test_express_source_reload_v1.py",
+    "sha256": "8fc66999cb2e8eadea5a3dc64430c7c6dbe52fb49808ee707051184dd2007c11"
+  },
+  {
+    "file": "final_project_cs/tests/unit/travel/mobility/test_express_source_reload_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0616_급행표_시험정정/test_express_source_reload_v1.py",
+    "sha256": "425ff812dc2a2c2cc068d947e7b3a65a848829f17b486c035d454ad8e8b8898f"
+  },
+  {
+    "file": "final_project_cs/tests/unit/travel/mobility/test_express_source_reload_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0618_첫차계약_시험정정/test_express_source_reload_v1.py",
+    "sha256": "d06319b7d94e4efd1122a4b54a87364200a3f5de890fa8d88e4a802a425754b6"
+  },
+  {
+    "file": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0642_급행표_결과기록/mobility.md",
+    "sha256": "f0a1498e30e3f873e72133b9e9eb2909f3825277a2996904fb543ac20dd580db"
+  },
+  {
+    "file": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0613_급행_운행표_변경이_다음계산에_반영되지않음.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0642_급행표_결과기록/2026-10-09_0613_급행_운행표_변경이_다음계산에_반영되지않음.md",
+    "sha256": "7e46b243b3489282552c309a39e7ed9a9c7f96f67853982545d1d79ab5030d8e"
+  }
+]

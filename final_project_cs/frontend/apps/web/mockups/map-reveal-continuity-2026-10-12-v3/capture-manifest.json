@@ -1,0 +1,38 @@
+[
+  {
+    "Target": "first-375.png",
+    "Source": ".tmp\\uiux-resume-20261012-v1\\completion-evidence\\checking-read-list-2026101-f5328--접혀-있고-현재-검증-카드만-펼쳐진다-375px\\first-marker-all-read-folded-375.png",
+    "Bytes": 146959,
+    "SHA256": "362BC04BD8892A4D7D1C015E24615D8C42A1DE9115C1CCF26EC0EF7389A7BC59"
+  },
+  {
+    "Target": "third-375.png",
+    "Source": ".tmp\\uiux-resume-20261012-v1\\completion-evidence\\uiux-sonnet-map-reveal-202-08f40--먼-일정은-각각-거리-버튼으로-남는다-375px\\after-third-frame-observed-375.png",
+    "Bytes": 132879,
+    "SHA256": "FD5100D51B1E052488AA95C0E30F06B0A5D0F5C40675956F46E2260CDCEB24C6"
+  },
+  {
+    "Target": "reveal-375.webm",
+    "Source": ".tmp\\uiux-resume-20261012-v1\\completion-evidence\\checking-read-list-2026101-f5328--접혀-있고-현재-검증-카드만-펼쳐진다-375px\\video.webm",
+    "Bytes": 1026189,
+    "SHA256": "344A1702FF30C2AADA5C2BC3E74298371DDE76193C8E019C77FE51506534A8DF"
+  },
+  {
+    "Target": "first-1280.png",
+    "Source": ".tmp\\uiux-resume-20261012-v1\\completion-evidence\\checking-read-list-2026101-0a0c8-접혀-있고-현재-검증-카드만-펼쳐진다-1280px\\first-marker-all-read-folded-1280.png",
+    "Bytes": 166242,
+    "SHA256": "140152623EEBE52E40ACD8A256E7CEFF9B25C161C51F75F578A2E947B032EBDF"
+  },
+  {
+    "Target": "third-1280.png",
+    "Source": ".tmp\\uiux-resume-20261012-v1\\completion-evidence\\uiux-sonnet-map-reveal-202-74233-먼-일정은-각각-거리-버튼으로-남는다-1280px\\after-third-frame-observed-1280.png",
+    "Bytes": 152976,
+    "SHA256": "381489A2E968F3EF5C198E60950A4B1D1F3F9BA4E8E05CDFAEA81850F87B6DF4"
+  },
+  {
+    "Target": "reveal-1280.webm",
+    "Source": ".tmp\\uiux-resume-20261012-v1\\completion-evidence\\checking-read-list-2026101-0a0c8-접혀-있고-현재-검증-카드만-펼쳐진다-1280px\\video.webm",
+    "Bytes": 1121307,
+    "SHA256": "99ECB89984DFF11F5EFAB8D1C88CF20369D7A94FDAA62AA9004894F03D378651"
+  }
+]

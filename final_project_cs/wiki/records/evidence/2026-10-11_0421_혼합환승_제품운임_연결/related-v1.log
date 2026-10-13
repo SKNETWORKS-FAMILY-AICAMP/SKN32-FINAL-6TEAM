@@ -1,0 +1,87 @@
+........................................................................ [ 42%]
+.....................................FF.................F............... [ 84%]
+...........................                                              [100%]
+================================== FAILURES ===================================
+_________________________________ test_golden _________________________________
+
+    def test_golden():
+        _skip_if_no_data()
+        _, got = _run()
+        got.pop("basis")
+        want = json.loads(GOLD.read_text(encoding="utf-8"))
+>       assert _customer_values(got) == want, "예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다"
+E       AssertionError: 예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다
+E       assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Differing items:
+E         {'left_out': {'dinner_to_lotte_mart': [{'code': 'no_last_departure', 'label': '경의중앙선 서울역→디지털미디어시티 → 6호선 디지털미디어시티→연신내 →...reason': '이동 출발 19:16 출발은 재판정에서 불성립 · 19:02 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 0회 · 소요 18분'}]}} != {'left_out': {}}
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_plan_v1.py:159: AssertionError
+_____________________________ test_contract_keys ______________________________
+
+    def test_contract_keys():
+        _skip_if_no_data()
+        _, got = _run()
+        for it in got["items"]:
+            assert set(it) <= ITEM_KEYS, f"ItemIn 에 없는 키: {set(it) - ITEM_KEYS}"
+        for key, r in got["routes"].items():
+            assert set(r) == ROUTE_KEYS, f"{key}: {set(r) ^ ROUTE_KEYS}"
+            assert r["planned"] in {o["id"] for o in r["options"]}
+            for o in r["options"]:
+                assert OPTION_KEYS <= set(o) <= OPTION_KEYS | OPTION_OPT, f"{key}/{o.get('id')}: {set(o) ^ OPTION_KEYS}"
+                assert isinstance(o["eta_min"], int) and o["eta_min"] > 0
+        bad = [(k, p) for k, p in _walk_keys({"items": got["items"], "routes": got["routes"]}) if k in FORBIDDEN]
+        assert not bad, f"코어로 나가면 안 되는 키: {bad}"
+        mob = [it for it in got["items"] if it["kind"] == "mobility"]
+        for it in mob:
+            assert it["route"] in got["routes"]
+            context = it["detail"]["departure_context"]
+            assert context["schema_version"] == 1 and context["timing_unit"] == "model_minutes"
+            assert datetime.fromisoformat(context["captured_at"]).utcoffset() is not None
+            route = got["routes"][it["route"]]
+            assert set(context["options"]) == {o["id"] for o in route["options"]}
+            for option in route["options"]:
+                saved = context["options"][option["id"]]
+                assert saved["option_id"] == option["id"] and saved["eta_min"] == option["eta_min"]
+                if saved["check"] is not None:
+                    assert saved["check"]["legs"] == saved["legs"]
+>           assert set(context["basis"]) == {"timetable_built_at", "rules_version", "express_version"}
+E           AssertionError: assert {'express_ver...ble_built_at'} == {'express_ver...ble_built_at'}
+E             
+E             Extra items in the left set:
+E             'subway_station_version'
+E             Use -v to get more diff
+
+tests\unit\travel\mobility\test_plan_v1.py:188: AssertionError
+____________________________ test_golden_all_modes ____________________________
+
+    def test_golden_all_modes():
+        """버스 포함 예시(27 손일 「버스 포함 예시 재추출」) — 자전거는 실시간 조회라 뺀다."""
+        _skip_if_no_data()
+        doc = json.loads(IN.read_text(encoding="utf-8"))
+        got = plan(doc["places"], doc["items"], doc.get("party_size"), doc.get("constraints"),
+                   runtime=_runtime(), modes=MODES_ALL)
+        got.pop("basis")
+        want = json.loads(GOLD_ALL.read_text(encoding="utf-8"))
+>       assert _customer_values(got) == want, "버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다"
+E       AssertionError: 버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다
+E       assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Differing items:
+E         {'left_out': {'dinner_to_lotte_mart': [{'code': 'no_last_departure', 'label': '경의중앙선 서울역→디지털미디어시티 → 6호선 디지털미디어시티→연신내 →..., 'label': '그 밖 혼합 후보 12개', 'reason': '추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)'}, ...]}} != {'left_out': {'dinner_to_lotte_mart': [{'code': 'no_last_departure', 'label': '버스 새벽A504 서울역버스환승센터.강우규의거터→서울역버스환승센터', ..., 'label': '그 밖 혼합 후보 12개', 'reason': '추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)'}, ...]}}
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_plan_v1.py:579: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_0421_혼합환승_제품운임_연결\related-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_golden - AssertionErr...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_contract_keys - Asser...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_golden_all_modes - As...
+3 failed, 168 passed in 196.60s (0:03:16)
+Exception ignored in: <function Console.__del__ at 0x0000021D7FA95D00>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

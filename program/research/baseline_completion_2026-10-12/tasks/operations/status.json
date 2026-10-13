@@ -1,0 +1,80 @@
+{
+  "phase": "waiting_dependency",
+  "updated_at_kst": "2026-10-12T04:44:38+09:00",
+  "w_ids": [
+    "W05",
+    "W09"
+  ],
+  "changed_files": [
+    "final_project_cs/app/application/operations_policy.py",
+    "final_project_cs/app/application/operations_diagnostics.py",
+    "final_project_cs/app/presentation/admin_operations_api.py",
+    "final_project_cs/app/infrastructure/db/migrations/902_unattended_operations.sql",
+    "final_project_cs/config/operations-policy.yaml",
+    "final_project_cs/scripts/replay_operations_diagnostics.py",
+    "final_project_cs/app/ops_entrypoint.py",
+    "final_project_cs/app/application/admin_service.py",
+    "final_project_cs/app/domains/travel_ops/modules/web_account/admin_customer_api.py",
+    "final_project_cs/frontend/apps/admin/src/features/operations/source-policy.tsx",
+    "final_project_cs/frontend/apps/admin/src/features/operations/connected.tsx",
+    "final_project_cs/frontend/apps/admin/src/lib/gateway.ts",
+    "final_project_cs/frontend/apps/admin/src/components/AdminApp.tsx",
+    "final_project_cs/frontend/apps/web/src/features/support/support.tsx",
+    "final_project_cs/frontend/apps/web/src/features/support/client.ts",
+    "final_project_cs/frontend/apps/web/src/features/support/support.test.ts",
+    "final_project_cs/frontend/apps/web/tests/live/support.spec.ts",
+    "final_project_cs/tests/unit/test_operations_diagnostics.py",
+    "final_project_cs/tests/security/test_unattended_operations.py",
+    "final_project_cs/tests/security/test_admin_json_gateway.py",
+    "final_project_cs/tests/integration/db/operations_pglite.mjs",
+    "final_project_cs/tests/integration/db/test_unattended_operations.py",
+    "final_project_cs/wiki/operations/unattended-operations.md",
+    "final_project_cs/wiki/records/reports/2026-10-12-unattended-operations-local-verification.md"
+  ],
+  "tests": [
+    {
+      "command": "python -m pytest tests/unit/test_operations_diagnostics.py tests/security/test_unattended_operations.py tests/security/test_admin_json_gateway.py tests/integration/db/test_unattended_operations.py -q -p no:cacheprovider --basetemp=../scratch/operations-20261012/pytest-final-v5 --junitxml=../scratch/operations-20261012/backend-final-v5.xml",
+      "passed": 51,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "scratch/operations-20261012/backend-final-v5.xml"
+    },
+    {
+      "command": "node scratch/operations-20261012/build-ui.mjs; node scratch/operations-20261012/ui-test.mjs",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "scratch/operations-20261012/ui/result-v2.json",
+      "scope": "mock 응답에 연결한 실제 운영 React 구성요소"
+    },
+    {
+      "command": "npx playwright test tests/live/support.spec.ts --config=playwright.live.config.ts",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "scratch/operations-20261012/support-playwright-v2/.last-run.json",
+      "scope": "고객 웹 mock 서버 화면 반응; 실제 외부 호출 아님"
+    },
+    {
+      "command": "npm test -- src/features/support/support.test.ts src/features/support/client.test.ts",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "담당 실행 출력; 상세 재현 조건은 report.md 연결 보고서"
+    }
+  ],
+  "report": "program/research/baseline_completion_2026-10-12/tasks/operations/report.md",
+  "dependencies_remaining": [
+    "Dining 실제 새벽 호출의 정책 서비스 접합과 공급자 첫 예약의 이중 차감 방지",
+    "공통 실행 오류 수집 콜백·주기적 spool 재전송 및 보존 정리·영속 볼륨 및 배포 판본 주입",
+    "인증 이용 제한 안내·고객 공통 탐색 메뉴의 답변 전제 제거 인계",
+    "실제 PostgreSQL 다중 연결 경쟁·전체 스키마/관문·독립 통합 검토"
+  ],
+  "unresolved": [
+    "운영 앱 표준 typecheck의 Next typegen SWC 경로 접근 오류; 직접 TypeScript 검사는 성공"
+  ],
+  "deployment": "not_deployed",
+  "ready_reason": "전용 서비스·설정 저장/감사·진단 내구 복구·화면의 관련 로컬 시험은 통과. 핵심 실제 호출 접합이 남아 전체 ready 또는 완료로 처리하지 않음.",
+  "source_manifest": "program/research/baseline_completion_2026-10-12/tasks/operations/source-manifest.json",
+  "handoff": "program/research/baseline_completion_2026-10-12/tasks/operations/handoff.md"
+}

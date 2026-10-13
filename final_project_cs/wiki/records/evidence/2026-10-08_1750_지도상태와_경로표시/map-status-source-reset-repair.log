@@ -1,0 +1,47 @@
+
+[WebServer] (node:12708) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:17552) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:17552) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19508) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:24140) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:20416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:18272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:11216) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:17544) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:24268) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:20068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 1 test using 1 worker
+
+
+(node:5820) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/1] tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다
+tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다
+reset-count 시간 조정 3곳 모두 처음으로
+
+reset-requests [{"revision":1,"edits":[{"source_id":"s1","field":"items[0].starts_at","value":"08:35"},{"source_id":"s1","field":"items[0].ends_at","value":"10:05"},{"source_id":"s1","field":"items[1].starts_at","value":"10:14"},{"source_id":"s1","field":"items[1].ends_at","value":"11:14"},{"source_id":"s1","field":"items[2].starts_at","value":"11:30"},{"source_id":"s1","field":"items[2].ends_at","value":"12:30"}]},{"revision":2,"edits":[{"source_id":"s1","field":"items[0].starts_at","value":"09:00"},{"source_id":"s1","field":"items[0].ends_at","value":"10:30"},{"source_id":"s1","field":"items[1].starts_at","value":"11:00"},{"source_id":"s1","field":"items[1].ends_at","value":"12:00"},{"source_id":"s1","field":"items[2].starts_at","value":"12:30"},{"source_id":"s1","field":"items[2].ends_at","value":"13:30"}]}]
+
+  1 passed (40.5s)

@@ -1,0 +1,9 @@
+{
+  "report": "final_project_cs/wiki/records/reports/2026-10-10_0318_차량회전자료_내용교체_복구검증.md",
+  "assets": "final_project_cs/wiki/records/reports/assets/2026-10-10_mobility_readiness_v51",
+  "debug": "final_project_cs/wiki/records/reports/debugs/2026-10-10_0311_차량회전자료_내용갱신.md",
+  "history": "final_project_cs/wiki/records/history/2026-10-10_0311_차량회전자료_내용갱신.md",
+  "plan": "final_project_cs/wiki/records/plans/2026-10-10_0311_차량회전자료_내용갱신.md",
+  "test_count": 41,
+  "full_feature_completion": false
+}

@@ -1,0 +1,46 @@
+[
+  {
+    "reason": "disabled",
+    "route": "POST /v1/trips",
+    "status": 503,
+    "error": {
+      "code": "team_unavailable",
+      "message": "요청한 업무의 담당 기능을 사용할 수 없습니다",
+      "team_id": "dining",
+      "reason": "disabled",
+      "retryable": false
+    },
+    "events": []
+  },
+  {
+    "reason": "disabled",
+    "route": "GET /v1/web/trips/{id}/route-shapes",
+    "status": 503,
+    "shape_source": null,
+    "events": [
+      "connection"
+    ]
+  },
+  {
+    "reason": "not_installed",
+    "route": "POST /v1/trips",
+    "status": 503,
+    "error": {
+      "code": "team_unavailable",
+      "message": "요청한 업무의 담당 기능을 사용할 수 없습니다",
+      "team_id": "dining",
+      "reason": "not_installed",
+      "retryable": false
+    },
+    "events": []
+  },
+  {
+    "reason": "not_installed",
+    "route": "GET /v1/web/trips/{id}/route-shapes",
+    "status": 503,
+    "shape_source": null,
+    "events": [
+      "connection"
+    ]
+  }
+]

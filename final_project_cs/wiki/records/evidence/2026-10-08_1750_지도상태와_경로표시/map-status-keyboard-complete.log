@@ -1,0 +1,64 @@
+[WebServer] (node:22400) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:4308) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 4 tests using 1 worker
+
+(node:16804) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/4] tests\live\map-status-bar.spec.ts:10:1 › 확인·변경·위치 표시가 하나의 막대에 나란히 붙고 시간 초기화는 변경 메뉴에서 동작한다
+[2/4] tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다
+  1) tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다 ─────
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('button', { name: /^바뀐 일정 \d+곳$/ })
+    Expected: 0
+    Received: 1
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveCount" getByRole('button', { name: /^바뀐 일정 \d+곳$/ }) with timeout 12000ms
+      - waiting for getByRole('button', { name: /^바뀐 일정 \d+곳$/ })
+        27 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      76 |   await page.keyboard.press("Tab");
+      77 |   await page.keyboard.press("Enter");
+    > 78 |   await expect(changedBadge(page)).toHaveCount(0);
+         |                                    ^
+      79 |   await expect(needsBadge(page)).toBeFocused();
+      80 | });
+      81 |
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\web\tests\live\map-status-bar.spec.ts:78:36
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\trace.zip
+    Usage:
+
+        npx playwright show-trace .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:8632) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[3/4] tests\live\map-status-bar.spec.ts:82:1 › 확대한 경로선에 수단 이름이 붙고 지도 이동·축소에 따라 바뀌며 클릭은 선으로 통과한다
+[4/4] tests\live\map-status-bar.spec.ts:120:1 › 마커 선택은 일정만 열고 설명 알림을 띄우지 않는다
+  1 failed
+    tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다 ──────
+  3 passed (46.9s)

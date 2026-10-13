@@ -1,0 +1,20 @@
+[WebServer] (node:23788) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:23356) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:8560) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:9472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   1 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시 (1.2m)
+(node:24696) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] ⨯ [Error: ENOSPC: no space left on device, write] {
+[WebServer]   errno: -4055,
+[WebServer]   code: 'ENOSPC',
+[WebServer]   syscall: 'write'
+[WebServer] }
+  x   2 tests\live\submit-end-registration-20261012.spec.ts:28:3 › 375px 일반 recheck: 목록 끝에서 버튼 이름까지 즉시 표시 (8.2s)

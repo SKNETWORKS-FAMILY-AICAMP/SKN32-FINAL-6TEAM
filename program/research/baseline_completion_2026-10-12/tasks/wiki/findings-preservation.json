@@ -1,0 +1,9 @@
+{
+  "checked_at_kst": "2026-10-12T04:06:18.525027+09:00",
+  "findings": 25,
+  "selected_choices_unchanged": true,
+  "decisions_unchanged": true,
+  "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-12_040618_findings-current-evidence/findings-v2.json",
+  "before_sha256": "b093dee984ebdca53c823dd6c69d73acff881976780ad06ddd29b916615bfd95",
+  "after_sha256": "de27b6d27d09b58a08de72ac81d9c2d92eb255943af9bb87efc0cd1869ea6f59"
+}

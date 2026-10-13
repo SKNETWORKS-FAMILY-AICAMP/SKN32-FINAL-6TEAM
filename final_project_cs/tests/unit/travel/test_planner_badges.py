@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from app.domains.travel_ops.components.planning import planner
 from app.domains.travel_ops.instances.dining.ledger import shop_badges
-from app.domains.travel_ops.components.planning.survey import likes_from_survey
+from app.domains.travel_ops.instances.dining.survey import likes_from_survey
 from app.domains.travel_ops.components.planning.planner import Cand, preference_profile, rank_candidates
 from app.domains.travel_ops.entry.trip_api import _badges
 
@@ -157,3 +157,10 @@ def test_the_planner_picks_the_wanted_nopo_only_when_asked(monkeypatch):
     assert any("노포집" in title for title in meals("노포 위주로 먹고 싶어요"))
     assert any("노포집" in title for title in meals("", {"survey": {
         "version": "2026-09-24.v1", "priority_details": {"food": ["nopo"]}}}))
+
+
+def test_planner_survey_likes_reject_malformed_nested_values():
+    for constraints in ({"survey": "nopo"}, {"survey": {"priority_details": []}},
+                        {"survey": {"priority_details": {"food": "not-nopo"}}}):
+        assert planner._survey_likes(constraints) == ()
+    assert planner._survey_likes({"survey": {"priority_details": {"food": ["nopo"]}}}) == ("nopo",)

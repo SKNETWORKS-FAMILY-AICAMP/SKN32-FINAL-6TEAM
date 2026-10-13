@@ -1,0 +1,18 @@
+{
+  "deployment": "not_applied",
+  "full_dirty_local_copy": false,
+  "files": {
+    "decision_unit.py": {
+      "sha256": "43a6ccf159ab118450fc45b584547892663fd78e89ec596b00385e29b0d60162",
+      "expected_runtime_sha256": "778d6c99b6909838696fa0e13f2b1eb9ea4568ddcadbf1f61f8d08d917d4276b"
+    },
+    "schedule_query.py": {
+      "sha256": "56f430347afa4cbbe315b4fea4239186d91602fc30d8669a6e7492b17c7a17a6",
+      "expected_runtime_sha256": null
+    },
+    "trip_messages.py": {
+      "sha256": "4cc21d1cbd4203721f401ff0feb21a613486df2f2c0f27bad66d2b46b4c1c1aa",
+      "expected_runtime_sha256": "40b731c51c0ba9b1968470cd7714e629bd9d94fa54705c4b4f783fcfb5b98b96"
+    }
+  }
+}

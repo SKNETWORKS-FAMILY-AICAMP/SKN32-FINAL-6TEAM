@@ -1,0 +1,268 @@
+﻿program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_213331_654488_isolated_integration
+등록: 9e62991b-3a1e-4674-9672-6fa1498cb827
+등록: 75b03573-2f1f-4a49-a824-053037f324ad
+활성 프롬프트 2개 검증 완료 (등록/재사용 2개)
+==============================================================
+TourAPI 음식점 영업시간 구조화 · 표본 1598건
+==============================================================
+  영업 구간 생성         1576   98.6%
+  요일마다 다름           385   24.1%
+  브레이크 있음           585   36.6%
+  라스트오더 있음          790   49.4%
+  휴무 규칙 생성          666   41.7%
+
+[사람이 봐야 할 것]
+   154  에 영업 범위가 여럿
+    20  원문 없음
+    20  명절 이름이 적혀 있지 않아 설과 추석으로 본다
+    13   마지막 주문 [270] 이 구간 밖
+    12   마지막 주문 [60] 이 구간 밖
+    11  휴무 여부를 업소에 문의하라는 표기가 있다
+    11   마지막 주문 [1230] 이 구간 밖
+    10  연도 없는 특정일 표기라 날짜 규칙으로 담지 못함
+     8  해석하지 못한 휴무 표기
+     7   마지막 주문 [640] 이 구간 밖
+
+저장: C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\2026-10-12_213331_654488_isolated_integration\dining-build\parsed_hours.json
+장소 1598, 영업 규칙 10879, 구간 14637, 휴무 규칙 968
+저장: C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\2026-10-12_213331_654488_isolated_integration\dining-build\load_200.sql
+식당 70 (새로 67, 기존 3) / 근거 {'localdata_food': 55, 'localdata_rest': 7, 'operator_check': 8, 'vegan_curated': 70}
+영업시간 검수 비건식당_영업시간_검수.csv: {'식당': 0, '영업 규칙': 0, '구간': 0, '휴무 규칙': 0, '물러난 관광공사 규칙': 0}
+→ C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\2026-10-12_213331_654488_isolated_integration\dining-build\vegan.sql
+FFF...FFFF.....F..................F...F.F............................... [ 58%]
+......FFFF............................F..F........F.                     [100%]
+================================== FAILURES ===================================
+_____________________________ test_bike_lfd_rule ______________________________
+tests\unit\travel\mobility\test_plan_bike_v1.py:105: in test_bike_lfd_rule
+    got, why = P.leg(A, B, _dt("13:30"), {}, True, "a_to_b")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:782: in ride_results
+    rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                         ^^^^^^^^
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+__________________________ test_bike_after_prev_end ___________________________
+tests\unit\travel\mobility\test_plan_bike_v1.py:123: in test_bike_after_prev_end
+    got, why = P.leg(A, B, _dt("13:30"), {}, True, "a_to_b", not_before_dt=_dt("12:50"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:782: in ride_results
+    rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                         ^^^^^^^^
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+________________________ test_bike_not_feasible_reason ________________________
+tests\unit\travel\mobility\test_plan_bike_v1.py:139: in test_bike_not_feasible_reason
+    assert why is None and got[0]["planned"] == "walk", (why, got)
+E   AssertionError: ({'code': 'mode_unavailable', 'left_out': [{'code': 'walk_source_unavailable', 'label': '도보', 'reason': '검증 가능한 보행 경로를...outer_unavailable', 'source': 'walking_network', 'status': 'unavailable'}}], 'reason': '자전거 — 반경 300m 안 대여소 없음'}, None)
+E   assert ({'code': 'mode_unavailable', 'left_out': [{'code': 'walk_source_unavailable', 'label': '도보', 'reason': '검증 가능한 보행 경로를 ...lking_router_unavailable', 'source': 'walking_network', 'status': 'unavailable'}}], 'reason': '자전거 — 반경 300m 안 대여소 없음'} is None)
+_______________________ test_bike_eta_changes_recompute _______________________
+tests\unit\travel\mobility\test_plan_bike_v1.py:173: in test_bike_eta_changes_recompute
+    got, why = Planner(rt, modes=["bike"]).leg(A, B, _dt("13:30"), {}, True, "a_to_b")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:782: in ride_results
+    rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                         ^^^^^^^^
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+_____________________ test_bike_recheck_fails_not_listed ______________________
+tests\unit\travel\mobility\test_plan_bike_v1.py:189: in test_bike_recheck_fails_not_listed
+    assert why is None and [o["id"] for o in got[0]["options"]] == ["walk"], got
+E   AssertionError: None
+E   assert ({'code': 'no_data', 'left_out': [{'code': 'walk_source_unavailable', 'label': '도보', 'reason': '검증 가능한 보행 경로를 확보하지 못해 도...ilable', 'source': 'walking_network', 'status': 'unavailable'}}], 'reason': '자전거 — 역산 출발에서 다시 보니 소요를 못 냈다: 승차 소요 근거없음'} is None)
+____________________ test_bike_service_day_boundary_exact _____________________
+tests\unit\travel\mobility\test_plan_bike_v1.py:196: in test_bike_service_day_boundary_exact
+    got, why = Planner(rt, modes=["bike"]).leg(A, B, _dt("04:40"), {}, True, "a_to_b")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:782: in ride_results
+    rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                         ^^^^^^^^
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+__________________ test_bike_stage_buffer_and_prev_end_exact __________________
+tests\unit\travel\mobility\test_plan_bike_v1.py:206: in test_bike_stage_buffer_and_prev_end_exact
+    got, why = Planner(rt, modes=["bike"], stage="in_progress").leg(A, B, _dt("13:30"), {}, True, "a_to_b",
+app\domains\travel_ops\instances\mobility\engine\plan.py:1792: in leg
+    self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:104: in capture
+    "station_services": _station_services(option, runtime),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:70: in _station_services
+    results = route_options.ride_results(legs, option.get('_lr'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:782: in ride_results
+    rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+                                                         ^^^^^^^^
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'label'
+_________________________________ test_golden _________________________________
+tests\unit\travel\mobility\test_plan_v1.py:162: in test_golden
+    assert _customer_values(got) == want, "예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다"
+E   AssertionError: 예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다
+E   assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'skipped': [{'code': 'arrive_late', 'from': '서울역 저녁 식당(시나리오)', 'kept_input_moves': 0, 'reason': '앞 항목이 끝난 뒤(19:00) 떠나서는 19:30 도착에 맞는 후보가 없다', ...}]} != {'skipped': []}
+E     {'routes': {'gyeongbokgung_to_seongsu': {'from': '경복궁', 'options': [{'eta_min': 37, 'fare_krw': 1550, 'id': 'subway_1'...: 'subway_1', 'label': '2호선 성수→동대문역사문화공원 → 4호선 동대문역사문화공원→서울역', ...}], 'planned': 'subway_1', 'to': '서울역 저녁 식당(시나리오)'}}} != {'routes': {'dinner_to_lotte_mart': {'from': '서울역 저녁 식당(시나리오)', 'options': [{'eta_min': 6, 'fare_krw': 0,...
+E     
+E     ...Full output truncated (4 lines hidden), use '-vv' to show
+____________________________ test_golden_all_modes ____________________________
+tests\unit\travel\mobility\test_plan_v1.py:585: in test_golden_all_modes
+    assert _customer_values(got) == want, "버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다"
+E   AssertionError: 버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다
+E   assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'skipped': [{'code': 'arrive_late', 'from': '서울역 저녁 식당(시나리오)', 'kept_input_moves': 0, 'reason': '앞 항목이 끝난 뒤(19:00) 떠나서는 19:30 도착에 맞는 후보가 없다', ...}]} != {'skipped': []}
+E     {'routes': {'gyeongbokgung_to_seongsu': {'from': '경복궁', 'options': [{'eta_min': 37, 'fare_krw': 1550, 'id': 'subway_1'...: 'subway_1', 'label': '2호선 성수→동대문역사문화공원 → 4호선 동대문역사문화공원→서울역', ...}], 'planned': 'subway_1', 'to': '서울역 저녁 식당(시나리오)'}}} != {'routes': {'dinner_to_lotte_mart': {'from': '서울역 저녁 식당(시나리오)', 'options': [{'eta_min': 6, 'fare_krw': 0,...
+E     
+E     ...Full output truncated (4 lines hidden), use '-vv' to show
+______________________________ test_reasons_axis ______________________________
+tests\unit\travel\mobility\test_plan_v1.py:647: in test_reasons_axis
+    assert "소요 가장 짧음" in r[0]["label"] and "환승 가장 적음(1회)" in r[0]["label"], r[0]["label"]
+E   AssertionError: 3호선 경복궁→을지로3가 → 2호선 을지로3가→성수
+E   assert ('소요 가장 짧음' in '3호선 경복궁→을지로3가 → 2호선 을지로3가→성수')
+____________________________ test_walk_m_and_fare _____________________________
+tests\unit\travel\mobility\test_plan_v1.py:679: in test_walk_m_and_fare
+    w = got["routes"]["dinner_to_lotte_mart"]["options"][0]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'dinner_to_lotte_mart'
+_ test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths0-604-expected0] _
+tests\unit\travel\mobility\test_route_shape_context_v1.py:181: in test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival
+    saved = capture([option], runtime=runtime, origin={}, destination={}, stage='planning', party={},
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:103: in capture
+    "station_paths": _station_paths(option, runtime),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:58: in _station_paths
+    paths[index] = route_options.ridden_path(verifier, leg, result, day_type)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:921: in ridden_path
+    for _d, verd in chosen_departures(v, leg, lr, day_type):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:799: in chosen_departures
+    ride = v.ride_of(line, d, verd, a, b)
+           ^^^^^^^^^
+E   AttributeError: 'Verifier' object has no attribute 'ride_of'
+_ test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths1-604-None] _
+tests\unit\travel\mobility\test_route_shape_context_v1.py:181: in test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival
+    saved = capture([option], runtime=runtime, origin={}, destination={}, stage='planning', party={},
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:103: in capture
+    "station_paths": _station_paths(option, runtime),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:58: in _station_paths
+    paths[index] = route_options.ridden_path(verifier, leg, result, day_type)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:921: in ridden_path
+    for _d, verd in chosen_departures(v, leg, lr, day_type):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:799: in chosen_departures
+    ride = v.ride_of(line, d, verd, a, b)
+           ^^^^^^^^^
+E   AttributeError: 'Verifier' object has no attribute 'ride_of'
+_ test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths2-609-None] _
+tests\unit\travel\mobility\test_route_shape_context_v1.py:181: in test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival
+    saved = capture([option], runtime=runtime, origin={}, destination={}, stage='planning', party={},
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:103: in capture
+    "station_paths": _station_paths(option, runtime),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:58: in _station_paths
+    paths[index] = route_options.ridden_path(verifier, leg, result, day_type)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:921: in ridden_path
+    for _d, verd in chosen_departures(v, leg, lr, day_type):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:799: in chosen_departures
+    ride = v.ride_of(line, d, verd, a, b)
+           ^^^^^^^^^
+E   AttributeError: 'Verifier' object has no attribute 'ride_of'
+_ test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths3-604-expected3] _
+tests\unit\travel\mobility\test_route_shape_context_v1.py:181: in test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival
+    saved = capture([option], runtime=runtime, origin={}, destination={}, stage='planning', party={},
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:103: in capture
+    "station_paths": _station_paths(option, runtime),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_context.py:58: in _station_paths
+    paths[index] = route_options.ridden_path(verifier, leg, result, day_type)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:921: in ridden_path
+    for _d, verd in chosen_departures(v, leg, lr, day_type):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\options.py:799: in chosen_departures
+    ride = v.ride_of(line, d, verd, a, b)
+           ^^^^^^^^^
+E   AttributeError: 'Verifier' object has no attribute 'ride_of'
+_________________ test_leg_attaches_earliest_only_when_asked __________________
+tests\unit\travel\mobility\test_earliest_v1.py:266: in test_leg_attaches_earliest_only_when_asked
+    assert got is None and why["code"] == "arrive_late" and "earliest" not in why and not calls
+E   AssertionError: assert (None is None and 'no_data' == 'arrive_late'
+E     
+E     - arrive_late
+E     + no_data)
+____________________ test_walk_only_earliest_real_planner _____________________
+tests\unit\travel\mobility\test_earliest_v1.py:291: in test_walk_only_earliest_real_planner
+    assert why is None, why
+E   AssertionError: {'code': 'no_data', 'reason': '앞 항목이 끝난 뒤(11:29) 떠날 후보(도보·역·버스)가 없다', 'searched': {'calls': 0, 'causes': [], 'checked': [], 'stop': 'no_targets'}}
+E   assert {'code': 'no_data', 'reason': '앞 항목이 끝난 뒤(11:29) 떠날 후보(도보·역·버스)가 없다', 'searched': {'calls': 0, 'causes': [], 'checked': [], 'stop': 'no_targets'}} is None
+______ test_bus_only_earliest_sources_include_bus_transfer_and_no_subway ______
+tests\unit\travel\mobility\test_bus_only_planner_candidates.py:25: in test_bus_only_earliest_sources_include_bus_transfer_and_no_subway
+    assert pl._mixed_sources(place, place, stations, stations, 600, {}, False, 1200) == [candidate]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:963: in _mixed_sources
+    regular = gen.regular_alternative(mc)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'regular_alternative'
+============================== warnings summary ===============================
+..\..\..\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290
+  C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\2026-10-12_213331_654488_isolated_integration\junit.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_lfd_rule - ...
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_after_prev_end
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_not_feasible_reason
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_eta_changes_recompute
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_recheck_fails_not_listed
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_service_day_boundary_exact
+FAILED tests/unit/travel/mobility/test_plan_bike_v1.py::test_bike_stage_buffer_and_prev_end_exact
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_golden - AssertionErr...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_golden_all_modes - As...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_reasons_axis - Assert...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_walk_m_and_fare - Key...
+FAILED tests/unit/travel/mobility/test_route_shape_context_v1.py::test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths0-604-expected0]
+FAILED tests/unit/travel/mobility/test_route_shape_context_v1.py::test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths1-604-None]
+FAILED tests/unit/travel/mobility/test_route_shape_context_v1.py::test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths2-609-None]
+FAILED tests/unit/travel/mobility/test_route_shape_context_v1.py::test_capture_preserves_only_unique_path_matching_selected_boarding_and_arrival[paths3-604-expected3]
+FAILED tests/unit/travel/mobility/test_earliest_v1.py::test_leg_attaches_earliest_only_when_asked
+FAILED tests/unit/travel/mobility/test_earliest_v1.py::test_walk_only_earliest_real_planner
+FAILED tests/unit/travel/mobility/test_bus_only_planner_candidates.py::test_bus_only_earliest_sources_include_bus_transfer_and_no_subway
+18 failed, 106 passed, 15 deselected, 1 warning in 246.58s (0:04:06)

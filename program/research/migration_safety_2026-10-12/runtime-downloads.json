@@ -1,0 +1,14 @@
+[
+  {
+    "file": "postgres.zip",
+    "url": "https://repository.cybertec.at/windows/public/16/postgresql-ee-16.15_EE_1.3.13-public-1.zip",
+    "bytes": 64216695,
+    "sha256": "1880fbd90559893f9811574bcb184f00cd52d181d95d29e4681cb9c9f7e85841"
+  },
+  {
+    "file": "vector.zip",
+    "url": "https://repository.cybertec.at/windows/public/16/extension/pgvector-16-public-v0.8.2-1.zip",
+    "bytes": 623556,
+    "sha256": "eba9e9bf0036447a75d8f9671a20f0628a712c7a355775134530fefcccf2656b"
+  }
+]

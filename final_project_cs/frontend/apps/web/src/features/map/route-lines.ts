@@ -60,6 +60,7 @@ export function routeTags(shapes: RouteShape[]): { kinds: RouteTag[]; guessed: n
 export function rideLines(shape: RouteShape, t: (ko: string, en: string) => string): string[] {
   return shape.rides.map((ride) => [
     ride.line,
+    ride.service === "express" ? t("급행", "express") : ride.service === "local" ? t("일반", "local") : null,
     ride.from && ride.to ? `${ride.from}→${ride.to}` : null,
     ride.count !== null ? (ride.mode === "bus" ? t(`${ride.count}개 정류장`, `${ride.count} stops`) : t(`${ride.count}개 역`, `${ride.count} stations`)) : null,
     ride.filled ? null : (ride.mode === "bus" ? t("정류장 사이는 직선", "straight between stops") : t("역 사이는 직선", "straight between stations")),

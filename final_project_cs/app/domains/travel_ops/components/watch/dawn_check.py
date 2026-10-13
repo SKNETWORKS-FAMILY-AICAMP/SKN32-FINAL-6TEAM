@@ -73,8 +73,10 @@ def _clock(text: str) -> time:
 class DawnCheck:
     def __init__(self, *, store: TripStore, connection_factory: Callable[[], Any],
                  clock: Callable[[], datetime], source: Any | None,
-                 start: time | None = None, until: time | None = None) -> None:
+                 start: time | None = None, until: time | None = None,
+                 place_status: Any | None = None) -> None:
         self.store, self._connect, self.clock, self.source = store, connection_factory, clock, source
+        self.place_status = place_status
         if start is None or until is None:
             from app.core.settings import get_guardrails
 
@@ -85,7 +87,7 @@ class DawnCheck:
 
     def tick(self) -> DawnResult:
         result = DawnResult()
-        if self.source is None:
+        if self.source is None and self.place_status is None:
             # ★실행기가 이 문구를 표준출력(JSON)으로 낸다 — Windows 콘솔(cp949)이 못 찍는 긴 줄표를 쓰지 않는다
             result.disabled = "ACOP_GOOGLE_MAPS_API_KEY 가 비어 있다. 새벽 식당 확인을 돌리지 않았다"
             return result
@@ -114,6 +116,24 @@ class DawnCheck:
     # ── 한 항목 ─────────────────────────────────────────────────
     def _check(self, trip_id, meal: Item, day, places: list[dict[str, Any]], result: DawnResult) -> None:
         entry = {"trip_id": str(trip_id), "item": meal.title, "place": meal.place.get("name")}
+        if self.place_status is not None:
+            with self._connect() as conn:
+                trip, _ = self.store.latest(conn, trip_id)
+            status = self.place_status.lookup(tenant=self.store.tenant_id, customer_id=trip['customer_id'],
+                                             trip_id=trip_id, place=meal.place, start=meal.starts_at,
+                                             end=meal.ends_at, now=self.clock(), context='dawn', kind=meal.kind)
+            if status['status'] == 'unverifiable':
+                result.fatal.append({**entry, 'failed': status['reason'], 'diagnostic': status.get('diagnostic')})
+                # 검증 불가를 하루 완료로 기록하지 않는다. 같은 유지·재확인 안내는 한 번만 쌓는다.
+                from app.domains.travel_ops.components.watch.trip_watch_batch import Outcome, digest
+                payload = digest([Outcome(meal, 'source_failed', reasons=[status['reason']],
+                                          checked_at=self.clock().isoformat())], kind='guidance')
+                with self._connect() as conn, conn.transaction():
+                    self.store.enqueue_message(conn, trip_id=trip_id,
+                                               key=f"dawn-deferred:{meal.item_id}:{day}:{status['reason']}", payload=payload)
+                return
+            return self._apply_verdict(trip_id, meal, day, places, result, status['status'],
+                                       '방문 구간 영업 상태 확인', source=status['source'])
         with self._connect() as conn:
             google_id = self._provider_id(conn, meal.place["place_id"])
         if google_id is None:
@@ -138,9 +158,13 @@ class DawnCheck:
             result.fatal.append({**entry, "failed": "open_verdict"})
             return
         state, detail = verdict
+        return self._apply_verdict(trip_id, meal, day, places, result, state, detail)
+
+    def _apply_verdict(self, trip_id, meal, day, places, result, state, detail, *, source=PROVIDER):
+        entry = {"trip_id": str(trip_id), "item": meal.title, "place": meal.place.get("name")}
         result.checked += 1
         if state != "closed":
-            self._record(trip_id, meal, day, state, detail)
+            self._record(trip_id, meal, day, state, detail, source=source)
             if state == "open":
                 result.open += 1
             else:
@@ -151,12 +175,12 @@ class DawnCheck:
         with self._connect() as conn, conn.transaction():
             trip, items = self.store.latest(conn, trip_id)
             if meal.kind == "activity":
-                plan = plan_activity_closed_on_day(items=items, places=places, item=meal, source=PROVIDER,
+                plan = plan_activity_closed_on_day(items=items, places=places, item=meal, source=source,
                                                    detail=detail, checked_at=checked_at,
                                                    exclude=self._closed_places(conn, day))
             else:
                 def replan(candidates):
-                    return plan_closed_on_day(trip=trip, items=items, places=candidates, meal=meal, source=PROVIDER,
+                    return plan_closed_on_day(trip=trip, items=items, places=candidates, meal=meal, source=source,
                                               detail=detail, checked_at=checked_at,
                                               exclude=self._closed_places(conn, day),
                                               price_lookup=self._price_lookup(),
@@ -168,7 +192,7 @@ class DawnCheck:
                     more = dining_ledger.add_nearby(conn, self.store, trip_id, [meal], places)
                     if more != places:
                         plan = replan(more)
-            self._insert_check(conn, trip_id, meal, day, "closed", detail)
+            self._insert_check(conn, trip_id, meal, day, "closed", detail, source=source)
             if isinstance(plan, NoChange):
                 result.unresolved.append({**entry, "status": plan.status})
                 return
@@ -184,17 +208,17 @@ class DawnCheck:
             result.rechecked.append({**entry, "skipped": outcome["skipped"]})
 
     # ── 저장 ────────────────────────────────────────────────────
-    def _record(self, trip_id, meal: Item, day, verdict: str, detail: str) -> None:
+    def _record(self, trip_id, meal: Item, day, verdict: str, detail: str, *, source=PROVIDER) -> None:
         with self._connect() as conn, conn.transaction():
-            self._insert_check(conn, trip_id, meal, day, verdict, detail)
+            self._insert_check(conn, trip_id, meal, day, verdict, detail, source=source)
 
-    def _insert_check(self, conn, trip_id, meal: Item, day, verdict: str, detail: str) -> None:
+    def _insert_check(self, conn, trip_id, meal: Item, day, verdict: str, detail: str, *, source=PROVIDER) -> None:
         with conn.cursor() as cur:
             cur.execute("INSERT INTO place_open_checks (tenant_id, trip_id, item_id, day, place_id, verdict, "
                         "detail, source) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) "
                         "ON CONFLICT (tenant_id, item_id, day) DO NOTHING",
                         (self.store.tenant_id, trip_id, meal.item_id, day, meal.place["place_id"], verdict,
-                         detail, PROVIDER))
+                         detail, source))
 
     def _checked_items(self, conn, day) -> set:
         with conn.cursor() as cur:

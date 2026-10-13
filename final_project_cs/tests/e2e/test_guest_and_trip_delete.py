@@ -90,6 +90,12 @@ def test_delete_removes_the_trip_and_everything_tied_to_it_but_nothing_else(cook
             cur.execute("INSERT INTO trip_intakes (tenant_id, customer_id, status, trip_id) VALUES (%s,%s,'confirmed',%s)", (tenant, customer, target))
             cur.execute("INSERT INTO places (place_id, tenant_id, name, kind, latitude, longitude, trip_scope) "
                         "VALUES (%s,%s,'전용','activity',37.5,127.0,%s)", (uuid4(), tenant, target))
+            cur.execute("INSERT INTO ops_lookup_usage(tenant_id,day,trip_id,used) VALUES(%s,current_date,%s,1)",
+                        (tenant, target))
+            cur.execute("INSERT INTO ops_lookup_checks(tenant_id,trip_id,resource_hash,checked_at) VALUES(%s,%s,'test-resource',now())",
+                        (tenant, target))
+            cur.execute("INSERT INTO ops_diagnostic_events(tenant_id,event_id,fingerprint,customer_id,trip_id,occurred_at,expires_at) "
+                        "VALUES(%s,%s,'test-fingerprint',%s,%s,now(),now()+interval '30 days')", (tenant, uuid4(), customer, target))
     assert _count("SELECT count(*) FROM outbox WHERE tenant_id=%s AND topic='trip.notice' AND dedupe_key LIKE %s", tenant, f"{trip_id}:%") > 0
 
     response = _delete(cookies, trip_id)
@@ -101,6 +107,8 @@ def test_delete_removes_the_trip_and_everything_tied_to_it_but_nothing_else(cook
                 "SELECT count(*) FROM trip_chat_turns WHERE tenant_id=%s AND trip_id=%s",
                 "SELECT count(*) FROM place_open_checks WHERE tenant_id=%s AND trip_id=%s",
                 "SELECT count(*) FROM dining.dn_notice WHERE tenant_id=%s AND trip_id=%s",
+                "SELECT count(*) FROM ops_lookup_usage WHERE tenant_id=%s AND trip_id=%s",
+                "SELECT count(*) FROM ops_lookup_checks WHERE tenant_id=%s AND trip_id=%s",
                 "SELECT count(*) FROM trip_intakes WHERE tenant_id=%s AND trip_id=%s",
                 "SELECT count(*) FROM places WHERE tenant_id=%s AND trip_scope=%s"):
         assert _count(sql, *mine) == 0, sql
@@ -109,6 +117,11 @@ def test_delete_removes_the_trip_and_everything_tied_to_it_but_nothing_else(cook
     assert _count("SELECT count(*) FROM trips WHERE tenant_id=%s AND trip_id=%s", tenant, other_id) == 1
     assert _count("SELECT count(*) FROM trip_chat_turns WHERE tenant_id=%s AND trip_id=%s", tenant, other_id) == 1
     assert _count("SELECT count(*) FROM places WHERE tenant_id=%s AND trip_scope=%s", tenant, other_id) == 1
+    for table in ("ops_lookup_usage", "ops_lookup_checks"):
+        assert _count(f"SELECT count(*) FROM {table} WHERE tenant_id=%s AND trip_id=%s", tenant, other_id) == 1
+    # 진단 발생은 보존 기한까지 유지하되 삭제된 여행과의 연결만 해제한다.
+    assert _count("SELECT count(*) FROM ops_diagnostic_events WHERE tenant_id=%s AND trip_id IS NULL", tenant) == 1
+    assert _count("SELECT count(*) FROM ops_diagnostic_events WHERE tenant_id=%s AND trip_id=%s", tenant, other_id) == 1
     assert cookies["client"].get("/v1/web/trips").json()["trips"][0]["trip_id"] == str(other_id)
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:                # 시험이 만든 요식 줄을 치운다(공용 표)
         cur.execute("DELETE FROM dining.dn_notice WHERE tenant_id=%s", (tenant,))
@@ -202,15 +215,25 @@ def test_every_table_that_carries_a_trip_number_is_accounted_for():
         "trips", "itinerary_versions", "itinerary_items", "pending_changes",           # trips 를 지우면 CASCADE
         "trip_guardian_changes",                                                       # 항로 지킴이 켜고 끈 기록(050) — trips 를 지우면 CASCADE
         "trip_safety_pauses",                                                          # 재난 시 일정 정지(052) — trips 를 지우면 CASCADE
+        "travel_watch_checks",                                                        # 감시 관측(228) — trips 외래키 CASCADE, 아래에서 실제 제약 확인
         "trip_chat_turns", "place_open_checks", "dining.dn_notice",                    # trip_delete._PURGE
         "user_activity_events",                                                        # 사용자 활동 기록(054) — trip_delete._PURGE. 비식별로 남길지는 사용자 결정 대기
         "trip_intakes",                                                                # trip_delete 가 이름을 대어 지운다
         "places",                                                                      # trip_scope — trip_delete 가 지운다
+        "ops_lookup_usage", "ops_lookup_checks",                                      # 명시 파기 + trips 외래 키 CASCADE
+        "ops_diagnostic_events",                                                       # trips 외래 키 SET NULL, 보존 기한까지 발생 보존
     }
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT table_schema, table_name FROM information_schema.columns WHERE column_name IN ('trip_id','trip_scope') "
                     "AND table_schema NOT IN ('pg_catalog','information_schema')")
         found = {(f"{s}.{t}" if s != "public" else t) for s, t in cur.fetchall()}
+        cur.execute("SELECT confdeltype FROM pg_constraint WHERE conrelid=to_regclass('travel_watch_checks') "
+                    "AND confrelid=to_regclass('trips') AND contype='f'")
+        assert cur.fetchall() == [("c",)], "감시 관측은 여행 삭제와 함께 CASCADE로 파기되어야 합니다"
+        for table, action in (("ops_lookup_usage", "c"), ("ops_lookup_checks", "c"), ("ops_diagnostic_events", "n")):
+            cur.execute("SELECT confdeltype FROM pg_constraint WHERE conrelid=to_regclass(%s) "
+                        "AND confrelid=to_regclass('trips') AND contype='f'", (table,))
+            assert cur.fetchall() == [(action,)], table
         cur.execute("SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='v'")
         views = {r[0] for r in cur.fetchall()}
     unknown = found - handled - views
@@ -388,17 +411,27 @@ def test_a_guest_cleanup_also_purges_the_cases_and_the_profile_so_no_row_is_left
     assert _count("SELECT count(*) FROM customer_profiles WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 0
 
 
-def test_when_another_record_points_at_the_guest_only_the_empty_user_row_stays_and_the_profile_goes(cookies, monkeypatch):
+def test_when_another_record_points_at_the_guest_only_the_empty_user_row_stays_and_the_profile_goes(cookies, monkeypatch, tmp_path):
     """처리 기록 파기를 끄면(옛 동작) Case 가 사용자 행을 붙든다 — 그래도 식별 정보(프로필)는 지운다(전에는 프로필이 같이 남았다)."""
     from app.domains.travel_ops.modules.web_account import member_cleanup
 
     real = member_cleanup.get_guardrails()
     monkeypatch.setattr(member_cleanup, "get_guardrails", lambda: _PurgeOff(real))
     guest = _new_guest_with_trip(cookies, days_idle=9)
+    from app.application import operations_diagnostics as diagnostics
+    event = diagnostics.Event(tenant_id=cookies['tenant'], customer_id=guest, kind='processing_error',
+                              code='DELETE_TEST', deployment='test', policy_version='test')
+    pending = diagnostics.Event(tenant_id=cookies['tenant'], customer_id=guest, kind='processing_error',
+                                code='DELETE_TEST', deployment='test', policy_version='test')
+    spool = diagnostics.Spool(tmp_path / 'erased-customer.sqlite3')
+    assert spool.enqueue(pending) == 'spooled'
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("INSERT INTO customer_cases (tenant_id, customer_id, status, subject, state_json, version) "
                     "VALUES (%s,%s,'resolved','t','{}'::jsonb,1)", (cookies["tenant"], guest))
         cur.execute("INSERT INTO customer_profiles (tenant_id, customer_id, recovery_email) VALUES (%s,%s,'a@example.com')", (cookies["tenant"], guest))
+        diagnostics.persist(conn, event)
+        cur.execute("INSERT INTO personal_ai_oauth_records(tenant_id,kind,record_key,customer_id,body) VALUES(%s,'access',%s,%s,'{}')",
+                    (cookies['tenant'], uuid4().hex, guest))
     with get_connection() as conn:
         result = cleanup_guests(conn, cookies["tenant"])
     assert result["customers_kept"] == 1 and result["customers_deleted"] == 0 and result["trips_deleted"] == 1, result
@@ -406,6 +439,16 @@ def test_when_another_record_points_at_the_guest_only_the_empty_user_row_stays_a
     assert _count("SELECT count(*) FROM web_sessions WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 0
     assert _count("SELECT count(*) FROM customer_cases WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 1
     assert _count("SELECT count(*) FROM customer_profiles WHERE tenant_id=%s AND customer_id=%s", cookies["tenant"], guest) == 0
+    assert _count("SELECT count(*) FROM ops_defect_customers WHERE tenant_id=%s AND customer_id=%s", cookies['tenant'], guest) == 0
+    assert _count("SELECT count(*) FROM ops_diagnostic_events WHERE tenant_id=%s AND customer_id=%s", cookies['tenant'], guest) == 0
+    assert _count("SELECT count(*) FROM personal_ai_oauth_records WHERE tenant_id=%s AND customer_id=%s", cookies['tenant'], guest) == 0
+    with get_connection() as conn:
+        assert conn.execute('SELECT external_id FROM customers WHERE customer_id=%s', (guest,)).fetchone()[0] == 'erased:' + str(guest)
+    replayed = spool.replay(get_connection)
+    assert replayed['rejected'] == 1 and replayed['pending'] == 0
+    with get_connection() as conn:
+        assert conn.execute('SELECT occurrences FROM ops_defects WHERE tenant_id=%s AND fingerprint=%s',
+                            (cookies['tenant'], event.fingerprint())).fetchone()[0] == 1
 
 
 def test_guest_cleanup_does_nothing_when_switched_off_and_follows_the_operator_hours(cookies):

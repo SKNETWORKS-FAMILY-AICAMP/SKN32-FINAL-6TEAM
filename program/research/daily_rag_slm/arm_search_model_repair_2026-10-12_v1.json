@@ -1,0 +1,66 @@
+{
+  "observed_at_utc": "2026-10-11T19:53:52.132172+00:00",
+  "purpose": "Oracle ARM search/model integration repair; not daily paper research or product model adoption",
+  "research_completed": false,
+  "review_completed": true,
+  "implemented": true,
+  "measured": true,
+  "our_finetuning": false,
+  "model": "publisher Gemma-4-E4B QAT Q4_0 original; llama.cpp via existing adapter",
+  "knowledge_chunks": 11,
+  "knowledge_chunks_with_embedding": 11,
+  "place_embeddings": 2041,
+  "eligible_place_embeddings": 2041,
+  "retrieval_diagnostic": {
+    "passed": 6,
+    "planned": 6,
+    "top1_all_correct": true,
+    "product_independent": false
+  },
+  "live_chat": {
+    "passed": 4,
+    "planned": 4,
+    "cases_frozen_before_apply": true,
+    "dev_cases": 1,
+    "held_back_variants": 3,
+    "independent_product_holdout": false,
+    "seconds": [
+      68.52844799897866,
+      65.10836469597416,
+      67.50506619497901,
+      59.79914438398555
+    ],
+    "itinerary_unchanged": true
+  },
+  "place_search_exact_name_first": true,
+  "local_unit_tests": {
+    "intake_and_corpus": {
+      "passed": 71,
+      "planned": 71
+    },
+    "decision_policy_service": {
+      "passed": 146,
+      "planned": 146
+    }
+  },
+  "contract_security": {
+    "passed": 375,
+    "planned": 375
+  },
+  "existing_gates": {
+    "passed": 26,
+    "planned": 26
+  },
+  "fill_attempts": {
+    "succeeded": 1,
+    "attempts_including_preflight_failures": 5,
+    "failed_preserved": 4
+  },
+  "api_image": "tripilot-arm-api:1647e8990df9",
+  "runtime_cd_hashes_match": true,
+  "model_pid_unchanged": true,
+  "general_web_search_connected": false,
+  "backup_export": "auto-review rejected local transfer; database dump retained on Oracle ARM; no bypass",
+  "report": "final_project_cs\\wiki\\records\\reports\\2026-10-12_0454_arm-search-model-repair.md",
+  "raw_result_root": "program\\scripts\\plan_qa_bench\\results\\arm_search_repair_20261012"
+}

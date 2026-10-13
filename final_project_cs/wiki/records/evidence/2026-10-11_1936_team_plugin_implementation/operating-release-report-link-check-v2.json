@@ -1,0 +1,9 @@
+{
+  "report": "wiki/records/reports/2026-10-12_0236_team_plugin_operating_release.md",
+  "report_sha256": "9fe1bd73a444ff1926ff47a74f27bad37426065e1abe06f25732c75735819fed",
+  "local_links": 24,
+  "missing_links": [],
+  "backup": "wiki/records/reports/_backup/2026-10-12_024428_before_dod_partial_collection_clarification",
+  "dod_partially_collected_tests": 132,
+  "dod_collection_errors": 2
+}

@@ -1,0 +1,51 @@
+........................................................................ [ 13%]
+........................................................................ [ 26%]
+........................................................................ [ 39%]
+........................................................................ [ 52%]
+........................................................................ [ 65%]
+........................................................................ [ 78%]
+....................Timeout (0:01:30)!
+Thread 0x00005c80 (most recent call first):
+  File "<python-runtime>\Lib\socket.py", line 295 in accept
+  File "<python-runtime>\Lib\socket.py", line 627 in _fallback_socketpair
+  File "<python-runtime>\Lib\asyncio\proactor_events.py", line 787 in _make_self_pipe
+  File "<python-runtime>\Lib\asyncio\proactor_events.py", line 640 in __init__
+  File "<python-runtime>\Lib\asyncio\windows_events.py", line 316 in __init__
+  File "<python-runtime>\Lib\asyncio\events.py", line 720 in new_event_loop
+  File "<python-runtime>\Lib\asyncio\events.py", line 823 in new_event_loop
+  File "<python-runtime>\Lib\asyncio\runners.py", line 137 in _lazy_init
+  File "<python-runtime>\Lib\asyncio\runners.py", line 58 in __enter__
+  File "<python-runtime>\Lib\asyncio\runners.py", line 193 in run
+  File "<workspace>\final_project_cs\tests\unit\travel\mobility\test_review_fixes_wiring.py", line 63 in test_34_35_team_answers_structured_route_with_engine
+  File "<python-runtime>\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "<python-runtime>\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "<python-runtime>\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "<python-runtime>\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "<python-runtime>\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "<python-runtime>\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "<python-runtime>\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "<python-runtime>\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "<python-runtime>\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "<python-runtime>\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main

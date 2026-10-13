@@ -1,0 +1,60 @@
+{
+  "date_kst": "2026-10-11",
+  "recorded_at_utc": "2026-10-11T01:27:50.025273+00:00",
+  "research_completed": true,
+  "review_completed": true,
+  "implementation_completed": true,
+  "measurement_completed": true,
+  "maintenance": {
+    "completed": true,
+    "state": "six_hour_report_2026-10-11_2240.json",
+    "previous_state": "six_hour_report_2026-10-11_1400.json"
+  },
+  "research_status": "Selected5 primary-paper review completed;1 extra screened. Local completionguard and queue-specific measurement only; not all candidate reproduction or model accuracy success.",
+  "oracle_llm_incident": {
+    "state": "oracle_llm_incident_2026-10-11.json",
+    "daily_research_completion_unchanged": true
+  },
+  "completion_scope": {
+    "research": "5 selected reviews plus12 official-model metadata checks",
+    "review": "problem/conditions/cost/risk/dev/holdout/acceptance/resume recorded",
+    "implementation": "local adapter responseguard and separate800-token stability profile",
+    "measurement": "18adapter tests+3queuegate tests,240recorded replay,5130newB answers preserved"
+  },
+  "report": "final_project_cs/wiki/records/reports/2026-10-11_1030_daily-response-completion-research.md",
+  "source_review": "2026-10-11_sources_and_review_v1.json",
+  "response_prereg": "2026-10-11_response_guard_prereg_v1.json",
+  "soak_prereg": "2026-10-11_app_schema_soak_originals_prereg_v3.json",
+  "raw_evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003",
+  "model_accuracy_improved": false,
+  "independent_validation_completed": false,
+  "product_adoption": false,
+  "oracle_adapter_deployed": true,
+  "new_training_started": false,
+  "pending": [
+    "Saluki exact trainable weights/backward/memory/storage gates pending; currentrevision README-only",
+    "Independent holdout720 unbuilt/unfrozen and E human review0/158 pending",
+    "MatRAG/SWYB/NativeScope reproduction and actual resource costs pending",
+    "Oracle mixed-question semantic regression2/4; compound target and response quality need reviewed local fix",
+    "GPU A three new grammar comparisons and original QAT stability; GPU B four new seed generation comparisons, no new training"
+  ],
+  "closing_E": {
+    "model": "Gemma-4-E4B-it HF NF4 + our oos2 adapter",
+    "suite": "E order-reversed mixed/control2roles",
+    "saved": 4014,
+    "expected": 4014,
+    "errors": 0,
+    "unparsed": 0,
+    "mixed_normal_correct": 910,
+    "mixed_normal_total": 1033,
+    "mixed_false_picks": 47,
+    "mixed_no_request_total": 974,
+    "passed_gates": 1,
+    "total_gates": 4,
+    "adopted": false,
+    "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/B_missing_E_recovered_verification.json"
+  },
+  "closing_B_collected_rows": 5130,
+  "latest_six_hour_report": "final_project_cs/wiki/records/reports/2026-10-11_2240_six-hour-gpu-arm-report.md",
+  "oracle_answer_repair_state": "oracle_answer_repair_2026-10-11_v1.json"
+}

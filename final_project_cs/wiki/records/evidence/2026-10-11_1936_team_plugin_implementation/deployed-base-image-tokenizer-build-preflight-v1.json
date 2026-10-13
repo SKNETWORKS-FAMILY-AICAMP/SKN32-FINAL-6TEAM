@@ -1,0 +1,1 @@
+{"image_id": "sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294", "default_user_is_root": true, "entrypoint_present": false, "command_present": true, "working_directory_matches_baseline": true, "cache_override_in_base_image": false, "environment_values_exported": false}

@@ -1,0 +1,56 @@
+--- final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1343_공항철도_공표승차시간_대조/verify_time.py
++++ final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py
+@@ -133,10 +133,14 @@
+         self.rows = 0
+         self.skipped_no_dep = 0
+         self.fetched_at = None
++        self.published_boarding = None
+ 
+     @classmethod
+-    def load(cls, path, wanted=None, express=False):
++    def load(cls, path, wanted=None, express=False, published_boarding=None):
+         tt = cls()
++        tt.published_boarding = published_boarding
++        if published_boarding is not None:
++            published_boarding.check_base(path)
+         ex_lines = EX.available() if express else []   # express=True(실서비스 런타임·CLI)일 때만: 열차 단위 표가 있는 노선은 통합 시간표 행 대신 그 표로 읽는다. 시험용 축소 시간표는 노선 이름만 같은 가짜라 기본 꺼짐
+         held = collections.defaultdict(list)     # 열차 단위 표 후보 노선의 행 — 실제 시간표면 버리고 표로, 아니면(시험용 축소판) 그대로 쓴다
+         # ☆`[2026-09-29 문제목록 #63]` .gz 도 읽는다 — 시험용 축소 시간표(20MB)를 압축해 두었다(98% 줄어든다)
+@@ -163,6 +167,12 @@
+                 if not raw:
+                     continue
+                 r = json.loads(raw)
++                if published_boarding is not None:
++                    if r.get('line') in ex_lines and any(
++                            key[0] == r.get('line') for key in published_boarding.groups):
++                        raise RuntimeError('공표 승차 시간 대조와 열차 단위 급행 표의 적용 노선이 겹친다')
++                    if not published_boarding.observe(r, to_min(r.get('dep_time'))):
++                        continue
+                 if r.get("line") in ex_lines:
+                     held[r["line"]].append({k: r.get(k) for k in ("line", "station_nm", "dep_time", "day_type", "dir", "dest_nm",
+                                                                   "dest_inferred", "fetched_at")})
+@@ -183,6 +193,9 @@
+                     tt.rows += 1
+         for v in tt.by_key.values():
+             v.sort(key=lambda d: d.min)
++        if published_boarding is not None:
++            published_boarding.finish()
++            published_boarding.check_base(path)
+         return tt
+ 
+     def departures(self, line, station, day_type):
+@@ -1585,7 +1598,13 @@
+         return out[:maxn], tried, self._taxi(ts, te, now_min)
+ 
+     def _ev_tt(self, line, station, day_type, claim, grade="확정"):
+-        return {"source_type": "db", "source_id": f"timetable_v1@{self.tt.fetched_at}",
++        source = f"timetable_v1@{self.tt.fetched_at}"
++        published = getattr(self.tt, 'published_boarding', None)
++        refs = published.evidence(line, station, day_type) if published else []
++        if refs:
++            source += f"|boarding:{refs[0]['sha256']}"
++            claim += f" (승차 시각 공표 대조: {refs[0]['source_url']}; 조회 {refs[0]['observed_at']})"
++        return {"source_type": "db", "source_id": source,
+                 "grade": grade, "observed_at": self.tt.fetched_at,
+                 "claim": f"{line} {station} {day_type}: {claim}"}
+ 

@@ -163,9 +163,9 @@ def test_trip_desk_uses_its_tenant_when_reading_alternative_states(monkeypatch):
 
 
 def test_batch_read_tool_uses_scope_tenant_and_existing_ledger_lookup(monkeypatch):
-    from app.domains.travel_ops.instances.dining import ledger
     from contextlib import nullcontext
 
+    from app.domains.travel_ops.instances.dining import ledger
     from app.tools.read_tools import ReadToolbox
 
     conn, seen = object(), []

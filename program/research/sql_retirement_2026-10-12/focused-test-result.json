@@ -1,0 +1,8 @@
+{
+  "command": "python -m pytest tests/integration/db/test_migrations_rerun.py tests/contract/test_team_contract.py tests/contract/test_core_isolation.py tests/architecture/test_engine_accepts_travel_policies.py -q",
+  "working_directory": "final_project_cs",
+  "passed": 29,
+  "failed": 0,
+  "duration_seconds": 29.21,
+  "scope": "isolated migration DB plus contracts; not full suite or real customer transaction"
+}

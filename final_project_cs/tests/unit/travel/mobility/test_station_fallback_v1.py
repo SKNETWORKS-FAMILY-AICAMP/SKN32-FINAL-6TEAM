@@ -277,12 +277,12 @@ def test_revive_keys_do_not_collide_on_same_sort_number():
     assert any("버스" in x for x in labels) and len(labels) == len(set(labels)), labels
 
 
-def test_same_nearest_station_still_walk_only():
-    """앞 판 정책 유지(사각지대로 기록) — 막힌 역을 뺀 뒤 양쪽 첫 역이 같으면 다른 짝을 보지 않는다."""
+def test_same_nearest_station_checks_other_pairs():
+    """최근접역이 같아도 서로 다른 역 조합을 검증한다. 같은 물리적 역끼리는 제외한다."""
     pl, seen = _pair_planner({0: [_opt(0, 650)]})
     pl._near_stations = lambda place, limit, k=None: [("같은역", 100.0, None), ("B2", 300.0, None)]
     got, why = pl.leg(A_, B_, ARR, {}, True, "a_to_b")
-    assert got is None and seen == [] and "가장 가까운 역이 같다" in why["reason"], why
+    assert got is not None and seen == [0], why
 
 
 @pytest.mark.parametrize("bad", [0, -1, 2.5, True, "3"])

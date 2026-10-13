@@ -1,0 +1,49 @@
+## 후속 감사 결과
+
+**추가 확정 결함은 1건입니다.** `routing` 상태의 초기 재시도 경합에서 패자가 409가 아니라 500을 받을 수 있습니다. 확신은 중간~높음이고, 정적 읽기만으로 낸 판단입니다.
+
+### 결함
+- **위치:** `case_dispatch.py:145-149`의 `retry_initial` routing 분기가 부르는 `execute`입니다. 문제 줄은 `case_dispatch.py:88`(get_case)과 `:90-94`(`ROUTED` 전이)입니다.
+- **재현 조건:**
+  1. 같은 `request_id`로 요청 2개가 `routing` 상태의 같은 Case에 들어옵니다. 원 요청이 아직 진행 중일 때 들어온 재전송도 해당합니다.
+  2. 둘 다 `retry_initial`의 사전 점검(`:111-141`)을 통과합니다. 이때 `:141`의 commit이 행 잠금을 풀었고 활성 run도 아직 없습니다.
+  3. 승자가 `ROUTED`를 커밋한 뒤에 패자가 `:88`을 읽습니다.
+- **결과:** 패자는 `RUNNING`(승자가 이미 끝났다면 `RESOLVED`) 상태의 최신 version을 `expected_version`으로 얻습니다. 그래서 `transition.py:147`의 version 불일치 검사를 통과하고, `apply_event`(`case.py:61-66`)가 `(RUNNING, ROUTED)` 전이를 `InvalidTransition`으로 거절합니다.
+- **500이 되는 이유:**
+  - `contracts.py:44`에서 `InvalidTransition`은 `Exception`을 직접 상속합니다.
+  - `trip_api.py:1045-1054`와 `:1983-1992`는 이를 잡지 않습니다.
+  - 그래서 `errors.py:42`의 일반 `Exception` 핸들러로 넘어갑니다. 이 핸들러가 정확히 500을 내는지는 읽지 않았습니다.
+- **문서와의 충돌:** `plugin-availability.md:125`는 "routing/running 두 경로 모두 409"라고 적었는데, routing 경로는 이 창이 남아 있습니다. 직전 감사의 "routing은 `expected_version` 때문에 안전하다"는 판단도 이 경우에는 맞지 않습니다.
+- **시험이 못 잡은 이유:** 새 routing 시험(`test_initial_retry_boundaries.py:107-122`)은 `execute`를 통째로 `ActiveRunError`를 던지는 대역으로 바꿉니다. 그래서 `execute` 안의 `ROUTED` 전이는 실행되지 않습니다. 같은 Case에 재시도 2개를 동시에 보내는 DB 시험은 e2e에도 없습니다.
+- **최소 수정 방향(제안만, 수정하지 않았습니다):** routing 분기에서 `InvalidTransition`을 받으면 Case를 다시 읽습니다. 상태가 더 이상 `routing`이 아니면 `StateConflict("같은 요청의 업무가 아직 실행 중입니다")`로 바꿉니다. 승자 run과 Case는 닫지 않습니다.
+
+### 이상 없는 항목
+- `running` 분기: `run_case`의 `start_run`이 A 트랜잭션 안에서 실패하므로 `ActiveRunError`가 `StateConflict`로 올바르게 바뀝니다. 승자 run과 Case는 건드리지 않습니다.
+- `validate_resume`, `validate_customer_input`, `_validate_resume_hash`: 재전송, 다른 메시지 충돌, 만료, 소비된 토큰 처리가 컨트롤러와 일치합니다.
+- `VALID_INPUT`, `RESUMED`, `RESUMING→ROUTED` 전이와 필수 payload 키가 `events.py`와 일치합니다.
+- `run_case`의 `_task`/capability 관문과 `_resume` 전체의 순서가 계약 문서와 일치합니다. 재개 쪽 `ActiveRunError`도 처리돼 있습니다.
+- 문서 대조: 원문 SHA는 다른 message만 비교하고, 동시 최초 모델 2회는 의도 정책이며, 교차 Team 전체 사전검증으로 확대하지 않았습니다. 이 항목들은 `web-access.md`와 `plugin-availability.md`가 코드와 일치합니다.
+- 시험 개수: 초기 재시도 8, 동시 5, 재개 커밋 1, 격리 7, 재개 9, 감시 복구 4가 파일 내용과 맞습니다.
+
+### 실행 근거
+- **runner:** 29/29 통과, 1.80초, `PYTEST_EXIT=0`입니다. 구성은 18+10+1입니다. DB 없는 unit이며 위 결함은 이 29건에 포함되지 않습니다.
+- **로그 확인:**
+  - `initial-concurrency-after-v1.log`는 29/29(195.33초)입니다.
+  - `initial-create-scope-v1.log`는 2/2(41.10초)입니다.
+  - `resume-commit-http-v1.log`는 1/1(36.18초)입니다.
+  - `initial-retry-race-after-v2.log`는 29/29(2.68초)입니다. 시간으로 보면 DB 없는 unit 실행이며 HTTP 근거가 아닙니다.
+- 29건 집합과 scope 2건 집합은 분리 실행이라 "새 31건 고정 한 번 실행"으로 부르지 않습니다.
+- 모두 합성 로컬 DB 근거입니다. 실제 운영이나 이동 정확도로 일반화하지 않습니다.
+- worker 보고서(`2026-10-12_0000_watch_failed_run_recovery.md`)는 읽기만 했습니다. 감시 복구 43/43은 거기 적힌 수치이고 이번에 재현하지 않았습니다.
+
+### 읽은 범위
+- **소스:** `case_dispatch.py` 전체, `case_service.py` 전체, `case.py` 전체, `events.py` 전체, `controller.py` 1-490행과 780-935행, `transition.py` 95-205행, `trip_messages.py` 270-380행, `trip_api.py` 1020-1060행.
+- **시험:** 요청하신 unit 3개와 e2e 6개 전체, fixture `decided`와 `api`.
+- **문서·근거:** `plugin-availability.md`와 `web-access.md` 전체, 직전 `result.txt`와 `model-metadata.json`, 위 4개 로그, 위 worker 보고서.
+- **읽지 못한 범위:**
+  - `controller.py` 490-780행(`_apply_result` 등)은 요청 범위 밖이라 읽지 않았습니다.
+  - `errors.py`의 500 처리 세부는 읽지 않았습니다.
+  - 새 결함은 실행으로 재현하지 못했습니다.
+- **참고:** 처음 `ls` 하나를 Bash로 시도했다가 거부됐고, 이후 Bash는 runner 1회만 썼습니다.
+
+위 결함 외에 추가로 확정한 결함은 없습니다. 이 항목만 처리되면 범위 확장이나 반복 감사는 필요 없다고 봅니다.

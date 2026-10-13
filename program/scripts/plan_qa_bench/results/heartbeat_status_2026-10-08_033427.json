@@ -1,0 +1,68 @@
+{
+  "checked_at": "2026-10-08T03:34:27.899588+09:00",
+  "archived": {
+    "d_test_d3_q4km_oos3.jsonl": {
+      "saved": 360,
+      "unique": 360,
+      "failed": 0,
+      "sha256": "dd0adc84db5a3cb3de5879ff7c781b3a7539f91dfecc8c25769a891ae36d163a"
+    },
+    "d_test_lp_d2_q4km_oos3.jsonl": {
+      "saved": 1000,
+      "unique": 1000,
+      "failed": 0,
+      "sha256": "fd4e84280d29b744738085a0cee044685395fc61a47a79643dcea49881a13225"
+    },
+    "d_test_lp_q4km_oos3.jsonl": {
+      "saved": 2735,
+      "unique": 2735,
+      "failed": 0,
+      "sha256": "a64711c7cc0144e30898ca6664c4ec1e47ab1a913d725842a31379bcaa7d9a2e"
+    },
+    "eval_oos3_mix10.json": {
+      "saved": 160,
+      "errors": 0,
+      "sha256": "0ad5f71a3be8cf7e50231c96800abf89e975d024cf799c2610372062cdde5894"
+    },
+    "eval_oos3_mix11.json": {
+      "saved": 163,
+      "errors": 0,
+      "sha256": "9830a8c13a733839c820c5c920b24e50a818f6960e586ea402265bd1e3983b2e"
+    },
+    "eval_oos3_mix12.json": {
+      "saved": 176,
+      "errors": 0,
+      "sha256": "f1a87c7b5ae37c7cabaded8627fb3582609838b7784eaa6b3243a3d3b8b20c9f"
+    },
+    "eval_oos3_mix8.json": {
+      "saved": 171,
+      "errors": 0,
+      "sha256": "8e55db4532fe1ecf81bab9ad2dc22ee00f906f5ceae91ca995ffe7e54f0fcd29"
+    },
+    "eval_oos3_mix9.json": {
+      "saved": 165,
+      "errors": 0,
+      "sha256": "203aa5ae5d32399cb6de0320a429a09115102aeaa0876e461a0837d95a6e68db"
+    }
+  },
+  "mai": {
+    "verify_mai_code_1_1_flash.jsonl": {
+      "saved": 204,
+      "unique": 204,
+      "errors": 0,
+      "unparsed": 0
+    },
+    "d_test_d3_mai_code_1_1_flash.jsonl": {
+      "saved": 313,
+      "unique": 313,
+      "errors": 0,
+      "unparsed": 0
+    }
+  },
+  "oos3_remaining": [
+    "H",
+    "MX"
+  ],
+  "strata": "blocked: existing volume quota; not restarted",
+  "other_engines": "research only; no new benchmark started"
+}

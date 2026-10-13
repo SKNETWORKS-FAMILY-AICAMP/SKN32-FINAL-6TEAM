@@ -1,3 +1,15 @@
+---
+type: guide
+title: Case 상태 전이도
+description: 코드의 상태·전이 표에서 만드는 상태 전이도와 전이 목록
+status: draft
+domain: neutral
+automation:
+  command: python -m scripts.make_state_diagram
+  owner: process:state-diagram
+  manual_edit: false
+---
+
 <!-- 이 파일은 `python -m scripts.make_state_diagram` 이 만든다. 손으로 고치지 않는다. -->
 <!-- 출처: app/core/case_lifecycle/events.py:TRANSITIONS -->
 
@@ -68,3 +80,7 @@ stateDiagram-v2
 | `escalated` | `cancelled_by_user` | `cancelled` |
 | `failed` | `failure_escalated` | `escalated` |
 | `cancelled` | 없음 | 끝 |
+
+## 관계
+
+- [Case 생명주기](case-lifecycle.md) — 상태와 전이의 책임·경계

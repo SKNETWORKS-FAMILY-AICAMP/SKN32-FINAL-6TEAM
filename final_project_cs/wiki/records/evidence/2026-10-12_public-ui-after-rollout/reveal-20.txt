@@ -1,0 +1,57 @@
+- alert: 여행 계획 등록 · triPilot
+- banner:
+  - link "triPilot — 소개 화면으로 돌아가기":
+    - /url: /
+    - generic: t
+    - text: triPilot
+  - heading "계획을 확인하고 있어요" [level=1]
+  - progressbar "계획 확인 진행":
+    - text: 정리 완료
+    - generic: 100%
+  - button "항로 지킴이 끄기":
+    - generic: 지금 켜져 있어요
+  - button "메뉴":
+- main:
+  - region "여행 지도":
+    - generic "OpenStreetMap 지도":
+      - link "Leaflet":
+        - /url: https://leafletjs.com
+        - text: Leaflet
+      - text: "| ©"
+      - link "OpenStreetMap":
+        - /url: https://www.openstreetmap.org/copyright
+      - text: contributors ·
+      - link "지도 오류 신고":
+        - /url: https://www.openstreetmap.org/fixthemap
+    - group "지도 단추":
+      - button "지도 단추 펼치기":
+        - img "거리 눈금 200m": 200m
+    - status: 표시할 장소 좌표가 없어요.
+  - region "장소·운영시간 확인":
+    - heading "장소·운영시간 확인" [level=2]
+    - paragraph: 장소 0/6 · 이동 0/4
+    - region "1일차10.19 월":
+      - heading "1일차10.19 월" [level=3]
+      - list:
+        - generic: 09:00
+        - article "경복궁 관람":
+          - heading "경복궁 관람" [level=4]
+        - generic: 12:30
+        - article "광장시장":
+          - heading "광장시장" [level=4]
+        - generic: 15:00
+        - article "국립중앙박물관 관람":
+          - heading "국립중앙박물관 관람" [level=4]
+    - region "2일차10.20 화":
+      - heading "2일차10.20 화" [level=3]
+      - list:
+        - generic: 10:00
+        - article "북촌한옥마을 산책":
+          - heading "북촌한옥마을 산책" [level=4]
+        - generic: 12:00
+        - article "인사동":
+          - heading "인사동" [level=4]
+        - generic: 14:00
+        - article "창덕궁 관람":
+          - heading "창덕궁 관람" [level=4]
+  - status: 장소와 운영시간을 확인하고 있어요.

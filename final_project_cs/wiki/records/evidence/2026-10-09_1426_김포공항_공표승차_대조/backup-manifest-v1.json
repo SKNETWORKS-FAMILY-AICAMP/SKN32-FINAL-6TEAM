@@ -1,0 +1,22 @@
+[
+  {
+    "path": "datasets/mobility/processed/mobility/published_boarding_timetable_v1.json",
+    "backup": "datasets/mobility/processed/mobility/_backup/2026-10-09_1426_김포공항_공표승차_대조/published_boarding_timetable_v1.json",
+    "sha256": "8718a8398afc4298475e63644b5ff317acaf3ef50e540a012c3319d9e10c166f"
+  },
+  {
+    "path": "datasets/mobility/processed/mobility/MANIFEST_git_v1.json",
+    "backup": "datasets/mobility/processed/mobility/_backup/2026-10-09_1426_김포공항_공표승차_대조/MANIFEST_git_v1.json",
+    "sha256": "70c947c4689678d112f5a3c9cb847629ec6bd1f50e715bb18e8cc1f3dc66c763"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1426_김포공항_공표승차_대조/mobility.md",
+    "sha256": "09a0143c2d51eabeb7804060b2ed4bcb118e29162ea438362f8926ab2ba0612c"
+  },
+  {
+    "path": "datasets/mobility/REPORT.md",
+    "backup": "datasets/mobility/_backup/2026-10-09_1426_김포공항_공표승차_대조/REPORT.md",
+    "sha256": "14b5aad011485a0e4b904cf0c6dfd444ab8ee3a66a4e1f3fe67ba5b8545755a2"
+  }
+]

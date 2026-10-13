@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-10-11T17:06:21.438Z",
+  "browserVerified": false,
+  "externalRequests": 0,
+  "passed": 5,
+  "total": 5,
+  "cases": [
+    {
+      "responseVersion": 2,
+      "duplicateAlreadyInCache": false,
+      "before": {
+        "version": 2,
+        "stop": "response-stop",
+        "messageIds": [
+          "original",
+          "reply"
+        ]
+      },
+      "after": {
+        "version": 3,
+        "stop": "updated-stop",
+        "messageIds": [
+          "original",
+          "reply"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "responseVersion": 2,
+      "duplicateAlreadyInCache": true,
+      "before": {
+        "version": 2,
+        "stop": "response-stop",
+        "messageIds": [
+          "original",
+          "reply"
+        ]
+      },
+      "after": {
+        "version": 3,
+        "stop": "updated-stop",
+        "messageIds": [
+          "original",
+          "reply",
+          "followup"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "responseVersion": 3,
+      "duplicateAlreadyInCache": false,
+      "before": {
+        "version": 3,
+        "stop": "response-stop",
+        "messageIds": [
+          "original",
+          "reply"
+        ]
+      },
+      "after": {
+        "version": 3,
+        "stop": "response-stop",
+        "messageIds": [
+          "original",
+          "reply"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "responseVersion": 4,
+      "duplicateAlreadyInCache": false,
+      "before": {
+        "version": 4,
+        "stop": "response-stop",
+        "messageIds": [
+          "original",
+          "reply"
+        ]
+      },
+      "after": {
+        "version": 4,
+        "stop": "response-stop",
+        "messageIds": [
+          "original",
+          "reply"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "responseVersion": "absent",
+      "duplicateAlreadyInCache": false,
+      "before": {
+        "stop": "response-stop",
+        "messageIds": [
+          "original",
+          "reply"
+        ]
+      },
+      "after": {
+        "stop": "response-stop",
+        "messageIds": [
+          "original",
+          "reply"
+        ]
+      },
+      "pass": true
+    }
+  ]
+}

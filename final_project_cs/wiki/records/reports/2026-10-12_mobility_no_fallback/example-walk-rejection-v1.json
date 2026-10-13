@@ -1,0 +1,61 @@
+{
+  "scope": "기존 내부 예시 도보 제외 원인 진단, 웹 정답/실보행 측정 아님",
+  "origin": {
+    "key": "dinner",
+    "name": "서울역 저녁 식당(시나리오)",
+    "kind": "dining",
+    "lat": 37.5552,
+    "lon": 126.972,
+    "attributes": {
+      "district": "중구",
+      "hours": [
+        "17:00",
+        "22:00"
+      ]
+    }
+  },
+  "destination": {
+    "key": "lotte_mart",
+    "name": "롯데마트 서울역점",
+    "kind": "activity",
+    "lat": 37.5559,
+    "lon": 126.9707,
+    "attributes": {
+      "district": "중구",
+      "hours": [
+        "10:00",
+        "24:00"
+      ]
+    }
+  },
+  "straight_m": 138.68698482752626,
+  "planner_result": [
+    null,
+    null,
+    true
+  ],
+  "basis": {
+    "source": "walking_network",
+    "status": "unavailable",
+    "reason": "unverified_walk_access"
+  },
+  "router_result": {
+    "distance_m": 330.3,
+    "time_s": 250,
+    "basis": "로컬 도로그래프",
+    "source_id": "osm_road_graph_v2@2026-10-03",
+    "foot_timing": {
+      "flat_mps": 1.39,
+      "stairs_m": 25.223402495929488,
+      "seconds": 249.71650757326506
+    },
+    "quality": {
+      "access_max_m": 84.6,
+      "arterial_pct": 0.0,
+      "optimistic": true
+    },
+    "optimistic": true
+  },
+  "last_error": null,
+  "developer_api_calls": 0
+}

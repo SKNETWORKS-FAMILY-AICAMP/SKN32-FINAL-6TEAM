@@ -1,0 +1,66 @@
+
+> @tripilot/web@0.1.0 test
+> vitest run src/lib/live/gateway.test.ts src/lib/live/stream.test.ts src/lib/live/recovery.test.ts src/lib/live/waiting.test.ts --reporter=verbose
+
+
+ RUN  v5.0.1 C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web
+
+ ✓ src/lib/live/waiting.test.ts > when the server is told to be slow > says nothing before the first step, then gets stronger at each step (a plain call: 8 s · 30 s · 60 s) 4ms
+ ✓ src/lib/live/waiting.test.ts > when the server is told to be slow > is slower to speak for a streamed task, which shows its own progress (30 s · 60 s · 120 s) 1ms
+ ✓ src/lib/live/waiting.test.ts > the call that has waited longest > is none when no call has reached its first step 4ms
+ ✓ src/lib/live/waiting.test.ts > the call that has waited longest > is the one with the highest level, then the longest wait; the seconds are whole seconds 1ms
+ ✓ src/lib/live/waiting.test.ts > the calls that are counted > joins when it starts, starts over on a sign of life, and leaves when it ends 2ms
+ ✓ src/lib/live/recovery.test.ts > recoveryOf — the situation brief after a disaster pause was lifted > is none for anything that is not a brief 3ms
+ ✓ src/lib/live/recovery.test.ts > recoveryOf — the situation brief after a disaster pause was lifted > reads the brief the way the server sent it 3ms
+ ✓ src/lib/live/recovery.test.ts > recoveryOf — the situation brief after a disaster pause was lifted > never reads an unknown status as 「unaffected」 and drops a stop it cannot name 1ms
+ ✓ src/lib/live/recovery.test.ts > recoveryOf — the situation brief after a disaster pause was lifted > offers only the ways it can send back, and the answers it knows 0ms
+ ✓ src/lib/live/recovery.test.ts > recoveryOf — the situation brief after a disaster pause was lifted > reads what was chosen before, keeping only known answers 0ms
+ ✓ src/lib/live/recovery.test.ts > recoveryOf — the situation brief after a disaster pause was lifted > reads the phase of a trip that has not started 0ms
+ ✓ src/lib/live/stream.test.ts > a long request with live progress (POST …/messages · …/plan with Accept: text/event-stream) > asks for the stream with the session cookie and the CSRF token (it is a write), reports each stage and beat, and resolves with the result body 54ms
+ ✓ src/lib/live/stream.test.ts > a long request with live progress (POST …/messages · …/plan with Accept: text/event-stream) > reads a server without streams: the JSON answer comes once, as before 1ms
+ ✓ src/lib/live/stream.test.ts > a long request with live progress (POST …/messages · …/plan with Accept: text/event-stream) > turns the server's error event into its code and sentence, keeping `retryable` 2ms
+ ✓ src/lib/live/stream.test.ts > a long request with live progress (POST …/messages · …/plan with Accept: text/event-stream) > gives a refusal before the stream opens as the usual JSON error (too many open streams) 4ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > maps server items to stops in Seoul time with pins and booking marks 119ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > does not make a guest just to open a trip: a browser with no session is told at once, with the way back 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > lists nothing without asking for trips when this browser has no session 1ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > lists the server's trips with the session cookie 11ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > deleting a trip (backend request 2026-10-03: POST /v1/web/trips/{id}/delete) > asks the server with the session (cookie and CSRF token) and forgets this tab's copy of the conversation 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > deleting a trip (backend request 2026-10-03: POST /v1/web/trips/{id}/delete) > takes a successful answer without a JSON body as deleted 1ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > deleting a trip (backend request 2026-10-03: POST /v1/web/trips/{id}/delete) > says the server cannot delete yet when the route is not there — the real server's answer today is 404 {detail: Not Found} — and nothing is pretended 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > deleting a trip (backend request 2026-10-03: POST /v1/web/trips/{id}/delete) > takes the server's own “no such trip of yours” (404 not_found) as already gone, but passes any other refusal on as it was 1ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > keeps move items out of the stops, as moves between the stop before and the stop after them (Seoul time) 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > reads the trip's name the server keeps 1ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > shows the server's own answer and falls back to fixed words, never inventing one 4ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > never fills in its own “passed to a person” sentence: an escalated result without an answer shows its status, one with an answer shows the server's words 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > carries what the server did and found: history, warnings, pinned stops and the other options it kept 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > carries the place facts the server sent (dining ledger) and leaves out what it did not 1ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > shows closed days, last entry, and the source's hours text for places outside the dining ledger 1ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > keeps only Google Maps links for the map app: each stop and each day's route 5ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > keeps the rule sections behind an answer only when the server sends them (development mode) 4ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > sends the stop the customer picked as item_id, and nothing when none was picked 3ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > does not quietly become a new user when the session has ended 1ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > keeps the folded rest of an answer and the 「혹시 이런 뜻이었나요?」 readings the server offers with it 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > shows the conversation from the server's record, keeping this tab's choices on the latest answer 5ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > keeps the server's reply when only the re-read after it fails — it is not reported as 'not sent' 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > sends a failed message again with the same request id, so the server does not act on it twice 16ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > does not reuse a failed message's request id for different words or a different stop 3ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > continuing a request that is waiting for input > continues the same Case and clears it after completion without storing its token 3ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > continuing a request that is waiting for input > keeps pending requests separate when switching between trips 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > continuing a request that is waiting for input > uses the renewed token and Case version when more information is still needed 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > continuing a request that is waiting for input > retries a failed reply with the same request id and resume credentials 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > continuing a request that is waiting for input > does not restore resume credentials from conversation storage after a reload 4ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > continuing a request that is waiting for input > reads waiting and completion from SSE results just as from JSON 9ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > continuing a request that is waiting for input > drops credentials when the login session is no longer the one that received them 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > continuing a request that is waiting for input > accepts explicit correlation and never reuses a failed reply id for a different Case 2ms
+ ✓ src/lib/live/gateway.test.ts > live trip gateway > marks an answer that needs the customer's position, and sends the position only when given 6ms
+ ✓ src/lib/live/stream.test.ts > a long request with live progress (POST …/messages · …/plan with Accept: text/event-stream) > a line gone quiet for two beats is lost: it says so and sends the very same request again 70ms
+ ✓ src/lib/live/stream.test.ts > a long request with live progress (POST …/messages · …/plan with Accept: text/event-stream) > stops after the last reconnect with `connection_lost` — the screen offers to send it again 240ms
+ ✓ src/lib/live/stream.test.ts > following an intake while the server reads it (GET …/trip-intakes/{id}/events) > passes on each stage and beat, then ends when the server says the reading is done 3ms
+ ✓ src/lib/live/stream.test.ts > following an intake while the server reads it (GET …/trip-intakes/{id}/events) > tells a stopped reading (`stalled`), a missing intake, a server without the stream and a silent line apart 67ms
+ ✓ src/lib/live/stream.test.ts > the waiting line > shows the server's stage in the customer's language with how long it has taken, or that it is reconnecting 1ms
+
+ Test Files  4 passed (4)
+      Tests  53 passed (53)
+   Start at  22:49:17
+   Duration  1.02s (tests 44%, transform 42%, import 12%, worker 2%)
+

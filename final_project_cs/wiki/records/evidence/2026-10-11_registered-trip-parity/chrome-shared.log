@@ -1,0 +1,246 @@
+
+[WebServer] (node:352) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19124) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:24652) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28624) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[WebServer] (node:3128) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:3112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:24516) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:4380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:26128) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:18812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:15336) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:14624) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:7032) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 32 tests using 1 worker
+
+
+(node:18624) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/32] tests\live\day-marker-recovery-20261011.spec.ts:27:3 › 수정안 왕복·직접 수정 복귀 시 선택 배경 전체 정렬 375px
+[2/32] tests\live\day-marker-recovery-20261011.spec.ts:53:3 › 수정안에서 보던 날짜가 없어지면 첫 유효 날짜로 복귀 375px
+[3/32] tests\live\day-marker-recovery-20261011.spec.ts:63:3 › 탭 너비 변경·숨김 복원·화면 크기 변경 시 재측정 375px
+[4/32] tests\live\day-marker-recovery-20261011.spec.ts:74:3 › 중간 스와이프 취소·확정·빠른 연속 전환·움직임 줄이기 375px
+[5/32] tests\live\day-marker-recovery-20261011.spec.ts:94:3 › 문제 항목 배치 비교 촬영·좁은 카드 줄바꿈 375px
+[6/32] tests\live\day-marker-recovery-20261011.spec.ts:27:3 › 수정안 왕복·직접 수정 복귀 시 선택 배경 전체 정렬 1280px
+[7/32] tests\live\day-marker-recovery-20261011.spec.ts:53:3 › 수정안에서 보던 날짜가 없어지면 첫 유효 날짜로 복귀 1280px
+[8/32] tests\live\day-marker-recovery-20261011.spec.ts:63:3 › 탭 너비 변경·숨김 복원·화면 크기 변경 시 재측정 1280px
+[9/32] tests\live\day-marker-recovery-20261011.spec.ts:74:3 › 중간 스와이프 취소·확정·빠른 연속 전환·움직임 줄이기 1280px
+[10/32] tests\live\day-marker-recovery-20261011.spec.ts:94:3 › 문제 항목 배치 비교 촬영·좁은 카드 줄바꿈 1280px
+[11/32] tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 375px 일반: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다
+[12/32] tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 375px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다
+[13/32] tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 1280px 일반: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다
+[14/32] tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 1280px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다
+[15/32] tests\live\route-lines.spec.ts:31:1 › 선이 있는 여행: 길을 아는 구간은 실선, 직선으로 이은 구간은 점선·옅은 색으로 그리고, 출처와 점선·버스의 뜻을 목록 끝 출처 줄에 적는다
+[16/32] tests\live\route-lines.spec.ts:58:1 › 서버에 이 경로가 아직 없으면(404) 선도 출처 문구도 오류 문구도 없이 핀만 보인다
+[17/32] tests\live\route-lines.spec.ts:67:1 › 선을 읽다 실패하면(500) 읽지 못했다고 말하고 핀은 그대로 보인다 — 선이 없다는 말이 아니다
+[18/32] tests\live\route-lines.spec.ts:75:1 › 서버가 선을 늦게 줘도(길 자료를 올리는 중) 핀이 먼저 보이고, 선은 오면 그려진다
+[19/32] tests\live\route-lines.spec.ts:83:1 › 다른 날로 바꾸면 그 날 장소 사이의 선만 남는다(둘째 날에는 선이 없다)
+[20/32] tests\live\route-lines.spec.ts:92:1 › 확대하면 상세 경로선을 따로 한 번 받아 그린다: 축소 상태는 짧은 선, 확대 수준 15 이상에서 상세 선으로 바뀌고, 다시 줄여도 상세 선이 남는다
+[21/32] tests\live\shared-trip-ui-20261011.spec.ts:18:3 › 등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 375px
+  1) tests\live\shared-trip-ui-20261011.spec.ts:18:3 › 등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 375px ─────────
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByRole('tablist', { name: '일차 고르기', includeHidden: true })
+    Expected: ""
+    Received: serializes to the same string
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('tablist', { name: '일차 고르기', includeHidden: true }) with timeout 12000ms
+      - waiting for getByRole('tablist', { name: '일차 고르기', includeHidden: true })
+        4 × locator resolved to <div inert="" role="tablist" data-quiet="true" aria-hidden="true" aria-label="일차 고르기" class="plan-check_dayStrip__Bct4R">…</div>
+          - unexpected value "true"
+        23 × locator resolved to <div role="tablist" aria-label="일차 고르기" class="plan-check_dayStrip__Bct4R">…</div>
+           - unexpected value "null"
+
+
+      26 |     await paneTab(page, "채팅").click(); await paneTab(page, "일정").click(); await aligned(page);
+      27 |     await body.evaluate(el => { el.scrollTop = 100; });
+    > 28 |     await expect(strip).toHaveAttribute("data-quiet", "");
+         |                         ^
+      29 |     await body.evaluate(el => { el.scrollTop = 0; });
+      30 |     await expect(strip).not.toHaveAttribute("data-quiet");
+      31 |     await dayTab(page, /^1일차/).click(); await aligned(page);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\shared-trip-ui-20261011.spec.ts:28:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-registered-shared\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-375px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-registered-shared\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-375px\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results-registered-shared\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-375px\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results-registered-shared\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-375px\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:8260) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[22/32] tests\live\shared-trip-ui-20261011.spec.ts:35:3 › 수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 375px
+  2) tests\live\shared-trip-ui-20261011.spec.ts:35:3 › 수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 375px ───
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      42 |     await expect.poll(() => body.evaluate(el => el.scrollTop)).toBeLessThan(2);
+      43 |     // 전환 직후 같은 휠 동작은 새 페이지를 내리지 않는다. 취소 가능한 DOM 입력도 확인한다.
+    > 44 |     expect(await body.evaluate(el => !el.dispatchEvent(new WheelEvent("wheel", { deltaY: 600, bubbles: true, cancelable: true })))).toBe(true);
+         |                                                                                                                                     ^
+      45 |     await expect.poll(() => body.evaluate(el => el.scrollTop)).toBeLessThan(2);
+      46 |     await page.waitForTimeout(450);
+      47 |     await body.hover({ position: { x: 40, y: 150 } }); await page.mouse.wheel(0, 160);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\shared-trip-ui-20261011.spec.ts:44:133
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-registered-shared\shared-trip-ui-20261011-수정-3a45d-막고-새-스크롤과-일정-추가를-허용한다-375px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-registered-shared\shared-trip-ui-20261011-수정-3a45d-막고-새-스크롤과-일정-추가를-허용한다-375px\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results-registered-shared\shared-trip-ui-20261011-수정-3a45d-막고-새-스크롤과-일정-추가를-허용한다-375px\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results-registered-shared\shared-trip-ui-20261011-수정-3a45d-막고-새-스크롤과-일정-추가를-허용한다-375px\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+(node:18772) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[23/32] tests\live\shared-trip-ui-20261011.spec.ts:61:3 › 채팅은 이전 대화를 유지하고 최신 이동·새 답변·직접 전송을 지원한다 375px
+[24/32] tests\live\shared-trip-ui-20261011.spec.ts:18:3 › 등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 1280px
+  3) tests\live\shared-trip-ui-20261011.spec.ts:18:3 › 등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 1280px ────────
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByRole('tablist', { name: '일차 고르기', includeHidden: true })
+    Expected: ""
+    Received: serializes to the same string
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('tablist', { name: '일차 고르기', includeHidden: true }) with timeout 12000ms
+      - waiting for getByRole('tablist', { name: '일차 고르기', includeHidden: true })
+        5 × locator resolved to <div inert="" role="tablist" data-quiet="true" aria-hidden="true" aria-label="일차 고르기" class="plan-check_dayStrip__Bct4R">…</div>
+          - unexpected value "true"
+        22 × locator resolved to <div role="tablist" aria-label="일차 고르기" class="plan-check_dayStrip__Bct4R">…</div>
+           - unexpected value "null"
+
+
+      26 |     await paneTab(page, "채팅").click(); await paneTab(page, "일정").click(); await aligned(page);
+      27 |     await body.evaluate(el => { el.scrollTop = 100; });
+    > 28 |     await expect(strip).toHaveAttribute("data-quiet", "");
+         |                         ^
+      29 |     await body.evaluate(el => { el.scrollTop = 0; });
+      30 |     await expect(strip).not.toHaveAttribute("data-quiet");
+      31 |     await dayTab(page, /^1일차/).click(); await aligned(page);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\shared-trip-ui-20261011.spec.ts:28:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-registered-shared\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-1280px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-registered-shared\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-1280px\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results-registered-shared\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-1280px\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results-registered-shared\shared-trip-ui-20261011-등록-여행은-검증-날짜·테두리·스크롤-규칙을-공유한다-1280px\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+(node:28272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[25/32] tests\live\shared-trip-ui-20261011.spec.ts:35:3 › 수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 1280px
+  4) tests\live\shared-trip-ui-20261011.spec.ts:35:3 › 수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 1280px ──
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      54 |     await expect(page.getByRole("textbox", { name: "일정 이름", exact: true })).toBeVisible();
+      55 |     const writes = (await mockServer(request).log()).filter(row => row.method === "POST" && /autofix/.test(row.path));
+    > 56 |     expect(writes.some(row => row.body?.dry_run === true)).toBe(true);
+         |                                                            ^
+      57 |     expect(writes.some(row => row.body?.dry_run !== true)).toBe(true);
+      58 |     await page.getByRole("button", { name: "취소", exact: true }).click();
+      59 |     await expect(body.locator('[data-insert-near] button[id^="plan-insert-"]')).toBeVisible();
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\shared-trip-ui-20261011.spec.ts:56:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-registered-shared\shared-trip-ui-20261011-수정-95028-고-새-스크롤과-일정-추가를-허용한다-1280px\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-registered-shared\shared-trip-ui-20261011-수정-95028-고-새-스크롤과-일정-추가를-허용한다-1280px\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results-registered-shared\shared-trip-ui-20261011-수정-95028-고-새-스크롤과-일정-추가를-허용한다-1280px\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results-registered-shared\shared-trip-ui-20261011-수정-95028-고-새-스크롤과-일정-추가를-허용한다-1280px\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+(node:30344) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[26/32] tests\live\shared-trip-ui-20261011.spec.ts:61:3 › 채팅은 이전 대화를 유지하고 최신 이동·새 답변·직접 전송을 지원한다 1280px
+[27/32] tests\live\trip-layout.spec.ts:8:1 › 375px와 320px에서 지도 위 시트의 「일정 | 채팅」으로 칸을 바꾸고 가로로 넘치지 않으며, 빈 메시지는 막는다
+[28/32] tests\live\trip-layout.spec.ts:27:1 › 채팅 버튼은 막대만 펼치고(입력칸에 초점 없음), 입력칸에 초점이 가면 채팅 칸으로 넘어간다 — 일정 칸으로 돌아오면 쓰던 글은 막대에 남는다
+[29/32] tests\live\trip-layout.spec.ts:47:1 › 일차·일정·지도 선택이 이어진다: 지도 보기는 안내 토스트 없이 핀을 선택하고, 핀을 누르면 그 일정이 목록에서 펼쳐진다
+[30/32] tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 375px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다
+[31/32] tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 1280px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다
+[32/32] tests\live\trip-marker-no-toast-20261011.spec.ts:36:1 › 실제 선택 요청 알림은 마커를 선택·해제해도 유지한다
+  4 failed
+    tests\live\shared-trip-ui-20261011.spec.ts:18:3 › 등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 375px ──────────
+    tests\live\shared-trip-ui-20261011.spec.ts:35:3 › 수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 375px ────
+    tests\live\shared-trip-ui-20261011.spec.ts:18:3 › 등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 1280px ─────────
+    tests\live\shared-trip-ui-20261011.spec.ts:35:3 › 수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 1280px ───
+  28 passed (11.7m)

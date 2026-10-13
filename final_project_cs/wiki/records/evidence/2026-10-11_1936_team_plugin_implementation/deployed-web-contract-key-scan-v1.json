@@ -1,0 +1,2 @@
+{"files_scanned":249,"roots":["/app/.next/static","/app/.next/server"],"counts":{"case_status":4,"waiting_input":0,"resume_token":0,"expected_version":0},"findings":[{"path":"/app/.next/static/chunks/38km_trj2ou5g.js","sha256":"d584796ba6affbd709ae3c02c66645815095c7eebc5e84ff6541a45e9d5fff0c","hits":{"case_status":2}},{"path":"/app/.next/server/chunks/ssr/_0u3h62s._.js","sha256":"051086e0ed13dd18a0c512a2e44d6ae159e51fd4c51dd0b063c71a84781c7508","hits":{"case_status":2}}],"environment_read":false,"customer_data_read":false}
+

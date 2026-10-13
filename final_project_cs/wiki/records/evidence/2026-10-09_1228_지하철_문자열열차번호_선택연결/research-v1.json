@@ -1,0 +1,12 @@
+{
+  "checked_at": "2026-10-09T12:41:18.189565+09:00",
+  "cutoff": "2026-10-09",
+  "sources": [
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "finding": "btrainNo는 운행 열차번호이고 btrainSttus는 별도 열차종류입니다. 역ID와 다른 필드이며 공식 문서와 실제 A번호를 대조했습니다.",
+      "applicability": "역의 숫자ID 검사를 열차번호에 재사용하지 않고 원번호를 보존합니다. 접두사로 운영사·급행을 추정하지 않습니다."
+    }
+  ],
+  "method": "예측 알고리즘 대신 입력 식별 계약을 수정합니다. 논문 계수·속도 보정·지도값 맞추기는 적용하지 않습니다."
+}

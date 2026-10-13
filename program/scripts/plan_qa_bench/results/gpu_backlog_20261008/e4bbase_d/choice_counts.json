@@ -1,0 +1,431 @@
+{
+  "model": "Gemma-4-E4B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "Instruct release",
+  "suite": "D",
+  "saved": 2735,
+  "expected": 2735,
+  "missing": 0,
+  "failed_or_unparsed": 13,
+  "single_choice_expected": 2669,
+  "compound_diagnostic_total": 66,
+  "positive": {
+    "total": 883,
+    "correct": 738,
+    "false_pick": 0,
+    "failed_or_missing": 4,
+    "correct_wilson95": [
+      0.8099068362651665,
+      0.8587583395697125
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.004331618444859839
+    ]
+  },
+  "negative": {
+    "total": 1786,
+    "correct": 1709,
+    "false_pick": 75,
+    "failed_or_missing": 2,
+    "correct_wilson95": [
+      0.9464456456435748,
+      0.9653669576220272
+    ],
+    "false_pick_wilson95": [
+      0.033632306699337394,
+      0.05232025522313506
+    ]
+  },
+  "subtypes": {
+    "absent_but_plausible": {
+      "total": 78,
+      "correct": 76,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9112472996432415,
+        0.9929399065272408
+      ],
+      "false_pick_wilson95": [
+        0.007060093472759203,
+        0.08875270035675845
+      ]
+    },
+    "change_request": {
+      "total": 79,
+      "correct": 71,
+      "false_pick": 8,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8127005885203687,
+        0.9477881920594146
+      ],
+      "false_pick_wilson95": [
+        0.05221180794058543,
+        0.18729941147963136
+      ]
+    },
+    "chitchat": {
+      "total": 1300,
+      "correct": 1244,
+      "false_pick": 54,
+      "failed_or_missing": 2,
+      "correct_wilson95": [
+        0.9444745620062026,
+        0.9666791614492002
+      ],
+      "false_pick_wilson95": [
+        0.031974810255891994,
+        0.05380360863397296
+      ]
+    },
+    "compound_intent": {
+      "total": 66,
+      "correct": 48,
+      "false_pick": 0,
+      "failed_or_missing": 7,
+      "correct_wilson95": [
+        0.6095777422224589,
+        0.8199665500441133
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05500255701354129
+      ]
+    },
+    "confusable_name": {
+      "total": 77,
+      "correct": 71,
+      "false_pick": 5,
+      "failed_or_missing": 1,
+      "correct_wilson95": [
+        0.8402438428027608,
+        0.9637990449458338
+      ],
+      "false_pick_wilson95": [
+        0.028053080447716178,
+        0.14316425064219399
+      ]
+    },
+    "context_pronoun": {
+      "total": 71,
+      "correct": 66,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8455098688621009,
+        0.969546397560289
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05132795219689034
+      ]
+    },
+    "duplicate_place": {
+      "total": 79,
+      "correct": 75,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8769228272429488,
+        0.9801359572199815
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "nameless_description": {
+      "total": 75,
+      "correct": 63,
+      "false_pick": 0,
+      "failed_or_missing": 2,
+      "correct_wilson95": [
+        0.7408329231474533,
+        0.9060348639642386
+      ],
+      "false_pick_wilson95": [
+        3.469446951953614e-18,
+        0.04872384248280587
+      ]
+    },
+    "negation": {
+      "total": 72,
+      "correct": 63,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7791894627583916,
+        0.9328221577942649
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05065117259645781
+      ]
+    },
+    "ordinal_relative": {
+      "total": 80,
+      "correct": 63,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6857784426940333,
+        0.8628761328230384
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "out_of_scope": {
+      "total": 80,
+      "correct": 77,
+      "false_pick": 3,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8954527990995489,
+        0.9871654310800886
+      ],
+      "false_pick_wilson95": [
+        0.012834568919911402,
+        0.10454720090045115
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 300,
+      "correct": 204,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6252238889196531,
+        0.7302246414395104
+      ],
+      "false_pick_wilson95": [
+        8.673617379884035e-19,
+        0.012642971224546034
+      ]
+    },
+    "tourist_synth_out": {
+      "total": 300,
+      "correct": 297,
+      "false_pick": 3,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9710165066376601,
+        0.9965933815622847
+      ],
+      "false_pick_wilson95": [
+        0.003406618437715286,
+        0.02898349336233983
+      ]
+    },
+    "typo_slang": {
+      "total": 78,
+      "correct": 77,
+      "false_pick": 0,
+      "failed_or_missing": 1,
+      "correct_wilson95": [
+        0.930891429982978,
+        0.9977332682461664
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    }
+  },
+  "failed_records": [
+    {
+      "i": 1200,
+      "set": "mixed10",
+      "qi": 104,
+      "type": "compound_intent",
+      "gold": 17,
+      "content": "{\"item\": [17, 18]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 335,
+      "p_null": 0.0,
+      "p_mass": 1.0
+    },
+    {
+      "i": 1220,
+      "set": "mixed10",
+      "qi": 124,
+      "type": "typo_slang",
+      "gold": 10,
+      "content": "{\"item\": [10]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 236,
+      "p_null": 0.0,
+      "p_mass": 0.9999
+    },
+    {
+      "i": 1524,
+      "set": "mixed10",
+      "qi": 428,
+      "type": "confusable_name",
+      "gold": 10,
+      "content": "{\"item\": [10]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 236,
+      "p_null": 0.0,
+      "p_mass": 0.9999
+    },
+    {
+      "i": 1858,
+      "set": "mixed11",
+      "qi": 222,
+      "type": "compound_intent",
+      "gold": 3,
+      "content": "{\"item\": [3, 6]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 280,
+      "p_null": 0.0,
+      "p_mass": 0.9996
+    },
+    {
+      "i": 2014,
+      "set": "mixed11",
+      "qi": 378,
+      "type": "nameless_description",
+      "gold": 29,
+      "content": "{\"item\": \"27\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 237,
+      "p_null": 0.028664,
+      "p_mass": 0.9979
+    },
+    {
+      "i": 2149,
+      "set": "mixed11",
+      "qi": 513,
+      "type": "nameless_description",
+      "gold": 24,
+      "content": "{\"item\": \"27\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 237,
+      "p_null": 0.105466,
+      "p_mass": 0.9959
+    },
+    {
+      "i": 2216,
+      "set": "mixed12",
+      "qi": 37,
+      "type": "chitchat",
+      "gold": null,
+      "content": "{\"item\": \"null\"}",
+      "parsed": false,
+      "pick": null,
+      "ms": 218,
+      "p_null": 0.895972,
+      "p_mass": 0.9998
+    },
+    {
+      "i": 2652,
+      "set": "mixed12",
+      "qi": 473,
+      "type": "compound_intent",
+      "gold": 25,
+      "content": "{\"item\": [25, 23]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 321,
+      "p_null": 0.0,
+      "p_mass": 0.9999
+    },
+    {
+      "i": 2714,
+      "set": "mixed12",
+      "qi": 535,
+      "type": "compound_intent",
+      "gold": 30,
+      "content": "{\"item\": [30, 31]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 324,
+      "p_null": 0.0,
+      "p_mass": 0.9999
+    },
+    {
+      "i": 457,
+      "set": "mixed8",
+      "qi": 457,
+      "type": "compound_intent",
+      "gold": 5,
+      "content": "{\"item\": [5, 6]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 278,
+      "p_null": 0.0,
+      "p_mass": 0.9998
+    },
+    {
+      "i": 607,
+      "set": "mixed9",
+      "qi": 56,
+      "type": "compound_intent",
+      "gold": 8,
+      "content": "{\"item\": [34]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 237,
+      "p_null": 0.0,
+      "p_mass": 0.9989
+    },
+    {
+      "i": 893,
+      "set": "mixed9",
+      "qi": 342,
+      "type": "chitchat",
+      "gold": null,
+      "content": "{\"item\": [4, 16, 36]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 379,
+      "p_null": 0.0,
+      "p_mass": 0.9985
+    },
+    {
+      "i": 1053,
+      "set": "mixed9",
+      "qi": 502,
+      "type": "compound_intent",
+      "gold": 14,
+      "content": "{\"item\": [14, 15]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 320,
+      "p_null": 0.000114,
+      "p_mass": 0.9996
+    }
+  ],
+  "answer_sha256": "0aa347270a46aa08b57ff36aed5aef7697fc1862dd9c7d0d0cb133b5f7ad06cf",
+  "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+  "execution": {
+    "job": {
+      "id": "e4bbase_d",
+      "label": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "prompts": "/workspace/heavy/all_prompts.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "d_backlog_e4bbase",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 2735
+    },
+    "started": "2026-10-08T01:47:22.707600+00:00",
+    "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

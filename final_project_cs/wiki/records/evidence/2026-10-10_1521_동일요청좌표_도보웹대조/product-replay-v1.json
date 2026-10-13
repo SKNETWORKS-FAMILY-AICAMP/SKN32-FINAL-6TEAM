@@ -1,0 +1,76 @@
+{
+  "started_at": "2026-10-10T15:20:30.346452+09:00",
+  "finished_at": "2026-10-10T15:20:57.682896+09:00",
+  "arrive": "2026-10-10T16:00:00+09:00",
+  "party": "party_of(None,{}) 기본 성인·초행",
+  "modes": [
+    "walk"
+  ],
+  "straight_m": 498.1328910240875,
+  "walk_policy_straight_m": 1200,
+  "product": {
+    "status": "available",
+    "m": 743,
+    "min": 12
+  },
+  "result": {
+    "route": {
+      "from": "시청쪽 기준점",
+      "to": "청계천쪽 기준점",
+      "planned": "walk",
+      "options": [
+        {
+          "id": "walk",
+          "label": "도보",
+          "eta_min": 12,
+          "walk_m": 743,
+          "fare_krw": 0,
+          "uses": []
+        }
+      ]
+    },
+    "comparison": {
+      "case": "walk10-origin_walk10-dest",
+      "date": "2026-10-10",
+      "arrive_by_min": 960,
+      "planned": "walk",
+      "options": [
+        {
+          "id": "walk",
+          "start_min": 938,
+          "eta_min": 12,
+          "margin_min": 10,
+          "slack_min": 0,
+          "transfers": 0,
+          "check": null,
+          "wait_min": 0
+        }
+      ],
+      "left_out": [],
+      "left_checks": [],
+      "start_min": 938
+    }
+  },
+  "why": null,
+  "comparison": [
+    {
+      "reference": "큰길우선",
+      "distance_delta_m": 32,
+      "distance_delta_percent": 4.50070323488045,
+      "time_delta_min": 0,
+      "distance_within_10_percent": true,
+      "time_within_5_min": true
+    },
+    {
+      "reference": "최단거리",
+      "distance_delta_m": 71,
+      "distance_delta_percent": 10.56547619047619,
+      "time_delta_min": 1,
+      "distance_within_10_percent": false,
+      "time_within_5_min": true
+    }
+  ],
+  "blocked_network_attempts": 0,
+  "limited_api_calls": 0,
+  "same_geometry_verified": false
+}

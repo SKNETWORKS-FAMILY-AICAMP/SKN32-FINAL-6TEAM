@@ -1,0 +1,52 @@
+{
+  "changes": [
+    {
+      "path": "final_project_cs/wiki/external/test-scenarios.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_210021_625487_v3-close/test-scenarios.md",
+      "before_sha256": "6221a02332f566d593add82bc2e7b02ef7bd9dab317c9e0ae63d93f83da089c5",
+      "after_sha256": "0fae59e63f6daf62befe84f7d1b26b96a93b2690e3f7357378c5c90397808937"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/service-improvement.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_210021_625487_v3-close/service-improvement.md",
+      "before_sha256": "31bc9c6d4003f1958ee7528ba5beb00188baba091189f06fc6882cfbca19476e",
+      "after_sha256": "ca4fea23ce1b504e9f259359406d3aba6bbeef8f594d1ba78214f6e6c4b62cf8"
+    },
+    {
+      "path": "wiki/evaluation/golden-set.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_210021_625487_v3-close/golden-set.md",
+      "before_sha256": "cdd2be78a6bd62963b0340bb9a5e2de837518e2d2b129dbfe6252a31bc117ce3",
+      "after_sha256": "b25235f73e69d4e795e050f5fe650055d9afaf53b9cbc7035da197c80d47a9d0"
+    },
+    {
+      "path": "wiki/evaluation/protocol.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_210021_625487_v3-close/protocol.md",
+      "before_sha256": "9b0532f0ae24fc2ca5224e8681003e99d214af522b42dbd0e356438bc70b5b74",
+      "after_sha256": "3a8ee95d36fa3be9c89c7ff73aaad3b368b560a77d806ba8c40e741f17bc974a"
+    },
+    {
+      "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_210021_625487_v3-close/D-017-watch-cadence-golden-time.md",
+      "before_sha256": "7118404cb9f5642183d657855ffc2bb3030c2ee7ff3a2ce9834d002b3f4c5106",
+      "after_sha256": "784bba385a114e4a3bb739d69cc0938196d25951ab591d48843e13ead73cbb1a"
+    },
+    {
+      "path": "wiki/governance/cutover.md",
+      "backup": "wiki/governance/_backup/2026-10-11_210021_625487_v3-close/cutover.md",
+      "before_sha256": "e97004f62c0081863349d505928ef8b1817ea4dd29b4ed146cbd4bdf590ffb2a",
+      "after_sha256": "dfc65e2cba76483c46e0d47ca351d5e455ac7c9b6387b5224bdfb70335fbcb64"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_wiki-current-and-governance-v3.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "906688a31e83ddeea3edbb670f190a886e73103f5dd66de1d4ced69ae44cd52e"
+    },
+    {
+      "path": "wiki/log.md",
+      "backup": "wiki/_backup/2026-10-11_210021_625487_v3-close/log.md",
+      "before_sha256": "0d95b83082fa9acbedf6051bafb2c8ca2a6dcb6ea92ec91078766270e9a5e7b8",
+      "after_sha256": "e750f57a473bc8820bc2599ddca77d912a121126232d9d3ae3b58f53338888e1"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "official_sources": [
+    {
+      "url": "https://www.airportrailroad.com/train/normal/live",
+      "finding": "정적 본문은 열림. 열차별 운행ID·생성시각·목록 귀속 추가 확인 미완료."
+    },
+    {
+      "url": "https://gtfs.org/documentation/realtime/feed-entities/trip-updates/",
+      "finding": "운행 갱신 부재를 정시로 간주하지 않는 원칙 확인. AREX가 GTFS라는 뜻이 아님."
+    },
+    {
+      "url": "https://wiki.openstreetmap.org/wiki/Relation:restriction",
+      "finding": "from/via/to의 금지·강제 회전, 보행자 예외와 조건부 제약의 별도 범위 확인. 이번 정적 단순 2487관계의 의미는 바꾸지 않음."
+    },
+    {
+      "url": "https://docs.python.org/3/library/hashlib.html",
+      "finding": "입력 바이트의 SHA256 내용값을 비교함. 새 예측/탐색 논문 알고리즘을 적용하는 변경이 아님."
+    }
+  ],
+  "blocked_research": [
+    {
+      "method": "CUA 초기화",
+      "result": "kernel assets 경로 오류로 초기화 실패"
+    },
+    {
+      "method": "공개 HTML Python 조회(제한 API 아님)",
+      "result": "격리 환경 DNS 실패, 권한 검토 후 조회 SSL 서명 유형 오류. 인증서 검증을 끄지 않았음."
+    }
+  ],
+  "limited_api_budget": {
+    "reserve_rate": 0.2,
+    "usage_before": "미확인",
+    "usage_after": "미확인",
+    "remaining": "미확인",
+    "reset_at": "미확인",
+    "task_calls": 0,
+    "task_retries": 0,
+    "atomic_budget_reservations": 0,
+    "decision": "공유 누적 사용량/갱신 시간 확인 전 제한 API 호출하지 않음. 운영 한도/예약 주기/알림 정책 변경 없음."
+  },
+  "actual_vehicle_boarding_payment_samples": 0,
+  "aligned_new_web_routes": 0,
+  "browser_rendered": false
+}

@@ -1,0 +1,54 @@
+{
+  "recorded_at": "2026-10-09T12:22:46.595949+09:00",
+  "timestamps_basis": "개별 호출 시각은 별도 측정하지 않음. 이 세션 도구 결과 순서와 기록 생성시각을 보존.",
+  "providers_attempted": 2,
+  "attempts": [
+    {
+      "provider": "naver",
+      "operation": "지도 탭 생성",
+      "result": "tab 15 navigate timeout"
+    },
+    {
+      "provider": "naver",
+      "operation": "같은 탭 읽기",
+      "result": "timeout; kernel reset"
+    },
+    {
+      "provider": "kakao",
+      "operation": "지도 탭 생성",
+      "result": "Timed out waiting for tab 16 to navigate to https://map.kakao.com/."
+    },
+    {
+      "provider": "kakao",
+      "operation": "문서화된 tabs.get",
+      "result": "Timed out running CDP command \"Emulation.setFocusEmulationEnabled\" for tab 16"
+    },
+    {
+      "provider": "kakao",
+      "operation": "문서화된 cua.getTab",
+      "result": "Timed out running CDP command \"Emulation.setFocusEmulationEnabled\" for tab 16"
+    },
+    {
+      "provider": "naver",
+      "operation": "기존 W03 공개 경로 주소 web.open",
+      "result": "Internal Error; route values not retrieved"
+    }
+  ],
+  "public_tab_inventory": [
+    {
+      "id": "15",
+      "title": "map.naver.com/p",
+      "url": "https://map.naver.com/p"
+    },
+    {
+      "id": "16",
+      "title": "카카오맵",
+      "url": "https://map.kakao.com/"
+    }
+  ],
+  "new_route_observations": 0,
+  "aligned_product_comparisons": 0,
+  "map_developer_api_calls": 0,
+  "actual_walks": 0,
+  "finding": "페이지 주소/제목은 열렸으나 제어기의 화면 읽기 단계가 시간 초과. 웹 서비스 자체의 제공 실패로 단정하지 않음."
+}

@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-10-10T03:18:49.560949+09:00",
+  "matched": 409,
+  "total": 409,
+  "allowed_changes": [
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py",
+    "final_project_cs/wiki/teams/mobility.md"
+  ],
+  "prior_matched": 403,
+  "prior_total": 411,
+  "other_changes_retained": [
+    "final_project_cs/app/domains/travel_ops/components/actions/itinerary_actions.py",
+    "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary.py",
+    "final_project_cs/app/domains/travel_ops/components/watch/notice_routing.py",
+    "final_project_cs/app/domains/travel_ops/components/watch/safety_pause.py",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_watch.py",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py",
+    "final_project_cs/config/guardrails.yaml",
+    "final_project_cs/scripts/run_sweepers.py"
+  ],
+  "data_hashes_matched": 6
+}

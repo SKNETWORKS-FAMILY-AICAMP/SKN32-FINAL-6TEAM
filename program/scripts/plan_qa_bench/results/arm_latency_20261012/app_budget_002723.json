@@ -1,0 +1,90 @@
+{
+  "utc": "2026-10-11T15:27:24.703952+00:00",
+  "state": {
+    "Status": "running",
+    "Running": true,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 1487473,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-11T15:26:48.574332182Z",
+    "FinishedAt": "2026-10-11T15:26:48.478309851Z",
+    "Health": {
+      "Status": "healthy",
+      "FailingStreak": 0,
+      "Log": [
+        {
+          "Start": "2026-10-11T15:26:53.86309897Z",
+          "End": "2026-10-11T15:26:54.163110655Z",
+          "ExitCode": 1,
+          "Output": "curl: (7) Failed to connect to 127.0.0.1 port 8043 after 5 ms: Could not connect to server\n"
+        },
+        {
+          "Start": "2026-10-11T15:26:59.163585528Z",
+          "End": "2026-10-11T15:26:59.268097484Z",
+          "ExitCode": 1,
+          "Output": "curl: (7) Failed to connect to 127.0.0.1 port 8043 after 0 ms: Could not connect to server\n"
+        },
+        {
+          "Start": "2026-10-11T15:27:04.269550764Z",
+          "End": "2026-10-11T15:27:04.39504792Z",
+          "ExitCode": 1,
+          "Output": "curl: (7) Failed to connect to 127.0.0.1 port 8043 after 0 ms: Could not connect to server\n"
+        },
+        {
+          "Start": "2026-10-11T15:27:09.396340119Z",
+          "End": "2026-10-11T15:27:09.512931487Z",
+          "ExitCode": 1,
+          "Output": "curl: (7) Failed to connect to 127.0.0.1 port 8043 after 0 ms: Could not connect to server\n"
+        },
+        {
+          "Start": "2026-10-11T15:27:14.513629242Z",
+          "End": "2026-10-11T15:27:14.61980969Z",
+          "ExitCode": 0,
+          "Output": "{\"status\":\"ok\"}"
+        }
+      ]
+    }
+  },
+  "memory_limit": 1610612736,
+  "mounts": [
+    {
+      "Type": "volume",
+      "Name": "tripilot-arm_ops",
+      "Source": "/var/lib/docker/volumes/tripilot-arm_ops/_data",
+      "Destination": "/srv/var/ops",
+      "Driver": "local",
+      "Mode": "rw",
+      "RW": true,
+      "Propagation": ""
+    },
+    {
+      "Type": "bind",
+      "Source": "/home/ubuntu/tripilot-serving/mobility/processed",
+      "Destination": "/data/mobility/processed",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": "rprivate"
+    }
+  ],
+  "image": "tripilot-arm-api:c4f5c3cb2944",
+  "labels": {
+    "com.docker.compose.config-hash": "d045a982e40332d24d7dabe776c14327ad2ca197a21e1817be05bbb9f2e534cb",
+    "com.docker.compose.container-number": "1",
+    "com.docker.compose.depends_on": "",
+    "com.docker.compose.image": "sha256:634f6cf3baf47068a96d7e66327f26fbcc940a2ea9055337dada0a86a3e648d4",
+    "com.docker.compose.oneoff": "False",
+    "com.docker.compose.project": "tripilot-arm",
+    "com.docker.compose.project.config_files": "/home/ubuntu/tripilot-serving/control/compose.yml",
+    "com.docker.compose.project.environment_file": "/home/ubuntu/tripilot-serving/control/control.env",
+    "com.docker.compose.project.working_dir": "/home/ubuntu/tripilot-serving/control",
+    "com.docker.compose.replace": "api-1",
+    "com.docker.compose.service": "api",
+    "com.docker.compose.version": "2.40.3"
+  },
+  "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0\n",
+  "memory_current": "973090816\n"
+}

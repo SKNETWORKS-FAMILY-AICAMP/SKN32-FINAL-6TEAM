@@ -1,0 +1,65 @@
+{
+  "observed_at_utc": "2026-10-09T01:11:32.308848+00:00",
+  "repositories": [
+    {
+      "repo_id": "perplexity-ai/pplx-embed-v2-late-0.6b",
+      "revision": "8fc2de24534aa3610d85fa59c463313a5f096455",
+      "last_modified_utc": "2026-10-08T14:34:03.000Z",
+      "created_at_utc": "2026-08-03T10:37:26.000Z",
+      "parameters": {
+        "parameters": {
+          "F32": 594321600
+        },
+        "total": 594321600
+      },
+      "card_data": {
+        "license": "mit",
+        "pipeline_tag": "feature-extraction",
+        "tags": [
+          "feature-extraction",
+          "sentence-similarity",
+          "mteb",
+          "sentence-transformers"
+        ],
+        "language": [
+          "multilingual"
+        ]
+      },
+      "weights": [
+        {
+          "name": "1_Dense/model.safetensors",
+          "bytes": 524376,
+          "lfs": {
+            "sha256": "ea18dae8901decaf9533aaeda9123a52770c8b65680f17e37d15ff6fce085172",
+            "size": 524376,
+            "pointerSize": 131
+          }
+        },
+        {
+          "name": "model.safetensors",
+          "bytes": 2377321184,
+          "lfs": {
+            "sha256": "107eaae48d026ea20458b30dd755a0f1475b34fcf5a1895123ad67a2385b9d6b",
+            "size": 2377321184,
+            "pointerSize": 135
+          }
+        }
+      ],
+      "weight_bytes": 2377845560,
+      "metadata_files": [
+        {
+          "name": "README.md",
+          "bytes": 3258,
+          "sha256": "c47db7d49bb32b4ba82c76a1148ec42bfb1e9967eb55b16b4482b58a5172bd51"
+        },
+        {
+          "name": "config.json",
+          "bytes": 2305,
+          "sha256": "c8f7eb8533d309e19fd62390779432c57c9f47dc3dc0e262bc2fadf46513210f"
+        }
+      ],
+      "weights_downloaded": false,
+      "path": "program/scripts/plan_qa_bench/results/release_watch_20261009_extra_v1/perplexity-ai__pplx-embed-v2-late-0.6b"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "checks": [
+    {
+      "name": "HTML ID 중복",
+      "passed": true,
+      "detail": 30
+    },
+    {
+      "name": "문제 묶음 수",
+      "passed": true,
+      "detail": 25
+    },
+    {
+      "name": "보고서 로컬 링크·앵커",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "접근 가능한 SVG",
+      "passed": true,
+      "detail": [
+        {
+          "viewbox": "0 0 720 1000",
+          "role": "img",
+          "aria-labelledby": "wiki-review-flow-title wiki-review-flow-desc"
+        }
+      ]
+    },
+    {
+      "name": "인용 문장·줄·해시 일치",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "정독 범위의 보수적 집계",
+      "passed": true,
+      "detail": "31/284"
+    }
+  ],
+  "passed": 6,
+  "total": 6
+}

@@ -1,0 +1,36 @@
+{
+  "source_hash_matches": 216,
+  "backup_hash_matches": 4,
+  "local_links": [
+    "final_project_cs/wiki/records/evidence/2026-10-09_0822_도보비교_입력검증/existing-data-audit-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0822_도보비교_입력검증",
+    "final_project_cs/scripts/mobility/compare_kakao_golden.py",
+    "final_project_cs/tests/unit/travel/mobility/test_walk_comparison_values_v1.py",
+    "final_project_cs/wiki/teams/mobility.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v29/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0822_도보비교_입력검증/backup-manifest-v1.json",
+    "final_project_cs/scripts/mobility/_backup/2026-10-09_0822_도보비교_입력검증/compare_kakao_golden.py",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0822_도보비교_입력검증/mobility.md",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0826_도보입력_검증결과/mobility.md",
+    "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0826_도보입력_결함종료/2026-10-09_0822_도보비교_입력검증_논리값과_비정상수치를_도보비교에_집계.md",
+    "final_project_cs/wiki/records/reports/2026-10-09_0826_도보비교_유효입력과_개발표본_집계_검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v28/mobility-readiness.html"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0826_도보비교_유효입력과_개발표본_집계_검증.md": "2f19e4ca8f0ff8eb9aeed8eb7e54e395e56a5e9fb64c794e267c5abe1ed48765",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v29/mobility-readiness.html": "c2877c10fbcb6aaef93e14d54f8eff838db7cc3ae6fc270d9caa4e0be33593d0",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v29/readiness-catalog.json": "356a494d16430af7ffb9b41c92bfc5ab11718ebc4cf2ae992bc6e68342a73e84",
+    "final_project_cs/wiki/teams/mobility.md": "2189258755937ce15a9c8cef2b5396ca0958f22d0f4e79599f3bfed9e8d94af0",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0822_도보비교_입력검증/verification-proof-v1.json": "b51db79feeeaa5f4a148edb6f63f79a78d848b0ba70923a770906e0a8543644d",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0822_도보비교_입력검증/backup-manifest-v1.json": "5e21630d733c0fb320fdd322fc05937668d5a9539f0548adea86572b2b94a5f8"
+  },
+  "browser_render_verified": false,
+  "scan_scope": [
+    "final_project_cs/wiki/records/reports/2026-10-09_0826_도보비교_유효입력과_개발표본_집계_검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v29/mobility-readiness.html",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v29/readiness-catalog.json",
+    "final_project_cs/wiki/teams/mobility.md",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0822_도보비교_입력검증/verification-proof-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0822_도보비교_입력검증/backup-manifest-v1.json"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "html_parse": "passed",
+  "svg_xml_parse": "passed",
+  "accessible_title": true,
+  "links": [
+    {
+      "href": "../../../evidence/2026-10-11_1936_team_plugin_implementation/acceptance-mapping-v2.json",
+      "exists": true
+    },
+    {
+      "href": "../../../../teams/team-plugin-lifecycle.md",
+      "exists": true
+    }
+  ],
+  "screen_render_verified": false
+}

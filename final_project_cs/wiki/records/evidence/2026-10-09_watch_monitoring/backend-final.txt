@@ -1,0 +1,33 @@
+..F..................................................................... [ 32%]
+........................................................................ [ 65%]
+........................................................................ [ 98%]
+...                                                                      [100%]
+================================== FAILURES ===================================
+________ test_history_cursor_filters_detail_pages_and_tenant_isolation ________
+
+world = namespace(conn=<psycopg.Connection [INTRANS] (host=127.0.0.1 port=5433 user=postgres database=acop_cs) at 0x1f14721bdd..., 26, 24, 938573, tzinfo=datetime.timezone.utc), client=<starlette.testclient.TestClient object at 0x000001F14727AB10>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001F14721BD70>
+
+    def test_history_cursor_filters_detail_pages_and_tenant_isolation(world,monkeypatch):
+        w=world
+        for i in range(3):
+            run(w,lambda i=i: (monitoring.record('schedule',trip_id=w.trip_id,report={'verdict':'fatal' if i==1 else 'clear'}) or {'checked':1,'fatal':int(i==1)}),forced=i==2)
+        page=w.client.get('/admin/api/watch-runs',params={'limit':1}).json()
+        seen={page['runs'][0]['run_id']}
+        while page['next_cursor']:
+            page=w.client.get('/admin/api/watch-runs',params={'limit':1,'cursor':page['next_cursor']}).json()
+            assert page['runs'][0]['run_id'] not in seen
+            seen.add(page['runs'][0]['run_id'])
+>       assert len(seen)==3
+E       AssertionError: assert 2 == 3
+E        +  where 2 = len({'88f79ff1-8b2f-4f7f-922e-d51835bec919', '9e42eb14-4adb-46f4-83fb-ea452f414ccd'})
+
+tests\integration\test_watch_monitoring.py:103: AssertionError
+============================== warnings summary ===============================
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/integration/test_watch_monitoring.py::test_history_cursor_filters_detail_pages_and_tenant_isolation
+1 failed, 218 passed, 1 warning in 17.87s

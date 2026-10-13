@@ -1,0 +1,11 @@
+{
+  "created_at": "2026-10-09T01:40:48.563364+09:00",
+  "report": "2026-10-09_0140_출발관측_승차환승_재계산과_안내검증.md",
+  "target_passed": 49,
+  "regression_passed": 607,
+  "source_to_notice_passed": 2,
+  "independent_real_trip_samples": 0,
+  "production_consumer_assembled": false,
+  "late_case_replanning_connected": false,
+  "scope": "고정 입력·실제 계산기·로컬 DB 바깥함; 실제 승차·배포 응답 아님"
+}

@@ -38,6 +38,14 @@ def test_hotel_pick_pushes_next_and_preserves_stay():
     assert all(c["basis"] == "timetable" for c in got)
 
 
+def test_delaying_next_stop_preserves_preceding_inferred_end_for_reassembly():
+    rows = [row(0, "09:00", "10:00", provenance={"ends_at": {"rule": "intake.default_duration"}}),
+            row(1, "10:00", "11:00")]
+    got = fit(rows, touched={('source', 1)})
+    assert values(got) == {"items[0].ends_at": "10:00", "items[1].starts_at": "10:15", "items[1].ends_at": "11:15"}
+    assert rows[0]["end"] == "10:00"  # 원본을 늘려 이동시간을 지우지 않는다.
+
+
 def test_cascades_through_following_unlocked_items():
     got = fit([row(0, "09:00", "10:00"), row(1, "10:05", "11:05"), row(2, "11:10", "12:10")])
     assert values(got)["items[2].starts_at"] == "11:30"

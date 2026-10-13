@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-10-09T05:46:55.535552+09:00",
+  "root_running": true,
+  "other_live_agents_completed": [
+    "mobility_turn_audit",
+    "mobility_walk_diagnosis"
+  ],
+  "new_agents_spawned": 0,
+  "external_messages_sent": 0,
+  "scope": "이 대화의 live agent 목록; 다른 모든 앱 세션의 실행 여부를 확인한 것은 아니다"
+}

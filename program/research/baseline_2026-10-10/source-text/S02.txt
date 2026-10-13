@@ -1,0 +1,50 @@
+SEI Configuration Management Models in Commercial Environments
+https://www.sei.cmu.edu/documents/1022/1991_005_001_645586.pdf
+
+=== PDF page 1 ===
+Technical Report
+CMU/SEI-91-TR-7
+ESD-9-TR-7
+Configuration Management Models
+in Commercial Environments
+Peter H. Feiler
+March 1991
+
+=== PDF page 42 ===
+In contrast  to version-oriented configuration management, change-oriented configuration
+management views configurations as being defined by a baseline configuration and a com-
+bination of change sets, i.e., a set of logical changes.  In  some respects, the two views are
+dual representations of configuration versions. This is illustrated in Figure 5-3.  The  figure
+shows both the version graph of a configuration (boxes) and the dual version  graph of
+change sets (shaded ellipses). The apparent duality  is due to the fact that the configuration
+versions can be expressed in terms of the baseline configuration and the change sets.
+Base
+R2.0 = Base + CS3
+S
+R1.1 =  Base + CS1
+R1.2 =  Base + CS1 + CS2
+CS1
+CS2
+CS3
+Figure 5-3: Version Graph of Configuration and Corresponding Change Sets
+The change-oriented view differs from  the version-oriented view in two ways. First, the ex-
+plicit representation of logical changes permits tracking of change sets with respect  to both
+individual components and  configurations. Second, the ability to refer to individual change
+sets and selectively include them in configurations provides support  for managing the evolu-
+tion of a system based on propagation of logical changes to a set of maintained system
+configurations. This latter ability breaks the duality of configuration and change  set versions.
+The next two sections address the two differences.
+5.1.2. Change Set Tracking
+Having change sets as named and manipulable entities allows developers to  ask questions
+about their relationship to system components and configurations. These queries fall into the
+following categories:
+• Determining which components have been modified as part of a logical change.
+This information can provide insight into whether for certain logical changes the
+same set of components requires modification, i.e., there exists a logical  de-
+pendency that may potentially not be recorded explicitly in the system structure.
+• Determining the collection of  change sets a particular components is part of.
+This information can provide insight into the stability of a component  based on
+the frequency and type of logical change. The type of a  logical change may be
+recorded as part of the  history log or as a user-defined attribute of the change
+set, e.g., bug fix, enhancement, generalization, portability improvement.
+40 CMU/SEI-91-TR-7

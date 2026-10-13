@@ -1,0 +1,125 @@
+{
+  "date_kst": "2026-10-10",
+  "recorded_at_utc": "2026-10-10T01:28:52.252411+00:00",
+  "research_completed": true,
+  "review_completed": true,
+  "implementation_completed": true,
+  "measurement_completed": true,
+  "research": {
+    "reviewed": 4,
+    "selected": 4,
+    "primary_sources": "program/research/daily_rag_slm/2026-10-10_sources_and_review_v1.json",
+    "published_oct8_checked_oct10": true
+  },
+  "implementation": {
+    "method": "SFT-as-context travel adaptation",
+    "logic_passed": 7,
+    "logic_total": 7,
+    "compiled_files": 4,
+    "preregistration": "program/research/daily_rag_slm/2026-10-10_context_prereg_v1.json",
+    "product_adoption": false
+  },
+  "measurement": {
+    "completed_conditions": 6,
+    "total_conditions": 6,
+    "completed_questions": 13122,
+    "planned_questions": 13122,
+    "unparsed": 7,
+    "errors": 0,
+    "D3_gate_pass": false,
+    "E_pending": false,
+    "recount": "program/scripts/plan_qa_bench/results/heartbeat_20261010_1400/recount.json",
+    "paired_comparison": "program/scripts/plan_qa_bench/results/daily_20261010_1003/context_D3_paired_comparison.json",
+    "E_gate_pass": false,
+    "paired_E_comparison": "program/scripts/plan_qa_bench/results/heartbeat_20261010_1400/context_E_paired.json"
+  },
+  "model_release_check": {
+    "prior_revisions_checked": 9,
+    "changed": 0,
+    "new_candidates_screened": 2,
+    "all_checked": 11,
+    "evidence": "program/scripts/plan_qa_bench/results/daily_20261010_1003/model_revision_checks.json",
+    "weights_downloaded": false
+  },
+  "newly_collected_before_daily": {
+    "A_new_rows": 3340,
+    "B_new_rows": 4734,
+    "total_new_rows": 8074,
+    "A_files_sha256_verified": 44,
+    "B_files_sha256_verified": 15,
+    "source_first_pass_rows_reused": 13122
+  },
+  "gpu_A": {
+    "observed_at_utc": "2026-10-10T01:23:49.660749+00:00",
+    "gpu": "3372 MiB, 88 %",
+    "worker_lock_held": true,
+    "registered": 153,
+    "context_completed": 3,
+    "context_running": 1,
+    "context_ready_pending": 2,
+    "context_expected": 13122,
+    "free_bytes": 3815219200,
+    "existing_worker_restarted": false,
+    "latest_manifest_registration": {
+      "recorded_at_utc": "2026-10-10T01:32:37.352963+00:00",
+      "registered": 154,
+      "added_missing_condition": "e4bbase_oos2_multi_items_bc_a1",
+      "added_expected": 835,
+      "evidence": "program/scripts/plan_qa_bench/results/daily_20261010_1003/missing_oos2_registration.json",
+      "preserved_existing_worker": true
+    }
+  },
+  "gpu_B": {
+    "current": "NF4 cosine seed20261014 E running; FINCH E pending",
+    "current_observation_utc": null,
+    "followup_dispatcher_alive": true,
+    "followup_waits_for_prior_exit_and_lock": true,
+    "followup_main_conditions": 4,
+    "followup_main_rows": 8748,
+    "followup_smoke_rows": 24,
+    "existing_worker_preserved": true
+  },
+  "oracle_ARM": {
+    "observed_at_utc": "2026-10-10T01:19:42.392068+00:00",
+    "resource_summary": {
+      "window_s": 300.076701139973,
+      "cpu_pct_two_cores": 84.48575382123477,
+      "host_cpu_busy_pct": 92.72845323364841,
+      "host_steal_pct": 0.16956969600294403,
+      "memory_current_bytes": 7208022016,
+      "above_20_contiguous_seconds": 27777.200709733996,
+      "five_minute_target_verified": true
+    },
+    "host_resource_observation": {
+      "memtotal": 12503744512,
+      "memavailable": 5337956352,
+      "host_used_percent": 57.309137699693906,
+      "root_total_bytes": 102888095744,
+      "root_used_bytes": 58129739776,
+      "root_available_bytes": 44741578752,
+      "observed_at_utc": "2026-10-10T01:23:46.200069+00:00"
+    },
+    "active": {
+      "at": "2026-10-10T01:17:10.324761+00:00",
+      "job_id": "e4bt_q4_d3_nocache",
+      "engine_pid": 266244,
+      "expected": 360,
+      "saved": 101
+    },
+    "no_new_restart": true,
+    "app_deployment_or_correctness_not_claimed": true
+  },
+  "independent_validation": {
+    "E_human_reviewed": 0,
+    "E_human_total": 158,
+    "human_sample_sha256": "d07396c826cd587c05364fbff3526f6f6fd7e6daecf39464f6f49873d1767743",
+    "new_720_holdout_frozen": false
+  },
+  "resume": [
+    "Collect candidate-order D3/E answers without rerunning; paired exact test and itinerary bootstrap after completion",
+    "Complete B oos1/oos2r E, then dispatcher starts missing oos2/oos3 smoke and D3/E",
+    "ARM continues successful profile HTTP stability repetitions; preserve failed profiles and diagnose timeouts separately",
+    "Human E adjudication and independent holdout remain mandatory before model adoption"
+  ],
+  "latest_six_hour_report": "final_project_cs/wiki/records/reports/2026-10-10_1400_six-hour-gpu-arm-report.md"
+}

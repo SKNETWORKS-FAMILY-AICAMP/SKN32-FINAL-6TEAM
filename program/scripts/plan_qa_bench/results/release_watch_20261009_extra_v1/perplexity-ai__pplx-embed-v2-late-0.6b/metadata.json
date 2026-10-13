@@ -1,0 +1,169 @@
+{
+  "_id": "6a706f666036156bc3559218",
+  "id": "perplexity-ai/pplx-embed-v2-late-0.6b",
+  "private": false,
+  "pipeline_tag": "feature-extraction",
+  "library_name": "sentence-transformers",
+  "tags": [
+    "sentence-transformers",
+    "safetensors",
+    "qwen3_5",
+    "feature-extraction",
+    "sentence-similarity",
+    "mteb",
+    "multilingual",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 452,
+  "likes": 43,
+  "modelId": "perplexity-ai/pplx-embed-v2-late-0.6b",
+  "author": "perplexity-ai",
+  "sha": "8fc2de24534aa3610d85fa59c463313a5f096455",
+  "lastModified": "2026-10-08T14:34:03.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3_5Model"
+    ],
+    "model_type": "qwen3_5",
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    },
+    "chat_template_jinja": "{%- for message in messages if message['role'] == 'system' -%}\n{%- for content in message['content'] -%}{{ content['text'] }}{%- endfor -%}\n{%- endfor -%}\n{%- for message in messages if message['role'] != 'system' -%}\n{%- for content in message['content'] if content['type'] == 'image' -%}\n{{ '<|vision_start|><|image_pad|><|vision_end|>' }}\n{%- endfor -%}\n{%- for content in message['content'] if content['type'] == 'text' -%}\n{{ content['text'] }}\n{%- endfor -%}\n{%- endfor -%}"
+  },
+  "cardData": {
+    "license": "mit",
+    "pipeline_tag": "feature-extraction",
+    "tags": [
+      "feature-extraction",
+      "sentence-similarity",
+      "mteb",
+      "sentence-transformers"
+    ],
+    "language": [
+      "multilingual"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "1_Dense/config.json",
+      "blobId": "366d1581f4c91fda3a014ef96a8f6177d517f64c",
+      "size": 238
+    },
+    {
+      "rfilename": "1_Dense/model.safetensors",
+      "blobId": "4e1c150545f8187fd7efd1c6fdaae397e1c9aaea",
+      "size": 524376,
+      "lfs": {
+        "sha256": "ea18dae8901decaf9533aaeda9123a52770c8b65680f17e37d15ff6fce085172",
+        "size": 524376,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "2_MultiVectorMask/config.json",
+      "blobId": "0ddde6f921585ed30d4db744681cf2744720c904",
+      "size": 391
+    },
+    {
+      "rfilename": "3_Normalize/config.json",
+      "blobId": "d673424086be2dbb2563e7e185f2b563ab08864b",
+      "size": 89
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "49d99853e55b291092b42dd125eb9cc13129211c",
+      "size": 3258
+    },
+    {
+      "rfilename": "assets/logo.svg",
+      "blobId": "97329b235500e9000d8ab3458a2f4de93e9cd883",
+      "size": 48565
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "1c3207c49fd36e3773fc55cf7529794068164ef0",
+      "size": 479
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "7aee98dc124634d107aac9d30b42da308ddcecde",
+      "size": 2305
+    },
+    {
+      "rfilename": "config_sentence_transformers.json",
+      "blobId": "085f0731dfee789a98394c2add0a60bf8278e553",
+      "size": 264
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "1f7ed4b2d9aa06cb67d8b3ce6f967380c3e698ea",
+      "size": 2377321184,
+      "lfs": {
+        "sha256": "107eaae48d026ea20458b30dd755a0f1475b34fcf5a1895123ad67a2385b9d6b",
+        "size": 2377321184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modules.json",
+      "blobId": "ae8ddd4a5d6edb80fc45d7b6d31b778dd271d1f8",
+      "size": 535
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "d930603426506875d58aca111350b7edf6df3ca3",
+      "size": 1351
+    },
+    {
+      "rfilename": "requirements.txt",
+      "blobId": "8914dedf5f61328895256b7ffec2f2701d054248",
+      "size": 63
+    },
+    {
+      "rfilename": "sentence_bert_config.json",
+      "blobId": "d6e8d31d2eacd63767fb10091a18c4d7bb5fdc4b",
+      "size": 664
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "438a5e5bdd0392e6c6c1c76b530aa75768cfac31",
+      "size": 19989705,
+      "lfs": {
+        "sha256": "a171436d73b1d30b9ba99ff6b7f15efcf45cf428b6ff908842286a8057030b1c",
+        "size": 19989705,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "7c00fd2b9e23a9e332432d115dafc57fa18babf3",
+      "size": 1195
+    }
+  ],
+  "spaces": [
+    "tardellirs/model-pulse",
+    "mteb/leaderboard",
+    "fastgpu/vram-and-gpu-cost-calculator"
+  ],
+  "createdAt": "2026-08-03T10:37:26.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 594321600
+    },
+    "total": 594321600
+  },
+  "usedStorage": 2397835265
+}

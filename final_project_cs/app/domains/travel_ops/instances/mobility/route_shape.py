@@ -13,7 +13,8 @@
   note     왜 그렇게 그렸는지 한 줄(예: 「버스 노선 형상은 없어 직선으로 잇는다」)
 
 대중교통: 지하철은 **탄 역 좌표를 순서대로 잇는다**(실제 선로 곡선이 아니다 — 선로 형상 자료가 없다) + 양 끝 걸음은 도로 그래프 foot 길.
-         버스는 정류장 목록이 일정에 없어(노선 번호만) 직선으로 잇는다.
+         저장된 승하차 문맥이 있으면 버스는 선택 노선의 정류장을 순서대로 잇고, 지하철은 선택 편성의 경유 방향을 따른다.
+         정류장 경유선은 실제 도로 형상이 아니며 선택 문맥이 없는 옛 버스 일정은 직선으로 잇는다.
 못 구했을 때(길찾기 꺼짐 · 지도 밖 · 경로 없음)는 직선 + `grade=근거없음` 으로 내리고 이유를 note 에 적는다 — 조용히 빼지 않는다.
 """
 from __future__ import annotations
@@ -107,6 +108,18 @@ def _line_order():
     try:
         return getattr(engine_runtime.get_verifier(**wiring._STATE["kw"])._v, "lo", None)
     except Exception:                              # noqa: BLE001 — 형상은 보조 정보라 계산기 오류로 화면 전체를 막지 않는다
+        return None
+
+
+def _bus_routes():
+    """이미 적재된 노선별 정류장 순서. 지도 요청에서 외부 버스 API를 호출하지 않는다."""
+    from . import wiring
+    if wiring.mode() != "enabled":
+        return None
+    from .engine import runtime as engine_runtime
+    try:
+        return getattr(engine_runtime.get_verifier(**wiring._STATE["kw"])._v, "bus", None)
+    except Exception:                              # noqa: BLE001 — 보조 형상에 자료가 없으면 이유와 직선을 내린다
         return None
 
 
@@ -214,7 +227,7 @@ def _planned(route_def: dict | None) -> dict | None:
 
 
 def build_shape(a: tuple[float, float], b: tuple[float, float], route_def: dict | None, *, router, sc,
-                detail: bool = False, lo=None) -> dict[str, Any]:
+                detail: bool = False, lo=None, bus=None, context=None) -> dict[str, Any]:
     """장소 a → b (둘 다 (경도, 위도)) 한 구간의 경로선. 계획 수단(route_def.planned)을 따른다.
 
     `detail=False` 는 축소용(모양 오차 2 m 안 · 점 최대 `MAX_POINTS`), `True` 는 확대용 상세 선(원본에 가깝게 · 최대 `MAX_POINTS_DETAIL`)."""
@@ -222,7 +235,44 @@ def build_shape(a: tuple[float, float], b: tuple[float, float], route_def: dict 
     mode = _kind(option)
     straight = [list(a), list(b)]
     note: str | None = None
-    if mode in ("walk", "bike", "taxi"):
+    rides = []
+    selected, context_error = None, None
+    if mode in ("subway", "bus", "mixed") and context is not None:
+        from .shape_transit import selected_option, segments
+        selected, context_error = selected_option(context, (option or {}).get('id'))
+        if selected is not None:
+            modes = [leg.get('mode', 'subway') for leg in selected['legs']]
+            consistent = (set(modes) == {mode} if mode != 'mixed'
+                          else {'bus', 'subway'} <= set(modes) or modes.count('bus') >= 2)
+            if not consistent:
+                sections, context_error = None, '계획 수단과 저장된 경로 문맥이 불일치하여 직선으로 잇는다'
+            else:
+                sections, context_error = segments(selected, bus=bus, sc=sc, lo=lo, ride_names=_ride_names)
+            if sections is not None:
+                line, notes, previous = [], [], list(a)
+                for points, ride, section_note in sections:
+                    if previous != points[0]:
+                        walk, why = _route(router, tuple(previous), tuple(points[0]), 'foot')
+                        line.extend(walk or [previous, points[0]])
+                        if walk is None:
+                            notes.append(f'역·정류장 접근/환승 걸음은 직선({why})')
+                    line.extend(points)
+                    previous = points[-1]
+                    rides.append(ride)
+                    if section_note not in notes:
+                        notes.append(section_note)
+                if previous != list(b):
+                    walk, why = _route(router, tuple(previous), b, 'foot')
+                    line.extend(walk or [previous, list(b)])
+                    if walk is None:
+                        notes.append(f'역·정류장→도착 장소 걸음은 직선({why})')
+                source = 'transit_stops' if mode == 'mixed' else 'bus_stops' if mode == 'bus' else 'stations'
+                grade, note = '추정', ' · '.join(notes)
+    if context_error:
+        line, source, grade, note = straight, 'straight_line', '근거없음', context_error
+    elif selected is not None:
+        pass                                      # 저장된 선택 구간을 이미 그렸다. uses로 방향을 다시 고르지 않는다.
+    elif mode in ("walk", "bike", "taxi"):
         coords, why = _route(router, a, b, {"walk": "foot", "bike": "bike", "taxi": "car"}[mode])
         if coords:
             line, source, grade = coords, "local_road_graph", "추정"
@@ -256,7 +306,7 @@ def build_shape(a: tuple[float, float], b: tuple[float, float], route_def: dict 
     else:
         line, source, grade, note = straight, "straight_line", "근거없음", "계획 수단을 몰라 직선으로 잇는다"
     line = _fit(line, MAX_POINTS_DETAIL if detail else MAX_POINTS, tol_m=0.5 if detail else SIMPLIFY_TOLERANCE_M)
-    extra = {"rides": rides} if mode in ("subway", "mixed") and source == "stations" else {}
+    extra = {"rides": rides} if rides and source in ('stations', 'bus_stops', 'transit_stops') else {}
     return {**extra, "mode": mode, "line": {"type": "LineString", "coordinates": line}, "source": source, "grade": grade,
             "distance_m": round(_length(line)), "note": note}
 
@@ -272,6 +322,7 @@ def shapes_for_items(items, *, detail: bool = False) -> list[dict[str, Any]]:
 
     router, sc = _engine()
     lo = _line_order()
+    bus = _bus_routes()
     out = []
     for n, it in enumerate(ordered):
         if it.kind != "mobility":
@@ -280,7 +331,8 @@ def shapes_for_items(items, *, detail: bool = False) -> list[dict[str, Any]]:
         after = next((x for x in ordered[n + 1:] if x.kind != "mobility" and xy(x)), None)
         if before is None or after is None:
             continue
-        shape = build_shape(xy(before), xy(after), (it.detail or {}).get("route_def"), router=router, sc=sc, detail=detail, lo=lo)
+        shape = build_shape(xy(before), xy(after), (it.detail or {}).get("route_def"), router=router, sc=sc,
+                            detail=detail, lo=lo, bus=bus, context=(it.detail or {}).get('departure_context'))
         out.append({"item_id": str(it.item_id), "from_item_id": str(before.item_id), "to_item_id": str(after.item_id),
                     "from": (before.place or {}).get("name") or before.title, "to": (after.place or {}).get("name") or after.title,
                     **shape})
@@ -306,6 +358,7 @@ def shapes_for_review(review: dict[str, Any] | None, *, detail: bool = False) ->
 
     router, sc = _engine()
     lo = _line_order()
+    bus = _bus_routes()
     out = []
     for m in review.get("moves") or []:
         a_it, b_it = items.get(m.get("from")), items.get(m.get("to"))
@@ -314,13 +367,15 @@ def shapes_for_review(review: dict[str, Any] | None, *, detail: bool = False) ->
             continue
         mode = m.get("mode")
         uses = m.get("uses") or []
-        if mode in ("subway", "transit") and not uses:
+        context = m.get('departure_context')
+        if mode in ("subway", "transit") and not uses and context is None:
             shape = build_shape(a, b, None, router=router, sc=sc, detail=detail, lo=lo)
             shape["note"] = "저장된 검사에 탄 역 정보가 없어 직선으로 잇는다(새로 접수하면 역 좌표를 따라 그린다)"
         else:
-            opt_id = _REVIEW_MODE_ID.get(mode)
+            opt_id = m.get('selected_option_id') if context is not None else _REVIEW_MODE_ID.get(mode)
             route_def = ({"planned": opt_id, "options": [{"id": opt_id, "uses": uses}]} if opt_id else None)
-            shape = build_shape(a, b, route_def, router=router, sc=sc, detail=detail, lo=lo)
+            shape = build_shape(a, b, route_def, router=router, sc=sc, detail=detail, lo=lo,
+                                bus=bus, context=context)
         out.append({"from_item_id": str(m["from"]), "to_item_id": str(m["to"]),
                     "from": (a_it.get("place") or {}).get("name") or a_it.get("title"),
                     "to": (b_it.get("place") or {}).get("name") or b_it.get("title"), **shape})

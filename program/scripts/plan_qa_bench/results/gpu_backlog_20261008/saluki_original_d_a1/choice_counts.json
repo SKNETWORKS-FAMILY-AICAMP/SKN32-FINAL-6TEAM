@@ -1,0 +1,271 @@
+{
+  "model": "Underdog-Saluki-27B-1.0 IQ2-mix publisher original",
+  "our_training": false,
+  "publisher_training": "Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning",
+  "suite": "D",
+  "saved": 2735,
+  "expected": 2735,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "single_choice_expected": 2669,
+  "compound_diagnostic_total": 66,
+  "positive": {
+    "total": 883,
+    "correct": 771,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8495808873178599,
+      0.893505707749906
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.004331618444859839
+    ]
+  },
+  "negative": {
+    "total": 1786,
+    "correct": 1710,
+    "false_pick": 76,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9470624785074213,
+      0.9658675421641436
+    ],
+    "false_pick_wilson95": [
+      0.03413245783585641,
+      0.05293752149257879
+    ]
+  },
+  "subtypes": {
+    "absent_but_plausible": {
+      "total": 78,
+      "correct": 78,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9530621902878059,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    },
+    "change_request": {
+      "total": 79,
+      "correct": 79,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9536287883460772,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "chitchat": {
+      "total": 1300,
+      "correct": 1231,
+      "false_pick": 69,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9333665417218833,
+        0.9578461069777617
+      ],
+      "false_pick_wilson95": [
+        0.04215389302223825,
+        0.06663345827811668
+      ]
+    },
+    "compound_intent": {
+      "total": 66,
+      "correct": 48,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6095777422224589,
+        0.8199665500441133
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05500255701354129
+      ]
+    },
+    "confusable_name": {
+      "total": 77,
+      "correct": 73,
+      "false_pick": 4,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8739071685752308,
+        0.9796152814963542
+      ],
+      "false_pick_wilson95": [
+        0.020384718503645788,
+        0.12609283142476915
+      ]
+    },
+    "context_pronoun": {
+      "total": 71,
+      "correct": 67,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8639039420002305,
+        0.9778754806983033
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05132795219689034
+      ]
+    },
+    "duplicate_place": {
+      "total": 79,
+      "correct": 77,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9123141537110886,
+        0.9930296326934152
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "nameless_description": {
+      "total": 75,
+      "correct": 65,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7716683625530486,
+        0.9259341529595605
+      ],
+      "false_pick_wilson95": [
+        3.469446951953614e-18,
+        0.04872384248280587
+      ]
+    },
+    "negation": {
+      "total": 72,
+      "correct": 68,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8656798403400208,
+        0.9781857840186834
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05065117259645781
+      ]
+    },
+    "ordinal_relative": {
+      "total": 80,
+      "correct": 69,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7703289993301339,
+        0.9214528567566089
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "out_of_scope": {
+      "total": 80,
+      "correct": 79,
+      "false_pick": 1,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9325372992233133,
+        0.9977900244795476
+      ],
+      "false_pick_wilson95": [
+        0.0022099755204522745,
+        0.06746270077668665
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 300,
+      "correct": 221,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6840604965627417,
+        0.7832884970576399
+      ],
+      "false_pick_wilson95": [
+        8.673617379884035e-19,
+        0.012642971224546034
+      ]
+    },
+    "tourist_synth_out": {
+      "total": 300,
+      "correct": 298,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9760224167496929,
+        0.998169851642088
+      ],
+      "false_pick_wilson95": [
+        0.0018301483579117855,
+        0.023977583250306973
+      ]
+    },
+    "typo_slang": {
+      "total": 78,
+      "correct": 76,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9112472996432415,
+        0.9929399065272408
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "b0ffe4268f6869c8417724955b820c361f45e6203b3eaa3a7911ec407e3fac3f",
+  "gold_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+  "execution": {
+    "job": {
+      "id": "saluki_original_d_a1",
+      "suite": "d",
+      "label": "Underdog-Saluki-27B-1.0 IQ2-mix publisher original",
+      "our_training": false,
+      "publisher_training": "Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning",
+      "model": "/tmp/tripilot-saluki-20261009/smoke_verified_model.gguf",
+      "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+      "model_revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "prompts": "/workspace/heavy/all_prompts.json",
+      "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+      "expected": 2735,
+      "script": "/tmp/tripilot-saluki-20261009/saluki_eval_20261009.py",
+      "runner_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+      "tag": "saluki_original_d_a1",
+      "port": 8401,
+      "logprobs": "1",
+      "purpose": "Matched frozen developer/regression suite; not holdout or adoption",
+      "dependency": "/tmp/tripilot-saluki-20261009/SMOKE_PASS.json",
+      "ephemeral_ram_model": true,
+      "automatic_retry": false
+    },
+    "started": "2026-10-08T20:10:06.544176+00:00",
+    "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+    "script_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

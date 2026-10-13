@@ -1,0 +1,726 @@
+{
+  "observed_at_utc": "2026-10-09T02:34:43.558179+00:00",
+  "worker_pid": 342497,
+  "worker_cmdline": "python3 /tmp/tripilot-a-backlog-20261008/gpu_eval_queue.py --root /tmp/tripilot-a-backlog-20261008 ",
+  "GPU": "94 %, 5108 MiB, 16380 MiB\n",
+  "available_bytes": 4270678016,
+  "ready": [
+    {
+      "id": "winnow_oos_multi_items_bc_a1",
+      "checks": {
+        "model": true,
+        "prompts": true,
+        "script": true,
+        "lora": true
+      }
+    }
+  ],
+  "blocked": [],
+  "state": {
+    "jobs": {
+      "frog_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "frog_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_h": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bbase_mx": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bbase_d": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 13
+      },
+      "e4bbase_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_d3": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 2
+      },
+      "g12bbase_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "g12bbase_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "g12bbase_d": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 2
+      },
+      "g12bbase_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "g12bbase_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_original_h": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 19
+      },
+      "winnow_original_mx": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 42
+      },
+      "winnow_original_d": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 53
+      },
+      "winnow_original_d2": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 13
+      },
+      "winnow_original_d3": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 13
+      },
+      "winnow_oos_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_oos_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_oos_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_oos_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_oos_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_original_d2": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bqat_original_h": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bqat_original_mx": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 4
+      },
+      "e4bqat_original_d3": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 1
+      },
+      "e4bqat_oos1_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos1_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_original_d": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 17
+      },
+      "e4bqat_oos1_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos1_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos1_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos3_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_oos2r_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_cosine_s20261012_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "saluki_original_smoke12_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 12,
+        "expected": 12,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "saluki_original_d3_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "saluki_original_mx_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "saluki_original_h_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "saluki_original_d_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "saluki_original_d2_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_finch_s20261012_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_finch_s20261012_d3": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_finch_s20261012_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_finch_s20261012_d": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_finch_s20261012_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_finch_s20261012_d2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1000,
+        "expected": 1000,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_finch_s20261012_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_finch_s20261012_h": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_finch_s20261012_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_finch_s20261012_mx": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_multi_items_bc_a1": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 835,
+        "expected": 835,
+        "complete": true,
+        "failed_or_unparsed": 5
+      },
+      "e4bqat_original_multi_items_bc_a1": {
+        "status": "completed_with_errors",
+        "exit_code": 0,
+        "saved": 835,
+        "expected": 835,
+        "complete": true,
+        "failed_or_unparsed": 6
+      },
+      "e4bbase_cosine_s20261012_multi_items_bc_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 835,
+        "expected": 835,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_cosine_s20261012_multi_items_bc_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 835,
+        "expected": 835,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "e4bbase_finch_s20261012_multi_items_bc_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 835,
+        "expected": 835,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "valen_08b_original_smoke12_a1": {
+        "status": "failed",
+        "exit_code": 1,
+        "saved": 0,
+        "expected": 12,
+        "complete": false,
+        "failed_or_unparsed": 0
+      },
+      "e4bqat_finch_s20261012_multi_items_bc_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 835,
+        "expected": 835,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "valen_08b_original_smoke12_a2": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 12,
+        "expected": 12,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "valen_08b_original_d3_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 360,
+        "expected": 360,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "valen_08b_original_mx_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 4014,
+        "expected": 4014,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "valen_08b_original_h_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 1316,
+        "expected": 1316,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "valen_08b_original_d_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 2735,
+        "expected": 2735,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "valen_08b_original_d2_a1": {
+        "status": "failed",
+        "exit_code": 1,
+        "saved": 0,
+        "expected": 1000,
+        "complete": false,
+        "failed_or_unparsed": 0
+      },
+      "g12bbase_multi_items_bc_a1": {
+        "status": "completed",
+        "exit_code": 0,
+        "saved": 835,
+        "expected": 835,
+        "complete": true,
+        "failed_or_unparsed": 0
+      },
+      "winnow_original_multi_items_bc_a1": {
+        "status": "running",
+        "pid": 363087,
+        "expected": 835,
+        "saved": 0
+      }
+    }
+  },
+  "manifest_sha256": "a4974c4ebf4640b8b1ef1006f7d373bba9b6810325cdbde74eadf4724cbde94a"
+}

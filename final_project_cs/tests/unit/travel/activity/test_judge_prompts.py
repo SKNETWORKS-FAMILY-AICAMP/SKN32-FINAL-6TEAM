@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+from app.domains.travel_ops.instances.activity import alternative_order
 from app.domains.travel_ops.instances.activity.judge import KINDS, prompt_key
 from app.domains.travel_ops.instances.activity.judge.llm import known_prompt_files
 from app.tools.read_tools import ALLOWED_PROMPT_KEYS
@@ -15,5 +16,6 @@ def test_every_kind_has_a_prompt_file():
 
 
 def test_every_kind_key_is_allowlisted_and_nothing_extra():
+    """★`[2026-10-13]` 대체 후보 순서(`alternative_order`)는 판정 종류가 아니지만 같은 폴더 · 같은 어댑터를 쓴다(코어 전달 사항 11번)."""
     judge_keys = {key for key in ALLOWED_PROMPT_KEYS if key.startswith("activity_judge.")}
-    assert judge_keys == {prompt_key(kind) for kind in KINDS}
+    assert judge_keys == {prompt_key(kind) for kind in KINDS} | {alternative_order.PROMPT_KEY}

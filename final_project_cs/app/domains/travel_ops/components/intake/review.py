@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import time
+from copy import deepcopy
 from datetime import date, datetime, time as dtime
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
@@ -31,13 +32,14 @@ from .assemble import collect
 from .hours import HoursFacts, closed_weekdays, facts_for, week_known_all, weekday_ko
 from .moves import Leg, late_text, leg_between
 from .terms import category_label
+from . import taxi_pricing
 
 KST = ZoneInfo("Asia/Seoul")
 #: 한 번 계산하는 동안 이동 계산기에 쓰는 시간 상한(초). 넘으면 남은 구간은 어림값으로 낸다(이유가 줄에 적힌다) — 화면이 끝없이 기다리지 않게. ★우리가 고른 값
 ENGINE_BUDGET_S = 25.0
 SOURCE_LABEL = {"places": "우리 장소 목록", "tour_api": "관광공사", "kakao": "카카오 지도", "customer_pick": "직접 고른 곳",
                 "customer": "직접 고른 곳"}
-_HOURS_CODES = {"before_opening", "after_closing", "after_last_entry", "break_time"}
+_HOURS_CODES = {"before_opening", "after_closing", "after_last_entry", "break_time", "outside_hours"}
 _RANK = {"bad": 4, "warn": 3, "filled": 2, "ok": 1, "unknown": 0}
 
 
@@ -255,16 +257,19 @@ def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) 
     today = hours_on(facts.attributes, day)
     dow = weekday_ko(day)
     codes = {v.code: v for v in vios}
+    # ★`[2026-10-13]` 활동 원장 판정(관광지) — 휴무 원문 · 중간에 닫힘을 활동 팀이 정했다(`hours.facts_for` ⑤)
+    act = facts.activity or {}
     # 휴무일
     if "closed_day" in codes or today == "closed":
-        closed = _line("closed", "bad", f"{dow}요일은 쉬는 날이에요 · 방문일이 휴무예요")
+        why = f"({act['quote']})" if act.get("closed") is True and act.get("quote") else ""
+        closed = _line("closed", "bad", f"{dow}요일은 쉬는 날이에요 · 방문일이 휴무예요{why}")
     else:
         off = closed_weekdays(facts.attributes)
         if off:
             closed = _line("closed", "ok", f"{'·'.join(off)}요일 휴무 · 방문은 {dow}요일")
         elif week_known_all(facts.attributes):
             closed = _line("closed", "ok", "쉬는 요일이 없어요")
-        elif today is not None:
+        elif today is not None or act.get("closed") is False:
             closed = _line("closed", "ok", f"{dow}요일은 열어요")
         else:
             closed = _line("closed", "unknown", "휴무 정보가 없어요")
@@ -274,7 +279,14 @@ def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) 
     # 운영시간
     if today == "closed" or "closed_day" in codes:
         return _line("hours", "unknown", "쉬는 날이라 운영하지 않아요"), closed
+    if act.get("cut_short") is True and act.get("closes_at") and act.get("usable_minutes"):
+        # 도착 때는 열려 있지만 끝나기 전에 닫는다 — 「이미 닫힘」과 안내가 다르다(머물 수 있는 분을 알린다)
+        return _line("hours", "warn", f"{act['closes_at']}에 닫아 {act['usable_minutes']}분만 머물 수 있어요"), closed
     if not isinstance(today, DayHours):
+        if act.get("within_hours") is False:
+            return _line("hours", "warn", "운영시간 밖이에요 · 시각을 옮겨 주세요"), closed
+        if act.get("within_hours") is True:
+            return _line("hours", "ok", "운영시간 안에 머물러요"), closed
         return _line("hours", "unknown", f"{dow}요일 운영시간을 읽지 못했어요"), closed
     opens, closes = today.opens.strftime("%H:%M"), today.closes.strftime("%H:%M")
     parts: list[tuple[str, str]] = []
@@ -285,6 +297,8 @@ def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) 
     if "after_last_entry" in codes:
         last = today.last_entry.strftime("%H:%M") if today.last_entry else ""
         parts.append(("warn", f"{last} 입장 마감이에요 · {row['start']} 시작은 늦어요"))
+    if "outside_hours" in codes and not parts:
+        parts.append(("warn", "운영시간 밖이에요 · 시각을 옮겨 주세요"))
     if "break_time" in codes:
         brk = facts.attributes.get("break") or ["", ""]
         parts.append(("warn", f"{brk[0]}–{brk[1]} 브레이크 타임에 걸쳐요"))
@@ -334,7 +348,7 @@ class _Budgeted:
         return answer
 
 
-def default_engine(party_size: int | None, modes: list[str] | None = None) -> Callable[..., Any] | None:
+def default_engine(party_size: int | None, modes: list[str] | None = None, *, constraints=None) -> Callable[..., Any] | None:
     """이동 계산기(시간표 판정). 제품 조립 불가는 전파하고 명시적 standalone의 기존 None 계약은 유지한다.
     ★`[2026-10-06]` 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013 `team_hooks/legs.py`).
     `modes` `[2026-10-07 이동수단 고르기]` 이 수단만으로 후보를 만드는 계산기 — 고객이 구간 수단을 골랐을 때 쓴다."""
@@ -343,7 +357,7 @@ def default_engine(party_size: int | None, modes: list[str] | None = None) -> Ca
     try:
         from app.domains.travel_ops.components.team_hooks import legs
 
-        return legs.leg_planner(party_size, {}, modes=modes)
+        return legs.leg_planner(party_size, constraints or {}, modes=modes)
     except TeamUnavailable:
         raise
     except Exception:                                     # noqa: BLE001 — 독립 실행의 기존 확인 화면 계약
@@ -385,6 +399,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             pass
 
     got = collect(sources=sources, claims=claims)
+    pricing = taxi_pricing.from_trip(got.trip)
+    pricing_constraints = taxi_pricing.constraints(pricing)
     rows = got.rows
     positions = {str(s["source_id"]): int(s["position"]) for s in sources}
     for r in rows:
@@ -396,9 +412,12 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     except (TypeError, ValueError):
         party = None
     if engine is None and use_engine:
-        engine = default_engine(party)
+        engine = default_engine(party, constraints=pricing_constraints) if pricing_constraints else default_engine(party)
         if engine_for_mode is None and engine is not None:
-            engine_for_mode = lambda mode: default_engine(party, [mode])        # noqa: E731
+            if pricing_constraints:
+                engine_for_mode = lambda mode: default_engine(party, [mode], constraints=pricing_constraints)  # noqa: E731
+            else:
+                engine_for_mode = lambda mode: default_engine(party, [mode])  # noqa: E731
     budgeted = _Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None
     dates = sorted({r["date"] for r in rows if r["date"]})
     day_no = {d: i + 1 for i, d in enumerate(dates)}
@@ -418,7 +437,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         seq_of[i] = len(parts) + 1
         attributes = dict(facts[i].attributes)
         parts.append(Part(seq=len(parts) + 1, kind=r["kind"], title=r["title"] or "(제목 없음)", starts_at=start,
-                          ends_at=end, place={"name": r["title"] or "", "attributes": attributes}))
+                          ends_at=end, place={"name": r["title"] or "", "attributes": attributes,
+                                              **({"activity": facts[i].activity} if facts[i].activity else {})}))
     violations = check_itinerary(parts)
     by_seq: dict[int, list[Violation]] = {}
     for v in violations:
@@ -516,7 +536,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         # ★재사용 키 — 이름과 정확한 좌표까지 넣는다(같은 자리에서 지점 이름만 바뀌어도 앞 판의 경로 문구가 남지 않게)
         pick = mode_pick.get(f"{ia['id']}~{ib['id']}")
         sig = (f"{pa['name']}|{pa['lat']!r},{pa['lon']!r}>{pb['name']}|{pb['lat']!r},{pb['lon']!r}@{a_end.isoformat()}>{b_start.isoformat()}"
-               f"#{ia['place_state']}{ib['place_state']}" + (f"#m={pick}" if pick else ""))        # ★고른 수단이 바뀌면 옛 이동을 재사용하지 않는다
+               f"#{ia['place_state']}{ib['place_state']}" + (f"#m={pick}" if pick else "") + taxi_pricing.signature(pricing))
         if sig in old_moves:
             # 재사용하는 것은 경로 계산뿐이다 — 어느 일정 · 몇째 날인지는 지금 판의 것으로 채운다(앞에 날짜가 하나 늘어 일차만 바뀐 경우)
             add_move({**old_moves[sig], "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]}, ia, ib)
@@ -541,7 +561,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     return {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
             "engine": ("timetable" if engines == {"timetable"} else "estimate" if engines == {"estimate"}
                        else "mixed" if engines else None),
-            "items": items, "moves": moves,
+            "items": items, "moves": moves, "taxi_pricing": pricing if pricing is not None else taxi_pricing.default(),
             "needs": {"items": needs_items, "moves": needs_moves, "total": needs_items + needs_moves},
             "ready": bool(items) and not got.problems and needs_items + needs_moves == 0}
 
@@ -561,7 +581,8 @@ def public(payload: dict[str, Any] | None) -> dict[str, Any] | None:
         items.append({**it, "place": public_place(place)})
     # `uses` 는 경로선을 그리는 쪽(`/route-shapes`)이 저장본에서 읽는다 — 확인 화면 응답 모양은 그대로 둔다
     return {**payload, "items": items,
-            "moves": [{k: v for k, v in m.items() if k not in ("sig", "uses")} for m in payload.get("moves", [])]}
+            "moves": [{k: v for k, v in m.items() if k not in ("sig", "uses", "departure_context", "selected_option_id")}
+                      for m in payload.get("moves", [])]}
 
 
 MOVE_MODES = ("subway", "bus", "taxi", "walk")
@@ -639,7 +660,9 @@ def _move(a: dict[str, Any], b: dict[str, Any], leg: Leg, provisional: list[str]
             "mode": leg.mode, "mode_label": leg.mode_label, "minutes": leg.minutes, "km": leg.km,
             "depart": _hm(leg.depart), "arrive": _hm(leg.arrive), "slack_min": leg.slack_min, "basis": leg.basis,
             "summary": f"{leg.mode_label} {leg.minutes}분 · {leg.km}km" + (" [추정]" if estimate else ""),
-            "fare_krw": leg.fare_krw, "sig": sig, "uses": list(leg.uses), "rows": [route, mode, arrival]}
+            "fare_krw": leg.fare_krw, "sig": sig, "uses": list(leg.uses),
+            "departure_context": deepcopy(leg.departure_context), "selected_option_id": leg.selected_option_id,
+            "rows": [route, mode, arrival]}
 
 
 # ── 저장 · 읽기 ──────────────────────────────────────────────────

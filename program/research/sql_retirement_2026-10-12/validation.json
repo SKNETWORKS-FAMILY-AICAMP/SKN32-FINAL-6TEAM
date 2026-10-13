@@ -1,0 +1,116 @@
+{
+  "passed": 27,
+  "total": 27,
+  "checks": [
+    {
+      "check": "local backup file hashes",
+      "passed": true
+    },
+    {
+      "check": "local actual restore five empty tables",
+      "passed": true
+    },
+    {
+      "check": "local actual legacy zero",
+      "passed": true
+    },
+    {
+      "check": "local exactly five removed",
+      "passed": true
+    },
+    {
+      "check": "local other schema preserved",
+      "passed": true
+    },
+    {
+      "check": "local travel six content hashes preserved",
+      "passed": true
+    },
+    {
+      "check": "local isolated two reruns",
+      "passed": true
+    },
+    {
+      "check": "deployed backup file hashes",
+      "passed": true
+    },
+    {
+      "check": "deployed actual restore five empty tables",
+      "passed": true
+    },
+    {
+      "check": "deployed actual legacy zero",
+      "passed": true
+    },
+    {
+      "check": "deployed exactly five removed",
+      "passed": true
+    },
+    {
+      "check": "deployed other schema preserved",
+      "passed": true
+    },
+    {
+      "check": "deployed travel six content hashes preserved",
+      "passed": true
+    },
+    {
+      "check": "deployed isolated two reruns",
+      "passed": true
+    },
+    {
+      "check": "document-backups.json preserved hashes",
+      "passed": true
+    },
+    {
+      "check": "wiki-backups.json preserved hashes",
+      "passed": true
+    },
+    {
+      "check": "final-wiki-fix-backups.json preserved hashes",
+      "passed": true
+    },
+    {
+      "check": "sql-status.png valid image",
+      "passed": true
+    },
+    {
+      "check": "travel-schema.png valid image",
+      "passed": true
+    },
+    {
+      "check": "program\\research\\sql_retirement_2026-10-12\\index.html local links exist",
+      "passed": true
+    },
+    {
+      "check": "program\\research\\wiki_review_2026-10-11\\wiki-review-v2.html local links exist",
+      "passed": true
+    },
+    {
+      "check": "datasets\\_archive\\2026-10-12_commerce_db_retirement\\REPORT.md local links exist",
+      "passed": true
+    },
+    {
+      "check": "embedded DB counts reflect snapshots",
+      "passed": true
+    },
+    {
+      "check": "review 25 cards kept",
+      "passed": true
+    },
+    {
+      "check": "W14 links new actual result",
+      "passed": true
+    },
+    {
+      "check": "24 choices confirmed, historical W11 preserved",
+      "passed": true
+    },
+    {
+      "check": "wiki final violations zero",
+      "passed": true
+    }
+  ],
+  "browser_rendering_checked": false,
+  "scope": "metadata, links, backup hashes, image file validity and document state; not browser rendering"
+}

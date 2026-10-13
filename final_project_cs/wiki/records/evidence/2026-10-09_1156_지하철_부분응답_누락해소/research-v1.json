@@ -1,0 +1,8 @@
+{
+  "checked_at": "2026-10-09T12:06:08.590262+09:00",
+  "official_docs": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+  "protocol_max_rows": 1000,
+  "sample_max_rows": 5,
+  "applied_assumption": "총건수/응답행수범위만대조,실제운행/ETA정확도는별도.",
+  "paper_algorithm_applied": false
+}

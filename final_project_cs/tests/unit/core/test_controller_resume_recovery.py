@@ -96,6 +96,41 @@ def reply(recovery, **overrides):
     return asyncio.run(recovery.controller.resume(**options))
 
 
+def test_team_exception_collects_after_failed_run_cleanup_and_preserves_exception(recovery, monkeypatch):
+    state = recovery
+    state.case['status'] = CaseStatus.RUNNING
+    steps = []
+    failure = RuntimeError('private provider response')
+    monkeypatch.setattr(state.controller.case_service, 'start_run', lambda *a, **k: uuid4())
+    monkeypatch.setattr(state.controller, '_task', lambda *a, **k: object())
+    monkeypatch.setattr(state.controller, '_abandon_run', lambda *a: steps.append('cleanup'))
+
+    async def execute(task):
+        raise failure
+
+    def collect(payload):
+        steps.append('collect')
+        assert payload['customer_id'] == state.case['customer_id']
+        assert payload['code'] == 'team_exception'
+        assert 'private provider response' not in str(payload)
+        return {'status': 'spooled'}
+
+    monkeypatch.setattr(state.controller, '_execute_team_task', execute)
+    state.controller.diagnostic_recorder = collect
+    with pytest.raises(RuntimeError) as raised:
+        asyncio.run(state.controller.run_case(tenant_id=state.case['tenant_id'], case_id=state.case['case_id']))
+    assert raised.value is failure and steps == ['cleanup', 'collect']
+
+
+def test_controller_collector_failure_is_visible_and_does_not_raise(recovery, caplog):
+    def broken(payload):
+        raise OSError('private diagnostic error')
+
+    recovery.controller.diagnostic_recorder = broken
+    assert recovery.controller._report_failure(recovery.case, 'team_exception') == {'status': 'collection_degraded'}
+    assert 'status=collection_degraded' in caplog.text and 'private diagnostic error' not in caplog.text
+
+
 def test_same_event_retries_interrupted_resuming_without_consuming_input_twice(recovery, monkeypatch):
     starts = []
     applied = []

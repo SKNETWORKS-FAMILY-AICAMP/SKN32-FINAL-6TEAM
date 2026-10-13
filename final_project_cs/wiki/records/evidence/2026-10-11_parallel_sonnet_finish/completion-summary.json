@@ -1,0 +1,73 @@
+{
+  "created_at": "2026-10-11T20:54:58.483892+09:00",
+  "product_fixes": 3,
+  "new_regression_cases": 55,
+  "previous_failures_resolved": 7,
+  "strict_feature_completion": {
+    "completed": 0,
+    "total": 21
+  },
+  "verification": {
+    "plan-regression-after": {
+      "tests": 56,
+      "passed": 56,
+      "seconds": 366.338,
+      "network_attempts": 0,
+      "limited_api_calls": 0
+    },
+    "final-related": {
+      "tests": 227,
+      "passed": 227,
+      "seconds": 92.446,
+      "network_attempts": 0,
+      "limited_api_calls": 0
+    }
+  },
+  "claude_reviews": [
+    {
+      "stream": "approved/departure-stdout",
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "is_error": false
+    },
+    {
+      "stream": "approved/fare-stdout",
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "is_error": false
+    },
+    {
+      "stream": "review-fixes/fare-stdout",
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "is_error": false
+    },
+    {
+      "stream": "review-fixes/taxi-stdout",
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "is_error": false
+    }
+  ],
+  "approved_exported_unique_files": [
+    "app/domains/travel_ops/components/watch/trip_reminders.py",
+    "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "app/domains/travel_ops/instances/mobility/engine/options.py",
+    "app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "app/domains/travel_ops/instances/mobility/engine/subway_departure.py",
+    "app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+    "tests/unit/travel/mobility/test_departure_observer_v1.py",
+    "tests/unit/travel/mobility/test_departure_source_to_notice_v1.py",
+    "tests/unit/travel/mobility/test_fare_discount_upper_v1.py",
+    "tests/unit/travel/mobility/test_subway_departure_v1.py",
+    "tests/unit/travel/mobility/test_transfer_fare_clock_v1.py",
+    "tests/unit/travel/mobility/test_transfer_fare_product_v1.py"
+  ],
+  "limited_data_api_calls": 0,
+  "deployment": false,
+  "actual_boarding_or_payment": false
+}

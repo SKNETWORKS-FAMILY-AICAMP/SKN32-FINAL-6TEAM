@@ -1,0 +1,18 @@
+{
+  "job": {
+    "id": "e4bbase_mx",
+    "label": "Gemma-4-E4B-it Q4_K_M",
+    "our_training": false,
+    "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+    "prompts": "/workspace/heavy/all_prompts_mx.json",
+    "script": "/workspace/heavy/d_test_llama_lp.py",
+    "tag": "mx_backlog_e4bbase",
+    "port": 8401,
+    "logprobs": "1",
+    "expected": 4014
+  },
+  "started": "2026-10-08T01:32:19.039218+00:00",
+  "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+  "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

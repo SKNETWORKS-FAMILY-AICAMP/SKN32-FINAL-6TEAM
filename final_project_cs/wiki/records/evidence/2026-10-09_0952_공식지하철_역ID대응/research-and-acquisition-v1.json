@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-10-09T09:59:20.966446+09:00",
+  "sources": [
+    {
+      "url": "https://data.seoul.go.kr/dataList/OA-12764/F/1/datasetView.do",
+      "scope": "full dataset description, official file list, metadata/license and ETA generation-time correction notice",
+      "downloaded_file_basis_date": "2026-09-02"
+    },
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "scope": "official fields previously verified; source file provides Shinlim ID not listed in older enum"
+    },
+    {
+      "url": "https://gtfs.org/documentation/realtime/reference/",
+      "scope": "prior turn unique trip/stop identity requirement; unchanged design reference, Seoul is not GTFS"
+    }
+  ],
+  "new_route_web_samples": 0,
+  "map_developer_api_calls": 0,
+  "actual_arrival_samples": 0,
+  "network_limitation": "Initial sandbox Python page read failed DNS. Authorized read-only escalation fetched official HTML and public xlsx successfully. No authentication key used.",
+  "research_requirement": "This unit fixes authoritative code-table mismatch with source data; no new prediction or routing algorithm adopted."
+}

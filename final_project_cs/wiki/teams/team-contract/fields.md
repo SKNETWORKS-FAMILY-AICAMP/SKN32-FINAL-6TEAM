@@ -5,6 +5,7 @@ description: TeamTask·TeamResult·Evidence·Manifest 의 필드·필수 여부�
 status: draft
 tags: [contract, architecture]
 domain: neutral
+domain_note: 도메인 공통 계약 필드이며 여행 업무는 필드 사례로만 나온다
 ---
 
 # Team 계약 필드 명세

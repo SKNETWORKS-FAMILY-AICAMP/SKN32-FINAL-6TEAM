@@ -1,0 +1,28 @@
+.............F.......F....                                               [100%]
+================================== FAILURES ===================================
+__ test_an_unavailable_required_move_engine_returns_503_without_an_estimate ___
+tests\e2e\test_mcp_read_tools.py:317: in test_an_unavailable_required_move_engine_returns_503_without_an_estimate
+    assert response.json()["error"]["reason"] == "engine_unavailable"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'details'
+_ test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons _
+tests\e2e\test_intake_transcription_differs_db.py:126: in test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons
+    assert item["place_state"] == "unresolved" and place["result"] == "bad"
+E   AssertionError: assert ('found' == 'unresolved'
+E     
+E     - unresolved
+E     + found)
+============================== warnings summary ===============================
+tests/e2e/test_mcp_read_tools.py::test_both_tools_are_read_only_and_exist_even_with_the_write_switch_off
+tests/e2e/test_mcp_read_tools.py::test_the_risk_tool_over_mcp_matches_the_web_and_a_stranger_gets_a_tool_error
+tests/e2e/test_mcp_read_tools.py::test_the_risk_tool_over_mcp_matches_the_web_and_a_stranger_gets_a_tool_error
+tests/e2e/test_mcp_read_tools.py::test_the_move_tool_over_mcp_reports_the_grade_and_never_leaks_the_key
+tests/e2e/test_mcp_read_tools.py::test_the_move_tool_over_mcp_reports_the_grade_and_never_leaks_the_key
+  C:\Users\playdata2\anaconda3\Lib\contextlib.py:105: DeprecationWarning: Use `streamable_http_client` instead.
+    self.gen = func(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_mcp_read_tools.py::test_an_unavailable_required_move_engine_returns_503_without_an_estimate
+FAILED tests/e2e/test_intake_transcription_differs_db.py::test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons
+2 failed, 24 passed, 5 warnings in 67.49s (0:01:07)

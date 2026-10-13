@@ -33,6 +33,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
+from copy import copy
 import logging
 import math
 from typing import Any, Callable
@@ -80,6 +81,21 @@ class GooglePlaces(TravelSource):
         # ★세기만 하는 호출(`price`)이 월 무료 한도를 넘는지 잴 표. 없으면 가드레일 표를 쓴다
         self._free_monthly = free_monthly
         self._on_over_free = on_over_free
+        self._prepaid_meter = None
+
+    def for_lookup(self):
+        """고객 범위를 공유하지 않는, HTTP 첫 예약 한 번의 전용 사본."""
+        source = copy(self)
+        source._prepaid_meter = None
+        return source
+
+    def reserve_first(self, meter: str) -> bool:
+        if self._prepaid_meter is not None:
+            raise RuntimeError("first_request_already_reserved")
+        if not self._allow() or not self._budget.try_reserve(meter):
+            return False
+        self._prepaid_meter = meter
+        return True
 
     def _http_request(self, method: str, url: str, headers: dict[str, str],
                       json: dict[str, Any] | None) -> httpx.Response:
@@ -95,9 +111,12 @@ class GooglePlaces(TravelSource):
             # ★`[2026-09-30 사용자 결정]` 상한 없이 **세기만** 한다 — 무료 한도를 넘으면 알린다
             self._count_uncapped(meter)
         else:
-            if not self._allow():
+            prepaid = self._prepaid_meter == meter
+            if prepaid:
+                self._prepaid_meter = None
+            elif not self._allow():
                 return None
-            if not self._budget.try_reserve(meter):
+            if not prepaid and not self._budget.try_reserve(meter):
                 # ★무료 한도 보호 — 부르지 않는다. 세고 「모름」으로 넘긴다(부르는 쪽이 fatal 로 센다)
                 self._miss("budget_exhausted", meter)
                 return None

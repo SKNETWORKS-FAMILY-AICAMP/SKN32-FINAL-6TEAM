@@ -1,24 +1,125 @@
 ---
 type: contract
-title: Team 실행 가용성과 조립 판
+title: Team 실행 가용성·조립 판 계약
 status: draft
 domain: neutral
+domain_note: 공통 실행 가용성·조립 판 계약이며 식당·이동은 현재 여행 구현의 적용 예시다
 ---
 
-# Team 실행 가용성과 조립 판
+# Team 실행 가용성·조립 판 계약
 
-`TeamRegistry.require_runnable(team_id, capability=None)`이 실행 객체를 얻는 관문입니다. `get`은 메타데이터 조회입니다. 비활성·부재·선택 로딩 실패를 `disabled`, `not_installed`, `load_failed`로 구분하고 `TeamUnavailable`로 거절합니다. HTTP는 `team_unavailable` 503이며 SSE·MCP도 같은 실패 의미를 유지합니다. 원격 일시 불가만 재시도 가능으로 표시합니다.
+접수 단계의 식당 영업시간 판정도 Dining 필수 계산입니다. 장소 행이 있는 경우와 관광 콘텐츠 번호·이름만 있는 경우 모두 같은 실행 관문을 사용하며, 후자는 `dining_ledger.catalog_state` hook으로 Team의 원장 구현에 위임합니다. 꺼진 Team을 우회하는 직접 원장 SQL을 컴포넌트에 두지 않습니다. 독립적인 기존 계획서 읽기와 새 영업시간 판정은 구분합니다.
 
-Team 선언의 `required`는 활성 구현의 로딩 실패 정책입니다. 비활성 구현은 required여도 import하지 않습니다. capability 중복·manifest 계약 major 불일치는 후보 조립 오류이며 조용히 격리하지 않습니다. TeamTask/TeamResult 전송 필드 계약은 이 내부 변경으로 판올림하지 않습니다.
+이동 판정의 JSON·MCP 읽기 도구도 필수 계산을 수행합니다. `TeamUnavailable`을 일반 `engine_error`와 직선거리 어림값으로 바꾸지 않으며 동일한 503·이유를 유지합니다. 그 밖의 실행 오류도 조립 판 안에서는 필수 엔진 불가로 명시하고 추정 성공을 발행하지 않습니다.
 
-Controller는 담당·capability를 task 생성과 답변·토큰 반영 전에 확인합니다. 실행 도중 필요해진 다른 Team의 필수 계산은 그 계산 관문에서 별도로 확인합니다. Core에 여행별 의존 관계를 하드코딩하지 않습니다. Local/A2A 모두 관문을 거치고 A2A 결과의 team_id/task_id/run_id를 대조합니다.
+2026-10-11 구현 착수 계약. [수명 관리 계획](../team-plugin-lifecycle.md)의 구현 경계입니다. 아직 구현·운영 완료를 주장하지 않습니다.
 
-Registry·Executor·계산 hook·Controller·revision을 같은 조립 판에 고정합니다. 준비 실패한 판은 게시하지 않습니다. 기존 요청은 이전 판으로 끝나며 새 요청은 새 판을 사용합니다. 담당 부재나 활성 엔진 미준비를 직선거리 추정·빈 결과·완료 상태로 바꾸지 않습니다.
+`TeamUnavailable(RuntimeError)`은 `team_id`, `reason`과 외부 코드 `team_unavailable`을 가지며 고객 입력 오류와 구분합니다. disabled, not_installed, load_failed, remote_unavailable을 이유로 구분합니다. HTTP는 503이고 SSE·MCP도 실패로 표현합니다. ToolScopeViolation은 ValueError에서 분리합니다.
 
-Dining의 이름·메뉴·방문구간·식당 UID 연결은 고정된 Dining hook을 사용합니다. 관광 콘텐츠 번호가 없고 정확히 일치하는 내부 가게 번호만 있는 개선도 Dining 구현 안에 유지합니다. 접수 컴포넌트가 직접 원장 SQL로 실행 관문을 우회하지 않습니다. Mobility 경로선 계산도 필수 hook을 사용하며 저장된 계획서 자체의 읽기와 구분합니다.
+Registry의 `get`은 메타데이터 조회로 남기고 `require_runnable(team_id, capability=None)`이 실행 객체 획득 관문입니다. 비활성·부재·선택 로딩 실패는 이 관문에서 거절합니다. `declare_unavailable(team_id, reason)`으로 구현을 import하지 않고 상태를 등록합니다. manifest 계약 major와 capability 소유를 검사하고 중복 제공은 거절합니다.
 
-제품 판 밖에서 독립 계산을 시험하려면 명시적 `standalone_services`를 사용합니다. 시나리오 재생용 `service_overrides`는 꺼진 Team을 활성화하지 않습니다. 기록되지 않은 경로를 임의의 시간으로 성공시키지 않습니다.
+선언의 TeamConfig에 `required: bool = True`, `capabilities: list[str] | None = None`, `hooks: list[str] | None = None`을 호환 필드로 추가합니다. 미지정은 기존 선언을 유지합니다. 명시적 capability와 실제 manifest가 다르면 조립 오류입니다. 비활성 구현을 import하지 않으며 선택 로딩 실패는 등록표에 이유를 남깁니다. 정적 검증은 구현 import를 하지 않습니다. TeamTask/TeamResult 전송 필드는 이 변경에서 바꾸지 않습니다.
 
-같은 답변의 동시 재개에서 다른 요청이 실행권을 먼저 얻으면 현재 상태를 멱등 응답합니다. 실제 복구 실행권을 얻은 요청은 실행 결과를 그대로 반환합니다. 활성 실행의 복구·만료는 기존 Case 실행 계약을 따릅니다.
+Controller는 task 생성 전 담당 Team·capability 관문을 사용합니다. 담당 지정 ROUTED와 재개 토큰·답변·VALID_INPUT 반영 전에도 같은 판의 기존·최종 담당 Team·capability를 확인합니다. 이 사전 관문에서 거절된 업무 상태·답변·토큰은 보존하고 운영 원인은 별도 로그에 남깁니다. Team 실행 중 실제 사용하는 교차 Team 필수 계산의 가용성은 해당 계산 관문에서 따로 확인합니다. Local/A2A 모두 관문을 거치며 A2A 결과의 team_id/task_id/run_id를 대조합니다. 원격 unavailable을 ESCALATE 성공으로 바꾸지 않습니다.
 
-[수명주기](../team-plugin-lifecycle.md), [가용성 회귀](../../../tests/integration/controller/test_plugin_unavailable.py), [조립 판 시험](../../../tests/unit/test_plugin_composition_runtime.py).
+조립 판은 Registry·Executor·계산 연결·Controller·revision을 함께 고정합니다. 요청/백그라운드 회차는 시작 시 고정하고 종료까지 유지합니다. 새 판 준비는 게시된 계산 표와 전역 엔진 상태를 바꾸지 않으며 실패한 판을 게시하지 않습니다. 기존 판 요청은 끝까지 실행하고 새 판 이후 요청에 비활성 정책을 적용합니다. 꺼진 Team의 필수 계산을 직선거리 어림값·모름·빈 사고 목록으로 대신 성공시키지 않습니다.
+
+## 실행 경계 보완 (2026-10-11)
+
+- `required`는 active인 구현을 적재할 때만 적용합니다. inactive이면 required여도 import하지 않습니다. 선택 팀은 코드·훅 제공자 적재 실패를 `load_failed`로 격리합니다. 계약 불일치·중복 capability는 선택 여부와 관계없이 후보 오류입니다.
+- 재개 입력·토큰 소비 전 확인하는 기존·최종 담당 Team·capability의 불가(disabled/not_installed/load_failed)는 입력·토큰을 소비하지 않습니다. 선택적인 `resume_prepare`가 있는 경로는 그 준비 중 확인한 불가도 VALID_INPUT 전에 거절합니다. 실행을 시작한 뒤 원격 연결 또는 실제 교차 Team 필수 계산이 실패하면 실패를 감사 기록에 남기며, 이미 저장된 답변·요청 식별자는 보존합니다. running 또는 resuming이고 활성 run이 없는 동일 요청의 재시도는 입력·토큰을 다시 소비하지 않고 실행을 이어갈 수 있습니다. 이미 적용한 변경의 멱등성은 기존 Core 계약을 따릅니다.
+- 필수 이동 계산에서 활성 Team의 엔진이 준비되지 않았으면 `team_unavailable`, `reason=engine_unavailable`로 실패합니다. 직선거리 추정으로 성공하지 않습니다. disabled와 다른 원인입니다.
+- HTTP·SSE·MCP의 Team 불가 코드는 `team_unavailable`입니다. retryable은 remote_unavailable만 true입니다. 의도적으로 꺼진 기능은 반복 전송으로 해결된다고 안내하지 않습니다.
+- 조립 판의 감사 위치는 운영 로그의 `composition_revision`입니다. 고객 데이터나 접속 정보는 넣지 않습니다. 작업 중 판을 바꿔 기록하지 않습니다.
+- 이동 엔진 자료·경유 설정은 프로세스 수명 동안 고정합니다. 설정 변경은 재기동이 필요하며 hot reload 후보가 전역 엔진을 다시 초기화하지 않습니다. Team 활성/비활성 교체는 별도로 지원합니다.
+- 문자열 A2A endpoint는 조립 때 주입한 신뢰된 resolver의 기존 계약을 유지합니다. endpoint가 신원 메타데이터를 포함하면 대조하고, 결과의 team/task/run 식별자는 항상 필수 대조합니다. 모르는 완료 상태는 성공으로 받지 않습니다.
+- 새 Case 접수의 201은 업무 완료를 뜻하지 않습니다. 실행 불가 결과는 별도 상태 조회에서 원인을 확인할 수 있어야 합니다. 동기 재개와 웹 변경 요청의 불가는 503 또는 SSE error로 끝납니다.
+
+재개 구현 순서는 기존 owner 관문 → prospective resuming 상태로 읽기 전용 route 선택 → 최종 owner/capability 관문 → 선택적 resume_prepare 후보 확보 → VALID_INPUT입니다. resume_route는 저장을 하지 않습니다. 동일 event가 이미 입력 반영됐고 Case가 running 또는 resuming이며 활성 run이 없으면, VALID_INPUT·토큰 소비를 반복하지 않고 run_case를 다시 시도합니다. VALID_INPUT 커밋 뒤 실행 시작 전 중단도 이 재시도에 포함합니다. 활성 run이 있으면 새 실행을 시작하지 않으며, 이미 완료된 요청은 기존 멱등 응답을 유지합니다.
+
+유효한 재개 토큰의 TTL 만료는 잘못된 토큰과 구분 가능한 `ResumeExpiredError`로 호출부에 전달합니다. 이 예외는 기존 `ControllerError`와 `ResumeTokenExpired` 양쪽의 호환성을 유지합니다. 명시적 만료 토큰은 WAIT_EXPIRED 뒤 자동 실행하지 않으며 기존 HTTP 401 `invalid_resume_token` 경계를 유지합니다. 담당 불가의 사전거절은 만료 처리에도 유지합니다. 자동 대기 선택 입구가 만료 뒤 새 문장을 처리할지 여부는 도메인 접수 정책이며 Controller가 새 업무로 임의 변환하지 않습니다.
+
+검증: [재개 중단 복구·명시 토큰 만료 후속 보완](../../records/reports/2026-10-11_2320_resume_recovery_opus_followup.md) — 신규 10건 포함 DB 없는 단위·프로세스 내 HTTP 회귀 70/70, 운영 미반영입니다.
+
+초기 여행 채팅의 동일 request_id·동일 본문 재전송은 접수 기록만 있다는 이유로 성공한 중복 응답이 되지 않습니다. 업무 해석 때 정한 담당·구조화 요청·대상 항목·기준 일정 버전을 CLASSIFIED의 state_patch에 `conversation_dispatch`로 보존하고 실행 관문 전에 커밋합니다. routing 또는 running이며 활성 run이 없는 업무는 저장한 계획으로 같은 Case를 재시도하고 모델 분류·추출을 반복하지 않습니다. 계속 비활성이면 동일 불가를 반환합니다. 활성 run이 있거나 옛 미완료 기록에 계획이 없으면 409로 구분합니다. 입력 대기·완료 업무의 최초 요청 중복은 기존 응답을 유지하며 답변 토큰을 소비하지 않습니다. 적용·알림의 멱등성은 기존 코어 관문을 유지합니다.
+
+일반 `/v1/cases/{id}/messages` 입구는 `resume_prepare`를 주입하지 않습니다. 담당 Dining은 활성이고 실제 계산에 필요한 Mobility만 비활성인 예에서는, 담당/capability 검사를 통과하여 답변과 VALID_INPUT을 저장한 뒤 Team의 Mobility 계산 관문에서 실패할 수 있습니다. 이를 모든 동적 필수 계산의 사전 검증으로 설명하지 않습니다. 필수 계산은 같은 고정 판에서 실패로 드러내고 다른 계산이나 추정 성공으로 대행하지 않으며, 저장된 입력과 동일 event 재시도 경계를 유지합니다. 담당 업무가 해당 계산을 실제로 요구하지 않으면 독립 실행을 허용합니다. Core에 도메인 Team 목록이나 일괄 의존성 차단을 추가하지 않습니다.
+
+새 Case는 분류 뒤 실행 관문에서 알려진 불가를 확인하면 503과 case_id를 반환합니다. 접수 자체가 보존되어도 완료로 표시하지 않습니다. 같은 요청의 재전송은 아직 agent run이 없는 routing 업무를 다시 실행할 수 있습니다.
+
+
+## A2A 전송 메타데이터와 결과 식별자
+
+HTTP 제출 어댑터는 요청의 `task_id`, `run_id`, `team_id`를 원격에 전달하고 원격 artifact는 세 값을 그대로 돌려줍니다. 이는 TeamTask/TeamResult 스키마 변경이 아니라 기존 식별자 검사의 전송 배선입니다. 원격 상태 조회용 id는 별도로 유지할 수 있지만 업무 결과 id를 대신하지 않습니다. 완료·대기 artifact의 식별자 누락·불일치는 거절하며, 결과에 요청 id를 임의 채워 넣지 않습니다. capability resolver는 조립 판에 고정된 신뢰 경계이며 기존 문자열 endpoint 형식을 유지합니다. 원격 unavailable은 일반 전송 실패와 구분합니다.
+
+취소는 best effort이며 `reliability.a2a_cancel_timeout_seconds` 안에서 끝납니다. 취소 시간 초과·실패는 고객 입력을 포함하지 않는 운영 로그에 예외 종류와 요청 실행 식별자를 남기며 원래의 deadline 실패 결과를 보존합니다. 기본 1초는 외부 SLA 실측이 아닌 구현 운영 한도입니다.
+
+
+## A2A 동기 호출과 제한시간 (2026-10-11)
+
+capability resolver의 동기 구현은 외부 제출·상태 변경이 없는 순수 조회에 한해 `asyncio.to_thread`로 실행합니다. 현재 요청의 ContextVar 조립 판을 전달하며, 반환값이 awaitable이면 요청의 이벤트 루프에서 이어서 기다립니다. resolver의 기한이 지나면 결과를 버리고 원격 제출은 하지 않습니다. Python은 이미 실행 중인 thread를 강제로 취소하지 못하므로 resolver가 기한 뒤에도 끝날 수 있으며 순수 조회라는 전제가 필요합니다. 비동기 resolver도 지원합니다.
+
+transport의 submit/send, poll/get_status, cancel은 존재하는 메서드마다 async 함수여야 합니다. 제출 전 계약을 확인하며 동기 제출 구현은 실행 0회로 거절합니다. 동기 factory가 awaitable을 돌려주는 방식도 transport에서는 허용하지 않습니다. 명시적인 async 어댑터가 필요하며 그 어댑터 안에서 동기 I/O로 이벤트 루프를 막아서는 안 됩니다. cancel이 없는 구현의 취소는 실패로 추정하지 않고 best effort 미지원으로 구분합니다. 취소 지원 시 기존 취소 유예시간을 적용합니다. 동기 제출을 thread로 옮겨 기한 뒤 늦은 POST를 만드는 방식은 사용하지 않습니다.
+
+## 실행 마감과 정리 예산 (2026-10-11)
+
+실행기가 task의 deadline을 스스로 집행하고 기한 뒤 취소 정리가 필요하면 선택 속성 `cleanup_budget_seconds`로 유한한 0 이상 정리 예산을 알립니다. A2A 실행기는 기존 `reliability.a2a_cancel_timeout_seconds`를 이 값으로 제공합니다. 이 속성이 없는 실행기는 기존 Controller의 Team 실행 제한시간을 유지합니다. TeamExecutorPort의 기존 `execute` 구현은 그대로 호환됩니다.
+
+Controller는 이 속성을 제공하는 실행기에 대해 `task.deadline_at까지 남은 시간 + cleanup_budget_seconds + reliability.team_cleanup_grace_seconds`를 바깥 제한시간으로 사용합니다. 정리 구간의 실행기 마감이 Controller에 먼저 취소되는 경합을 방지합니다. grace 기본 0.1초는 이벤트 루프의 정리·실패 결과 반환을 위한 운영 정책값이며 외부 SLA 실측이 아닙니다. 업무 실행 자체의 deadline은 늘리지 않습니다. 음수·무한대·NaN 예산은 계약 오류로 거절합니다. 검토 담당 Team 실행에도 같은 계산을 적용합니다.
+
+취소가 끝나거나 취소 자체가 제한시간을 넘기더라도 기존 `remote_deadline_exceeded` 원인을 Core가 기록합니다. 취소 실패 로그는 별도로 보존합니다. 외부 호출자가 명시적으로 요청을 취소한 경우의 CancelledError 전파는 변경하지 않습니다.
+
+## 백그라운드 회차 실패 격리 (2026-10-11)
+
+회차의 조립 실패는 의도적인 Team 비활성과 구분해 fatal로 기록합니다. 실패한 판을 게시하거나 전역 계산으로 대신 실행하지 않으며, 그 회차의 Team 의존 작업은 실행하지 않습니다. 분류 되잡기·회원 정리·끝난 여행의 외부 값 정리 등 독립 작업은 계속 수행합니다. 재난 안전 점검도 기존 감시 주기 문 안에서 독립적으로 수행합니다. 성공한 회차는 기존처럼 하나의 Controller·등록표·계산 표를 종료까지 고정합니다.
+
+작업 하나의 일반 예외는 작업 이름·예외 종류와 실패 건수로 관찰하고 다음 독립 작업을 진행합니다. 상주 실행은 회차 예외를 기록한 뒤 다음 회차를 시도하며, 단발 실행은 실패 종료 코드를 반환합니다. KeyboardInterrupt·SystemExit 같은 명시적 종료 신호는 가로채지 않습니다. 예외 메시지에 포함될 수 있는 고객 입력·접속 정보는 새 실패 로그에 싣지 않습니다.
+
+`composition_failure`는 Team 조립 실패이며, 기능 배선이 성공하면 재난 점검을 기존 주기 안에서 독립 수행합니다. `features_failure`는 선택 기능을 연결하는 초기화 실패로 별도 fatal을 남깁니다. 이 초기화에는 게스트 여행 제외 같은 필수 감시 범위 연결도 포함되므로, 실패 위치를 확인하지 못한 상태에서는 Team 작업·출발 안내·재난 점검을 실행하지 않습니다. 연결 누락을 「모든 여행 감시」로 바꾸지 않습니다. 분류·회원 정리·끝난 여행의 외부 값 정리 등 해당 범위 연결을 요구하지 않는 작업은 계속합니다. 두 실패가 함께 나면 두 원인을 각각 기록합니다.
+
+백그라운드 프로세스의 기능 초기화는 성공한 뒤 반복 등록하지 않습니다. 동일 설정으로도 항목 짚기 모델의 캐시·워밍 상태가 새 객체로 교체되는 일을 막습니다. 실패한 시도는 완료로 표시하지 않아 다음 회차에 재시도하며, 초기화 성공 여부는 Team 후보 조립 성공 여부와 독립입니다. 이 프로세스 수명 경계는 API의 후보 조립·요청 BindingTable 게시를 변경하지 않습니다.
+
+
+## 미분류와 알려진 담당 부재의 구분 (2026-10-11)
+
+아직 담당 종류를 정하지 못한 입력은 실행 불가 플러그인과 구분합니다. 제공자 0개라는 이유만으로 모든 분류를 `TeamUnavailable`로 바꾸지 않습니다. 알려진 담당 관계가 없는 종류와 빈 종류는 기존 `RegistryError`로 남기며 Controller의 한 번 재배분 또는 routing_failed 경로를 유지합니다.
+
+도메인은 구현을 import하지 않는 순수 라우팅 메타데이터를 조립에 제공합니다. Registry의 중립 `declare_case_types(team_id, case_types)`는 그 관계만 보관합니다. 실제 제공자가 없는 종류에 알려진 담당이 정확히 하나 있으면 실행 관문으로 부재·비활성·적재 실패를 확인하여 `TeamUnavailable`을 냅니다. 중복 담당은 `RegistryError`이며 코어에 제품 Team 이름 목록을 넣지 않습니다. 기존 활성 manifest가 받아들이는 종류의 정상 해결은 그대로 유지합니다.
+
+
+## 읽기 도구의 필수 계산 경계 (2026-10-11)
+
+`read.dining_state`와 `read.dining_states`도 담당 Team의 필수 계산입니다. 다른 Team이 허용된 도구로 호출해도 고정된 조립 판의 Dining 실행 관문과 해당 계산 제공자를 먼저 확인하며, 거절 시 DB 연결을 열거나 구현을 import하지 않습니다. `dining_ledger=False` 시험 설정도 바인딩된 제품 판에서 비활성·부재 담당을 우회하지 못합니다. 바인딩 밖의 기존 합성 재생 사용은 명시적인 standalone 경계로 한정하며 이 설정을 제품 계산 성공 근거로 쓰지 않습니다.
+
+
+## 여행 HTTP 입구의 필수 계산 경계 (2026-10-11)
+
+일정 등록·접수·생성에서 Dining 이름 조회기 생성, 방문구간 판정, 식사 후보 제공자 생성과 식당 UID 연결은 `dining_ledger.lookup_factory`·`slot_verdicts`·`planner_factory`·`link_core_place`를 통해 고정된 조립 판의 Dining 관문을 거칩니다. `with_ledger`는 일반 조회 실패의 기존 표시를 유지하되 `TeamUnavailable`을 삼켜 등록 성공으로 바꾸지 않습니다. 제공자는 조립 때 기존 구현 함수·클래스를 그대로 캡처하며 요청 중 직접 구현을 다시 import하지 않습니다.
+
+여행·접수의 route-shapes HTTP는 저장된 일정의 소유권 확인과 읽기를 독립적으로 유지합니다. 새 도로 그래프 탐색은 Mobility의 `mobility_shapes.items`·`review` 제공자를 거치며 비활성·부재 시 503으로 거절합니다. 이 부속 계산 패밀리는 기존 `legs` 소유 훅과 함께 Mobility가 조립하며 기존 TeamConfig.hooks 선언 목록을 늘리지 않습니다. 저장된 계획서의 순수 조회·표현은 Team 계산과 구분하여 계속 허용합니다. 명시적 standalone 시험에서도 계산이 필요하면 해당 제공자를 직접 조립해야 합니다.
+
+Dining 이름 조회기 객체는 접수 시 지연 생성할 수 있습니다. Activity 소스만으로 해결되어 Dining을 실제 호출하지 않는 접수는 독립 처리로 유지하며, 첫 Dining 이름·메뉴 조회 직전에 고정된 factory와 담당 관문을 확인합니다. 예외를 삼켜 다른 장소 검색으로 대행하지 않습니다.
+
+등록 요청이 식사 항목 없이 식당 UID 연결만 요구하는 경우도 연결 제공자를 쓰기 전에 확인합니다. 일정 생성은 식사 후보 제공자를 DB 연결 전에 확인하되 이미 완료한 동일 요청의 독립 조회는 유지합니다. 저장된 접수 검사 결과가 None이면 경로선은 계산 호출 0회로 빈 목록을 반환합니다. 이동 default_engine의 바인딩 없는 non-standalone 조립 실패도 TeamUnavailable을 None으로 바꾸지 않습니다.
+
+
+## 감시 업무의 실행 중단 복구 (2026-10-11)
+
+감시가 생성한 동일 사건의 Case가 running이고 활성 실행이 없으며 직전 agent run이 failed라면, 다음 감시 회차가 새 Case를 만들지 않고 기존 Controller.run_case를 다시 호출할 수 있습니다. 실패 원인을 TeamUnavailable로 한정하지 않습니다. agent_runs에는 typed 실패 원인 열이 없으므로 이는 실행 실패로 끝난 watch Case의 복구 경계입니다. 사용자 질의 Case에는 적용하지 않습니다.
+
+담당과 capability가 실행 불가하면 고정된 등록표의 사전 관문에서 거절하여 새 run을 만들지 않고 Case를 보존합니다. Team이 실제 실행 중 요구하는 동적 교차 Team 계산은 해당 관문에서 확인하므로, 의존성이 계속 꺼진 회차에는 같은 Case의 failed run이 추가될 수 있습니다. 이를 모든 의존성의 사전 검증 또는 실행 예산 0으로 부르지 않습니다. 기능을 다시 연결하면 같은 Case가 실행되고 기존 Core 멱등 적용 규칙을 유지합니다. 비활성 회차를 generic team_error로 닫거나 기존 사건의 retry_max를 소모하지 않습니다.
+
+활성 run이 있거나 실행 기록이 없거나 직전 run이 성공한 running Case는 자동 복구하지 않습니다. waiting 계열·resolved·escalated·failed Case도 이 복구 대상이 아닙니다. Controller의 제한시간 초과는 escalated로 끝나므로 그대로 제외하며, 기존 일시 실패 guardrail의 닫힌 Case 재개 규칙과 구분합니다. 같은 묶음 Case가 여러 항목을 덮더라도 한 회차에는 한 번만 실행합니다. 동시 실행 시작 경합에서 진 감시는 활성 업무를 team_error로 닫지 않고 다음 회차로 넘깁니다.
+
+감시가 읽는 guardrail observed는 기존 Controller가 저장하는 리스트와 숫자·문자열 스칼라 모두 허용합니다. 스칼라 제한시간을 읽다가 회차를 중단하지 않으며, 같은 닫힌 상태·cooldown·retry_max 규칙으로 처리합니다.
+
+
+## 초기 메시지의 동시 접수와 실패 재시도 (2026-10-11)
+
+웹 초기 메시지는 해석 뒤 중립 `create_case_once`로 업무를 생성합니다. 기존 `open_case`의 즉시 분류 계약은 바꾸지 않습니다. tenant·trip·request_id로 만든 멱등 키와 기존 action_requests 장부를 사용하며 스키마를 추가하지 않습니다. 생성 직전 읽기 트랜잭션을 종료하고 생성과 CREATED 이벤트, 멱등 장부를 짧은 단일 트랜잭션으로 커밋합니다. 생성 잠금은 후속 분류·Team 실행까지 유지하지 않습니다. 동시 첫 요청은 모델을 각각 호출할 수 있지만 Case와 CREATED는 하나이며, 뒤 요청은 먼저 저장된 해석을 덮지 않고 409로 재확인을 요구합니다.
+
+신규 웹 Case에는 초기 원문의 SHA-256만 추가로 보존하여 같은 마스킹 결과를 가진 다른 원문도 같은 request_id이면 409로 거절합니다. 원문·민감값은 기존 create/transition 마스킹 경계를 거칩니다. 이 SHA가 없는 기존 Case의 동일 본문 판정은 이전 masked subject 비교와 호환하며, 이를 신규 원문 동일성 보장으로 일반화하지 않습니다.
+
+초기 실행 계획이 있는 routing/running Case만 같은 초기 요청으로 복구합니다. 대기·종결 상태는 기존 중복 조회를 유지하고 new/classifying/resuming, 저장된 계획이 없는 미완료 업무, 활성 실행 또는 이미 고객 답변 이력이 있는 업무는 409입니다. 답변을 이미 기록한 업무는 그 답변의 원래 이벤트로 복구해야 합니다. 저장된 일정 기준 버전이 현재와 다르면 409이며 자동으로 최신 버전에 얹지 않습니다. Controller의 제한시간 초과로 escalated된 업무도 초기 자동 복구 대상이 아닙니다.
+
+초기 재시도의 사전 확인 뒤 다른 실행이 먼저 시작되는 경합도 routing/running 두 경로 모두 409로 반환합니다. 실행권을 얻은 run과 Case 상태를 실패로 덮어쓰거나 완료한 것처럼 응답하지 않습니다.

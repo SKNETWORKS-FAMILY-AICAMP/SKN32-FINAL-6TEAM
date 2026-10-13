@@ -84,18 +84,21 @@ class OpenAIResponsesJudgeLLM:
 
     async def judge(self, prompt_key: str, payload: dict[str, Any], *, schema: dict[str, Any],
                     schema_name: str, web_search: bool | None = None,
-                    instructions: str | None = None, run_id: UUID | None = None) -> JudgeCall:
+                    instructions: str | None = None, run_id: UUID | None = None,
+                    model: str | None = None) -> JudgeCall:
         """판정 하나를 부른다.
 
         - `connection_factory` 가 있으면 지시문은 **등록된 프롬프트**(`prompts` 테이블)에서 읽고 감사 기록을 남긴다.
           없는 프롬프트면 외부 호출 전에 멈춘다.
         - 없으면(시험 · 스파이크) `instructions` 를 그대로 쓴다. 둘 다 없으면 멈춘다 — 지시문 없이 부르지 않는다.
         - `web_search` 가 `None` 이면 설정(`activity_judge_web_search`)을 따른다.
+        - `model` 이 `None` 이면 설정(`activity_judge_model`)을 따른다. `[2026-10-13]` 판정마다 모델을 고를 수 있게(활동 코어 전달 사항 11번 —
+          대체 후보 순서만 다른 모델로 부른다). 감사 기록에는 실제로 부른 모델이 남는다.
         """
         settings = get_settings()
         if not settings.openai_api_key.strip():
             raise RuntimeError("OpenAI API key is missing")
-        model = settings.activity_judge_model
+        model = model or settings.activity_judge_model
         use_web = settings.activity_judge_web_search if web_search is None else web_search
 
         prompt_id = None

@@ -1,0 +1,445 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.diagnostics.config.ts",
+      "uiux-time-boundary-20261012.spec.ts",
+      "uiux-sonnet-map-crowded-20261012.spec.ts",
+      "uiux-sonnet-remaining-20261012.spec.ts"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\playwright.diagnostics.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-resume-20261012-v1/diagnostics-evidence",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+        "testIgnore": [
+          "**/_backup/**"
+        ],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../uiux-resume-20261012-v1/diagnostics-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "uiux-sonnet-map-crowded-20261012.spec.ts",
+      "file": "uiux-sonnet-map-crowded-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "180px 지도에서 이전 4개 거리 단추의 번호 중심을 누를 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3911,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T17:55:54.753Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "crowded-number-hit-evidence",
+                      "contentType": "application/json",
+                      "body": "W3siaWQiOiIxIiwiYnV0dG9uIjp7IngiOjI1LjEwOTM3NSwieSI6MjY3LCJ3aWR0aCI6OTkuNzgxMjUsImhlaWdodCI6MzQsInRvcCI6MjY3LCJyaWdodCI6MTI0Ljg5MDYyNSwiYm90dG9tIjozMDEsImxlZnQiOjI1LjEwOTM3NX0sIm51bWJlciI6eyJ4Ijo3Ny44OTA2MjUsInkiOjI3Mywid2lkdGgiOjIyLCJoZWlnaHQiOjIyLCJ0b3AiOjI3MywicmlnaHQiOjk5Ljg5MDYyNSwiYm90dG9tIjoyOTUsImxlZnQiOjc3Ljg5MDYyNX0sIm51bWJlckNlbnRyZUhpdHNPd25CdXR0b24iOnRydWV9LHsiaWQiOiIyIiwiYnV0dG9uIjp7IngiOjk1LjEwOTM3NSwieSI6MjY3LCJ3aWR0aCI6OTkuNzgxMjUsImhlaWdodCI6MzQsInRvcCI6MjY3LCJyaWdodCI6MTk0Ljg5MDYyNSwiYm90dG9tIjozMDEsImxlZnQiOjk1LjEwOTM3NX0sIm51bWJlciI6eyJ4IjoxNDcuODkwNjI1LCJ5IjoyNzMsIndpZHRoIjoyMiwiaGVpZ2h0IjoyMiwidG9wIjoyNzMsInJpZ2h0IjoxNjkuODkwNjI1LCJib3R0b20iOjI5NSwibGVmdCI6MTQ3Ljg5MDYyNX0sIm51bWJlckNlbnRyZUhpdHNPd25CdXR0b24iOnRydWV9LHsiaWQiOiIzIiwiYnV0dG9uIjp7IngiOjE2NS4xMDkzNzUsInkiOjI2Nywid2lkdGgiOjk5Ljc4MTI1LCJoZWlnaHQiOjM0LCJ0b3AiOjI2NywicmlnaHQiOjI2NC44OTA2MjUsImJvdHRvbSI6MzAxLCJsZWZ0IjoxNjUuMTA5Mzc1fSwibnVtYmVyIjp7IngiOjE5MC4xMDkzNzUsInkiOjI3Mywid2lkdGgiOjIyLCJoZWlnaHQiOjIyLCJ0b3AiOjI3MywicmlnaHQiOjIxMi4xMDkzNzUsImJvdHRvbSI6Mjk1LCJsZWZ0IjoxOTAuMTA5Mzc1fSwibnVtYmVyQ2VudHJlSGl0c093bkJ1dHRvbiI6dHJ1ZX0seyJpZCI6IjQiLCJidXR0b24iOnsieCI6MjM1LjEwOTM3NSwieSI6MjY3LCJ3aWR0aCI6OTkuNzgxMjUsImhlaWdodCI6MzQsInRvcCI6MjY3LCJyaWdodCI6MzM0Ljg5MDYyNSwiYm90dG9tIjozMDEsImxlZnQiOjIzNS4xMDkzNzV9LCJudW1iZXIiOnsieCI6MjYwLjEwOTM3NSwieSI6MjczLCJ3aWR0aCI6MjIsImhlaWdodCI6MjIsInRvcCI6MjczLCJyaWdodCI6MjgyLjEwOTM3NSwiYm90dG9tIjoyOTUsImxlZnQiOjI2MC4xMDkzNzV9LCJudW1iZXJDZW50cmVIaXRzT3duQnV0dG9uIjp0cnVlfV0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1e040c3df919cbae9f80-f1f826dc8d135ceec488",
+          "file": "uiux-sonnet-map-crowded-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "180px 지도에서 이전 5개 거리 단추의 번호 중심을 누를 수 있다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2700,
+                  "error": {
+                    "message": "Error: [{\"id\":\"1\",\"button\":{\"x\":25.109375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":124.890625,\"bottom\":301,\"left\":25.109375},\"number\":{\"x\":77.890625,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":99.890625,\"bottom\":295,\"left\":77.890625},\"numberCentreHitsOwnButton\":false},{\"id\":\"2\",\"button\":{\"x\":77.609375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":177.390625,\"bottom\":301,\"left\":77.609375},\"number\":{\"x\":130.390625,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":152.390625,\"bottom\":295,\"left\":130.390625},\"numberCentreHitsOwnButton\":false},{\"id\":\"3\",\"button\":{\"x\":130.109375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":229.890625,\"bottom\":301,\"left\":130.109375},\"number\":{\"x\":155.109375,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":177.109375,\"bottom\":295,\"left\":155.109375},\"numberCentreHitsOwnButton\":true},{\"id\":\"4\",\"button\":{\"x\":182.609375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":282.390625,\"bottom\":301,\"left\":182.609375},\"number\":{\"x\":207.609375,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":229.609375,\"bottom\":295,\"left\":207.609375},\"numberCentreHitsOwnButton\":true},{\"id\":\"5\",\"button\":{\"x\":235.109375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":334.890625,\"bottom\":301,\"left\":235.109375},\"number\":{\"x\":260.109375,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":282.109375,\"bottom\":295,\"left\":260.109375},\"numberCentreHitsOwnButton\":true}]\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: [{\"id\":\"1\",\"button\":{\"x\":25.109375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":124.890625,\"bottom\":301,\"left\":25.109375},\"number\":{\"x\":77.890625,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":99.890625,\"bottom\":295,\"left\":77.890625},\"numberCentreHitsOwnButton\":false},{\"id\":\"2\",\"button\":{\"x\":77.609375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":177.390625,\"bottom\":301,\"left\":77.609375},\"number\":{\"x\":130.390625,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":152.390625,\"bottom\":295,\"left\":130.390625},\"numberCentreHitsOwnButton\":false},{\"id\":\"3\",\"button\":{\"x\":130.109375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":229.890625,\"bottom\":301,\"left\":130.109375},\"number\":{\"x\":155.109375,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":177.109375,\"bottom\":295,\"left\":155.109375},\"numberCentreHitsOwnButton\":true},{\"id\":\"4\",\"button\":{\"x\":182.609375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":282.390625,\"bottom\":301,\"left\":182.609375},\"number\":{\"x\":207.609375,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":229.609375,\"bottom\":295,\"left\":207.609375},\"numberCentreHitsOwnButton\":true},{\"id\":\"5\",\"button\":{\"x\":235.109375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":334.890625,\"bottom\":301,\"left\":235.109375},\"number\":{\"x\":260.109375,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":282.109375,\"bottom\":295,\"left\":260.109375},\"numberCentreHitsOwnButton\":true}]\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-map-crowded-20261012.spec.ts:54:96",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-map-crowded-20261012.spec.ts",
+                      "column": 96,
+                      "line": 54
+                    },
+                    "snippet": "  52 |     await test.info().attach(\"crowded-number-hit-evidence\", { body: JSON.stringify(evidence), contentType: \"application/json\" });\n  53 |     await page.screenshot({ path: test.info().outputPath(`crowded-number-${count}.png`) });\n> 54 |     expect(evidence.every(entry => entry.numberCentreHitsOwnButton), JSON.stringify(evidence)).toBe(true);\n     |                                                                                                ^\n  55 |   });\n  56 | }\n  57 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-map-crowded-20261012.spec.ts",
+                        "column": 96,
+                        "line": 54
+                      },
+                      "message": "Error: [{\"id\":\"1\",\"button\":{\"x\":25.109375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":124.890625,\"bottom\":301,\"left\":25.109375},\"number\":{\"x\":77.890625,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":99.890625,\"bottom\":295,\"left\":77.890625},\"numberCentreHitsOwnButton\":false},{\"id\":\"2\",\"button\":{\"x\":77.609375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":177.390625,\"bottom\":301,\"left\":77.609375},\"number\":{\"x\":130.390625,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":152.390625,\"bottom\":295,\"left\":130.390625},\"numberCentreHitsOwnButton\":false},{\"id\":\"3\",\"button\":{\"x\":130.109375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":229.890625,\"bottom\":301,\"left\":130.109375},\"number\":{\"x\":155.109375,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":177.109375,\"bottom\":295,\"left\":155.109375},\"numberCentreHitsOwnButton\":true},{\"id\":\"4\",\"button\":{\"x\":182.609375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":282.390625,\"bottom\":301,\"left\":182.609375},\"number\":{\"x\":207.609375,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":229.609375,\"bottom\":295,\"left\":207.609375},\"numberCentreHitsOwnButton\":true},{\"id\":\"5\",\"button\":{\"x\":235.109375,\"y\":267,\"width\":99.78125,\"height\":34,\"top\":267,\"right\":334.890625,\"bottom\":301,\"left\":235.109375},\"number\":{\"x\":260.109375,\"y\":273,\"width\":22,\"height\":22,\"top\":273,\"right\":282.109375,\"bottom\":295,\"left\":260.109375},\"numberCentreHitsOwnButton\":true}]\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  52 |     await test.info().attach(\"crowded-number-hit-evidence\", { body: JSON.stringify(evidence), contentType: \"application/json\" });\n  53 |     await page.screenshot({ path: test.info().outputPath(`crowded-number-${count}.png`) });\n> 54 |     expect(evidence.every(entry => entry.numberCentreHitsOwnButton), JSON.stringify(evidence)).toBe(true);\n     |                                                                                                ^\n  55 |   });\n  56 | }\n  57 |\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-map-crowded-20261012.spec.ts:54:96"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T17:55:59.623Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "crowded-number-hit-evidence",
+                      "contentType": "application/json",
+                      "body": "W3siaWQiOiIxIiwiYnV0dG9uIjp7IngiOjI1LjEwOTM3NSwieSI6MjY3LCJ3aWR0aCI6OTkuNzgxMjUsImhlaWdodCI6MzQsInRvcCI6MjY3LCJyaWdodCI6MTI0Ljg5MDYyNSwiYm90dG9tIjozMDEsImxlZnQiOjI1LjEwOTM3NX0sIm51bWJlciI6eyJ4Ijo3Ny44OTA2MjUsInkiOjI3Mywid2lkdGgiOjIyLCJoZWlnaHQiOjIyLCJ0b3AiOjI3MywicmlnaHQiOjk5Ljg5MDYyNSwiYm90dG9tIjoyOTUsImxlZnQiOjc3Ljg5MDYyNX0sIm51bWJlckNlbnRyZUhpdHNPd25CdXR0b24iOmZhbHNlfSx7ImlkIjoiMiIsImJ1dHRvbiI6eyJ4Ijo3Ny42MDkzNzUsInkiOjI2Nywid2lkdGgiOjk5Ljc4MTI1LCJoZWlnaHQiOjM0LCJ0b3AiOjI2NywicmlnaHQiOjE3Ny4zOTA2MjUsImJvdHRvbSI6MzAxLCJsZWZ0Ijo3Ny42MDkzNzV9LCJudW1iZXIiOnsieCI6MTMwLjM5MDYyNSwieSI6MjczLCJ3aWR0aCI6MjIsImhlaWdodCI6MjIsInRvcCI6MjczLCJyaWdodCI6MTUyLjM5MDYyNSwiYm90dG9tIjoyOTUsImxlZnQiOjEzMC4zOTA2MjV9LCJudW1iZXJDZW50cmVIaXRzT3duQnV0dG9uIjpmYWxzZX0seyJpZCI6IjMiLCJidXR0b24iOnsieCI6MTMwLjEwOTM3NSwieSI6MjY3LCJ3aWR0aCI6OTkuNzgxMjUsImhlaWdodCI6MzQsInRvcCI6MjY3LCJyaWdodCI6MjI5Ljg5MDYyNSwiYm90dG9tIjozMDEsImxlZnQiOjEzMC4xMDkzNzV9LCJudW1iZXIiOnsieCI6MTU1LjEwOTM3NSwieSI6MjczLCJ3aWR0aCI6MjIsImhlaWdodCI6MjIsInRvcCI6MjczLCJyaWdodCI6MTc3LjEwOTM3NSwiYm90dG9tIjoyOTUsImxlZnQiOjE1NS4xMDkzNzV9LCJudW1iZXJDZW50cmVIaXRzT3duQnV0dG9uIjp0cnVlfSx7ImlkIjoiNCIsImJ1dHRvbiI6eyJ4IjoxODIuNjA5Mzc1LCJ5IjoyNjcsIndpZHRoIjo5OS43ODEyNSwiaGVpZ2h0IjozNCwidG9wIjoyNjcsInJpZ2h0IjoyODIuMzkwNjI1LCJib3R0b20iOjMwMSwibGVmdCI6MTgyLjYwOTM3NX0sIm51bWJlciI6eyJ4IjoyMDcuNjA5Mzc1LCJ5IjoyNzMsIndpZHRoIjoyMiwiaGVpZ2h0IjoyMiwidG9wIjoyNzMsInJpZ2h0IjoyMjkuNjA5Mzc1LCJib3R0b20iOjI5NSwibGVmdCI6MjA3LjYwOTM3NX0sIm51bWJlckNlbnRyZUhpdHNPd25CdXR0b24iOnRydWV9LHsiaWQiOiI1IiwiYnV0dG9uIjp7IngiOjIzNS4xMDkzNzUsInkiOjI2Nywid2lkdGgiOjk5Ljc4MTI1LCJoZWlnaHQiOjM0LCJ0b3AiOjI2NywicmlnaHQiOjMzNC44OTA2MjUsImJvdHRvbSI6MzAxLCJsZWZ0IjoyMzUuMTA5Mzc1fSwibnVtYmVyIjp7IngiOjI2MC4xMDkzNzUsInkiOjI3Mywid2lkdGgiOjIyLCJoZWlnaHQiOjIyLCJ0b3AiOjI3MywicmlnaHQiOjI4Mi4xMDkzNzUsImJvdHRvbSI6Mjk1LCJsZWZ0IjoyNjAuMTA5Mzc1fSwibnVtYmVyQ2VudHJlSGl0c093bkJ1dHRvbiI6dHJ1ZX1d"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\diagnostics-evidence\\uiux-sonnet-map-crowded-20-37110-이전-5개-거리-단추의-번호-중심을-누를-수-있다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\diagnostics-evidence\\uiux-sonnet-map-crowded-20-37110-이전-5개-거리-단추의-번호-중심을-누를-수-있다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-map-crowded-20261012.spec.ts",
+                    "column": 96,
+                    "line": 54
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "1e040c3df919cbae9f80-e09606e92f7e3823bd0a",
+          "file": "uiux-sonnet-map-crowded-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-remaining-20261012.spec.ts",
+      "file": "uiux-sonnet-remaining-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scrollend 이벤트가 없는 브라우저에서도 소개 카드 드래그 뒤 스냅이 복원된다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 14175,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"x mandatory\"\u001b[39m\nReceived: \u001b[31m\"none\"\u001b[39m\n\nCall Log:\n- Timeout 12000ms exceeded while waiting on the predicate",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"x mandatory\"\u001b[39m\nReceived: \u001b[31m\"none\"\u001b[39m\n\nCall Log:\n- Timeout 12000ms exceeded while waiting on the predicate\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts:28:96",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts",
+                      "column": 96,
+                      "line": 28
+                    },
+                    "snippet": "  26 |   await page.mouse.move(x - 150, y, { steps: 8 }); await page.mouse.up();\n  27 |   await expect(guide.getByText(\"2 / 4\", { exact: true })).toBeVisible();\n> 28 |   await expect.poll(() => track.evaluate(element => getComputedStyle(element).scrollSnapType)).toBe(\"x mandatory\");\n     |                                                                                                ^\n  29 | });\n  30 |\n  31 | test(\"여행 화면의 작은 목록에서는 채팅 내용 조각이 그려지지 않는다\", async ({ page }) => {"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts",
+                        "column": 96,
+                        "line": 28
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"x mandatory\"\u001b[39m\nReceived: \u001b[31m\"none\"\u001b[39m\n\nCall Log:\n- Timeout 12000ms exceeded while waiting on the predicate\n\n  26 |   await page.mouse.move(x - 150, y, { steps: 8 }); await page.mouse.up();\n  27 |   await expect(guide.getByText(\"2 / 4\", { exact: true })).toBeVisible();\n> 28 |   await expect.poll(() => track.evaluate(element => getComputedStyle(element).scrollSnapType)).toBe(\"x mandatory\");\n     |                                                                                                ^\n  29 | });\n  30 |\n  31 | test(\"여행 화면의 작은 목록에서는 채팅 내용 조각이 그려지지 않는다\", async ({ page }) => {\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts:28:96"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T17:56:04.762Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\diagnostics-evidence\\uiux-sonnet-remaining-2026-63f0e-라우저에서도-소개-카드-드래그-뒤-스냅이-복원된다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\diagnostics-evidence\\uiux-sonnet-remaining-2026-63f0e-라우저에서도-소개-카드-드래그-뒤-스냅이-복원된다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts",
+                    "column": 96,
+                    "line": 28
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "9b92a857a82f1dca3231-cb6f35fdaab831d59b12",
+          "file": "uiux-sonnet-remaining-20261012.spec.ts",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "title": "여행 화면의 작은 목록에서는 채팅 내용 조각이 그려지지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2253,
+                  "error": {
+                    "message": "Error: {\"sheet\":{\"x\":0,\"y\":708,\"width\":375,\"height\":104,\"top\":708,\"right\":375,\"bottom\":812,\"left\":0},\"chat\":{\"x\":0,\"y\":730,\"width\":375,\"height\":212,\"top\":730,\"right\":375,\"bottom\":942,\"left\":0},\"text\":[{\"text\":\"등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.\",\"box\":{\"x\":14,\"y\":783.140625,\"width\":305.359375,\"height\":87.171875,\"top\":783.140625,\"right\":319.359375,\"bottom\":870.3125,\"left\":14}}]}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 15\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"box\": Object {\u001b[39m\n\u001b[31m+       \"bottom\": 870.3125,\u001b[39m\n\u001b[31m+       \"height\": 87.171875,\u001b[39m\n\u001b[31m+       \"left\": 14,\u001b[39m\n\u001b[31m+       \"right\": 319.359375,\u001b[39m\n\u001b[31m+       \"top\": 783.140625,\u001b[39m\n\u001b[31m+       \"width\": 305.359375,\u001b[39m\n\u001b[31m+       \"x\": 14,\u001b[39m\n\u001b[31m+       \"y\": 783.140625,\u001b[39m\n\u001b[31m+     },\u001b[39m\n\u001b[31m+     \"text\": \"등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: {\"sheet\":{\"x\":0,\"y\":708,\"width\":375,\"height\":104,\"top\":708,\"right\":375,\"bottom\":812,\"left\":0},\"chat\":{\"x\":0,\"y\":730,\"width\":375,\"height\":212,\"top\":730,\"right\":375,\"bottom\":942,\"left\":0},\"text\":[{\"text\":\"등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.\",\"box\":{\"x\":14,\"y\":783.140625,\"width\":305.359375,\"height\":87.171875,\"top\":783.140625,\"right\":319.359375,\"bottom\":870.3125,\"left\":14}}]}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 15\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"box\": Object {\u001b[39m\n\u001b[31m+       \"bottom\": 870.3125,\u001b[39m\n\u001b[31m+       \"height\": 87.171875,\u001b[39m\n\u001b[31m+       \"left\": 14,\u001b[39m\n\u001b[31m+       \"right\": 319.359375,\u001b[39m\n\u001b[31m+       \"top\": 783.140625,\u001b[39m\n\u001b[31m+       \"width\": 305.359375,\u001b[39m\n\u001b[31m+       \"x\": 14,\u001b[39m\n\u001b[31m+       \"y\": 783.140625,\u001b[39m\n\u001b[31m+     },\u001b[39m\n\u001b[31m+     \"text\": \"등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts:57:51",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts",
+                      "column": 51,
+                      "line": 57
+                    },
+                    "snippet": "  55 |   await test.info().attach(\"compact-trip-paint-evidence\", { body: JSON.stringify(evidence), contentType: \"application/json\" });\n  56 |   await page.screenshot({ path: test.info().outputPath(\"compact-trip-chat.png\") });\n> 57 |   expect(evidence.text, JSON.stringify(evidence)).toEqual([]);\n     |                                                   ^\n  58 | });\n  59 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts",
+                        "column": 51,
+                        "line": 57
+                      },
+                      "message": "Error: {\"sheet\":{\"x\":0,\"y\":708,\"width\":375,\"height\":104,\"top\":708,\"right\":375,\"bottom\":812,\"left\":0},\"chat\":{\"x\":0,\"y\":730,\"width\":375,\"height\":212,\"top\":730,\"right\":375,\"bottom\":942,\"left\":0},\"text\":[{\"text\":\"등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.\",\"box\":{\"x\":14,\"y\":783.140625,\"width\":305.359375,\"height\":87.171875,\"top\":783.140625,\"right\":319.359375,\"bottom\":870.3125,\"left\":14}}]}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 15\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"box\": Object {\u001b[39m\n\u001b[31m+       \"bottom\": 870.3125,\u001b[39m\n\u001b[31m+       \"height\": 87.171875,\u001b[39m\n\u001b[31m+       \"left\": 14,\u001b[39m\n\u001b[31m+       \"right\": 319.359375,\u001b[39m\n\u001b[31m+       \"top\": 783.140625,\u001b[39m\n\u001b[31m+       \"width\": 305.359375,\u001b[39m\n\u001b[31m+       \"x\": 14,\u001b[39m\n\u001b[31m+       \"y\": 783.140625,\u001b[39m\n\u001b[31m+     },\u001b[39m\n\u001b[31m+     \"text\": \"등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n  55 |   await test.info().attach(\"compact-trip-paint-evidence\", { body: JSON.stringify(evidence), contentType: \"application/json\" });\n  56 |   await page.screenshot({ path: test.info().outputPath(\"compact-trip-chat.png\") });\n> 57 |   expect(evidence.text, JSON.stringify(evidence)).toEqual([]);\n     |                                                   ^\n  58 | });\n  59 |\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts:57:51"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T17:56:36.564Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "compact-trip-paint-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJzaGVldCI6eyJ4IjowLCJ5Ijo3MDgsIndpZHRoIjozNzUsImhlaWdodCI6MTA0LCJ0b3AiOjcwOCwicmlnaHQiOjM3NSwiYm90dG9tIjo4MTIsImxlZnQiOjB9LCJjaGF0Ijp7IngiOjAsInkiOjczMCwid2lkdGgiOjM3NSwiaGVpZ2h0IjoyMTIsInRvcCI6NzMwLCJyaWdodCI6Mzc1LCJib3R0b20iOjk0MiwibGVmdCI6MH0sInRleHQiOlt7InRleHQiOiLrk7HroZ3tlZwg7J287KCV7JeQ7IScIOq2geq4iO2VnCDrgrTsmqnsnYQg6rOo6528IOyjvOyEuOyalC4g7ZWY66OoIOyalOyVvSwg7ISg7YOd7ZWcIOyepeyGjOyZgCDri6TsnYwg7J287KCV7J2EIO2VqOq7mCDsgrTtjrTrs7wg7IiYIOyeiOyWtOyalC4iLCJib3giOnsieCI6MTQsInkiOjc4My4xNDA2MjUsIndpZHRoIjozMDUuMzU5Mzc1LCJoZWlnaHQiOjg3LjE3MTg3NSwidG9wIjo3ODMuMTQwNjI1LCJyaWdodCI6MzE5LjM1OTM3NSwiYm90dG9tIjo4NzAuMzEyNSwibGVmdCI6MTR9fV19"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\diagnostics-evidence\\uiux-sonnet-remaining-2026-7fff3-작은-목록에서는-채팅-내용-조각이-그려지지-않는다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\diagnostics-evidence\\uiux-sonnet-remaining-2026-7fff3-작은-목록에서는-채팅-내용-조각이-그려지지-않는다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\uiux-sonnet-remaining-20261012.spec.ts",
+                    "column": 51,
+                    "line": 57
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "9b92a857a82f1dca3231-b63b61d4c3c36c0c04e1",
+          "file": "uiux-sonnet-remaining-20261012.spec.ts",
+          "line": 31,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "uiux-time-boundary-20261012.spec.ts",
+      "file": "uiux-time-boundary-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (375px)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3412,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T17:56:40.739Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "actual-boundary",
+                      "contentType": "application/json",
+                      "body": "eyJvcmlnaW5hbCI6eyJ0b3AiOjYxNC41LCJjZW50ZXIiOjYyNSwidGl0bGVDZW50ZXIiOjYyNi45OTIxODc1LCJzdHJpcEJvdHRvbSI6NDUwLCJidXR0b25Cb3R0b20iOjQzOCwicm93Qm90dG9tIjo4MTQuMTg3NX0sInN0dWNrIjp7InRvcCI6NDM3LCJjZW50ZXIiOjQ0Ny41LCJ0aXRsZUNlbnRlciI6NDI5Ljk5MjE4NzUsInN0cmlwQm90dG9tIjo0NDYsImJ1dHRvbkJvdHRvbSI6NDM0LCJyb3dCb3R0b20iOjYxNy4xODc1fX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e1bf661f8bdb81613086-715a90a5e44018eff5e5",
+          "file": "uiux-time-boundary-20261012.spec.ts",
+          "line": 5,
+          "column": 34
+        },
+        {
+          "title": "시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (1280px)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2668,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T17:56:44.514Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "actual-boundary",
+                      "contentType": "application/json",
+                      "body": "eyJvcmlnaW5hbCI6eyJ0b3AiOjU4OS41LCJjZW50ZXIiOjYwMCwidGl0bGVDZW50ZXIiOjYwMS45OTIxODc1LCJzdHJpcEJvdHRvbSI6NDI1LCJidXR0b25Cb3R0b20iOjQxMywicm93Qm90dG9tIjo3NDYuMzEyNX0sInN0dWNrIjp7InRvcCI6NDEyLCJjZW50ZXIiOjQyMi41LCJ0aXRsZUNlbnRlciI6NDA0Ljk5MjE4NzUsInN0cmlwQm90dG9tIjo0MjEsImJ1dHRvbkJvdHRvbSI6NDA5LCJyb3dCb3R0b20iOjU0OS4zMTI1fX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e1bf661f8bdb81613086-b6759b2ba02cc2b8d9c5",
+          "file": "uiux-time-boundary-20261012.spec.ts",
+          "line": 5,
+          "column": 34
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T17:54:25.418Z",
+    "duration": 150930.36,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

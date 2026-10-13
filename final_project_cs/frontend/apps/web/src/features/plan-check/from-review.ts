@@ -1,6 +1,7 @@
 import { compareItems, streamedReview } from "@/features/intake-review/stream-model";
 import type { IntakeView } from "@/lib/live/intake";
 import { modeChoiceOf } from "@/lib/live/move-options";
+import { webTaxiPricingOf } from "@/lib/live/taxi-pricing";
 import type { StreamLine, StreamState } from "@/lib/live/intake-events";
 import type { Candidate, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
@@ -89,7 +90,7 @@ export function viewOfReview(base: PlanCheckView, review: ReviewShape, stage: Pl
  */
 export function reviewResultOf(intake: ReviewedIntakeView, base: PlanCheckView, infos?: Readonly<Record<string, PlaceInfo>>): PlanCheckView | null {
   if (!intake.review) return null;
-  return viewOfReview({ ...base, title: intake.check?.title ?? null }, intake.review, "done", infos);
+  return viewOfReview({ ...base, revision: intake.revision, title: intake.check?.title ?? null, taxiPricing: webTaxiPricingOf(intake.review.taxi_pricing) }, intake.review, "done", infos);
 }
 
 /** Lines the stream has told about that the intake does not hold yet (a read that is a moment ahead of the GET). */

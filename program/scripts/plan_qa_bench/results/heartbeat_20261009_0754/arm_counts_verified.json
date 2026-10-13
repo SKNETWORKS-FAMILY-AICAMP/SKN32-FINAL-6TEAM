@@ -1,0 +1,34 @@
+{
+  "source_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+  "metadata_matches": 360,
+  "expected": 360,
+  "saved": 360,
+  "unique_ids": 360,
+  "normal_correct": 107,
+  "normal_expected": 120,
+  "normal_wilson95": [
+    0.8234463978470834,
+    0.9355885884582658
+  ],
+  "null_false_positive": 29,
+  "null_expected": 240,
+  "false_positive_wilson95": [
+    0.08546347834981291,
+    0.16814991093920253
+  ],
+  "errors_or_unparsed": 0,
+  "missing": 0,
+  "all_correct": 318,
+  "latency_samples": 360,
+  "latency_first_request_s": 174.49889237299794,
+  "latency_after_first_median_s": 156.1293279940146,
+  "latency_p50_upper_order_s": 156.1710728800099,
+  "latency_p95_upper_order_s": 174.68819515200448,
+  "cache_n_median": 1.0,
+  "cache_n_le1": 230,
+  "prompt_processing_share_engine_time": 0.9875504332828026,
+  "timing_scope": "Single completed run, serial requests, reused synthetic development contexts; no repeated-run superiority inference",
+  "model_training": "existing trained merged E4B; exact oos recipe not yet matched",
+  "cpu_and_model": "CPU-only Oracle ARM 2 cores, Q4_K_M, existing model, llama.cpp bed0a8566, seed20261008, temperature0, max_tokens16",
+  "product_adoption": false
+}

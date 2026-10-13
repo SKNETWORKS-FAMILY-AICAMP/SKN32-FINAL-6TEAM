@@ -1,0 +1,11 @@
+{
+  "lint_exit": 0,
+  "public_ui_response_checked": false,
+  "final_browser_tests": 20,
+  "final_browser_exit": 0,
+  "typecheck_exit": 0,
+  "first_ui_tests": 7,
+  "deployed_in_this_work": false,
+  "distinct_tests": 25,
+  "repeated_tests": 2
+}

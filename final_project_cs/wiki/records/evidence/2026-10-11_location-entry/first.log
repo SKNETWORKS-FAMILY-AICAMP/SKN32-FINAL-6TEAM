@@ -1,0 +1,124 @@
+
+[WebServer] (node:27008) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:6440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:3024) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:26672) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:25740) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:2892) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:26048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:12380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:25044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:24512) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:24208) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+
+(node:21704) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/6] tests\live\location-entry.spec.ts:13:34 › 375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다
+  1) tests\live\location-entry.spec.ts:13:34 › 375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip') with timeout 12000ms
+      - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')
+
+
+      20 |   if (await tools(page).getAttribute("data-layout") === "row") expect(boxes.at(-1)!.box.x).toBeLessThan(boxes.at(-2)!.box.x);
+      21 |   await locate(page).focus();
+    > 22 |   await expect(locate(page).getByRole("tooltip")).toBeVisible();
+         |                                                   ^
+      23 |   const foldBefore = (await tools(page).getByRole("button", { name: "지도 단추 접기" }).boundingBox())!;
+      24 |   await mkdir("mockups/location-entry-2026-10-11-v1", { recursive: true });
+      25 |   await page.screenshot({ path: `mockups/location-entry-2026-10-11-v1/tools-${width}.png` });
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\location-entry.spec.ts:22:51
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    location-results\location-entry-375px-동의-전에-95b59-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: location-results\location-entry-375px-동의-전에-95b59-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\error-context.md
+
+
+
+(node:25856) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[2/6] tests\live\location-entry.spec.ts:13:34 › 1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다
+  2) tests\live\location-entry.spec.ts:13:34 › 1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip') with timeout 12000ms
+      - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }).getByRole('tooltip')
+
+
+      20 |   if (await tools(page).getAttribute("data-layout") === "row") expect(boxes.at(-1)!.box.x).toBeLessThan(boxes.at(-2)!.box.x);
+      21 |   await locate(page).focus();
+    > 22 |   await expect(locate(page).getByRole("tooltip")).toBeVisible();
+         |                                                   ^
+      23 |   const foldBefore = (await tools(page).getByRole("button", { name: "지도 단추 접기" }).boundingBox())!;
+      24 |   await mkdir("mockups/location-entry-2026-10-11-v1", { recursive: true });
+      25 |   await page.screenshot({ path: `mockups/location-entry-2026-10-11-v1/tools-${width}.png` });
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\location-entry.spec.ts:22:51
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    location-results\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: location-results\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\error-context.md
+
+
+
+(node:10188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[3/6] tests\live\location-entry.spec.ts:40:1 › 버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으로 이동하며 동의 철회 뒤에는 지운다
+[4/6] tests\live\location-entry.spec.ts:60:1 › 시간 초과 뒤에도 버튼을 다시 눌러 성공하면 점과 카메라를 복구한다
+[5/6] tests\live\location-entry.spec.ts:84:58 › denied: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다
+[6/6] tests\live\location-entry.spec.ts:84:58 › unsupported: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다
+  2 failed
+    tests\live\location-entry.spec.ts:13:34 › 375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 
+    tests\live\location-entry.spec.ts:13:34 › 1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 
+  4 passed (1.7m)

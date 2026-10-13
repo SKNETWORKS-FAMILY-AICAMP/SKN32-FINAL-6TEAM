@@ -1,0 +1,32 @@
+{
+  "checked_at": "2026-10-11T03:41:43.300182+09:00",
+  "counts": {
+    "조건부 사용": 3,
+    "개선 필요": 9,
+    "추가 검증": 9
+  },
+  "baseline_hashes_checked": 498,
+  "baseline_hashes_matching": 497,
+  "mismatches": [
+    "final_project_cs/app/domains/travel_ops/instances/_shared/itinerary_team.py"
+  ],
+  "initial_check_matching": 498,
+  "current_mismatch_hashes": {
+    "final_project_cs/app/domains/travel_ops/instances/_shared/itinerary_team.py": "baf66b6d64beb80c873982ce1f3ee87ac838c914461bef1e7d9e5da4cb3d1cfd"
+  },
+  "product_tests_rerun": false,
+  "limited_api_calls": 0,
+  "current_operational_state": "not_probed",
+  "whole_readiness_percent": null,
+  "scope": "classification counts are not completion percent; 205 passed is the prior execution, not validation of changed common code",
+  "source_hashes": {
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_0317_미발행출발_지연복구\\final-integrity-v1.json": "486792a278ae087b9aaacf0ae66a2f242bb69d31c1d8aa53d8eafd7d266527bb",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\assets\\2026-10-11_mobility_readiness_v55\\readiness-catalog.json": "60bd9f5429560daedb7dbfe168eab41e275e8a2edd2cb3a1ece9c197274a2850",
+    "C:\\Users\\playdata2\\.codex\\visualizations\\2026\\10\\09\\01a11f41-7ba2-7842-8ea6-1a2fd857fd52\\seoul-mobility-readiness-oct11.html": "3841857064fe0a8f1e210c071cb49ceccd3ae54459865dae326877ec208e8277",
+    "C:\\Users\\playdata2\\.codex\\visualizations\\2026\\10\\09\\01a11f41-7ba2-7842-8ea6-1a2fd857fd52\\seoul-mobility-evidence-oct11.html": "d41f290440214c2ebc827fc6b6abccba658618ed533a6f9f2827a1dfcfa76fd9",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\readiness-visual-check-v2.json": "4899069a27c79d672b48f1718f5180e6f9cae7dc367b661cfbd12e2a3d1695a1",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\check_readiness_visuals_20261011_v2.py": "9901e746301b5dc25418ad6505e4e8e4cabb6c2c15c1c583660b33ea34acec69",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\readiness-736-v2.png": "1ae27dae5ba163d4f9e56ee98dae2855df5c99fac16da10bed6c41400a497d81",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\evidence-360-v2.png": "a26aae4c2db36cbf1fcdc00cf5c10fb9435e5943aa74f40b3cab404853078ee1"
+  }
+}

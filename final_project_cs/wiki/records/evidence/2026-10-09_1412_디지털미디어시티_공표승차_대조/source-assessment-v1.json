@@ -1,0 +1,29 @@
+{
+  "checked_at": "2026-10-09T14:15:44.053355+09:00",
+  "official_schedule_url": "https://www.airportrailroad.com/train/normal/info/040/0",
+  "facts": "datasets/mobility/raw/2026-10-09_1412_디지털미디어시티_공표승차_대조/official-minute-facts-v1.json",
+  "acquired_groups": 4,
+  "expected_groups": 4,
+  "search_recovery": "공덕 검색 결과에 표시된 DMC 공식 결과 참조를 열어 전체334줄을 읽음. 직접 URL 열기는 오류였음. 5~24시 모든 시간 행과 평일/휴일 양방향을 구분함.",
+  "gtfs_reference": "https://gtfs.org/documentation/schedule/reference/#stop_timestxt",
+  "research_application": "GTFS는 출발시각과 승차 허용(pickup_type)을 구분한다. TAGO가 GTFS라는 뜻이 아니며, 종류/정차 식별 없는 보유 행을 전부 승차 가능으로 간주하지 않는 전제만 참고. 이번 별도 논문 알고리즘 적용 없음.",
+  "raw_source_search": {
+    "exact_names": [
+      "tago_timetable.jsonl",
+      "tago_timetable_done.json",
+      "tago_station_ids.json",
+      "tago_empty_confirmed.json"
+    ],
+    "scope": "workspace rg --files --no-ignore, _backup 및 .git 제외",
+    "matches": 0,
+    "DATA_DIR_set": false,
+    "fallback_exists": false,
+    "documented_old_raw_exists": false,
+    "documented_old_backup_exists": false,
+    "limits": "다른 기계·클라우드·제외한 백업 전체의 부재를 뜻하지 않음. 현재 DATA_DIR 미설정 환경에서 전체수집을 실행하지 않음."
+  },
+  "actual_tago_api_calls": 0,
+  "map_developer_api_calls": 0,
+  "new_aligned_map_routes": 0,
+  "actual_boarding_payment_samples": 0
+}

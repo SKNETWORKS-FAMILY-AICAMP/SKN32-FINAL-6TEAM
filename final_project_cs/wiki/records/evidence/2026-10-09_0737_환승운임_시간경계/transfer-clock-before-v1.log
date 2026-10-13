@@ -1,0 +1,253 @@
+FF.FF....FFFFFFF.                                                        [100%]
+================================== FAILURES ===================================
+______ test_following_board_controls_day_or_night_window[1240-1280-1550] ______
+
+alight = 1240, board = 1280, expected = 1550
+
+    @pytest.mark.parametrize("alight,board,expected", [
+        (20*60+40, 21*60+20, 1550),
+        (20*60+30, 21*60+30, 1550),
+        (20*60+45, 21*60+46, None),
+        (6*60+40, 7*60+20, None),
+        (6*60+20, 7*60+1, None),
+        (6*60+30, 7*60, 1550),
+        (23*60+40, 24*60+30, 1550),
+        (12*60, 12*60+30, 1550),
+        (12*60, 12*60+31, None),
+    ])
+    def test_following_board_controls_day_or_night_window(alight, board, expected):
+>       assert transfer_fare(_rules()["fare"], parts(alight, board)) == expected
+E       AssertionError: assert None == 1550
+E        +  where None = transfer_fare({'bus': {'by_type': {'grade': '확정', 'value': {'간선': 1500, '광역': 3000, '마을': 1200, '순환': 1400, ...}, '근거': '서울시 물가정보 버스...1회용 교통카드는 교통카드 운임 + 100원(지하철 페이지). 외국인 관광객도 교통카드(티머니·Discover Seoul Pass 등) 사용을 기본으로 본다 — 1회용·현금은 값을 따로 내지 않는다.'}, ...}, [{'alight': 1240, 'base': 1500, 'board': 1230, 'kind': '간선', ...}, {'alight': 1290, 'base': 1550, 'board': 1280, 'kind': 'subway', ...}])
+E        +    where [{'alight': 1240, 'base': 1500, 'board': 1230, 'kind': '간선', ...}, {'alight': 1290, 'base': 1550, 'board': 1280, 'kind': 'subway', ...}] = parts(1240, 1280)
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:25: AssertionError
+______ test_following_board_controls_day_or_night_window[1230-1290-1550] ______
+
+alight = 1230, board = 1290, expected = 1550
+
+    @pytest.mark.parametrize("alight,board,expected", [
+        (20*60+40, 21*60+20, 1550),
+        (20*60+30, 21*60+30, 1550),
+        (20*60+45, 21*60+46, None),
+        (6*60+40, 7*60+20, None),
+        (6*60+20, 7*60+1, None),
+        (6*60+30, 7*60, 1550),
+        (23*60+40, 24*60+30, 1550),
+        (12*60, 12*60+30, 1550),
+        (12*60, 12*60+31, None),
+    ])
+    def test_following_board_controls_day_or_night_window(alight, board, expected):
+>       assert transfer_fare(_rules()["fare"], parts(alight, board)) == expected
+E       AssertionError: assert None == 1550
+E        +  where None = transfer_fare({'bus': {'by_type': {'grade': '확정', 'value': {'간선': 1500, '광역': 3000, '마을': 1200, '순환': 1400, ...}, '근거': '서울시 물가정보 버스...1회용 교통카드는 교통카드 운임 + 100원(지하철 페이지). 외국인 관광객도 교통카드(티머니·Discover Seoul Pass 등) 사용을 기본으로 본다 — 1회용·현금은 값을 따로 내지 않는다.'}, ...}, [{'alight': 1230, 'base': 1500, 'board': 1220, 'kind': '간선', ...}, {'alight': 1300, 'base': 1550, 'board': 1290, 'kind': 'subway', ...}])
+E        +    where [{'alight': 1230, 'base': 1500, 'board': 1220, 'kind': '간선', ...}, {'alight': 1300, 'base': 1550, 'board': 1290, 'kind': 'subway', ...}] = parts(1230, 1290)
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:25: AssertionError
+_______ test_following_board_controls_day_or_night_window[400-440-None] _______
+
+alight = 400, board = 440, expected = None
+
+    @pytest.mark.parametrize("alight,board,expected", [
+        (20*60+40, 21*60+20, 1550),
+        (20*60+30, 21*60+30, 1550),
+        (20*60+45, 21*60+46, None),
+        (6*60+40, 7*60+20, None),
+        (6*60+20, 7*60+1, None),
+        (6*60+30, 7*60, 1550),
+        (23*60+40, 24*60+30, 1550),
+        (12*60, 12*60+30, 1550),
+        (12*60, 12*60+31, None),
+    ])
+    def test_following_board_controls_day_or_night_window(alight, board, expected):
+>       assert transfer_fare(_rules()["fare"], parts(alight, board)) == expected
+E       AssertionError: assert 1550 == None
+E        +  where 1550 = transfer_fare({'bus': {'by_type': {'grade': '확정', 'value': {'간선': 1500, '광역': 3000, '마을': 1200, '순환': 1400, ...}, '근거': '서울시 물가정보 버스...1회용 교통카드는 교통카드 운임 + 100원(지하철 페이지). 외국인 관광객도 교통카드(티머니·Discover Seoul Pass 등) 사용을 기본으로 본다 — 1회용·현금은 값을 따로 내지 않는다.'}, ...}, [{'alight': 400, 'base': 1500, 'board': 390, 'kind': '간선', ...}, {'alight': 450, 'base': 1550, 'board': 440, 'kind': 'subway', ...}])
+E        +    where [{'alight': 400, 'base': 1500, 'board': 390, 'kind': '간선', ...}, {'alight': 450, 'base': 1550, 'board': 440, 'kind': 'subway', ...}] = parts(400, 440)
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:25: AssertionError
+_______ test_following_board_controls_day_or_night_window[380-421-None] _______
+
+alight = 380, board = 421, expected = None
+
+    @pytest.mark.parametrize("alight,board,expected", [
+        (20*60+40, 21*60+20, 1550),
+        (20*60+30, 21*60+30, 1550),
+        (20*60+45, 21*60+46, None),
+        (6*60+40, 7*60+20, None),
+        (6*60+20, 7*60+1, None),
+        (6*60+30, 7*60, 1550),
+        (23*60+40, 24*60+30, 1550),
+        (12*60, 12*60+30, 1550),
+        (12*60, 12*60+31, None),
+    ])
+    def test_following_board_controls_day_or_night_window(alight, board, expected):
+>       assert transfer_fare(_rules()["fare"], parts(alight, board)) == expected
+E       AssertionError: assert 1550 == None
+E        +  where 1550 = transfer_fare({'bus': {'by_type': {'grade': '확정', 'value': {'간선': 1500, '광역': 3000, '마을': 1200, '순환': 1400, ...}, '근거': '서울시 물가정보 버스...1회용 교통카드는 교통카드 운임 + 100원(지하철 페이지). 외국인 관광객도 교통카드(티머니·Discover Seoul Pass 등) 사용을 기본으로 본다 — 1회용·현금은 값을 따로 내지 않는다.'}, ...}, [{'alight': 380, 'base': 1500, 'board': 370, 'kind': '간선', ...}, {'alight': 431, 'base': 1550, 'board': 421, 'kind': 'subway', ...}])
+E        +    where [{'alight': 380, 'base': 1500, 'board': 370, 'kind': '간선', ...}, {'alight': 431, 'base': 1550, 'board': 421, 'kind': 'subway', ...}] = parts(380, 421)
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:25: AssertionError
+___________ test_overlapping_rides_cannot_receive_transfer_discount ___________
+
+    def test_overlapping_rides_cannot_receive_transfer_discount():
+>       assert transfer_fare(_rules()["fare"], parts(720, 719)) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = transfer_fare({'bus': {'by_type': {'grade': '확정', 'value': {'간선': 1500, '광역': 3000, '마을': 1200, '순환': 1400, ...}, '근거': '서울시 물가정보 버스...1회용 교통카드는 교통카드 운임 + 100원(지하철 페이지). 외국인 관광객도 교통카드(티머니·Discover Seoul Pass 등) 사용을 기본으로 본다 — 1회용·현금은 값을 따로 내지 않는다.'}, ...}, [{'alight': 720, 'base': 1500, 'board': 710, 'kind': '간선', ...}, {'alight': 729, 'base': 1550, 'board': 719, 'kind': 'subway', ...}])
+E        +    where [{'alight': 720, 'base': 1500, 'board': 710, 'kind': '간선', ...}, {'alight': 729, 'base': 1550, 'board': 719, 'kind': 'subway', ...}] = parts(720, 719)
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:29: AssertionError
+______ test_invalid_distance_fare_or_clock_does_not_produce_money[m-nan] ______
+
+field = 'm', value = nan
+
+    @pytest.mark.parametrize("field,value", [
+        ("m", float("nan")), ("m", float("inf")), ("m", -1), ("m", True),
+        ("base", -1), ("board", float("nan")), ("alight", None),
+    ])
+    def test_invalid_distance_fare_or_clock_does_not_produce_money(field, value):
+        data = parts(720, 725)
+        data[0][field] = value
+>       assert transfer_fare(_rules()["fare"], data) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\options.py:502: in transfer_fare
+    tot = max(p["base"] for p in parts) + distance_fare(sum(p["m"] for p in parts), steps)
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+m = nan, steps = [{'_from': 10000, 'every_m': 5000, 'upto_m': None, 'won': 100}]
+
+    def distance_fare(m, steps):
+        """거리 추가운임(원) — base_m 을 넘은 몫을 단계마다 「every_m 마다 won」(올림)으로 매긴다."""
+        extra, cur = 0, 0
+        for s in steps:
+            cur = s["_from"]
+            if m <= cur:
+                break
+            end = m if s["upto_m"] is None else min(m, s["upto_m"])
+>           extra += math.ceil((end - cur) / s["every_m"]) * s["won"]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           ValueError: cannot convert float NaN to integer
+
+app\domains\travel_ops\instances\mobility\engine\options.py:125: ValueError
+______ test_invalid_distance_fare_or_clock_does_not_produce_money[m-inf] ______
+
+field = 'm', value = inf
+
+    @pytest.mark.parametrize("field,value", [
+        ("m", float("nan")), ("m", float("inf")), ("m", -1), ("m", True),
+        ("base", -1), ("board", float("nan")), ("alight", None),
+    ])
+    def test_invalid_distance_fare_or_clock_does_not_produce_money(field, value):
+        data = parts(720, 725)
+        data[0][field] = value
+>       assert transfer_fare(_rules()["fare"], data) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\options.py:502: in transfer_fare
+    tot = max(p["base"] for p in parts) + distance_fare(sum(p["m"] for p in parts), steps)
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+m = inf, steps = [{'_from': 10000, 'every_m': 5000, 'upto_m': None, 'won': 100}]
+
+    def distance_fare(m, steps):
+        """거리 추가운임(원) — base_m 을 넘은 몫을 단계마다 「every_m 마다 won」(올림)으로 매긴다."""
+        extra, cur = 0, 0
+        for s in steps:
+            cur = s["_from"]
+            if m <= cur:
+                break
+            end = m if s["upto_m"] is None else min(m, s["upto_m"])
+>           extra += math.ceil((end - cur) / s["every_m"]) * s["won"]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           OverflowError: cannot convert float infinity to integer
+
+app\domains\travel_ops\instances\mobility\engine\options.py:125: OverflowError
+______ test_invalid_distance_fare_or_clock_does_not_produce_money[m--1] _______
+
+field = 'm', value = -1
+
+    @pytest.mark.parametrize("field,value", [
+        ("m", float("nan")), ("m", float("inf")), ("m", -1), ("m", True),
+        ("base", -1), ("board", float("nan")), ("alight", None),
+    ])
+    def test_invalid_distance_fare_or_clock_does_not_produce_money(field, value):
+        data = parts(720, 725)
+        data[0][field] = value
+>       assert transfer_fare(_rules()["fare"], data) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = transfer_fare({'bus': {'by_type': {'grade': '확정', 'value': {'간선': 1500, '광역': 3000, '마을': 1200, '순환': 1400, ...}, '근거': '서울시 물가정보 버스...1회용 교통카드는 교통카드 운임 + 100원(지하철 페이지). 외국인 관광객도 교통카드(티머니·Discover Seoul Pass 등) 사용을 기본으로 본다 — 1회용·현금은 값을 따로 내지 않는다.'}, ...}, [{'alight': 720, 'base': 1500, 'board': 710, 'kind': '간선', ...}, {'alight': 735, 'base': 1550, 'board': 725, 'kind': 'subway', ...}])
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:39: AssertionError
+_____ test_invalid_distance_fare_or_clock_does_not_produce_money[m-True] ______
+
+field = 'm', value = True
+
+    @pytest.mark.parametrize("field,value", [
+        ("m", float("nan")), ("m", float("inf")), ("m", -1), ("m", True),
+        ("base", -1), ("board", float("nan")), ("alight", None),
+    ])
+    def test_invalid_distance_fare_or_clock_does_not_produce_money(field, value):
+        data = parts(720, 725)
+        data[0][field] = value
+>       assert transfer_fare(_rules()["fare"], data) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = transfer_fare({'bus': {'by_type': {'grade': '확정', 'value': {'간선': 1500, '광역': 3000, '마을': 1200, '순환': 1400, ...}, '근거': '서울시 물가정보 버스...1회용 교통카드는 교통카드 운임 + 100원(지하철 페이지). 외국인 관광객도 교통카드(티머니·Discover Seoul Pass 등) 사용을 기본으로 본다 — 1회용·현금은 값을 따로 내지 않는다.'}, ...}, [{'alight': 720, 'base': 1500, 'board': 710, 'kind': '간선', ...}, {'alight': 735, 'base': 1550, 'board': 725, 'kind': 'subway', ...}])
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:39: AssertionError
+_____ test_invalid_distance_fare_or_clock_does_not_produce_money[base--1] _____
+
+field = 'base', value = -1
+
+    @pytest.mark.parametrize("field,value", [
+        ("m", float("nan")), ("m", float("inf")), ("m", -1), ("m", True),
+        ("base", -1), ("board", float("nan")), ("alight", None),
+    ])
+    def test_invalid_distance_fare_or_clock_does_not_produce_money(field, value):
+        data = parts(720, 725)
+        data[0][field] = value
+>       assert transfer_fare(_rules()["fare"], data) is None
+E       AssertionError: assert 1549 is None
+E        +  where 1549 = transfer_fare({'bus': {'by_type': {'grade': '확정', 'value': {'간선': 1500, '광역': 3000, '마을': 1200, '순환': 1400, ...}, '근거': '서울시 물가정보 버스...1회용 교통카드는 교통카드 운임 + 100원(지하철 페이지). 외국인 관광객도 교통카드(티머니·Discover Seoul Pass 등) 사용을 기본으로 본다 — 1회용·현금은 값을 따로 내지 않는다.'}, ...}, [{'alight': 720, 'base': -1, 'board': 710, 'kind': '간선', ...}, {'alight': 735, 'base': 1550, 'board': 725, 'kind': 'subway', ...}])
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:39: AssertionError
+____ test_invalid_distance_fare_or_clock_does_not_produce_money[board-nan] ____
+
+field = 'board', value = nan
+
+    @pytest.mark.parametrize("field,value", [
+        ("m", float("nan")), ("m", float("inf")), ("m", -1), ("m", True),
+        ("base", -1), ("board", float("nan")), ("alight", None),
+    ])
+    def test_invalid_distance_fare_or_clock_does_not_produce_money(field, value):
+        data = parts(720, 725)
+        data[0][field] = value
+>       assert transfer_fare(_rules()["fare"], data) is None
+E       AssertionError: assert 1550 is None
+E        +  where 1550 = transfer_fare({'bus': {'by_type': {'grade': '확정', 'value': {'간선': 1500, '광역': 3000, '마을': 1200, '순환': 1400, ...}, '근거': '서울시 물가정보 버스...1회용 교통카드는 교통카드 운임 + 100원(지하철 페이지). 외국인 관광객도 교통카드(티머니·Discover Seoul Pass 등) 사용을 기본으로 본다 — 1회용·현금은 값을 따로 내지 않는다.'}, ...}, [{'alight': 720, 'base': 1500, 'board': nan, 'kind': '간선', ...}, {'alight': 735, 'base': 1550, 'board': 725, 'kind': 'subway', ...}])
+
+tests\unit\travel\mobility\test_transfer_fare_clock_v1.py:39: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\transfer-clock-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_following_board_controls_day_or_night_window[1240-1280-1550]
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_following_board_controls_day_or_night_window[1230-1290-1550]
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_following_board_controls_day_or_night_window[400-440-None]
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_following_board_controls_day_or_night_window[380-421-None]
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_overlapping_rides_cannot_receive_transfer_discount
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_invalid_distance_fare_or_clock_does_not_produce_money[m-nan]
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_invalid_distance_fare_or_clock_does_not_produce_money[m-inf]
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_invalid_distance_fare_or_clock_does_not_produce_money[m--1]
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_invalid_distance_fare_or_clock_does_not_produce_money[m-True]
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_invalid_distance_fare_or_clock_does_not_produce_money[base--1]
+FAILED tests/unit/travel/mobility/test_transfer_fare_clock_v1.py::test_invalid_distance_fare_or_clock_does_not_produce_money[board-nan]
+11 failed, 6 passed in 5.89s
+Exception ignored in: <function Console.__del__ at 0x0000022343D05BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

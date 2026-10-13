@@ -1,0 +1,6 @@
+CANDIDATE=legacy/deployment_candidates/2026-10-12_015017_plugin_v11
+FIXED_PYTEST_COMMAND=C:\Users\playdata2\anaconda3\python.exe -m pytest tests/unit/travel/test_fact_read_recovery.py tests/unit/travel/test_fact_context.py tests/unit/travel/test_initial_retry_boundaries.py tests/unit/core/test_controller_resume_recovery.py -q --tb=short -p no:cacheprovider -o faulthandler_timeout=60
+........................................................................ [ 93%]
+.....                                                                    [100%]
+77 passed in 12.50s
+PYTEST_EXIT=0

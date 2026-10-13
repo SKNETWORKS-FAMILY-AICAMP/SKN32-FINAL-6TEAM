@@ -1,0 +1,12 @@
+사용자가 명시 승인한 Claude Sonnet 5.5 마지막 독립 코드 재감사입니다. 다른 모델로 대체하거나 하위 에이전트를 호출하지 마세요. 읽기 전용입니다. 소스/설정/문서 수정, 삭제, Git 쓰기, 설치, 배포, 네트워크 운영 요청은 금지합니다. .env/키/자격 증명/개인 메모/실제 고객 데이터/접속 문자열을 읽거나 출력하지 마세요. 시험은 기존 합성 fixture로만 실행하세요. 테스트 설정은 환경에서 기존 코드가 읽되 당신이 환경 값이나 고객 행을 출력하지 마세요.
+먼저 RULE.md와 wiki/teams/team-contract/plugin-availability.md를 처음부터 끝까지 읽으세요. wiki 확정 계약이 현재 사양입니다. 이전 Opus의 6개 지적 이후 수정에 집중하여 남은 실제 결함을 찾아 주세요:
+1. app/core/registry.py와 domain core_hooks/routing.py의 known owner metadata: other/general은 RegistryError→Controller reroute 한 번 또는 escalation, 알려진 담당 부재/disabled/load_failed는 TeamUnavailable. 구성에서 Team을 완전히 제거해도 다른 Team이 대행하지 않는가? Core domain-neutral인가?
+2. Controller/A2A 전체 deadline과 취소 cleanup 예산: 실제 Controller가 외부 wait_for로 내부 취소를 먼저 끊지 않는가? cancel 호출과 유한 종료·원래 실패 보존·async transport 및 sync resolver 계약. app/application/controller.py, app/core/remote_team/a2a_executor.py, guardrails의 비밀 없는 해당 키만 읽으세요.
+3. travel_ops lazy exports: app/domains/travel_ops/__init__.py, composition. disabled implementation이 sys.modules에 적재되지 않는 실제 subprocess 시험이 의미 있는가? 상위 import 경로로 eager load가 되지 않는가?
+4. bound move_judge: TeamUnavailable의 reason/code를 그대로 유지하고 다른 실행 오류를 성공 추정/직선거리 값으로 바꾸지 않는가? 바인딩 없는 명시적 standalone과 구분하는가?
+5. intake hours: 장소 행 존재/부재 두 경로 모두 dining catalog_state 필수관문을 거치고 Team SQL 구현을 우회하지 않는가? 장소 이름/관광번호 원본 SQL 의미가 보존되는가?
+6. worker: 조립 실패 때 Team 작업만 실패하고 분류 되잡기/동의 보관 정리/외부값 정리 같은 독립 작업을 실제로 계속 하는가? 오류가 가려져 성공으로 기록되지 않는가?
+부모 및 다른 작업자는 지금 안정화한 코드로 전체 시험 중입니다. 파일 수정 없이 독립 판단만 하세요. tests의 수제 Registry나 monkeypatch가 생산 의미를 약화시키고 실제 누락을 숨기는지 검토하세요. 지적마다 파일/행·재현·영향·확신을 구분하고 읽지 못한 범위도 명시하세요.
+반드시 Bash로 아래 기존 시험을 직접 실행하고 명령·출력·exit status를 반환하세요. 실행 시간이 걸려도 추측 통과라고 쓰지 마세요. Python은 C:/Users/playdata2/anaconda3/python.exe입니다:
+"C:/Users/playdata2/anaconda3/python.exe" -m pytest tests/unit/core/test_plugin_availability.py tests/unit/test_project_composition.py tests/unit/test_plugin_composition_runtime.py tests/unit/travel/test_plugin_worker_availability.py tests/unit/travel/test_plugin_read_boundaries.py tests/integration/controller/test_unknown_route_availability.py tests/integration/controller/test_plugin_unavailable.py tests/integration/dining/test_catalog_state_plugin.py -q --tb=short
+추가로 이미 존재하는 관련 시험을 선택 실행할 수 있습니다. 신규 파일 생성·pytest 소스 수정·고객 데이터 조회는 안 됩니다. 한국어 존댓말로 결론과 실제 검사 수/실행 결과 및 남은 결함을 반환하세요.

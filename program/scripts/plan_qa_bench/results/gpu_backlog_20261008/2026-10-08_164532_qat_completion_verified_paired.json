@@ -1,0 +1,16 @@
+{
+  "e4bqat_oos2r_h": {
+    "positive": {
+      "total": 461,
+      "trained_only_correct": 34,
+      "original_only_correct": 0,
+      "exact_p": 1.1641532182693481e-10
+    },
+    "negative": {
+      "total": 855,
+      "trained_only_correct": 487,
+      "original_only_correct": 0,
+      "exact_p": 5.0052077379577523e-147
+    }
+  }
+}

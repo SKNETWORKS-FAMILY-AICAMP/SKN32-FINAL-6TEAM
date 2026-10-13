@@ -1,0 +1,29 @@
+▲ Next.js 16.3.5 (webpack)
+✓ Running next.config.ts took 40ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.2s
+  Running TypeScript ...
+
+  We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+  	- include was updated to add '.next-api-limits-1009/types/**/*.ts'
+  	- include was updated to add '.next-api-limits-1009/dev/types/**/*.ts'
+
+  Finished TypeScript in 7.3s ...
+  Collecting page data using 5 workers ...
+  Generating static pages using 5 workers (0/2) ...
+✓ Generating static pages using 5 workers (2/2) in 1100ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /_not-found
+├ ƒ /[[...path]]
+└ ƒ /admin/api/[...segments]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

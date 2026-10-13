@@ -1,0 +1,58 @@
+[WebServer] (node:18732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:4944) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:24328) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:16784) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22572) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[WebServer] (node:4120) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:8308) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:14416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:6104) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:30532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:5040) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:27988) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:29284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 11 tests using 1 worker
+
+
+(node:27140) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/11] tests\live\day-strip-quiet.spec.ts:18:1 › 목록을 스크롤하면 일차 줄만 사라지고 멈춘 뒤 다시 나타나며 목록 위치는 유지된다
+[2/11] tests\live\day-strip-quiet.spec.ts:35:1 › 지도를 누르고 움직이는 동안은 계속 숨고 손을 놓은 뒤 복귀한다
+[3/11] tests\live\day-strip-quiet.spec.ts:48:1 › 일차 버튼 조작은 숨기지 않고 숨은 중에도 Tab을 누르면 다시 접근할 수 있다
+[4/11] tests\live\day-strip-quiet.spec.ts:69:1 › 동작 줄이기 설정에서도 숨김·복귀가 되며 위치 이동 효과는 없다
+[5/11] tests\live\submit-at-list-end-20261011.spec.ts:10:3 › 375px 일반 동작: 목록 끝에서 스크롤 중에도 제출 표시
+[6/11] tests\live\submit-at-list-end-20261011.spec.ts:10:3 › 375px 동작 줄임: 목록 끝에서 스크롤 중에도 제출 표시
+[7/11] tests\live\submit-at-list-end-20261011.spec.ts:10:3 › 1280px 일반 동작: 목록 끝에서 스크롤 중에도 제출 표시
+[8/11] tests\live\submit-at-list-end-20261011.spec.ts:10:3 › 1280px 동작 줄임: 목록 끝에서 스크롤 중에도 제출 표시
+[9/11] tests\live\submit-at-list-end-20261011.spec.ts:44:1 › 목록 끝에서 접어도 제출은 숨고 다시 펼치면 복귀한다
+[10/11] tests\live\timeline-endpoints-20261009.spec.ts:52:3 › 스크롤·드래그 중 제출 숨김과 유휴 복원 375px
+[11/11] tests\live\timeline-endpoints-20261009.spec.ts:52:3 › 스크롤·드래그 중 제출 숨김과 유휴 복원 1280px
+  11 passed (1.4m)

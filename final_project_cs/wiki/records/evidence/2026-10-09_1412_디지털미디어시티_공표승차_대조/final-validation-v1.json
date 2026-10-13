@@ -1,0 +1,13 @@
+{
+  "checked_at": "2026-10-09T14:16:47.954137+09:00",
+  "matched": 310,
+  "total": 310,
+  "backups_matched": 7,
+  "backups_total": 7,
+  "prior_preserved": 322,
+  "related_tests_passed": 97,
+  "deselected": 165,
+  "ABBA_runs_passed": 16,
+  "full_feature_completion": false,
+  "browser_rendered": false
+}

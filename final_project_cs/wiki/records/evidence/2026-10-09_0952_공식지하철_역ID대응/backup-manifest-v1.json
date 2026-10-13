@@ -1,0 +1,37 @@
+[
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0952_공식지하철_역ID대응/mobility.md",
+    "sha256": "94d91bac7eb9da4f069957cb3fa8437c48788dd433de2652aeda3925693e8e8c"
+  },
+  {
+    "source": "datasets/mobility/REPORT.md",
+    "backup": "datasets/mobility/_backup/2026-10-09_0952_공식지하철_역ID대응/REPORT.md",
+    "sha256": "9fd2fa713fe24a0e1c9e164c5572f5b26020acd66eba866a62048b51d2ecab5d"
+  },
+  {
+    "source": "datasets/mobility/README.md",
+    "backup": "datasets/mobility/_backup/2026-10-09_0952_공식지하철_역ID대응/README.md",
+    "sha256": "052b3fb8e0c8d800f6b1f773ce9cc6849e952d1097667fbfad13e9d0dab9a42f"
+  },
+  {
+    "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py",
+    "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_0955_지하철누락호선/seoul_subway.py",
+    "sha256": "48b3c2bedc1bce1b05c882d8c7556d31080ffa68a0c6c5c570fa92c91b905345"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0955_지하철누락호선/mobility.md",
+    "sha256": "d88bcbb716ef249a3f8b9ffbcff6aab412cc8b3a38a1bf44cc14cc2d233a0d0c"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0959_공식지하철_역ID검증결과/mobility.md",
+    "sha256": "efb78cf891fe50709347a21fd8a340dd71bffabf6c27f7b1cae736f7feeb0836"
+  },
+  {
+    "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0955_실시간지하철_세호선_필터누락.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0959_지하철호선누락_결함종료/2026-10-09_0955_실시간지하철_세호선_필터누락.md",
+    "sha256": "4c93909fdfe2a5552ad3213065f756828890701b633abecd959111221d06d998"
+  }
+]

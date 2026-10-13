@@ -18,7 +18,7 @@ from app.core.project_config import ProjectConfig, load_project_config, config_r
 from app.core.registry import TeamRegistry
 from app.core.service_bindings import BindingTable, collect_services, collect_registration, collecting_services
 from app.core.remote_team.a2a_executor import A2ATeamExecutor
-from app.core.remote_team.executor import LocalTeamExecutor, TeamExecutorPort
+from app.core.remote_team.executor import TeamExecutorPort
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
 from app.core.settings import get_settings
@@ -217,37 +217,6 @@ def build_kakao_local() -> Any | None:
     return KakaoLocal(api_key=key, budget=CallBudget(connection_factory=get_connection, caps=kakao_caps()))
 
 
-def build_activity_judge_llm() -> Any | None:
-    """활동 판정 LLM(D-CS-008) — Responses API 어댑터. 쓰지 않을 때는 `None`.
-
-    ★`None` 인 경우: `activity_judge_mode = rule` 이거나 OpenAI 키가 없을 때. 그러면 Team 은 규칙 판정만 한다
-      (키가 없는데 섀도로 돌려 매번 실패를 남기지 않는다). 만드는 것 자체는 I/O 가 없다 — 부를 때 나간다.
-    ★설정 객체에 칸이 없으면(시험용 설정) `rule` 과 같다 — 조립을 깨지 않는다(`build_kakao_local` 과 같은 방식).
-    """
-    from app.infrastructure.llm.openai_responses import OpenAIResponsesJudgeLLM
-
-    settings = get_settings()
-    if getattr(settings, "activity_judge_mode", "rule") == "rule":
-        return None
-    if not (getattr(settings, "openai_api_key", "") or "").strip():
-        return None
-    return OpenAIResponsesJudgeLLM(connection_factory=get_connection)
-
-
-def build_activity_judge_shadow_sink():
-    """섀도 기록 한 줄을 표 `activity_judge_shadow` 한 행으로 쓰는 함수(A안, 2026-10-06).
-
-    ★호출마다 연결을 새로 연다 — 백그라운드 스레드에서 불리고, 판정 한 건에 한 번이라 연결 풀을 따로 두지 않는다.
-    """
-    from app.infrastructure.db.repository import create_activity_judge_shadow
-
-    def sink(record: dict[str, Any]) -> None:
-        with get_connection() as conn, conn.transaction():
-            create_activity_judge_shadow(conn, record)
-
-    return sink
-
-
 _mobility_configuration_lock = threading.Lock()
 _mobility_configuration_key = None
 
@@ -290,6 +259,104 @@ def _configure_mobility_once(settings):
     return mobility_wiring.configure_from_settings(settings, bike_gate=bike_gate)
 
 
+def build_mobility_departure_observer(settings, sources, *, guardrails=None):
+    """현재 구간 재검증에 기존 도착정보 소스·캐시·정책을 꽂는다. 배포·전송은 하지 않는다."""
+    from app.core.service_bindings import current_bindings
+    from app.core.team_availability import TeamUnavailable
+
+    table = current_bindings()
+    if table is not None:
+        try:
+            table.registry.require_runnable("mobility")
+        except TeamUnavailable as exc:
+            logging.getLogger(__name__).info("departure_observation_omitted", extra={
+                "team_id": exc.team_id, "reason": exc.reason, "composition_revision": table.revision})
+            return None
+    if not getattr(settings, 'mobility_data_dir', ''):
+        return None
+    from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
+    if mobility_wiring.mode() == 'unconfigured':
+        _configure_mobility(settings)
+    if mobility_wiring.mode() != 'enabled':
+        raise mobility_wiring.MobilityUnavailable('출발 관측에 필요한 이동 계산기가 켜지지 않았다')
+    if guardrails is None:
+        from app.core.settings import get_guardrails
+        guardrails = get_guardrails()
+    import math
+    policy = {key: guardrails.get(path) for key, path in {
+        'max_age_seconds': 'travel.bus_arrival_cache_seconds',
+        'max_provider_age_seconds': 'mobility.departure_observation.max_provider_age_seconds',
+        'max_provider_clock_ahead_seconds': 'mobility.departure_observation.max_provider_clock_ahead_seconds',
+    }.items()}
+    for key, value in policy.items():
+        if (isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value)
+                or value < 0 or (key != 'max_provider_clock_ahead_seconds' and value == 0)):
+            raise ValueError(f'출발 관측 정책 값이 올바르지 않다: {key}')
+    source = getattr(sources, 'bus_arrival', None)
+    def bus_arrival(route_id, **kwargs):
+        if source is None:
+            return {'status': 'unavailable', 'reason': 'bus_arrival_source_unconfigured'}
+        return source.boardable_arrival(route_id, **policy, **kwargs)
+    subway_source = getattr(sources, 'subway_arrival', None)
+    subway_policy = dict(policy)
+    if subway_source is not None:
+        age = guardrails.get('travel.subway_arrival_cache_seconds')
+        if (isinstance(age, bool) or not isinstance(age, (int, float)) or not math.isfinite(age) or age <= 0):
+            raise ValueError('지하철 출발 관측 보관 정책 값이 올바르지 않다')
+        subway_policy['max_age_seconds'] = age
+    def subway_arrival(station, **kwargs):
+        if subway_source is None:
+            return {'status': 'unavailable', 'reason': 'subway_arrival_source_unconfigured'}
+        return subway_source.boardable_arrival(station, **subway_policy, **kwargs)
+    from app.domains.travel_ops.components.watch.departure_revalidation import build_observer
+    return build_observer(bus_arrival=bus_arrival, subway_arrival=subway_arrival,
+                          basis_validator=lambda basis: mobility_wiring.validate_departure_basis(basis))
+
+def build_activity_judge_llm() -> Any | None:
+    """활동 판정 LLM(D-CS-008) — Responses API 어댑터. 쓰지 않을 때는 `None`.
+
+    ★`None` 인 경우: `activity_judge_mode = rule` 이거나 OpenAI 키가 없을 때. 그러면 Team 은 규칙 판정만 한다
+      (키가 없는데 섀도로 돌려 매번 실패를 남기지 않는다). 만드는 것 자체는 I/O 가 없다 — 부를 때 나간다.
+    ★설정 객체에 칸이 없으면(시험용 설정) `rule` 과 같다 — 조립을 깨지 않는다(`build_kakao_local` 과 같은 방식).
+    """
+    from app.infrastructure.llm.openai_responses import OpenAIResponsesJudgeLLM
+
+    settings = get_settings()
+    if getattr(settings, "activity_judge_mode", "rule") == "rule":
+        return None
+    if not (getattr(settings, "openai_api_key", "") or "").strip():
+        return None
+    return OpenAIResponsesJudgeLLM(connection_factory=get_connection)
+
+
+def build_activity_judge_shadow_sink():
+    """섀도 기록 한 줄을 표 `activity_judge_shadow` 한 행으로 쓰는 함수(A안, 2026-10-06).
+
+    ★호출마다 연결을 새로 연다 — 백그라운드 스레드에서 불리고, 판정 한 건에 한 번이라 연결 풀을 따로 두지 않는다.
+    """
+    from app.infrastructure.db.repository import create_activity_judge_shadow
+
+    def sink(record: dict[str, Any]) -> None:
+        with get_connection() as conn, conn.transaction():
+            create_activity_judge_shadow(conn, record)
+
+    return sink
+
+
+def build_activity_judge_budget():
+    """판정 LLM 호출 예산 — 판정 종류 → 「불러도 되나」. `external_call_budget` 의 두 줄로 센다. `[2026-10-13]`
+    활동 코어 전달 사항 7번.
+
+    ★줄: `activity_judge`(원문 해석) · `activity_judge_web`(웹 검색 — 호출당 비용이 약 100배라 따로 센다).
+      상한은 `guardrails.yaml travel.activity_judge.budget`. 프로세스 · 재기동과 상관없이 DB 에서 같이 센다.
+    ★넘거나 세다가 실패하면 활동이 **부르지 않는다**(`budget_exhausted` · `budget_unreadable`) — 모델 서버 넘김
+      장치(`_llm_failover_budget`)와 반대다. 판정 LLM 은 규칙 판정을 돕는 쪽이라 안 불러도 고객 답이 나간다.
+    """
+    from app.domains.travel_ops.instances.activity.judge.modes import budget_caps, budget_meter
+    from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget
+
+    budget = CallBudget(connection_factory=get_connection, caps=budget_caps())
+    return lambda kind: budget.try_reserve(budget_meter(kind))
 
 
 def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
@@ -302,9 +369,11 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
     #   조용히 네트워크를 타지 않게. 위 `build_travel_sources` 와 같은 이유다.
     judge_llm = None
     shadow_sink = None
+    judge_budget = None
     if tools is None:
         judge_llm = build_activity_judge_llm()
         shadow_sink = build_activity_judge_shadow_sink() if judge_llm is not None else None
+        judge_budget = build_activity_judge_budget() if judge_llm is not None else None
         config.require_module("vector_rag", "default ReadToolbox")
         # ★바깥 소스는 **조립이 넣는다.** 도구가 스스로 만들면 테스트가 조용히
         #   네트워크를 탄다. 만드는 것 자체는 I/O 가 없다 — 호출할 때만 나간다.
@@ -315,7 +384,8 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                             travel=sources,
                             report_extractor=build_report_extractor(),
                             kakao=build_kakao_local(),
-                            google_places=build_google_places(limiter=sources.limiter))
+                            google_places=build_google_places(limiter=sources.limiter),
+                            place_status=build_place_status())
         # ☆`[2026-09-29 이동 계산기 문제목록 #24·#31·#34]` 이동 계산기를 설정대로 켜거나 끈다 — 켜면 자료를 확인하고
         #   (없거나 판 명세와 다르면 기동을 멈춘다, 결정 15) 적재까지 한다(첫 고객 요청이 약 33초를 기다리지 않게).
         #   설정 mobility_data_dir 가 비면 꺼짐. 도구를 주입한 조립(시험)은 건너뛴다.
@@ -356,6 +426,8 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                     f"team '{declaration.team_id}' supports activity_judge_mode {list(supported)}, got '{mode}'")
             team.judge_llm = judge_llm
             team.judge_shadow_sink = shadow_sink
+            if hasattr(team, "judge_budget"):
+                team.judge_budget = judge_budget
         team.manifest = team.manifest.model_copy(update={"active": declaration.active,
                                                          "team_id": declaration.team_id})
         if declaration.capabilities is not None and set(declaration.capabilities) != set(team.manifest.capabilities):
@@ -373,11 +445,14 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
 
 
 def build_team_executor(registry: TeamRegistry, *, config: ProjectConfig | None = None,
-                        transport: Any | None = None, capability_resolver: Any | None = None) -> TeamExecutorPort:
+                        transport: Any | None = None, capability_resolver: Any | None = None,
+                        execution_planner: Any | None = None, diagnostic_recorder: Any | None = None) -> TeamExecutorPort:
     config = config or load_project_config()
     _validate_modules(config)
     if config.ports.team_executor == "local":
-        return LocalTeamExecutor(registry)
+        from app.domains.travel_ops.components.watch.batch_executor import TravelBatchExecutor
+
+        return TravelBatchExecutor(registry, planner=execution_planner, diagnostic_recorder=diagnostic_recorder)
     if transport is None or capability_resolver is None:
         raise CompositionError("port team_executor=a2a requires injected transport and capability_resolver")
     return A2ATeamExecutor(transport, capability_resolver, registry=registry)
@@ -425,7 +500,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
                      llm: Any | None = None, policy_search_fn=search_policy,
                      config_path: str | Path | None = None,
                      config: ProjectConfig | None = None,
-                     action_handlers: Any | None = None) -> Controller:
+                     action_handlers: Any | None = None,
+                     execution_planner: Any | None = None) -> Controller:
     """Assemble the application Controller and inject every concrete adapter.
 
     ★`config` 를 주면 **그 선언 그대로** 조립한다(2026-09-06, reload 계약).
@@ -446,7 +522,9 @@ def build_controller(*, registry: TeamRegistry | None = None,
     registry = registry or build_registry(tools=tools, llm=llm, config=config)
     if config.response_review.enabled:
         registry.require_runnable(config.response_review.owner_team_id)
-    team_executor = team_executor or build_team_executor(registry, config=config)
+    diagnostic_recorder = build_operations_recorder(config=config)
+    team_executor = team_executor or build_team_executor(registry, config=config, execution_planner=execution_planner,
+                                                         diagnostic_recorder=diagnostic_recorder)
     verification_policy, fact_queries = build_verification(config=config)
     controller = Controller(
         registry,
@@ -463,6 +541,7 @@ def build_controller(*, registry: TeamRegistry | None = None,
         action_handlers=action_handlers if action_handlers is not None else build_action_handlers(),
         # ★`[2026-10-06]` 라우팅이 어긋났을 때 한 번 더 고르는 자리 — 어휘는 도메인이 갖는다.
         reroute=build_reroute(),
+        diagnostic_recorder=diagnostic_recorder,
     )
     with collect_services() as bindings:
         wire_domain_teams(config=config, registry=registry)
@@ -474,6 +553,26 @@ def build_controller(*, registry: TeamRegistry | None = None,
     if tools is None and ("legs", "leg_planner") in bindings:
         _configure_mobility(get_settings())
     return controller
+
+
+def build_operations_recorder(*, config: ProjectConfig | None = None):
+    from app.application.operations_diagnostics import execution_recorder
+
+    config = config if config is not None else load_project_config()
+    collect = execution_recorder(connection_factory=get_connection, policy_version=config_revision(config))
+
+    def record(payload):
+        # 중립 Controller는 subject_ref의 업무 뜻을 모른다. 조립부만 여행 UUID를 추출한다.
+        if payload.get("case_id") and not payload.get("customer_id"):
+            with get_connection() as conn:
+                case = repository.get_case(conn, tenant_id=payload["tenant_id"], case_id=payload["case_id"])
+            if case is not None:
+                payload = {**payload, "customer_id": case["customer_id"],
+                           "subject_ref": (case.get("state_json") or {}).get("subject_ref")}
+        ref = payload.get("subject_ref") or {}
+        return collect({**payload, "trip_id": payload.get("trip_id") or (ref.get("id") if ref.get("kind") == "trip" else None)})
+
+    return record
 
 
 def build_mcp_surface(app_getter):
@@ -537,15 +636,31 @@ def wire_optional_features() -> list[str]:
 
     progress_hook.register(op_stream.sse)
 
+    from app.domains.travel_ops.ports.data_sources import simulation_hook
+    from app.domains.travel_ops.components.watch import simulation
+
+    simulation_hook.register(simulation)
+
     # ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 — 우리 데이터로 가르친 모델 자리. `.env` 에 `ACOP_OLLAMA_POINTER_MODEL` 이 있을 때만 꽂는다
     #  (없으면 낱말 규칙만 — 지금까지와 같다). 켜고 끄기: 가드레일 `travel.pointer.mode`(off · shadow · on).
     from app.domains.travel_ops.components.conversation import item_pointer
 
     pointer = item_pointer.register_from_settings(get_settings())
+
+    # ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 2차 확인 — 규칙이 「끝남」이라 한 공지를 가르친 모델이 한 번 더 본다. `.env` 에
+    #  `ACOP_OLLAMA_NOTICE_MODEL` 이 있을 때만 꽂는다(없으면 규칙만). 켜고 끄기: 가드레일 `travel.notice_end.mode`(off · shadow · on).
+    from app.domains.travel_ops.ports.data_sources import notice_end_model
+
+    notice_judge = notice_end_model.register_from_settings(get_settings())
+    # `[2026-10-13 사용자 결정]` 여행 영향이 없다고 보고 보내지 않은 「기타」 재난 문자를 DB 에 남긴다(관리자 웹앱 「걸러진 재난 문자」)
+    from app.domains.travel_ops.components.watch import notice_exclusions
+
+    notice_exclusions.register()
     return (list(trip_scope.registered())
             + (["settings"] if settings_hook.is_registered() else [])
             + (["progress"] if progress_hook.is_registered() else [])
-            + (["item_pointer"] if pointer is not None else []))
+            + (["item_pointer"] if pointer is not None else [])
+            + (["notice_end_model"] if notice_judge is not None else []))
 
 
 def wire_domain_teams(*, config: ProjectConfig | None = None, registry: TeamRegistry | None = None) -> list[str]:
@@ -584,7 +699,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     Outside collection this remains the explicit standalone/unit-test assembly seam.
     Production stores the returned registrations in a per-controller BindingTable.
     """
-    from app.domains.travel_ops.components.team_hooks import dining_ledger, legs, mobility_shapes, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import activity_ledger, dining_ledger, legs, mobility_shapes, similarity, watch_planners
 
     if active_ids is not None:
         pass
@@ -610,7 +725,8 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         legs.register(leg_planner=mobility_wiring.leg_planner,
                       disruptions_from_events=mobility_wiring.disruptions_from_events,
                       walk_limit_m=walk_limit_m,
-                      basis=mobility_wiring.basis)
+                      basis=mobility_wiring.basis,
+                      departure_observer=mobility_wiring.observe_departure)
         mobility_shapes.register(items=mobility_route_shape.shapes_for_items,
                                  review=mobility_route_shape.shapes_for_review)
 
@@ -628,7 +744,8 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                lookup_factory=LedgerPlaceLookup,
                                slot_verdicts=dining_ledger_impl.slot_verdicts,
                                planner_factory=dining_ledger_impl.PlannerLedger,
-                               link_core_place=dining_ledger_impl.link_core_place_to)
+                               link_core_place=dining_ledger_impl.link_core_place_to,
+                               closure_observation=dining_ledger_impl.closure_observation)
 
     if "activity" in active_ids:
         # 활동 — 비슷한 곳 순서와 설문 선호.
@@ -637,6 +754,15 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         similarity.register(score=activity_similarity.score,
                             preference_of=activity_similarity.preference_of,
                             distance_first=activity_similarity.distance_first)
+
+        # 활동 — 휴무 · 운영시간 · 재난 영향 판정의 정본(활동 원장). 확인 화면 · 감시가 고객 문의와 같은 판정을 쓴다
+        from app.domains.travel_ops.instances.activity import ledger as activity_ledger_impl
+        from app.domains.travel_ops.instances.activity import verdicts as activity_verdicts
+
+        activity_ledger.register(state=activity_ledger_impl.state,
+                                 state_by_content=activity_ledger_impl.state_by_content,
+                                 indoor=activity_ledger_impl.indoor,
+                                 disaster=activity_verdicts.disaster_verdict)
 
     if "activity" in active_ids:
         from app.domains.travel_ops.instances.activity.team import plan_activity_trigger
@@ -647,16 +773,21 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     if "mobility" in active_ids:
         from app.domains.travel_ops.instances.mobility.team import plan_mobility_trigger
         watch_planners.register("mobility", plan_mobility_trigger)
-    names = {"mobility": "legs", "dining": "dining_ledger", "activity": "similarity"}
-    connected = [name for owner, name in names.items() if owner in active_ids]
+    names = {"mobility": ("legs",), "dining": ("dining_ledger",), "activity": ("similarity", "activity_ledger")}
+    connected = [name for owner, hooks in names.items() if owner in active_ids for name in hooks]
     connected += [f"watch:{kind}" for kind in sorted(active_ids & names.keys())]
     for declaration in (config.teams if config else []):
         if declaration.active and declaration.team_id in active_ids and declaration.hooks is not None:
-            actual = {name for name in connected if name == names.get(declaration.team_id)
+            actual = {name for name in connected if name in names.get(declaration.team_id, ())
                       or name == f"watch:{declaration.team_id}"}
             if set(declaration.hooks) != actual:
                 raise CompositionError(f"declared hooks do not match provider: {declaration.team_id}")
     return connected
+
+
+def build_place_status(google=None):
+    from app.domains.travel_ops.components.watch.place_status import PlaceStatus
+    return PlaceStatus(get_connection, google=google)
 
 
 def build_domain_routers() -> list:

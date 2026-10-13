@@ -1,0 +1,20 @@
+[WebServer] (node:1180) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:27568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:26580) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+  x  1 tests\live\submit-end-registration-20261012.spec.ts:61:1 › 등록 불가여도 끝에서는 안내를 표시하고 스크롤로는 전송하지 않는다 (0ms)
+  -  2 tests\live\submit-end-registration-20261012.spec.ts:73:1 › 목록 끝에서도 최소 접힘 중에는 안내를 숨기고 펼치면 복귀한다
+
+
+  1) tests\live\submit-end-registration-20261012.spec.ts:61:1 › 등록 불가여도 끝에서는 안내를 표시하고 스크롤로는 전송하지 않는다 
+
+    Error: worker process exited unexpectedly (code=3221226505, signal=null)
+
+  1 failed
+    tests\live\submit-end-registration-20261012.spec.ts:61:1 › 등록 불가여도 끝에서는 안내를 표시하고 스크롤로는 전송하지 않는다 
+  1 did not run

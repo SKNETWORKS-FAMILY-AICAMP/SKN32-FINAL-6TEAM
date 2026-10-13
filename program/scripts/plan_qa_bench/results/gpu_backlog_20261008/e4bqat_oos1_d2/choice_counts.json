@@ -1,0 +1,99 @@
+{
+  "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+  "suite": "D2",
+  "saved": 1000,
+  "expected": 1000,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "single_choice_expected": 1000,
+  "compound_diagnostic_total": 0,
+  "positive": {
+    "total": 0,
+    "correct": 0,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.0,
+      1.0
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      1.0
+    ]
+  },
+  "negative": {
+    "total": 1000,
+    "correct": 995,
+    "false_pick": 5,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9883490446266249,
+      0.9978624644726756
+    ],
+    "false_pick_wilson95": [
+      0.0021375355273244596,
+      0.011650955373375113
+    ]
+  },
+  "subtypes": {
+    "chitchat_holdout_aihub": {
+      "total": 700,
+      "correct": 695,
+      "false_pick": 5,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.983389156548705,
+        0.9969452516518496
+      ],
+      "false_pick_wilson95": [
+        0.00305474834815058,
+        0.0166108434512951
+      ]
+    },
+    "chitchat_holdout_kocul": {
+      "total": 300,
+      "correct": 300,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9873570287754538,
+        0.9999999999999998
+      ],
+      "false_pick_wilson95": [
+        8.673617379884035e-19,
+        0.012642971224546034
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "673fbdf6154233d97387b8c2a2f265c2a98e0665ba140db59ab0800a9f098581",
+  "gold_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+  "execution": {
+    "job": {
+      "id": "e4bqat_oos1_d2",
+      "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "prompts": "/workspace/heavy/all_prompts_d2.json",
+      "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "d2_backlog_e4bqat_oos1",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1000,
+      "purpose": "Missing matched QAT D/D2 normal-request and no-selection regression coverage; diagnose H improvement versus mixed-request retention losses; retain compound diagnostic separately; no repeats or adoption",
+      "lora": "/workspace/tripilot/oos1_lora_f16.gguf",
+      "lora_sha256": "6d3cf6786fb5e99511930e493776d38695adf6fd201fd16398df7ade01f767ba"
+    },
+    "started": "2026-10-08T08:19:46.037504+00:00",
+    "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

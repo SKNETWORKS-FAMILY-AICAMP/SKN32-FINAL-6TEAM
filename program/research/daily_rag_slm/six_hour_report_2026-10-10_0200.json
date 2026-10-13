@@ -1,0 +1,118 @@
+{
+  "report": "final_project_cs/wiki/records/reports/2026-10-10_0200_six-hour-gpu-arm-report.md",
+  "gpu": {
+    "observed_at_utc": "2026-10-09T17:18:57.059649+00:00",
+    "A": {
+      "gpu": "3158 MiB, 78 %",
+      "registered": 131,
+      "status_counts": {
+        "completed": 103,
+        "completed_with_errors": 22,
+        "failed": 2,
+        "running": 1
+      },
+      "ready_jobs": [
+        "e4bbase_cosine_s20261014_multi_items_bc_a1",
+        "e4bqat_cosine_s20261014_multi_items_bc_a1",
+        "frog_multi_items_bc_a1"
+      ],
+      "input_blocked_jobs": [],
+      "free_bytes": 3988393984,
+      "worker_alive": true,
+      "worker_lock_held": true,
+      "added_jobs": 8,
+      "added_questions": 6680
+    },
+    "B": {
+      "observed_at_utc": "2026-10-09T17:18:57.310867+00:00",
+      "gpu": "12603 MiB, 100 %",
+      "current": [
+        "oos2r_finch_5e5_seed20261014_20261009"
+      ],
+      "step": 300,
+      "total_steps": 654,
+      "next_ready_training_jobs": 0,
+      "free_bytes": 5886447616,
+      "conditional_candidates": [
+        "Saluki: identical trainable weights, CUDA backward, actual 16GB feasibility and storage",
+        "StandardOne: revision/license/choice-score contract and storage",
+        "Spark: preflight and source/runtime compatibility",
+        "Jevify family: source/runtime/trainability preflight"
+      ],
+      "candidate_observation_scope": "Existing preparation records, not a new upstream release recheck"
+    },
+    "archived": {
+      "sets": 22,
+      "rows": 40320,
+      "expected": 40320,
+      "failed_or_unparsed": 2,
+      "missing": 0,
+      "files": 92,
+      "files_verified": 92,
+      "new_cosine_seed14_adapter_files_verified": 18,
+      "new_cosine_seed14_basic": [
+        {
+          "file": "eval_oos2r_cosine_5e5_seed20261014_20261009_mix10.json",
+          "saved": 160,
+          "errors": 0
+        },
+        {
+          "file": "eval_oos2r_cosine_5e5_seed20261014_20261009_mix11.json",
+          "saved": 163,
+          "errors": 0
+        },
+        {
+          "file": "eval_oos2r_cosine_5e5_seed20261014_20261009_mix12.json",
+          "saved": 176,
+          "errors": 0
+        },
+        {
+          "file": "eval_oos2r_cosine_5e5_seed20261014_20261009_mix8.json",
+          "saved": 171,
+          "errors": 0
+        },
+        {
+          "file": "eval_oos2r_cosine_5e5_seed20261014_20261009_mix9.json",
+          "saved": 165,
+          "errors": 0
+        }
+      ],
+      "auto_feeder_actual_completion": {
+        "completed": 1,
+        "total": 2
+      }
+    },
+    "report": "final_project_cs/wiki/records/reports/2026-10-10_0200_six-hour-gpu-arm-report.md",
+    "resume": "Preserve running jobs; collect remaining multi-item roles and seed14 FINCH. Existing feeder will archive/register the FINCH adapter on completion. Prepared future B training count is zero; do not fill with arbitrary duplicate seeds or claim conditional candidates ready."
+  },
+  "arm": {
+    "observation": "2026-10-09T17:19:03.116429+00:00",
+    "first_http": [
+      7,
+      11
+    ],
+    "query_success": [
+      0,
+      4
+    ],
+    "repair_unit_tests": [
+      22,
+      22
+    ],
+    "repair_runtime_applied": false
+  },
+  "human_E": [
+    0,
+    158
+  ],
+  "human_selection_answer": [
+    0,
+    24
+  ],
+  "independent_holdout_complete": false,
+  "saluki_training": [
+    0,
+    1
+  ],
+  "new_research_performed": false
+}

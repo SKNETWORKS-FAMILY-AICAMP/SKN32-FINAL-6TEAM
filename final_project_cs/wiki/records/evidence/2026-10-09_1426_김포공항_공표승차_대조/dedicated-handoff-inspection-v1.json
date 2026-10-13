@@ -1,0 +1,131 @@
+{
+  "created_at": "2026-10-09T15:05:11.967588+09:00",
+  "scope": "전용 예약 대화 인계 준비만 수행. 제품 재생·회귀 검사·적용 재실행 안 함.",
+  "state_file": ".tmp\\mobility_complete_20261008\\gimpo-published-state-v1.json",
+  "current_data": {
+    "groups": 12,
+    "minutes": 2044,
+    "backup_groups": 8,
+    "backup_eight_groups_preserved": true,
+    "new_official_groups": [
+      {
+        "day_type": "weekday",
+        "dir": "U",
+        "minute_count": 182,
+        "match": true,
+        "full_hour_range": true
+      },
+      {
+        "day_type": "weekday",
+        "dir": "D",
+        "minute_count": 182,
+        "match": true,
+        "full_hour_range": true
+      },
+      {
+        "day_type": "holiday",
+        "dir": "U",
+        "minute_count": 158,
+        "match": true,
+        "full_hour_range": true
+      },
+      {
+        "day_type": "holiday",
+        "dir": "D",
+        "minute_count": 158,
+        "match": true,
+        "full_hour_range": true
+      }
+    ],
+    "manifest_entry_count": 1,
+    "manifest_hash_matches": true,
+    "manifest_bytes_match": true,
+    "current_sha256": "7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+    "manifest_sha256": "3fa2f58ee5cb58deba795a33bff57cb2bd1ea30545b3db33ca51ea2347494be7"
+  },
+  "prior_integrity": {
+    "manifest": "final_project_cs/wiki/records/evidence/2026-10-09_1412_디지털미디어시티_공표승차_대조/final-integrity-v1.json",
+    "checked": 310,
+    "matched": 307,
+    "mismatches": [
+      {
+        "path": "datasets/mobility/processed/mobility/published_boarding_timetable_v1.json",
+        "expected": "8718a8398afc4298475e63644b5ff317acaf3ef50e540a012c3319d9e10c166f",
+        "actual": "7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+        "match": false
+      },
+      {
+        "path": "datasets/mobility/processed/mobility/MANIFEST_git_v1.json",
+        "expected": "70c947c4689678d112f5a3c9cb847629ec6bd1f50e715bb18e8cc1f3dc66c763",
+        "actual": "3fa2f58ee5cb58deba795a33bff57cb2bd1ea30545b3db33ca51ea2347494be7",
+        "match": false
+      },
+      {
+        "path": "final_project_cs/wiki/teams/mobility.md",
+        "expected": "09a0143c2d51eabeb7804060b2ed4bcb118e29162ea438362f8926ab2ba0612c",
+        "actual": "a6a670f2f1c9fba38db018e3e39c4f35bcfb37928a0a9b97fbaaad4eada32b3f",
+        "match": false
+      }
+    ]
+  },
+  "backup_checks": [
+    {
+      "path": "datasets/mobility/processed/mobility/published_boarding_timetable_v1.json",
+      "backup": "datasets/mobility/processed/mobility/_backup/2026-10-09_1426_김포공항_공표승차_대조/published_boarding_timetable_v1.json",
+      "sha256": "8718a8398afc4298475e63644b5ff317acaf3ef50e540a012c3319d9e10c166f",
+      "backup_actual_sha256": "8718a8398afc4298475e63644b5ff317acaf3ef50e540a012c3319d9e10c166f",
+      "match": true
+    },
+    {
+      "path": "datasets/mobility/processed/mobility/MANIFEST_git_v1.json",
+      "backup": "datasets/mobility/processed/mobility/_backup/2026-10-09_1426_김포공항_공표승차_대조/MANIFEST_git_v1.json",
+      "sha256": "70c947c4689678d112f5a3c9cb847629ec6bd1f50e715bb18e8cc1f3dc66c763",
+      "backup_actual_sha256": "70c947c4689678d112f5a3c9cb847629ec6bd1f50e715bb18e8cc1f3dc66c763",
+      "match": true
+    },
+    {
+      "path": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1426_김포공항_공표승차_대조/mobility.md",
+      "sha256": "09a0143c2d51eabeb7804060b2ed4bcb118e29162ea438362f8926ab2ba0612c",
+      "backup_actual_sha256": "09a0143c2d51eabeb7804060b2ed4bcb118e29162ea438362f8926ab2ba0612c",
+      "match": true
+    },
+    {
+      "path": "datasets/mobility/REPORT.md",
+      "backup": "datasets/mobility/_backup/2026-10-09_1426_김포공항_공표승차_대조/REPORT.md",
+      "sha256": "14b5aad011485a0e4b904cf0c6dfd444ab8ee3a66a4e1f3fe67ba5b8545755a2",
+      "backup_actual_sha256": "14b5aad011485a0e4b904cf0c6dfd444ab8ee3a66a4e1f3fe67ba5b8545755a2",
+      "match": true
+    }
+  ],
+  "evidence_files_at_inspection": [
+    "backup-manifest-v1.json",
+    "baseline-v1.json",
+    "before-data-audit-v1.json",
+    "before-product-replay-v1.json"
+  ],
+  "execution_evidence": {
+    "before-product-replay-v1.json": true,
+    "product-replay-v1.json": false,
+    "related-v1.log": false,
+    "related-v1.xml": false,
+    "related-v1-run.json": false,
+    "final-integrity-v1.json": false
+  },
+  "process_inspection": {
+    "method": "Get-CimInstance Win32_Process; python.exe/pythonw.exe; command line matches apply_replay_gimpo or verify_gimpo_boarding",
+    "checked_at": "2026-10-09T15:03:51.8826195+09:00",
+    "matched_processes": 0,
+    "sandbox_initial_query": "CIM access unavailable; elevated read-only query succeeded"
+  },
+  "automation": {
+    "id": "automation-2",
+    "kind": "heartbeat",
+    "name": "이동 모듈 개선·재검증 계속",
+    "status": "ACTIVE",
+    "rrule": "FREQ=HOURLY;INTERVAL=6",
+    "target_thread_id": "01a11f41-7ba2-7842-8ea6-1a2fd857fd52",
+    "updated_at": 1791525768322
+  },
+  "limits": "12그룹 파일 존재는 검증 완료가 아닙니다. 제외312행·다른1746그룹 보존·ABBA16회·관련 회귀 검사는 다음 실행에서 실측해야 합니다."
+}

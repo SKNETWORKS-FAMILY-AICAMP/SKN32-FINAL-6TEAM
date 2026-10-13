@@ -1,0 +1,27 @@
+{
+  "source_hash_matches": 235,
+  "backup_hash_matches": 11,
+  "local_links": [
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v37/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1023_계획지하철_공식ID연결",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1023_계획지하철_공식ID연결/runtime.py",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1023_계획지하철_공식ID연결/backup-manifest-v1.json",
+    "final_project_cs/wiki/records/reports/debugs/2026-10-09_1023_계획지하철_공식ID연결.md",
+    "datasets/mobility/processed/mobility/subway_realtime_stations_20260902_v1.json",
+    "final_project_cs/wiki/records/reports/2026-10-09_1032_계획지하철_공식역ID와_내용판_연결검증.md",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v37/readiness-catalog.json"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_1032_계획지하철_공식역ID와_내용판_연결검증.md": "ae09660a4a5b75f7f01d85c1a373ebb84210064d14882e9a3dee32fa1e54b8da",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v37/mobility-readiness.html": "336eafe804269792cbe8d269e858e49ed2e63dbb2b379a2730401f36cf651d1b",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v37/readiness-catalog.json": "881c697590f732a9e3494882b16ea683d939e89665e97e3e1abf6878e0f27466",
+    "final_project_cs/wiki/teams/mobility.md": "620475aa00199cef01041608f56b6bc16fc77f99d71617a0c89de08c0d4bcf42",
+    "final_project_cs/wiki/records/reports/debugs/2026-10-09_1023_계획지하철_공식ID연결.md": "7632266b0cf472b42c5fc4fe715097a99182014cb5e2d5cb68ac46aa4160e0c9",
+    "datasets/mobility/README.md": "f6b06b13d4fcbb0976a6578c6f710af5bac9014065f24764b8c7eefa0f75fcd1",
+    "datasets/mobility/REPORT.md": "90e2e864fe469809066d66e82b46d2a31ff4690078ced517ed20959e9b740c4f",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1023_계획지하철_공식ID연결/verification-proof-v1.json": "681d0a7805bbdc1ffdf572f23ee039598b21989918ad64bc719575e196a189d9",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1023_계획지하철_공식ID연결/backup-manifest-v1.json": "f97f6115b9b7851008803e6b8c46284395d67f659509165875ab1943d77785f1"
+  },
+  "feature_count": 21,
+  "browser_render_verified": false
+}

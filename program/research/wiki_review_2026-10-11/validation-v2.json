@@ -1,0 +1,67 @@
+{
+  "checks": [
+    {
+      "name": "25개 고유 항목",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "항목마다 선택지3개·추천1개",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "수정문장·작업·완료검사 구체화",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "모든 수정 대상 실재",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "모든 근거 대상 실재",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Claude 정확한 모델 2회 응답",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "코드·DB·배포 완료와 계획 구분",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "사용자 방향 반영",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "설계와 표준값 구분",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "W04 현재 공유 토큰 근거",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "외부 자동 리소스 로드 없음",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "새 코드 근거 해시 일치",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "passed_count": 12,
+  "total": 12,
+  "passed": true
+}

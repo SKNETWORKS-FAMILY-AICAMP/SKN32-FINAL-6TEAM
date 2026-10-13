@@ -1,3 +1,11 @@
+---
+type: contract
+title: 운영 앱 API 계약
+description: 고객 앱과 분리된 개발·QA 운영 앱의 인증과 API 경계
+status: draft
+domain: travel
+---
+
 # 운영자 웹앱 연동 계약
 
 2026-10-08 사용자 요청. 고객 웹앱과 별도 프로세스인 운영 앱에만 아래 경로를 등록한다.
@@ -9,6 +17,7 @@
 | POST /admin/api/login | operatorId, password; X-CSRF-Token 이중제출; 로그인 실패 잠금 |
 | POST /admin/api/logout | 서명 세션 기반 CSRF 확인 뒤 쿠키 삭제 |
 | GET /admin/api/snapshot | ops:introspect 권한; 현재 테넌트에 한정한 관리자 화면 자료 |
+| GET /admin/api/api-limits | ops:introspect 권한; 현재 프로세스의 API 일·월 ENV 한도와 기본값·DB 기록. [세부 계약](api-environment-limits.md) |
 | POST /admin/api/commands | model.ts의 13가지 명령. 서버에서 입력·권한·대상·사유 재검증 |
 | GET /v1/web/support/notices | 고객 API의 공개 공지·점검 상태; 고객 인증정보 불필요 |
 | GET /v1/web/support/inquiries | 고객 인증으로 본인 문의와 답변 조회 |

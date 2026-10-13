@@ -41,3 +41,5 @@ def normalize_window(first_raw, last_raw, base_d):
     if f > l:
         return None, None, "근거없음", f"첫차 {_hm(f)} > 막차 {_hm(l)} — 운행 구간을 해석할 수 없음"
     return _hm(f), _hm(l), grade, note
+
+

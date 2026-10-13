@@ -1,0 +1,258 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.map-proof.config.ts",
+      "map-status-bar.spec.ts:10",
+      "uiux-sonnet-map-reveal-20261012.spec.ts"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\playwright.map-proof.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-resume-20261012-v1/map-proof-evidence",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+        "testIgnore": [
+          "**/_backup/**"
+        ],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../uiux-resume-20261012-v1/map-proof-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "map-status-bar.spec.ts",
+      "file": "map-status-bar.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 3616,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m375\u001b[39m\nReceived:    \u001b[31m402.359375\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m375\u001b[39m\nReceived:    \u001b[31m402.359375\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts:55:35",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts",
+                      "column": 35,
+                      "line": 55
+                    },
+                    "snippet": "  53 |   const panel = await page.getByRole(\"region\", { name: \"변경 관리\" }).boundingBox();\n  54 |   expect(panel!.x).toBeGreaterThanOrEqual(0);\n> 55 |   expect(panel!.x + panel!.width).toBeLessThanOrEqual(375);\n     |                                   ^\n  56 |   await shot(page, \"02-time-reset-menu\");\n  57 |   const before = (await server.received(\"POST\", \"/edits\")).length;\n  58 |   await reset.click();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts",
+                        "column": 35,
+                        "line": 55
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m375\u001b[39m\nReceived:    \u001b[31m402.359375\u001b[39m\n\n  53 |   const panel = await page.getByRole(\"region\", { name: \"변경 관리\" }).boundingBox();\n  54 |   expect(panel!.x).toBeGreaterThanOrEqual(0);\n> 55 |   expect(panel!.x + panel!.width).toBeLessThanOrEqual(375);\n     |                                   ^\n  56 |   await shot(page, \"02-time-reset-menu\");\n  57 |   const before = (await server.received(\"POST\", \"/edits\")).length;\n  58 |   await reset.click();\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts:55:35"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:34:18.765Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\map-proof-evidence\\map-status-bar-위치·확인·변경-표시-a1d5c-란히-놓이고-시간-초기화는-변경-메뉴에서-동작한다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\map-proof-evidence\\map-status-bar-위치·확인·변경-표시-a1d5c-란히-놓이고-시간-초기화는-변경-메뉴에서-동작한다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts",
+                    "column": 35,
+                    "line": 55
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "307ebc2271188419de72-970ccd3f13499ab04fb7",
+          "file": "map-status-bar.spec.ts",
+          "line": 10,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11074,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:34:24.065Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjMwMywidGhpcmRGcmFtZXMiOjg2LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MCwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIyIl0sWyIxIl1dLCJjZW50ZXJEZWx0YSI6WzAuNSwwLjU1NDY4NzVdLCJwcmV2aW91c0hpZGRlbiI6W3RydWUsdHJ1ZV0sInByZXZpb3VzUmV0YWluZWQiOlt0cnVlLHRydWVdfSwiZmFpbHVyZUNvdW50IjowLCJmYWlsdXJlcyI6W10sInN0b3AiOnRydWV9"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\map-proof-evidence\\uiux-sonnet-map-reveal-202-08f40--먼-일정은-각각-거리-버튼으로-남는다-375px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-621f3725db2c2f491af0",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 24,
+          "column": 3
+        },
+        {
+          "title": "세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10718,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:34:35.770Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjMwNywidGhpcmRGcmFtZXMiOjg3LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MCwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIyIl0sWyIxIl1dLCJjZW50ZXJEZWx0YSI6WzAsMC41NTQ2ODc1XSwicHJldmlvdXNIaWRkZW4iOlt0cnVlLHRydWVdLCJwcmV2aW91c1JldGFpbmVkIjpbdHJ1ZSx0cnVlXX0sImZhaWx1cmVDb3VudCI6MCwiZmFpbHVyZXMiOltdLCJzdG9wIjp0cnVlfQ=="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\map-proof-evidence\\uiux-sonnet-map-reveal-202-74233-먼-일정은-각각-거리-버튼으로-남는다-1280px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-0a7fd47295bf24316feb",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 24,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T18:34:15.207Z",
+    "duration": 32434.827999999998,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

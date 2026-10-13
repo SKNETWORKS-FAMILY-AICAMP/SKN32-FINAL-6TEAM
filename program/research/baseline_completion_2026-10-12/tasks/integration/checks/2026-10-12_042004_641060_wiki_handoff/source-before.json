@@ -1,0 +1,87 @@
+[
+  {
+    "path": "program/scripts/check_wiki.py",
+    "handoff_sha256": "e28c4a67ce454444bd626ee493393ef7e22644fa5d2d33608242c5d240cf2bc8",
+    "current_sha256": "e28c4a67ce454444bd626ee493393ef7e22644fa5d2d33608242c5d240cf2bc8"
+  },
+  {
+    "path": "program/scripts/build_wiki_catalogs.py",
+    "handoff_sha256": "bf46453472c1957e21714063f2f654e76cfebf3f5f0f6f9b11df3e265282b010",
+    "current_sha256": "bf46453472c1957e21714063f2f654e76cfebf3f5f0f6f9b11df3e265282b010"
+  },
+  {
+    "path": "program/scripts/tests/test_wiki_governance.py",
+    "handoff_sha256": "926b73da92b5f3d7ba0e85033430809c6d5d62f4328daec4e08f1201cd6e880b",
+    "current_sha256": "926b73da92b5f3d7ba0e85033430809c6d5d62f4328daec4e08f1201cd6e880b"
+  },
+  {
+    "path": "wiki/governance/document-standard.md",
+    "handoff_sha256": "bcd967b749eb72b9c247c50601814734376b51a77bc8b5458d15c4578a2c04e6",
+    "current_sha256": "bcd967b749eb72b9c247c50601814734376b51a77bc8b5458d15c4578a2c04e6"
+  },
+  {
+    "path": "wiki/governance/front-matter.md",
+    "handoff_sha256": "f73410d6f929fe21e6e162979e6aba8a01e1c89bef9be0434dcbe9648024ad3d",
+    "current_sha256": "f73410d6f929fe21e6e162979e6aba8a01e1c89bef9be0434dcbe9648024ad3d"
+  },
+  {
+    "path": "wiki/governance/review-policy.md",
+    "handoff_sha256": "b7080f1604ab9c090bc22827fe2c1cbbcb17238ec09376087e03fba61ca7c654",
+    "current_sha256": "b7080f1604ab9c090bc22827fe2c1cbbcb17238ec09376087e03fba61ca7c654"
+  },
+  {
+    "path": "wiki/governance/evidence-grades.md",
+    "handoff_sha256": "ab6818415d90cfa926ec6e0dafc95da047d95fafb31297cc79bbe9e4c542ccea",
+    "current_sha256": "ab6818415d90cfa926ec6e0dafc95da047d95fafb31297cc79bbe9e4c542ccea"
+  },
+  {
+    "path": "wiki/governance/implementation-state.md",
+    "handoff_sha256": "02033b2874749cdc5184b5e50525152db5958255306da10dc74446ba23eaf9db",
+    "current_sha256": "02033b2874749cdc5184b5e50525152db5958255306da10dc74446ba23eaf9db"
+  },
+  {
+    "path": "wiki/governance/index.md",
+    "handoff_sha256": "88193d6a4e74342803e873861ee4da4c3c49f820f6be12bf7dbbd854d567f5c5",
+    "current_sha256": "88193d6a4e74342803e873861ee4da4c3c49f820f6be12bf7dbbd854d567f5c5"
+  },
+  {
+    "path": "wiki/delivery/roles.md",
+    "handoff_sha256": "d48675b15f04c3f942d7852e646ecb072004cdae683ba459b494c19a3193de3d",
+    "current_sha256": "d48675b15f04c3f942d7852e646ecb072004cdae683ba459b494c19a3193de3d"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/code-layout.md",
+    "handoff_sha256": "adb725a8f7f510bf7f94218fb4a3c0d9c34bd279438af70f5df36e1297a46fa4",
+    "current_sha256": "adb725a8f7f510bf7f94218fb4a3c0d9c34bd279438af70f5df36e1297a46fa4"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/findings-v2.json",
+    "handoff_sha256": "de27b6d27d09b58a08de72ac81d9c2d92eb255943af9bb87efc0cd1869ea6f59",
+    "current_sha256": "de27b6d27d09b58a08de72ac81d9c2d92eb255943af9bb87efc0cd1869ea6f59"
+  },
+  {
+    "path": "final_project_cs/wiki/data/migration-inventory.generated.md",
+    "handoff_sha256": "c1b5680ff575b27431ce5f378dd150c0e294c6a6ccb766b15b4aeb1ddc83c7ec",
+    "current_sha256": "c1b5680ff575b27431ce5f378dd150c0e294c6a6ccb766b15b4aeb1ddc83c7ec"
+  },
+  {
+    "path": "wiki/governance/implementation-inventory.generated.md",
+    "handoff_sha256": "6e83940351a4f7d3bce394833b431fdc7c022fac392916b453a77fab65cc0802",
+    "current_sha256": "6e83940351a4f7d3bce394833b431fdc7c022fac392916b453a77fab65cc0802"
+  },
+  {
+    "path": "wiki/governance/implementation-inventory.generated.json",
+    "handoff_sha256": "02f01d458faaa30ac446298cb75e462b058b53616f32a68c811b2a12cb37eb23",
+    "current_sha256": "02f01d458faaa30ac446298cb75e462b058b53616f32a68c811b2a12cb37eb23"
+  },
+  {
+    "path": "wiki/records/reports/2026-10-12_review-policy-before-followup.md",
+    "handoff_sha256": "e7dc82d87b65bcc61878002fe476f27af2a5eabd9f68303fb235e974d68685f8",
+    "current_sha256": "e7dc82d87b65bcc61878002fe476f27af2a5eabd9f68303fb235e974d68685f8"
+  },
+  {
+    "path": "wiki/records/reports/2026-10-12_evidence-grades-before-followup.md",
+    "handoff_sha256": "0240929abb9337cb67c7263d836b54769d6a0c32b1f90a08911eb82a21f8b353",
+    "current_sha256": "0240929abb9337cb67c7263d836b54769d6a0c32b1f90a08911eb82a21f8b353"
+  }
+]

@@ -1,4 +1,5 @@
 import type { Coordinates } from "@/features/map/model";
+import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 
 /**
  * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
@@ -133,6 +134,10 @@ export type PlanStage = "received" | "reading" | "checking" | "done";
 export const STAGES: readonly PlanStage[] = ["received", "reading", "checking", "done"];
 
 export interface PlanCheckView {
+  /** 이동 후보의 이전 판 상태를 폐기할 때 쓰는 실제 접수 revision. */
+  revision?: number;
+  /** 이번 접수의 응답에 있는 호출 상품만 표시합니다. */
+  taxiPricing?: WebTaxiPricing | null;
   stage: PlanStage;
   /** The trip's title once the check is done. */
   title: string | null;

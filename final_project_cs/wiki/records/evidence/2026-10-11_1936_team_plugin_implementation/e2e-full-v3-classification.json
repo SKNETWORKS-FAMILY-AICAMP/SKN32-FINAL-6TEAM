@@ -1,0 +1,85 @@
+{
+  "collected": 999,
+  "executed": 733,
+  "passed": 715,
+  "failed": 12,
+  "skipped": 6,
+  "unexecuted": 266,
+  "failures": [
+    {
+      "test": "tests.e2e.test_trip_intake_api::test_the_confirm_screen_fixes_a_time_and_registers_one_trip",
+      "reason": "AssertionError: {\"error\":{\"code\":\"schedule_check_failed\",\"message\":\"변경 후 검사를 끝내지 못해 저장하지 않았어요. 다시 시도해 주세요.\",\"reason\":\"review_failed\"}}\nassert 409 == 200\n +  where 409 = <Response [409 Conflict]>.status_code"
+    },
+    {
+      "test": "tests.e2e.test_trip_intake_api::test_a_plan_without_dates_asks_for_the_first_day_before_registering",
+      "reason": "AssertionError: {\"error\":{\"code\":\"schedule_check_failed\",\"message\":\"변경 후 검사를 끝내지 못해 저장하지 않았어요. 다시 시도해 주세요.\",\"reason\":\"review_failed\"}}\nassert 409 == 200\n +  where 409 = <Response [409 Conflict]>.status_code"
+    },
+    {
+      "test": "tests.e2e.test_trip_intake_api::test_an_unfound_place_is_fixed_by_name_or_left_without_a_place",
+      "reason": "AssertionError: {\"error\":{\"code\":\"team_unavailable\",\"message\":\"요청한 업무의 담당 기능을 사용할 수 없습니다\",\"team_id\":\"mobility\",\"reason\":\"engine_unavailable\",\"retryable\":false}}\nassert 503 == 200\n +  where 503 = <Response [503 Service Unavailable]>.status_code"
+    },
+    {
+      "test": "tests.e2e.test_trip_intake_api::test_a_place_name_the_customer_fixed_is_remembered_for_the_next_plan",
+      "reason": "AssertionError: {\"error\":{\"code\":\"team_unavailable\",\"message\":\"요청한 업무의 담당 기능을 사용할 수 없습니다\",\"team_id\":\"mobility\",\"reason\":\"engine_unavailable\",\"retryable\":false}}\nassert 503 == 200\n +  where 503 = <Response [503 Service Unavailable]>.status_code"
+    },
+    {
+      "test": "tests.e2e.test_trip_intake_api::test_a_place_the_customer_fixed_is_never_used_for_another_customer",
+      "reason": "AssertionError: {\"error\":{\"code\":\"team_unavailable\",\"message\":\"요청한 업무의 담당 기능을 사용할 수 없습니다\",\"team_id\":\"mobility\",\"reason\":\"engine_unavailable\",\"retryable\":false}}\nassert 503 == 200\n +  where 503 = <Response [503 Service Unavailable]>.status_code"
+    },
+    {
+      "test": "tests.e2e.test_trip_planner::test_the_draft_passes_the_very_check_registration_runs",
+      "reason": "AssertionError: {\"error\":{\"code\":\"team_unavailable\",\"message\":\"요청한 업무의 담당 기능을 사용할 수 없습니다\",\"team_id\":\"mobility\",\"reason\":\"engine_unavailable\",\"retryable\":false}}\nassert 503 == 200\n +  where 503 = <Response [503 Service Unavailable]>.status_code"
+    },
+    {
+      "test": "tests.e2e.test_trip_planner::test_a_violation_in_the_first_draft_is_repaired_and_rechecked",
+      "reason": "KeyError: 'checks'"
+    },
+    {
+      "test": "tests.e2e.test_trip_planner::test_registering_in_one_call_goes_through_the_same_door",
+      "reason": "KeyError: 'status'"
+    },
+    {
+      "test": "tests.e2e.test_trip_planner::test_indoor_preference_puts_more_indoor_places_in_the_draft",
+      "reason": "KeyError: 'draft'"
+    },
+    {
+      "test": "tests.e2e.test_trip_planner::test_a_place_the_customer_dislikes_is_left_out",
+      "reason": "KeyError: 'draft'"
+    },
+    {
+      "test": "tests.e2e.test_trip_planner::test_with_a_child_we_say_what_we_dropped_and_why",
+      "reason": "KeyError: 'planner'"
+    },
+    {
+      "test": "tests.e2e.test_trip_planner::test_without_a_model_it_still_drafts_and_says_so",
+      "reason": "KeyError: 'planner'"
+    }
+  ],
+  "skips": [
+    {
+      "test": "tests.e2e.test_safety_pause::test_with_no_shelter_data_the_notice_says_so_and_does_not_invent",
+      "reason": "이 개발 DB 에는 실제 대피 장소 자료가 적재돼 있다 — 「자료 없음」 경로는 빈 표에서만 본다"
+    },
+    {
+      "test": "tests.e2e.test_trip_dining_ledger::test_the_planner_takes_meals_from_the_ledger_and_every_meal_is_open_then",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    },
+    {
+      "test": "tests.e2e.test_trip_dining_ledger::test_a_lunch_at_a_dinner_only_shop_is_swapped_by_the_ledger",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    },
+    {
+      "test": "tests.e2e.test_trip_dining_ledger::test_registering_the_plan_links_its_meals_to_the_ledger",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    },
+    {
+      "test": "tests.e2e.test_trip_dining_ledger::test_registration_refuses_a_meal_the_ledger_says_is_closed",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    },
+    {
+      "test": "tests.e2e.test_trip_dining_ledger::test_registration_accepts_a_meal_the_ledger_says_is_open",
+      "reason": "원장에 실제 가게가 있는 DB 다 — 시험이 세운 가게만으로 초안을 짤 수 없다(CI DB 에서 돈다)"
+    }
+  ],
+  "note": "maxfail=12. Process source loaded before later fixture edits. Not final-source evidence."
+}

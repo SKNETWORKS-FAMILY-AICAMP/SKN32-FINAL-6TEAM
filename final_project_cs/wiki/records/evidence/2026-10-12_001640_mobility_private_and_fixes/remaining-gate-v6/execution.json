@@ -1,0 +1,25 @@
+{
+  "args": [
+    "-m",
+    "not live",
+    "tests/unit/travel/mobility/test_walk_comparison_scope_v1.py",
+    "tests/unit/travel/mobility/test_walk_comparison_values_v1.py",
+    "tests/unit/travel/mobility/test_walk_duration_contract_v1.py",
+    "tests/unit/travel/mobility/test_walk_routed_cap.py",
+    "tests/unit/travel/mobility/test_walk_timing_replay_v1.py",
+    "tests/unit/travel/test_subway_notice.py",
+    "tests/unit/travel/test_subway_notice_station_lists_v1.py",
+    "tests/contract",
+    "tests/security",
+    "-q",
+    "--maxfail=8",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\remaining-gate-v6\\temp",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\remaining-gate-v6\\result.xml"
+  ],
+  "exit_code": 0,
+  "elapsed_s": 20.34,
+  "scope": "v4 early-stop remaining files + notice + contract + security",
+  "network": "blocked except same-thread standard socketpair IPC"
+}

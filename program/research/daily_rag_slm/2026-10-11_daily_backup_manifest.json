@@ -1,0 +1,32 @@
+{
+  "created_at_utc": "2026-10-11T01:21:12.940693+00:00",
+  "files": [
+    "program/research/daily_rag_slm/_backup/2026-10-11_102112_daily_research_close/2026-10-11_sources_and_review_v1.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102112_daily_research_close/model_release_watchlist.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102112_daily_research_close/gpu_backlog_2026-10-11.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102112_daily_research_close/arm_serving_2026-10-11.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102112_daily_research_close/2026-10-11.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102112_daily_research_close/2026-10-11.md",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102112_daily_research_close/index.md",
+    "wiki/research/_backup/2026-10-11_102112_daily_research_close/rag-slm-improvements.md",
+    "wiki/_backup/2026-10-11_102112_daily_research_close/log.md",
+    "final_project_cs/wiki/operations/_backup/2026-10-11_102112_daily_research_close/arm-develop-cd.md",
+    "final_project_cs/wiki/_backup/2026-10-11_102112_daily_research_close/log.md",
+    "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-11_102112_daily_research_close/2026-10-11_1010_arm-adapter-incomplete-success.md",
+    "final_project_cs/deploy/arm/_backup/2026-10-11_100728_daily_response_guard/ollama_adapter.py",
+    "final_project_cs/wiki/operations/_backup/2026-10-11_100728_daily_response_guard/arm-develop-cd.md",
+    "final_project_cs/deploy/arm/_backup/2026-10-11_101446_upstream_error_guard/ollama_adapter.py",
+    "final_project_cs/deploy/arm/_backup/2026-10-11_101446_upstream_error_guard/test_response_guard.py",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102444_candidate_language_scope/model_release_watchlist.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102444_backup_list_addition/2026-10-11_daily_backup_manifest.json",
+    "final_project_cs/wiki/records/reports/_backup/2026-10-11_102545_replay_reproduction_link/2026-10-11_1030_daily-response-completion-research.md",
+    "program/scripts/plan_qa_bench/server/_backup/2026-10-11_101615_repeat_metadata_correction/app_schema_soak_20261011_v3.py",
+    "program/research/daily_rag_slm/_backup/2026-10-11_101615_repeat_metadata_correction/2026-10-11_app_schema_soak_originals_prereg_v3.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102749_closing_E_recovery/gpu_backlog_2026-10-11.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102749_closing_E_recovery/arm_serving_2026-10-11.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102749_closing_E_recovery/2026-10-11.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_102749_closing_E_recovery/2026-10-11.md",
+    "final_project_cs/wiki/records/reports/_backup/2026-10-11_102749_closing_E_recovery/2026-10-11_1030_daily-response-completion-research.md"
+  ],
+  "remote_queue_backup": "Private raw registration evidence; no connection information in public document"
+}

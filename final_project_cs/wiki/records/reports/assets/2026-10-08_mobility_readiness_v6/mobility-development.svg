@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="864pt" height="345.6pt" viewBox="0 0 864 345.6" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-08T23:57:55.271858</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.9.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 345.6 
+L 864 345.6 
+L 864 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 34.00024 342.59976 
+L 380.926495 342.59976 
+L 380.926495 51.87222 
+L 34.00024 51.87222 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 34.00024 65.087108 
+L 184.33495 65.087108 
+L 184.33495 158.870186 
+L 34.00024 158.870186 
+z
+" clip-path="url(#p7192db7b07)" style="fill: #93a5b5"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 34.00024 235.601794 
+L 323.105452 235.601794 
+L 323.105452 329.384872 
+L 34.00024 329.384872 
+z
+" clip-path="url(#p7192db7b07)" style="fill: #126b67"/>
+   </g>
+   <g id="matplotlib.axis_1"/>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="m83558d9a58" d="M 0 0 
+L -3.5 0 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m83558d9a58" x="34.00024" y="111.978647" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font: 12px 'Malgun Gothic'; text-anchor: end" x="27.00024" y="116.533959" transform="rotate(-0 27.00024 116.533959)">이전</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#m83558d9a58" x="34.00024" y="282.493333" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font: 12px 'Malgun Gothic'; text-anchor: end" x="27.00024" y="287.048646" transform="rotate(-0 27.00024 287.048646)">현재</text>
+     </g>
+    </g>
+   </g>
+   <g id="text_3">
+    <text style="font: 13px 'Malgun Gothic'; text-anchor: start" x="187.226003" y="115.376928" transform="rotate(-0 187.226003 115.376928)">52/100 = 52.0%</text>
+   </g>
+   <g id="text_4">
+    <text style="font: 13px 'Malgun Gothic'; text-anchor: start" x="325.996504" y="285.891614" transform="rotate(-0 325.996504 285.891614)">100/100 = 100.0%</text>
+   </g>
+   <g id="text_5">
+    <text style="font: 14.4px 'Malgun Gothic'; text-anchor: start" x="34.00024" y="33.87222" transform="rotate(-0 34.00024 33.87222)">버스만으로 경로 산출</text>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_5">
+    <path d="M 474.371394 342.59976 
+L 821.297648 342.59976 
+L 821.297648 51.87222 
+L 474.371394 51.87222 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 474.371394 65.087108 
+L 685.760151 65.087108 
+L 685.760151 158.870186 
+L 474.371394 158.870186 
+z
+" clip-path="url(#pb4c19c25c0)" style="fill: #93a5b5"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 474.371394 235.601794 
+L 763.476606 235.601794 
+L 763.476606 329.384872 
+L 474.371394 329.384872 
+z
+" clip-path="url(#pb4c19c25c0)" style="fill: #126b67"/>
+   </g>
+   <g id="matplotlib.axis_3"/>
+   <g id="matplotlib.axis_4">
+    <g id="ytick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#m83558d9a58" x="474.371394" y="111.978647" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font: 12px 'Malgun Gothic'; text-anchor: end" x="467.371394" y="116.533959" transform="rotate(-0 467.371394 116.533959)">이전</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m83558d9a58" x="474.371394" y="282.493333" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <text style="font: 12px 'Malgun Gothic'; text-anchor: end" x="467.371394" y="287.048646" transform="rotate(-0 467.371394 287.048646)">현재</text>
+     </g>
+    </g>
+   </g>
+   <g id="text_8">
+    <text style="font: 13px 'Malgun Gothic'; text-anchor: start" x="688.868809" y="115.376928" transform="rotate(-0 688.868809 115.376928)">68/93 = 73.1%</text>
+   </g>
+   <g id="text_9">
+    <text style="font: 13px 'Malgun Gothic'; text-anchor: start" x="766.585264" y="285.891614" transform="rotate(-0 766.585264 285.891614)">93/93 = 100.0%</text>
+   </g>
+   <g id="text_10">
+    <text style="font: 14.4px 'Malgun Gothic'; text-anchor: start" x="474.371394" y="33.87222" transform="rotate(-0 474.371394 33.87222)">같은 지하철 경로의 요금 안내</text>
+   </g>
+  </g>
+  <g id="text_11">
+   <text style="font: 14px 'Malgun Gothic'; text-anchor: middle" x="432" y="13.629302" transform="rotate(-0 432 13.629302)">산출과 요금 안내가 늘었습니다. 시간·정확 요금 검증은 별도입니다.</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p7192db7b07">
+   <rect x="34.00024" y="51.87222" width="346.926255" height="290.72754"/>
+  </clipPath>
+  <clipPath id="pb4c19c25c0">
+   <rect x="474.371394" y="51.87222" width="346.926255" height="290.72754"/>
+  </clipPath>
+ </defs>
+</svg>

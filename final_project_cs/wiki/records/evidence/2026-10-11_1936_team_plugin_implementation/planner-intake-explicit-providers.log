@@ -1,0 +1,286 @@
+...........FFF..FF..............F...........F.F
+================================== FAILURES ===================================
+_________ test_the_confirm_screen_fixes_a_time_and_registers_one_trip _________
+tests\e2e\test_trip_intake_api.py:343: in test_the_confirm_screen_fixes_a_time_and_registers_one_trip
+    fixed = _edit(client, headers, view, {"source_id": source, "field": "items[2].starts_at", "value": "18:30"})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\e2e\test_trip_intake_api.py:322: in _edit
+    assert response.status_code == status, response.text
+E   AssertionError: {"error":{"code":"schedule_check_failed","message":"���� �� �˻縦 ������ ���� �������� �ʾҾ��. �ٽ� �õ��� �ּ���.","reason":"review_failed"}}
+E   assert 409 == 200
+E    +  where 409 = <Response [409 Conflict]>.status_code
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:206 intake review failed intake=8f771288-17b6-495e-a968-2ed91d19d640
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 202, in process
+    review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=1,
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:317 intake review failed intake=8f771288-17b6-495e-a968-2ed91d19d640 revision=1
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 313, in _review_of
+    return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:317 intake review failed intake=8f771288-17b6-495e-a968-2ed91d19d640 revision=2
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 313, in _review_of
+    return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+_____ test_a_plan_without_dates_asks_for_the_first_day_before_registering _____
+tests\e2e\test_trip_intake_api.py:378: in test_a_plan_without_dates_asks_for_the_first_day_before_registering
+    fixed = _edit(client, headers, view, {"field": "trip.first_day", "value": "2026-11-02"})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\e2e\test_trip_intake_api.py:322: in _edit
+    assert response.status_code == status, response.text
+E   AssertionError: {"error":{"code":"schedule_check_failed","message":"���� �� �˻縦 ������ ���� �������� �ʾҾ��. �ٽ� �õ��� �ּ���.","reason":"review_failed"}}
+E   assert 409 == 200
+E    +  where 409 = <Response [409 Conflict]>.status_code
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:206 intake review failed intake=b2745b1c-b587-4336-884a-4abdd76976a8
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 202, in process
+    review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=1,
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:317 intake review failed intake=b2745b1c-b587-4336-884a-4abdd76976a8 revision=1
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 313, in _review_of
+    return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:317 intake review failed intake=b2745b1c-b587-4336-884a-4abdd76976a8 revision=2
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 313, in _review_of
+    return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+_______ test_an_unfound_place_is_fixed_by_name_or_left_without_a_place ________
+tests\e2e\test_trip_intake_api.py:395: in test_an_unfound_place_is_fixed_by_name_or_left_without_a_place
+    fixed = _edit(client, headers, view,
+tests\e2e\test_trip_intake_api.py:322: in _edit
+    assert response.status_code == status, response.text
+E   AssertionError: {"error":{"code":"team_unavailable","message":"��û�� ������ ��� ����� ����� �� �����ϴ�","team_id":"mobility","reason":"engine_unavailable","retryable":false}}
+E   assert 503 == 200
+E    +  where 503 = <Response [503 Service Unavailable]>.status_code
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:206 intake review failed intake=97a5b919-124f-4294-83be-0f32e949b3ea
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 202, in process
+    review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=1,
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:317 intake review failed intake=97a5b919-124f-4294-83be-0f32e949b3ea revision=1
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 313, in _review_of
+    return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+____ test_a_place_name_the_customer_fixed_is_remembered_for_the_next_plan _____
+tests\e2e\test_trip_intake_api.py:442: in test_a_place_name_the_customer_fixed_is_remembered_for_the_next_plan
+    _edit(client, headers, first, {"source_id": source, "field": "items[1].place", "value": {"name": "�������"}})
+tests\e2e\test_trip_intake_api.py:322: in _edit
+    assert response.status_code == status, response.text
+E   AssertionError: {"error":{"code":"team_unavailable","message":"��û�� ������ ��� ����� ����� �� �����ϴ�","team_id":"mobility","reason":"engine_unavailable","retryable":false}}
+E   assert 503 == 200
+E    +  where 503 = <Response [503 Service Unavailable]>.status_code
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:206 intake review failed intake=0e911f01-6102-4e5e-b38d-6cbfea827f78
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 202, in process
+    review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=1,
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:317 intake review failed intake=0e911f01-6102-4e5e-b38d-6cbfea827f78 revision=1
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 313, in _review_of
+    return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+_____ test_a_place_the_customer_fixed_is_never_used_for_another_customer ______
+tests\e2e\test_trip_intake_api.py:461: in test_a_place_the_customer_fixed_is_never_used_for_another_customer
+    _edit(client, mine, first, {"source_id": source, "field": "items[1].place", "value": {"name": "�������"}})
+tests\e2e\test_trip_intake_api.py:322: in _edit
+    assert response.status_code == status, response.text
+E   AssertionError: {"error":{"code":"team_unavailable","message":"��û�� ������ ��� ����� ����� �� �����ϴ�","team_id":"mobility","reason":"engine_unavailable","retryable":false}}
+E   assert 503 == 200
+E    +  where 503 = <Response [503 Service Unavailable]>.status_code
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:206 intake review failed intake=a1e31434-f6c2-43c9-af7c-101e15beac56
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 202, in process
+    review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=1,
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:317 intake review failed intake=a1e31434-f6c2-43c9-af7c-101e15beac56 revision=1
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 313, in _review_of
+    return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 670, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 399, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 346, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 74, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+______________ test_with_a_model_the_order_comes_from_the_model _______________
+tests\e2e\test_trip_planner.py:370: in test_with_a_model_the_order_comes_from_the_model
+    _assert_leave_rule(flipped)
+tests\e2e\test_trip_planner.py:567: in _assert_leave_rule
+    assert datetime.fromisoformat(after["starts_at"]) - arrive == timedelta(minutes=MOVE_BUFFER_MIN)
+E   AssertionError: assert (datetime.datetime(2026, 10, 5, 12, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))) - datetime.datetime(2026, 10, 5, 10, 35, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))) == datetime.timedelta(seconds=600)
+E    +  where datetime.datetime(2026, 10, 5, 12, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))) = <built-in method fromisoformat of type object at 0x00007FF9C2235080>('2026-10-05T12:00:00+09:00')
+E    +    where <built-in method fromisoformat of type object at 0x00007FF9C2235080> = <class 'datetime.datetime'>.fromisoformat
+E    +  and   datetime.timedelta(seconds=600) = <class 'datetime.timedelta'>(minutes=10)
+_______ test_every_move_leaves_at_next_start_minus_travel_minus_buffer ________
+tests\e2e\test_trip_planner.py:578: in test_every_move_leaves_at_next_start_minus_travel_minus_buffer
+    _assert_leave_rule(body["draft"])
+tests\e2e\test_trip_planner.py:567: in _assert_leave_rule
+    assert datetime.fromisoformat(after["starts_at"]) - arrive == timedelta(minutes=MOVE_BUFFER_MIN)
+E   AssertionError: assert (datetime.datetime(2026, 10, 5, 12, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))) - datetime.datetime(2026, 10, 5, 10, 35, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))) == datetime.timedelta(seconds=600)
+E    +  where datetime.datetime(2026, 10, 5, 12, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))) = <built-in method fromisoformat of type object at 0x00007FF9C2235080>('2026-10-05T12:00:00+09:00')
+E    +    where <built-in method fromisoformat of type object at 0x00007FF9C2235080> = <class 'datetime.datetime'>.fromisoformat
+E    +  and   datetime.timedelta(seconds=600) = <class 'datetime.timedelta'>(minutes=10)
+________ test_pace_decides_how_many_places_a_day_by_measuring_the_day _________
+tests\e2e\test_trip_planner.py:631: in test_pace_decides_how_many_places_a_day_by_measuring_the_day
+    _assert_leave_rule(body["draft"])
+tests\e2e\test_trip_planner.py:567: in _assert_leave_rule
+    assert datetime.fromisoformat(after["starts_at"]) - arrive == timedelta(minutes=MOVE_BUFFER_MIN)
+E   AssertionError: assert (datetime.datetime(2026, 10, 5, 12, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))) - datetime.datetime(2026, 10, 5, 10, 35, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))) == datetime.timedelta(seconds=600)
+E    +  where datetime.datetime(2026, 10, 5, 12, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))) = <built-in method fromisoformat of type object at 0x00007FF9C2235080>('2026-10-05T12:00:00+09:00')
+E    +    where <built-in method fromisoformat of type object at 0x00007FF9C2235080> = <class 'datetime.datetime'>.fromisoformat
+E    +  and   datetime.timedelta(seconds=600) = <class 'datetime.timedelta'>(minutes=10)
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_trip_intake_api.py::test_the_confirm_screen_fixes_a_time_and_registers_one_trip
+FAILED tests/e2e/test_trip_intake_api.py::test_a_plan_without_dates_asks_for_the_first_day_before_registering
+FAILED tests/e2e/test_trip_intake_api.py::test_an_unfound_place_is_fixed_by_name_or_left_without_a_place
+FAILED tests/e2e/test_trip_intake_api.py::test_a_place_name_the_customer_fixed_is_remembered_for_the_next_plan
+FAILED tests/e2e/test_trip_intake_api.py::test_a_place_the_customer_fixed_is_never_used_for_another_customer
+FAILED tests/e2e/test_trip_planner.py::test_with_a_model_the_order_comes_from_the_model
+FAILED tests/e2e/test_trip_planner.py::test_every_move_leaves_at_next_start_minus_travel_minus_buffer
+FAILED tests/e2e/test_trip_planner.py::test_pace_decides_how_many_places_a_day_by_measuring_the_day
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 8 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+8 failed, 39 passed in 64.48s (0:01:04)

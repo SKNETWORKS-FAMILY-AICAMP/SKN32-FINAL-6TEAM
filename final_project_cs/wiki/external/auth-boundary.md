@@ -55,7 +55,7 @@ domain: neutral
 |---|---|---|
 | `INV-CS-SEC-002` | scope 없는 principal은 거부된다 | `tests/security/test_auth_and_scope_guards.py::test_scope_guard_denies_a_principal_with_no_scopes` |
 | `INV-CS-SEC-003` | 다른 scope를 가진 principal도 거부된다 | `tests/security/test_auth_and_scope_guards.py::test_scope_guard_denies_a_principal_holding_another_scope` |
-| `INV-CS-SEC-007` | scope 12개는 guardrail이 소유한다(09-06 `composer:admin`·`ops:reload` 추가 전 10개) | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
+| `INV-CS-SEC-007` | 현재 scope 목록은 공통 guardrail이 소유한다 | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
 
 **003이 중요하다.** "scope가 있기만 하면 통과"가 아니라 **"맞는 scope여야 통과"**다.
 
@@ -63,16 +63,9 @@ domain: neutral
 
 ### 주요 scope
 
-`[실측]` v8 §24가 정한 **네 축**.
+범용 Case API의 `case:read`·`case:write`·`action:approve`와 개발자용 `ops:introspect`·`ops:reload`는 [공통 guardrail](../../config/guardrails.yaml)이 소유합니다. 수를 별도 하드코딩하지 않습니다. 과거 `order:read`·`return:read`는 현재 설정에서 제외했습니다.
 
-| scope | 무엇 |
-|---|---|
-| `case:read` | 조회 |
-| `case:write` | 생성·수정 |
-| **`action:approve`** | **승인** |
-| `mcp:read` | MCP 도구 3종 |
-
-`+ ops:introspect` · `ops:reload` 등 총 **12개**. guardrail이 소유한다. ★`[실측]` 그중 **`order:read`·`return:read` 둘은 커머스 scope 가 남은 것**이다 — 코드 담당 몫.
+**여행 MCP 인증은 별도입니다.** [현재 MCP](mcp-tools.md)는 웹 사용자 키로 고객·본인 여행을 확정합니다. 옛 Case MCP 3종의 `mcp:read` 설명을 현재 여행 도구에 적용하지 않습니다.
 
 **읽기와 쓰기와 승인을 나눈 게 핵심이다.** 하나로 묶으면 조회 권한만 주고 싶어도 승인까지 열린다.
 
@@ -83,7 +76,7 @@ tenant · client · scope 와 함께 저장
 원문을 로그에 남기지 않는다
 ```
 
-**환불·구독 변경·권한 변경**은 `action:approve` scope와 **evidence를 확인하고 before/after hash를 audit**한다.
+**여행 예약·환급처럼 승인이 필요한 변경**은 `action:approve` scope와 **evidence를 확인하고 before/after hash를 audit**한다.
 
 ## ③ 격리
 
@@ -247,6 +240,10 @@ security:
 
 `[실측]` **테스트 함수 이름도 `six` → `ten` 으로 바뀌었다.** DoD-14 evidence 가 아직 `six` 로 적고 있다. → [../quality/blind-spots.md](../quality/blind-spots.md)
 
+## 적용 대상 구분
+
+아래 개발자용 진단·설정 화면의 로그인은 고객 상담원 배치를 뜻하지 않습니다. 현재 제품은 상주 상담원이 고객 문제를 수동 수정하는 구조를 채택하지 않습니다. 고객 승인과 개발자 진단 권한은 구분합니다.
+
 ## 관계
 
 - [rest-api.md](rest-api.md) — 쓰기 경로
@@ -254,3 +251,5 @@ security:
 - [a2a-protocol.md](a2a-protocol.md) — 위임 경로
 - [../data/tenancy.md](../data/tenancy.md) — 저장 계층 격리
 - [../actions/approval.md](../actions/approval.md) — `action:approve`
+
+개정 전 인증 설명: [보존 기록](../records/commerce_2026-10-11/wiki--external--auth-boundary.md).

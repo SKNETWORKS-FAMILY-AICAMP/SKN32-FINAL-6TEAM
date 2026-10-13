@@ -1,0 +1,50 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+_______ test_generated_taxi_context_is_revalidated_at_current_departure _______
+
+    def test_generated_taxi_context_is_revalidated_at_current_departure():
+        runtime, context, _, deadline = scene()
+        before = deepcopy(context)
+>       assert context['options']['taxi']['path_kind'] == 'direct_taxi'
+E       AssertionError: assert 'vehicle' == 'direct_taxi'
+E         
+E         - direct_taxi
+E         + vehicle
+
+tests\unit\travel\mobility\test_departure_taxi_v1.py:55: AssertionError
+_ test_current_taxi_duration_and_fare_reach_notice_without_changing_stored_plan _
+
+    def test_current_taxi_duration_and_fare_reach_notice_without_changing_stored_plan():
+        runtime, context, route, deadline = scene()
+        runtime._v.car.seconds = 1200
+        runtime._v.car.fare = 19000
+        result = call(runtime, context, deadline)
+        move = Item(item_id=uuid4(), seq=1, kind='mobility', title='택시 이동', place_id=None,
+                    starts_at=NOW, ends_at=NOW+timedelta(minutes=10), detail={'route_def': route})
+        following = Item(item_id=uuid4(), seq=2, kind='activity', title='서울 관람', place_id=None,
+                         starts_at=deadline, ends_at=deadline+timedelta(hours=1), detail={})
+        before = deepcopy(move)
+        status, phrase = build_departure(move, [move, following], route_events=NoEvents(), routes=None,
+            now=NOW, departure_observer=lambda *a, **kw: result)
+>       assert status == 'ok'
+E       AssertionError: assert 'held' == 'ok'
+E         
+E         - ok
+E         + held
+
+tests\unit\travel\mobility\test_departure_taxi_v1.py:82: AssertionError
+============================== warnings summary ===============================
+..\..\..\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290
+  C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_parallel_sonnet_finish\taxi-notice-before.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_departure_taxi_v1.py::test_generated_taxi_context_is_revalidated_at_current_departure
+FAILED tests/unit/travel/mobility/test_departure_taxi_v1.py::test_current_taxi_duration_and_fare_reach_notice_without_changing_stored_plan
+2 failed, 18 deselected, 1 warning in 8.88s
+Exception ignored in: <function Console.__del__ at 0x0000022474FEBBA0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

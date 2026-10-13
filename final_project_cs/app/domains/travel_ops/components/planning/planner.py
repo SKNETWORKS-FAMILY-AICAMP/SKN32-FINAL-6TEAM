@@ -271,6 +271,19 @@ def preference_profile(text: str) -> Preference:
                       with_children=children, avoid=tuple(avoid), likes=tuple(likes), raw=text or "")
 
 
+
+def _survey_likes(constraints):
+    survey = (constraints or {}).get("survey") or {}
+    if not isinstance(survey, Mapping):
+        return ()
+    details = survey.get("priority_details") or {}
+    if not isinstance(details, Mapping):
+        return ()
+    food = details.get("food") or []
+    if not isinstance(food, (list, tuple)):
+        return ()
+    return tuple(code for code in _LIKE_TERMS if code in food)
+
 def badge_codes(cand: Cand) -> set[str]:
     """후보에 붙은 가게 표시 코드(`ledger_candidates` 가 원장에서 싣는다)."""
     return {str(badge.get("code")) for badge in cand.attributes.get("badges") or [] if isinstance(badge, Mapping)}
@@ -851,7 +864,9 @@ def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand], *, engine
                 routes[key] = got["route"]
                 out.append({"seq": 0, "kind": "mobility", "title": f"{previous['title']} → {item['title']}",
                             "place": None, "route": key, "starts_at": got["starts_at"], "ends_at": got["ends_at"],
-                            "detail": {"planner": {"day": _planned_day(item), "transfer_basis": "시간표 판정(이동 계산기)",
+                            "detail": {**({"departure_context": got["departure_context"]}
+                                          if got.get("departure_context") is not None else {}),
+                                       "planner": {"day": _planned_day(item), "transfer_basis": "시간표 판정(이동 계산기)",
                                                    "travel_min": got["eta_min"],
                                                    "leave_rule": "다음 일정 시작 − 이동 시간 − 여유(계산기 정책 버퍼)"}}})
                 out.append(item)
@@ -1381,10 +1396,9 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     per_day = MAX_ACTIVITIES_PER_DAY if target is not None else ACTIVITIES_PER_DAY
     floor_per_day = MIN_ACTIVITIES_PER_DAY if target is not None else ACTIVITIES_PER_DAY
     pref = preference_profile(request.preferences)
-    # ★`[2026-10-07]` 설문 음식 세부(michelin · nopo)도 취향이다 — 문장에서 읽은 것과 합친다(`survey.likes_from_survey`)
-    from app.domains.travel_ops.components.planning.survey import likes_from_survey
+    # ★`[2026-10-07]` 설문 음식 세부(michelin · nopo)도 취향이다 — 문장에서 읽은 것과 합친다(`dining.survey.likes_from_survey`)
 
-    survey_likes = [code for code in likes_from_survey(request.constraints) if code not in pref.likes]
+    survey_likes = [code for code in _survey_likes(request.constraints) if code not in pref.likes]
     if survey_likes:
         pref = replace(pref, likes=pref.likes + tuple(survey_likes))
     calls = {"tour_api": 0}

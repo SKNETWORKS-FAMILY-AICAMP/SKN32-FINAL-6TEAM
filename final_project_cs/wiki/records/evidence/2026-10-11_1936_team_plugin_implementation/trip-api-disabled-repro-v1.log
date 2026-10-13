@@ -1,0 +1,68 @@
+[
+  {
+    "reason": "disabled",
+    "route": "POST /v1/trips",
+    "status": 422,
+    "error": {
+      "code": "itinerary_infeasible",
+      "message": "이 일정은 그대로 수행할 수 없습니다: 합성 식사: 폐업한 곳이다(요식 원장)",
+      "violations": [
+        {
+          "code": "dining_closed_at_slot",
+          "items": [
+            1
+          ],
+          "reason": "합성 식사: 폐업한 곳이다(요식 원장)",
+          "remedy": "그 시각에 여는 다른 식당으로 바꾸거나 영업하는 시각으로 옮긴다"
+        }
+      ]
+    },
+    "events": [
+      "connection",
+      "dining_sql"
+    ]
+  },
+  {
+    "reason": "disabled",
+    "route": "GET /v1/web/trips/{id}/route-shapes",
+    "status": 200,
+    "shape_source": "local_road_graph",
+    "events": [
+      "connection",
+      "mobility_graph_route"
+    ]
+  },
+  {
+    "reason": "not_installed",
+    "route": "POST /v1/trips",
+    "status": 422,
+    "error": {
+      "code": "itinerary_infeasible",
+      "message": "이 일정은 그대로 수행할 수 없습니다: 합성 식사: 폐업한 곳이다(요식 원장)",
+      "violations": [
+        {
+          "code": "dining_closed_at_slot",
+          "items": [
+            1
+          ],
+          "reason": "합성 식사: 폐업한 곳이다(요식 원장)",
+          "remedy": "그 시각에 여는 다른 식당으로 바꾸거나 영업하는 시각으로 옮긴다"
+        }
+      ]
+    },
+    "events": [
+      "connection",
+      "dining_sql"
+    ]
+  },
+  {
+    "reason": "not_installed",
+    "route": "GET /v1/web/trips/{id}/route-shapes",
+    "status": 200,
+    "shape_source": "local_road_graph",
+    "events": [
+      "connection",
+      "mobility_graph_route"
+    ]
+  }
+]

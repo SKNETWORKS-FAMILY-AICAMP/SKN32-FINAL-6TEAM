@@ -1,0 +1,24 @@
+{
+  "job": {
+    "id": "e4bqat_oos2r_d3",
+    "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2r adapter",
+    "our_training": true,
+    "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+    "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+    "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+    "prompts": "/workspace/heavy/all_prompts_d3.json",
+    "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+    "script": "/workspace/heavy/d_test_llama.py",
+    "tag": "d3_backlog_e4bqat_oos2r",
+    "port": 8401,
+    "logprobs": "0",
+    "expected": 360,
+    "purpose": "Missing D3 normal-request and no-request coverage on QAT base; diagnose observed mixed-request regression against matched original and Q4_K_M adapters; no repeat or adoption",
+    "lora": "/tmp/tripilot-oos2r-eval/oos2r_lora_f16.gguf",
+    "lora_sha256": "d6de28e7c665ebc3f8e380c1be14fd10acbd1a1cc41e2f1a52ea36c0f5d6b333"
+  },
+  "started": "2026-10-08T08:06:36.131904+00:00",
+  "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+  "script_sha256": "e84b538e2069a60563357d322ba32537bdb7896e99a9503589ba5b8498372ea8",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

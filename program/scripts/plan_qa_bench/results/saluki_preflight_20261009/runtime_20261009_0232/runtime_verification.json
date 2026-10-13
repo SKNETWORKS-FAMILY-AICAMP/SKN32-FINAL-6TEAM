@@ -1,0 +1,46 @@
+{
+  "captured_at_utc": "2026-10-08T17:32:49.017338+00:00",
+  "remote_local_sha_match": [
+    14,
+    14
+  ],
+  "our_training": false,
+  "repetitions": 1,
+  "final_ranking": false,
+  "product_adoption": false,
+  "saluki_original_smoke12_a1": {
+    "saved": 12,
+    "expected": 12,
+    "parsed": 12,
+    "errors": 0,
+    "unparsed": 0,
+    "missing": 0,
+    "metadata_matched": 12,
+    "answer_sha256": "4a230c89c59a818526389a6d05c18d7d6f4435d80b09666e6ee6ec85b669e758",
+    "prompt_sha256": "3b9a5b20fcb236fc5c140b353d2f05ff439dfe9be48a418de82bbaaafbaec726",
+    "checked_prompt_lengths": 12,
+    "max_prompt_tokens": 1953,
+    "oversize": 0,
+    "partial_snapshot": false,
+    "correct": 9,
+    "positive_correct": 5,
+    "positive_expected": 6,
+    "negative_false_pick": 2,
+    "negative_expected": 6
+  },
+  "saluki_original_d3_a1": {
+    "saved": 184,
+    "expected": 360,
+    "parsed": 184,
+    "errors": 0,
+    "unparsed": 0,
+    "missing": 176,
+    "metadata_matched": 184,
+    "answer_sha256": "7c02806135541f2057683beaa07d68b0f9af4059878ec042cec4cf52745142c8",
+    "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+    "checked_prompt_lengths": 360,
+    "max_prompt_tokens": 2007,
+    "oversize": 0,
+    "partial_snapshot": true
+  }
+}

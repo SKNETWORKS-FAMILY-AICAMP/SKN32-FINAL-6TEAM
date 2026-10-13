@@ -1,0 +1,39 @@
+.F.....................................                                  [100%]
+================================== FAILURES ===================================
+____________ test_runtime_rebuilds_when_only_express_table_changes ____________
+
+tmp_path = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-related-pytest-v2/test_runtime_rebuilds_when_onl0')
+source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-related-pytest-v2/test_runtime_rebuilds_when_onl0/express.json.gz')
+
+    def test_runtime_rebuilds_when_only_express_table_changes(tmp_path, source):
+        _write_mini_data(tmp_path)
+        write_runs(source)
+        first = RT.get_verifier(quiet=True, data_dir=tmp_path, gh_url='', seoul_key='')
+        assert first._v.tt.departures('01호선', 'A', 'weekday')[0].min == 600
+        assert RT.get_verifier() is first
+        case = {'id': 'travel-test', 'date': '2026-10-07', 'depart_at': '10:00',
+            'legs': [{'line': '01호선', 'from': 'A', 'to': 'C'}], 'no_alternatives': True}
+        old = first.verify_case(case)
+        assert old.legs[0].depart_min == 600 and old.arrive_min == 604
+        write_runs(source, 300)
+        second = RT.get_verifier()
+        assert second is not first
+        new = second.verify_case(case)
+>       assert new.legs[0].depart_min == 605 and new.arrive_min == 609
+E       AssertionError: assert (None == 605)
+E        +  where None = LegResult(idx=0, label='01호선 A→C', verdict='infeasible', reason='10:00 은 01호선 A 의 weekday 첫차(10:05) 이전이다', grade='확정',...'claim': '01호선 A weekday: 그 방향 첫 출발 10:05'}], car=None, walk_min=None, code='before_first', worst=False, ride_src=None).depart_min
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:60: AssertionError
+---------------------------- Captured stdout call -----------------------------
+[mobility] ! 역 출구표(station_exits_v1.json)가 없다 — 정류장↔역 환승은 역 좌표로 잰다
+[mobility] ! 따릉이 대여소(bike_stations_v1.jsonl)가 없다 — 자전거는 근거없음으로 낸다
+[mobility] ! 역 출구표(station_exits_v1.json)가 없다 — 정류장↔역 환승은 역 좌표로 잰다
+[mobility] ! 따릉이 대여소(bike_stations_v1.jsonl)가 없다 — 자전거는 근거없음으로 낸다
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\express-source-related-v2.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_express_source_reload_v1.py::test_runtime_rebuilds_when_only_express_table_changes
+1 failed, 38 passed in 12.20s
+Exception ignored in: <function Console.__del__ at 0x000001F1DB271C60>
+Traceback (most recent call last):
+  File "<python-runtime>\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

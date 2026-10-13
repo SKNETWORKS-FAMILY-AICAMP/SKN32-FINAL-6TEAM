@@ -53,9 +53,9 @@ export function useTripChat(trip: Trip, selectedId: string | null, onAsked: () =
     // A logout removes it; a new entry with the same trip key belongs to a later session.
     onMutate: () => ({ query: queryClient.getQueryCache().find({ queryKey: tripKey(trip.id, language), exact: true }) }),
     // ★Only a stop the customer actually picked goes to the server (`item_id`).
-    mutationFn: async ({ text, itemId, location }: { text: string; clearDraft: boolean; itemId?: string | null; location?: LocationFix | null }) => {
+    mutationFn: async ({ text, itemId, location, summaryDay }: { text: string; clearDraft: boolean; itemId?: string | null; location?: LocationFix | null; summaryDay?: string }) => {
       setProgress(null);
-      try { return { updated: await tripGateway.sendMessage(trip.id, text, language, itemId, location, setProgress), sent: null }; }
+      try { return { updated: await tripGateway.sendMessage(trip.id, text, language, itemId, location, setProgress, undefined, summaryDay), sent: null }; }
       catch (error) {
         if (!(error instanceof LiveError) || error.code !== "reply_kept") throw error;
         setRereading(true);
@@ -114,7 +114,7 @@ export function useTripChat(trip: Trip, selectedId: string | null, onAsked: () =
 
   const pickedId = trip.stops.some((stop) => stop.id === selectedId) ? selectedId : null;
 
-  function ask(text: string, clearDraft = false, itemId: string | null = pickedId, location: LocationFix | null = null) {
+  function ask(text: string, clearDraft = false, itemId: string | null = pickedId, location: LocationFix | null = null, summaryDay?: string) {
     if (message.isPending) return;
     const trimmed = text.trim();
     if (!trimmed) {
@@ -125,7 +125,7 @@ export function useTripChat(trip: Trip, selectedId: string | null, onAsked: () =
     setInputError("");
     setLocationError("");
     onAsked();
-    message.mutate({ text: trimmed, clearDraft, itemId, location });
+    message.mutate({ text: trimmed, clearDraft, itemId, location, summaryDay });
   }
 
   // ★The server said the answer needs where the customer is. The browser is asked only now, on this press (user decision 2026-09-30) — and only with the agreement to the location item.
@@ -197,7 +197,7 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }:
     </div>
     <div className={styles.prompts}>
       {latest.away && <button type="button" className={styles.chatLatest} onClick={() => { latest.jump(); logRef.current?.focus({ preventScroll: true }); }}>{latest.unread ? t("새 메시지 · 최신 대화로 이동", "New messages · Jump to latest") : t("최신 대화로 이동", "Jump to latest")}</button>}
-      <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 하루 일정을 요약해 주세요.`, `Summarize the itinerary for ${day}.`))}>{t("하루 요약", "Day summary")}</button>
+      <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 하루 일정을 요약해 주세요.`, `Summarize the itinerary for ${day}.`), false, null, null, day)}>{t("하루 요약", "Day summary")}</button>
       <button type="button" className={styles.prompt} disabled={!selected || message.isPending} onClick={() => selected && chat.askAbout(selected)}>{t("선택 일정", "Selected stop")}</button>
       <button type="button" className={styles.prompt} disabled={!selected || message.isPending} onClick={() => selected && chat.ask(t(`${selected.date} ${selected.time} ${selected.title} 다음 일정을 알려 주세요.`, `What comes after ${selected.title} on ${selected.date} at ${selected.time}?`))}>{t("다음 일정", "Next stop")}</button>
       <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 예약 표시를 알려 주세요.`, `Show booking notes for ${day}.`))}>{t("예약 표시", "Booking notes")}</button>

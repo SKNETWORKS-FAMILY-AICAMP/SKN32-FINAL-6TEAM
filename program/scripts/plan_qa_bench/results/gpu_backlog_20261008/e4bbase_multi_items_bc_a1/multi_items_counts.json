@@ -1,0 +1,207 @@
+{
+  "model": "Gemma-4-E4B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": null,
+  "saved": 835,
+  "expected": 835,
+  "missing": 0,
+  "failed_or_unparsed": 5,
+  "metadata_matches": 835,
+  "counts": {
+    "all": {
+      "total": 835,
+      "B": 787,
+      "C": 666,
+      "first_item_diagnostic": 739,
+      "false_pick": 19,
+      "failed_or_missing": 5,
+      "C_wilson95": [
+        0.769018221754735,
+        0.823465607905663
+      ]
+    },
+    "single": {
+      "total": 583,
+      "B": 558,
+      "C": 454,
+      "first_item_diagnostic": 518,
+      "false_pick": 0,
+      "failed_or_missing": 1,
+      "C_wilson95": [
+        0.7432718743364624,
+        0.8105403949144425
+      ]
+    },
+    "compound": {
+      "total": 66,
+      "B": 65,
+      "C": 48,
+      "first_item_diagnostic": 57,
+      "false_pick": 0,
+      "failed_or_missing": 1,
+      "C_wilson95": [
+        0.6095777422224589,
+        0.8199665500441133
+      ]
+    },
+    "no_request": {
+      "total": 186,
+      "B": 164,
+      "C": 164,
+      "first_item_diagnostic": 164,
+      "false_pick": 19,
+      "failed_or_missing": 3,
+      "C_wilson95": [
+        0.8274133461040541,
+        0.9205792203359217
+      ]
+    }
+  },
+  "answer_sha256": "fef9cf0deb342a666fee4043cbf5dcab5b5c954cae0196754121b4a81bb4cbdb",
+  "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+  "execution": {
+    "job": {
+      "id": "e4bbase_multi_items_bc_a1",
+      "label": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "prompts": "/tmp/tripilot-multi-items-20261009/prompts.json",
+      "script": "/tmp/tripilot-multi-items-20261009/multi_items_eval_20261009.py",
+      "tag": "e4bbase_multi_items_bc_a1",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 835,
+      "suite": "multi_items_bc",
+      "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+      "runner_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+      "output_contract": "strict items array with 64 output tokens; separately scored B and C",
+      "role": "missing multi-item response contract; same existing travel fixture; not prior D/E or independent holdout",
+      "automatic_retry": false
+    },
+    "started": "2026-10-09T01:03:57.936685+00:00",
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "failed_records": [
+    {
+      "i": 1169,
+      "set": "mix10",
+      "qi": 117,
+      "type": "out_of_scope",
+      "gold": null,
+      "gold_set": [],
+      "content": "```json\n{\"items\": []}\n```",
+      "parsed": false,
+      "pick": null,
+      "usage": {
+        "completion_tokens": 11,
+        "prompt_tokens": 1801,
+        "total_tokens": 1812,
+        "prompt_tokens_details": {
+          "cached_tokens": 1693
+        }
+      },
+      "finish_reason": "stop",
+      "ms": 283
+    },
+    {
+      "i": 1812,
+      "set": "mix11",
+      "qi": 91,
+      "type": "out_of_scope",
+      "gold": null,
+      "gold_set": [],
+      "content": "```json\n{\"items\": []}\n```",
+      "parsed": false,
+      "pick": null,
+      "usage": {
+        "completion_tokens": 11,
+        "prompt_tokens": 1822,
+        "total_tokens": 1833,
+        "prompt_tokens_details": {
+          "cached_tokens": 1712
+        }
+      },
+      "finish_reason": "stop",
+      "ms": 283
+    },
+    {
+      "i": 42,
+      "set": "mix8",
+      "qi": 53,
+      "type": "compound_intent",
+      "gold": 18,
+      "gold_set": [
+        18,
+        20
+      ],
+      "content": "{\"items\": [20, 21, 22, 23, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, ",
+      "parsed": false,
+      "pick": null,
+      "usage": {
+        "completion_tokens": 64,
+        "prompt_tokens": 1848,
+        "total_tokens": 1912,
+        "prompt_tokens_details": {
+          "cached_tokens": 1734
+        }
+      },
+      "finish_reason": "length",
+      "ms": 1293
+    },
+    {
+      "i": 265,
+      "set": "mix8",
+      "qi": 124,
+      "type": "ordinal_relative",
+      "gold": 3,
+      "gold_set": [
+        3
+      ],
+      "content": "{\"items\": [123]}",
+      "parsed": false,
+      "pick": null,
+      "usage": {
+        "completion_tokens": 9,
+        "prompt_tokens": 1843,
+        "total_tokens": 1852,
+        "prompt_tokens_details": {
+          "cached_tokens": 1734
+        }
+      },
+      "finish_reason": "stop",
+      "ms": 252
+    },
+    {
+      "i": 818,
+      "set": "mix9",
+      "qi": 148,
+      "type": "change_request",
+      "gold": null,
+      "gold_set": [],
+      "content": "{\"items\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1",
+      "parsed": false,
+      "pick": null,
+      "usage": {
+        "completion_tokens": 64,
+        "prompt_tokens": 1747,
+        "total_tokens": 1811,
+        "prompt_tokens_details": {
+          "cached_tokens": 1639
+        }
+      },
+      "finish_reason": "length",
+      "ms": 1294
+    }
+  ],
+  "repetitions": 1,
+  "independent_holdout": false,
+  "final_ranking": false,
+  "limits": [
+    "Changed output contract; compare only models with this exact contract",
+    "Existing development fixture; not new independent holdout",
+    "No output grammar enforcement; exact JSON and allowed IDs required",
+    "Failure and missing count as wrong; observed false picks separately reported"
+  ]
+}

@@ -98,6 +98,8 @@ class ReadToolbox:
     kakao: Any | None = None
     #: ★`[2026-09-30]` 구글 장소(`GooglePlaces`) — 식당 가격(`read.place_price`)만 쓴다. 없으면 「모름」.
     google_places: Any | None = None
+    #: 운영 조립만 주입하는 무료 휴무 관측. 시험·시나리오 기본값은 외부 조회 없음.
+    place_status: Any | None = None
 
     def _one(self, sql: str, params: tuple[Any, ...], columns: tuple[str, ...]) -> dict[str, Any] | None:
         with self.connection_factory() as conn:
@@ -549,14 +551,25 @@ class ReadToolbox:
         place = {"place_id": place_id, "latitude": latitude, "longitude": longitude,
                  "weather_sensitive": None if weather_sensitive is None else bool(weather_sensitive),
                  "district": district}
-        if self.check is not None:
-            return self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
-        if self.travel is None:
+        if self.check is None and self.travel is None:
             return None
-        from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
-
-        return DisruptionCheck(self.travel).check(
-            place=place, starts_at=_as_datetime(starts_at), region=str(region))
+        if place_id:
+            from app.domains.travel_ops.components.watch.simulation import case_place
+            connection = self.connection_factory()
+            if connection is not None:
+                with connection as conn:
+                    place = case_place(conn, tenant=scope.tenant_id, customer_id=scope.customer_id,
+                                       case_id=scope.case_id, place=place)
+        if self.check is not None:
+            report = self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
+        else:
+            from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+            report = DisruptionCheck(self.travel).check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
+        if self.place_status is not None and place_id and not place.get('_watch_simulation') and report is not None:
+            from datetime import UTC, datetime
+            return self.place_status.merge_case(scope, place=place, start=_as_datetime(starts_at), report=report,
+                                                now=datetime.now(UTC))
+        return report
 
     # ── role-activity 판에서 합친 도구 `[2026-10-08]` — 보존한 활동 팀 판만 부른다 ──────────────────
     def place_search(self, scope: ToolContext, *, name: str | None = None,
@@ -624,7 +637,7 @@ class ReadToolbox:
         when = _as_datetime(at)
         with self.connection_factory() as conn:
             facts = facts_for(conn, scope.tenant_id, {"place_id": str(place_id)}, "activity",
-                              when if isinstance(when, datetime) else None, None)
+                              when if isinstance(when, datetime) else None, None, activity_verdict=False)
             with conn.cursor() as cur:
                 cur.execute(
                     "SELECT ch.hours_origin FROM places p JOIN catalog_hours ch "
@@ -841,6 +854,8 @@ ALLOWED_PROMPT_KEYS = frozenset({
     #   섀도 모드에서 부른다(D-CS-015) — 기본 모드 `rule` 이면 부르지 않는다.
     "activity_judge.closure", "activity_judge.operating_hours", "activity_judge.weather_sensitive",
     "activity_judge.disaster_effect", "activity_judge.live_status",
+    # ★`[2026-10-13]` 대체 후보 순서(활동 코어 전달 사항 11번) — 기본 `kind_modes.alternative_order: rule` 이면 부르지 않는다.
+    "activity_judge.alternative_order",
 })
 
 

@@ -121,3 +121,31 @@ def test_the_step_lives_in_core_one_not_in_the_route():
     import app.presentation.api.cases as cases
 
     assert not hasattr(cases, "_classify"), "라우트에 절차 복사본이 남아 있다"
+
+
+@pytest.mark.parametrize("classifier", [None, lambda text: {}, lambda text: (_ for _ in ()).throw(TimeoutError("private-provider-body"))])
+def test_failure_diagnostic_contains_only_owned_ids_and_fixed_code(recorded, classifier):
+    seen = []
+    customer, case = uuid4(), uuid4()
+    event = classify_case(FakeConn(), tenant_id="test_travel", case_id=case,
+                          customer_id=customer, text="private customer text", classifier=classifier,
+                          actor_id="test", diagnostic_recorder=lambda value: seen.append(value) or {"status": "stored"})
+    assert event is EventType.CLASSIFICATION_FAILED
+    assert seen == [{"tenant_id": "test_travel", "case_id": case, "customer_id": customer,
+                     "code": "classification_failed"}]
+
+
+def test_diagnostic_failure_cannot_change_classification_result(recorded, caplog):
+    def unavailable(value):
+        raise RuntimeError("private-disk-path")
+    event = classify_case(FakeConn(), tenant_id="test_travel", case_id=uuid4(), text="private text",
+                          classifier=None, actor_id="test", diagnostic_recorder=unavailable)
+    assert event is EventType.CLASSIFICATION_FAILED
+    assert "status=collection_degraded" in caplog.text and "private-disk-path" not in caplog.text
+
+
+def test_success_is_not_collected_as_a_failure(recorded):
+    event = classify_case(FakeConn(), tenant_id="test_travel", case_id=uuid4(), text="서울 일정",
+                          classifier=lambda text: {"intent": "confirm_request", "issue_code": "activity_check", "sentiment": "neutral"},
+                          actor_id="test", diagnostic_recorder=lambda value: pytest.fail("successful classification counted"))
+    assert event is EventType.CLASSIFIED

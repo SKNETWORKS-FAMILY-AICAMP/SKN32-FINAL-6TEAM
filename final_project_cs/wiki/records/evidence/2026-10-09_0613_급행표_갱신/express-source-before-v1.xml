@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="5.697" timestamp="2026-10-09T06:13:30.977481+09:00"><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_changed_file_is_reloaded_without_clearing_process_cache" time="0.084"><failure message="assert 600 == 605">source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-before-pytest-v1/test_changed_file_is_reloaded_0/express.json.gz')
+
+    def test_changed_file_is_reloaded_without_clearing_process_cache(source):
+        write_runs(source)
+        first = EX.load_line('01호선')
+        assert first['weekday'][0][1] == 600
+        write_runs(source, 300)
+        second = EX.load_line('01호선')
+&gt;       assert second['weekday'][0][1] == 605
+E       assert 600 == 605
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:41: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_runtime_rebuilds_when_only_express_table_changes" time="0.140"><failure message="assert &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000001FDE035A990&gt; is not &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000001FDE035A990&gt;">tmp_path = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-before-pytest-v1/test_runtime_rebuilds_when_onl0')
+source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-before-pytest-v1/test_runtime_rebuilds_when_onl0/express.json.gz')
+
+    def test_runtime_rebuilds_when_only_express_table_changes(tmp_path, source):
+        _write_mini_data(tmp_path)
+        write_runs(source)
+        first = RT.get_verifier(quiet=True, data_dir=tmp_path, gh_url='', seoul_key='')
+        assert first._v.tt.departures('01호선', 'A', 'weekday')[0].min == 600
+        write_runs(source, 300)
+        second = RT.get_verifier()
+&gt;       assert second is not first
+E       assert &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000001FDE035A990&gt; is not &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000001FDE035A990&gt;
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:53: AssertionError</failure></testcase></testsuite></testsuites>

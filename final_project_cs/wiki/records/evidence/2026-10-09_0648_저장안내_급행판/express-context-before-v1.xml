@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="6.118" timestamp="2026-10-09T06:49:02.763139+09:00"><testcase classname="tests.unit.travel.mobility.test_departure_express_basis_v1" name="test_capture_records_an_express_content_version" time="0.204"><failure message="assert (False)&#10; +  where False = isinstance(None, str)">def test_capture_records_an_express_content_version():
+        runtime, context = scene()
+        runtime.express_sources = inputs()
+        saved = captured(runtime, context)
+        version = saved['basis'].get('express_version')
+&gt;       assert isinstance(version, str) and len(version) == 64
+E       assert (False)
+E        +  where False = isinstance(None, str)
+
+tests\unit\travel\mobility\test_departure_express_basis_v1.py:33: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_departure_express_basis_v1" name="test_changed_express_version_holds_before_external_arrival_query" time="0.007"><failure message="Failed: 낡은 안내에서는 조회하지 않음">def test_changed_express_version_holds_before_external_arrival_query():
+        runtime, context = scene()
+        runtime.express_sources = inputs()
+        saved = captured(runtime, context)
+        runtime.express_sources = inputs('b')
+&gt;       got = call(runtime, saved, bus_arrival=lambda *a, **kw: pytest.fail('낡은 안내에서는 조회하지 않음'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_departure_express_basis_v1.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:137: in observe
+    observation = bus_arrival(first['route_id'], stop_id=first['from_stop_id'],
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('100',)
+kw = {'now': datetime.datetime(2026, 10, 9, 10, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), 'ready_at'...026, 10, 9, 10, 6, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), 'stop_id': '1005', 'stop_sequence': 5}
+
+&gt;   got = call(runtime, saved, bus_arrival=lambda *a, **kw: pytest.fail('낡은 안내에서는 조회하지 않음'))
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: 낡은 안내에서는 조회하지 않음
+
+tests\unit\travel\mobility\test_departure_express_basis_v1.py:42: Failed</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,12 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/test_subway_boardable_v1.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-subway-select-before",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1039_\uc9c0\ud558\ucca0_\uc811\uadfc\ud6c4\uc5f4\ucc28_\uc120\ud0dd\\before-v1.xml"
+  ],
+  "exit_code": 1
+}

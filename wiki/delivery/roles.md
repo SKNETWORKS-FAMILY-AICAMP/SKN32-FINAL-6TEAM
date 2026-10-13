@@ -1,174 +1,72 @@
 ---
-type: plan
-title: 역할과 소유 경계
-description: 6명을 코어 2·모델 3·검증&프론트 1로 배치한다(v8). 「코어」 담당은 지금 「매니저」(브랜치 role-manager)라 부른다. 소유가 겹치면 이중 장부가 된다
+type: guide
+title: 개발 담당과 기능 책임
+description: 현재 담당 배치를 유지하면서 기능별 구현·검토 책임과 공유 계약 변경 절차를 정한다
 status: draft
-tags: [release]
-owners: [human:미배정]
-domain: neutral
-domain_note: 역할과 소유 경계는 도메인 무관이다
+tags: [release, documentation]
+domain: travel
 ---
 
-# 역할과 소유 경계
+# 개발 담당과 기능 책임
 
-`[실측]` v8 §16에서 이관.
+개발 담당자는 구현·검증을 맡는 팀원이며, **Activity·Dining·Mobility는 요청을 처리하는 에이전트 팀**입니다. 이 문서는 개발 책임을 정합니다. 고객 문제를 대신 수정하는 상주 상담원·운영 관리자 역할을 만들지 않습니다.
 
-## 배치
+## 담당 배치의 정본
 
-**6명을 코어 2 · 모델 3 · 검증&프론트 1로 배치한다.**
+[README 팀 소개](../../README.md#팀-소개)가 팀원 이름·인원·기존 소개 배치의 출처입니다. README도 과거 분담을 현재 담당 확정으로 재사용하지 말라고 명시합니다. 현재 작업 경계와 기능 책임은 이 문서를 따르며, 이름과 인원 수는 여기서 다시 관리하지 않습니다. 에이전트 팀·고객 웹의 실제 파일 위치는 [코드·시험 경로 안내](../../final_project_cs/wiki/teams/code-layout.md)가 소유합니다.
 
-**사람의 담당 경계는 코드의 책임 경계와 같을 필요가 없다.** 한 사람이 수직 기능 하나를 끝까지 본다.
+## 현재 적용하는 디렉토리 작업 경계
 
-## ★ 이름 대응 — 이 문서의 「코어」는 지금 「매니저」다
+[코드·시험 경로 안내](../../final_project_cs/wiki/teams/code-layout.md)가 실제 디렉토리의 정본입니다. Activity·Dining·Mobility는 각각 자신의 구현 폴더를 우선 수정합니다. 공통 application·core·DB·인증 영역은 해당 작업의 담당·검토자를 기록합니다. 기존 README 배치를 유지하고 별도 인증·DB 전담 인명·GitHub 계정을 임의로 배정하지 않습니다.
 
-이 문서는 v8 때 이름(코어 1·코어 2·모델·검증&프론트)으로 적혀 있다. 지금 팀과 조직 저장소는 다른 이름을 쓴다.
+## 기능별 구현·검토 책임 — 설계안
 
-| 이 문서의 이름 | 지금 부르는 이름 | 조직 저장소 브랜치 | 어떻게 바뀌었나 |
-|---|---|---|---|
-| **코어 1 · 코어 2** | **매니저** | `role-manager` | `[실측]` 2026-09-14 `role-core1`·`role-core2` 를 `role-core` 하나로 합치고(코어 2 브랜치 삭제), 2026-09-23 `role-manager` 로 이름을 바꿨다 |
-| 모델 (3명) | 맡은 Team 이름 — Activity · Dining · Mobility | `role-activity` · `role-dining` · `role-mobility` | `[실측]` 2026-09-23 `role-model1~3` 삭제 |
-| 검증 & 프론트 | eval-ui | `role-eval-ui` | `[추정]` 브랜치 이름으로 대응시켰다 |
+아래 표는 W16의 기능 책임 설계안입니다. 현재 디렉토리 작업 경계를 유지하고, 상시 역할 인명 배정·검토 승인 강제는 설계 상태로 남깁니다. 기존 인명 배치를 변경하거나 새로운 상시 전담자가 배정됐다는 뜻이 아닙니다. **변경을 맡은 개발자가 구현과 검증 증거를 책임지고, 공통 계약은 매니저 개발 역할과 해당 계약을 사용하는 기능 담당자가 검토합니다.**
 
-**매니저는 사람·역할·브랜치의 이름이다. 코드 층의 이름이 아니다.**
-설계 문서와 코드의 **Core**(Core vs Team, `app/core/**`, 「코어 규칙」, 코어 1 = 진입·분류 층)는 그대로 Core 다 — 「매니저 층」으로 바꿔 읽지 않는다.
-옛 커머스 Team 「VOC & Store Manager」의 Manager 와도 무관하다(그 Team 은 v11 에서 빠졌다).
+| 기능 | 구현·수정 책임 역할 | 함께 검토할 역할·범위 |
+|---|---|---|
+| Case 상태·분류·라우팅·실행 연결 | 매니저 개발 역할 | 영향을 받는 에이전트 팀 담당: 입력·결과·대기·재개 동작 |
+| 활동·식당·이동 판정 | 해당 에이전트 팀 개발 담당 | 공통 입력·출력·도구 계약 변경은 매니저, 다른 업무에 영향이 있으면 해당 에이전트 팀 담당 |
+| 고객 웹·API 연결 | UI·검증 담당과 해당 API 변경 담당 | 화면 상태·오류·재개를 함께 확인. 인증·권한 변경이면 아래 인증 검토도 수행 |
+| 인증·권한·고객별 데이터 격리 | 해당 변경의 인증·권한 구현 담당. 상시 전담 인명은 **[미확보]** | 매니저: 공통 인증·권한 계약 / 고객 웹·API 담당: 호출 경계 / UI·검증 담당: 타 고객 접근 거부 시험 |
+| 실행 안전·중복 방지·감사 기록 | 공통 실행 경로는 매니저, 업무별 제안·실행 처리기는 해당 변경 담당 | 관련 에이전트 팀 담당: 제안 의미 / UI·검증 담당: 중복·실패·재시도 결과 |
+| DB 스키마·SQL 적용·데이터 정제 | 스키마 변경은 해당 작업 담당, 업무 데이터는 해당 에이전트 팀 담당. 별도 DB 전담 인명은 **[미확보]** | 매니저: 공통 데이터 계약·트랜잭션 / 영향받는 기능 담당: 읽기·쓰기 호환성. README의 공통 데이터 참여 배치는 유지 |
+| 평가·회귀 시험 | UI·검증 담당, 업무 판정 기준은 해당 에이전트 팀 담당 | 매니저: 공통 계약·상태 경계 / 모델·프롬프트 변경 담당: 평가 조건·자료·결과 제출 |
+| 통합·릴리스 판정 | 매니저 개발 역할과 UI·검증 담당 | 영향받는 기능 담당: 통합 결과 확인. 제품 전체 완료·운영 반영 여부는 환경별 증거로 별도 판정 |
 
-`[실측 2026-09-25]` 루트 [README.md](../../README.md) 팀 소개 표(발표 자료의 공식 Ownership)는 **코어 담당 1명(Core 1 Runtime) · Activity 2 · Mobility 1 · Dining 1 · UI & 검증 1** 이다. 아래 「코어 2 · 모델 3 · 검증&프론트 1」 배치는 v8 때 것이다.
-`[미확보]` README 표에는 **코어 2(Access & Action Platform) 담당 칸이 없다** — 그 몫을 누가 보는지는 아직 어느 문서도 정하지 않았다.
+상시 전담 인명이 미확정인 기능은 작업을 시작할 때 **변경 담당자·검토자·영향받는 기능**을 작업 기록에 적습니다. 작업 담당자가 없는 변경을 배정 완료로 표시하지 않습니다. 에이전트 구축과 모델 파인튜닝도 각각의 변경 담당자가 구현·평가 증거를 제출하고, 공유 입력·출력 계약을 바꾸면 같은 검토 절차를 따릅니다.
 
-## 담당과 담당하지 않는 것
+## 공유 계약을 변경하는 순서
 
-| 담당 | 인원 | 역할 | **담당하지 않는 것** |
-|---|---|---|---|
-| **코어 1** — Case Runtime & Coordination | 1 | Case·lifecycle·Shared State·CAS·Controller·~~Top-Level LangGraph~~·Registry·`TeamExecutorPort`·Message Broker 정책. **인라인 분류의 실행·실패 처리·상태 전이**와 Feedback Analytics 집계 배치. `[정정 2026-09-10]` Top-Level LangGraph는 설계 문장이며, `requirements.txt`의 `langgraph==1.2.8`과 달리 cs·sample·composer 코드에서는 동적 import를 포함해 import 0곳이고 현재 흐름은 Controller와 Case 상태기계(12종)가 정한다(2026-09-10 LangGraph 실측). | 외부 인증, Tool 실행, Team 내부 로직, **분류 라벨 어휘와 프롬프트 품질** |
-| **코어 2** — Access & Action Platform | 1 | Gateway·API/MCP·A2A Adapter·Tool/Action·approval·idempotency·audit | Case routing 판단, Team 내부 로직, **분류 실행** |
-| **모델** — Agent Team Module | 3 | Team 내부 graph/agent·프롬프트·retrieval·rerank·memory 정책·모델 선택과 라우팅·`TeamResult` 생성 규칙. **분류 라벨 어휘와 분류 프롬프트의 구현·품질** | Core 계약 변경, side effect 실행, **분류의 호출 시점과 실패 처리** |
-| **검증 & 프론트** | 1 | **평가 harness·golden/holdout 관리·지표·통계·회귀·contract test 실행**, 운영 UI, observability, 통합 데모 | 업무 로직 구현 |
+1. 변경 담당자가 현재 wiki 계약을 확인하고 변경 이유·영향받는 기능·호환성을 적습니다. 필드·요청·권한·DB 구조 중 무엇이 바뀌는지 명시합니다.
+2. **wiki 계약을 코드보다 먼저 수정합니다.** 매니저와 해당 계약을 사용하는 에이전트 팀·웹·데이터 담당이 검토하고 이름·결과를 작업 기록에 남깁니다. 작업자가 검토를 겸했다면 독립 검토 완료로 표시하지 않습니다.
+3. 계약의 판올림 규칙을 적용하고 구현·호출부·시험을 함께 수정합니다. 입력·출력 필드를 바꾸지 않는 내부 정리에 계약 버전을 임의로 올리지 않습니다.
+4. 관련 단위 시험과 계약·보안·통합 시험을 실행하고 명령·조건·성공·실패·건너뛴 이유를 기록합니다. 병합 검사는 [cs 작업 규칙](../../final_project_cs/RULE.md)의 통합 규칙을 따릅니다.
+5. 작업 보고서에 검토 결과·검증 증거·남은 항목을 연결합니다. 문서 수정 완료, 코드 검증 완료, 운영 반영 완료를 구분합니다.
 
-**"담당하지 않는 것" 열이 실제 경계다.** 무엇을 하는지보다 무엇을 안 하는지가 충돌을 막는다.
+예: `TeamResult` 필드를 바꾸는 작업은 매니저와 이를 반환·소비하는 에이전트 팀 담당이 검토합니다. 식당 내부 계산만 바꾸고 계약이 같다면 Dining 담당이 수정하고 해당 판정 회귀 시험을 제출합니다.
 
-### 분류가 셋으로 갈려 있다
+## 이름 대응
 
-`[실측]` 인라인 분류 하나가 세 담당에 걸쳐 있다. **의도된 분할이다.**
-
-| 무엇 | 누가 |
-|---|---|
-| 언제 부르고 실패하면 어떻게 하나 | **코어 1** |
-| 어떤 라벨을 쓰고 프롬프트를 어떻게 쓰나 | **모델** |
-| 분류 실행 자체 | 코어 2 아님 |
-
-**"실행 시점"과 "품질"을 나눈 것이다.** 분류가 틀리면 모델 담당, 분류 실패를 조용히 넘기면 코어 1 담당이다.
-
-## ★ 검증이 앞이고 프론트가 뒤다
-
-**이 1명의 1순위는 화면이 아니라 "좋아졌다"를 숫자로 증명하는 것이다.**
-
-UI는 그 증명을 사람이 볼 수 있게 만드는 수단이다. **화면을 먼저 만들고 평가를 뒤로 미루지 않는다.**
-
-## 모델 3명은 Team 수에 고정되지 않는다
-
-Team은 Registry 등록형이라 개수가 늘 수 있다.
-
-| 축 | 성격 |
-|---|---|
-| ~~VOC & Store Manager · Response Generation & Review~~ | ~~CS Pack 고정 축~~ — ★`[2026-09-10]` 커머스 Team 이라 코드에서 제거됐다(작업 트리, 커밋 전) |
-| ~~Procurement + Order & Payment · Fulfillment & Logistics~~ | ~~검증 쇼핑몰 연계 축~~ — 같은 이유로 제거 |
-| ~~Catalog & Verification~~ | ~~A2A Remote~~ — 자리를 Place Verification 이 물려받았다 |
-| **Activity · Dining · Mobility** | **여행 MVP 축**(v11 §5). Dining·Mobility 는 4·5주차 (v11 §9-B `[추정]`) |
-| Booking Handoff | MVP 다음 — `[결정 2026-09-10]` MVP 에서 뺐다, 09-08 승격을 뒤집음 |
-| Place Verification | A2A Remote — 원격은 있고 등록은 0건 |
-
-**6명 팀 전체가 이 네 축에 고정되는 것은 아니다.**
-
-**Team 하나가 무거우면 2명을 붙이고 가벼우면 한 사람이 둘을 본다.**
-
-## ★ 소유 디렉터리 — 충돌 방지의 핵심
-
-**두 스트림이 같은 파일을 쓰지 않는다.**
-
-`[실측]` 이유가 명확하다.
-
-> 쓰면 **마지막에 끝난 쪽이 이겨서 조용히 덮어쓴다.**
-
-담당을 역할이 아니라 **디렉터리로 긋는다.** 사람 이름으로 나누면 경계가 흐려진다.
-
-| 스트림 | 소유 디렉터리 — 여기만 쓴다 |
-|---|---|
-| **Core** | `app/core/**`(Case 상태 규칙 `app/core/case_lifecycle/` 포함, 옛 `app/domain/`) `app/application/{case_service,controller}.py` `app/infrastructure/messaging/**` `tests/contract/**` `final_project_cs/wiki/records/handoff/**` `config/guardrails.yaml` |
-| **DB** | `app/infrastructure/db/**` `scripts/seed.py` |
-| **API** | `app/presentation/api/**` `app/presentation/security.py` `tests/security/**` |
-| **Team** | `app/modules/customer_ops/**` `app/tools/**` `prompts/**` |
-| **RAG** | `knowledge/**` `app/infrastructure/rag/**` |
-| **VOC** | `app/modules/customer_ops/feedback.py` `app/application/feedback_job.py` |
-| **Eval** | `eval/**` `prompts/judge/**` |
-| **UI** | `app/presentation/ui/**` |
-
-`[실측]` 이 원칙이 `acop_dojo`의 트랙 경계에도 그대로 쓰인다 — **"경계는 사람이 아니라 디렉터리로 긋는다."**
-
-### 왜 Core를 계약 테스트와 함께 묶는가
-
-`[실측]` 원문의 근거가 날카롭다.
-
-> `transition_case()`·낙관적 동시성·outbox 원자성·ContextPack 예산 절삭은 **틀려도 테스트가 초록으로 나오는 종류의 코드**다 (경합·부분 실패·토큰 경계).
-
-**그래서 계약 테스트를 만든 쪽과 통과시킨 쪽을 분리한다.** Core와 `tests/contract/`를 같은 사람이 쥔다.
-
-## DB 소유
-
-`[실측]` 테이블 단위로 소유가 갈린다.
-
-| 소유 | 테이블 |
-|---|---|
-| **코어 1** | `customer_cases` `case_events` `shared_state` `agent_runs` `team_tasks` `outbox` |
-| **코어 2** | `action_requests` `action_approvals` `audit_logs` external client/auth |
-| **공통** | `tenants` `customers` knowledge/prompt/LLM 기록 |
-
-SQLAlchemy 설정과 Alembic revision은 **공동 합의**다.
-
-## ★ Alembic은 단일 브랜치다
-
-**마이그레이션이 갈리면 병합이 지옥이 된다.**
-
-```
-revision 생성 전 main 을 rebase 한다
-CI 에서 upgrade head → downgrade -1 → upgrade head 를 검증한다
-```
-
-**되돌릴 수 있는지까지 검사한다.** 앞으로만 가는 마이그레이션은 사고 때 못 쓴다.
-
-## 경계를 넘는 작업
-
-혼자 못 정하는 것들.
-
-| 작업 | 누가 함께 |
-|---|---|
-| Team 계약 변경 | 코어 1 + 모델 3명 |
-| 스키마 변경 | 소유 담당 + 영향받는 쪽 |
-| 승인 경계 조정 | 코어 2 + 기획 |
-| 지표 정의 변경 | 검증 + 기획 |
-| 저장소 간 계약 | 양쪽 저장소 소유자 |
-| **Alembic revision** | **공동 합의** |
-
-계약 변경은 `contract_version` 상향과 회귀 테스트를 함께 한다.
-
-## 고정점
-
-**1W 금요일은 Contract Freeze Day다.** → [timeline.md](timeline.md)
-
-## 검증 쇼핑몰과의 경계
-
-`[미확보]` 협의 창구가 정해지지 않았다.
-
-| 우리가 주는 것 | 받아야 하는 것 |
-|---|---|
-| Action 실행 요청 | 결제 구성 스냅샷 |
-| 근거 대조 결과 | 쇼핑몰이 계산한 환불 예정액 |
-
-→ [../decisions/D-001-payment-ownership.md](../decisions/D-001-payment-ownership.md)
+- **매니저**: README의 Core 1 Runtime 개발 역할과 `role-manager` 브랜치. 옛 문서의 코어 1·코어 2 구분을 새 팀원 두 명으로 해석하지 않습니다. 공통 영역의 인명 배치는 README에서 확인합니다.
+- **TeamRegistry**: 요청에 맞는 에이전트 팀을 선택하는 장치. Controller는 Case 처리 흐름을 관리하고, 실행 계약을 통해 선택한 에이전트 팀을 호출합니다.
+- `role-activity`·`role-dining`·`role-mobility`·`role-eval-ui`: 협업 브랜치 이름. 브랜치 이름만으로 추가 담당자나 배포 완료 상태를 추정하지 않습니다.
 
 ## 관계
 
-- [timeline.md](timeline.md) — 주차별 배분
-- [dod.md](dod.md) — 완료 기준
-- [../governance/review-policy.md](../governance/review-policy.md) — 문서 소유
-- [../architecture/repository-map.md](../architecture/repository-map.md) — 저장소별 소유
+- [에이전트 팀 코드·시험 경로](../../final_project_cs/wiki/teams/code-layout.md) — 현재 수정 위치와 구조 검사
+- [Team 계약](../../final_project_cs/wiki/teams/team-contract/index.md) — 공유 입력·출력과 계약 판올림
+- [SQL 적용 안내](../../final_project_cs/wiki/data/migrations.md) — 스키마 변경·적용 증거
+- [문서 작성 표준](../governance/document-standard.md) — 정본·근거·기록 분리
+
+## 외부 근거와 적용 한계
+
+[외부] [NASA Systems Engineering Handbook 부록](https://www.nasa.gov/reference/system-engineering-handbook-appendix/)은 절차 수행의 책임·권한 배정 방법의 예로 RACI를 제시합니다. [GitHub CODEOWNERS 공식 문서](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)는 파일 경로에 검토자를 연결하며 실제 쓰기 권한과 별도 필수 검토 설정이 필요합니다. 기능 책임과 경로 검토는 같은 표가 아닙니다.
+
+이 자료가 우리 인명 배치를 정하거나 이 설계안을 산업 표준으로 인증하는 것은 아닙니다. 최초 발명자는 확인한 공식 자료에서 확정하지 못했습니다. 특정 인물·회사를 최초 제안자로 적지 않습니다. 현재는 디렉토리 경계를 유지하고 기능 책임표를 위 근거를 참고한 프로젝트 설계안으로 둡니다. `CODEOWNERS` 강제 검토가 적용됐다고 주장하지 않습니다. [내려받은 원문·해시](../../program/research/sql_review_2026-10-11/references/manifest.json).
+
+## 확인 근거
+
+2026-10-12 후속 검토의 경로 검사·시험 범위는 [이번 결과](../../program/research/baseline_completion_2026-10-12/tasks/wiki/report.md)에 별도로 기록합니다. 아래는 2026-10-11 확인 기록입니다. 새 상시 담당 배정·독립 검토 승인·운영 반영으로 승격하지 않습니다.
+
+[실측 2026-10-11 작업 트리] README 배치, 등록 설정, 구현·시험 경로를 대조했습니다. 상시 인증·DB 전담자는 README의 별도 배정으로 확인되지 않아 미확정으로 남겼습니다. 경로·계약 구조 시험 결과와 수정 전 사본은 [W16 재검토 보고서](../../final_project_cs/wiki/records/reports/2026-10-11_2117_W16-responsibility-review.md)에 있습니다. 개인 배정·제품 전체 검증·운영 반영 완료를 주장하지 않습니다.

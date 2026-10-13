@@ -1,0 +1,9 @@
+
+ RUN  v5.0.1 C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1
+
+
+ Test Files  1 passed (1)
+      Tests  36 passed (36)
+   Start at  10:38:29
+   Duration  932ms (import 47%, transform 44%, tests 8%, worker 2%)
+

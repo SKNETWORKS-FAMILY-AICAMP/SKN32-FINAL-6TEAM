@@ -1,0 +1,21 @@
+{
+  "verified_at": "2026-10-09T11:21:48.763837+09:00",
+  "source_test_data_matches": 241,
+  "artifact_matches": 44,
+  "backup_matches": 24,
+  "additional_evidence_hashes": {
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/after-v1.run.json": "b8ed68017aef33bd0b81fb330f41d22de7203da7b840f2cd1e363c7dbf4ce9c4",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/after-v2.run.json": "f2441e322d77c7973d49b31e61949a917fb93deb3cedd44e8d4b2787765385e1",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/after-v3.run.json": "72b53099b2b3b3478407c85e8e59d9c46a60cdd7b7c11d93eb1ef049bbda9fc4",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/after-v4.run.json": "d4469f457f4f56111e0d60c6bfecdf6be11330debf7ed7d29168551bf2112221",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/after-v5.run.json": "e23d52eeb262ce50b9bb7cd11fce10fc3fc0c0d991fc805b0833ed967164850a",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/after-v6.run.json": "175d271b932c601f05aa33281e7fb9a8fc2ffbf1ac6bd8e8278ad7b5541411ef",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/after-v7.run.json": "8d6fc7943dcbf0f2f91cf7eaf557921a56a0d6372948d3e6f5acb7f77fc50adf",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/before-v1.run.json": "b894e9ecdeb1064ee5555a0ee1252a4451a9112ffa5c1c50ce96516d13edea32",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/native-audit-failure-summary-v1.json": "693d987d81b0e687e8552ff83adeb966d8280d3491f7a7479076f7329cc59cb2",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/ruff-v1.run.json": "55bc4890484b99f0e67e7e89a0ac8bbbfccd7ddb8a723898f686eaff08c03b2e",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1056_지하철_현재출발_제품연결/supplemental-v1.run.json": "7f5813b176d7510d42c6d7ec1d0c9ac6d3768dbfd9be6654469ebb5625d5828e"
+  },
+  "browser_render_verified": false,
+  "commit_push_deploy": false
+}

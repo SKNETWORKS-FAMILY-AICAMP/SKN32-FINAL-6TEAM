@@ -1,0 +1,57 @@
+[WebServer] (node:27636) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:15080) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1784) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:12860) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:11536) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28484) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:17872) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:18292) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:20660) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:25220) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19764) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:11212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 26 tests using 1 worker
+
+(node:29320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intro · 375px: 화면 표시·가로 넘침·실행 오류 (2.6s)
+  ok  2 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · terms-preferences · 375px: 화면 표시·가로 넘침·실행 오류 (2.6s)
+  ok  3 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registration · 375px: 화면 표시·가로 넘침·실행 오류 (1.9s)
+  ok  4 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · trips · 375px: 화면 표시·가로 넘침·실행 오류 (1.7s)
+  ok  5 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registered-trip · 375px: 화면 표시·가로 넘침·실행 오류 (2.0s)
+  ok  6 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · verification-redirect · 375px: 화면 표시·가로 넘침·실행 오류 (2.3s)
+  ok  7 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · results-redirect · 375px: 화면 표시·가로 넘침·실행 오류 (2.6s)
+  x   8 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류 (7.0s)
+(node:27980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  9 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · starting-revisit · 375px: 화면 표시·가로 넘침·실행 오류 (2.5s)
+  x  10 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · account · 375px: 화면 표시·가로 넘침·실행 오류 (7.6s)
+(node:8532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 11 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · profile · 375px: 화면 표시·가로 넘침·실행 오류 (5.7s)
+  ok 12 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · support · 375px: 화면 표시·가로 넘침·실행 오류 (2.0s)
+  ok 13 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · social-cancelled · 375px: 화면 표시·가로 넘침·실행 오류 (2.2s)
+  ok 14 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intro · 1280px: 화면 표시·가로 넘침·실행 오류 (2.0s)
+  ok 15 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · terms-preferences · 1280px: 화면 표시·가로 넘침·실행 오류 (2.7s)
+  ok 16 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registration · 1280px: 화면 표시·가로 넘침·실행 오류 (3.2s)
+  ok 17 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · trips · 1280px: 화면 표시·가로 넘침·실행 오류 (3.2s)
+  x  18 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registered-trip · 1280px: 화면 표시·가로 넘침·실행 오류 (1.5m)
+(node:16112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 19 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · verification-redirect · 1280px: 화면 표시·가로 넘침·실행 오류 (3.3s)
+  ok 20 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · results-redirect · 1280px: 화면 표시·가로 넘침·실행 오류 (2.4s)

@@ -1,0 +1,9 @@
+학습 문제 16/16 · 평균 길이 2063 토큰 · 정답 토큰 평균 6.6
+Loading weights:   0%|          | 0/2076 [00:00<?, ?it/s]Loading weights:   7%|▋         | 139/2076 [00:00<00:01, 1376.90it/s]Loading weights:  24%|██▍       | 504/2076 [00:00<00:00, 2694.88it/s]Loading weights:  37%|███▋      | 774/2076 [00:01<00:03, 430.68it/s] Loading weights:  45%|████▍     | 931/2076 [00:01<00:02, 451.19it/s]Loading weights:  50%|█████     | 1046/2076 [00:01<00:02, 472.92it/s]Loading weights:  55%|█████▍    | 1140/2076 [00:02<00:01, 472.80it/s]Loading weights:  59%|█████▊    | 1219/2076 [00:02<00:01, 474.64it/s]Loading weights:  62%|██████▏   | 1288/2076 [00:02<00:01, 478.08it/s]Loading weights:  65%|██████▌   | 1351/2076 [00:02<00:01, 463.63it/s]Loading weights:  68%|██████▊   | 1407/2076 [00:02<00:01, 461.74it/s]Loading weights:  84%|████████▍ | 1749/2076 [00:02<00:00, 1041.93it/s]Loading weights: 100%|██████████| 2076/2076 [00:02<00:00, 710.10it/s] 
+모델 올림 Gemma4ForConditionalGeneration · GPU 메모리 8.7GB
+trainable params: 34,881,536 || all params: 7,975,982,368 || trainable%: 0.4373
+초기 손실 측정 16/16
+초기 손실 0.088101
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+ep 1 step 4/4 loss 0.0687 lr 5.00e-05 0.9분 · 남은 약 0분 · 최대 GPU 10.6GB
+저장 /root/adapters/smoke_finch_20261008 총 0.9분

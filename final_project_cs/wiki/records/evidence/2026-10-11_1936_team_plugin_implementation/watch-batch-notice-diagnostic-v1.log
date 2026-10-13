@@ -1,0 +1,26 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set _
+
+case_world = {'clock': <tests.scenario.test_case_version_day.Clock object at 0x000001E6306D9DC0>, 'customer': UUID('b857b8c0-3c09-4...EDF30B0>, 'store': <app.domains.travel_ops.components.itinerary.itinerary.TripStore object at 0x000001E630993F20>, ...}
+
+    def test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set(case_world):
+        world = case_world
+        everything = {SKY: ROAD, LUNCH: ROAD, "�����Ƹ���": ROAD, "�Ե����� ��庥ó": ROAD,
+                      "���� �귱ġ �Ĵ�(�ó�����)": ROAD, "���� ���� �Ĵ�(�ó�����)": ROAD}      # ���� ���� ��ü �ĺ��� �� ������
+        engine = _engine(world, everything)
+        first = _tick(engine)
+    
+        [opened] = first.opened
+        assert [v[0] for v in _versions(world)] == [1]                       # ���� �� �ٲ����
+        assert _status(world, __import__("uuid").UUID(opened["case_id"])) == "escalated"
+        notices = _outbox(world)
+>       assert len(notices) == 1, notices
+E       AssertionError: [('193f394c-8abe-4850-ac86-533a8657c5e3:proposal:ce9c0a21-18f7-44a3-a24d-cabef784cc9c', {'causes': [{'category': 'traf... 'traffic_control', 'kind': 'road_closed'}], 'changed': None, 'items': ['c19a1396-4d7f-4f72-ae51-fd802ac74889'], ...})]
+E       assert 2 == 1
+E        +  where 2 = len([('193f394c-8abe-4850-ac86-533a8657c5e3:proposal:ce9c0a21-18f7-44a3-a24d-cabef784cc9c', {'causes': [{'category': 'traf... 'traffic_control', 'kind': 'road_closed'}], 'changed': None, 'items': ['c19a1396-4d7f-4f72-ae51-fd802ac74889'], ...})])
+
+tests\scenario\test_watch_batch.py:221: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_watch_batch.py::test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set
+1 failed in 4.57s

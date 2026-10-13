@@ -52,13 +52,13 @@
 """
 from __future__ import annotations
 
-from app.core.team_availability import TeamUnavailable
-
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta
 import math
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
+
+from app.core.team_availability import TeamUnavailable
 
 from app.domains.travel_ops.components.planning.meal_likeness import LIKENESS_KEYS, likeness
 from app.domains.travel_ops.components.places.place_hours import break_span
@@ -586,7 +586,7 @@ class MealRoute:
                     break
         except TeamUnavailable:
             raise
-        except Exception:   # noqa: BLE001 — 계산기 장애로 대체를 멈추지 않는다. 도보 어림 그대로 둔다
+        except Exception:   # noqa: BLE001 — 일반 계산 오류의 기존 후보 정렬 정책 유지
             return None
         return int(got["eta_min"]) if got and got.get("eta_min") is not None else None
 

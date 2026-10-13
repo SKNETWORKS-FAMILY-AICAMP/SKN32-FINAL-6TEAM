@@ -42,6 +42,8 @@
 /* Expanded card: fills the setup area like a sheet. */
 .card.active { position: fixed; inset: 8px 12px 12px; z-index: 20; margin: 0; display: flex; flex-direction: column; border: 1px solid var(--color-primary); border-radius: 20px; background: var(--color-surface); box-shadow: 0 12px 36px color-mix(in srgb, var(--color-text) 9%, transparent); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; animation: expandCard .36s cubic-bezier(.22, .8, .2, 1) both; }
 .card.active::-webkit-scrollbar { display: none; }
+/* `[2026-10-12]` 같은 약관 카드를 두 번째로 그릴 때(동의 확인 → 약관 화면 이동)는 열림 애니메이션을 다시 돌리지 않는다 */
+.setup[data-quiet-open] .card { animation: none; }
 .card.active > .cardHead { position: sticky; top: 0; z-index: 2; background: var(--color-surface); min-height: 85px; border-bottom: 1px solid var(--color-border); }
 .card.active > .cardContent { display: flex; flex: 1 0 auto; flex-direction: column; opacity: 1; }
 .card.active .contentInner { flex: 1; display: flex; flex-direction: column; overflow: visible; }

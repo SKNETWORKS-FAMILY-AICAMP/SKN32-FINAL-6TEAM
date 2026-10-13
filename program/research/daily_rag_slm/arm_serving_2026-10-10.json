@@ -1,0 +1,232 @@
+{
+  "observed_at_utc": "2026-10-09T23:02:09.691937+00:00",
+  "benchmark": {
+    "observed_at": "2026-10-09T23:02:09.691937+00:00",
+    "service": "ActiveState=active\nMainPID=171515\nNRestarts=0\nMemoryCurrent=7221948416\nCPUQuotaPerSecUSec=1.800000s\nAllowedCPUs=0-1\nMemoryMax=10737418240\n",
+    "active": {
+      "at": "2026-10-09T22:58:18.706174+00:00",
+      "job_id": "e4bt_q4_d3_nocache",
+      "engine_pid": 266244,
+      "expected": 360,
+      "saved": 68
+    },
+    "resource_summary": {
+      "window_s": 300.0686996880104,
+      "cpu_pct_two_cores": 84.328228923275,
+      "host_cpu_busy_pct": 93.36494239244692,
+      "host_steal_pct": 0.18639097804881366,
+      "memory_current_bytes": 7221948416,
+      "above_20_contiguous_seconds": 19524.986524729,
+      "five_minute_target_verified": true
+    },
+    "free_bytes": 44743139328,
+    "states": {
+      "e4bt_q4_d3": "completed",
+      "e4bt_q8_d3": "completed",
+      "e4bt_q4_grouped60_cache_ABBA_1": "completed",
+      "e4bt_q4_grouped60_cache_ABBA_2": "completed",
+      "e4bt_q4_grouped60_cache_ABBA_3": "completed",
+      "e4bt_q4_grouped60_cache_ABBA_4": "completed",
+      "e4bt_q4_d3_concurrent2": "completed",
+      "e4bt_q4_d3_nocache": "running"
+    },
+    "registered": 14,
+    "collected": [
+      {
+        "id": "e4bt_q4_d3_concurrent2",
+        "saved": 360,
+        "unique_ids": 360,
+        "hashes": {
+          "summary.json": "0f2f2d576c62572269c4e1dd677e0a9e66752f52ce8f467ce0bcb8e10b83b188",
+          "engine.log": "ac702a67c31667c30aa6c3067fa30e420893e238fa99e4674dca65b963926fd0",
+          "answers.jsonl": "963fa929b1123906eec5b48cb0ba2be172d13ee93788993f9263e53fc2e74145",
+          "attempt_1791530154386545658.json": "76028a6c8fc7d364a558f96cd40f3ff83035ee01fa6561dcbcf1e3df6260edee"
+        },
+        "hash_checks": {
+          "summary.json": true,
+          "engine.log": true,
+          "answers.jsonl": true,
+          "attempt_1791530154386545658.json": true
+        },
+        "summary": {
+          "expected": 360,
+          "saved": 360,
+          "correct": 319,
+          "normal_correct": 107,
+          "normal_total": 120,
+          "null_correct": 212,
+          "null_total": 240,
+          "false_positive": 28,
+          "errors_or_unparsed": 0,
+          "latency_p50_s": 185.3313408330141,
+          "latency_p95_s": 339.7055608909868,
+          "latency_max_s": 428.3852418679744,
+          "repeated_soak_not_independent_accuracy": true
+        }
+      }
+    ]
+  },
+  "app_snapshot_file": "program/scripts/plan_qa_bench/results/heartbeat_20261010_0800/ARM_app_snapshot.json",
+  "report": "final_project_cs/wiki/records/reports/2026-10-10_0800_six-hour-gpu-arm-report.md",
+  "host_memory_used_approx_pct": 51.411157176401524,
+  "disk_used_pct": 56.496494071219885,
+  "daily_research_observation": {
+    "observed_at_utc": "2026-10-10T01:19:42.392068+00:00",
+    "resource_summary": {
+      "window_s": 300.076701139973,
+      "cpu_pct_two_cores": 84.48575382123477,
+      "host_cpu_busy_pct": 92.72845323364841,
+      "host_steal_pct": 0.16956969600294403,
+      "memory_current_bytes": 7208022016,
+      "above_20_contiguous_seconds": 27777.200709733996,
+      "five_minute_target_verified": true
+    },
+    "host_resource_observation": {
+      "memtotal": 12503744512,
+      "memavailable": 5337956352,
+      "host_used_percent": 57.309137699693906,
+      "root_total_bytes": 102888095744,
+      "root_used_bytes": 58129739776,
+      "root_available_bytes": 44741578752,
+      "observed_at_utc": "2026-10-10T01:23:46.200069+00:00"
+    },
+    "active": {
+      "at": "2026-10-10T01:17:10.324761+00:00",
+      "job_id": "e4bt_q4_d3_nocache",
+      "engine_pid": 266244,
+      "expected": 360,
+      "saved": 101
+    },
+    "no_new_restart": true,
+    "app_deployment_or_correctness_not_claimed": true
+  },
+  "latest_observation_2026_10_10_1411": {
+    "observed_at_utc": "2026-10-10T05:11:21.497700+00:00",
+    "resources": {
+      "window_s": 300.0800183379906,
+      "cpu_pct_two_cores": 83.92096744554148,
+      "host_cpu_busy_pct": 93.17896639320992,
+      "host_steal_pct": 0.1878777316541913,
+      "memory_current_bytes": 7413571584,
+      "above_20_contiguous_seconds": 41670.894016965,
+      "five_minute_target_verified": true
+    },
+    "benchmark_active": {
+      "at": "2026-10-10T05:09:01.476566+00:00",
+      "job_id": "e4bt_q4_d3_nocache",
+      "engine_pid": 266244,
+      "expected": 360,
+      "saved": 182
+    },
+    "host_memory_total_bytes": 12503744512,
+    "host_memory_available_bytes": 6124810240,
+    "host_memory_used_pct": 51.01619171663382,
+    "disk": {
+      "total": 102888095744,
+      "used": 58131476480,
+      "available": 44739842048
+    },
+    "units": {
+      "tripilot-arm-cd.timer": "active",
+      "tripilot-arm-refill.timer": "active",
+      "tripilot-arm-work-queue.service": "active",
+      "tripilot-arm-serving.service": "active"
+    },
+    "app_queue_counts": {
+      "failed": 3,
+      "completed": 22,
+      "pending": 64,
+      "running": 1
+    },
+    "ready_batches_added": 20,
+    "ready_now": 19,
+    "blocked_pending": 45,
+    "estimated_ready_seconds": 22437.39070956547,
+    "estimate_not_runtime_guarantee": true,
+    "queue_bug_fixed": true,
+    "regression_tests_passed": 15,
+    "regression_tests_total": 15,
+    "benchmark_untouched": true,
+    "active_app_job_not_interrupted": true
+  },
+  "latest_report": "final_project_cs/wiki/records/reports/2026-10-10_1400_six-hour-gpu-arm-report.md",
+  "heartbeat_2000": {
+    "observed_at_utc": "2026-10-10T11:10:32.263444+00:00",
+    "latest": {
+      "observed_at_utc": "2026-10-10T11:10:32.676944+00:00",
+      "resource_summary": {
+        "window_s": 300.1015311120427,
+        "cpu_pct_two_cores": 84.29741263317676,
+        "host_cpu_busy_pct": 93.26281681593723,
+        "host_steal_pct": 0.18969266978855862,
+        "memory_current_bytes": 7538065408,
+        "above_20_contiguous_seconds": 63226.42415224103,
+        "five_minute_target_verified": true
+      },
+      "service": "ActiveState=active\nMainPID=171515\nNRestarts=0\nMemoryCurrent=7537803264\nCPUQuotaPerSecUSec=1.800000s\nAllowedCPUs=0-1\nMemoryMax=10737418240\n",
+      "active": {
+        "at": "2026-10-10T11:07:03.203973+00:00",
+        "job_id": "e4bt_q4_d3_nocache",
+        "engine_pid": 266244,
+        "expected": 360,
+        "saved": 250
+      },
+      "registered": 14,
+      "completed": 7,
+      "benchmark_ready_pending": 6,
+      "host_memory_total_bytes": 12503744512,
+      "host_memory_available_bytes": 5939712000,
+      "host_memory_used_pct": 52.49653418382322,
+      "disk": {
+        "total": 102888095744,
+        "used": 58119770112,
+        "available": 44751548416
+      },
+      "units": {
+        "tripilot-arm-cd.timer": "active",
+        "tripilot-arm-refill.timer": "active",
+        "tripilot-arm-work-queue.service": "active",
+        "tripilot-arm-serving.service": "active"
+      },
+      "app_queue_counts": {
+        "failed": 3,
+        "completed": 39,
+        "pending": 61,
+        "running": 1
+      },
+      "ready_pending": 16,
+      "blocked_pending": 45,
+      "estimated_pending_seconds_recomputed": 20647.890483584397,
+      "estimated_active_remaining_seconds": 1238.582169515788,
+      "estimated_total_remaining_seconds": 21886.472653100183,
+      "estimate_not_measurement": true,
+      "app_controller_unchanged": true,
+      "app_revision": "210b020067a1e42f2622262adeb60d1f3d371668",
+      "new_http_batches": 17,
+      "new_http_passed": 187,
+      "new_http_total": 187,
+      "http_not_independent_accuracy": true,
+      "batch_seconds": [
+        1115.5676542180008,
+        1118.0371841620072,
+        1159.4530543260043,
+        1101.9978177620214,
+        1125.7944730370073,
+        1124.5866260119947,
+        1095.2795470139827,
+        1109.857476441015,
+        1129.2713987800526,
+        1121.7192829389824,
+        1102.647370208986,
+        1137.6445281259948,
+        2004.5743313269923,
+        2093.3271425790153,
+        1385.4129354630131,
+        1329.7459287689999,
+        1112.518603672972
+      ]
+    },
+    "report": "final_project_cs/wiki/records/reports/2026-10-10_2000_six-hour-gpu-arm-report.md"
+  },
+  "latest_observation_key": "heartbeat_2000"
+}

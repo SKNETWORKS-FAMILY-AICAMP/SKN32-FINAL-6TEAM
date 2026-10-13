@@ -1,0 +1,155 @@
+{
+  "checks": [
+    {
+      "name": "local inventory relation count",
+      "passed": true,
+      "detail": "109"
+    },
+    {
+      "name": "local all columns represented",
+      "passed": true,
+      "detail": "1001"
+    },
+    {
+      "name": "local read-only evidence",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "local exactly five residual tables",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "local metadata only",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "deployed inventory relation count",
+      "passed": true,
+      "detail": "105"
+    },
+    {
+      "name": "deployed all columns represented",
+      "passed": true,
+      "detail": "970"
+    },
+    {
+      "name": "deployed read-only evidence",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "deployed exactly five residual tables",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "deployed metadata only",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "suites have no collected overlap",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "suites have no unassigned collected tests",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "wiki current checker has zero violations",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "two HTML pages local resources exist",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "all twenty-five review cards preserved",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "W13 contains result link",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "W14 contains result link",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "W15 contains result link",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "W16 contains result link",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "W20 contains result link",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "W22 contains result link",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "pre-edit backup hashes match",
+      "passed": true,
+      "detail": "20"
+    },
+    {
+      "name": "official reference hashes match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "sql-status.png image opens",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy-schema.png image opens",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "travel-schema.png image opens",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "state-example.png image opens",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "checker-example.png image opens",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "all active test files assigned once",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "passed": 29,
+  "total": 29,
+  "limits": [
+    "Static HTML/data/link validation only; actual browser rendering was not performed.",
+    "Full common-suite execution was interrupted; selected regression runs are reported separately."
+  ]
+}

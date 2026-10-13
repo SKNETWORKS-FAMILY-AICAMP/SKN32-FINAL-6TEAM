@@ -1,0 +1,62 @@
+[
+  {
+    "path": "program/scripts/check_wiki.py",
+    "backup": "program/scripts/_backup/2026-10-12_035856_wiki-state/check_wiki.py",
+    "sha256": "8a7f8c5e43e4b04b67fd1a198a6966208b738f5007caf13f347c5f7c08e2094a"
+  },
+  {
+    "path": "program/scripts/build_wiki_catalogs.py",
+    "backup": "program/scripts/_backup/2026-10-12_035856_wiki-state/build_wiki_catalogs.py",
+    "sha256": "0d096a8ae1a7656aba00329d0c4c245dd7ed2abf176b252f9355e207ee1168a7"
+  },
+  {
+    "path": "program/scripts/tests/test_wiki_governance.py",
+    "backup": "program/scripts/tests/_backup/2026-10-12_035856_wiki-state/test_wiki_governance.py",
+    "sha256": "609bf69519f32cebc0fad3ed85dfa11082c48d6f5e44bc1cac15ac623d71561f"
+  },
+  {
+    "path": "wiki/governance/document-standard.md",
+    "backup": "wiki/governance/_backup/2026-10-12_035856_wiki-state/document-standard.md",
+    "sha256": "23711d2c3ab4e39bda8abac09e87bf66a81a5be2701ef4c78ab2ec899e0c00fc"
+  },
+  {
+    "path": "wiki/governance/front-matter.md",
+    "backup": "wiki/governance/_backup/2026-10-12_035856_wiki-state/front-matter.md",
+    "sha256": "1f63e8c794983cf763f9a65bacd9a4b234ebf2806f2101e693394810a94f2d1f"
+  },
+  {
+    "path": "wiki/governance/review-policy.md",
+    "backup": "wiki/governance/_backup/2026-10-12_035856_wiki-state/review-policy.md",
+    "sha256": "e7dc82d87b65bcc61878002fe476f27af2a5eabd9f68303fb235e974d68685f8"
+  },
+  {
+    "path": "wiki/governance/evidence-grades.md",
+    "backup": "wiki/governance/_backup/2026-10-12_035856_wiki-state/evidence-grades.md",
+    "sha256": "0240929abb9337cb67c7263d836b54769d6a0c32b1f90a08911eb82a21f8b353"
+  },
+  {
+    "path": "wiki/governance/implementation-state.md",
+    "backup": "wiki/governance/_backup/2026-10-12_035856_wiki-state/implementation-state.md",
+    "sha256": "22d0ce0dc559f91e08dfb72b79f079528f6996a684ae3d1f0ce0657da423f9cf"
+  },
+  {
+    "path": "wiki/governance/index.md",
+    "backup": "wiki/governance/_backup/2026-10-12_035856_wiki-state/index.md",
+    "sha256": "7842f9b9c9b2746364a3127b39fdd989a6e6fdf08bd7f568befc98c765697ec7"
+  },
+  {
+    "path": "wiki/delivery/roles.md",
+    "backup": "wiki/delivery/_backup/2026-10-12_035856_wiki-state/roles.md",
+    "sha256": "029aef302680c325e0bdaa289ade2b269880e056f1b8c6597d20bed675ac22fa"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/code-layout.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-12_035856_wiki-state/code-layout.md",
+    "sha256": "4195e6f146425c4519bc59104dc8210acd6c1dc8fe2037e71552881f3fad0efa"
+  },
+  {
+    "path": "program/research/wiki_review_2026-10-11/findings-v2.json",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-12_035856_wiki-state/findings-v2.json",
+    "sha256": "b093dee984ebdca53c823dd6c69d73acff881976780ad06ddd29b916615bfd95"
+  }
+]

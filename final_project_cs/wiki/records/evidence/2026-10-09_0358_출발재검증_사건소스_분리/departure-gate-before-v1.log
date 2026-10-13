@@ -1,0 +1,99 @@
+FFFFF..                                                                  [100%]
+================================== FAILURES ===================================
+____ test_walk_revalidation_does_not_require_unrelated_event_source[None] _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001B4CC1F1E80>
+events = None
+
+    @pytest.mark.parametrize('events', [None, UnavailableEvents()])
+    def test_walk_revalidation_does_not_require_unrelated_event_source(monkeypatch, events):
+        move, items, source, observer, planned = walking(monkeypatch)
+        status, phrase = build_departure(move, items, route_events=events, routes=None,
+                                        now=NOW, departure_observer=observer)
+>       assert status == 'ok' and f"�� {planned['eta_min']}��" in phrase.render()
+E       AssertionError: assert ('no_route' == 'ok'
+E         
+E         - ok
+E         + no_route)
+
+tests\unit\travel\test_departure_source_gate_v1.py:40: AssertionError
+___ test_walk_revalidation_does_not_require_unrelated_event_source[events1] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001B4CC1F2270>
+events = <tests.unit.travel.test_departure_source_gate_v1.UnavailableEvents object at 0x000001B4CC02FEC0>
+
+    @pytest.mark.parametrize('events', [None, UnavailableEvents()])
+    def test_walk_revalidation_does_not_require_unrelated_event_source(monkeypatch, events):
+        move, items, source, observer, planned = walking(monkeypatch)
+>       status, phrase = build_departure(move, items, route_events=events, routes=None,
+                                        now=NOW, departure_observer=observer)
+
+tests\unit\travel\test_departure_source_gate_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\components\watch\trip_reminders.py:342: in build_departure
+    events = route_events.affecting(route_targets(route))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.unit.travel.test_departure_source_gate_v1.UnavailableEvents object at 0x000001B4CC02FEC0>
+targets = []
+
+    def affecting(self, targets):
+>       pytest.fail('Ȯ���� ����� ���� ������ ��� �ҽ��� ��ȸ���� �ʾƾ� �մϴ�')
+E       Failed: Ȯ���� ����� ���� ������ ��� �ҽ��� ��ȸ���� �ʾƾ� �մϴ�
+
+tests\unit\travel\test_departure_source_gate_v1.py:17: Failed
+_________ test_disconnected_walk_is_held_even_without_incident_source _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001B4CC1F2960>
+
+    def test_disconnected_walk_is_held_even_without_incident_source(monkeypatch):
+        move, items, _, observer, _ = walking(monkeypatch, no_path=True)
+        status, phrase = build_departure(move, items, route_events=None, routes=None,
+                                        now=NOW, departure_observer=observer)
+>       assert status == 'held' and phrase is None
+E       AssertionError: assert ('no_route' == 'held'
+E         
+E         - held
+E         + no_route)
+
+tests\unit\travel\test_departure_source_gate_v1.py:49: AssertionError
+_ test_registered_observer_never_sends_old_bus_guidance_without_event_source __
+
+    def test_registered_observer_never_sends_old_bus_guidance_without_event_source():
+        move, items = bus_notice()
+        status, phrase = build_departure(move, items, route_events=None, routes=None, now=t('10:00'),
+            departure_observer=lambda *a, **kw: pytest.fail('�뼱 ��� �ҽ� ������ ���� �����ؾ� �մϴ�'))
+>       assert status == 'fatal' and phrase is None
+E       AssertionError: assert ('no_route' == 'fatal'
+E         
+E         - fatal
+E         + no_route)
+
+tests\unit\travel\test_departure_source_gate_v1.py:56: AssertionError
+___________ test_registered_observer_holds_missing_route_definition ___________
+
+    def test_registered_observer_holds_missing_route_definition():
+        move, items = bus_notice()
+        move.detail.pop('route_def')
+        status, phrase = build_departure(move, items, route_events=None, routes=None, now=t('10:00'),
+            departure_observer=lambda *a, **kw: pytest.fail('������ ��� ���ǰ� �����ϴ�'))
+>       assert status == 'held' and phrase is None
+E       AssertionError: assert ('no_route' == 'held'
+E         
+E         - held
+E         + no_route)
+
+tests\unit\travel\test_departure_source_gate_v1.py:64: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\departure-gate-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_departure_source_gate_v1.py::test_walk_revalidation_does_not_require_unrelated_event_source[None]
+FAILED tests/unit/travel/test_departure_source_gate_v1.py::test_walk_revalidation_does_not_require_unrelated_event_source[events1]
+FAILED tests/unit/travel/test_departure_source_gate_v1.py::test_disconnected_walk_is_held_even_without_incident_source
+FAILED tests/unit/travel/test_departure_source_gate_v1.py::test_registered_observer_never_sends_old_bus_guidance_without_event_source
+FAILED tests/unit/travel/test_departure_source_gate_v1.py::test_registered_observer_holds_missing_route_definition
+5 failed, 2 passed in 4.09s
+Exception ignored in: <function Console.__del__ at 0x000001B4BC985BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

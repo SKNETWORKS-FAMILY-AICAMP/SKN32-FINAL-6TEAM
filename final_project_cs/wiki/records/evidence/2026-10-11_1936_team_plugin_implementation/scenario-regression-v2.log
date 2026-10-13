@@ -1,0 +1,31 @@
+FF...F..F....                                                            [100%]
+================================== FAILURES ===================================
+_______ test_the_case_version_runs_the_whole_day_like_the_trip_version ________
+tests\scenario\test_case_version_day.py:224: in test_the_case_version_runs_the_whole_day_like_the_trip_version
+    _run_trip_day(trip_world)
+tests\scenario\test_case_version_day.py:183: in _run_trip_day
+    assert len(tick("10:45").adjusted) == 1
+E   AssertionError: assert 0 == 1
+E    +  where 0 = len([])
+E    +    where [] = TripTickResult(checked=2, unavailable=[], adjusted=[], fatal=[], unhandled=[], unresolved=[], pinned=[], unchecked=[], asked=[], expired=[], rechecked=[]).adjusted
+E    +      where TripTickResult(checked=2, unavailable=[], adjusted=[], fatal=[], unhandled=[], unresolved=[], pinned=[], unchecked=[], asked=[], expired=[], rechecked=[]) = <function _run_trip_day.<locals>.tick at 0x00000219DF01EE80>('10:45')
+_____________________ test_re_requests_run_through_cases ______________________
+tests\scenario\test_case_version_day.py:274: in test_re_requests_run_through_cases
+    assert _latest(case_world)[0]["version"] == 7
+E   assert 6 == 7
+_ test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong _
+tests\scenario\test_case_version_day.py:359: in test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong
+    assert _latest(world)[0]["version"] == 6
+E   assert 5 == 6
+____ test_a_scenario_runs_without_breaking_a_hard_constraint[t-confirmed] _____
+tests\scenario\test_travel_eval_scenarios.py:33: in test_a_scenario_runs_without_breaking_a_hard_constraint
+    assert outcome["verdict"]["passed"], outcome["verdict"]["failures"]
+E   AssertionError: ['���� ���� 5 < ��� 6']
+E   assert False
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\scenario-regression-v2.xml -
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_case_version_day.py::test_the_case_version_runs_the_whole_day_like_the_trip_version
+FAILED tests/scenario/test_case_version_day.py::test_re_requests_run_through_cases
+FAILED tests/scenario/test_case_version_day.py::test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong
+FAILED tests/scenario/test_travel_eval_scenarios.py::test_a_scenario_runs_without_breaking_a_hard_constraint[t-confirmed]
+4 failed, 9 passed in 30.05s

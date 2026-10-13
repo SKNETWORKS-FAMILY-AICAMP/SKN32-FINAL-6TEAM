@@ -1,0 +1,10 @@
+{
+  "error": "AssertionError: excluding all candidates with run removes 244/244 timetable candidates.",
+  "product_defect": false,
+  "diagnostics": {
+    "candidate_count": 244,
+    "run_bound": 244,
+    "inferred_destination": 0
+  },
+  "resolution": "Preserve previous scripts; v4 builds service paths from actual response terminals via the static line graph, with one audit-only origin name bridge. Successful patterns2, no timetable override or production name alias."
+}

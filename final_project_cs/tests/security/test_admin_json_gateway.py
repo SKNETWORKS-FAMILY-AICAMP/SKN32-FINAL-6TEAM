@@ -122,19 +122,21 @@ def test_settings_actor_is_signed_operator(client, monkeypatch):
 
 def test_customer_support_ownership_filter(monkeypatch):
     from app.domains.travel_ops.modules.web_account import admin_customer_api
-    owner, other = str(uuid4()), str(uuid4())
+    owner, _other = str(uuid4()), str(uuid4())
+    observed = []
+    class Connection:
+        def execute(self, sql, args):
+            observed.append((sql, args))
+            return SimpleNamespace(fetchall=lambda: [("mine", {"title": "여행 오류", "body": "masked", "language": "ko", "receivedAt": "2026-10-12T00:00:00Z"})])
     @contextmanager
     def connection():
-        yield object()
+        yield Connection()
     monkeypatch.setattr(admin_customer_api, "get_connection", connection)
     monkeypatch.setattr(admin_customer_api.web_cookie, "authenticate", lambda request: SimpleNamespace(tenant_id="tenant-a", customer_id=owner))
-    observed = []
-    def records(conn, tenant, kind):
-        observed.append(tenant)
-        return [{"id": "mine", "userId": owner}, {"id": "other", "userId": other}]
-    monkeypatch.setattr(admin_service, "records", records)
     app = FastAPI()
     app.include_router(admin_customer_api.build_router())
     response = TestClient(app).get("/v1/web/support/inquiries")
-    assert response.json() == {"inquiries": [{"id": "mine", "userId": owner}]}
-    assert observed == ["tenant-a"]
+    assert response.json()["inquiries"][0]["id"] == "mine"
+    assert response.json()["inquiries"][0]["status"] == "기록 완료"
+    assert observed[0][1] == ("tenant-a", owner, 51)
+    assert "customer_id=%s" in observed[0][0]

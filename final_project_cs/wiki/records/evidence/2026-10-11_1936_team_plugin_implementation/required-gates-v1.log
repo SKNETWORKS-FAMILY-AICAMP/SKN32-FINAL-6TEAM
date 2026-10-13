@@ -1,0 +1,31 @@
+
+=================================== ERRORS ====================================
+_ ERROR collecting tests/security/_backup/2026-10-11_213423_travel-commerce-cleanup/test_scope_contract.py _
+ImportError while importing test module 'C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\security\_backup\2026-10-11_213423_travel-commerce-cleanup\test_scope_contract.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\anaconda3\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\security\_backup\2026-10-11_213423_travel-commerce-cleanup\test_scope_contract.py:2: in <module>
+    from app.presentation.api.mcp import mcp
+E   ModuleNotFoundError: No module named 'app.presentation.api.mcp'
+_ ERROR collecting tests/architecture/_backup/2026-10-11_213529_travel-commerce-cleanup/test_engine_serves_another_domain.py _
+import file mismatch:
+imported module 'test_engine_serves_another_domain' has this __file__ attribute:
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\architecture\_backup\2026-10-11_213423_travel-commerce-cleanup\test_engine_serves_another_domain.py
+which is not the same as the test file we want to collect:
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\architecture\_backup\2026-10-11_213529_travel-commerce-cleanup\test_engine_serves_another_domain.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
+============================== warnings summary ===============================
+<unknown>:352
+<unknown>:352
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\required-gates-v1.xml -
+=========================== short test summary info ===========================
+ERROR tests/security/_backup/2026-10-11_213423_travel-commerce-cleanup/test_scope_contract.py
+ERROR tests/architecture/_backup/2026-10-11_213529_travel-commerce-cleanup/test_engine_serves_another_domain.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!
+2 warnings, 2 errors in 12.53s

@@ -1,0 +1,478 @@
+FFF.FF.FF.FF.                                                            [100%]
+================================== FAILURES ===================================
+_______ test_the_case_version_runs_the_whole_day_like_the_trip_version ________
+tests\scenario\test_case_version_day.py:220: in test_the_case_version_runs_the_whole_day_like_the_trip_version
+    outcomes = _run_case_day(case_world)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # \ub2a6\uac8c \uc624\ub294 \uc911 \u2014 \uc55e \uc77c\uc815 \ub3d9\uc120\uc740 \uc774\ubbf8 \uc9c0\ub0ac\ub2e4
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+_____________________ test_re_requests_run_through_cases ______________________
+tests\scenario\test_case_version_day.py:259: in test_re_requests_run_through_cases
+    _run_case_day(case_world)
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # \ub2a6\uac8c \uc624\ub294 \uc911 \u2014 \uc55e \uc77c\uc815 \ub3d9\uc120\uc740 \uc774\ubbf8 \uc9c0\ub0ac\ub2e4
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+_____________ test_a_stale_base_version_is_escalated_not_applied ______________
+tests\scenario\test_case_version_day.py:298: in test_a_stale_base_version_is_escalated_not_applied
+    _run_case_day(case_world)
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # \ub2a6\uac8c \uc624\ub294 \uc911 \u2014 \uc55e \uc77c\uc815 \ub3d9\uc120\uc740 \uc774\ubbf8 \uc9c0\ub0ac\ub2e4
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+___________________ test_the_same_disruption_opens_one_case ___________________
+tests\scenario\test_case_version_day.py:325: in test_the_same_disruption_opens_one_case
+    assert repository.get_case(conn, tenant_id=case_world["tenant"],
+E   AssertionError: assert 'running' == 'resolved'
+E     
+E     - resolved
+E     + running
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+_ test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong _
+tests\scenario\test_case_version_day.py:349: in test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong
+    outcomes = _run_case_day(world)
+               ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # \ub2a6\uac8c \uc624\ub294 \uc911 \u2014 \uc55e \uc77c\uc815 \ub3d9\uc120\uc740 \uc774\ubbf8 \uc9c0\ub0ac\ub2e4
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+_______ test_every_notice_carries_the_plan_link_whichever_path_made_it ________
+tests\scenario\test_case_version_day.py:393: in test_every_notice_carries_the_plan_link_whichever_path_made_it
+    _run_case_day(case_world)
+tests\scenario\test_case_version_day.py:209: in _run_case_day
+    outcomes["p3"] = _say(world, "delay")
+                     ^^^^^^^^^^^^^^^^^^^^
+tests\scenario\test_case_version_day.py:195: in _say
+    return world["engine"].message(customer_id=world["customer"], trip_id=world["trip_id"],
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # \ub2a6\uac8c \uc624\ub294 \uc911 \u2014 \uc55e \uc77c\uc815 \ub3d9\uc120\uc740 \uc774\ubbf8 \uc9c0\ub0ac\ub2e4
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+____ test_a_scenario_runs_without_breaking_a_hard_constraint[t-confirmed] _____
+tests\scenario\test_travel_eval_scenarios.py:31: in test_a_scenario_runs_without_breaking_a_hard_constraint
+    outcome = run_case(SPECS[case_id])
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+eval\runners\travel_scenarios.py:224: in run_case
+    result = _step(step, engine=engine, store=store, trip_id=trip_id,
+eval\runners\travel_scenarios.py:260: in _step
+    view = engine.message(customer_id=customer, trip_id=trip_id, text=text,
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # \ub2a6\uac8c \uc624\ub294 \uc911 \u2014 \uc55e \uc77c\uc815 \ub3d9\uc120\uc740 \uc774\ubbf8 \uc9c0\ub0ac\ub2e4
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+____ test_a_scenario_runs_without_breaking_a_hard_constraint[t-cash-only] _____
+tests\scenario\test_travel_eval_scenarios.py:31: in test_a_scenario_runs_without_breaking_a_hard_constraint
+    outcome = run_case(SPECS[case_id])
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+eval\runners\travel_scenarios.py:224: in run_case
+    result = _step(step, engine=engine, store=store, trip_id=trip_id,
+eval\runners\travel_scenarios.py:260: in _step
+    view = engine.message(customer_id=customer, trip_id=trip_id, text=text,
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:129: in handle_report
+    plan = plan_closed(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:717: in plan_closed
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # \uac00\uac8c \uc55e \u2014 \uc55e \uc77c\uc815 \ub3d9\uc120\uc740 \uc774\ubbf8 \uc9c0\ub0ac\ub2e4
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+__ test_a_scenario_runs_without_breaking_a_hard_constraint[t-swap-rollback] ___
+tests\scenario\test_travel_eval_scenarios.py:31: in test_a_scenario_runs_without_breaking_a_hard_constraint
+    outcome = run_case(SPECS[case_id])
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+eval\runners\travel_scenarios.py:224: in run_case
+    result = _step(step, engine=engine, store=store, trip_id=trip_id,
+eval\runners\travel_scenarios.py:260: in _step
+    view = engine.message(customer_id=customer, trip_id=trip_id, text=text,
+app\domains\travel_ops\scenarios\case_engine.py:91: in message
+    self.run(case_id=opened.case_id)
+app\domains\travel_ops\scenarios\case_engine.py:68: in run
+    return asyncio.run(self.controller.run_case(tenant_id=tenant_id or self.tenant_id,
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:422: in run_case
+    result = await self._execute_team_task(task)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:207: in _execute_team_task
+    return await asyncio.wait_for(self.team_executor.execute(task), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\core\remote_team\executor.py:31: in execute
+    return await entry.module.execute(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:159: in execute
+    return await self.run_itinerary(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\_shared\itinerary_team.py:166: in run_itinerary
+    return await self.handle_report(task, kind, ctx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\team.py:125: in handle_report
+    plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:683: in plan_delay
+    route=meal_route(items, meal, from_before=False, leg=_leg_engine(trip)))   # \ub2a6\uac8c \uc624\ub294 \uc911 \u2014 \uc55e \uc77c\uc815 \ub3d9\uc120\uc740 \uc774\ubbf8 \uc9c0\ub0ac\ub2e4
+                                                         ^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:627: in _leg_engine
+    return legs.leg_planner(trip.get("party_size"), trip.get("constraints") or {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\legs.py:74: in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\scenario-regression-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_case_version_day.py::test_the_case_version_runs_the_whole_day_like_the_trip_version
+FAILED tests/scenario/test_case_version_day.py::test_re_requests_run_through_cases
+FAILED tests/scenario/test_case_version_day.py::test_a_stale_base_version_is_escalated_not_applied
+FAILED tests/scenario/test_case_version_day.py::test_the_same_disruption_opens_one_case
+FAILED tests/scenario/test_case_version_day.py::test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong
+FAILED tests/scenario/test_case_version_day.py::test_every_notice_carries_the_plan_link_whichever_path_made_it
+FAILED tests/scenario/test_travel_eval_scenarios.py::test_a_scenario_runs_without_breaking_a_hard_constraint[t-confirmed]
+FAILED tests/scenario/test_travel_eval_scenarios.py::test_a_scenario_runs_without_breaking_a_hard_constraint[t-cash-only]
+FAILED tests/scenario/test_travel_eval_scenarios.py::test_a_scenario_runs_without_breaking_a_hard_constraint[t-swap-rollback]
+9 failed, 4 passed in 26.11s

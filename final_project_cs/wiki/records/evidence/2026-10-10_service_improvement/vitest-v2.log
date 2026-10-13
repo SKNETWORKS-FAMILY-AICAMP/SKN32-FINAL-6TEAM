@@ -1,0 +1,9 @@
+
+ RUN  v5.0.1 C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web
+
+
+ Test Files  2 passed (2)
+      Tests  24 passed (24)
+   Start at  02:34:15
+   Duration  1.68s (transform 64%, tests 22%, import 13%, worker 1%)
+

@@ -12,6 +12,7 @@
                 이동 항목이 없는 구간은 **간격이 0 일 때만** 걸린다 — 몇 분 걸리는지 모르기 때문이다.
     영업시간    장소 속성의 `hours`·`break` 가 있을 때만 본다. 없으면 모른다(통과시킨다).
                 식당은 요식 원장의 그 시각 판정(`place["ledger"]`)도 본다 — 붙이는 것은 부르는 쪽(`with_ledger`)이다.
+                관광지는 활동 원장 판정(`place["activity"]`)도 본다 — 붙이는 것은 확인 화면(`intake.review`)이다.
     결제·예산   여행 제약(`constraints.payment`·`budget_krw`)이 있을 때만 본다.
 
 ★**거절은 「무엇이·왜·무엇을 바꾸면 되는지」를 같이 낸다.** 완화 조건(`remedy`)이 없는 위반은
@@ -165,6 +166,7 @@ def _place_violations(part: Part) -> list[Violation]:
             found.append(Violation("after_last_entry", (part.seq,),
                                    f"{part.title}: {_hm(part.starts_at)} 시작인데 입장·주문 마감이 {last} 다",
                                    f"{last} 전에 들어가게 앞당기거나 다른 곳으로 바꾼다"))
+    found += _activity_violations(part, (part.place or {}).get("activity") or {}, {v.code for v in found}, start)
     span = break_span(attributes)
     if span is not None:
         starts, ends = span
@@ -173,6 +175,31 @@ def _place_violations(part: Part) -> list[Violation]:
                                    f"{part.title}: {starts:%H:%M}~{ends:%H:%M} 은 브레이크 타임인데 그 시간에 걸친다",
                                    f"{ends:%H:%M} 이후로 옮기거나 {starts:%H:%M} 전에 끝낸다"))
     return found
+
+
+def _activity_violations(part: Part, verdict: Mapping[str, Any], seen: set[str], start: datetime) -> list[Violation]:
+    """활동 원장 판정(`[2026-10-13]` 활동 코어 전달 사항 3번). ★요일표 판정이 먼저다 — 같은 뜻의 위반이 이미 있으면 더하지 않는다.
+    None 은 모름이라 거르지 않는다."""
+    if not verdict:
+        return []
+    if verdict.get("closed") is True:
+        if "closed_day" in seen:
+            return []
+        why = f" — {verdict['quote']}" if verdict.get("quote") else ""
+        return [Violation("closed_day", (part.seq,), f"{part.title}: {start:%m월 %d일}은 쉬는 날이다(활동 원장{why})",
+                          "그날 여는 다른 곳으로 바꾼다")]
+    if verdict.get("cut_short") is True and verdict.get("closes_at"):
+        closes, minutes = verdict["closes_at"], verdict.get("usable_minutes")
+        stay = f" {minutes}분만 머물 수 있다" if minutes else ""
+        reason = f"{part.title}: {closes} 에 닫아{stay}"
+        remedy = f"{closes} 이전에 끝나게 줄이거나 앞당긴다"
+        if "after_closing" in seen:
+            return []
+        return [Violation("after_closing", (part.seq,), reason, remedy)]
+    if verdict.get("within_hours") is False and verdict.get("closed") is False and             not seen & {"before_opening", "after_closing", "after_last_entry"}:
+        return [Violation("outside_hours", (part.seq,), f"{part.title}: {_hm(part.starts_at)} 에는 운영시간 밖이다(활동 원장)",
+                          "운영시간 안으로 옮기거나 그 시각에 여는 다른 곳으로 바꾼다")]
+    return []
 
 
 def _pair_violations(earlier: Part, later: Part) -> list[Violation]:

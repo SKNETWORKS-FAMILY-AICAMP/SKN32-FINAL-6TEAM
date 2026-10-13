@@ -1,0 +1,65 @@
+{
+  "checked_at": "2026-10-12T07:44:14.846598+00:00",
+  "method": "공식 공개 문서 web search/open. 로그인·계정 변경·API 실행 안 함.",
+  "references": [
+    {
+      "url": "https://openapi.sk.com/products/detail?menuSeq=126&svcSeq=60",
+      "facts": [
+        "대시보드→앱→앱키(appKey)",
+        "앱 만들기에서 앱 이름 입력",
+        "앱 단위 발급",
+        "통계 탭에 사용·에러 통계",
+        "상품 관리 탭"
+      ],
+      "access": "공개 사용자 가이드의 검색 본문으로 확인. 현재 open 파서는 본문 일부 동적 내용을 표시하지 않음."
+    },
+    {
+      "url": "https://openapi.sk.com/products/calc?menuSeq=5&svcSeq=4",
+      "facts": [
+        "Free 경로안내 API그룹 1,000건/일",
+        "보행자 경로안내가 경로안내 그룹에 표시",
+        "Premium 경로안내 11원/건 VAT포함",
+        "Free 사용한도 초과 시 차단 표시"
+      ],
+      "account_limit_verified": false
+    },
+    {
+      "url": "https://tmapapi.tmapmobility.com/terms.html",
+      "full_public_page_read": true,
+      "lines_read": "0-79, 전체80줄",
+      "facts": [
+        "저장 뒤24시간이 지나면 API 데이터 사용 제한",
+        "동일 서비스 다중 프로젝트 사용 우회 제한"
+      ],
+      "authenticated_product_contract_read": false
+    },
+    {
+      "url": "https://tmap-skopenapi.readme.io/reference/%EB%B3%B4%ED%96%89%EC%9E%90-%EA%B2%BD%EB%A1%9C%EC%95%88%EB%82%B4",
+      "facts": [
+        "appKey 헤더 필수",
+        "키 위치 마이페이지>앱>앱키(appKey)",
+        "공식 앱 링크 https://openapi.sk.com/mypage/project/",
+        "searchOption 0추천/4대로우선/10최단/30최단거리+계단제외",
+        "POST 보행자 API 제공"
+      ],
+      "endpoint_called": false
+    },
+    {
+      "url": "https://developers.kakaomobility.com/affiliate/",
+      "facts": [
+        "도보 길찾기는 제휴 API",
+        "이용 전 제휴 계약 필요"
+      ]
+    },
+    {
+      "url": "https://developers.kakaomobility.com/price/",
+      "facts": [
+        "공식 제휴 문의 연결 위치"
+      ]
+    }
+  ],
+  "direct_app_link_probe": "https://openapi.sk.com/mypage/project/ 공개 web.open 접근 실패. 대시보드 링크는 로그인 화면으로 이동. 로그인 이후 실제 화면 미확인.",
+  "limited_api_calls": 0,
+  "secret_values_output": false,
+  "product_connected": false
+}

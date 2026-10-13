@@ -66,6 +66,7 @@ export function StopRow({ stop, next, open, selected, past = false, started = fa
           <span className={styles.stopName}>
             <strong id={`${id}-title`} className={pc.cardTitle}>{stop.title}</strong>
             {hasTags && <span className={styles.stopTags}>
+              {stop.badges?.map((badge) => <span className={pc.pill} key={badge.code}>{badge.label}</span>)}
               {stop.booking === "booked" && <span className={pc.pill} data-booked>{bookingLabel(stop, t)}</span>}
               {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
               {stop.badges?.map((badge) => <span key={badge.code} className={pc.pill}>{badge.label}</span>)}

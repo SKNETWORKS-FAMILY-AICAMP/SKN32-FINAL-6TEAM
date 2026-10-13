@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="8" time="5.490" timestamp="2026-10-09T06:15:21.867036+09:00"><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_changed_file_is_reloaded_without_clearing_process_cache" time="0.094" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_runtime_rebuilds_when_only_express_table_changes" time="0.119" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_missing_table_created_later_is_not_a_permanent_empty_cache" time="0.028" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_file_removal_does_not_return_old_runs" time="0.017" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_same_line_at_new_path_is_not_old_cached_source" time="0.026" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_runtime_detects_a_previously_missing_table" time="0.098" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_source_changed_during_read_does_not_publish_mixed_cache" time="0.016"><failure message="Failed: DID NOT RAISE &lt;class 'RuntimeError'&gt;">source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-after-pytest-v1/test_source_changed_during_rea0/express.json.gz')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001F42F683290&gt;
+
+    def test_source_changed_during_read_does_not_publish_mixed_cache(source, monkeypatch):
+        write_runs(source)
+        original = EX.json.load
+        def changed_after_read(*args, **kwargs):
+            value = original(*args, **kwargs)
+            write_runs(source, 300)
+            return value
+        monkeypatch.setattr(EX.json, 'load', changed_after_read)
+&gt;       with pytest.raises(RuntimeError, match='입력이 바뀌었다'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'RuntimeError'&gt;
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:94: Failed</failure></testcase><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_source_changed_during_rebuild_keeps_previous_runtime" time="0.173"><failure message="RuntimeError: 이동 판정기를 구성하는 사이 급행 운행표가 바뀌었다">tmp_path = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-after-pytest-v1/test_source_changed_during_reb0')
+source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-after-pytest-v1/test_source_changed_during_reb0/express.json.gz')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001F42F6836B0&gt;
+
+    def test_source_changed_during_rebuild_keeps_previous_runtime(tmp_path, source, monkeypatch):
+        from app.domains.travel_ops.instances.mobility.engine.verify_time import Timetable
+        _write_mini_data(tmp_path)
+        write_runs(source)
+        first = RT.get_verifier(quiet=True, data_dir=tmp_path, gh_url='', seoul_key='')
+        write_runs(source, 300)
+        original = Timetable.load
+        def changed_after_read(*args, **kwargs):
+            value = original(*args, **kwargs)
+            write_runs(source, 600)
+            return value
+        monkeypatch.setattr(Timetable, 'load', changed_after_read)
+        with pytest.raises(RuntimeError, match='구성하는 사이'):
+            RT.get_verifier()
+        assert RT._SINGLETON is first
+        assert first._v.tt.departures('01호선', 'A', 'weekday')[0].min == 600
+        write_runs(source, 300)
+&gt;       second = RT.get_verifier()
+                 ^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\runtime.py:351: in get_verifier
+    _SINGLETON = build_verifier(**(_SINGLETON.build_kw or kw))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_url=None, seoul_key=None,
+                       guardrails_path=None, local_router=False, bike_gate=None):
+        """전부 올려 Runtime 을 만든다. 약 33초.
+    
+        paths  : 경로 일부만 바꿔 끼울 수 있다(시험용)
+        wanted : None 이면 전부. 배치에서만 집합을 준다
+        ☆`[2026-09-29 문제목록 #48]` 서버는 설정 값을 넘긴다 — data_dir(자료 폴더) · gh_url(자전거 라우터, "" 이면 끔) ·
+          seoul_key(따릉이 실시간, "" 이면 끔) · guardrails_path(정책 수치 파일). None 이면 명령줄 관례(환경변수·.env)를 쓴다.
+        """
+        from . import paths as _paths
+        if data_dir:
+            _paths.configure(data_dir)
+        elif _paths.SOURCE == "disabled":
+            raise RuntimeError("이동 계산기가 꺼져 있다(서버 설정 mobility_data_dir 비움) — 판정기를 올리지 않는다")
+        elif _paths.SOURCE == "unset":
+            _paths.load_cli_env()               # 명령줄·시험 — 서버는 기동 때 configure 로 정한다
+        if guardrails_path:
+            from .guardrails import use
+            use(guardrails_path)
+        vt = _load_verify_time()
+        P = default_paths()
+        if paths:
+            P = dict(P, **{k: Path(v) for k, v in paths.items()})
+            from .line_order import distance_source_paths
+            P.pop('rail_track', None)
+            P.pop('rail_distance_overlay', None)
+            P.update(distance_source_paths(P['order']))
+    
+        # station_exits 는 없어도 돈다(역 좌표로 대신) — 단 경고를 찍는다
+        missing = [k for k, v in P.items() if k not in ("meta", "station_exits", "bike_stations", "bus_profile") and not Path(v).exists()]
+        if missing:
+            # #24 — 어디를 봤는지 같이 말한다(자료 폴더 · 그 값이 어디서 왔나). 배포 확인은 datacheck.py
+            raise RuntimeError(f"판정기 입력이 없다: {missing} (자료 폴더 {_paths.DATA_DIR} · 출처 {_paths.SOURCE}) — "
+                               f"python -m app.domains.travel_ops.instances.mobility.engine.datacheck 로 확인")
+        if not paths:
+            from .datacheck import check as _datacheck
+            dc = _datacheck(verify_hash=False)       # 판 명세가 있으면 크기까지 맞춘다(해시는 기동 확인이 본다)
+            if dc["mismatched"]:
+                raise RuntimeError(f"이동 자료가 판 명세와 다르다: {dc['mismatched']} (명세 {dc['manifest']})")
+    
+        rules = json.loads(Path(P["rules"]).read_text(encoding="utf-8"))
+        from .guardrails import resolve as _resolve_guardrails
+        rules = _resolve_guardrails(rules)       # #49 — 정책 수치(value_from)를 guardrails.yaml 에서 채운다
+        special_rail = json.loads(Path(P['special_rail_fares']).read_text(encoding='utf-8'))
+        rules['fare']['subway']['special_lines'] = special_rail['lines']
+        # ☆#5 — 덮는 해를 아는 달력. 표 밖의 날짜는 평일로 짐작하지 않고 CalendarOutOfRange 로 멈춘다
+        from .timeutil import HolidayCalendar
+        holidays = HolidayCalendar.from_doc(json.loads(Path(P["holidays"]).read_text(encoding="utf-8")))
+        from .line_order import LineOrder
+        from .transfer_walk import TransferWalk
+        from .bus import BusRoutes
+        from .geo import StationCoords
+        from .exits import StationExits
+        from .bike import BikeStations, BikeLive, BikeRouter
+        from .congestion import Congestion
+        from .bus_profile import BusSegProfile
+        lo = LineOrder.load(str(P["order"]))
+        from .express import source_signatures
+        express_sources = source_signatures()
+        tt = vt.Timetable.load(str(P["timetable"]), wanted, express=True)   # 9호선·1호선은 열차 단위 표(급행)로 읽는다
+        tw = TransferWalk.load(str(P["transfer_walk"]),
+                                  rules["measured_baseline"]["kakao_walk_speed_mps"]["value"])
+        bus = BusRoutes.load(str(P["bus_route"]), str(P["bus_stops"]))
+        sc = StationCoords.load(str(P["station_coords"]))
+        ex = StationExits.load(str(P["station_exits"]))
+        # 따릉이(v0.7 · 22번 방). 실시간 조회는 .env SEOUL_OPENAPI_KEY, 라우터는 .env MOBILITY_GH_URL(21번과 같은 주소) — 둘 다 없으면 근거없음으로 낸다.
+        bk = BikeStations.load(str(P["bike_stations"]))
+        import os
+        # #48 — 서버는 설정 값(seoul_key)을 넘긴다. "" 는 끔, None 은 명령줄 관례(환경변수)
+        bike_live = (BikeLive(key=seoul_key, gate=bike_gate) if seoul_key else None) if seoul_key is not None else BikeLive.from_env()
+        # 라우터는 21번 car.py 의 make_router 로 — 23 이 CarService 를 끼울 때 같은 객체를 나눠 쓴다.
+        gh = (gh_url if gh_url is not None else os.environ.get("MOBILITY_GH_URL"))         or (None if gh_url == "" else ((rules.get("car") or {}).get("graphhopper") or {}).get("url", {}).get("value"))
+        bike_router = None
+        router_obj, router_kind = None, None
+        if gh and str(gh).startswith("http"):
+            from .car import make_router
+            rt = make_router(gh)
+            if rt.info():
+                router_obj, router_kind = rt, "graphhopper"
+        if router_obj is None and local_router:
+            # ☆`[2026-10-04]` GraphHopper 주소가 없거나 안 닿으면 저장소 안 도로 그래프로 파이썬이 직접 길을 찾는다(graph_router.py)
+            from .graph_router import GraphRouter
+            gr = GraphRouter.default()
+            if gr.available():
+                router_obj, router_kind = gr, "local"
+        car = None
+        if router_obj is not None:
+            bike_router = BikeRouter(router_obj, {}, (rules.get("bike") or {}).get("pbf_date") or "2026-09-18")
+            # ☆서비스 런타임은 전엔 택시 서비스(car)를 한 번도 끼우지 않았다 - 라우터가 떠 있어도 택시는 늘 「소요 근거없음」이었다.
+            #   속도 프로파일 자료가 없으면 첫 호출에서 RouterDown(근거없음)으로 답한다(_LazyCar).
+            car = _LazyCar(router_obj, rules, holidays)
+        # 혼잡도(v0.8 · 39번 방 · @ 부품) — 파일이 없으면 가산 없음(근거없음). 판정기 CLI 와 같은 두 파일.
+        cg_dir = Path(P["timetable"]).parent
+        cg_data = Congestion.load([cg_dir / "congestion_v1.jsonl", cg_dir / "congestion_line9_v1.jsonl"], wanted)
+        # 버스 구간 통행시간 프로파일(v0.9 · 41번 방) — 파일이 없으면 종전 모델(거리 ÷ 표정속도)
+        bus_prof = BusSegProfile.load(P["bus_profile"])
+        verifier = vt.Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, car=car, bk=bk, bike_live=bike_live,
+                               bike_router=bike_router, cg_data=cg_data, bus_prof=bus_prof)
+    
+        # ── 시간표 '판'. meta 의 built_at 이 있으면 그것, 없으면 행의 수집일.
+        #    둘은 다른 값이다 — 어느 쪽인지 접두어로 남긴다. 판정 이력이 "어느 판으로 냈는지"를 잃으면 안 된다.
+        built, meta_d = None, {}
+        meta = Path(P["meta"])
+        if meta.exists():
+            try:
+                meta_d = json.loads(meta.read_text(encoding="utf-8")) or {}
+                built = meta_d.get("built_at")
+            except (ValueError, OSError):
+                built, meta_d = None, {}
+        built_at = f"built:{built}" if built else f"fetched:{tt.fetched_at}"
+    
+        # ☆`[2026-09-29 문제목록 #32]` 시간표가 오래됐는지 — 기준(일)은 guardrails mobility.staleness.timetable_warn_days.
+        #   앞 판은 규칙에 기준만 있고 코드가 보지 않았다. 판정 불가가 아니라 재수집 신호다 — 경고로 싣는다.
+        # ☆`[89 · 2026-10-01]` 나이는 **수집일**로 잰다(앞 판은 built_at = 만든 시각). 만든 시각을 보면 옛 원자료를
+        #   다시 빌드만 해도 신선해 보인다. meta 의 원천별 수집일(tago·seoul) 중 **가장 오래된 것** → 없으면 행 fetched_at
+        #   → 그것도 없으면 built_at(종전). 어느 값으로 쟀는지 stats["timetable_age_basis"] 에 남긴다.
+        collected = sorted(str(v) for v in (meta_d.get("tago_fetched_at"), meta_d.get("seoul_fetched_at")) if v)
+        if collected:
+            stamp, age_basis = collected[0], "meta_fetched"
+        elif tt.fetched_at:
+            stamp, age_basis = tt.fetched_at, "row_fetched"
+        else:
+            stamp, age_basis = built, ("built" if built else None)
+        age_days, stale = None, False
+        if stamp:
+            from datetime import datetime, timezone
+            try:
+                t0 = datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
+                if t0.tzinfo is None:
+                    t0 = t0.replace(tzinfo=timezone.utc)
+                age_days = (datetime.now(timezone.utc) - t0).days
+                stale = age_days &gt; rules["staleness"]["timetable_warn_days"]["value"]
+            except ValueError:
+                age_days, stale = None, True     # 시각을 못 읽으면 오래된 것으로 본다(모르는 채 신선하다고 하지 않는다)
+    
+        stats = {"timetable_rows": tt.rows, "timetable_stations": len(tt.stations),
+                 "skipped_no_dep": tt.skipped_no_dep,
+                 "bus_routes": len(bus.by_id) if bus else 0,
+                 "transfer_pairs": len(tw.pairs) if tw else 0,
+                 "station_coords": len(sc.by_key) if sc else 0,
+                 "station_exits": sum(len(x) for x in ex.exits.values()) if ex else 0,
+                 "bike_stations": len(bk.rows) if bk else 0,
+                 "bike_live": bool(bike_live), "bike_router": bool(bike_router), "router": router_kind, "car": bool(car),
+                 "timetable_age_days": age_days, "timetable_age_basis": age_basis, "timetable_stale": stale, "data_dir_source": _paths.SOURCE}
+        if not quiet:
+            # ★ 출발없음을 같이 찍는다(2026-09-14). 수집 행 수(463,326)와 올라간 행 수가 달라서,
+            #   이 줄만 보면 "46만이라더니 44만이네"가 된다. 차이는 출발 시각이 '000000'(출발 없음)인 행이다.
+            print(f"[mobility] 시간표 {tt.rows:,}행(+출발없음 {tt.skipped_no_dep:,} = 수집 "
+                  f"{tt.rows + tt.skipped_no_dep:,}) · 역 {len(tt.stations)} · 판 {built_at} · "
+                  f"규칙 {rules['rules_version']} · 버스 {stats['bus_routes']}노선")
+        if tw is None:
+            print("[mobility] ! 환승 거리표가 없다 — 환승 도보는 근거없음으로 낸다")
+        if ex is None:
+            print("[mobility] ! 역 출구표(station_exits_v1.json)가 없다 — 정류장↔역 환승은 역 좌표로 잰다")
+        if bk is None:
+            print("[mobility] ! 따릉이 대여소(bike_stations_v1.jsonl)가 없다 — 자전거는 근거없음으로 낸다")
+        elif not quiet:
+            print(f"[mobility] 따릉이 {len(bk.rows):,}곳 · 실시간 {'on' if bike_live else 'off(근거없음)'} · "
+                  f"라우터 {router_kind if bike_router else 'off(소요 근거없음)'}")
+    
+        if stale and not quiet:
+            print(f"[mobility] ! 시간표 수집이 {age_days}일 전이다(기준 {rules['staleness']['timetable_warn_days']['value']}일) — 재수집이 필요하다")
+        mtimes = {k: (str(v), Path(v).stat().st_mtime) for k, v in P.items() if Path(v).exists()}
+        if source_signatures() != express_sources:
+&gt;           raise RuntimeError('이동 판정기를 구성하는 사이 급행 운행표가 바뀌었다')
+E           RuntimeError: 이동 판정기를 구성하는 사이 급행 운행표가 바뀌었다
+
+app\domains\travel_ops\instances\mobility\engine\runtime.py:328: RuntimeError</failure></testcase></testsuite></testsuites>

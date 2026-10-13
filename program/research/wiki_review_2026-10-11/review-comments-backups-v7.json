@@ -1,0 +1,150 @@
+{
+  "updated_at": "2026-10-11T22:40:55+09:00",
+  "changes": [
+    {
+      "path": "wiki/records/reports/2026-10-11_D-018-before-user-review.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "925b5bf509f271d004fe5a052395fdabcf7dc26c0d3ff8cced0613b2ec5f2af1"
+    },
+    {
+      "path": "wiki/decisions/D-018-decision15-stop-paths.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_224055_858357_browser-comments/D-018-decision15-stop-paths.md",
+      "before_sha256": "052b3e15e41e4299e969eed17c1ce75c9c94b460265d6c60e81d5b143eaff13a",
+      "after_sha256": "45650ca4bd8eec16806b87d5ca7feb90a038bfdb9bc3f645847623194f4e45f7"
+    },
+    {
+      "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_224055_858357_browser-comments/D-017-watch-cadence-golden-time.md",
+      "before_sha256": "784bba385a114e4a3bb739d69cc0938196d25951ab591d48843e13ead73cbb1a",
+      "after_sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-012-agent-auth-claude-style.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_224055_858357_browser-comments/D-CS-012-agent-auth-claude-style.md",
+      "before_sha256": "cb8e293cba6646fb0e1cae427b6a1af07e5a0bb8a70f8d0b60cf56c4cce89ed8",
+      "after_sha256": "c5536b95ed0e4093e7e996ff684a3aaefc547a96db481e51a9008175194d3838"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_224055_858357_browser-comments/D-CS-009-daytime-closure-detection.md",
+      "before_sha256": "b8619af855d44703948173c4e5d685145b0130138005c783112867b9cb21aff4",
+      "after_sha256": "2cfb7156ebf98ca6f3a8290ab20a8487fbaf3b948017571e75646219cbce9e42"
+    },
+    {
+      "path": "wiki/delivery/release-gate.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_224055_858357_browser-comments/release-gate.md",
+      "before_sha256": "86e2fb5728ab5baecdc7a763fc23ff87b730c0aae7423bfbabcd02833084f8bc",
+      "after_sha256": "7f44675c1b46450f3f3ee11d7e455ee01bf484ce1805fb20534052d32f4ba84d"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/review-decisions-flow-v7.svg",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "76ce1f04b18f8b82bba6e638a4717c3a21fd5c6d003a6290bb706f629415067b"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/findings-v2.json",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224055_858357_browser-comments/findings-v2.json",
+      "before_sha256": "e071e2c191bf8c4570aa7d36d02848df4d61c8412a6b927050fe17780ef6c717",
+      "after_sha256": "f06f5750dce15a5276f60af33ac8f45346bb20f6409c77fbb0a56588921a527e"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v2.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224055_858357_browser-comments/wiki-review-v2.html",
+      "before_sha256": "85be252d19b8525e8f5271bb3160ea60aa743cfa2e87dc367831e47f13ca6367",
+      "after_sha256": "36430dc3463ce9a373056c0f3c266329c037086b3ce31fca6be36271f133ee2d"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v1.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224055_858357_browser-comments/wiki-review-v1.html",
+      "before_sha256": "528a42e1196e218733486759adc91e5669a3d7a836fa6bcad0bed48c1741cd9c",
+      "after_sha256": "a01e4eefaa6f8177f441de96aa39de16df0fc5624d3a15d7bc9d719859cdccfb"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v3.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224055_858357_browser-comments/wiki-review-v3.html",
+      "before_sha256": "f3a5b007f5f2d150c56dc4c5dcb147b5d5d214427ae07d95a90532f0aa9e58d8",
+      "after_sha256": "b0b3ef0dced523a8e13347d5e1c60e7848b8d2a61a64685dae5628d8dc867ec0"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v6.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224055_858357_browser-comments/wiki-review-v6.html",
+      "before_sha256": "f3a5b007f5f2d150c56dc4c5dcb147b5d5d214427ae07d95a90532f0aa9e58d8",
+      "after_sha256": "b0b3ef0dced523a8e13347d5e1c60e7848b8d2a61a64685dae5628d8dc867ec0"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v2.md",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224055_858357_browser-comments/wiki-review-v2.md",
+      "before_sha256": "1b3c3df3bc8a474897f567105f2bd0213adbc71d4e0031be0040ee8634c18205",
+      "after_sha256": "029bd169876fb46083df81f07ce6ed1029ced25e14bfcd82872f4062e4bc6e27"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v1.md",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224055_858357_browser-comments/wiki-review-v1.md",
+      "before_sha256": "c925384f1cc31b91bd1b4a959eb0b5d96e7d4bdbc9aba3aa87e6a96d0a264f9a",
+      "after_sha256": "988a17006c3eba7b3b95cfdc82aa1d50b334fb2e9de946b41992b8bf3534d62e"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v3.md",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224055_858357_browser-comments/wiki-review-v3.md",
+      "before_sha256": "60294253b191aef368be7668ef052859820233503b76ca3b645dfad9ef2a278a",
+      "after_sha256": "5c1afb8823a5cbf9abeb0f0bd2a7a3e6a2869d2440855588aa757fd0e39500d2"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/review-comment-status-v7.json",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "c4856f7aa1856e0b3a48110bd36e173baa34fb817d4509e6c5ee5f73eba60e58"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_review-comments-v7.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "37e1aecf41e2a6cef0bd0ba369c64665e0d78e7ad52496489ce36ab3daccec3f"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v2.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224211_602257_comments-final-check/wiki-review-v2.html",
+      "before_sha256": "36430dc3463ce9a373056c0f3c266329c037086b3ce31fca6be36271f133ee2d",
+      "after_sha256": "20c9c50bf1f6eec9b773044b332c94dab90b75ae96e189dfcab40c2930d1f194"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_review-comments-v7.md",
+      "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-11_224211_602257_comments-final-check/2026-10-11_review-comments-v7.md",
+      "before_sha256": "37e1aecf41e2a6cef0bd0ba369c64665e0d78e7ad52496489ce36ab3daccec3f",
+      "after_sha256": "d579383b50407e5f78c97a0a5ccaf2fd8857c37b9f7abd400f32dc1cdaf9e7c5"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v2.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224438_161896_completed-status-sync/wiki-review-v2.html",
+      "before_sha256": "20c9c50bf1f6eec9b773044b332c94dab90b75ae96e189dfcab40c2930d1f194",
+      "after_sha256": "d6042137fb5bc23b9e8dda30b929f4d3156158fb44f23965f473c4b62521a3c7"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/findings-v2.json",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224438_161896_completed-status-sync/findings-v2.json",
+      "before_sha256": "f06f5750dce15a5276f60af33ac8f45346bb20f6409c77fbb0a56588921a527e",
+      "after_sha256": "56b335a12199613a6d82679540131c896d2850584b8c7e913c441368a7cb65f9"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v2.md",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224438_161896_completed-status-sync/wiki-review-v2.md",
+      "before_sha256": "029bd169876fb46083df81f07ce6ed1029ced25e14bfcd82872f4062e4bc6e27",
+      "after_sha256": "86fbdb2ce1e01b8fb7017308ae23a62cad7468b4b3fa64ef6f8384aa33c412d6"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_review-comments-v7.md",
+      "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-11_224438_161896_completed-status-sync/2026-10-11_review-comments-v7.md",
+      "before_sha256": "d579383b50407e5f78c97a0a5ccaf2fd8857c37b9f7abd400f32dc1cdaf9e7c5",
+      "after_sha256": "84056302b5b600b5f3ba3fac093a295d297b040e643594dd1cac37b72a2e82a0"
+    },
+    {
+      "path": ".tmp/review-comments-static-input.json",
+      "backup": ".tmp/_backup/2026-10-11_224438_161896_completed-status-sync/review-comments-static-input.json",
+      "before_sha256": "d822efb8cf9e050848c166c4bd062523ecfbc67b93601d21b5257dfa90f6d5e8",
+      "after_sha256": "210242a36dba941de668220540eba073a7a107055f7d259350ebe5c7b2d5f93f"
+    }
+  ],
+  "manifest_previous_backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_224438_161896_completed-status-sync/review-comments-backups-v7.json"
+}

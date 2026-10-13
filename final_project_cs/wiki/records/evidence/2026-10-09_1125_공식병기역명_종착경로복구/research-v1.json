@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-10-09T11:37:37.653928+09:00",
+  "sources": [
+    {
+      "url": "https://mediahub.seoul.go.kr/archives/2001681",
+      "scope": "서울시 2021-05-20 공식 안내의 주역명 옆/밑 괄호 부역명 설명, 1~8호선 범위"
+    },
+    {
+      "url": "https://data.seoul.go.kr/dataList/OA-12764/F/1/datasetView.do",
+      "scope": "기존 원문2026-09-02 실제 병기 이름/공식ID와 조회 예외. 기존 XLSX/추출물 해시 유지"
+    },
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "scope": "현재/다음/종착역ID·일반열차와 sample 최대5행, 오류코드 정의"
+    }
+  ],
+  "applied_assumptions": "공식1~8호선의 주역명(단일 괄호 부역명), 동일 노선 유일하며 정확 이름과 충돌하지 않는 것만 파생 대응. 다른 노선/역 접미사/유사도는 확장하지 않음.",
+  "paper_algorithm_applied": false,
+  "reason": "역 이름의 의미/식별 문제를 공식 원자료와 운영기관 설명으로 해결. 새로운 최적화·예측 알고리즘이나 논문 효과를 주장하지 않음.",
+  "new_map_web_routes": 0,
+  "map_developer_api_calls": 0,
+  "actual_boarding_payment": 0
+}

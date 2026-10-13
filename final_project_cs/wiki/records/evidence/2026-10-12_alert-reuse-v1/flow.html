@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>실제 경보 원본 활용 순서</title>
+<style>
+body{margin:0;background:#fbfcfd;color:#161c28;font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif}
+main{max-width:720px;margin:auto;padding:24px}
+h1{font-family:'Instrument Serif','Noto Serif KR',serif;font-size:28px;font-weight:400;margin:0 0 12px}
+p{line-height:1.6;margin:0 0 12px}svg{width:100%;height:auto;display:block}
+svg text{font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif;font-size:16px;fill:#161c28;text-anchor:middle}
+.edge{fill:none;stroke:#6b7488;stroke-width:1.2;marker-end:url(#arrow)}
+.node{fill:#ffffff;stroke:#161c28;stroke-width:1.2}
+.term{fill:#f1f4f8;stroke:#6b7488;stroke-width:1.2}
+.decision{fill:#fbfcfd;stroke:#a8720c;stroke-width:1.2}
+.label{font-size:12px;font-weight:500}
+footer{border-top:1px solid #dbe0ea;padding-top:12px;color:#6b7488;font-size:12px;line-height:1.6}
+</style>
+</head>
+<body><main>
+<h1>실제 경보 원본 활용 순서</h1>
+<p>앞으로 연결할 작업입니다. 원본 분석·후보 선정까지 수행했으며 제품 재생 시험과 대체안 검증은 미실행입니다.</p>
+<svg viewBox="0 0 720 760" role="img" aria-labelledby="flow-title flow-desc">
+<title id="flow-title">실제 경보 원본 활용 순서</title>
+<desc id="flow-desc">저장 원본을 구분한 뒤 장소와 시각 근거가 부족하면 보완 목록으로 종료하고, 충분하면 여행 일정 대조와 사례 재현 및 대체안 평가를 거쳐 결과를 기록합니다.</desc>
+<defs>
+<marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6b7488"/></marker>
+<marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#a8720c"/></marker>
+<marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2f5bd8"/></marker>
+</defs>
+<path class="edge" d="M280 56 V96"/>
+<path class="edge" d="M280 152 V192"/>
+<path class="edge" d="M280 304 V352"/>
+<path class="edge" d="M408 248 H496"/>
+<path class="edge" d="M280 408 V448"/>
+<path class="edge" d="M280 504 V544"/>
+<path class="edge" d="M280 600 V640"/>
+<rect x="292" y="316" width="40" height="20" fill="#fbfcfd"/>
+<text x="312" y="332" class="label">충분</text>
+<rect x="432" y="212" width="40" height="20" fill="#fbfcfd"/>
+<text x="452" y="228" class="label">부족</text>
+<ellipse class="term" cx="280" cy="36" rx="100" ry="20"/>
+<text x="280" y="40">원본 분석 시작</text>
+<rect class="node" x="120" y="96" width="320" height="56" rx="8"/>
+<text x="280" y="128">중복·과거·빈 결과·실패 분리</text>
+<path class="decision" d="M280 192 L408 248 L280 304 L152 248 Z"/>
+<text x="280" y="240">장소·시각 근거가</text><text x="280" y="264">충분한가?</text>
+<ellipse class="term" cx="600" cy="248" rx="104" ry="32"/>
+<text x="600" y="244">보완 목록 기록</text><text x="600" y="268">종료</text>
+<rect class="node" x="120" y="352" width="320" height="56" rx="8"/>
+<text x="280" y="384">여행 장소·경로·시간 대조</text>
+<rect class="node" x="120" y="448" width="320" height="56" rx="8"/>
+<text x="280" y="480">같은 조건으로 사례 재현</text>
+<rect class="node" x="120" y="544" width="320" height="56" rx="8"/>
+<text x="280" y="576">대체안 검증·실패·보류 평가</text>
+<ellipse class="term" cx="280" cy="664" rx="160" ry="24"/>
+<text x="280" y="668">결과·한계 기록 후 종료</text>
+<line x1="40" y1="716" x2="680" y2="716" stroke="#dbe0ea"/>
+<text x="360" y="740" class="label">타원: 시작·종료　사각형: 처리　마름모: 판단</text>
+</svg>
+<footer>2026-10-12 · triPilot · 제안 흐름 · 단일 분석 회차이며 자동 반복을 뜻하지 않습니다.<br>프로젝트 acop 프로필 사용. 외부 글꼴을 요청하지 않고 설치된 한글 글꼴로 표시합니다. 브라우저 표시 검사는 수행하지 않았습니다.</footer>
+</main></body></html>

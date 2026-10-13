@@ -1,0 +1,16 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+__ test_run_started_after_preflight_is_a_conflict_instead_of_unhandled_error __
+tests\unit\travel\test_initial_retry_boundaries.py:103: in test_run_started_after_preflight_is_a_conflict_instead_of_unhandled_error
+    retry()
+tests\unit\travel\test_initial_retry_boundaries.py:43: in <lambda>
+    return conn, calls, lambda: case_dispatch.retry_initial(conn, controller=controller, tenant="travel-test",
+app\domains\travel_ops\components\conversation\case_dispatch.py:147: in retry_initial
+    execution = _run(controller.run_case(tenant_id=tenant, case_id=case_id, actor_id=actor_id))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\test_initial_retry_boundaries.py:38: in run_case
+    raise run_error
+E   app.application.case_service.ActiveRunError: synthetic race
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_initial_retry_boundaries.py::test_run_started_after_preflight_is_a_conflict_instead_of_unhandled_error
+1 failed in 5.07s

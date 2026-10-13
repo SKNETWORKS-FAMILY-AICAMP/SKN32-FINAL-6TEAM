@@ -56,6 +56,12 @@ describe("which route lines go on the map", () => {
 describe("the legend over the map and the colour of each kind of route", () => {
   const t = (ko: string) => ko;
 
+  it("labels the saved express service without guessing a service for an older ride", () => {
+    const ride = {line:"9호선",from:"노량진",to:"고속터미널",stations:["노량진","동작","고속터미널"],count:3,filled:true};
+    expect(rideLines(shape({mode:"subway",rides:[{...ride,service:"express"},ride]}),(ko)=>ko))
+      .toEqual(["9호선 · 급행 · 노량진→고속터미널 · 3개 역","9호선 · 노량진→고속터미널 · 3개 역"]);
+  });
+
   it("names each kind that is drawn once, in a fixed order, and counts the routes that are only a guess", () => {
     const tags = routeTags([shape({ mode: "walk" }), shape({ itemId: "m2", mode: "subway", source: "straight_line", grade: "근거없음" }), shape({ itemId: "m3", mode: "subway" }), shape({ itemId: "m4", mode: "bus", source: "straight_line" })]);
     expect(tags.kinds.map((kind) => kind.label)).toEqual(["지하철", "버스", "도보"]);

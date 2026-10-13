@@ -19,7 +19,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 from contextvars import Context
-from app.domains.travel_ops.scenarios.replay_services import replay_leg_services
 
 import pytest
 
@@ -29,7 +28,8 @@ from app.infrastructure.db.session import get_connection
 from app.domains.travel_ops.scenarios.case_engine import CaseEngine
 from app.domains.travel_ops.components.planning.pending import PendingStore
 
-from .test_case_version_day import SCENARIO, _classifier, _extractor, case_world  # noqa: F401 — 픽스처를 그대로 쓴다
+from .test_case_version_day import _classifier, _extractor, case_world  # noqa: F401 — 픽스처를 그대로 쓴다
+from tests.unit.travel.execution_plan_fixture import fixture_plan
 
 ROAD = {"verdict": "disrupted", "disruptions": [{"category": "traffic_control", "kind": "road_closed"}]}
 FIRE = {"verdict": "disrupted", "disruptions": [{"category": "disaster_msg", "kind": "fire"}]}
@@ -51,20 +51,28 @@ def guardrails(monkeypatch):
     return override
 
 
-def _engine(world, reports: dict[str, dict]):
+def _engine(world, reports: dict[str, dict], *, default: dict | None = None):
     """`reports` — 장소 이름 → 그 장소의 점검 결과. 적힌 곳만 깨지고(일정의 원래 장소) 나머지(대체 후보)는 `clear`."""
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT name, place_id FROM places WHERE tenant_id=%s", (world["tenant"],))
         by_id = {str(place_id): reports[name] for name, place_id in cur.fetchall() if name in reports}
+        _, current_items = world["store"].latest(conn, world["trip_id"])
+        current_places = {str(i.place.get("place_id")) for i in current_items if i.place}
 
     def check(*, place, starts_at, **_):
         # ★읽기 도구는 장소의 **이름 없이** id · 좌표만 넘긴다 — id 로 가른다. 값이 호출 가능하면 부를 때마다 다음 결과(점검 소스가 잠깐 실패했다 돌아오는 시험)
-        report = by_id.get(str(place.get("place_id")), CLEAR)
+        place_id = str(place.get("place_id"))
+        # 원래 일정의 다른 장소는 정상으로 유지하고, 명시하지 않은 새 대안에만 적용한다.
+        fallback = CLEAR if default is None or place_id in current_places else default
+        report = by_id.get(place_id, fallback)
         return report() if callable(report) else report
 
     return CaseEngine(tenant_id=world["tenant"], check=check, route_events=world["engine"].opener.route_events,
                       classifier=_classifier, report_extractor=_extractor, clock=world["clock"],
-                      service_overrides=replay_leg_services(SCENARIO))
+                      execution_planner=fixture_plan,
+                      service_overrides={key: value for key, value in
+                                         world["engine"].controller.service_bindings.values.items()
+                                         if key[0] == "legs"})
 
 
 def _tick(engine):
@@ -109,7 +117,9 @@ def test_two_broken_items_of_one_trip_become_one_case_one_version_and_one_notice
 
     [opened] = result.opened                                            # ★Case 가 하나다(전에는 둘)
     assert opened["issue_code"] == "batch" and len(opened["items"]) == 2
-    assert [v[0] for v in _versions(world)] == [1, 2]                   # 판 하나만 더 생겼다(전에는 v3 까지)
+    view = world["engine"].view(__import__("uuid").UUID(opened["case_id"]))
+    assert view["case_status"] == "resolved", view["escalation"]
+    assert [v[0] for v in _versions(world)] == [1, 2], world["engine"].view(__import__("uuid").UUID(opened["case_id"]))
     assert str(_versions(world)[1][2]) == opened["case_id"]             # 그 판은 이 묶음 Case 가 썼다
     assert _status(world, __import__("uuid").UUID(opened["case_id"])) == "resolved"
 
@@ -212,13 +222,17 @@ def test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_
     world = case_world
     everything = {SKY: ROAD, LUNCH: ROAD, "아쿠아리움": ROAD, "롯데월드 어드벤처": ROAD,
                   "성수 브런치 식당(시나리오)": ROAD, "성수 국수 식당(시나리오)": ROAD}      # 원래 곳도 대체 후보도 다 막혔다
-    engine = _engine(world, everything)
+    # 장소 목록에 새 후보가 추가돼도 이 시험의 전제(모든 대안이 통제됨)를 유지한다.
+    # 후보 일부만 나열하면 확장 탐색이 유효한 대안을 찾아 별도 선택 질문을 만드는 것이 정상이다.
+    engine = _engine(world, everything, default=ROAD)
     first = _tick(engine)
 
     [opened] = first.opened
     assert [v[0] for v in _versions(world)] == [1]                       # 판이 안 바뀌었다
     assert _status(world, __import__("uuid").UUID(opened["case_id"])) == "escalated"
-    [(key, payload)] = _outbox(world)                                    # 항목마다가 아니라 **한 통**
+    notices = _outbox(world)
+    assert len(notices) == 1, [(k, p.get("type"), p.get("kind"), p.get("reason"), p.get("text")) for k, p in notices]
+    [(key, payload)] = notices                                          # 항목마다가 아니라 **한 통**
     assert payload["type"] == "guidance" and payload["batch"] is True and payload["kind"] in ("no_alternate", "mixed")
     assert "잠실 스카이타워" in payload["text"] and "성수 점심 식사" in payload["text"] and "일정은 그대로 두었어요" in payload["text"]
     assert "사람" not in payload["text"] and "담당자" not in payload["text"]
@@ -275,7 +289,7 @@ def test_a_source_failure_inside_a_completed_batch_is_reopened_alone_on_the_next
     assert [v[0] for v in _versions(world)] == [1, 2]                                       # 스카이타워만 바뀌었다
     names = {i.place["name"] for i in _latest(world)[1] if i.place}
     assert LUNCH in names and SKY not in names
-    assert not [p for _, p in _outbox(world) if "점심" in p["text"] and "그대로 두었어요" in p["text"]]     # 소스 실패는 고객에게 알리지 않는다
+    assert len([p for _, p in _outbox(world) if "점심" in p["text"] and p.get("deferred")]) == 1
 
     second = _tick(engine)
     [again] = second.opened                                                                # ★그 항목만 단일 Case 로 다시 열렸다

@@ -1,0 +1,257 @@
+{
+  "claim": "공식 공표 시각 경계와 출구 번호 존재 대조; 실제 도착/출구좌표/현장 혼잡 측정 아님",
+  "published_groups": [
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dir": "U",
+      "matched": 183,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dir": "D",
+      "matched": 182,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dir": "U",
+      "matched": 159,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dir": "D",
+      "matched": 158,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "디지털미디어시티",
+      "day_type": "weekday",
+      "dir": "U",
+      "matched": 183,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "디지털미디어시티",
+      "day_type": "weekday",
+      "dir": "D",
+      "matched": 182,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "디지털미디어시티",
+      "day_type": "holiday",
+      "dir": "U",
+      "matched": 159,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "디지털미디어시티",
+      "day_type": "holiday",
+      "dir": "D",
+      "matched": 158,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "김포공항",
+      "day_type": "weekday",
+      "dir": "U",
+      "matched": 182,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "김포공항",
+      "day_type": "weekday",
+      "dir": "D",
+      "matched": 182,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "김포공항",
+      "day_type": "holiday",
+      "dir": "U",
+      "matched": 158,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "김포공항",
+      "day_type": "holiday",
+      "dir": "D",
+      "matched": 158,
+      "excluded": 26
+    }
+  ],
+  "published_group_count": 12,
+  "published_minutes_matched": 2044,
+  "nonpublished_base_rows_excluded_in_scoped_groups": 312,
+  "selected_product_timetable": "timetable_v1.jsonl.gz",
+  "loaded_base_timetable_rows": 453356,
+  "loaded_line_station_count": 798,
+  "fresh_official_arex_boundaries": [
+    {
+      "station": "홍대입구",
+      "day_type": "weekday",
+      "direction": "U",
+      "boundary": "first",
+      "official_minute": 334,
+      "stored_minute": 334,
+      "matches": true,
+      "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+    },
+    {
+      "station": "홍대입구",
+      "day_type": "weekday",
+      "direction": "U",
+      "boundary": "last",
+      "official_minute": 1471,
+      "stored_minute": 1471,
+      "matches": true,
+      "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+    },
+    {
+      "station": "홍대입구",
+      "day_type": "weekday",
+      "direction": "D",
+      "boundary": "first",
+      "official_minute": 328,
+      "stored_minute": 328,
+      "matches": true,
+      "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+    },
+    {
+      "station": "홍대입구",
+      "day_type": "weekday",
+      "direction": "D",
+      "boundary": "last",
+      "official_minute": 1448,
+      "stored_minute": 1448,
+      "matches": true,
+      "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+    },
+    {
+      "station": "홍대입구",
+      "day_type": "holiday",
+      "direction": "U",
+      "boundary": "first",
+      "official_minute": 334,
+      "stored_minute": 334,
+      "matches": true,
+      "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+    },
+    {
+      "station": "홍대입구",
+      "day_type": "holiday",
+      "direction": "U",
+      "boundary": "last",
+      "official_minute": 1471,
+      "stored_minute": 1471,
+      "matches": true,
+      "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+    },
+    {
+      "station": "홍대입구",
+      "day_type": "holiday",
+      "direction": "D",
+      "boundary": "first",
+      "official_minute": 328,
+      "stored_minute": 328,
+      "matches": true,
+      "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+    },
+    {
+      "station": "홍대입구",
+      "day_type": "holiday",
+      "direction": "D",
+      "boundary": "last",
+      "official_minute": 1448,
+      "stored_minute": 1448,
+      "matches": true,
+      "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+    }
+  ],
+  "fresh_official_exit_number_presence": [
+    {
+      "station": "홍대입구",
+      "exit_ref": "1",
+      "exists_in_osm_data": true
+    },
+    {
+      "station": "홍대입구",
+      "exit_ref": "2",
+      "exists_in_osm_data": true
+    },
+    {
+      "station": "홍대입구",
+      "exit_ref": "3",
+      "exists_in_osm_data": true
+    },
+    {
+      "station": "홍대입구",
+      "exit_ref": "4",
+      "exists_in_osm_data": true
+    },
+    {
+      "station": "홍대입구",
+      "exit_ref": "5",
+      "exists_in_osm_data": true
+    },
+    {
+      "station": "홍대입구",
+      "exit_ref": "6",
+      "exists_in_osm_data": true
+    },
+    {
+      "station": "홍대입구",
+      "exit_ref": "7",
+      "exists_in_osm_data": true
+    },
+    {
+      "station": "홍대입구",
+      "exit_ref": "8",
+      "exists_in_osm_data": true
+    },
+    {
+      "station": "홍대입구",
+      "exit_ref": "9",
+      "exists_in_osm_data": true
+    }
+  ],
+  "station_exit_data": {
+    "source": "OSM Overpass node[railway=subway_entrance] bbox 36.75,126.40,38.12,129.10",
+    "grade": "추정",
+    "station_names": 645,
+    "exit_nodes": 3044
+  },
+  "line9_rows": 8208,
+  "line9_service_counts": {
+    "local": 5776,
+    "express": 2432
+  },
+  "file_sha256": {
+    "timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+    "timetable_v1.jsonl": "63a5b503dfe0d129e4a69993a9003669f3bf35ba8c833a55aa790d63db6478d0",
+    "published_boarding_timetable_v1.json": "7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+    "station_exits_v1.json": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+    "congestion_v1.jsonl": "e1e92ebb954b2900482b9f5a2ccdf91df386059577ff006ddb421972f9add07b",
+    "congestion_line9_v1.jsonl": "1b680c5dd069334b9a3fb4e03f0cbe7ab8cca35ed05792994775b007c70e9ae0"
+  },
+  "developer_api_calls": 0,
+  "private_data_accessed": false
+}

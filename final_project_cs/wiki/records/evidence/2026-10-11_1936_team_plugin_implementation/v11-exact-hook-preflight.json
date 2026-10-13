@@ -1,0 +1,17 @@
+[
+  {
+    "command_class": "exact",
+    "expected": "allow",
+    "actual": "allow"
+  },
+  {
+    "command_class": "other_or_chained",
+    "expected": "deny",
+    "actual": "deny"
+  },
+  {
+    "command_class": "other_or_chained",
+    "expected": "deny",
+    "actual": "deny"
+  }
+]

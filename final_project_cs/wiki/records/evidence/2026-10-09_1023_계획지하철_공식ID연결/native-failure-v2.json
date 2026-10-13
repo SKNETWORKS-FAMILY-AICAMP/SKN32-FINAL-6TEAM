@@ -1,0 +1,5 @@
+{
+  "error": "Audit v2 iterated station_coords dictionary keys as rows.",
+  "product_defect": false,
+  "resolution": "Preserved v2 and used v3 dictionary values; native product runtime and ID loading succeeded."
+}

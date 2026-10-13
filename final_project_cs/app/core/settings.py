@@ -153,6 +153,11 @@ class Settings(BaseSettings):
     #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
     ollama_pointer_model: str = ""
     ollama_pointer_timeout_seconds: float = 30.0
+    #: ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 **2차 확인** 모델(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 규칙만 쓴다.
+    #:  켜고 끄기는 가드레일 `travel.notice_end.mode`. 규칙과 모델이 둘 다 끝남일 때만 끝남이고, 모델을 못 부르면 규칙 결과를 쓴다(`notice_end_model.py`).
+    ollama_notice_model: str = ""
+    #:  ★첫 호출은 모델을 올리느라 길다(2026-10-13 x600 실측 53.7초, 이어지는 호출 약 1.3초) — 감시 루프는 고객을 기다리게 하지 않으므로 넉넉히 둔다
+    ollama_notice_timeout_seconds: float = 90.0
     # ── 모델 서버가 죽거나 늦을 때 **서버용 OpenAI 키**로 넘기는 장치 `[2026-10-07 사용자 지시]` ──
     #:  「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」. 코드 `app/infrastructure/llm_failover.py`.
     #:  ★스위치는 **기본 꺼짐**이다 — 개발 PC 에서 모델 서버 연결이 끊겼을 때 시험 · 측정이 조용히 유료 API 로 새지 않게. 운영(배포) 환경 파일에서만 켠다.
@@ -347,6 +352,8 @@ class Settings(BaseSettings):
     rate_subway_notice_per_day: int = 5000
     #: 확인(2026-10-04 공식 안내): 서울 「실시간 지하철 인증키」 하루 최대 1,000건 → 절반만(여유 2배). 도착정보는 지금 값이라 캐시를 짧게 둔다
     rate_seoul_subway_arrival_per_day: int = 500
+    #: 확인(2026-10-08): 버스도착정보 개발계정 1,000/일. 절반을 운영 한도로 둔다.
+    rate_seoul_bus_arrival_per_day: int = 500
     #: 서울 열린데이터광장 **일반 인증키**(따릉이 실시간 거치 대수 `bikeList`) 하루 상한 — ★공식 하루 한도를 못 찾았다(안내에 숫자 없음 · 「이용 제약 없이 쓰려면 활용사례 등록」)
     #:  `[미확인]` 그래서 **우리가 고른 보수적 값**이다. 이 값에서 막히면 따릉이 거치 대수가 「근거없음」이 되고(후보는 유지) 서비스는 계속된다. 0 = 제한 없음
     rate_seoul_bike_per_day: int = 1000
@@ -400,6 +407,7 @@ class Settings(BaseSettings):
             "odsay": self.rate_odsay_per_day,
             "subway_notice": self.rate_subway_notice_per_day,
             "seoul_subway_arrival": self.rate_seoul_subway_arrival_per_day,
+            "seoul_bus_arrival": self.rate_seoul_bus_arrival_per_day,
             "seoul_bike": self.rate_seoul_bike_per_day,
             "kakao": self.rate_kakao_per_day,
             "naver_search": self.rate_naver_search_per_day,

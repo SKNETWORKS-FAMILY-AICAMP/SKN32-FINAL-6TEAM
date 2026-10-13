@@ -1,0 +1,2060 @@
+{
+  "created_at": "2026-10-09T12:55:19.392360+09:00",
+  "requests": [
+    {
+      "legs": [
+        {
+          "mode": "subway",
+          "line": "공항철도",
+          "from": "공덕",
+          "to": "홍대입구"
+        }
+      ],
+      "context": {
+        "schema_version": 1,
+        "timing_unit": "model_minutes",
+        "from_place": {
+          "lat": 37.544,
+          "lon": 126.951
+        },
+        "to_place": {
+          "lat": 37.55,
+          "lon": 126.94
+        },
+        "basis": {
+          "timetable_built_at": "built:2026-10-01T10:38:34+09:00",
+          "rules_version": "v0.9.2",
+          "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+          "subway_station_version": "c3c2c13114f7d174f4ef1989fba2c9dc968f57919368587864171b2a26f2a244"
+        },
+        "party": {},
+        "first_visit": false,
+        "options": {
+          "p": {
+            "option_id": "p",
+            "legs": [
+              {
+                "mode": "subway",
+                "line": "공항철도",
+                "from": "공덕",
+                "to": "홍대입구"
+              }
+            ],
+            "subway_identity": {
+              "status": "matched",
+              "line_id": "1065",
+              "station_id": "1065006502",
+              "target_station_id": "1065006503",
+              "query_station": "공덕",
+              "target_station": "홍대입구",
+              "line": "공항철도"
+            },
+            "check": {
+              "legs": [
+                {
+                  "mode": "subway",
+                  "line": "공항철도",
+                  "from": "공덕",
+                  "to": "홍대입구"
+                }
+              ],
+              "walk_place_in": 1,
+              "walk_stop_in": 1,
+              "walk_stop_out": 1,
+              "walk_place_out": 1
+            }
+          }
+        }
+      },
+      "started_at": "2026-10-09T12:55:19.253761+09:00",
+      "finished_at": "2026-10-09T12:55:19.344356+09:00",
+      "callback_inputs": [
+        {
+          "station": "공덕",
+          "services": [
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "홍대입구"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "디지털미디어시티"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "마곡나루"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042",
+                "1065006505"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "김포공항"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042",
+                "1065006505",
+                "1065006506"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "계양"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042",
+                "1065006505",
+                "1065006506",
+                "1065006507"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "검암"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042",
+                "1065006505",
+                "1065006506",
+                "1065006507",
+                "1065065071"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "청라국제도시"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042",
+                "1065006505",
+                "1065006506",
+                "1065006507",
+                "1065065071",
+                "1065065072"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "영종"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042",
+                "1065006505",
+                "1065006506",
+                "1065006507",
+                "1065065071",
+                "1065065072",
+                "1065006508"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "운서"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042",
+                "1065006505",
+                "1065006506",
+                "1065006507",
+                "1065065071",
+                "1065065072",
+                "1065006508",
+                "1065006509"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "공항화물청사"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042",
+                "1065006505",
+                "1065006506",
+                "1065006507",
+                "1065065071",
+                "1065065072",
+                "1065006508",
+                "1065006509",
+                "1065006510"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "인천공항1터미널"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1065006502",
+                "1065006503",
+                "1065006504",
+                "1065065042",
+                "1065006505",
+                "1065006506",
+                "1065006507",
+                "1065065071",
+                "1065065072",
+                "1065006508",
+                "1065006509",
+                "1065006510",
+                "1065006511"
+              ],
+              "next_station_names": [
+                "홍대입구"
+              ],
+              "terminal_station_names": [
+                "인천공항2터미널"
+              ]
+            }
+          ]
+        }
+      ],
+      "product_result": {
+        "option_id": "p",
+        "observations": [
+          {
+            "source": "seoul_subway_arrival",
+            "line_id": "1065",
+            "station_id": "1065006502",
+            "target_station_id": "1065006503",
+            "confirmed_at": "2026-10-09T03:55:19.328584+00:00",
+            "observation_age_seconds": 0.0,
+            "ready_at": "2026-10-09T12:58:00+09:00",
+            "excluded": [
+              {
+                "train_number": "A2113",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "A1021",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5056",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5072",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "6104",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5562",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5058",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "6106",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "A2112",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5061",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "A1022",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5071",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "6103",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "A2110",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5577",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5063",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "6105",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "A1024",
+                "reason": "service_path_mismatch"
+              }
+            ],
+            "status": "no_boardable_prediction",
+            "reason": "no_vehicle_after_ready",
+            "evaluated_at": "2026-10-09T12:55:19.328584+09:00"
+          }
+        ],
+        "timing_unit": "model_minutes",
+        "party_check": "current_trip_not_supplied",
+        "basis": {
+          "timetable_built_at": "built:2026-10-01T10:38:34+09:00",
+          "rules_version": "v0.9.2",
+          "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+          "subway_station_version": "c3c2c13114f7d174f4ef1989fba2c9dc968f57919368587864171b2a26f2a244"
+        },
+        "checked_at": "2026-10-09T12:55:19.328584+09:00",
+        "verdict": "feasible",
+        "reason": "예정 13:03 +@10분(최악 13:03 + 버퍼 10분) · 여유 40분",
+        "leg_results": [
+          {
+            "idx": 0,
+            "verdict": "feasible",
+            "depart_min": 779,
+            "arrive_min": 783,
+            "wait_min": 1,
+            "ride_min": 3.5,
+            "ride_src": null
+          }
+        ],
+        "status": "model_revalidated",
+        "departure_at": "2026-10-09T12:56:00+09:00",
+        "arrival_at": "2026-10-09T13:05:00+09:00",
+        "worst_arrival_at": "2026-10-09T13:05:00+09:00",
+        "eta_min": 10
+      },
+      "baseline": {
+        "option_id": "p",
+        "observations": [],
+        "timing_unit": "model_minutes",
+        "party_check": "current_trip_not_supplied",
+        "basis": {
+          "timetable_built_at": "built:2026-10-01T10:38:34+09:00",
+          "rules_version": "v0.9.2",
+          "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+          "subway_station_version": "c3c2c13114f7d174f4ef1989fba2c9dc968f57919368587864171b2a26f2a244"
+        },
+        "checked_at": "2026-10-09T12:55:19.328584+09:00",
+        "verdict": "feasible",
+        "reason": "예정 13:03 +@10분(최악 13:03 + 버퍼 10분) · 여유 40분",
+        "leg_results": [
+          {
+            "idx": 0,
+            "verdict": "feasible",
+            "depart_min": 779,
+            "arrive_min": 783,
+            "wait_min": 1,
+            "ride_min": 3.5,
+            "ride_src": null
+          }
+        ],
+        "status": "model_revalidated",
+        "departure_at": "2026-10-09T12:56:00+09:00",
+        "arrival_at": "2026-10-09T13:05:00+09:00",
+        "worst_arrival_at": "2026-10-09T13:05:00+09:00",
+        "eta_min": 10
+      },
+      "baseline_clock": "2026-10-09T12:55:19.328584+09:00",
+      "controlled_access_minutes": 2,
+      "controlled_egress_minutes": 2
+    },
+    {
+      "legs": [
+        {
+          "mode": "subway",
+          "line": "05호선",
+          "from": "공덕",
+          "to": "마포"
+        }
+      ],
+      "context": {
+        "schema_version": 1,
+        "timing_unit": "model_minutes",
+        "from_place": {
+          "lat": 37.544,
+          "lon": 126.951
+        },
+        "to_place": {
+          "lat": 37.55,
+          "lon": 126.94
+        },
+        "basis": {
+          "timetable_built_at": "built:2026-10-01T10:38:34+09:00",
+          "rules_version": "v0.9.2",
+          "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+          "subway_station_version": "c3c2c13114f7d174f4ef1989fba2c9dc968f57919368587864171b2a26f2a244"
+        },
+        "party": {},
+        "first_visit": false,
+        "options": {
+          "p": {
+            "option_id": "p",
+            "legs": [
+              {
+                "mode": "subway",
+                "line": "05호선",
+                "from": "공덕",
+                "to": "마포"
+              }
+            ],
+            "subway_identity": {
+              "status": "matched",
+              "line_id": "1005",
+              "station_id": "1005000529",
+              "target_station_id": "1005000528",
+              "query_station": "공덕",
+              "target_station": "마포",
+              "line": "5호선"
+            },
+            "check": {
+              "legs": [
+                {
+                  "mode": "subway",
+                  "line": "05호선",
+                  "from": "공덕",
+                  "to": "마포"
+                }
+              ],
+              "walk_place_in": 1,
+              "walk_stop_in": 1,
+              "walk_stop_out": 1,
+              "walk_place_out": 1
+            }
+          }
+        }
+      },
+      "started_at": "2026-10-09T12:55:19.344356+09:00",
+      "finished_at": "2026-10-09T12:55:19.380103+09:00",
+      "callback_inputs": [
+        {
+          "station": "공덕",
+          "services": [
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519",
+                "1005000518",
+                "1005000517",
+                "1005000516",
+                "1005000515",
+                "1005000514",
+                "1005000513",
+                "1005000512",
+                "1005000511",
+                "1005000510"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "방화"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519",
+                "1005000518",
+                "1005000517",
+                "1005000516",
+                "1005000515",
+                "1005000514",
+                "1005000513",
+                "1005000512",
+                "1005000511"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "개화산"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519",
+                "1005000518",
+                "1005000517",
+                "1005000516",
+                "1005000515",
+                "1005000514",
+                "1005000513",
+                "1005000512"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "김포공항"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519",
+                "1005000518",
+                "1005000517",
+                "1005000516",
+                "1005000515",
+                "1005000514",
+                "1005000513"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "송정"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519",
+                "1005000518",
+                "1005000517",
+                "1005000516",
+                "1005000515",
+                "1005000514"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "마곡"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519",
+                "1005000518",
+                "1005000517",
+                "1005000516",
+                "1005000515"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "발산"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519",
+                "1005000518",
+                "1005000517",
+                "1005000516"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "우장산"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519",
+                "1005000518",
+                "1005000517"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "화곡"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519",
+                "1005000518"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "까치산"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520",
+                "1005000519"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "신정",
+                "신정(은행정)"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521",
+                "1005000520"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "목동"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522",
+                "1005000521"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "오목교",
+                "오목교(목동운동장앞)"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523",
+                "1005000522"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "양평"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524",
+                "1005000523"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "영등포구청"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525",
+                "1005000524"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "영등포시장"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526",
+                "1005000525"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "신길"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527",
+                "1005000526"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "여의도"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528",
+                "1005000527"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "여의나루"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            },
+            {
+              "train_status": "일반",
+              "path_station_ids": [
+                "1005000529",
+                "1005000528"
+              ],
+              "next_station_names": [
+                "마포"
+              ],
+              "terminal_station_names": [
+                "마포"
+              ],
+              "boarding_neighbor_ids": [
+                "1005000528",
+                "1005000530"
+              ]
+            }
+          ]
+        }
+      ],
+      "product_result": {
+        "option_id": "p",
+        "observations": [
+          {
+            "source": "seoul_subway_arrival",
+            "line_id": "1005",
+            "station_id": "1005000529",
+            "target_station_id": "1005000528",
+            "confirmed_at": "2026-10-09T03:55:19.380103+00:00",
+            "observation_age_seconds": 0.0,
+            "ready_at": "2026-10-09T12:58:00+09:00",
+            "excluded": [
+              {
+                "train_number": "A2113",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "A1021",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5056",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5072",
+                "reason": "arrives_before_ready"
+              },
+              {
+                "train_number": "6104",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5058",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "6106",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "A2112",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5061",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "A1022",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5071",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "6103",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "A2110",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5577",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5063",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "6105",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "A1024",
+                "reason": "boarding_identity_mismatch"
+              }
+            ],
+            "direction_basis": "route_label_and_neighbor_ids",
+            "provider_next_station_id": "1005000528",
+            "provider_previous_station_id": "1005000530",
+            "route_label": "방화행 - 마포방면",
+            "status": "predicted",
+            "train_number": "5562",
+            "next_station_id": "1005000528",
+            "terminal_station_id": "1005000510",
+            "train_status": "일반",
+            "path_station_ids": [
+              "1005000529",
+              "1005000528",
+              "1005000527",
+              "1005000526",
+              "1005000525",
+              "1005000524",
+              "1005000523",
+              "1005000522",
+              "1005000521",
+              "1005000520",
+              "1005000519",
+              "1005000518",
+              "1005000517",
+              "1005000516",
+              "1005000515",
+              "1005000514",
+              "1005000513",
+              "1005000512",
+              "1005000511",
+              "1005000510"
+            ],
+            "arrival_at": "2026-10-09T13:03:15+09:00",
+            "remaining_seconds": 475.619897,
+            "wait_after_access_seconds": 315.0,
+            "provider_received_at": "2026-10-09 12:54:15",
+            "provider_received_at_normalized": "2026-10-09T12:54:15+09:00",
+            "provider_age_seconds": 64.380103,
+            "eta_basis": "provider_generation_time",
+            "claim": "접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님",
+            "evaluated_at": "2026-10-09T12:55:19.380103+09:00"
+          }
+        ],
+        "timing_unit": "model_minutes",
+        "party_check": "current_trip_not_supplied",
+        "basis": {
+          "timetable_built_at": "built:2026-10-01T10:38:34+09:00",
+          "rules_version": "v0.9.2",
+          "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+          "subway_station_version": "c3c2c13114f7d174f4ef1989fba2c9dc968f57919368587864171b2a26f2a244"
+        },
+        "checked_at": "2026-10-09T12:55:19.380103+09:00",
+        "verdict": "feasible",
+        "reason": "예정 13:06 +@10분(최악 13:06 + 버퍼 10분) · 여유 37분",
+        "leg_results": [
+          {
+            "idx": 0,
+            "verdict": "feasible",
+            "depart_min": 784,
+            "arrive_min": 786,
+            "wait_min": 6,
+            "ride_min": 1.8,
+            "ride_src": "subway_path_model"
+          }
+        ],
+        "realtime_mode": "subway",
+        "status": "realtime",
+        "departure_at": "2026-10-09T12:56:00+09:00",
+        "arrival_at": "2026-10-09T13:08:00+09:00",
+        "worst_arrival_at": "2026-10-09T13:08:00+09:00",
+        "eta_min": 13
+      },
+      "baseline": {
+        "option_id": "p",
+        "observations": [],
+        "timing_unit": "model_minutes",
+        "party_check": "current_trip_not_supplied",
+        "basis": {
+          "timetable_built_at": "built:2026-10-01T10:38:34+09:00",
+          "rules_version": "v0.9.2",
+          "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+          "subway_station_version": "c3c2c13114f7d174f4ef1989fba2c9dc968f57919368587864171b2a26f2a244"
+        },
+        "checked_at": "2026-10-09T12:55:19.380103+09:00",
+        "verdict": "feasible",
+        "reason": "예정 13:03 +@10분(최악 13:03 + 버퍼 10분) · 여유 40분",
+        "leg_results": [
+          {
+            "idx": 0,
+            "verdict": "feasible",
+            "depart_min": 781,
+            "arrive_min": 783,
+            "wait_min": 3,
+            "ride_min": 1.8,
+            "ride_src": null
+          }
+        ],
+        "status": "model_revalidated",
+        "departure_at": "2026-10-09T12:56:00+09:00",
+        "arrival_at": "2026-10-09T13:05:00+09:00",
+        "worst_arrival_at": "2026-10-09T13:05:00+09:00",
+        "eta_min": 10
+      },
+      "baseline_clock": "2026-10-09T12:55:19.380103+09:00",
+      "controlled_access_minutes": 2,
+      "controlled_egress_minutes": 2
+    }
+  ],
+  "provider_calls_expected": 1,
+  "actual_http_responses": 2,
+  "normalized_reads": 2,
+  "snapshots": [
+    {
+      "station": "공덕",
+      "line": null,
+      "trains": [
+        {
+          "line": "공항철도",
+          "direction": "상행",
+          "route_label": "인천공항2터미널행 - 홍대입구방면",
+          "message": "공덕 도착",
+          "position": "공덕",
+          "arrival_code": "1",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006503",
+          "next_station_id": "1065006501",
+          "terminal_station_id": "1065006511",
+          "terminal_station": "인천공항2터미널",
+          "train_number": "A2113",
+          "arrival_order": "01000인천공항2터미널0",
+          "received_at": "2026-10-09 12:50:56",
+          "received_age_seconds": 263,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "상행",
+          "route_label": "인천공항2터미널행 - 홍대입구방면 (급행)",
+          "message": "공덕 출발",
+          "position": "공덕",
+          "arrival_code": "2",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006503",
+          "next_station_id": "1065006501",
+          "terminal_station_id": "1065006511",
+          "terminal_station": "인천공항2터미널",
+          "train_number": "A1021",
+          "arrival_order": "01000인천공항2터미널1",
+          "received_at": "2026-10-09 12:54:01",
+          "received_age_seconds": 78,
+          "source_clock_ahead": false,
+          "train_status": "급행"
+        },
+        {
+          "line": "경의중앙선",
+          "direction": "상행",
+          "route_label": "문산행 - 서강대방면",
+          "message": "전역 진입",
+          "position": "효창공원앞",
+          "arrival_code": "4",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1063",
+          "station_id": "1063075312",
+          "previous_station_id": "1063075826",
+          "next_station_id": "1063075313",
+          "terminal_station_id": "1063075335",
+          "terminal_station": "문산",
+          "train_number": "5056",
+          "arrival_order": "01001문산0",
+          "received_at": "2026-10-09 12:54:27",
+          "received_age_seconds": 52,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "5호선",
+          "direction": "상행",
+          "route_label": "방화행 - 마포방면",
+          "message": "전역 도착",
+          "position": "애오개",
+          "arrival_code": "5",
+          "eta_seconds": 120,
+          "eta_status": "valid",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "previous_station_id": "1005000530",
+          "next_station_id": "1005000528",
+          "terminal_station_id": "1005000510",
+          "terminal_station": "방화",
+          "train_number": "5072",
+          "arrival_order": "01001방화0",
+          "received_at": "2026-10-09 12:54:15",
+          "received_age_seconds": 64,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "6호선",
+          "direction": "상행",
+          "route_label": "응암순환(상선)행 - 대흥(서강대앞)방면",
+          "message": "8분 후 (이태원)",
+          "position": "이태원",
+          "arrival_code": "99",
+          "eta_seconds": 480,
+          "eta_status": "valid",
+          "line_id": "1006",
+          "station_id": "1006000626",
+          "previous_station_id": "1006000627",
+          "next_station_id": "1006000625",
+          "terminal_station_id": "1006000610",
+          "terminal_station": "응암순환(상선)",
+          "train_number": "6104",
+          "arrival_order": "01004응암순환(상선)0",
+          "received_at": "2026-10-09 12:54:18",
+          "received_age_seconds": 61,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "5호선",
+          "direction": "상행",
+          "route_label": "방화행 - 마포방면",
+          "message": "9분 후 (종로3가)",
+          "position": "종로3가",
+          "arrival_code": "99",
+          "eta_seconds": 540,
+          "eta_status": "valid",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "previous_station_id": "1005000530",
+          "next_station_id": "1005000528",
+          "terminal_station_id": "1005000510",
+          "terminal_station": "방화",
+          "train_number": "5562",
+          "arrival_order": "02005방화0",
+          "received_at": "2026-10-09 12:54:15",
+          "received_age_seconds": 64,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "경의중앙선",
+          "direction": "상행",
+          "route_label": "문산행 - 서강대방면",
+          "message": "[7]번째 전역 (응봉)",
+          "position": "응봉",
+          "arrival_code": "99",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1063",
+          "station_id": "1063075312",
+          "previous_station_id": "1063075826",
+          "next_station_id": "1063075313",
+          "terminal_station_id": "1063075335",
+          "terminal_station": "문산",
+          "train_number": "5058",
+          "arrival_order": "02007문산0",
+          "received_at": "2026-10-09 12:54:27",
+          "received_age_seconds": 52,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "6호선",
+          "direction": "상행",
+          "route_label": "응암순환(상선)행 - 대흥(서강대앞)방면",
+          "message": "16분 후 (신당)",
+          "position": "신당",
+          "arrival_code": "99",
+          "eta_seconds": 960,
+          "eta_status": "valid",
+          "line_id": "1006",
+          "station_id": "1006000626",
+          "previous_station_id": "1006000627",
+          "next_station_id": "1006000625",
+          "terminal_station_id": "1006000610",
+          "terminal_station": "응암순환(상선)",
+          "train_number": "6106",
+          "arrival_order": "02009응암순환(상선)0",
+          "received_at": "2026-10-09 12:54:18",
+          "received_age_seconds": 61,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "하행",
+          "route_label": "서울행 - 서울방면",
+          "message": "공덕 도착",
+          "position": "공덕",
+          "arrival_code": "1",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006501",
+          "next_station_id": "1065006503",
+          "terminal_station_id": "1065006501",
+          "terminal_station": "서울",
+          "train_number": "A2112",
+          "arrival_order": "11000서울0",
+          "received_at": "2026-10-09 12:53:28",
+          "received_age_seconds": 111,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "경의중앙선",
+          "direction": "하행",
+          "route_label": "용문행 - 효창공원앞방면",
+          "message": "전역 도착",
+          "position": "서강대",
+          "arrival_code": "5",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1063",
+          "station_id": "1063075312",
+          "previous_station_id": "1063075313",
+          "next_station_id": "1063075826",
+          "terminal_station_id": "1063075137",
+          "terminal_station": "용문",
+          "train_number": "5061",
+          "arrival_order": "11001용문0",
+          "received_at": "2026-10-09 12:53:10",
+          "received_age_seconds": 129,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "하행",
+          "route_label": "서울행 - 서울방면 (급행)",
+          "message": "[2]번째 전역 (디지털미디어시티)",
+          "position": "디지털미디어시티",
+          "arrival_code": "99",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006501",
+          "next_station_id": "1065006503",
+          "terminal_station_id": "1065006501",
+          "terminal_station": "서울",
+          "train_number": "A1022",
+          "arrival_order": "11002서울1",
+          "received_at": "2026-10-09 12:52:42",
+          "received_age_seconds": 157,
+          "source_clock_ahead": false,
+          "train_status": "급행"
+        },
+        {
+          "line": "5호선",
+          "direction": "하행",
+          "route_label": "하남검단산행 - 애오개방면",
+          "message": "5분 후 (여의나루)",
+          "position": "여의나루",
+          "arrival_code": "99",
+          "eta_seconds": 300,
+          "eta_status": "valid",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "previous_station_id": "1005000528",
+          "next_station_id": "1005000530",
+          "terminal_station_id": "1005000558",
+          "terminal_station": "하남검단산",
+          "train_number": "5071",
+          "arrival_order": "11002하남검단산0",
+          "received_at": "2026-10-09 12:54:26",
+          "received_age_seconds": 53,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "6호선",
+          "direction": "하행",
+          "route_label": "신내행 - 효창공원앞방면",
+          "message": "7분 후 (합정)",
+          "position": "합정",
+          "arrival_code": "99",
+          "eta_seconds": 420,
+          "eta_status": "valid",
+          "line_id": "1006",
+          "station_id": "1006000626",
+          "previous_station_id": "1006000625",
+          "next_station_id": "1006000627",
+          "terminal_station_id": "1006000648",
+          "terminal_station": "신내",
+          "train_number": "6103",
+          "arrival_order": "11004신내0",
+          "received_at": "2026-10-09 12:54:29",
+          "received_age_seconds": 50,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "하행",
+          "route_label": "서울행 - 서울방면",
+          "message": "공덕 출발",
+          "position": "공덕",
+          "arrival_code": "2",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006501",
+          "next_station_id": "1065006503",
+          "terminal_station_id": "1065006501",
+          "terminal_station": "서울",
+          "train_number": "A2110",
+          "arrival_order": "12000서울0",
+          "received_at": "2026-10-09 12:53:28",
+          "received_age_seconds": 111,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "5호선",
+          "direction": "하행",
+          "route_label": "마천행 - 애오개방면",
+          "message": "11분 후 (영등포시장)",
+          "position": "영등포시장",
+          "arrival_code": "99",
+          "eta_seconds": 660,
+          "eta_status": "valid",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "previous_station_id": "1005000528",
+          "next_station_id": "1005000530",
+          "terminal_station_id": "1005080555",
+          "terminal_station": "마천",
+          "train_number": "5577",
+          "arrival_order": "12005마천0",
+          "received_at": "2026-10-09 12:54:26",
+          "received_age_seconds": 53,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "경의중앙선",
+          "direction": "하행",
+          "route_label": "덕소행 - 효창공원앞방면",
+          "message": "[9]번째 전역 (강매)",
+          "position": "강매",
+          "arrival_code": "99",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1063",
+          "station_id": "1063075312",
+          "previous_station_id": "1063075313",
+          "next_station_id": "1063075826",
+          "terminal_station_id": "1063075126",
+          "terminal_station": "덕소",
+          "train_number": "5063",
+          "arrival_order": "12009덕소0",
+          "received_at": "2026-10-09 12:53:10",
+          "received_age_seconds": 129,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "6호선",
+          "direction": "하행",
+          "route_label": "봉화산행 - 효창공원앞방면",
+          "message": "16분 후 (증산(명지대앞))",
+          "position": "증산(명지대앞)",
+          "arrival_code": "99",
+          "eta_seconds": 960,
+          "eta_status": "valid",
+          "line_id": "1006",
+          "station_id": "1006000626",
+          "previous_station_id": "1006000625",
+          "next_station_id": "1006000627",
+          "terminal_station_id": "1006000647",
+          "terminal_station": "봉화산",
+          "train_number": "6105",
+          "arrival_order": "12009봉화산0",
+          "received_at": "2026-10-09 12:54:29",
+          "received_age_seconds": 50,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "하행",
+          "route_label": "서울행 - 서울방면 (급행)",
+          "message": "[11]번째 전역 (인천공항1터미널)",
+          "position": "인천공항1터미널",
+          "arrival_code": "99",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006501",
+          "next_station_id": "1065006503",
+          "terminal_station_id": "1065006501",
+          "terminal_station": "서울",
+          "train_number": "A1024",
+          "arrival_order": "12011서울1",
+          "received_at": "2026-10-09 12:52:42",
+          "received_age_seconds": 157,
+          "source_clock_ahead": false,
+          "train_status": "급행"
+        }
+      ],
+      "kind": "subway_arrival",
+      "schema_version": "1.1",
+      "provider_total": 18,
+      "response_row_count": 18,
+      "coverage_complete": true,
+      "confirmed_at": "2026-10-09T03:55:19.328584+00:00",
+      "source": "seoul_subway_arrival"
+    },
+    {
+      "station": "공덕",
+      "line": null,
+      "trains": [
+        {
+          "line": "공항철도",
+          "direction": "상행",
+          "route_label": "인천공항2터미널행 - 홍대입구방면",
+          "message": "공덕 도착",
+          "position": "공덕",
+          "arrival_code": "1",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006503",
+          "next_station_id": "1065006501",
+          "terminal_station_id": "1065006511",
+          "terminal_station": "인천공항2터미널",
+          "train_number": "A2113",
+          "arrival_order": "01000인천공항2터미널0",
+          "received_at": "2026-10-09 12:50:56",
+          "received_age_seconds": 263,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "상행",
+          "route_label": "인천공항2터미널행 - 홍대입구방면 (급행)",
+          "message": "공덕 출발",
+          "position": "공덕",
+          "arrival_code": "2",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006503",
+          "next_station_id": "1065006501",
+          "terminal_station_id": "1065006511",
+          "terminal_station": "인천공항2터미널",
+          "train_number": "A1021",
+          "arrival_order": "01000인천공항2터미널1",
+          "received_at": "2026-10-09 12:54:01",
+          "received_age_seconds": 78,
+          "source_clock_ahead": false,
+          "train_status": "급행"
+        },
+        {
+          "line": "경의중앙선",
+          "direction": "상행",
+          "route_label": "문산행 - 서강대방면",
+          "message": "전역 진입",
+          "position": "효창공원앞",
+          "arrival_code": "4",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1063",
+          "station_id": "1063075312",
+          "previous_station_id": "1063075826",
+          "next_station_id": "1063075313",
+          "terminal_station_id": "1063075335",
+          "terminal_station": "문산",
+          "train_number": "5056",
+          "arrival_order": "01001문산0",
+          "received_at": "2026-10-09 12:54:27",
+          "received_age_seconds": 52,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "5호선",
+          "direction": "상행",
+          "route_label": "방화행 - 마포방면",
+          "message": "전역 도착",
+          "position": "애오개",
+          "arrival_code": "5",
+          "eta_seconds": 120,
+          "eta_status": "valid",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "previous_station_id": "1005000530",
+          "next_station_id": "1005000528",
+          "terminal_station_id": "1005000510",
+          "terminal_station": "방화",
+          "train_number": "5072",
+          "arrival_order": "01001방화0",
+          "received_at": "2026-10-09 12:54:15",
+          "received_age_seconds": 64,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "6호선",
+          "direction": "상행",
+          "route_label": "응암순환(상선)행 - 대흥(서강대앞)방면",
+          "message": "8분 후 (이태원)",
+          "position": "이태원",
+          "arrival_code": "99",
+          "eta_seconds": 480,
+          "eta_status": "valid",
+          "line_id": "1006",
+          "station_id": "1006000626",
+          "previous_station_id": "1006000627",
+          "next_station_id": "1006000625",
+          "terminal_station_id": "1006000610",
+          "terminal_station": "응암순환(상선)",
+          "train_number": "6104",
+          "arrival_order": "01004응암순환(상선)0",
+          "received_at": "2026-10-09 12:54:18",
+          "received_age_seconds": 61,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "5호선",
+          "direction": "상행",
+          "route_label": "방화행 - 마포방면",
+          "message": "9분 후 (종로3가)",
+          "position": "종로3가",
+          "arrival_code": "99",
+          "eta_seconds": 540,
+          "eta_status": "valid",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "previous_station_id": "1005000530",
+          "next_station_id": "1005000528",
+          "terminal_station_id": "1005000510",
+          "terminal_station": "방화",
+          "train_number": "5562",
+          "arrival_order": "02005방화0",
+          "received_at": "2026-10-09 12:54:15",
+          "received_age_seconds": 64,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "경의중앙선",
+          "direction": "상행",
+          "route_label": "문산행 - 서강대방면",
+          "message": "[7]번째 전역 (응봉)",
+          "position": "응봉",
+          "arrival_code": "99",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1063",
+          "station_id": "1063075312",
+          "previous_station_id": "1063075826",
+          "next_station_id": "1063075313",
+          "terminal_station_id": "1063075335",
+          "terminal_station": "문산",
+          "train_number": "5058",
+          "arrival_order": "02007문산0",
+          "received_at": "2026-10-09 12:54:27",
+          "received_age_seconds": 52,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "6호선",
+          "direction": "상행",
+          "route_label": "응암순환(상선)행 - 대흥(서강대앞)방면",
+          "message": "16분 후 (신당)",
+          "position": "신당",
+          "arrival_code": "99",
+          "eta_seconds": 960,
+          "eta_status": "valid",
+          "line_id": "1006",
+          "station_id": "1006000626",
+          "previous_station_id": "1006000627",
+          "next_station_id": "1006000625",
+          "terminal_station_id": "1006000610",
+          "terminal_station": "응암순환(상선)",
+          "train_number": "6106",
+          "arrival_order": "02009응암순환(상선)0",
+          "received_at": "2026-10-09 12:54:18",
+          "received_age_seconds": 61,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "하행",
+          "route_label": "서울행 - 서울방면",
+          "message": "공덕 도착",
+          "position": "공덕",
+          "arrival_code": "1",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006501",
+          "next_station_id": "1065006503",
+          "terminal_station_id": "1065006501",
+          "terminal_station": "서울",
+          "train_number": "A2112",
+          "arrival_order": "11000서울0",
+          "received_at": "2026-10-09 12:53:28",
+          "received_age_seconds": 111,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "경의중앙선",
+          "direction": "하행",
+          "route_label": "용문행 - 효창공원앞방면",
+          "message": "전역 도착",
+          "position": "서강대",
+          "arrival_code": "5",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1063",
+          "station_id": "1063075312",
+          "previous_station_id": "1063075313",
+          "next_station_id": "1063075826",
+          "terminal_station_id": "1063075137",
+          "terminal_station": "용문",
+          "train_number": "5061",
+          "arrival_order": "11001용문0",
+          "received_at": "2026-10-09 12:53:10",
+          "received_age_seconds": 129,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "하행",
+          "route_label": "서울행 - 서울방면 (급행)",
+          "message": "[2]번째 전역 (디지털미디어시티)",
+          "position": "디지털미디어시티",
+          "arrival_code": "99",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006501",
+          "next_station_id": "1065006503",
+          "terminal_station_id": "1065006501",
+          "terminal_station": "서울",
+          "train_number": "A1022",
+          "arrival_order": "11002서울1",
+          "received_at": "2026-10-09 12:52:42",
+          "received_age_seconds": 157,
+          "source_clock_ahead": false,
+          "train_status": "급행"
+        },
+        {
+          "line": "5호선",
+          "direction": "하행",
+          "route_label": "하남검단산행 - 애오개방면",
+          "message": "5분 후 (여의나루)",
+          "position": "여의나루",
+          "arrival_code": "99",
+          "eta_seconds": 300,
+          "eta_status": "valid",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "previous_station_id": "1005000528",
+          "next_station_id": "1005000530",
+          "terminal_station_id": "1005000558",
+          "terminal_station": "하남검단산",
+          "train_number": "5071",
+          "arrival_order": "11002하남검단산0",
+          "received_at": "2026-10-09 12:54:26",
+          "received_age_seconds": 53,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "6호선",
+          "direction": "하행",
+          "route_label": "신내행 - 효창공원앞방면",
+          "message": "7분 후 (합정)",
+          "position": "합정",
+          "arrival_code": "99",
+          "eta_seconds": 420,
+          "eta_status": "valid",
+          "line_id": "1006",
+          "station_id": "1006000626",
+          "previous_station_id": "1006000625",
+          "next_station_id": "1006000627",
+          "terminal_station_id": "1006000648",
+          "terminal_station": "신내",
+          "train_number": "6103",
+          "arrival_order": "11004신내0",
+          "received_at": "2026-10-09 12:54:29",
+          "received_age_seconds": 50,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "하행",
+          "route_label": "서울행 - 서울방면",
+          "message": "공덕 출발",
+          "position": "공덕",
+          "arrival_code": "2",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006501",
+          "next_station_id": "1065006503",
+          "terminal_station_id": "1065006501",
+          "terminal_station": "서울",
+          "train_number": "A2110",
+          "arrival_order": "12000서울0",
+          "received_at": "2026-10-09 12:53:28",
+          "received_age_seconds": 111,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "5호선",
+          "direction": "하행",
+          "route_label": "마천행 - 애오개방면",
+          "message": "11분 후 (영등포시장)",
+          "position": "영등포시장",
+          "arrival_code": "99",
+          "eta_seconds": 660,
+          "eta_status": "valid",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "previous_station_id": "1005000528",
+          "next_station_id": "1005000530",
+          "terminal_station_id": "1005080555",
+          "terminal_station": "마천",
+          "train_number": "5577",
+          "arrival_order": "12005마천0",
+          "received_at": "2026-10-09 12:54:26",
+          "received_age_seconds": 53,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "경의중앙선",
+          "direction": "하행",
+          "route_label": "덕소행 - 효창공원앞방면",
+          "message": "[9]번째 전역 (강매)",
+          "position": "강매",
+          "arrival_code": "99",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1063",
+          "station_id": "1063075312",
+          "previous_station_id": "1063075313",
+          "next_station_id": "1063075826",
+          "terminal_station_id": "1063075126",
+          "terminal_station": "덕소",
+          "train_number": "5063",
+          "arrival_order": "12009덕소0",
+          "received_at": "2026-10-09 12:53:10",
+          "received_age_seconds": 129,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "6호선",
+          "direction": "하행",
+          "route_label": "봉화산행 - 효창공원앞방면",
+          "message": "16분 후 (증산(명지대앞))",
+          "position": "증산(명지대앞)",
+          "arrival_code": "99",
+          "eta_seconds": 960,
+          "eta_status": "valid",
+          "line_id": "1006",
+          "station_id": "1006000626",
+          "previous_station_id": "1006000625",
+          "next_station_id": "1006000627",
+          "terminal_station_id": "1006000647",
+          "terminal_station": "봉화산",
+          "train_number": "6105",
+          "arrival_order": "12009봉화산0",
+          "received_at": "2026-10-09 12:54:29",
+          "received_age_seconds": 50,
+          "source_clock_ahead": false,
+          "train_status": "일반"
+        },
+        {
+          "line": "공항철도",
+          "direction": "하행",
+          "route_label": "서울행 - 서울방면 (급행)",
+          "message": "[11]번째 전역 (인천공항1터미널)",
+          "position": "인천공항1터미널",
+          "arrival_code": "99",
+          "eta_seconds": 0,
+          "eta_status": "valid",
+          "line_id": "1065",
+          "station_id": "1065006502",
+          "previous_station_id": "1065006501",
+          "next_station_id": "1065006503",
+          "terminal_station_id": "1065006501",
+          "terminal_station": "서울",
+          "train_number": "A1024",
+          "arrival_order": "12011서울1",
+          "received_at": "2026-10-09 12:52:42",
+          "received_age_seconds": 157,
+          "source_clock_ahead": false,
+          "train_status": "급행"
+        }
+      ],
+      "kind": "subway_arrival",
+      "schema_version": "1.1",
+      "provider_total": 18,
+      "response_row_count": 18,
+      "coverage_complete": true,
+      "confirmed_at": "2026-10-09T03:55:19.380103+00:00",
+      "source": "seoul_subway_arrival"
+    }
+  ],
+  "misses": {},
+  "map_developer_api_calls": 0,
+  "new_map_web_samples": 0,
+  "actual_eta_accuracy_samples": 0,
+  "actual_boardings": 0,
+  "claim": "제품 관측기에서 공덕 도착정보를 실제 조회하고 같은30초 보관 응답을 두 경로에 대조. 두 경로를 두 독립 응답으로 세지 않음. 장소/접근/퇴장 통제·승차 이후 모델.",
+  "raw_responses": [
+    {
+      "http_status": 200,
+      "code": "INFO-000",
+      "total": 18,
+      "rows": 18,
+      "raw_path": "datasets/mobility/raw/2026-10-09_1248_지하철_방면과_인접역ID_대조/response-1-v1.json",
+      "raw_sha256": "5b129dd1180ceca7123e2bee821503467b313d8cfb878ce99746f28b3a84075e",
+      "key_redacted": false
+    },
+    {
+      "http_status": 200,
+      "code": "INFO-000",
+      "total": 18,
+      "rows": 18,
+      "raw_path": "datasets/mobility/raw/2026-10-09_1248_지하철_방면과_인접역ID_대조/response-2-v1.json",
+      "raw_sha256": "5b129dd1180ceca7123e2bee821503467b313d8cfb878ce99746f28b3a84075e",
+      "key_redacted": false
+    }
+  ]
+}

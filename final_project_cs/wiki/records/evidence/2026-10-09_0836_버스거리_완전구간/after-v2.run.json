@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/travel/mobility/test_bus_distance_completeness_v1.py",
+    "tests/unit/travel/mobility/test_bus_stop_identity_v1.py",
+    "tests/unit/travel/mobility/test_bus_profile_unit.py",
+    "tests/unit/travel/mobility/test_bus_to_bus.py",
+    "tests/unit/travel/mobility/test_departure_observer_v1.py",
+    "tests/unit/travel/mobility/test_arrival_query_clock_v1.py",
+    "tests/unit/travel/mobility/test_mixed_fare_upper_v1.py",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0836_버스거리_완전구간\\after-v2.xml"
+  ],
+  "exit_code": 0
+}

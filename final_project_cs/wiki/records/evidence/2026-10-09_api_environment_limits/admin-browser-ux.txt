@@ -1,0 +1,16 @@
+[WebServer] (node:24752) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 7 tests using 1 worker
+
+(node:8492) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\live\api-limits-proxy.spec.ts:18:1 › API 한도·감시 이력·시뮬레이션 경로와 검색 조건을 실제 중계한다 (157ms)
+  ok 2 tests\live\api-limits.spec.ts:9:1 › ENV 한도·기본값·현재 사용·마지막 상한을 구분하고 검색·다시 읽기한다 (1.4s)
+  ok 3 tests\live\api-limits.spec.ts:43:1 › 375px에서 조회 오류·재시도·DB 오류를 숨기지 않는다 (697ms)
+  ok 4 tests\live\monitoring.spec.ts:7:1 › 현재 상태·과거 회차·항목별 결과와 필터를 확인한다 (636ms)
+  ok 5 tests\live\monitoring.spec.ts:33:1 › 375px에서 오류·빈 이력과 날짜 검증을 실제 화면으로 확인한다 (650ms)
+  ok 6 tests\live\simulation.spec.ts:6:1 › 재난 N종 선택·적용·중지와 실행별 알림을 실제 관리자 화면에서 확인한다 (833ms)
+  ok 7 tests\live\simulation.spec.ts:53:1 › 좁은 화면에서 6개 스위치를 키보드로 조작한다 (551ms)
+
+  7 passed (7.6s)

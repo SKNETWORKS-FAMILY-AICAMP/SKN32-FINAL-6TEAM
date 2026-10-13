@@ -1,0 +1,43 @@
+{
+  "captured_at_utc": "2026-10-11T13:55:48.670256+00:00",
+  "conclusion": "기존 DB 두 곳에 이커머스 표 5개가 남음. 로컬 제외 규칙은 배포되지 않음. 삭제·배포하지 않음.",
+  "tests": [
+    {
+      "scope": "공통 계약·SQL 입력 관련",
+      "passed": 35,
+      "log": "common-focused.log"
+    },
+    {
+      "scope": "여행 경로·평가 관련",
+      "passed": 17,
+      "log": "travel-focused.log"
+    },
+    {
+      "scope": "임시 DB 재실행·재생성 방지",
+      "passed": 4,
+      "log": "db-migration-tests.log"
+    },
+    {
+      "scope": "여행 예문 교체",
+      "passed": 1,
+      "log": "sentiment-example-test-v2.log"
+    }
+  ],
+  "passed_related_tests": 57,
+  "full_suite_execution_complete": false,
+  "common_collected": 775,
+  "travel_collected": 6004,
+  "static_checks": {
+    "passed": 29,
+    "total": 29
+  },
+  "javascript_simulation": {
+    "passed": 8,
+    "total": 8
+  },
+  "browser_rendering_checked": false,
+  "retired_asset_guard": {
+    "violations": 0,
+    "scope": "active app/tests Python AST literals/imports plus Docker backup exclusion; not all domain semantics"
+  }
+}

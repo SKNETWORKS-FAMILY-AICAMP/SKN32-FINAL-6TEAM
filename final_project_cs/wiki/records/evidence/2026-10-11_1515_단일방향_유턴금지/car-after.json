@@ -1,0 +1,1002 @@
+[
+  {
+    "id": "N001",
+    "a": "마포역",
+    "b": "강동역",
+    "distance_m": 22101.51,
+    "model_seconds": 1197.775,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.6811025000060908
+  },
+  {
+    "id": "N002",
+    "a": "서울시립미술관",
+    "b": "동대문디자인플라자",
+    "distance_m": 3457.55,
+    "model_seconds": 240.944,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.017452200001571327
+  },
+  {
+    "id": "N003",
+    "a": "광장시장",
+    "b": "이수역",
+    "distance_m": 12570.37,
+    "model_seconds": 1006.505,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.6584088999952655
+  },
+  {
+    "id": "N004",
+    "a": "전쟁기념관",
+    "b": "올림픽공원",
+    "distance_m": 17495.01,
+    "model_seconds": 1456.907,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 1.7551260000036564
+  },
+  {
+    "id": "N005",
+    "a": "월드컵공원",
+    "b": "덕수궁",
+    "distance_m": 9978.37,
+    "model_seconds": 869.223,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.49291649999213405
+  },
+  {
+    "id": "N006",
+    "a": "서대문역",
+    "b": "구의역",
+    "distance_m": 14087.34,
+    "model_seconds": 1018.742,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.9656438000092749
+  },
+  {
+    "id": "N007",
+    "a": "신림역",
+    "b": "인사동",
+    "distance_m": 13271.09,
+    "model_seconds": 1212.299,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.8050838999915868
+  },
+  {
+    "id": "N008",
+    "a": "서울월드컵경기장",
+    "b": "가산디지털단지역",
+    "distance_m": 12252.23,
+    "model_seconds": 912.887,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.31058809999376535
+  },
+  {
+    "id": "N009",
+    "a": "상봉역",
+    "b": "북촌한옥마을",
+    "distance_m": 10637.03,
+    "model_seconds": 893.991,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.5995078999840189
+  },
+  {
+    "id": "N010",
+    "a": "도봉산역",
+    "b": "동대문디자인플라자",
+    "distance_m": 19041.63,
+    "model_seconds": 1257.602,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.4958973999891896
+  },
+  {
+    "id": "N011",
+    "a": "경복궁",
+    "b": "노원역",
+    "distance_m": 17794.58,
+    "model_seconds": 1222.616,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.6930185999954119
+  },
+  {
+    "id": "N012",
+    "a": "광장시장",
+    "b": "시청역",
+    "distance_m": 2375.8,
+    "model_seconds": 166.592,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.01956610000343062
+  },
+  {
+    "id": "N013",
+    "a": "창동역",
+    "b": "충정로역",
+    "distance_m": 19279.92,
+    "model_seconds": 1329.554,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.9009593999944627
+  },
+  {
+    "id": "N014",
+    "a": "마포역",
+    "b": "영등포역",
+    "distance_m": 4680.24,
+    "model_seconds": 414.319,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.04975629999535158
+  },
+  {
+    "id": "N015",
+    "a": "상봉역",
+    "b": "선유도공원",
+    "distance_m": 25448.6,
+    "model_seconds": 1493.613,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 1.281372099998407
+  },
+  {
+    "id": "N016",
+    "a": "서울월드컵경기장",
+    "b": "경복궁",
+    "distance_m": 9400.85,
+    "model_seconds": 879.934,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.30604049999965355
+  },
+  {
+    "id": "N017",
+    "a": "N서울타워",
+    "b": "종묘",
+    "distance_m": 3654.52,
+    "model_seconds": 326.987,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.023651399998925626
+  },
+  {
+    "id": "N018",
+    "a": "북서울꿈의숲",
+    "b": "고속터미널역",
+    "distance_m": 18854.41,
+    "model_seconds": 1512.141,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.8435844999912661
+  },
+  {
+    "id": "N019",
+    "a": "자양사거리",
+    "b": "선릉역",
+    "distance_m": 8149.31,
+    "model_seconds": 617.88,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.0997221999859903
+  },
+  {
+    "id": "N020",
+    "a": "경희궁",
+    "b": "반포한강공원",
+    "distance_m": 10767.37,
+    "model_seconds": 882.812,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.3202162000234239
+  },
+  {
+    "id": "N021",
+    "a": "종묘",
+    "b": "신촌역",
+    "distance_m": 6172.41,
+    "model_seconds": 512.895,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.11562939998111688
+  },
+  {
+    "id": "N022",
+    "a": "송파역",
+    "b": "압구정로데오",
+    "distance_m": 9686.54,
+    "model_seconds": 755.601,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.20953239998198114
+  },
+  {
+    "id": "N023",
+    "a": "경희궁",
+    "b": "목동역",
+    "distance_m": 13187.19,
+    "model_seconds": 1128.131,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.7268724000023212
+  },
+  {
+    "id": "N024",
+    "a": "국립중앙박물관",
+    "b": "봉천역",
+    "distance_m": 7603.31,
+    "model_seconds": 906.006,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.13327659998321906
+  },
+  {
+    "id": "N025",
+    "a": "천호역",
+    "b": "건대입구역",
+    "distance_m": 5319.02,
+    "model_seconds": 484.537,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.07290119997924194
+  },
+  {
+    "id": "N026",
+    "a": "공덕역",
+    "b": "익선동",
+    "distance_m": 5198.29,
+    "model_seconds": 464.878,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.07775920000858605
+  },
+  {
+    "id": "N027",
+    "a": "구의역",
+    "b": "예술의전당",
+    "distance_m": 12980.49,
+    "model_seconds": 1089.712,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.3599707999965176
+  },
+  {
+    "id": "N028",
+    "a": "종묘",
+    "b": "마포역",
+    "distance_m": 6730.46,
+    "model_seconds": 561.997,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.09888239999418147
+  },
+  {
+    "id": "N029",
+    "a": "당산역",
+    "b": "혜화역",
+    "distance_m": 13363.07,
+    "model_seconds": 999.382,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.3335372000001371
+  },
+  {
+    "id": "N030",
+    "a": "동묘앞역",
+    "b": "종각역",
+    "distance_m": 3159.91,
+    "model_seconds": 235.714,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.022241200000280514
+  },
+  {
+    "id": "N031",
+    "a": "용산역",
+    "b": "남산골한옥마을",
+    "distance_m": 5855.99,
+    "model_seconds": 677.204,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.07222229999024421
+  },
+  {
+    "id": "N032",
+    "a": "공덕역",
+    "b": "뚝섬한강공원",
+    "distance_m": 15352.03,
+    "model_seconds": 763.974,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.1162756999838166
+  },
+  {
+    "id": "N033",
+    "a": "중랑역",
+    "b": "63스퀘어",
+    "distance_m": 19997.01,
+    "model_seconds": 1182.708,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.7197444000048563
+  },
+  {
+    "id": "N034",
+    "a": "노원역",
+    "b": "잠실종합운동장",
+    "distance_m": 23758.4,
+    "model_seconds": 1489.444,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.6663760999799706
+  },
+  {
+    "id": "N035",
+    "a": "송파역",
+    "b": "서울대입구역",
+    "distance_m": 17593.15,
+    "model_seconds": 1339.765,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.653954999987036
+  },
+  {
+    "id": "N036",
+    "a": "청량리역",
+    "b": "잠실새내역",
+    "distance_m": 12046.59,
+    "model_seconds": 951.692,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.3694839999952819
+  },
+  {
+    "id": "N037",
+    "a": "용산역",
+    "b": "공덕역",
+    "distance_m": 2388.12,
+    "model_seconds": 332.691,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.012628299999050796
+  },
+  {
+    "id": "N038",
+    "a": "서울숲",
+    "b": "중랑역",
+    "distance_m": 8993.06,
+    "model_seconds": 484.704,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.06690140001592226
+  },
+  {
+    "id": "N039",
+    "a": "광화문",
+    "b": "강동역",
+    "distance_m": 15548.16,
+    "model_seconds": 1188.729,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.735401300014928
+  },
+  {
+    "id": "N040",
+    "a": "혜화역",
+    "b": "서울숲",
+    "distance_m": 7769.08,
+    "model_seconds": 575.417,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.1997947000199929
+  },
+  {
+    "id": "N041",
+    "a": "길상사",
+    "b": "인사동",
+    "distance_m": 3862.94,
+    "model_seconds": 444.86,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.028268599999137223
+  },
+  {
+    "id": "N042",
+    "a": "노량진역",
+    "b": "용산역",
+    "distance_m": 4339.8,
+    "model_seconds": 508.651,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.036443600023631006
+  },
+  {
+    "id": "N043",
+    "a": "미아사거리역",
+    "b": "서울숲",
+    "distance_m": 10785.23,
+    "model_seconds": 675.11,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.18725099999574013
+  },
+  {
+    "id": "N044",
+    "a": "예술의전당",
+    "b": "잠실나루역",
+    "distance_m": 14493.1,
+    "model_seconds": 1322.919,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.2230719999934081
+  },
+  {
+    "id": "N045",
+    "a": "고속터미널역",
+    "b": "망원시장",
+    "distance_m": 13967.38,
+    "model_seconds": 923.132,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.22852479998255149
+  },
+  {
+    "id": "N046",
+    "a": "마포역",
+    "b": "통인시장",
+    "distance_m": 6416.85,
+    "model_seconds": 564.675,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.1384505000023637
+  },
+  {
+    "id": "N047",
+    "a": "신사역",
+    "b": "잠실새내역",
+    "distance_m": 8619.94,
+    "model_seconds": 544.403,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.06405139999696985
+  },
+  {
+    "id": "N048",
+    "a": "강동역",
+    "b": "동대문디자인플라자",
+    "distance_m": 13167.54,
+    "model_seconds": 1068.666,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.2571264000143856
+  },
+  {
+    "id": "N049",
+    "a": "인사동",
+    "b": "잠실종합운동장",
+    "distance_m": 14267.2,
+    "model_seconds": 1020.659,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.42735280000488274
+  },
+  {
+    "id": "N050",
+    "a": "잠실종합운동장",
+    "b": "어린이대공원",
+    "distance_m": 6271.45,
+    "model_seconds": 640.217,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.050321999995503575
+  },
+  {
+    "id": "N051",
+    "a": "노원역",
+    "b": "서울월드컵경기장",
+    "distance_m": 24503.96,
+    "model_seconds": 1458.861,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.8187478999898303
+  },
+  {
+    "id": "N052",
+    "a": "망원시장",
+    "b": "뚝섬한강공원",
+    "distance_m": 18596.45,
+    "model_seconds": 947.735,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.1628748000075575
+  },
+  {
+    "id": "N053",
+    "a": "이화여대",
+    "b": "국립현대미술관 서울",
+    "distance_m": 4405.64,
+    "model_seconds": 432.63,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.02978309997706674
+  },
+  {
+    "id": "N054",
+    "a": "회현역",
+    "b": "가로수길",
+    "distance_m": 7333.05,
+    "model_seconds": 588.133,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.11765070000546984
+  },
+  {
+    "id": "N055",
+    "a": "동대문역",
+    "b": "올림픽공원",
+    "distance_m": 17930.86,
+    "model_seconds": 1352.271,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 1.8457059999927878
+  },
+  {
+    "id": "N056",
+    "a": "신도림역",
+    "b": "광화문",
+    "distance_m": 11699.32,
+    "model_seconds": 962.541,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.41884950001258403
+  },
+  {
+    "id": "N057",
+    "a": "뚝섬한강공원",
+    "b": "63스퀘어",
+    "distance_m": 14669.98,
+    "model_seconds": 973.659,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.31606800001463853
+  },
+  {
+    "id": "N058",
+    "a": "익선동",
+    "b": "성신여대입구역",
+    "distance_m": 3965.05,
+    "model_seconds": 380.041,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.09266480000223964
+  },
+  {
+    "id": "N059",
+    "a": "독산역",
+    "b": "압구정로데오",
+    "distance_m": 19647.53,
+    "model_seconds": 1372.613,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.7000920999853406
+  },
+  {
+    "id": "N060",
+    "a": "청담역",
+    "b": "반포한강공원",
+    "distance_m": 7814.85,
+    "model_seconds": 791.711,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.14080930000636727
+  },
+  {
+    "id": "N061",
+    "a": "성신여대입구역",
+    "b": "경희궁",
+    "distance_m": 5844.94,
+    "model_seconds": 503.617,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.09921019998728298
+  },
+  {
+    "id": "N062",
+    "a": "강남역",
+    "b": "봉천역",
+    "distance_m": 8909.36,
+    "model_seconds": 718.731,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.12225159999798052
+  },
+  {
+    "id": "N063",
+    "a": "광화문",
+    "b": "N서울타워",
+    "distance_m": 4906.35,
+    "model_seconds": 425.381,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.07695999997667968
+  },
+  {
+    "id": "N064",
+    "a": "길상사",
+    "b": "동묘앞역",
+    "distance_m": 4947.97,
+    "model_seconds": 449.288,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.029288899997482076
+  },
+  {
+    "id": "N065",
+    "a": "길상사",
+    "b": "효창공원",
+    "distance_m": 8936.39,
+    "model_seconds": 958.155,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.31747209999593906
+  },
+  {
+    "id": "N066",
+    "a": "종묘",
+    "b": "서대문역",
+    "distance_m": 3015.34,
+    "model_seconds": 228.759,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.016136499994900078
+  },
+  {
+    "id": "N067",
+    "a": "명동성당",
+    "b": "왕십리역",
+    "distance_m": 4905.08,
+    "model_seconds": 456.302,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.0650811999803409
+  },
+  {
+    "id": "N068",
+    "a": "익선동",
+    "b": "건대입구역",
+    "distance_m": 9516.77,
+    "model_seconds": 846.327,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.34630159998778254
+  },
+  {
+    "id": "N069",
+    "a": "합정역",
+    "b": "용산역",
+    "distance_m": 7034.26,
+    "model_seconds": 533.433,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.08750160000636242
+  },
+  {
+    "id": "N070",
+    "a": "국립현대미술관 서울",
+    "b": "어린이대공원",
+    "distance_m": 11377.37,
+    "model_seconds": 891.149,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.2881568000011612
+  },
+  {
+    "id": "N071",
+    "a": "서울역",
+    "b": "북촌한옥마을",
+    "distance_m": 4611.89,
+    "model_seconds": 492.965,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.0948723999899812
+  },
+  {
+    "id": "N072",
+    "a": "영등포역",
+    "b": "국립중앙박물관",
+    "distance_m": 8523.72,
+    "model_seconds": 840.887,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.2253058000060264
+  },
+  {
+    "id": "N073",
+    "a": "여의도한강공원",
+    "b": "마포역",
+    "distance_m": 2045.65,
+    "model_seconds": 153.701,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.003506299981381744
+  },
+  {
+    "id": "N074",
+    "a": "노들섬",
+    "b": "경복궁",
+    "distance_m": 9139.22,
+    "model_seconds": 818.655,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.16712170001119375
+  },
+  {
+    "id": "N075",
+    "a": "경희궁",
+    "b": "수유역",
+    "distance_m": 12358.51,
+    "model_seconds": 1043.287,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.3897177000180818
+  },
+  {
+    "id": "N076",
+    "a": "청담역",
+    "b": "동대문디자인플라자",
+    "distance_m": 8240.8,
+    "model_seconds": 832.768,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.19279470000765286
+  },
+  {
+    "id": "N077",
+    "a": "신사역",
+    "b": "인사동",
+    "distance_m": 7722.13,
+    "model_seconds": 598.869,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.1454129999910947
+  },
+  {
+    "id": "N078",
+    "a": "서울월드컵경기장",
+    "b": "경희궁",
+    "distance_m": 8096.78,
+    "model_seconds": 844.69,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.41797939999378286
+  },
+  {
+    "id": "N079",
+    "a": "남산골한옥마을",
+    "b": "동대문역",
+    "distance_m": 2195.68,
+    "model_seconds": 210.844,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.01619700001901947
+  },
+  {
+    "id": "N080",
+    "a": "익선동",
+    "b": "아현역",
+    "distance_m": 3989.63,
+    "model_seconds": 316.634,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.030736300017451867
+  },
+  {
+    "id": "N081",
+    "a": "이화여대",
+    "b": "용산역",
+    "distance_m": 5690.66,
+    "model_seconds": 718.835,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.28358739998657256
+  },
+  {
+    "id": "N082",
+    "a": "노원역",
+    "b": "회기역",
+    "distance_m": 9419.41,
+    "model_seconds": 629.667,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.11874360000365414
+  },
+  {
+    "id": "N083",
+    "a": "선릉역",
+    "b": "잠실새내역",
+    "distance_m": 3404.95,
+    "model_seconds": 306.445,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.021261999994749203
+  },
+  {
+    "id": "N084",
+    "a": "대방역",
+    "b": "반포한강공원",
+    "distance_m": 9457.4,
+    "model_seconds": 731.148,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.1530551000032574
+  },
+  {
+    "id": "N085",
+    "a": "영등포역",
+    "b": "이수역",
+    "distance_m": 9388.05,
+    "model_seconds": 693.594,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.13059329998213798
+  },
+  {
+    "id": "N086",
+    "a": "국립현대미술관 서울",
+    "b": "회기역",
+    "distance_m": 8582.29,
+    "model_seconds": 671.94,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.21182289998978376
+  },
+  {
+    "id": "N087",
+    "a": "회기역",
+    "b": "이태원역",
+    "distance_m": 10111.17,
+    "model_seconds": 843.14,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.4407296999997925
+  },
+  {
+    "id": "N088",
+    "a": "낙산공원",
+    "b": "삼청동",
+    "distance_m": 3999.58,
+    "model_seconds": 517.725,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.042550800018943846
+  },
+  {
+    "id": "N089",
+    "a": "명동성당",
+    "b": "국립현대미술관 서울",
+    "distance_m": 2526.3,
+    "model_seconds": 273.904,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.01751410000724718
+  },
+  {
+    "id": "N090",
+    "a": "공덕역",
+    "b": "청계천 광통교",
+    "distance_m": 4367.08,
+    "model_seconds": 374.403,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.043937899987213314
+  },
+  {
+    "id": "N091",
+    "a": "회현역",
+    "b": "광장시장",
+    "distance_m": 3385.83,
+    "model_seconds": 247.026,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.0254053000244312
+  },
+  {
+    "id": "N092",
+    "a": "종묘",
+    "b": "덕수궁",
+    "distance_m": 2550.46,
+    "model_seconds": 240.11,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.017331600014586
+  },
+  {
+    "id": "N093",
+    "a": "시청역",
+    "b": "혜화역",
+    "distance_m": 3903.83,
+    "model_seconds": 259.798,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.029784200014546514
+  },
+  {
+    "id": "N094",
+    "a": "화곡역",
+    "b": "구로디지털단지역",
+    "distance_m": 10558.78,
+    "model_seconds": 920.827,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.23988590002409182
+  },
+  {
+    "id": "N095",
+    "a": "신촌역",
+    "b": "노들섬",
+    "distance_m": 6469.31,
+    "model_seconds": 534.288,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.09854750000522472
+  },
+  {
+    "id": "N096",
+    "a": "용리단길",
+    "b": "서울역",
+    "distance_m": 2372.72,
+    "model_seconds": 297.099,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.012302499992074445
+  },
+  {
+    "id": "N097",
+    "a": "청량리역",
+    "b": "왕십리역",
+    "distance_m": 3044.19,
+    "model_seconds": 326.834,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.04279450001195073
+  },
+  {
+    "id": "N098",
+    "a": "양재시민의숲",
+    "b": "양재역",
+    "distance_m": 1873.37,
+    "model_seconds": 168.838,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.00937859999248758
+  },
+  {
+    "id": "N099",
+    "a": "덕수궁",
+    "b": "이태원역",
+    "distance_m": 4717.11,
+    "model_seconds": 451.554,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.09677109998301603
+  },
+  {
+    "id": "N100",
+    "a": "압구정로데오",
+    "b": "삼성역",
+    "distance_m": 3464.41,
+    "model_seconds": 310.302,
+    "new_uturn_occurrences": [],
+    "applied_relations": 4706,
+    "elapsed_seconds": 0.02022819998092018
+  }
+]

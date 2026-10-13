@@ -1,0 +1,91 @@
+{
+  "original_job": "e4bqat_original_d",
+  "trained_job": "e4bqat_oos2r_d",
+  "suite": "D",
+  "original_model": "Gemma-4-E4B-it QAT Q4_0 original",
+  "our_adapter_model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2r adapter",
+  "original_answer_sha256": "c5bc8426c21ad27ae6de5ae6a1c43f68e5d69fb5982f280665de1e26c01b042c",
+  "trained_answer_sha256": "9ffee3d257a874322d647b70fcd564cec12c6a83c0c13cfe72cd73e745dd00c0",
+  "full_ids_gold_type_match": true,
+  "frozen_input_script_engine_model_match": true,
+  "registered_adapter_hash_match": true,
+  "original_our_training": false,
+  "adapter_our_training": true,
+  "groups": {
+    "positive": {
+      "total": 883,
+      "original": {
+        "total": 883,
+        "correct": 730,
+        "false_pick": 0,
+        "failed_or_missing": 12,
+        "correct_wilson95": [
+          0.8003617637619037,
+          0.8502618558953058
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.004331618444859839
+        ]
+      },
+      "our_travel_adapter": {
+        "total": 883,
+        "correct": 784,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8653688141436724,
+          0.9070353097128068
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.004331618444859839
+        ]
+      },
+      "trained_only_correct": 68,
+      "original_only_correct": 14,
+      "exact_p": 1.1349339471612945e-09
+    },
+    "negative": {
+      "total": 1786,
+      "original": {
+        "total": 1786,
+        "correct": 1707,
+        "false_pick": 76,
+        "failed_or_missing": 3,
+        "correct_wilson95": [
+          0.9452132486221798,
+          0.964364519831497
+        ],
+        "false_pick_wilson95": [
+          0.03413245783585641,
+          0.05293752149257879
+        ]
+      },
+      "our_travel_adapter": {
+        "total": 1786,
+        "correct": 1781,
+        "false_pick": 5,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9934630324010345,
+          0.9988036240938856
+        ],
+        "false_pick_wilson95": [
+          0.001196375906114521,
+          0.00653696759896559
+        ]
+      },
+      "trained_only_correct": 78,
+      "original_only_correct": 4,
+      "exact_p": 7.614296800224126e-19
+    }
+  },
+  "repetitions": 1,
+  "final_ranking": false,
+  "limitations": [
+    "existing developer/regression suite",
+    "paired exact test does not replace independent holdout or seed repeats",
+    "no direct speed comparison"
+  ]
+}

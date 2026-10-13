@@ -1,0 +1,755 @@
+{
+  "observed_at_utc": "2026-10-09T01:05:14.907059+00:00",
+  "scope": "Public official metadata/config/license/code; no weights or authentication",
+  "repositories": [
+    {
+      "repo_id": "Valen-Team/Valen-2B",
+      "revision": "8106f4c18f91a96a23a7d6dc420ac6a6ff66e8a6",
+      "last_modified_utc": "2026-10-08T07:03:01.000Z",
+      "created_at_utc": "2026-10-05T20:39:03.000Z",
+      "parameters": {
+        "parameters": {
+          "F32": 2214825577
+        },
+        "total": 2214825577
+      },
+      "card_data": {
+        "language": [
+          "en",
+          "zh"
+        ],
+        "license": "apache-2.0",
+        "library_name": "transformers",
+        "tags": [
+          "valen",
+          "qwen3_5",
+          "decision-making",
+          "image-text-to-text",
+          "video",
+          "shared-state",
+          "full-finetuning"
+        ],
+        "base_model": "Qwen/Qwen3.5-2B"
+      },
+      "weights": [
+        {
+          "name": "model-00001-of-00003.safetensors",
+          "bytes": 3999858328,
+          "lfs": {
+            "sha256": "cbac6fc9f9e1e155c09bd566ac79649d228db83d7ed0ac611184fc894a9baa21",
+            "size": 3999858328,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00002-of-00003.safetensors",
+          "bytes": 3997771424,
+          "lfs": {
+            "sha256": "280e098df96bd9acba5253d3ac4e38a178e795610fe77eabf4ca89dcdedc5a23",
+            "size": 3997771424,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00003-of-00003.safetensors",
+          "bytes": 861752068,
+          "lfs": {
+            "sha256": "62b8d1265250a1dc9389e86026f65cc1764975f99a07a320d8aa2aa43f7ec424",
+            "size": 861752068,
+            "pointerSize": 134
+          }
+        }
+      ],
+      "weight_bytes": 8859381820,
+      "metadata_files": [
+        {
+          "name": "LICENSE",
+          "bytes": 11544,
+          "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a"
+        },
+        {
+          "name": "README.md",
+          "bytes": 2049,
+          "sha256": "f3a532b3243a93edca70e7ef89f3ef239d077a31d7893b955162912008528bbc"
+        },
+        {
+          "name": "batching.py",
+          "bytes": 2953,
+          "sha256": "ea45d4724bcafca559fc5a2a18092918b633746771c19da6554c29bc5f2cef64"
+        },
+        {
+          "name": "compiler.py",
+          "bytes": 13627,
+          "sha256": "f35bab2e71b6beb1228daaa5b7baecdacf04eaf713aee14e8082b97090f910b4"
+        },
+        {
+          "name": "config.json",
+          "bytes": 3334,
+          "sha256": "3347726bd3487643f8373bdd52929dee675d1142d282c3537f8a622bcdd1f19f"
+        },
+        {
+          "name": "configuration_valen.py",
+          "bytes": 1003,
+          "sha256": "8aa80266e8c328b5251d969de80f58e706dcd15a535c877108aab452ff572279"
+        },
+        {
+          "name": "data_types.py",
+          "bytes": 258,
+          "sha256": "b06ce08081d8f7b2bf36abf302410a96086395e75a04f9e9b1c591db519b1641"
+        },
+        {
+          "name": "heads.py",
+          "bytes": 6605,
+          "sha256": "63b5970a8bfa121eff94d50ffd35e1fa8387f3af5abccc5f5b75381fb084fc34"
+        },
+        {
+          "name": "modeling_valen.py",
+          "bytes": 4553,
+          "sha256": "851f90a089c23060e321e1da192689fd3b405253f219f67723bf57c873612d62"
+        },
+        {
+          "name": "responses.py",
+          "bytes": 1542,
+          "sha256": "298016b0070f1000a38d033e1048e038ff5df6fc1dcbe830601105b181f1d228"
+        },
+        {
+          "name": "runtime_model.py",
+          "bytes": 5554,
+          "sha256": "2ce5808373505105bedc254bd99671fbeea43c25483e6b63add77b9e32d7baaf"
+        },
+        {
+          "name": "schema.py",
+          "bytes": 3385,
+          "sha256": "81659cc31b9673f6b9482095a4bbf6a2fb0b1415f0dfdd1c057278ecdca13595"
+        }
+      ],
+      "weights_downloaded": false,
+      "path": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/Valen-Team__Valen-2B"
+    },
+    {
+      "repo_id": "Valen-Team/Valen-0.8B",
+      "revision": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+      "last_modified_utc": "2026-10-08T07:02:59.000Z",
+      "created_at_utc": "2026-10-05T20:40:35.000Z",
+      "parameters": {
+        "parameters": {
+          "F32": 854305641
+        },
+        "total": 854305641
+      },
+      "card_data": {
+        "language": [
+          "en",
+          "zh"
+        ],
+        "license": "apache-2.0",
+        "library_name": "transformers",
+        "tags": [
+          "valen",
+          "qwen3_5",
+          "decision-making",
+          "image-text-to-text",
+          "video",
+          "shared-state",
+          "full-finetuning"
+        ],
+        "base_model": "Qwen/Qwen3.5-0.8B"
+      },
+      "weights": [
+        {
+          "name": "model.safetensors",
+          "bytes": 3417285852,
+          "lfs": {
+            "sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+            "size": 3417285852,
+            "pointerSize": 135
+          }
+        }
+      ],
+      "weight_bytes": 3417285852,
+      "metadata_files": [
+        {
+          "name": "LICENSE",
+          "bytes": 11544,
+          "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a"
+        },
+        {
+          "name": "README.md",
+          "bytes": 2165,
+          "sha256": "021881b23518a033039d5590b826a31e55bf4b635427a82e05ebc50eeb61a961"
+        },
+        {
+          "name": "batching.py",
+          "bytes": 2953,
+          "sha256": "ea45d4724bcafca559fc5a2a18092918b633746771c19da6554c29bc5f2cef64"
+        },
+        {
+          "name": "compiler.py",
+          "bytes": 13627,
+          "sha256": "f35bab2e71b6beb1228daaa5b7baecdacf04eaf713aee14e8082b97090f910b4"
+        },
+        {
+          "name": "config.json",
+          "bytes": 3333,
+          "sha256": "8a6a766acfe35a6eb3d373e90c43af0f08dbd44301251df71e18b1b5b5381c08"
+        },
+        {
+          "name": "configuration_valen.py",
+          "bytes": 1003,
+          "sha256": "8aa80266e8c328b5251d969de80f58e706dcd15a535c877108aab452ff572279"
+        },
+        {
+          "name": "data_types.py",
+          "bytes": 258,
+          "sha256": "b06ce08081d8f7b2bf36abf302410a96086395e75a04f9e9b1c591db519b1641"
+        },
+        {
+          "name": "heads.py",
+          "bytes": 6605,
+          "sha256": "63b5970a8bfa121eff94d50ffd35e1fa8387f3af5abccc5f5b75381fb084fc34"
+        },
+        {
+          "name": "modeling_valen.py",
+          "bytes": 4553,
+          "sha256": "851f90a089c23060e321e1da192689fd3b405253f219f67723bf57c873612d62"
+        },
+        {
+          "name": "responses.py",
+          "bytes": 1542,
+          "sha256": "298016b0070f1000a38d033e1048e038ff5df6fc1dcbe830601105b181f1d228"
+        },
+        {
+          "name": "runtime_model.py",
+          "bytes": 5554,
+          "sha256": "2ce5808373505105bedc254bd99671fbeea43c25483e6b63add77b9e32d7baaf"
+        },
+        {
+          "name": "schema.py",
+          "bytes": 3385,
+          "sha256": "81659cc31b9673f6b9482095a4bbf6a2fb0b1415f0dfdd1c057278ecdca13595"
+        }
+      ],
+      "weights_downloaded": false,
+      "path": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/Valen-Team__Valen-0.8B"
+    },
+    {
+      "repo_id": "Valen-Team/Valen-4B",
+      "revision": "255ed2640730efdd5cbdb3d539165925f8f45e27",
+      "last_modified_utc": "2026-10-06T14:28:26.000Z",
+      "created_at_utc": "2026-10-05T20:42:32.000Z",
+      "parameters": {
+        "parameters": {
+          "BF16": 4539265536,
+          "F32": 1716009
+        },
+        "total": 4540981545
+      },
+      "card_data": {
+        "license": "apache-2.0",
+        "base_model": "Qwen/Qwen3.5-4B",
+        "library_name": "transformers",
+        "tags": [
+          "valen",
+          "decision-making",
+          "shared-state",
+          "qwen3.5",
+          "custom-code"
+        ]
+      },
+      "weights": [
+        {
+          "name": "model-00001-of-00003.safetensors",
+          "bytes": 3991299376,
+          "lfs": {
+            "sha256": "21fef5c5b93c2d9f1e54100f31709aaeb1651058784b9d38c47d9345fdba50d0",
+            "size": 3991299376,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00002-of-00003.safetensors",
+          "bytes": 3979833864,
+          "lfs": {
+            "sha256": "9ec6792a776db86b348b97ae3e9ff5feaa055dba2ea28035aac9f1d543623e9b",
+            "size": 3979833864,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00003-of-00003.safetensors",
+          "bytes": 1114356012,
+          "lfs": {
+            "sha256": "c7b96a0d85eb01475c0f775a51f88e4455aeae31143cc86c8457723d9019c13e",
+            "size": 1114356012,
+            "pointerSize": 135
+          }
+        }
+      ],
+      "weight_bytes": 9085489252,
+      "metadata_files": [
+        {
+          "name": "LICENSE",
+          "bytes": 11544,
+          "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a"
+        },
+        {
+          "name": "README.md",
+          "bytes": 2312,
+          "sha256": "c66a4c8c780b03513d4235c58af821ab7ea6a61f2c5d2153fb76363b4f6c03fb"
+        },
+        {
+          "name": "batching.py",
+          "bytes": 2953,
+          "sha256": "ea45d4724bcafca559fc5a2a18092918b633746771c19da6554c29bc5f2cef64"
+        },
+        {
+          "name": "compiler.py",
+          "bytes": 13627,
+          "sha256": "f35bab2e71b6beb1228daaa5b7baecdacf04eaf713aee14e8082b97090f910b4"
+        },
+        {
+          "name": "config.json",
+          "bytes": 3495,
+          "sha256": "15dd1b0e94aa6ad330d3d8c50e4f9ea579edbb21fb2ba13c02b32c3e0ede6527"
+        },
+        {
+          "name": "configuration_valen.py",
+          "bytes": 737,
+          "sha256": "735b02402fb5b6c7a1652f6691ba66d066ef99e84500042faec396ff7a668fe5"
+        },
+        {
+          "name": "data_types.py",
+          "bytes": 258,
+          "sha256": "b06ce08081d8f7b2bf36abf302410a96086395e75a04f9e9b1c591db519b1641"
+        },
+        {
+          "name": "heads.py",
+          "bytes": 6605,
+          "sha256": "63b5970a8bfa121eff94d50ffd35e1fa8387f3af5abccc5f5b75381fb084fc34"
+        },
+        {
+          "name": "modeling_valen.py",
+          "bytes": 4138,
+          "sha256": "07f87481334cb1e28e9daee036c27bab3654645abf3df7983346b316e7788848"
+        },
+        {
+          "name": "responses.py",
+          "bytes": 1542,
+          "sha256": "298016b0070f1000a38d033e1048e038ff5df6fc1dcbe830601105b181f1d228"
+        },
+        {
+          "name": "runtime_model.py",
+          "bytes": 5281,
+          "sha256": "98bf0443ca196900b9f2b056129c84932041b8b53395d111f2fe6d3f2bc1e0a6"
+        },
+        {
+          "name": "schema.py",
+          "bytes": 3292,
+          "sha256": "253825862b60016e37fd1040492008ad7f303679c092313d8a6527cf509f3b6e"
+        }
+      ],
+      "weights_downloaded": false,
+      "path": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/Valen-Team__Valen-4B"
+    },
+    {
+      "repo_id": "CohereLabs/North-Micro-Vision-Instruct",
+      "revision": "fa548d9aa62c1220bfd21fc6cfc465f1bd2a1a40",
+      "last_modified_utc": "2026-09-30T13:30:59.000Z",
+      "created_at_utc": "2026-08-10T13:20:37.000Z",
+      "parameters": {
+        "parameters": {
+          "BF16": 2484847856
+        },
+        "total": 2484847856
+      },
+      "card_data": {
+        "library_name": "transformers",
+        "license": "apache-2.0",
+        "pipeline_tag": "image-text-to-text",
+        "language": [
+          "en",
+          "de",
+          "fr",
+          "es",
+          "it",
+          "pt",
+          "hi",
+          "ja",
+          "ko",
+          "zh",
+          "ar"
+        ],
+        "tags": [
+          "vision",
+          "multimodal",
+          "conversational",
+          "multilingual",
+          "native-resolution"
+        ]
+      },
+      "weights": [
+        {
+          "name": "model.safetensors",
+          "bytes": 4969765248,
+          "lfs": {
+            "sha256": "cd9a9ed867111bbc6b6e062bf0b3b9c88af183eb41003083501a76c84e912046",
+            "size": 4969765248,
+            "pointerSize": 135
+          }
+        }
+      ],
+      "weight_bytes": 4969765248,
+      "metadata_files": [
+        {
+          "name": "README.md",
+          "bytes": 19961,
+          "sha256": "b7837743ea686f54cdc7377ba7bcf05b523649db6a0ef116d3a4ba1bf8059f12"
+        },
+        {
+          "name": "config.json",
+          "bytes": 3731,
+          "sha256": "d1a76c913772b57179785b278ce2d1a4800b685247723fb9c4dafd5cbffe5236"
+        }
+      ],
+      "weights_downloaded": false,
+      "path": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/CohereLabs__North-Micro-Vision-Instruct"
+    },
+    {
+      "repo_id": "Aleph-Alpha/Kolibri-1",
+      "revision": "35bc4d3be745502227a67247de77d70e691614ee",
+      "last_modified_utc": "2026-10-03T08:43:53.000Z",
+      "created_at_utc": "2026-10-02T05:54:02.000Z",
+      "parameters": {
+        "parameters": {
+          "BF16": 705058560,
+          "F8_E4M3": 77398016000
+        },
+        "total": 78103074560
+      },
+      "card_data": {
+        "license": "apache-2.0",
+        "pipeline_tag": "text-generation",
+        "library_name": "vllm",
+        "base_model": "Aleph-Alpha/Kolibri-1-BF16",
+        "tags": [
+          "reasoning",
+          "moe"
+        ],
+        "language": [
+          "de",
+          "en"
+        ]
+      },
+      "weights": [
+        {
+          "name": "model-00001-of-00032.safetensors",
+          "bytes": 3156374416,
+          "lfs": {
+            "sha256": "a7a98d7a62ea98d5ea087803ce018f51a15e442bc9a621617c68df7582947542",
+            "size": 3156374416,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00002-of-00032.safetensors",
+          "bytes": 2501296272,
+          "lfs": {
+            "sha256": "53b50581240e08566e640c7b58c18ad6296ca5ca08faf352e4aef7aa9d27f618",
+            "size": 2501296272,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00003-of-00032.safetensors",
+          "bytes": 2501967864,
+          "lfs": {
+            "sha256": "317e19f78b64a7cea43a3608814b00deef3adeac94fab24c0bedb55a8bbfdac8",
+            "size": 2501967864,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00004-of-00032.safetensors",
+          "bytes": 2501967352,
+          "lfs": {
+            "sha256": "bb5d53ba193ad9dc41e968a44ad5d2715a4eed4cf109932575e7212ae6414aa2",
+            "size": 2501967352,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00005-of-00032.safetensors",
+          "bytes": 2501296936,
+          "lfs": {
+            "sha256": "506679891025274abe555dac9bf27f4cca89122256cd5e969bc07a5533874671",
+            "size": 2501296936,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00006-of-00032.safetensors",
+          "bytes": 2501967208,
+          "lfs": {
+            "sha256": "dcf896e80294c89b28bb76ef898a4220cacb5a9f0e12aca11d65f788246cb9ee",
+            "size": 2501967208,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00007-of-00032.safetensors",
+          "bytes": 2501297968,
+          "lfs": {
+            "sha256": "ce656d867973e90505986db8220d4ca738c6770824bb742ead8aa9ceb7eb06f7",
+            "size": 2501297968,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00008-of-00032.safetensors",
+          "bytes": 2501971880,
+          "lfs": {
+            "sha256": "91161bdbe0a1cc28174f86ec214bc980c5f62d153396fd4d8174a4562d93fa1c",
+            "size": 2501971880,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00009-of-00032.safetensors",
+          "bytes": 2501970968,
+          "lfs": {
+            "sha256": "b44480ecc6e590ed4d7e7867598f1d53e662e34ba72486b523a99680f5f37f5d",
+            "size": 2501970968,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00010-of-00032.safetensors",
+          "bytes": 2501300576,
+          "lfs": {
+            "sha256": "3a4ac7a25770d2249310b0fd7ae6f4a29ca688f7ddc05ae153364d1dec463589",
+            "size": 2501300576,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00011-of-00032.safetensors",
+          "bytes": 2501971240,
+          "lfs": {
+            "sha256": "d6e98a9bf220fb3a838e2758b6cdc014a6554d1f10a9aaf962bd9ceaf011909b",
+            "size": 2501971240,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00012-of-00032.safetensors",
+          "bytes": 2501299416,
+          "lfs": {
+            "sha256": "28b4aa1be1c20bd5e0ec32bf47e0dbcad211131bfc95615c18b3553013e8cf11",
+            "size": 2501299416,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00013-of-00032.safetensors",
+          "bytes": 2501972200,
+          "lfs": {
+            "sha256": "65a8381eb71d36742b40176fa151c694ae762b125430ecf75291d7c5558ad954",
+            "size": 2501972200,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00014-of-00032.safetensors",
+          "bytes": 2501970944,
+          "lfs": {
+            "sha256": "0abc95b53946fadd5bd50661380e19d32b6625511a20ecede01b5a60986eb4ab",
+            "size": 2501970944,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00015-of-00032.safetensors",
+          "bytes": 2501300168,
+          "lfs": {
+            "sha256": "82a2e70ce79dbc09822e158e8987a4b5a262f74cb35b09b559c87a0adae05569",
+            "size": 2501300168,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00016-of-00032.safetensors",
+          "bytes": 2501971536,
+          "lfs": {
+            "sha256": "15349270769eb1c94172d786f29c2125fa6cea80e9e9a4857eae4cb610eaa13a",
+            "size": 2501971536,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00017-of-00032.safetensors",
+          "bytes": 2495419496,
+          "lfs": {
+            "sha256": "840257b51a1af40c4cc66a2ad5e4c9687a366c30ff16ba53eab8b6d8fe613ec9",
+            "size": 2495419496,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00018-of-00032.safetensors",
+          "bytes": 2501295784,
+          "lfs": {
+            "sha256": "5cfe070e4238a3422581126dbc30afc05f3d933d7b6e69a69996a18acea9c904",
+            "size": 2501295784,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00019-of-00032.safetensors",
+          "bytes": 2501970944,
+          "lfs": {
+            "sha256": "70bdd122f2a5ad54e453f4f5a6b586d1addf85220adeecef2fc0b4816804dd75",
+            "size": 2501970944,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00020-of-00032.safetensors",
+          "bytes": 2501299872,
+          "lfs": {
+            "sha256": "7384816f58c8bb67c502e66b1cd45879ffb8efb98c7a07afb837a7c5a406ae65",
+            "size": 2501299872,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00021-of-00032.safetensors",
+          "bytes": 2501971736,
+          "lfs": {
+            "sha256": "2cef36b82a1eca0e642ea3079f8d505fe9e4b7d2c2aa6d0e73a6db496f2e2eae",
+            "size": 2501971736,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00022-of-00032.safetensors",
+          "bytes": 2501971040,
+          "lfs": {
+            "sha256": "f5f11113e7f55e9f51924644553ae8f70983c3c561f532c505212106fd39e26a",
+            "size": 2501971040,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00023-of-00032.safetensors",
+          "bytes": 2501300720,
+          "lfs": {
+            "sha256": "c59a78ba172979fdde4851e130de686561b662c6a4300df933e09bed1ac98dc1",
+            "size": 2501300720,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00024-of-00032.safetensors",
+          "bytes": 2501971024,
+          "lfs": {
+            "sha256": "e1410bdf2700631fa644db038b0d305f36222f2ef65ba10cb230c05b7d70b24e",
+            "size": 2501971024,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00025-of-00032.safetensors",
+          "bytes": 2501299560,
+          "lfs": {
+            "sha256": "0967938289a49a558dcd7cae86ff461948c1aba829a0969d135da9ba6def9828",
+            "size": 2501299560,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00026-of-00032.safetensors",
+          "bytes": 2501972056,
+          "lfs": {
+            "sha256": "6f4c2ea2af3962f05ffd2329d3227967905f70166846e2819a6382ac55977af8",
+            "size": 2501972056,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00027-of-00032.safetensors",
+          "bytes": 2501970944,
+          "lfs": {
+            "sha256": "acc778dd678f2edfd183a88af8690b1077f8403ab729ba28ec6afd3b59b4080f",
+            "size": 2501970944,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00028-of-00032.safetensors",
+          "bytes": 2501300336,
+          "lfs": {
+            "sha256": "534f96e7acf4075f6603a08ebce82dc3955cca832c6750777baa9d88d33f1bd5",
+            "size": 2501300336,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00029-of-00032.safetensors",
+          "bytes": 2501971448,
+          "lfs": {
+            "sha256": "4e8fa5779ce4884375285cb0cc14df9bd39bca3cf517d00ad1ae7fd02d4955f8",
+            "size": 2501971448,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00030-of-00032.safetensors",
+          "bytes": 2501299296,
+          "lfs": {
+            "sha256": "1b79183349e4a7155a9d0316dbcb03df5c03879e34706ec83b7393089cd67c67",
+            "size": 2501299296,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00031-of-00032.safetensors",
+          "bytes": 2501972368,
+          "lfs": {
+            "sha256": "399bd9a219592fc009d022cffaae1ea93aa6a455b9c69d0eeb6aeeb32c65b772",
+            "size": 2501972368,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00032-of-00032.safetensors",
+          "bytes": 640583640,
+          "lfs": {
+            "sha256": "d336470ef702ca1ffc7b3b41a65fea16cd1d28ac1da925d22e457a57ca5811f8",
+            "size": 640583640,
+            "pointerSize": 134
+          }
+        }
+      ],
+      "weight_bytes": 78841467208,
+      "metadata_files": [
+        {
+          "name": "LICENSE",
+          "bytes": 11358,
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "name": "README.md",
+          "bytes": 236001,
+          "sha256": "4dfcbcc60b30ef6d6bbd98a3a386d2b52606a83f3c04b2896c483bb19982b1d0"
+        },
+        {
+          "name": "config.json",
+          "bytes": 3904,
+          "sha256": "310443b4224e940682de2b829ba1e377bc39ed7250ac069ce011b8b7c260322f"
+        }
+      ],
+      "weights_downloaded": false,
+      "path": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/Aleph-Alpha__Kolibri-1"
+    }
+  ]
+}

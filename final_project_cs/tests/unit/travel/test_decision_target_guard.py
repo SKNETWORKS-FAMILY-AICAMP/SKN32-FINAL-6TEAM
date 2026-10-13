@@ -31,6 +31,7 @@ class _Model:
 
     def __init__(self, action, target, **extra):
         self.answer = {"action": action, "target_item": target, "target_change": extra.pop("change", "none"), "fact": extra.pop("fact", "none"),
+                       "change_scope": extra.pop("change_scope", "place" if action in {"apply_change", "propose_alternatives"} else "none"),
                        "minutes": 0, "choices": []}
 
     def structured(self, system, user, schema, *, num_predict=160):
@@ -130,3 +131,10 @@ def test_questions_and_rollbacks_are_not_guarded():
     assert rolled.action == "rollback" and rolled.change is not None
     no_target, _ = _run("long7", "저녁 식당 바꿔 줘", "apply_change", "none")                       # 대상을 못 골랐으면 부르는 쪽이 원래 되묻는다
     assert no_target.action == "apply_change" and no_target.item is None
+
+
+def test_a_time_only_change_cannot_enter_the_place_replacement_executor():
+    got, _ = _run("long7", "아니 시간 지금으로 바꾸라고", "apply_change", "i35", change_scope="time")
+    assert got.action == "other" and got.item is None and got.change is None
+    assert got.raw["scope_guard"] == {"requested": "time", "blocked_action": "apply_change"}
+    assert "시간이나 날짜 변경 요청을 장소 교체로 실행하지 않았습니다" in got.social

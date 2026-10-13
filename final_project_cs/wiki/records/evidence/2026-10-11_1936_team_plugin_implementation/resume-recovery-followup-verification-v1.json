@@ -1,0 +1,18 @@
+{
+  "source_sha256": {
+    "app/application/controller.py": "3363b7903ed10e94dfdf288ef601a77da94f800b7874838fe830e4e83a874064",
+    "wiki/teams/team-contract/plugin-availability.md": "414ee97be7ddf6c769f1328fa6a0ef743f2a9232a29ddbc8f977cef21ead84b6",
+    "tests/unit/core/test_controller_resume_recovery.py": "0d378a4d4a274f0622dd6db8faadff811207c79d6040ba5d6a9296c3e4016131"
+  },
+  "links": 8,
+  "missing_links": [],
+  "trailing_lines": [],
+  "tests": {
+    "passed": 70,
+    "total": 70,
+    "new": 10,
+    "seconds": 3.71
+  },
+  "database_used": false,
+  "external_io": false
+}

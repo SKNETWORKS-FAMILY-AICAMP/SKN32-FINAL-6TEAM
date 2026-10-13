@@ -35,6 +35,8 @@ domain: neutral
 | [evidence-grades.md](evidence-grades.md) | 이 숫자가 실측인가 추정인가를 어떻게 표시하는가 |
 | [domain-axis.md](domain-axis.md) | **도메인이 바뀌면 이 문서를 다시 읽어야 하는가** |
 | [review-policy.md](review-policy.md) | draft를 stable로 올리려면 무엇이 필요한가 |
+| [implementation-state.md](implementation-state.md) | 문서·결정·구현·검증·환경 반영을 어떻게 구분하는가 |
+| [implementation-inventory.generated.md](implementation-inventory.generated.md) | 현재 결정·계약 중 상태 필드가 아직 적용되지 않은 문서는 무엇인가 |
 | [migration.md](migration.md) | 이관 계획과 기준 |
 | [migration-scope/index.md](migration-scope/index.md) | **파일별 판정 목록.** 이관 대상 199건 · 사람 판정 60건 |
 | [type-verification/](type-verification/index.md) | 분류 체계가 실제로 판별 가능한가 (검증 **9회** — round-1 ~ round-9. `[정정 2026-09-10]` 4회로 적혀 있었다) |
@@ -70,3 +72,6 @@ domain: neutral
 | [drift-case-voc.md](drift-case-voc.md) | 낡은 문장이 규칙으로 승격된 사고 |
 | [migration-scope/coverage.md](migration-scope/coverage.md) | 반영률 실측 |
 
+## 2026-10-12 목차에 더한 문서
+
+- [checker-scope.md](checker-scope.md) — wiki 검사기(`program/scripts/check_wiki.py`)가 무엇을 검사하고 무엇을 안 하는지 · 실행법

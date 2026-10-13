@@ -106,19 +106,20 @@ _SYSTEM_PROMPT = (
 )
 
 
-def _openai_llm(text: str) -> dict[str, Any]:
+def _openai_llm(text: str, *, system: str = _SYSTEM_PROMPT, timeout_seconds: float | None = None) -> dict[str, Any]:
     settings = get_settings()
     if not settings.openai_api_key:
         raise ClassificationFailed("OpenAI API key is missing")
     try:
         from openai import OpenAI
 
-        response = OpenAI(api_key=settings.openai_api_key).chat.completions.create(
+        options = {"timeout": timeout_seconds, "max_retries": 0} if timeout_seconds is not None else {}
+        response = OpenAI(api_key=settings.openai_api_key, **options).chat.completions.create(
             model=settings.llm_model,
             temperature=settings.llm_temperature,
             seed=settings.llm_seed,
             response_format={"type": "json_object"},
-            messages=[{"role": "system", "content": _SYSTEM_PROMPT},
+            messages=[{"role": "system", "content": system},
                       {"role": "user", "content": text}],
         )
         content = response.choices[0].message.content
@@ -134,7 +135,7 @@ def _openai_llm(text: str) -> dict[str, Any]:
         raise ClassificationFailed(f"LLM classification failed: {exc}") from exc
 
 
-def _ollama_llm(text: str) -> dict[str, Any]:
+def _ollama_llm(text: str, *, system: str = _SYSTEM_PROMPT, timeout_seconds: float | None = None) -> dict[str, Any]:
     """로컬 Ollama(Gemma 4)로 분류한다 — `ACOP_OLLAMA_BASE_URL` 이 있을 때.
 
     ★2026-09-14 OpenAI 크레딧 소진(429 실측)으로 붙였다. 같은 프롬프트·같은 검증을 쓴다 —
@@ -142,11 +143,15 @@ def _ollama_llm(text: str) -> dict[str, Any]:
     """
     from app.infrastructure.ollama_chat import OllamaError, from_settings
 
-    chat = from_settings(get_settings())
+    settings = get_settings()
+    if timeout_seconds is not None:
+        settings = settings.model_copy(update={"ollama_timeout_seconds": timeout_seconds,
+                                               "llm_failover_total_seconds": timeout_seconds})
+    chat = from_settings(settings)
     if chat is None:
         raise ClassificationFailed("Ollama base url is missing")
     try:
-        return chat.json(_SYSTEM_PROMPT, text)
+        return chat.json(system, text)
     except OllamaError as exc:
         raise ClassificationFailed(f"Ollama classification failed: {exc}") from exc
 
@@ -154,6 +159,13 @@ def _ollama_llm(text: str) -> dict[str, Any]:
 def _default_llm() -> LLM:
     """설정이 고른 제공자 — Ollama 주소가 있으면 Ollama, 없으면 OpenAI."""
     return _ollama_llm if (get_settings().ollama_base_url or "").strip() else _openai_llm
+
+
+def ask_json(system: str, text: str) -> dict[str, Any]:
+    """분류 에이전트의 추가 계약도 같은 설정·모델 제공자와 마스킹을 사용한다."""
+    from app.core.settings import get_guardrails
+    return _default_llm()(masked(text), system=system,
+                          timeout_seconds=float(get_guardrails().get("travel.watch.plan_timeout_seconds")))
 
 
 def classify(text: str, llm: LLM | None = None) -> Classification:

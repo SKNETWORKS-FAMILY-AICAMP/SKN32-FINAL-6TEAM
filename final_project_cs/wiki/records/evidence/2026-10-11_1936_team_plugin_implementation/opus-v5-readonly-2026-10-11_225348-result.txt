@@ -1,0 +1,102 @@
+# 후보 v5 독립 감사 결과 (`2026-10-11_222547_plugin_v5`)
+
+시험은 다시 돌리지 않았습니다. 아래 결론은 모두 원문을 읽고 판단한 것이며, 실행해서 확인한 것은 없습니다. 확정 결함은 7건입니다.
+
+## 확정 결함
+
+**[P1] 접수 전체 되돌리기가 항상 500으로 실패합니다**
+- 위치: `app/domains/travel_ops/entry/trip_api.py:1438-1440`이 `restore(..., item=...)`를 호출합니다. 그런데 `app/domains/travel_ops/components/intake/pipeline.py:472-473`의 `restore`는 `item` 인자를 받지 않습니다. `pipeline.py`는 manifest 변경 목록에 없어 기준판 그대로입니다.
+- 재현: `POST /v1/web/trip-intakes/{id}/restore`를 부르면 됩니다. 몸통에 `item`이 없어도 `item=None`이 넘어가므로 매번 `TypeError`가 납니다. 이 핸들러는 `LookupError`와 `IntakeConflict`만 잡아서 결과는 500입니다.
+- 영향: 기준판에서 되던 기능이 전부 막히는 회귀입니다. 함수 단위로 이식하면서 짝이 되는 함수를 빠뜨린 것으로 보입니다.
+- 확신: 높음
+
+**[P1] 입력 대기 업무가 있으면 같은 여행의 이후 메시지를 전부 그 업무의 답으로 가져갑니다(사실 질문 포함)**
+- 위치: `trip_messages.py:317-325`에서 `resume_pending`이 사실 답 경로보다 먼저, 무조건 실행됩니다. `case_dispatch.py:107-120`은 대기 업무가 하나면 `case_id`가 없어도 그 업무를 자동으로 고릅니다. `clarify`가 `BUSINESS_ACTIONS`(`case_dispatch.py:17`)에 들어 있어서 `trip_messages.py:684-687` → `conversation_work.py:87-108`을 거쳐 `wait_for_input`, 즉 waiting_input이 됩니다.
+- 재현: 결정 단위가 clarify를 내거나 지연 분이 빠진 신고가 들어온 뒤, "오늘 저녁 식당 몇 시에 열어?"를 보냅니다. 팀은 같은 되물음을 반복합니다(`conversation_work.py:107`, `:146`).
+- 영향:
+  - 사실 질문 경로와 다른 변경 요청이 막힙니다.
+  - 취소 경로가 없고, "아니요"는 되돌리기 확인에서만 통합니다.
+  - 클라이언트가 "이건 새 메시지"라고 지정할 방법이 없습니다.
+- 확신: 코드 경로는 높음, 실제 발생 빈도는 미확인
+
+**[P2] 대기 시간(24시간)이 지난 뒤 첫 메시지가 401로 끝나고 내용이 버려집니다**
+- 위치: 만료되면 `case_service.py:130-134`에서 `ResumeTokenExpired`가 나고, `controller.py:853-865`가 WAIT_EXPIRED 처리 후 `ControllerError`를 던집니다. 이것이 `trip_api.py:1045-1046`과 `:1975-1976`에서 `401 invalid_resume_token`이 됩니다.
+- 영향: 고객이 새로 보낸 문장은 처리되지 않습니다. 웹이 401을 인증 실패로 처리하는지는 미확인입니다.
+- 확신: 높음
+
+**[P2] 담당 팀을 끄면, 대기 업무가 있는 여행의 채팅 전체가 503이 됩니다**
+- 위치: `controller.py:872`에서 `require_team(owner)`가 경로 변경보다 먼저 실행됩니다. 만료 분기도 `controller.py:854`에서 같은 검사가 WAIT_EXPIRED보다 먼저라서, 팀이 꺼져 있는 동안에는 업무가 만료조차 되지 않습니다.
+- 확신: 높음
+
+**[P2] 감시 Case가 실행 도중 `TeamUnavailable`을 만나면 RUNNING 고아로 남고, 이후 재시도에서 영구히 빠집니다**
+- 위치: `trip_watch_cases.py:177-185`는 이 경우 Case를 닫지 않고 둡니다. `_attempt`(`:349-356`)는 RUNNING을 재시도 대상이 아닌 "existing"으로 봅니다. 기준판은 예외가 나면 `_close_failed`로 `team_error`를 남겼고, 이는 재시도 가능한 사유였습니다.
+- 발생 조건:
+  - 이동 엔진이 준비되지 않은 경우(`legs.py:53/74/103`).
+  - 다른 팀에 걸린 의존이 막힌 경우. 예를 들어 `itinerary_changes.py:116`의 `walk_limit_m`은 mobility가 실행 가능해야 합니다. 그런데 `skipped_watch` 사전 거름은 항목 자기 종류의 팀만 봅니다.
+- 확신: 높음
+
+**[P3] 답변 반영과 실행 시작 사이에 끊기면 RESUMING에 고착됩니다**
+- 위치: `controller.py:924-931`에서 VALID_INPUT을 커밋한 뒤 RESUMED는 `run_case`가 기록합니다. 그 사이 프로세스 재시작, DB 오류, `ActiveRunError`가 나면 RESUMING에 남습니다.
+- 복구 경로가 없습니다: 같은 요청 재시도는 RUNNING일 때만 다시 실행하고(`:833-850`), routing sweeper는 routing만 봅니다(`routing_sweeper.py:68`).
+- 기준판은 VALID_INPUT과 RESUMED를 한 트랜잭션에서 처리했습니다.
+- 확신: 중상
+
+**[P3] 처리 실패 뒤 같은 request_id로 재시도하면, 처리되지 않았는데도 "duplicate" 200을 돌려줍니다**
+- 위치: `trip_messages.py:302-316`의 중복 확인은 Case 상태를 보지 않습니다. Case는 `case_dispatch.py:79/98`의 실패(503 등) 전에 이미 만들어져 있습니다.
+- 확신: 높음
+
+## 정책 관찰 (결함으로 단정하지 않은 것)
+- **routing sweeper 집계**: 꺼진 팀으로 가는 routing Case는 매 회차 `errored`로 집계되고, `--once`는 exit 1로 끝납니다(`routing_sweeper.py:80-85`). `run_sweepers`의 team_unavailable 분류를 거치지 않습니다. `cases.py:151-157`의 503 응답 뒤 Case가 routing에 남는 것이 이 경로로 이어집니다.
+- **이동 엔진 꺼짐 설정**: `mobility_data_dir`이 비어 있는데 mobility 팀이 활성이면, 조립은 통과하고 요청 시점에 503이 납니다(`wiring.py:196-197`, `legs.py:53`, `composition.py:428-429`). 기준판은 직선 어림값으로 처리했습니다. 운영 env는 미확인입니다.
+- **선택 팀을 끌 때의 파급**: mobility를 끄면 activity/dining의 변경도 막히고(`itinerary_changes.py:116,141`), dining을 끄면 `read.dining_states`를 쓰는 다른 팀 흐름이 막힙니다.
+- **토큰 없는 재개**: `cases.py:215-219`에서 case:write 주체는 1회용 토큰 없이 재개할 수 있습니다. 웹 키에는 `case:*` scope가 없음을 확인했습니다.
+- **오류 코드 매핑**: 모든 `ControllerError`가 401 `invalid_resume_token`이 되고("case not found", "대기 중 아님" 포함), `RegistryError`는 422가 됩니다.
+- **잠금 시간**: `_resume`이 Case 행 잠금을 쥔 채 `resume_prepare`(후보 확보, 별도 연결로 DB 쓰기)를 실행합니다.
+- **고아 모듈**: `app/presentation/api/mcp.py:9-20`이 삭제된 `cases._mcp_*`를 참조합니다. 앱에 탑재된 곳이 없어 영향은 없습니다.
+- **기타 경미**:
+  - `trip_api`의 `simulation` 값은 항상 null입니다(SQL227 제외에 따른 것으로 안전).
+  - `controller.py:246`의 `original_request`는 `ContextInputs`를 만든 뒤에 넣습니다. 반영 여부는 미확인입니다.
+  - `guardrails.yaml`은 주석을 빼고 다시 직렬화됐습니다. 따옴표가 필요한 값은 유지된 것을 확인했고, `08:00`처럼 따옴표 없는 값을 어떻게 읽는지는 YAML 로더 종류에 따라 달라 미확인입니다.
+
+## 이상 없음으로 확인한 범위
+- **import·export**: 팀 import 0개, lazy export, 선언 capability·hook과 manifest 일치, `KNOWN_TEAM_CASE_TYPES`.
+- **팀 차단 판정**: 알려진 팀이 꺼졌을 때는 거절하고, unknown은 재배분합니다.
+- **계산 표 바인딩 유지**:
+  - 바인딩 표가 불변이고, 요청 고정 미들웨어가 SSE·deferred에도 `copy_context`로 이어집니다.
+  - move_options 스레드 풀에는 바인딩된 스레드에서 만든 계산기만 넘어갑니다.
+- **worker**:
+  - 기능 초기화는 한 번 성공하면 다시 하지 않고, 실패하면 재시도합니다.
+  - 조립이 실패해도 독립 작업은 계속 돕니다.
+  - 기능 초기화 실패 시 팀 작업을 건너뛰어, 게스트 제외 범위 없이 돌지 않습니다.
+- **상태 전이**: `(RESUMING, ROUTED)` 전이 시 담당 팀이 갱신됩니다(`case.py:86-87`).
+- **제외 항목**: SQL 228/229/059/227, 출발 재검증, `service_overrides`를 새로 참조하지 않습니다.
+- **a2a**: 결과의 identity 검증, async 전용 transport, 취소 예산을 확인했습니다. 다만 운영 설정이 `team_executor: local`이라 이 경로는 실제로 타지 않습니다.
+
+## 실제로 읽은 파일·구간
+- `release-manifest.json` 전체, `runtime-overlay.diff` 전체(5,667행, 여러 번 나눠 읽음)
+- `controller.py`: 90-260, 290-490, 780-932
+- `case_service.py` 전체, `runtime.py`: 20-162, `composition.py`: 140-766, `app.py` 전체
+- `cases.py`: 55-270, `registry.py`: 125-224, `events.py`: 44-123
+- `trip_api.py`: 1010-1070, 1216-1450, 1925-2055 및 grep 구간
+- `trip_messages.py`: 255-490, 615-745 및 grep 구간
+- `itinerary_team.py`: 1-175, `_base.py`: 60-160, `wiring.py`: 40-244
+- `run_sweepers.py`: 1-80, 260-570, `routing_sweeper.py`: 25-93, `trip_watch_cases.py`: 160-365
+- `pipeline.py`: 472-511, `move_options.py`: 1-175, `planner.py`: 1165-1244
+- `itinerary_changes.py`: 100-149, `pending.py` 일부, `redaction.py`, `project.yaml`, `ops_entrypoint.py` 일부, `mcp.py`, `instances/__init__.py`
+- `case_dispatch.py`, `conversation_work.py`, `service_bindings.py`, `team_availability.py`, `a2a_executor.py`, `executor.py`, `read_tools.py`, `guardrails.yaml`은 diff 전문과 grep으로 확인했습니다.
+- 알려 드릴 점: 후보 디렉터리 전체를 grep했을 때 `release-overlay/.../mcp_server.py` 주석 한 줄이 결과에 섞였습니다. 그 파일을 따로 열지는 않았습니다.
+
+## 읽지 않은 범위
+- `trip_api.py`와 `trip_messages.py`의 나머지 구간, 각 팀 본문(activity/dining/mobility), `transition.py` 본문, `settings.py`의 Guardrails 로더
+- 나머지 의존 모듈
+- 50개 변경 파일 중 diff로만 본 파일들의 전후 문맥 전부
+- `candidate-manifest.json`, `FINAL-VERIFICATION.json`, `release-overlay`는 지시에 따라 읽지 않았습니다.
+
+## 확인하지 못한 실행 조건
+- 시험 재실행, 실제 배포, 이미지 동일성, 외부 소스 연결
+- 운영 env(`mobility_data_dir` 등)
+- DB 상태: 이전 판에서 남아 있는 trip_message waiting_input Case가 있는지
+- 웹 클라이언트가 401·503·duplicate를 어떻게 처리하는지
+- YAML 로더 종류
+
+부모가 전한 327·175·SQL85·197 증거는 이번 호출에서 직접 확인하지 않았습니다.

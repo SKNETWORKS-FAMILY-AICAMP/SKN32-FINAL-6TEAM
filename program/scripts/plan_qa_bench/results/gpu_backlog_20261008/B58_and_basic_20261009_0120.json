@@ -1,0 +1,87 @@
+{
+  "b58_pid": 2798582,
+  "cmdline": "bash /root/daily_rag_seed3_20261009/run_B58_seed3_20261009.sh ",
+  "status": "[2026-10-08T16:18:14Z] B57 학습·변환·기본 평가 종료 대기; GPU 사용 시작 안 함\n",
+  "source": {
+    "our_training": true,
+    "seed": 20261014,
+    "reference_seeds": [
+      20261012,
+      20261013
+    ],
+    "mode_order": [
+      "cosine",
+      "finch"
+    ],
+    "epochs": 2,
+    "rank": 16,
+    "accum": 8,
+    "max_lr": 5e-05,
+    "prepared_jobs": 2,
+    "dependency": "B57 ALLDONE",
+    "source_hashes_verified": 3,
+    "purpose": "Third distinct seed estimates schedule variation using frozen travel training data; separate from independent holdout and product adoption",
+    "new_model_download": false,
+    "available_bytes": 22522576896
+  },
+  "basic": {
+    "spark_s1_4b_oos": [
+      {
+        "path": "/root/work/eval_spark_s1_4b_oos_mix10.json",
+        "bytes": 3971,
+        "sha256": "edfa30223cc8655cde72ba32c5509f34a96a6d2f2a1251aacbb6418b5d73e7fe"
+      },
+      {
+        "path": "/root/work/eval_spark_s1_4b_oos_mix11.json",
+        "bytes": 4026,
+        "sha256": "a312b6756d44ddb0ad6de459789441ce8b9ed3c6167cc0bb19ede131c2036395"
+      },
+      {
+        "path": "/root/work/eval_spark_s1_4b_oos_mix12.json",
+        "bytes": 4353,
+        "sha256": "bb230587e913e3de92e09b13c7cf0eb66a59b2709f541976d4322db6f229168d"
+      },
+      {
+        "path": "/root/work/eval_spark_s1_4b_oos_mix8.json",
+        "bytes": 4220,
+        "sha256": "fc188fa7b76c2340278fad18d92292ae8e819769183f18abea9313a9027ac065"
+      },
+      {
+        "path": "/root/work/eval_spark_s1_4b_oos_mix9.json",
+        "bytes": 4089,
+        "sha256": "816e105a7896df5322e035a9e032623527135a21637599a19b7e1c1497c4c372"
+      }
+    ],
+    "oos2r_cosine_5e5_20261008": [
+      {
+        "path": "/root/work/eval_oos2r_cosine_5e5_20261008_mix10.json",
+        "bytes": 3984,
+        "sha256": "2c1e78dc004f48a2890c5cd764d55de5cdaeeb0aecaf226606c5200778b0719d"
+      },
+      {
+        "path": "/root/work/eval_oos2r_cosine_5e5_20261008_mix11.json",
+        "bytes": 4034,
+        "sha256": "6a7253f9cd83ef1ab741e9779521dabf907bb2ba0cb27cf1ee7eb01ea952d29f"
+      },
+      {
+        "path": "/root/work/eval_oos2r_cosine_5e5_20261008_mix12.json",
+        "bytes": 4360,
+        "sha256": "9f83effa027603b1f015191ca8d1ef5806af8ddf149a43913c9aa188e0c3c403"
+      },
+      {
+        "path": "/root/work/eval_oos2r_cosine_5e5_20261008_mix8.json",
+        "bytes": 4230,
+        "sha256": "5b3f58e26cf2335c67ca60851f3c6c381b4082ded48828f99f9ec6813edb7f98"
+      },
+      {
+        "path": "/root/work/eval_oos2r_cosine_5e5_20261008_mix9.json",
+        "bytes": 4091,
+        "sha256": "16b5ecd3daaf6b9b3c03c2a4c2dfd04c05a12a3e48bc713939fc5afee4aa24e5"
+      }
+    ]
+  },
+  "failure_logs": {
+    "qlora_smoke_jevify_e4b_oos.log": "학습 문제 16/16 · 평균 길이 1999 토큰 · 정답 토큰 평균 6.8\nTraceback (most recent call last):\n  File \"/root/work/qlora_train2.py\", line 49, in <module>\n    model = AutoModelForCausalLM.from_pretrained(MODEL, quantization_config=bnb, dtype=torch.bfloat16, device_map={'': 0})\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/transformers/models/auto/auto_factory.py\", line 409, in from_pretrained\n    return model_class.from_pretrained(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/transformers/modeling_utils.py\", line 4243, in from_pretrained\n    checkpoint_files, sharded_metadata = _get_resolved_checkpoint_files(\n                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/transformers/modeling_utils.py\", line 632, in _get_resolved_checkpoint_files\n    raise OSError(\nOSError: Error no file named model.safetensors, or pytorch_model.bin, found in directory /root/hf_models/jevify_e4b.\n",
+    "dl_jevify_e4b_oos.log": "lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 475, in http_get\n    return http_get(\n           ^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 475, in http_get\n    return http_get(\n           ^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 475, in http_get\n    return http_get(\n           ^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 475, in http_get\n    return http_get(\n           ^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 475, in http_get\n    return http_get(\n           ^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 475, in http_get\n    return http_get(\n           ^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 475, in http_get\n    return http_get(\n           ^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 475, in http_get\n    return http_get(\n           ^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 475, in http_get\n    return http_get(\n           ^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py\", line 89, in _inner_fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/venv_imajev/lib/python3.12/site-packages/huggingface_hub/file_download.py\", line 459, in http_get\n    for chunk in response.iter_bytes(chunk_size=constants.DOWNLOAD_CHUNK_SIZE):\n  File \"/root/venv_imajev/lib/python3.12/site-packages/httpx/_models.py\", line 897, in iter_bytes\n    for raw_bytes in self.iter_raw():\n  File \"/root/venv_imajev/lib/python3.12/site-packages/httpx/_models.py\", line 951, in iter_raw\n    for raw_stream_bytes in self.stream:\n  File \"/root/venv_imajev/lib/python3.12/site-packages/httpx/_client.py\", line 153, in __iter__\n    for chunk in self._stream:\n  File \"/root/venv_imajev/lib/python3.12/site-packages/httpx/_transports/default.py\", line 126, in __iter__\n    with map_httpcore_exceptions():\n  File \"/usr/lib/python3.12/contextlib.py\", line 158, in __exit__\n    self.gen.throw(value)\n  File \"/root/venv_imajev/lib/python3.12/site-packages/httpx/_transports/default.py\", line 118, in map_httpcore_exceptions\n    raise mapped_exc(message) from exc\nhttpx.ReadTimeout: The read operation timed out\n"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "current_tag": "2026-10-09_0423_출발보류_감시연결",
+  "backups": [
+    {
+      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\teams\\_backup\\2026-10-09_0443_출발감시_후속결함\\mobility.md.bak",
+      "sha256": "747d902ecb89be716a2bc24974d0f3dfa9eb82473f3945fcc0b7c1e03c783361"
+    },
+    {
+      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\_backup\\2026-10-09_0443_파일명_정리\\2026-10-09_0439_출발보류_감시연결과_현재경로_재조정_검증.md.bak",
+      "sha256": "183e95cc8803b13c6721aeadd5b33c685ee05c7ebda6a7488fed05f38e6d6574"
+    },
+    {
+      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\teams\\_backup\\2026-10-09_0443_파일명_정리\\mobility.md.bak",
+      "sha256": "0282ad04ea7e6928d9e84413d62b178a0a90692a2734bdbf515952fc0c0a6134"
+    },
+    {
+      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\debugs\\_backup\\2026-10-09_0443_파일명_정리\\2026-10-09_0423_出발보류_감시연결.md.bak",
+      "sha256": "38adab059e561147c76c2cee876492a899deec0b4f6d22e6a20fccf2315311e7"
+    },
+    {
+      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\_backup\\2026-10-09_0443_파일명_정리\\departure-watch-work.json.bak",
+      "sha256": "2a3a2f1a5cbd8a46a959c286a4f9e07bd61d221d93ed393622a172fa3d4bddb3"
+    }
+  ],
+  "evidence_tree_backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\_backup\\2026-10-09_0443_파일명_정리",
+  "original_evidence_files": [
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\before-backup.json",
+      "sha256": "3cac981868c079199f9c89ac715510713775c43f30fb837b84f36967f25dfbce"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\consensus-review-status-v1.json",
+      "sha256": "9cfa81e043ed54cfe58707cce35c09b722c12458deda0cb83748f65a87d84f05"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\correction-backups-v1.json",
+      "sha256": "a431730de174c9349c8463532a314f49daacb3cdc0ef8e9cacca4003b94161fd"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-replan-target-v1.xml",
+      "sha256": "b9ded067bac61dbaf9534c36521f093725c6e8350656759fec90e6469783047b"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-assembly-v1.xml",
+      "sha256": "712825c8767bd09033608ab83affbb00471dbd5332e6444e2eacc4d0e7a4a9ab"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-before-v1.xml",
+      "sha256": "f1d399c5fb3426bab9dade5ccec5c43733c4533165561e20371311bc597f1e42"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-db-target-v1.xml",
+      "sha256": "170e666dee7e0dea07db00867278b7e7c819048743093e25ccf29d93c84a63ec"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-db-target-v2.xml",
+      "sha256": "9dc071bc5687cfbe2172937796825dfc2d1aece6a32659534878e3720429622c"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-db-target-v3.xml",
+      "sha256": "d7858e24f4fb6f04bbc47bb503272b58231c087af45aa6ec03b688b8c1802d42"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-regression-v1-commands.json",
+      "sha256": "6489dcb5cf2998aa28bdaf7e55882135d4ffb84f3d6dc3bcd2d4ed78789dd862"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-regression-v1-part1.log",
+      "sha256": "bb07377f60be340d1d3df314b90eda508ad88343fa8144d72deb429e4a81bb70"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-regression-v1-part1.xml",
+      "sha256": "27d091ac40184473c423a5b50a87610d64ec47cf713e579316086fd16748dbd3"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-regression-v1-part2.log",
+      "sha256": "549daa7c7e7b825241503ec10f6b7ee853ccb79305d8ba7598988261ccc442cf"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-regression-v1-part2.xml",
+      "sha256": "b36fc5341886275279554c431632399ac0edc815421d0bedc451c9018eb445a2"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-regression-v1-part3.log",
+      "sha256": "70112f5821815145f04b98ec90e5194569fb16edea4ccb54623fba3f3ba9cbc6"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-regression-v1-part3.xml",
+      "sha256": "f20310f93ce68021a8bbd33b917968767442f16b956b973d95c8ed8bd270b9bc"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-regression-v1-part4.log",
+      "sha256": "4c51d8672ca4484207315af219c2cff40de06a29586e187c13717a5b2e8d480f"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-regression-v1-part4.xml",
+      "sha256": "1892742ba7d8bc440d814e7fe89e92ddc3bf7f421998061737254c271182982d"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\departure-watch-target-v1.xml",
+      "sha256": "a914fa54d626041ad4fad78f10d9f68d196a77e75df6613c910fb1e9ea53d1a7"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\follow-up-v1.json",
+      "sha256": "6318832b13830bd966dd747686c8e5131c52fd83e455b9bea96321802e8477ef"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\publication-backups-v1.json",
+      "sha256": "96ac5a66c0a84af10bb289007e25d0502bf35fc17e9a56b701c801c76cb81589"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\publication-validation-v1.json",
+      "sha256": "9312ea96035264d4279f5ae43d4a8231a95ad23a98d1feadd059235c8e44c956"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\published-output-v1.json",
+      "sha256": "a550a42c0cea3369a5f40eb213ae5ae5aa21a199c14d74f8997fdfe673aae2fd"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\research-v1.json",
+      "sha256": "ca6532a0ba9e8c487819ddc0ee2ae5eb35111904aa347527eb62042f77d605d6"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\static-checks-v1.json",
+      "sha256": "8e50f4bd1c480a4cf99f5a402297c5fcc751405bc2c0fcb783acb2be91140497"
+    },
+    {
+      "file": "2026-10-09_0423_出발보류_감시연결\\verification-proof-v1.json",
+      "sha256": "ceaab999d70e3195d5cec7c0b771d0287ddfcfe977ebbb5f36e19e48d2382df9"
+    }
+  ]
+}

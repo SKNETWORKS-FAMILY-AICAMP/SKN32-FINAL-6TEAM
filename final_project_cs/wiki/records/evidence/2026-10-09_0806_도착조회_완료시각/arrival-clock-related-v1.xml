@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="1" skipped="0" tests="98" time="6.318" timestamp="2026-10-09T08:08:49.165962+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_fresh_response_after_request_start_is_not_future_confirmation" time="0.050" /><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_access_starts_after_response_and_skips_vehicle_missed_during_query" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_real_source_clock_flows_through_revalidation_and_departure_notice" time="0.055" /><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_no_boardable_prediction_still_moves_model_departure_after_response" time="0.006" /><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_query_delay_crossing_deadline_does_not_emit_old_guidance" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_observer_rejects_missing_timezone_or_backwards_evaluation[2026-10-09T10:00:02]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_observer_rejects_missing_timezone_or_backwards_evaluation[2026-10-09T09:59:59+09:00]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_confirmed_after_evaluation_is_still_rejected" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_current_boarding_ride_profile_and_egress_replace_the_saved_total" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_source_failure_revalidates_the_model_with_explicit_status[stale]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_source_failure_revalidates_the_model_with_explicit_status[unavailable]" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_source_failure_revalidates_the_model_with_explicit_status[no_boardable_prediction]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[basis-basis_changed]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[coords-place_changed]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[legs-route_check_missing_or_changed]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[access-access_context_invalid]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[option-option_changed]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_mismatched_identity_or_clock_cannot_be_used[stop_sequence-1]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_mismatched_identity_or_clock_cannot_be_used[route_id-other]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_mismatched_identity_or_clock_cannot_be_used[arrival_at-2026-10-09T10:03:00+09:00]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_mismatched_identity_or_clock_cannot_be_used[confirmed_at-2026-10-09T10:01:00+09:00]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_late_current_bus_does_not_produce_old_departure_guidance" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_future_bus_after_rail_is_not_replaced_with_current_bus_prediction" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_midnight_and_second_rounding_use_current_service_day" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_live_departure_is_request_private_and_not_reused_for_departure_search" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_later_bus_is_recomputed_after_first_ride_and_transfer_not_given_current_eta" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_client_case_cannot_inject_realtime_departure" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_source_to_notice_v1" name="test_missed_first_bus_selects_second_and_changes_current_notice_eta" time="0.044" /><testcase classname="tests.unit.travel.mobility.test_departure_source_to_notice_v1" name="test_model_with_unusable_saved_leg_is_fatal_not_a_fabricated_fallback" time="0.004" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_six_minute_access_skips_bus_in_three_minutes_and_selects_second" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_only_cache_elapsed_is_subtracted_and_provider_age_is_not_subtracted_twice" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_exact_ready_time_is_boardable_but_one_second_later_is_not" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_full_and_unknown_message_are_not_zero_second_buses" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_invalid_identity_and_clock_do_not_match_another_stop[changes0-source_or_route_mismatch]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_invalid_identity_and_clock_do_not_match_another_stop[changes1-stop_not_unique]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_invalid_identity_and_clock_do_not_match_another_stop[changes2-stop_not_unique]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_invalid_identity_and_clock_do_not_match_another_stop[changes3-invalid_stop_identity]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_invalid_identity_and_clock_do_not_match_another_stop[changes4-timezone_required]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_invalid_identity_and_clock_do_not_match_another_stop[changes5-invalid_age_limit]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_duplicate_stop_sequence_is_not_silently_selected" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_stale_and_future_confirmations_require_refresh" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_second_order_is_not_assumed_later_when_provider_predictions_change" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_arrival_v1" name="test_eta_without_verified_message_basis_is_rejected" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_adapter_queries_exact_stop_and_selects_after_access" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_second_stop_and_loop_sequence_share_one_route_response" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_fresh_http_response_does_not_refresh_old_provider_data" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_missing_source_and_provider_auth_failure_have_no_boardable_result" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_invalid_input_does_not_spend_a_source_call[changes0]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_invalid_input_does_not_spend_a_source_call[changes1]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_invalid_input_does_not_spend_a_source_call[changes2]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_invalid_input_does_not_spend_a_source_call[changes3]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_invalid_input_does_not_spend_a_source_call[changes4]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_invalid_input_does_not_spend_a_source_call[changes5]" time="0.002" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_invalid_input_does_not_spend_a_source_call[changes6]" time="0.003" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_invalid_input_does_not_spend_a_source_call[changes7]" time="0.001" /><testcase classname="tests.unit.travel.test_bus_boardable_source_v1" name="test_invalid_input_does_not_spend_a_source_call[changes8]" time="0.003" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[3\ubd8431\ucd08 \ud6c4-211]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[31\ucd08 \ud6c4 (2\ubc88\uc9f8 \uc804)-31]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[0\ucd08 \ud6c4-0]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[3\ubd84 \ud6c4-180]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[4\ubd8438\ucd08\ud6c4[2\ubc88\uc9f8 \uc804]-278]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[2\ubd84\ud6c4[1\ubc88\uc9f8 \uc804]-120]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[\ucd9c\ubc1c\ub300\uae30-None]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[\uc6b4\ud589\uc885\ub8cc-None]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[\uace7 \ub3c4\ucc29-None]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[2\ubc88\uc9f8 \uc804-None]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_provider_message_eta[-None]" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_units_observation_time_and_request_parameter" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_loop_stop_requires_sequence_to_select_one_direction" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_auth_failure_is_not_success_or_cached" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_empty_success_and_wrong_shapes" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_route_cache_shared_across_stop_filters_and_expires_in_30_seconds" time="0.001" /><testcase classname="tests.unit.travel.test_seoul_bus_arrival" name="test_common_key_assembles_bus_source" time="0.026" /><testcase classname="tests.unit.travel.test_seoul_bus_shared_cache_v1" name="test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call" time="0.065"><failure message="Failed: 둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다">unique_key = ('TEST_ONLY_6f2263eb99c1406e82b25a2c99188f93', '9fa1b3bf95112c477428ba262d0c499a0505bed65359ac2b436232f57f51f450')
+
+    def test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call(unique_key):
+        key, key_hash = unique_key
+        observed = datetime.now(KST).replace(microsecond=0) - timedelta(seconds=8)
+        calls = []
+    
+        def transport(url, params):
+            calls.append(1)
+            return httpx.Response(200, json={'msgHeader': {'headerCd': '0'}, 'msgBody': {'itemList': [
+                {'busRouteId': '100100118', 'stId': '111000181', 'staOrd': str(seq),
+                 'rtNm': '753', 'stNm': '여행 출발 정류장', 'dir': direction,
+                 'mkTm': observed.isoformat(sep=' '), 'arrmsg1': message, 'arrmsg2': '출발대기'}
+                for seq, direction, message in [(5, '서울역', '4분38초후[2번째 전]'), (90, '종점', '2분후[1번째 전]')]
+            ]}})
+    
+        first_cache = DbResponseCache(300, get_connection)
+        second_cache = DbResponseCache(300, get_connection)
+        first = SeoulBusArrival(service_key=key, transport=transport, cache=first_cache)
+    
+        def forbidden_call(url, params):
+            pytest.fail('둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다')
+    
+        second = SeoulBusArrival(service_key=key, transport=forbidden_call, cache=second_cache)
+        a = first.arrivals('100100118', stop_id='111000181', stop_sequence=5)
+&gt;       b = second.arrivals('100100118', stop_id='111000181', stop_sequence=90)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_seoul_bus_shared_cache_v1.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\ports\data_sources\seoul_bus.py:96: in arrivals
+    payload = self._fetch_json(BASE, {'serviceKey': self._key, 'busRouteId': str(route_id), 'resultType': 'json'})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\ports\data_sources\base.py:152: in _fetch_json
+    response = self._get(url, params)
+               ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+url = 'http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll'
+params = {'busRouteId': '100100118', 'resultType': 'json', 'serviceKey': 'TEST_ONLY_6f2263eb99c1406e82b25a2c99188f93'}
+
+    def forbidden_call(url, params):
+&gt;       pytest.fail('둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다')
+E       Failed: 둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다
+
+tests\unit\travel\test_seoul_bus_shared_cache_v1.py:44: Failed</failure></testcase><testcase classname="tests.unit.travel.test_seoul_bus_shared_cache_v1" name="test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call" time="0.007"><error message="failed on teardown with &quot;psycopg.OperationalError: connection failed: connection to server at &quot;127.0.0.1&quot;, port 5433 failed: Permission denied (0x0000271D/10013)&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture
+    def unique_key():
+        # 다른 시험·실제 공개 응답을 지우지 않고 이 시험이 만든 해시 한 줄만 정리한다.
+        service_key = 'TEST_ONLY_' + uuid4().hex
+        key = ('seoul_bus_arrival', BASE, tuple(sorted({
+            'serviceKey': service_key, 'busRouteId': '100100118', 'resultType': 'json'
+        }.items())))
+        yield service_key, DbResponseCache._hash(key)
+&gt;       with get_connection() as conn, conn.transaction():
+             ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_seoul_bus_shared_cache_v1.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = &lt;class 'psycopg.Connection'&gt;
+conninfo = 'user=postgres dbname=acop_cs host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = False, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+params = {'dbname': 'acop_cs', 'host': '127.0.0.1', 'port': '5433', 'user': 'postgres'}
+timeout = 130
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -&gt; Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+&gt;               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError</error></testcase><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_fresh_departure_and_eta_are_displayed_without_mutating_saved_item" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value0-held]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value1-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value2-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value3-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[value4-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_invalid_or_late_observations_do_not_emit_stale_guidance[None-fatal]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_observer_notice_v1" name="test_model_fallback_is_labelled_and_default_consumer_preserves_saved_eta" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_generated_context_identifies_walk_and_real_stairs_are_rechecked" time="0.003" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_current_graph_duration_replaces_saved_route_duration" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_seconds_are_rounded_up_and_eta_includes_departure_rounding" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[None]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[vehicle]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[unknown]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_inconsistent_walk_context_is_held[check]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_inconsistent_walk_context_is_held[legs]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_explicit_no_path_is_held_and_not_replaced_by_straight_formula" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_missing_router_uses_explicit_existing_model_evidence[None]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_missing_router_uses_explicit_existing_model_evidence[router1]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_operating_margin_is_required_even_when_walk_arrives_before_deadline" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_party_walk_policy_is_checked_again" time="0.003" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_invalid_current_distance_is_never_published[-1]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_invalid_current_distance_is_never_published[nan]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_invalid_current_distance_is_never_published[inf]" time="0.001" /></testsuite></testsuites>

@@ -1,0 +1,19 @@
+F401 [*] `copy.deepcopy` imported but unused
+ --> tests\unit\travel\mobility\test_tago_collection_integrity_v1.py:2:18
+  |
+1 | """실제 수집 진입점의 오류/빈 자료·페이지 완전성을 통제 응답으로 검사한다."""
+2 | from copy import deepcopy
+  |                  ^^^^^^^^
+3 | import importlib
+4 | import json
+  |
+help: Remove unused import: `copy.deepcopy`
+  |
+1 | """실제 수집 진입점의 오류/빈 자료·페이지 완전성을 통제 응답으로 검사한다."""
+  - from copy import deepcopy
+2 | import importlib
+  |
+
+Found 1 error.
+[*] 1 fixable with the `--fix` option.
+

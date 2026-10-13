@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>같은 질문의 표시 순서 견고성 진단</title>
+<style>body{margin:0;background:#fbfcfd;color:#161c28;font-family:Arial,"Malgun Gothic",sans-serif}main{max-width:880px;margin:24px auto;padding:20px}h1{font-size:26px}p,summary{line-height:1.6}svg{width:100%;height:auto}details{border-top:1px solid #dbe0ea;padding-top:14px}summary{cursor:pointer}summary:focus-visible{outline:3px solid #2f5bd8}</style>
+<main><h1>질문은 같은데, 후보 위치에 따라 답이 달라졌습니다</h1><p>첫 진단 8조건 중 모든 견고성 기준을 충족한 조건은 0개입니다. 같은 문항 반복은 독립적인 정확도 검증이 아닙니다. 글꼴은 설치된 Arial·맑은 고딕을 사용합니다.</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 780" role="img" aria-labelledby="order-gate-title order-gate-desc"><title id="order-gate-title">같은 질문의 표시 순서 견고성 진단</title><desc id="order-gate-desc">고정된 질문과 정답에서 후보 표시 순서만 뒤집어 답을 비교하고, 세 기준 모두 충족하면 독립 검증 준비로, 미달하면 채택 보류와 추가 진단으로 이어져 이번 회차를 마친다.</desc>
+<defs><marker id="order-gate-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2f5bd8"/></marker></defs>
+<style>text{font-family:Arial,'Malgun Gothic',sans-serif;fill:#161c28;font-size:19px;text-anchor:middle}.node{fill:#fbfcfd;stroke:#161c28;stroke-width:2}.edge{fill:none;stroke:#2f5bd8;stroke-width:2;marker-end:url(#order-gate-arrow)}.small{font-size:16px}.focus{fill:#f1f4f8;stroke:#a8720c;stroke-width:2}</style>
+<rect width="820" height="780" fill="#fbfcfd"/>
+<ellipse class="node" cx="410" cy="40" rx="130" ry="27"/><text x="410" y="47">진단 회차 시작</text>
+<path class="edge" d="M410 67V95"/><rect class="node" x="245" y="100" width="330" height="62" rx="6"/><text x="410" y="126">모델·질문·정답 ID 고정</text><text class="small" x="410" y="150">학습 여부와 실행판도 기록</text>
+<path class="edge" d="M410 162V185"/><rect class="node" x="245" y="190" width="330" height="55" rx="6"/><text x="410" y="224">후보 표시 순서만 뒤집기</text>
+<path class="edge" d="M410 245V270"/><rect class="node" x="245" y="275" width="330" height="55" rx="6"/><text x="410" y="309">원래 답과 같은 문항 비교</text>
+<path class="edge" d="M410 330V350"/><path class="focus" d="M410 355L570 435L410 515L250 435Z"/><text x="410" y="420">세 기준을 모두</text><text x="410" y="448">충족했나요?</text>
+<path class="edge" d="M570 435H625V555"/><text class="small" x="626" y="423">예 · 이번 0/8</text>
+<path class="edge" d="M250 435H195V555"/><text class="small" x="190" y="423">아니요 · 이번 8/8</text>
+<rect class="node" x="45" y="560" width="300" height="65" rx="6"/><text x="195" y="588">채택 보류·추가 진단</text><text class="small" x="195" y="612">정상 요청 손실과 오지목 확인</text>
+<rect class="node" x="475" y="560" width="300" height="65" rx="6"/><text x="625" y="588">별도 독립 검증 준비</text><text class="small" x="625" y="612">사람 검수·새 보류 자료 필요</text>
+<path class="edge" d="M195 625V665H410V695"/><path class="edge" d="M625 625V665H410"/><ellipse class="node" cx="410" cy="725" rx="130" ry="27"/><text x="410" y="732">이번 진단 종료</text>
+</svg>
+<p>세 기준: 정상 정답 감소 ≤2%p · 오지목 증가 ≤1%p · 선택 일치 ≥99%. 다음 준비 작업은 기존 GPU 대기열에서 순서대로 실행하며, 같은 결과를 독립 표본으로 더하지 않습니다.</p>
+<details><summary>더 쉽게</summary><p>장소 목록의 순서만 바꿨는데 답이 달라진다면, 문장을 이해하기보다 위치에 기대고 있을 수 있습니다. 이 시험으로 취약점을 찾았으며, 새 자료에서 검증하기 전에는 채택하지 않습니다.</p></details>
+<details><summary>예 하나 더</summary><p>“경복궁 입장 시간은요?”라는 질문은 목록에서 경복궁이 첫 번째이든 마지막이든 같은 경복궁 ID를 골라야 합니다.</p></details></main></html>

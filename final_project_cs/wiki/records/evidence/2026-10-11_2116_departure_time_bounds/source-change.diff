@@ -1,0 +1,35 @@
+--- before/departure_observer.py
++++ after/departure_observer.py
+@@ -13,6 +13,12 @@
+ def _number(value):
+     return (not isinstance(value, bool) and isinstance(value, (int, float))
+             and math.isfinite(value) and value >= 0)
++
++
++def _duration_minutes(value):
++    """변환 전에 운행일 범위를 검사한다. 초대형 정수도 실수로 변환하지 않는다."""
++    return (not isinstance(value, bool) and isinstance(value, (int, float))
++            and 0 <= value <= SERVICE_DAY_MAX_MIN)
+ 
+ 
+ def _same_place(saved, current):
+@@ -200,14 +206,16 @@
+         if option.get('subway_identity') != boarding_identity(runtime, legs):
+             return fail('needs_replan', 'subway_identity_changed')
+     names = ('walk_place_in', 'walk_stop_in', 'walk_stop_out', 'walk_place_out')
+-    if any(not _number(check.get(key)) for key in names):
++    if any(not _duration_minutes(check.get(key)) for key in names):
++        return fail('needs_replan', 'access_context_invalid')
++    access = check['walk_place_in'] + check['walk_stop_in']
++    egress = check['walk_stop_out'] + check['walk_place_out']
++    if not _duration_minutes(access) or not _duration_minutes(egress):
+         return fail('needs_replan', 'access_context_invalid')
+     now_local = now.astimezone(KST)
+     start = now_local.replace(second=0, microsecond=0)
+     if now_local > start:
+         start += timedelta(minutes=1)
+-    access = check['walk_place_in'] + check['walk_stop_in']
+-    egress = check['walk_stop_out'] + check['walk_place_out']
+     ready = start + timedelta(minutes=math.ceil(access))
+     service_date, depart_min = service_day(ready)
+     midnight = datetime.combine(service_date, time(), tzinfo=KST)

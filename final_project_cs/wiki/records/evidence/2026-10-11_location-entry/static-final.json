@@ -1,0 +1,6 @@
+{
+  "typecheck_exit": 0,
+  "lint_exit": 0,
+  "typecheck_incremental": false,
+  "build": "Next webpack production; verified Chrome uses this build"
+}

@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-10-09T05:08:14.624030+09:00",
+  "sources": [
+    {
+      "url": "https://www.postgresql.org/docs/16/explicit-locking.html",
+      "applied": "같은 여행 행을 FOR NO KEY UPDATE로 잠그고 갱신과 안내 저장을 트랜잭션 끝까지 직렬화",
+      "limits": "저장 순서만 보장하며 실제 발송/출발/탑승 상태는 확인하지 않는다"
+    }
+  ]
+}

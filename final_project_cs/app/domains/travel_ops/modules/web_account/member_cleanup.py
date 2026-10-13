@@ -59,10 +59,14 @@ _COUNTS: tuple[tuple[str, str], ...] = (
     ("web_sessions", "SELECT count(*) FROM web_sessions WHERE tenant_id=%s AND customer_id = ANY(%s)"),
     ("web_user_keys", "SELECT count(*) FROM web_user_keys WHERE tenant_id=%s AND customer_id = ANY(%s)"),
     ("web_agent_keys", "SELECT count(*) FROM web_agent_keys WHERE tenant_id=%s AND customer_id = ANY(%s)"),
+    ("personal_ai_oauth_records", "SELECT count(*) FROM personal_ai_oauth_records WHERE tenant_id=%s AND customer_id = ANY(%s)"),
+    ("ops_defect_customers", "SELECT count(*) FROM ops_defect_customers WHERE tenant_id=%s AND customer_id = ANY(%s)"),
+    ("ops_diagnostic_events", "SELECT count(*) FROM ops_diagnostic_events WHERE tenant_id=%s AND customer_id = ANY(%s)"),
 )
 #: 사용자 번호로 바로 지우는 표 — 여행 삭제가 못 지우는 것들(순서 무관, 모두 사용자 행을 가리킨다)
 _BY_CUSTOMER: tuple[str, ...] = ("user_activity_events", "place_aliases", "customer_profiles", "telegram_link_codes",
-                                 "web_oauth_states", "web_oauth_tickets", "web_social_links", "web_sessions", "web_user_keys", "web_agent_keys")
+                                 "web_oauth_states", "web_oauth_tickets", "web_social_links", "web_sessions", "web_user_keys", "web_agent_keys",
+                                 "personal_ai_oauth_records", "ops_defect_customers")
 
 
 def _now(now: datetime | None) -> datetime:
@@ -95,6 +99,8 @@ def erase_customer(conn, tenant_id: str, customer_id: UUID) -> dict[str, int]:
         cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))      # 여행이 안 된 접수(자식은 CASCADE)
         for table in _BY_CUSTOMER:
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
+        cur.execute('UPDATE ops_diagnostic_events SET customer_id=NULL WHERE tenant_id=%s AND customer_id=%s',
+                    (tenant_id, customer_id))
         if get_guardrails().get("retention.case_follows_trip"):
             cur.execute("SELECT case_id FROM customer_cases WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
             ids = [row[0] for row in cur.fetchall()]
@@ -105,6 +111,8 @@ def erase_customer(conn, tenant_id: str, customer_id: UUID) -> dict[str, int]:
             done["customer"] = cur.rowcount
         except ForeignKeyViolation:
             done["kept"] = 1
+            cur.execute('UPDATE customers SET external_id=%s WHERE tenant_id=%s AND customer_id=%s',
+                        ('erased:' + str(customer_id), tenant_id, customer_id))
     return done
 
 

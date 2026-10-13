@@ -26,7 +26,9 @@ from app.presentation.api.app import app
 
 # 설계 계약 문서 §1 의 표 — 이것은 **최소 집합**이지 상한이 아니다.
 CONTRACT_V1_PATHS = {
-    # Public prepared input catalog: wiki/external/test-scenarios.md.
+    # 실제 계약: personal-ai-oauth.md, test-scenarios.md, rest-endpoints/web-intakes.md.
+    "/v1/web/agent-connections",
+    "/v1/web/agent-connections/{connection_id}",
     "/v1/web/test-scenarios",
     "/v1/web/trip-intakes/{intake_id}/restore",
     # 운영자 웹앱 연동 계약의 고객 문의·공개 공지. 문의 쓰기는 고객 인증과 CSRF를 거친다.
@@ -166,7 +168,8 @@ OPEN_WRITE_PATHS = {"/v1/web/session", "/v1/web/auth/session", "/v1/web/auth/{pr
                     "/v1/telegram/webhook"}
 
 # 인증으로 치는 의존성 — scope 키(`require_scope`) 또는 웹 사용자 키(`_web_customer`)
-AUTH_DEPENDENCIES = ("require_scope.", "._web_customer", "require_identity")
+AUTH_DEPENDENCIES = ("require_scope.", "._web_customer", "require_identity",
+                     "build_personal_ai_router.<locals>.require_member")
 
 WRITE_METHODS = {"post", "put", "patch", "delete"}
 

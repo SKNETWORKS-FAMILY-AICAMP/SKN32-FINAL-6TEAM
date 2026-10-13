@@ -1,0 +1,38 @@
+[
+  {
+    "title": "docker-production",
+    "url": "https://docs.docker.com/compose/how-tos/production/",
+    "resolved_url": "https://docs.docker.com/compose/how-tos/production/",
+    "http_status": 200,
+    "file": "program/research/wiki_review_2026-10-11/references/w18/docker-production.html",
+    "sha256": "096772a62d99957c94d92dfeb5355f2e79138f719d093b36c34da613a723f61d",
+    "downloaded_at": "2026-10-11T22:08:40.448459"
+  },
+  {
+    "title": "docker-startup",
+    "url": "https://docs.docker.com/compose/how-tos/startup-order/",
+    "resolved_url": "https://docs.docker.com/compose/how-tos/startup-order/",
+    "http_status": 200,
+    "file": "program/research/wiki_review_2026-10-11/references/w18/docker-startup.html",
+    "sha256": "5fc52d7f3894adb2378eae7ca714fece8eb77cb8e04666b8e4e966acf184db80",
+    "downloaded_at": "2026-10-11T22:08:40.525888"
+  },
+  {
+    "title": "docker-restart",
+    "url": "https://docs.docker.com/engine/containers/start-containers-automatically/",
+    "resolved_url": "https://docs.docker.com/engine/containers/start-containers-automatically/",
+    "http_status": 200,
+    "file": "program/research/wiki_review_2026-10-11/references/w18/docker-restart.html",
+    "sha256": "44cbed287a1814790aa70a87238f4f0d272ac6fb2714b4ff82ac4fac3b037b8a",
+    "downloaded_at": "2026-10-11T22:08:40.588702"
+  },
+  {
+    "title": "google-sre-monitoring",
+    "url": "https://sre.google/sre-book/monitoring-distributed-systems/",
+    "resolved_url": "https://sre.google/sre-book/monitoring-distributed-systems/",
+    "http_status": 200,
+    "file": "program/research/wiki_review_2026-10-11/references/w18/google-sre-monitoring.html",
+    "sha256": "3117d94aca6d7422db18b210a4142718388523a4ea2082df539ffe9a8c4c2a75",
+    "downloaded_at": "2026-10-11T22:08:41.009956"
+  }
+]

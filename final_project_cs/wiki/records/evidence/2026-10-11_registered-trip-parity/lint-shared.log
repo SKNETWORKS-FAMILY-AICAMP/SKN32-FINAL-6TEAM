@@ -1,0 +1,236 @@
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts
+   8:35  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `stripBox.current`, but the source dependencies were [active, markerBox, stripBox]. Differences in ref.current access.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts:8:35
+   6 | export function useDayMarker(stripBox: RefObject<HTMLElement | null>, markerBox: RefObject<HTMLElement | null>, active: number, layoutKey: string) {
+   7 |   const progress = useRef({ shift: 0, width: 1 });
+>  8 |   const placeMarker = useCallback((shift = 0, width = 1) => {
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  9 |     progress.current = { shift, width };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 10 |     const strip = stripBox.current, marker = markerBox.current;
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 20 |     tabs.forEach((tab, index) => tab.toggleAttribute("data-lit", index === (toward && part > 0.5 ? active + (shift < 0 ? 1 : -1) : active)));
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |   }, [active, markerBox, stripBox]);
+     | ^^^^ Could not preserve existing manual memoization
+  22 |
+  23 |   useLayoutEffect(() => {
+  24 |     placeMarker();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/preserve-manual-memoization
+   8:35  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `markerBox.current`, but the source dependencies were [active, markerBox, stripBox]. Differences in ref.current access.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts:8:35
+   6 | export function useDayMarker(stripBox: RefObject<HTMLElement | null>, markerBox: RefObject<HTMLElement | null>, active: number, layoutKey: string) {
+   7 |   const progress = useRef({ shift: 0, width: 1 });
+>  8 |   const placeMarker = useCallback((shift = 0, width = 1) => {
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  9 |     progress.current = { shift, width };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 10 |     const strip = stripBox.current, marker = markerBox.current;
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 20 |     tabs.forEach((tab, index) => tab.toggleAttribute("data-lit", index === (toward && part > 0.5 ? active + (shift < 0 ? 1 : -1) : active)));
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |   }, [active, markerBox, stripBox]);
+     | ^^^^ Could not preserve existing manual memoization
+  22 |
+  23 |   useLayoutEffect(() => {
+  24 |     placeMarker();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/preserve-manual-memoization
+   8:35  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `markerBox` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts:8:35
+   6 | export function useDayMarker(stripBox: RefObject<HTMLElement | null>, markerBox: RefObject<HTMLElement | null>, active: number, layoutKey: string) {
+   7 |   const progress = useRef({ shift: 0, width: 1 });
+>  8 |   const placeMarker = useCallback((shift = 0, width = 1) => {
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  9 |     progress.current = { shift, width };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 10 |     const strip = stripBox.current, marker = markerBox.current;
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 20 |     tabs.forEach((tab, index) => tab.toggleAttribute("data-lit", index === (toward && part > 0.5 ? active + (shift < 0 ? 1 : -1) : active)));
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |   }, [active, markerBox, stripBox]);
+     | ^^^^ This function may (indirectly) reassign or modify `markerBox` after render
+  22 |
+  23 |   useLayoutEffect(() => {
+  24 |     placeMarker();
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts:17:5
+  15 |     const toward = shift < 0 ? tabs[active + 1] : shift > 0 ? tabs[active - 1] : undefined;
+  16 |     const part = toward ? Math.min(1, Math.abs(shift) / Math.max(1, width * 0.4)) : 0;
+> 17 |     marker.style.transform = `translateX(${here.offsetLeft + (toward ? (toward.offsetLeft - here.offsetLeft) * part : 0)}px)`;
+     |     ^^^^^^^^^^^^ This modifies `markerBox`
+  18 |     marker.style.width = `${here.offsetWidth + (toward ? (toward.offsetWidth - here.offsetWidth) * part : 0)}px`;
+  19 |     strip.toggleAttribute("data-dragging", shift !== 0);
+  20 |     tabs.forEach((tab, index) => tab.toggleAttribute("data-lit", index === (toward && part > 0.5 ? active + (shift < 0 ? 1 : -1) : active)));  react-hooks/immutability
+  17:5   error  Error: This value cannot be modified
+
+Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts:17:5
+  15 |     const toward = shift < 0 ? tabs[active + 1] : shift > 0 ? tabs[active - 1] : undefined;
+  16 |     const part = toward ? Math.min(1, Math.abs(shift) / Math.max(1, width * 0.4)) : 0;
+> 17 |     marker.style.transform = `translateX(${here.offsetLeft + (toward ? (toward.offsetLeft - here.offsetLeft) * part : 0)}px)`;
+     |     ^^^^^^^^^^^^ `markerBox` cannot be modified
+  18 |     marker.style.width = `${here.offsetWidth + (toward ? (toward.offsetWidth - here.offsetWidth) * part : 0)}px`;
+  19 |     strip.toggleAttribute("data-dragging", shift !== 0);
+  20 |     tabs.forEach((tab, index) => tab.toggleAttribute("data-lit", index === (toward && part > 0.5 ? active + (shift < 0 ? 1 : -1) : active)));                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/immutability
+  28:19  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `markerBox` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts:28:19
+  26 |   }, [active, layoutKey, placeMarker, stripBox]);
+  27 |
+> 28 |   useLayoutEffect(() => {
+     |                   ^^^^^^^
+> 29 |     const strip = stripBox.current;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |     if (!strip) return;
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |     return () => { live = false; observer.disconnect(); };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |   }, [layoutKey, placeMarker, stripBox]);
+     | ^^^^ This function may (indirectly) reassign or modify `markerBox` after render
+  39 |   return placeMarker;
+  40 | }
+  41 |
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts:17:5
+  15 |     const toward = shift < 0 ? tabs[active + 1] : shift > 0 ? tabs[active - 1] : undefined;
+  16 |     const part = toward ? Math.min(1, Math.abs(shift) / Math.max(1, width * 0.4)) : 0;
+> 17 |     marker.style.transform = `translateX(${here.offsetLeft + (toward ? (toward.offsetLeft - here.offsetLeft) * part : 0)}px)`;
+     |     ^^^^^^^^^^^^ This modifies `markerBox`
+  18 |     marker.style.width = `${here.offsetWidth + (toward ? (toward.offsetWidth - here.offsetWidth) * part : 0)}px`;
+  19 |     strip.toggleAttribute("data-dragging", shift !== 0);
+  20 |     tabs.forEach((tab, index) => tab.toggleAttribute("data-lit", index === (toward && part > 0.5 ? active + (shift < 0 ? 1 : -1) : active)));                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/immutability
+  39:10  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `markerBox` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts:39:10
+  37 |     return () => { live = false; observer.disconnect(); };
+  38 |   }, [layoutKey, placeMarker, stripBox]);
+> 39 |   return placeMarker;
+     |          ^^^^^^^^^^^ This function may (indirectly) reassign or modify `markerBox` after render
+  40 | }
+  41 |
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-day-marker.ts:17:5
+  15 |     const toward = shift < 0 ? tabs[active + 1] : shift > 0 ? tabs[active - 1] : undefined;
+  16 |     const part = toward ? Math.min(1, Math.abs(shift) / Math.max(1, width * 0.4)) : 0;
+> 17 |     marker.style.transform = `translateX(${here.offsetLeft + (toward ? (toward.offsetLeft - here.offsetLeft) * part : 0)}px)`;
+     |     ^^^^^^^^^^^^ This modifies `markerBox`
+  18 |     marker.style.width = `${here.offsetWidth + (toward ? (toward.offsetWidth - here.offsetWidth) * part : 0)}px`;
+  19 |     strip.toggleAttribute("data-dragging", shift !== 0);
+  20 |     tabs.forEach((tab, index) => tab.toggleAttribute("data-lit", index === (toward && part > 0.5 ? active + (shift < 0 ? 1 : -1) : active)));                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/immutability
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-page-scroll-reset.ts
+  11:19  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `box` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-page-scroll-reset.ts:11:19
+   9 |   const target = useRef(top);
+  10 |   useLayoutEffect(() => { target.current = top; });
+> 11 |   useLayoutEffect(() => {
+     |                   ^^^^^^^
+> 12 |     const element = box.current;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 13 |     if (!element) return;
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 20 |     return () => { cancelAnimationFrame(frame); element.style.overflowY = overflow; };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |   }, [box, pageKey]);
+     | ^^^^ This function may (indirectly) reassign or modify `box` after render
+  22 |   useEffect(() => {
+  23 |     const element = box.current;
+  24 |     if (!element) return;
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-page-scroll-reset.ts:17:5
+  15 |     gate.current = { locked: true, lastWheel: performance.now() };
+  16 |     const overflow = element.style.overflowY;
+> 17 |     element.style.overflowY = "hidden";
+     |     ^^^^^^^^^^^^^ This modifies `box`
+  18 |     element.scrollTo({ top: target.current(), behavior: "instant" });
+  19 |     const frame = requestAnimationFrame(() => { element.style.overflowY = overflow; });
+  20 |     return () => { cancelAnimationFrame(frame); element.style.overflowY = overflow; };  react-hooks/immutability
+  17:5   error  Error: This value cannot be modified
+
+Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\plan-check\use-page-scroll-reset.ts:17:5
+  15 |     gate.current = { locked: true, lastWheel: performance.now() };
+  16 |     const overflow = element.style.overflowY;
+> 17 |     element.style.overflowY = "hidden";
+     |     ^^^^^^^^^^^^^ `box` cannot be modified
+  18 |     element.scrollTo({ top: target.current(), behavior: "instant" });
+  19 |     const frame = requestAnimationFrame(() => { element.style.overflowY = overflow; });
+  20 |     return () => { cancelAnimationFrame(frame); element.style.overflowY = overflow; };                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/immutability
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\trip\use-chat-follow.ts
+  19:19  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `box` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\trip\use-chat-follow.ts:19:19
+  17 |     setAway(false); setUnread(false);
+  18 |   };
+> 19 |   useLayoutEffect(() => {
+     |                   ^^^^^^^
+> 20 |     if (!active) return;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |     const sent = pending && !previous.current.pending;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |     if (sent || follow.current) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 23 |       follow.current = true;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 24 |       if (box.current) box.current.scrollTop = box.current.scrollHeight;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 25 |       setAway(false); setUnread(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |     } else if (lastId !== previous.current.lastId) setUnread(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |     previous.current = { lastId, pending };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |   }, [active, box, lastId, pending]);
+     | ^^^^ This function may (indirectly) reassign or modify `box` after render
+  29 |   useEffect(() => {
+  30 |     const element = box.current;
+  31 |     if (!element || !active) return;
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\trip\use-chat-follow.ts:24:24
+  22 |     if (sent || follow.current) {
+  23 |       follow.current = true;
+> 24 |       if (box.current) box.current.scrollTop = box.current.scrollHeight;
+     |                        ^^^^^^^^^^^ This modifies `box`
+  25 |       setAway(false); setUnread(false);
+  26 |     } else if (lastId !== previous.current.lastId) setUnread(true);
+  27 |     previous.current = { lastId, pending };  react-hooks/immutability
+  24:24  error  Error: This value cannot be modified
+
+Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+
+C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\src\features\trip\use-chat-follow.ts:24:24
+  22 |     if (sent || follow.current) {
+  23 |       follow.current = true;
+> 24 |       if (box.current) box.current.scrollTop = box.current.scrollHeight;
+     |                        ^^^^^^^^^^^ `box` cannot be modified
+  25 |       setAway(false); setUnread(false);
+  26 |     } else if (lastId !== previous.current.lastId) setUnread(true);
+  27 |     previous.current = { lastId, pending };                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/immutability
+
+✖ 10 problems (10 errors, 0 warnings)
+

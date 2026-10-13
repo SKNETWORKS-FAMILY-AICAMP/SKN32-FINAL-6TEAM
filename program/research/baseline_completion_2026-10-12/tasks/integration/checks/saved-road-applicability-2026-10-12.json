@@ -1,0 +1,206 @@
+{
+  "input": "final_project_cs/var/alert-snapshots/analysis/2026-10-12-seoul28-replay-v1/runs/2026-10-12_032148_8f5b54d1/cases.json",
+  "input_sha256": "0f4c28b451808bbd73f2e2f0de1f6a90f3ae9a8185ff126772d280a038397639",
+  "passed": 28,
+  "total": 28,
+  "cases": [
+    {
+      "incident_id": "L90174193387",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174151378",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174169980",
+      "expected": "clear",
+      "actual": "clear",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174170006",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174171556",
+      "expected": "clear",
+      "actual": "clear",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174172025",
+      "expected": "clear",
+      "actual": "clear",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174172323",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174172575",
+      "expected": "clear",
+      "actual": "clear",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174175732",
+      "expected": "clear",
+      "actual": "clear",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174176052",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174176080",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174176081",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174182933",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174182934",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174182985",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174183055",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174183110",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174183189",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174183223",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174183245",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174183275",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174191976",
+      "expected": "clear",
+      "actual": "clear",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174193668",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174193690",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174193779",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174193892",
+      "expected": "unresolved",
+      "actual": "unresolved",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174213703",
+      "expected": "clear",
+      "actual": "clear",
+      "passed": true,
+      "actual_customer_trip": false
+    },
+    {
+      "incident_id": "L93174214863",
+      "expected": "clear",
+      "actual": "clear",
+      "passed": true,
+      "actual_customer_trip": false
+    }
+  ],
+  "scope": "실제 사건 행 + 명시적 시험 경로. 영향 미확인20건 보류·주의8건 정상 유지. 방향 정확도 시험은 기존2/20 그대로이며 실제 경로의 영향·무영향 판정 완료 아님.",
+  "network": "socket connect blocked; in-memory XML response only"
+}

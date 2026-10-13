@@ -1,0 +1,114 @@
+from pathlib import Path
+import cProfile
+from copy import deepcopy
+import hashlib
+import importlib.util
+import json
+import pstats
+import random
+import statistics
+import sys
+from time import perf_counter
+
+w = Path(__file__).resolve().parents[2]
+cs = w / 'final_project_cs'
+sys.path.insert(0, str(cs))
+from tests.unit.travel.mobility import test_taxi_fallback as T
+from app.domains.travel_ops.instances.mobility.engine import car_turn_search as search
+
+tag = '2026-10-09_0600_회전탐색_중복거리'
+evidence = cs / 'wiki/records/evidence' / tag
+baseline_path = cs / 'app/domains/travel_ops/instances/mobility/engine/_backup' / tag / 'car_turn_search.py'
+spec = importlib.util.spec_from_file_location(search.__package__ + '._benchmark_baseline', baseline_path)
+baseline = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(baseline)
+optimized = search.pieces
+prior = json.loads((cs / 'wiki/records/evidence/2026-10-09_0532_출발조건_저장경합/verification-proof-v1.json').read_text(encoding='utf8'))
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+files = {w / row['file'] for row in prior['source_hashes'] + prior['data_hashes']}
+engine = cs / 'app/domains/travel_ops/instances/mobility/engine'
+files.update(engine.glob('*.py'))
+files.update((engine / 'rules').glob('*.json'))
+files.update((cs / 'tests/unit/travel/mobility').glob('test_*turn*.py'))
+files.update(cs / 'tests/unit/travel/mobility' / name for name in ['test_graph_router.py','test_taxi_fallback.py','test_plan_v1.py'])
+files.add(baseline_path)
+snapshot = {p.relative_to(w).as_posix(): sha(p) for p in sorted(files)}
+(evidence / 'benchmark-start-hashes-v3.json').write_text(json.dumps(snapshot,indent=2),encoding='utf8')
+
+def run(fn):
+    traces = []
+    def traced(*args,**kwargs):
+        result = fn(*args,**kwargs)
+        traces.append(result)
+        return result
+    search.pieces = traced
+    start = perf_counter()
+    output = T._run('05:00')
+    duration = perf_counter() - start
+    normalized = deepcopy(output)
+    normalized['basis'].pop('decided_at')
+    for item in normalized['items']:
+        context = item.get('detail',{}).get('departure_context')
+        if context is not None:
+            context.pop('captured_at')
+    compared_traces = []
+    for parts,arcs,cost,start_snap,goal_snap in traces:
+        compared_traces.append(dict(parts=parts,arcs=arcs,cost=cost,
+            start={key:getattr(start_snap,key) for key in start_snap.__slots__},
+            goal={key:getattr(goal_snap,key) for key in goal_snap.__slots__}))
+    compared = dict(plan=normalized,turn_search_traces=compared_traces)
+    raw = json.dumps(compared,sort_keys=True,ensure_ascii=False,default=str)
+    return duration, hashlib.sha256(raw.encode()).hexdigest(), compared
+
+start = perf_counter()
+T._runtime_with_car()
+construction = perf_counter() - start
+cold, expected_hash, expected = run(baseline.pieces)
+warmup, warmup_hash, _ = run(optimized)
+assert warmup_hash == expected_hash
+print(json.dumps(dict(runtime_seconds=construction,cold_baseline_plan_seconds=cold,warmup_optimized_seconds=warmup)),flush=True)
+rows = []
+for pair in range(6):
+    for name,fn in [('baseline',baseline.pieces),('optimized',optimized)]:
+        seconds,output_hash,output = run(fn)
+        assert output == expected, (pair,name)
+        rows.append(dict(pair=pair+1,variant=name,seconds=seconds,output_sha256=output_hash))
+        print(json.dumps(rows[-1]),flush=True)
+
+profile = cProfile.Profile()
+search.pieces = optimized
+profile.runcall(T._run,'05:00')
+stats = pstats.Stats(profile)
+profile_rows = []
+for (file,line,name),(primitive,calls,own,cumulative,_) in stats.stats.items():
+    if file.endswith('car_turn_search.py') or (file.endswith('car.py') and name=='hav'):
+        profile_rows.append(dict(file=Path(file).name,line=line,name=name,calls=calls,own_seconds=own,cumulative_seconds=cumulative))
+
+a = [r['seconds'] for r in rows if r['variant']=='baseline']
+b = [r['seconds'] for r in rows if r['variant']=='optimized']
+rng = random.Random(20261009)
+estimates = []
+for _ in range(20000):
+    indices = rng.choices(range(len(a)),k=len(a))
+    estimates.append(100*(1-statistics.mean(b[i] for i in indices)/statistics.mean(a[i] for i in indices)))
+estimates.sort()
+summary = dict(runtime_construction_seconds=construction,cold_baseline_plan_seconds=cold,
+    warmup_optimized_seconds=warmup,rows=rows,pairs=6,
+    baseline=dict(mean=statistics.mean(a),median=statistics.median(a),min=min(a),max=max(a),stdev=statistics.stdev(a)),
+    optimized=dict(mean=statistics.mean(b),median=statistics.median(b),min=min(b),max=max(b),stdev=statistics.stdev(b)),
+    reduction_percent=100*(1-statistics.mean(b)/statistics.mean(a)),
+    paired_bootstrap_95_percent_ci=[estimates[500],estimates[19499]],bootstrap_resamples=20000,seed=20261009,
+    output_matches=len(rows),output_total=len(rows),output_sha256=expected_hash,
+    optimized_warm_profile=profile_rows,
+    caveat='고정 개발 입력·같은 프로세스의 준비된 자료. 실제 HTTP·독립 웹·탑승 결제 측정 아님',
+    excluded_wallclock_fields=['basis.decided_at','items[].detail.departure_context.captured_at'],
+    start_hash_count=len(snapshot),end_hash_matches=sum(sha(w/name)==value for name,value in snapshot.items()))
+assert summary['end_hash_matches']==len(snapshot)
+target=evidence / 'taxi-turn-ab-v3.json'
+assert not target.exists()
+target.write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf8')
+(evidence / 'taxi-turn-matched-output-v3.json').write_text(json.dumps(expected,ensure_ascii=False,indent=2,default=str),encoding='utf8')
+print(json.dumps({k:summary[k] for k in ['baseline','optimized','reduction_percent','paired_bootstrap_95_percent_ci','output_matches','end_hash_matches']},ensure_ascii=False),flush=True)

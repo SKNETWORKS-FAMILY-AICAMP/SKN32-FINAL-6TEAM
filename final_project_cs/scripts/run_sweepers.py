@@ -212,7 +212,8 @@ def _run_jobs(tenant_id: str, only: str | None, *, composition_failed=False,
         def classify():
             classifier = composition.build_classifier()
             with get_connection() as conn:
-                return sweep_stuck_classifying(conn, tenant_id=tenant_id, classifier=classifier, actor_id="sweeper")
+                return sweep_stuck_classifying(conn, tenant_id=tenant_id, classifier=classifier, actor_id="sweeper",
+                                               diagnostic_recorder=composition.build_operations_recorder())
         run("classifying", classify)
     if only in (None, "routing"):
         def route():
@@ -322,7 +323,12 @@ def _run_web_guard(tenant_id: str) -> dict[str, object]:
         # ★`[2026-10-05]` 보관 기간(`consent.evidence_retention_days`)이 지난 동의 기록도 여기서 지운다 — 동의 기록을 지우는 곳은 이 함수 하나뿐이다
         out = {**prune_usage(conn, tenant_id), "guests": cleanup_guests(conn, tenant_id), "consent_events_purged": purge_expired(conn, tenant_id)}
     # ★`[2026-10-07]` 회원 자료 정리 — 하루 한 번(주기 문) · 기본은 세기만(dry_run). 별도 연결로 돈다(위 정리와 트랜잭션이 섞이지 않게)
-    return {**out, "retention": _run_retention(tenant_id, forced=False)}
+    # 원본 정리를 먼저 끝낸다. 합성본 정리 실패가 원본 파기를 막지 않는다.
+    out["retention"] = _run_retention(tenant_id, forced=False)
+    from app.domains.travel_ops.components.customer.service_improvement import prune_expired
+    with get_connection() as conn:
+        out["synthetic_batches_purged"] = prune_expired(conn, tenant_id)
+    return out
 
 
 def _run_trip_places(tenant_id: str) -> dict[str, object]:
@@ -358,6 +364,7 @@ def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
     # ★하루 호출 상한(`ACOP_RATE_GOOGLE_PLACES_PER_DAY`)을 **같은 제한기**로 건다 — 넘으면 부르지 않고
     #   `rate_limited` 로 세며, 그 항목은 `fatal` 로 남아 창 안에서 다시 시도된다(요금이 새지 않게).
     from app.domains.travel_ops.ports.data_sources.call_budget import CallBudget, google_caps
+    from app import composition
 
     # ★무료 한도 보호 — DB 예산(027)을 **반드시** 건다. 프로세스 안 제한기는 매분 새로 차서 못 지킨다
     budget = CallBudget(connection_factory=get_connection, caps=google_caps())
@@ -365,7 +372,8 @@ def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
                            match_radius_m=float(get_guardrails().get("travel.dawn_check.match_radius_m")))
               if key else None)
     outcome = DawnCheck(store=TripStore(tenant_id), connection_factory=get_connection,
-                        clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")), source=source).tick()
+                        clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")), source=source,
+                        place_status=composition.build_place_status(source)).tick()
     return outcome.counts()
 
 
@@ -380,14 +388,18 @@ def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
     from app.domains.travel_ops.entry.trip_api import plan_url
     from app.domains.travel_ops.components.watch.trip_reminders import TripReminders
 
-    sources = build_travel_sources(get_settings())
+    from app.composition import build_mobility_departure_observer
+    settings = get_settings()
+    sources = build_travel_sources(settings)
     reminders = TripReminders(store=TripStore(tenant_id), connection_factory=get_connection,
                               clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")),
                               route_events=sources.route_events,
+                              departure_observer=build_mobility_departure_observer(settings, sources),
                               link=lambda trip_id: plan_url(tenant_id, trip_id))
     outcome = reminders.tick()
     return {"trips": outcome.trips, "sent": len(outcome.sent), "already": outcome.already,
-            "held": len(outcome.held), "fatal": len(outcome.fatal), "no_route": outcome.no_route}
+            "held": len(outcome.held), "fatal": len(outcome.fatal), "no_route": outcome.no_route,
+            "stale": len(outcome.stale)}
 
 
 def _watch_if_due(tenant_id: str, *, forced: bool, composition_failed=False) -> dict[str, int]:
@@ -398,6 +410,7 @@ def _watch_if_due(tenant_id: str, *, forced: bool, composition_failed=False) -> 
     """
     from app.application.job_gate import WATCH_GATE, claim, interval_seconds
     from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.watch.monitoring import execute
 
     interval, min_seconds = interval_seconds(get_guardrails())
     if not forced:
@@ -415,7 +428,7 @@ def _watch_if_due(tenant_id: str, *, forced: bool, composition_failed=False) -> 
             logger.error("sweeper_job_failed job=trip_safety error_type=%s", type(exc).__name__)
             counts["safety_errored"] = 1
         return counts
-    return work()
+    return execute(tenant_id, forced=forced, interval=interval, work=work, connection_factory=get_connection)
 
 
 def _run_trip_safety(tenant_id: str) -> dict[str, int]:
@@ -431,7 +444,10 @@ def _run_trip_safety(tenant_id: str) -> dict[str, int]:
     check = DisruptionCheck(build_travel_sources(get_settings()))
     sweep = SafetySweep(store=TripStore(tenant_id), check=check.check_safety, release=check.released,
                         connection_factory=get_connection, clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")))
-    return sweep.tick().counts()
+    outcome = sweep.tick()
+    from app.domains.travel_ops.components.watch.monitoring import outcomes
+    outcomes('safety_action', outcome)
+    return outcome.counts()
 
 
 @_in_round
@@ -446,6 +462,7 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
     from app.domains.travel_ops.components.itinerary.itinerary import TripStore
     from app.domains.travel_ops.components.watch.trip_watch_cases import TripWatchCaseOpener
+    from app import composition
 
     # ★`[2026-10-06 사용자 결정]` 재난 정지 점검은 감시 **앞에** 같은 주기로 돈다 — 정지가 먼저 걸려야 같은 회차의 감시가 그 여행을 건너뛴다(`TripStore.due`).
     #   실패해도 감시는 돈다(정지 점검의 예외가 일정 감시를 막지 않는다 — 실패는 세고 로그에 남긴다). 결과는 `safety_*` 칸으로 감시 결과에 합친다
@@ -466,8 +483,13 @@ def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     opener = TripWatchCaseOpener(
         store=TripStore(tenant_id), check=DisruptionCheck(sources).check,
         connection_factory=get_connection, clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")),
-        repository=repository, run_case=run_case, route_events=sources.route_events)
+        repository=repository, run_case=run_case, route_events=sources.route_events,
+        diagnostic_recorder=composition.build_operations_recorder(),
+        place_status=composition.build_place_status(),
+        departure_observer=composition.build_mobility_departure_observer(get_settings(), sources))
     outcome = opener.tick()
+    from app.domains.travel_ops.components.watch.monitoring import outcomes
+    outcomes('schedule_action', outcome)
     escalated = sum(1 for run in outcome.ran if run.get("status") == "escalated")
     return {**safety, "checked": outcome.checked, "opened": len(outcome.opened), "existing": len(outcome.existing),
             "ran": len(outcome.ran), "escalated": escalated, "fatal": len(outcome.fatal),

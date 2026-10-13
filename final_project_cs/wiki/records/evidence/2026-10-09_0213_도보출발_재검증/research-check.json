@@ -1,0 +1,9 @@
+{
+  "checked_at": "2026-10-09T02:23:23.494170+09:00",
+  "url": "https://drops.dagstuhl.de/entities/document/10.4230/OASIcs.ATMOS.2015.1",
+  "title": "Towards Realistic Pedestrian Route Planning",
+  "scope": "publisher abstract revisited; earlier report partial body reading preserved",
+  "inference": "Missing sidewalks and open-area traversals remain network quality issues; observer wiring does not resolve them.",
+  "adopted_algorithm": false,
+  "exhaustive_search": false
+}

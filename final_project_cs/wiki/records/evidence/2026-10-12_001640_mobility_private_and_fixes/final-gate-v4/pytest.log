@@ -1,0 +1,303 @@
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 19%]
+........................................................................ [ 24%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 38%]
+........................................................................ [ 43%]
+........................................................................ [ 48%]
+...........FFF.......................................................... [ 53%]
+........................................................................ [ 58%]
+........................................................................ [ 63%]
+....................................ssss................................ [ 67%]
+..........................................................FF
+================================== FAILURES ===================================
+____________ test_34_35_team_answers_structured_route_with_engine _____________
+
+tmp_path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_finish_20261011/final-gate-v4/temp/test_34_35_team_answers_struct0')
+
+    def test_34_35_team_answers_structured_route_with_engine(tmp_path):
+        _write_mini_data(tmp_path)
+        wiring.configure(data_dir=str(tmp_path), gh_url="", seoul_key="")
+        tools = FakeTools({})
+>       result = asyncio.run(MobilityTeam(tools).execute(_mobility_task({"mobility": LEGS})))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_review_fixes_wiring.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\asyncio\runners.py:193: in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+..\..\..\anaconda3\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:787: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\socket.py:623: in _fallback_socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (<socket.socket [closed] fd=-1, family=2, type=1, proto=0>, ('127.0.0.1', 56367))
+k = {}
+
+    def reject(*a,**k):
+>    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+[mobility] ! 역 출구표(station_exits_v1.json)가 없다 — 정류장↔역 환승은 역 좌표로 잰다
+[mobility] ! 따릉이 대여소(bike_stations_v1.jsonl)가 없다 — 자전거는 근거없음으로 낸다
+_________ test_34_team_without_engine_raises_error_not_made_up_answer _________
+
+    def test_34_team_without_engine_raises_error_not_made_up_answer():
+        wiring.configure(data_dir="")
+>       result = asyncio.run(MobilityTeam(FakeTools({})).execute(_mobility_task({"mobility": LEGS})))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_review_fixes_wiring.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\asyncio\runners.py:193: in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+..\..\..\anaconda3\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:787: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\socket.py:623: in _fallback_socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (<socket.socket [closed] fd=-1, family=2, type=1, proto=0>, ('127.0.0.1', 52932))
+k = {}
+
+    def reject(*a,**k):
+>    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError
+_______________ test_35_without_structured_input_keeps_old_path _______________
+
+    def test_35_without_structured_input_keeps_old_path():
+        wiring.configure(data_dir="")
+        tools = FakeTools({"read.route": None})
+>       result = asyncio.run(MobilityTeam(tools).execute(_mobility_task({})))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_review_fixes_wiring.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\asyncio\runners.py:193: in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:58: in __enter__
+    self._lazy_init()
+..\..\..\anaconda3\Lib\asyncio\runners.py:137: in _lazy_init
+    self._loop = events.new_event_loop()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:823: in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\events.py:720: in new_event_loop
+    return self._loop_factory()
+           ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\windows_events.py:316: in __init__
+    super().__init__(proactor)
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:640: in __init__
+    self._make_self_pipe()
+..\..\..\anaconda3\Lib\asyncio\proactor_events.py:787: in _make_self_pipe
+    self._ssock, self._csock = socket.socketpair()
+                               ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\socket.py:623: in _fallback_socketpair
+    csock.connect((addr, port))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (<socket.socket [closed] fd=-1, family=2, type=1, proto=0>, ('127.0.0.1', 52940))
+k = {}
+
+    def reject(*a,**k):
+>    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError
+_______________________ test_d_p90_multi_seoul_itaewon ________________________
+
+    def test_d_p90_multi_seoul_itaewon():
+>       rt = _runtime()
+             ^^^^^^^^^^
+
+tests\unit\travel\mobility\test_verify55_v1.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_verify55_v1.py:143: in _runtime
+    _RT = build_verifier(quiet=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\runtime.py:267: in build_verifier
+    if rt.info():
+       ^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\car.py:234: in info
+    with urllib.request.urlopen(self.url + "/info", timeout=5) as r:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+..\..\..\anaconda3\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:1373: in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+..\..\..\anaconda3\Lib\http\client.py:1336: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1382: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1331: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1091: in _send_output
+    self.send(msg)
+..\..\..\anaconda3\Lib\http\client.py:1035: in send
+    self.connect()
+..\..\..\anaconda3\Lib\http\client.py:1001: in connect
+    self.sock = self._create_connection(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (('localhost', 8989), 5, None), k = {}
+
+    def reject(*a,**k):
+>    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError
+____________________ test_d_wondeok_no_yangpyeong_transfer ____________________
+
+    def test_d_wondeok_no_yangpyeong_transfer():
+>       rt = _runtime()
+             ^^^^^^^^^^
+
+tests\unit\travel\mobility\test_verify55_v1.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_verify55_v1.py:143: in _runtime
+    _RT = build_verifier(quiet=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\runtime.py:267: in build_verifier
+    if rt.info():
+       ^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\car.py:234: in info
+    with urllib.request.urlopen(self.url + "/info", timeout=5) as r:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+..\..\..\anaconda3\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:1373: in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+..\..\..\anaconda3\Lib\http\client.py:1336: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1382: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1331: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1091: in _send_output
+    self.send(msg)
+..\..\..\anaconda3\Lib\http\client.py:1035: in send
+    self.connect()
+..\..\..\anaconda3\Lib\http\client.py:1001: in connect
+    self.sock = self._create_connection(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (('localhost', 8989), 5, None), k = {}
+
+    def reject(*a,**k):
+>    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError
+============================== warnings summary ===============================
+<unknown>:352
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+tests/unit/travel/mobility/test_review_fixes_wiring.py::test_34_team_without_engine_raises_error_not_made_up_answer
+tests/unit/travel/mobility/test_route_shape.py::test_detail_returns_more_points_than_the_default_for_a_long_road_route
+tests/unit/travel/mobility/test_taxi_fallback.py::test_before_first_train_falls_back_to_a_labelled_taxi
+  C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored in: <function BaseEventLoop.__del__ at 0x000001E43D5D60C0>
+  
+  Traceback (most recent call last):
+    File "C:\Users\playdata2\anaconda3\Lib\asyncio\base_events.py", line 728, in __del__
+      self.close()
+    File "C:\Users\playdata2\anaconda3\Lib\asyncio\proactor_events.py", line 697, in close
+      self._close_self_pipe()
+    File "C:\Users\playdata2\anaconda3\Lib\asyncio\proactor_events.py", line 779, in _close_self_pipe
+      self._ssock.close()
+      ^^^^^^^^^^^
+  AttributeError: 'ProactorEventLoop' object has no attribute '_ssock'
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/unit/travel/mobility/test_route_shape.py::test_detail_returns_more_points_than_the_default_for_a_long_road_route
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\route_shape.py:125: RuntimeWarning: coroutine 'MobilityTeam.execute' was never awaited
+    return [list(c) for c in coords], None
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/travel/mobility/test_taxi_fallback.py::test_before_first_train_falls_back_to_a_labelled_taxi
+  C:\Users\playdata2\anaconda3\Lib\json\decoder.py:337: RuntimeWarning: coroutine 'MobilityTeam.execute' was never awaited
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_finish_20261011\final-gate-v4\result.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_review_fixes_wiring.py::test_34_35_team_answers_structured_route_with_engine
+FAILED tests/unit/travel/mobility/test_review_fixes_wiring.py::test_34_team_without_engine_raises_error_not_made_up_answer
+FAILED tests/unit/travel/mobility/test_review_fixes_wiring.py::test_35_without_structured_input_keeps_old_path
+FAILED tests/unit/travel/mobility/test_verify55_v1.py::test_d_p90_multi_seoul_itaewon
+FAILED tests/unit/travel/mobility/test_verify55_v1.py::test_d_wondeok_no_yangpyeong_transfer
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 5 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+5 failed, 1059 passed, 4 skipped, 220 deselected, 6 warnings in 1009.77s (0:16:49)

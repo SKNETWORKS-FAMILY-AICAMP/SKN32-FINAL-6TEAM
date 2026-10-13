@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="8" time="6.213" timestamp="2026-10-09T08:07:41.708138+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_fresh_response_after_request_start_is_not_future_confirmation" time="0.068"><failure message="AssertionError: {'confirmed_at': '2026-10-09T01:00:02+00:00', 'observation_age_seconds': -2.0, 'ready_at': '2026-10-09T10:06:00+09:00', 'reason': 'confirmation_in_future', ...}&#10;assert 'unavailable' == 'predicted'&#10;  &#10;  - predicted&#10;  + unavailable">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000020D44460DD0&gt;
+
+    def test_fresh_response_after_request_start_is_not_future_confirmation(monkeypatch):
+        query, requests, clock = delayed_source(monkeypatch)
+        got = read(query)
+&gt;       assert got['status'] == 'predicted', got
+E       AssertionError: {'confirmed_at': '2026-10-09T01:00:02+00:00', 'observation_age_seconds': -2.0, 'ready_at': '2026-10-09T10:06:00+09:00', 'reason': 'confirmation_in_future', ...}
+E       assert 'unavailable' == 'predicted'
+E         
+E         - predicted
+E         + unavailable
+
+tests\unit\travel\mobility\test_arrival_query_clock_v1.py:43: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_access_starts_after_response_and_skips_vehicle_missed_during_query" time="0.002"><failure message="AssertionError: {'confirmed_at': '2026-10-09T01:00:02+00:00', 'observation_age_seconds': -2.0, 'ready_at': '2026-10-09T10:06:00+09:00', 'reason': 'confirmation_in_future', ...}&#10;assert ('unavailable' == 'predicted'&#10;  &#10;  - predicted&#10;  + unavailable)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000020D443F08F0&gt;
+
+    def test_access_starts_after_response_and_skips_vehicle_missed_during_query(monkeypatch):
+        query, _, _ = delayed_source(monkeypatch, first=390, second=480)
+        got = read(query)
+&gt;       assert got['status'] == 'predicted' and got['bus_order'] == 2, got
+E       AssertionError: {'confirmed_at': '2026-10-09T01:00:02+00:00', 'observation_age_seconds': -2.0, 'ready_at': '2026-10-09T10:06:00+09:00', 'reason': 'confirmation_in_future', ...}
+E       assert ('unavailable' == 'predicted'
+E         
+E         - predicted
+E         + unavailable)
+
+tests\unit\travel\mobility\test_arrival_query_clock_v1.py:53: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_real_source_clock_flows_through_revalidation_and_departure_notice" time="0.085"><failure message="AssertionError: {'arrival_at': '2026-10-09T10:16:00+09:00', 'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'fixture-a'}, 'checked_at': '2026-10-09T10:00:00+09:00', 'departure_at': '2026-10-09T10:00:00+09:00', ...}&#10;assert 'model_revalidated' == 'realtime'&#10;  &#10;  - realtime&#10;  + model_revalidated">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000020D44461910&gt;
+
+    def test_real_source_clock_flows_through_revalidation_and_departure_notice(monkeypatch):
+        runtime, context = scene()
+        query, requests, clock = delayed_source(monkeypatch)
+        got = call(runtime, context, bus_arrival=query)
+&gt;       assert got['status'] == 'realtime', got
+E       AssertionError: {'arrival_at': '2026-10-09T10:16:00+09:00', 'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'fixture-a'}, 'checked_at': '2026-10-09T10:00:00+09:00', 'departure_at': '2026-10-09T10:00:00+09:00', ...}
+E       assert 'model_revalidated' == 'realtime'
+E         
+E         - realtime
+E         + model_revalidated
+
+tests\unit\travel\mobility\test_arrival_query_clock_v1.py:61: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_no_boardable_prediction_still_moves_model_departure_after_response" time="0.008"><failure message="AssertionError: assert '2026-10-09T10:00:00+09:00' == '2026-10-09T10:00:02+09:00'&#10;  &#10;  - 2026-10-09T10:00:02+09:00&#10;  ?                   ^&#10;  + 2026-10-09T10:00:00+09:00&#10;  ?                   ^">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000020D44461F70&gt;
+
+    def test_no_boardable_prediction_still_moves_model_departure_after_response(monkeypatch):
+        runtime, context = scene()
+        query, _, clock = delayed_source(monkeypatch, full=True)
+        got = call(runtime, context, bus_arrival=query)
+        assert got['status'] == 'model_revalidated', got
+&gt;       assert got['checked_at'] == clock[0].isoformat()
+E       AssertionError: assert '2026-10-09T10:00:00+09:00' == '2026-10-09T10:00:02+09:00'
+E         
+E         - 2026-10-09T10:00:02+09:00
+E         ?                   ^
+E         + 2026-10-09T10:00:00+09:00
+E         ?                   ^
+
+tests\unit\travel\mobility\test_arrival_query_clock_v1.py:77: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_query_delay_crossing_deadline_does_not_emit_old_guidance" time="0.007" /><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_observer_rejects_missing_timezone_or_backwards_evaluation[2026-10-09T10:00:02]" time="0.007"><failure message="AssertionError: assert 'realtime' == 'fatal'&#10;  &#10;  - fatal&#10;  + realtime">evaluation = '2026-10-09T10:00:02'
+
+    @pytest.mark.parametrize('evaluation', ['2026-10-09T10:00:02', '2026-10-09T09:59:59+09:00'])
+    def test_observer_rejects_missing_timezone_or_backwards_evaluation(evaluation):
+        runtime, context = scene()
+        def bad(*args, **kwargs):
+            return dict(prediction(*args, **kwargs), evaluated_at=evaluation)
+&gt;       assert call(runtime, context, bus_arrival=bad)['status'] == 'fatal'
+E       AssertionError: assert 'realtime' == 'fatal'
+E         
+E         - fatal
+E         + realtime
+
+tests\unit\travel\mobility\test_arrival_query_clock_v1.py:96: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_observer_rejects_missing_timezone_or_backwards_evaluation[2026-10-09T09:59:59+09:00]" time="0.014"><failure message="AssertionError: assert 'realtime' == 'fatal'&#10;  &#10;  - fatal&#10;  + realtime">evaluation = '2026-10-09T09:59:59+09:00'
+
+    @pytest.mark.parametrize('evaluation', ['2026-10-09T10:00:02', '2026-10-09T09:59:59+09:00'])
+    def test_observer_rejects_missing_timezone_or_backwards_evaluation(evaluation):
+        runtime, context = scene()
+        def bad(*args, **kwargs):
+            return dict(prediction(*args, **kwargs), evaluated_at=evaluation)
+&gt;       assert call(runtime, context, bus_arrival=bad)['status'] == 'fatal'
+E       AssertionError: assert 'realtime' == 'fatal'
+E         
+E         - fatal
+E         + realtime
+
+tests\unit\travel\mobility\test_arrival_query_clock_v1.py:96: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_arrival_query_clock_v1" name="test_confirmed_after_evaluation_is_still_rejected" time="0.006" /></testsuite></testsuites>

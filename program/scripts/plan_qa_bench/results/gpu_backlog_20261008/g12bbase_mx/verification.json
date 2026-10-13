@@ -1,0 +1,11 @@
+{
+  "remote_answer_sha256": "1c0963a3adc6aa7f24d89c8b38434b8aaf69672556b8d303ca82d8ed2e1d5729",
+  "answer_remote_hash_match": true,
+  "fixed_prompt_hash_match": true,
+  "exact_id_gold_type_match": true,
+  "independent_direct_recount": true,
+  "saved": 4014,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "model_repetitions": 1
+}

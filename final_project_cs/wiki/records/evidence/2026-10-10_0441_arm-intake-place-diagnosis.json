@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-10T04:41:21+09:00",
+  "scope": "Oracle ARM develop app, one user-reported itinerary intake",
+  "intake": {"status": "review", "stage": "review", "revision": 1, "fatal_code": null},
+  "items": {"extracted": 10, "expected": 10, "resolved_coordinates": 0, "named_landmarks": 8, "generic_hotel_entries": 2},
+  "database_counts": {"places": 0, "place_catalog": 0},
+  "configured_credentials": {"data_go_kr_key": false, "tour_api_key": false, "kakao_rest_api_key": false},
+  "health": {"api": true, "postgresql": true, "web": true, "resident_model": true, "model_adapter": true},
+  "classification_failure_logs_last_20_minutes": 2,
+  "model_quality_pass": false,
+  "repair": {"configuration_prepared": true, "credential_transfer": "not_performed_auto_review_rejected_pending_user_authorization", "app_restarted": false, "user_itinerary_modified": false},
+  "privacy": "No credential values, connection identities, user identifiers, or original itinerary text included."
+}

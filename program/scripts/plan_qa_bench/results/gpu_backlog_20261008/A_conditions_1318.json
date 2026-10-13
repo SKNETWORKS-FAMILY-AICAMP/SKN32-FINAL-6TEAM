@@ -1,0 +1,57 @@
+{
+  "root_space": {
+    "path": "/root",
+    "available_bytes": 8882008064,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "temp_space": {
+    "path": "/tmp",
+    "available_bytes": 8882008064,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "ready": [
+    {
+      "id": "winnow_original_h",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    },
+    {
+      "id": "winnow_original_mx",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    },
+    {
+      "id": "winnow_original_d",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    },
+    {
+      "id": "winnow_original_d2",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    },
+    {
+      "id": "winnow_original_d3",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    }
+  ],
+  "blocked": [],
+  "worker_pid": 342497,
+  "observed_at_utc": "2026-10-08T04:18:22.059900+00:00"
+}

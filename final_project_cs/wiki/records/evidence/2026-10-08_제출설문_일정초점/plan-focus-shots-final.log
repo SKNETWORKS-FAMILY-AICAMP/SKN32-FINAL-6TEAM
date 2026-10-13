@@ -1,0 +1,57 @@
+
+[WebServer] (node:15636) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:21308) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 7 tests using 1 worker
+
+
+
+(node:5140) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/7] tests\live\consent.spec.ts:17:1 › 처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아오고, 약관 화면에는 필수 둘 · 선택 셋과 초안 표시가 있다
+[2/7] tests\live\loading-handoff.spec.ts:8:1 › 전송 요청 전에 클라이언트 진행 화면이 보이고, 첫 조회를 기다리는 동안에도 SSE는 먼저 연결된다
+[3/7] tests\live\loading-handoff.spec.ts:36:1 › 설문에 머무는 동안 재생이 소진되지 않고 다음을 누른 순간부터 축적된 결과를 재생한다
+[4/7] tests\live\loading-handoff.spec.ts:73:1 › 다음 로딩에서는 저장한 설문 답을 유지하고 첫 미응답 질문부터 이어서 보여준다
+[5/7] tests\live\plan-check-redesign.spec.ts:499:1 › 바꾼 시간에는 「되돌리기」가 붙고(수정·삭제 앞), 누르면 그 일정만 처음 시간으로 돌아오며, 변경 메뉴에서는 바꾼 시간 모두를 한 번에 되돌린다
+[6/7] tests\live\plan-focus.spec.ts:10:1 › 마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인다
+[7/7] tests\live\plan-focus.spec.ts:23:1 › 검증 중 마지막 일정은 목록 가운데에 따라오고 지도 마커도 함께 보인다
+  1) tests\live\plan-focus.spec.ts:23:1 › 검증 중 마지막 일정은 목록 가운데에 따라오고 지도 마커도 함께 보인다 ──────────────────
+
+    Error: expect(received).toBeLessThan(expected)
+
+    Expected: < 22
+    Received:   999
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      35 |     const row = await body.locator("li[data-type]").last().boundingBox();
+      36 |     return box && row ? Math.abs(row.y + row.height / 2 - box.y - box.height / 2) : 999;
+    > 37 |   }, { intervals: [50], timeout: 5000 }).toBeLessThan(22);
+         |                                          ^
+      38 |   await expect(page.getByRole("region", { name: "여행 지도" })).toBeVisible();
+      39 |   await expect(page.locator("[data-pin-body]").first()).toBeVisible();
+      40 |   await shot(page, "07-check-centered");
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\web\tests\live\plan-focus.spec.ts:37:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\plan-focus-검증-중-마지막-일정은-목록-가운데에-따라오고-지도-마커도-함께-보인다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .tmp\consent-progress-results\plan-focus-검증-중-마지막-일정은-목록-가운데에-따라오고-지도-마커도-함께-보인다\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\plan-focus-검증-중-마지막-일정은-목록-가운데에-따라오고-지도-마커도-함께-보인다\trace.zip
+    Usage:
+
+        npx playwright show-trace .tmp\consent-progress-results\plan-focus-검증-중-마지막-일정은-목록-가운데에-따라오고-지도-마커도-함께-보인다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    tests\live\plan-focus.spec.ts:23:1 › 검증 중 마지막 일정은 목록 가운데에 따라오고 지도 마커도 함께 보인다 ───────────────────
+  6 passed (39.0s)

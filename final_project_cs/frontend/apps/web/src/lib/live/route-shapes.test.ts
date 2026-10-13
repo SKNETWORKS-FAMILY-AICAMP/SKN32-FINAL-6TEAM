@@ -80,6 +80,11 @@ describe("rides of a subway line", () => {
   const line = { type: "LineString", coordinates: [[126.977, 37.5796], [127.0, 37.57]] };
   const read = (rides: unknown) => readRouteShapes({ shapes: [{ item_id: "m1", from_item_id: "a", to_item_id: "b", mode: "subway", source: "stations", grade: "추정", line, rides }] }).shapes[0].rides;
 
+  it("keeps an explicit train service and leaves missing or unknown kinds unlabeled", () => {
+    const rides = read([{line:"9호선",service:"express"},{line:"9호선",service:"local"},{line:"1호선"},{line:"9호선",service:"maybe"}]);
+    expect(rides.map(ride=>ride.service)).toEqual(["express","local",undefined,undefined]);
+  });
+
   it("reads each ride, and says the stations between are missing only when the server says `filled: false`", () => {
     expect(read([{ line: "지하철 3호선", from: "경복궁", to: "을지로3가", stations: ["경복궁", "", "을지로3가"], count: 4, filled: true }, { line: "지하철 1호선", from: "A", to: "B", filled: false }]))
       .toEqual([{ line: "지하철 3호선", from: "경복궁", to: "을지로3가", stations: ["경복궁", "을지로3가"], count: 4, filled: true }, { line: "지하철 1호선", from: "A", to: "B", stations: [], count: null, filled: false }]);

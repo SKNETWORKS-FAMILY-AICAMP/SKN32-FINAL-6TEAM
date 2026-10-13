@@ -1,0 +1,13 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2206_plugin_v3
+configfile: pytest.ini
+plugins: anyio-4.14.1, langsmith-0.10.0, asyncio-0.25.2
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 2 items
+
+tests/unit/test_candidate_packaging.py::test_candidate_imports_own_core_and_builds_customer_api PASSED [ 50%]
+tests/unit/test_candidate_packaging.py::test_excluded_features_are_not_imported_or_packaged PASSED [100%]
+
+============================== 2 passed in 4.46s ==============================

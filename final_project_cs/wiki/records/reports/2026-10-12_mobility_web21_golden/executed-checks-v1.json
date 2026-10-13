@@ -1,0 +1,37 @@
+[
+  {
+    "file": "mobility_web21_20261012-runtime-tests-v2.xml",
+    "passed": 24,
+    "total_executed": 24,
+    "failures": 0,
+    "skipped": 0
+  },
+  {
+    "file": "mobility_web21_20261012-selection-tests-v4.xml",
+    "passed": 20,
+    "total_executed": 20,
+    "failures": 0,
+    "skipped": 0
+  },
+  {
+    "file": "rail-legacy-baseline-pytest-v1.xml",
+    "passed": 22,
+    "total_executed": 22,
+    "failures": 0,
+    "skipped": 0
+  },
+  {
+    "file": "rail-loop-boundary-pytest-v1.xml",
+    "passed": 2,
+    "total_executed": 2,
+    "failures": 0,
+    "skipped": 0
+  },
+  {
+    "file": "rail-precision-regression-pytest-v1.xml",
+    "passed": 114,
+    "total_executed": 114,
+    "failures": 0,
+    "skipped": 0
+  }
+]

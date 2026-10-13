@@ -1,0 +1,10 @@
+{
+  "whole_files_sha_verified": 14,
+  "whole_files_expected": 14,
+  "snapshot_observed_at_utc": "2026-10-09T02:10:16.579449+00:00",
+  "all_hashes_match": true,
+  "fixed_metadata_checked_by_native_report": true,
+  "completed_only": true,
+  "repetitions": 1,
+  "final_ranking": false
+}

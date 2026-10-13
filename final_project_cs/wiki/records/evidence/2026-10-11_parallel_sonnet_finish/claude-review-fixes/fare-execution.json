@@ -1,0 +1,7 @@
+{
+  "exit_code": 0,
+  "elapsed_s": 34.47,
+  "requested_model": "claude-sonnet-5-5",
+  "stream": "fare",
+  "tools_enabled": false
+}

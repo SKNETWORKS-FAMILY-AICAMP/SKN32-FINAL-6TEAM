@@ -251,11 +251,16 @@ class IntakeModeIn(IntakeRevisionIn):
     mode: str = Field(min_length=1, max_length=16)
 
 
+class IntakeRestoreItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    source_id: UUID
+    index: int = Field(ge=0)
 
 
 class IntakeRestoreIn(IntakeRevisionIn):
     """전체 되돌리기 — 현재 판과 같은 접수에서 복원할 완료된 과거 판."""
     restore_revision: int = Field(ge=1)
+    item: IntakeRestoreItem | None = None
 
 
 class IntakeAutofixIn(IntakeRevisionIn):
@@ -401,6 +406,11 @@ class MessageIn(BaseModel):
     expected_version: int | None = Field(default=None, ge=0)
 
 
+class WebMessageIn(MessageIn):
+    # 요약 버튼의 명시적 읽기 요청. 에이전트 자유 문장 계약과 분리한다.
+    summary_day: date | None = None
+
+
 class RollbackIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     request_id: str = Field(min_length=1)
@@ -542,6 +552,10 @@ _CAUSE_FIELDS = ("category", "type", "kind", "summary", "message", "to_version",
 def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
     from app.domains.travel_ops.components.places.place_info import place_info
     trip, items = store.latest(conn, trip_id)
+    from app.domains.travel_ops.components.intake import registered_moves
+    checked = registered_moves.load_trip_review(conn, tenant_id=store.tenant_id,
+                                               customer_id=trip["customer_id"], trip_id=trip_id)
+    items = registered_moves.recover_for_routes(items, checked)
     history = [{"version": row["version"], "reason": row["reason"],
                 "causes": [{k: cause.get(k) for k in _CAUSE_FIELDS if cause.get(k) is not None}
                            for cause in (row["causes"] or [])],
@@ -1443,7 +1457,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             with get_connection() as conn:
                 return restore(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                               revision=request.revision, restore_revision=request.restore_revision)
+                               revision=request.revision, restore_revision=request.restore_revision,
+                               item=(request.item.source_id, request.item.index) if request.item else None)
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except IntakeConflict as exc:
@@ -1613,12 +1628,18 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         - 필수값이 비었으면 422 `intake_incomplete` + 문제 목록. 판정기가 막으면 그 422 를 그대로 돌려준다.
         """
         from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, draft, mark_confirmed
+        from app.domains.travel_ops.components.intake import registered_moves, review as review_module
 
         tenant, customer = who
         try:
             with get_connection() as conn:
-                _, _, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                                    revision=request.revision)
+                status, existing_trip, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                                    revision=request.revision)
+                if status == "confirmed" and existing_trip:
+                    store = TripStore(tenant)
+                    _trip_or_404(conn, store, existing_trip, customer)
+                    return {"intake_id": str(intake_id), "status": "confirmed",
+                            "trip": {**_trip_view(conn, store, existing_trip), "created": False}}
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except IntakeConflict as exc:
@@ -1627,7 +1648,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(422, "intake_incomplete", "등록 전에 채워야 할 값이 있습니다",
                          problems=[p.as_dict() for p in built.problems])
         _count("confirm", tenant, customer, http)
-        body = {**built.body, "customer_id": str(customer)}
+        with get_connection() as conn:
+            checked = review_module.load(conn, tenant, intake_id, request.revision)
+        body = {**registered_moves.with_review_moves(built.body, checked), "customer_id": str(customer)}
         survey = _intake_survey(tenant, intake_id, request.survey)
         if survey is not None:
             body["constraints"] = {**body.get("constraints", {}), "survey": survey}
@@ -1683,7 +1706,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
             preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko",
-            constraints={**({"survey": survey} if survey is not None else {}),
+            constraints={**(built.body.get("constraints") or {}), **({"survey": survey} if survey is not None else {}),
                          **({"avoid_districts": list(request.recovery.avoid_districts), "lighter_day": request.recovery.lighter_day}
                             if request.recovery is not None else {})})
         keep = request.keep_read_items and bool(built.body["items"])
@@ -1934,7 +1957,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return {"recorded": saved["recorded"], "choice": request.choice, "lighter_day": request.lighter_day, "proposals": proposals}
 
     @router.post("/v1/web/trips/{trip_id}/messages")
-    def web_message(trip_id: UUID, request: MessageIn, http: Request, background: BackgroundTasks,
+    def web_message(trip_id: UUID, request: WebMessageIn, http: Request, background: BackgroundTasks,
                     who: tuple[str, UUID] = Depends(_web_customer)):
         """「에이전트에게 변경 요청」 — 자유 문장. 에이전트 API 와 **같은 처리**를 탄다.
 
@@ -1973,7 +1996,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 # ★`[2026-09-29]` 사실 질문은 분류(모델)를 기다리지 않고 답한다 — 분류·완료 기록은 응답 뒤에서
                 defer=defer, selected_item_id=request.item_id, location=request.location, progress=progress,
                 controller=controller, resume_case_id=request.case_id, resume_token=request.resume_token,
-                expected_version=request.expected_version)
+                expected_version=request.expected_version, summary_day=getattr(request, "summary_day", None))
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         except TeamUnavailable as exc:
@@ -2457,6 +2480,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         with get_connection() as conn:
             _trip_or_404(conn, store, trip_id, customer)
             _trip, items = store.latest(conn, trip_id)
+            from app.domains.travel_ops.components.intake import registered_moves
+            checked = registered_moves.load_trip_review(conn, tenant_id=tenant, customer_id=customer, trip_id=trip_id)
+            items = registered_moves.recover_for_routes(items, checked)
         from app.domains.travel_ops.components.team_hooks import mobility_shapes
         return {"trip_id": str(trip_id), "detail": detail, "shapes": mobility_shapes.items(items, detail=detail),
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}

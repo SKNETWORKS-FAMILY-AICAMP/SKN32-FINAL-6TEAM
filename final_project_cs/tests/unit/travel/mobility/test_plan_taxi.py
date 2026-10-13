@@ -92,7 +92,8 @@ def test_taxi_is_chosen_only_when_no_other_group_can_be_planned():
 def _real_runtime():
     from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
     try:
-        return build_verifier(quiet=True, local_router=True)
+        # 실제 로컬 자료를 검사한다. 외부 GraphHopper·따릉이 API는 이 시험의 전제가 아니다.
+        return build_verifier(quiet=True, local_router=True, gh_url="", seoul_key="")
     except RuntimeError as ex:
         pytest.skip(f"이동 자료 없음 — 자료 기기에서만 돈다({str(ex)[:60]})")
 
@@ -122,7 +123,8 @@ def test_real_data_taxi_mode_lists_a_taxi_option_with_time_and_fare(real_rt):
     route = next(iter(out["routes"].values()))
     taxi = next(o for o in route["options"] if o["id"] == "taxi")
     assert taxi["eta_min"] >= 15 and taxi["fare_krw"] >= 8000 and taxi["uses"] == []
-    assert "택시" in taxi["label"] and "예상 요금" in taxi["label"]
+    assert "택시" in taxi["label"] and "예상 총예산" in taxi["label"]
+    assert "일반호출 0원" in taxi["label"]
     assert route["planned"] == "taxi", "도보 상한 밖이라 택시만 남는다"
 
 

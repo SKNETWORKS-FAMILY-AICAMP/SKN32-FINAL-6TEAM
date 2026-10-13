@@ -744,11 +744,11 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     found = [p for p in found if p.get("kind") == ("activity" if lodging else item["kind"])]
     if before and not found:
         notes.append("no_same_kind")
-    # 이름이 검색어로 시작하는 곳 먼저, 그 안에서 **일정에 맞는 곳**(휴무 · 운영시간 밖이 아닌 곳)이 앞, 같으면 앞뒤 일정에서 가까운 순
+    # 이름이 검색어와 정확히 같은 곳 → 검색어로 시작하는 곳 순, 그 안에서 **일정에 맞는 곳**(휴무 · 운영시간 밖이 아닌 곳)이 앞, 같으면 앞뒤 일정에서 가까운 순
     # 평가(DB)할 풀을 고를 때도 출처 순서가 아니라 이름 일치 → 가까운 순으로 먼저 줄 세운다(뒤에 붙은 카카오 결과가 평가도 못 받고 잘리지 않게)
-    found.sort(key=lambda p: (0 if normalize_full(p["name"]).startswith(key) else 1, _score(p, prev, nxt, ref, bool(area))))
+    found.sort(key=lambda p: (0 if normalize_full(p["name"]) == key else 1 if normalize_full(p["name"]).startswith(key) else 2, _score(p, prev, nxt, ref, bool(area))))
     judged = [(p, assess(conn, tenant_id, item, p, prev, nxt, None)) for p in found[:SEARCH_POOL]]
-    judged.sort(key=lambda pa: (0 if normalize_full(pa[0]["name"]).startswith(key) else 1, pa[1]["status"] == "bad",
+    judged.sort(key=lambda pa: (0 if normalize_full(pa[0]["name"]) == key else 1 if normalize_full(pa[0]["name"]).startswith(key) else 2, pa[1]["status"] == "bad",
                                 not pa[1]["fits"], _score(pa[0], prev, nxt, ref, bool(area))))
     out = [{"rank": rank, **_present(p, a, prev, nxt, ref, area)} for rank, (p, a) in enumerate(judged[:limit], start=1)]
     return {"item": item["id"], "query": q, "results": out, "notes": notes}

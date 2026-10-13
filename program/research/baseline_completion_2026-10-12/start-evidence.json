@@ -1,0 +1,62 @@
+{
+  "date_kst": "2026-10-12",
+  "scope": "새 세션 6개 실제 착수 확인. 구현·시험 완료 결과 아님",
+  "sessions": [
+    {
+      "thread_id": "01a12c50-ad3e-7741-8f1a-1ba3a10f0c00",
+      "thread_status": "active",
+      "turn_status": "inProgress",
+      "started_at_utc_unix": 1791744849,
+      "initial_progress": "기존 웹 로그인과 개인 AI 연결은 별도 경로로 확인됐습니다. 현재 계약대로 SDK의 인증 처리 위에 동의·토큰 저장·여행 소유권 검사를 붙이겠습니다. 할 일 상태 진행 주요 인증 계약 읽기 끝 4/4 = 100% 기존 호출·SDK 확인 진행 중 0/2 = 0% 구현·보안 시험 대기 0/2 = 0%"
+    },
+    {
+      "thread_id": "01a12c50-c607-7152-89a0-0ba560a8b214",
+      "thread_status": "active",
+      "turn_status": "inProgress",
+      "started_at_utc_unix": 1791744855,
+      "initial_progress": "현재 묶음 처리는 Activity 경로에서 고정 순서로 실행되고 있었습니다. 확정된 분류 계획 계약과 다른 부분이므로, 팀 내부 계산은 재사용하면서 실행 계획 검증과 연결 지점을 바꾸겠습니다. 할 일 상태 진행 계약·담당 범위 확인 진행 2/3 = 67% 실행 경로 대조 진행 2/4 = 50% 구현·관련 시험 대기 분모 확인 중"
+    },
+    {
+      "thread_id": "01a12c50-dac2-7ee2-8b01-52141c0c4ae5",
+      "thread_status": "active",
+      "turn_status": "inProgress",
+      "started_at_utc_unix": 1791744861,
+      "initial_progress": "기존 서비스 개선 기록을 재사용하고, 운영 설정이 실제 자료 선택에 반영되는 연결부를 확인하고 있습니다. 할 일 상태 진행 계약·담당 범위 확인 진행 2/3 = 67% 구현·관련 시험 대기 0/1 = 0% 결과·인계 기록 대기 0/1 = 0% 인증과 식당 내부 로직은 다른 세션 범위이므로, 전용 정책 서비스와 사후 분석 기능에 집중하겠습니다."
+    },
+    {
+      "thread_id": "01a12c50-f1d3-7933-a806-26218a49824e",
+      "thread_status": "active",
+      "turn_status": "inProgress",
+      "started_at_utc_unix": 1791744868,
+      "initial_progress": "현재 상태 안내에 정리 전 DB 상태가 남아 있고, 새 상태 필드는 검사기가 아직 확인하지 않는 것으로 파악했습니다. 할 일 상태 진행 작업 범위·규칙 확인 완료 3/3 = 100% 현재 사실·검사 범위 대조 진행 중 1/4 = 25% 수정·검증·결과 기록 대기 0/3 = 0% 다른 담당의 기능 문서는 직접 고치지 않고, 적용 대상 목록과 후속 반영 항목으로 남기겠습니다."
+    },
+    {
+      "thread_id": "01a12c51-0eee-7b63-9c03-8a640ebe12e2",
+      "thread_status": "active",
+      "turn_status": "inProgress",
+      "started_at_utc_unix": 1791744874,
+      "initial_progress": "공통·여행 시험을 분리해 실행하고, 환경·모델 근거를 현재 코드와 대조하겠습니다. 할 일 상태 진행 작업 범위·계약 확인 진행 중 0/4 = 0% 격리 시험 실행 대기 0/2 = 0% 환경·모델 근거 대조 대기 분모 확인 중 검증 기록 저장 대기 0/2 = 0% 다른 세션이 맡은 구현은 수정하지 않고, 발견한 실패와 필요한 접합 사항을 기록하겠습니다."
+    },
+    {
+      "thread_id": "01a12c51-28bb-7360-9a71-eacdd47202bf",
+      "thread_status": "active",
+      "turn_status": "inProgress",
+      "started_at_utc_unix": 1791744881,
+      "initial_progress": "문서 작성에는 technical-writing 스킬을, 흐름 그림에는 diagram-design 스킬을 적용하겠습니다. 최종 문서에는 확정 사양·구현 확인·배포 상태를 따로 표시해, 문서 작성이 끝난 것을 기능 완료로 오해하지 않게 하겠습니다. 할 일 상태 진행 공통 지시·담당 명세 읽기 끝 3/3 = 100% 25개 항목 근거 대조 시작 0/25 = 0% v12·최종 기준선 작성 준비 중 0/2 = 0%"
+    }
+  ],
+  "automations": [
+    {
+      "id": "tripilot-2",
+      "target": "01a12c51-0eee-7b63-9c03-8a640ebe12e2",
+      "purpose": "의존 구현 완료 후 통합 검증",
+      "interval_minutes": 15
+    },
+    {
+      "id": "tripilot-v12",
+      "target": "01a12c51-28bb-7360-9a71-eacdd47202bf",
+      "purpose": "통합 결과 확인·v12·최종 베이스라인 완성",
+      "interval_minutes": 15
+    }
+  ]
+}

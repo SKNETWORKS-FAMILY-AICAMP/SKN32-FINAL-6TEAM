@@ -1,0 +1,10 @@
+{
+  "created_at": "2026-10-09T01:59:05.565589+09:00",
+  "report": "2026-10-09_0159_출발관측_자동알림_조립검증.md",
+  "target_passed": 44,
+  "regression_passed": 649,
+  "production_entry_code_assembled": true,
+  "deployed_customer_guidance_confirmed": false,
+  "late_case_replanning_connected": false,
+  "scope": "고정 입력·조립된 계산기·응답 주입·실제 로컬 개발 DB; 고객 GPS·실제 승차 아님"
+}

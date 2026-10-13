@@ -154,3 +154,41 @@ def test_general_request_cannot_smuggle_actions_or_omit_the_answer(general):
                         choices=[],reads=[],social="",general_requests=general)
     with pytest.raises(du.DecisionFailed):
         du.decide(Chat(),stops=[],changes=[],history=[],selected_item_id=None,message="책 추천")
+
+
+def _decide_general(general, social=""):
+    class Chat:
+        def structured(self,*args,**kwargs):
+            return dict(action="other",target_item="none",target_change="none",fact="none",minutes=0,
+                        choices=[],reads=[],social=social,general_requests=general)
+    return du.decide(Chat(),stops=[],changes=[],history=[],selected_item_id=None,message="추천해줘")
+
+
+def test_general_answers_carry_one_fixed_note_that_they_are_not_trip_data():
+    d=_decide_general([dict(question="조용한 곳 추천",answer="일정이 빡빡하셨다니 조용한 정원을 권해요."),
+                       dict(question="책 추천",answer="짧은 에세이를 권해요.")],social="수고하셨어요.")
+    assert d.social.count(du.GENERAL_NOTE) == 1 and d.social.endswith(du.GENERAL_NOTE)
+    assert d.social.startswith("수고하셨어요.") and "짧은 에세이" in d.social
+
+
+def test_note_is_not_added_without_a_general_request():
+    d=_decide_general([],social="수고하셨어요.")
+    assert d.social == "수고하셨어요." and du.GENERAL_NOTE not in d.social
+
+
+def test_prompt_routes_out_of_itinerary_history_to_evidence_and_limits_recommendation_reasons():
+    assert "action=ask_policy" in du.SYSTEM and "일정 목록에 없는 장소" in du.SYSTEM
+    assert "이 프롬프트에 실제로 있는 근거만" in du.SYSTEM and "취향을 기억하거나 저장한다고 말하지 않는다" in du.SYSTEM
+
+
+def test_unfound_place_history_is_reported_as_not_found_instead_of_answered_from_memory():
+    from app.domains.travel_ops.components.conversation import trip_replies
+    seen=[]
+    def search(**kwargs):
+        seen.append(kwargs)
+        return []
+    status,text,evidence=trip_replies.question_reply(
+        message="이 옛 성터는 언제 누가 세웠어?",items=[item("솔빛전시관",1)],tenant_id="t",policy_search=search,
+        scopes=list(trip_replies.QUESTION_SCOPES),min_score=0.5,now=NOW)
+    assert seen and status=="answered" and "지어내 답하지 않았어요" in text
+    assert evidence["policy_hits"]==0 and evidence["unmatched"] is True

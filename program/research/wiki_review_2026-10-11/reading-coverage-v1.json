@@ -1,0 +1,1427 @@
+{
+  "reviewed_at": "2026-10-11T15:37:29+09:00",
+  "current": 284,
+  "full_body": 31,
+  "files": [
+    {
+      "path": "wiki/architecture/concurrency.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "da618bef455aee683adf7d6b4a619d5692a4a1a2616d3b8506d35c484dc4d835"
+    },
+    {
+      "path": "wiki/architecture/core-design.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "8c7a217b1a08d6cdeb3d8f75a37b9b5fdd658ada88da95cff8b0d23848e1b71c"
+    },
+    {
+      "path": "wiki/architecture/core-vs-team.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "74deaaa2c565cf86e4586c9e0a569d4b97d4fa3a832845c0055051cadd5e5f99"
+    },
+    {
+      "path": "wiki/architecture/diagrams.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "40dc9f9b338f42b2a64557730511ae8d4cfa7a9600e58cd89e84da70cd3b45d1"
+    },
+    {
+      "path": "wiki/architecture/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "950a2a5ec5df62907ec541135df25fe7ce40162f68aaf9c33e840fe6a06029cc"
+    },
+    {
+      "path": "wiki/architecture/notifications.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4000e2e5df3f648d626ee6da660d462de25b27622ca05ee2cc23fe708f2fc6a7"
+    },
+    {
+      "path": "wiki/architecture/pack-model.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d51d44f8bb370d0f2d95f7c853dc1aa1c2ac8f2297a2626c3bb5912067348c31"
+    },
+    {
+      "path": "wiki/architecture/paper-basis.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "eaa2662fb2e42e4f636452ef6c409c913fed9aafe1ac1edca40b5838c941aa21"
+    },
+    {
+      "path": "wiki/architecture/repository-map.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "17ccc9e23622d8f72eab96fb6f8add02271982d31e626188870c7595dd5b73a9"
+    },
+    {
+      "path": "wiki/architecture/stack-sources.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a9059cfe7380abc33c11b9c78291a89b2171a4bc73db0a1541cbcda187a29613"
+    },
+    {
+      "path": "wiki/architecture/system-context.md",
+      "review_level": "본문 정독",
+      "sha256": "79e3ee2fbe8672114413db014f9954f94d9fb030eb6822772ae9cd904e6f4101"
+    },
+    {
+      "path": "wiki/architecture/tech-stack.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a62700edb07099615d2efa222497ececefa4ee3622fb60f0d65a914256e9f380"
+    },
+    {
+      "path": "wiki/business/edge-inference.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d48e987a1bf770440b03c06608d2e2f7f97b24fcfe198ae038c369fe7af3b968"
+    },
+    {
+      "path": "wiki/business/error-cost.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "af83ba4a13fd56683958feab47fe52fe08bb35bae2d6e6f81488710916092960"
+    },
+    {
+      "path": "wiki/business/gpu-limits.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9c8a300d9a2746cf4c214166d7b002d968396de9e4490625b38b34aaa338eae0"
+    },
+    {
+      "path": "wiki/business/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9f7aa7f36f446f2e36fa3faf99a676092df5144d9f3c89a90cbe1ea9e4429860"
+    },
+    {
+      "path": "wiki/business/infrastructure-cost.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e6bc75a4d5d59849398a7be34b9667f0201cff23971138c215fa279ddd676d09"
+    },
+    {
+      "path": "wiki/business/market.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b9b8e92f9e11c975dc079721f0a6f2e3a9769a14a1ac09f07202e1fbfb7b79ac"
+    },
+    {
+      "path": "wiki/business/measure-review-time.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a5eaa38c76933836155a50b3bee2cacfad3441c4ffa371d4fde98fd632e7e8e6"
+    },
+    {
+      "path": "wiki/business/pricing-travel.md",
+      "review_level": "본문 정독",
+      "sha256": "4e2e2c46eaff5218720be66f8a4edb46d8b320289d38f2a56efb25360cf216d8"
+    },
+    {
+      "path": "wiki/business/pricing.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3dba175b1ed5d869bfdebe64aa27c595935857dccfacc3fff01deec00ecc6ade"
+    },
+    {
+      "path": "wiki/business/unit-economics.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "bb4232d2c448f9c501c2fface2b577e94ef143a34204002a0eca543a0c959c6d"
+    },
+    {
+      "path": "wiki/decisions/D-001-payment-ownership.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a4d1429645f9318c93bc7683f3629eed96980ec6cb187a7a8b1311a46e7ef31c"
+    },
+    {
+      "path": "wiki/decisions/D-002-graph-store-gate.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a8a37f96fbec36c6a63a84535ce8a8f6c57eecaaa4c83d9597e4b03bcb167275"
+    },
+    {
+      "path": "wiki/decisions/D-003-message-broker.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "8e3a10702f2865a2439b6e0e040cad175b665c158c01290d1bc188abd73f33d9"
+    },
+    {
+      "path": "wiki/decisions/D-004-self-hosting-rationale.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "063627d65ebbaee6709122e1f3e8c4008eacf337d48a7a86bb8c67b68a5ec375"
+    },
+    {
+      "path": "wiki/decisions/D-005-write-gate.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e5bdc98d65d518e7d153956c309791a8dd88e5391814fc08433f40b9e7060020"
+    },
+    {
+      "path": "wiki/decisions/D-006-composer-ownership.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ca5d964e50f8548fc6906fb3a365f02d4b01f5eafd2f5e7e1a67f05b1ec1679b"
+    },
+    {
+      "path": "wiki/decisions/D-007-central-config-store.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d6ffc165fa8f4d0c8579e95381e797d9d546cf78a6898f63b2ec9206f536243a"
+    },
+    {
+      "path": "wiki/decisions/D-008-review-spam-out-of-scope.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6b564380cb7aaf4f37b5b3a7aa0921f066c9dcaf5cd3500ab65a08b2277578de"
+    },
+    {
+      "path": "wiki/decisions/D-009-recommendation-scope.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "c484dc991f9205593c9429de771197ac6e8d483c6526f011d9c950cbcaa3677d"
+    },
+    {
+      "path": "wiki/decisions/D-010-deferral-scoring.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e37e15fe8b737f15fbcf6429a2a1744a57f3a8428204ea29ff1a33d1a98c5982"
+    },
+    {
+      "path": "wiki/decisions/D-011-composer-v3-gap.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4932537ba413b324666ffab38b45d214ffa89f7ef09177445202b92249f86825"
+    },
+    {
+      "path": "wiki/decisions/D-012-cutover-timing.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "56be77686d3dda3f93b8e098a43ffd341ced4813760b8b4a28053fd012a879a1"
+    },
+    {
+      "path": "wiki/decisions/D-013-declarative-team.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "fe0c4ce54bd388552a4243cd00f56013747a0acd086102d484ed7ce672836259"
+    },
+    {
+      "path": "wiki/decisions/D-014-judge-rebaseline.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "5a6a3c15260798f88020d401085b3bdbb3ae4d8bb17254b78e30c1f7db5adda8"
+    },
+    {
+      "path": "wiki/decisions/D-015-implementation-catalog.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "5026f53703f09e60e07dd701b3a0356f3640eac7a66844500ade61498493e69d"
+    },
+    {
+      "path": "wiki/decisions/D-016-scope-narrowing-reasons.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "bb477855287370bc29d2bbf9df0bc7c80968d31a7fc0eaa896d8d71788ac062b"
+    },
+    {
+      "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+      "review_level": "본문 정독",
+      "sha256": "c3dc4c7393c00036dd4deea627d1b5ebaf8781311bc893281cb52ecbff1ef71e"
+    },
+    {
+      "path": "wiki/decisions/D-018-decision15-stop-paths.md",
+      "review_level": "본문 정독",
+      "sha256": "03edaf60ce71ae7d5ad3d2aad211d4c44f5b8bd02ef8b8037a2cae7b593651ed"
+    },
+    {
+      "path": "wiki/decisions/D-019-travel-density.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b23e6b48df52e3c3064ab69ad55c5c9539b9a40c2e086b7bc212b2d800dd89f8"
+    },
+    {
+      "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+      "review_level": "본문 정독",
+      "sha256": "0c85527cc71e44b24c7d6324cae8b089096947e6996ef42358895fbb428efc7b"
+    },
+    {
+      "path": "wiki/decisions/D-021-email-verified-key-recovery.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "8b14e0f45c365e4492399c78ed68282f3e376aa7a40bfae256cb9079aa8e14d7"
+    },
+    {
+      "path": "wiki/decisions/D-022-study-only-kto-images.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ace765f72c5508be41fb8e1afb9b406eace43d780eb6722e212d3149bf504676"
+    },
+    {
+      "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+      "review_level": "본문 정독",
+      "sha256": "3b885240d4f738945aae741896698515624607c5ab2c27b6191b1cd0579d41ff"
+    },
+    {
+      "path": "wiki/decisions/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "0d88b8a82bb098748858598a17413ca04efc0207a0aacf0de8a7e03a34eeaaf5"
+    },
+    {
+      "path": "wiki/delivery/dod.md",
+      "review_level": "본문 정독",
+      "sha256": "d2b282123fe902cc7fd5c4289d0d424fce7b66150cb1613312ddb9a11950af26"
+    },
+    {
+      "path": "wiki/delivery/estimation-baseline.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "eb8504dddd7a3442433b1272cf54b3698c2eb8c583fd34ed93f97765ebce4451"
+    },
+    {
+      "path": "wiki/delivery/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b4f81d03f9f59924866b956faea7bb064e94a96ada2f4d3ec76ccdf896d874ce"
+    },
+    {
+      "path": "wiki/delivery/milestones/final-2026-10-26.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "11e8e2d0fc9c92697bbde59566bdca59c5b30cacd7a21e9501c2cd724e82a8d3"
+    },
+    {
+      "path": "wiki/delivery/milestones/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3ce3475a488013af154529a60afaccfc28c966975fd6c3dbeb591cc4df16fb67"
+    },
+    {
+      "path": "wiki/delivery/milestones/midterm-2026-09-15.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "2734331fc0354f076b5034f0e67e14599c10b68c21e08e7d9426bacdb90fdced"
+    },
+    {
+      "path": "wiki/delivery/open-items.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d147f154c519b4be19e7f3c25c8cca71e78fef12f5908aba7cca2ac76d624ad1"
+    },
+    {
+      "path": "wiki/delivery/release-gate.md",
+      "review_level": "본문 정독",
+      "sha256": "a957f2dce022f05bf7337b46a71b5446850629979bcf1828b73ce88e4f29ce17"
+    },
+    {
+      "path": "wiki/delivery/roles.md",
+      "review_level": "본문 정독",
+      "sha256": "0915529edb9747ecfa7fdecf3a1f597e0bd74f91d25ec80bbab1c35098339246"
+    },
+    {
+      "path": "wiki/delivery/scope-verdicts.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b98b768ab96ac2cc60d527e11fbe63cec70e95c3b50472a507da27e72790fc94"
+    },
+    {
+      "path": "wiki/delivery/ticket-structure.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "5c9de4c2c2d71ed117bdd4ccb2e6f4d4f89da2e9f94be3fe5a7e8834018d8aa8"
+    },
+    {
+      "path": "wiki/delivery/timeline.md",
+      "review_level": "본문 정독",
+      "sha256": "30c8c14e512146afbabe3dca4de1a5cd3b70e0e89e4a6578af3ec05898f015c1"
+    },
+    {
+      "path": "wiki/delivery/todo-user.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3ad60eca2c897dd8fef7a4964e960d67d7e4a6cb8c4d8e086da72dfb6f678987"
+    },
+    {
+      "path": "wiki/evaluation/classification-accuracy.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "60abd9b7d45c0ecde4b2257822d7b3f172ab14ff873350353787bf0a279481e0"
+    },
+    {
+      "path": "wiki/evaluation/dod28-rerun.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6d6f33932631a12d5afff98436ef454c9208cfdbfb3cc326cf19bbfecb811bed"
+    },
+    {
+      "path": "wiki/evaluation/finetuning.md",
+      "review_level": "본문 정독",
+      "sha256": "b959c5b3db7766eb554440a886c32969ada2342dd5261aee04c471431a463b7e"
+    },
+    {
+      "path": "wiki/evaluation/golden-set.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b0d91af730a87b4007598532934679ae81e1ac507011e9a136e3a1f41472b838"
+    },
+    {
+      "path": "wiki/evaluation/index.md",
+      "review_level": "본문 정독",
+      "sha256": "dc67c3335d388236dc4fb5c843fcede2d98c2638dca0512815e40b3278375b92"
+    },
+    {
+      "path": "wiki/evaluation/judge-second-opinion.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "caf7ec707202d81f6bbb8d3fa330656dfbb528509a36a11a28877ab495f6f98a"
+    },
+    {
+      "path": "wiki/evaluation/judge.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a83e7b50991088dc42f51da269ae94eddb4c44cf1cb289d4ddfed4ba944751fe"
+    },
+    {
+      "path": "wiki/evaluation/metrics.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "228e6018443bd844361bc0cd785641887b809f2e63c5df16253f1c9ecae135e6"
+    },
+    {
+      "path": "wiki/evaluation/model-selection.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6eaf3fe687ce220aa85ca43f9133c146f482204a3d4e658a91b5ea665cf487a3"
+    },
+    {
+      "path": "wiki/evaluation/protocol.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b693c766c049bc421fd8baa21ed8b949f31aecfb1366b311173407aedcd8d3ea"
+    },
+    {
+      "path": "wiki/governance/cutover.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4890126f33c31014511b45a035e2e157afb14f92642397497b9e27534e19a9b3"
+    },
+    {
+      "path": "wiki/governance/document-standard.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "23711d2c3ab4e39bda8abac09e87bf66a81a5be2701ef4c78ab2ec899e0c00fc"
+    },
+    {
+      "path": "wiki/governance/domain-axis.md",
+      "review_level": "본문 정독",
+      "sha256": "c2e3c0359f6f4aabc439e16103e53e24e9d34c7f2df410bfbd6706df3b852ebd"
+    },
+    {
+      "path": "wiki/governance/drift-case-voc.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9a8dafde9578e1ed09c06ebce4f2e79fc5b86c2865ca009f340f40f9078a7781"
+    },
+    {
+      "path": "wiki/governance/evidence-grades.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "0240929abb9337cb67c7263d836b54769d6a0c32b1f90a08911eb82a21f8b353"
+    },
+    {
+      "path": "wiki/governance/front-matter.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "7593bacfacc2e8ebc21bcb25b6c2440f93cf829e15aee313dd07f10aeb2e476d"
+    },
+    {
+      "path": "wiki/governance/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "7842f9b9c9b2746364a3127b39fdd989a6e6fdf08bd7f568befc98c765697ec7"
+    },
+    {
+      "path": "wiki/governance/known-weaknesses.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4d0d9cc2f8ebf05f10c973b3a40565b782f592a9b3d06e1d9d5397052a5224a3"
+    },
+    {
+      "path": "wiki/governance/migration-scope/coverage-2026-09.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9ba3efb9697ff6059a3d860644831146ce717238c6b4640dfc2197a55212437c"
+    },
+    {
+      "path": "wiki/governance/migration-scope/coverage.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "2fb77f253cc89bc039e0ce4a92009b51ffe7d14f3da2b3195f865011b1963636"
+    },
+    {
+      "path": "wiki/governance/migration-scope/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "552601930b07a2f4d6eca4cf2a0216d4581251d96a81a08c96f993cb53c740af"
+    },
+    {
+      "path": "wiki/governance/migration-scope/judgments-2.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a1b1102b6f79c20862c85ac30dcea8f021f063a72bb9b1a0485721c0b9f25915"
+    },
+    {
+      "path": "wiki/governance/migration-scope/judgments.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "7c2cfec53fff312b4088ee881559a6658c01d7b2c35768649fc622697a589172"
+    },
+    {
+      "path": "wiki/governance/migration-scope/status.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6f0943ceee498e97232786f310a86176a2f06bb170b6e05aac51c59960496074"
+    },
+    {
+      "path": "wiki/governance/migration.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "c02d8eaac7c8776db4249ee44ecb01d01ad8da9104f745763b8d3ac52052e2f7"
+    },
+    {
+      "path": "wiki/governance/parallel-work.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3f9c64d045b2bd816a2d7dd2673839d20da87cb3c9ca50792ae9a0c8c979645d"
+    },
+    {
+      "path": "wiki/governance/review-policy.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e7dc82d87b65bcc61878002fe476f27af2a5eabd9f68303fb235e974d68685f8"
+    },
+    {
+      "path": "wiki/governance/structure-guide.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "c56e013f8296461d3e681a83b37404c744a929e4a1f31c0acc50a0df051beb21"
+    },
+    {
+      "path": "wiki/governance/type-guide.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d9179e5776750256554af428af7167053b3eac08383aaf2397ae8e8ca13af5aa"
+    },
+    {
+      "path": "wiki/governance/type-verification/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e81c7fbcf37c7509aa0a2fee174ab09e97a918fd633c15e77b96fd8bb4ad9485"
+    },
+    {
+      "path": "wiki/governance/type-verification/round-1.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "f99e8b0f057bdef218a2cbbbdcce8707aa16560d94541d007d04a7f95417ec39"
+    },
+    {
+      "path": "wiki/governance/type-verification/round-2.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "cf3a5478e97e10ee2e186be8a4d4b657ce782f6cd1df403352d9509b9da4bfae"
+    },
+    {
+      "path": "wiki/governance/type-verification/round-3.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "8ce81c5c82dff2493b8ce2e3efbc993c71929f265eaf8cc0091c74664091c155"
+    },
+    {
+      "path": "wiki/governance/type-verification/round-4.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "fa716e1f981159ba417ecc80945927961d37860df412f72161c0b1210dd8dafd"
+    },
+    {
+      "path": "wiki/governance/type-verification/round-5.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d812a3c141147f5a19d815aa844e88f5b13ad056def35471b83d6fa55bd78f77"
+    },
+    {
+      "path": "wiki/governance/type-verification/round-6.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "95821e659511d3b23bba4000b8e18b72971336ffc0138775ff74146756b35fd7"
+    },
+    {
+      "path": "wiki/governance/type-verification/round-7.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "f73fc582d89fd335f5dc9340a583c282e6c661294ac43f99b7d8c90fd7130969"
+    },
+    {
+      "path": "wiki/governance/type-verification/round-8.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ca6e7622a518e29a7d0adf1a7640763bf57b9ab605a5f35a074220dc43dd7513"
+    },
+    {
+      "path": "wiki/governance/type-verification/round-9.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "1988f38ddb1208633547602984d6096b421c7daee0836798697df13110bd04db"
+    },
+    {
+      "path": "wiki/governance/work-loop.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "195777b9931b456123ca75f45da21895918f49e1842330602b46da6e5aaf1ef2"
+    },
+    {
+      "path": "wiki/index.md",
+      "review_level": "본문 정독",
+      "sha256": "a864050fe4229a63fbf5a6fc487ff147985b32b88e84779c9218be28afb992ab"
+    },
+    {
+      "path": "wiki/log.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ce87c6bf5b6cfe026847ba3826027577ab1dfbcb48de9f94ef02b887567a6bb3"
+    },
+    {
+      "path": "wiki/product/glossary.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d4e150e9012df819e183a050357b6e1d5b3deb74713815b861dd3a4b8f24ecb6"
+    },
+    {
+      "path": "wiki/product/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "96de689708d49a9afa1ce1c83055144b0e1e5a91f31e72a7ae0bd87540f3e0c5"
+    },
+    {
+      "path": "wiki/product/personas.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6964f818a6fe176763e0e5b4ae7c1e1fe03947b2e1306bd4e1dfb3979d107a9f"
+    },
+    {
+      "path": "wiki/product/pitch-questions.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "0e28deb443ef6a54c3e3662971367f595d2f4f9d767611798760121b63f54535"
+    },
+    {
+      "path": "wiki/product/positioning.md",
+      "review_level": "본문 정독",
+      "sha256": "c5b0417c356e1821dc86b2c73959e548d6c815530f788eda29c79adbb9abcfb7"
+    },
+    {
+      "path": "wiki/product/problem.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ccc9ef8e6385d872ed6726352f9e5304f23360455f5d2cacebe0ada4f161ae64"
+    },
+    {
+      "path": "wiki/product/scope.md",
+      "review_level": "본문 정독",
+      "sha256": "81715676d76774d488567dd0f976bbeae9537eb20a5ce2445e448b340d9865aa"
+    },
+    {
+      "path": "wiki/product/traveler-profile.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "81d058d371115bcc7cd1547a98ac7d423fcb39d681ad3533fa6d0045858ac0e3"
+    },
+    {
+      "path": "wiki/product/vision-backlog.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ab67343ed8abb8ef5e9e101ca663e6e2dd9102461a79093d738a8d6eb68562b8"
+    },
+    {
+      "path": "wiki/quickstart.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "40ffafa707f0c53266c8e9ac52b8cf16fc88958317fa2959705a3e2b3adcb96f"
+    },
+    {
+      "path": "wiki/research/a2a-adoption.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "aac7fe1994b996b4d76df19ea9967a0a69bed6ea180dc78ed015cdbe5e7c4d94"
+    },
+    {
+      "path": "wiki/research/accessibility-data-sources.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b6fafe5aaf5b6b774f333cc872dc7b1aa5d3775a2dcf954674f5f6ca59c0993b"
+    },
+    {
+      "path": "wiki/research/dietary-data-sources.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b475a0f1efa748ff5dd2668e4bd69f38d476e33571efa3690adc9231c0b5ff2a"
+    },
+    {
+      "path": "wiki/research/dispute-cases.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "8ea4e16605869ec1c265d314e085731ff8468ec7004d902c74adc8d3e293fd40"
+    },
+    {
+      "path": "wiki/research/graphrag.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9adddc1d14c0e6eba95ac82f90a32039443538fdc0dbb550dbcb9017cd20ccff"
+    },
+    {
+      "path": "wiki/research/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "51ca72f10fbc2dd6bacff9753e9feeb142f6d50444ed01bbb1858ce7df88e582"
+    },
+    {
+      "path": "wiki/research/legal-basis.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "05e6a2b6d878eec5a25bff0b2934d694c013f830a672d01bd63ffe6ba9e631fe"
+    },
+    {
+      "path": "wiki/research/mt-benchmark.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "af98c2f2477fc1731f8d997598267d1c1210114205b9b43f16befb71a94086f2"
+    },
+    {
+      "path": "wiki/research/mt-methodology.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ea848bafd44ca7530f521f79f9d0972f26c8f4f0e61c2577c9954cd98b1c5960"
+    },
+    {
+      "path": "wiki/research/place-api-quota-and-terms.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "7881ab1955a28dc7735b7f7e71b48f7cd22603a25fa52ba055ff6f610cf06982"
+    },
+    {
+      "path": "wiki/research/price-data-sources.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3aa08f4dfae6f476ae403c0597bddd93a06e885ceaf714e3cbf999c6ae2cb2b3"
+    },
+    {
+      "path": "wiki/research/rag-slm-improvements.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "60cb87b182e5f4d258502370c85453e035ef23bea288243bff91cee087675376"
+    },
+    {
+      "path": "wiki/travel_api_competitor_census_2026-09-11.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "69000599e4725d18ff88371eba0694e8d472b14bb5c87237c393bef26f6e8abc"
+    },
+    {
+      "path": "final_project_cs/wiki/actions/action-proposal.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "5fc3c99f531c17243775b3efe5f4886a1d7f445b24e6370240e391a665486d5d"
+    },
+    {
+      "path": "final_project_cs/wiki/actions/approval.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b4dab1e17f8cb40eb2b3bc52ad59ad7fd138ec80aff4b8ee8c9f394855c59d83"
+    },
+    {
+      "path": "final_project_cs/wiki/actions/evidence-check.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "199edd4351352fab9384cc7904f3eca610486846d17d9f89b813894b688ea977"
+    },
+    {
+      "path": "final_project_cs/wiki/actions/idempotency.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "2e671f38b0e3c5fe60c1364f9734ec8771b1f341b8874c15c9aaf30796a9995a"
+    },
+    {
+      "path": "final_project_cs/wiki/actions/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a7e417327a2a52b79c865c5eb6873153ba31a82c3bb30829bcaadd5b5fa8dd28"
+    },
+    {
+      "path": "final_project_cs/wiki/actions/outbox.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6d289e4510070fa5a56ec41c848601fe2c115a18367b0ec080d436444eed05d2"
+    },
+    {
+      "path": "final_project_cs/wiki/actions/tool-gateway.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "0f747b85d34f787306ac480a32dbd6ba1c7c9fe5a09c1f7bc14e931a40ae2435"
+    },
+    {
+      "path": "final_project_cs/wiki/context/context-broker.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b2fb670ad9c380525ea0c1c05211d1242f8fe54080adc4e55922e62edefb1e5e"
+    },
+    {
+      "path": "final_project_cs/wiki/context/context-budget.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3ca78fae7a2fe508821ec0ea9a3327928c2650c63235f183ddbf0b1be628f6dc"
+    },
+    {
+      "path": "final_project_cs/wiki/context/corpus-authoring.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a4590606ba1c8df25e22b944663bf51e2ef859d03c1cd3865b7e8aab137243d7"
+    },
+    {
+      "path": "final_project_cs/wiki/context/graph-retrieval.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e61becacc128ebec796565180bfde3cb0b5655db2f0965580761efaabfcb35f2"
+    },
+    {
+      "path": "final_project_cs/wiki/context/index.md",
+      "review_level": "본문 정독",
+      "sha256": "6d34646cc1a6632ae5af74e7d060d0166d5a3af0fae9512d5cfa9d50d4596b6f"
+    },
+    {
+      "path": "final_project_cs/wiki/context/memory.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "35140c8cc53ea94b943c2f1d71118b69a7f29e04636220dfa0491e991e2b9f1b"
+    },
+    {
+      "path": "final_project_cs/wiki/context/rag-retrieval.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ea1c516e9ca0175946802e03c722b6a62189cb9ed26f155c1f2b8c0c8bf250b3"
+    },
+    {
+      "path": "final_project_cs/wiki/context/travel-corpus.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "11d85802651c78ad44d11f7ebaa4ab34c6be05dc503c4b61dea624da615b3d4c"
+    },
+    {
+      "path": "final_project_cs/wiki/data/index.md",
+      "review_level": "본문 정독",
+      "sha256": "deac103a6a1c4a6b4954e844accf5ee49112cf4e329d0ebe20847dd5c4616af4"
+    },
+    {
+      "path": "final_project_cs/wiki/data/migrations.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4d1be2fc87d49ac01f1593baafd2233525b2869eebb2c30ab44fe34043d1debd"
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/fields.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "1426b531c6f62dde2f15957f1bea9d1f651117787b4688e89bdbb33dd7a7cc7b"
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/index.md",
+      "review_level": "본문 정독",
+      "sha256": "040698bd34dd932d3f8b3dd7742cd6af0b05e2879424095098283b6501699b0e"
+    },
+    {
+      "path": "final_project_cs/wiki/data/tenancy.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9e44120605fb3bf7b38a06f8e5a1bbc93f970996b05b4e5ee474ff94c218c7f7"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-001-composer-ui-removal.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9516be8c9d239016d8b49f10ef58ed2ffd2b3fd7a4ad863d3491fb65dd1eef96"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-002-finetuned-model-not-adopted.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "0dd628da5fa1e3abc01dd7dc1ba2ef240458ea290edf60eee33c86621b7ccdde"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-003-composer-scope.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "61c152c0c6ef1c34990fd0274f32f95574724ad8aecf6be9e79dd3db1884b0c2"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "5875a2f8fe593459f3e972ee3bf5af5991b618dd5e829a9a025c36cdab2df963"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-005-odsay-not-used.md",
+      "review_level": "본문 정독",
+      "sha256": "fd32926dcd60450195d10541bce7ab5d099bfd43d804aa68068b982257c327f8"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-006-cancellation-terms-are-structured.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "75a1deec29910bc26c20bd2e92c72fab741ca9ebedfc4a7c0a064b232beea17e"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-007-ui-operator-login.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b843252a72472e321b977af01da8cb770e76d5653178d645da7606b6db412c9e"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-008-ops-console-separate-app.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e045a5a86c0b9fd79cf1ca49fa34917604a32976cc08c85de14ec1190b58671f"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md",
+      "review_level": "본문 정독",
+      "sha256": "9e5c096046e3dbe8bb6795ee5a33f0061d30bb4591ac9e912e58434faec8b4f3"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-010-google-calls-in-dawn-batch-only.md",
+      "review_level": "본문 정독",
+      "sha256": "820f18e5a695f15f67fb5e40c4aceb872df85a38220aa437e28db68d5165d349"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+      "review_level": "본문 정독",
+      "sha256": "1ee1e1e74cadde24f0663c32190dafc45f46ad3f29d1060a836d91a543fb8527"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-012-agent-auth-claude-style.md",
+      "review_level": "본문 정독",
+      "sha256": "312a92d3c73056e3393ba4b46310dfa1da7bc38b5a3ac4c16a3f8cedc6a952c5"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-013-domain-folder-layout.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4b141ccb7c16f06ed4d5fc22b7cd79f0cb6b891f0ce30eeb33155a4b8364b09c"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md",
+      "review_level": "본문 정독",
+      "sha256": "a03152e7cb4a4ce2556d435cc21dba67e6e47e14ce28d146dee0295c64204a86"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "73a518636d04abad1a1e2dc87e0dc8c8b2e84c0d8eea9a9b329c82ad9f97f227"
+    },
+    {
+      "path": "final_project_cs/wiki/domain-swap.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4a14f937af202516ae77df8b596c8dcab124c065b82d42eaa816631278fcfd4b"
+    },
+    {
+      "path": "final_project_cs/wiki/external/a2a-protocol.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3b60b8c33acab424208ddb0b4ae98b5c589432f005c01d5fab22174ce228b336"
+    },
+    {
+      "path": "final_project_cs/wiki/external/admin-screen-api.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4a9cdbe4f809ae5da4c29f4e1df8ddc7ec4c115610dd6e7f6587cf79ff4fd1c5"
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-environment-limits.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "dd4f8fd0d1718fa1ff12bcbf65d8fa000156717acc2365f1219e0031dd750b2e"
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-key-issue-guide.md",
+      "review_level": "본문 정독",
+      "sha256": "3f42aea91baa31c7cbce6f2507b2e1ab61b1674501578feb91fe3eae720cbddd"
+    },
+    {
+      "path": "final_project_cs/wiki/external/auth-boundary.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "97e0db42e3ba40b93a3122e406b02f8e1b5b46085d5b69f42a6af754a1150312"
+    },
+    {
+      "path": "final_project_cs/wiki/external/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6da960bcaea202c7c5bd998bea96f4ce506a6028060164322866b0bb6265e284"
+    },
+    {
+      "path": "final_project_cs/wiki/external/introspection.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9719d144b36bd5e237665f63efc7339b55554dd779aec20c89e0441e92cf13bb"
+    },
+    {
+      "path": "final_project_cs/wiki/external/llm-failover.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "42364d69f80973fb7d1afd1d4a45da2a64b383b60dc11e3c02dea5a52f19db52"
+    },
+    {
+      "path": "final_project_cs/wiki/external/mcp-tools.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e8192826b1a78a3726b79ba930de2756284cdb6507deee5f8b18ad5d2699c4dd"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-api.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "578e734a1da19afcf1c45a9f485c4c76c69ab8328b03947e323b1f3da1a7f6ca"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ad4fd85368d7a2f8ddeb6728ec7f72fb135f51a0481e91765673211dd6c18a79"
+    },
+    {
+      "path": "final_project_cs/wiki/external/test-scenarios.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6221a02332f566d593add82bc2e7b02ef7bd9dab317c9e0ae63d93f83da089c5"
+    },
+    {
+      "path": "final_project_cs/wiki/external/travel-density.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "157919fca62bcbb690a1b2e109c6132a77e105a27e112dc38efcf2242965b6c4"
+    },
+    {
+      "path": "final_project_cs/wiki/external/watch-monitoring.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "2d8c62221c3f4080a03463967e5efebe3f1a65bcabf1fad80b6523b6c3b3f190"
+    },
+    {
+      "path": "final_project_cs/wiki/external/watch-simulation.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "994e9393938e961f10a8941c45f9c45f30c192d73d2e55799172884485e4c8e8"
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-auth-transfer.md",
+      "review_level": "본문 정독",
+      "sha256": "2e12a344a5d3680d64e5eaddf4d36bd37d8d36210b7453aab1186e2af0c1c41e"
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-flow-2026-10-09.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "248eaf4d0b927702756ba28acd750637a9b572d365cc429e56b7e4b57a921da7"
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-intake-restore.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "36197c154a0c256862f2c0085d6d163a89c7fdf2896b480383d92d6d048d38b3"
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-screen-api.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3c4453117dcce43dedd751d6cbb47b854702a686f03e5c855ef70f685de8880c"
+    },
+    {
+      "path": "final_project_cs/wiki/index.md",
+      "review_level": "본문 정독",
+      "sha256": "cc80fb2ebaa1ad17f665684e165bbbf43e157320469dfb15d3c354c347ab06e7"
+    },
+    {
+      "path": "final_project_cs/wiki/log.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ca64033ca9b2fc3654ab7d6c81209ad513468fb0ff53e9d8e2760678bc3c6aee"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/alert-snapshots.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e564667fd5fd87a6a020c0a4a83fcd0c71011fc47d025a62e7df36cb7ea0742c"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/always-on.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "7925f1b80d5b812de307135f163166ca3cd55659b087c3cb4f968ad1a750af61"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/arm-develop-cd.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "1e1bcf49cac07b61ebeb2dca73d88b31bfdd0376e03f2eaaa2329a8687dc2c97"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/arm-serving-queue-flow.html",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ac513e2a54369c128476e33686016d6f3c9ee037a65891a4d2215e0fe437d424"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/arm-serving-queue.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "f36b33f8ed351ba20995ab9ca37726a3ce95fa3a798309ebf1460002874b2a84"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/call-budget.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b6076ce3db61198bf9a4d87be4dd3da83f6b256d451211695b4971138ace40ba"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/google-login-setup.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6aed0abc8134ac17520679e173b7f6443fcd42154fc0e568ebdd211cf3840e81"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/gpu-work-queue.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e6ca0a885ee4b450b83e5a9a2ef4ca0ece891a431267031aa8e346ef8ef9b162"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a8aaa3111acf86d464593fa1a668faa01c3916b23455a8c10f4d9872a9a033af"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/local-setup.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "7cf90fa69f4c2e8cf70f8f9e2b8637e1387b242647bc4fd637e5f6b4acf84bd8"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/move-to-server.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "095abc865940d17e2da94618b3af8e2d52b4010211bf03551553b4d28f82bb4a"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/run.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "cdca08aaaff626f3ac8e0db142f54ac2f9ec6fb3eb025e50608d5c36ffc66b56"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/service-improvement.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "31bc9c6d4003f1958ee7528ba5beb00188baba091189f06fc6882cfbca19476e"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/telegram-setup.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "96b4d7d3eb3683f6b482e17b1d29c2e6cd5740d1086f482a22c3fa6f246357b6"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/troubleshooting.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "1ca5de02181b4f5b29870186767cba277fdad3203f32594bf8f2e71e3a43400d"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/unknown-state.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ae28fcebbcafe020905a96fc872d91fd39040b8767c4c828e6dc800feeeb3029"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/blind-spots.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "1bc7101f6273c832d2bcfc652aeed0ea4068c41ac1d591a6726a085ed158ab24"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/dod-evidence-drift.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b9174286994e97bf19871ceafe0c9a8823869668c1b7d06fb1eb4fb6a221c041"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/eval-harness.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "06bca64fb4c2eb647ff3bfc80a88cdeef35bf023151f5253de7feeaf75690649"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/evidence.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "72185037e19c23d1c5c8cdefd7a45b33fca4ce6875bb26c1288018e157033483"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/guardrails.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "66c023cf3dba9a25d043f76f2b24a4d348f737b6b57f34176d86c0d75067fea5"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "c9f9c5638340683648e4ce81e75ff9b974d21333bba5c077c88903740eff5652"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/invariants.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b6710f80c023796027fa7b7a4947153f978ca752ff00df0bff3335833be36060"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d5ea17f8d92454a3aa1dec796f7570f1bf07ef690f8a2930e9853911e81d2b17"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/slm-model-evaluation.md",
+      "review_level": "본문 정독",
+      "sha256": "a138097546a03f721bccca12c19dd9a45312f67633f0d45a55e04f7e0cf5d785"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/test-map.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3903ec44601e2b49cc9d239d0a1a6e2088aa7202c2d65a479cc398f11225f610"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/test-reliability.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "c79dbdd54ac961705cca374b236683fd103fc706ab73a1c81a175e57c9ae48c1"
+    },
+    {
+      "path": "final_project_cs/wiki/quickstart.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "39b86759573701d9bf5bc83152004093524320eccefbb07f385744ee1d7bfb60"
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/agentic-controller.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "cb734db484d71df86112e435adb8c472067a5a8223fef6ef752e600f2f4e3d37"
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/case-lifecycle.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "1679746352f7c879fdeb259912a9941dff7d6b13c56d91f9ef0688e871dbcafc"
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/case-state-machine.generated.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "26527ecebf74b066601c001f726fb0a4a390f9d4b9b48a65977887ce80e46b5f"
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/conflict-retry.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "2433437495a8874635dc2c66fca31fb5681abd9e091366e0ef446a710cf00a37"
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "8637ef34ed2cc46ef193a7bc54dded0375af301da8d3e18e2bb272c30e5b8099"
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/langgraph-comparison.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "feda1ef68fb57d4101ad22e77444b221e8a2b8ee5492a145456ba5499dd19486"
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/message-broker.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "125b28f24508bd974ffbd5105d20edee208606ae0de64590e50c6d5cff9db3c2"
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/shared-state.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "afe369fe5155757891ad770ab6b1db628b4f504f97ab1245ff2f3959a2b48805"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/activity.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "2885d515007297c06e3ff3d8368c8034574f5bafcb1ace00e24f02e9007bd85e"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/booking-handoff.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e3ddecd49e46b44e191f2edfd6c058a7815820ff2564669cb1a616fa2692eb01"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/build-order.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3bab8715ff6986d14aca3819c90140c4986212ca413b7ce44176a236e318c4ed"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/code-layout.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "0027e2f81c106e7911e80e97a3ad4ae97baa1a285ffa76fd5da930b12e5a040a"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/common-utils.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "903185aa1f0cb89fed1e258590e3c3533631f7fce8dce867f704063c4e9fa1de"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/composition.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "fd3e2ed70bd743f48a9e99d65d8a138378af86027db711e23937c0aa2eb6c893"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining-agent-design.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ea5b54cc8322e83a301d7387b64d615102683272e03a32c26ac0b0035fa702a8"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining-mcp-boundary.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "0125c6ed0e488dfe18296102eff713b833066da559b0ae6044e7fb3c3b76c2d2"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "63370e3995516600b83d744036c8205350b297ecc2f027521712bad0b946d939"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/folder-change-notice.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "866500f48e76643ee03f819394b17a83e4caa5e2a58a1d3180fff4ce12699dac"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "f60064275debf9ba1dc892a96a98bc82dabe24e29f966449ef7cfb274ee90ea0"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/mobility.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "24c5bf9133a026941177d6552345573e656d7a56b8d5c46524bf8e3aa9e9ddd8"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/remote-team-a2a.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "7b26295a47c69fcfc36beb0945518afaba9a77fb9050031dcd39fb591dc52e63"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-boundary.md",
+      "review_level": "본문 정독",
+      "sha256": "2859658ab1756996d466abb30ab76e184c3a790d5281d93dc82f5c12e51c2c41"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/fields.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "5391f7e476d91129d786df43ab1dbdd93095d33c19dbebddb9bf46c198b31ac0"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "55fe5f11f57744ba39546b0e4df5a47b667c8545d114117b87d4a7edb11af9a1"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-registry.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "bf95c349d702104037abcd6878c037984c65ec2c4370a5c13af4fab4466caaeb"
+    },
+    {
+      "path": "final_project_sample/wiki/composer/auth-scope.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "390128d0078e2a5efb6945626f58685a80bbd07f7a80645ef9ce355ba865b56b"
+    },
+    {
+      "path": "final_project_sample/wiki/composer/design-gap.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "00ea3a213fff3ea3264dcee42d3d159a748d07b7e634fec1bc09855d20b8987f"
+    },
+    {
+      "path": "final_project_sample/wiki/composer/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "37305641106e1bad37626c83ce99e154780f874a6fab311f2f9e0676499db151"
+    },
+    {
+      "path": "final_project_sample/wiki/composer/ui-boundary.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "bc7fd804def9029574c13d8792b4b4d61558550fb92a58e94370120e6cd22c40"
+    },
+    {
+      "path": "final_project_sample/wiki/composer/write-channel.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "2047efe53765f9643c77fb666e3c398c3ec7dda073c79c360becb5975e704f18"
+    },
+    {
+      "path": "final_project_sample/wiki/contracts/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "5474d272fdd4f382acd2af3918b9bd58f7a6cfe9308b8698088a8b70753e2a9c"
+    },
+    {
+      "path": "final_project_sample/wiki/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a8b05be8f0392607a927bc25987fd2bc0709f8977e1c948ec1df29d3944802a4"
+    },
+    {
+      "path": "final_project_sample/wiki/operations/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "12f4135beb3ba72cf028d540583162b37f6cd14f26f4c1fc57f761da3573948a"
+    },
+    {
+      "path": "final_project_sample/wiki/operations/local-setup.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d5230ab0436c8b14d30301691c4e9b038e38816aa86d56e1e3ffe63fb57995fe"
+    },
+    {
+      "path": "final_project_sample/wiki/operations/packaging.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6cd929f1e484d2b94a953bea7b891c3de160c4199a184778375741766e8d37c1"
+    },
+    {
+      "path": "final_project_sample/wiki/operations/run.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "844b13cb656c79f611ffe3d485aabbfacb10209386a97f89a965595ec064459c"
+    },
+    {
+      "path": "final_project_sample/wiki/operations/stuck-case-sweeper.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "695c4fc27a5503ab0baf86f433f26216edec016c403d1aafbadbe26da0b04be8"
+    },
+    {
+      "path": "final_project_sample/wiki/operations/troubleshooting.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "94fce8ac622195b0b610cb34b86924c89611d8211b71feec2afcbceace8d3ef5"
+    },
+    {
+      "path": "final_project_sample/wiki/quality/another-domain.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "57c9658a64014fbf0cd4f18c2c34442427146a0cdd02032540d3642f36aec3d8"
+    },
+    {
+      "path": "final_project_sample/wiki/quality/architecture-tests.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9ec6c067773fc65c5811b6b40ef82eb46ec11304e2cd57a0515f8cbc899a779c"
+    },
+    {
+      "path": "final_project_sample/wiki/quality/domain-free.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "6068a45b8096a000980801146ba8d45ee82f54ee394d754187b28c7ab5a2f528"
+    },
+    {
+      "path": "final_project_sample/wiki/quality/domain-swap.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "007bc4c555366a04b223d5dea8f6e25614dbde7f658b57ed99aabf0c12908ac0"
+    },
+    {
+      "path": "final_project_sample/wiki/quality/evidence.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "0377d1e20dbd632383ba8731766db955c086bc2afc166b50f8d758e91b3dbd3b"
+    },
+    {
+      "path": "final_project_sample/wiki/quality/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e5119a613a782b3c31de7aaa0d73a3aafff962e6805be895a6eb68c9db0ee540"
+    },
+    {
+      "path": "final_project_sample/wiki/quality/invariants.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "8d858858c99b2b1582a2fa7a20fa3441bdd8208aaab30fc4341c800f54fa57c6"
+    },
+    {
+      "path": "final_project_sample/wiki/quality/verification.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4463ac9f29cf77b8b979c7697d3115ad247154c0368d5780f8741710decafbce"
+    },
+    {
+      "path": "final_project_sample/wiki/runtime/agentic-controller.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "03471ffb0568673f97ed84a3442cde2bfb102ecdd9ef41e09431cc064d083614"
+    },
+    {
+      "path": "final_project_sample/wiki/runtime/case-lifecycle.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "fb9aa7cc0e6be9276dd3ef30aceee85c48ec25b40689d8e656709dd92fec29af"
+    },
+    {
+      "path": "final_project_sample/wiki/runtime/conflict-retry.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "0c783cd6b5fce5fedc8e667931cf292eece21025ee6ab761a07a97cc4370d427"
+    },
+    {
+      "path": "final_project_sample/wiki/runtime/context-pack.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "65c868cfb6a1f07c81d562447e0c5452571375991b45c521576c55025e5272a6"
+    },
+    {
+      "path": "final_project_sample/wiki/runtime/idempotency.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a81356c619488f339569ba690dc0eb8726fa1bde73ccba2eeabc1cdcf11f4d48"
+    },
+    {
+      "path": "final_project_sample/wiki/runtime/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "556d7a0766b1c4bb9ab99fe4e028aab037b7b6117515da68e6b0340fd88c3eb1"
+    },
+    {
+      "path": "final_project_sample/wiki/runtime/message-broker.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "b39629da6d48d1c3f9077efd6d5cef2db1f689e399f86b7e42956e0cdb12e906"
+    },
+    {
+      "path": "final_project_sample/wiki/runtime/shared-state.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "e02f62b5c7d8913afb3d1e2d7db72ef4ee1e67fe3aabe57391638250c787efe9"
+    },
+    {
+      "path": "final_project_sample/wiki/teams/example-teams.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "2d040d08f929c6b3e11834ae103611ded803ddff9fa47893e5aceba2d4c1d353"
+    },
+    {
+      "path": "final_project_sample/wiki/teams/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9429f857a89e5cb53f23e9114fd78883b3b8bd983686d4187ac717b827591959"
+    },
+    {
+      "path": "final_project_sample/wiki/teams/team-boundary.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d299a0d31eff17990f0be377726c6d68464cc3179a8904b3c66944c5ecf4b280"
+    },
+    {
+      "path": "final_project_sample/wiki/teams/team-contract.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "1cb984d67849891778dbe215dd96efe65cc80ae25b4dcb0de445e4bc194bd141"
+    },
+    {
+      "path": "final_project_sample/wiki/teams/team-registry.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "3dbf4c21f0bef382598c1eeca56747a679a68cabe1ec51384352b6fd25b27c48"
+    },
+    {
+      "path": "datasets/wiki/catalog.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "81b0a3984694072097675654db023c7a938a587363a6e204f9c399299e90deaa"
+    },
+    {
+      "path": "datasets/wiki/coupang-extension.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "4320fa16cebd2aaabf56b930360c49ecde4276bfbef9c6b75ec06fab23b0c23f"
+    },
+    {
+      "path": "datasets/wiki/distribution.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ee6d9b510e097c644183e0239d758b807a2ac5433d3c33b792a05f0c3d2315fe"
+    },
+    {
+      "path": "datasets/wiki/generation.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "9ec9aa4f733d1b69a748ab515245a1664e9516f661d5818a14c6e9d26b28bd4a"
+    },
+    {
+      "path": "datasets/wiki/index.md",
+      "review_level": "본문 정독",
+      "sha256": "cc09f6a09ecc168461c50c63b947fa983c40545e32690343d058eb5a5de932f4"
+    },
+    {
+      "path": "datasets/wiki/report-split.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "669f30929e5158c2362600e04963be005e11108992090d8074e585c020ef7d00"
+    },
+    {
+      "path": "datasets/wiki/scraper-notes.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "fe7fde2f6c4c0a5e87293165b6f42d35f48b0f62f1cb991b4249e77a87cc992b"
+    },
+    {
+      "path": "datasets/wiki/source-selection.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "dfc6e1c6901e4e165072cc12f273d9db3f040cede496c04a59679fa2e191f7e2"
+    },
+    {
+      "path": "acop_dojo/wiki/design-principles.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ca338cb5faacae5378f021059ecf3576f99e8d766997214ad5edab56f3bbc24f"
+    },
+    {
+      "path": "acop_dojo/wiki/design-review.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "a3238bd9556bc775bfd7694069213b8ac9f65075324759641a29bfbcbde1cbba"
+    },
+    {
+      "path": "acop_dojo/wiki/generation.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "d53f9b1e319ba1992ba26baf080d7ac1e3332da6d1f92ba1e6d2900b6ac2df79"
+    },
+    {
+      "path": "acop_dojo/wiki/guide.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "ee303d8a5eae6fc8fbb67fb7d4dc49ba0af86965c73f12f28d265b570ed2c777"
+    },
+    {
+      "path": "acop_dojo/wiki/handoff-2026-09-14.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "8071ffd0b521ec2c39ae3c15ca536cd360c206c8315b7f293f2c05cc68ee32b3"
+    },
+    {
+      "path": "acop_dojo/wiki/index.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "f36f0bde337b034f6887f8caf4eaa363e037dc2f3ca962db1d4fdb41aa7403bd"
+    },
+    {
+      "path": "acop_dojo/wiki/learning-methodology.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "1fe774475388b9c388d8616144efd7e07c137310983cb3b2cbab38909c0a4503"
+    },
+    {
+      "path": "acop_dojo/wiki/trace-review.md",
+      "review_level": "제목·구조·도입부 검토; 본문 추가 정독 필요",
+      "sha256": "f99aa7cd1f8dff385fa81a607c0492109f6ddedc6c5f46f8abcc67cb4e00effd"
+    }
+  ]
+}

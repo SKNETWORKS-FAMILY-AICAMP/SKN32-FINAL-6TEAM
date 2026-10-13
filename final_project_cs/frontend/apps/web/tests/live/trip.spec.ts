@@ -500,3 +500,4 @@ test("「공유하기」의 「파일로 내려받기」는 계획서 링크와 
   expect(answer.headers()["content-disposition"]).toMatch(/^attachment; filename\*=UTF-8''triPilot-/);
   expect((await request.get(openHref.toString())).headers()["content-disposition"]).toBeUndefined();
 });
+

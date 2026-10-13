@@ -1,0 +1,16 @@
+{
+  "environment": "deployed",
+  "files": [
+    {
+      "file": "deployed-old5.dump",
+      "bytes": 11995,
+      "sha256": "30a90603834903a8dbf608565f28d9ac1aed506c0bf788e9d0d355b5046f4b3d"
+    },
+    {
+      "file": "deployed-schema.sql",
+      "bytes": 233003,
+      "sha256": "2dd6f9a17ae6d8e7fbb6346c07815a811d8f6bbcc39f37f12446004a1f89edfa"
+    }
+  ],
+  "scope": "old five tables schema/data plus complete schema only; no other business data"
+}

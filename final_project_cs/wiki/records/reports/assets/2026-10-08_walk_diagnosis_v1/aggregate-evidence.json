@@ -1,0 +1,37 @@
+{
+  "n": 30,
+  "stairs_positive_n": 12,
+  "flat": {
+    "n": 30,
+    "within_5_min": 15,
+    "mae_min": 7.037537393162393,
+    "median_delta_min": 0.28733974358974024,
+    "median_bootstrap95": [
+      -1.4733974358974393,
+      5.616346153846152
+    ]
+  },
+  "counterfactual": {
+    "n": 30,
+    "within_5_min": 15,
+    "mae_min": 6.781656825549396,
+    "median_delta_min": 0.7829632060957294,
+    "median_bootstrap95": [
+      -0.36104364161524555,
+      5.781016288763272
+    ]
+  },
+  "counterfactual_is_not_implemented": true,
+  "input_sha256": {
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\rules_v0.3.json": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd",
+    "datasets\\mobility\\raw\\kakao_golden\\fresh_experiment_100_design.json": "af6fcf5460a71e3fd18cf3cf1eabe6ef03851e56c71e69ff06620dd2fc6dbe74",
+    "datasets\\mobility\\raw\\kakao_golden\\fresh_web_100_v1.json": "e6a084921f95ab9c334c49685db40a23b7be56700505ead261d969999d632fc2"
+  },
+  "source_sha256": {
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py": "85695755c30686d0aaa9a22bf6365e189c622a55b84087697b8b1a3ef2658fd4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-08_1745_그래프출처표시\\graph_router.py": "b54c3c32bc8119e7ae7388db82cb92a1998e0ca2eb8bade4927925f68ee184da",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan.py": "5956eb819142f88fc71da3b1b9cb9766870a3dffe963666a06021495a337dca7",
+    "datasets\\mobility\\scripts\\build_road_graph_v2.py": "7c9255bd152d08c05f21278c2bec0130fb96d5e46789652c273de10b5c2b1fd6"
+  }
+}

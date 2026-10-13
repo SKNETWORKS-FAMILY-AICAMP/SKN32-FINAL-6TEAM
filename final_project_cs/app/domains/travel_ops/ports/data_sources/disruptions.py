@@ -34,6 +34,8 @@ from datetime import UTC, datetime, timedelta
 import math
 from typing import Any, Callable
 
+from .simulation_hook import inputs, record_result, resolve
+
 #: 아직 못 붙인 항목과 그 이유. ★활용신청이 끝나 어댑터가 붙으면 여기서 지운다.
 #:  재난문자는 여기 없다 — 샘플 CSV 판이 붙어 있고(`disaster_msg.py`), 소스가
 #:  없을 때의 이유는 조립이 `unavailable["disaster"]` 에 적는다.
@@ -107,6 +109,10 @@ class DisruptionCheck:
             "air_quality": lambda: self._air(place, starts_at, sensitive),
             "earthquake": lambda: self._earthquake(place, starts_at),
         }
+        simulated = resolve(place)
+        if simulated:
+            for name, row in inputs(simulated, place).items():
+                jobs[name] = lambda row=row: row
         # ★동시에 돌린다 — 소스 하나가 느려도 나머지를 기다리게 하지 않는다.
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
             futures = {name: pool.submit(job) for name, job in jobs.items()}
@@ -119,7 +125,7 @@ class DisruptionCheck:
         advisories = [item for check in checks for item in check.pop("_advisories", [])]
         failed = [check["category"] for check in checks if check["status"] == "failed"]
         verdict = "fatal" if failed else ("disrupted" if disruptions else "clear")
-        return {
+        report = {
             "verdict": verdict,
             "disruptions": disruptions,
             "advisories": advisories,
@@ -132,6 +138,9 @@ class DisruptionCheck:
             "checked_at": datetime.now(UTC).isoformat(),
             "indoor_unknown": indoor_unknown,
         }
+        if simulated:
+            record_result(simulated, report, safety_only=False)
+        return report
 
     def check_safety(self, *, place: dict[str, Any], starts_at: datetime | None, region: str = "서울") -> dict[str, Any]:
         """**재난 사건만**(재난문자 · 지진) 점검한다 — 재난 시 일정 정지 반복(`SafetySweep`)이 쓴다. `[2026-10-06]`
@@ -142,6 +151,18 @@ class DisruptionCheck:
             "disaster_msg": lambda: self._disaster(place, starts_at, region, False),
             "earthquake": lambda: self._earthquake(place, starts_at),
         }
+        simulated = resolve(place)
+        if simulated:
+            # 정지가 먼저 걸려 일반 감시에서 빠져도 켠 N종의 점검 근거는 남긴다.
+            full = self.check(place=place, starts_at=starts_at, region=region)
+            safety_categories = {"disaster_msg", "earthquake"}
+            failed = [name for name in full["failed_categories"] if name in safety_categories]
+            disruptions = [cause for cause in full["disruptions"] if cause["category"] in safety_categories]
+            report = {**full, "verdict": "fatal" if failed else "disrupted" if disruptions else "clear",
+                      "failed_categories": failed, "disruptions": disruptions, "advisories": [],
+                      "checks": [row for row in full["checks"] if row["category"] in safety_categories]}
+            record_result(simulated, report, safety_only=True)
+            return report
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
             futures = {name: pool.submit(job) for name, job in jobs.items()}
             checks = [futures[name].result() for name in jobs]
@@ -149,10 +170,13 @@ class DisruptionCheck:
         for check in checks:
             check.pop("_advisories", None)
         failed = [check["category"] for check in checks if check["status"] == "failed"]
-        return {"verdict": "fatal" if failed else ("disrupted" if disruptions else "clear"), "disruptions": disruptions,
+        report = {"verdict": "fatal" if failed else ("disrupted" if disruptions else "clear"), "disruptions": disruptions,
                 "checks": checks, "failed_categories": failed,
                 "not_connected": [c["category"] for c in checks if c["status"] == "not_connected"],
                 "place_id": place.get("place_id"), "region": region, "checked_at": datetime.now(UTC).isoformat()}
+        if simulated:
+            record_result(simulated, report, safety_only=True)
+        return report
 
     def released(self, *, place: dict[str, Any], since: datetime, at: datetime, region: str = "서울") -> list[dict[str, Any]] | None:
         """`since` 부터 `at` 까지 온 **재난 해제 문자**. 소스가 해제 조회를 못 하거나 못 읽었으면 `None`(모름 — 「해제 없음」이 아니다)."""
@@ -230,15 +254,22 @@ class DisruptionCheck:
             return {**base, "status": "not_connected", "mode": mode,
                     "reason": (f"샘플 기간({coverage.get('from')} ~ {coverage.get('to')}) 밖 — "
                                f"실키 발급 대기 (data.go.kr/data/15134001)")}
-        disruptions = [{"category": "disaster_msg", "kind": item.get("kind"),
-                        "step": item.get("step"), "text": item.get("text"),
-                        "created_at": item.get("created_at"), "source": value.get("source"),
-                        "mode": mode}
-                       for item in value.get("for_region") or []
-                       if sensitive or not item.get("weather")]
+        rows = [{"category": "disaster_msg", "kind": item.get("kind"),
+                 "step": item.get("step"), "text": item.get("text"),
+                 "created_at": item.get("created_at"), "source": value.get("source"),
+                 "mode": mode,
+                 # `[2026-10-13]` 「기타」 · 모르는 구분이면 본문으로 가른 여행 영향 종류(road · bus · rail · utility · crowd · hazard · outdoor)와 누가 냈는지
+                 **({"impact": item["impact"], "impact_by": item.get("impact_by")} if item.get("impact") else {})}
+                for item in value.get("for_region") or []]
+        weather = [bool(item.get("weather")) for item in value.get("for_region") or []]
+        disruptions = [row for row, is_weather in zip(rows, weather) if sensitive or not is_weather]
+        # ★`[2026-10-13]` 날씨 영향이 없다고 본 장소에서 뺀 날씨형 문자는 버리지 않고 **사실로** 남긴다 — 이상으로 세지는 않는다.
+        #   호우 · 산사태처럼 그 구에 가는 것 자체가 위험한 문자는 실내 관광지도 막는다(활동 팀 판정 — 감시가 `activity_ledger.disaster` 로 다시 가른다)
+        held_back = [row for row, is_weather in zip(rows, weather) if not sensitive and is_weather]
         return {**base, "status": "ok", "mode": mode, "source": value.get("source"),
                 "confirmed_at": value.get("confirmed_at"),
                 "unclassified": value.get("unclassified", []),
+                "weather_held_back": held_back,
                 "_disruptions": disruptions}
 
 
