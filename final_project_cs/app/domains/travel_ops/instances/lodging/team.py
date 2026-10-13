@@ -892,7 +892,10 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         """`[2026-10-13]` 구글 호텔 후보를 고를 때 — 숙소 상세(`read.stay_google_details`, SerpApi 1회)를 다시 읽어 **판매처 최저가끼리** 비교한다.
         전에는 다시 볼 도구가 없어 「확인 못 함」이었다. 판매처가 하나도 없으면 「없어졌다」고 하지 않고 확인 못 함(`no_price`) — 구글 상세에
         가격이 없는 까닭(매진 · 표시 안 됨)을 가를 수 없다. 바뀌었으면 판매처 · 예약 버튼 · 「1박 ○원~」도 새 값으로."""
-        before = pick.get("price_from") if pick.get("price_from") is not None else pick.get("price_per_night")
+        # `[2026-10-13]` 판매처 최저가끼리 — 보여 준 판매처(`sellers`)의 최저가가 기준이다. `price_from` 은 구글 목록가까지 넣은 최저라
+        #   기준이 다르다(☆x600 확인 — 목록 173,845원 · 판매처 최저 176,766원이 「바뀜」으로 나왔다). 판매처를 못 읽었던 후보만 `price_from`
+        shown = [s.get("price_per_night") for s in pick.get("sellers") or [] if isinstance(s.get("price_per_night"), (int, float))]
+        before = min(shown) if shown else (pick.get("price_from") if pick.get("price_from") is not None else pick.get("price_per_night"))
         if not query:
             return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_query"}
         token = pick["property_token"]
