@@ -100,6 +100,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
                        # ★`[2026-10-11]` 재난문자를 수정본 §8 분류표로 가른다(구현 계획 2.4) · 재난으로 막혔을 때 대체 후보 위치를 다시 본다.
                        #   `read.disaster_points` 는 `replacement._recheck_disaster` 가 10-07 부터 부르는데 선언이 빠져 있었다.
                        "read.disaster", "read.disaster_points",
+                       # ★`[2026-10-14]` 여행을 못 찾은 예약에서 설문 문항을 다시 물을 때 같은 고객의 지난 답(전달 8번 회신)
+                       "read.last_survey_answer",
                        *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
@@ -854,7 +856,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         ★후보를 못 찾거나 확인하지 못하면 그렇다고 말한다(`status` unknown · ranked 0곳) — 변경 제안은 그대로 만든다.
         """
         alternatives, evidence, note, warnings = self._recommend_alternatives(
-            task, place, booking.get("starts_at"), seen, evidence, decisions)
+            task, place, booking.get("starts_at"), seen, evidence, decisions, booking=booking)
         return self._propose_change(task, booking, evidence, reason=reason,
                                     answer=f"{answer}\n{note}" if note else answer,
                                     decisions={**decisions, "alternatives": alternatives}, warnings=warnings)
