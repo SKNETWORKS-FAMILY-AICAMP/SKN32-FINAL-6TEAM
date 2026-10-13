@@ -1,0 +1,1714 @@
+{
+ "sets": {
+  "mix8": {
+   "today": "2026-11-29",
+   "items": [
+    {
+     "id": 1,
+     "date": "2027-01-25",
+     "start": "09:30",
+     "kind": "mobility",
+     "title": "공항철도로 시내 이동",
+     "place": "공항철도 열차"
+    },
+    {
+     "id": 2,
+     "date": "2027-01-25",
+     "start": "11:00",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "코트야드 메리어트 서울 남대문"
+    },
+    {
+     "id": 3,
+     "date": "2027-01-25",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "유림면에서 점심",
+     "place": "유림면"
+    },
+    {
+     "id": 4,
+     "date": "2027-01-25",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "정동길 산책",
+     "place": "정동길"
+    },
+    {
+     "id": 5,
+     "date": "2027-01-25",
+     "start": "15:00",
+     "kind": "activity",
+     "title": "배재학당역사박물관 관람",
+     "place": "배재학당역사박물관"
+    },
+    {
+     "id": 6,
+     "date": "2027-01-25",
+     "start": "16:30",
+     "kind": "activity",
+     "title": "정동전망대에서 풍경 보기",
+     "place": "정동전망대"
+    },
+    {
+     "id": 7,
+     "date": "2027-01-26",
+     "start": "08:00",
+     "kind": "dining",
+     "title": "호텔에서 아침 식사",
+     "place": "코트야드 메리어트 서울 남대문"
+    },
+    {
+     "id": 8,
+     "date": "2027-01-26",
+     "start": "10:00",
+     "kind": "activity",
+     "title": "성북구립미술관 관람",
+     "place": "성북구립미술관"
+    },
+    {
+     "id": 9,
+     "date": "2027-01-26",
+     "start": "12:00",
+     "kind": "dining",
+     "title": "성북동면옥집에서 점심",
+     "place": "성북동면옥집"
+    },
+    {
+     "id": 10,
+     "date": "2027-01-26",
+     "start": "14:00",
+     "kind": "dining",
+     "title": "수연산방에서 차 마시기",
+     "place": "수연산방"
+    },
+    {
+     "id": 11,
+     "date": "2027-01-26",
+     "start": "15:30",
+     "kind": "activity",
+     "title": "성북동 골목 산책",
+     "place": "성북동"
+    },
+    {
+     "id": 12,
+     "date": "2027-01-26",
+     "start": "17:00",
+     "kind": "dining",
+     "title": "학림다방에서 쉬기",
+     "place": "학림다방"
+    },
+    {
+     "id": 13,
+     "date": "2027-01-27",
+     "start": "08:00",
+     "kind": "dining",
+     "title": "호텔에서 아침 식사",
+     "place": "코트야드 메리어트 서울 남대문"
+    },
+    {
+     "id": 14,
+     "date": "2027-01-27",
+     "start": "10:30",
+     "kind": "activity",
+     "title": "아모레퍼시픽미술관 관람",
+     "place": "아모레퍼시픽미술관"
+    },
+    {
+     "id": 15,
+     "date": "2027-01-27",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "효뜨에서 점심",
+     "place": "효뜨"
+    },
+    {
+     "id": 16,
+     "date": "2027-01-27",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "용산 아이파크몰 둘러보기",
+     "place": "용산 아이파크몰"
+    },
+    {
+     "id": 17,
+     "date": "2027-01-27",
+     "start": "16:00",
+     "kind": "activity",
+     "title": "영화 관람",
+     "place": "CGV 용산아이파크몰"
+    },
+    {
+     "id": 18,
+     "date": "2027-01-27",
+     "start": "19:00",
+     "kind": "dining",
+     "title": "몽중헌 용산점에서 저녁",
+     "place": "몽중헌 용산점"
+    },
+    {
+     "id": 19,
+     "date": "2027-01-28",
+     "start": "09:00",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "코트야드 메리어트 서울 남대문"
+    },
+    {
+     "id": 20,
+     "date": "2027-01-28",
+     "start": "09:30",
+     "kind": "mobility",
+     "title": "지하철로 석촌고분역 이동",
+     "place": "석촌고분역"
+    },
+    {
+     "id": 21,
+     "date": "2027-01-28",
+     "start": "11:00",
+     "kind": "activity",
+     "title": "소마미술관 관람",
+     "place": "소마미술관"
+    },
+    {
+     "id": 22,
+     "date": "2027-01-28",
+     "start": "13:00",
+     "kind": "dining",
+     "title": "벽제갈비 방이본점에서 점심",
+     "place": "벽제갈비 방이본점"
+    },
+    {
+     "id": 23,
+     "date": "2027-01-28",
+     "start": "15:00",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "소피텔 앰배서더 서울 호텔"
+    },
+    {
+     "id": 24,
+     "date": "2027-01-28",
+     "start": "18:00",
+     "kind": "activity",
+     "title": "잠실새내 먹자골목 둘러보기",
+     "place": "잠실새내 먹자골목"
+    },
+    {
+     "id": 25,
+     "date": "2027-01-29",
+     "start": "08:00",
+     "kind": "dining",
+     "title": "호텔에서 아침 식사",
+     "place": "소피텔 앰배서더 서울 호텔"
+    },
+    {
+     "id": 26,
+     "date": "2027-01-29",
+     "start": "10:00",
+     "kind": "activity",
+     "title": "롯데월드 민속박물관 관람",
+     "place": "롯데월드 민속박물관"
+    },
+    {
+     "id": 27,
+     "date": "2027-01-29",
+     "start": "11:30",
+     "kind": "activity",
+     "title": "잠실 지하상가 둘러보기",
+     "place": "잠실 지하상가"
+    },
+    {
+     "id": 28,
+     "date": "2027-01-29",
+     "start": "13:00",
+     "kind": "dining",
+     "title": "벽제갈비 방이본점에서 점심",
+     "place": "벽제갈비 방이본점"
+    },
+    {
+     "id": 29,
+     "date": "2027-01-29",
+     "start": "15:00",
+     "kind": "activity",
+     "title": "소마미술관 특별전 관람",
+     "place": "소마미술관"
+    },
+    {
+     "id": 30,
+     "date": "2027-01-29",
+     "start": "17:00",
+     "kind": "activity",
+     "title": "송파도서관에서 쉬기",
+     "place": "송파도서관"
+    },
+    {
+     "id": 31,
+     "date": "2027-01-30",
+     "start": "09:00",
+     "kind": "mobility",
+     "title": "지하철로 문래역 이동",
+     "place": "문래역"
+    },
+    {
+     "id": 32,
+     "date": "2027-01-30",
+     "start": "10:00",
+     "kind": "activity",
+     "title": "문래창작촌 산책",
+     "place": "문래창작촌"
+    },
+    {
+     "id": 33,
+     "date": "2027-01-30",
+     "start": "12:00",
+     "kind": "dining",
+     "title": "영일분식에서 점심",
+     "place": "영일분식"
+    },
+    {
+     "id": 34,
+     "date": "2027-01-30",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "문래예술공장 방문",
+     "place": "문래예술공장"
+    },
+    {
+     "id": 35,
+     "date": "2027-01-30",
+     "start": "16:00",
+     "kind": "activity",
+     "title": "63스퀘어 둘러보기",
+     "place": "63스퀘어"
+    },
+    {
+     "id": 36,
+     "date": "2027-01-30",
+     "start": "18:00",
+     "kind": "dining",
+     "title": "노량진 컵밥거리에서 저녁",
+     "place": "노량진 컵밥거리"
+    },
+    {
+     "id": 37,
+     "date": "2027-01-31",
+     "start": "08:00",
+     "kind": "dining",
+     "title": "호텔에서 아침 식사",
+     "place": "소피텔 앰배서더 서울 호텔"
+    },
+    {
+     "id": 38,
+     "date": "2027-01-31",
+     "start": "09:00",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "소피텔 앰배서더 서울 호텔"
+    },
+    {
+     "id": 39,
+     "date": "2027-01-31",
+     "start": "10:00",
+     "kind": "activity",
+     "title": "잠실 지하상가에서 쇼핑",
+     "place": "잠실 지하상가"
+    },
+    {
+     "id": 40,
+     "date": "2027-01-31",
+     "start": "11:30",
+     "kind": "activity",
+     "title": "롯데월드 민속박물관 재방문",
+     "place": "롯데월드 민속박물관"
+    },
+    {
+     "id": 41,
+     "date": "2027-01-31",
+     "start": "13:00",
+     "kind": "dining",
+     "title": "벽제갈비 방이본점에서 점심",
+     "place": "벽제갈비 방이본점"
+    },
+    {
+     "id": 42,
+     "date": "2027-01-31",
+     "start": "15:00",
+     "kind": "mobility",
+     "title": "공항버스로 이동",
+     "place": "공항버스 승차장"
+    }
+   ],
+   "qs": [
+    {
+     "q": "거기 몇 시였죠?",
+     "gold": 5,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "오후에 박물관 어디 가요?"
+      },
+      {
+       "role": "service",
+       "text": "15시에 배재학당역사박물관에 갑니다."
+      }
+     ]
+    },
+    {
+     "q": "그 집 점심 맞아?",
+     "gold": 9,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "화요일 점심 어디예요?"
+      },
+      {
+       "role": "service",
+       "text": "성북동면옥집에서 드십니다."
+      }
+     ]
+    },
+    {
+     "q": "그거 영화야?",
+     "gold": 17,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "수요일 네 시 일정 알려줘"
+      },
+      {
+       "role": "service",
+       "text": "CGV 용산아이파크몰에서 영화 관람입니다."
+      }
+     ]
+    },
+    {
+     "q": "마지막 거 오래 걸려?",
+     "gold": 6,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "첫날 오후 일정 순서로 보여줘"
+      },
+      {
+       "role": "service",
+       "text": "정동길 산책, 배재학당역사박물관 관람, 정동전망대에서 풍경 보기 순서입니다."
+      }
+     ]
+    },
+    {
+     "q": "가운데 거 실내야?",
+     "gold": 34,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 점심 이후 세 일정은?"
+      },
+      {
+       "role": "service",
+       "text": "문래예술공장 방문, 63스퀘어 둘러보기, 노량진 컵밥거리 저녁입니다."
+      },
+      {
+       "role": "customer",
+       "text": "점심 빼고 오후 활동 세 개만 다시요"
+      },
+      {
+       "role": "service",
+       "text": "문래창작촌 산책, 문래예술공장 방문, 63스퀘어 둘러보기입니다."
+      }
+     ]
+    },
+    {
+     "q": "그 다음 일정 뭐야?",
+     "gold": 16,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "수요일 점심은 효뜨죠?"
+      },
+      {
+       "role": "service",
+       "text": "네, 12시 30분 효뜨에서 점심입니다."
+      }
+     ]
+    },
+    {
+     "q": "뒤에 거 앉아서 볼 수 있어?",
+     "gold": 30,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 늦은 오후 두 일정은?"
+      },
+      {
+       "role": "service",
+       "text": "소마미술관 특별전 관람 다음에 송파도서관에서 쉽니다."
+      }
+     ]
+    },
+    {
+     "q": "그 호텔 조식 몇 시?",
+     "gold": 7,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "화요일 아침은 어디서 먹어요?"
+      },
+      {
+       "role": "service",
+       "text": "코트야드 메리어트 서울 남대문에서 아침 식사합니다."
+      }
+     ]
+    },
+    {
+     "q": "두 번째 거 입장료 있어?",
+     "gold": 26,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 아침 일정 두 개 알려줘"
+      },
+      {
+       "role": "service",
+       "text": "호텔 아침 식사 후 롯데월드 민속박물관을 관람합니다."
+      }
+     ]
+    },
+    {
+     "q": "그 집은 예약해 둔 거야?",
+     "gold": 22,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "목요일 점심 뭐 먹죠?"
+      },
+      {
+       "role": "service",
+       "text": "벽제갈비 방이본점에서 점심입니다."
+      }
+     ]
+    },
+    {
+     "q": "거기서 얼마나 쉬어요?",
+     "gold": 10,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "화요일 차 마시는 곳이 어디야?"
+      },
+      {
+       "role": "service",
+       "text": "14시에 수연산방에서 차를 마십니다."
+      }
+     ]
+    },
+    {
+     "q": "앞에 거 역에서 가까워?",
+     "gold": 32,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 오전에 문래에서 뭐 해?"
+      },
+      {
+       "role": "service",
+       "text": "문래창작촌 산책 후 영일분식에서 점심입니다."
+      }
+     ]
+    },
+    {
+     "q": "그 다음은 식사야?",
+     "gold": 3,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "첫날 체크인 언제죠?"
+      },
+      {
+       "role": "service",
+       "text": "11시에 코트야드 메리어트 서울 남대문에 체크인합니다."
+      }
+     ]
+    },
+    {
+     "q": "마지막 거 공항 가는 거지?",
+     "gold": 42,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "일요일 끝 일정 알려줘"
+      },
+      {
+       "role": "service",
+       "text": "벽제갈비 방이본점 점심 후 공항버스로 이동합니다."
+      }
+     ]
+    },
+    {
+     "q": "그거 쇼핑 시간이야?",
+     "gold": 39,
+     "type": "context_pronoun",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "마지막 날 10시 일정은?"
+      },
+      {
+       "role": "service",
+       "text": "잠실 지하상가에서 쇼핑합니다."
+      }
+     ]
+    },
+    {
+     "q": "화요일 코트야드 조식 몇 시?",
+     "gold": 7,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수요일 코트야드 아침은?",
+     "gold": 13,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫날 코트야드 체크인은?",
+     "gold": 2,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 코트야드 체크아웃 시간?",
+     "gold": 19,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 소피텔 체크인 몇 시?",
+     "gold": 23,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 날 소피텔 체크아웃은?",
+     "gold": 38,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 소피텔 조식 시간?",
+     "gold": 25,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 소피텔 아침은?",
+     "gold": 37,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 소마미술관은 몇 시?",
+     "gold": 21,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 소마미술관 특별전은?",
+     "gold": 29,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫 벽제갈비 점심 언제야?",
+     "gold": 22,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 벽제갈비 점심 몇 시?",
+     "gold": 28,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 벽제갈비 식사는?",
+     "gold": 41,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 잠실 지하상가 언제?",
+     "gold": 27,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 잠실 지하상가 쇼핑은?",
+     "gold": 39,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "재방문하는 민속박물관 몇 시?",
+     "gold": 40,
+     "type": "duplicate_place",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북구립미술관 시간은?",
+     "gold": 8,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "아모레퍼시픽미술관은 언제?",
+     "gold": 14,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "배재학당역사박물관 가는 날?",
+     "gold": 5,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "롯데월드 민속박물관 첫 방문은?",
+     "gold": 26,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "소마미술관 특별전 몇 시?",
+     "gold": 29,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북동면옥집에서 먹는 때는?",
+     "gold": 9,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수연산방 차 시간 알려줘",
+     "gold": 10,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "문래예술공장 언제 들러?",
+     "gold": 34,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "문래창작촌은 몇 시야?",
+     "gold": 32,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동전망대는 언제 올라가?",
+     "gold": 6,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동길은 언제 걸어?",
+     "gold": 4,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "용산 아이파크몰 구경 시간?",
+     "gold": 16,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "CGV 용산아이파크몰 영화는?",
+     "gold": 17,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북어린이미술관 꿈자람도 가?",
+     "gold": null,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "문래예술마을 방문 몇 시?",
+     "gold": null,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동극장 공연은 언제야?",
+     "gold": null,
+     "type": "confusable_name",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "유림면 취소하고 정동길 시간 알려줘",
+     "gold": 3,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "배재학당 예약하고 전망대도 확인해줘",
+     "gold": 5,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북미술관 시간 보고 면옥집도 알려줘",
+     "gold": 8,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수연산방 미루고 학림다방은 그대로 둬",
+     "gold": 10,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "효뜨 먼저 확인하고 영화 시간도 줘",
+     "gold": 15,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "아모레 미술관 예약하고 몰도 들를래",
+     "gold": 14,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "몽중헌 빼고 다음날 이동 시간 알려줘",
+     "gold": 18,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "석촌고분역 이동 늦추고 미술관도 미뤄줘",
+     "gold": 20,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "소피텔 체크인 확인하고 저녁 산책도 봐줘",
+     "gold": 23,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "송파도서관 빼고 다음날 문래역 이동은?",
+     "gold": 30,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "영일분식 예약하고 예술공장도 확인해줘",
+     "gold": 33,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "63스퀘어 먼저 보고 컵밥도 먹을래",
+     "gold": 35,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 날 지하상가 줄이고 박물관은 갈게",
+     "gold": 39,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "공항버스 시간 바꾸고 점심도 당겨줘",
+     "gold": 42,
+     "type": "compound_intent",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "유림면 말고 정동길 몇 시야?",
+     "gold": 4,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "전망대 아니고 배재학당 알려줘",
+     "gold": 5,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "면옥집 말고 수연산방은?",
+     "gold": 10,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "학림다방 말고 성북동 산책 시간",
+     "gold": 11,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "효뜨 아니고 아모레 미술관요",
+     "gold": 14,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "아이파크몰 말고 CGV 몇 시?",
+     "gold": 17,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "영화 말고 몽중헌 저녁 시간",
+     "gold": 18,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "갈비집 아니고 소피텔 체크인",
+     "gold": 23,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "먹자골목 말고 금요일 조식은?",
+     "gold": 25,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "소마 특별전 말고 송파도서관",
+     "gold": 30,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "문래창작촌 말고 영일분식 몇 시?",
+     "gold": 33,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "예술공장 말고 63스퀘어 알려줘",
+     "gold": 35,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "컵밥 말고 마지막 날 조식",
+     "gold": 37,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 갈비 점심 말고 공항버스 시간",
+     "gold": 42,
+     "type": "negation",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "유림면 몇시얌",
+     "gold": 3,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동길산책언제임",
+     "gold": 4,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "배재학당박물관 ㄱㄱ 시간?",
+     "gold": 5,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북구립미술관몇시여",
+     "gold": 8,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수연산방 차마시는거 ㅇㅇ?",
+     "gold": 10,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "학림다방언제감",
+     "gold": 12,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "아모레퍼시픽미술관몇시",
+     "gold": 14,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "용산아이파크몰 구경몇시?",
+     "gold": 16,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "씨지비용산 영화언제임",
+     "gold": 17,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "몽중헌 저녁 몇시용",
+     "gold": 18,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "소마미술관 목욜 몇시",
+     "gold": 21,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "소피텔첵인 언제ㅠㅠ",
+     "gold": 23,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "잠실지하상가 금욜 몇시",
+     "gold": 27,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "문래창작촌 산책몇시얌",
+     "gold": 32,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "영일분식 점심 ㄱㅊ 몇시?",
+     "gold": 33,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "공항뻐스 몇시타여",
+     "gold": 42,
+     "type": "typo_slang",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "안녕!",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "고마워요 ㅎㅎ",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "오늘 서울 날씨 어때?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "비트코인 얼마야?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "너 누가 만들었어?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "파이썬 정렬 코드 줘",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "ㅋㅋㅋㅋ",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "배터리 절약법 알려줘",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "환율 지금 얼마야?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "내일 눈 올까?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "와 벌써 기대돼",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "잘 자요",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "한국어 끝말잇기 할래?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "휴대폰 용량 꽉 찼어",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "2 더하기 3은?",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "그냥 인사하러 왔어",
+     "gold": null,
+     "type": "out_of_scope",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "여행 일정 도와드릴까요?"
+      },
+      {
+       "role": "service",
+       "text": "네, 필요하시면 말씀해 주세요."
+      }
+     ]
+    },
+    {
+     "q": "도착해서 시내 들어가는 철길 이동은?",
+     "gold": 1,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫날 짐 풀 방 받는 건 언제?",
+     "gold": 2,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "옛 학교 건물 구경 몇 시?",
+     "gold": 5,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "높은 데서 도심 내려다보는 건?",
+     "gold": 6,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "옛집에서 차 마시는 일정은?",
+     "gold": 10,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "오래된 찻집에서 쉬는 건 언제?",
+     "gold": 12,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수요일 화장품 회사 전시 공간은?",
+     "gold": 14,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수요일 스크린 앞에 앉는 일정은?",
+     "gold": 17,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 전시 그림 보는 건 몇 시?",
+     "gold": 21,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 옛 생활 전시 보는 곳은?",
+     "gold": 26,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 지하에서 쇼핑하는 건?",
+     "gold": 27,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "책 보며 잠깐 쉬는 시간은?",
+     "gold": 30,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 공방 많은 골목 걷는 건?",
+     "gold": 32,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 높은 건물 구경은?",
+     "gold": 35,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "길거리 한 그릇 저녁은 언제?",
+     "gold": 36,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 날 공항 가는 차는?",
+     "gold": 42,
+     "type": "nameless_description",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "월요일 첫 일정 몇 시?",
+     "gold": 1,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫날 세 번째 일정은?",
+     "gold": 3,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "월요일 마지막 일정은?",
+     "gold": 6,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "화요일 첫 식사 언제야?",
+     "gold": 7,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "둘째 날 세 번째 일정은?",
+     "gold": 9,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수요일 마지막 식사는?",
+     "gold": 18,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "효뜨 끝나고 바로 뭐 해?",
+     "gold": 16,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "넷째 날 첫 일정은?",
+     "gold": 19,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 점심 바로 다음은?",
+     "gold": 23,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 두 번째 일정은?",
+     "gold": 26,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 마지막 일정은?",
+     "gold": 30,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 첫 일정은?",
+     "gold": 31,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "영일분식 바로 다음은?",
+     "gold": 34,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "여섯째 날 마지막 식사는?",
+     "gold": 36,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 날 첫 일정은?",
+     "gold": 37,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "여행 마지막 일정은?",
+     "gold": 42,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동길 산책 30분 미뤄줘",
+     "gold": 4,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "배재학당 관람 빼줘",
+     "gold": 5,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "성북동면옥집 점심 당겨줘",
+     "gold": 9,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "학림다방 취소할게요",
+     "gold": 12,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "효뜨 점심 한 시간 늦춰줘",
+     "gold": 15,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "CGV 용산 영화 빼주세요",
+     "gold": 17,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 석촌고분역 이동 미뤄줘",
+     "gold": 20,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "잠실새내 먹자골목 취소해줘",
+     "gold": 24,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "송파도서관 시간 줄여줘",
+     "gold": 30,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "문래예술공장 방문 앞당겨줘",
+     "gold": 34,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "63스퀘어 일정 빼줘",
+     "gold": 35,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "30분 미뤄줘",
+     "gold": null,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "그거 취소할래",
+     "gold": null,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "좀 일찍 가면 안 돼?",
+     "gold": null,
+     "type": "change_request",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "거기 30분 늦춰줘",
+     "gold": 29,
+     "type": "change_request",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 오후 전시가 뭐죠?"
+      },
+      {
+       "role": "service",
+       "text": "15시에 소마미술관 특별전을 관람합니다."
+      }
+     ]
+    },
+    {
+     "q": "그 집 예약 취소해줘",
+     "gold": 41,
+     "type": "change_request",
+     "split": "held",
+     "history": [
+      {
+       "role": "customer",
+       "text": "마지막 날 점심은 어디예요?"
+      },
+      {
+       "role": "service",
+       "text": "13시에 벽제갈비 방이본점에서 점심입니다."
+      }
+     ]
+    },
+    {
+     "q": "경복궁 가는 시간 있어?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "남산서울타워 야경은 몇 시야?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "광장시장 점심 언제야?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "국립중앙박물관 관람 시간?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "북촌한옥마을은 언제 걸어?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "롯데월드 아쿠아리움 예약했어?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "더현대 서울 쇼핑은 언제?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "창덕궁 입장 몇 시?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서울숲 산책 일정 있어?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "남대문시장 구경 넣었나요?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "DDP 전시 보는 날은?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "한강공원 자전거 몇 시?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "명동성당 들르는 일정은?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서울스카이 전망대 예약은?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "망원시장 간식 시간 알려줘",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "리움미술관 표는 몇 시?",
+     "gold": null,
+     "type": "absent_but_plausible",
+     "split": "held",
+     "history": []
+    }
+   ]
+  }
+ }
+}

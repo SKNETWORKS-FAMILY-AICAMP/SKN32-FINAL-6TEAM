@@ -209,7 +209,8 @@ def _ask_instead(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
         summary, outbox = _open_ask(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base, item=item,
                                     best=best, decision=decision, causes=causes)
         return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{summary['proposal_id']}", summary=summary,
-                             outbox=outbox)
+                             outbox=outbox, answer=outbox[0].payload["text"] if outbox else
+                                     f"{summary['item']} — 일정은 그대로 두었어요. 계획서 링크에서 대안을 골라 주세요.")
     return None
 
 
@@ -358,7 +359,8 @@ def _ask_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
     summary, outbox = _open_consent(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base, item=item,
                                     causes=causes,
                                     indoor_unknown=bool((arguments.get("consent") or {}).get("indoor_unknown", True)))
-    return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{summary['proposal_id']}", summary=summary, outbox=outbox)
+    return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{summary['proposal_id']}", summary=summary, outbox=outbox, answer=outbox[0].payload["text"] if outbox else
+                                     f"{summary['item']} — 일정은 그대로 두었어요. 계획서 링크에서 대안을 골라 주세요.")
 
 
 def _open_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int, item: Item,

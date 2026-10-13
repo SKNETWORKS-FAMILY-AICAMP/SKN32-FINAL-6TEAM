@@ -163,11 +163,11 @@ def _advance_to_running(conn, tenant: str, case_id) -> None:
     with conn.transaction():
         transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=1,
                         event_type=EventType.CLASSIFIED,
-                        payload={"intent": "billing", "issue_code": "invoice",
+                        payload={"intent": "incident_report", "issue_code": "activity_cancel_or_change",
                                  "sentiment": "neutral"}, actor_type="test")
         transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2,
                         event_type=EventType.ROUTED,
-                        payload={"owner_team_id": "fake_order", "capability": "order.investigate"},
+                        payload={"owner_team_id": "test_activity", "capability": "activity.inspect"},
                         actor_type="test")
     conn.commit()
 

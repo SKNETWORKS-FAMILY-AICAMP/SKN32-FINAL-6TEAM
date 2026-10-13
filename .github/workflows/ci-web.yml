@@ -7,16 +7,17 @@
 #     tests/contract/test_web_client_contract.py 가 잡는다.
 #   ★실서버 시험(test:real)은 넣지 않는다 — 팀 채팅 알림 · 외부 호출 · DB 에 시험 여행이 남는다
 #     (playwright.real.config.ts 머리 주석).
+# ★`[2026-10-13 사용자 결정]` GitHub 검사는 develop · main 에서만 돈다 — role-manager 는 검사하지 않는다(ci-main.yml 과 같다).
 name: CI (web)
 
 on:
   push:
-    branches: [role-manager, develop, main]
+    branches: [develop, main]
     paths:
       - "final_project_cs/frontend/apps/web/**"
       - ".github/workflows/ci-web.yml"
   pull_request:
-    branches: [role-manager, develop, main]
+    branches: [develop, main]
     paths:
       - "final_project_cs/frontend/apps/web/**"
       - ".github/workflows/ci-web.yml"

@@ -11,6 +11,8 @@
 """
 from __future__ import annotations
 
+from app.core.team_availability import TeamUnavailable
+
 import json
 from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import datetime
@@ -118,6 +120,8 @@ def options(found: dict[str, Any], from_id: str, to_id: str, *,
             continue
         try:
             row = f.result()
+        except TeamUnavailable:
+            raise
         except Exception:                                   # noqa: BLE001 — 한 수단의 오류가 다른 수단을 막지 않는다
             rows.append({"mode": m, "label": MOVE_LABEL.get(m, m), "fits": None, "why_not": SLOW_TEXT})
             continue

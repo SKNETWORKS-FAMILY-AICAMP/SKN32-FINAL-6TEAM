@@ -8,27 +8,38 @@ from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 from app.domains.travel_ops.components.conversation.trip_messages import handle_trip_message
 
 from .test_case_version_day import REPORTS, _at, _classifier, _seed
+from .test_case_version_day import SCENARIO, Clock, _sources
+from app.domains.travel_ops.scenarios.case_engine import CaseEngine
+from app.domains.travel_ops.scenarios.replay_services import replay_leg_services
+from app.core.service_bindings import bind_services
+from app.tools.read_tools import ReadToolbox
 
 
 def test_dining_unknown_is_answered_without_escalation_or_a_new_itinerary(monkeypatch):
     tenant = "dining_unknown_" + uuid4().hex[:10]
     store, _, trip_id = _seed(tenant)
     desk = TripDesk(store=store, connection_factory=get_connection)
-    monkeypatch.setattr(desk, "_dining_states", lambda slots: {
-        s["place_id"]: {"linked": True, "open_at_slot": None} for s in slots})
     report = REPORTS["delay"]
+    clock=Clock(_at(report['at']))
+    check,events=_sources(clock)
+    engine=CaseEngine(tenant_id=tenant,check=check,route_events=events,classifier=_classifier,
+        report_extractor=None,clock=clock,service_overrides=replay_leg_services(SCENARIO))
+    monkeypatch.setattr(ReadToolbox,'dining_states',lambda self,scope,*,slots,**kwargs: {
+        s['place_id']:{'linked':True,'open_at_slot':None} for s in slots})
     try:
         arguments = {"tenant": tenant, "trip_id": trip_id, "request_id": "unknown-hours",
                      "message": report["message"], "at": _at(report["at"]), "classifier": _classifier,
                      "chat": SimpleNamespace(json=lambda *_: {"type": "delay", "minutes": report["minutes"]}),
-                     "desk": desk, "actor_id": "test"}
-        outcome = handle_trip_message(**arguments)
+                     "desk": desk, "actor_id": "test", "controller":engine.controller}
+        with bind_services(engine.controller.service_bindings):
+            outcome = handle_trip_message(**arguments)
         assert outcome["status"] == "needs_check" and outcome["case_status"] == "resolved"
         assert outcome["answer"] == outcome["outcome"]["message"]
         assert "확인" in outcome["answer"] and "바꾸지" in outcome["answer"]
         with get_connection() as conn:
             assert store.latest(conn, trip_id)[0]["version"] == 1
-        repeated = handle_trip_message(**arguments)
+        with bind_services(engine.controller.service_bindings):
+            repeated = handle_trip_message(**arguments)
         assert repeated["status"] == "duplicate" and repeated["case_status"] == "resolved"
         assert outcome["answer"] in repeated["answer"]
     finally:

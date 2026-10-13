@@ -1,0 +1,16 @@
+기존 판정 90문항 — 유형별 맞은 수 (규칙 켬, 문턱은 개발용에서 고름). 26B 대비 ▲=이김 ▼=짐
+유형                        n  26B  재평가4B      WeMM-4B    OD-small   A3(재평가4B+  세 개 전부   
+chinese                   4    4  4=         4=         2▼         4=         4=       
+direct                    6    6  6=         6=         6=         6=         6=       
+english                  10   10  5▼         8▼         4▼         5▼         9▼       
+japanese                  4    4  2▼         3▼         3▼         2▼         2▼       
+none                      5    5  5=         5=         5=         5=         5=       
+none_near_miss            6    6  5▼         3▼         6=         5▼         5▼       
+paraphrase               10   10  8▼         7▼         8▼         8▼         9▼       
+paraphrase_activity       6    6  5▼         5▼         3▼         5▼         6=       
+paraphrase_knowledge     14   13  4▼         5▼         1▼         5▼         5▼       
+policy_about_item         5    5  5=         5=         5=         5=         5=       
+relative_time             7    6  7▲         7▲         3▼         7▲         7▲       
+sequence                  9    8  1▼         1▼         1▼         1▼         1▼       
+typo_or_slang             4    4  4=         3▼         3▼         4=         4=       
+합계 26B 87 / 90 · 재평가4B 61 · WeMM-4B 62 · OD-small 50 · A3(재평가4B+WeMM-4B) 62 · 세 개 전부 68

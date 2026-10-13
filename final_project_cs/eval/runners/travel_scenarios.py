@@ -168,6 +168,7 @@ def _engine(tenant: str, data: dict[str, Any], drop_scenes: list[str], clock: Cl
     from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
                                                   ReplayWarning, ReplayWeather)
     from app.domains.travel_ops.scenarios.case_engine import CaseEngine
+    from app.domains.travel_ops.scenarios.replay_services import replay_leg_services
 
     # ★**사건만 뺀다**(`_scene` 이 붙은 항목). 종류를 통째로 빼면 그 소스가 **답하지 않는 것**이 되어
     #   대체까지 실패(결정 15 의 치명)로 읽힌다 — 첫 실행에서 실제로 그렇게 났다. 평상값은 남긴다.
@@ -185,7 +186,8 @@ def _engine(tenant: str, data: dict[str, Any], drop_scenes: list[str], clock: Cl
                             air=ReplayAir(timeline))
     check = DisruptionCheck(sources, limits=lambda: (60, 30)).check
     return CaseEngine(tenant_id=tenant, check=check, route_events=ReplayRouteEvents(timeline),
-                      classifier=classifier, report_extractor=extractor, clock=clock)
+                      classifier=classifier, report_extractor=extractor, clock=clock,
+                      service_overrides=replay_leg_services(data))
 
 
 def _violations(store, trip_id, data) -> list[dict[str, Any]]:

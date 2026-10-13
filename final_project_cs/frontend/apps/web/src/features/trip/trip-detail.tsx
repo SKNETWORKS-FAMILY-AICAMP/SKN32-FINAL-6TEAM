@@ -1,11 +1,14 @@
 "use client";
 
 import { useContext, useEffect, useRef, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ExternalLink, MessageCircle } from "lucide-react";
 import { HeaderSlot } from "@/components/layout/device-frame";
+import { safePhotoUrl } from "@/features/plan-check/from-review";
 import pc from "@/features/plan-check/plan-check.module.css";
-import { useT } from "@/lib/settings";
+import { getPlacePhotos } from "@/lib/live/intake-review";
+import { useSettings, useT } from "@/lib/settings";
 import type { Trip, TripStop } from "./model";
 import { bookingLabel, StopFacts } from "./trip-rows";
 import styles from "./trip-screen.module.css";
@@ -24,7 +27,8 @@ export function DetailHeader({ title, onBack }: { title: string; onBack: () => v
  * `[2026-10-07 사용자 결정 — 목업 C안 「상세 보기」]` One stop's detail, the plan check's change screen laid out for a registered trip: 「○○ 상세 · n일차 · i/N」, a card for each stop of that day
  * (swiped, or a dot pressed, to the next — the map follows), and the photos below (slide the sheet up).
  * A card: the day and times, the booking note, the name and where the facts come from, kind · address, then the facts of the list card and 「이 일정 질문하기 · 지도 앱으로 열기」.
- * ★Only what the server gave: the server sends no photos of a place yet, so the photo part says they are coming.
+ * Photos: the plan check's change screen asks the same call for a place's registered photos (`GET /v1/web/places/photos?ref=tour:…`). A stop of a registered trip has that ref only when
+ * the server sends it (`place_ref` — not yet, asked of the backend); without it the photo part says they are coming. ★Only what the server gave — no photo is made up.
  */
 export function TripDetail({ trip, stopId, dayNumber, onStop, onAsk, askBusy, onSheetFull }: {
   trip: Trip; stopId: string; dayNumber: number;
@@ -48,13 +52,43 @@ export function TripDetail({ trip, stopId, dayNumber, onStop, onAsk, askBusy, on
       </Carousel>
       {list.length > 1 && <div className={pc.dots} role="group" aria-label={t("일정 고르기", "Choose a stop")}>{list.map((entry, at) =>
         <button key={entry.id} type="button" aria-pressed={at === index} aria-label={`${at + 1}. ${entry.title}`} onClick={() => onStop(entry.id)}><span aria-hidden="true" /></button>)}</div>}
-      <button type="button" className={pc.hint} onClick={onSheetFull}>{t("시트를 위로 올리면 사진 안내 ↑", "Slide the sheet up for photos ↑")}</button>
-      <section className={pc.photos} aria-labelledby="trip-photos-title">
-        <h4 id="trip-photos-title">{t(`등록된 사진 · ${stop.title}`, `Photos · ${stop.title}`)}</h4>
-        <p className={pc.empty}>{t("등록된 사진이 없어요 · 장소 사진은 준비 중이에요", "No photos yet · place photos are coming")}</p>
-      </section>
+      <Photos stop={stop} onSheetFull={onSheetFull} />
     </div>
   </div>;
+}
+
+/**
+ * The registered photos of the stop in view (the plan check's photo part): the hint to slide the sheet up, then the photos with the source's credit. Fetched each time (never stored —
+ * the server's rule for the tourism photos); a photo that cannot be fetched is just not shown.
+ */
+function Photos({ stop, onSheetFull }: { stop: TripStop; onSheetFull: () => void }) {
+  const t = useT();
+  const { language } = useSettings();
+  const ref = stop.placeRef?.startsWith("tour:") ? stop.placeRef : null;
+  const found = useQuery({ queryKey: ["place-photos", ref, language], queryFn: () => getPlacePhotos(ref!, language), enabled: Boolean(ref), staleTime: 5 * 60_000, retry: false });
+  const photos = (found.data?.photos ?? []).flatMap((photo) => {
+    const url = safePhotoUrl(photo.url);
+    return url ? [{ url, caption: [photo.name ?? stop.title, found.data?.source_note].filter(Boolean).join(" ") }] : [];
+  });
+  const empty = !ref ? t("등록된 사진이 없어요 · 장소 사진은 준비 중이에요", "No photos yet · place photos are coming")
+    : found.isPending ? t("사진을 불러오고 있어요…", "Loading the photos…")
+      : found.isError ? t("사진을 불러오지 못했어요.", "Could not load the photos.")
+        : t("등록된 사진이 없어요.", "No photos for this place.");
+  return <>
+    <button type="button" className={pc.hint} onClick={onSheetFull}>{photos.length
+      ? t(`시트를 위로 올리면 ${stop.title} 사진 ${photos.length}장 ↑`, `Slide the sheet up for ${photos.length} photos of ${stop.title} ↑`)
+      : t("시트를 위로 올리면 사진 안내 ↑", "Slide the sheet up for photos ↑")}</button>
+    <section className={pc.photos} aria-labelledby="trip-photos-title">
+      <h4 id="trip-photos-title">{t(`등록된 사진 · ${stop.title}`, `Photos · ${stop.title}`)}{photos.length > 0 && <small>{t(`${photos.length}장`, `${photos.length}`)}</small>}</h4>
+      {photos.length
+        ? <div className={pc.photoGrid}>{photos.map((photo, index) => <figure key={`${photo.url}-${index}`} className={pc.photo}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- place photos come from hosts the place data names, not configured in advance */}
+            <img src={photo.url} alt={photo.caption} loading="lazy" />
+            <figcaption>{photo.caption}</figcaption>
+          </figure>)}</div>
+        : <p className={pc.empty} role={found.isError ? "alert" : undefined}>{empty}</p>}
+    </section>
+  </>;
 }
 
 function DetailCard({ stop, next, dayNumber, active, onAsk, askBusy }: { stop: TripStop; next: TripStop | undefined; dayNumber: number; active: boolean; onAsk: () => void; askBusy: boolean }) {

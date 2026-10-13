@@ -11,6 +11,8 @@
 """
 from __future__ import annotations
 
+from app.core.service_bindings import collect_registration, read_binding
+
 from typing import Any, Callable, Mapping
 
 _score: Callable[..., int] | None = None
@@ -22,6 +24,8 @@ def register(*, score: Callable[..., int],
              preference_of: Callable[[Mapping[str, Any] | None], str | None],
              distance_first: Callable[[str | None], bool]) -> None:
     """조립 때 한 번. 셋을 다 줘야 한다."""
+    if collect_registration("similarity", locals()):
+        return
     global _score, _preference_of, _distance_first
     _score, _preference_of, _distance_first = score, preference_of, distance_first
 
@@ -32,27 +36,31 @@ def clear() -> None:
 
 
 def is_registered() -> bool:
-    return _score is not None
+    _selected_0 = read_binding("similarity", "score", globals()["_score"])
+    return _selected_0 is not None
 
 
 def preference_of(constraints: Mapping[str, Any] | None) -> str | None:
     """여행 조건의 설문에서 읽은 선호. ★미등록이면 `None`(설문 없음과 같다)."""
-    if _preference_of is None:
+    _selected_0 = read_binding("similarity", "preference_of", globals()["_preference_of"])
+    if _selected_0 is None:
         return None
-    return _preference_of(constraints)
+    return _selected_0(constraints)
 
 
 def distance_first(preference: str | None) -> bool:
     """거리를 분류보다 앞세우나. ★미등록이면 `False` — 선호를 모를 때 활동 팀이 내는 답과 같다."""
-    if _distance_first is None:
+    _selected_0 = read_binding("similarity", "distance_first", globals()["_distance_first"])
+    if _selected_0 is None:
         return False
-    return _distance_first(preference)
+    return _selected_0(preference)
 
 
 def scorer(preference: str | None) -> Callable[..., int] | None:
     """후보 점수 함수 — 부품이 넘겨 쓰는 모양(`similarity=`). ★미등록이면 `None`(유사도 없이 거리만)."""
-    if _score is None:
+    _selected_0 = read_binding("similarity", "score", globals()["_score"])
+    if _selected_0 is None:
         return None
     from functools import partial
 
-    return partial(_score, preference=preference)
+    return partial(_selected_0, preference=preference)

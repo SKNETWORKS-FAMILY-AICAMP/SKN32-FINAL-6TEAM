@@ -1,0 +1,34 @@
+digraph roles {
+  graph [rankdir=LR, fontname="Malgun Gothic", nodesep=0.25, ranksep=0.55, dpi=200, pad=0.12, newrank=true];
+  node  [shape=box, style="rounded,filled", fontname="Malgun Gothic", fontsize=12, margin="0.14,0.07", fillcolor="#FFFFFF", color="#9FB0A6"];
+  edge  [color="#5F6B64", fontname="Malgun Gothic", fontsize=10, arrowsize=0.7];
+
+  subgraph cluster_use {
+    label="쓰는 쪽"; fontname="Malgun Gothic"; fontsize=12; color="#C9D4CD"; style="rounded";
+    dining  [label="요식 에이전트", fillcolor="#EEF4EF", color="#2D5F48"];
+    activity[label="액티비티 에이전트", fillcolor="#EEF4EF", color="#2D5F48"];
+    mobility[label="공용 이동 판정 도구\n(두 에이전트가 함께 부름)", fillcolor="#F6EAD4", color="#C8913A"];
+    chat    [label="여행별 채팅 · 질문 해석"];
+    admin   [label="관리 화면 · 점검"];
+  }
+
+  subgraph cluster_store {
+    label="저장 · 관계 구조"; fontname="Malgun Gothic"; fontsize=12; color="#C9D4CD"; style="rounded";
+    vec  [label="벡터 검색\nPostgreSQL + pgvector\n여행 정책 12문서 · 130조각 · 1024차원", fillcolor="#2D5F48", fontcolor="white", color="#2D5F48"];
+    road [label="도로 그래프 · 지하철 역 순서\n파일 → 프로세스 메모리"];
+    itin [label="일정 관계 구조(메모리)\n날짜 · 순서 · 앞뒤 · 같은 장소\n연구 코드에서 비교 실험"];
+    rel  [label="업무 관계 조회\nPostgreSQL 재귀 질의(SqlGraphAdapter)\n사건 · 실행 · 근거 연결"];
+    rows [label="정형 표\n여행 · 일정 · 사건 · 대화 기록"];
+  }
+
+  dining   -> vec  [label=" 정책 근거"];
+  activity -> vec;
+  dining   -> mobility;
+  activity -> mobility;
+  mobility -> road [label=" 경로 · 거리"];
+  chat     -> vec  [label=" 정책 질문"];
+  chat     -> itin [style=dashed, label=" 실험 단계"];
+  chat     -> rows [label=" 최근 대화"];
+  admin    -> rel  [style=dashed, label=" 여행 요청 경로에선 안 씀"];
+  rel      -> rows [style=dotted, arrowhead=none, label=" 기존 표를 관계로 읽음"];
+}

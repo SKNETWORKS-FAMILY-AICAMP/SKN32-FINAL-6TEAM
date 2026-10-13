@@ -26,7 +26,7 @@ import type { MoveOptions, MoveOptionMode } from "@/lib/live/move-options";
 import { moveToast } from "./map-description";
 import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 import { useFollowScroll } from "./use-follow-scroll";
-import { readListZoom, writeListZoom } from "./list-zoom";
+import { useListZoom } from "./list-zoom";
 import { useTimeInset } from "./use-time-inset";
 import { useDayMarker } from "./use-day-marker";
 import { usePageScrollReset } from "./use-page-scroll-reset";
@@ -455,10 +455,9 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const [dayChoice, setDayChoice] = useState<"all" | null>(null);
   // Which way the last move between days went (for the slide in); null when the list was not moved from one day to another.
   const [slide, setSlide] = useState<"next" | "prev" | null>(null);
-  // ★`[2026-10-05 사용자 요청]` The day list follows the finger sideways with the neighbouring day beside it (`peek`), the chips' marker slides with it, two fingers pinching zoom the list (`listZoom`, kept for the
-  //   customer) and pinched as far in as it goes it becomes the overview of every day (「전체」) and the other way back (`swap` names the animation of that turn). See `use-day-gestures.ts`.
+  // 날짜는 한 손가락으로 넘긴다. 목록 크기는 메뉴에서만 바꿔 브라우저의 두 손가락 확대를 보존한다.
   const [peek, setPeek] = useState<{ side: -1 | 0 | 1; top: number; edge: boolean }>({ side: 0, top: 0, edge: false });
-  const [listZoom, setListZoom] = useState(readListZoom);
+  const listZoom = useListZoom();
   const [swap, setSwap] = useState<"overview" | "day" | null>(null);
   const trackBox = useRef<HTMLDivElement>(null);
   const zoomBox = useRef<HTMLDivElement>(null);
@@ -1092,14 +1091,6 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   function chooseAllDays() { setSlide(null); setFilter(null); setDayChoice("all"); bodyBox.current?.scrollTo({ top: 0 }); }
   const neighbourOf = (side: -1 | 1) => (dayAt < 0 ? undefined : days[dayAt + side]);
   const placeMarker = useDayMarker(stripBox, markerBox, listDay === "all" ? 0 : dayAt + 1, `${dayStrip}|${days.length}|${language}|${side}|${compact}|${Boolean(inserting)}`);
-  /** Pinched as far in as it goes, the day list becomes the overview of every day; pinched as far out as it goes from the overview, one day. Between: the size the customer asked for stays. */
-  function endPinch(zoom: number) {
-    const zoomEl = zoomBox.current;
-    const setZoom = (value: number) => { if (zoomEl) zoomEl.style.zoom = value === 1 ? "" : String(value); setListZoom(value); writeListZoom(value); };
-    if (listDay !== "all" && zoom <= 0.7 && days.length > 1) { setZoom(1); setSwap("overview"); chooseAllDays(); return; }
-    if (listDay === "all" && !filtering && zoom >= 1.45 && days.length > 1) { setZoom(1); setSwap("day"); goDay(mapDay, false); return; }
-    setZoom(Math.round(Math.min(1.3, Math.max(0.8, zoom)) * 20) / 20);
-  }
   useCenterTools(bodyBox, done && !changing);
   useDayGestures(bodyBox, {
     swipe: dayStrip && !filtering && !inserting,
@@ -1109,10 +1100,6 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     onPeek: (side, top, edge) => setPeek({ side, top, edge }),
     onProgress: (shift, width) => placeMarker(shift, width),
     onTurn: (delta) => stepDay(delta, false),
-    pinch: done && !changing,
-    zoom: listZoom,
-    onPinch: (zoom) => { if (zoomBox.current) zoomBox.current.style.zoom = String(zoom); },
-    onPinchEnd: endPinch,
     overview: listDay === "all",
     onOverviewSwipe: () => {
       // The day whose part of the list is at the top of what shows (the one being looked at).

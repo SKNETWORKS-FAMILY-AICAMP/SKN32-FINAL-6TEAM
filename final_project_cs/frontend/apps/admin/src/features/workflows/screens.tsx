@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { chatLimitFor, formatNumber, type AdminCommand, type Inquiry, type InquiryStatus, type Notice, type ScreenProps } from '../../lib/model';
+import { INITIAL_INQUIRIES_LIST, chatLimitFor, formatNumber, type AdminCommand, type Inquiry, type InquiryStatus, type InquiriesListState, type Notice, type ScreenProps } from '../../lib/model';
 import { DEMO_OPERATOR } from '../../lib/demo/fixtures';
 import styles from './screens.module.css';
 
@@ -65,10 +65,11 @@ function WorkflowDialog({ children, titleId, locked, onClose }: { children: Reac
   return <dialog ref={ref} className={styles.dialog} aria-labelledby={titleId} onCancel={event => { event.preventDefault(); if (!locked) onClose(); }}>{children}</dialog>;
 }
 
-export function InquiriesScreen({ data, onCommand, navigate, inquiryId }: ScreenProps & { inquiryId?: string }) {
-  const [status, setStatus] = useState<InquiryStatus | '전체'>('전체');
-  const [query, setQuery] = useState('');
-  const [owner, setOwner] = useState('all');
+export function InquiriesScreen({ data, onCommand, navigate, inquiryId, listState, onListStateChange }: ScreenProps & { inquiryId?: string; listState: InquiriesListState; onListStateChange: (state: InquiriesListState) => void }) {
+  const { status, query, owner } = listState;
+  const setStatus = (status: InquiriesListState['status']) => onListStateChange({ ...listState, status });
+  const setQuery = (query: string) => onListStateChange({ ...listState, query });
+  const setOwner = (owner: string) => onListStateChange({ ...listState, owner });
   const [manageTemplates, setManageTemplates] = useState(false);
   const operators = [...new Set([DEMO_OPERATOR, ...data.inquiries.map(item => item.assignee), ...data.audit.map(item => item.actor)])].filter(Boolean).sort();
   const filtered = data.inquiries.filter(item => (status === '전체' || item.status === status) && (owner === 'all' || (owner === 'unassigned' ? !item.assignee : item.assignee === owner)) && `${item.title} ${item.body} ${item.userId}`.toLowerCase().includes(query.toLowerCase().trim()));
@@ -83,7 +84,7 @@ export function InquiriesScreen({ data, onCommand, navigate, inquiryId }: Screen
         <div className={styles.listFilters}><label>문의 찾기<input value={query} onChange={event => setQuery(event.target.value)} placeholder="제목, 내용 또는 사용자 ID" /></label><label>담당자 필터<select value={owner} onChange={event => setOwner(event.target.value)}><option value="all">담당 전체</option><option value="unassigned">미지정</option><option value={DEMO_OPERATOR}>내 담당</option>{operators.filter(operator => operator !== DEMO_OPERATOR).map(operator => <option key={operator}>{operator}</option>)}</select></label></div>
         <div className={styles.inquiryItems}>{filtered.length ? filtered.map(item => <button key={item.id} type="button" className={`${styles.inquiryItem} ${selected?.id === item.id ? styles.selectedItem : ''}`} aria-pressed={selected?.id === item.id} onClick={() => navigate(`/inquiries/${item.id}`)}><div className={styles.row}><span className={`badge ${item.status === '접수' ? styles.warmBadge : ''}`}>{item.status}</span><time className={styles.small}>{displayTime(item.receivedAt)}</time></div><strong>{item.title}</strong><span className={styles.excerpt}>{item.body}</span><span className={styles.small}>{item.userId} · {item.assignee || '담당 미지정'}</span></button>) : <Empty>조건에 맞는 문의가 없습니다.</Empty>}</div>
       </section>
-      {selected ? <InquiryDetail key={selected.id} inquiry={selected} data={data} onCommand={onCommand} navigate={navigate} operators={operators} onManageTemplates={() => setManageTemplates(true)} /> : <section className="panel"><Empty>{requestedInquiry ? '선택한 문의가 현재 필터에 포함되지 않습니다.' : inquiryId ? '요청한 문의를 찾을 수 없습니다.' : '문의가 접수되면 여기에서 내용을 확인할 수 있습니다.'}</Empty>{requestedInquiry ? <button type="button" onClick={() => { setStatus('전체'); setOwner('all'); setQuery(''); }}>문의 필터 초기화</button> : inquiryId && <button type="button" onClick={() => navigate('/inquiries')}>문의 목록으로 돌아가기</button>}</section>}
+      {selected ? <InquiryDetail key={selected.id} inquiry={selected} data={data} onCommand={onCommand} navigate={navigate} operators={operators} onManageTemplates={() => setManageTemplates(true)} /> : <section className="panel"><Empty>{requestedInquiry ? '선택한 문의가 현재 필터에 포함되지 않습니다.' : inquiryId ? '요청한 문의를 찾을 수 없습니다.' : '문의가 접수되면 여기에서 내용을 확인할 수 있습니다.'}</Empty>{requestedInquiry ? <button type="button" onClick={() => onListStateChange(INITIAL_INQUIRIES_LIST)}>문의 필터 초기화</button> : inquiryId && <button type="button" onClick={() => navigate('/inquiries')}>문의 목록으로 돌아가기</button>}</section>}
     </div>
     {manageTemplates && <TemplateManager data={data} onCommand={onCommand} onClose={() => setManageTemplates(false)} />}
   </div>;

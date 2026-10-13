@@ -158,6 +158,53 @@ python -m scripts.check_env
 
 `[실측]` **단 extension 2건 FAIL 은 마이그레이션 전에는 정상이다.** 이걸 모르면 멀쩡한 상태를 고장으로 오해한다.
 
+## ★ 시험(pytest) — 이동 자료 없이 돈다 `[2026-10-12]`
+
+**이동 자료(지하철 시간표 등 약 93MB)는 받지 않아도 된다.** 시험은 기본으로 이동 계산기를 끄고 돈다
+(`tests/conftest.py` 가 `ACOP_MOBILITY_DATA_DIR` 를 비운다). GitHub 검사(CI)도 같은 조건이다.
+
+| 무엇을 | 어떻게 |
+|---|---|
+| DB | 빈 DB 하나(`pgvector` 확장 가능한 PostgreSQL) → `python -m app.infrastructure.db.migrate` → `python -m scripts.register_prompts` |
+| 빠른 관문(develop 과 같음) | `python -m pytest tests/architecture tests/contract tests/unit -q` 그리고 `python -m pytest tests/security -q` |
+| 전체(main 과 같음) | `python -m pytest -q` (실제 모델을 부르는 `live` 는 `pytest.ini` 가 뺀다) |
+| 전체를 병렬로 | `python -m pytest -q -n 4 --dist loadfile` — 일꾼마다 `<DB 이름>_gw0` 같은 자기 DB 를 본 DB 를 틀로 복사해 쓴다(`final_project_cs/conftest.py`). 본 DB 에 다른 접속(개발 서버 등)이 있으면 복사가 실패하니 **시험용 DB 에서만** 쓴다 |
+| 환경값 | CI 와 같게 — `.github/workflows/ci-main.yml` 의 `env` 칸(시험용 가짜 값)과 위 `PYTHONPATH` |
+
+**GitHub 검사(파이썬)는 언제 무엇을 도나** `[2026-10-13 사용자 결정]` — role-manager 는 검사하지 않는다. develop · main 에서 1번.
+
+| 언제 | 도는 검사 | 걸리는 시간 |
+|---|---|---|
+| `develop` · `main` 에 push · `develop` · `main` 으로 오는 PR | 전체 관문 `CI (main)` — 린트 + 전체 시험(live · rag 제외, 4개 일꾼 병렬) + 배포 이미지(`deploy/Dockerfile.api`) 빌드 | 약 4분 `[실측 1회 — 10-13 develop 255초, 병렬 전 606초]` |
+| `role-manager` 에 push | 검사 없음 | 0 |
+| 손으로 돌릴 때만 | 빠른 관문 `CI (develop)` — 린트 + 아키텍처·계약·단위·보안 | 약 1~2분 `[실측]` |
+| 저장소 맨 위 문서(`wiki/` · `program/` · 맨 위 `*.md`)만 바뀐 push | 건너뜀 (PR 은 건너뛰지 않는다) | 0 |
+
+- 같은 커밋을 `role-manager` → `develop` 순으로 올리면 develop 에서 **1번**만 돈다.
+- 이력: 10-08 통합 커밋이 이유 기록 없이 두 관문을 role-manager · develop 모두에서 돌게 넓혀 4번 → 10-12 1차 정리 2번 → 10-13 1번.
+- `final_project_cs/wiki/` 만 바뀐 push 는 건너뛰지 **않는다** — 계약 시험이 그 문서(상태 표 등)를 코드와 대조한다.
+- 병렬은 실무 표준 방식이다 — pytest-xdist 로 나누고 일꾼마다 DB 를 따로 둔다(pytest-django 가 `test_<이름>_gw0` 을 만드는 것과 같다). 한 파일의 시험은 한 일꾼이 순서대로 돈다(`--dist loadfile`).
+- 각 job 에 제한 시간(빠른 20분 · 전체 40분)이 있다. 넘기면 멈춘 시험이 있다는 뜻이다 — 로그 끝의 `--durations` 표(오래 걸린 시험 25개)부터 본다.
+- 손으로 다시 돌리려면 GitHub 의 Actions 탭에서 워크플로를 고르고 **Run workflow** 를 누른다(`workflow_dispatch`).
+
+**이동을 거치는 시험을 새로 쓸 때** — 앱을 만든 직후 시험용 고정 구간을 명시한다. 안 하면 이동 팀이
+「엔진 미준비」로 거절해 503 `team_unavailable`(`reason: engine_unavailable`)이 난다([plugin-availability](../teams/team-contract/plugin-availability.md) — 직선거리 어림으로 대신하지 않는 것이 계약이다).
+
+```python
+from tests.helpers.plugin_bindings import publish_fixed_mobility
+
+client = TestClient(create_app(...))
+publish_fixed_mobility(client.app, source="내_시험_이름")            # 구간마다 5분 · 앞 일정 끝나고 출발
+# 일정 짜기처럼 「다음 일정 시작 − 이동 − 여유」 출발 규칙을 보는 시험은 도착 여유를 준다
+publish_fixed_mobility(client.app, source="내_시험_이름", arrival_buffer_min=MOVE_BUFFER_MIN)
+```
+
+**실제 시간표로 돌려 보고 싶을 때만** 자료 폴더를 직접 지정한다 — 셸에서 `ACOP_MOBILITY_DATA_DIR=<자료 폴더>/datasets/mobility/processed`.
+느려진다(2026-10-12 일정 짜기 시험 묶음: 꺼짐 33초 → 켬 약 10분 `[실측 1회]`). 실제 자료로 하는 확인은 자료가 붙어 있는 개발 기계의 cs 프로젝트 서버(화면·API)에서 한다.
+
+`[실측]` 2026-10-12 develop 의 이동 팀 「엔진 미준비 거절」 변경 뒤, 자료 없는 CI 에서 이동을 거치는 e2e 시험 45건이
+깨졌다(요식 PR 도 같이 붉어짐). 위 고정 구간을 넣어 고쳤다.
+
 ## 관계
 
 - [run.md](run.md) — 실행 명령

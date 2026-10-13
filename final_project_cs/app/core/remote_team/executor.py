@@ -9,7 +9,7 @@ class TeamExecutorPort(Protocol):
     async def execute(self, task: TeamTask) -> TeamResult: ...
 
 
-class ToolScopeViolation(ValueError):
+class ToolScopeViolation(RuntimeError):
     """`task.allowed_tools`가 등록된 Team manifest의 scope를 벗어난다."""
 
 
@@ -20,7 +20,7 @@ class LocalTeamExecutor:
         self.registry = registry
 
     async def execute(self, task: TeamTask) -> TeamResult:
-        entry = self.registry.get(task.team_id)
+        entry = self.registry.require_runnable(task.team_id, task.capability)
         manifest_tools = set(getattr(entry.manifest, "allowed_tools", []))
         claimed_tools = set(task.allowed_tools)
         if not claimed_tools <= manifest_tools:

@@ -1,0 +1,105 @@
+@startuml
+title A-COP A2A Remote Team delegation lifecycle
+skinparam backgroundColor #faf9ff
+skinparam shadowing false
+skinparam sequence {
+  LifeLineBorderColor #7c3aed
+  LifeLineBackgroundColor #f5f3ff
+  ParticipantBorderColor #7c3aed
+  ParticipantBackgroundColor #ede9fe
+  ArrowColor #4b5563
+}
+
+actor "외부 기업 Agent 플랫폼" as Client
+participant "A-COP Agent Gateway" as Gateway
+participant "TeamRegistry" as Registry
+participant "TeamExecutorPort" as Port
+participant "A2A Remote Team\n(Catalog & Verification)" as Remote
+participant "Controller" as Controller
+
+note over Client,Gateway
+외부 기업 Agent 플랫폼이 A-COP에 업무를 위임한다.
+개인 AI의 MCP 도구 호출이나 일반 Case 흐름은 이 그림의 범위가 아니다.
+end note
+
+Client -> Gateway: Agent Card 조회
+Gateway --> Client: Agent Card\ncapability / schema / auth / task mode
+Client -> Gateway: A2A Task 생성\ncase_id, capability=sku_verify, deadline_s, idempotency_key
+Gateway -> Gateway: scope·audience·인증·idempotency 검증
+Gateway -> Controller: 외부 위임 Task 전달
+Controller -> Registry: capability resolve
+Registry --> Controller: execution_type=A2A\nagent_card_url / a2a_endpoint
+Controller -> Port: execute(TeamTask)
+Port -> Remote: Task 요청
+Remote --> Port: status=working
+Port --> Controller: TeamResult(outcome=waiting)\n원격 task 추적 시작
+Controller -> Gateway: Case running 반영
+Gateway --> Client: task_id / status=working
+
+loop 상태 폴링 또는 콜백
+  Client -> Gateway: Task 상태 조회 또는 callback
+  Gateway -> Remote: 원격 상태 조회
+  Remote --> Gateway: working / progress
+  Gateway --> Client: 상태·progress
+end
+
+alt 추가 입력 필요 (input-required)
+  Remote --> Port: required package_unit / reason
+  Port -> Controller: need_more_context 정규화
+  Controller -> Controller: Case waiting_external
+  Controller --> Gateway: 질문 / resume token
+  Gateway --> Client: 추가 입력 요청
+  Client -> Gateway: 추가 입력
+  Gateway -> Port: resume(task_id, input)
+  Port -> Remote: A2A Task resume
+  Remote --> Port: status=working
+  Port --> Controller: Case running 재개
+else 완료
+  Remote --> Port: status=completed\nArtifact: verification_report + evidence_manifest
+  Port -> Controller: Artifact 근거 대조
+end
+
+Port -> Port: A2A Adapter 결과를 canonical TeamResult로 정규화
+note right of Port
+LOCAL 실행도 동일한 TeamExecutorPort 뒤에서
+canonical TeamResult로 정규화된다.
+Controller는 LOCAL/A2A 차이를 보지 않는다.
+end note
+Port --> Controller: TeamResult(outcome=completed)\nArtifact digest / evidence
+Controller -> Gateway: Case resolved 또는 후속 판단
+Gateway --> Client: TeamResult + Artifact 반환
+
+note over Gateway,Remote
+보안 원칙 적용:
+scope와 audience·만료·발급자 검증,
+case_id + idempotency key로 중복 Task 방지,
+Task·상태·Artifact·실패를 audit 기록.
+token 원문은 로그에 남기지 않는다.
+end note
+
+note right of Controller
+A2A Task ↔ A-COP Case 상태 매핑
+working → running
+input-required → waiting_input
+completed → resolved 또는 후속 판단
+failed → escalated
+cancelled → cancelled
+timeout / 조회 불명 → escalated + remote unknown
+end note
+
+alt 실패·timeout·인증 실패
+  Remote --> Port: 5xx / timeout / auth failure
+  Port -> Port: 제한적 재시도 후 deadline 판정
+  Port --> Controller: remote outcome=unknown
+  Controller -> Gateway: Case escalated
+  Gateway --> Client: 오류 근거·task_id·unknown 반환
+else 취소
+  Client -> Gateway: 취소 요청
+  Gateway -> Port: cancel(task_id)
+  Port -> Remote: A2A cancel
+  Remote --> Port: cancelled 확인
+  Port --> Controller: TeamResult(outcome=cancelled)
+  Controller -> Gateway: Case cancelled
+  Gateway --> Client: 취소 결과 반환
+end
+@enduml

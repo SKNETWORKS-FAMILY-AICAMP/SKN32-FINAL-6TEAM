@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import logging
 import inspect
 from typing import Any, Callable
@@ -13,15 +12,16 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.core.contracts import InvalidTransition, StateConflict
 from app.application.case_intake import IdempotencyConflict, open_case
 from app.application.controller import ControllerError
+from app.core.team_availability import TeamUnavailable
+from app.core.registry import RegistryError
+from app.presentation.errors import team_unavailable_error
 from app.core.subjects import SubjectNotFound, SubjectUnsupported
 from app.core.idempotency import idempotency_key
 from app.core.transition import transition_case
 from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.application.classification import classify_case
 from app.application.proposal_guard import audit_payload, describe, recheck_before_execution
-from app.core.redaction import masked
 from app.presentation.security import Principal, require_scope
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class MessageRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     request_id: str
     message: str = Field(min_length=1)
-    token: str = Field(min_length=1)
+    token: str | None = Field(default=None, min_length=1)
     expected_version: int | None = None
 
 
@@ -143,8 +143,25 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
             except SubjectUnsupported as exc:
                 raise _error(422, "subject_ref_unsupported", str(exc)) from exc
             case_id = opened.case_id
-            view = _view(repository.get_case(conn, tenant_id=tenant, case_id=case_id))
-            if not opened.created:
+            saved = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
+            view = _view(saved)
+            if controller is not None and view["status"] == "routing" and hasattr(controller, "_capability"):
+                try:
+                    controller._capability(saved)
+                except TeamUnavailable as exc:
+                    failure = team_unavailable_error(exc)
+                    failure.detail["error"]["case_id"] = str(case_id)
+                    raise failure from exc
+                except RegistryError:
+                    # 담당 재분류는 Controller의 기존 절차가 처리한다.
+                    pass
+            should_start = opened.created
+            if not opened.created and view["status"] == "routing":
+                with conn.cursor() as cur:
+                    cur.execute("SELECT 1 FROM agent_runs WHERE tenant_id=%s AND case_id=%s LIMIT 1",
+                                (tenant, case_id))
+                    should_start = cur.fetchone() is None
+            if not should_start:
                 return view
         if controller is not None and view["status"] == "routing":
             # ★응답을 보낸 **뒤에** 돌린다. 접수는 "받았다" 를 빨리 답하는 일이다.
@@ -167,7 +184,15 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
         with get_connection() as conn:
             case = _case_or_404(conn, principal, case_id, customer_id)
             events = repository.get_case_events(conn, tenant_id=principal.tenant_id, case_id=case_id)
-        return {**_view(case), "answer": case["state_json"].get("answer"), "pending_actions": [],
+        availability = {}
+        if controller is not None and case["status"] in ("routing", "running", "resuming", "waiting_input", "waiting_approval") and hasattr(controller, "_capability"):
+            try:
+                controller._capability(case)
+            except TeamUnavailable as exc:
+                availability["execution_error"] = team_unavailable_error(exc).detail["error"]
+            except RegistryError:
+                pass
+        return {**_view(case), **availability, "answer": case["state_json"].get("answer"), "pending_actions": [],
                 # ★2026-09-01 발견 — value 가 항상 {} 로 하드코딩돼 있었다.
                 #   get_case_events() 는 payload_json 을 이미 가져오는데 여기서 버렸다.
                 #   그러면 API 는 "무슨 단계를 지났다"만 말하고 "무엇을 근거로 그렇게
@@ -181,18 +206,32 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
         with get_connection() as conn:
             _case = _case_or_404(conn, principal, case_id)
         try:
-            outcome = controller.resume(tenant_id=principal.tenant_id, case_id=case_id, token=request.token,
-                                        actor_id=principal.key_id, event_id=request.request_id)
+            common = dict(tenant_id=principal.tenant_id, case_id=case_id,
+                          actor_id=principal.key_id, event_id=request.request_id,
+                          message=request.message, expected_version=request.expected_version)
+            if request.token is not None:
+                outcome = controller.resume(token=request.token, **common)
+            else:
+                # case:write 주체가 조회할 수 있는 동일 테넌트 업무의 고객 입력만 재개한다.
+                outcome = controller.resume_customer_input(customer_id=_case["customer_id"], **common)
             if inspect.isawaitable(outcome):
                 outcome = asyncio.run(outcome)
+        except TeamUnavailable as exc:
+            raise team_unavailable_error(exc) from exc
         except ControllerError as exc:
             raise _error(401, "invalid_resume_token", str(exc)) from exc
+        except ValueError as exc:
+            raise _error(422, "invalid_customer_input", str(exc)) from exc
         except StateConflict as exc:
             raise _error(409, "state_conflict", "state conflict") from exc
         except InvalidTransition as exc:
             raise _error(422, "invalid_transition", "invalid state transition") from exc
         with get_connection() as conn:
-            return _view(repository.get_case(conn, tenant_id=principal.tenant_id, case_id=case_id))
+            updated = repository.get_case(conn, tenant_id=principal.tenant_id, case_id=case_id)
+            state = updated.get("state_json") or {}
+            return {**_view(updated), "answer": state.get("answer"),
+                    "required_input_schema": state.get("required_input_schema"),
+                    "resume_token": outcome.get("resume_token") if isinstance(outcome, dict) else None}
 
     @router.post("/v1/cases/{case_id}/actions/{action_id}/approve")
     def approve(case_id: UUID, action_id: UUID, request: ApprovalRequest, principal: Principal = Depends(require_scope("action:approve"))):
@@ -264,92 +303,3 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
                                     payload={"action_id": str(action_id), "approver_id": request.approver_id}, actor_type="human", actor_id=request.approver_id)
             return _view(repository.get_case(conn, tenant_id=principal.tenant_id, case_id=case_id))
     return router
-
-
-def _mcp_principal() -> Principal:
-    """Resolve the MCP caller, refusing when the module is declared off.
-
-    ★tool 세 개가 전부 이 함수를 지난다. 그래서 `mcp` 모듈의 게이트를 여기 둔다.
-      2026-08-30 이전에는 게이트가 아예 없어서, 선언에서 모듈을 꺼도 개인 AI 의
-      read-only 접근이 그대로 살아 있었다(`docs/handoff/08` §2 가 끄면 사라져야
-      한다고 지정한 표면이다).
-    """
-    from app.core.project_config import load_project_config
-    from app.core.settings import get_settings
-    from app.core.settings import get_guardrails
-    load_project_config().require_module("mcp", "MCP tool surface")
-    if "mcp:read" not in set(get_guardrails().get("security.mcp_allowed_scopes")):
-        raise RuntimeError("mcp:read is not configured")
-    return Principal(get_settings().tenant_id, frozenset({"mcp:read"}), "mcp")
-
-
-def _mcp_classifier():
-    """MCP 경로가 쓸 분류기. 못 만들면 `None` 이다.
-
-    ★`None` 을 주면 `classify_case()` 가 `classification_failed` 를 남긴다 —
-      전과 같은 결과지만 **시도한 뒤의 실패**다. 전에는 시도조차 없었다.
-      조립 실패를 여기서 삼키지 않고 그대로 드러내려면 예외를 올려야 하지만,
-      그러면 이미 만들어진 Case 가 응답 없이 사라진 것처럼 보인다 — 접수는
-      성공했고 분류만 실패한 것이므로 상태기계에 맡긴다.
-    """
-    try:
-        from app import composition
-
-        return composition.build_classifier()
-    except Exception:
-        logger.exception("MCP 분류기를 만들지 못했다")
-        return None
-
-
-def _mcp_cases(customer_id: str, limit: int) -> list[dict]:
-    principal = _mcp_principal()
-    with get_connection() as conn:
-        rows = repository.list_cases(conn, tenant_id=principal.tenant_id, customer_id=UUID(customer_id), limit=min(limit, 100))
-    return [{k: (str(v) if isinstance(v, UUID) else v) for k, v in row.items()} for row in rows]
-
-
-def _mcp_detail(customer_id: str, case_id: str) -> dict:
-    principal = _mcp_principal()
-    with get_connection() as conn:
-        case = _case_or_404(conn, principal, UUID(case_id), UUID(customer_id))
-    return _view(case)
-
-
-def _mcp_open(customer_id: str, message: str, channel: str) -> dict:
-    principal = _mcp_principal()
-    request = CreateCase(request_id=hashlib.sha256(f"mcp:{customer_id}:{message}".encode()).hexdigest(), customer_id=UUID(customer_id), message=message, channel=channel)
-    tenant = principal.tenant_id
-    idem = idempotency_key(tenant_id=tenant, request_id=request.request_id, action_type="mcp.open_support_case", business_subject=f"{request.customer_id}:{request.message}")
-    # Reuse the REST creation path's state machine without exposing write actions.
-    with get_connection() as conn:
-        with conn.transaction():
-            with conn.cursor() as cur:
-                # ★same check-then-insert race as create() (2026-09-01 finding,
-                #   wiki/records/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md) --
-                #   this path is actually exactly-once already in practice
-                #   (idem is a deterministic hash of customer_id+message, no
-                #   client-controlled request_id), but two genuinely-simultaneous
-                #   identical MCP calls would hit the same race without this lock.
-                cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"{tenant}:{idem}",))
-                cur.execute("SELECT case_id FROM action_requests WHERE tenant_id=%s AND idempotency_key=%s", (tenant, idem))
-                existing = cur.fetchone()
-            if existing:
-                return _view(repository.get_case(conn, tenant_id=tenant, case_id=existing[0]))
-            safe_message = masked(message)
-            case_id = repository.create_case(conn, tenant_id=tenant, customer_id=request.customer_id, subject=safe_message)
-            transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=0, event_type=EventType.CREATED, payload={"channel": channel, "message": safe_message}, actor_type="mcp", actor_id=principal.key_id)
-            # ★분류는 이 트랜잭션 **밖**에서 한다 — REST 접수 경로와 같은 이유다
-            #   (LLM 을 기다리는 동안 잠금을 쥐고 있으면 안 된다).
-            repository.create_action_request(conn, tenant_id=tenant, case_id=case_id, action_type="mcp.open_support_case",
-                                            arguments={"request_id": request.request_id}, idempotency_key=idem)
-        # ── 생성 트랜잭션이 끝났다 ──────────────────────────────────────────
-        # ★계약(`CLAUDE.md` §0.2 · `docs/handoff/03`)은 이 tool 을 "Case 생성과
-        #   **분류 시작**까지" 로 정한다. 그런데 2026-09-06 이전에는 분류를 아예
-        #   시도하지 않고 `classification_unavailable` 을 적어, MCP 로 연 Case 가
-        #   **전부 라벨 없이 escalated** 로 갔다(실측 확인). 라우팅도 못 받는다.
-        #   당시엔 이 경로에서 분류기를 구할 방법이 없어 정직하게 "못 한다" 고
-        #   적은 것인데, 분류 절차가 코어 1(`app/application/classification.py`)로
-        #   올라오면서 그 이유가 없어졌다.
-        classify_case(conn, tenant_id=tenant, case_id=case_id, text=message,
-                      classifier=_mcp_classifier(), actor_id=principal.key_id)
-        return _view(repository.get_case(conn, tenant_id=tenant, case_id=case_id))

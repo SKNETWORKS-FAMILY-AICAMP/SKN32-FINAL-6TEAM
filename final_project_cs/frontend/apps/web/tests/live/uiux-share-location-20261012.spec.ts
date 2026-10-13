@@ -1,6 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, openTitle, start, TRIP_ID, tripScreen } from "./helpers";
+import { beforeTheTrip, mockServer, openTitle, start, TRIP_ID, tripScreen, openPane } from "./helpers";
 import { changeLocationConsent, startWithLocationConsent } from "./location-kit";
+
+// `[2026-10-13]` 가짜 서버 여행(2026-10-01)이 「지난 일정」으로 그려지지 않게 여행 전날로 시계를 고정한다(helpers.ts beforeTheTrip).
+test.beforeEach(async ({ page }) => { await beforeTheTrip(page); });
 
 /** UI·UX 감사에서 찾은 공유창 초점과 GPS 대기 취소의 mock 서버 회귀 시험. */
 async function openShare(page: Page) {
@@ -67,7 +70,7 @@ async function openDelayedLocation(page: Page) {
   });
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
-  await page.getByRole("tab", { name: "채팅", exact: true }).click();
+  await openPane(page, "채팅");
   await page.getByRole("textbox", { name: "여행 메시지" }).fill("여기서 경복궁 어떻게 가?");
   await page.getByRole("button", { name: "메시지 전송", exact: true }).click();
   const locate = page.getByRole("button", { name: "내 위치 알려 주고 다시 묻기", exact: true });

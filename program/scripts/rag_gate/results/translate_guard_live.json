@@ -1,0 +1,1368 @@
+{
+"meta": {
+"날짜": "2026-10-06 17:50",
+"모델": "gemma4:12b",
+"호출 수": 120,
+"알림 수": 40,
+"언어": [
+"en",
+"ja",
+"zh-CN"
+],
+"반복": 1,
+"걸린 시간(초)": 179,
+"결과": {
+"passed": 115,
+"guard_rejected": 5
+},
+"통과했는데 독립 검사로 어긋남(새어 나감)": 112,
+"보호 장치가 거른 것": 5,
+"거른 것 중 독립 검사로도 어긋남": 5,
+"번역 지연 ms p50": 2407.841500000359,
+"p95": 3155.6092000000717,
+"언어별": {
+"en": {
+"n": 40,
+"passed": 38,
+"rejected": 2,
+"error": 0,
+"leaked": 35
+},
+"ja": {
+"n": 40,
+"passed": 38,
+"rejected": 2,
+"error": 0,
+"leaked": 38
+},
+"zh-CN": {
+"n": 40,
+"passed": 39,
+"rejected": 1,
+"error": 0,
+"leaked": 39
+}
+}
+},
+"rows": [
+{
+"i": 0,
+"lang": "en",
+"src": "[변경] 내일 14:10 경복궁 입장이 비 예보로 어려워 보여요. 15:30 국립중앙박물관(입장료 5,000원)으로 바꿨어요. 일정 버전 4.",
+"raw": "[Change] Entry to Gyeongbokgung Palace tomorrow at 14:10 seems difficult due to the rain forecast. It has been changed to National Museum of Korea (Admission fee 5,000 won) at 15:30. Schedule version 4.",
+"status": "passed",
+"ms": 34409.125199999835,
+"indep": [
+"tag"
+]
+},
+{
+"i": 0,
+"lang": "ja",
+"src": "[변경] 내일 14:10 경복궁 입장이 비 예보로 어려워 보여요. 15:30 국립중앙박물관(입장료 5,000원)으로 바꿨어요. 일정 버전 4.",
+"raw": "[変更] 明日 14:10 景福宮（Gyeongbokgung）への入場は雨の予報のため難しそうです。15:30 国立中央博物館（入館料 5,000ウォン）に変更しました。スケジュール バージョン 4。",
+"status": "passed",
+"ms": 36147.97490000001,
+"indep": [
+"tag"
+]
+},
+{
+"i": 0,
+"lang": "zh-CN",
+"src": "[변경] 내일 14:10 경복궁 입장이 비 예보로 어려워 보여요. 15:30 국립중앙박물관(입장료 5,000원)으로 바꿨어요. 일정 버전 4.",
+"raw": "[变更] 由于明天有降雨预报，14:10 的 경복궁 (景福宫) 入场似乎有些困难。已更改为 15:30 的 국립중앙박물관(입장료 5,000원) (国立中央博物馆)。日程版本 4。",
+"status": "passed",
+"ms": 3609.146800000417,
+"indep": [
+"tag"
+]
+},
+{
+"i": 1,
+"lang": "en",
+"src": "[재생] 오늘 09:00에 시작해요. 첫 일정은 09:40 남산서울타워이고, 숙소에서 지하철로 28분 걸려요.",
+"raw": "[Playback] It starts today at 09:00. The first schedule is Namsan Seoul Tower (남산서울타워) at 09:40, which takes 28 minutes by subway from the accommodation.",
+"status": "passed",
+"ms": 3453.399800000625,
+"indep": [
+"tag"
+]
+},
+{
+"i": 1,
+"lang": "ja",
+"src": "[재생] 오늘 09:00에 시작해요. 첫 일정은 09:40 남산서울타워이고, 숙소에서 지하철로 28분 걸려요.",
+"raw": "[再生] 今日 09:00に始まります。最初の予定は 09:40 南山ソウルタワー（Namsan Seoul Tower）で、宿泊先から地下鉄で28分かかります。",
+"status": "passed",
+"ms": 2950.490900000659,
+"indep": [
+"tag"
+]
+},
+{
+"i": 1,
+"lang": "zh-CN",
+"src": "[재생] 오늘 09:00에 시작해요. 첫 일정은 09:40 남산서울타워이고, 숙소에서 지하철로 28분 걸려요.",
+"raw": "[再生] 今天 09:00 开始。第一个行程是 09:40 南山서울타워 (Namsan Seoul Tower)，从住宿地点乘坐地铁需要 28 分钟。",
+"status": "passed",
+"ms": 2599.4223999996393,
+"indep": [
+"tag"
+]
+},
+{
+"i": 2,
+"lang": "en",
+"src": "[알림] 18:20 출발 전 확인: 광장시장 마약김밥 줄이 길어 대기 40분이 예상돼요. 19:00 저녁 예약은 그대로예요.",
+"raw": "[Notice] 18:20 Check before departure: The line for Mayak Gimbap at Gwangjang Market is long, so a wait of 40 minutes is expected. The 19:00 dinner reservation remains the same.",
+"status": "passed",
+"ms": 2668.2477999993353,
+"indep": [
+"tag"
+]
+},
+{
+"i": 2,
+"lang": "ja",
+"src": "[알림] 18:20 출발 전 확인: 광장시장 마약김밥 줄이 길어 대기 40분이 예상돼요. 19:00 저녁 예약은 그대로예요.",
+"raw": "[通知] 18:20 出発前の確認：広蔵市場(Gwangjang Market)の麻薬キンパの列が長く、40分の待ち時間が予想されます。19:00 の夕食の予約は変更ありません。",
+"status": "passed",
+"ms": 2975.887900000089,
+"indep": [
+"tag"
+]
+},
+{
+"i": 2,
+"lang": "zh-CN",
+"src": "[알림] 18:20 출발 전 확인: 광장시장 마약김밥 줄이 길어 대기 40분이 예상돼요. 19:00 저녁 예약은 그대로예요.",
+"raw": "[通知] 18:20 出发前确认：由于广藏市场 (Gwangjang Market) 的麻药金汤 (Mayak Gimbap) 排队人数多，预计需要等待40分钟。19:00 的晚餐预约保持不变。",
+"status": "passed",
+"ms": 3394.39560000028,
+"indep": [
+"tag"
+]
+},
+{
+"i": 3,
+"lang": "en",
+"src": "[변경] 3번 일정이 17:30에서 16:45로 당겨졌어요. 이동 시간 35분을 반영했어요. 일정 버전 7.",
+"raw": "[Change] Schedule 3 has been moved up from 17:30 to 16:45. The travel time of 35 minutes has been reflected. Schedule version 7.",
+"status": "passed",
+"ms": 2860.140400000091,
+"indep": [
+"tag"
+]
+},
+{
+"i": 3,
+"lang": "ja",
+"src": "[변경] 3번 일정이 17:30에서 16:45로 당겨졌어요. 이동 시간 35분을 반영했어요. 일정 버전 7.",
+"raw": "[変更] 3番のスケジュールが17:30から16:45に繰り上げられました。移動時間35分を反映しました。スケジュールバージョン 7。",
+"status": "passed",
+"ms": 2107.6156999997693,
+"indep": [
+"tag"
+]
+},
+{
+"i": 3,
+"lang": "zh-CN",
+"src": "[변경] 3번 일정이 17:30에서 16:45로 당겨졌어요. 이동 시간 35분을 반영했어요. 일정 버전 7.",
+"raw": "[变更] 3号行程从 17:30 提前到了 16:45。已反映 35 分钟的移动时间。日程版本 7。",
+"status": "passed",
+"ms": 2230.8775000001333,
+"indep": [
+"tag"
+]
+},
+{
+"i": 4,
+"lang": "en",
+"src": "[지연] 지하철 2호선이 12분 지연되고 있어요. 11:05 도착 예정이 11:17로 늦어져요.",
+"raw": "[Delay] Subway Line 2 is delayed by 12 minutes. The scheduled arrival of 11:05 is delayed to 11:17.",
+"status": "passed",
+"ms": 2141.839899999468,
+"indep": [
+"tag"
+]
+},
+{
+"i": 4,
+"lang": "ja",
+"src": "[지연] 지하철 2호선이 12분 지연되고 있어요. 11:05 도착 예정이 11:17로 늦어져요.",
+"raw": "[遅延] 地下鉄2号線が12分遅れています。11:05到着予定が11:17に遅れます。",
+"status": "passed",
+"ms": 2050.789399999303,
+"indep": [
+"tag"
+]
+},
+{
+"i": 4,
+"lang": "zh-CN",
+"src": "[지연] 지하철 2호선이 12분 지연되고 있어요. 11:05 도착 예정이 11:17로 늦어져요.",
+"raw": "[延迟] 地铁 2号线延迟了 12 分钟。原定于 11:05 到达的时间推迟至 11:17。",
+"status": "passed",
+"ms": 2158.8048000003255,
+"indep": [
+"tag"
+]
+},
+{
+"i": 5,
+"lang": "en",
+"src": "[재생] 2일차가 시작돼요. 08:30 호텔 출발, 10:00 북촌한옥마을 도착, 점심은 12:30 예정이에요.",
+"raw": "[재생] Day 2 is starting. Departure from the hotel at 08:30, arrival at Bukchon Hanok Village (북촌한ok마을) at 10:00, and lunch is scheduled for 12:30.",
+"status": "passed",
+"ms": 2662.3333000006824,
+"indep": []
+},
+{
+"i": 5,
+"lang": "ja",
+"src": "[재생] 2일차가 시작돼요. 08:30 호텔 출발, 10:00 북촌한옥마을 도착, 점심은 12:30 예정이에요.",
+"raw": "[再生] 2日目が始まります。08:30 ホテル出発、10:00 北村（Bukchon）韓屋村到着、昼食は12:30予定です。",
+"status": "passed",
+"ms": 2848.222199999327,
+"indep": [
+"tag"
+]
+},
+{
+"i": 5,
+"lang": "zh-CN",
+"src": "[재생] 2일차가 시작돼요. 08:30 호텔 출발, 10:00 북촌한옥마을 도착, 점심은 12:30 예정이에요.",
+"raw": "[再生] 第2天开始了。08:30 从酒店出发，10:00 到达北村韩屋村（Bukchon Hanok Village），午餐预计在 12:30。",
+"status": "passed",
+"ms": 2609.101799999735,
+"indep": [
+"tag"
+]
+},
+{
+"i": 6,
+"lang": "en",
+"src": "[변경] 롯데월드 자유이용권 62,000원 예약이 확정됐어요. 입장은 10:00부터 가능해요.",
+"raw": "[Change] Lotte World Free Pass 62,000 won reservation is confirmed. Entry is available from 10:00.",
+"status": "passed",
+"ms": 2221.633899999688,
+"indep": [
+"tag"
+]
+},
+{
+"i": 6,
+"lang": "ja",
+"src": "[변경] 롯데월드 자유이용권 62,000원 예약이 확정됐어요. 입장은 10:00부터 가능해요.",
+"raw": "[変更] 롯데월드 (Lotte World) フリーパス 62,000ウォンの予約が確定しました。入場は10:00から可能です。",
+"status": "passed",
+"ms": 2039.2067000002498,
+"indep": [
+"tag"
+]
+},
+{
+"i": 6,
+"lang": "zh-CN",
+"src": "[변경] 롯데월드 자유이용권 62,000원 예약이 확정됐어요. 입장은 10:00부터 가능해요.",
+"raw": "[变更] 롯데월드 (Lotte World) 自由套票 62,000원 预约已确认。入场可从 10:00 开始。",
+"status": "passed",
+"ms": 2265.6832000002396,
+"indep": [
+"tag"
+]
+},
+{
+"i": 7,
+"lang": "en",
+"src": "[알림] 21:00에 닫는 가게라 라스트오더는 20:30이에요. 20:00 전에 도착하는 걸 권해요.",
+"raw": "[Notice] The shop closes at 21:00, so the last order is at 20:30. We recommend arriving before 20:00.",
+"status": "passed",
+"ms": 2256.5623000000414,
+"indep": [
+"tag"
+]
+},
+{
+"i": 7,
+"lang": "ja",
+"src": "[알림] 21:00에 닫는 가게라 라스트오더는 20:30이에요. 20:00 전에 도착하는 걸 권해요.",
+"raw": "[通知] 21:00に閉まるお店のため、ラストオーダーは20:30です。20:00前に到着することをお勧めします。",
+"status": "passed",
+"ms": 2194.413799999893,
+"indep": [
+"tag"
+]
+},
+{
+"i": 7,
+"lang": "zh-CN",
+"src": "[알림] 21:00에 닫는 가게라 라스트오더는 20:30이에요. 20:00 전에 도착하는 걸 권해요.",
+"raw": "[通知] 由于店铺在 21:00 关门，最后点餐时间为 20:30。建议您在 20:00 前到达。",
+"status": "passed",
+"ms": 2248.522900000353,
+"indep": [
+"tag"
+]
+},
+{
+"i": 8,
+"lang": "en",
+"src": "[변경] 한강 유람선이 강풍으로 취소돼 19:30 N서울타워 야경으로 바꿨어요. 입장권은 16,000원이에요. 일정 버전 5.",
+"raw": "[Change] The Han River cruise has been canceled due to strong winds and changed to the N Seoul Tower night view at 19:30. The admission fee is 16,000 won. Schedule version 5.",
+"status": "passed",
+"ms": 2513.8116999996782,
+"indep": [
+"tag"
+]
+},
+{
+"i": 8,
+"lang": "ja",
+"src": "[변경] 한강 유람선이 강풍으로 취소돼 19:30 N서울타워 야경으로 바꿨어요. 입장권은 16,000원이에요. 일정 버전 5.",
+"raw": "[変更] 強風のため、漢江遊覧船がキャンセルとなり、19:30 Nソウルタワーの夜景に変更されました。入場券は16,000ウォンです。スケジュールバージョン 5。",
+"status": "passed",
+"ms": 2719.9319999999716,
+"indep": [
+"tag"
+]
+},
+{
+"i": 8,
+"lang": "zh-CN",
+"src": "[변경] 한강 유람선이 강풍으로 취소돼 19:30 N서울타워 야경으로 바꿨어요. 입장권은 16,000원이에요. 일정 버전 5.",
+"raw": "[变更] 由于强风原因，汉江游览船已取消，改为 19:30 N서울타워 (N Seoul Tower) 夜景。门票为 16,000원。行程版本 5。",
+"status": "passed",
+"ms": 2788.1632999997237,
+"indep": [
+"tag"
+]
+},
+{
+"i": 9,
+"lang": "en",
+"src": "[재생] 3일차 일정이에요. 09:15 DDP 전시, 13:00 이태원 점심, 16:20 한남동 카페 순서예요.",
+"raw": "[재생] This is the schedule for Day 3. The order is 09:15 DDP exhibition, 13:00 Itaewon (이태원) lunch, and 16:20 Hannam-dong (한남동) cafe.",
+"status": "passed",
+"ms": 2990.5163000003085,
+"indep": []
+},
+{
+"i": 9,
+"lang": "ja",
+"src": "[재생] 3일차 일정이에요. 09:15 DDP 전시, 13:00 이태원 점심, 16:20 한남동 카페 순서예요.",
+"raw": "[再生] 3日目の日程です。09:15 DDP 展示、13:00 イテウォン(Itaewon)でランチ、16:20 漢南洞(Hannam-dong)のカフェの順です。",
+"status": "passed",
+"ms": 3155.6092000000717,
+"indep": [
+"tag"
+]
+},
+{
+"i": 9,
+"lang": "zh-CN",
+"src": "[재생] 3일차 일정이에요. 09:15 DDP 전시, 13:00 이태원 점심, 16:20 한남동 카페 순서예요.",
+"raw": "[再生] 这是第3天的行程。顺序是 09:15 DDP 展示，13:00 梨泰院 (이태원) 午餐，16:20 汉南洞 (한남동) 咖啡。",
+"status": "passed",
+"ms": 3085.3917999993428,
+"indep": [
+"tag"
+]
+},
+{
+"i": 10,
+"lang": "en",
+"src": "[알림] 비가 14:00부터 17:00까지 올 예정이에요. 실외 일정 2개를 실내로 옮길 수 있어요.",
+"raw": "[Notice] Rain is expected from 14:00 to 17:00. 2 outdoor schedules can be moved indoors.",
+"status": "passed",
+"ms": 2392.6087999998344,
+"indep": [
+"tag"
+]
+},
+{
+"i": 10,
+"lang": "ja",
+"src": "[알림] 비가 14:00부터 17:00까지 올 예정이에요. 실외 일정 2개를 실내로 옮길 수 있어요.",
+"raw": "[通知] 14:00から17:00まで雨が降る予定です。屋外の予定2つを屋内に移動できます。",
+"status": "passed",
+"ms": 1906.0124999996333,
+"indep": [
+"tag"
+]
+},
+{
+"i": 10,
+"lang": "zh-CN",
+"src": "[알림] 비가 14:00부터 17:00까지 올 예정이에요. 실외 일정 2개를 실내로 옮길 수 있어요.",
+"raw": "[通知] 预计从 14:00 到 17:00 有雨。可将 2 个室外行程改为在室内进行。",
+"status": "passed",
+"ms": 2033.70730000006,
+"indep": [
+"tag"
+]
+},
+{
+"i": 11,
+"lang": "en",
+"src": "[변경] 택시 요금이 예상보다 높아 지하철로 바꿨어요. 22분 더 걸리지만 2,750원 아낄 수 있어요.",
+"raw": "[Change] I switched to the subway because the taxi fare was higher than expected. It takes 22 minutes longer, but you can save 2,750 won.",
+"status": "passed",
+"ms": 2081.042900000284,
+"indep": [
+"tag"
+]
+},
+{
+"i": 11,
+"lang": "ja",
+"src": "[변경] 택시 요금이 예상보다 높아 지하철로 바꿨어요. 22분 더 걸리지만 2,750원 아낄 수 있어요.",
+"raw": "[変更] タクシー料金が予想より高かったため、地下鉄に変更しました。22分長くかかりますが、2,750ウォン節約できます。",
+"status": "passed",
+"ms": 2148.1266000000687,
+"indep": [
+"tag"
+]
+},
+{
+"i": 11,
+"lang": "zh-CN",
+"src": "[변경] 택시 요금이 예상보다 높아 지하철로 바꿨어요. 22분 더 걸리지만 2,750원 아낄 수 있어요.",
+"raw": "[变更] 出租车费用比预想的要高，所以换成了地铁。虽然要多花22分钟，但可以节省2,750韩元。",
+"status": "passed",
+"ms": 2189.06269999934,
+"indep": [
+"tag"
+]
+},
+{
+"i": 12,
+"lang": "en",
+"src": "[지연] 버스 402번이 8분 늦게 와요. 12:40 도착 예정이 12:48이 돼요. 다음 일정까지 여유는 15분이에요.",
+"raw": "[Delay] Bus 402 is running 8 minutes late. The scheduled arrival of 12:40 is changed to 12:48. There are 15 minutes until the next schedule.",
+"status": "passed",
+"ms": 2388.62490000065,
+"indep": [
+"tag"
+]
+},
+{
+"i": 12,
+"lang": "ja",
+"src": "[지연] 버스 402번이 8분 늦게 와요. 12:40 도착 예정이 12:48이 돼요. 다음 일정까지 여유는 15분이에요.",
+"raw": "[遅延] バス402番が8分遅れて到着します。12:40到着予定が12:48になります。次の予定まで余裕は15分です。",
+"status": "passed",
+"ms": 2490.262999999686,
+"indep": [
+"tag"
+]
+},
+{
+"i": 12,
+"lang": "zh-CN",
+"src": "[지연] 버스 402번이 8분 늦게 와요. 12:40 도착 예정이 12:48이 돼요. 다음 일정까지 여유는 15분이에요.",
+"raw": "[延迟] 巴士 402번 将延迟 8 分钟到达。预计到达时间从 12:40 变为 12:48。距离下一个行程还有 15 分钟的缓冲时间。",
+"status": "passed",
+"ms": 2602.8403000000253,
+"indep": [
+"tag"
+]
+},
+{
+"i": 13,
+"lang": "en",
+"src": "[재생] 오늘은 4명 일정이에요. 10:30 창덕궁 후원 관람(1인 8,000원)이 예약돼 있어요.",
+"raw": "[Playback] Today's schedule is for 4 people. A tour of Changdeokgung Palace (창덕궁) Huwon Garden (10:30, 8,000 won per person) is reserved.",
+"status": "guard_rejected",
+"ms": 2774.722899999688,
+"indep": [
+"tag"
+],
+"why": "번역의 숫자가 원문과 다르다 — 빠짐 ['1'] · 새로 생김 []"
+},
+{
+"i": 13,
+"lang": "ja",
+"src": "[재생] 오늘은 4명 일정이에요. 10:30 창덕궁 후원 관람(1인 8,000원)이 예약돼 있어요.",
+"raw": "[再生] 本日は4名様のご予定です。10:30 昌徳宮（Changdeokgung）後園観覧（1人 8,000ウォン）が予約されています。",
+"status": "passed",
+"ms": 2681.0516999994434,
+"indep": [
+"tag"
+]
+},
+{
+"i": 13,
+"lang": "zh-CN",
+"src": "[재생] 오늘은 4명 일정이에요. 10:30 창덕궁 후원 관람(1인 8,000원)이 예약돼 있어요.",
+"raw": "[再生] 今天有4人的行程。已预约 10:30 参观昌德宫 (Changdeokgung) 后园（1人 8,000원）。",
+"status": "passed",
+"ms": 2478.3525000002555,
+"indep": [
+"tag"
+]
+},
+{
+"i": 14,
+"lang": "en",
+"src": "[변경] 5일차 11:00 일정이 휴관이라 12:15 서울식물원으로 옮겼어요. 일정 버전 9.",
+"raw": "[Change] The schedule for Day 5 at 11:00 was moved to Seoul Botanical Garden (서울식물원) at 12:15 due to the facility being closed. Schedule version 9.",
+"status": "passed",
+"ms": 2492.079300000114,
+"indep": [
+"tag"
+]
+},
+{
+"i": 14,
+"lang": "ja",
+"src": "[변경] 5일차 11:00 일정이 휴관이라 12:15 서울식물원으로 옮겼어요. 일정 버전 9.",
+"raw": "[変更] 5日目 11:00 の予定が休館のため、12:15 ソウル植物園（Seoul Botanical Garden）に変更されました。スケジュール バージョン 9。",
+"status": "passed",
+"ms": 2575.014099999862,
+"indep": [
+"tag"
+]
+},
+{
+"i": 14,
+"lang": "zh-CN",
+"src": "[변경] 5일차 11:00 일정이 휴관이라 12:15 서울식물원으로 옮겼어요. 일정 버전 9.",
+"raw": "[变更] 第5天 11:00 的行程因休馆已更改至 12:15 的 서울식물원 (首尔植物园)。日程版本 9。",
+"status": "passed",
+"ms": 2455.2089999997406,
+"indep": [
+"tag"
+]
+},
+{
+"i": 15,
+"lang": "en",
+"src": "[알림] 공항철도 막차는 23:48이에요. 22:30 전에는 숙소로 출발하는 걸 권해요.",
+"raw": "[Notice] The last train for Airport Railroad is at 23:48. It is recommended to leave for your accommodation before 22:30.",
+"status": "passed",
+"ms": 2181.128500000341,
+"indep": [
+"tag"
+]
+},
+{
+"i": 15,
+"lang": "ja",
+"src": "[알림] 공항철도 막차는 23:48이에요. 22:30 전에는 숙소로 출발하는 걸 권해요.",
+"raw": "[通知] 空港鉄道の最終便は23:48です。22:30前には宿へ向けて出発することをお勧めします。",
+"status": "passed",
+"ms": 2006.1142999993535,
+"indep": [
+"tag"
+]
+},
+{
+"i": 15,
+"lang": "zh-CN",
+"src": "[알림] 공항철도 막차는 23:48이에요. 22:30 전에는 숙소로 출발하는 걸 권해요.",
+"raw": "[通知] 空港铁路的末班车是 23:48。建议在 22:30 前出发前往住宿地点。",
+"status": "passed",
+"ms": 1959.9815999999919,
+"indep": [
+"tag"
+]
+},
+{
+"i": 16,
+"lang": "en",
+"src": "[변경] 점심 12:00 예약이 만석이라 12:45 근처 식당으로 바꿨어요. 대기 없이 앉을 수 있어요.",
+"raw": "[Change] The reservation for lunch at 12:00 was full, so it has been changed to a nearby restaurant at 12:45. You can be seated without waiting.",
+"status": "passed",
+"ms": 2077.1937999998045,
+"indep": [
+"tag"
+]
+},
+{
+"i": 16,
+"lang": "ja",
+"src": "[변경] 점심 12:00 예약이 만석이라 12:45 근처 식당으로 바꿨어요. 대기 없이 앉을 수 있어요.",
+"raw": "[変更] 12:00の予約が満席のため、12:45の近くのレストランに変更しました。待機なしで座ることができます。",
+"status": "passed",
+"ms": 2145.118899999943,
+"indep": [
+"tag"
+]
+},
+{
+"i": 16,
+"lang": "zh-CN",
+"src": "[변경] 점심 12:00 예약이 만석이라 12:45 근처 식당으로 바꿨어요. 대기 없이 앉을 수 있어요.",
+"raw": "[变更] 由于 12:00 的预约已满员，已更改至 12:45 的附近餐厅。无需等待即可入座。",
+"status": "passed",
+"ms": 2017.5778000002538,
+"indep": [
+"tag"
+]
+},
+{
+"i": 17,
+"lang": "en",
+"src": "[재생] 마지막 날이에요. 07:50 체크아웃, 09:20 인천공항 도착을 권해요. 비행기는 11:55 출발이에요.",
+"raw": "[Playback] It is the last day. We recommend checking out at 07:50 and arriving at Incheon International Airport (인천공항) by 09:20. The flight departs at 11:55.",
+"status": "passed",
+"ms": 2448.3806999996887,
+"indep": [
+"tag"
+]
+},
+{
+"i": 17,
+"lang": "ja",
+"src": "[재생] 마지막 날이에요. 07:50 체크아웃, 09:20 인천공항 도착을 권해요. 비행기는 11:55 출발이에요.",
+"raw": "[再生] 最後の日です。07:50 チェックアウト、09:20 仁川国際空港（Incheon International Airport）到着をお勧めします。飛行機は11:55出発です。",
+"status": "passed",
+"ms": 2727.8925000000527,
+"indep": [
+"tag"
+]
+},
+{
+"i": 17,
+"lang": "zh-CN",
+"src": "[재생] 마지막 날이에요. 07:50 체크아웃, 09:20 인천공항 도착을 권해요. 비행기는 11:55 출발이에요.",
+"raw": "[再生] 这是最后一天了。建议 07:50 退房，09:20 到达 인천공항 (仁川机场)。飞机将于 11:55 起飞。",
+"status": "passed",
+"ms": 2534.992400000192,
+"indep": [
+"tag"
+]
+},
+{
+"i": 18,
+"lang": "en",
+"src": "[알림] 오늘 미세먼지가 나쁨(78)이에요. 야외 2시간 일정은 짧게 줄이는 걸 권해요.",
+"raw": "[Notice] Today's fine dust level is bad (78). It is recommended to shorten the 2-hour outdoor schedule.",
+"status": "passed",
+"ms": 2112.9726000008304,
+"indep": [
+"tag"
+]
+},
+{
+"i": 18,
+"lang": "ja",
+"src": "[알림] 오늘 미세먼지가 나쁨(78)이에요. 야외 2시간 일정은 짧게 줄이는 걸 권해요.",
+"raw": "[通知] 本日は微細粉塵が「悪い」(78)です。屋外の2時間の予定は短くすることを推奨します。",
+"status": "passed",
+"ms": 1777.9340000006414,
+"indep": [
+"tag"
+]
+},
+{
+"i": 18,
+"lang": "zh-CN",
+"src": "[알림] 오늘 미세먼지가 나쁨(78)이에요. 야외 2시간 일정은 짧게 줄이는 걸 권해요.",
+"raw": "[通知] 今天的细颗粒物浓度为差(78)。建议缩短户外2小时的行程。",
+"status": "passed",
+"ms": 1648.434200000338,
+"indep": [
+"tag"
+]
+},
+{
+"i": 19,
+"lang": "en",
+"src": "[변경] 4번 일정 이동 시간이 18분에서 31분으로 늘었어요. 도착은 15:12에서 15:25가 돼요. 일정 버전 12.",
+"raw": "[Change] The travel time for schedule 4 has increased from 18 minutes to 31 minutes. Arrival will be at 15:25 instead of 15:12. Schedule version 12.",
+"status": "passed",
+"ms": 2158.1749999995736,
+"indep": [
+"tag"
+]
+},
+{
+"i": 19,
+"lang": "ja",
+"src": "[변경] 4번 일정 이동 시간이 18분에서 31분으로 늘었어요. 도착은 15:12에서 15:25가 돼요. 일정 버전 12.",
+"raw": "[変更] 4番のスケジュールの移動時間が18分から31分に延びました。到着は15:12から15:25になります。スケジュールバージョン 12。",
+"status": "passed",
+"ms": 2651.7441999994844,
+"indep": [
+"tag"
+]
+},
+{
+"i": 19,
+"lang": "zh-CN",
+"src": "[변경] 4번 일정 이동 시간이 18분에서 31분으로 늘었어요. 도착은 15:12에서 15:25가 돼요. 일정 버전 12.",
+"raw": "[变更] 4号行程的移动时间从18分钟增加到31分钟。到达时间将从15:12变为15:25。日程版本 12。",
+"status": "passed",
+"ms": 2406.8388000005143,
+"indep": [
+"tag"
+]
+},
+{
+"i": 20,
+"lang": "en",
+"src": "[재생] 6일차 아침 08:45이에요. 오늘은 3곳을 돌고 18:00에 저녁이 예정돼 있어요.",
+"raw": "[Playback] It is Day 6, 08:45 in the morning. Today, you will visit 3 places and dinner is scheduled for 18:00.",
+"status": "passed",
+"ms": 2292.424899999787,
+"indep": [
+"tag"
+]
+},
+{
+"i": 20,
+"lang": "ja",
+"src": "[재생] 6일차 아침 08:45이에요. 오늘은 3곳을 돌고 18:00에 저녁이 예정돼 있어요.",
+"raw": "[再生] 6日目の朝 08:45です。今日は3か所を巡り、18:00に夕食が予定されています。",
+"status": "passed",
+"ms": 2142.0937000002596,
+"indep": [
+"tag"
+]
+},
+{
+"i": 20,
+"lang": "zh-CN",
+"src": "[재생] 6일차 아침 08:45이에요. 오늘은 3곳을 돌고 18:00에 저녁이 예정돼 있어요.",
+"raw": "[再生] 现在是第6天的早上 08:45。今天计划游览3个地方，并于 18:00 安排了晚餐。",
+"status": "passed",
+"ms": 2097.648300000401,
+"indep": [
+"tag"
+]
+},
+{
+"i": 21,
+"lang": "en",
+"src": "[변경] 쇼핑 일정이 11:30에서 13:10으로 미뤄졌어요. 명동 매장 영업이 10:30에 시작해요.",
+"raw": "[Change] The shopping schedule has been postponed from 11:30 to 13:10. The Myeong-dong (명동) store opens at 10:30.",
+"status": "passed",
+"ms": 2274.4102000006023,
+"indep": [
+"tag"
+]
+},
+{
+"i": 21,
+"lang": "ja",
+"src": "[변경] 쇼핑 일정이 11:30에서 13:10으로 미뤄졌어요. 명동 매장 영업이 10:30에 시작해요.",
+"raw": "[変更] ショッピングのスケジュールが11:30から13:10に延期されました。明洞（Myeong-dong）店舗の営業が10:30に始まります。",
+"status": "passed",
+"ms": 2427.475299999969,
+"indep": [
+"tag"
+]
+},
+{
+"i": 21,
+"lang": "zh-CN",
+"src": "[변경] 쇼핑 일정이 11:30에서 13:10으로 미뤄졌어요. 명동 매장 영업이 10:30에 시작해요.",
+"raw": "[变更] 购物行程从 11:30 推迟到 13:10。明洞 (Myeong-dong) 店铺将于 10:30 开始营业。",
+"status": "passed",
+"ms": 2452.5180999999066,
+"indep": [
+"tag"
+]
+},
+{
+"i": 22,
+"lang": "en",
+"src": "[알림] 경복궁 수문장 교대식은 10:00과 14:00에 있어요. 지금 일정은 13:40 도착이라 맞아요.",
+"raw": "[Notice] The Gyeongbokgung Palace Royal Guard Changing Ceremony is at 10:00 and 14:00. Your current schedule of arriving at 13:40 is correct.",
+"status": "passed",
+"ms": 2469.3144999992,
+"indep": [
+"tag"
+]
+},
+{
+"i": 22,
+"lang": "ja",
+"src": "[알림] 경복궁 수문장 교대식은 10:00과 14:00에 있어요. 지금 일정은 13:40 도착이라 맞아요.",
+"raw": "[通知] 景福宮(景福宮)の守門将交代式は10:00と14:00に行われます。現在のスケジュールは13:40到着なので、合っています。",
+"status": "passed",
+"ms": 2536.6893999998865,
+"indep": [
+"tag"
+]
+},
+{
+"i": 22,
+"lang": "zh-CN",
+"src": "[알림] 경복궁 수문장 교대식은 10:00과 14:00에 있어요. 지금 일정은 13:40 도착이라 맞아요.",
+"raw": "[通知] 景福宮(Gyeongbokgung) 守門將交接儀式在 10:00 和 14:00。目前的行程是 13:40 到達，所以是正確的。",
+"status": "passed",
+"ms": 2733.0721999996967,
+"indep": [
+"tag"
+]
+},
+{
+"i": 23,
+"lang": "en",
+"src": "[지연] 항공편이 25분 늦게 도착해요. 14:05 착륙이 14:30이 돼요. 택시 예약을 15:10으로 옮겼어요.",
+"raw": "[Delay] The flight is arriving 25 minutes late. The landing at 14:05 will be changed to 14:30. The taxi reservation has been moved to 15:10.",
+"status": "passed",
+"ms": 2767.0195999999123,
+"indep": [
+"tag"
+]
+},
+{
+"i": 23,
+"lang": "ja",
+"src": "[지연] 항공편이 25분 늦게 도착해요. 14:05 착륙이 14:30이 돼요. 택시 예약을 15:10으로 옮겼어요.",
+"raw": "[遅延] 航空便が25分遅れて到着します。14:05着が14:30になります。タクシーの予約を15:10に変更しました。",
+"status": "passed",
+"ms": 2555.475099999967,
+"indep": [
+"tag"
+]
+},
+{
+"i": 23,
+"lang": "zh-CN",
+"src": "[지연] 항공편이 25분 늦게 도착해요. 14:05 착륙이 14:30이 돼요. 택시 예약을 15:10으로 옮겼어요.",
+"raw": "[延迟] 航班将延迟25分钟到达。14:05的着陆变为14:30。已将出租车预约更改为15:10。",
+"status": "passed",
+"ms": 2377.9342999996516,
+"indep": [
+"tag"
+]
+},
+{
+"i": 24,
+"lang": "en",
+"src": "[변경] 인사동 쌈지길 방문은 30분 줄여 45분으로 했어요. 다음 일정은 14:20 그대로예요.",
+"raw": "[Change] The visit to Insadong Ssamjigil has been shortened by 30 minutes to 45 minutes. The next schedule remains at 14:20.",
+"status": "passed",
+"ms": 2290.419799999654,
+"indep": [
+"tag"
+]
+},
+{
+"i": 24,
+"lang": "ja",
+"src": "[변경] 인사동 쌈지길 방문은 30분 줄여 45분으로 했어요. 다음 일정은 14:20 그대로예요.",
+"raw": "[変更] 仁寺洞(Insa-dong) 쌈지길(Ssamzigil) の訪問を30分短縮し、45分に変更しました。次の予定は14:20のままです。",
+"status": "passed",
+"ms": 2541.4590999998836,
+"indep": [
+"tag"
+]
+},
+{
+"i": 24,
+"lang": "zh-CN",
+"src": "[변경] 인사동 쌈지길 방문은 30분 줄여 45분으로 했어요. 다음 일정은 14:20 그대로예요.",
+"raw": "[变更] 访问 인사동 쌈지길 的时间缩短了 30 分钟，改为 45 分钟。下一项行程仍为 14:20。",
+"status": "passed",
+"ms": 2587.430300000051,
+"indep": [
+"tag"
+]
+},
+{
+"i": 25,
+"lang": "en",
+"src": "[재생] 오늘 일정 5개 중 첫 번째는 09:30 서울숲이에요. 날씨는 맑고 최고 24도예요.",
+"raw": "[Playback] The first of today's 5 scheduled items is at 09:30 Seoul Forest (서울숲). The weather is clear with a high of 24 degrees.",
+"status": "passed",
+"ms": 2354.841100000158,
+"indep": [
+"tag"
+]
+},
+{
+"i": 25,
+"lang": "ja",
+"src": "[재생] 오늘 일정 5개 중 첫 번째는 09:30 서울숲이에요. 날씨는 맑고 최고 24도예요.",
+"raw": "[再生] 本日の予定5つのうち、1つ目は09:30 ソウルスプ（Seoul Forest）です。天気は晴れで最高気温は24度です。",
+"status": "guard_rejected",
+"ms": 2336.969300000419,
+"indep": [
+"tag"
+],
+"why": "번역의 숫자가 원문과 다르다 — 빠짐 [] · 새로 생김 ['1']"
+},
+{
+"i": 25,
+"lang": "zh-CN",
+"src": "[재생] 오늘 일정 5개 중 첫 번째는 09:30 서울숲이에요. 날씨는 맑고 최고 24도예요.",
+"raw": "[再生] 今天 5 个日程中的第一个是 09:30 首尔林 (Seoul Forest)。天气晴朗，最高气温为 24 度。",
+"status": "passed",
+"ms": 2262.912000000142,
+"indep": [
+"tag"
+]
+},
+{
+"i": 26,
+"lang": "en",
+"src": "[알림] 예약번호 AB7392 의 입장은 15:00까지 가능해요. 현재 이동 시간이 42분이라 14:10 출발이 필요해요.",
+"raw": "[Notice] Entry for reservation number AB7392 is available until 15:00. Since the current travel time is 42 minutes, a departure at 14:10 is required.",
+"status": "passed",
+"ms": 2336.496800000532,
+"indep": [
+"tag"
+]
+},
+{
+"i": 26,
+"lang": "ja",
+"src": "[알림] 예약번호 AB7392 의 입장은 15:00까지 가능해요. 현재 이동 시간이 42분이라 14:10 출발이 필요해요.",
+"raw": "[通知] 予約番号 AB7392 の入場は15:00まで可能です。現在、移動時間が42分かかるため、14:10の出発が必要です。",
+"status": "passed",
+"ms": 2384.717300000375,
+"indep": [
+"tag"
+]
+},
+{
+"i": 26,
+"lang": "zh-CN",
+"src": "[알림] 예약번호 AB7392 의 입장은 15:00까지 가능해요. 현재 이동 시간이 42분이라 14:10 출발이 필요해요.",
+"raw": "[通知] 预约编号 AB7392 的入场截止时间为 15:00。由于目前预计行驶时间为 42 分钟，因此需要在 14:10 出发。",
+"status": "passed",
+"ms": 2458.115899999939,
+"indep": [
+"tag"
+]
+},
+{
+"i": 27,
+"lang": "en",
+"src": "[변경] 숙소 근처 식당 3곳 중 평점 4.6점 가게로 19:20 저녁을 잡았어요. 1인 평균 14,000원이에요.",
+"raw": "[Change] I have booked dinner at 19:20 for a restaurant with a rating of 4.6 among 3 restaurants near the accommodation. It is an average of 14,000 won per person.",
+"status": "guard_rejected",
+"ms": 2659.181400000307,
+"indep": [
+"tag"
+],
+"why": "번역의 숫자가 원문과 다르다 — 빠짐 ['1'] · 새로 생김 []"
+},
+{
+"i": 27,
+"lang": "ja",
+"src": "[변경] 숙소 근처 식당 3곳 중 평점 4.6점 가게로 19:20 저녁을 잡았어요. 1인 평균 14,000원이에요.",
+"raw": "[変更] 宿泊施設の近くにあるレストラン3件のうち、評価が4.6点の店舗で19:20に夕食を予約しました。1人あたり平均14,000ウォンです。",
+"status": "passed",
+"ms": 2679.2742999996335,
+"indep": [
+"tag"
+]
+},
+{
+"i": 27,
+"lang": "zh-CN",
+"src": "[변경] 숙소 근처 식당 3곳 중 평점 4.6점 가게로 19:20 저녁을 잡았어요. 1인 평균 14,000원이에요.",
+"raw": "[变更] 在住宿附近的3家餐厅中，预订了评分为4.6分的餐厅于19:20进行晚餐。每人平均为14,000원。",
+"status": "guard_rejected",
+"ms": 2544.107300000178,
+"indep": [
+"tag"
+],
+"why": "번역의 숫자가 원문과 다르다 — 빠짐 ['1'] · 새로 생김 []"
+},
+{
+"i": 28,
+"lang": "en",
+"src": "[재생] 2일차 마지막 일정은 20:15 홍대 거리 산책이에요. 23:00 전에 숙소로 돌아와요.",
+"raw": "[Playback] The last schedule for Day 2 is a stroll through Hongdae Street at 20:15. Return to the accommodation before 23:00.",
+"status": "passed",
+"ms": 2309.834200000296,
+"indep": [
+"tag"
+]
+},
+{
+"i": 28,
+"lang": "ja",
+"src": "[재생] 2일차 마지막 일정은 20:15 홍대 거리 산책이에요. 23:00 전에 숙소로 돌아와요.",
+"raw": "[再生] 2日目の最後の予定は20:15の弘大（Hongdae）通り散策です。23:00前に宿に戻ります。",
+"status": "passed",
+"ms": 2181.160600000112,
+"indep": [
+"tag"
+]
+},
+{
+"i": 28,
+"lang": "zh-CN",
+"src": "[재생] 2일차 마지막 일정은 20:15 홍대 거리 산책이에요. 23:00 전에 숙소로 돌아와요.",
+"raw": "[再生] 第2天的最后行程是 20:15 在 홍대 (弘大) 街道散步。请在 23:00 前回到住宿地点。",
+"status": "passed",
+"ms": 2227.4879000005967,
+"indep": [
+"tag"
+]
+},
+{
+"i": 29,
+"lang": "en",
+"src": "[변경] 에버랜드 대신 서울랜드로 바꿨어요. 이동 시간은 1시간 10분, 입장료는 성인 54,000원이에요. 일정 버전 3.",
+"raw": "[Change] Changed to Seoul Land instead of Everland. Travel time is 1 hour 10 minutes, and the admission fee is 54,000 won for adults. Schedule version 3.",
+"status": "passed",
+"ms": 2363.0285999997795,
+"indep": [
+"tag"
+]
+},
+{
+"i": 29,
+"lang": "ja",
+"src": "[변경] 에버랜드 대신 서울랜드로 바꿨어요. 이동 시간은 1시간 10분, 입장료는 성인 54,000원이에요. 일정 버전 3.",
+"raw": "[変更] エバーランドの代わりにソウルランドに変更しました。移動時間は1時間 10分、入場料は大人 54,000ウォンです。スケジュールバージョン 3。",
+"status": "passed",
+"ms": 2420.6024999994042,
+"indep": [
+"tag"
+]
+},
+{
+"i": 29,
+"lang": "zh-CN",
+"src": "[변경] 에버랜드 대신 서울랜드로 바꿨어요. 이동 시간은 1시간 10분, 입장료는 성인 54,000원이에요. 일정 버전 3.",
+"raw": "[变更] 已将 Everland 更改为 Seoul Land。移动时间为 1小时 10分，成人入场费为 54,000원。日程版本 3。",
+"status": "passed",
+"ms": 2458.1105999996,
+"indep": [
+"tag"
+]
+},
+{
+"i": 30,
+"lang": "en",
+"src": "[알림] 지하철 5호선 광화문역 출구 4번이 공사로 막혀요. 도보 6분 더 걸리고 10:48 도착이 10:54가 돼요.",
+"raw": "[Notice] Subway Line 5 Gwanghwamun Station Exit 4 is closed due to construction. It will take an additional 6 minutes on foot, and the 10:48 arrival will become 10:54.",
+"status": "passed",
+"ms": 2639.62360000005,
+"indep": [
+"tag"
+]
+},
+{
+"i": 30,
+"lang": "ja",
+"src": "[알림] 지하철 5호선 광화문역 출구 4번이 공사로 막혀요. 도보 6분 더 걸리고 10:48 도착이 10:54가 돼요.",
+"raw": "[通知] 地下鉄5号線 光化門駅（Gwanghwamun Station）出口4番が工事のため閉鎖されています。徒歩でさらに6分かかり、10:48到着が10:54になります。",
+"status": "passed",
+"ms": 2852.287200000319,
+"indep": [
+"tag"
+]
+},
+{
+"i": 30,
+"lang": "zh-CN",
+"src": "[알림] 지하철 5호선 광화문역 출구 4번이 공사로 막혀요. 도보 6분 더 걸리고 10:48 도착이 10:54가 돼요.",
+"raw": "[通知] 地铁 5号线 光化门站 (Gwanghwamun Station) 4号出口因施工封闭。步行需额外花费 6 分钟，原定于 10:48 到达的时间将变为 10:54。",
+"status": "passed",
+"ms": 3091.9193999998242,
+"indep": [
+"tag"
+]
+},
+{
+"i": 31,
+"lang": "en",
+"src": "[지연] 택시 호출이 17분 걸려요. 16:10 출발이 16:27이 돼요.",
+"raw": "[Delay] It takes 17 minutes to call a taxi. The 16:10 departure will be changed to 16:27.",
+"status": "passed",
+"ms": 2594.5401999997557,
+"indep": [
+"tag"
+]
+},
+{
+"i": 31,
+"lang": "ja",
+"src": "[지연] 택시 호출이 17분 걸려요. 16:10 출발이 16:27이 돼요.",
+"raw": "[遅延] タクシーの配車に17分かかります。16:10出発が16:27になります。",
+"status": "passed",
+"ms": 1857.6763999999457,
+"indep": [
+"tag"
+]
+},
+{
+"i": 31,
+"lang": "zh-CN",
+"src": "[지연] 택시 호출이 17분 걸려요. 16:10 출발이 16:27이 돼요.",
+"raw": "[延迟] 呼叫出租车需要17分钟。16:10出发将变为16:27。",
+"status": "passed",
+"ms": 1711.4388999998482,
+"indep": [
+"tag"
+]
+},
+{
+"i": 32,
+"lang": "en",
+"src": "[변경] 3일차 점심이 13:00에서 12:20으로 당겨졌어요. 오후 일정 시작은 14:00 그대로예요.",
+"raw": "[Change] Day 3 lunch has been moved forward from 13:00 to 12:20. The start of the afternoon schedule remains at 14:00.",
+"status": "passed",
+"ms": 1965.7373000000007,
+"indep": [
+"tag"
+]
+},
+{
+"i": 32,
+"lang": "ja",
+"src": "[변경] 3일차 점심이 13:00에서 12:20으로 당겨졌어요. 오후 일정 시작은 14:00 그대로예요.",
+"raw": "[変更] 3日目の昼食が13:00から12:20に前倒しになりました。午後のスケジュールの開始は14:00のままです。",
+"status": "passed",
+"ms": 2374.0199000003486,
+"indep": [
+"tag"
+]
+},
+{
+"i": 32,
+"lang": "zh-CN",
+"src": "[변경] 3일차 점심이 13:00에서 12:20으로 당겨졌어요. 오후 일정 시작은 14:00 그대로예요.",
+"raw": "[变更] 第3天的午餐时间从13:00提前到了12:20。下午行程的开始时间仍为14:00。",
+"status": "passed",
+"ms": 2259.46120000026,
+"indep": [
+"tag"
+]
+},
+{
+"i": 33,
+"lang": "en",
+"src": "[재생] 오늘 일정은 6시간이에요. 10:00 시작, 16:00 종료 예정이고 이동은 총 1시간 25분이에요.",
+"raw": "[Playback] Today's schedule is for 6 hours. It is scheduled to start at 10:00 and end at 16:00, with a total travel time of 1 hour 25 minutes.",
+"status": "passed",
+"ms": 2407.841500000359,
+"indep": [
+"tag"
+]
+},
+{
+"i": 33,
+"lang": "ja",
+"src": "[재생] 오늘 일정은 6시간이에요. 10:00 시작, 16:00 종료 예정이고 이동은 총 1시간 25분이에요.",
+"raw": "[再生] 本日のスケジュールは6時間です。10:00開始、16:00終了予定で、移動時間は合計1時間25分です。",
+"status": "passed",
+"ms": 2432.4110999996265,
+"indep": [
+"tag"
+]
+},
+{
+"i": 33,
+"lang": "zh-CN",
+"src": "[재생] 오늘 일정은 6시간이에요. 10:00 시작, 16:00 종료 예정이고 이동은 총 1시간 25분이에요.",
+"raw": "[再生] 今天的行程是6小时。预计于10:00开始，16:00结束，移动时间总计为1小时25分。",
+"status": "passed",
+"ms": 2136.7346000006364,
+"indep": [
+"tag"
+]
+},
+{
+"i": 34,
+"lang": "en",
+"src": "[알림] 롯데타워 전망대 야경 시간은 19:10 입장이 가장 좋아요. 현재 예약은 19:30이라 20분 늦어요.",
+"raw": "[Notice] The best time to enter the Lotte Tower Observatory for the night view is 19:10. Your current reservation is at 19:30, which is 20 minutes late.",
+"status": "passed",
+"ms": 2313.7688000006165,
+"indep": [
+"tag"
+]
+},
+{
+"i": 34,
+"lang": "ja",
+"src": "[알림] 롯데타워 전망대 야경 시간은 19:10 입장이 가장 좋아요. 현재 예약은 19:30이라 20분 늦어요.",
+"raw": "[通知] 롯데タワー展望台の夜景時間は19:10の入場が最もおすすめです。現在の予約は19:30なので、20分遅れています。",
+"status": "passed",
+"ms": 2349.004199999399,
+"indep": [
+"tag"
+]
+},
+{
+"i": 34,
+"lang": "zh-CN",
+"src": "[알림] 롯데타워 전망대 야경 시간은 19:10 입장이 가장 좋아요. 현재 예약은 19:30이라 20분 늦어요.",
+"raw": "[通知] Lotte Tower (롯데타워) 观景台的夜景时间，19:10 入场最为理想。目前的预约是 19:30，晚了 20 分钟。",
+"status": "passed",
+"ms": 2460.7114000000365,
+"indep": [
+"tag"
+]
+},
+{
+"i": 35,
+"lang": "en",
+"src": "[변경] 우천으로 야외 일정 2개를 취소하고 13:30 코엑스 아쿠아리움(성인 35,000원)으로 바꿨어요. 일정 버전 6.",
+"raw": "[Change] Due to rain, 2 outdoor activities have been canceled and changed to Coex Aquarium (Adults 35,000 won) at 13:30. Schedule version 6.",
+"status": "passed",
+"ms": 2599.3601000000126,
+"indep": [
+"tag"
+]
+},
+{
+"i": 35,
+"lang": "ja",
+"src": "[변경] 우천으로 야외 일정 2개를 취소하고 13:30 코엑스 아쿠아리움(성인 35,000원)으로 바꿨어요. 일정 버전 6.",
+"raw": "[変更] 雨天のため屋外の予定を2件キャンセルし、13:30 コアックス アクアリウム（大人 35,000円）に変更しました。日程バージョン 6。",
+"status": "passed",
+"ms": 2560.102299999926,
+"indep": [
+"tag"
+]
+},
+{
+"i": 35,
+"lang": "zh-CN",
+"src": "[변경] 우천으로 야외 일정 2개를 취소하고 13:30 코엑스 아쿠아리움(성인 35,000원)으로 바꿨어요. 일정 버전 6.",
+"raw": "[变更] 由于降雨，取消了2个户外行程，并改为13:30 科克斯水族馆（成人 35,000원）。行程版本 6。",
+"status": "passed",
+"ms": 2508.241200000157,
+"indep": [
+"tag"
+]
+},
+{
+"i": 36,
+"lang": "en",
+"src": "[재생] 4일차 첫 일정은 09:00 광화문 광장이에요. 이후 11:20 서촌, 13:10 점심이에요.",
+"raw": "[재생] The first schedule for Day 4 is at 09:00 Gwanghwamun Square (광화문 광장). After that, it's Seochon (서촌) at 11:20 and lunch at 13:10.",
+"status": "passed",
+"ms": 2837.76940000007,
+"indep": []
+},
+{
+"i": 36,
+"lang": "ja",
+"src": "[재생] 4일차 첫 일정은 09:00 광화문 광장이에요. 이후 11:20 서촌, 13:10 점심이에요.",
+"raw": "[再生] 4日目の最初の予定は09:00 広化門広場（Gwanghwamun Square）です。その後、11:20 西村（Seochon）、13:10 昼食です。",
+"status": "passed",
+"ms": 3084.609900000032,
+"indep": [
+"tag"
+]
+},
+{
+"i": 36,
+"lang": "zh-CN",
+"src": "[재생] 4일차 첫 일정은 09:00 광화문 광장이에요. 이후 11:20 서촌, 13:10 점심이에요.",
+"raw": "[再生] 第4天的第一个行程是09:00s在光化门广场(광화문 광장)。之后是11:20西村(서촌)，13:10是午餐。",
+"status": "passed",
+"ms": 2782.527399999708,
+"indep": [
+"tag"
+]
+},
+{
+"i": 37,
+"lang": "en",
+"src": "[알림] 마지막 지하철까지 1시간 5분 남았어요. 지금 22:40에 출발하면 23:15 도착이에요.",
+"raw": "[Notice] There are 1 hour and 5 minutes left until the last subway. If you depart now at 22:40, you will arrive at 23:15.",
+"status": "passed",
+"ms": 2499.825200000487,
+"indep": [
+"tag"
+]
+},
+{
+"i": 37,
+"lang": "ja",
+"src": "[알림] 마지막 지하철까지 1시간 5분 남았어요. 지금 22:40에 출발하면 23:15 도착이에요.",
+"raw": "[通知] 次の地下鉄まで残り1時間5分です。現在22:40に出発すれば、23:15に到着します。",
+"status": "passed",
+"ms": 2157.1923000001334,
+"indep": [
+"tag"
+]
+},
+{
+"i": 37,
+"lang": "zh-CN",
+"src": "[알림] 마지막 지하철까지 1시간 5분 남았어요. 지금 22:40에 출발하면 23:15 도착이에요.",
+"raw": "[通知]距离最后一班地铁还有1小时5分钟。如果现在于22:40出发，将于23:15到达。",
+"status": "passed",
+"ms": 1923.043000000689,
+"indep": [
+"tag"
+]
+},
+{
+"i": 38,
+"lang": "en",
+"src": "[변경] 쇼핑 예산 120,000원 중 이미 78,500원을 썼어요. 남은 일정은 두 곳이에요.",
+"raw": "[Change] You have already spent 78,500 out of your shopping budget of 120,000 won. There are two places left in the remaining itinerary.",
+"status": "passed",
+"ms": 2074.048600000424,
+"indep": [
+"tag"
+]
+},
+{
+"i": 38,
+"lang": "ja",
+"src": "[변경] 쇼핑 예산 120,000원 중 이미 78,500원을 썼어요. 남은 일정은 두 곳이에요.",
+"raw": "[変更] ショッピング予算 120,000円のうち、すでに 78,500円を使いました。残りの予定は2か所です。",
+"status": "guard_rejected",
+"ms": 2240.5784000002313,
+"indep": [
+"tag"
+],
+"why": "번역의 숫자가 원문과 다르다 — 빠짐 [] · 새로 생김 ['2']"
+},
+{
+"i": 38,
+"lang": "zh-CN",
+"src": "[변경] 쇼핑 예산 120,000원 중 이미 78,500원을 썼어요. 남은 일정은 두 곳이에요.",
+"raw": "[变更] 在购物预算 120,000원 中已经使用了 78,500원。剩余行程还有两处。",
+"status": "passed",
+"ms": 2065.2305000003253,
+"indep": [
+"tag"
+]
+},
+{
+"i": 39,
+"lang": "en",
+"src": "[지연] 공연 입장이 15분 늦어져 19:45 시작이에요. 저녁 식사를 18:15로 앞당겼어요.",
+"raw": "[Delay] Performance entry is delayed by 15 minutes and will start at 19:45. Dinner has been moved forward to 18:15.",
+"status": "passed",
+"ms": 2009.6775000001799,
+"indep": [
+"tag"
+]
+},
+{
+"i": 39,
+"lang": "ja",
+"src": "[지연] 공연 입장이 15분 늦어져 19:45 시작이에요. 저녁 식사를 18:15로 앞당겼어요.",
+"raw": "[遅延] 公演の入場が15分遅れ、19:45開始となります。夕食を18:15に前倒ししました。",
+"status": "passed",
+"ms": 2096.9911000001957,
+"indep": [
+"tag"
+]
+},
+{
+"i": 39,
+"lang": "zh-CN",
+"src": "[지연] 공연 입장이 15분 늦어져 19:45 시작이에요. 저녁 식사를 18:15로 앞당겼어요.",
+"raw": "[延迟] 入场时间推迟了15分钟，将于19:45开始。晚餐时间提前到了18:15。",
+"status": "passed",
+"ms": 1958.0476000001,
+"indep": [
+"tag"
+]
+}
+]
+}

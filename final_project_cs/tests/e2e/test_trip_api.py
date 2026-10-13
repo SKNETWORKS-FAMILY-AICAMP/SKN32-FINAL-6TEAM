@@ -30,6 +30,7 @@ from app.domains.travel_ops.entry.trip_api import build_trip_router, plan_token
 from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
 from app.presentation import security
 from app.presentation.api.app import create_app
+from tests.helpers.plugin_bindings import publish_fixed_mobility
 
 KST = ZoneInfo("Asia/Seoul")
 SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
@@ -74,6 +75,11 @@ def _body(customer, request_id="create-1", **override):
 
 @pytest.fixture()
 def api(monkeypatch):
+    """시나리오의 CRUD·권한·버전·통지 시험. 실제 이동 경로 정확도를 측정하지 않는다.
+
+    HTTP 요청에는 시험용 고정 이동 계산을 명시적으로 연결한다. 독립 watcher의 재생
+    route_def·사건 소스는 그대로다. 계산기 부재 시험은 별도 앱 또는 명시 off 표를 쓴다.
+    """
     original = settings_module.get_settings()
     tenant = "trip_api_" + uuid4().hex[:12]
     test_settings = original.model_copy(update={"tenant_id": tenant})
@@ -128,6 +134,7 @@ def api(monkeypatch):
     client = TestClient(create_app(classifier=classifier, domain_routers=[build_trip_router(
         check_factory=lambda: check, classifier_factory=lambda: trip_classifier,
         chat_factory=ScenarioChat)]))
+    calculation_calls = publish_fixed_mobility(client.app, source="trip_api_scenario_test")
 
     def auth(scope):
         return {"Authorization": "Bearer " + security._development_key(scope, original.secret_key)}
@@ -143,10 +150,11 @@ def api(monkeypatch):
             return cur.fetchall()
 
     yield {"client": client, "auth": auth, "tenant": tenant, "customer": customer,
-           "tick": tick, "notices": notices, "store": store}
+           "tick": tick, "notices": notices, "store": store, "calculation_calls": calculation_calls}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         # ★자유 문장 경로가 Case 를 만든다 — FK 순서대로 먼저 지운다
         cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+        cur.execute("DELETE FROM agent_runs WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s", (tenant,))     # 웹 사용자 키(025)

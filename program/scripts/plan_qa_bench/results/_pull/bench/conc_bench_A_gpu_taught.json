@@ -1,0 +1,30 @@
+{
+ "tag": "a_gpu_taught",
+ "np": 4,
+ "A_same_itinerary_sequential": {
+  "n": 60,
+  "workers": 1,
+  "sec_per_q": 0.2523016174634298,
+  "q_per_hour": 14268.636230688482
+ },
+ "B_changing_itinerary_sequential": {
+  "n": 60,
+  "workers": 1,
+  "sec_per_q": 0.46270599762598674,
+  "q_per_hour": 7780.318427836637
+ },
+ "C_concurrency": {
+  "2": {
+   "n": 60,
+   "workers": 2,
+   "sec_per_q": 0.35060186783472697,
+   "q_per_hour": 10268.057104866974
+  },
+  "4": {
+   "n": 60,
+   "workers": 4,
+   "sec_per_q": 0.23748807112375894,
+   "q_per_hour": 15158.656108348197
+  }
+ }
+}

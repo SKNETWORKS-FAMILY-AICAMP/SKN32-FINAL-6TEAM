@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A-COP 실행 경로 — diagram-design 샘플</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* 토큰: ~/.diagram-design/profiles/acop.md (marker: profile: acop)
+     담당별 색은 쓰지 않는다 — 소유는 zone 이 말한다. accent 는 하나뿐. */
+  :root {
+    --paper:#fbfcfd; --paper-2:#f1f4f8;
+    --ink:#161c28; --muted:#6b7488; --soft:#7a8599;
+    --rule:rgba(22,28,40,.12); --rule-solid:#dbe0ea;
+    --accent:#a8720c; --accent-tint:rgba(168,114,12,.10);
+    --link:#2f5bd8;
+    --zone-fill:rgba(22,28,40,.02); --zone-line:rgba(22,28,40,.10); --zone-ink:rgba(22,28,40,.40);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#141821; --paper-2:#1c222d;
+      --ink:#e9edf4; --muted:#9aa4b6; --soft:#6f7a8d;
+      --rule:rgba(233,237,244,.12); --rule-solid:rgba(191,192,192,.25);
+      --accent:#d9a441; --accent-tint:rgba(217,164,65,.14);
+      --link:#7fa0e8;
+      --zone-fill:rgba(245,245,245,.02); --zone-line:rgba(245,245,245,.10); --zone-ink:rgba(245,245,245,.40);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#141821; --paper-2:#1c222d;
+    --ink:#e9edf4; --muted:#9aa4b6; --soft:#6f7a8d;
+    --rule:rgba(233,237,244,.12); --rule-solid:rgba(191,192,192,.25);
+    --accent:#d9a441; --accent-tint:rgba(217,164,65,.14);
+    --link:#7fa0e8;
+    --zone-fill:rgba(245,245,245,.02); --zone-line:rgba(245,245,245,.10); --zone-ink:rgba(245,245,245,.40);
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Geist","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    display:flex; justify-content:center; padding:44px 24px 64px;
+  }
+  .sheet { width:100%; max-width:1000px; }
+  .eyebrow {
+    font-family:"Geist Mono",ui-monospace,monospace; font-size:8px; font-weight:500;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--soft); margin:0 0 10px;
+  }
+  h1 {
+    font-family:"Instrument Serif","Noto Serif KR",serif; font-weight:400;
+    font-size:34px; line-height:1.15; margin:0 0 8px; letter-spacing:-.01em;
+  }
+  .standfirst { margin:0 0 26px; color:var(--muted); font-size:14px; max-width:64ch; line-height:1.65; }
+  .standfirst code { font-family:"Geist Mono",monospace; font-size:12.5px; }
+  .frame { background:var(--paper-2); border:1px solid var(--rule); border-radius:10px; padding:8px; overflow-x:auto; }
+  svg { display:block; width:100%; height:auto; min-width:760px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:20px; }
+  .card { border:1px solid var(--rule); border-radius:8px; padding:12px 14px; }
+  .card h2 {
+    font-family:"Geist Mono",ui-monospace,monospace; font-size:8px; font-weight:500;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft); margin:0 0 5px;
+  }
+  .card p { margin:0; font-size:13px; line-height:1.6; color:var(--muted); }
+  .card strong { color:var(--ink); font-weight:600; }
+  footer { margin-top:22px; padding-top:14px; border-top:1px solid var(--rule); font-size:11.5px; color:var(--soft); line-height:1.7; }
+  footer code { font-family:"Geist Mono",ui-monospace,monospace; font-size:11px; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <p class="eyebrow">A-COP · v8 §8 · Architecture</p>
+  <h1>A-COP 실행 경로</h1>
+  <p class="standfirst">담당을 색이 아니라 <strong>zone</strong> 이 말한다. 강조색은 하나 —
+    <code>ActionProposal</code> 이 실제 실행으로 바뀌는 승인 경계다. 이 제품이 파는 것이 그 경계다.</p>
+
+  <div class="frame">
+  <svg viewBox="0 0 960 600" role="img" aria-labelledby="ttl dsc">
+    <title id="ttl">A-COP 실행 경로 아키텍처</title>
+    <desc id="dsc">코어 2 진입·실행 구역, 코어 1 조정 구역, 모델 업무 구역 셋으로 나뉜다. 외부 요청이 Agent Gateway로 들어와 Agentic Controller를 거쳐 Agent Team으로 위임되고, Team이 돌려준 ActionProposal이 승인 경계를 지나야 실행된다.</desc>
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+      </marker>
+      <marker id="aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+      </marker>
+    </defs>
+
+    <!-- ── z-order 1. zone (노드·화살표보다 먼저) ── -->
+    <g>
+      <rect x="40" y="88" width="208" height="328" rx="8" fill="var(--zone-fill)" stroke="var(--zone-line)" stroke-width="0.8"/>
+      <rect x="76" y="92" width="136" height="12" rx="2" fill="var(--paper-2)"/>
+      <text x="144" y="101" fill="var(--zone-ink)" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="1.0">ACCESS &amp; ACTION — CORE 2</text>
+
+      <rect x="296" y="88" width="272" height="248" rx="8" fill="var(--zone-fill)" stroke="var(--zone-line)" stroke-width="0.8"/>
+      <rect x="352" y="92" width="160" height="12" rx="2" fill="var(--paper-2)"/>
+      <text x="432" y="101" fill="var(--zone-ink)" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="1.0">CASE RUNTIME — CORE 1</text>
+
+      <rect x="616" y="88" width="248" height="180" rx="8" fill="var(--zone-fill)" stroke="var(--zone-line)" stroke-width="0.8"/>
+      <rect x="676" y="92" width="128" height="12" rx="2" fill="var(--paper-2)"/>
+      <text x="740" y="101" fill="var(--zone-ink)" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="1.0">AGENT TEAM — MODEL</text>
+    </g>
+
+    <!-- ── z-order 2. 화살표 ── -->
+    <g fill="none" stroke="var(--muted)" stroke-width="1.2" marker-end="url(#a)">
+      <line x1="16" y1="146" x2="56" y2="146"/>
+      <line x1="224" y1="146" x2="312" y2="146"/>
+      <line x1="544" y1="146" x2="632" y2="146"/>
+      <line x1="432" y1="268" x2="432" y2="180"/>
+    </g>
+
+    <!-- Team → 승인 경계. 아래로 내려 왼쪽으로 돌아온다 (직교 2절) -->
+    <path d="M740,172 V 358 Q740,366 732,366 H 232"
+          fill="none" stroke="var(--accent)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#aa)"/>
+
+    <!-- 승인 후 실행 → 저장 -->
+    <path d="M144,392 V 458 Q144,466 152,466 H 312"
+          fill="none" stroke="var(--accent)" stroke-width="1.2" marker-end="url(#aa)"/>
+
+    <!-- 저장소 → Context Broker (수동 읽기) -->
+    <path d="M432,440 V 320" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#a)"/>
+
+    <!-- ── z-order 3. 노드 ── -->
+    <g font-family="Geist, Noto Sans KR, sans-serif" font-size="12" font-weight="600" text-anchor="middle">
+      <rect x="64" y="120" width="160" height="52" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text x="144" y="142" fill="var(--ink)">Agent Gateway</text>
+      <text x="144" y="158" font-family="Geist Mono, monospace" font-size="8" font-weight="400" fill="var(--soft)" letter-spacing=".4">REST · MCP · A2A</text>
+
+      <rect x="64" y="340" width="160" height="52" rx="8" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.6"/>
+      <text x="144" y="362" fill="var(--accent)">승인 경계</text>
+      <text x="144" y="378" font-family="Geist Mono, monospace" font-size="8" font-weight="400" fill="var(--accent)" letter-spacing=".4">approval · idempotency</text>
+
+      <rect x="320" y="120" width="224" height="52" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text x="432" y="142" fill="var(--ink)">Agentic Controller</text>
+      <text x="432" y="158" font-family="Geist Mono, monospace" font-size="8" font-weight="400" fill="var(--soft)" letter-spacing=".4">Top-Level LangGraph</text>
+
+      <rect x="320" y="200" width="224" height="44" rx="8" fill="var(--paper)" stroke="var(--muted)"/>
+      <text x="432" y="227" font-size="11.5" fill="var(--ink)">Team Registry</text>
+
+      <rect x="320" y="268" width="224" height="44" rx="8" fill="var(--paper)" stroke="var(--muted)"/>
+      <text x="432" y="295" font-size="11.5" fill="var(--ink)">Context Broker</text>
+
+      <rect x="640" y="120" width="200" height="52" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text x="740" y="142" fill="var(--ink)">Agent Team ×5</text>
+      <text x="740" y="158" font-family="Geist Mono, monospace" font-size="8" font-weight="400" fill="var(--soft)" letter-spacing=".4">LOCAL · Registry 등록형</text>
+
+      <rect x="640" y="200" width="200" height="44" rx="8" fill="var(--paper)" stroke="var(--muted)" stroke-dasharray="4,3"/>
+      <text x="740" y="227" font-size="11.5" fill="var(--ink)">Catalog &amp; Verification</text>
+
+      <rect x="320" y="440" width="224" height="52" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text x="432" y="462" fill="var(--ink)">PostgreSQL</text>
+      <text x="432" y="478" font-family="Geist Mono, monospace" font-size="8" font-weight="400" fill="var(--soft)" letter-spacing=".4">case · events · outbox</text>
+    </g>
+
+    <!-- 화살표 라벨 -->
+    <g font-family="Geist Mono, monospace" font-size="8" letter-spacing=".5" fill="var(--soft)" text-anchor="middle">
+      <text x="268" y="140">POST /v1/cases</text>
+      <text x="588" y="140">TeamExecutorPort</text>
+      <text x="452" y="230" text-anchor="start" fill="var(--soft)">ContextPack</text>
+      <text x="482" y="356" fill="var(--accent)">ActionProposal</text>
+      <text x="196" y="432" text-anchor="start" fill="var(--accent)">ExecuteAction</text>
+      <text x="452" y="400" text-anchor="start">read</text>
+    </g>
+
+    <text x="16" y="140" font-family="Geist Mono, monospace" font-size="7.5" fill="var(--soft)" text-anchor="start" letter-spacing="1">외부</text>
+
+    <!-- 그리지 않은 것 -->
+    <g font-family="Geist Mono, monospace" font-size="8" fill="var(--soft)">
+      <text x="616" y="330" letter-spacing="1.2" font-weight="500">그리지 않은 것</text>
+      <text x="616" y="350">검증 &amp; 프론트 — 런타임 계층이 아니라 평가·UI 도구다</text>
+      <text x="616" y="368">Team 은 read Tool 을 직접 부르지 않는다 (Context Broker 경유)</text>
+      <text x="616" y="386">Team 은 side effect 를 실행하지 않는다 (제안까지만)</text>
+    </g>
+  </svg>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h2>zone 3개</h2>
+      <p>담당을 색이 아니라 <strong>담는 관계</strong>로 말한다. 코어 1은 파란 부류가 아니라 Case 런타임을 담고 있는 계층이다. 점선 경계가 그걸 말하고 채움색은 못 한다.</p>
+    </div>
+    <div class="card">
+      <h2>강조 하나</h2>
+      <p><strong>승인 경계</strong>만 강조색이다. 제안이 실행으로 바뀌는 유일한 지점이라, 읽는 사람이 하나만 본다면 이것이어야 한다.</p>
+    </div>
+    <div class="card">
+      <h2>넷을 셋으로</h2>
+      <p>담당은 넷인데 zone 은 최대 셋이다. <strong>검증 &amp; 프론트</strong>는 런타임 계층이 아니라 도구라서 뺐다. 넷을 다 그리려면 swimlane 타입으로 간다.</p>
+    </div>
+  </div>
+
+  <footer>
+    <code>cathrynlavery/diagram-design</code> v2.6 <code>type-architecture.md</code> 규칙 —
+    zone 은 노드·화살표보다 먼저 그리고(z-order), 채움은 2% 잉크 워시, 최대 3개.
+    비축 연결은 둥근 직교 커넥터(<code>r=8</code>)만 쓰고 대각선은 금지. 모든 좌표·너비·간격은 4의 배수.
+    선이 안 겹치게 배치해서 bridge/hop 은 쓰지 않았다.
+    토큰은 <code>~/.diagram-design/profiles/acop.md</code>, 마커는 <code>.diagram-design</code>.
+  </footer>
+</div>
+</body>
+</html>

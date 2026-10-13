@@ -1,0 +1,388 @@
+<title>모순판정 Agent Contract — A-COP</title>
+<style>
+  :root {
+    --paper: #f3f5f8;
+    --surface: #ffffff;
+    --surface-2: #eaedf3;
+    --ink: #161a22;
+    --ink-muted: #5a6373;
+    --ink-faint: #8891a0;
+    --border: #dbe0e8;
+    --accent: #33449b;
+    --accent-ink: #1f2c6e;
+    --accent-soft: #e2e6f7;
+    --contradicted: #b3283f;
+    --contradicted-soft: #fbe4e7;
+    --consistent: #16794f;
+    --consistent-soft: #dff3e8;
+    --indeterminate: #8a6a1f;
+    --indeterminate-soft: #f7ecd6;
+    --shadow: 0 1px 2px rgba(20,24,34,.05), 0 10px 28px -14px rgba(20,24,34,.16);
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f1218;
+    --surface: #171b24;
+    --surface-2: #1d2230;
+    --ink: #e8eaf0;
+    --ink-muted: #9aa2b3;
+    --ink-faint: #6b7485;
+    --border: #2a3040;
+    --accent: #8b9aef;
+    --accent-ink: #cdd5ff;
+    --accent-soft: #232b52;
+    --contradicted: #e8899a;
+    --contradicted-soft: #3a1d24;
+    --consistent: #7fd6ac;
+    --consistent-soft: #10301f;
+    --indeterminate: #e0bd77;
+    --indeterminate-soft: #362a10;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 32px -16px rgba(0,0,0,.55);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f1218;
+      --surface: #171b24;
+      --surface-2: #1d2230;
+      --ink: #e8eaf0;
+      --ink-muted: #9aa2b3;
+      --ink-faint: #6b7485;
+      --border: #2a3040;
+      --accent: #8b9aef;
+      --accent-ink: #cdd5ff;
+      --accent-soft: #232b52;
+      --contradicted: #e8899a;
+      --contradicted-soft: #3a1d24;
+      --consistent: #7fd6ac;
+      --consistent-soft: #10301f;
+      --indeterminate: #e0bd77;
+      --indeterminate-soft: #362a10;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 32px -16px rgba(0,0,0,.55);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Pretendard Variable", Pretendard, "Apple SD Gothic Neo",
+      "Malgun Gothic", "Segoe UI", sans-serif;
+    line-height: 1.6;
+  }
+  .mono { font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Consolas, monospace; }
+  code { font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Consolas, monospace; font-size: .92em; }
+  a { color: var(--accent-ink); }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header.hero { margin-bottom: 28px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 12px;
+  }
+  .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  h1 { font-size: clamp(24px, 3.6vw, 30px); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 10px; text-wrap: balance; }
+  .lede { color: var(--ink-muted); font-size: 15px; max-width: 62ch; margin: 0; }
+
+  /* ---- diagram card ---- */
+  .diagram-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 20px 12px;
+    margin: 28px 0;
+    box-shadow: var(--shadow);
+  }
+  .diagram-card figcaption {
+    font-size: 12.5px; color: var(--ink-faint); margin-top: 10px; text-align: center;
+  }
+  svg.flow text { fill: currentColor; font-family: -apple-system, "Pretendard Variable", Pretendard, sans-serif; }
+  svg.flow .stage-box { fill: var(--surface-2); stroke: var(--border); }
+  svg.flow .stage-label { font-size: 12.5px; font-weight: 700; }
+  svg.flow .arrow-label { font-size: 10.5px; fill: var(--ink-faint); }
+  svg.flow .arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; }
+  svg.flow .verdict-box { stroke-width: 1.6; }
+  svg.flow .v-contra { fill: var(--contradicted-soft); stroke: var(--contradicted); }
+  svg.flow .v-consist { fill: var(--consistent-soft); stroke: var(--consistent); }
+  svg.flow .v-indet { fill: var(--indeterminate-soft); stroke: var(--indeterminate); }
+  svg.flow .v-label-contra { fill: var(--contradicted); font-weight: 800; }
+  svg.flow .v-label-consist { fill: var(--consistent); font-weight: 800; }
+  svg.flow .v-label-indet { fill: var(--indeterminate); font-weight: 800; }
+  svg.flow .sub { font-size: 10.5px; fill: var(--ink-muted); }
+
+  /* ---- stat strip ---- */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin: 0 0 8px;
+  }
+  .stat { background: var(--surface); padding: 14px 16px; }
+  .stat .k { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+  .stat .v { font-size: 15px; font-weight: 800; }
+  .stat .v.yes { color: var(--consistent); }
+  .stat .v.no { color: var(--contradicted); }
+
+  .summary-box {
+    font-size: 14.5px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 20px 0 40px;
+  }
+
+  section { margin-top: 40px; }
+  section h2 {
+    font-size: 17px; font-weight: 800; margin: 0 0 14px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  section h3 { font-size: 14.5px; font-weight: 800; margin: 22px 0 8px; }
+  p { font-size: 14px; color: var(--ink); }
+  .muted { color: var(--ink-muted); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 10px 0 18px; }
+  caption { text-align: left; font-size: 12px; color: var(--ink-faint); margin-bottom: 6px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-faint); font-weight: 700; }
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .tbl-wrap table { margin: 0; }
+  .tbl-wrap th, .tbl-wrap td { border-bottom: 1px solid var(--border); }
+  .tbl-wrap tr:last-child td { border-bottom: none; }
+
+  .pass { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
+    background: var(--consistent-soft); color: var(--consistent); }
+
+  pre {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font-size: 12.8px; line-height: 1.55;
+  }
+
+  .example-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 14px 0 20px; }
+  .example-card {
+    border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--surface);
+  }
+  .example-card .verdict-tag {
+    display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px; margin-bottom: 8px;
+  }
+  .example-card.contra .verdict-tag { background: var(--contradicted-soft); color: var(--contradicted); }
+  .example-card.consist .verdict-tag { background: var(--consistent-soft); color: var(--consistent); }
+  .example-card.indet .verdict-tag { background: var(--indeterminate-soft); color: var(--indeterminate); }
+  .example-card .line { font-size: 13px; margin: 4px 0; }
+  .example-card .line .lbl { color: var(--ink-faint); font-size: 11px; display: block; }
+
+  .guard-list { margin: 10px 0 0; padding-left: 20px; }
+  .guard-list li { font-size: 13.5px; margin-bottom: 8px; }
+
+  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--ink-faint); }
+
+  @media (max-width: 560px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">A-COP · Agent Contract</div>
+    <h1>모순판정 — Record Consistency Guard</h1>
+    <p class="lede">고객 주장을 시스템 자신의 기록과 대조해 모순·일치·판정불가 세 갈래로 분류하는 검증 모듈의 계약 명세.</p>
+  </header>
+
+  <!-- 1. 한눈에 보기: 다이어그램 먼저 -->
+  <figure class="diagram-card">
+    <svg class="flow" viewBox="0 0 980 400" role="img" aria-label="주장 추출부터 종결까지의 처리 흐름과, 판정 단계에서 모순·일치·판정불가 세 갈래로 갈라진 뒤 각기 다른 다음 조치로 이어지는 구조">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <polygon points="0,0 10,5 0,10" fill="currentColor"></polygon>
+        </marker>
+      </defs>
+
+      <!-- stage 1-3 -->
+      <rect class="stage-box" x="10" y="150" width="120" height="52" rx="8"></rect>
+      <text class="stage-label" x="70" y="172" text-anchor="middle">주장 추출</text>
+      <text class="sub" x="70" y="189" text-anchor="middle">claim_asserted</text>
+
+      <line class="arrow" x1="130" y1="176" x2="168" y2="176" marker-end="url(#arrow)"></line>
+
+      <rect class="stage-box" x="170" y="150" width="120" height="52" rx="8"></rect>
+      <text class="stage-label" x="230" y="172" text-anchor="middle">주장 유형화</text>
+      <text class="sub" x="230" y="189" text-anchor="middle">환불·배송·정책 등</text>
+
+      <line class="arrow" x1="290" y1="176" x2="328" y2="176" marker-end="url(#arrow)"></line>
+
+      <rect class="stage-box" x="330" y="150" width="130" height="52" rx="8"></rect>
+      <text class="stage-label" x="395" y="172" text-anchor="middle">관련 이벤트 수집</text>
+      <text class="sub" x="395" y="189" text-anchor="middle">system_recorded</text>
+
+      <line class="arrow" x1="460" y1="176" x2="498" y2="176" marker-end="url(#arrow)"></line>
+
+      <!-- 판정 stage (branch point) -->
+      <rect class="stage-box" x="500" y="150" width="110" height="52" rx="8" style="stroke:var(--accent); stroke-width:1.6;"></rect>
+      <text class="stage-label" x="555" y="176" text-anchor="middle" style="fill:var(--accent-ink);">판정</text>
+
+      <!-- three branches -->
+      <line class="arrow" x1="610" y1="165" x2="668" y2="90" marker-end="url(#arrow)"></line>
+      <line class="arrow" x1="610" y1="176" x2="668" y2="176" marker-end="url(#arrow)"></line>
+      <line class="arrow" x1="610" y1="187" x2="668" y2="262" marker-end="url(#arrow)"></line>
+
+      <rect class="verdict-box v-contra" x="670" y="62" width="120" height="56" rx="8"></rect>
+      <text class="v-label-contra" x="730" y="86" text-anchor="middle" font-size="12.5">모순</text>
+      <text class="sub" x="730" y="103" text-anchor="middle">기록과 불일치</text>
+
+      <rect class="verdict-box v-consist" x="670" y="148" width="120" height="56" rx="8"></rect>
+      <text class="v-label-consist" x="730" y="172" text-anchor="middle" font-size="12.5">일치</text>
+      <text class="sub" x="730" y="189" text-anchor="middle">기록이 뒷받침</text>
+
+      <rect class="verdict-box v-indet" x="670" y="234" width="120" height="56" rx="8"></rect>
+      <text class="v-label-indet" x="730" y="258" text-anchor="middle" font-size="12.5">판정불가</text>
+      <text class="sub" x="730" y="275" text-anchor="middle">외부 사실 요구됨</text>
+
+      <!-- converge to 답변/제안 -->
+      <line class="arrow" x1="790" y1="90" x2="838" y2="150" marker-end="url(#arrow)"></line>
+      <line class="arrow" x1="790" y1="176" x2="838" y2="176" marker-end="url(#arrow)"></line>
+      <line class="arrow" x1="790" y1="262" x2="838" y2="202" marker-end="url(#arrow)"></line>
+
+      <rect class="stage-box" x="840" y="150" width="130" height="52" rx="8"></rect>
+      <text class="stage-label" x="905" y="172" text-anchor="middle">답변·조치 제안</text>
+      <text class="sub" x="905" y="189" text-anchor="middle">ActionProposal</text>
+
+      <!-- second row: 검토/승인 -> 종결/재오픈 -->
+      <line class="arrow" x1="905" y1="202" x2="905" y2="240" marker-end="url(#arrow)"></line>
+      <rect class="stage-box" x="810" y="242" width="190" height="50" rx="8"></rect>
+      <text class="stage-label" x="905" y="263" text-anchor="middle">사람 검토·승인</text>
+      <text class="sub" x="905" y="279" text-anchor="middle">HITL 필수</text>
+
+      <line class="arrow" x1="810" y1="267" x2="130" y2="267" marker-end="url(#arrow)"></line>
+      <rect class="stage-box" x="10" y="242" width="120" height="50" rx="8"></rect>
+      <text class="stage-label" x="70" y="263" text-anchor="middle">종결 / 재오픈</text>
+      <text class="sub" x="70" y="279" text-anchor="middle">case_events append</text>
+    </svg>
+    <figcaption>판정 단계에서 모순·일치·판정불가 세 갈래로 갈라지고, 각 갈래가 서로 다른 근거를 달고
+    "답변·조치 제안" 단계로 다시 모인다 — 판정불가는 곧바로 사람 검토로 넘어갈 수 있다.</figcaption>
+  </figure>
+
+  <!-- 2. 요약 -->
+  <div class="stats">
+    <div class="stat"><div class="k">신설 Team인가</div><div class="v no">아니오</div></div>
+    <div class="stat"><div class="k">소속</div><div class="v">ORD·LOG 공통 모듈</div></div>
+    <div class="stat"><div class="k">3기준 통과</div><div class="v yes">3/3</div></div>
+    <div class="stat"><div class="k">착수 우선순위</div><div class="v">1순위</div></div>
+  </div>
+  <div class="summary-box">
+    <strong>한 줄 요약</strong> — "누구 말이 맞는가"를 AI가 판결하지 않는다. 고객의 주장을 시스템
+    자신의 append-only 이벤트 로그와 대조해서 <b>모순 / 일치 / 판정불가</b> 세 갈래로만 분류한다.
+    별도 Team이 아니라 ORD·LOG가 공유하는 검증 모듈이며, 정답셋은 <code>case_events</code>에서
+    자동으로 생성되므로 사람이 라벨링할 필요가 없다.
+  </div>
+
+  <!-- 3. 상세 -->
+  <section>
+    <h2>1. 전제 조건 — 이벤트 타입 5종</h2>
+    <p class="muted"><code>case_events</code>가 에이전트 자신의 출력만 담으면 정답셋이 될 수 없다.
+    자기 출력으로 자기를 채점하는 순환 구조이기 때문이다. 아래 5종을 구분해야 한다.</p>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>이벤트 타입</th><th>의미</th></tr>
+        <tr><td class="mono">claim_asserted</td><td>고객이 자연어로 주장한 내용</td></tr>
+        <tr><td class="mono">system_recorded</td><td>시스템이 실제로 기록한 사실</td></tr>
+        <tr><td class="mono">agent_proposed</td><td>에이전트의 제안 (판정 대상 아님)</td></tr>
+        <tr><td class="mono">action_approved</td><td>사람의 승인</td></tr>
+        <tr><td class="mono">action_completed</td><td>실제 처리 완료</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. 판정 규칙 — 세 갈래 예시</h2>
+    <div class="example-grid">
+      <div class="example-card contra">
+        <span class="verdict-tag">모순</span>
+        <div class="line"><span class="lbl">고객 주장</span>"환불이 완료됐다고 안내받았다"</div>
+        <div class="line"><span class="lbl">시스템 기록</span><code>refund_approved</code>만 존재, <code>refund_completed</code> 없음</div>
+      </div>
+      <div class="example-card consist">
+        <span class="verdict-tag">일치</span>
+        <div class="line"><span class="lbl">고객 주장</span>"환불 승인 후에도 안 됐다"</div>
+        <div class="line"><span class="lbl">시스템 기록</span><code>refund_approved</code>만 존재, <code>refund_completed</code> 없음 — 미완료 상태로 뒷받침됨</div>
+      </div>
+      <div class="example-card indet">
+        <span class="verdict-tag">판정불가</span>
+        <div class="line"><span class="lbl">고객 주장</span>"상품을 실제로 받지 못했다"</div>
+        <div class="line"><span class="lbl">시스템 기록</span>배송완료 이벤트 존재 — 운송 기록일 뿐 실수령의 증거는 아님</div>
+      </div>
+    </div>
+    <p class="muted">세 번째 갈래를 "고객 거짓"으로 밀어붙이지 않는 것이 이 설계의 핵심이다.
+    지우면 임의의 외부 진실을 다시 지어내는 함정에 빠진다.</p>
+  </section>
+
+  <section>
+    <h2>3. 3기준 검증</h2>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>기준</th><th>판정</th><th>근거</th></tr>
+        <tr><td>정답셋 존재</td><td><span class="pass">통과</span></td><td>이벤트 시각·상태·정책 버전으로 규칙 기반 라벨이 자동 생성됨</td></tr>
+        <tr><td>임의배정 비의존</td><td><span class="pass">통과</span></td><td>판정 대상은 주문 ID·이벤트 관계로 결정되며 지어낸 배정이 없음</td></tr>
+        <tr><td>코어루프 필요</td><td><span class="pass">통과</span></td><td>근거수집→제안→검토→승인→종결 전 단계에 직접 쓰임</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Contract 명세</h2>
+    <h3>입력</h3>
+    <pre class="mono">ContradictionCheckInput
+  case_id: UUID
+  claim: ClaimAssertion            # claim_asserted 이벤트에서 파싱된 구조
+    - claim_type: Literal["refund_status","delivery_status","policy_eligibility", ...]
+    - asserted_at: datetime
+    - raw_text: str
+  candidate_events: list[SystemEvent]   # case_events 중 관련 이벤트만 (system_recorded)
+  policy_context: PolicyVersion | None  # 정책 시행일 버전 (해당 시)</pre>
+
+    <h3>출력</h3>
+    <pre class="mono">ContradictionCheckResult
+  verdict: Literal["contradicted", "consistent", "indeterminate"]
+  matched_events: list[EvidenceRef]     # 판정 근거가 된 이벤트만 (전체 아님)
+  rationale: str                        # 템플릿 기반 — 근거 이벤트 나열, LLM 자유생성 아님
+  indeterminate_reason: str | None      # 판정불가일 때만: 왜 시스템 기록이 증명하지 못하는지
+  next_action: Literal["respond","escalate","reopen_case","no_action"]</pre>
+
+    <h3>다음 조치 매핑</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>verdict</th><th>next_action</th><th>의미</th></tr>
+        <tr><td><span class="example-card contra" style="display:inline-block;padding:2px 8px;border-radius:6px;">모순</span></td><td class="mono">escalate | reopen_case</td><td>시스템 기록과 어긋남 — 사람 검토 또는 케이스 재오픈</td></tr>
+        <tr><td><span class="example-card consist" style="display:inline-block;padding:2px 8px;border-radius:6px;">일치</span></td><td class="mono">respond</td><td>근거 기반 안내로 종결 가능</td></tr>
+        <tr><td><span class="example-card indet" style="display:inline-block;padding:2px 8px;border-radius:6px;">판정불가</span></td><td class="mono">escalate</td><td>외부 사실 확인이 필요 — 시스템이 임의로 단정하지 않음</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. 금지 사항</h2>
+    <ul class="guard-list">
+      <li><b>판정불가를 거짓으로 격하하지 않는다.</b> 시스템 기록이 증명하지 못하는 것과 고객이 틀린 것은 다르다.</li>
+      <li><b>claim_asserted / system_recorded 구분이 없으면 실행하지 않는다.</b> 구분 없는 로그로는 자기 출력을 자기가 채점하는 순환이 된다.</li>
+      <li><b>판정 결과가 직접 환불·제재를 실행하지 않는다.</b> <code>ActionProposal</code>만 생성하고, 실행은 항상 사람 승인을 거친다.</li>
+      <li><b>모순 판정이 곧 귀책 판정은 아니다.</b> "기록과 다르다"까지만 말하고 "누구 잘못이다"는 말하지 않는다.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>6. 확장 후보 (같은 원리, 별도 문서)</h2>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>#</th><th>기능</th><th>한 줄</th></tr>
+        <tr><td>A</td><td>정책 시행일 기준 자격 판정</td><td>요청 당시 시행 중이던 정책 버전으로 자동 판정</td></tr>
+        <tr><td>B</td><td>보상·환불 중복·초과 방지</td><td>결제액 초과 보상 승인을 사전 차단</td></tr>
+        <tr><td>C</td><td>종결 자격·재오픈 판정</td><td>"끝났다고 말할 수 있는가"를 이벤트 순서로 확인</td></tr>
+        <tr><td>D</td><td>이벤트 시간순서 무결성 검사</td><td><code>배송완료 &lt; 발송</code> 같은 불가능한 순서 탐지</td></tr>
+      </table>
+    </div>
+    <p class="muted">상세 설계는 <code>A-COP_경합상황_보강안.md</code> 참조.</p>
+  </section>
+
+  <footer>
+    Claude와 Codex CLI(GPT)가 각각 독립 검토한 뒤 대조해 확정. 판정 기준은
+    <code>A-COP_아이디어_통합분석.md</code>와 동일한 3기준(정답셋 존재·임의배정 비의존·코어루프 필요)을 그대로 적용.
+  </footer>
+
+</div>

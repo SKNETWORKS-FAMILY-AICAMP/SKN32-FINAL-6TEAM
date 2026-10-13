@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>송채영 · VOC와 응대 생성 · A-COP 학습 가이드</title>
+<style>:root{--accent:#0d7a4d}
+:root{--bg:#f6f7fa;--surface:#fff;--line:#dfe3ec;--text:#161c28;--dim:#5c667a;
+--code-bg:#eef1f6;--warn-bg:#fff8e8;--warn-line:#e3c26a;--ok-bg:#eefbf4;--ok-line:#7fcaa6}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+--bg:#12151c;--surface:#191d26;--line:#2b3240;--text:#e6e9f0;--dim:#98a2b8;
+--code-bg:#0f1219;--warn-bg:#2a2415;--warn-line:#7a6420;--ok-bg:#13251d;--ok-line:#2f6b50}}
+:root[data-theme=dark]{--bg:#12151c;--surface:#191d26;--line:#2b3240;--text:#e6e9f0;
+--dim:#98a2b8;--code-bg:#0f1219;--warn-bg:#2a2415;--warn-line:#7a6420;
+--ok-bg:#13251d;--ok-line:#2f6b50}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font-family:"Malgun Gothic","\B9D1\C740 \ACE0\B515",system-ui,-apple-system,sans-serif;
+font-size:16px;line-height:1.75;-webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px 80px}
+code,pre{font-family:"D2Coding",Consolas,"Courier New",monospace}
+.top{background:var(--accent);color:#fff;padding:32px 0 26px}
+.top .wrap{padding-bottom:0}
+.kicker{font-size:13px;letter-spacing:.06em;opacity:.85;margin:0 0 6px}
+h1{font-size:29px;line-height:1.3;margin:0 0 10px;font-weight:800;letter-spacing:-.02em}
+.top p.sub{margin:0;font-size:15.5px;opacity:.94;max-width:64ch}
+.who{margin-top:15px;font-size:13.5px;opacity:.9}
+nav.parts{background:var(--surface);border-bottom:1px solid var(--line);
+position:sticky;top:0;z-index:5;overflow-x:auto}
+nav.parts .wrap{display:flex;gap:2px;padding:0 20px;white-space:nowrap}
+nav.parts a{display:block;padding:11px 12px;font-size:13px;color:var(--dim);
+text-decoration:none;border-bottom:2px solid transparent}
+nav.parts a:hover{color:var(--text)}
+nav.parts a[aria-current=page]{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+h2{font-size:21px;margin:46px 0 4px;letter-spacing:-.01em;padding-left:13px;
+border-left:4px solid var(--accent)}
+h2+.lede{color:var(--dim);margin:0 0 16px;padding-left:17px;font-size:14.5px}
+h3{font-size:16.5px;margin:26px 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin:5px 0}
+a{color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+padding:15px 18px;margin:14px 0}
+.note{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:11px;
+padding:14px 18px;margin:16px 0}
+.note b{display:block;margin-bottom:4px}
+.good{background:var(--ok-bg);border:1px solid var(--ok-line);border-radius:11px;
+padding:14px 18px;margin:16px 0}
+.steps{list-style:none;padding:0;margin:16px 0;counter-reset:s}
+.steps>li{counter-increment:s;background:var(--surface);border:1px solid var(--line);
+border-radius:11px;padding:13px 18px 13px 56px;position:relative;margin:9px 0}
+.steps>li::before{content:counter(s);position:absolute;left:16px;top:14px;width:26px;
+height:26px;border-radius:50%;background:var(--accent);color:#fff;display:grid;
+place-items:center;font-size:13.5px;font-weight:700}
+.steps .path{font-family:"D2Coding",Consolas,monospace;font-size:13.5px;font-weight:700;
+display:block;margin-bottom:3px;word-break:break-all}
+.steps .why{color:var(--dim);font-size:14.5px}
+.tblwrap{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--surface)}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--dim);font-weight:700;white-space:nowrap}
+td code{font-size:13px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:9px;
+padding:13px 15px;overflow-x:auto;font-size:13.5px;line-height:1.6;margin:12px 0}
+:not(pre)>code{background:var(--code-bg);border-radius:4px;padding:1px 5px;font-size:14px}
+.q{margin:16px 0;padding-left:20px;border-left:3px solid var(--line)}
+.q li{margin:9px 0}
+.foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--line);
+color:var(--dim);font-size:13.5px}
+.flow{list-style:none;padding:0;margin:20px 0;counter-reset:f}
+.flow>li{counter-increment:f;position:relative;padding:0 0 26px 46px;border-left:2px solid var(--line);margin:0}
+.flow>li:last-child{border-left-color:transparent;padding-bottom:0}
+.flow>li::before{content:counter(f);position:absolute;left:-15px;top:0;width:28px;height:28px;
+border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;
+font-size:13.5px;font-weight:700}
+.flow h3{margin:1px 0 4px;font-size:17px}
+.flow .owner{display:inline-block;font-size:11.5px;font-weight:700;border-radius:5px;
+padding:1px 8px;margin-left:8px;background:var(--code-bg);color:var(--dim);vertical-align:2px}
+.flow .where{font-family:"D2Coding",Consolas,monospace;font-size:13px;color:var(--dim);
+display:block;margin:6px 0 0;word-break:break-all}
+.scope{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+.scope__col{border:1px solid var(--line);border-radius:11px;padding:13px 17px;background:var(--surface)}
+.scope__col h4{margin:0 0 7px;font-size:14px}
+.scope__col ul{margin:0;padding-left:19px;font-size:14.5px}
+.scope__col li{margin:4px 0}
+.scope__col--yes{border-left:4px solid var(--accent)}
+.scope__col--yes h4{color:var(--accent)}
+.scope__col--no{opacity:.82}
+.scope__col--no h4{color:var(--dim)}
+nav.parts a em{font-style:normal;display:block;font-size:11px;opacity:.72;margin-top:-3px}
+@media(max-width:640px){.scope{grid-template-columns:1fr}}
+@media(max-width:600px){h1{font-size:23px}body{font-size:15px}.steps>li{padding-left:50px}
+.flow>li{padding-left:34px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+<p class="kicker">A-COP 담당자별 학습 가이드 · Agent Team Module (총괄)</p>
+<h1>VOC와 응대 생성</h1>
+<p class="sub">문의를 모아 보는 팀과 답변 문장을 만들고 검토하는 팀입니다. CS Pack의 고정 축 둘입니다.</p>
+<p class="who">담당 송채영 (Agent Team Module 총괄) · Team 2개 + 분류기 · 251줄</p>
+</div></header>
+<nav class="parts"><div class="wrap"><a href="01_core1_case_runtime.html">1. 코어 1<em>최연우</em></a><a href="02_core2_access_action.html">2. 코어 2<em>정세환</em></a><a href="03_team_voc_response.html" aria-current="page">3. VOC · 응대<em>송채영</em></a><a href="04_team_order_payment.html">4. 주문 · 결제<em>김지혜</em></a><a href="05_team_fulfillment_return.html">5. 배송 · 반품<em>서유현</em></a><a href="06_eval_frontend.html">6. 검증 · 프론트<em>최상욱</em></a></div></nav>
+<main class="wrap">
+
+<h2>Agent Team 세 사람의 공통 기초</h2>
+<p class="lede">담당 Team이 달라도 지켜야 할 계약은 같습니다. 이 절은 세 장에 똑같이 들어 있습니다.</p>
+
+<div class="note">
+<b>가장 중요한 규칙 하나</b>
+<p style="margin:6px 0 0">Team은 <b>부수효과를 실행하지 않습니다.</b> 환불이 맞다고 100퍼센트
+확신해도 환불을 하는 게 아니라 "환불하자"는 제안(<code>ActionProposal</code>)을 돌려줍니다.
+실제 실행은 <a href="02_core2_access_action.html">코어 2</a>의 승인 경로에서 일어납니다.
+이 경계를 넘는 코드는 리뷰에서 되돌려집니다.</p>
+</div>
+
+<h3>Team 하나는 이렇게 생겼습니다</h3>
+<p>상속할 부모 클래스가 없습니다. <code>manifest</code> 속성과 <code>execute()</code> 메서드
+두 개만 있으면 Team입니다. Core는 그 둘만 씁니다.</p>
+<pre>class 내Team:
+    manifest = TeamManifest(
+        team_id="...",              # config/project.yaml 의 team_id 와 같아야 한다
+        capabilities=[...],         # 내가 할 수 있는 일. 다른 팀과 겹치면 조립이 실패한다
+        allowed_tools=[...],        # 내가 부를 수 있는 도구. 목록 밖은 도구함이 거부한다
+        knowledge_scope=[...],      # 내가 읽을 수 있는 지식 범위
+    )
+    async def execute(self, task: TeamTask) -> TeamResult: ...</pre>
+
+<h3>계약 네 개를 먼저 읽습니다</h3>
+<ol class="steps"><li><span class="path">app/core/contracts.py:303 <code>TeamManifest</code>, :321 <code>TeamModule</code></span><span class="why">자기소개서의 모양입니다. Registry는 이것만 보고 라우팅합니다.</span></li><li><span class="path">app/core/contracts.py:165 <code>TeamTask</code></span><span class="why">들어오는 것입니다. <code>context</code>(근거 꾸러미), <code>allowed_tools</code>, <code>deadline_at</code>, <code>resume</code>가 핵심 필드입니다.</span></li><li><span class="path">app/core/contracts.py:223 <code>TeamResult</code>, :201 <code>ActionProposal</code></span><span class="why">나가는 것입니다. <code>next_action</code>이 &#39;승인 받아라&#39;·&#39;고객에게 물어라&#39;·&#39;사람에게 넘겨라&#39;를 전부 표현합니다.</span></li><li><span class="path">app/core/contracts.py:94 <code>Evidence</code></span><span class="why">모든 주장에 붙는 출처입니다. <code>source_type</code>·<code>source_id</code>·<code>observed_at</code>. 근거 없는 문장은 답변에 넣지 않습니다.</span></li><li><span class="path">app/tools/read_tools.py:38 <code>ReadToolbox</code>, :146 <code>call()</code></span><span class="why">DB를 읽는 유일한 통로입니다. <code>call()</code>이 <code>allowed_tools</code>를 검사하고 같은 도구를 반복해 부르는 루프도 막습니다. 직접 SQL을 쓰면 안 됩니다.</span></li></ol>
+<h3>ContextPack — 받은 근거가 온전하지 않을 수 있습니다</h3>
+<p><code>task.context</code>에 근거가 실려 옵니다. 그런데 12,000 토큰 예산을 넘으면
+일부가 잘려 나갑니다. 그때 <code>degraded=true</code>가 붙고 <code>omissions</code>에
+무엇을 뺐는지가 적힙니다.</p>
+<p><b>이 깃발을 무시하면 안 됩니다.</b> 근거가 잘린 채로 확정 답변을 만들면
+그게 바로 이 프로젝트가 막으려는 상황입니다. 정책 근거를 못 대면
+<code>escalate</code>나 <code>wait_for_input</code>이 정답입니다.</p>
+
+<h3>세 사람의 Team 배분</h3>
+<div class="tblwrap"><table><thead><tr><th>담당</th><th>Team</th><th>파일</th></tr></thead><tbody><tr><td>송채영 (총괄)</td><td>VOC &amp; Store Manager · Response Generation &amp; Review</td><td><code>voc_store_manager.py</code>, <code>response_review.py</code></td></tr><tr><td>김지혜</td><td>Procurement + Order &amp; Payment</td><td><code>procurement_order_payment.py</code></td></tr><tr><td>서유현</td><td>Fulfillment &amp; Logistics · Return &amp; Refund</td><td><code>fulfillment_logistics.py</code>, <code>return_refund.py</code></td></tr><tr><td>셋이 함께 (총괄 송채영)</td><td>Catalog &amp; Verification (A2A Remote)</td><td><code>catalog_verification.py</code></td></tr></tbody></table></div>
+<p>Core나 검증 쪽에서 Agent Team Module에 연락할 일이 있으면 송채영에게 합니다.
+셋이 각자 받으면 같은 결정을 세 번 하게 됩니다.</p>
+
+<h2>내 Team 둘</h2>
+<p class="lede">문의를 모아 보는 팀과, 답변 문장을 만들고 검토하는 팀입니다.</p>
+
+<p>CS Pack의 고정 축 두 개를 맡습니다. 이번 기간에 확실히 여는 범위라
+다른 Team보다 완성도 요구가 높습니다. 그리고 Agent Team Module 세 사람의 총괄이라,
+Core나 검증 쪽에서 오는 연락을 받는 창구이기도 합니다.</p>
+
+<h3>VOC &amp; Store Manager</h3>
+<p>문의를 유형별로 모으고, 급증 신호가 있으면 알립니다. 개별 문의에 답하는 팀이 아니라
+<b>전체를 보는</b> 팀입니다. 도구는 <code>read.policy</code> 하나만 쓰고 지식 범위는
+주문·배송·반품·교환 넷입니다.</p>
+
+<h3>Response Generation &amp; Review</h3>
+<p>답변 문장을 만들고 톤을 검토합니다. 이 팀만 특별한 점이 둘 있습니다.
+첫째, <b>도구를 안 쓰고 LLM만</b> 씁니다(<code>__init__</code>이 <code>llm</code>만 받습니다).
+둘째, 만든 문장이 사실과 맞는지 <b>결정적으로</b> 한 번 더 검사합니다 —
+LLM에게 검토를 시키는 것과 별개로 코드가 직접 대조합니다.</p>
+
+<h2>코드 읽는 순서</h2>
+<p class="lede">짧은 것부터 읽습니다. VOC 97줄, Response Review 154줄입니다.</p>
+<ol class="steps"><li><span class="path">app/modules/customer_ops/voc_store_manager.py:13 <code>manifest</code></span><span class="why">가장 짧은 Team입니다. manifest 선언 → <code>_evidence()</code>로 근거 만들기 → <code>execute()</code>에서 분기까지 한 팀의 전부가 97줄 안에 있습니다. <b>Team이 어떻게 생겼는지 보려면 이 파일 하나면 됩니다.</b></span></li><li><span class="path">app/modules/customer_ops/response_review.py:19 <code>ResponseGenerationReviewTeam</code></span><span class="why">두 번째로 읽습니다. :35 <code>__init__</code>이 <code>tools</code>를 안 받는 것을 먼저 확인하세요 — 이 팀은 DB를 안 읽고 받은 근거만 씁니다.</span></li><li><span class="path">response_review.py:84 <code>_deterministic()</code></span><span class="why">★이 파트에서 제일 중요한 함수입니다. LLM이 쓴 문장에서 주장을 뽑아 <code>Facts</code>와 코드로 대조합니다. LLM에게 &#39;네 답 검토해&#39;라고 시키는 것만으로는 부족하기 때문입니다. 검토자도 같은 모델이면 같은 착각을 합니다.</span></li><li><span class="path">response_review.py:96 <code>_generate()</code>, :106 <code>execute()</code></span><span class="why">생성하고, 검사하고, 실패하면 재시도하고, 그래도 안 되면 사람에게 넘기는 흐름입니다. <code>retry</code> 횟수가 어디서 오는지 따라가 보세요.</span></li><li><span class="path">app/modules/customer_ops/response_review_policy.py</span><span class="why">톤 프로필과 검토 기준이 든 파일입니다. 코드와 정책을 분리해 둔 자리입니다.</span></li><li><span class="path">prompts/response/generate.v2.md, review_tone.v1.md</span><span class="why">실제로 쓰는 프롬프트입니다. 버전이 파일명에 박혀 있고 DB에 등록해야 활성화됩니다.</span></li><li><span class="path">app/modules/customer_ops/feedback.py:33 <code>INTENTS</code>, :86 <code>classify()</code></span><span class="why">Team은 아니지만 VOC 소유입니다. 문의가 들어올 때 의도·이슈·감성을 한 번에 분류합니다. 실패하면 Case가 사람에게 넘어갑니다.</span></li><li><span class="path">app/application/feedback_job.py:30 <code>run_daily_feedback()</code></span><span class="why">일일 집계 배치입니다. 급증 판정식(:25 <code>is_surge</code>)이 계획서 조문 그대로인지 확인하고 넘어가세요.</span></li><li><span class="path">app/modules/customer_ops/catalog_verification.py</span><span class="why">셋이 함께 구현하고 총괄이 송채영입니다. A2A로 원격 위임되는 유일한 Team이라 나중에 볼 것이 더 있습니다.</span></li></ol>
+<h2>직접 돌려 보기</h2>
+<pre>python -m pytest tests/unit/teams/test_voc_store_manager.py -q
+python -m pytest tests/unit/teams/test_response_review.py tests/unit/teams/test_response_review_team.py -q
+python -m pytest tests/unit/voc -q
+python -m scripts.register_prompts</pre>
+
+<div class="good">
+<b>추천 연습</b>
+<p style="margin:6px 0 0"><code>_deterministic()</code>에 일부러 틀린 주장이 든 문장을 넣어
+보세요. 예를 들어 실제 주문 금액이 30,000원인데 "50,000원 환불" 문장을 만들어 넘기면
+어떤 값이 돌아오는지. 이 함수가 무엇을 잡고 무엇을 못 잡는지가 곧 이 팀의 방어 범위입니다.</p>
+</div>
+
+<h2>함정</h2>
+
+<div class="note">
+<b>이 파트에서 실제로 났던 제일 큰 결함</b>
+<p style="margin:6px 0 0"><code>feedback.py</code>의 <code>INTENTS</code>가 옛 구독·청구
+도메인 어휘(<code>billing</code>, <code>technical</code>)로 남아 있었는데, 이 함수가 운영
+API의 기본 분류기였습니다. 쇼핑몰 문의는 <b>전부 분류 실패로 떨어졌을</b> 상태였습니다.
+지금은 <code>order</code>, <code>shipping</code>, <code>return</code>, <code>exchange</code>,
+<code>other</code>입니다.</p>
+<p style="margin:8px 0 0">재발 방지로 <b>INTENTS가 모든 Team의 <code>accepted_case_types</code>를
+덮는지</b> 검사하는 테스트가 있습니다. Team을 새로 만들면서 새 유형을 받겠다고 선언하면
+이 테스트가 먼저 붉어집니다 — <code>tests/unit/voc/test_feedback_intent_alignment.py</code>.</p>
+</div>
+
+<div class="note">
+<b>프롬프트를 쓰면 DB에 등록해야 합니다</b>
+<p style="margin:6px 0 0">프롬프트 파일만 만들어 두고 등록을 안 하면, 감사 기록 경로로 불릴 때마다
+<code>no active prompt registered</code>로 죽습니다. Response Review 팀이 실제로 이 상태로
+한동안 있었습니다. <code>python -m scripts.register_prompts</code>를 잊지 마세요.</p>
+</div>
+
+<div class="note">
+<b>Core를 import하면 테스트가 붉어집니다</b>
+<p style="margin:6px 0 0">Team은 <code>app/core/contracts.py</code>와 <code>app/tools/</code>만
+씁니다. Controller나 transition을 직접 부르면 <code>tests/contract/test_core_isolation.py</code>가
+import 검사로 잡습니다. 의도된 것이니 놀라지 마세요.</p>
+</div>
+
+<div class="note">
+<b>총괄이라 오는 연락이 있습니다</b>
+<p style="margin:6px 0 0">Core나 검증 쪽에서 Agent Team Module에 물어볼 일이 있으면
+송채영에게 옵니다. 계약 변경 요청이 오면 <b>혼자 답하지 말고</b> 세 사람이 같이 정하세요.
+<code>TeamTask</code>·<code>TeamResult</code>가 바뀌면 세 사람 코드가 전부 바뀝니다.</p>
+</div>
+
+<h2>확인 질문</h2>
+<ol class="q">
+<li>Response Review 팀은 왜 <code>ReadToolbox</code>를 안 받습니까?</li>
+<li>LLM에게 검토를 시키는데 왜 코드로 또 검사합니까?</li>
+<li>분류가 실패한 문의는 어떻게 됩니까? 빈 <code>intent</code>로 라우팅됩니까?</li>
+<li>새 프롬프트 파일을 만들었는데 팀이 계속 죽습니다. 무엇을 빼먹었습니까?</li>
+</ol>
+
+<h2>옆 담당과 맞닿는 곳</h2>
+<div class="tblwrap"><table><thead><tr><th>담당</th><th>어디서 만나나</th></tr></thead><tbody><tr><td><a href='04_team_order_payment.html'>김지혜 · 주문과 결제</a></td><td>같은 계약을 씁니다. 계약을 바꾸려면 같이 정합니다</td></tr><tr><td><a href='05_team_fulfillment_return.html'>서유현 · 배송과 반품</a></td><td>동. Catalog &amp; Verification은 셋이 함께 만듭니다</td></tr><tr><td><a href='01_core1_case_runtime.html'>최연우 · 코어 1</a></td><td>Controller가 <code>execute()</code>를 부릅니다. 분류 결과로 라우팅합니다</td></tr><tr><td><a href='06_eval_frontend.html'>최상욱 · 검증과 프론트</a></td><td>답변 품질을 golden/holdout으로 잽니다. VOC 화면도 그쪽입니다</td></tr></tbody></table></div>
+<div class="foot">
+A-COP 담당자별 학습 가이드 · 기준 저장소 <code>final_project_cs</code> · 확인일 2026-08-31<br>
+담당 구분의 근거는 <code>A-COP_구현계획서_v8.md</code> §16 과 <code>A-COP_스프린트_에픽_설계.md</code> 입니다.<br>
+줄번호는 코드가 바뀌면 밀립니다. 안 맞으면 함께 적힌 이름으로 찾으세요.
+이 파일은 <code>program/onboarding/build_guides.py</code> 가 만듭니다.
+</div>
+</main>
+</body>
+</html>

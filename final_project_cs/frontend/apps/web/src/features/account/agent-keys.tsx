@@ -13,7 +13,7 @@ import styles from "./account.module.css";
 
 const NAME_MAX = 60;
 const DAYS = [7, 30, 90] as const;
-const keysKey = (language: string) => ["agent-keys", language] as const;
+export const keysKey = (language: string) => ["agent-keys", language] as const;
 
 /**
  * `[2026-10-04 사용자 지시 · 서버 D-CS-012]` My page 「에이전트 연결」: a signed-in member makes a key a personal AI (Claude Code, an MCP client) uses to read — or also change —
@@ -71,7 +71,7 @@ export function AgentKeys() {
   const body = () => {
     if (profile === undefined) return <p className={styles.mutedNote} role="status">{t("불러오고 있어요.", "Loading.")}</p>;
     if (!member) return <p className={styles.explain}>{t("로그인한 사용자만 에이전트를 연결할 수 있어요. ", "Only signed-in users can connect an agent. ")}
-      <Link href={`${routes.myPage}#accounts`}>{t("위의 소셜 계정을 연결하면", "Link a social account above and")}</Link>{t(" 쓸 수 있어요.", " it opens.")}</p>;
+      <Link href={`${routes.myPageAccount}?returnTo=${encodeURIComponent(routes.myPageAgents)}`}>{t("「로그인 · 계정」에서 로그인하면", "Sign in under “Sign-in & accounts” and")}</Link>{t(" 쓸 수 있어요.", " it opens.")}</p>;
     if (keys.isError && isAgentKeysUnsupported(keys.error)) return <p className={styles.mutedNote}>{t("에이전트 연결은 서버가 준비 중이에요.", "Connecting an agent is being prepared on the server.")}</p>;
     const list = keys.data ?? [];
     const activeCount = list.filter((key) => key.status === "active").length;

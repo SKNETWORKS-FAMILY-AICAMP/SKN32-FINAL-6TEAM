@@ -19,6 +19,8 @@
 /* The survey row is a button (it opens the start screen's preferences card), drawn like the links. */
 button.link { width: 100%; border: 0; background: transparent; font-family: inherit; text-align: left; cursor: pointer; }
 button.link:hover { background: var(--color-soft); }
+/* `[2026-10-13 사용자 지적]` 위 `border: 0`(버튼 기본 테두리 지우기)이 판의 줄 사이 선까지 지워 「여행 목록 보기」와 이 줄 사이에만 선이 없었다 — 그 선은 되살린다. */
+.board > * + button.link { border-top: 1px solid var(--color-border); }
 .profile { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 15px; color: var(--color-text); text-decoration: none; }
 .profile:hover { background: var(--color-soft); }
 .profile > svg { flex: none; color: var(--color-muted); }
@@ -38,5 +40,19 @@ button.link:hover { background: var(--color-soft); }
 .switch:checked::after { content: "ON"; right: auto; left: 9px; color: var(--color-on-primary); }
 .switch:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
 .note { margin-top: auto; font-size: 10px; line-height: 1.7; color: var(--color-muted); }
+.listZoom { padding: 12px 15px; display: grid; gap: 10px; }
+.zoomHeading { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.zoomHeading output { color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.zoomButtons { display: flex; gap: 8px; }
+.zoomButtons button { min-width: 44px; min-height: 44px; border: 1px solid var(--color-border); border-radius: 10px; color: var(--color-primary); background: var(--color-surface); }
+.zoomButtons button:nth-child(2) { flex: 1; font-size: 13px; }
+.zoomButtons button:disabled { opacity: .45; cursor: default; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes slide { from { transform: translateX(24px); opacity: .6; } }
+/* `[2026-10-13 메뉴 로그인 입구 후보 1]` 게스트: 프로필 줄과 「계정으로 계속하기」가 한 칸. 로그인한 사용자: 맨 아래 따로 놓인 「로그아웃」 줄. */
+.account { display: grid; gap: 10px; padding: 12px 15px 14px; }
+.account .profile { min-height: 0; padding: 0; }
+.account .profile:hover { background: none; }
+.signIn { width: 100%; }
+.signOut { color: var(--color-muted); }
+.signOutError { margin-top: -12px; font-size: 11px; line-height: 1.7; color: var(--color-error); }

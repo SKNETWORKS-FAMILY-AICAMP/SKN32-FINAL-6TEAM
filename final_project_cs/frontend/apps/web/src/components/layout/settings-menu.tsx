@@ -3,16 +3,19 @@
 import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, Menu, X } from "lucide-react";
-import { Avatar } from "@/components/ui";
-import { useAuthProviders } from "@/features/account/use-auth-providers";
+import { Avatar, ButtonLink } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { LanguagePicker } from "@/components/ui/language-picker";
 import { ThemePicker } from "@/components/ui/theme-picker";
+import { DATA_MODE } from "@/lib/data-mode";
+import { LiveError, logout } from "@/lib/live/client";
 import { nicknameLabel, useProfile } from "@/lib/profile";
 import { updateSettings, useSettings, useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
+import { useListZoom, writeListZoom } from "@/features/plan-check/list-zoom";
 import { OverlayRoot } from "./overlay-root";
 import styles from "./settings-menu.module.css";
 
@@ -25,13 +28,20 @@ export const CloseMenu = createContext<() => void>(() => undefined);
 /** `tools` (`[2026-10-07 사용자 결정 — 목업 C안]`): a screen's own icon in the drawer's head, left of the close button (a registered trip's Course Keeper). It reads `CloseMenu`. */
 export function SettingsMenu({ className = "", tools }: { className?: string; tools?: ReactNode }) {
   const t = useT();
-  const { skipAnimation } = useSettings();
+  const { skipAnimation, language } = useSettings();
+  const listZoom = useListZoom();
   const profile = useProfile();
   const [open, setOpen] = useState(false);
-  // `[2026-10-03 사용자 지시]` 「계정 연결 · 로그인」 줄은 서버가 로그인 방법을 하나라도 설정했을 때만 있다(메뉴를 열 때 한 번 물어본다).
-  const providers = useAuthProviders(open);
   const root = useContext(OverlayRoot);
   const router = useRouter();
+  const pathname = usePathname();
+  const queryClient = useQueryClient();
+  // `[2026-10-13 사용자 결정 — 메뉴 로그인 입구 후보 1]` 게스트는 프로필 줄 아래 같은 칸에서 「계정으로 계속하기」(로그인 · 계정 화면, 끝나면 메뉴를 연 화면으로),
+  // 로그인한 사용자는 메뉴 맨 아래 「로그아웃」. 로그인 방법이 없는 서버여도 입구는 있다 — 그 화면이 「설정된 로그인 방법이 아직 없어요」라고 말한다. 전의 「계정 연결 · 로그인」 줄은 이것으로 바뀌었다.
+  const member = profile?.session?.kind === "member";
+  const signIn = DATA_MODE === "live" && profile !== undefined && !member;
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
   const [{ agreed }, setOnboarding] = useOnboarding();
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -57,6 +67,21 @@ export function SettingsMenu({ className = "", tools }: { className?: string; to
     router.push(routes.start);
   }
 
+  /** The same sign-out as My page's: what was read for the previous account is dropped (`[2026-10-05]`), then the start of the app — the page open now belonged to that account. */
+  async function signOut() {
+    setSigningOut(true);
+    setSignOutError("");
+    try {
+      await logout(language);
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      setOpen(false);
+      router.push(routes.home);
+    } catch (error) {
+      setSignOutError(error instanceof LiveError || error instanceof Error ? error.message : String(error));
+    } finally { setSigningOut(false); }
+  }
+
   function trapFocus(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") { event.stopPropagation(); close(); return; }
     if (event.key !== "Tab" || !panel.current) return;
@@ -77,17 +102,32 @@ export function SettingsMenu({ className = "", tools }: { className?: string; to
       {/* One board; its rows are divided by lines only. */}
       <div className={styles.board}>
         {/* Links close the menu on the way, also when their page is already open. */}
-        <Link ref={first} href={routes.myPage} className={styles.profile} onClick={close}>
-          <Avatar size={48} />
-          <span className={styles.profileText}><strong>{nicknameLabel(profile, t)}</strong><small>{t("마이페이지", "My page")}</small></span>
-          <ChevronRight size={18} aria-hidden="true" />
-        </Link>
+        {(() => {
+          const profileLink = <Link ref={first} href={routes.myPage} className={styles.profile} onClick={close}>
+            <Avatar size={48} />
+            <span className={styles.profileText}><strong>{nicknameLabel(profile, t)}</strong><small>{signIn ? t("이 기기에서만 · 마이페이지", "This device only · My page") : t("마이페이지", "My page")}</small></span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </Link>;
+          return signIn
+            ? <div className={styles.account}>{profileLink}
+              <ButtonLink href={`${routes.myPageAccount}?returnTo=${encodeURIComponent(pathname)}`} variant="primary" className={styles.signIn} onClick={close}>{t("계정으로 계속하기", "Continue with an account")}</ButtonLink></div>
+            : profileLink;
+        })()}
         <Link href={routes.trips} className={styles.link} onClick={close}>{t("여행 목록 보기", "View trip list")}<ChevronRight size={18} aria-hidden="true" /></Link>
         <button type="button" className={styles.link} onClick={openSurvey}>{t("여행 취향 설문", "Travel preferences survey")}<ChevronRight size={18} aria-hidden="true" /></button>
-        {(providers.data?.length ?? 0) > 0 && <Link href={`${routes.myPage}#accounts`} className={styles.link} onClick={close}>{t("계정 연결 · 로그인", "Link account · Sign in")}<ChevronRight size={18} aria-hidden="true" /></Link>}
+        {/* `[2026-10-12 사용자 지시]` 문의함(옛 「문의하기」)은 마이페이지 카드에서 이 메뉴로 옮겼다. */}
+        <Link href={routes.support} className={styles.link} onClick={close}>{t("문의함", "Inquiries")}<ChevronRight size={18} aria-hidden="true" /></Link>
         {/* The same card as the home intro, caption included. */}
         <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />
         <ThemePicker />
+        <div className={styles.listZoom} role="group" aria-label={t("일정 목록 크기", "Schedule list size")}>
+          <div className={styles.zoomHeading}><strong>{t("일정 목록 크기", "Schedule list size")}</strong><output aria-live="polite">{Math.round(listZoom * 100)}%</output></div>
+          <div className={styles.zoomButtons}>
+            <button type="button" aria-label={t("일정 목록 축소", "Reduce schedule list size")} disabled={listZoom <= 0.8} onClick={() => writeListZoom(listZoom - 0.1)}>−</button>
+            <button type="button" disabled={listZoom === 1} onClick={() => writeListZoom(1)}>{t("기본 크기", "Default size")}</button>
+            <button type="button" aria-label={t("일정 목록 확대", "Increase schedule list size")} disabled={listZoom >= 1.3} onClick={() => writeListZoom(listZoom + 0.1)}>+</button>
+          </div>
+        </div>
         {/* `[2026-10-03 사용자 결정]` 계획 확인 화면의 단계별 재생을 건너뛰고 서버 결과를 바로 본다. 시스템의 「동작 줄이기」가 아니라 이 스위치가 정한다. */}
         <label className={styles.switchRow}>
           <span className={styles.switchText}><strong id={`${id}-skip`}>{t("애니메이션 건너뛰기", "Skip animations")}</strong><small id={`${id}-skip-note`}>{t("켜면 계획 확인 화면이 단계별 재생 없이 바로 떠요.", "When on, the plan check appears at once, without the step-by-step replay.")}</small></span>
@@ -95,6 +135,10 @@ export function SettingsMenu({ className = "", tools }: { className?: string; to
             onChange={(event) => updateSettings({ skipAnimation: event.target.checked })} />
         </label>
       </div>
+      {member && <div className={styles.board}>
+        <button type="button" className={`${styles.link} ${styles.signOut}`} disabled={signingOut} onClick={() => void signOut()}>{signingOut ? t("로그아웃하는 중…", "Signing out…") : t("로그아웃", "Sign out")}</button>
+      </div>}
+      {signOutError && <p className={styles.signOutError} role="alert">{signOutError}</p>}
       <p className={styles.note}>{t("설정은 이 브라우저에 저장돼요.", "Settings are saved in this browser.")}</p>
     </div>
   </div>;

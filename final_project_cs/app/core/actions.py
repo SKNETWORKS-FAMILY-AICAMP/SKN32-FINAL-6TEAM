@@ -58,6 +58,8 @@ class AppliedAction:
     revert_deadline: Any = None
     delegation: dict[str, Any] | None = None
     prior_state: dict[str, Any] | None = None
+    # 실행이 보류되거나 계산과 다른 결과가 났을 때 적용기가 실제 결과를 안내한다.
+    answer: str | None = None
 
     def ledger(self) -> dict[str, Any]:
         """`action_requests` 에 적을 칸들. 코어가 그대로 넘긴다."""

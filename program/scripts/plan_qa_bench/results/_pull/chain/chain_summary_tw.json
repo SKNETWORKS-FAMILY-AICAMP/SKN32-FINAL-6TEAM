@@ -1,0 +1,217 @@
+{
+ "e4b_only": {
+  "n769": 769,
+  "ok769": 755,
+  "wrong769": 14,
+  "miss769": 0,
+  "comp_n": 66,
+  "comp_A": 65,
+  "comp_B": 65,
+  "lat_median_ms": 1433.094210922718,
+  "lat_p95_ms": 1518.4473684057593,
+  "by_type": {
+   "context_pronoun": [
+    69,
+    71
+   ],
+   "duplicate_place": [
+    78,
+    79
+   ],
+   "confusable_name": [
+    76,
+    77
+   ],
+   "negation": [
+    72,
+    72
+   ],
+   "typo_slang": [
+    78,
+    78
+   ],
+   "out_of_scope": [
+    80,
+    80
+   ],
+   "nameless_description": [
+    69,
+    75
+   ],
+   "ordinal_relative": [
+    77,
+    80
+   ],
+   "change_request": [
+    79,
+    79
+   ],
+   "absent_but_plausible": [
+    77,
+    78
+   ]
+  },
+  "ended": {
+   "e4b": 835
+  },
+  "calls": {
+   "e4b": 835
+  },
+  "routing": [
+   {},
+   {}
+  ]
+ },
+ "rules_e4b": {
+  "n769": 769,
+  "ok769": 751,
+  "wrong769": 18,
+  "miss769": 0,
+  "comp_n": 66,
+  "comp_A": 63,
+  "comp_B": 64,
+  "lat_median_ms": 1410.7193686068058,
+  "lat_p95_ms": 1517.9185820743442,
+  "by_type": {
+   "context_pronoun": [
+    69,
+    71
+   ],
+   "duplicate_place": [
+    76,
+    79
+   ],
+   "confusable_name": [
+    76,
+    77
+   ],
+   "negation": [
+    72,
+    72
+   ],
+   "typo_slang": [
+    78,
+    78
+   ],
+   "out_of_scope": [
+    79,
+    80
+   ],
+   "nameless_description": [
+    67,
+    75
+   ],
+   "ordinal_relative": [
+    79,
+    80
+   ],
+   "change_request": [
+    78,
+    79
+   ],
+   "absent_but_plausible": [
+    77,
+    78
+   ]
+  },
+  "ended": {
+   "e4b": 710,
+   "rules": 125
+  },
+  "calls": {
+   "rules": 835,
+   "e4b": 710,
+   "embed": 32
+  },
+  "routing": [
+   {},
+   {}
+  ],
+  "vs_e4b_only(a만,b만,p)": [
+   3,
+   7,
+   0.34375
+  ]
+ },
+ "no_jev": {
+  "n769": 769,
+  "ok769": 751,
+  "wrong769": 18,
+  "miss769": 0,
+  "comp_n": 66,
+  "comp_A": 63,
+  "comp_B": 64,
+  "lat_median_ms": 1428.6363050341606,
+  "lat_p95_ms": 1545.0786231085658,
+  "by_type": {
+   "context_pronoun": [
+    69,
+    71
+   ],
+   "duplicate_place": [
+    76,
+    79
+   ],
+   "confusable_name": [
+    76,
+    77
+   ],
+   "negation": [
+    72,
+    72
+   ],
+   "typo_slang": [
+    78,
+    78
+   ],
+   "out_of_scope": [
+    79,
+    80
+   ],
+   "nameless_description": [
+    67,
+    75
+   ],
+   "ordinal_relative": [
+    79,
+    80
+   ],
+   "change_request": [
+    78,
+    79
+   ],
+   "absent_but_plausible": [
+    77,
+    78
+   ]
+  },
+  "ended": {
+   "e4b": 674,
+   "rules": 125,
+   "reject": 36
+  },
+  "calls": {
+   "rules": 835,
+   "e4b": 674,
+   "embed": 32,
+   "ml": 626
+  },
+  "routing": [
+   {
+    "point→point": 550,
+    "reject→reject": 36,
+    "reject→point": 40
+   },
+   {
+    "경로맞음·최종정답": 578,
+    "경로틀림·최종정답": 40,
+    "경로맞음·최종오답": 8
+   }
+  ],
+  "vs_e4b_only(a만,b만,p)": [
+   3,
+   7,
+   0.34375
+  ]
+ }
+}

@@ -20,7 +20,7 @@ from app.presentation.api.app import create_app
 from app.presentation.security import _development_key
 
 #: ★분류기를 주입해 LLM 없이 뜨게 한다. 이 파일이 재는 것은 분류가 아니라 반영이다.
-_CLASSIFIER = lambda _text: {"intent": "billing", "issue_code": "x", "sentiment": "neutral"}
+_CLASSIFIER = lambda _text: {"intent": "incident_report", "issue_code": "x", "sentiment": "neutral"}
 
 
 @pytest.fixture()

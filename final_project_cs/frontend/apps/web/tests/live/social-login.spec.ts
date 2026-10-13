@@ -18,7 +18,7 @@ const storedKey = (page: Page) => page.evaluate((storage) => localStorage.getIte
 test("서버에 소셜 로그인이 없으면(404) 「서버가 준비 중」이라고만 말하고 누를 단추도 메뉴 줄도 없다", async ({ page, request }) => {
   await mockServer(request).scenario({ social: "off" });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await expect(card(page)).toContainText("서버가 준비 중이에요");
   await expect(card(page).getByRole("button")).toHaveCount(0);
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
@@ -28,7 +28,7 @@ test("서버에 소셜 로그인이 없으면(404) 「서버가 준비 중」이
 test("서버에 설정된 로그인 방법이 하나도 없으면(빈 목록) 그렇다고 말하고 단추를 두지 않는다", async ({ page, request }) => {
   await mockServer(request).scenario({ social: "none" });
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await expect(card(page)).toContainText("설정된 로그인 방법이 아직 없어요");
   await expect(card(page).getByRole("button")).toHaveCount(0);
 });
@@ -36,7 +36,7 @@ test("서버에 설정된 로그인 방법이 하나도 없으면(빈 목록) �
 test("통합 인증: 게스트가 구글로 계속하면 회원 쿠키를 받고 현재 여행을 보관한다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await expect(row(page, "구글")).toBeVisible();
   await row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" }).click();
   await expect(page.getByRole("heading", { name: "구글 계정으로 로그인했어요" })).toBeVisible();
@@ -62,7 +62,7 @@ test("통합 인증: 게스트가 구글로 계속하면 회원 쿠키를 받고
 test("구글 줄은 구글이 주는 공식 버튼 모양이다 — 흰 바탕·테두리·표준 색 G(네 색)·허용된 문구, 우리가 다시 칠하지 않고, 모든 업체에 공식 아이콘과 회사 이름을 표시한다", async ({ page, request }) => {
   await mockServer(request);
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   const google = row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" });
   await expect(google).toBeVisible();
   await expect(google).toHaveCSS("background-color", "rgb(255, 255, 255)");
@@ -81,7 +81,7 @@ test("로그인: 세션이 없는 브라우저는 「구글 로그인」으로 �
   const server = mockServer(request);
   await start(page, null);
   await agree(page);                                                       // 약관에는 이미 동의한 사람 - 이 시험의 주제는 로그인이다
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await expect(card(page)).not.toContainText("연결하기");                         // nothing to link without a session
   await row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" }).click();
   await expect(page.getByRole("heading", { name: "구글 계정으로 로그인했어요" })).toBeVisible();
@@ -94,6 +94,9 @@ test("로그인: 세션이 없는 브라우저는 「구글 로그인」으로 �
   expect(await storedKey(page)).toBeNull();
   expect(await cookie(page)).toMatch(/^member-session-/);
   await page.getByRole("link", { name: "마이페이지" }).click();
+  // `[2026-10-13 마이페이지 A안]` 마이페이지는 상태 줄 — 「로그인 상태」 카드는 「로그인 · 계정」 화면에 있다.
+  await expect(page.getByRole("navigation", { name: "내 상태" }).getByRole("link", { name: /^로그인 · 계정/ })).toContainText("로그인됨");
+  await page.goto("/mypage/account");
   await expect(page.getByRole("group", { name: "로그인 상태" })).toContainText("로그인한 계정으로 쓰고 있어요");
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
 });
@@ -101,7 +104,7 @@ test("로그인: 세션이 없는 브라우저는 「구글 로그인」으로 �
 test("게스트는 자료 소실 경고 없이 한 버튼으로 계정을 선택한다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await expect(card(page)).not.toContainText("게스트 여행은 사라지고");
   await expect(row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" })).toHaveCount(1);
   await row(page, "카카오").getByRole("button", { name: "Kakao 계정으로 계속" }).click();
@@ -115,14 +118,14 @@ test("업체 화면에서 취소하면 「취소했어요」, 이미 다른 여�
   const server = mockServer(request);
   await start(page);
   await server.scenario({ socialResult: "cancelled" });
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" }).click();
   await expect(page.getByRole("heading", { name: "로그인하지 못했어요" })).toBeVisible();
   await expect(page.locator("main").getByRole("alert")).toContainText("로그인을 취소했어요");
   expect((await server.received("POST", "/auth/exchange")).length).toBe(0);
 
   await server.scenario({ socialResult: "elsewhere", sessionKind: "member" });
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" }).click();
   await expect(page.locator("main").getByRole("alert")).toContainText("이미 다른 여행 기록에 연결돼 있어요");
   expect(await cookie(page)).toBe("known-session");
@@ -140,7 +143,7 @@ test("이 브라우저가 시작하지 않은 로그인 링크(남이 보낸 tic
 
 test("같은 ticket 을 두 번 쓰거나 다른 nonce 로 쓰면 서버가 거절하고(410), 화면은 처음부터 다시 하라고 한다", async ({ page }) => {
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" }).click();
   await expect(page.getByRole("heading", { name: "구글 계정으로 로그인했어요" })).toBeVisible();
   // the same ticket again, with a nonce this browser no longer holds
@@ -152,7 +155,7 @@ test("같은 ticket 을 두 번 쓰거나 다른 nonce 로 쓰면 서버가 거�
 test("연결 풀기: 「풀기」 → 「연결 풀기」 두 번 눌러야 풀리고, 여행은 그대로라고 말한다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" }).click();
   await expect(page.getByRole("heading", { name: "구글 계정으로 로그인했어요" })).toBeVisible();
   await page.getByRole("link", { name: "계속하기" }).click();
@@ -164,20 +167,38 @@ test("연결 풀기: 「풀기」 → 「연결 풀기」 두 번 눌러야 풀�
   expect((await server.received("DELETE", "/auth/google")).length).toBe(1);
 });
 
-test("메뉴에 「계정 연결 · 로그인」 줄이 있고 누르면 마이페이지의 소셜 계정 카드로 간다", async ({ page }) => {
+// `[2026-10-13 사용자 결정 — 메뉴 로그인 입구 후보 1]` 전의 「계정 연결 · 로그인」 줄 대신, 게스트에게는 프로필 줄 아래 「계정으로 계속하기」가 있다.
+test("게스트의 메뉴에는 「계정으로 계속하기」가 있고, 누르면 돌아올 곳을 싣고 로그인 · 계정 화면으로 간다", async ({ page }) => {
   await start(page);
   await page.goto("/trips");
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /계정 연결 · 로그인/ }).click();
-  await expect(page).toHaveURL(/\/mypage#accounts$/);
+  const menu = page.getByRole("dialog", { name: "메뉴" });
+  await expect(menu.getByRole("button", { name: "로그아웃" })).toHaveCount(0);
+  await menu.getByRole("link", { name: "계정으로 계속하기" }).click();
+  await expect(page).toHaveURL(/\/mypage\/account\?returnTo=%2Ftrips$/);
+  await expect(menu).toHaveCount(0);                                         // 메뉴는 닫힌다
   await expect(card(page)).toBeVisible();
+});
+
+test("회원의 메뉴에는 입구 대신 맨 아래 「로그아웃」이 있고, 누르면 서버에 알리고 첫 화면으로 간다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ sessionKind: "member" });
+  await start(page);
+  await page.goto("/trips");
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  const menu = page.getByRole("dialog", { name: "메뉴" });
+  await expect(menu.getByRole("link", { name: "계정으로 계속하기" })).toHaveCount(0);
+  await menu.getByRole("button", { name: "로그아웃" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  const [out] = await server.received("POST", "/v1/web/auth/logout");
+  expect(out.csrf).toBe("csrf-known");
 });
 
 test("세션 없는 로그인에 서버가 사람 확인을 요구했는데 확인 화면이 꺼져 있으면 서버 문장을 그대로 보인다", async ({ page, request }) => {
   await mockServer(request).scenario({ socialHumanCheck: "required" });
   await start(page, null);
   await agree(page);                                                       // 약관에는 이미 동의한 사람 - 이 시험의 주제는 로그인이다
-  await page.goto("/mypage");
+  await page.goto("/mypage/account");
   await row(page, "구글").getByRole("button", { name: "Google 계정으로 계속" }).click();
   await expect(card(page).getByRole("alert")).toContainText("사람인지 확인해 주세요");
 });

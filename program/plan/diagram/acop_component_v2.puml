@@ -1,0 +1,128 @@
+@startuml
+title A-COP Basement(Core) component architecture
+left to right direction
+skinparam backgroundColor #faf9ff
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #4b5563
+skinparam LineColor #4b5563
+skinparam packageStyle rectangle
+skinparam component {
+  BackgroundColor #f5f3ff
+  BorderColor #7c3aed
+  FontColor #111827
+  BackgroundColor<<core1>> #dbeafe
+  BorderColor<<core1>> #2563eb
+  BackgroundColor<<core2>> #fee2e2
+  BorderColor<<core2>> #dc2626
+  BackgroundColor<<broker>> #e0e7ff
+  BorderColor<<broker>> #4f46e5
+  BackgroundColor<<context>> #cffafe
+  BorderColor<<context>> #0891b2
+  BackgroundColor<<domain>> #dcfce7
+  BorderColor<<domain>> #16a34a
+}
+skinparam package {
+  BackgroundColor #ffffff
+  BorderColor #6b7280
+  BackgroundColor<<core1>> #eff6ff
+  BorderColor<<core1>> #2563eb
+  BackgroundColor<<core2>> #fff1f2
+  BorderColor<<core2>> #dc2626
+  BackgroundColor<<domain>> #f0fdf4
+  BorderColor<<domain>> #16a34a
+}
+
+component "REST / MCP\n진입" as RestMcp
+component "A2A Remote\n외부 Agent" as ExternalA2A
+component "운영 UI" as OpsUI
+component "LLM provider" as LLM
+database "DB" as DB
+
+package "CS Pack" <<domain>> as CSPack {
+  component "VOC & Store Manager" as VOC
+  component "Response Generation & Review" as Response
+}
+package "Commerce Ops Pack" <<domain>> as CommercePack {
+  component "Procurement + Order & Payment" as Procurement
+  component "Fulfillment & Logistics" as Fulfillment
+  component "Return & Refund (Mock)" as Return
+  component "Catalog & Verification\n(A2A Remote)" as Catalog
+}
+
+package "Core 1. Case Runtime & Coordination" <<core1>> as Core1 {
+  component "Agent Gateway" as Gateway
+  component "Customer Case Layer" as CaseLayer
+  component "Agent Team Registry /\nTeam Contract" as Registry
+  component "Context Broker" <<context>> as Context
+  component "Message Broker" <<broker>> as Message
+  component "Shared State" as State
+  component "Agentic Controller /\nOrchestration" as Controller
+}
+
+package "Core 2. Access & Action Platform" <<core2>> as Core2 {
+  component "Tool / Action Layer" as Action
+}
+
+RestMcp --> Gateway : REST / MCP 요청
+ExternalA2A --> Gateway : A2A 요청
+OpsUI --> Gateway : 운영 접근
+Gateway --> CaseLayer : 승인된 요청
+Gateway --> Controller : Case / Task 진입
+CaseLayer --> State : Case 상태·event/history
+Controller --> Registry : capability resolve
+Registry --> Controller : Team Contract / 실행 유형
+Controller --> Context : Context 요청
+Context --> Controller : ContextPack
+Context --> DB : RAG·DB 상태·이력·Memory 조회
+Controller --> Message : Task / Event publish
+Message --> VOC : 전달
+Message --> Response : 전달
+Message --> Procurement : 전달
+Message --> Fulfillment : 전달
+Message --> Return : 전달
+Message --> State : event 반영
+Controller --> Action : ActionProposal
+Action --> DB : 승인·idempotency·audit 상태
+Action --> ExternalA2A : A2A Remote 위임
+Controller --> LLM : 판단·응답 생성
+
+VOC -[hidden]-> Response
+Procurement -[hidden]-> Fulfillment
+Core1 -[hidden]-> Core2
+
+note right of Message
+Message Broker = Task/Event 전달
+Queue·Retry·Event 운반만 수행
+Team 선택이나 판단은 하지 않는다.
+end note
+
+note right of Context
+Context Broker = 판단용 ContextPack 구성
+RAG, DB current state, Case history,
+Memory, Team knowledge scope를
+선택·조합·정규화·압축한다.
+Message Broker와 합치지 않는다.
+end note
+
+note bottom of Core2
+Core 2는 Tool/Action, approval,
+idempotency, audit와 실제 side effect를 담당한다.
+Core 1의 Team은 ActionProposal만 반환한다.
+end note
+
+note top of Core1
+CS Pack과 Commerce Ops Pack은
+하나의 Runtime(Core) 위에 얹히는
+Registry 등록형 도메인 팩이다.
+end note
+
+legend bottom right
+|색상|의미|
+|<#eff6ff>|Core 1: Case Runtime & Coordination|
+|<#fff1f2>|Core 2: Access & Action Platform|
+|<#f0fdf4>|도메인 팩 / Registry 등록 Team|
+|<#e0e7ff>|Message Broker: Task/Event 전달|
+|<#cffafe>|Context Broker: 판단용 ContextPack|
+endlegend
+@enduml

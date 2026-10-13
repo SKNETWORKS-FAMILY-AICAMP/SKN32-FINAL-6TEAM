@@ -67,18 +67,18 @@ for(const width of [375,1280]) {
     await page.emulateMedia({reducedMotion:'reduce'});expect(await arrow.evaluate(el=>parseFloat(getComputedStyle(el).transitionDuration))).toBeLessThanOrEqual(.0001);
     await noHorizontalScroll(page);
   });
-  test(`일반 카드 무테·선택과 상태 테두리·잠금 재클릭 ${width}px`,async({page,request})=>{
+  test(`일반 카드 테두리(10-13 ④)·선택과 상태 테두리·잠금 재클릭 ${width}px`,async({page,request})=>{
     await page.setViewportSize({width,height:812});await page.emulateMedia({reducedMotion:'reduce'});
     const tiles=shots?await useMapTiles(page):async()=>{};
     await openFinished(page,request,undefined,{intakeEvents:'off'});await tiles();await prepare(page);
     for(let i=0;i<4;i++)await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowUp');
     await page.evaluate(()=>{if(document.activeElement instanceof HTMLElement)document.activeElement.blur();});
-    await expect(card(page,'경복궁 관람')).toHaveCSS('border-top-color','rgba(0, 0, 0, 0)');
+    await expect(card(page,'경복궁 관람')).toHaveCSS('border-top-color','rgb(195, 205, 198)');
     await expect(card(page,'올리브영')).not.toHaveCSS('border-top-color','rgba(0, 0, 0, 0)');
     await expect(card(page,'광장시장')).not.toHaveCSS('border-top-color','rgba(0, 0, 0, 0)');
     await expect(page.locator('[data-departure-mark] svg').first()).toHaveClass(/lucide-minus/);
     await capture(page,`03-cards-${width}`);
-    await head(page,'경복궁 관람').focus();await expect(card(page,'경복궁 관람')).not.toHaveCSS('border-top-color','rgba(0, 0, 0, 0)');
+    await head(page,'경복궁 관람').focus();await expect(card(page,'경복궁 관람')).not.toHaveCSS('border-top-color','rgb(195, 205, 198)');
     await head(page,'경복궁 관람').click();
     const lock=page.getByRole('button',{name:'경복궁 관람 꼭 넣을 일정으로 고정'});
     await lock.click();const unlock=page.getByRole('button',{name:'경복궁 관람 고정 풀기'});

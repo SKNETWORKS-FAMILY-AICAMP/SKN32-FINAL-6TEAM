@@ -1,0 +1,87 @@
+@startuml
+title A-COP Case Lifecycle State Diagram
+skinparam backgroundColor #faf9ff
+skinparam shadowing false
+skinparam ArrowColor #4b5563
+skinparam LineColor #4b5563
+skinparam state {
+  BorderColor #6b7280
+  BackgroundColor #f5f3ff
+  BackgroundColor<<normal>> #dbeafe
+  BorderColor<<normal>> #2563eb
+  BackgroundColor<<wait>> #fef3c7
+  BorderColor<<wait>> #d97706
+  BackgroundColor<<resolved>> #dcfce7
+  BorderColor<<resolved>> #16a34a
+  BackgroundColor<<abnormal>> #fee2e2
+  BorderColor<<abnormal>> #dc2626
+}
+
+state "new" as New <<normal>>
+state "classifying" as Classifying <<normal>>
+state "routing" as Routing <<normal>>
+state "running" as Running <<normal>>
+
+state "대기" as Waiting {
+  state "waiting_input" as WaitingInput <<wait>>
+  state "waiting_approval" as WaitingApproval <<wait>>
+  state "waiting_external" as WaitingExternal <<wait>>
+}
+
+state "resuming" as Resuming <<normal>>
+state "resolved" as Resolved <<resolved>>
+state "escalated" as Escalated <<abnormal>>
+state "failed" as Failed <<abnormal>>
+state "cancelled" as Cancelled <<abnormal>>
+
+[*] --> New
+New --> Classifying : created
+New --> Cancelled : 취소
+Classifying --> Routing : classified
+Classifying --> Escalated : 분류 불가
+Routing --> Running : team_task
+Routing --> Escalated : capability 없음
+Running --> WaitingInput : missing_input
+Running --> WaitingApproval : approval_required
+Running --> WaitingExternal : async_provider
+Running --> Resolved : completed
+Running --> Failed : retry_exhausted
+Running --> Escalated : 자동 처리 한계
+WaitingInput --> Resuming : valid_input
+WaitingInput --> Escalated : ttl
+WaitingApproval --> Resuming : approved
+WaitingApproval --> Escalated : rejected_or_ttl
+WaitingExternal --> Resuming : callback
+WaitingExternal --> Escalated : ttl
+Resuming --> Running : token 유효
+Resuming --> Escalated : token 무효
+Resolved --> Cancelled : 취소
+Escalated --> Cancelled : 취소
+Failed --> Escalated : 운영자 이관
+Cancelled --> [*]
+
+note right of Resuming
+상태 변경은 transition_case(
+case_id, expected_version, event_type,
+payload, actor) 단일 진입점으로만 수행한다.
+affected row = 0 이면 StateConflict.
+WAIT reason: customer_input | human_approval | external_callback
+resume node: validate_input | execute_approved_action | verify_external_result
+Resume token은 hash만 저장하며 24시간 TTL·일회성이다.
+TTL 만료는 자동 종료가 아니라 escalated와 운영자 알림을 만든다.
+end note
+
+legend bottom right
+|=색상 |=의미|
+|<#dbeafe>|정상 흐름|
+|<#fef3c7>|대기 상태|
+|<#dcfce7>|정상 종료 resolved|
+|<#fee2e2>|이상 종료 escalated · failed · cancelled|
+|=운영 규칙 |=내용|
+|단일 진입점|transition_case와 낙관적 버전 검증|
+|WAIT / RESUME|WAIT reason과 resume node를 계약으로 고정|
+|=라벨 출처 |=내용|
+|영문 라벨|§19 mermaid 초안에 명시된 이벤트명|
+|한글 라벨|§19 표에는 있으나 이벤트명이 없는 전이. 설명용|
+endlegend
+@enduml

@@ -1,0 +1,777 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1511 1975" width="1511" height="1975"><rect width="100%" height="100%" fill="#fbfcfd"/><defs><marker id="vee" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L8,4 L0,8" fill="none" stroke="#606b7e" stroke-width="1.3"/></marker></defs><text x="30" y="40" font-family="NanumGothicCoding" font-size="12" letter-spacing="1" fill="#727d90">사람 · 앱</text><text x="319.7" y="40" font-family="NanumGothicCoding" font-size="12" letter-spacing="1" fill="#727d90">유스케이스 — triPilot</text><text x="1187.5" y="40" font-family="NanumGothicCoding" font-size="12" letter-spacing="1" fill="#727d90">시스템 행위자</text><text x="30" y="78" font-family="Malgun Gothic" font-size="22" font-weight="700" fill="#161c28">triPilot 유스케이스 — 전체 한 장</text><text x="30" y="100" font-family="Malgun Gothic" font-size="13" fill="#606b7e">v3 · 2026-10-02 · 실제 API · 코드 기준 · 실선 = 연관 · 회색 점선 = 반드시 쓰는 공통 기능(«include») · 금색 점선 = 조건이 맞을 때만(«extend») · 빈 삼각형 = 일반화 · 금색 상자 = 핵심 처리</text><rect x="297.7" y="102.8" width="863.8" height="1705.0" rx="10" fill="none" stroke="#dbe0ea" stroke-width="1.2"/><svg x="88.7" y="118.0" width="1349.0" height="347.0" viewBox="0 0 1349.0 347.0" overflow="visible">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(10.8 336.37)">
+<title>UC</title>
+<g id="clust2" class="cluster">
+<title>cluster_g</title>
+<path fill="#f1f4f8" stroke="#dbe0ea" d="M228.15,-30.57C228.15,-30.57 1031.88,-30.57 1031.88,-30.57 1037.88,-30.57 1043.88,-36.57 1043.88,-42.57 1043.88,-42.57 1043.88,-305.57 1043.88,-305.57 1043.88,-311.57 1037.88,-317.57 1031.88,-317.57 1031.88,-317.57 228.15,-317.57 228.15,-317.57 222.15,-317.57 216.15,-311.57 216.15,-305.57 216.15,-305.57 216.15,-42.57 216.15,-42.57 216.15,-36.57 222.15,-30.57 228.15,-30.57"/>
+<text xml:space="preserve" text-anchor="start" x="224.15" y="-303.82" font-family="NanumGothicCoding" font-size="12.00" fill="#727d90">A · 여행 준비 — 계획을 받아 일정으로 읽는다</text>
+</g>
+<!-- traveler -->
+<g id="node1" class="node">
+<title>traveler</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M152.15,-237.14C152.15,-237.14 12,-237.14 12,-237.14 6,-237.14 0,-231.14 0,-225.14 0,-225.14 0,-190 0,-190 0,-184 6,-178 12,-178 12,-178 152.15,-178 152.15,-178 158.15,-178 164.15,-184 164.15,-190 164.15,-190 164.15,-225.14 164.15,-225.14 164.15,-231.14 158.15,-237.14 152.15,-237.14"/>
+<image xlink:href="ic_person.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="12.2" y="-224.57"/>
+<text xml:space="preserve" text-anchor="start" x="43.2" y="-212.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">여행자</text>
+<text xml:space="preserve" text-anchor="start" x="43.2" y="-190.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">국적 무관 자유여행자</text>
+</g>
+<!-- companion -->
+<g id="node2" class="node">
+<title>companion</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M152.15,-59.14C152.15,-59.14 12,-59.14 12,-59.14 6,-59.14 0,-53.14 0,-47.14 0,-47.14 0,-12 0,-12 0,-6 6,0 12,0 12,0 152.15,0 152.15,0 158.15,0 164.15,-6 164.15,-12 164.15,-12 164.15,-47.14 164.15,-47.14 164.15,-53.14 158.15,-59.14 152.15,-59.14"/>
+<image xlink:href="ic_person.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="12.2" y="-46.57"/>
+<text xml:space="preserve" text-anchor="start" x="43.2" y="-34.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">동행자</text>
+<text xml:space="preserve" text-anchor="start" x="43.2" y="-12.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">링크로 계획서만 본다</text>
+</g>
+<!-- traveler&#45;&gt;companion -->
+<g id="edge1" class="edge">
+<title>traveler&#45;&gt;companion</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M177.37,-187.57C177.37,-187.57 186.53,-187.57 186.53,-187.57 186.53,-187.57 186.53,-54.95 186.53,-54.95 186.53,-54.95 177.44,-54.95 164.63,-54.95"/>
+<polygon fill="none" stroke="#606b7e" stroke-width="1.15" points="177.37,-183.72 166.37,-187.57 177.37,-191.42 177.37,-183.72"/>
+</g>
+<!-- u01 -->
+<g id="node4" class="node">
+<title>u01</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M398.56,-214.57C398.56,-214.57 274.9,-214.57 274.9,-214.57 268.9,-214.57 262.9,-208.57 262.9,-202.57 262.9,-202.57 262.9,-190.57 262.9,-190.57 262.9,-184.57 268.9,-178.57 274.9,-178.57 274.9,-178.57 398.56,-178.57 398.56,-178.57 404.56,-178.57 410.56,-184.57 410.56,-190.57 410.56,-190.57 410.56,-202.57 410.56,-202.57 410.56,-208.57 404.56,-214.57 398.56,-214.57"/>
+<text xml:space="preserve" text-anchor="start" x="272.98" y="-196.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;01 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="309.73" y="-196.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">여행 시작하기</text>
+<text xml:space="preserve" text-anchor="start" x="272.98" y="-185.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">언어 · 설문 6문항</text>
+</g>
+<!-- traveler&#45;&gt;u01 -->
+<g id="edge2" class="edge">
+<title>traveler&#45;&gt;u01</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M164.4,-205.57C195.94,-205.57 231.69,-205.57 262.43,-205.57"/>
+</g>
+<!-- u03 -->
+<g id="node5" class="node">
+<title>u03</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M429.31,-280.57C429.31,-280.57 244.15,-280.57 244.15,-280.57 238.15,-280.57 232.15,-274.57 232.15,-268.57 232.15,-268.57 232.15,-256.57 232.15,-256.57 232.15,-250.57 238.15,-244.57 244.15,-244.57 244.15,-244.57 429.31,-244.57 429.31,-244.57 435.31,-244.57 441.31,-250.57 441.31,-256.57 441.31,-256.57 441.31,-268.57 441.31,-268.57 441.31,-274.57 435.31,-280.57 429.31,-280.57"/>
+<text xml:space="preserve" text-anchor="start" x="242.23" y="-262.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;03 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="278.98" y="-262.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">읽힌 일정 확인 · 고치기</text>
+<text xml:space="preserve" text-anchor="start" x="242.23" y="-251.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">고치기 · 빼기 → 등록</text>
+</g>
+<!-- traveler&#45;&gt;u03 -->
+<g id="edge3" class="edge">
+<title>traveler&#45;&gt;u03</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M164.22,-223.78C204.11,-223.78 243.53,-223.78 243.53,-223.78 243.53,-223.78 243.53,-234.1 243.53,-244.09"/>
+</g>
+<!-- u02 -->
+<g id="node6" class="node">
+<title>u02</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M402.31,-148.57C402.31,-148.57 271.15,-148.57 271.15,-148.57 265.15,-148.57 259.15,-142.57 259.15,-136.57 259.15,-136.57 259.15,-124.57 259.15,-124.57 259.15,-118.57 265.15,-112.57 271.15,-112.57 271.15,-112.57 402.31,-112.57 402.31,-112.57 408.31,-112.57 414.31,-118.57 414.31,-124.57 414.31,-124.57 414.31,-136.57 414.31,-136.57 414.31,-142.57 408.31,-148.57 402.31,-148.57"/>
+<text xml:space="preserve" text-anchor="start" x="269.23" y="-130.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;02 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="305.98" y="-130.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">계획 올리기</text>
+<text xml:space="preserve" text-anchor="start" x="269.23" y="-119.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">글 · 사진 · 파일 5개 · 10MB</text>
+</g>
+<!-- traveler&#45;&gt;u02 -->
+<g id="edge4" class="edge">
+<title>traveler&#45;&gt;u02</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M164.59,-196.57C189.1,-196.57 209.53,-196.57 209.53,-196.57 209.53,-196.57 209.53,-136.28 209.53,-136.28 209.53,-136.28 232.38,-136.28 258.71,-136.28"/>
+</g>
+<!-- u05 -->
+<g id="node7" class="node">
+<title>u05</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M405.69,-82.57C405.69,-82.57 267.78,-82.57 267.78,-82.57 261.78,-82.57 255.78,-76.57 255.78,-70.57 255.78,-70.57 255.78,-58.57 255.78,-58.57 255.78,-52.57 261.78,-46.57 267.78,-46.57 267.78,-46.57 405.69,-46.57 405.69,-46.57 411.69,-46.57 417.69,-52.57 417.69,-58.57 417.69,-58.57 417.69,-70.57 417.69,-70.57 417.69,-76.57 411.69,-82.57 405.69,-82.57"/>
+<text xml:space="preserve" text-anchor="start" x="265.86" y="-64.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;05 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="302.61" y="-64.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">여행계획서 보기</text>
+<text xml:space="preserve" text-anchor="start" x="265.86" y="-53.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">로그인 없는 링크 · 늘 최신</text>
+</g>
+<!-- companion&#45;&gt;u05 -->
+<g id="edge7" class="edge">
+<title>companion&#45;&gt;u05</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M164.4,-50.76C193.61,-50.76 226.44,-50.76 255.56,-50.76"/>
+</g>
+<!-- aiapp -->
+<g id="node3" class="node">
+<title>aiapp</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M147.65,-148.14C147.65,-148.14 16.5,-148.14 16.5,-148.14 10.5,-148.14 4.5,-142.14 4.5,-136.14 4.5,-136.14 4.5,-101 4.5,-101 4.5,-95 10.5,-89 16.5,-89 16.5,-89 147.65,-89 147.65,-89 153.65,-89 159.65,-95 159.65,-101 159.65,-101 159.65,-136.14 159.65,-136.14 159.65,-142.14 153.65,-148.14 147.65,-148.14"/>
+<image xlink:href="ic_bot.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="16.7" y="-135.57"/>
+<text xml:space="preserve" text-anchor="start" x="47.7" y="-123.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">개인 AI 비서 앱</text>
+<text xml:space="preserve" text-anchor="start" x="47.7" y="-101.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">우리 API로 연결</text>
+</g>
+<!-- aiapp&#45;&gt;u02 -->
+<g id="edge5" class="edge">
+<title>aiapp&#45;&gt;u02</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M159.86,-124.43C191.31,-124.43 227.54,-124.43 258.98,-124.43"/>
+</g>
+<!-- aiapp&#45;&gt;u05 -->
+<g id="edge6" class="edge">
+<title>aiapp&#45;&gt;u05</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M82.53,-88.62C82.53,-79.04 82.53,-70.85 82.53,-70.85 82.53,-70.85 181.21,-70.85 255.6,-70.85"/>
+</g>
+<!-- s -->
+<g id="node8" class="node">
+<title>s</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M699.35,-280.57C699.35,-280.57 550.94,-280.57 550.94,-280.57 544.94,-280.57 538.94,-274.57 538.94,-268.57 538.94,-268.57 538.94,-256.57 538.94,-256.57 538.94,-250.57 544.94,-244.57 550.94,-244.57 550.94,-244.57 699.35,-244.57 699.35,-244.57 705.35,-244.57 711.35,-250.57 711.35,-256.57 711.35,-256.57 711.35,-268.57 711.35,-268.57 711.35,-274.57 705.35,-280.57 699.35,-280.57"/>
+<text xml:space="preserve" text-anchor="start" x="549.02" y="-256.57" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">여행 등록 · 계획서 링크</text>
+</g>
+<!-- u03&#45;&gt;s -->
+<g id="edge8" class="edge">
+<title>u03&#45;&gt;s</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M441.67,-262.57C441.67,-262.57 530.34,-262.57 530.34,-262.57"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="537.34,-262.57 530.34,-265.72 535.24,-262.65 530.34,-262.65 530.34,-262.57 530.34,-262.5 535.24,-262.5 530.34,-259.42 537.34,-262.57"/>
+</g>
+<!-- r -->
+<g id="node9" class="node">
+<title>r</title>
+<path fill="#f8f3ea" stroke="#d6b680" d="M728.97,-181.57C728.97,-181.57 521.31,-181.57 521.31,-181.57 515.31,-181.57 509.31,-175.57 509.31,-169.57 509.31,-169.57 509.31,-157.57 509.31,-157.57 509.31,-151.57 515.31,-145.57 521.31,-145.57 521.31,-145.57 728.97,-145.57 728.97,-145.57 734.97,-145.57 740.97,-151.57 740.97,-157.57 740.97,-157.57 740.97,-169.57 740.97,-169.57 740.97,-175.57 734.97,-181.57 728.97,-181.57"/>
+<text xml:space="preserve" text-anchor="start" x="519.39" y="-163.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">계획 읽기</text>
+<text xml:space="preserve" text-anchor="start" x="519.39" y="-152.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">매니저(코어)의 처리 단계 · 값 · 방법 · 근거</text>
+</g>
+<!-- u02&#45;&gt;r -->
+<g id="edge9" class="edge">
+<title>u02&#45;&gt;r</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M414.68,-135.57C464.77,-135.57 520.53,-135.57 520.53,-135.57 520.53,-135.57 520.53,-136.96 520.53,-136.96"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="520.53,-143.96 517.38,-136.96 520.46,-141.86 520.46,-136.96 520.53,-136.96 520.61,-136.96 520.61,-141.86 523.68,-136.96 520.53,-143.96"/>
+</g>
+<!-- u04 -->
+<g id="node10" class="node">
+<title>u04</title>
+<path fill="#ffffff" stroke="#d6b680" stroke-dasharray="5,2" d="M706.47,-115.57C706.47,-115.57 543.81,-115.57 543.81,-115.57 537.81,-115.57 531.81,-109.57 531.81,-103.57 531.81,-103.57 531.81,-91.57 531.81,-91.57 531.81,-85.57 537.81,-79.57 543.81,-79.57 543.81,-79.57 706.47,-79.57 706.47,-79.57 712.47,-79.57 718.47,-85.57 718.47,-91.57 718.47,-91.57 718.47,-103.57 718.47,-103.57 718.47,-109.57 712.47,-115.57 706.47,-115.57"/>
+<text xml:space="preserve" text-anchor="start" x="541.89" y="-97.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;04 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="578.64" y="-97.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">일정 짜 달라고 하기</text>
+<text xml:space="preserve" text-anchor="start" x="541.89" y="-86.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">계획이 비었거나 「일정 짜 줘」</text>
+</g>
+<!-- u02&#45;&gt;u04 -->
+<g id="edge10" class="edge">
+<title>u02&#45;&gt;u04</title>
+<path fill="none" stroke="#d6b680" stroke-width="1.15" stroke-dasharray="5,2" d="M336.53,-103.81C336.53,-103.81 336.53,-100.78 336.53,-100.78 336.53,-100.78 447.16,-100.78 531.44,-100.78"/>
+<polygon fill="#d6b680" stroke="#d6b680" stroke-width="1.15" points="336.53,-110.81 333.38,-103.81 336.46,-108.72 336.46,-103.81 336.53,-103.81 336.61,-103.81 336.61,-108.72 339.68,-103.81 336.53,-110.81"/>
+</g>
+<!-- r3 -->
+<g id="node11" class="node">
+<title>r3</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1015.88,-280.57C1015.88,-280.57 820.97,-280.57 820.97,-280.57 814.97,-280.57 808.97,-274.57 808.97,-268.57 808.97,-268.57 808.97,-256.57 808.97,-256.57 808.97,-250.57 814.97,-244.57 820.97,-244.57 820.97,-244.57 1015.88,-244.57 1015.88,-244.57 1021.88,-244.57 1027.88,-250.57 1027.88,-256.57 1027.88,-256.57 1027.88,-268.57 1027.88,-268.57 1027.88,-274.57 1021.88,-280.57 1015.88,-280.57"/>
+<text xml:space="preserve" text-anchor="start" x="819.05" y="-262.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">장소 하나로 정하기</text>
+<text xml:space="preserve" text-anchor="start" x="819.05" y="-251.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">표 → 별칭 → 오타 → 카카오 · 관광공사</text>
+</g>
+<!-- r&#45;&gt;r3 -->
+<g id="edge11" class="edge">
+<title>r&#45;&gt;r3</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M741.38,-168.76C781.01,-168.76 815.53,-168.76 815.53,-168.76 815.53,-168.76 815.53,-236.08 815.53,-236.08"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="815.53,-243.08 812.38,-236.08 815.46,-240.98 815.46,-236.08 815.53,-236.08 815.61,-236.08 815.61,-240.98 818.68,-236.08 815.53,-243.08"/>
+</g>
+<!-- r1 -->
+<g id="node12" class="node">
+<title>r1</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M985.5,-148.57C985.5,-148.57 851.34,-148.57 851.34,-148.57 845.34,-148.57 839.34,-142.57 839.34,-136.57 839.34,-136.57 839.34,-124.57 839.34,-124.57 839.34,-118.57 845.34,-112.57 851.34,-112.57 851.34,-112.57 985.5,-112.57 985.5,-112.57 991.5,-112.57 997.5,-118.57 997.5,-124.57 997.5,-124.57 997.5,-136.57 997.5,-136.57 997.5,-142.57 991.5,-148.57 985.5,-148.57"/>
+<text xml:space="preserve" text-anchor="start" x="849.42" y="-130.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">정해진 모양 읽기</text>
+<text xml:space="preserve" text-anchor="start" x="849.42" y="-119.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">코드: 시각 · 일차 · 예약번호</text>
+</g>
+<!-- r&#45;&gt;r1 -->
+<g id="edge12" class="edge">
+<title>r&#45;&gt;r1</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M733.53,-145.46C733.53,-135.67 733.53,-125.57 733.53,-125.57 733.53,-125.57 830.54,-125.57 830.54,-125.57"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="837.54,-125.57 830.54,-128.72 835.44,-125.65 830.54,-125.65 830.54,-125.57 830.54,-125.5 835.44,-125.5 830.54,-122.42 837.54,-125.57"/>
+</g>
+<!-- r2 -->
+<g id="node13" class="node">
+<title>r2</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1002.75,-214.57C1002.75,-214.57 834.09,-214.57 834.09,-214.57 828.09,-214.57 822.09,-208.57 822.09,-202.57 822.09,-202.57 822.09,-190.57 822.09,-190.57 822.09,-184.57 828.09,-178.57 834.09,-178.57 834.09,-178.57 1002.75,-178.57 1002.75,-178.57 1008.75,-178.57 1014.75,-184.57 1014.75,-190.57 1014.75,-190.57 1014.75,-202.57 1014.75,-202.57 1014.75,-208.57 1008.75,-214.57 1002.75,-214.57"/>
+<text xml:space="preserve" text-anchor="start" x="832.17" y="-196.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">원문 위치 가리키기</text>
+<text xml:space="preserve" text-anchor="start" x="832.17" y="-185.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">AI: 남은 줄만 · 원문에 없으면 버림</text>
+</g>
+<!-- r&#45;&gt;r2 -->
+<g id="edge13" class="edge">
+<title>r&#45;&gt;r2</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M741.34,-158.95C787.81,-158.95 830.53,-158.95 830.53,-158.95 830.53,-158.95 830.53,-169.8 830.53,-169.8"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="830.53,-176.8 827.38,-169.8 830.46,-174.7 830.46,-169.8 830.53,-169.8 830.61,-169.8 830.61,-174.7 833.68,-169.8 830.53,-176.8"/>
+</g>
+<!-- r0 -->
+<g id="node14" class="node">
+<title>r0</title>
+<path fill="#ffffff" stroke="#d6b680" stroke-dasharray="5,2" d="M966.38,-82.57C966.38,-82.57 870.47,-82.57 870.47,-82.57 864.47,-82.57 858.47,-76.57 858.47,-70.57 858.47,-70.57 858.47,-58.57 858.47,-58.57 858.47,-52.57 864.47,-46.57 870.47,-46.57 870.47,-46.57 966.38,-46.57 966.38,-46.57 972.38,-46.57 978.38,-52.57 978.38,-58.57 978.38,-58.57 978.38,-70.57 978.38,-70.57 978.38,-76.57 972.38,-82.57 966.38,-82.57"/>
+<text xml:space="preserve" text-anchor="start" x="868.55" y="-64.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">사진 받아쓰기</text>
+<text xml:space="preserve" text-anchor="start" x="868.55" y="-53.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">한 줄씩 · 두 번 대조</text>
+</g>
+<!-- r&#45;&gt;r0 -->
+<g id="edge14" class="edge">
+<title>r&#45;&gt;r0</title>
+<path fill="none" stroke="#d6b680" stroke-width="1.15" stroke-dasharray="5,2" d="M725.53,-136.74C725.53,-136.74 725.53,-63.07 725.53,-63.07 725.53,-63.07 801.59,-63.07 858.19,-63.07"/>
+<polygon fill="#d6b680" stroke="#d6b680" stroke-width="1.15" points="725.53,-143.74 722.38,-136.74 725.46,-141.64 725.46,-136.74 725.53,-136.74 725.61,-136.74 725.61,-141.64 728.68,-136.74 725.53,-143.74"/>
+</g>
+<!-- place -->
+<g id="node15" class="node">
+<title>place</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1315.53,-292.14C1315.53,-292.14 1107.88,-292.14 1107.88,-292.14 1101.88,-292.14 1095.88,-286.14 1095.88,-280.14 1095.88,-280.14 1095.88,-245 1095.88,-245 1095.88,-239 1101.88,-233 1107.88,-233 1107.88,-233 1315.53,-233 1315.53,-233 1321.53,-233 1327.53,-239 1327.53,-245 1327.53,-245 1327.53,-280.14 1327.53,-280.14 1327.53,-286.14 1321.53,-292.14 1315.53,-292.14"/>
+<image xlink:href="ic_db.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="1108.08" y="-279.57"/>
+<text xml:space="preserve" text-anchor="start" x="1139.08" y="-267.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">장소 정보</text>
+<text xml:space="preserve" text-anchor="start" x="1139.08" y="-245.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">우리 표 · 카카오 · 관광공사 · Places</text>
+</g>
+<!-- r3&#45;&gt;place -->
+<g id="edge15" class="edge">
+<title>r3&#45;&gt;place</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M1028.05,-262.57C1050.18,-262.57 1073.51,-262.57 1095.84,-262.57"/>
+</g>
+<!-- ai -->
+<g id="node16" class="node">
+<title>ai</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1293.03,-149.14C1293.03,-149.14 1130.38,-149.14 1130.38,-149.14 1124.38,-149.14 1118.38,-143.14 1118.38,-137.14 1118.38,-137.14 1118.38,-102 1118.38,-102 1118.38,-96 1124.38,-90 1130.38,-90 1130.38,-90 1293.03,-90 1293.03,-90 1299.03,-90 1305.03,-96 1305.03,-102 1305.03,-102 1305.03,-137.14 1305.03,-137.14 1305.03,-143.14 1299.03,-149.14 1293.03,-149.14"/>
+<image xlink:href="ic_spark.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="1130.58" y="-136.57"/>
+<text xml:space="preserve" text-anchor="start" x="1161.58" y="-124.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">AI 모델</text>
+<text xml:space="preserve" text-anchor="start" x="1161.58" y="-102.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">시험 중 — 로컬 · API 비교</text>
+</g>
+<!-- r2&#45;&gt;ai -->
+<g id="edge16" class="edge">
+<title>r2&#45;&gt;ai</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M1006.53,-178.19C1006.53,-158.66 1006.53,-130.57 1006.53,-130.57 1006.53,-130.57 1064.01,-130.57 1118.12,-130.57"/>
+</g>
+<!-- r0&#45;&gt;ai -->
+<g id="edge17" class="edge">
+<title>r0&#45;&gt;ai</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M918.53,-82.93C918.53,-92.11 918.53,-101.28 918.53,-101.28 918.53,-101.28 1032.34,-101.28 1118.14,-101.28"/>
+</g>
+</g>
+</svg><svg x="10.0" y="505.0" width="1050.0" height="325.0" viewBox="0 0 1050.0 325.0" overflow="visible">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(10.8 313.8)">
+<title>UC</title>
+<g id="clust2" class="cluster">
+<title>cluster_g</title>
+<path fill="#f1f4f8" stroke="#dbe0ea" d="M306.9,-8C306.9,-8 801.97,-8 801.97,-8 807.97,-8 813.97,-14 813.97,-20 813.97,-20 813.97,-283 813.97,-283 813.97,-289 807.97,-295 801.97,-295 801.97,-295 306.9,-295 306.9,-295 300.9,-295 294.9,-289 294.9,-283 294.9,-283 294.9,-20 294.9,-20 294.9,-14 300.9,-8 306.9,-8"/>
+<text xml:space="preserve" text-anchor="start" x="302.9" y="-281.25" font-family="NanumGothicCoding" font-size="12.00" fill="#727d90">B · 여행 중 요청 — 읽고, 근거로 답하고, 바꿀 일은 조율로</text>
+</g>
+<!-- req -->
+<g id="node1" class="node">
+<title>req</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M230.9,-170.57C230.9,-170.57 12,-170.57 12,-170.57 6,-170.57 0,-164.57 0,-158.57 0,-158.57 0,-123.43 0,-123.43 0,-117.43 6,-111.43 12,-111.43 12,-111.43 230.9,-111.43 230.9,-111.43 236.9,-111.43 242.9,-117.43 242.9,-123.43 242.9,-123.43 242.9,-158.57 242.9,-158.57 242.9,-164.57 236.9,-170.57 230.9,-170.57"/>
+<image xlink:href="ic_person.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="12.2" y="-158"/>
+<text xml:space="preserve" text-anchor="start" x="43.2" y="-145.5" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">요청하는 쪽</text>
+<text xml:space="preserve" text-anchor="start" x="43.2" y="-123.75" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">여행자 · AI 비서 앱(위와 같은 행위자)</text>
+</g>
+<!-- u06 -->
+<g id="node2" class="node">
+<title>u06</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M490.43,-60C490.43,-60 354.77,-60 354.77,-60 348.77,-60 342.77,-54 342.77,-48 342.77,-48 342.77,-36 342.77,-36 342.77,-30 348.77,-24 354.77,-24 354.77,-24 490.43,-24 490.43,-24 496.43,-24 502.43,-30 502.43,-36 502.43,-36 502.43,-48 502.43,-48 502.43,-54 496.43,-60 490.43,-60"/>
+<text xml:space="preserve" text-anchor="start" x="352.85" y="-42.2" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;06 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="389.6" y="-42.2" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">채팅으로 묻기</text>
+<text xml:space="preserve" text-anchor="start" x="352.85" y="-31.05" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">하루 요약 · 다음 이동 · 규정</text>
+</g>
+<!-- req&#45;&gt;u06 -->
+<g id="edge1" class="edge">
+<title>req&#45;&gt;u06</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M121.62,-111.03C121.62,-81.89 121.62,-42 121.62,-42 121.62,-42 253.18,-42 342.34,-42"/>
+</g>
+<!-- u07 -->
+<g id="node3" class="node">
+<title>u07</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M494.18,-126C494.18,-126 351.02,-126 351.02,-126 345.02,-126 339.02,-120 339.02,-114 339.02,-114 339.02,-102 339.02,-102 339.02,-96 345.02,-90 351.02,-90 351.02,-90 494.18,-90 494.18,-90 500.18,-90 506.18,-96 506.18,-102 506.18,-102 506.18,-114 506.18,-114 506.18,-120 500.18,-126 494.18,-126"/>
+<text xml:space="preserve" text-anchor="start" x="349.1" y="-108.2" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;07 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="385.85" y="-108.2" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">바꿔 달라고 하기</text>
+<text xml:space="preserve" text-anchor="start" x="349.1" y="-97.05" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">바로 바꾸고 다른 안 셋까지</text>
+</g>
+<!-- req&#45;&gt;u07 -->
+<g id="edge2" class="edge">
+<title>req&#45;&gt;u07</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M243.07,-118.72C275.23,-118.72 309.22,-118.72 338.87,-118.72"/>
+</g>
+<!-- u08 -->
+<g id="node4" class="node">
+<title>u08</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M477.31,-192C477.31,-192 367.9,-192 367.9,-192 361.9,-192 355.9,-186 355.9,-180 355.9,-180 355.9,-168 355.9,-168 355.9,-162 361.9,-156 367.9,-156 367.9,-156 477.31,-156 477.31,-156 483.31,-156 489.31,-162 489.31,-168 489.31,-168 489.31,-180 489.31,-180 489.31,-186 483.31,-192 477.31,-192"/>
+<text xml:space="preserve" text-anchor="start" x="365.98" y="-174.2" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;08 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="402.73" y="-174.2" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">문제 알리기</text>
+<text xml:space="preserve" text-anchor="start" x="365.98" y="-163.05" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">늦음 · 휴무</text>
+</g>
+<!-- req&#45;&gt;u08 -->
+<g id="edge3" class="edge">
+<title>req&#45;&gt;u08</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M243.07,-160.86C281.44,-160.86 322.4,-160.86 355.5,-160.86"/>
+</g>
+<!-- u09 -->
+<g id="node5" class="node">
+<title>u09</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M522.31,-258C522.31,-258 322.9,-258 322.9,-258 316.9,-258 310.9,-252 310.9,-246 310.9,-246 310.9,-234 310.9,-234 310.9,-228 316.9,-222 322.9,-222 322.9,-222 522.31,-222 522.31,-222 528.31,-222 534.31,-228 534.31,-234 534.31,-234 534.31,-246 534.31,-246 534.31,-252 528.31,-258 522.31,-258"/>
+<text xml:space="preserve" text-anchor="start" x="320.98" y="-240.2" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;09 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="357.73" y="-240.2" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">다른 안 고르기 · 되돌리기</text>
+<text xml:space="preserve" text-anchor="start" x="320.98" y="-229.05" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">「선택이 필요해요」 · 앞 판으로</text>
+</g>
+<!-- req&#45;&gt;u09 -->
+<g id="edge4" class="edge">
+<title>req&#45;&gt;u09</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M243.15,-165.71C286.42,-165.71 324.62,-165.71 324.62,-165.71 324.62,-165.71 324.62,-199.64 324.62,-221.64"/>
+</g>
+<!-- g -->
+<g id="node6" class="node">
+<title>g</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M764.97,-60C764.97,-60 635.31,-60 635.31,-60 629.31,-60 623.31,-54 623.31,-48 623.31,-48 623.31,-36 623.31,-36 623.31,-30 629.31,-24 635.31,-24 635.31,-24 764.97,-24 764.97,-24 770.97,-24 776.97,-30 776.97,-36 776.97,-36 776.97,-48 776.97,-48 776.97,-54 770.97,-60 764.97,-60"/>
+<text xml:space="preserve" text-anchor="start" x="633.39" y="-42.2" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">근거 찾기</text>
+<text xml:space="preserve" text-anchor="start" x="633.39" y="-31.05" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">여행 규정 · 예약 취소 조건</text>
+</g>
+<!-- u06&#45;&gt;g -->
+<g id="edge5" class="edge">
+<title>u06&#45;&gt;g</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M502.88,-36C502.88,-36 614.51,-36 614.51,-36"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="621.51,-36 614.51,-39.15 619.41,-36.08 614.51,-36.08 614.51,-36 614.51,-35.93 619.41,-35.93 614.51,-32.85 621.51,-36"/>
+</g>
+<!-- q -->
+<g id="node7" class="node">
+<title>q</title>
+<path fill="#f8f3ea" stroke="#d6b680" d="M785.97,-126C785.97,-126 614.31,-126 614.31,-126 608.31,-126 602.31,-120 602.31,-114 602.31,-114 602.31,-102 602.31,-102 602.31,-96 608.31,-90 614.31,-90 614.31,-90 785.97,-90 785.97,-90 791.97,-90 797.97,-96 797.97,-102 797.97,-102 797.97,-114 797.97,-114 797.97,-120 791.97,-126 785.97,-126"/>
+<text xml:space="preserve" text-anchor="start" x="612.39" y="-108.2" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">요청 읽기</text>
+<text xml:space="preserve" text-anchor="start" x="612.39" y="-97.05" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">요청 종류 5 · 대상 항목 · 문제 코드</text>
+</g>
+<!-- u06&#45;&gt;q -->
+<g id="edge6" class="edge">
+<title>u06&#45;&gt;q</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M502.91,-48C554.77,-48 612.62,-48 612.62,-48 612.62,-48 612.62,-81.27 612.62,-81.27"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="612.62,-88.27 609.47,-81.27 612.55,-86.17 612.55,-81.27 612.62,-81.27 612.7,-81.27 612.7,-86.17 615.77,-81.27 612.62,-88.27"/>
+</g>
+<!-- u07&#45;&gt;q -->
+<g id="edge7" class="edge">
+<title>u07&#45;&gt;q</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M506.63,-108C506.63,-108 593.87,-108 593.87,-108"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="600.87,-108 593.87,-111.15 598.77,-108.08 593.87,-108.08 593.87,-108 593.87,-107.93 598.77,-107.93 593.87,-104.85 600.87,-108"/>
+</g>
+<!-- u08&#45;&gt;q -->
+<g id="edge8" class="edge">
+<title>u08&#45;&gt;q</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M489.57,-174C545.32,-174 615.62,-174 615.62,-174 615.62,-174 615.62,-134.79 615.62,-134.79"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="615.62,-127.79 618.77,-134.79 615.7,-129.88 615.7,-134.79 615.62,-134.79 615.55,-134.79 615.55,-129.88 612.47,-134.79 615.62,-127.79"/>
+</g>
+<!-- v -->
+<g id="node8" class="node">
+<title>v</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M760.09,-258C760.09,-258 640.18,-258 640.18,-258 634.18,-258 628.18,-252 628.18,-246 628.18,-246 628.18,-234 628.18,-234 628.18,-228 634.18,-222 640.18,-222 640.18,-222 760.09,-222 760.09,-222 766.09,-222 772.09,-228 772.09,-234 772.09,-234 772.09,-246 772.09,-246 772.09,-252 766.09,-258 760.09,-258"/>
+<text xml:space="preserve" text-anchor="start" x="638.26" y="-240.2" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">새 판 저장</text>
+<text xml:space="preserve" text-anchor="start" x="638.26" y="-229.05" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">기준 판이 그대로일 때만</text>
+</g>
+<!-- u09&#45;&gt;v -->
+<g id="edge9" class="edge">
+<title>u09&#45;&gt;v</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M534.69,-240C534.69,-240 619.52,-240 619.52,-240"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="626.52,-240 619.52,-243.15 624.42,-240.08 619.52,-240.08 619.52,-240 619.52,-239.93 624.42,-239.93 619.52,-236.85 626.52,-240"/>
+</g>
+<!-- ai -->
+<g id="node9" class="node">
+<title>ai</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1016.62,-104.57C1016.62,-104.57 877.97,-104.57 877.97,-104.57 871.97,-104.57 865.97,-98.57 865.97,-92.57 865.97,-92.57 865.97,-57.43 865.97,-57.43 865.97,-51.43 871.97,-45.43 877.97,-45.43 877.97,-45.43 1016.62,-45.43 1016.62,-45.43 1022.62,-45.43 1028.62,-51.43 1028.62,-57.43 1028.62,-57.43 1028.62,-92.57 1028.62,-92.57 1028.62,-98.57 1022.62,-104.57 1016.62,-104.57"/>
+<image xlink:href="ic_spark.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="878.17" y="-92"/>
+<text xml:space="preserve" text-anchor="start" x="909.17" y="-79.5" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">AI 모델</text>
+<text xml:space="preserve" text-anchor="start" x="909.17" y="-57.75" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">같은 행위자 · 시험 중</text>
+</g>
+<!-- g&#45;&gt;ai -->
+<g id="edge10" class="edge">
+<title>g&#45;&gt;ai</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M777.32,-52.72C805.37,-52.72 837.14,-52.72 865.57,-52.72"/>
+</g>
+<!-- q&#45;&gt;ai -->
+<g id="edge11" class="edge">
+<title>q&#45;&gt;ai</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M798.18,-97.28C820.55,-97.28 844.09,-97.28 865.69,-97.28"/>
+</g>
+</g>
+</svg><svg x="296.9" y="870.0" width="1184.0" height="442.0" viewBox="0 0 1184.0 442.0" overflow="visible">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(10.8 431.37)">
+<title>UC</title>
+<g id="clust1" class="cluster">
+<title>cluster_g</title>
+<path fill="#f1f4f8" stroke="#dbe0ea" d="M20,-59.57C20,-59.57 795.23,-59.57 795.23,-59.57 801.23,-59.57 807.23,-65.57 807.23,-71.57 807.23,-71.57 807.23,-400.57 807.23,-400.57 807.23,-406.57 801.23,-412.57 795.23,-412.57 795.23,-412.57 20,-412.57 20,-412.57 14,-412.57 8,-406.57 8,-400.57 8,-400.57 8,-71.57 8,-71.57 8,-65.57 14,-59.57 20,-59.57"/>
+<text xml:space="preserve" text-anchor="start" x="16" y="-398.82" font-family="NanumGothicCoding" font-size="12.00" fill="#727d90">C · 일정 조율 — 전부 통과할 때까지 다시 맞춘다</text>
+</g>
+<!-- c -->
+<g id="node1" class="node">
+<title>c</title>
+<path fill="#f8f3ea" stroke="#d6b680" d="M218.16,-243.57C218.16,-243.57 36,-243.57 36,-243.57 30,-243.57 24,-237.57 24,-231.57 24,-231.57 24,-219.57 24,-219.57 24,-213.57 30,-207.57 36,-207.57 36,-207.57 218.16,-207.57 218.16,-207.57 224.16,-207.57 230.16,-213.57 230.16,-219.57 230.16,-219.57 230.16,-231.57 230.16,-231.57 230.16,-237.57 224.16,-243.57 218.16,-243.57"/>
+<text xml:space="preserve" text-anchor="start" x="34.08" y="-225.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;12 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="70.83" y="-225.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">일정 조율</text>
+<text xml:space="preserve" text-anchor="start" x="34.08" y="-214.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">UC&#45;07 · 08 · 10 · 11 이 반드시 부른다</text>
+</g>
+<!-- e3 -->
+<g id="node2" class="node">
+<title>e3</title>
+<path fill="#ffffff" stroke="#d6b680" stroke-dasharray="5,2" d="M485.94,-111.57C485.94,-111.57 352.53,-111.57 352.53,-111.57 346.53,-111.57 340.53,-105.57 340.53,-99.57 340.53,-99.57 340.53,-87.57 340.53,-87.57 340.53,-81.57 346.53,-75.57 352.53,-75.57 352.53,-75.57 485.94,-75.57 485.94,-75.57 491.94,-75.57 497.94,-81.57 497.94,-87.57 497.94,-87.57 497.94,-99.57 497.94,-99.57 497.94,-105.57 491.94,-111.57 485.94,-111.57"/>
+<text xml:space="preserve" text-anchor="start" x="350.61" y="-93.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">못 맞춤 알리기</text>
+<text xml:space="preserve" text-anchor="start" x="350.61" y="-82.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">후보 소진 · 조건 푼 안 제시</text>
+</g>
+<!-- c&#45;&gt;e3 -->
+<g id="edge1" class="edge">
+<title>c&#45;&gt;e3</title>
+<path fill="none" stroke="#d6b680" stroke-width="1.15" stroke-dasharray="5,2" d="M126.88,-198.81C126.88,-198.81 126.88,-93.57 126.88,-93.57 126.88,-93.57 253.54,-93.57 340.12,-93.57"/>
+<polygon fill="#d6b680" stroke="#d6b680" stroke-width="1.15" points="126.88,-205.81 123.73,-198.81 126.81,-203.72 126.81,-198.81 126.88,-198.81 126.96,-198.81 126.96,-203.72 130.03,-198.81 126.88,-205.81"/>
+</g>
+<!-- a1 -->
+<g id="node3" class="node">
+<title>a1</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M487.07,-177.57C487.07,-177.57 351.41,-177.57 351.41,-177.57 345.41,-177.57 339.41,-171.57 339.41,-165.57 339.41,-165.57 339.41,-153.57 339.41,-153.57 339.41,-147.57 345.41,-141.57 351.41,-141.57 351.41,-141.57 487.07,-141.57 487.07,-141.57 493.07,-141.57 499.07,-147.57 499.07,-153.57 499.07,-153.57 499.07,-165.57 499.07,-165.57 499.07,-171.57 493.07,-177.57 487.07,-177.57"/>
+<text xml:space="preserve" text-anchor="start" x="349.49" y="-159.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">영향받는 항목 추리기</text>
+<text xml:space="preserve" text-anchor="start" x="349.49" y="-148.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">바로 다음 · 오늘 · 이후 전부</text>
+</g>
+<!-- c&#45;&gt;a1 -->
+<g id="edge2" class="edge">
+<title>c&#45;&gt;a1</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M230.56,-216.57C286.75,-216.57 344.88,-216.57 344.88,-216.57 344.88,-216.57 344.88,-186.32 344.88,-186.32"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="344.88,-179.32 348.03,-186.32 344.96,-181.42 344.96,-186.32 344.88,-186.32 344.81,-186.32 344.81,-181.42 341.73,-186.32 344.88,-179.32"/>
+</g>
+<!-- a2 -->
+<g id="node4" class="node">
+<title>a2</title>
+<path fill="#f8f3ea" stroke="#d6b680" d="M522.69,-309.57C522.69,-309.57 315.78,-309.57 315.78,-309.57 309.78,-309.57 303.78,-303.57 303.78,-297.57 303.78,-297.57 303.78,-285.57 303.78,-285.57 303.78,-279.57 309.78,-273.57 315.78,-273.57 315.78,-273.57 522.69,-273.57 522.69,-273.57 528.69,-273.57 534.69,-279.57 534.69,-285.57 534.69,-285.57 534.69,-297.57 534.69,-297.57 534.69,-303.57 528.69,-309.57 522.69,-309.57"/>
+<text xml:space="preserve" text-anchor="start" x="313.86" y="-291.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">담당 에이전트 점검</text>
+<text xml:space="preserve" text-anchor="start" x="313.86" y="-280.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">액티비티 → 요식 → 이동 · 앞 초안을 넘김</text>
+</g>
+<!-- c&#45;&gt;a2 -->
+<g id="edge3" class="edge">
+<title>c&#45;&gt;a2</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M230.47,-234.57C277.09,-234.57 321.88,-234.57 321.88,-234.57 321.88,-234.57 321.88,-264.82 321.88,-264.82"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="321.88,-271.82 318.73,-264.82 321.81,-269.72 321.81,-264.82 321.88,-264.82 321.96,-264.82 321.96,-269.72 325.03,-264.82 321.88,-271.82"/>
+</g>
+<!-- a3 -->
+<g id="node5" class="node">
+<title>a3</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M528.32,-375.57C528.32,-375.57 310.16,-375.57 310.16,-375.57 304.16,-375.57 298.16,-369.57 298.16,-363.57 298.16,-363.57 298.16,-351.57 298.16,-351.57 298.16,-345.57 304.16,-339.57 310.16,-339.57 310.16,-339.57 528.32,-339.57 528.32,-339.57 534.32,-339.57 540.32,-345.57 540.32,-351.57 540.32,-351.57 540.32,-363.57 540.32,-363.57 540.32,-369.57 534.32,-375.57 528.32,-375.57"/>
+<text xml:space="preserve" text-anchor="start" x="308.24" y="-357.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">적용</text>
+<text xml:space="preserve" text-anchor="start" x="308.24" y="-346.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">근거 대조(기준 판 · 항목 · 장소) → 새 판 1번</text>
+</g>
+<!-- c&#45;&gt;a3 -->
+<g id="edge4" class="edge">
+<title>c&#45;&gt;a3</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M126.88,-243.92C126.88,-280.19 126.88,-357.57 126.88,-357.57 126.88,-357.57 289.39,-357.57 289.39,-357.57"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="296.39,-357.57 289.39,-360.72 294.29,-357.65 289.39,-357.65 289.39,-357.57 289.39,-357.5 294.29,-357.5 289.39,-354.42 296.39,-357.57"/>
+</g>
+<!-- a4 -->
+<g id="node6" class="node">
+<title>a4</title>
+<path fill="#f8f3ea" stroke="#d6b680" d="M475.82,-243.57C475.82,-243.57 362.66,-243.57 362.66,-243.57 356.66,-243.57 350.66,-237.57 350.66,-231.57 350.66,-231.57 350.66,-219.57 350.66,-219.57 350.66,-213.57 356.66,-207.57 362.66,-207.57 362.66,-207.57 475.82,-207.57 475.82,-207.57 481.82,-207.57 487.82,-213.57 487.82,-219.57 487.82,-219.57 487.82,-231.57 487.82,-231.57 487.82,-237.57 481.82,-243.57 475.82,-243.57"/>
+<text xml:space="preserve" text-anchor="start" x="360.74" y="-225.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;14 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="397.49" y="-225.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">변경 알리기</text>
+<text xml:space="preserve" text-anchor="start" x="360.74" y="-214.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">알림 1번 · 계획서 새 판</text>
+</g>
+<!-- c&#45;&gt;a4 -->
+<g id="edge5" class="edge">
+<title>c&#45;&gt;a4</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M230.5,-225.57C230.5,-225.57 341.87,-225.57 341.87,-225.57"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="348.87,-225.57 341.87,-228.72 346.78,-225.65 341.87,-225.65 341.87,-225.57 341.87,-225.5 346.78,-225.5 341.87,-222.42 348.87,-225.57"/>
+</g>
+<!-- x1 -->
+<g id="node7" class="node">
+<title>x1</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M768.73,-309.57C768.73,-309.57 630.82,-309.57 630.82,-309.57 624.82,-309.57 618.82,-303.57 618.82,-297.57 618.82,-297.57 618.82,-285.57 618.82,-285.57 618.82,-279.57 624.82,-273.57 630.82,-273.57 630.82,-273.57 768.73,-273.57 768.73,-273.57 774.73,-273.57 780.73,-279.57 780.73,-285.57 780.73,-285.57 780.73,-297.57 780.73,-297.57 780.73,-303.57 774.73,-309.57 768.73,-309.57"/>
+<text xml:space="preserve" text-anchor="start" x="628.9" y="-291.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">액티비티 점검</text>
+<text xml:space="preserve" text-anchor="start" x="628.9" y="-280.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">운영일 · 시간 · 날씨 · 대기질</text>
+</g>
+<!-- a2&#45;&gt;x1 -->
+<g id="edge6" class="edge">
+<title>a2&#45;&gt;x1</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M547.7,-291.57C547.7,-291.57 618.56,-291.57 618.56,-291.57"/>
+<polygon fill="none" stroke="#606b7e" stroke-width="1.15" points="547.7,-287.72 536.7,-291.57 547.7,-295.42 547.7,-287.72"/>
+</g>
+<!-- x2 -->
+<g id="node8" class="node">
+<title>x2</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M769.48,-111.57C769.48,-111.57 630.07,-111.57 630.07,-111.57 624.07,-111.57 618.07,-105.57 618.07,-99.57 618.07,-99.57 618.07,-87.57 618.07,-87.57 618.07,-81.57 624.07,-75.57 630.07,-75.57 630.07,-75.57 769.48,-75.57 769.48,-75.57 775.48,-75.57 781.48,-81.57 781.48,-87.57 781.48,-87.57 781.48,-99.57 781.48,-99.57 781.48,-105.57 775.48,-111.57 769.48,-111.57"/>
+<text xml:space="preserve" text-anchor="start" x="628.15" y="-93.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">요식 점검</text>
+<text xml:space="preserve" text-anchor="start" x="628.15" y="-82.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">영업 · 브레이크 · 라스트오더</text>
+</g>
+<!-- a2&#45;&gt;x2 -->
+<g id="edge7" class="edge">
+<title>a2&#45;&gt;x2</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M512.88,-260.56C512.88,-260.56 512.88,-93.57 512.88,-93.57 512.88,-93.57 567.58,-93.57 617.8,-93.57"/>
+<polygon fill="none" stroke="#606b7e" stroke-width="1.15" points="509.03,-260.56 512.88,-271.56 516.73,-260.56 509.03,-260.56"/>
+</g>
+<!-- x3 -->
+<g id="node9" class="node">
+<title>x3</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M767.98,-177.57C767.98,-177.57 631.57,-177.57 631.57,-177.57 625.57,-177.57 619.57,-171.57 619.57,-165.57 619.57,-165.57 619.57,-153.57 619.57,-153.57 619.57,-147.57 625.57,-141.57 631.57,-141.57 631.57,-141.57 767.98,-141.57 767.98,-141.57 773.98,-141.57 779.98,-147.57 779.98,-153.57 779.98,-153.57 779.98,-165.57 779.98,-165.57 779.98,-171.57 773.98,-177.57 767.98,-177.57"/>
+<text xml:space="preserve" text-anchor="start" x="629.65" y="-159.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">이동 재판정</text>
+<text xml:space="preserve" text-anchor="start" x="629.65" y="-148.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">시간표로 앞뒤 구간 제시간?</text>
+</g>
+<!-- a2&#45;&gt;x3 -->
+<g id="edge8" class="edge">
+<title>a2&#45;&gt;x3</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M520.88,-260.48C520.88,-260.48 520.88,-159.57 520.88,-159.57 520.88,-159.57 571.74,-159.57 619.22,-159.57"/>
+<polygon fill="none" stroke="#606b7e" stroke-width="1.15" points="517.03,-260.48 520.88,-271.48 524.73,-260.48 517.03,-260.48"/>
+</g>
+<!-- e1 -->
+<g id="node10" class="node">
+<title>e1</title>
+<path fill="#ffffff" stroke="#d6b680" stroke-dasharray="5,2" d="M766.48,-243.57C766.48,-243.57 633.07,-243.57 633.07,-243.57 627.07,-243.57 621.07,-237.57 621.07,-231.57 621.07,-231.57 621.07,-219.57 621.07,-219.57 621.07,-213.57 627.07,-207.57 633.07,-207.57 633.07,-207.57 766.48,-207.57 766.48,-207.57 772.48,-207.57 778.48,-213.57 778.48,-219.57 778.48,-219.57 778.48,-231.57 778.48,-231.57 778.48,-237.57 772.48,-243.57 766.48,-243.57"/>
+<text xml:space="preserve" text-anchor="start" x="631.15" y="-225.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">다음 후보로 다시</text>
+<text xml:space="preserve" text-anchor="start" x="631.15" y="-214.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">전부 통과 못 함 · 후보 남음</text>
+</g>
+<!-- a2&#45;&gt;e1 -->
+<g id="edge9" class="edge">
+<title>a2&#45;&gt;e1</title>
+<path fill="none" stroke="#d6b680" stroke-width="1.15" stroke-dasharray="5,2" d="M527.88,-264.84C527.88,-264.84 527.88,-231.57 527.88,-231.57 527.88,-231.57 575.51,-231.57 620.62,-231.57"/>
+<polygon fill="#d6b680" stroke="#d6b680" stroke-width="1.15" points="527.88,-271.84 524.73,-264.84 527.81,-269.74 527.81,-264.84 527.88,-264.84 527.96,-264.84 527.96,-269.74 531.03,-264.84 527.88,-271.84"/>
+</g>
+<!-- e2 -->
+<g id="node11" class="node">
+<title>e2</title>
+<path fill="#ffffff" stroke="#d6b680" stroke-dasharray="5,2" d="M779.23,-375.57C779.23,-375.57 620.32,-375.57 620.32,-375.57 614.32,-375.57 608.32,-369.57 608.32,-363.57 608.32,-363.57 608.32,-351.57 608.32,-351.57 608.32,-345.57 614.32,-339.57 620.32,-339.57 620.32,-339.57 779.23,-339.57 779.23,-339.57 785.23,-339.57 791.23,-345.57 791.23,-351.57 791.23,-351.57 791.23,-363.57 791.23,-363.57 791.23,-369.57 785.23,-375.57 779.23,-375.57"/>
+<text xml:space="preserve" text-anchor="start" x="618.4" y="-357.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;13 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="655.15" y="-357.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">바꾸기 전에 묻기</text>
+<text xml:space="preserve" text-anchor="start" x="618.4" y="-346.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">「먼저 물어봐」 · 고정 · 안전 경보</text>
+</g>
+<!-- a3&#45;&gt;e2 -->
+<g id="edge10" class="edge">
+<title>a3&#45;&gt;e2</title>
+<path fill="none" stroke="#d6b680" stroke-width="1.15" stroke-dasharray="5,2" d="M549.06,-357.57C549.06,-357.57 608.21,-357.57 608.21,-357.57"/>
+<polygon fill="#d6b680" stroke="#d6b680" stroke-width="1.15" points="542.06,-357.57 549.06,-354.42 544.16,-357.5 549.06,-357.5 549.06,-357.57 549.06,-357.65 544.16,-357.65 549.06,-360.72 542.06,-357.57"/>
+</g>
+<!-- discord -->
+<g id="node13" class="node">
+<title>discord</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1122.38,-59.14C1122.38,-59.14 899.73,-59.14 899.73,-59.14 893.73,-59.14 887.73,-53.14 887.73,-47.14 887.73,-47.14 887.73,-12 887.73,-12 887.73,-6 893.73,0 899.73,0 899.73,0 1122.38,0 1122.38,0 1128.38,0 1134.38,-6 1134.38,-12 1134.38,-12 1134.38,-47.14 1134.38,-47.14 1134.38,-53.14 1128.38,-59.14 1122.38,-59.14"/>
+<image xlink:href="ic_bell.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="899.93" y="-46.57"/>
+<text xml:space="preserve" text-anchor="start" x="930.93" y="-34.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">알림 채널</text>
+<text xml:space="preserve" text-anchor="start" x="930.93" y="-12.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">디스코드 — 지금은 팀 시연 채널 하나</text>
+</g>
+<!-- a4&#45;&gt;discord -->
+<g id="edge14" class="edge">
+<title>a4&#45;&gt;discord</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M487.93,-219.57C498.44,-219.57 505.88,-219.57 505.88,-219.57 505.88,-219.57 505.88,-29.57 505.88,-29.57 505.88,-29.57 737.92,-29.57 887.48,-29.57"/>
+</g>
+<!-- info -->
+<g id="node12" class="node">
+<title>info</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1150.88,-189.14C1150.88,-189.14 871.23,-189.14 871.23,-189.14 865.23,-189.14 859.23,-183.14 859.23,-177.14 859.23,-177.14 859.23,-142 859.23,-142 859.23,-136 865.23,-130 871.23,-130 871.23,-130 1150.88,-130 1150.88,-130 1156.88,-130 1162.88,-136 1162.88,-142 1162.88,-142 1162.88,-177.14 1162.88,-177.14 1162.88,-183.14 1156.88,-189.14 1150.88,-189.14"/>
+<image xlink:href="ic_db.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="871.43" y="-176.57"/>
+<text xml:space="preserve" text-anchor="start" x="902.43" y="-164.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">장소 · 영업 · 교통 정보</text>
+<text xml:space="preserve" text-anchor="start" x="902.43" y="-142.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">같은 행위자 · 관광공사 · 카카오 · Google · 시간표</text>
+</g>
+<!-- x1&#45;&gt;info -->
+<g id="edge11" class="edge">
+<title>x1&#45;&gt;info</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M781.11,-291.57C873.29,-291.57 1010.88,-291.57 1010.88,-291.57 1010.88,-291.57 1010.88,-228.47 1010.88,-189.52"/>
+</g>
+<!-- x2&#45;&gt;info -->
+<g id="edge12" class="edge">
+<title>x2&#45;&gt;info</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M781.73,-93.57C826.89,-93.57 873.88,-93.57 873.88,-93.57 873.88,-93.57 873.88,-112.2 873.88,-129.66"/>
+</g>
+<!-- x3&#45;&gt;info -->
+<g id="edge13" class="edge">
+<title>x3&#45;&gt;info</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M780.34,-159.57C804.48,-159.57 831.79,-159.57 858.95,-159.57"/>
+</g>
+</g>
+</svg><svg x="58.8" y="1352.0" width="1308.0" height="533.0" viewBox="0 0 1308.0 533.0" overflow="visible">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(10.8 522.37)">
+<title>UC</title>
+<g id="clust2" class="cluster">
+<title>cluster_g</title>
+<path fill="#f1f4f8" stroke="#dbe0ea" d="M258.15,-84.57C258.15,-84.57 983.13,-84.57 983.13,-84.57 989.13,-84.57 995.13,-90.57 995.13,-96.57 995.13,-96.57 995.13,-491.57 995.13,-491.57 995.13,-497.57 989.13,-503.57 983.13,-503.57 983.13,-503.57 258.15,-503.57 258.15,-503.57 252.15,-503.57 246.15,-497.57 246.15,-491.57 246.15,-491.57 246.15,-96.57 246.15,-96.57 246.15,-90.57 252.15,-84.57 258.15,-84.57"/>
+<text xml:space="preserve" text-anchor="start" x="254.15" y="-489.82" font-family="NanumGothicCoding" font-size="12.00" fill="#727d90">D · 자동 관리 — 시간이 깨워 여행 끝까지 돈다</text>
+</g>
+<!-- timer -->
+<g id="node1" class="node">
+<title>timer</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M182.15,-288.14C182.15,-288.14 12,-288.14 12,-288.14 6,-288.14 0,-282.14 0,-276.14 0,-276.14 0,-241 0,-241 0,-235 6,-229 12,-229 12,-229 182.15,-229 182.15,-229 188.15,-229 194.15,-235 194.15,-241 194.15,-241 194.15,-276.14 194.15,-276.14 194.15,-282.14 188.15,-288.14 182.15,-288.14"/>
+<image xlink:href="ic_clock.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="12.2" y="-275.57"/>
+<text xml:space="preserve" text-anchor="start" x="43.2" y="-263.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">시계</text>
+<text xml:space="preserve" text-anchor="start" x="43.2" y="-241.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">3분 · 03:00 · 알림 시각 · 1분</text>
+</g>
+<!-- u10 -->
+<g id="node2" class="node">
+<title>u10</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M425.19,-400.57C425.19,-400.57 296.28,-400.57 296.28,-400.57 290.28,-400.57 284.28,-394.57 284.28,-388.57 284.28,-388.57 284.28,-376.57 284.28,-376.57 284.28,-370.57 290.28,-364.57 296.28,-364.57 296.28,-364.57 425.19,-364.57 425.19,-364.57 431.19,-364.57 437.19,-370.57 437.19,-376.57 437.19,-376.57 437.19,-388.57 437.19,-388.57 437.19,-394.57 431.19,-400.57 425.19,-400.57"/>
+<text xml:space="preserve" text-anchor="start" x="294.36" y="-382.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;10 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="331.11" y="-382.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">외부 변화 감시</text>
+<text xml:space="preserve" text-anchor="start" x="294.36" y="-371.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">3분마다</text>
+</g>
+<!-- timer&#45;&gt;u10 -->
+<g id="edge1" class="edge">
+<title>timer&#45;&gt;u10</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M97.28,-288.59C97.28,-325.29 97.28,-382.57 97.28,-382.57 97.28,-382.57 206.06,-382.57 283.82,-382.57"/>
+</g>
+<!-- u11 -->
+<g id="node3" class="node">
+<title>u11</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M447.31,-318.57C447.31,-318.57 274.15,-318.57 274.15,-318.57 268.15,-318.57 262.15,-312.57 262.15,-306.57 262.15,-306.57 262.15,-294.57 262.15,-294.57 262.15,-288.57 268.15,-282.57 274.15,-282.57 274.15,-282.57 447.31,-282.57 447.31,-282.57 453.31,-282.57 459.31,-288.57 459.31,-294.57 459.31,-294.57 459.31,-306.57 459.31,-306.57 459.31,-312.57 453.31,-318.57 447.31,-318.57"/>
+<text xml:space="preserve" text-anchor="start" x="272.23" y="-300.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;11 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="308.98" y="-300.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">새벽 정기 점검</text>
+<text xml:space="preserve" text-anchor="start" x="272.23" y="-289.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">03:00~08:00 · 항목 · 날짜마다 한 번</text>
+</g>
+<!-- timer&#45;&gt;u11 -->
+<g id="edge2" class="edge">
+<title>timer&#45;&gt;u11</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M194.5,-275.57C233.46,-275.57 269.28,-275.57 269.28,-275.57 269.28,-275.57 269.28,-278.39 269.28,-282.14"/>
+</g>
+<!-- u15 -->
+<g id="node4" class="node">
+<title>u15</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M432.31,-235.57C432.31,-235.57 289.15,-235.57 289.15,-235.57 283.15,-235.57 277.15,-229.57 277.15,-223.57 277.15,-223.57 277.15,-211.57 277.15,-211.57 277.15,-205.57 283.15,-199.57 289.15,-199.57 289.15,-199.57 432.31,-199.57 432.31,-199.57 438.31,-199.57 444.31,-205.57 444.31,-211.57 444.31,-211.57 444.31,-223.57 444.31,-223.57 444.31,-229.57 438.31,-235.57 432.31,-235.57"/>
+<text xml:space="preserve" text-anchor="start" x="287.23" y="-217.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;15 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="323.98" y="-217.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">일정 알림 보내기</text>
+<text xml:space="preserve" text-anchor="start" x="287.23" y="-206.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">하루 시작 · 다음 일정 · 출발</text>
+</g>
+<!-- timer&#45;&gt;u15 -->
+<g id="edge3" class="edge">
+<title>timer&#45;&gt;u15</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M194.34,-252.07C269.31,-252.07 360.28,-252.07 360.28,-252.07 360.28,-252.07 360.28,-244.23 360.28,-236.03"/>
+</g>
+<!-- u16 -->
+<g id="node5" class="node">
+<title>u16</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M428.19,-153.57C428.19,-153.57 293.28,-153.57 293.28,-153.57 287.28,-153.57 281.28,-147.57 281.28,-141.57 281.28,-141.57 281.28,-129.57 281.28,-129.57 281.28,-123.57 287.28,-117.57 293.28,-117.57 293.28,-117.57 428.19,-117.57 428.19,-117.57 434.19,-117.57 440.19,-123.57 440.19,-129.57 440.19,-129.57 440.19,-141.57 440.19,-141.57 440.19,-147.57 434.19,-153.57 428.19,-153.57"/>
+<text xml:space="preserve" text-anchor="start" x="291.36" y="-135.77" font-family="NanumGothicCoding" font-size="11.00" fill="#a8720c">UC&#45;16 &#160;</text>
+<text xml:space="preserve" text-anchor="start" x="328.11" y="-135.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">오류 알림 받기</text>
+<text xml:space="preserve" text-anchor="start" x="291.36" y="-124.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">상시 작업이 연속 실패할 때</text>
+</g>
+<!-- timer&#45;&gt;u16 -->
+<g id="edge4" class="edge">
+<title>timer&#45;&gt;u16</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M97.28,-228.8C97.28,-192.39 97.28,-135.57 97.28,-135.57 97.28,-135.57 203.43,-135.57 280.97,-135.57"/>
+</g>
+<!-- w2 -->
+<g id="node6" class="node">
+<title>w2</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M713.22,-400.57C713.22,-400.57 539.31,-400.57 539.31,-400.57 533.31,-400.57 527.31,-394.57 527.31,-388.57 527.31,-388.57 527.31,-376.57 527.31,-376.57 527.31,-370.57 533.31,-364.57 539.31,-364.57 539.31,-364.57 713.22,-364.57 713.22,-364.57 719.22,-364.57 725.22,-370.57 725.22,-376.57 725.22,-376.57 725.22,-388.57 725.22,-388.57 725.22,-394.57 719.22,-400.57 713.22,-400.57"/>
+<text xml:space="preserve" text-anchor="start" x="537.39" y="-382.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">바뀐 값에 걸린 항목 고르기</text>
+<text xml:space="preserve" text-anchor="start" x="537.39" y="-371.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">변화 없으면 사건 0 · 알림 0</text>
+</g>
+<!-- u10&#45;&gt;w2 -->
+<g id="edge5" class="edge">
+<title>u10&#45;&gt;w2</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M437.53,-382.57C437.53,-382.57 518.46,-382.57 518.46,-382.57"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="525.46,-382.57 518.46,-385.72 523.36,-382.65 518.46,-382.65 518.46,-382.57 518.46,-382.5 523.36,-382.5 518.46,-379.42 525.46,-382.57"/>
+</g>
+<!-- w1 -->
+<g id="node7" class="node">
+<title>w1</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M688.47,-466.57C688.47,-466.57 564.06,-466.57 564.06,-466.57 558.06,-466.57 552.06,-460.57 552.06,-454.57 552.06,-454.57 552.06,-442.57 552.06,-442.57 552.06,-436.57 558.06,-430.57 564.06,-430.57 564.06,-430.57 688.47,-430.57 688.47,-430.57 694.47,-430.57 700.47,-436.57 700.47,-442.57 700.47,-442.57 700.47,-454.57 700.47,-454.57 700.47,-460.57 694.47,-466.57 688.47,-466.57"/>
+<text xml:space="preserve" text-anchor="start" x="562.14" y="-448.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">소스 수집</text>
+<text xml:space="preserve" text-anchor="start" x="562.14" y="-437.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">소스마다 한 번 · 값 · 지문</text>
+</g>
+<!-- u10&#45;&gt;w1 -->
+<g id="edge6" class="edge">
+<title>u10&#45;&gt;w1</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M360.28,-400.95C360.28,-420.48 360.28,-448.57 360.28,-448.57 360.28,-448.57 543.42,-448.57 543.42,-448.57"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="550.42,-448.57 543.42,-451.72 548.32,-448.65 543.42,-448.65 543.42,-448.57 543.42,-448.5 548.32,-448.5 543.42,-445.42 550.42,-448.57"/>
+</g>
+<!-- o1 -->
+<g id="node9" class="node">
+<title>o1</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M673.1,-334.57C673.1,-334.57 579.44,-334.57 579.44,-334.57 573.44,-334.57 567.44,-328.57 567.44,-322.57 567.44,-322.57 567.44,-310.57 567.44,-310.57 567.44,-304.57 573.44,-298.57 579.44,-298.57 579.44,-298.57 673.1,-298.57 673.1,-298.57 679.1,-298.57 685.1,-304.57 685.1,-310.57 685.1,-310.57 685.1,-322.57 685.1,-322.57 685.1,-328.57 679.1,-334.57 673.1,-334.57"/>
+<text xml:space="preserve" text-anchor="start" x="577.52" y="-316.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">영업시간 조회</text>
+<text xml:space="preserve" text-anchor="start" x="577.52" y="-305.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">계획한 시각에 여나</text>
+</g>
+<!-- u11&#45;&gt;o1 -->
+<g id="edge8" class="edge">
+<title>u11&#45;&gt;o1</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M459.61,-308.57C459.61,-308.57 558.64,-308.57 558.64,-308.57"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="565.64,-308.57 558.64,-311.72 563.54,-308.65 558.64,-308.65 558.64,-308.57 558.64,-308.5 563.54,-308.5 558.64,-305.42 565.64,-308.57"/>
+</g>
+<!-- n1 -->
+<g id="node10" class="node">
+<title>n1</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M686.22,-268.57C686.22,-268.57 566.31,-268.57 566.31,-268.57 560.31,-268.57 554.31,-262.57 554.31,-256.57 554.31,-256.57 554.31,-244.57 554.31,-244.57 554.31,-238.57 560.31,-232.57 566.31,-232.57 566.31,-232.57 686.22,-232.57 686.22,-232.57 692.22,-232.57 698.22,-238.57 698.22,-244.57 698.22,-244.57 698.22,-256.57 698.22,-256.57 698.22,-262.57 692.22,-268.57 686.22,-268.57"/>
+<text xml:space="preserve" text-anchor="start" x="564.39" y="-250.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">출발 시각 계산</text>
+<text xml:space="preserve" text-anchor="start" x="564.39" y="-239.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">다음 시작 − 이동 − 여유</text>
+</g>
+<!-- u15&#45;&gt;n1 -->
+<g id="edge11" class="edge">
+<title>u15&#45;&gt;n1</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M444.75,-225.07C522.55,-225.07 626.28,-225.07 626.28,-225.07 626.28,-225.07 626.28,-225.79 626.28,-225.79"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="626.28,-230.91 623.13,-223.91 626.21,-228.81 626.21,-223.91 626.28,-223.91 626.36,-223.91 626.36,-228.81 629.43,-223.91 626.28,-230.91"/>
+</g>
+<!-- n2 -->
+<g id="node11" class="node">
+<title>n2</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M704.22,-202.57C704.22,-202.57 548.31,-202.57 548.31,-202.57 542.31,-202.57 536.31,-196.57 536.31,-190.57 536.31,-190.57 536.31,-178.57 536.31,-178.57 536.31,-172.57 542.31,-166.57 548.31,-166.57 548.31,-166.57 704.22,-166.57 704.22,-166.57 710.22,-166.57 716.22,-172.57 716.22,-178.57 716.22,-178.57 716.22,-190.57 716.22,-190.57 716.22,-196.57 710.22,-202.57 704.22,-202.57"/>
+<text xml:space="preserve" text-anchor="start" x="546.39" y="-184.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">문구틀 번역</text>
+<text xml:space="preserve" text-anchor="start" x="546.39" y="-173.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">언어마다 처음 한 번 · 값은 원값</text>
+</g>
+<!-- u15&#45;&gt;n2 -->
+<g id="edge9" class="edge">
+<title>u15&#45;&gt;n2</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M444.63,-217.57C493.39,-217.57 545.28,-217.57 545.28,-217.57 545.28,-217.57 545.28,-211.4 545.28,-211.4"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="545.28,-204.4 548.43,-211.4 545.36,-206.5 545.36,-211.4 545.28,-211.4 545.21,-211.4 545.21,-206.5 542.13,-211.4 545.28,-204.4"/>
+</g>
+<!-- n3 -->
+<g id="node12" class="node">
+<title>n3</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M678.35,-136.57C678.35,-136.57 574.19,-136.57 574.19,-136.57 568.19,-136.57 562.19,-130.57 562.19,-124.57 562.19,-124.57 562.19,-112.57 562.19,-112.57 562.19,-106.57 568.19,-100.57 574.19,-100.57 574.19,-100.57 678.35,-100.57 678.35,-100.57 684.35,-100.57 690.35,-106.57 690.35,-112.57 690.35,-112.57 690.35,-124.57 690.35,-124.57 690.35,-130.57 684.35,-136.57 678.35,-136.57"/>
+<text xml:space="preserve" text-anchor="start" x="572.27" y="-118.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">알림 배달</text>
+<text xml:space="preserve" text-anchor="start" x="572.27" y="-107.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">3번까지 다시 · 중복 0</text>
+</g>
+<!-- u15&#45;&gt;n3 -->
+<g id="edge10" class="edge">
+<title>u15&#45;&gt;n3</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" stroke-dasharray="5,2" d="M444.79,-210.07C449.45,-210.07 452.28,-210.07 452.28,-210.07 452.28,-210.07 452.28,-127.07 452.28,-127.07 452.28,-127.07 553.57,-127.07 553.57,-127.07"/>
+<polygon fill="#606b7e" stroke="#606b7e" stroke-width="1.15" points="560.57,-127.07 553.57,-130.22 558.47,-127.15 553.57,-127.15 553.57,-127.07 553.57,-127 558.47,-127 553.57,-123.92 560.57,-127.07"/>
+</g>
+<!-- operator -->
+<g id="node17" class="node">
+<title>operator</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1272.4,-59.14C1272.4,-59.14 1061,-59.14 1061,-59.14 1055,-59.14 1049,-53.14 1049,-47.14 1049,-47.14 1049,-12 1049,-12 1049,-6 1055,0 1061,0 1061,0 1272.4,0 1272.4,0 1278.4,0 1284.4,-6 1284.4,-12 1284.4,-12 1284.4,-47.14 1284.4,-47.14 1284.4,-53.14 1278.4,-59.14 1272.4,-59.14"/>
+<image xlink:href="ic_person.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="1061.2" y="-46.57"/>
+<text xml:space="preserve" text-anchor="start" x="1092.2" y="-34.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">운영자</text>
+<text xml:space="preserve" text-anchor="start" x="1092.2" y="-12.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">오류 알림만 — 고객 건은 받지 않음</text>
+</g>
+<!-- u16&#45;&gt;operator -->
+<g id="edge17" class="edge">
+<title>u16&#45;&gt;operator</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M440.63,-142.35C623.59,-142.35 1057.28,-142.35 1057.28,-142.35 1057.28,-142.35 1057.28,-92.91 1057.28,-59.5"/>
+</g>
+<!-- w3 -->
+<g id="node8" class="node">
+<title>w3</title>
+<path fill="#ffffff" stroke="#d6b680" stroke-dasharray="5,2" d="M967.13,-466.57C967.13,-466.57 805.22,-466.57 805.22,-466.57 799.22,-466.57 793.22,-460.57 793.22,-454.57 793.22,-454.57 793.22,-442.57 793.22,-442.57 793.22,-436.57 799.22,-430.57 805.22,-430.57 805.22,-430.57 967.13,-430.57 967.13,-430.57 973.13,-430.57 979.13,-436.57 979.13,-442.57 979.13,-442.57 979.13,-454.57 979.13,-454.57 979.13,-460.57 973.13,-466.57 967.13,-466.57"/>
+<text xml:space="preserve" text-anchor="start" x="803.3" y="-448.77" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">대체 소스로 다시 읽기</text>
+<text xml:space="preserve" text-anchor="start" x="803.3" y="-437.62" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">1차 실패 시 · 대체도 실패면 오류</text>
+</g>
+<!-- w1&#45;&gt;w3 -->
+<g id="edge7" class="edge">
+<title>w1&#45;&gt;w3</title>
+<path fill="none" stroke="#d6b680" stroke-width="1.15" stroke-dasharray="5,2" d="M709.15,-448.57C709.15,-448.57 793.17,-448.57 793.17,-448.57"/>
+<polygon fill="#d6b680" stroke="#d6b680" stroke-width="1.15" points="702.15,-448.57 709.15,-445.42 704.24,-448.5 709.15,-448.5 709.15,-448.57 709.15,-448.65 704.24,-448.65 709.15,-451.72 702.15,-448.57"/>
+</g>
+<!-- watch -->
+<g id="node13" class="node">
+<title>watch</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1274.28,-457.14C1274.28,-457.14 1059.13,-457.14 1059.13,-457.14 1053.13,-457.14 1047.13,-451.14 1047.13,-445.14 1047.13,-445.14 1047.13,-410 1047.13,-410 1047.13,-404 1053.13,-398 1059.13,-398 1059.13,-398 1274.28,-398 1274.28,-398 1280.28,-398 1286.28,-404 1286.28,-410 1286.28,-410 1286.28,-445.14 1286.28,-445.14 1286.28,-451.14 1280.28,-457.14 1274.28,-457.14"/>
+<image xlink:href="ic_db.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="1059.33" y="-444.57"/>
+<text xml:space="preserve" text-anchor="start" x="1090.33" y="-432.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">외부 데이터 6종</text>
+<text xml:space="preserve" text-anchor="start" x="1090.33" y="-410.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">날씨 · 특보 · 예보 · 재난문자 · 교통 2</text>
+</g>
+<!-- w1&#45;&gt;watch -->
+<g id="edge12" class="edge">
+<title>w1&#45;&gt;watch</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M626.28,-430.14C626.28,-422.58 626.28,-415.57 626.28,-415.57 626.28,-415.57 887.55,-415.57 1046.77,-415.57"/>
+</g>
+<!-- w3&#45;&gt;watch -->
+<g id="edge13" class="edge">
+<title>w3&#45;&gt;watch</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M979.59,-443.85C1001.1,-443.85 1024.28,-443.85 1046.75,-443.85"/>
+</g>
+<!-- google -->
+<g id="node14" class="node">
+<title>google</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1255.53,-346.14C1255.53,-346.14 1077.88,-346.14 1077.88,-346.14 1071.88,-346.14 1065.88,-340.14 1065.88,-334.14 1065.88,-334.14 1065.88,-299 1065.88,-299 1065.88,-293 1071.88,-287 1077.88,-287 1077.88,-287 1255.53,-287 1255.53,-287 1261.53,-287 1267.53,-293 1267.53,-299 1267.53,-299 1267.53,-334.14 1267.53,-334.14 1267.53,-340.14 1261.53,-346.14 1255.53,-346.14"/>
+<image xlink:href="ic_db.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="1078.08" y="-333.57"/>
+<text xml:space="preserve" text-anchor="start" x="1109.08" y="-321.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">장소 · 영업 정보</text>
+<text xml:space="preserve" text-anchor="start" x="1109.08" y="-299.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">같은 행위자 · Google(새벽만)</text>
+</g>
+<!-- o1&#45;&gt;google -->
+<g id="edge14" class="edge">
+<title>o1&#45;&gt;google</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M685.39,-316.57C776.8,-316.57 953.56,-316.57 1065.55,-316.57"/>
+</g>
+<!-- ai -->
+<g id="node15" class="node">
+<title>ai</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1236.03,-237.14C1236.03,-237.14 1097.38,-237.14 1097.38,-237.14 1091.38,-237.14 1085.38,-231.14 1085.38,-225.14 1085.38,-225.14 1085.38,-190 1085.38,-190 1085.38,-184 1091.38,-178 1097.38,-178 1097.38,-178 1236.03,-178 1236.03,-178 1242.03,-178 1248.03,-184 1248.03,-190 1248.03,-190 1248.03,-225.14 1248.03,-225.14 1248.03,-231.14 1242.03,-237.14 1236.03,-237.14"/>
+<image xlink:href="ic_spark.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="1097.58" y="-224.57"/>
+<text xml:space="preserve" text-anchor="start" x="1128.58" y="-212.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">AI 모델</text>
+<text xml:space="preserve" text-anchor="start" x="1128.58" y="-190.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">같은 행위자 · 시험 중</text>
+</g>
+<!-- n2&#45;&gt;ai -->
+<g id="edge15" class="edge">
+<title>n2&#45;&gt;ai</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M716.42,-190.28C819.28,-190.28 986.02,-190.28 1085.15,-190.28"/>
+</g>
+<!-- discord -->
+<g id="node16" class="node">
+<title>discord</title>
+<path fill="#ffffff" stroke="#dbe0ea" d="M1239.78,-148.14C1239.78,-148.14 1093.63,-148.14 1093.63,-148.14 1087.63,-148.14 1081.63,-142.14 1081.63,-136.14 1081.63,-136.14 1081.63,-101 1081.63,-101 1081.63,-95 1087.63,-89 1093.63,-89 1093.63,-89 1239.78,-89 1239.78,-89 1245.78,-89 1251.78,-95 1251.78,-101 1251.78,-101 1251.78,-136.14 1251.78,-136.14 1251.78,-142.14 1245.78,-148.14 1239.78,-148.14"/>
+<image xlink:href="ic_bell.png" width="25px" height="34px" preserveAspectRatio="xMinYMin meet" x="1093.83" y="-135.57"/>
+<text xml:space="preserve" text-anchor="start" x="1124.83" y="-123.07" font-family="Malgun Gothic" font-size="14.00" fill="#161c28">알림 채널</text>
+<text xml:space="preserve" text-anchor="start" x="1124.83" y="-101.32" font-family="Malgun Gothic" font-size="11.00" fill="#606b7e">같은 행위자 · 디스코드</text>
+</g>
+<!-- n3&#45;&gt;discord -->
+<g id="edge16" class="edge">
+<title>n3&#45;&gt;discord</title>
+<path fill="none" stroke="#606b7e" stroke-width="1.15" d="M690.65,-118.57C788.05,-118.57 972.97,-118.57 1081.45,-118.57"/>
+</g>
+</g>
+</svg><path d="M527.0,721.6 H564.6 V820.8 H357.7 V1056.8" fill="none" stroke="#606b7e" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#vee)"/><path d="M510.1,655.6 H572.8 V830.8 H383.7 V1056.8" fill="none" stroke="#606b7e" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#vee)"/><path d="M353.8,1484.6 H313.7 V1360.8 H409.7 V1094.8" fill="none" stroke="#606b7e" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#vee)"/><path d="M331.7,1566.6 H321.7 V1350.8 H435.7 V1094.8" fill="none" stroke="#606b7e" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#vee)"/><text x="615.1" y="853.8" font-family="NanumGothicCoding" font-size="11" fill="#727d90">include — 바꿔 달라고 하기 · 문제 알리기 → 일정 조율</text><text x="343.7" y="1344.8" font-family="NanumGothicCoding" font-size="11" fill="#727d90">include — 외부 변화 감시 · 새벽 정기 점검 → 일정 조율</text><text x="30" y="1957.0" font-family="Malgun Gothic" font-size="12" fill="#606b7e">AI 모델 · 장소 정보 · 알림 채널은 같은 행위자를 구역마다 옆에 다시 그렸다(선을 짧게). 고객 건을 사람에게 넘기는 유스케이스는 없다 — 운영자는 오류 알림만 받는다.</text></svg>

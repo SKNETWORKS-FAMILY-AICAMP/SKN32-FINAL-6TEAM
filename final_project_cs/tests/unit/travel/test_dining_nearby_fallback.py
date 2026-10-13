@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app.domains.travel_ops.instances.dining import nearby
-from app.domains.travel_ops.instances.dining import ledger as dining_ledger_impl
+from app.domains.travel_ops.components.team_hooks import dining_ledger
 from app.domains.travel_ops.components.itinerary.itinerary import Item
 
 KST = timezone(timedelta(hours=9))
@@ -52,7 +52,7 @@ def _desk(monkeypatch, items, places, added, closed=()):
         calls.append([m.title for m in meals])
         return seen_places + added
 
-    monkeypatch.setattr(nearby, "add_nearby", fake_add)
+    monkeypatch.setattr(dining_ledger, "add_nearby", fake_add)
     desk = TripDesk(store=SimpleNamespace(tenant_id="t"), connection_factory=lambda: nullcontext(object()))
     monkeypatch.setattr(desk, "_read", lambda _: ({"version": 1}, items, places))
     monkeypatch.setattr(desk, "_outcome", lambda _id, _version, _items, plan, **_: plan)
@@ -89,7 +89,7 @@ def test_a_closed_report_replans_when_the_ledger_removes_an_existing_alias(monke
 
     lunch, alias = _place("원래 식당"), _place("원장 별칭")
     desk, _ = _desk(monkeypatch, [_item(lunch, "12:00")], [lunch, alias], [])
-    monkeypatch.setattr(nearby, "add_nearby", lambda *args, **kwargs: [lunch])
+    monkeypatch.setattr(dining_ledger, "add_nearby", lambda *args, **kwargs: [lunch])
 
     plan = desk.report_closed(trip_id=uuid.uuid4(), at=datetime.fromisoformat("2026-10-02T12:10:00+09:00"),
                               message="문 닫았어요")
@@ -146,10 +146,10 @@ def test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_
         asked.append([m.title for m in meals])
         return [lunch] if remove_alias else places + [alt]
 
-    monkeypatch.setattr(nearby, "add_nearby", fake_add)
+    monkeypatch.setattr(dining_ledger, "add_nearby", fake_add)
     # ★`[2026-10-06]` 자리를 거치므로 꽂는 쪽(요식 원장)을 바꿔 끼운다(D-CS-013)
-    monkeypatch.setattr(dining_ledger_impl, "dining_states",
-                        lambda c, t, slots, **_: {s["place_id"]: {"linked": True, "open_at_slot": True} for s in slots})
+    monkeypatch.setattr(dining_ledger, "state_lookup", lambda c, t:
+                        lambda slots: {s["place_id"]: {"linked": True, "open_at_slot": True} for s in slots})
     applied = []
     monkeypatch.setattr(dawn_check, "apply_or_ask",
                         lambda *_, plan, **__: applied.append(plan) or {"status": "adjusted", "version": 2})
@@ -160,7 +160,7 @@ def test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_
         start=clock.time(), until=datetime.fromisoformat("2026-10-02T08:00:00+09:00").time())
     monkeypatch.setattr(checker, "_provider_id", lambda *_: "google-original")
     monkeypatch.setattr(checker, "_closed_places", lambda *_: set())
-    monkeypatch.setattr(checker, "_insert_check", lambda *_: None)
+    monkeypatch.setattr(checker, "_insert_check", lambda *_, **__: None)
     monkeypatch.setattr(checker, "_price_lookup", lambda: None)
     result = dawn_check.DawnResult()
 

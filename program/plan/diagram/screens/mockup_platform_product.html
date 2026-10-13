@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>제품 구조와 구성 화면</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; background: #eef1f6;
+         color: #131a26; font-size: 14px; line-height: 1.55; }
+  .wrap { width: 1240px; padding: 22px; }
+  .title { font-size: 19px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 4px; }
+  .lead { font-size: 13px; color: #5d6b7f; margin-bottom: 16px; }
+  .lead b { color: #131a26; }
+
+  .panel { background: #fff; border: 1px solid #dde3ec; border-radius: 12px; padding: 16px 18px; }
+  .h { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .hsub { font-size: 12.5px; color: #5d6b7f; margin-bottom: 12px; }
+
+  /* 제품 구조 */
+  .slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .slot { border: 2px dashed #b9c6dd; border-radius: 10px; padding: 11px 12px; background: #fbfcfe; }
+  .slot--on { border-style: solid; border-color: #0d7a4d; background: #f4fbf7; }
+  .slot--later { border-color: #d9b45e; background: #fffaf0; }
+  .slot--own { border-color: #2f5bd8; background: #f5f8ff; }
+  .slot__tag { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 5px;
+               padding: 1px 7px; margin-bottom: 6px; }
+  .t-on { background: #e6f6ee; color: #0d7a4d; }
+  .t-later { background: #fff4e0; color: #9a6200; }
+  .t-own { background: #e6f0ff; color: #2f5bd8; }
+  .slot__t { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .slot__d { font-size: 12px; color: #5d6b7f; }
+  .plug { text-align: center; color: #98a2b3; font-size: 11.5px; margin: 9px 0 8px; }
+
+  .core { border: 2px solid #2f5bd8; border-radius: 12px; background: #f5f8ff;
+          padding: 13px 15px; }
+  .core__t { font-weight: 800; font-size: 14.5px; color: #2f5bd8; margin-bottom: 3px; }
+  .core__s { font-size: 12px; color: #5d6b7f; margin-bottom: 9px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: #fff; border: 1px solid #c9d6ee; border-radius: 7px;
+          padding: 4px 9px; font-size: 12px; }
+  .core__note { margin-top: 9px; font-size: 12px; color: #2f5bd8; font-weight: 600; }
+
+  /* 비교 */
+  .cols { display: grid; grid-template-columns: 1fr 400px; gap: 16px; align-items: start;
+          margin-top: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 8px 9px; border-bottom: 1px solid #eef1f6;
+           vertical-align: top; }
+  th { font-size: 11.5px; color: #5d6b7f; text-transform: none; white-space: nowrap; }
+  td.us { color: #0d7a4d; font-weight: 600; }
+  td.them { color: #8a94a6; }
+
+  /* 도입 3단계 */
+  .steps { display: flex; gap: 10px; margin-top: 12px; }
+  .step { flex: 1; border: 1px solid #dde3ec; border-radius: 10px; padding: 11px 13px; }
+  .step__n { display: inline-grid; place-items: center; width: 20px; height: 20px;
+             border-radius: 50%; background: #2f5bd8; color: #fff; font-size: 11px;
+             font-weight: 700; margin-bottom: 6px; }
+  .step__t { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+  .step__d { font-size: 12px; color: #5d6b7f; }
+  .note { margin-top: 12px; font-size: 12.5px; color: #5d6b7f; }
+  .note b { color: #131a26; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">제품 구조와 구성 화면</div>
+  <div class="lead">
+    <b>우리가 만드는 것은 고객 응대를 구성하는 플랫폼이다.</b>
+    고정된 실행기 하나 위에 업무 팩을 갈아 끼우는 구조이며,
+    그 갈아 끼우는 일을 화면에서 한다. 그 화면이 Composer다.
+  </div>
+
+  <div class="panel">
+    <div class="h">제품 구조</div>
+    <div class="hsub">아래 고정된 실행기 하나 위에 업무 팩을 갈아 끼운다.</div>
+
+    <div class="slots">
+      <div class="slot slot--on">
+        <div class="slot__tag t-on">기본 제공, 이번 기간</div>
+        <div class="slot__t">CS Pack</div>
+        <div class="slot__d">VOC and Store Manager, Response Generation and Review</div>
+      </div>
+      <div class="slot slot--later">
+        <div class="slot__tag t-later">확장 범위</div>
+        <div class="slot__t">Commerce Ops Pack</div>
+        <div class="slot__d">주문과 결제, 배송, 반품, 카탈로그 검증</div>
+      </div>
+      <div class="slot slot--own">
+        <div class="slot__tag t-own">도입 기업이 직접 추가</div>
+        <div class="slot__t">자사 업무 Team</div>
+        <div class="slot__d">그 회사만의 규정과 절차를 담은 Team을 스스로 만들어 꽂는다</div>
+      </div>
+    </div>
+
+    <div class="plug">위 세 칸은 Registry에 등록되는 슬롯이다. 빼고 넣어도 아래는 그대로다.</div>
+
+    <div class="core">
+      <div class="core__t">A-COP Runtime</div>
+      <div class="core__s">우리가 만들어 파는 부분이다. 업무 도메인을 모른다.</div>
+      <div class="chips">
+        <span class="chip">Case 생명주기 12개 상태</span>
+        <span class="chip">Team 라우팅</span>
+        <span class="chip">근거 조합</span>
+        <span class="chip">승인 경계</span>
+        <span class="chip">멱등성</span>
+        <span class="chip">감사 로그</span>
+        <span class="chip">평가와 통계</span>
+        <span class="chip">REST, MCP, A2A 진입</span>
+      </div>
+      <div class="core__note">Team을 하나 늘리는 일이 전면 수정 작업이 된다면 설계가 잘못된 것이다.</div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:16px">
+    <div class="h">화면이 맡는 자리</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step__n">1</div>
+        <div class="step__t">설치</div>
+        <div class="step__d">자사 환경에 Runtime을 올린다. 화면 밖의 일이다.</div>
+      </div>
+      <div class="step">
+        <div class="step__n">2</div>
+        <div class="step__t">구성</div>
+        <div class="step__d">Composer 화면에서 모듈과 Team을 켜고 끄고 값을 고친다. 설계 대상이 이 화면이다.</div>
+      </div>
+      <div class="step">
+        <div class="step__n">3</div>
+        <div class="step__t">운영</div>
+        <div class="step__d">조립 현황 화면에서 판정과 평가를 보고 이상 신호만 감독한다.</div>
+      </div>
+    </div>
+    <div class="note">
+      <b>Composer 화면이 이 제품의 핵심 화면이다.</b>
+      여기서 무엇을 켜고 끄고 무엇을 추가할 수 있는지가 곧 제품이 어디까지 구성 가능한지를 말한다.
+      지금은 등록된 모듈과 Team을 켜고 끄며 전체 설정을 바꿀 수 있고,
+      카탈로그에서 골라 인스턴스를 만드는 방식은 계약 확정 단계에 있다.
+    </div>
+    <div class="note">
+      누가 이 화면을 조작하는지는 이 문서의 범위가 아니다.
+      도입 기업의 담당자가 직접 할 수도 있고 우리가 대신 할 수도 있다.
+      어느 쪽이든 결과물은 같은 화면에 같은 형태로 남는다.
+    </div>
+  </div>
+</div>
+</body>
+</html>

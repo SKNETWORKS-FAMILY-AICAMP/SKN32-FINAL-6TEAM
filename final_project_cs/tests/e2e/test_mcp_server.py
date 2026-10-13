@@ -14,7 +14,9 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
+from datetime import timedelta
 from typing import Any
 
 import httpx
@@ -23,6 +25,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
 from app.domains.travel_ops.modules.mcp import mcp_server
+from app.core.service_bindings import BindingTable
 
 from .test_trip_api import _report, api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_web_api import _fresh_limit_cache, _h, _session, _web_body  # noqa: F401
@@ -34,6 +37,40 @@ READ_TOOLS = {"tripilot_list_trips", "tripilot_get_trip", "tripilot_get_notices"
 WRITE_TOOLS = {"tripilot_ask", "tripilot_report_issue", "tripilot_swap_item", "tripilot_choose_proposal",
                "tripilot_rollback", "tripilot_submit_itinerary", "tripilot_plan_trip"}
 MESSAGE = {"message": "식당이 휴무예요", "at": "2030-01-01T12:00:00+09:00"}
+
+
+@pytest.fixture
+def mcp_calculated_api(api):
+    """판 교체 시험의 이동값을 명시한다. 제품의 계산기 부재 정책을 우회하지 않는다."""
+    runtime = api["client"].app.state.runtime
+    published = runtime.published_snapshot()
+    controller = copy.copy(published.controller)
+    prior = controller.service_bindings
+    calls = []
+    duration = timedelta(minutes=5)
+
+    def planner(party_size, constraints, **kwargs):
+        def leg(a, b, arrive, not_before=None):
+            # 고정된 시험용 5분 구간. 출발·도착·경로의 계약을 매 호출 검사한다.
+            assert all(isinstance(p[axis], (int, float)) for p in (a, b) for axis in ("lat", "lon"))
+            start = not_before if not_before is not None else arrive - duration
+            end = start + duration
+            if end > arrive:
+                return None, {"code": "arrive_late", "source": "mcp_test_fixture"}
+            calls.append((a["name"], b["name"], start, end))
+            route = {"from": a["name"], "to": b["name"], "planned": "test_route",
+                     "options": [{"id": "test_route", "label": "시험용 이동 구간", "eta_min": 5,
+                                  "uses": [], "source": "mcp_test_fixture"}]}
+            return {"route": route, "starts_at": start, "ends_at": end, "eta_min": 5, "left_out": []}, None
+        return leg
+
+    values = dict(prior.values)
+    values.update({("legs", "leg_planner"): planner, ("legs", "walk_limit_m"): lambda: 1200,
+                   ("legs", "basis"): lambda: {"mode": "test_fixture", "source": "mcp_test_fixture"}})
+    controller.service_bindings = BindingTable(values, controller.registry, published.revision)
+    runtime.swap(controller, published.revision)
+    api["mcp_calculation_calls"] = calls
+    yield api
 
 
 def _trip(api, me, request_id="mcp-1") -> str:
@@ -271,10 +308,9 @@ def test_reporting_a_delay_over_mcp_matches_the_web_twin_and_a_stranger_cannot_r
     assert denied.isError and "404" in _error_text(denied)
 
 
-def test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404(api, monkeypatch):
+def test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404(mcp_calculated_api):
     """다른 안으로 바꾸고(판이 오른다) 그 앞 판으로 되돌린다 — 두 도구 모두 **현재 판 번호를 서버에서 읽어** 보내 낡은 판 거절이 나지 않는다."""
-    # ★`[2026-10-07]` 이동 계산기를 끈다 — 이동 자료가 있는 기계에서는 시간표로 다시 재어 대체 식당이 「다음 일정에 늦음」으로 떨어질 수 있다(이 시험의 뜻이 아니다)
-    monkeypatch.setattr("app.domains.travel_ops.components.itinerary.itinerary_changes._leg_engine", lambda trip: None)
+    api = mcp_calculated_api
     me, other = _session(api), _session(api)
     trip_id = _trip(api, me)
     assert _report(api, trip_id, "delay").status_code == 200           # 지연 → 점심에 다른 안이 마련된다(판 2) — 에이전트 입구로 준비
@@ -296,12 +332,42 @@ def test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404(api, 
     assert next(i for i in after_swap["items"] if i["seq"] == 5)["place"] == alt["name"]
     assert back["version"] == after_swap["version"] + 1 == after_back["version"]    # 되돌린 것도 새 판으로 기록된다
     assert next(i for i in after_back["items"] if i["seq"] == 5)["place"] == lunch["place"]
+    assert api["mcp_calculation_calls"], "계산 부재를 우회하지 않고 조립된 시험 제공자를 호출해야 한다"
+    assert all((end - start).total_seconds() == 300 for _, _, start, end in api["mcp_calculation_calls"])
 
     async def stranger(session):
         return await session.call_tool("tripilot_rollback", {"trip_id": trip_id, "to_version": 1})
 
     denied = _run(_surface(api, write=True), other["user_key"], stranger)
     assert denied.isError and "404" in _error_text(denied)
+
+
+def test_saved_trip_remains_readable_with_every_team_disabled(api):
+    """기존 여행 조회·건강 확인은 독립 기능이고, 꺼진 업무는 실행하지 않는다."""
+    from app import composition
+
+    me, other = _session(api), _session(api)
+    trip_id = _trip(api, me, "mcp-all-off-existing")
+    before = api["client"].get(f"/v1/web/trips/{trip_id}", headers=_h(me["user_key"]))
+    assert before.status_code == 200, before.text
+    config = composition.load_project_config().model_copy(deep=True)
+    config.teams = [team.model_copy(update={"active": False}) for team in config.teams]
+    off = composition.build_controller(config=config)
+    api["client"].app.state.runtime.swap(off, off.composition_revision)
+    assert all(not state["available"] for state in off.registry.availability().values())
+    assert off.service_bindings.values == {}
+    after = api["client"].get(f"/v1/web/trips/{trip_id}", headers=_h(me["user_key"]))
+    assert after.status_code == 200, after.text
+    assert after.json()["version"] == before.json()["version"]
+    assert [item["item_id"] for item in after.json()["items"]] == [item["item_id"] for item in before.json()["items"]]
+    assert api["client"].get("/health").status_code == 200
+    assert api["client"].get(f"/v1/web/trips/{trip_id}", headers=_h(other["user_key"])).status_code == 404
+
+    async def scenario(session):
+        return _data(await session.call_tool("tripilot_get_trip", {"trip_id": trip_id}))
+
+    read = _run(_surface(api, write=False), me["user_key"], scenario)
+    assert read["trip_id"] == trip_id and read["version"] == before.json()["version"]
 
 
 def test_submitting_a_bad_itinerary_returns_the_problems_and_a_good_one_is_registered_for_me_only(api):

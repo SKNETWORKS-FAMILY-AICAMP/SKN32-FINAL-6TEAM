@@ -1,0 +1,104 @@
+<svg viewBox="0 0 1480 972" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="wf-f05-title wf-f05-desc">
+<title id="wf-f05-title">F05 여행 중에 묻는다</title>
+<desc id="wf-f05-desc">여행 중에 묻는다 — 기능별 워크플로</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1480" height="972" fill="#fbfcfd"/>
+<!-- 화살표 먼저 -->
+<path d="M616 96 L616 140" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M616 244 L616 284" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M724 192 L904 192 A8 8 0 0 1 912 200 L912 416" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M616 372 L616 412" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M724 328 L828 328 A8 8 0 0 1 836 336 L836 416" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M596 492 L596 664" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M692 492 L692 536" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M512 452 L336 452 A8 8 0 0 0 328 460 L328 788" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M704 492 L704 508 A8 8 0 0 0 712 516 L1116 516 A8 8 0 0 1 1124 524 L1124 540" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M700 620 L700 664" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M508 704 L408 704 A8 8 0 0 0 400 712 L400 788" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M616 748 L616 788" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<!-- 이름표 -->
+<rect x="624" y="256" width="52" height="16" rx="2" fill="#fbfcfd"/><text x="650" y="268" class="lab" fill="#6b7488">새 요청</text>
+<rect x="736" y="168" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="768" y="180" class="lab" fill="#6b7488">접수 거절</text>
+<rect x="624" y="384" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="656" y="396" class="lab" fill="#6b7488">검사 통과</text>
+<rect x="736" y="304" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="768" y="316" class="lab" fill="#6b7488">해석 실패</text>
+<rect x="492" y="504" width="96" height="16" rx="2" fill="#fbfcfd"/><text x="540" y="516" class="lab" fill="#6b7488">사실·위치·대화</text>
+<rect x="652" y="504" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="668" y="516" class="lab" fill="#6b7488">규정</text>
+<rect x="456" y="428" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="478" y="440" class="lab" fill="#6b7488">모호함</text>
+<rect x="1068" y="492" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="1090" y="504" class="lab" fill="#6b7488">후보만</text>
+<rect x="708" y="632" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="740" y="644" class="lab" fill="#6b7488">검색 결과</text>
+<rect x="408" y="760" width="108" height="16" rx="2" fill="#fbfcfd"/><text x="462" y="772" class="lab" fill="#6b7488">위치·목적지 필요</text>
+<rect x="624" y="760" width="96" height="16" rx="2" fill="#fbfcfd"/><text x="672" y="772" class="lab" fill="#6b7488">확인 결과 안내</text>
+<!-- 상자 -->
+<rect x="516" y="40" width="200" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="516" y="40" width="200" height="56" rx="28" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="616" y="63" class="name">시작 — 여행 질문 보내기</text>
+<text x="616" y="81" class="sub">질문·선택 일정·위치 전달</text>
+<rect x="508" y="140" width="212" height="104" rx="6" fill="#fbfcfd"/>
+<rect x="508" y="140" width="212" height="104" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="614" y="169" class="name">접수 확인 [코드]</text>
+<text x="614" y="189" class="sub">인증·소유·중복·해석 설정 확인</text>
+<text x="614" y="207" class="sub">횟수 제한(기본 꺼짐)</text>
+<text x="614" y="225" class="sub">중복 요청은 이전 답 반환</text>
+<rect x="508" y="288" width="212" height="84" rx="6" fill="#fbfcfd"/>
+<rect x="508" y="288" width="212" height="84" rx="6" fill="rgba(47,91,216,0.03)" stroke="#2f5bd8" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="614" y="316" class="name">질문 해석 [언어 모델]</text>
+<text x="614" y="336" class="sub">일정·최근 변경·대화 함께 읽기</text>
+<text x="614" y="354" class="sub">행동·대상 검사, 실패면 유지</text>
+<polygon points="616,412 718,452 616,492 514,452" fill="#fbfcfd"/>
+<polygon points="616,412 718,452 616,492 514,452" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="616" y="456" class="name">무슨 질문인가?</text>
+<rect x="680" y="536" width="212" height="84" rx="6" fill="#fbfcfd"/>
+<rect x="680" y="536" width="212" height="84" rx="6" fill="rgba(22,28,40,0.04)" stroke="#6b7488" stroke-width="1.4" stroke-dasharray="6,3"/>
+<text x="786" y="564" class="name">규정 검색 [공용 도구]</text>
+<text x="786" y="584" class="sub">질문을 임베딩해 조각 상위 3개</text>
+<text x="786" y="602" class="sub">검색 오류면 안내</text>
+<rect x="508" y="664" width="212" height="84" rx="6" fill="#fbfcfd"/>
+<rect x="508" y="664" width="212" height="84" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="614" y="692" class="name">답변 근거 확인 [코드]</text>
+<text x="614" y="712" class="sub">사실·위치·이동·근처 확인</text>
+<text x="614" y="730" class="sub">규정 0.55 이상 문장 최대 2개</text>
+<rect x="256" y="792" width="216" height="76" rx="38" fill="#fbfcfd"/>
+<rect x="256" y="792" width="216" height="76" rx="38" fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="364" y="816" class="name">⏸ 추가 정보 대기</text>
+<text x="364" y="834" class="sub">대상 확인·동의 후 위치 제공</text>
+<text x="364" y="852" class="sub">다른 해석 최대 3개</text>
+<rect x="1024" y="540" width="200" height="76" rx="38" fill="#fbfcfd"/>
+<rect x="1024" y="540" width="200" height="76" rx="38" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1124" y="564" class="name">끝 — 변경 후보로 연결</text>
+<text x="1124" y="582" class="sub">후보 탐색 흐름으로 연결</text>
+<text x="1124" y="600" class="sub">일정은 바로 바꾸지 않음</text>
+<rect x="760" y="416" width="228" height="76" rx="38" fill="#fbfcfd"/>
+<rect x="760" y="416" width="228" height="76" rx="38" fill="#ffffff" stroke="#161c28" stroke-width="1.8" stroke-dasharray="3,3"/>
+<text x="874" y="440" class="name">오류 — 접수·해석 실패</text>
+<text x="874" y="458" class="sub">거절 또는 해석 실패 사유 안내</text>
+<text x="874" y="476" class="sub">일정 변경 없이 실패 기록</text>
+<rect x="516" y="792" width="200" height="76" rx="38" fill="#fbfcfd"/>
+<rect x="516" y="792" width="200" height="76" rx="38" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="616" y="816" class="name">끝 — 답변 반환</text>
+<text x="616" y="834" class="sub">답·기록 반환, 일정 유지</text>
+<text x="616" y="852" class="sub">근처 추천 최대 3곳</text>
+<line x1="32" y1="928" x2="1448" y2="928" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="948" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="936" width="28" height="16" rx="8" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="140" y="948" class="leg">시작</text>
+<rect x="192" y="936" width="28" height="16" rx="8" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="228" y="948" class="leg">끝</text>
+<rect x="268" y="936" width="28" height="16" rx="8" fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="304" y="948" class="leg">기다림</text>
+<rect x="368" y="936" width="28" height="16" rx="8" fill="#ffffff" stroke="#161c28" stroke-width="1" stroke-dasharray="3,3"/>
+<text x="404" y="948" class="leg">오류로 끝남</text>
+<rect x="500" y="936" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="536" y="948" class="leg">코드</text>
+<rect x="588" y="936" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="2.2"/>
+<text x="624" y="948" class="leg">담당 에이전트</text>
+<rect x="732" y="936" width="28" height="16" rx="3" fill="rgba(22,28,40,0.04)" stroke="#6b7488" stroke-width="1.4" stroke-dasharray="6,3"/>
+<text x="768" y="948" class="leg">공용 도구</text>
+<rect x="852" y="936" width="28" height="16" rx="3" fill="rgba(47,91,216,0.03)" stroke="#2f5bd8" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="888" y="948" class="leg">언어 모델이 돕는 자리</text>
+<rect x="1048" y="936" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="1084" y="948" class="leg">고객 · 개인 AI</text>
+<polygon points="1218,936 1232,944 1218,952 1204,944" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1240" y="948" class="leg">코드의 판단</text>
+<line x1="1336" y1="944" x2="1364" y2="944" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<text x="1372" y="948" class="leg">반복</text>
+</svg>

@@ -43,6 +43,18 @@
   --color-inverse: #24392f;
   --color-on-inverse: #ffffff;
   --color-scrim: rgba(36, 57, 47, 0.45);
+  /* `[2026-10-12 사용자 결정 — 일정 줄]` 지금 표시(주황 — 일정 점의 초록과 겹치지 않게) · 줄(머무는 실선 · 끝 ⊖ · 가는 선) · 지난 일정(회색 칸). 목업 2026-10-12_타임라인_지금시각_목업.html 의 값. */
+  --color-now: #c8552a;
+  --color-now-soft: #fbe9e1;
+  --color-rail-stay: #9cc0a8;
+  --color-rail-cap: #5f9673;
+  --color-rail-free: #d3dbd5;
+  --color-past-ink: #56645b;
+  --color-past-sub: #66746b;
+  --color-past-bg: #eceeeb;
+  --color-past-line: #c3cdc6;
+  --color-past-dot: #b2bdb5;
+  --color-past-pill: #dfe3df;
   --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
   /* 승인된 브랜드·시험 분류·지도 스택 색은 두 테마에서 동일하게 유지합니다. */
   --color-shadow-soft: #0002;
@@ -113,6 +125,17 @@
   --color-inverse: #26262a;
   --color-on-inverse: #ffffff;
   --color-scrim: rgba(28, 28, 30, 0.45);
+  --color-now: #c8552a;
+  --color-now-soft: #fbe9e1;
+  --color-rail-stay: #a9c4b4;
+  --color-rail-cap: #5f8a72;
+  --color-rail-free: #d6d6d2;
+  --color-past-ink: #5f5f65;
+  --color-past-sub: #707074;
+  --color-past-bg: #ededeb;
+  --color-past-line: #c2c2c6;
+  --color-past-dot: #b6b6ba;
+  --color-past-pill: #e0e0de;
   /* 승인된 브랜드·시험 분류·지도 스택 색은 두 테마에서 동일하게 유지합니다. */
   --color-shadow-soft: #0002;
   --color-shadow-strong: #0005;

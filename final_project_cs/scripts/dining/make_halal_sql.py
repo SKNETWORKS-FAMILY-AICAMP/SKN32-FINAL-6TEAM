@@ -4,6 +4,8 @@
     datasets/dining/processed/halal/할랄식당_검수.csv
     판정이 「영업」이고 좌표가 있고, 인허가 관리번호가 있거나 원장이 「없음(운영자 확인)」인 행만
     가게로 넣는다. 확인 필요 · 폐업 기록만 · 원장에 없음 · 제외 는 넣지 않는다(개수만 알린다).
+    판정이 「일반 식당」이면 가게와 영업 근거 레코드만 넣고 목록 레코드 · 할랄 속성은 넣지 않는다 — 할랄 · 무슬림 친화가
+    아니라고 사람이 본 곳(「고삼이」 생선구이, 2026-10-12 사용자). place_uid 는 그대로라 분류 · 결 · 영업시간 검수가 남는다.
 
 가게마다 출처 레코드가 둘 붙는다(make_vegan_sql 과 같다).
     근거 레코드    영업을 무엇으로 확인했는가. 원장 칸이 일반이면 localdata_food, 휴게면 localdata_rest
@@ -65,6 +67,8 @@ SAME_PLACE_SIM = 0.6
 
 CERTIFIED = {"KMF 인증", "타기관 인증"}
 LIMITED = {"무슬림 자가인증", "무슬림 프렌들리", "포크프리"}
+#: 할랄 목록에서 빼되 원장에는 일반 식당으로 남기는 판정
+GENERAL = "일반 식당"
 
 
 def q(value) -> str:
@@ -145,7 +149,7 @@ def main() -> None:
         operator = ledger.startswith("없음")
         mgmt = (row.get("관리번호") or "").strip() or (f"manual:{label}" if operator else "")
         lat, lng = (row.get("위도") or "").strip(), (row.get("경도") or "").strip()
-        if verdict != "영업" or not mgmt or not lat or not lng:
+        if verdict not in ("영업", GENERAL) or not mgmt or not lat or not lng:
             skipped[verdict or "빈칸"] = skipped.get(verdict or "빈칸", 0) + 1
             continue
         taken += 1
@@ -179,6 +183,9 @@ def main() -> None:
             f"WHERE source_code = '{ev_source}' AND external_id = {q(mgmt)}) "
             "ON CONFLICT (record_id) DO NOTHING;")
 
+        if verdict == GENERAL:
+            attrs[GENERAL] = attrs.get(GENERAL, 0) + 1
+            continue
         list_id = str(uuid.uuid5(NS, f"record:halal:list:{mgmt}"))
         raw = {"목록": os.path.basename(sheet), "번호": row["번호"], "상호": label,
                "웹 근거 등급": row.get("웹 근거 등급(초안)") or None,

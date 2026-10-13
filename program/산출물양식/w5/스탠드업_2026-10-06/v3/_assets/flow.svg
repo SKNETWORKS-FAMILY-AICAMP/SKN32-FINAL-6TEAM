@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 430" width="1200" height="430" font-family="Segoe UI, Malgun Gothic, sans-serif">
+<rect width="1200" height="430" fill="#f7f9f3"/>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2e6047"/></marker><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6d7c73"/></marker></defs>
+<rect x="30" y="60" width="236" height="118" rx="18" fill="#ffffff" stroke="#dce3dd" stroke-width="1.5"/>
+<text x="52" y="94" font-size="13" letter-spacing="1.5" fill="#2e6047" font-weight="700">01</text>
+<text x="52" y="130" font-size="23" font-weight="700" fill="#24392f">계획 올리기</text>
+<text x="52" y="158" font-size="15" fill="#6d7c73">글 · 사진 · 파일</text>
+<line x1="274" y1="119.0" x2="320" y2="119.0" stroke="#2e6047" stroke-width="2.2" marker-end="url(#ar)"/>
+<rect x="330" y="60" width="236" height="118" rx="18" fill="#ffffff" stroke="#dce3dd" stroke-width="1.5"/>
+<text x="352" y="94" font-size="13" letter-spacing="1.5" fill="#2e6047" font-weight="700">02</text>
+<text x="352" y="130" font-size="23" font-weight="700" fill="#24392f">검사 · 고객 확인</text>
+<text x="352" y="158" font-size="15" fill="#6d7c73">시간 겹침 · 이동 가능 여부</text>
+<line x1="574" y1="119.0" x2="620" y2="119.0" stroke="#2e6047" stroke-width="2.2" marker-end="url(#ar)"/>
+<rect x="630" y="60" width="236" height="118" rx="18" fill="#e9f2eb" stroke="#2e6047" stroke-width="2"/>
+<text x="652" y="94" font-size="13" letter-spacing="1.5" fill="#2e6047" font-weight="700">03</text>
+<text x="652" y="130" font-size="23" font-weight="700" fill="#24392f">여행 중 위험 점검</text>
+<text x="652" y="158" font-size="15" fill="#6d7c73">3분마다 휴관 · 마감 · 날씨</text>
+<line x1="874" y1="119.0" x2="920" y2="119.0" stroke="#2e6047" stroke-width="2.2" marker-end="url(#ar)"/>
+<rect x="930" y="60" width="236" height="118" rx="18" fill="#e9f2eb" stroke="#2e6047" stroke-width="2"/>
+<text x="952" y="94" font-size="13" letter-spacing="1.5" fill="#2e6047" font-weight="700">04</text>
+<text x="952" y="130" font-size="23" font-weight="700" fill="#24392f">바꿀 안 + 알림</text>
+<text x="952" y="158" font-size="15" fill="#6d7c73">요식업 · 액티비티 에이전트</text>
+<path d="M1048.0,182 V240 H748.0 V188" fill="none" stroke="#2e6047" stroke-width="2.6" marker-end="url(#ar)"/>
+<rect x="770.0" y="223" width="256" height="34" rx="17" fill="#f7f9f3"/>
+<text x="898.0" y="246" text-anchor="middle" font-size="16" font-weight="700" fill="#2e6047">여행이 끝날 때까지 되풀이</text>
+<rect x="940" y="338" width="216" height="64" rx="16" fill="#ffffff" stroke="#cbd8cd" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="1048.0" y="366" text-anchor="middle" font-size="15" font-weight="700" fill="#24392f">고객 채팅 · 개인 AI 비서</text>
+<text x="1048.0" y="389" text-anchor="middle" font-size="13" fill="#6d7c73">「거기 웨이팅 심해?」</text>
+<line x1="1118.0" y1="338" x2="1118.0" y2="186" stroke="#6d7c73" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ag)"/>
+</svg>

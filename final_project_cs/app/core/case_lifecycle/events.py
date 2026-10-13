@@ -1,6 +1,7 @@
 """Case 이벤트와 허용 상태 전이표.
 
-★이 표가 v5 §5-1(상태 정의표)·§5-2(전이도)의 **코드 상 유일한 대응물**이다.
+★이 표가 현재 wiki/runtime/case-lifecycle.md 계약의 **코드 상 유일한 대응물**이다.
+  최초 v5 표에 대한 명시적 후속 변경은 wiki를 따른다.
   전이 규칙을 다른 곳에 다시 쓰지 않는다. 여기 없는 전이는 일어날 수 없다.
 
 상태 변경은 `app/core/transition.py:transition_case()` 만이 진입점이다(CLAUDE.md §0.3).
@@ -45,7 +46,7 @@ class EventType(str, Enum):
 
 
 #: (현재 상태, 이벤트) -> 다음 상태.
-#: v5 §5-1 의 "허용 다음 상태" 열과 §5-2 의 전이 라벨을 합친 것이다.
+#: 최초 v5 표와 현재 wiki의 명시적 후속 전이 계약을 반영한다.
 #: ★여기 없는 조합은 InvalidTransition 이다. 예외를 만들지 않는다.
 TRANSITIONS: dict[tuple[CaseStatus, EventType], CaseStatus] = {
     # new
@@ -79,7 +80,8 @@ TRANSITIONS: dict[tuple[CaseStatus, EventType], CaseStatus] = {
     # waiting_external
     (CaseStatus.WAITING_EXTERNAL, EventType.VALID_CALLBACK): CaseStatus.RESUMING,
     (CaseStatus.WAITING_EXTERNAL, EventType.WAIT_EXPIRED): CaseStatus.ESCALATED,
-    # resuming
+    # resuming — 입력을 반복 소비하지 않고 최종 담당만 기록하는 자기전이다.
+    (CaseStatus.RESUMING, EventType.ROUTED): CaseStatus.RESUMING,
     (CaseStatus.RESUMING, EventType.RESUMED): CaseStatus.RUNNING,
     (CaseStatus.RESUMING, EventType.RESUME_FAILED): CaseStatus.ESCALATED,
     # 종료 계열

@@ -8,7 +8,11 @@ async function centre(page: Page, key: string) {
   await page.locator("div[class*=sheetBody]").evaluate((body, key) => {
     const point = body.querySelector<HTMLElement>(`[data-insert-point="${key}"]`)!;
     const area = body.getBoundingClientRect();
-    body.scrollTop += point.getBoundingClientRect().top - (area.top + area.height / 2);
+    // The seam is picked against the middle of the list UNDER the sheet's head (use-insertion-point.ts). `[2026-10-13 ④]` the rows got shorter and two seams can be
+    // 45 px apart, so centring on the whole area (head included, 36 px higher) picked the next seam.
+    const head = body.parentElement?.querySelector("header")?.getBoundingClientRect();
+    const top = Math.max(area.top, head?.bottom ?? area.top);
+    body.scrollTop += point.getBoundingClientRect().top - (top + area.bottom) / 2;
   }, key);
   await expect(page.locator("[data-insert-near]")).toHaveAttribute("data-insert-point", key);
 }

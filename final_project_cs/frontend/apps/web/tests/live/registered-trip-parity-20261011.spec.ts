@@ -3,7 +3,11 @@ import { mkdir } from "node:fs/promises";
 import { dayTab, mockServer, noHorizontalScroll, start, TRIP_ID, tripScreen } from "./helpers";
 import { mapSettled } from "./plan-check-kit";
 
-test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await mockServer(request).scenario({ routeShapes: "on" }); await start(page); });
+test.beforeEach(async ({ page, request }) => {
+  await mockServer(request).reset(); await mockServer(request).scenario({ routeShapes: "on" }); await start(page);
+  // `[2026-10-13]` 가짜 서버의 여행은 2026-10-01 이다 — 그 뒤로는 「지난 일정」(회색 한 줄, 10-12 결정)이 되어 예약 표시 · 카드가 사라진다. 이 시험은 여행 전 화면을 본다.
+  await page.clock.setFixedTime(new Date("2026-09-30T12:00:00+09:00"));
+});
 
 for (const width of [375, 1280]) for (const reduced of [false, true]) {
   test(`${width}px ${reduced ? "동작 줄임" : "일반"}: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다`, async ({ page }) => {
@@ -19,7 +23,8 @@ for (const width of [375, 1280]) for (const reduced of [false, true]) {
     await expect(booked.locator("[data-booked]")).toHaveText("예약 있음");
     await expect(first.locator("[data-stop-start]")).toHaveCSS("font-size", "16px");
     await expect(first.locator("[data-stop-start]")).toHaveCSS("font-weight", "400");
-    await expect(first.locator("[data-stop-end]")).toHaveCSS("opacity", "0");
+    // `[2026-10-12 사용자 결정 — 일정 줄 A]` 모든 일정이 시작 아래 「~끝」을 늘 보인다(10-10 의 「고른 일정만」을 바꿈).
+    await expect(first.locator("[data-stop-end]")).toHaveCSS("opacity", "1");
     await expect(page.locator("path.trip-route-line")).toHaveCount(2);
     await expect(page.locator("path.trip-route-line--dashed")).toHaveCount(1);
     await page.locator("#stop-button-i-a").click();
@@ -34,7 +39,7 @@ for (const width of [375, 1280]) for (const reduced of [false, true]) {
     await page.mouse.move(0, 0);
     await page.screenshot({ path: `mockups/registered-trip-parity-2026-10-11-v1/${width}-${reduced ? "reduce" : "normal"}.png` });
     await page.locator("#stop-button-i-b").click();
-    await expect(first.locator("[data-stop-end]")).toHaveCSS("opacity", "0");
+    await expect(first.locator("[data-stop-end]")).toHaveCSS("opacity", "1");             // 다른 일정을 골라도 끝 시각은 남는다
     await page.getByRole("button", { name: "경복궁 관람 상세 보기", exact: true }).click();
     await expect(page.locator("#main-content")).not.toContainText("예약 정보 없음");
     await expect(page.locator('[data-booked]')).not.toHaveCount(0);

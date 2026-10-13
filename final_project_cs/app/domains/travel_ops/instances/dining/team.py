@@ -107,6 +107,11 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
     async def handle_report(self, task: TeamTask, kind: str, ctx: dict[str, Any]) -> TeamResult:
         if kind not in ("delay", "closed"):
             return await super().handle_report(task, kind, ctx)
+        if kind == "delay" and not ctx["report"].get("minutes"):
+            from app.domains.travel_ops.instances._shared.conversation_work import wait_for_input
+
+            return wait_for_input(self, task, ctx,
+                                  "몇 분쯤 늦으세요? 예를 들어 ‘30분이요’라고 알려 주세요.", "minutes")
         places = self.catalog(task, ctx)
         if places is None:
             return self._unknown(task, "장소 목록", ctx["evidence"])

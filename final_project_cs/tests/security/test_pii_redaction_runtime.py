@@ -27,7 +27,7 @@ def pii_case(monkeypatch):
                 "tenant": tenant,
                 "customer": customer,
                 "original": original,
-                "client": TestClient(create_app(classifier=lambda _: {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"})),
+                "client": TestClient(create_app(classifier=lambda _: {"intent": "incident_report", "issue_code": "activity_cancel_or_change", "sentiment": "negative"})),
             }
         finally:
             with conn.transaction():

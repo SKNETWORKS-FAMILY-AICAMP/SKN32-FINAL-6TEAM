@@ -1,0 +1,21 @@
+[00:38] 가벼운 LLM (올라마, 4개 묶음 전부)
+[00:38] gemma4:e4b
+gemma4:e4b 1.16s/q errors=0
+[00:44] gemma4:e2b
+gemma4:e2b 1.20s/q errors=0
+[00:50] qwen3.5:4b
+qwen3.5:4b 1.58s/q errors=0
+[00:56] WeMM 임베딩
+tencent/WeMM-Embedding-2B FAIL ImportError('This modeling file requires the following packages that were not found in your environment: qwen_vl_utils. Run `pip install qwen_vl_utils`')
+tencent/WeMM-Embedding-4B FAIL ImportError('This modeling file requires the following packages that were not found in your environment: qwen_vl_utils. Run `pip install qwen_vl_utils`')
+[00:56] OpenDecider 설치
+[01:06] OpenDecider 탐침(질문 3개)
+Fetching 9 files:  11%|█         | 1/9 [00:00<00:03,  2.50it/s]Fetching 9 files:  22%|██▏       | 2/9 [00:00<00:01,  4.43it/s]Fetching 9 files:  67%|██████▋   | 6/9 [00:00<00:00, 12.06it/s]Fetching 9 files:  89%|████████▉ | 8/9 [00:02<00:00,  3.43it/s]Fetching 9 files: 100%|██████████| 9/9 [00:04<00:00,  1.23it/s]Fetching 9 files: 100%|██████████| 9/9 [00:04<00:00,  1.85it/s]
+Loading weights:   0%|          | 0/170 [00:00<?, ?it/s]Loading weights:  34%|███▍      | 58/170 [00:00<00:00, 515.12it/s]Loading weights:  65%|██████▍   | 110/170 [00:00<00:00, 494.46it/s]Loading weights:  94%|█████████▍| 160/170 [00:00<00:00, 490.59it/s]Loading weights: 100%|██████████| 170/170 [00:00<00:00, 515.48it/s]
+첫 응답 구조: {"type": "choice", "choice": "일정에 이 질문이 가리키는 항목이 없다", "probabilities": {"item 1: 10/3(토) 10:00 [activity] 경복궁 관람 @ 경복궁": 0.17040017247200012, "item 2: 10/3(토) 12:30 [dining] 토속촌 삼계탕 @ 토속촌삼계탕": 0.13876406848430634, "item 3: 10/3(토) 15:00 [activity] 한강 카약 체험 @ 뚝섬한강공원": 0.06699255853891373, "item 4: 10/3(토) 19:00 [dining] 명동교자 저녁 @ 명동교자 본점": 0.036194320768117905, "item 5: 10/4(일) 09:30 [activity] 북한산 둘레길 @ 북한산 둘레길": 0.05549829825758934, "item 6: 10/4(일) 13:00 [dining] 광장시장 빈대떡 @ 광장시장": 0.08439125120639801, "item 7: 10/4(일) 15:30 [activity] 국립중앙박물관 @ 국립중앙박물관": 0.0383199080824852, "item 8: 10/4(일) 
+manjunathshiva/opendecider-nano 2.14s/q n=3
+[01:08] OpenDecider nano 전체
+manjunathshiva/opendecider-nano 0.19s/q n=178
+[01:09] OpenDecider small 전체
+manjunathshiva/opendecider-small 0.29s/q n=178
+[01:11] P11DONE

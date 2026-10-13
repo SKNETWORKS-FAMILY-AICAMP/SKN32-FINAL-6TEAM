@@ -1,0 +1,26 @@
+## Qwen/Qwen3-Reranker-4B — 개발용(heavy dev 44)으로 고른 문턱 lo=0.1 hi=0.5
+                                          정답   엉뚱   못찾음     LLM 호출 문제
+FT 구조 · heavy 판정 88                 79/88=90%    6     3      17/88=19%
+  26B 직접                            85/88=97%    3     0
+  12B 직접                            81/88=92%    7     0
+  기존 구조(E4B/E4B/12B)                84/88=95%    1     3
+FT 구조 · mix4 88(처음 보는 세트)           82/88=93%    5     1      17/88=19%
+  26B 직접                            81/88=92%    7     0
+  12B 직접                            79/88=90%    9     0
+  기존 구조(E4B/E4B/12B)                81/88=92%    4     3
+
+mix4 유형별(FT 구조, 유형당 8): {'context_pronoun': 8, 'duplicate_place': 7, 'confusable_name': 8, 'compound_intent': 8, 'negation': 7, 'typo_slang': 7, 'out_of_scope': 7, 'nameless_description': 7, 'ordinal_relative': 8, 'change_request': 8, 'absent_but_plausible': 7}
+
+## Qwen/Qwen3-Reranker-0.6B — 개발용(heavy dev 44)으로 고른 문턱 lo=0.3 hi=0.99
+                                          정답   엉뚱   못찾음     LLM 호출 문제
+FT 구조 · heavy 판정 88                 79/88=90%    4     5      42/88=48%
+  26B 직접                            85/88=97%    3     0
+  12B 직접                            81/88=92%    7     0
+  기존 구조(E4B/E4B/12B)                84/88=95%    1     3
+FT 구조 · mix4 88(처음 보는 세트)           81/88=92%    3     4      40/88=45%
+  26B 직접                            81/88=92%    7     0
+  12B 직접                            79/88=90%    9     0
+  기존 구조(E4B/E4B/12B)                81/88=92%    4     3
+
+mix4 유형별(FT 구조, 유형당 8): {'context_pronoun': 8, 'duplicate_place': 7, 'confusable_name': 8, 'compound_intent': 6, 'negation': 8, 'typo_slang': 7, 'out_of_scope': 7, 'nameless_description': 8, 'ordinal_relative': 7, 'change_request': 7, 'absent_but_plausible': 8}
+
