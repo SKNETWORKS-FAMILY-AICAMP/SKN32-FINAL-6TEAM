@@ -5,12 +5,13 @@
   「조회가 막혔다」로 적는다(`intake/places.py` 의 NOT_THERE 밖의 사유).
 ★`[2026-10-07 팀]` `near`(앞 일정 좌표)를 원장 이름 찾기에도 넘긴다 — 같은 이름 여럿 · 「근처 칼국수집」에서 가까운 곳을 고르는 단서.
   `find_dish_near` — 「광장시장 빈대떡」처럼 장소를 먼저 찾은 뒤 그 좌표 근처의 메뉴 가게를 찾는다(`intake/places.resolve`).
+  `find_meal_near` — 「광장시장 점심」처럼 장소 근처의 식당 하나(`[2026-10-13]`).
 """
 from __future__ import annotations
 
 from typing import Any, Callable
 
-from .ledger import find_dish_near, find_license_shop_by_name, find_place_by_name
+from .ledger import find_dish_near, find_license_shop_by_name, find_meal_near, find_place_by_name
 
 
 class LedgerPlaceLookup:
@@ -47,6 +48,16 @@ class LedgerPlaceLookup:
         try:
             with self._connect() as conn:
                 found = find_dish_near(conn, text, (float(latitude), float(longitude)))
+        except Exception:   # noqa: BLE001
+            self.misses["unavailable"] = self.misses.get("unavailable", 0) + 1
+            return None
+        return self._seen(found)
+
+    def find_meal_near(self, latitude: float, longitude: float) -> dict[str, Any] | None:
+        """장소(시장 · 동네) 좌표 근처의 원장 식당 하나(「광장시장 점심」). 언제나 확인 필요."""
+        try:
+            with self._connect() as conn:
+                found = find_meal_near(conn, (float(latitude), float(longitude)))
         except Exception:   # noqa: BLE001
             self.misses["unavailable"] = self.misses.get("unavailable", 0) + 1
             return None
