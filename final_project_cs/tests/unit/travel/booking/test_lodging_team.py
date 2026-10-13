@@ -683,11 +683,11 @@ def test_google_options_carry_seller_prices_photo_and_address():
     google = {**NEAR_GOOGLE, "stays": [{**row, "property_token": f"tok-{i}", "image": f"https://img/{i}.jpg"}
                                        for i, row in enumerate(NEAR_GOOGLE["stays"])]}
     detail = {"address": "서울 용산구 어딘가", "image": None, "sellers": [
-        {"seller": "Agoda", "price_per_night": 125000.0, "link": "https://www.google.com/a", "official": False},
-        {"seller": "Trip.com", "price_per_night": 118000.0, "link": "https://www.google.com/t", "official": False},
-        {"seller": "Vio.com", "price_per_night": 99000.0, "link": "https://www.google.com/v", "official": False},
-        {"seller": "가까운 호텔", "price_per_night": 117000.0, "link": "https://www.google.com/o", "official": True},
-        {"seller": "Booking.com", "price_per_night": 130000.0, "link": "https://www.google.com/b", "official": False}]}
+        {"seller": "Agoda", "price_per_night": 125000.0, "link": None, "official": False},
+        {"seller": "Trip.com", "price_per_night": 118000.0, "link": "https://us.trip.com/hotels/redirect?hotelid=1", "official": False},
+        {"seller": "Vio.com", "price_per_night": 99000.0, "link": "https://vio.example", "official": False},
+        {"seller": "가까운 호텔", "price_per_night": 117000.0, "link": None, "official": True},
+        {"seller": "Booking.com", "price_per_night": 130000.0, "link": None, "official": False}]}
     result, _, tools = _itinerary(_plan(), {"read.stay_google": google,
                                             "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
     (asked,) = [a for name, a in tools.calls if name == "read.stay_google_details"]
@@ -695,8 +695,9 @@ def test_google_options_carry_seller_prices_photo_and_address():
     assert "1) 가까운 호텔(1박 120,000원 · 원래 숙소에서 2.0km · 판매처 공식 사이트 117,000원 · 트립닷컴 118,000원 · 아고다 125,000원)" in result.answer, \
         "Vio.com 처럼 목록에 없는 판매처는 빼고, 싼 순 3곳"
     option = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"][0]
-    assert (option["image"], option["address"], option["sellers"][0]["link"]) == (
-        "https://img/2.jpg", "서울 용산구 어딘가", "https://www.google.com/o")
+    assert (option["image"], option["address"]) == ("https://img/2.jpg", "서울 용산구 어딘가")
+    assert (option["link"], option["link_seller"]) == ("https://us.trip.com/hotels/redirect?hotelid=1", "트립닷컴"), \
+        "예약 버튼은 바로 갈 주소가 있는 가장 싼 판매처 — 공식 사이트(117,000원)는 주소가 없어 트립닷컴(118,000원)"
     assert result.action_proposals[0].arguments["summary"]["google_details"] == {"asked": 1, "read": 1}
 
 

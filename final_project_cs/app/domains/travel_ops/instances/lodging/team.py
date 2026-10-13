@@ -299,6 +299,7 @@ def _lodging_option(rank: int, pick: dict[str, Any], item: Any) -> dict[str, Any
             "latitude": pick.get("latitude"), "longitude": pick.get("longitude"), "link": pick["link"],
             # `[2026-10-13]` 화면용 — 사진 · 판매처별 가격(구글 호텔 후보만, 상세를 읽었을 때) · 주소
             "image": pick.get("image"), "sellers": pick.get("sellers") or [], "address": pick.get("address"),
+            "link_seller": pick.get("link_seller"),
             "property_token": pick.get("property_token")}
 
 
@@ -656,6 +657,10 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     pick["sellers"] = _sellers(found)
                     pick["address"] = found.get("address") or None
                     pick["image"] = pick.get("image") or found.get("image")
+                    # 예약 버튼 — 보여 주는 판매처 중 바로 갈 주소가 있는 가장 싼 곳(날짜가 채워진 판매처 화면). 없으면 호텔 링크 그대로
+                    direct = next((seller for seller in pick["sellers"] if seller.get("link")), None)
+                    if direct:
+                        pick["link"], pick["link_seller"] = direct["link"], direct["name"]
         record = {"itinerary": "lodging_options", "item": item.title, "query": query, "shown_before": len(shown),
                   "sizes": sizes_used, "options": [pick["name"] for pick in picks],
                   "anchor": anchor["kind"] if anchor else None, "reference_price": reference_price, "details_read": len(details),

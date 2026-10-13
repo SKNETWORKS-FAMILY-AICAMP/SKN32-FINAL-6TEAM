@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 from typing import Any, Callable
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 
@@ -32,6 +33,27 @@ TIMEOUT_SECONDS = 20.0
 
 def _number(value: Any) -> float | None:
     return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def seller_link(link: Any) -> tuple[str | None, str]:
+    """판매처 링크 → (쓸 주소, 종류). `[2026-10-13]` ☆10:32 playdata 명동: 판매처 링크가 모두 `google.com` 을 거쳤다.
+      - `google.com/aclk?…` 는 구글 **광고 클릭** 링크(아고다 · 부킹닷컴) — 고객에게 주면 광고 클릭이 된다 → 쓰지 않는다(`ad`).
+      - `google.com/travel/lodging/clk?…&pcurl=…` 는 안에 판매처 주소가 들어 있다(트립닷컴 — 호텔 번호 · 날짜 · 인원) → 그 주소(`seller`).
+      - 구글이 아닌 주소는 그대로(`seller`). 그 밖의 구글 경유 주소는 쓰지 않는다(`google`).
+    판매처 주소가 그 호텔 · 날짜 화면으로 열리는지는 **확인 안 함**."""
+    text = str(link or "").strip()
+    if not text:
+        return None, "none"
+    parsed = urlparse(text)
+    host = parsed.netloc.lower()
+    if not host.endswith("google.com"):
+        return text, "seller"
+    if parsed.path.startswith("/aclk"):
+        return None, "ad"
+    inner = (parse_qs(parsed.query).get("pcurl") or [""])[0]
+    if inner.startswith("https://") and not urlparse(inner).netloc.lower().endswith("google.com"):
+        return inner, "seller"
+    return None, "google"
 
 
 def _image(row: dict[str, Any]) -> str | None:
@@ -116,9 +138,10 @@ class SerpApiHotels(TravelSource):
                 if not isinstance(row, dict) or not row.get("source") or str(row["source"]) in seen:
                     continue
                 seen.add(str(row["source"]))
+                link, kind = seller_link(row.get("link"))
                 sellers.append({"seller": str(row["source"]),
                                 "price_per_night": _number((row.get("rate_per_night") or {}).get("extracted_lowest")),
-                                "link": str(row.get("link") or ""), "official": row.get("official") is True})
+                                "link": link, "link_kind": kind, "official": row.get("official") is True})
         return self.stamp({"property_token": property_token, "name": str(data.get("name") or ""),
                            "address": str(data.get("address") or ""), "phone": str(data.get("phone") or ""),
                            "image": _image(data), "sellers": sellers}, source=SOURCE)
@@ -129,4 +152,4 @@ class SerpApiHotels(TravelSource):
         return str(error)[:200] if error else None
 
 
-__all__ = ["SOURCE", "SerpApiHotels", "URL"]
+__all__ = ["SOURCE", "SerpApiHotels", "URL", "seller_link"]
