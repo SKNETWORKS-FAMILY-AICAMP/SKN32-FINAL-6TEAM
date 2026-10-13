@@ -3,6 +3,7 @@
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
     --only      classifying | routing | trip | trip_cases | trip_safety | trip_dawn | trip_reminders | place_facts | catalog_hours | trip_places | web_guard | retention 중 하나만 돌린다.
+                `team:<이름>` 은 팀이 끼운 정기 작업 하나를 시간대와 상관없이 지금 돌린다(`team_hooks/scheduled_jobs`).
 
 ★`retention` 은 **약관의 보관 기간 · 회원 자료 정리**다(`[2026-10-07 사용자 결정]`, 마이그레이션 056). 마지막 이용 뒤 `retention.member_idle_days` 가 지난 회원의 자료를 지우는데,
   **기본 모드는 `dry_run`(대상을 세기만 하고 `retention_runs` 에 건수를 남긴다 — 아무것도 안 지운다)** 이고 `on` 은 사용자가 건수를 보고 승인한 뒤 관리 화면에서 켠다.
@@ -255,6 +256,15 @@ def _run_jobs(tenant_id: str, only: str | None, *, composition_failed=False,
     if only in (None, "catalog_hours"):
         # ★`[2026-09-29 사용자 지시]` 관광공사 목록 운영시간 새벽 읽기 — 창(03:00~08:00) 밖이면 아무것도 안 한다
         run("catalog_hours", lambda: _run_catalog_hours(tenant_id))
+    # ★`[2026-10-13]` 에이전트 팀이 끼운 정기 작업(`instances/<팀>/jobs.py` → `team_hooks/scheduled_jobs`). 시간대 밖이면 부르지 않는다.
+    #   `--only team:<이름>` 은 시간대를 보지 않는다(손으로 부르는 것). 활동의 웹 확인 배치 등 — 활동 → 코어 전달 사항(10-13) 2번
+    if only is None or only.startswith("team:"):
+        from app.domains.travel_ops.components.team_hooks import scheduled_jobs
+
+        for job in scheduled_jobs.registered():
+            key = f"team:{job.name}"
+            if only in (None, key):
+                run(key, lambda job=job: _run_team_job(tenant_id, job, forced=only == key))
     # ★끝난 여행의 전용 장소 행(029)에서 외부 서비스 값(좌표·식별자)을 비운다 — 약관, `trip_places.py` 머리
     if only in (None, "trip_places"):
         run("trip_places", lambda: _run_trip_places(tenant_id))
@@ -298,6 +308,32 @@ def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
                        per_night=int(guard.get("travel.catalog_hours.per_night")),
                        per_tick=int(guard.get("travel.catalog_hours.per_tick")),
                        retry_days=int(guard.get("travel.catalog_hours.retry_days")))
+
+
+def _in_window(now, start: str, until: str) -> bool:
+    """서울 시각 `now` 가 `start`~`until`("HH:MM") 안인가. 자정을 넘는 시간대(22:00~02:00)도 받는다."""
+    from datetime import time as clock
+
+    begin, end = clock.fromisoformat(start), clock.fromisoformat(until)
+    at = now.time()
+    return begin <= at < end if begin <= end else (at >= begin or at < end)
+
+
+def _run_team_job(tenant_id: str, job, *, forced: bool = False, now=None) -> dict[str, object]:
+    """팀 정기 작업 한 회차 — 시간대(`guardrails travel.team_jobs.windows.<job.window>`) 밖이면 부르지 않는다."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from app.core.settings import get_guardrails
+
+    now = now or datetime.now(ZoneInfo("Asia/Seoul"))
+    if not forced:
+        window = get_guardrails().get(f"travel.team_jobs.windows.{job.window}")
+        if not isinstance(window, dict) or not window.get("start") or not window.get("until"):
+            raise ValueError(f"team job '{job.name}' window '{job.window}' is not configured")   # 모르는 시간대에 돌지 않는다
+        if not _in_window(now, str(window["start"]), str(window["until"])):
+            return {"outside_window": 1}
+    return dict(job.tick(tenant_id, now))
 
 
 def _run_retention(tenant_id: str, *, forced: bool) -> dict[str, object]:
@@ -562,10 +598,16 @@ def main() -> int:
     parser.add_argument("--once", action="store_true", default=True)
     parser.add_argument("--interval", type=int, default=None,
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
-    parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_safety", "trip_dawn", "place_facts",
-                                           "catalog_hours",
-                                           "trip_reminders", "trip_places", "web_guard", "retention"),
-                        default=None)
+    fixed = ("classifying", "routing", "trip", "trip_cases", "trip_safety", "trip_dawn", "place_facts", "catalog_hours",
+             "trip_reminders", "trip_places", "web_guard", "retention")
+
+    def job_name(value: str) -> str:
+        # `team:<이름>` — 팀이 끼운 정기 작업 하나(시간대를 보지 않고 지금 부른다)
+        if value in fixed or (value.startswith("team:") and len(value) > len("team:")):
+            return value
+        raise argparse.ArgumentTypeError(f"{value!r} 는 {', '.join(fixed)} 또는 team:<이름> 중 하나여야 한다")
+
+    parser.add_argument("--only", type=job_name, default=None)
     args = parser.parse_args()
 
     tenant_id = get_settings().tenant_id

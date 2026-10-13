@@ -370,6 +370,7 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
     judge_llm = None
     shadow_sink = None
     judge_budget = None
+    production = tools is None           # 아래에서 tools 를 만들어 넣으므로 먼저 적어 둔다
     if tools is None:
         judge_llm = build_activity_judge_llm()
         shadow_sink = build_activity_judge_shadow_sink() if judge_llm is not None else None
@@ -428,6 +429,12 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
             team.judge_shadow_sink = shadow_sink
             if hasattr(team, "judge_budget"):
                 team.judge_budget = judge_budget
+        if production and hasattr(team, "live_lookup"):
+            # ★`[2026-10-13]` 활동 → 코어 전달 사항 1번 — 배치가 저장한 실시간 운영 상태(`activity.ac_live_status`)를 팀이 읽는 함수.
+            #   팀은 DB 를 직접 열지 않으므로 조립이 꽂는다(`judge_budget` 과 같은 방식). 도구를 주입한 조립(시험)에는 꽂지 않는다.
+            from app.domains.travel_ops.instances.activity import live_store
+
+            team.live_lookup = live_store.build_lookup(get_connection)
         team.manifest = team.manifest.model_copy(update={"active": declaration.active,
                                                          "team_id": declaration.team_id})
         if declaration.capabilities is not None and set(declaration.capabilities) != set(team.manifest.capabilities):
@@ -783,6 +790,21 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                 adopt=lodging_ledger_impl.adopt_option,
                                 item_key=lodging_ledger_impl.item_key,
                                 offers=lodging_ledger_impl.shown_offers)
+    # 팀 정기 작업 — 활성 팀이 `instances/<팀>/jobs.py` 에 `JOBS` 를 두면 등록한다. 작업 실행기가 시간대 안에서 부른다.
+    #   `[2026-10-13]` 활동 → 코어 전달 사항 2번: 전에는 실행기에 작업이 고정돼 있어 팀 배치마다 코어를 고쳐야 했다.
+    from app.domains.travel_ops.components.team_hooks import scheduled_jobs
+
+    for team_id in sorted(active_ids):
+        module_name = f"app.domains.travel_ops.instances.{team_id}.jobs"
+        try:
+            jobs_module = importlib.import_module(module_name)
+        except ModuleNotFoundError as exc:
+            if exc.name and module_name.startswith(exc.name):      # 그 팀은 정기 작업이 없다(파일이 없다)
+                continue
+            raise                                                   # jobs.py 안의 import 가 깨졌다 — 숨기지 않는다
+        for job in getattr(jobs_module, "JOBS", ()):
+            scheduled_jobs.register(team_id, job)
+
     names = {"mobility": ("legs",), "dining": ("dining_ledger",), "activity": ("similarity", "activity_ledger")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
     hook_names = {**names, "lodging": ("lodging_ledger",)}
