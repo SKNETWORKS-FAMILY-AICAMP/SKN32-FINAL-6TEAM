@@ -229,7 +229,7 @@ function telegramChannelRefusal(body) {
 let attempts = new Map();
 // ── 동의 기록 (2026-10-05) ── 시작
 /** The terms version the page under test carries (`src/features/consent/terms-content.ts` `TERMS_VERSION`) - keep the two the same; a different one is what "server_ahead" plays. */
-const TERMS_VERSION = "2026-10-10.1";   // 웹 `terms-content.ts` 와 같은 값(2026-10-07 보관 기간 확정)
+const TERMS_VERSION = "2026-10-13.1";   // 웹 `terms-content.ts` 와 같은 값(`[2026-10-13]` 약관의 「마이페이지」 → 실제 화면 이름)
 // `[2026-10-12]` The codes the cs server records (`consents.py` `CODES`) - not the page's list. The page's sixth, `service_improvement`, is
 // not on the server yet and the server refuses the whole save when it comes (wiki/records/reports/debugs/2026-10-12_2024_동의저장_422_웹6항목_서버5항목.md);
 // the stub had it, which is why the browser tests passed. Add it here when the server takes it.

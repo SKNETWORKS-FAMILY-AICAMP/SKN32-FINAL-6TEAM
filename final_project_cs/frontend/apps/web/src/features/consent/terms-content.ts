@@ -14,7 +14,7 @@ import type { ConsentCode } from "./consent-model";
  *   `wiki/records/plans/2026-10-05_약관_초안/00_법무확인_목록.md` 의 대조 표에 있다. 그 폴더의 01~05 는 이 파일의 한국어 본문 사본이다.
  * - ★정해지지 않은 값은 지어내지 않는다 — 본문에 「【확정 필요: …】」를 직접 쓰지 않고 `OPERATOR` · `RETENTION` 상수를 끼워 넣는다(시험이 지킨다).
  */
-export const TERMS_VERSION = "2026-10-10.1";   // 서비스 개선 선택 동의 추가. cs 프로젝트 서버 consent.terms_version과 함께 변경한다.
+export const TERMS_VERSION = "2026-10-13.1";   // `[2026-10-13]` 「마이페이지」를 실제 화면 이름(설정 › 약관 · 동의 / 알림 받는 곳)으로 — 메뉴 = 마이페이지 · 설정 화면 개편. (앞 판 2026-10-10.1: 서비스 개선 선택 동의 추가.) cs 프로젝트 서버 consent.terms_version과 함께 변경한다.
 // 이전 판 2026-10-05.1 = 운영 주체 · 문의 연락처 · 보호책임자를 채웠다(글이 바뀌었으니 버전을 올린다). 서버 `consent.terms_version` 과 같이 올린다
 export const TERMS_STATUS: "draft" | "reviewed" = "reviewed";   // `[2026-10-07 사용자 결정]` 보관 기간 확정 · 안내문(「AI 작성 초안 …」)을 더 띄우지 않는다. ★변호사 검토를 했다는 뜻이 아니다 — 안내를 내리기로 한 사용자 결정이다
 /** 시행일("YYYY-MM-DD"). 확정 전에는 초안 작성일. */
@@ -659,7 +659,7 @@ const privacy: TermsDoc = {
           "② 다음은 서비스 화면에서 직접 할 수 있습니다.",
           list(
             "여행 삭제(바로 지워짐), 일정 수정, 계획서 내려받기",
-            "선택 동의의 철회(마이페이지)",
+            "선택 동의의 철회(설정 › 「약관 · 동의」)",
             "소셜 계정 연결 해제, 에이전트 키 폐기, 디스코드 웹훅 삭제",
           ),
           `③ 화면에서 할 수 없는 요구(회원 자료 전체의 삭제, 처리 기록의 열람 · 삭제 등)는 문의처(${OPERATOR.contact})로 할 수 있습니다. 운영자는 관계 법령이 정한 기간 안에 처리하고 결과를 알려야 합니다.`,
@@ -671,7 +671,7 @@ const privacy: TermsDoc = {
           "(2) The following can be done directly on the Service screens:",
           list(
             "deleting a trip (deleted at once), editing the schedule, downloading the plan;",
-            "withdrawing optional consents (My Page);",
+            "withdrawing optional consents (Settings → “Terms & consents”);",
             "disconnecting a social account, revoking an agent key, deleting the Discord webhook.",
           ),
           `(3) Requests that cannot be made on screen (deleting all of a member's data, seeing or deleting handling records, and so on) may be sent to ${OPERATOR.contact}. The Operator must handle them within the period set by law and report the result.`,
@@ -870,8 +870,8 @@ const sensitive: TermsDoc = {
     {
       heading: ["제6조 (동의를 거부할 권리와 불이익)", "Article 6 (Right to refuse and its effect)"],
       body: [
-        "이용자는 이 동의를 거부할 수 있습니다. 거부해도 서비스를 이용할 수 있으며, 식당을 확인하거나 바꿀 때 종교 · 신념과 관련된 식사 조건이 반영되지 않는 것 말고는 불이익이 없습니다. 이용자는 동의한 뒤에도 마이페이지에서 언제든 철회할 수 있습니다.",
-        "The user may refuse this consent. The user can still use the Service; the only effect is that food conditions related to religion or beliefs are not taken into account when restaurants are checked or replaced. The user may withdraw this consent at any time on My Page.",
+        "이용자는 이 동의를 거부할 수 있습니다. 거부해도 서비스를 이용할 수 있으며, 식당을 확인하거나 바꿀 때 종교 · 신념과 관련된 식사 조건이 반영되지 않는 것 말고는 불이익이 없습니다. 이용자는 동의한 뒤에도 설정 › 「약관 · 동의」에서 언제든 철회할 수 있습니다.",
+        "The user may refuse this consent. The user can still use the Service; the only effect is that food conditions related to religion or beliefs are not taken into account when restaurants are checked or replaced. The user may withdraw this consent at any time in Settings → “Terms & consents”.",
       ],
     },
     LANGUAGE_SECTION,
@@ -996,13 +996,13 @@ const location: TermsDoc = {
       heading: ["제8조 (이용자의 권리와 행사 방법)", "Article 8 (Users' rights and how to use them)"],
       body: [
         paras(
-          "① 이용자는 언제든 이 동의의 전부 또는 일부를 철회할 수 있습니다. 마이페이지에서 위치 동의를 끄면 됩니다.",
+          "① 이용자는 언제든 이 동의의 전부 또는 일부를 철회할 수 있습니다. 설정 › 「약관 · 동의」에서 위치 동의를 끄면 됩니다.",
           "② 이용자는 언제든 위치 수집 · 이용의 일시 중지를 요구할 수 있습니다. 브라우저(기기) 설정에서 이 사이트의 위치 권한을 끄면 그때부터 위치를 읽지 않습니다.",
           `③ 이용자는 자기에 대한 확인자료와 개인위치정보를 제3자에게 제공한 이유 · 내용의 열람이나 고지를 요구할 수 있고, 오류가 있으면 정정을 요구할 수 있습니다. 이 요구는 ${OPERATOR.contact}로 합니다.`,
           "④ 운영자는 이 요구를 거절하지 않으며, 지체 없이 처리해야 합니다.",
         ),
         paras(
-          "(1) The user may withdraw all or part of this consent at any time by turning off the location consent on My Page.",
+          "(1) The user may withdraw all or part of this consent at any time by turning off the location consent in Settings → “Terms & consents”.",
           "(2) The user may at any time ask for the collection and use of their position to be paused. Turning off this site's location permission in the browser (device) settings stops the Service from reading the position from then on.",
           `(3) The user may ask to see, or be told about, the records about themselves and the reasons for and contents of any provision of their personal location data to third parties, and may ask for errors to be corrected. These requests go to ${OPERATOR.contact}.`,
           "(4) The Operator does not refuse these requests and must handle them without delay.",
@@ -1073,7 +1073,7 @@ const alertChannel: TermsDoc = {
             "텔레그램(서비스가 제공하는 경우): 대화 번호, 연결 시각, 연결 상태. 텔레그램 이름 · 사용자명 · 전화번호 · 프로필 사진은 받더라도 저장하지 않습니다.",
             "알림을 받을 곳(어느 메신저인지)",
           ),
-          "알림은 한 번에 한 곳으로만 보냅니다. 여러 메신저를 연결했다면 이용자가 마지막에 연결했거나 마이페이지에서 고른 곳으로 보냅니다.",
+          "알림은 한 번에 한 곳으로만 보냅니다. 여러 메신저를 연결했다면 이용자가 마지막에 연결했거나 설정 › 「알림 받는 곳」에서 고른 곳으로 보냅니다.",
         ),
         paras(
           list(
@@ -1081,7 +1081,7 @@ const alertChannel: TermsDoc = {
             "Telegram (where the Service offers it): the chat number, the time of connection and the connection status. Telegram names, usernames, phone numbers and profile photos are not stored even if received.",
             "Which messenger alerts go to",
           ),
-          "Each alert is sent to one place only. If the user has connected more than one messenger, alerts go to the one connected last or chosen on My Page.",
+          "Each alert is sent to one place only. If the user has connected more than one messenger, alerts go to the one connected last or chosen in Settings → “Where alerts go”.",
         ),
       ],
     },
@@ -1114,8 +1114,8 @@ const alertChannel: TermsDoc = {
     {
       heading: ["제5조 (동의를 거부할 권리와 불이익)", "Article 5 (Right to refuse and its effect)"],
       body: [
-        "이용자는 이 동의를 거부할 수 있습니다. 거부해도 서비스를 이용할 수 있으며, 메신저로 알림을 받지 못하는 것 말고는 불이익이 없습니다. 최신 일정은 웹 화면과 여행계획서 링크에서 볼 수 있습니다. 이용자는 마이페이지에서 언제든 연결을 풀거나 이 동의를 철회할 수 있습니다.",
-        "The user may refuse this consent. The user can still use the Service; the only effect is that alerts are not sent to a messenger. The latest schedule is shown on the web screens and the trip plan link. The user may disconnect a messenger or withdraw this consent at any time on My Page.",
+        "이용자는 이 동의를 거부할 수 있습니다. 거부해도 서비스를 이용할 수 있으며, 메신저로 알림을 받지 못하는 것 말고는 불이익이 없습니다. 최신 일정은 웹 화면과 여행계획서 링크에서 볼 수 있습니다. 이용자는 언제든 설정 › 「알림 받는 곳」에서 연결을 풀거나 「약관 · 동의」에서 이 동의를 철회할 수 있습니다.",
+        "The user may refuse this consent. The user can still use the Service; the only effect is that alerts are not sent to a messenger. The latest schedule is shown on the web screens and the trip plan link. The user may at any time disconnect a messenger in Settings → “Where alerts go” or withdraw this consent in “Terms & consents”.",
       ],
     },
     LANGUAGE_SECTION,
@@ -1148,8 +1148,8 @@ const serviceImprovement: TermsDoc = {
     {
       heading: ["제3조 (거부·철회와 효과)", "Article 3 (Refusal and withdrawal)"],
       body: [
-        "이 동의는 선택입니다. 거부하거나 철회해도 기본 서비스를 계속 이용할 수 있습니다. 마이페이지의 약관 동의 관리에서 철회하면 이후 추출에서 제외하고 검토 대기 합성 후보를 폐기합니다. 이미 익명성 검토를 마친 합성본에는 개인과 연결하는 표를 두지 않아 특정 이용자의 기여분을 찾아 개별 회수할 수 없습니다. 문의는 개인정보 보호 문의 창구로 할 수 있습니다.",
-        "This consent is optional. Refusal or withdrawal does not restrict the basic service. Withdraw through consent management in My Page; future extraction excludes you and pending synthetic candidates are discarded. Approved anonymous data has no table linking it to individuals, so a particular user's contribution cannot be individually located or recalled. Contact the privacy inquiry channel for questions.",
+        "이 동의는 선택입니다. 거부하거나 철회해도 기본 서비스를 계속 이용할 수 있습니다. 설정 › 「약관 · 동의」에서 철회하면 이후 추출에서 제외하고 검토 대기 합성 후보를 폐기합니다. 이미 익명성 검토를 마친 합성본에는 개인과 연결하는 표를 두지 않아 특정 이용자의 기여분을 찾아 개별 회수할 수 없습니다. 문의는 개인정보 보호 문의 창구로 할 수 있습니다.",
+        "This consent is optional. Refusal or withdrawal does not restrict the basic service. Withdraw in Settings → “Terms & consents”; future extraction excludes you and pending synthetic candidates are discarded. Approved anonymous data has no table linking it to individuals, so a particular user's contribution cannot be individually located or recalled. Contact the privacy inquiry channel for questions.",
       ],
     },
     LANGUAGE_SECTION,
