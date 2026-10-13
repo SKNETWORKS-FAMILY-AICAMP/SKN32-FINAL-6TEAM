@@ -64,3 +64,20 @@ def test_a_delay_does_not_push_the_stay_or_everything_after_its_check_out():
     knocks = delay_knock_on([lunch, stay, dinner], lunch, 30)
     assert [k.item.title for k in knocks] == [], "30분 늦어도 15:00 체크인 · 18:00 저녁은 그대로 — 숙소가 체크아웃까지 커서를 끌지 않는다"
     assert all(k.item.kind != "lodging" for k in delay_knock_on([lunch, stay, dinner], lunch, 600)), "숙소는 늦음 연쇄 대상이 아니다"
+
+
+def test_choosing_another_stay_does_not_push_the_evening_plan_to_the_check_out_day():
+    """☆2026-10-13 로컬 확인 — 3박 숙소에서 후보를 고르자 「다른 안으로」(`plan_swap`)가 끝(체크아웃)까지 뒤 일정을 밀려다 `conflicts_next` 로 막혔다."""
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, plan_swap
+
+    stay = Item(item_id=uuid4(), seq=1, kind="lodging", title="롯데호텔", place_id=None, starts_at=_at(6, 15), ends_at=_at(9, 11),
+                place=None, detail={"alternates": [{"key": "myrealtrip:1", "name": "코리아나 호텔", "place_id": None,
+                                                    "starts_at": _at(6, 15).isoformat(), "ends_at": _at(9, 11).isoformat()}]})
+    move = Item(item_id=uuid4(), seq=2, kind="mobility", title="호텔 → 저녁", place_id=None, starts_at=_at(6, 17, 40), ends_at=_at(6, 17, 52),
+                place=None, detail={})
+    dinner = Item(item_id=uuid4(), seq=3, kind="dining", title="저녁", place_id=None, starts_at=_at(6, 18), ends_at=_at(6, 19),
+                  place=None, detail={})
+    plan = plan_swap(trip_version=1, base_version=1, items=[stay, move, dinner], places_by_id={}, item_id=stay.item_id,
+                     choice="myrealtrip:1", message=None, request_id=None, check=None)
+    assert isinstance(plan, ItineraryChange), plan
+    assert set(plan.replacements) == {stay.item_id}, "저녁 쪽 이동은 그대로 — 밀지 않는다"

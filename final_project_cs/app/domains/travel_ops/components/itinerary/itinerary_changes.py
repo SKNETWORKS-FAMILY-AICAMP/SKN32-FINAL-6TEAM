@@ -29,7 +29,7 @@ from typing import Any, Callable
 from uuid import UUID
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item
-from app.domains.travel_ops.components.itinerary.itinerary_checks import leave_at, seoul
+from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS, leave_at, seoul
 from app.domains.travel_ops.components.planning.replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, DiningStateLookup, activity_candidates, alternate_record,
                      apply_google_prices, brand_of, change_notice, choose, dining_candidates, dining_fits, dining_notice,
                      MealRoute, meal_route, route_candidates, route_notice, store_candidates)
@@ -939,7 +939,8 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
     # ★`[2026-09-29 ui 세션 지적]` 시각을 늦춘 안(조건 풀기 「08:30으로 늦추면」)은 **뒤따르는 이동을 함께 민다** — 전에는 바로 다음
     #   항목(09:00 출발 이동)과 겹친다고 `conflicts_next` 로 막아, 제안에 올린 안을 고를 수 없었다. 이동은 소요를 그대로 두고
     #   새 끝 시각 뒤로 옮기며, 그래도 **다음 장소 일정**에 늦으면 그때 막는다(`shift_moves_after` — 제안을 만들 때도 같은 기준).
-    shifted, late_for = shift_moves_after(items, current, ends)
+    # `[2026-10-13]` 숙소(며칠에 걸친다)는 뒤 일정을 밀지 않는다 — 끝(체크아웃)이 며칠 뒤라 그대로 밀면 그날 저녁 일정이 「늦는다」로 막힌다
+    shifted, late_for = ({}, None) if current.kind in STAY_KINDS else shift_moves_after(items, current, ends)
     if late_for is not None:
         return NoChange("conflicts_next", {"next": late_for.title})
     place = places_by_id.get(str(pick["place_id"])) if pick.get("place_id") else None
