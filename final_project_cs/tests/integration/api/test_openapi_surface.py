@@ -88,6 +88,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/chat",
     "/v1/web/map-load",
     "/v1/web/trips/{trip_id}/rollback",
+    # ★2026-10-13 「일정 수정」 — 등록한 여행을 확인 화면 접수로 다시 연다. `wiki/external/rest-endpoints.md` 「등록한 여행 고치기」
+    "/v1/web/trips/{trip_id}/reopen",
+    "/v1/web/trip-intakes/{intake_id}/cancel",
     # ★2026-10-02 웹(사용자 키)용 신고 · 다른 안으로 — 에이전트 입구(`/v1/trips/{id}/reports` · `…/alternate`)와 같은 처리, 본인 여행만. 개인 AI(MCP)가 쓴다
     "/v1/web/trips/{trip_id}/reports",
     "/v1/web/trips/{trip_id}/items/{item_id}/alternate",

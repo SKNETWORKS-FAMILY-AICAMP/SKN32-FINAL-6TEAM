@@ -178,7 +178,8 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
         problems.append(Problem("no_date", f"{where}.date", f"「{title or '이 항목'}」의 날짜를 모릅니다 — "
                                 "첫날 날짜를 알려 주세요", sid))
     place = value("place")
-    no_place = (fields.get("place") or {}).get("method") == "customer" and place is None
+    # ★`[2026-10-13]` 수정 접수가 등록한 여행에서 가져온 「장소 없음」(`method: trip`)도 고객이 정한 「장소 없음」과 같다(`reopen.py`)
+    no_place = (fields.get("place") or {}).get("method") in ("customer", "trip") and place is None
     if not place and not no_place:
         problems.append(Problem("no_place", f"{where}.place", f"「{title or '이 항목'}」의 장소를 정하지 못했습니다 — "
                                 "장소 이름을 고치거나 「장소 없음」으로 두세요", sid))

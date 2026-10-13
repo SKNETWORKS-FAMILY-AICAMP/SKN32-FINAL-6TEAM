@@ -11,7 +11,7 @@ import { MoveModeBox } from "./move-mode";
 import { Act, Checks, NeedsLine, needsOf, VerdictMark } from "./parts";
 import type { PlanCheckActions } from "./plan-check";
 import { insertionPoints, type InsertionPoint } from "./insertion-points";
-import { RailList } from "./rail-list";
+import { RailList, type RailNow } from "./rail-list";
 import { StopKind } from "./stop-kind";
 import type { Grab, TimeEditHandles, TimeKind } from "./use-time-edit";
 import styles from "./plan-check.module.css";
@@ -93,7 +93,7 @@ export interface TimeEditUi {
 }
 
 /** The days of a view, each with its timeline: stops (cards) and the moves between them. */
-export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }: {
+export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading, now }: {
   view: PlanCheckView;
   days: PlanDay[];
   listDay: number | "all";
@@ -101,19 +101,21 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
   mapDay: number;
   onShowDay: (day: number) => void;
   heading: (day: PlanDay) => ReactNode;
+  /** `[2026-10-13 사용자 결정 — 수정 모드]` The trip screen's 「지금」 on a day's line (the edit of a registered trip); none on the plan check of a new plan. */
+  now?: (date: string) => RailNow | null;
 }) {
   return <>{days.filter((day) => (listDay === "all" || day.day === listDay) && timeline(view, day.day).some(ctx.visible)).map((day) =>
     <section key={day.day} aria-labelledby={`${ctx.prefix}plan-day-${day.day}`}>
       <h3 id={`${ctx.prefix}plan-day-${day.day}`} className={styles.day}>{ctx.done
         ? <button type="button" className={styles.dayButton} aria-pressed={mapDay === day.day} onClick={() => onShowDay(day.day)}>{heading(day)}</button>
         : heading(day)}</h3>
-      <RailList className={styles.timeline}>{(() => {
+      <RailList className={styles.timeline} now={now?.(day.date)}>{(() => {
         const times = dayTimes(view, day.day);
         const points = ctx.insertion ? insertionPoints(view, day) : [];
         return <>{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
           {points[index] && ctx.insertion?.(points[index])}
           {entry.type === "item"
-            ? <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
+            ? entry.item.past ? <PastItemRow item={entry.item} ctx={ctx} /> : <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
             : <MoveRow move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={ctx} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />}
         </Fragment>)}{points.at(-1) && ctx.insertion?.(points.at(-1)!)}</>;
       })()}</RailList>
@@ -232,6 +234,20 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
         </div>
       </div>}
     </article>
+  </li>;
+}
+
+/**
+ * `[2026-10-13 사용자 결정 — 수정 모드]` A stop of the registered trip that is over: the trip screen's thin grey line (its name, 「~end」). It is not in the edit — the server keeps it as it is —
+ * so it has no tools, and pressed it says why.
+ */
+function PastItemRow({ item, ctx }: { item: PlanItem; ctx: RowContext }) {
+  const t = useT();
+  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-past data-passed>
+    <span className={styles.time}>{item.startsAt}</span>
+    <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
+    <div><Act className={styles.pastLine} why={t("지난 일정이라 바꿀 수 없어요", "This stop is over, so it cannot change")} explain={ctx.explain} onPress={() => undefined}
+      aria-label={t(`${item.title} · 지난 일정`, `${item.title} · past`)}><span>{item.title}</span><small>~{item.endsAt || "—"}</small></Act></div>
   </li>;
 }
 

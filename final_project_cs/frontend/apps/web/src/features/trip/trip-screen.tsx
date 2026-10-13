@@ -2,7 +2,7 @@
 
 import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Bell, ChevronsRight, MessageCircle, OctagonAlert } from "lucide-react";
+import { ArrowLeft, Bell, ChevronsRight, MessageCircle, OctagonAlert, Pencil } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { OverlayRoot } from "@/components/layout/overlay-root";
 import { JourneyShell } from "@/components/layout/journey-shell";
@@ -36,6 +36,7 @@ import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
 import { DetailHeader, TripDetail } from "./trip-detail";
+import { TripEdit } from "./trip-edit";
 import { TitleMenu, TripShare, TripTitle } from "./trip-title";
 import { SafetyPanel, shelterMeta } from "./trip-safety";
 import { tripKey, useTrip } from "./use-trip";
@@ -69,14 +70,17 @@ const UNDER_CHIPS = 96;
  */
 export function TripScreen({ tripId }: { tripId: string }) {
   const query = useTrip(tripId);
+  // `[2026-10-13 사용자 결정 — D 수정 모드]` 「일정 수정」: the same page becomes the plan check of this trip (`trip-edit.tsx`) until 「완료」, then the trip is drawn afresh.
+  const [editing, setEditing] = useState(false);
   // ★A failed re-read keeps the plan already on screen (react-query keeps the last data). Only a trip that never loaded shows the error page — the change bell re-reads often.
   // ★`[2026-10-05]` But a trip that is gone (`not_found`) or a session that ended (`session_expired`) is not drawn from the cache: another account's plan must not stay on the screen.
   const gone = query.error instanceof LiveError && ["not_found", "session_expired"].includes(query.error.code);
   if (query.isPending || !query.data || gone) {
     return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} /></JourneyShell>;
   }
+  if (editing) return <TripEdit trip={query.data} onExit={() => setEditing(false)} />;
   // `useTripGuardian` reads the address (`?guardian=on`): wait for it outside the server render.
-  return <Suspense fallback={null}><TripView key={query.data.id} trip={query.data} stale={query.isError ? { reload: () => void query.refetch(), fetching: query.isFetching } : null} /></Suspense>;
+  return <Suspense fallback={null}><TripView key={query.data.id} trip={query.data} stale={query.isError ? { reload: () => void query.refetch(), fetching: query.isFetching } : null} onEdit={() => setEditing(true)} /></Suspense>;
 }
 
 const monthDay = (date: string) => `${date.slice(5, 7)}.${date.slice(8, 10)}`;
@@ -85,7 +89,7 @@ const weekday = (date: string, language: Language) =>
 const dayLabel = (date: string, language: Language) => `${monthDay(date)} ${weekday(date, language)}`;
 const dayName = (index: number, t: Translate) => t(`${index + 1}일차`, `Day ${index + 1}`);
 
-function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null }) {
+function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null; onEdit: () => void }) {
   const t = useT();
   const { language, skipAnimation } = useSettings();
   const queryClient = useQueryClient();
@@ -564,8 +568,11 @@ function TripView({ trip, stale }: { trip: Trip; stale: { reload: () => void; fe
               {/* `[2026-10-07 목업 C안]` 재난으로 정지된 동안만 채팅 버튼 앞에 — 누르면 알림 센터(할 일 맨 위가 정지 패널). */}
               {trip.safety?.paused && <button type="button" className={styles.pausedChip} onClick={() => openCenter()} aria-label={t("일정 정지 중 · 알림 센터 열기", "Itinerary paused · open notices")}>
                 <OctagonAlert size={16} strokeWidth={2} aria-hidden="true" />{t("일정 정지 중", "Paused")}</button>}
-              <button type="button" className={styles.chatButton} id="trip-pane-button-chat" aria-pressed={!plan} aria-controls="trip-pane-chat" onClick={() => goPane(plan ? "chat" : "plan")}>
-                <MessageCircle size={15} strokeWidth={2} aria-hidden="true" />{t("채팅", "Chat")}</button>
+              {/* `[2026-10-13 사용자 결정 — 수정 모드 · 후보 1]` 「일정 수정」 · 채팅은 아이콘 단추 둘(이름은 화면 읽기 · 툴팁). 「일정 수정」을 누르면 같은 화면이 수정 모드(`trip-edit.tsx`)가 된다. */}
+              <button type="button" className={styles.chatButton} data-icon id="trip-edit-button" onClick={onEdit} aria-label={t("일정 수정", "Edit itinerary")} title={t("일정 수정", "Edit itinerary")}>
+                <Pencil size={16} strokeWidth={1.8} aria-hidden="true" /></button>
+              <button type="button" className={styles.chatButton} data-icon id="trip-pane-button-chat" aria-pressed={!plan} aria-controls="trip-pane-chat" onClick={() => goPane(plan ? "chat" : "plan")} aria-label={t("채팅", "Chat")} title={t("채팅", "Chat")}>
+                <MessageCircle size={16} strokeWidth={2} aria-hidden="true" /></button>
             </div>
           </header>
           <div className={`${styles.pager} ${detailStop || compact ? styles.away : ""}`}>

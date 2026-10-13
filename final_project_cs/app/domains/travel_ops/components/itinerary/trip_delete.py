@@ -114,8 +114,9 @@ def delete_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID) -> di
         for table, column in _PURGE:
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s AND {column}=%s", (tenant_id, trip_id))
             counts[table] = cur.rowcount
-        # 접수 — 이 여행으로 만든 것만(자식 `intake_sources` · `intake_claims` · `intake_reviews` 는 CASCADE)
-        cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s AND trip_id=%s AND customer_id=%s", (tenant_id, trip_id, customer_id))
+        # 접수 — 이 여행으로 만든 것 · ★`[2026-10-13]` 이 여행을 다시 연 수정 접수(`intake/reopen.py`)만(자식 `intake_sources` · `intake_claims` · `intake_reviews` 는 CASCADE)
+        cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s AND (trip_id=%s OR reopen_trip_id=%s) AND customer_id=%s",
+                    (tenant_id, trip_id, trip_id, customer_id))
         counts["trip_intakes"] = cur.rowcount
         cur.execute("DELETE FROM trips WHERE tenant_id=%s AND trip_id=%s", (tenant_id, trip_id))
         counts["trips"] = cur.rowcount

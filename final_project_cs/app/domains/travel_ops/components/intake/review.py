@@ -96,6 +96,8 @@ def place_state(row: dict[str, Any]) -> tuple[str, dict[str, Any] | None]:
     evidence = (claim or {}).get("evidence") or {}
     if claim and claim["method"] == "customer":
         return ("none", None) if (value is None or evidence.get("none")) else ("customer", value)
+    if claim and claim["method"] == "trip" and value is None:
+        return "none", None                # ★`[2026-10-13]` 등록한 여행의 「장소 없음」 일정을 다시 연 것(`reopen.py`)
     if evidence.get("method") == "nameless":
         return ("needs_name" if evidence.get("booked") is True else "needs_choice"), None
     if not value or row["place"] is None:

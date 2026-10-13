@@ -19,6 +19,8 @@
 .chatButton { display: inline-flex; flex: none; align-items: center; gap: 5px; min-height: 34px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 750; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 12%, transparent); }
 .chatButton[aria-pressed="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-on-primary); }
 .chatButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* `[2026-10-13 사용자 결정 — 수정 모드 · 후보 1]` 「일정 수정」 · 채팅은 34px 둥근 아이콘 단추. 수정 모드의 「취소」(plan check 의 시트 머리)는 이 단추 모양 그대로. */
+.chatButton[data-icon] { justify-content: center; width: 34px; padding: 0; }
 /* In the chat pane no day chip is shown chosen (the chat button is). */
 .sharedHead [data-chat] [data-lit] { border-color: var(--color-border-strong); color: var(--color-muted); }
 .sharedHead [data-chat] > :first-child { opacity: 0; }

@@ -7,8 +7,8 @@ import { streamApi, type OpProgress } from "./stream";
 /** One value the server read, with how it was read and the evidence behind it (server `intake_claims`). */
 export interface IntakeField {
   value: unknown;
-  /** rule · llm_span (the model pointed at a span of the original) · lookup (place search) · customer */
-  method: "rule" | "llm_span" | "lookup" | "customer";
+  /** rule · llm_span (the model pointed at a span of the original) · lookup (place search) · customer · trip (`[2026-10-13]` taken from the registered trip an edit reopened) */
+  method: "rule" | "llm_span" | "lookup" | "customer" | "trip";
   evidence: { line?: number; text?: string; source?: string; how?: string; blocked?: string[] } & Record<string, unknown>;
   needs_review: boolean;
   note: string | null;
@@ -56,6 +56,11 @@ export interface IntakeView {
   questions?: IntakeQuestion[];
   /** The question set these come from; a change in meaning of an option raises it. Kept for the record - the page does not branch on it. */
   questions_version?: string;
+  /**
+   * `[2026-10-13]` An edit of a registered trip (`reopenTrip`): the trip and the version it reopened, and the trip's stops left out of the intake (over, or not an activity or a meal) —
+   * they stay as they are when the edit is done. Null (or absent, an older server) on an intake read from a plan.
+   */
+  reopen?: { trip_id: string; version: number; frozen_item_ids: string[] } | null;
 }
 
 /** One question of `questions[]`. Only `kind: "single"` (pick one option) is drawn today; the fields are read as data and checked again before drawing (`features/survey-questions/model.ts`). */
@@ -127,7 +132,24 @@ export function submitSurveyAnswers(intakeId: string, answers: Record<string, st
   });
 }
 
-export function confirmIntake(intakeId: string, revision: number, language: Language, survey?: TripSurvey): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
+/**
+ * `[2026-10-13 사용자 결정]` 「일정 수정」: the registered trip as a plan-check intake (`POST /v1/web/trips/{id}/reopen`, `wiki/external/rest-endpoints.md` 「등록한 여행 고치기」). Its changes go
+ * through the intake's own calls; `confirmIntake` on it writes the trip's next version. `version` is the trip version on screen — another one is refused (409 `stale_itinerary`).
+ * The same trip and version opened again answer the same intake, with what was changed in it.
+ */
+export function reopenTrip(tripId: string, version: number, language: Language): Promise<ReviewedIntakeView> {
+  return api(`/v1/web/trips/${encodeURIComponent(tripId)}/reopen`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ version }),
+  });
+}
+
+/** `[2026-10-13 사용자 지시]` 「취소」 of an edit (`reopenTrip`): the intake is closed — nothing is written to the trip, and the next 「일정 수정」 starts afresh. */
+export function cancelTripEdit(intakeId: string, language: Language): Promise<{ intake_id: string; status: "closed" }> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/cancel`, language, { method: "POST" });
+}
+
+/** On an edit of a registered trip (`reopen`) it answers the trip's `version` after it and whether a new one was written (`changed: false` = nothing was different). */
+export function confirmIntake(intakeId: string, revision: number, language: Language, survey?: TripSurvey): Promise<{ status: "confirmed"; trip: { trip_id: string }; version?: number; changed?: boolean }> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/confirm`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, ...(survey && { survey }) }),
   });
