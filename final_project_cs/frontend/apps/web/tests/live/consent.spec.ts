@@ -142,7 +142,8 @@ test("서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안
   await expect(page.getByRole("alert", { name: "약관 확인 진행" })).toContainText("약관이 새로 바뀌었어요");
 });
 
-for (const wait of [{ ms: 500, visible: false }, { ms: 1200, visible: true }]) {
+// `[2026-10-13 develop 병합]` 안내는 확인이 3초를 넘어야 뜬다(role-manager 773d10df — `CHECK_CARD_AFTER_MS = 3000`, 10-12). 시험만 1초 기준으로 남아 있었다.
+for (const wait of [{ ms: 2500, visible: false }, { ms: 3200, visible: true }]) {
   test(`동의 응답 ${wait.ms}ms 대기에서는 준비 안내가 ${wait.visible ? "나타나고 응답 후 닫힌다" : "나타나지 않는다"}`, async ({ page, request }) => {
     const server = mockServer(request);
     await server.scenario({ consents: "on", consentStream: "json" });
