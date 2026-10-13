@@ -192,14 +192,14 @@ export async function forgetStartScreen(page: Page) {
 }
 
 /**
- * Open the start screen's preferences from My page (menu → My page → the preferences card's 수정). Done inside the app, so the page-only
- * state (the active trip) stays. ★The intro button no longer leads here once the terms are agreed.
+ * Open the start screen's preferences from My page (menu → My page → its 「여행 취향」 line — `[2026-10-13 마이페이지 A안]` it was the preferences card's 수정). Done inside
+ * the app, so the page-only state (the active trip) stays. ★The intro button no longer leads here once the terms are agreed.
  */
 export async function openPreferencesFromMyPage(page: Page) {
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
   await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ }).click();
   await expect(page).toHaveURL(/\/mypage$/);
-  await page.locator("section").filter({ has: page.getByRole("heading", { name: "여행 취향", exact: true }) }).getByRole("button", { name: "수정", exact: true }).click();
+  await page.getByRole("navigation", { name: "내 상태" }).getByRole("button", { name: /^여행 취향/ }).click();
   await expect(page).toHaveURL(/\/start$/);
 }
 
@@ -228,8 +228,19 @@ export async function openNotices(page: Page) {
   return page.getByRole("dialog", { name: "알림" });
 }
 
-/** The two panes of the trip's sheet: 「일정 | 채팅」. */
-export const paneTab = (page: Page, name: "일정" | "채팅") => page.getByRole("tab", { name, exact: true });
+/**
+ * The two panes of the trip's sheet. `[2026-10-13 일정 줄 — 채팅 버튼 하나]` The 「일정 | 채팅」 tabs became ONE chat button at the end of the day-chip row: pressed while
+ * the chat pane is open; pressing it again (or a day chip) goes back to the schedule.
+ */
+export const chatButton = (page: Page) => page.locator("#trip-pane-button-chat");
+
+/** Opens a pane of the trip's sheet (nothing to do when it is open already). */
+export async function openPane(page: Page, name: "일정" | "채팅") {
+  const button = chatButton(page);
+  const chat = name === "채팅";
+  if (((await button.getAttribute("aria-pressed")) === "true") !== chat) await button.click();
+  await expect(button).toHaveAttribute("aria-pressed", String(chat));
+}
 
 /** `[2026-10-07 목업 C안 B]` Open the trip's name in the header: the row 「여행계획서 열기 · 공유하기」 under it. */
 export async function openTitle(page: Page) {
@@ -245,7 +256,18 @@ export const dayTab = (page: Page, name: RegExp) => page.getByRole("tablist", { 
  * Register a trip the way a customer does, against the test mock server: write a plan, 「계획 확인하기」, wait for the plan-check screen's result,
  * 「여행 등록」, and land on the trip screen (the mock's one trip, `TRIP_ID`). Needs the mock's default scenario (a plan whose check passes).
  */
+/**
+ * `[2026-10-13]` The mock server's trip is on 2026-10-01. Since the 10-12 timeline (「지난 일정」 — a stop whose end has passed by the device clock is one grey line), the trip
+ * screen draws every stop of it as past once that day is over: no card, no booking tag, no way row. A test of the trip screen as it looks before the trip starts the page's
+ * clock on the day before and lets it run (a stopped clock would also stop gestures that time the pointer).
+ */
+export async function beforeTheTrip(page: Page) {
+  await page.clock.install({ time: new Date("2026-09-30T12:00:00+09:00") });
+  await page.clock.resume();
+}
+
 export async function registerStubTrip(page: Page, plan = "10/1 09:00 경복궁 관람") {
+  await beforeTheTrip(page);
   await openRegistration(page);
   await page.getByLabel("나의 여행 계획").fill(plan);
   await checkPlan(page);

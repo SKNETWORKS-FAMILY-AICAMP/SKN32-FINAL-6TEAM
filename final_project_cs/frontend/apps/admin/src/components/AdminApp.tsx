@@ -6,7 +6,7 @@ import { Activity, ArrowRight, Bell, Gauge, Home, Inbox, ListChecks, LogOut, Pan
 import { createAdminGateway, operatorSession, operatorLogin, operatorLogout } from '../lib/gateway';
 import { isDemoMode } from '../lib/data-mode';
 import { DEMO_OPERATOR } from '../lib/demo/fixtures';
-import type { AdminCommand, ScreenProps, ViewState } from '../lib/model';
+import { INITIAL_INQUIRIES_LIST, INITIAL_USERS_LIST, type AdminCommand, type ScreenProps, type ViewState } from '../lib/model';
 import { HomeScreen, UsersScreen, UserDetailScreen, LimitsScreen, UsageScreen, ServerScreen } from '../features/overview/screens';
 import { InquiriesScreen, NoticesScreen, AuditScreen, OpsScreen } from '../features/workflows/screens';
 import styles from './AdminApp.module.css';
@@ -51,6 +51,8 @@ function Console({ mode, initialPath = '/', standalone = false, operatorId, onLo
   const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [resetCount, setResetCount] = useState(0);
+  const [usersList, setUsersList] = useState(INITIAL_USERS_LIST);
+  const [inquiriesList, setInquiriesList] = useState(INITIAL_INQUIRIES_LIST);
   const query = useQuery({ queryKey: ['admin'], queryFn: () => gateway!.snapshot(), enabled: !!gateway });
   useEffect(() => {
     const onBack = () => { if (standalone && window.location.hash && !window.location.hash.startsWith('#/')) return; setRoute(standalone ? window.location.hash.slice(1) || '/login' : window.location.pathname); setToast(''); };
@@ -77,6 +79,7 @@ function Console({ mode, initialPath = '/', standalone = false, operatorId, onLo
   };
   const reset = async () => {
     await gateway!.reset(); await query.refetch(); setResetCount(n => n + 1); setViewState('normal'); setStep(0); setVisited([route]);
+    setUsersList(INITIAL_USERS_LIST); setInquiriesList(INITIAL_INQUIRIES_LIST);
     setToast('모든 데모 변경을 초기화했습니다.');
   };
   const breadcrumb = MENUS.find(m => m.path === '/' ? route === '/' : route.startsWith(m.path))?.title || '운영자 콘솔';
@@ -90,12 +93,12 @@ function Console({ mode, initialPath = '/', standalone = false, operatorId, onLo
     if (route === '/settings' && !isDemoMode(mode)) screen = <OperationsSettings />;
     else if ((route === '/cases' || route.startsWith('/cases/')) && !isDemoMode(mode)) screen = <CaseTrace navigate={navigate} id={route === '/cases' ? undefined : route.slice('/cases/'.length)} />;
     else if (route === '/') screen = <HomeScreen {...screenProps} />;
-    else if (route === '/users') screen = <UsersScreen {...screenProps} />;
+    else if (route === '/users') screen = <UsersScreen {...screenProps} listState={usersList} onListStateChange={setUsersList} />;
     else if (route.startsWith('/users/')) screen = <UserDetailScreen {...screenProps} userId={decodeURIComponent(route.slice('/users/'.length))} />;
     else if (route === '/limits') screen = <LimitsScreen {...screenProps} />;
     else if (route === '/usage') screen = <UsageScreen {...screenProps} />;
     else if (route === '/server') screen = <ServerScreen {...screenProps} />;
-    else if (route === '/inquiries' || route.startsWith('/inquiries/')) screen = <InquiriesScreen {...screenProps} inquiryId={route === '/inquiries' ? undefined : decodeURIComponent(route.slice('/inquiries/'.length))} />;
+    else if (route === '/inquiries' || route.startsWith('/inquiries/')) screen = <InquiriesScreen {...screenProps} inquiryId={route === '/inquiries' ? undefined : decodeURIComponent(route.slice('/inquiries/'.length))} listState={inquiriesList} onListStateChange={setInquiriesList} />;
     else if (route === '/notices') screen = <NoticesScreen {...screenProps} />;
     else if (route === '/audit') screen = <AuditScreen {...screenProps} />;
     else if (route === '/ops') screen = <OpsScreen {...screenProps} />;

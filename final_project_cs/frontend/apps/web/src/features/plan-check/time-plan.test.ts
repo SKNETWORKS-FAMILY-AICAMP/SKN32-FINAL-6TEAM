@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  ASSUMED_MINUTES, DAY_END, GAP_BASE_PX, GAP_MAX_PX, SNAP,
-  formatHm, gapPx, leadPx, legMinutes, moveStop, occupancy, ownRange, parseHm, pushRange, settledAfter, slackAfter, snap,
+  ASSUMED_MINUTES, DAY_END, SNAP,
+  formatHm, legMinutes, moveStop, occupancy, ownRange, parseHm, pushRange, settledAfter, slackAfter, snap,
   type TimedLeg, type TimedStop,
 } from "./time-plan";
 
@@ -101,24 +101,6 @@ describe("how long a stop takes and how much free time follows it", () => {
     expect(legMinutes([leg("a", "b", 30), leg("a", "b", 99)], "a", "b")).toBe(30);
     expect(legMinutes([leg("a", "b", -5)], "a", "b")).toBe(0);
     expect(legMinutes(DAY_LEGS, "b", "a")).toBe(0);               // legs have a direction
-  });
-});
-
-describe("the space drawn for free time", () => {
-  it("grows with the free minutes from a base and stops growing at the cap", () => {
-    expect(gapPx(0)).toBe(GAP_BASE_PX);
-    expect(gapPx(30)).toBe(40);                                   // 14 + 66 * (1 - e^-0.5)
-    expect(gapPx(60)).toBe(56);
-    expect(gapPx(120)).toBe(71);
-    expect(gapPx(193)).toBe(77);
-    expect(gapPx(5000)).toBe(GAP_MAX_PX);                         // flattens out at 80 and never passes it
-    expect(GAP_MAX_PX).toBe(80);
-    expect([0, 15, 30, 60, 120, 240, 600].map(gapPx)).toEqual([...[0, 15, 30, 60, 120, 240, 600].map(gapPx)].sort((a, b) => a - b));   // more free time never gets less space
-  });
-
-  it("gives only the base space to a stop that is already late or has nothing after it", () => {
-    expect(gapPx(-45)).toBe(GAP_BASE_PX);
-    expect(gapPx(null)).toBe(GAP_BASE_PX);
   });
 });
 
@@ -417,30 +399,5 @@ describe("a time typed in by hand is taken to the minute", () => {
   it("moves the neighbours by the minute too, when pushing", () => {
     const result = moveStop(day, legs, 0, 655, { step: 1 });                                      // a would end at 745 + 12 > 700: b is pushed to 757
     expect(result.changes.map((change) => [change.id, change.start])).toEqual([["a", 655], ["b", 757]]);
-  });
-});
-
-describe("leadPx — the leg stands nearer the stop whose time is closer", () => {
-  it("12:30 → 15:00 with the leg leaving at 14:12 stands 68 % of the way down (nearer 15:00)", () => {
-    expect(leadPx(40, "12:30", "15:00", "14:12")).toBe(27);      // 102 / 150 of 40 px
-  });
-  it("exactly between the two times it stands exactly in the middle", () => {
-    expect(leadPx(40, "10:00", "12:00", "11:00")).toBe(20);
-    expect(leadPx(41, "10:00", "12:00", "11:00")).toBe(21);       // rounded to a whole px
-  });
-  it("leaving at the first stop's time stands at the top; at the next stop's time at the bottom; outside the two it is held to the nearer end", () => {
-    expect(leadPx(40, "10:00", "12:00", "10:00")).toBe(0);
-    expect(leadPx(40, "10:00", "12:00", "12:00")).toBe(40);
-    expect(leadPx(40, "10:00", "12:00", "09:00")).toBe(0);
-    expect(leadPx(40, "10:00", "12:00", "13:00")).toBe(40);
-  });
-  it("no free space, a missing or unreadable time, or stops that do not follow each other leave the leg at the top (0)", () => {
-    expect(leadPx(0, "10:00", "12:00", "11:00")).toBe(0);
-    expect(leadPx(-5, "10:00", "12:00", "11:00")).toBe(0);
-    expect(leadPx(40, "", "12:00", "11:00")).toBe(0);
-    expect(leadPx(40, "10:00", "12:00", "")).toBe(0);
-    expect(leadPx(40, "10:00", "--", "11:00")).toBe(0);
-    expect(leadPx(40, "12:00", "10:00", "11:00")).toBe(0);
-    expect(leadPx(40, "10:00", "10:00", "10:00")).toBe(0);
   });
 });

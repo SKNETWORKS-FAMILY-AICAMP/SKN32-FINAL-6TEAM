@@ -108,7 +108,7 @@ export function TelegramRow({ hasSession, guest = false }: { hasSession: boolean
   // ★`[2026-10-04]` 게스트는 알림을 받지 않는다(서버가 게스트의 여행을 감시·안내하지 않음) - 디스코드 줄과 같은 문장.
   // ★`[2026-10-05]` 서버가 일정 변경 알림을 고객이 연결한 채널로 보내는 길은 아직 없다(운영자 채널로만 나간다) - 화면은 알림이 간다고 약속하지 않고, 디스코드 줄과 같은 문장으로 「준비 중」이라고 말한다.
   const laterNote = !guest && <span className={styles.note}>{t("일정이 바뀔 때 텔레그램으로 알림을 보내는 기능은 준비 중이에요.", "Alerts about plan changes through Telegram are still being prepared.")}</span>;
-  const guestNote = guest && <span className={styles.note}>{t("게스트는 일정 알림을 받지 않아요. 아래 소셜 계정을 연결하면 알림을 받을 수 있어요.", "Guests get no schedule alerts. Link a social account below to get them.")}</span>;
+  const guestNote = guest && <span className={styles.note}>{t("게스트는 일정 알림을 받지 않아요. 「로그인 · 계정」에서 로그인하면 알림을 받을 수 있어요.", "Guests get no schedule alerts. Sign in under “Sign-in & accounts” to get them.")}</span>;
 
   const body = () => {
     if (connected) {

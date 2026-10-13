@@ -1,34 +1,40 @@
 import { expect, test } from "@playwright/test";
-import { agree, mockServer, paneTab, registerStubTrip, start, TRIP_ID, useKorean } from "./helpers";
+import { agree, mockServer, registerStubTrip, start, TRIP_ID, useKorean, chatButton } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 
-test("메뉴는 프로필·여행 목록·여행 취향 설문·언어·테마·애니메이션 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
-  // The six base rows: profile, trips, survey, language, theme, skip-animation. Both old layout switches are removed.
-  // with a social sign-in provider set up the menu has a seventh (「계정 연결 · 로그인」, covered by social-login.spec).
+test("메뉴는 프로필·여행 목록·여행 취향 설문·문의함·언어·테마·일정 목록 크기·애니메이션 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
+  // The eight base rows: profile, trips, survey, 문의함 (`[2026-10-12]` moved here from the my-page card, once named 문의하기), language, theme,
+  // schedule list size (42df598c), skip-animation. Both old layout switches are removed.
+  // `[2026-10-13 사용자 결정]` A guest's profile row shares its cell with 「계정으로 계속하기」 (the old 「계정 연결 · 로그인」 row is gone; covered by social-login.spec).
   await mockServer(request).scenario({ social: "off" });
   await page.goto("/trips/new");
   const open = page.getByRole("button", { name: "메뉴", exact: true });
   await open.click();
   const menu = page.getByRole("dialog", { name: "메뉴" });
   const profile = menu.getByRole("link", { name: /마이페이지/ });
+  const signIn = menu.getByRole("link", { name: "계정으로 계속하기" });
   const trips = menu.getByRole("link", { name: "여행 목록 보기" });
   const survey = menu.getByRole("button", { name: "여행 취향 설문" });
+  const support = menu.getByRole("link", { name: "문의함", exact: true });
   const language = menu.getByRole("button", { name: /LANGUAGE/ });
   const green = menu.getByRole("button", { name: "그린", exact: true });
   const white = menu.getByRole("button", { name: "화이트", exact: true });
+  // At the default size (100%) 「기본 크기」 is disabled, so Tab skips it.
+  const zoomOut = menu.getByRole("button", { name: "일정 목록 축소" });
+  const zoomIn = menu.getByRole("button", { name: "일정 목록 확대" });
   const skip = menu.getByRole("switch", { name: "애니메이션 건너뛰기" });
   const close = menu.getByRole("button", { name: "메뉴 닫기" });
-  const tops = await Promise.all([profile, trips, survey, language, green, skip].map(async (item) => (await item.boundingBox())!.y));
+  const tops = await Promise.all([profile, signIn, trips, survey, support, language, green, zoomOut, skip].map(async (item) => (await item.boundingBox())!.y));
   expect([...tops].sort((a, b) => a - b)).toEqual(tops);
-  // One board holds exactly these six rows; the language row is the home card's picker with its caption.
-  expect(await profile.evaluate((link) => {
+  // One board holds exactly these eight rows (the first is the profile with the guest's 「계정으로 계속하기」); the language row is the home card's picker with its caption.
+  expect(await trips.evaluate((link) => {
     const board = link.parentElement!;
-    return board.children.length === 6 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('[role="switch"]')) && board.textContent!.includes("LANGUAGE · 언어") && board.textContent!.includes("THEME · 테마");
+    return board.children.length === 8 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('a[href="/support"]')) && Boolean(board.querySelector('[role="switch"]')) && board.textContent!.includes("LANGUAGE · 언어") && board.textContent!.includes("THEME · 테마");
   })).toBe(true);
 
   await expect(profile).toBeFocused();
-  for (const next of [trips, survey, language, green, white, skip, close, profile]) {
+  for (const next of [signIn, trips, survey, support, language, green, white, zoomOut, zoomIn, skip, close, profile]) {
     await page.keyboard.press("Tab");
     await expect(next).toBeFocused();
   }
@@ -53,6 +59,8 @@ test("메뉴는 프로필·여행 목록·여행 취향 설문·언어·테마·
 
   await open.click();
   await expect(profile).toBeFocused();   // 메뉴가 열려 초점을 받은 뒤에 Tab 을 누른다(위와 같다)
+  await page.keyboard.press("Tab");
+  await expect(signIn).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(trips).toBeFocused();
   await page.keyboard.press("Enter");
@@ -101,7 +109,7 @@ test("플로팅 버튼 스위치는 없다 — 예전에 켜 둔 설정이 남�
   // `[2026-10-07 사용자 결정 — 목업 C안]` 여행 화면이 늘 지도 + 시트라 플로팅 버튼 · 고정 하단 탭을 고르는 스위치를 메뉴에서 뺐다.
   await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", navigation: "floating" })));
   await registerStubTrip(page);
-  await expect(paneTab(page, "일정")).toHaveAttribute("aria-selected", "true");
+  await expect(chatButton(page)).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByRole("button", { name: "채팅 입력 열기" })).toBeVisible();
   await expect(page.getByRole("button", { name: "일정 · 메뉴 열기 또는 닫기" })).toHaveCount(0);
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
@@ -186,11 +194,15 @@ test("등록 여행 메뉴의 모든 항목에 Tab으로 닿고 항로 지킴이
   await expect(menu.getByRole("switch", { name: "플로팅 버튼 사용" })).toHaveCount(0);
   await expect(menu.getByRole("switch", { name: "데스크탑 화면으로 보기" })).toHaveCount(0);
   for (const next of [
+    menu.getByRole("link", { name: "계정으로 계속하기" }),                    // `[2026-10-13]` 게스트의 로그인 입구
     menu.getByRole("link", { name: "여행 목록 보기" }),
     menu.getByRole("button", { name: "여행 취향 설문" }),
+    menu.getByRole("link", { name: "문의함", exact: true }),
     menu.getByRole("button", { name: /LANGUAGE/ }),
     menu.getByRole("button", { name: "그린", exact: true }),
     menu.getByRole("button", { name: "화이트", exact: true }),
+    menu.getByRole("button", { name: "일정 목록 축소" }),
+    menu.getByRole("button", { name: "일정 목록 확대" }),
     menu.getByRole("switch", { name: "애니메이션 건너뛰기" }), keeper,
     menu.getByRole("button", { name: "메뉴 닫기" }), first,
   ]) { await page.keyboard.press("Tab"); await expect(next).toBeFocused(); }

@@ -1,13 +1,14 @@
+# ★`[2026-10-13 사용자 결정]` GitHub 검사는 develop · main 에서만 돈다 — role-manager 는 검사하지 않는다(ci-main.yml 과 같다).
 name: CI (admin)
 
 on:
   push:
-    branches: [role-manager, develop, main]
+    branches: [develop, main]
     paths:
       - "final_project_cs/frontend/apps/admin/**"
       - ".github/workflows/ci-admin.yml"
   pull_request:
-    branches: [role-manager, develop, main]
+    branches: [develop, main]
     paths:
       - "final_project_cs/frontend/apps/admin/**"
       - ".github/workflows/ci-admin.yml"

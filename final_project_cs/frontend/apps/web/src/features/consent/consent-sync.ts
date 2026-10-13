@@ -1,7 +1,7 @@
 import { hasSession } from "@/lib/live/client";
 import type { Language } from "@/lib/i18n";
 import { getServerConsents, isConsentsUnsupported, isTermsVersionChanged, postServerConsents, type ConsentChoice, type ServerConsents } from "@/lib/live/consents";
-import { CONSENT_CODES, noConsents, requiredAgreed, type ConsentMap } from "./consent-model";
+import { CONSENT_CODES, noConsents, requiredAgreed, serverPending, type ConsentMap } from "./consent-model";
 import { consentedAt, consentsSynced, markConsentsSynced, readConsents, replaceConsents } from "./consent-store";
 import { loadLiveTerms, termsDocs, termsVersion } from "./terms-live";
 import { docHash, sha256Hex } from "./terms-text";
@@ -43,8 +43,9 @@ function hashOf(code: string): Promise<string> {
   return found;
 }
 
+/** `[2026-10-12 임시]` 서버가 아직 모르는 항목(`SERVER_PENDING_CONSENTS`)은 보내지 않는다 — 보내면 저장 전체가 422 로 거부된다. */
 export async function choicesOf(map: ConsentMap): Promise<ConsentChoice[]> {
-  return Promise.all(CONSENT_CODES.map(async (code) => ({ code, agreed: map[code], textSha256: await hashOf(code) })));
+  return Promise.all(CONSENT_CODES.filter((code) => !serverPending(code)).map(async (code) => ({ code, agreed: map[code], textSha256: await hashOf(code) })));
 }
 
 /** 서버가 이 약관 버전에 대해 갖고 있는 동의로 이 브라우저의 사본을 바꾼다(서버가 이긴다). */

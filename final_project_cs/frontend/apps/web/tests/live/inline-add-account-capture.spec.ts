@@ -50,7 +50,7 @@ for (const width of [375, 1280]) {
     await form.getByRole("button", { name: "다시 검색", exact: true }).scrollIntoViewIfNeeded();
     await capture("04-place-selected");
     await mockServer(request).scenario({ consents: "on" });
-    await page.goto("/mypage#accounts");
+    await page.goto("/mypage/account");
     const group = page.getByRole("group", { name: "소셜 계정" });
     await expect(group.getByRole("button", { name: "Kakao 계정으로 계속", exact: true })).toBeVisible();
     await group.scrollIntoViewIfNeeded();

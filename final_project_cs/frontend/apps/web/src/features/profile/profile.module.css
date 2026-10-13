@@ -30,6 +30,18 @@
 /* The token management card sits under the profile card on My page. */
 .card + .card { margin-top: 16px; }
 
+/* `[2026-10-13 마이페이지 A안]` 상태 줄: 한 판에 줄마다 이름 · 지금 상태 · ›, 누르면 그 항목의 화면(메뉴 판과 같은 모양). 줄 사이 선은 줄의 `border: 0` 뒤에 둔다 — 앞에 두면 단추 줄(여행 취향)의 선이 지워진다. */
+.rows { display: grid; margin-top: 16px; border: 1px solid var(--color-border); border-radius: 20px; background: var(--color-surface); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 12px 18px; border: 0; background: transparent; color: var(--color-text); font-family: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.rows > * + * { border-top: 1px solid var(--color-border); }
+.row:hover { background: var(--color-soft); }
+.row:disabled { cursor: default; opacity: .6; }
+.row:focus-visible { outline-offset: -3px; }
+.row > svg { flex: none; color: var(--color-muted); }
+.rowText { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.rowText strong { font-size: 14px; font-weight: 650; letter-spacing: -.2px; }
+.rowText small { font-size: 12px; line-height: 1.6; color: var(--color-muted); overflow-wrap: anywhere; }
+
 /* My page: a card with a title row (title left, action right) and answer lines under each question. */
 .sectionHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .sectionTitle { min-width: 0; font-size: 16px; font-weight: 700; letter-spacing: -.3px; line-height: 1.5; overflow-wrap: anywhere; }

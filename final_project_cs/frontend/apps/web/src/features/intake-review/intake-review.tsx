@@ -286,7 +286,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       onRegister: () => confirm.mutate(queryClient.getQueryData<ReviewedIntakeView>(key)?.revision ?? view.revision),
       error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
       loginRequired: loginRequired(confirm.error),
-      loginHref: `${routes.myPage}?returnTo=${encodeURIComponent(routes.intake(intakeId))}#accounts`,
+      loginHref: `${routes.myPageAccount}?returnTo=${encodeURIComponent(routes.intake(intakeId))}`,
       registeredHref: view.status === "confirmed" && view.trip_id ? routes.trip(view.trip_id) : null,
     }} />;
 }
