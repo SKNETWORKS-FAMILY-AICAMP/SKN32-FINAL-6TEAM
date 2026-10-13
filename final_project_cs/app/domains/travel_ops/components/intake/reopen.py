@@ -78,6 +78,39 @@ def _claims_for(index: int, item: Item, evidence: dict[str, Any]) -> list[tuple[
     return [(f"items[{index}].{name}", value, why) for name, value, why in out]
 
 
+def _trip_modes(items: list[Item], editable: list[Item]) -> list[tuple[int, int, str]]:
+    """`[2026-10-14]` 등록한 여행에 이미 정해 둔 이동 수단 → (앞 항목 번호, 뒤 항목 번호, 수단). 확인 화면의 수단 값 줄(`moves[0-i~0-j].mode`)로 싣는다.
+
+    고칠 수 있는 이웃 두 일정(같은 날) 사이에 이동 항목이 하나 있고 그 경로가 계산기가 고른 수단일 때만 — 어림(`estimate`) 이동은 고른 수단이 아니다.
+    ☆이것이 없을 때 다시 연 수정 화면은 저장된 수단(지하철) 대신 추천(도보)을 보였다(x600 실서버 확인 2026-10-14)."""
+    from .moves import mode_of
+    from .review import MOVE_MODES
+
+    ordered = sorted(items, key=lambda i: i.seq)
+    index_of = {i.item_id: n for n, i in enumerate(editable)}
+    out: list[tuple[int, int, str]] = []
+    for n, move in enumerate(ordered):
+        if move.kind != "mobility":
+            continue
+        before = next((i for i in reversed(ordered[:n]) if i.kind != "mobility"), None)
+        after = next((i for i in ordered[n + 1:] if i.kind != "mobility"), None)
+        if before is None or after is None or before.item_id not in index_of or after.item_id not in index_of:
+            continue
+        a, b = index_of[before.item_id], index_of[after.item_id]
+        if b != a + 1 or before.starts_at.astimezone(KST).date() != after.starts_at.astimezone(KST).date():
+            continue
+        detail = move.detail or {}
+        route = detail.get("route_def") or {}
+        options = route.get("options") or []
+        option = next((o for o in options if o.get("id") == route.get("planned")), options[0] if options else None)
+        if option is None or route.get("planned") == "estimate" or detail.get("route_basis") == "estimate":
+            continue
+        mode, _label = mode_of(option)
+        if mode in MOVE_MODES:
+            out.append((a, b, mode))
+    return out
+
+
 def _line(item: Item) -> str:
     when = item.starts_at.astimezone(KST)
     end = f"~{item.ends_at.astimezone(KST).strftime('%H:%M')}" if item.ends_at else ""
@@ -119,6 +152,8 @@ def open_for_trip(conn, *, tenant_id: str, customer_id: UUID, trip: dict[str, An
             rows.append(("trip.party_size", int(trip["party_size"]), base))
         for index, item in enumerate(editable):
             rows += _claims_for(index, item, {**base, "line": index + 1, "item_id": str(item.item_id)})
+        for a, b, mode in _trip_modes(items, editable):
+            rows.append((f"moves[0-{a}~0-{b}].mode", mode, base))       # 원본은 하나(위치 0) — 확인 화면의 구간 id 는 「0-번호」
         for field_name, value, evidence in rows:
             cur.execute("INSERT INTO intake_claims (intake_id, tenant_id, revision, source_id, field, value_json, method, "
                         "evidence, needs_review, note, created_at) VALUES (%s,%s,1,%s,%s,%s,'trip',%s,false,NULL,clock_timestamp())",
@@ -310,7 +345,7 @@ def prepare(conn, *, tenant_id: str, intake_id: UUID, revision: int, base_items:
     # `[2026-10-14]` 바뀐 일정 옆 · 새로 이웃이 된 구간에 확인 화면이 검증한 이동을 넣고, 고객이 고른 수단은 옛 이동을 갈음한다.
     # 수단만 바꿔도 새 판이다(`changed`) — 그래야 고른 수단이 저장되고 출발 알림이 그 수단으로 나간다
     plan.items, picked = registered_moves.fill_edited_moves(plan.items, review.load(conn, tenant_id, intake_id, revision),
-                                                            plan.keys)
+                                                            plan.keys, review.customer_mode_pairs(claims))
     plan.changed += picked
     return plan
 

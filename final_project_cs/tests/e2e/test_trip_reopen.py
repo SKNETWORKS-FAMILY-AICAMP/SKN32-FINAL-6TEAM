@@ -310,3 +310,28 @@ def test_a_mode_picked_in_edit_mode_replaces_the_old_move_and_is_a_change_by_its
     assert new_move.kind == "mobility" and new_move.detail["route_def"]["planned"] == "taxi"
     assert old_move.item_id not in {i.item_id for i in after}
     assert "이동(" in done["trip"]["history"][-1]["causes"][0]["summary"]
+
+
+def test_reopening_shows_the_mode_saved_on_the_trip_and_done_without_touching_it_changes_nothing(api, monkeypatch):
+    """`[2026-10-14 x600 실서버 확인]` 다시 연 수정 화면은 여행에 저장된 수단을 보인다(추천으로 되돌아가지 않는다).
+    여행에서 가져온 수단(`method: trip`)은 고친 것이 아니라 그대로 「완료」하면 판을 쓰지 않는다."""
+    from app.domains.travel_ops.components.intake import review as review_module
+
+    from .test_intake_move_mode import FakeCalc
+
+    monkeypatch.setattr(review_module, "default_engine", FakeCalc().factory)     # 시험용 이동 계산기(mock) — 계약 모양만 본다
+    key = _user(api)
+    trip = _trip(api, key)
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    a, b = (next(i["id"] for i in view["review"]["items"] if i["title"] == t) for t in ("북촌한옥마을", "인사동"))
+    picked = api["client"].post(f"/v1/web/trip-intakes/{view['intake_id']}/moves/{a}~{b}/mode", headers=_h(key),
+                                json={"revision": view["revision"], "mode": "taxi"})
+    assert picked.status_code == 200, picked.text
+    done = _confirm(api, key, {"intake_id": view["intake_id"], "revision": picked.json()["revision"]})
+    assert done["version"] == trip["version"] + 1
+    again = _reopen(api, key, trip["trip_id"], done["version"])
+    a, b = (next(i["id"] for i in again["review"]["items"] if i["title"] == t) for t in ("북촌한옥마을", "인사동"))
+    move = next(m for m in again["review"]["moves"] if m["from"] == a and m["to"] == b)
+    assert move["mode"] == "taxi"                                                  # ★저장된 수단 — 추천(지하철)이 아니다
+    untouched = _confirm(api, key, again)
+    assert (untouched["changed"], untouched["version"]) == (False, done["version"])  # 가져온 수단은 고친 것이 아니다

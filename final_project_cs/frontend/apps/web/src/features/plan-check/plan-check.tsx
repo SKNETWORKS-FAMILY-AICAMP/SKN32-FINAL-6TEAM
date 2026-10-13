@@ -1487,7 +1487,9 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
 
         </>}
     </section>
-          {done && !changing && !inserting && <ResultFooter footerRef={submitBox} atListEnd={atListEnd} muted={collapsed || (!atListEnd && quietSubmit.hidden) || mapMoving} focusHandlers={quietSubmit.focusHandlers} view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
+          {/* `[2026-10-14 실서버 확인]` 시간 고치기 창이 열려 있으면 숨긴다 — 창의 ✓ 「적용」이 아래쪽에 오면 같은 초록 ✓ 인 이 단추가 그 위를 덮어,
+              「적용」을 누른 손님이 「완료」(수정 모드면 아무것도 쓰지 않고 닫힘)를 눌렀다. 창을 닫으면(적용 · 취소) 다시 나온다. */}
+          {done && !changing && !inserting && !timeEdit.edit && <ResultFooter footerRef={submitBox} atListEnd={atListEnd} muted={collapsed || (!atListEnd && quietSubmit.hidden) || mapMoving} focusHandlers={quietSubmit.focusHandlers} view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
             previewing={previewing && side === "after"} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} editing={Boolean(edit)} />}
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
     {shownToast && <ToastView key={shownToast.stamp} toast={shownToast.toast} onDone={hideToast} />}

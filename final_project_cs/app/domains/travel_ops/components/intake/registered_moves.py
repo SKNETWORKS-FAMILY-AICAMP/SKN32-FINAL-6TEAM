@@ -106,17 +106,13 @@ def _entry(a, b, move, *, registration_keys=False):
                        **({'departure_context': context} if context is not None else {})}}
 
 
-def _picked(move) -> bool:
-    """고객이 수정 화면에서 고른 수단이 닿아 그대로 쓰인 구간인가(`review._apply_pick` 의 `kept`)."""
-    return ((move or {}).get("mode_choice") or {}).get("state") == "kept"
-
-
-def fill_edited_moves(items: list[Item], review, keys: dict) -> tuple[list[Item], list[str]]:
+def fill_edited_moves(items: list[Item], review, keys: dict, customer_pairs=frozenset()) -> tuple[list[Item], list[str]]:
     """`[2026-10-14]` 수정 접수 「완료」 — 확인 화면이 검증한 이동을 새 판에 잇는다. → (새 판 일정, 수단을 바꾼 구간 이름들).
 
     `keys` = 새 판 일정 id → 접수의 (원본, 항목 번호). 같은 날 이웃한 두 일정이 둘 다 접수 항목일 때
     - 사이에 이동 항목이 없으면(바뀐 일정 옆 · 새로 이웃이 된 구간) 검증한 이동을 넣는다 — 출발 알림이 이 항목으로 나간다(`trip_reminders`)
-    - 고객이 수단을 골랐으면(`mode_choice.state=kept`) 옛 이동을 그 이동으로 갈음한다(`replaces_item_id`)
+    - 고객이 **이 접수에서** 수단을 골랐거나 「추천으로」 되돌렸으면(`customer_pairs` = `review.customer_mode_pairs`) 옛 이동을 검증한 이동으로 갈음한다(`replaces_item_id`).
+      ★`[2026-10-14]` 처음엔 `mode_choice.state=kept` 로 갈랐는데, 여행에서 가져온 수단(`method: trip`)도 kept 라 「완료」 때마다 모든 이동이 「바뀜」이 됐다
     - 그 밖에는 옛 이동을 그대로 둔다(계획 때의 경로 · 출발 문맥을 지운 검증값으로 덮지 않는다)
     ☆처음 판(팀원 커밋 6eb2ad44)은 바뀐 일정 옆 이동을 빼기만 하고 다시 넣지 않아, 그 구간 출발 알림이 사라지고 고른 수단도 저장되지 않았다."""
     if not review:
@@ -138,10 +134,11 @@ def fill_edited_moves(items: list[Item], review, keys: dict) -> tuple[list[Item]
             continue
         b = ordered[end]
         ka, kb = keys.get(a.item_id), keys.get(b.item_id)
-        move = moves.get((ids.get(ka), ids.get(kb))) if ka and kb else None
+        pair = (ids.get(ka), ids.get(kb)) if ka and kb else (None, None)
+        move = moves.get(pair) if ka and kb else None
         same_day = a.starts_at.astimezone(KST).date() == b.starts_at.astimezone(KST).date()
         entry = None
-        if move is not None and same_day and (not between or _picked(move)):
+        if move is not None and same_day and (not between or f"{pair[0]}~{pair[1]}" in customer_pairs):
             entry = _entry({"title": a.title, "starts_at": a.starts_at, "detail": a.detail},
                            {"title": b.title}, move)
         if entry is None:
