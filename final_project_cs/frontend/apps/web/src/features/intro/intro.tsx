@@ -4,6 +4,7 @@ import Image, { getImageProps } from "next/image";
 import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { LanguageButton } from "@/components/ui/language-picker";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { RecentTrips } from "@/features/trip/trip-list";
 import type { Language } from "@/lib/i18n";
@@ -220,7 +221,7 @@ export function Intro() {
   </div>;
   const page = (index: number) => `${styles.page} ${shown[index] && !(replaying && index === current) ? styles.in : ""}`;
 
-  return <DeviceFrame onBrand={backToStart}>
+  return <DeviceFrame onBrand={backToStart} headerExtra={<LanguageButton />}>
     <div className={styles.progress} style={{ "--fx-p": progress.toFixed(3) } as CSSProperties} aria-hidden="true" />
     <main ref={pages} id="main-content" className={styles.pages} tabIndex={0} aria-label={text.pages} onKeyDown={keys} style={{ "--intro-bg": background } as CSSProperties}>
       <section className={`${page(0)} ${styles.hero}`} aria-labelledby="intro-title">

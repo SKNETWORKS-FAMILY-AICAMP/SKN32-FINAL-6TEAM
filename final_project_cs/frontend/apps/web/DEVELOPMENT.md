@@ -584,3 +584,10 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **여행 화면 — 지금 점만**: 「지금 HH:MM」 꼬리표(`.nowLabel`)를 없애고 빨간 점이 줄을 따라 흐른다(채워지는 줄 · 지나온 원은 그대로).
 - **데이터**(`lib/live/gateway.ts` · `features/trip/model.ts`): `items[].kind` · `kind_label` 과 `place_info.hours[].weekday` 를 새로 읽는다(서버가 이미 보내던 칸). 영업시간 줄은 그대로 두고 요일 번호를 붙인 `dayHours` 를 더했다.
 - 검증: 단위 시험 `time-rail.test.ts` · `trip-timeline.test.ts` · `gateway.test.ts` 3파일 54/54(쓰이지 않게 된 `freePx` · `currentEntry` · `followNow` 시험은 뺐고, `kind` · `weekday` 시험을 더했다). 타입 0 · 바꾼 파일 린트 0. 로컬 실서버(8042 + 3100)에서 새 게스트로 API 등록한 시험 여행(10-13 ~ 14, 이동 항목 포함)과 시험 접수 1건으로 두 화면 확인 — 시계는 Playwright 로 10-13 15:20 → 16:40. **`test:live` · `check` 는 돌리지 않았다**(2026-10-12 사용자 결정 — develop PR 직전에 몰아서). 바뀔 시험 후보는 리포트에.
+
+## 2026-10-13 (이어서) — develop PR 전 브라우저 시험 맞춤 · 메뉴 세 줄 이름 되돌림(ST4F-204)
+
+- 위 두 작업(메뉴 = 마이페이지 · 카드 A안)에 `test:live` 를 맞췄다. 깨진 까닭은 화면 결함이 아니라 시험이 옛 화면을 본 것(메뉴 줄 이름 · 언어 등이 설정 화면으로 · 로그아웃 확인 창 · 게스트의 알림 화면 잠김 · 펼친 카드의 정보 줄 없음). 도우미는 `pickLanguage`(메뉴 › 설정에서 고르고 뒤로)로 바꾸고 `openPreferencesFromMyPage` 는 뺐다.
+- `[2026-10-13 사용자 지시]` 메뉴 앞 세 줄 이름은 develop 대로 「여행 목록 보기 · 여행 취향 설문 · 문의함」(보조 문구는 그대로).
+- `[2026-10-13 사용자 결정]` 약관 동의 전에는 언어를 바꿀 길이 없던 문제(언어 카드가 설정 화면에만 있고 설정 화면은 동의 뒤에 열린다): 계획 확인 전 화면(첫 소개 · 시작(약관) · 계획 담기) 머리의 메뉴 단추 옆에 지구본(`components/ui/language-picker.tsx` `LanguageButton`)을 두었다. 설정 화면의 언어 카드도 그대로 — 두 곳 다 바꿀 수 있고, 계획 확인부터는 설정 화면에만 있다. 계획 담기 화면 머리의 항로 지킴이 아이콘은 뺐다(「계획 확인하기」에서 카드가 뜬다).
+- 검증과 남은 일: [리포트](../../../wiki/records/reports/2026-10-13_1655_웹_브라우저시험맞춤_메뉴이름_develop병합.md).

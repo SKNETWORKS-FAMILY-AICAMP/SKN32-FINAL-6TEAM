@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { KEY_STORAGE, TRIP_ID, hydrated, mockServer, noHorizontalScroll, pickMenuLanguage, registerStubTrip, start, checkPlan, tripScreen } from "./helpers";
+import { KEY_STORAGE, TRIP_ID, hydrated, mockServer, noHorizontalScroll, pickLanguage, registerStubTrip, start, checkPlan, tripScreen } from "./helpers";
 
 /**
  * 여행 목록(첫 화면의 「내 여행」 카드 · `/trips`)과 여행 삭제 — 테스트용 모방 서버로 도는 자동 시험(실제 서버 아님).
@@ -86,7 +86,7 @@ test("첫 화면 카드·메뉴의 여행 목록 보기·전체 목록이 같은
   await expect(tripScreen(page)).toBeVisible();
 
   await openMenu(page, "메뉴");
-  await menuLink(page, "메뉴", "여행 목록 보기").click();
+  await menuLink(page, "메뉴", /^여행 목록 보기/).click();
   await expect(page).toHaveURL(/\/trips$/);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.locator("#main-content").getByRole("link", { name: /^내 여행/ }).click();
@@ -111,7 +111,7 @@ test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는
   await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
 });
 
-test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에는 로고와 메뉴만 있다", async ({ page }) => {
+test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에는 로고와 메뉴(계획 담기는 언어 지구본도)만 있다", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
   await expect(page.locator("#start-title")).toBeInViewport();
@@ -123,11 +123,13 @@ test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에�
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator("#intro-title")).toBeInViewport();
 
-  for (const path of ["/trips/new", "/trips"]) {
+  // `[2026-10-13 사용자 결정]` 계획 담기 머리에는 메뉴 옆에 언어 지구본이 있다(그 뒤 화면은 메뉴만).
+  for (const [path, buttons] of [["/trips/new", ["언어 · 한국어", "메뉴"]], ["/trips", ["메뉴"]]] as const) {
     await page.goto(path);
     const banner = page.getByRole("banner");
     await expect(banner.getByRole("link")).toHaveCount(1);
-    await expect(banner.getByRole("button")).toHaveCount(1);
+    await expect(banner.getByRole("button")).toHaveCount(buttons.length);
+    for (const name of buttons) await expect(banner.getByRole("button", { name, exact: true })).toBeVisible();
     await banner.getByRole("link", { name: "triPilot — 소개 화면으로 돌아가기" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.locator("#intro-title")).toBeInViewport();
@@ -140,7 +142,7 @@ test("등록하고 로고로 돌아오면 첫 화면 카드와 전체 목록이 
   await expect(card(page).getByText("아직 등록한 여행이 없어요.", { exact: true })).toBeVisible();
   // 아래는 모두 앱 안에서 옮겨 다닌다(주소창으로 새로 열면 캐시가 사라진다) — 위에서 「비었다」고 읽어 둔 목록이 새로 읽혀야 한다.
   await openMenu(page, "메뉴");
-  await menuLink(page, "메뉴", "여행 목록 보기").click();
+  await menuLink(page, "메뉴", /^여행 목록 보기/).click();
   await expect(page.locator("#main-content").getByText("아직 등록한 여행이 없어요.", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "새 여행 등록", exact: true }).click();
   // `registerStubTrip` 은 주소창으로 열기 때문에 쓰지 않는다 — 같은 순서를 앱 안에서 밟는다.
@@ -155,7 +157,7 @@ test("등록하고 로고로 돌아오면 첫 화면 카드와 전체 목록이 
   await expect(card(page).getByRole("listitem")).toHaveCount(1);
   await expect(card(page).getByText("아직 등록한 여행이 없어요.")).toHaveCount(0);
   await openMenu(page, "메뉴");
-  await menuLink(page, "메뉴", "여행 목록 보기").click();
+  await menuLink(page, "메뉴", /^여행 목록 보기/).click();
   await expect(rows(page)).toHaveCount(1);
 });
 
@@ -189,16 +191,14 @@ test("영어와 PC 기기 틀·375px·320px·낮은 화면에서 첫 화면 카�
   for (const english of [false, true]) {
     if (english) {
       await page.goto("/");
-      await openMenu(page, "메뉴");
-      await pickMenuLanguage(page, "메뉴", "English");
-      await page.keyboard.press("Escape");
+      await pickLanguage(page, "메뉴", "English");                              // `[2026-10-13]` 언어는 설정 화면에서 고르고 뒤로 온다
       const recent = page.getByRole("region", { name: "My trips", exact: true });
       await expect(recent.getByRole("link", { name: /View all/ })).toBeVisible();
       // 제목은 서버가 준 그대로라 영어로 바뀌지 않는다 — 바뀌는 것은 「등록」 문구다.
       await expect(recent.getByRole("listitem").first()).toContainText("내 여행");
       await expect(recent.getByRole("listitem").first()).toContainText("Added");
       await openMenu(page, "Menu");
-      await expect(menuLink(page, "Menu", "View trip list")).toBeVisible();
+      await expect(menuLink(page, "Menu", /^View trip list/)).toBeVisible();
       await page.keyboard.press("Escape");
     }
     for (const [width, height, together] of sizes) {
@@ -400,12 +400,11 @@ test("마지막 여행을 지우면 빈 목록과 새 여행 등록만 남고, �
   await registerStubTrip(page);
   // 영어로도 읽어, 여행이 두 언어로 캐시에 들어 있게 한다 — 삭제는 둘 다 지워야 한다.
   const before = await tripReads();
-  await openMenu(page, "메뉴");
-  await pickMenuLanguage(page, "메뉴", "English");
-  await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible();
+  await pickLanguage(page, "메뉴", "English");                                // `[2026-10-13]` 설정 화면에서 고르고 여행 화면으로 돌아와 영어로 다시 읽는다
   await expect.poll(tripReads).toBeGreaterThan(before);
-  await pickMenuLanguage(page, "Menu", "한국어");
-  await menuLink(page, "메뉴", "여행 목록 보기").click();
+  await pickLanguage(page, "Menu", "한국어");
+  await openMenu(page, "메뉴");
+  await menuLink(page, "메뉴", /^여행 목록 보기/).click();
   await expect(page).toHaveURL(/\/trips$/);
 
   await expect(rows(page)).toHaveCount(1);
@@ -440,9 +439,7 @@ test("영어·키보드로 한 건 삭제와 선택 삭제를 쓰고, PC 기기 
   await page.goto("/trips");
   await expect(rows(page)).toHaveCount(3);
   const ids = await shownIds(page);
-  await openMenu(page, "메뉴");
-  await pickMenuLanguage(page, "메뉴", "English");
-  await page.keyboard.press("Escape");
+  await pickLanguage(page, "메뉴", "English");
   const trash = rows(page).first().getByRole("button");
   // 제목은 서버가 준 그대로(영어로 옮기지 않는다) — 이름의 틀만 영어다.
   await expect(trash).toHaveAccessibleName(/^Delete 내 여행 \(added .+\)$/);

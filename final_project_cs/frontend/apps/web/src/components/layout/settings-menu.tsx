@@ -26,8 +26,8 @@ export const CloseMenu = createContext<() => void>(() => undefined);
 /**
  * `tools` (`[2026-10-07 사용자 결정 — 목업 C안]`): a screen's own icon in the drawer's head, left of the close button (a registered trip's Course Keeper). It reads `CloseMenu`.
  * `[2026-10-13 회의 확정 — 메뉴 = 마이페이지(목업 C안)]` The drawer is My page: one board, its first cell the profile (image · name · sign-in chip · one button),
- * then four rows — My trips · Travel preferences · Inquiries · Settings. The app settings (language · theme · list size · skip animations) moved to the
- * settings screen, and signing out is only on 「설정 › 로그인 · 계정」.
+ * then four rows — 여행 목록 보기 · 여행 취향 설문 · 문의함 · 설정 (`[2026-10-13 사용자 지시]` the first three keep the names they had before, with a note under each).
+ * The app settings (language · theme · list size · skip animations) moved to the settings screen, and signing out is only on 「설정 › 로그인 · 계정」.
  */
 export function SettingsMenu({ className = "", tools }: { className?: string; tools?: ReactNode }) {
   const t = useT();
@@ -38,7 +38,7 @@ export function SettingsMenu({ className = "", tools }: { className?: string; to
   const board = useRef<HTMLDivElement>(null);
   const id = useId();
 
-  // The first thing on the board takes the focus: the profile cell's button, or 「내 여행」 while the profile is still being read.
+  // The first thing on the board takes the focus: the profile cell's button, or 「여행 목록 보기」 while the profile is still being read.
   useEffect(() => {
     if (open) board.current?.querySelector<HTMLElement>("a[href], button")?.focus();
   }, [open]);
@@ -103,8 +103,8 @@ function MenuBoard({ onClose, onHide }: { onClose: () => void; onHide: () => voi
   const row = (title: string, note: ReactNode) => <><span className={styles.rowText}><strong>{title}</strong><small>{note}</small></span><ChevronRight size={18} aria-hidden="true" /></>;
   return <>
     <ProfileCell profile={profile} onClose={onClose} />
-    <Link href={routes.trips} className={styles.row} onClick={onClose}>{row(t("내 여행", "My trips"), <TripCount />)}</Link>
-    <button type="button" className={styles.row} onClick={openSurvey}>{row(t("여행 취향", "Travel preferences"), preferences)}</button>
+    <Link href={routes.trips} className={styles.row} onClick={onClose}>{row(t("여행 목록 보기", "View trip list"), <TripCount />)}</Link>
+    <button type="button" className={styles.row} onClick={openSurvey}>{row(t("여행 취향 설문", "Travel preferences survey"), preferences)}</button>
     {/* `[2026-10-12 사용자 지시]` 문의함(옛 「문의하기」)은 마이페이지 카드에서 이 메뉴로 옮겼다. */}
     <Link href={routes.support} className={styles.row} onClick={onClose}>{row(t("문의함", "Inquiries"), t("보낸 문의와 답변", "Your inquiries and the answers"))}</Link>
     <Link href={routes.myPage} className={styles.row} onClick={onClose}>{row(t("설정", "Settings"), t("계정 · 알림 · 약관 동의 · 에이전트 · 언어 · 테마", "Account · alerts · consents · agents · language · theme"))}</Link>
@@ -140,7 +140,7 @@ function ProfileCell({ profile, onClose }: { profile: Profile | undefined; onClo
   </div>;
 }
 
-/** 「내 여행」's note: how many trips this browser has (the same list as 「내 여행」, read when the menu opens). */
+/** 「여행 목록 보기」's note: how many trips this browser has (the same list as the 「내 여행」 screen, read when the menu opens). */
 function TripCount() {
   const t = useT();
   const trips = useTrips();

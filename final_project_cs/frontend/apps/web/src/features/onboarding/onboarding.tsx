@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { LanguageButton } from "@/components/ui/language-picker";
 import { requiredAgreed, type ConsentCode } from "@/features/consent/consent-model";
 import { saveConsents } from "@/features/consent/consent-sync";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
@@ -173,7 +174,7 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
     <div className={styles.cardContent} id={`content-${id}`} inert={state.open !== id} aria-hidden={state.open !== id}><div className={styles.contentInner}><div className={styles.cardPadding}><div className={styles.divider} />{content}</div></div></div>
   </section>;
 
-  return <DeviceFrame headerInert={termsOpen}>
+  return <DeviceFrame headerInert={termsOpen} headerExtra={<LanguageButton />}>
     <div className={styles.setup} data-terms={termsOpen}>
       <Scene stage={sceneStage} step={state.step - INTRO_STEP} totalSteps={questions.length + 1} complete={state.complete} pulse={pulse} sizes="(max-width: 720px) 100vw, 402px" />
       <div className={styles.scroller} data-locked={expanded} inert={termsOpen}>

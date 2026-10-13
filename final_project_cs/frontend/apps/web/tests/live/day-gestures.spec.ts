@@ -114,26 +114,35 @@ test("두 손가락은 목록 크기와 날짜를 바꾸지 않고 진행 중인
   expect(await page.locator("div[class*=sheetBody]").evaluate((el) => getComputedStyle(el).touchAction)).toContain("pinch-zoom");
 });
 
-test("메뉴에서 목록 크기를 즉시 바꾸고 새로 열어도 기억하며 기본 크기로 복원한다", async ({ page, request }) => {
+test("설정 화면에서 목록 크기를 바꾸면 돌아온 목록에 적용되고, 새로 열어도 기억하며 기본 크기로 복원한다", async ({ page, request }) => {
+  // `[2026-10-13 메뉴 = 마이페이지]` 일정 목록 크기는 메뉴가 아니라 설정 화면(메뉴 › 설정)에 있다 — 거기서 바꾸고 뒤로 오면 목록이 그 크기다.
   await openFinished(page, request, withDays);
-  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  const toSettings = async () => {
+    await page.getByRole("button", { name: "메뉴", exact: true }).click();
+    await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /^설정/ }).click();
+    await expect(page).toHaveURL(/\/mypage$/);
+  };
   const controls = page.getByRole("group", { name: "일정 목록 크기", exact: true });
   const increase = controls.getByRole("button", { name: "일정 목록 확대", exact: true });
   const reduce = controls.getByRole("button", { name: "일정 목록 축소", exact: true });
+  await toSettings();
   for (let i = 0; i < 3; i++) await increase.click();
   await expect(controls.locator("output")).toHaveText("130%");
   await expect(increase).toBeDisabled();
-  expect(await zoomOf(page)).toBe(1.3);
+  await page.goBack();
+  await expect.poll(() => zoomOf(page)).toBe(1.3);
   if (process.env.LIST_ZOOM_SHOTS) await page.screenshot({ path: `${process.env.LIST_ZOOM_SHOTS}/menu-list-zoom-130.png` });
-  await page.getByRole("button", { name: "메뉴 닫기", exact: true }).click();
   await page.reload();
   await expect.poll(() => zoomOf(page)).toBe(1.3);
-  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  await toSettings();
   for (let i = 0; i < 5; i++) await reduce.click();
   await expect(controls.locator("output")).toHaveText("80%");
   await expect(reduce).toBeDisabled();
-  expect(await zoomOf(page)).toBe(0.8);
+  await page.goBack();
+  await expect.poll(() => zoomOf(page)).toBe(0.8);
+  await toSettings();
   await controls.getByRole("button", { name: "기본 크기", exact: true }).click();
   await expect(controls.locator("output")).toHaveText("100%");
-  expect(await zoomOf(page)).toBe(1);
+  await page.goBack();
+  await expect.poll(() => zoomOf(page)).toBe(1);
 });

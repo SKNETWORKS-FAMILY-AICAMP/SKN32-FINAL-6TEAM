@@ -136,7 +136,7 @@ test("상세 보기는 Esc 로도 닫히고, 「이 일정 질문하기」는 �
   await expect.poll(async () => (await server.received("POST", "/messages")).length).toBe(1);
 });
 
-test("장소 출처는 상세 카드에서 이름 옆 꼬리표로 한 번만 말하고(「출처」 줄이 없다), 목록 카드는 「출처」 줄로 말한다", async ({ page }) => {
+test("장소 출처는 상세 카드에서 이름 옆 꼬리표로 한 번만 말하고(「출처」 줄이 없다), 펼친 목록 카드에는 정보 줄이 없다(2026-10-13 카드 A안)", async ({ page }) => {
   // 실서버 확인(2026-10-08)에서 상세 카드에 「ⓒ한국관광공사」가 두 번 보였다 — mock 서버의 일정에는 출처가 없어 여기서 붙인다.
   await page.route(`**/v1/web/trips/${TRIP_ID}`, async (route) => {
     if (route.request().method() !== "GET") { await route.continue(); return; }
@@ -148,7 +148,7 @@ test("장소 출처는 상세 카드에서 이름 옆 꼬리표로 한 번만 �
   });
   await openTrip(page);
   await page.locator("#stop-button-i-a").click();
-  await expect(page.locator("#stop-detail-i-a dl")).toContainText("출처ⓒ한국관광공사");
+  await expect(page.locator("#stop-detail-i-a dl")).toHaveCount(0);                    // `[2026-10-13 카드 A안]` 펼친 카드에는 정보 줄이 없다(상세 보기 화면에 있다)
   await page.getByRole("button", { name: "아침 식당 상세 보기" }).click();
   const card = page.locator('[data-card-id="i-a"]');
   await expect(card.getByText("ⓒ한국관광공사", { exact: true })).toHaveCount(1);
