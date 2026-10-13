@@ -231,6 +231,8 @@ class ReadToolbox:
 
         ★tenant·customer 조건을 뺀 조회는 그 자체가 보안 결함이다
           (`CLAUDE.md` §1, `tests/security/`).
+        ★`[2026-10-13]` 이 예약이 속한 여행을 `trip` 에 붙인다(`_booking_trip`) — 팀이 그 여행의 설문을 `read.itinerary` 로 읽는다
+          (활동 → 코어 전달 8번 회신 `wiki/records/reports/2026-10-13_활동_전달8_설문전달_회신.md`).
         """
         select = ("SELECT booking_id, booking_no, kind, status, starts_at, party_size, "
                   "capacity, amount_cents, locked, place_id FROM bookings "
@@ -247,7 +249,48 @@ class ReadToolbox:
             matched_by = "nearest"
             found = self._one(select + " ORDER BY starts_at ASC LIMIT 1",
                               (scope.tenant_id, scope.customer_id), self._BOOKING_COLUMNS)
-        return None if found is None else {**found, "matched_by": matched_by}
+        if found is None:
+            return None
+        return {**found, "matched_by": matched_by, "trip": self._booking_trip(scope, found)}
+
+    def _booking_trip(self, scope: ToolContext, booking: dict[str, Any]) -> dict[str, Any]:
+        """이 예약이 속한 여행. `{trip_id, matched_by, why_unknown}` — 못 찾으면 `trip_id` 가 `None` 이고 이유를 적는다.
+
+        찾는 순서(전달 8번 회신):
+          1. `"itinerary_item"` — 여행 **최신 일정판**의 항목이 이 예약을 가리킨다(`itinerary_items.booking_id`). 확인된 연결이다.
+          2. `"trip_period"` — 1이 없으면 진행 중인 여행 가운데 예약 날짜(서울 날짜)가 그 여행의 첫 항목 날짜~마지막 항목 날짜 안에
+             드는 것. **추정이다.** 딱 하나일 때만 쓴다.
+        ★둘 이상 걸리면 고르지 않는다(`why_unknown: "ambiguous"`) — 다른 여행의 취향으로 판정하는 것이 「모름」보다 나쁘다.
+        ★여행 · 항목 모두 tenant · customer 로 묶는다. 다른 고객의 여행은 있는지도 말하지 않는다.
+        """
+        linked = self._trip_ids(
+            "SELECT DISTINCT t.trip_id FROM itinerary_items i JOIN trips t ON t.tenant_id=i.tenant_id "
+            "AND t.trip_id=i.trip_id AND i.version=t.latest_version "
+            "WHERE t.tenant_id=%s AND t.customer_id=%s AND i.booking_id=%s LIMIT 2",
+            (scope.tenant_id, scope.customer_id, str(booking["booking_id"])))
+        if len(linked) == 1:
+            return {"trip_id": linked[0], "matched_by": "itinerary_item", "why_unknown": None}
+        if linked:
+            return {"trip_id": None, "matched_by": None, "why_unknown": "ambiguous"}
+        if booking.get("starts_at") is None:
+            return {"trip_id": None, "matched_by": None, "why_unknown": "not_linked"}
+        during = self._trip_ids(
+            "SELECT t.trip_id FROM trips t JOIN itinerary_items i ON i.tenant_id=t.tenant_id "
+            "AND i.trip_id=t.trip_id AND i.version=t.latest_version "
+            "WHERE t.tenant_id=%s AND t.customer_id=%s AND t.status='active' GROUP BY t.trip_id "
+            "HAVING (%s::timestamptz AT TIME ZONE 'Asia/Seoul')::date "
+            "BETWEEN min(i.starts_at AT TIME ZONE 'Asia/Seoul')::date "
+            "AND max(coalesce(i.ends_at, i.starts_at) AT TIME ZONE 'Asia/Seoul')::date LIMIT 2",
+            (scope.tenant_id, scope.customer_id, booking["starts_at"]))
+        if len(during) == 1:
+            return {"trip_id": during[0], "matched_by": "trip_period", "why_unknown": None}
+        return {"trip_id": None, "matched_by": None, "why_unknown": "ambiguous" if during else "not_linked"}
+
+    def _trip_ids(self, sql: str, params: tuple[Any, ...]) -> list[str]:
+        with self.connection_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql, params)
+                return [str(row[0]) for row in cur.fetchall()]
 
     def _case_booking_id(self, scope: ToolContext) -> str | None:
         """이 Case 가 가리키는 예약 id(`subject_ref.kind == "booking"`). 없으면 `None`."""
