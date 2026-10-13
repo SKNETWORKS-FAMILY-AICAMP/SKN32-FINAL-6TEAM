@@ -345,9 +345,16 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         try:
             resumed = resume_pending(conn, controller=controller, tenant=tenant, trip=trip,
                                      request_id=request_id, message=message, actor_id=actor_id,
-                                     case_id=resume_case_id, token=resume_token, expected_version=expected_version, desk=desk, chat=chat)
+                                     case_id=resume_case_id, token=resume_token, expected_version=expected_version, desk=desk, chat=chat,
+                                     fresh=(lambda: _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
+                                                                message=message, selected=selected_item_id, chat=chat, now=at))
+                                     if summary_day is None and _decision_mode(chat, tenant) == "on" else None)
         except LookupError:
             raise TripNotFound(str(resume_case_id)) from None
+        # ★`[2026-10-13]` 대기 건이 있어도 새 문장이 혼자서 완결된 요청이면 새 요청으로 처리한다(같은 해석을 다시 부르지 않는다)
+        fresh_decision = None
+        if resumed is not None and "fresh_decision" in resumed:
+            fresh_decision, resumed = resumed["fresh_decision"], None
         if resumed is not None:
             return resumed
         # ★`[2026-09-29]` **사실 질문의 답은 분류 전에 규칙으로 만든다**(모델을 안 쓴다) — 그리고 Case 기록에 **처음부터**
@@ -361,9 +368,11 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             _clear_model_path()
             if summary_decision is not None:
                 decision, failure = summary_decision, None
+            elif fresh_decision is not None:
+                decision, failure = fresh_decision
             else:
                 decision, failure = _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
-                                                message=message, selected=selected_item_id, chat=chat)
+                                                message=message, selected=selected_item_id, chat=chat, now=at)
             record = decision.record() if decision is not None else {"failed": failure}
             record = {**record, **_model_path()}               # ★`[2026-10-07]` 어느 경로(로컬 · API)로 답했나 — 넘김 장치가 켜져 있을 때만 들어간다
             if mode == "on" or summary_decision is not None:
@@ -629,7 +638,7 @@ def _model_path() -> dict[str, Any]:
 
 
 def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: list[Any], message: str,
-                selected: UUID | None, chat: Any):
+                selected: UUID | None, chat: Any, now: datetime | None = None):
     from app.core.settings import get_guardrails
 
     from app.domains.travel_ops.components.conversation import chat_log
@@ -639,7 +648,7 @@ def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: li
         decision = decision_unit.decide(
             chat, stops=decision_unit.stops_of(items), changes=decision_unit.changes_of(store, conn, trip_id, items),
             history=chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id), selected_item_id=selected,
-            message=message, num_predict=int(get_guardrails().get("travel.decision_unit.num_predict") or 160))
+            message=message, num_predict=int(get_guardrails().get("travel.decision_unit.num_predict") or 160), now=now)
         return decision, None
     except decision_unit.DecisionFailed as exc:
         return None, str(exc)
@@ -786,6 +795,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     team = {"dining": "dining", "activity": "activity", "mobility": "mobility"}.get(getattr(item, "kind", None),
                                                                                     "trip_desk")
     # 읽기 재시도(fact_read_retry.retry_read)가 쓰는 스냅샷 — Case 를 열 때와 같은 이름으로 남긴다
+    # ★`[2026-10-14]` 문맥으로 바로잡은 대상(`fact_context.resolve`)을 스냅샷에도 같이 적는다 — 전에는 해석 기록은 바로잡은 대상,
+    #   스냅샷은 모델이 처음 고른 대상이라 중단 뒤 재전송이 엉뚱한 일정을 읽을 수 있었다(`test_context_corrected_target_and_snapshot_are_committed_together`)
+    if read_snapshot and not decision.reads:
+        read_snapshot = {**read_snapshot, "item_id": str(decision.item.item_id) if decision.item else None}
     read_patch = {"fact_read_snapshot": read_snapshot} if read_snapshot else {}
     if not safe_read or read_case["status"] != "running":
         move(EventType.ROUTED, {"owner_team_id": team, "capability": f"trip_desk.{action}", "routed_by": "decision_unit",

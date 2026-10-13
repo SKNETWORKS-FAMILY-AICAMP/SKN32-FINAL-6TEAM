@@ -24,7 +24,15 @@ from zoneinfo import ZoneInfo
 KST = ZoneInfo("Asia/Seoul")
 
 ACTIONS = ("apply_change", "propose_alternatives", "rollback", "redo", "answer_fact", "ask_policy", "answer_service",
-           "report_delay", "report_closed", "clarify", "other")
+           "report_delay", "report_closed", "change_time", "add_item", "remove_item", "clarify", "other")
+#: ★`[2026-10-13]` 알아듣지만 **아직 채팅으로 실행하지 않는** 요청 — 할 일 목록에 없으면 모델이 가장 가까운 「장소 바꾸기」 되묻기로
+#:  억지로 끼웠다(시간 변경 58건 실행 0 · 엉뚱한 되묻기 29건, 추가·삭제 26건 정상 0 — x600 서버 웹 채팅 시험 2026-10-13).
+#:  실행 기능이 생기기 전까지 늘 같은 정직한 안내로 답한다. 되묻기 후보(`choices`)로는 내지 않는다(실행할 수 없는 것을 고르게 하지 않는다).
+UNSUPPORTED = {
+    "change_time": "시간이나 날짜를 옮기는 일은 아직 채팅에서 하지 못해 일정은 바꾸지 않았어요. 계획서의 일정표에서 직접 수정해 주세요.",
+    "add_item": "일정에 새 곳을 넣는 일은 아직 채팅에서 하지 못해 일정은 바꾸지 않았어요.",
+    "remove_item": "일정을 빼는 일은 아직 채팅에서 하지 못해 일정은 바꾸지 않았어요.",
+}
 FACTS = ("detail", "address", "phone", "hours", "time", "next", "booking", "day", "move",
          "route_here", "nearby_dining", "nearby_activity", "schedule", "changeability",
          "description", "duration", "price", "entry_booking", "outdoor", "food", "none")
@@ -61,13 +69,18 @@ SYSTEM = """너는 여행 일정 서비스의 요청 해석기다. 고객 문장
   「경복궁이 뭐야?」는 장소 질문 answer_fact/detail이며, 「이 예약 취소 위약금은?」은 규정 질문 ask_policy다.
 - report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).
 - report_closed: 장소가 닫았다고 알린다.
+- change_time: 일정의 시각·날짜·머무는 시간을 바꾸거나 일정을 앞뒤·다른 날로 옮겨 달라(장소는 그대로).
+- add_item: 일정에 새 장소·활동·식사·쉬는 시간을 넣어 달라.
+- remove_item: 일정을 빼거나 취소해 달라(다른 곳으로 바꾸라는 말이 아니다).
 - clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**
   1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나
   직전 대화로 정할 수 없으면 clarify.
 - other: 여행 일정과 무관한 말 · 인사. 서비스 기능·사용법·정체 질문은 answer_service로 구분한다.
 먼저 고객이 묻는 객체를 구분한다: 기존 일정의 항목·상태를 물으면 읽기, 새로운 대체 장소를 찾으라면 후보 추천, 실제로 바꾸라면 변경 실행이다.
 모든 문장에서 change_scope를 함께 분류한다: place(장소), time(시각), date(날짜), mixed(둘 이상), none(변경 요청 아님), unclear(불명확).
-시간·날짜만 바꾸라는 말은 장소 교체가 아니다. action=apply_change 또는 propose_alternatives는 change_scope=place일 때만 쓴다.
+destination_text: 고객이 바꿀 곳을 직접 이름이나 조건으로 말했으면 그 부분을 원문 그대로 복사한다(장소 이름을 고치거나 지어내지 않는다). 말하지 않았으면 빈 문자열이다.
+condition_text: 요청이 어떤 일이 생길 때만 하라는 조건부라면 그 조건 부분을 원문 그대로 복사한다. 조건이 없으면 빈 문자열이다.
+시간·날짜만 바꾸라는 말은 장소 교체가 아니다 — change_time 이다. action=apply_change 또는 propose_alternatives는 change_scope=place일 때만 쓴다.
 목록 조회: 일정 여러 개나 시간대의 항목을 묻는 말은 answer_fact다. 일정 목록은 fact=schedule,
 변경할 수 있는 항목·고정·예약 때문에 바꿔도 되는지를 묻는 말은 fact=changeability다.
 변경 가능한 기존 활동들을 알려 달라는 말도 answer_fact/changeability이며, 대체 장소 추천이나 실제 변경으로 읽지 않는다.
@@ -87,6 +100,7 @@ kind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 
 - 기존 여행 일정의 끼니·항목을 지칭한 장소 후보 추천은 그 항목을 target_item으로 고르는 propose_alternatives다. 실제 변경 적용은 명시적으로 변경을 실행해 달라고 한 경우에만 한다.
 - nearby_dining과 nearby_activity는 고객이 현재 위치·여기·근처·주변을 기준으로 찾는다고 명시한 경우에만 고른다. 기존 일정의 대체 후보 요청을 현재 위치 주변 검색으로 바꾸지 않는다.
 - 범위 조회의 날짜를 고객이나 앞 대화가 지정하지 않았다면 query.day는 all이다. today나 tomorrow를 추측하지 않는다.
+- 맨 위 「지금」 줄이 있으면 오늘·내일·지금·몇 분 뒤 같은 상대적인 때는 그 줄의 날짜·시각을 기준으로 푼다. 「오늘」은 그 줄의 날짜다.
 """
 
 # 읽기 질문의 범위를 실행 단계까지 보존한다. 예문을 외우는 대신 같은 계약으로 모든 표현을 해석한다.
@@ -245,8 +259,32 @@ def item_lines(stops: list[Stop], selected: str = "none") -> list[str]:
     return out
 
 
+_WEEK = "월화수목금토일"
+
+
+def now_line(stops: list[Stop], now: datetime | None) -> str:
+    """★`[2026-10-13]` 해석기에 주는 「지금」 — 한국 시각과 그날이 여행 몇 일차인지. 없으면 빈 문자열.
+
+    전에는 이 줄이 없어 모델이 「오늘 15시」「다음 일정」「지금」을 풀 기준이 없었다 — 「오늘 15시」에 내일 15:00 일정을 골랐다
+    (x600 서버 웹 채팅 시험 2026-10-13, 처리 기록 331번). 일정 짚기 모델(`item_pointer.py`)은 이미 「오늘」을 받고 있다."""
+    if now is None:
+        return ""
+    local = _local(now)
+    stamp = f"{local:%Y-%m-%d}({_WEEK[local.weekday()]}) {local:%H:%M}"
+    if not stops:
+        return f"지금(한국 시각): {stamp}"
+    first, last = _local(stops[0].item.starts_at).date(), _local(stops[-1].item.starts_at).date()
+    if local.date() < first:
+        where = f"여행 시작 전 — 1일차는 {first:%m-%d}"
+    elif local.date() > last:
+        where = "여행이 끝난 뒤"
+    else:
+        where = f"오늘은 여행 {(local.date() - first).days + 1}일차"
+    return f"지금(한국 시각): {stamp} · {where}"
+
+
 def _prompt(stops: list[Stop], changes: list[Change], history: list[dict[str, Any]], selected: str,
-            message: str) -> str:
+            message: str, now: datetime | None = None) -> str:
     lines = item_lines(stops, selected)
     change_lines = [f"{c.alias} | 대상 {next((s.alias for s in stops if s.item.item_id == c.target_item_id), 'none')}"
                     f" | {c.line}" + (" (가장 최근)" if c is changes[-1] else "")
@@ -261,7 +299,8 @@ def _prompt(stops: list[Stop], changes: list[Change], history: list[dict[str, An
     previous = next((t for t in reversed(history) if t.get("role") == "assistant"), {})
     focus = (previous.get("reply") or {}).get("focus") or {}
     focus_alias = next((s.alias for s in stops if str(s.item.item_id) == str(focus.get("item_id"))), "none")
-    return ("일정 목록:\n" + ("\n".join(lines) or "(없음)")
+    head = now_line(stops, now)
+    return ((head + "\n\n" if head else "") + "일정 목록:\n" + ("\n".join(lines) or "(없음)")
             + "\n\n바뀐 이력(아래가 최근):\n" + ("\n".join(change_lines) or "(없음)")
             + f"\n\n직전 대화:\n{talk}\n구조화된 직전 답변 대상: {focus_alias}\n\n화면에서 고른 일정: {selected}\n\n고객 문장: {message}")
 
@@ -271,7 +310,7 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
     items = [s.alias for s in stops] + ["none"]
     change_ids = sorted({c.alias for c in changes}) + ["none"]
     choice = {"type": "object", "properties": {
-        "action": {"type": "string", "enum": [a for a in ACTIONS if a != "clarify"]},
+        "action": {"type": "string", "enum": [a for a in ACTIONS if a != "clarify" and a not in UNSUPPORTED]},
         "target_item": {"type": "string", "enum": items},
         "target_change": {"type": "string", "enum": change_ids},
         "fact": {"type": "string", "enum": list(FACTS)}},
@@ -292,6 +331,8 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "target_change": {"type": "string", "enum": change_ids},
         "fact": {"type": "string", "enum": list(FACTS)},
         "change_scope": {"type": "string", "enum": ["place", "time", "date", "mixed", "none", "unclear"]},
+        "destination_text": {"type": "string"},
+        "condition_text": {"type": "string"},
         "minutes": {"type": "integer"},
         "query": query_schema(stops),
         "reads": {"type": "array", "items": read},
@@ -301,18 +342,20 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
             "required": ["question", "answer"], "additionalProperties": False}},
         "choices": {"type": "array", "items": choice, "maxItems": 3}},
         # ★되묻는 문장은 모델이 쓰지 않는다 — 서버가 후보로 만든다(답이 길어져 p95 가 7초였다, 재생 시험 2026-09-29)
-        "required": ["action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests"]}
+        # ★`[2026-10-14]` 목적지 · 조건 칸은 **반드시 낸다**(없으면 빈 문자열) — 선택 칸이면 학습 E4B 가 아예 내지 않았다(재생 434건 중 목적지 0/43)
+        "required": ["action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests",
+                     "destination_text", "condition_text"]}
 
 
 def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list[dict[str, Any]],
-           selected_item_id: UUID | None, message: str, num_predict: int = 400) -> Decision:
+           selected_item_id: UUID | None, message: str, num_predict: int = 400, now: datetime | None = None) -> Decision:
     """모델 한 번. 스키마 밖 · 목록 밖 값이면 `DecisionFailed`."""
     from app.domains.travel_ops.components.core_hooks.feedback import masked
 
     selected = next((s.alias for s in stops if selected_item_id and s.item.item_id == selected_item_id), "none")
     started = time.monotonic()
     try:
-        raw = chat.structured(SYSTEM, _prompt(stops, changes, history, selected, masked(message)),
+        raw = chat.structured(SYSTEM, _prompt(stops, changes, history, selected, masked(message), now),
                               _schema(stops, changes), num_predict=num_predict)
     except Exception as exc:                          # noqa: BLE001 — 모델 장애는 부르는 쪽이 「바꾸지 않고 묻기」로 답한다
         raise DecisionFailed(f"{type(exc).__name__}: {str(exc)[:160]}") from exc
@@ -331,6 +374,21 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         # 변경 범위를 확인하지 못했거나 시간·날짜 요청이면 팀의 장소 교체 실행기로 보내지 않는다.
         raw = {**raw, "scope_guard": {"requested": change_scope, "blocked_action": action}}
         action = "other"
+    if action in UNSUPPORTED:
+        raw = {**raw, "unsupported": action}
+        action = "other"
+    # ★`[2026-10-13]` 조건부 변경(「비 오면 바꿔 줘」)은 미리 걸어 둘 수 없다 — 지금 실행하지 않는다.
+    #   전에는 조건을 담을 칸이 없어 비가 안 왔는데도 바로 바꿨다(x600 서버 웹 채팅 시험 2026-10-13, 처리 기록 416번).
+    condition = str(raw.get("condition_text") or "").strip()[:200]
+    if action in {"apply_change", "propose_alternatives", "report_closed"} and condition:
+        raw = {**raw, "condition_guard": {"condition": condition, "blocked_action": action}}
+        action = "other"
+    # ★`[2026-10-13]` 고객이 바꿀 곳을 직접 말했는데(「통인시장으로」) 그곳으로 바로 바꾸는 실행은 아직 없다. 전에는 근처 첫 후보로
+    #   바꾸고 「요청하신 대로」라고 답했다(16건 중 14건). 이제 바꾸지 않고 후보를 보여 고르게 한다 — 말한 곳이 후보에 있으면 거기서 고른다.
+    destination = str(raw.get("destination_text") or "").strip()[:200]
+    if action == "apply_change" and destination:
+        raw = {**raw, "named_destination": {"text": destination, "blocked_action": action}}
+        action = "propose_alternatives"
     by_alias = {s.alias: s.item for s in stops}
     target = raw.get("target_item") or "none"
     if target != "none" and target not in by_alias:
@@ -347,17 +405,52 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     if not isinstance(general, list) or len(general) > 8:
         raise DecisionFailed("일반 요청 목록이 유효하지 않습니다")
     general_answers = []
+    dropped_general = 0
     for request in general:
         if (not isinstance(request, dict) or set(request) != {"question", "answer"}
-                or not all(isinstance(request.get(k), str) and request[k].strip() for k in ("question", "answer"))
+                or not all(isinstance(request.get(k), str) for k in ("question", "answer"))
                 or len(request["question"]) > 1000 or len(request["answer"]) > 2000):
             raise DecisionFailed("일반 요청의 질문·답이 유효하지 않습니다")
+        if not (request["question"].strip() and request["answer"].strip()):
+            handled = raw.get("unsupported") or raw.get("scope_guard") or raw.get("condition_guard")
+            if action in ("other", "answer_service") and not handled:
+                # 일반 질문 자체가 고객 요청인데 답이 비었다 — 조용히 넘기지 않고 실패로 드러낸다
+                raise DecisionFailed("일반 요청의 질문·답이 유효하지 않습니다")
+            # ★`[2026-10-14]` 빈 답이 든 일반 질문 칸은 그 칸만 버린다(일정과 무관한 덧붙임 답이다). 전에는 해석 전체를 버렸다
+            #   (학습 E4B 재생 434건 중 19건 — 예: 「카페 하나 추가해줘」를 일반 질문으로도 적고 답은 비움)
+            dropped_general += 1
+            continue
         general_answers.append(request["answer"].strip())
     if general_answers:
         general_answers.append(GENERAL_NOTE)
     social ="\n\n".join([str(raw.get("social") or "")[:500], *general_answers]).strip()
     if raw.get("scope_guard"):
         social = "시간이나 날짜 변경 요청을 장소 교체로 실행하지 않았습니다. 이 채팅에서는 시간·날짜 변경을 적용하지 못하므로 일정표에서 직접 수정해 주세요."
+    if raw.get("unsupported"):
+        social = UNSUPPORTED[raw["unsupported"]]
+    if raw.get("condition_guard"):
+        social = (f"「{raw['condition_guard']['condition']}」처럼 조건이 붙은 변경은 아직 미리 걸어 둘 수 없어 지금은 일정을 바꾸지 않았어요. "
+                  "그 일이 실제로 생기면 그때 다시 말씀해 주세요.")
+    # ★`[2026-10-13]` 고른 할 일에 **쓰지 않는 칸**(읽기 질문 · 조회 범위)이 채워져 있어도 해석 전체를 버리지 않는다 — 그 칸만 무시하고 남긴다.
+    #   전에는 할 일은 맞게 골라도(예: 「점심 1시간 당겨줘」→ 시간 변경) 군더더기 읽기 칸 때문에 「해석 실패」가 났다
+    #   (x600 서버 웹 채팅 시험 2026-10-13: 해석 실패 13건 중 9건 · 같은 입력 재생에서 gemma4:12b 56건 중 33건).
+    #   단 일정을 **실제로 바꾸는** 할 일은 그대로 막는다 — 조회 범위가 붙은 변경은 조회를 원했는지 변경을 원했는지 애매해서다(잘못 바꾸지 않게).
+    ignored: dict[str, Any] = {}
+    if action not in ("answer_fact", "answer_service", "apply_change", "rollback", "redo", "report_closed"):
+        if raw.get("reads"):
+            ignored["reads"] = len(raw["reads"])
+        if query is not None:
+            ignored["query"], query = query, None
+        if fact in (*QUERY_FACTS, "day", "outdoor"):
+            ignored["fact"], fact = fact, "none"
+    if action == "answer_fact" and query is not None and fact not in (*QUERY_FACTS, "day", "outdoor") and not raw.get("reads"):
+        # ★`[2026-10-14]` 한 일정을 묻는 사실(다음 · 시각 · 이동 · 영업시간 …)에 붙은 조회 범위는 쓰지 않는 칸이다 — 버린다.
+        #   전에는 해석 전체를 버렸다(학습 E4B 재생 434건 중 30건). 일정을 바꾸지 않는 읽기라 안전하다
+        ignored["query"], query = query, None
+    if dropped_general:
+        ignored["general_requests"] = dropped_general
+    if ignored:
+        raw = {**raw, "ignored_for_action": ignored, **({"reads": []} if "reads" in ignored else {})}
     reads = []
     for read in raw.get("reads") or []:
         if (action != "answer_fact" or not isinstance(read, dict) or read.get("fact") not in FACTS
@@ -409,7 +502,8 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     choices = []
     # 같은 읽기 해석의 반복은 모호성이 아니다. 원본 출력은 남기고 중복 표시 후보만 뺀다.
     for option in ([] if fact in QUERY_FACTS or canonical_scope else (raw.get("choices") or [])):
-        if not isinstance(option, dict) or option.get("action") not in ACTIONS or option.get("action") == "clarify":
+        if (not isinstance(option, dict) or option.get("action") not in ACTIONS or option.get("action") == "clarify"
+                or option.get("action") in UNSUPPORTED):
             continue                                   # ★목록 밖 후보는 버린다(지어낸 해석을 보이지 않는다)
         item = by_alias.get(option.get("target_item") or "none")
         change = changes_by.get(option.get("target_change") or "none")
@@ -536,8 +630,9 @@ def maybe_meant(decision: Decision, fact: str, first: datetime | None, limit: in
 def choice_message(choice: dict[str, Any], first: datetime | None) -> str | None:
     """해석 후보 → **그대로 보내면 한 번에 알아듣는 문장**(웹 버튼 · 「1번」 답의 뜻). 만들 수 없으면 None."""
     item, change, action = choice.get("item"), choice.get("change"), choice["action"]
-    where = (f"{_day_no(item, first)}일차 {_local(item.starts_at):%H:%M} "
-             f"{(item.place or {}).get('name') or item.title}") if item is not None else None
+    # ★`[2026-10-13]` 고객이 아는 이름은 **일정 제목**이다 — 전에는 연결 장소 이름을 써서 「경복궁 관람」 일정을 「황학정」으로,
+    #   「명동교자」를 「성수망치버거」로 되물어 무슨 일정인지 알아보기 어려웠다(x600 서버 웹 채팅 시험 2026-10-13)
+    where = (f"{_day_no(item, first)}일차 {_local(item.starts_at):%H:%M} {item.title}") if item is not None else None
     if action == "apply_change" and where:
         return f"{where} 다른 곳으로 바꿔 줘"
     if action == "propose_alternatives" and where:
@@ -579,5 +674,29 @@ def labels(decision: Decision) -> dict[str, str]:
     return {"intent": intent, "issue_code": code, "sentiment": sentiment}
 
 
-__all__ = ["ACTIONS", "Change", "Decision", "DecisionFailed", "FACTS", "LOCATION_FACTS", "NEAR_FACTS", "fact_first", "guard_target", "maybe_meant", "Stop", "SYSTEM", "changes_of", "choice_message",
+def stands_alone(decision: "Decision | None") -> bool:
+    """★`[2026-10-13]` 이 해석이 **앞의 되묻기 없이도 처리할 수 있는 완결된 요청**인가 — 할 일에 필요한 값이 다 있나.
+
+    대기 중인 되묻기가 있을 때 새 문장이 「그 질문의 답」인지 「새 요청」인지 가르는 데 쓴다(`case_dispatch.resume_pending`).
+    전에는 웹이 대기 건 번호를 붙이면 무엇을 말해도 대기 건의 답으로만 처리해, 새 요청에도 같은 되묻기만 반복됐다
+    (x600 서버 웹 채팅 시험 2026-10-13: 20건). 판단은 문장 낱말이 아니라 **모델이 고른 할 일과 서버가 확인한 값**으로 한다."""
+    if decision is None:
+        return False
+    if decision.raw.get("scope_guard") or decision.raw.get("condition_guard") or decision.raw.get("unsupported"):
+        return True                                   # 시간·날짜 변경으로 알아들었다 — 그 요청에 대한 안내가 답이다
+    action = decision.action
+    if action in ("clarify", "other"):
+        return False
+    if action in ("apply_change", "propose_alternatives", "report_closed"):
+        return decision.item is not None
+    if action in ("rollback", "redo"):
+        return decision.change is not None
+    if action == "report_delay":
+        return bool(decision.minutes)
+    if action == "answer_fact":
+        return bool(decision.reads) or decision.fact != "none"
+    return action in ("ask_policy", "answer_service")
+
+
+__all__ = ["ACTIONS", "UNSUPPORTED", "stands_alone", "Change", "Decision", "DecisionFailed", "FACTS", "LOCATION_FACTS", "NEAR_FACTS", "fact_first", "guard_target", "maybe_meant", "Stop", "SYSTEM", "changes_of", "choice_message",
            "decide", "item_lines", "labels", "stops_of"]

@@ -59,9 +59,12 @@ class OllamaItemPointer:
 
     def __init__(self, *, base_url: str, model: str, timeout: float = 30.0, keep_alive: str = "",
                  mode: Callable[[], str] | str = "on", post: Callable[[str, dict, float], Any] | None = None, cache_size: int = 256,
-                 background_warm: bool = False, warm_timeout: float = 180.0) -> None:
+                 background_warm: bool = False, warm_timeout: float = 180.0, num_ctx: int = 0) -> None:
         self.base_url, self.model, self.timeout, self.keep_alive = base_url.rstrip("/"), model, timeout, keep_alive
         self.background_warm, self.warm_timeout = background_warm, warm_timeout
+        #: ★`[2026-10-14]` 요청 해석과 **같은 모델**을 쓰면 문맥 길이도 같아야 한다 — 다르면 Ollama 가 부를 때마다 모델을 다시 올린다
+        #:  (`ollama_chat.OllamaChat.num_ctx`). 0 이면 보내지 않는다(모델 기본)
+        self.num_ctx = int(num_ctx or 0)
         self._warm_fp: tuple | None = None          # 모델 서버가 마지막으로 읽어 둔 일정(올라마는 한 번에 한 일정의 앞부분만 기억한다)
         self._warming = False
         self._warm_thread: threading.Thread | None = None
@@ -79,7 +82,8 @@ class OllamaItemPointer:
     def _ask(self, prompt: str, timeout: float | None = None) -> int | None:
         """모델 한 번 — 번호(정수) 또는 None(없음). 못 부르거나 형식이 틀리면 예외."""
         payload: dict[str, Any] = {"model": self.model, "stream": False, "think": False, "format": _SCHEMA,
-                                   "options": {"temperature": 0, "num_predict": 24}, "messages": [{"role": "user", "content": prompt}]}
+                                   "options": {"temperature": 0, "num_predict": 24, **({"num_ctx": self.num_ctx} if self.num_ctx > 0 else {})},
+                                   "messages": [{"role": "user", "content": prompt}]}
         if self.keep_alive:
             payload["keep_alive"] = self.keep_alive
         response = self._post(f"{self.base_url}/api/chat", payload, timeout or self.timeout)
@@ -199,7 +203,9 @@ def register_from_settings(settings: Any) -> OllamaItemPointer | None:
     pointer = OllamaItemPointer(base_url=base, model=model, timeout=float(getattr(settings, "ollama_pointer_timeout_seconds", 30.0)),
                                 keep_alive=str(getattr(settings, "ollama_pointer_keep_alive", "") or ""), mode=mode,
                                 background_warm=bool(getattr(settings, "ollama_pointer_background_warm", True)),
-                                warm_timeout=float(getattr(settings, "ollama_pointer_warm_timeout_seconds", 180.0)))
+                                warm_timeout=float(getattr(settings, "ollama_pointer_warm_timeout_seconds", 180.0)),
+                                num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0)
+                                if model == (getattr(settings, "ollama_model", "") or "").strip() else 0)
     itinerary_team.set_item_pointer(pointer)
     logger.info("일정 항목 짚기 모델 연결: %s (mode=%s)", model, mode())
     return pointer

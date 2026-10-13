@@ -42,12 +42,14 @@ def test_the_provider_choice_is_explicit_and_never_falls_back(monkeypatch):
     retriever._embed_query.cache_clear()
 
 
-def test_the_travel_corpus_is_local_only_and_that_is_visible():
-    """★여행 코퍼스에는 1536 벡터가 **없다.** 제공자를 openai 로 되돌리면 검색이 **예외**로 죽는다 —
-    조용히 0건이 되지 않는다(`retriever.search_policy`).
+def test_the_travel_corpus_vectors_are_all_or_nothing_per_provider_and_that_is_visible():
+    """★여행 코퍼스의 벡터 칸은 제공자마다 **전부 채워졌거나 전부 비었다** — 일부만 찬 칸으로 검색하면 근거가 몰래 줄어든다.
 
-    ★`[2026-09-22]` 여행 130청크는 **1024칸만** 채워져 있다(OpenAI 크레딧이 없어 로컬 임베딩으로만
-      적재했다). 그 사실을 숨기지 않고 여기서 그대로 확인한다.
+    ★`[2026-09-22]` 여행 130청크는 처음에 **1024칸만** 채웠다(OpenAI 크레딧이 없어 로컬 임베딩으로만 적재).
+    ★`[2026-10-14]` 전에는 「1536칸 = 0」을 그대로 단언했지만, 10-07 넘김 장치 계약(`wiki/external/llm-failover.md`)은 오히려
+      유료 대체로 검색하려면 1536칸을 **채우라**고 정했다(`scripts/embed_chunks_openai.py`). 로컬 DB 는 채워져 있고 x600 서버는 비어 있다 —
+      둘 다 정상 상태이고, 일부만 찬 상태만 막는다. 비어 있으면 그 제공자로 검색할 때 **예외**(조용히 0건이 아님),
+      차 있으면 그 칸으로 검색한다(유료 호출 없이 질문 벡터를 대신 넣어 본다).
     """
     from app.core import settings as settings_module
     from app.infrastructure.rag import retriever
@@ -58,15 +60,19 @@ def test_the_travel_corpus_is_local_only_and_that_is_visible():
                FROM knowledge_chunks kc JOIN knowledge_documents kd USING(document_id)
                WHERE kd.scope = ANY(%s)""", (TRAVEL_SCOPES,))
         total, openai_dim, local_dim = cur.fetchone()
-    assert (total, openai_dim, local_dim) == (130, 0, 130), (total, openai_dim, local_dim)
+    assert total == 130 and local_dim == 130 and openai_dim in (0, total), (total, openai_dim, local_dim)
 
     original = settings_module.get_settings()
     patched = original.model_copy(update={"embedding_provider": "openai"})
     with pytest.MonkeyPatch.context() as monkeypatch:
         monkeypatch.setattr(retriever, "get_settings", lambda: patched)
         retriever._embed_query.cache_clear()
-        with pytest.raises(RuntimeError, match="embedding_1024|벡터 칸"):
-            retriever.search_policy("demo", "비가 와서 못 간다", TRAVEL_SCOPES)
+        if openai_dim == 0:
+            with pytest.raises(RuntimeError, match="embedding_1024|벡터 칸"):
+                retriever.search_policy("demo", "비가 와서 못 간다", TRAVEL_SCOPES)
+        else:
+            monkeypatch.setattr(retriever, "_embed_query", lambda query: [0.01] * 1536)
+            assert retriever.search_policy("demo", "비가 와서 못 간다", TRAVEL_SCOPES, top_k=3)
     retriever._embed_query.cache_clear()
 
 

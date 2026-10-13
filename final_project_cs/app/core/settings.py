@@ -149,6 +149,9 @@ class Settings(BaseSettings):
     #: ★`[2026-09-29]` 모델을 붙잡아 둘 시간(Ollama `keep_alive`, 예 `30m` · `2h`). 비우면 Ollama 기본(5분).
     #:  길게 두면 잠든 모델의 느린 첫 호출(ui 세션 실측 29.8초)이 줄지만 원격 GPU 메모리를 그만큼 잡는다 — 값은 운영이 정한다
     ollama_keep_alive: str = ""
+    #: ★`[2026-10-14]` Ollama 문맥 길이(`num_ctx`). 요청 해석 입력이 약 4,600 토큰이라 Ollama 기본(12~16GB GPU 에서 4,096)이면 앞이 잘린다
+    #:  (`ollama_chat.OllamaChat.num_ctx`). 0 이면 Ollama 기본을 쓴다
+    ollama_num_ctx: int = 8192
     #: ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 **가르친 모델**(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 낱말 규칙만 쓴다.
     #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
     ollama_pointer_model: str = ""
