@@ -742,6 +742,27 @@ def test_google_options_carry_seller_prices_photo_and_address():
     assert result.action_proposals[0].arguments["summary"]["google_details"] == {"asked": 1, "read": 1}
 
 
+def test_a_google_option_named_in_japanese_is_shown_with_the_detail_korean_name():
+    """`[2026-10-13]` ☆14:03 playdata 명동: 구글 목록이 hl=ko 인데도 「相鉄フレッサイン ソウル明洞」로 왔다 — 상세 이름이 한글이면 그걸 보이고,
+    원래 이름은 `source_name` · `shown` 에 남겨 다음 「바꿔 줘」에서 같은 곳이 다시 안 나오게 한다. 상세도 원어면 그대로."""
+    rows = [{**row, "property_token": f"tok-{i}", "image": None} for i, row in enumerate(NEAR_GOOGLE["stays"])]
+    rows[2] = {**rows[2], "name": "相鉄フレッサイン ソウル明洞"}
+    detail = {"name": "소테츠 프레사 인 서울 명동", "address": "서울 중구", "image": None,
+              "sellers": [{"seller": "Agoda", "price_per_night": 125000.0, "link": None, "official": False}]}
+    result, _, _ = _itinerary(_plan(), {"read.stay_google": {**NEAR_GOOGLE, "stays": rows},
+                                        "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
+    new = result.action_proposals[0].arguments["replacements"][0]["item"]
+    option = new["detail"]["alternates"][0]
+    assert (option["name"], option["source_name"], option["key"]) == ("소테츠 프레사 인 서울 명동", "相鉄フレッサイン ソウル明洞", "google:相鉄フレッサインソウル明洞"), \
+        "보이는 이름은 한글, 키 · source_name 은 목록 이름 그대로"
+    assert "1) 소테츠 프레사 인 서울 명동(" in result.answer and "相鉄" not in result.answer
+    assert "相鉄フレッサイン ソウル明洞" in new["detail"]["shown"] and "소테츠 프레사 인 서울 명동" in new["detail"]["shown"]
+    same, _, _ = _itinerary(_plan(), {"read.stay_google": {**NEAR_GOOGLE, "stays": rows},
+                                      "read.stay_google_details": lambda a: {"details": {t: {**detail, "name": "相鉄フレッサイン"} for t in a["tokens"]}}})
+    option = same.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"][0]
+    assert (option["name"], option["source_name"]) == ("相鉄フレッサイン ソウル明洞", None), "상세도 원어면 목록 이름 그대로(지어내지 않는다)"
+
+
 def test_change_again_skips_what_was_already_shown():
     result, _, _ = _itinerary(_plan(stay_detail={"shown": ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]}))
     assert result.answer.startswith("기존 호텔 대신 갈 수 있는 곳이에요 — 1) 먼 호텔(1박 100,000원 · 원래 숙소에서 11.5km) · "

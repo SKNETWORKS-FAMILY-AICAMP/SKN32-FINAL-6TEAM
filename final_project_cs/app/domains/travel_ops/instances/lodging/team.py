@@ -144,6 +144,19 @@ _NOT_NAME = re.compile(r"\(.*?\)|\[.*?\]|호텔|hotel|서울|seoul|[\s\-_·,.&']
 SAME_STAY_M = 100
 
 
+_HANGUL = re.compile(r"[가-힣]")
+_CJK = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]")   # 가나 · 한자
+
+
+def _korean_name(listed: Any, candidate: Any) -> str:
+    """구글 호텔 목록 이름이 **원어**(가나 · 한자, 한글 없음)로 왔고 숙소 상세 이름이 한글이면 상세 이름을 보인다. 그 밖은 목록 이름 그대로(지어내지 않는다).
+    ☆`[2026-10-13]` 14:03 playdata 명동: hl=ko 인데도 「相鉄フレッサイン ソウル明洞」(소테츠 프레사 인)이 일본어로 왔다. 상세 이름이 한글로 오는지는 확인 안 함."""
+    listed, candidate = str(listed or ""), str(candidate or "")
+    if _HANGUL.search(listed) or not _CJK.search(listed) or not _HANGUL.search(candidate):
+        return listed
+    return candidate
+
+
 def _core(name: str) -> str:
     """숙소 이름 핵심 — 「밀리오레 호텔 서울 명동」 · 「밀리오레호텔 명동」 → 「밀리오레명동」. 영어 · 한국어 표기가 다르면 못 묶는다(확인 안 함)."""
     return _NOT_NAME.sub("", str(name or "")).casefold()
@@ -300,6 +313,8 @@ def _lodging_option(rank: int, pick: dict[str, Any], item: Any) -> dict[str, Any
             # `[2026-10-13]` 화면용 — 사진 · 판매처별 가격(구글 호텔 후보만, 상세를 읽었을 때) · 주소
             "image": pick.get("image"), "sellers": pick.get("sellers") or [], "address": pick.get("address"),
             "link_seller": pick.get("link_seller"),
+            # `[2026-10-13]` 목록 이름이 원어라 상세 이름으로 바꿔 보인 경우 원래(목록) 이름 — 다음 「바꿔 줘」에서 같은 곳을 빼는 데 쓴다
+            "source_name": pick.get("source_name"),
             # `[2026-10-13 사용자 결정]` 판매처를 읽은 곳의 「1박 ○원~」 — 목록 최저가와 판매처 가격 중 가장 싼 값. 없으면 `None`
             "price_from": pick.get("price_from"),
             "property_token": pick.get("property_token")}
@@ -709,6 +724,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                 found = (got.get("details") or {}).get(pick.get("property_token")) if pick["source"] == "구글 호텔" else None
                 if found:
                     google_read += 1
+                    shown_name = _korean_name(pick["name"], found.get("name"))
+                    if shown_name != pick["name"]:
+                        pick["source_name"], pick["name"] = pick["name"], shown_name
                     pick["sellers"] = _sellers(found)
                     pick["address"] = found.get("address") or None
                     pick["image"] = pick.get("image") or found.get("image")
@@ -756,7 +774,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             said = f" 말씀하신 대로 1박 {_won(price_limit)} 이하만 골랐어요."
         answer = f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}.{said} 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."
         detail = {**item.detail, "alternates": options, "other_options": [option["name"] for option in options],
-                  "shown": [*shown, *(pick["name"] for pick in picks)], "query": query}
+                  "shown": [*shown, *(pick["name"] for pick in picks), *(pick["source_name"] for pick in picks if pick.get("source_name"))],
+                  "query": query}
         cause = with_request({"category": "customer_request", "type": "requested_options", "from": item.title,
                               "message": task.input_text}, task.context.current_state.get("request_id"))
         replacement = item.replaced_by(place=None, title=item.title, detail=detail)
