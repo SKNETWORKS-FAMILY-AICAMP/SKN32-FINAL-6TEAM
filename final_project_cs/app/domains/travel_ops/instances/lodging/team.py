@@ -289,6 +289,12 @@ def _fresh_picks(booked: dict[str, Any], exclude: set[str], anchor: dict[str, An
 def _price_note(check: dict[str, Any]) -> str:
     """고를 때 가격 재확인 결과 한 문장(앞에 빈칸). 1박 값을 모르면 아무것도 적지 않는다."""
     before, now = check.get("before"), check.get("now")
+    if check.get("basis") == "sellers":
+        # `[2026-10-13]` 구글 호텔 — 판매처 최저가끼리 비교(「1박 ○원~」)
+        if check["status"] == "same":
+            return f" 지금도 판매처 최저가 1박 {_won(now)}~ 그대로예요."
+        if check["status"] == "changed":
+            return f" 보여 드릴 때 1박 {_won(before)}~이던 판매처 최저가가 지금 1박 {_won(now)}~이에요."
     if check["status"] == "changed" and check.get("basis") == "list":
         # 목록 값과 예약 화면(상세) 값이 다른 것일 수 있다 — 「가격이 바뀌었다」고 하지 않는다
         return f" 목록에서는 1박 {_won(before)}이었는데, 예약 화면 기준으로 지금 1박 {_won(now)}이에요."
@@ -833,9 +839,11 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         확인 결과 `status`: `same` · `changed`(새 값으로) · `gone`(그 날짜 객실 없음 · 매진) · `unchecked`(구글 호텔 · 상세를 못 읽음 · 조건 모름)."""
         before = pick.get("price_per_night")
         source, _, gid = str(pick.get("key") or "").partition(":")
+        query = item.detail.get("query") or self._stay_query(item, ctx["trip"])
+        if source == "google" and pick.get("property_token"):
+            return self._recheck_google(task, ctx, pick, query)
         if source != "myrealtrip" or not gid:
             return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_recheck_tool"}
-        query = item.detail.get("query") or self._stay_query(item, ctx["trip"])
         if not query:
             return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_query"}
         detail = self._read(task, "read.stay_detail", {"gid": gid, "check_in": query["check_in"], "check_out": query["check_out"],
@@ -854,6 +862,35 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         status = "same" if now == before else "changed"
         check = {"status": status, "before": before, "now": now, "basis": pick.get("price_basis") or "list"}
         return ({**pick, "price_per_night": now, "price_basis": "detail"} if status == "changed" else pick), check
+
+    def _recheck_google(self, task: TeamTask, ctx: dict[str, Any], pick: dict[str, Any],
+                        query: dict[str, Any] | None) -> tuple[dict[str, Any], dict[str, Any]]:
+        """`[2026-10-13]` 구글 호텔 후보를 고를 때 — 숙소 상세(`read.stay_google_details`, SerpApi 1회)를 다시 읽어 **판매처 최저가끼리** 비교한다.
+        전에는 다시 볼 도구가 없어 「확인 못 함」이었다. 판매처가 하나도 없으면 「없어졌다」고 하지 않고 확인 못 함(`no_price`) — 구글 상세에
+        가격이 없는 까닭(매진 · 표시 안 됨)을 가를 수 없다. 바뀌었으면 판매처 · 예약 버튼 · 「1박 ○원~」도 새 값으로."""
+        before = pick.get("price_from") if pick.get("price_from") is not None else pick.get("price_per_night")
+        if not query:
+            return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_query"}
+        token = pick["property_token"]
+        got = self._read(task, "read.stay_google_details", {"tokens": [token], "keyword": query["keyword"], "check_in": query["check_in"],
+                                                            "check_out": query["check_out"], "adults": query["adults"]}, ctx["seen"])
+        ctx["evidence"] = self._evidence(task, source_id="read.stay_google_details:recheck", claim="고른 숙소 가격 재확인(구글 호텔 상세)",
+                                         value=got, base=ctx["evidence"])
+        detail = ((got or {}).get("details") or {}).get(token)
+        if not detail:
+            return pick, {"status": "unchecked", "before": before, "now": None, "reason": "detail_unreadable"}
+        sellers = _sellers(detail)
+        if not sellers or before is None:
+            return pick, {"status": "unchecked", "before": before, "now": None, "reason": "no_price"}
+        now = sellers[0]["price_per_night"]
+        status = "same" if now == before else "changed"
+        check = {"status": status, "before": before, "now": now, "basis": "sellers"}
+        if status == "same":
+            return pick, check
+        direct = next((seller for seller in sellers if seller.get("link")), None)
+        fresh = {**pick, "sellers": sellers, "price_from": now, "price_basis": "sellers",
+                 **({"link": direct["link"], "link_seller": direct["name"]} if direct else {})}
+        return fresh, check
 
     @staticmethod
     def _stay_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:

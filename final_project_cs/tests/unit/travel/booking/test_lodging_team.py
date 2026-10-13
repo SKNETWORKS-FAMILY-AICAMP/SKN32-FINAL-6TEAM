@@ -671,10 +671,55 @@ def test_a_chosen_stay_without_rooms_now_is_not_applied():
 
 
 def test_a_chosen_google_hotel_is_not_rechecked_and_says_so():
+    """구글 후보에 `property_token` 이 없으면(옛 판 후보) 다시 볼 수 없다 — 그렇다고 적는다."""
     result, _, tools = _choose("google:가까운호텔", DETAIL)
-    assert [name for name, _ in tools.calls] == ["read.itinerary"], "구글 호텔 한 곳만 다시 볼 도구가 없다"
+    assert [name for name, _ in tools.calls] == ["read.itinerary"], "token 이 없으면 다시 볼 도구가 없다"
     assert result.answer.endswith(" 지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1박 120,000원) — 예약 전에 링크에서 확인해 주세요.")
     assert result.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_recheck_tool"
+
+
+def _choose_google(detail_now, *, listed=120000.0):
+    """구글 후보(token 있음)를 보여 준 뒤 고른다. 고를 때 상세(`read.stay_google_details`)는 `detail_now` 를 돌려준다."""
+    google = {**NEAR_GOOGLE, "stays": [{**row, "property_token": f"tok-{i}", "image": None} for i, row in enumerate(NEAR_GOOGLE["stays"])]}
+    shown = {"address": None, "image": None, "sellers": [
+        {"seller": "Agoda", "price_per_night": listed - 5000, "link": None, "official": False},
+        {"seller": "Trip.com", "price_per_night": listed, "link": "https://kr.trip.com/x", "official": False}]}
+    calls = {"n": 0}
+
+    def details(a):
+        calls["n"] += 1
+        return {"details": {t: (shown if calls["n"] == 1 else detail_now) for t in a["tokens"]}}
+    plan = _plan()
+    first, _, _ = _itinerary(plan, {"read.stay_google": google, "read.stay_google_details": details})
+    plan["items"][1]["detail"] = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
+    state = {**ITEM_STATE, "subject_ref": {**ITEM_STATE["subject_ref"], "request": {"type": "change", "choice": "google:가까운호텔"}}}
+    return _run({"task": "unclear"}, {"read.itinerary": plan, "read.stay_google": google, "read.stay_google_details": details},
+                text="고를게", capability="lodging.itinerary", state=state)
+
+
+def test_a_chosen_google_hotel_is_rechecked_by_its_seller_prices():
+    """`[2026-10-13]` 구글 후보도 고를 때 상세를 다시 읽어 **판매처 최저가끼리** 비교한다(SerpApi 1회). 전에는 「확인 못 함」."""
+    same_detail = {"address": None, "image": None, "sellers": [
+        {"seller": "Agoda", "price_per_night": 115000.0, "link": None, "official": False},
+        {"seller": "Trip.com", "price_per_night": 120000.0, "link": "https://kr.trip.com/x", "official": False}]}
+    same, _, tools = _choose_google(same_detail)
+    recheck = [a for name, a in tools.calls if name == "read.stay_google_details"]
+    assert recheck[-1]["tokens"] == ["tok-2"] and recheck[-1]["check_in"] == IN
+    assert same.answer.endswith(" 지금도 판매처 최저가 1박 115,000원~ 그대로예요.")
+    assert same.action_proposals[0].arguments["summary"]["price_check"] == {"status": "same", "before": 115000.0, "now": 115000.0, "basis": "sellers"}
+    changed_detail = {"address": None, "image": None, "sellers": [
+        {"seller": "Trip.com", "price_per_night": 131000.0, "link": "https://kr.trip.com/y", "official": False},
+        {"seller": "Agoda", "price_per_night": 140000.0, "link": None, "official": False}]}
+    changed, _, _ = _choose_google(changed_detail)
+    assert changed.answer.endswith(" 보여 드릴 때 1박 115,000원~이던 판매처 최저가가 지금 1박 131,000원~이에요.")
+    chosen = changed.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["chosen"]
+    assert (chosen["price_from"], chosen["link"], chosen["link_seller"], [s["name"] for s in chosen["sellers"]]) == \
+        (131000.0, "https://kr.trip.com/y", "트립닷컴", ["트립닷컴", "아고다"]), "바뀌면 판매처 · 예약 버튼 · 「1박 ○원~」도 새 값"
+    assert "예약은 이 링크에서 해 주세요: https://kr.trip.com/y" in changed.answer
+    empty, _, _ = _choose_google({"address": None, "image": None, "sellers": []})
+    assert empty.action_proposals and empty.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_price", \
+        "판매처가 없으면 「없어졌다」가 아니라 확인 못 함 — 매진인지 표시만 안 된 건지 가를 수 없다"
+    assert "지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1박 115,000원)" in empty.answer
 
 
 def test_the_same_stay_from_both_sources_is_shown_once_as_myrealtrip():
