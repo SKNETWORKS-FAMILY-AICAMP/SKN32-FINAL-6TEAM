@@ -45,3 +45,20 @@ def operator_setting(tenant_id: str, name: str) -> Any:
         return _reader(tenant_id, name)
     except Exception:                                   # noqa: BLE001 — 표를 못 읽으면 기본값으로 간다
         return None
+
+
+GOOGLE_PRICE = "travel.dining.google_price_enabled"
+
+
+def google_price_enabled(tenant_id: str) -> bool:
+    """식당 대체 후보의 구글 가격 조회를 켰나. `[2026-10-13 사용자 지시]` 유료 결제 뒤 관리 콘솔에서 켠다.
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.google_price_enabled`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다 — 켜는 것은 명시한 경우뿐이다.
+    """
+    value = operator_setting(tenant_id, GOOGLE_PRICE)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import google_price_enabled as guardrail_default
+
+    return guardrail_default()
