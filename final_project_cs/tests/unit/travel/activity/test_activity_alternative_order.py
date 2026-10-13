@@ -114,3 +114,65 @@ def test_preference_inputs_need_a_clue():
     assert alternative_order.preference_inputs({"pace": "relaxed", "domestic": True}, "") is None   # 취향과 무관한 칸뿐
     picked = alternative_order.preference_inputs({"theme": "힐링", "priority_details": {"activity": ["힐링"]}}, None)
     assert picked == {"survey": {"theme": "힐링", "activity_details": ["힐링"]}, "customer_text": None}
+
+
+# ── `[2026-10-13 사용자 결정 A안]` 3곳 → 3곳 순서만 ─────────────────────────────────────
+
+def _pool_of_six():
+    from .test_activity_closed_alternatives import ORIGIN, _row
+
+    rows = [_row(f"c{i}", f"장소{i}", x=126.9770 + 0.002 * i, y=37.5796) for i in range(1, 7)]
+    return {"origin": ORIGIN, "source": "place_catalog", "confirmed_at": "2026-10-09T03:00:00+09:00", "candidates": rows}
+
+
+def _run_six(monkeypatch, llm, *, mode="llm"):
+    _modes(monkeypatch, mode)
+    values = {"read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": TUESDAY, "party_size": 2, "capacity": 4},
+              "read.policy": [], "read.place": PLACE, "read.disruptions": CLEAR, "read.disaster": disaster_from(CLEAR),
+              "read.place_hours": _hours({**WEEK, "tue": "closed"}), "read.place_candidates": _pool_of_six()}
+    team = ActivityTeam(FakeTools(values))
+    team.judge_llm, team.judge_runner = llm, Inline()
+    context = pack("activity", scope=["activity"], state={"survey": SURVEY})
+    result = asyncio.run(team.execute(task("activity", "activity.check_feasible", context, ALLOWED,
+                                           input_text="아이랑 갈 만한 데로 바꿔 주세요")))
+    alt = result.decisions[0]["alternatives"]
+    return result, alt, [a["contentid"] for a in alt["alternatives"]], [a["contentid"] for a in alt["more_alternatives"]]
+
+
+def test_only_the_three_shown_candidates_go_to_the_llm_and_more_stays_in_code_order(monkeypatch):
+    base = OrderLLM({"order": ["c1", "c2", "c3"], "used_preference": False, "reason": ""})
+    _, _, shown_code, more_code = _run_six(monkeypatch, base)
+    assert len(shown_code) == 3 and len(more_code) >= 3                     # 화면 3곳 + 더보기
+    assert [c["id"] for c in base.calls[0]["payload"]["candidates"]] == shown_code
+
+    llm = OrderLLM({"order": [shown_code[2], shown_code[0], shown_code[1]], "used_preference": True,
+                    "reason": "아이와 함께라 가장 가까운 곳을 먼저 보여 드려요"})
+    result, alt, shown, more = _run_six(monkeypatch, llm)
+
+    assert shown == [shown_code[2], shown_code[0], shown_code[1]]            # 같은 3곳, 순서만 바뀜
+    assert set(shown) == set(shown_code) and more == more_code               # 더보기는 코드 순서 그대로
+    assert alt["order"]["by"] == "llm" and "AI 가 고객님 취향에 맞춰" in result.answer
+
+
+def test_the_llm_cannot_promote_a_more_candidate_into_the_shown_three(monkeypatch):
+    _, _, shown_code, more_code = _run_six(monkeypatch, OrderLLM({"order": [], "used_preference": False, "reason": ""}))
+    llm = OrderLLM({"order": [more_code[0], *shown_code], "used_preference": True, "reason": "더 어울려요"})
+    _, alt, shown, more = _run_six(monkeypatch, llm)
+
+    assert shown == shown_code                                               # 더보기 후보는 상위 3곳에 들어오지 못한다
+    assert more_code[0] not in shown and more == more_code and alt["order"]["dropped"] == 1
+
+
+def test_a_reorder_without_a_reason_is_not_accepted(monkeypatch):
+    _, _, shown_code, _ = _run_six(monkeypatch, OrderLLM({"order": [], "used_preference": False, "reason": ""}))
+    for output in ({"order": list(reversed(shown_code)), "used_preference": False, "reason": ""},
+                   {"order": list(reversed(shown_code)), "used_preference": True, "reason": "  "}):
+        result, alt, shown, _ = _run_six(monkeypatch, OrderLLM(output))
+        assert shown == shown_code and alt["order"]["by"] == "code"
+        assert "AI 가" not in result.answer
+
+
+def test_the_same_order_needs_no_reason(monkeypatch):
+    _, _, shown_code, _ = _run_six(monkeypatch, OrderLLM({"order": [], "used_preference": False, "reason": ""}))
+    _, alt, shown, _ = _run_six(monkeypatch, OrderLLM({"order": shown_code, "used_preference": False, "reason": ""}))
+    assert shown == shown_code and alt["order"]["by"] == "llm" and alt["order"]["reason"] is None
