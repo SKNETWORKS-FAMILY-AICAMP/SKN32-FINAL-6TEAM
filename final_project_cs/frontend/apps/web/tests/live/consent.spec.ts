@@ -182,9 +182,14 @@ test("약관 SSE를 기다려도 마이페이지는 남고 실제 단계와 완�
   await server.scenario({ consents: "on", retention: "on", consentStream: "slow" });
   await server.consents({ service_terms: true, privacy: true });
   await start(page);
+  // `[2026-10-13]` 안내는 확인이 1초를 넘어야 뜨고(바로 위 시험이 본다) mock 단계는 1.2초씩이라, 「동의 기록 읽기」가 보이는 틈이
+  // 약 0.27초뿐이었다 — 로컬 · GitHub CI 모두 그 틈을 놓쳐 늘 실패했다. 스트림 요청이 나간 뒤 1초 지연만 바로 넘겨 단계마다 약 1.2초 보이게 한다.
+  await page.clock.install();
   const accepts: string[] = [];
   page.on("request", (req) => { if (req.url().endsWith("/v1/web/consents") && req.method() === "GET") accepts.push(req.headers().accept); });
   await page.goto("/mypage");
+  await expect.poll(() => accepts.length).toBeGreaterThan(0);
+  await page.clock.runFor(1000);
   const progress = page.getByRole("status", { name: "약관 확인 진행" });
   await expect(progress.locator('[aria-current="step"]')).toContainText("동의 기록 읽기");
   await expect(progress).toContainText("2/6단계 완료");
