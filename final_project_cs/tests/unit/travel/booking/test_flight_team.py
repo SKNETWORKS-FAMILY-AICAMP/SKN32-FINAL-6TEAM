@@ -504,6 +504,23 @@ def test_change_on_a_flight_item_holds_new_direct_flights_like_dining_and_activi
     assert proposal.arguments["summary"]["near_original"] == 1
 
 
+def test_a_source_that_timed_out_is_said_in_the_change_answer():
+    """`[2026-10-13]` ☆14:49 playdata ICN→NRT: Ignav 가 20초 상한에 걸려 `timeout` 으로 빠졌는데 「바꿔 줘」 답은 아무 말이 없었다 —
+    판매처 비교가 빠진 줄 모르고 고르게 된다. timeout · resting 만 적는다(조회 실패는 기록에만 — 시험의 빈 소스를 실패로 보지 않게)."""
+    base = FakeTools({"read.flight_search": WITH_VIA}).values["read.booking_search_flights"]
+
+    def late(arguments):
+        got = base(arguments)
+        return {**got, "sources": {**got["sources"], "ignav": {"status": "timeout", "seconds": 20.0}}}
+    result, _, _ = _run({"task": "unclear"}, {"read.itinerary": _plan(), "read.booking_search_flights": late},
+                        text="바꿔줘", capability="flight.itinerary", state=LEG_STATE)
+    assert result.answer.endswith("(1인 32,000원). 항공사 · 여행사 판매처 비교는 20초 안에 답이 없어 뺐어요 — 그쪽 가격이 더 쌀 수 있어요. "
+                                  "고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
+    assert result.decisions[0]["sources"] == {"myrealtrip": "ok", "ignav": "timeout", "google": "failed"}
+    plain, _, _ = _legrun(_plan())
+    assert "답이 없어" not in plain.answer and "쉬는 중" not in plain.answer, "빈 소스(failed)는 답에 적지 않는다"
+
+
 def test_choosing_a_flight_moves_the_item_to_its_departure_and_keeps_the_old_one_as_an_option():
     plan = _plan()
     first, _, _ = _legrun(plan)

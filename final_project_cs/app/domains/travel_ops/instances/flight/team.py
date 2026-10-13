@@ -282,6 +282,29 @@ def _conditions(ctx: dict[str, Any]) -> dict[str, Any]:
             "max_price": int(limit) if isinstance(limit, (int, float)) and not isinstance(limit, bool) and limit > 0 else None}
 
 
+_SOURCE_NAMES = {"myrealtrip": "마이리얼트립", "ignav": "항공사 · 여행사 판매처 비교", "google": "구글 항공권"}
+
+
+def _eun(word: str) -> str:
+    """「은 / 는」 — 마지막 글자에 받침이 있으면 「은」."""
+    last = str(word or "").rstrip()[-1:]
+    return "은" if last and "가" <= last <= "힣" and (ord(last) - 0xAC00) % 28 else "는"
+
+
+def _missing_note(sources: dict[str, Any] | None) -> str:
+    """「바꿔 줘」 답 끝 한 문장 — 상한 안에 답이 없거나(`timeout`) · 쉬는 중(`resting`)인 소스를 적는다. 조회 실패(`failed`)는 적지 않는다(기록에만) — 건너뜀 · 참고도 안 적는다.
+    ☆`[2026-10-13]` 14:49 playdata ICN→NRT: Ignav 가 20초 상한에 걸려 `timeout` — 전에는 검색 답(`_search`)에만 적고 「바꿔 줘」 답은 아무 말 없이
+      두 소스 결과만 보였다. 고객이 판매처 비교가 빠진 줄 모르고 고르게 된다."""
+    parts = []
+    for name, state in (sources or {}).items():
+        status, label = (state or {}).get("status"), _SOURCE_NAMES.get(name, name)
+        if status == "timeout":
+            parts.append(f"{label}{_eun(label)} {int(state.get('seconds') or 0)}초 안에 답이 없어 뺐어요")
+        elif status == "resting":
+            parts.append(f"{label}{_eun(label)} 요청 한도로 잠시 쉬는 중이에요")
+    return (" " + " · ".join(parts) + " — 그쪽 가격이 더 쌀 수 있어요.") if parts else ""
+
+
 def _per_person(option: dict[str, Any], people: int) -> float | None:
     best = option.get("best")
     return best / people if isinstance(best, (int, float)) and people else None
@@ -608,7 +631,8 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         record = {"itinerary": "flight_options", "item": item.title, "query": query, "shown_before": len(shown),
                   "widened_to_connecting": widened and bool(picks), "around": clock, "near_original": near_count,
                   "conditions": {**conditions, "price_limit": price_limit, "by_price": by_price},
-                  "options": [_flight_key(option) for option in picks]}
+                  "options": [_flight_key(option) for option in picks],
+                  "sources": {name: (state or {}).get("status") for name, state in (booked.get("sources") or {}).items()}}
         if not picks:
             return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
                                 next_action=NextAction.RESPOND, decisions=[record],
@@ -623,6 +647,7 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
                   + (" 지금 편 가격을 몰라 1인 가격이 낮은 순으로 골랐어요." if by_price
                      else f" 지금 편(1인 {_won(reference, 'KRW')})보다 싼 편만 골랐어요." if conditions["cheaper"]
                      else f" 말씀하신 대로 1인 {_won(price_limit, 'KRW')} 이하만 골랐어요." if price_limit is not None else "")
+                  + _missing_note(booked.get("sources"))
                   + " 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
         keys = [o["key"] for o in alternates]
         detail = {**item.detail, "alternates": alternates, "other_options": [o["name"] for o in alternates],
@@ -638,7 +663,7 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
                                  replacements={item.item_id: replacement},
                                  summary={"flight_options": keys, "shown_total": len(detail["shown"]),
                                           "widened_to_connecting": widened, "near_original": near_count,
-                                          "conditions": record["conditions"]})
+                                          "conditions": record["conditions"], "sources": record["sources"]})
         return self.settle(task, ctx, change)
 
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:

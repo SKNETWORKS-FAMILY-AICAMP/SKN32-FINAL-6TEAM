@@ -157,6 +157,26 @@ def _korean_name(listed: Any, candidate: Any) -> str:
     return candidate
 
 
+_SOURCE_NAMES = {"myrealtrip": "마이리얼트립", "google": "구글 호텔"}
+
+
+def _eun(word: str) -> str:
+    """「은 / 는」 — 마지막 글자에 받침이 있으면 「은」."""
+    last = str(word or "").rstrip()[-1:]
+    return "은" if last and "가" <= last <= "힣" and (ord(last) - 0xAC00) % 28 else "는"
+
+
+def _missing_note(sources: dict[str, Any] | None) -> str:
+    """「바꿔 줘」 답 끝 한 문장 — 쉬는 중(429)인 소스를 적는다(항공 팀 `_missing_note` 와 같은 꼴). 조회 실패는 기록에만. 둘 다 괜찮으면 빈 문자열.
+    `[2026-10-13]` 검색 답(`_search`)에는 있었고 「바꿔 줘」 답에는 없었다 — 고객이 한쪽 소스가 빠진 줄 모르고 고르게 된다."""
+    parts = []
+    for name, state in (sources or {}).items():
+        status, label = (state or {}).get("status"), _SOURCE_NAMES.get(name, name)
+        if status == "resting":
+            parts.append(f"{label}{_eun(label)} 요청 한도로 잠시 쉬는 중이에요")
+    return (" " + " · ".join(parts) + " — 그쪽 숙소는 빠져 있어요.") if parts else ""
+
+
 def _core(name: str) -> str:
     """숙소 이름 핵심 — 「밀리오레 호텔 서울 명동」 · 「밀리오레호텔 명동」 → 「밀리오레명동」. 영어 · 한국어 표기가 다르면 못 묶는다(확인 안 함)."""
     return _NOT_NAME.sub("", str(name or "")).casefold()
@@ -751,7 +771,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                   "anchor": anchor["kind"] if anchor else None, "reference_price": reference_price, "details_read": len(details),
                   "conditions": {**conditions, "price_limit": price_limit, "by_price": by_price},
                   "near": sum(1 for pick in picks if pick["distance_km"] is not None and pick["distance_km"] <= NEAR_KM),
-                  "google_details": {"asked": len(tokens), "read": google_read}}
+                  "google_details": {"asked": len(tokens), "read": google_read},
+                  "sources": {name: (state or {}).get("status") for name, state in (booked.get("sources") or {}).items()}}
         if not picks:
             if not booked:
                 return self._unknown(task, "숙소 검색 결과", ctx["evidence"])
@@ -778,7 +799,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             said = f" 원래 숙소(1박 {_won(reference_price)})보다 싼 곳만 골랐어요."
         elif price_limit is not None:
             said = f" 말씀하신 대로 1박 {_won(price_limit)} 이하만 골랐어요."
-        answer = f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}.{said} 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."
+        answer = (f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}.{said}{_missing_note(booked.get('sources'))}"
+                  " 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
         detail = {**item.detail, "alternates": options, "other_options": [option["name"] for option in options],
                   "shown": [*shown, *(pick["name"] for pick in picks), *(pick["source_name"] for pick in picks if pick.get("source_name"))],
                   "query": query}
@@ -792,7 +814,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         change = ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                                  replacements={item.item_id: replacement},
                                  summary={"lodging_options": [o["name"] for o in options], "shown_total": len(detail["shown"]),
-                                          **{k: v for k, v in record.items() if k in ("sizes", "shown_before", "anchor", "near", "details_read", "conditions", "google_details")}})
+                                          **{k: v for k, v in record.items() if k in ("sizes", "shown_before", "anchor", "near", "details_read", "conditions", "google_details", "sources")}})
         return self.settle(task, ctx, change)
 
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:

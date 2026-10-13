@@ -808,6 +808,17 @@ def test_a_google_option_named_in_japanese_is_shown_with_the_detail_korean_name(
     assert (option["name"], option["source_name"]) == ("相鉄フレッサイン ソウル明洞", None), "상세도 원어면 목록 이름 그대로(지어내지 않는다)"
 
 
+def test_a_resting_source_is_said_in_the_change_answer():
+    """`[2026-10-13]` 마이리얼트립이 쉬는 중(429)이면 「바꿔 줘」 답 끝에 그렇다고 적는다(항공 팀과 같은 꼴). 조회 실패(시험의 빈 구글)는 적지 않는다."""
+    resting = {"cooldown_seconds": 540, "source": "myrealtrip"}
+    result, _, _ = _itinerary(_plan(), {"read.stay_search": resting, "read.stay_google": NEAR_GOOGLE})
+    assert "마이리얼트립은 요청 한도로 잠시 쉬는 중이에요 — 그쪽 숙소는 빠져 있어요. 고르시면 바꿀게요." in result.answer
+    assert result.decisions[0]["sources"] == {"myrealtrip": "resting", "google": "ok"}
+    assert [o["source"] for o in result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]] == ["구글 호텔"] * 3
+    plain, _, _ = _itinerary(_plan())
+    assert "쉬는 중" not in plain.answer and plain.decisions[0]["sources"] == {"myrealtrip": "ok", "google": "ok"}
+
+
 def test_change_again_skips_what_was_already_shown():
     result, _, _ = _itinerary(_plan(stay_detail={"shown": ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]}))
     assert result.answer.startswith("기존 호텔 대신 갈 수 있는 곳이에요 — 1) 먼 호텔(1박 100,000원 · 원래 숙소에서 11.5km) · "
