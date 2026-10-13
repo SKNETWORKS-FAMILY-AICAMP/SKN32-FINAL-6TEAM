@@ -67,7 +67,7 @@ DETAIL = {"name": "호텔스카이파크 센트럴명동점", "address": "서울
                      {"source": "Hotel Skypark", "official": True, "link": "https://www.skyparkhotel.com/",
                       "rate_per_night": {"extracted_lowest": 341147}},
                      {"source": "Trip.com", "rate_per_night": {"extracted_lowest": 347363},
-                      "link": "https://www.google.com/travel/lodging/clk?pc=x&pcurl=https://us.trip.com/hotels/redirect?hotelid%3D1%26checkin%3D2026-11-06&s=y"}]}
+                      "link": "https://www.google.com/travel/lodging/clk?pc=x&pcurl=https://us.trip.com/hotels/redirect?hotelid%3D1%26checkin%3D2026-11-06%26locale%3Den_us&s=y"}]}
 
 
 def test_a_property_detail_gives_sellers_address_and_photo():
@@ -81,5 +81,5 @@ def test_a_property_detail_gives_sellers_address_and_photo():
         ("Agoda", 365696.0, False), ("Hotel Skypark", 341147.0, True), ("Trip.com", 347363.0, False)], "같은 판매처는 한 번만"
     assert [(row["link"], row["link_kind"]) for row in got["sellers"]] == [
         (None, "ad"), ("https://www.skyparkhotel.com/", "seller"),
-        ("https://us.trip.com/hotels/redirect?hotelid=1&checkin=2026-11-06", "seller")], \
-        "`[2026-10-13]` 구글 광고 클릭 링크는 쓰지 않고, 구글 경유 링크는 안의 판매처 주소를 꺼낸다"
+        ("https://kr.trip.com/hotels/redirect?hotelid=1&checkin=2026-11-06&locale=ko-KR", "seller")], \
+        "`[2026-10-13]` 구글 광고 클릭 링크는 쓰지 않고, 구글 경유 링크는 안의 판매처 주소를 꺼낸다 — 트립닷컴은 한국판으로"

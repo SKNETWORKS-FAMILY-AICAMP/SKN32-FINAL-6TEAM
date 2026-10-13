@@ -18,6 +18,7 @@
 """
 from __future__ import annotations
 
+import re
 from typing import Any, Callable
 from urllib.parse import parse_qs, urlparse
 
@@ -35,6 +36,20 @@ def _number(value: Any) -> float | None:
     return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
 
 
+_LOCALE = re.compile(r"(?<=[?&])locale=[^&]*")
+
+
+def _korean(url: str) -> str:
+    """트립닷컴 주소를 한국판으로. `[2026-10-13]` ☆10:40 playdata 명동: 구글이 준 트립닷컴 주소(`us.trip.com` · `locale=en_us`)를
+    열었더니 호텔 · 날짜 · 인원은 맞았고 원화였지만 화면이 영어(미국판)였다 → 호스트를 `kr.trip.com`, `locale` 을 `ko-KR` 로.
+    나머지 값(호텔 번호 · 날짜 · 인원 · 제휴 번호)은 그대로. 바꾼 주소가 한국어로 열리는지는 **확인 안 함**."""
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+    if not host.endswith("trip.com") or host == "kr.trip.com":
+        return url
+    return parsed._replace(netloc="kr.trip.com", query=_LOCALE.sub("locale=ko-KR", parsed.query)).geturl()
+
+
 def seller_link(link: Any) -> tuple[str | None, str]:
     """판매처 링크 → (쓸 주소, 종류). `[2026-10-13]` ☆10:32 playdata 명동: 판매처 링크가 모두 `google.com` 을 거쳤다.
       - `google.com/aclk?…` 는 구글 **광고 클릭** 링크(아고다 · 부킹닷컴) — 고객에게 주면 광고 클릭이 된다 → 쓰지 않는다(`ad`).
@@ -47,12 +62,12 @@ def seller_link(link: Any) -> tuple[str | None, str]:
     parsed = urlparse(text)
     host = parsed.netloc.lower()
     if not host.endswith("google.com"):
-        return text, "seller"
+        return _korean(text), "seller"
     if parsed.path.startswith("/aclk"):
         return None, "ad"
     inner = (parse_qs(parsed.query).get("pcurl") or [""])[0]
     if inner.startswith("https://") and not urlparse(inner).netloc.lower().endswith("google.com"):
-        return inner, "seller"
+        return _korean(inner), "seller"
     return None, "google"
 
 
