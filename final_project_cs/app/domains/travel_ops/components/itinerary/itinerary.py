@@ -488,6 +488,15 @@ class TripStore:
                         row["seed_trips"] = seeded | using.get(row["place_id"], set())
             return rows
 
+    def places_by_id(self, conn, place_ids: list[UUID]) -> dict[UUID, dict[str, Any]]:
+        """장소 행들 — `items()` 가 일정에 붙이는 것과 같은 모양(판정용). `[2026-10-13]` 수정 모드의 「완료」가 새로 넣은 장소를 판정에 붙인다."""
+        if not place_ids:
+            return {}
+        with conn.cursor() as cur:
+            cur.execute("SELECT " + ", ".join(PLACE_COLUMNS) + " FROM places WHERE tenant_id=%s AND place_id = ANY(%s)",
+                        (self.tenant_id, list(place_ids)))
+            return {row[0]: _place(row) for row in cur.fetchall()}
+
     # ── 쓰기 ────────────────────────────────────────────────────
     def adopt_places(self, conn, trip_id: Any, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """장소들을 **그 여행 전용 행**으로 넣고(이미 있으면 그대로) 그 행들을 돌려준다. `[2026-10-01]`

@@ -2,7 +2,7 @@
 
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ArrowLeftRight, RotateCcw, ChevronDown, ChevronsDown, ChevronsRight, Sparkles, Pencil, Plus, Undo2, LockOpen } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, RotateCcw, ChevronDown, ChevronsDown, ChevronsRight, Sparkles, Pencil, Plus, Undo2, LockOpen, X } from "lucide-react";
 import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
 import { ToastView, useToastState } from "@/components/toast-view";
 import { TripMap } from "@/features/map";
@@ -46,7 +46,9 @@ import type { InsertionPoint } from "./insertion-points";
 import { useInsertionPoint } from "./use-insertion-point";
 import { PlaceSearchHeader } from "./place-search-header";
 import { useBackgroundBack } from "./use-background-back";
+import type { RailNow } from "./rail-list";
 import styles from "./plan-check.module.css";
+import tripStyles from "@/features/trip/trip-screen.module.css";
 
 export interface PlanCheckProps {
   /** The latest snapshot. The screen paces the changes between snapshots itself (`useReveal`). */
@@ -79,6 +81,22 @@ export interface PlanCheckProps {
   routes?: RouteShapes | null;
   /** `[2026-10-05]` The zoom level of the map: the screen above asks for the detailed route lines once it is zoomed in (`features/map/use-route-detail.ts`). */
   onMapZoom?: (zoom: number) => void;
+  /** `[2026-10-13 사용자 결정 — 수정 모드]` The screen edits a registered trip (`features/trip/trip-edit.tsx`) instead of checking a new plan. */
+  edit?: TripEditMode;
+}
+
+/**
+ * `[2026-10-13 사용자 결정 — 수정 모드]` What changes when the plan check edits a registered trip. The steps are the plan check's own — change, 「다시 제출」, checked, ✓ — and the ✓ is
+ * `registration.onRegister`, which writes the trip's next version instead of a new trip. `[2026-10-13 사용자 지시]` The sheet's head has 「취소」 (the edit is let go — the page asks first).
+ * The trip's 「지금」 runs on the list, and the first notice says what the screen is. Every change still goes through `actions`, as on the plan check of a new plan.
+ */
+export interface TripEditMode {
+  /** 「취소」 in the sheet's head: the page asks, then drops the edit and goes back to the trip. */
+  onCancel: () => void;
+  /** 「지금」 on a day's line, as on the trip screen. */
+  now: (date: string) => RailNow | null;
+  /** The first notice (in place of 「계획 확인 화면이에요」). */
+  intro: BusToast;
 }
 
 /** A place for one stop: an alternative or a search result, or just a name the server looks up. */
@@ -360,7 +378,7 @@ const SHEET_MIN = 44;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
-type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom">;
+type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom" | "edit">;
 
 /** What still needs a look in a plan, leaving out the stops marked for deletion (they are leaving) and the legs that end at one. */
 function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: ReadonlySet<string>): { places: number; moves: number; total: number } {
@@ -370,7 +388,7 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, onMapZoom }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
+function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, onMapZoom, edit }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
   const t = useT();
   const { language, skipAnimation } = useSettings();
   const done = view.stage === "done";
@@ -398,7 +416,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       action: value.undo || value.revert ? { label: value.undoLabel ?? latest.current?.t("되돌리기", "Undo") ?? "", run: value.revert ?? (() => latest.current?.undo()) } : undefined,
     });
   }, [hideToast, showToast]);
-  usePlanIntroToast(done, showToast, t);
+  usePlanIntroToast(done, showToast, t, edit?.intro);
   const [working, setWorking] = useState(false);
   const changingNow = useRef(false);
   const [changeToolsOpen, setChangeToolsOpen] = useState(false);
@@ -931,8 +949,9 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       if (actions.recheck) await actions.recheck(ids);
       if (actions.recheck && ids.length && !skipAnimation) setReplay({ ids, at: 0 });
       else setChanged({});
+      // `[2026-10-13 사용자 지시 — 수정 모드]` The edit's last button is 「완료」 (the trip's next version), not 「여행 등록」.
       return actions.recheck
-        ? { text: t("고친 내용을 다시 확인했어요", "Checked the changes again"), sub: t("이대로 진행할 수 있어요 · 오른쪽 버튼이 「여행 등록」으로 바뀌었어요", "You can go ahead · the right button is now 「Register trip」") }
+        ? { text: t("고친 내용을 다시 확인했어요", "Checked the changes again"), sub: edit ? t("이대로 진행할 수 있어요 · 오른쪽 버튼이 「완료」로 바뀌었어요", "You can go ahead · the right button is now 「Done」") : t("이대로 진행할 수 있어요 · 오른쪽 버튼이 「여행 등록」으로 바뀌었어요", "You can go ahead · the right button is now 「Register trip」") }
         : { text: t("뺄 일정을 지웠어요", "Took the stops out"), sub: t("이대로 진행할 수 있어요", "You can go ahead") };
     });
   }
@@ -1156,6 +1175,11 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   };
   const backGesture = useBackgroundBack(Boolean(inserting) && !addingBusy, () => { if (mapPicking) setMapPicking(false); else if (inserting) closeInsertion(inserting.key); });
   const renderInsertion = (point: InsertionPoint) => {
+    // `[2026-10-13 사용자 결정 — 수정 모드]` No ＋ in a gap that is over or going on now: after a stop that is over (or before one, at the start of a day).
+    const stops = shown.items.filter((item) => item.date === point.date);
+    const at = stops.findIndex((item) => item.id === point.anchorId);
+    const before = point.side === "before-stop" ? stops[at - 1] : stops[at];
+    if (before?.past || (!before && stops[at]?.past)) return null;
     const label = point.side === "before-move"
       ? t(`${point.previous} 다음 이동 전에 일정 추가`, `Add a stop before leaving ${point.previous}`)
       : point.next ? t(`${point.next} 전에 일정 추가`, `Add a stop before ${point.next}`)
@@ -1393,9 +1417,13 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
               })}
             </div>}
 
-            <p className={styles.count}>{done
-              ? (registered || rechecking ? <HeadBadges needs={needCount} changed={0} filter={null} onFilter={setFilter} registered={registered} rechecking={rechecking} needsOnMap /> : null)
-              : countText(view, t)}</p>
+            {edit && done
+              // `[2026-10-13 사용자 지시 — 수정 모드]` 「취소」 in the trip screen's chat-button place (the round ✓ saves, as on the plan check): it lets the edit go, after asking.
+              ? <div className={tripStyles.headTools}><button type="button" className={tripStyles.chatButton} aria-disabled={registration?.busy || undefined}
+                  onClick={() => { if (!registration?.busy) edit.onCancel(); }}><X size={15} strokeWidth={2.2} aria-hidden="true" />{t("취소", "Cancel")}</button></div>
+              : <p className={styles.count}>{done
+                ? (registered || rechecking ? <HeadBadges needs={needCount} changed={0} filter={null} onFilter={setFilter} registered={registered} rechecking={rechecking} needsOnMap /> : null)
+                : countText(view, t)}</p>}
           </header>
           <div ref={bodyBox} className={styles.sheetBody} data-next-preview={(canRecommend || (previewing && side === "before")) && !noFixNow || undefined} data-under-float={done && dayStrip ? true : undefined} {...quietSubmit.handlers} {...follow.handlers} onScroll={follow.handlers.onScroll}>
             {emptyMapInList && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
@@ -1417,8 +1445,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
               const proposed = previewing && side === "after" && previewView;
               /** A day of the list as the page shows it (also drawn beside the page while it is dragged). */
               const dayList = (which: number | "all", insert = true) => proposed
-                ? <DayList view={listAfter ?? previewView} days={previewView.days.filter((day) => previewView.items.some((item) => item.day === day.day))} listDay={which} ctx={{ ...contextAfter, insertion: insert && canInsert ? renderInsertion : undefined }} mapDay={mapDay} onShowDay={showDay} heading={heading} />
-                : <DayList view={listBefore} days={days} listDay={which} ctx={{ ...contextBefore, insertion: insert && canInsert ? renderInsertion : undefined }} mapDay={mapDay} onShowDay={showDay} heading={heading} />;
+                ? <DayList view={listAfter ?? previewView} days={previewView.days.filter((day) => previewView.items.some((item) => item.day === day.day))} listDay={which} ctx={{ ...contextAfter, insertion: insert && canInsert ? renderInsertion : undefined }} mapDay={mapDay} onShowDay={showDay} heading={heading} now={edit?.now} />
+                : <DayList view={listBefore} days={days} listDay={which} ctx={{ ...contextBefore, insertion: insert && canInsert ? renderInsertion : undefined }} mapDay={mapDay} onShowDay={showDay} heading={heading} now={edit?.now} />;
               const near = peek.side === 0 ? undefined : neighbourOf(peek.side);
               const zoomStyle = listZoom === 1 ? undefined : { zoom: listZoom };
               return <div ref={trackBox} className={styles.dayTrack}>
@@ -1460,7 +1488,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
         </>}
     </section>
           {done && !changing && !inserting && <ResultFooter footerRef={submitBox} atListEnd={atListEnd} muted={collapsed || (!atListEnd && quietSubmit.hidden) || mapMoving} focusHandlers={quietSubmit.focusHandlers} view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
-            previewing={previewing && side === "after"} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} />}
+            previewing={previewing && side === "after"} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} editing={Boolean(edit)} />}
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
     {shownToast && <ToastView key={shownToast.stamp} toast={shownToast.toast} onDone={hideToast} />}
   </div>;

@@ -45,7 +45,7 @@ def test_existing_constraints_are_preserved_and_legacy_fees_cannot_be_double_cou
 
 
 class RecordingConnection:
-    def __init__(self, row=("review", 3)):
+    def __init__(self, row=("review", 3, None)):  # (상태, 판, 수정 접수의 여행 — `[2026-10-14]` 수정 모드 합침으로 칸 하나 더)
         self.row, self.calls = row, []
 
     def transaction(self):
@@ -75,8 +75,8 @@ def test_revision_edit_stores_one_structured_claim_and_rechecks_atomically(monke
     assert "customer_id=%s" in conn.calls[0][0] and conn.calls[0][1] == ("t", "i", "c")
 
 
-@pytest.mark.parametrize("row,revision,error", [(None, 3, LookupError), (("confirmed", 3), 3, pipeline.IntakeConflict),
-                                              (("review", 4), 3, pipeline.IntakeConflict)])
+@pytest.mark.parametrize("row,revision,error", [(None, 3, LookupError), (("confirmed", 3, None), 3, pipeline.IntakeConflict),
+                                              (("review", 4, None), 3, pipeline.IntakeConflict)])
 def test_missing_customer_closed_intake_and_stale_revision_write_nothing(row, revision, error):
     conn = RecordingConnection(row)
     with pytest.raises(error):
