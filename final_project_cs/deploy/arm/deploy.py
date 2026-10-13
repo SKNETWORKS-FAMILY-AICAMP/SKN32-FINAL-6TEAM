@@ -12,7 +12,9 @@ BASE = Path(os.environ["DEPLOY_BASE"])
 REPO = BASE / "repo"
 CONTROL = BASE / "control"
 STATE = BASE / "state.json"
-PATHS = ["app", "config", "prompts", "scripts", "deploy", "frontend/apps/web", "requirements.txt"]
+PATHS = ["app", "config", "prompts", "scripts", "deploy", "frontend/apps/web", "requirements.txt", "knowledge"]
+# 서버 전용 덧씌움(2026-10-12 검색 수정). develop 원본이 바뀌면 멈추고 사람이 본다 — 수정이 develop 에 들어가면 지운다.
+OVERLAY = CONTROL / "prepare_search_release.py"
 
 
 def run(*args, **kwargs):
@@ -93,6 +95,9 @@ def main():
         state.pop("missing_files", None)
         git("fetch", "--depth", "1", "origin", "develop")
         sha = git("rev-parse", "FETCH_HEAD")
+        if sha == state.get("overlay_blocked_sha"):
+            print("덧씌움 충돌로 막힌 SHA — 사람 검토 대기(새 develop 커밋이 오면 다시 시도)", flush=True)
+            return
         if sha in (state.get("current"), state.get("failed")):
             print("반영할 새 변경 없음", flush=True)
             return
@@ -107,6 +112,13 @@ def main():
         src = release / "final_project_cs"
         (src / "var").mkdir(exist_ok=True)
         (src / "var" / "notice_phrasebook.json").write_text("[]", encoding="utf-8")
+        if OVERLAY.is_file():
+            try:
+                run("python3", str(OVERLAY), str(src))
+            except subprocess.CalledProcessError:
+                # 고장이 아니라 사람이 볼 일이다. 같은 SHA 를 5분마다 다시 시도하지 않고 한 번만 실패로 남긴다.
+                save({**state, "overlay_blocked_sha": sha, "overlay_blocked_at": time.time()})
+                raise
         tag = sha[:12]
         previous = state.get("current")
         save({**state, "building": sha, "started_at": time.time()})
