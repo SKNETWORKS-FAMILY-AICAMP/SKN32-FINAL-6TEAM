@@ -26,7 +26,7 @@ def git(*args):
 
 
 def compose(tag, *args):
-    return run("docker", "compose", "--env-file", str(CONTROL / "control.env"),
+    return run("docker", "compose", "--env-file", str(CONTROL / ".env"),
                "-f", str(CONTROL / "compose.yml"), *args,
                env={**os.environ, "IMAGE_TAG": tag}, cwd=CONTROL)
 
@@ -56,7 +56,7 @@ def healthy(tag):
                 with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=5) as response:
                     assert response.status == 200
             time.sleep(10)
-            raw = subprocess.check_output(["docker", "compose", "--env-file", str(CONTROL / "control.env"),
+            raw = subprocess.check_output(["docker", "compose", "--env-file", str(CONTROL / ".env"),
                                            "-f", str(CONTROL / "compose.yml"), "ps", "-q"],
                                           env={**os.environ, "IMAGE_TAG": tag}, text=True)
             ids = raw.split()
