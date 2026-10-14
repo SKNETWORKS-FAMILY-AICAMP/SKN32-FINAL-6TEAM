@@ -2,7 +2,7 @@
 
 import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Bell, ChevronsRight, MessageCircle, OctagonAlert, Pencil } from "lucide-react";
+import { ArrowLeft, Bell, ChevronDown, ChevronsRight, OctagonAlert, Pencil } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { OverlayRoot } from "@/components/layout/overlay-root";
 import { JourneyShell } from "@/components/layout/journey-shell";
@@ -161,6 +161,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const pagerTrack = useRef<HTMLDivElement>(null);
   const dayTrack = useRef<HTMLDivElement>(null);
   const stripBox = useRef<HTMLDivElement>(null);
+  // `[2026-10-14 ST4F-493]` The buttons at the right of the chips (✎, the pause chip) — hidden with the chips while the list scrolls.
+  const toolsBox = useRef<HTMLDivElement>(null);
   const markerBox = useRef<HTMLSpanElement>(null);
   const grab = useRef<{ y: number; height: number; moved: boolean } | null>(null);
   const justDragged = useRef(false);
@@ -253,7 +255,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const listDays = all ? days : mapDay ? [mapDay] : [];
   const nextDay = !all && dayAt >= 0 && dayAt < days.length - 1 ? days[dayAt + 1] : null;
   const placeMarker = useDayMarker(stripBox, markerBox, all ? 0 : dayAt + 1, `${days.length}|${language}|${pane}|${Boolean(detailId)}|${compact}`);
-  const quietDays = useQuietDayStrip(stripBox, pane === "plan" && !detailId, false, bodyBox);
+  const quietDays = useQuietDayStrip(stripBox, pane === "plan" && !detailId, false, bodyBox, toolsBox);
 
   useTimeInset(bodyBox, sheetBox, pane === "plan" && !detailId, `${all}|${dayAt}|${compact}`);
 
@@ -577,15 +579,15 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                 onClick={() => { goDay(date); goPane("plan"); }}>{dayName(index, t)}<small>{dayLabel(date, language)}</small>
                 {date === today && <><span className={pc.todayDot} aria-hidden="true" /><span className="sr-only">{t("오늘", "today")}</span></>}</button>)}
             </div>}
-            <div className={styles.headTools}>
-              {/* `[2026-10-07 목업 C안]` 재난으로 정지된 동안만 채팅 버튼 앞에 — 누르면 알림 센터(할 일 맨 위가 정지 패널). */}
+            {/* `[2026-10-14 사용자 결정 — ST4F-493]` 오른쪽 단추 묶음도 일차 칩처럼 목록을 스크롤하는 동안 숨고, 멈추면 칩과 함께 돌아온다(`useQuietDayStrip` 의 `tools`). */}
+            <div ref={toolsBox} className={styles.headTools} data-at-top={quietDays.atTop || undefined} data-quiet={quietDays.hidden || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers}>
+              {/* `[2026-10-07 목업 C안]` 재난으로 정지된 동안만 「일정 수정」 단추 앞에 — 누르면 알림 센터(할 일 맨 위가 정지 패널). */}
               {trip.safety?.paused && <button type="button" className={styles.pausedChip} onClick={() => openCenter()} aria-label={t("일정 정지 중 · 알림 센터 열기", "Itinerary paused · open notices")}>
                 <OctagonAlert size={16} strokeWidth={2} aria-hidden="true" />{t("일정 정지 중", "Paused")}</button>}
-              {/* `[2026-10-13 사용자 결정 — 수정 모드 · 후보 1]` 「일정 수정」 · 채팅은 아이콘 단추 둘(이름은 화면 읽기 · 툴팁). 「일정 수정」을 누르면 같은 화면이 수정 모드(`trip-edit.tsx`)가 된다. */}
+              {/* `[2026-10-13 사용자 결정 — 수정 모드 · 후보 1]` 「일정 수정」은 아이콘 단추(이름은 화면 읽기 · 툴팁). 누르면 같은 화면이 수정 모드(`trip-edit.tsx`)가 된다.
+                   `[2026-10-14 사용자 결정 — ST4F-493]` 채팅 아이콘 단추는 뺐다 — 채팅은 오른쪽 아래 채팅 단추 · 옆으로 밀기로 들어가고, 일차 칩으로 돌아온다. */}
               <button type="button" className={styles.chatButton} data-icon id="trip-edit-button" onClick={onEdit} aria-label={t("일정 수정", "Edit itinerary")} title={t("일정 수정", "Edit itinerary")}>
                 <Pencil size={16} strokeWidth={1.8} aria-hidden="true" /></button>
-              <button type="button" className={styles.chatButton} data-icon id="trip-pane-button-chat" aria-pressed={!plan} aria-controls="trip-pane-chat" onClick={() => goPane(plan ? "chat" : "plan")} aria-label={t("채팅", "Chat")} title={t("채팅", "Chat")}>
-                <MessageCircle size={16} strokeWidth={2} aria-hidden="true" /></button>
             </div>
           </header>
           <div className={`${styles.pager} ${detailStop || compact ? styles.away : ""}`}>
@@ -602,12 +604,20 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                     <div key={all ? "all" : mapDay} className={pc.page} data-slide={slide ?? undefined}>{listDays.map(dayList)}</div>
                   </div>
                   {trip.stops.length === 0 && <p className={pc.empty}>{t("등록한 일정이 없어요.", "There are no stops.")}</p>}
-                  {trip.stops.length > 0 && <p className={pc.credit}>{t("예약 표시는 입력한 정보 기준입니다. · 장소 정보 출처 : ⓒ한국관광공사 · ", "Booking notes reflect the information you entered. · Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a>
-                    {drawn.length > 0 && <><br />{routeDetail.routes?.attribution}{routeNotes(drawn).map((note) => <span key={note} data-route-note><br />{note}</span>)}</>}</p>}
+                  {/* `[2026-10-14 사용자 결정 — ST4F-493]` 예약 안내는 가운데 한 줄로 늘 보이고, 그 아래 출처는 계획 확인 화면처럼 접힌 한 줄(누르면 장소 정보 출처 · 경로선 출처 · 경로 안내). */}
+                  {trip.stops.length > 0 && <>
+                    <p className={styles.bookingNote}>{t("예약 표시는 입력한 정보 기준입니다.", "Booking notes reflect the information you entered.")}</p>
+                    <details className={pc.credit}>
+                      <summary aria-label={t("출처와 경로 안내 펼치기", "Show sources and route notes")}><span>{t("ⓒ한국관광공사", "ⓒKorea Tourism Organization")}{drawn.length > 0 && routeDetail.routes?.attribution && ` · ${routeDetail.routes.attribution.includes("OpenStreetMap") ? "© OpenStreetMap" : routeDetail.routes.attribution}`}</span><ChevronDown size={14} strokeWidth={1.8} aria-hidden="true" /></summary>
+                      <div className={pc.creditDetails}><p>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>
+                        {drawn.length > 0 && <p>{routeDetail.routes?.attribution}{routeNotes(drawn).map((note) => <span key={note} data-route-note>{note}</span>)}</p>}
+                      </div>
+                    </details>
+                  </>}
                   <p className={pc.dayHint}>{nextDay ? t(`옆으로 밀면 ${dayName(dayAt + 1, t)} ${dayLabel(nextDay, language)} 일정이 나와요`, `Swipe sideways for day ${dayAt + 2}`) : t("옆으로 밀면 채팅이 나와요", "Swipe sideways for the chat")}<ChevronsRight size={15} strokeWidth={1.8} aria-hidden="true" /></p>
                 </div>
               </div>
-              <div ref={chatBox} className={`${styles.pane} ${styles.chatPane}`} id="trip-pane-chat" role="group" aria-labelledby="trip-pane-button-chat" inert={plan}>
+              <div ref={chatBox} className={`${styles.pane} ${styles.chatPane}`} id="trip-pane-chat" role="group" aria-label={t("채팅", "Chat")} inert={plan}>
                 <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} selected={selected} logRef={chatLog} active={!plan} />
               </div>
             </div>
@@ -617,7 +627,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
       {titleOpen && !titleEditing && !detailStop && <TitleMenu planUrl={trip.planUrl ?? null} onShare={() => setShareOpen(true)} onDone={closeTitle} explain={explain} />}
       {shareOpen && trip.planUrl && <TripShare trip={trip} title={tripTitle} planUrl={trip.planUrl} onClose={closeShare} notify={showToast} />}
       {mapTarget && <MapAppsSheet target={mapTarget} onClose={closeMapApps} />}
-      {!detailStop && <ChatBar chat={chat} open={barOpen} inChat={!plan} onOpen={() => setBarOpen(true)} onClose={() => setBarOpen(false)} onEnterChat={() => goPane("chat")} />}
+      {!detailStop && <ChatBar chat={chat} open={barOpen} inChat={!plan} subject={selected ? (selected.place ?? selected.title) : null} onOpen={() => setBarOpen(true)} onClose={() => setBarOpen(false)} onEnterChat={() => goPane("chat")} onLeaveChat={() => goPane("plan")} />}
       {/* `[2026-10-07 목업 C안 ① 알림 센터]` 할 일(재난 정지 → 재난 뒤 이어가기 → 선택 요청 → 자동 변경) 아래 탭 셋(살펴볼 점 · 받은 알림 · 변경 이력). 여행계획서 링크는 제목을 펼친 줄에 있다. */}
       {centerOpen && <NoticeCenter onClose={closeCenter}>
         <TripAttention trip={trip} tab={centerTab} onTab={setCenterTab} onResumed={resumed}
