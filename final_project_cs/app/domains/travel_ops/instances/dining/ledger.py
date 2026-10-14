@@ -126,13 +126,20 @@ def _catalog_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | N
             row = cur.fetchone()
         return str(row[0]) if row else None
     if not content_id:
-        found = find_place_by_name(conn, str(place.get("name") or ""))
-        content_id = str(found["content_id"]) if found and found.get("content_id") else None
-        if (content_id is None and found and found.get("match") == "exact" and not found.get("needs_review")
-                and found.get("dining_place_uid")):
-            return str(found["dining_place_uid"])
-    if not content_id:
-        return None
+        # ★`[2026-10-14]` 이름으로 찾은 가게는 **그 장소 근처(`SAME_NAME_RADIUS_M`)일 때만** 잇는다. 전에는 좌표를 안 보고, 「확인 필요」로 찾은
+        #   가게(지점 · 앞부분 · 오타)도 그 가게의 관광공사 번호로 이었다 — 연결 정답셋에서 2km 떨어진 같은 이름 가게 · 체인 다른 지점과
+        #   dev 7/53 · holdout 2/19 를 이었다(`eval/reports/2026-10-14_dining_link.md`). 근처면 지점 표시가 달라도(「○○ 본점」) 같은 가게다.
+        #   좌표가 없으면 거리를 못 재니 예전처럼 **정확히 같은 이름 하나**만 받는다.
+        here = _coords(place)
+        found = find_place_by_name(conn, str(place.get("name") or ""), near=here)
+        if not found or not found.get("dining_place_uid"):
+            return None
+        if here is None:
+            exact = found.get("match") == "exact" and not found.get("needs_review")
+            return str(found["dining_place_uid"]) if exact else None
+        if _metres(here, (found["latitude"], found["longitude"])) > SAME_NAME_RADIUS_M:
+            return None
+        return str(found["dining_place_uid"])
     with conn.cursor() as cur:
         cur.execute("SELECT p.place_uid::text FROM dining.dn_place p WHERE p.record_status <> 'closed' AND p.place_uid IN "
                     "(SELECT r.place_uid FROM dining.dn_source_record r WHERE r.source_code = 'tourapi_kor_food' "
@@ -455,6 +462,8 @@ NAME_PREFIX_UNIQUE_MIN = 3          # ★`[2026-10-10 사용자 결정]` 이 글
 #:  좁혔을 때 「성수동」으로 시작하는 가게가 하나(「성수동 대림창고 갤러리」)라 그 가게가 골라졌다(장소 찾기 평가 PL-034)
 AREA_TAIL = re.compile(r"(동|구|역|로|길)$")
 DISH_RADIUS_M = 800                 # 「근처 칼국수집」 · 「통인시장 기름떡볶이」 — 기준 좌표에서 이 안의 원장 가게
+#: 이름이 같은 가게를 **같은 가게**로 보는 거리 — 원장 → 코어 승격(221 `promote_to_core`)이 같은 이름 공용 행을 다시 쓰는 거리와 같다 `[2026-10-14]`
+SAME_NAME_RADIUS_M = 150
 #: 시장 · 동네 이름의 식사(「광장시장 점심」)에서 고르지 않는 큰 종류 — 끼니가 아니라 카페 · 디저트다 `[2026-10-13]`
 NOT_A_MEAL = frozenset({"카페디저트"})
 _BRANCH_TAIL = re.compile(r"(본점|직영점|분점|별관|본관|신관|[가-힣a-z0-9]{1,8}점)")
@@ -490,6 +499,13 @@ def _shops(conn) -> list[dict[str, Any]]:
              "address": address, "category": category, "content_id": str(cid) if cid else None,
              "key": _name_key(name), "base": _base_key(name)}
             for uid, name, lat, lng, address, category, cid in rows]
+
+
+def _coords(place: dict[str, Any]) -> tuple[float, float] | None:
+    try:
+        return float(place["latitude"]), float(place["longitude"])
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def _metres(a: tuple[float, float], b: tuple[float, float]) -> float:
