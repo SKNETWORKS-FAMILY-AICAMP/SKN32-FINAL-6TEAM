@@ -106,7 +106,7 @@ class Feed:
 
             review, _ = _review_of(conn, self.tenant_id, self.intake_id, int(state["revision"]), sources,
                                    claims)
-            review = review_module.public(review)
+            review = review_module.public(review, tenant_id=self.tenant_id)
         by_item = {it["id"]: it for it in (review or {}).get("items", [])}
         for item_id, row in rows_by_id.items():
             if item_id in self.rich and item_id not in by_item:

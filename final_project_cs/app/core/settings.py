@@ -550,3 +550,14 @@ def google_price_enabled() -> bool:
         return get_guardrails().get("travel.dining.google_price_enabled") is True
     except ConfigError:
         return False
+
+
+def taxi_call_product_enabled() -> bool:
+    """확인 화면의 택시 호출 상품 고르기를 켰나 — 가드레일 `travel.mobility.taxi_call_product_enabled`. ★기본 꺼짐.
+
+    `[2026-10-14 사용자 지시 · 핫픽스]` 택시 요금 계산이 믿을 만해질 때까지 끈다. 가드레일을 못 읽어도 **꺼짐**이다(켜는 것은 명시한 경우뿐).
+    """
+    try:
+        return get_guardrails().get("travel.mobility.taxi_call_product_enabled") is True
+    except ConfigError:
+        return False

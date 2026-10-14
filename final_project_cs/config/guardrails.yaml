@@ -451,6 +451,12 @@ travel:
       enabled: false
       model: "openai:gpt-4o-mini"
       deadline_s: 120
+  # -- 확인 화면의 「택시 호출 상품」 고르기 (2026-10-14 사용자 지시 · 핫픽스) --
+  # 택시 요금(호출 상품별 이용료) 계산이 아직 믿을 만하지 않아 고객 화면의 상품 고르기 칸을 **기본 꺼짐**으로 둔다.
+  # 꺼짐: 검사 응답에 `taxi_pricing` 을 싣지 않아 칸이 사라지고, 고르기 요청(`trip.taxi_pricing`)은 거절하고, 이미 저장된 고른 값은 계산에 쓰지 않는다.
+  # **관리 콘솔 「운영 설정」** 의 같은 이름 스위치로 켠다(콘솔 값이 먼저). 읽는 곳: `settings_hook.taxi_call_product_enabled(tenant)`.
+  mobility:
+    taxi_call_product_enabled: false
   # -- 카카오 호출 예산 (2026-09-27) --
   # 키워드 검색 무료 한도는 하루 100,000건이지만 처음 켠 앱 하나에만 준다 — 한도 초과 사용 자체가 약관 위반이라
   # 설정의 하루 상한(ACOP_RATE_KAKAO_PER_DAY=1000)과 같은 값으로 DB 예산을 건다(모든 프로세스가 같이 센다).
