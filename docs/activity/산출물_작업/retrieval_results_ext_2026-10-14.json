@@ -3,7 +3,7 @@
   "id": "R-05",
   "query": "무료 취소는 언제까지 가능한가요?",
   "expect": "t_ext_02 또는 t_ext_01 또는 기존 72시간 절",
-  "ms": 2666,
+  "ms": 1256,
   "top3": [
    {
     "scope": "travel_cancellation",
@@ -18,10 +18,10 @@
     "score": 0.527
    },
    {
-    "scope": "travel_activity",
-    "document": "무료·무예약 활동을 무엇으로 판정하나",
-    "section": "무료·무예약이면 취소 대상이 아니다",
-    "score": 0.5
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행자 사유로 취소하는 경우",
+    "score": 0.503
    }
   ]
  },
@@ -29,7 +29,7 @@
   "id": "E-01",
   "query": "여행사 사정으로 취소되면 얼마를 배상받나요?",
   "expect": "t_ext_02 여행사 사유로 취소하는 경우",
-  "ms": 342,
+  "ms": 1103,
   "top3": [
    {
     "scope": "travel_cancellation",
@@ -41,7 +41,7 @@
     "scope": "travel_cancellation",
     "document": "소비자분쟁해결기준 — 국내여행",
     "section": "여행자 사유로 취소하는 경우",
-    "score": 0.638
+    "score": 0.645
    },
    {
     "scope": "travel_cancellation",
@@ -55,25 +55,25 @@
   "id": "E-02",
   "query": "공연 3일 전에 취소하면 얼마를 돌려받나요?",
   "expect": "t_ext_03 관객이 환급을 요구하는 경우",
-  "ms": 255,
+  "ms": 281,
   "top3": [
    {
     "scope": "travel_activity",
     "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
     "section": "공연이 취소되거나 연기된 경우",
-    "score": 0.48
+    "score": 0.49
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행자 사유로 취소하는 경우",
+    "score": 0.474
    },
    {
     "scope": "travel_weather",
     "document": "기상 사유로 활동이 깨졌을 때의 순연과 취소",
     "section": "고객이 먼저 물어 왔을 때",
     "score": 0.473
-   },
-   {
-    "scope": "travel_activity",
-    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
-    "section": "관객이 환급을 요구하는 경우",
-    "score": 0.465
    }
   ]
  },
@@ -81,13 +81,13 @@
   "id": "E-03",
   "query": "스키장 시설이 고장 나서 이용을 못 했어요. 환불되나요?",
   "expect": "t_ext_03 시설을 정상적으로 이용할 수 없을 때",
-  "ms": 349,
+  "ms": 308,
   "top3": [
    {
     "scope": "travel_activity",
     "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
     "section": "시설을 정상적으로 이용할 수 없을 때",
-    "score": 0.458
+    "score": 0.461
    },
    {
     "scope": "travel_activity",
@@ -107,7 +107,7 @@
   "id": "E-04",
   "query": "천재지변으로 일정이 취소되면 위약금을 내야 하나요?",
   "expect": "t_ext_01 위약금 없이 해제 / t_ext_02 인원 미달과 불가항력",
-  "ms": 220,
+  "ms": 314,
   "top3": [
    {
     "scope": "travel_cancellation",
