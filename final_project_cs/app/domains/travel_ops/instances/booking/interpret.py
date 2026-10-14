@@ -6,6 +6,8 @@
   모델은 고객이 말한 시간대 이름만 옮기고, 근거 조각(`depart_times_text`)이 문장에 없으면 비운다(날짜와 같은 방식).
 - 모양이 틀리면 `InterpretationInvalid` — 고쳐 맞추지 않는다. 공항 코드는 영문 대문자 3글자만 받는다.
 - 무엇이 빠졌는지는 `needs()` 가 값으로 다시 센다 — 지난 출발일 · 출발일보다 앞선 귀국일 · 출발지와 같은 도착지는 없는 값으로 본다.
+- `[2026-10-14]` 예약 모듈 확장 — `mode`(flight · train · bus). 항공만 출발 · 도착이 공항 코드이고, 기차 · 버스는 역 · 터미널 **이름**(규칙 사전 값)이다.
+  `domestic` 은 항공에서만 필수(어느 도구를 부를지), 기차 · 버스는 국내뿐이라 True 로 둔다. `grade` 는 열차 등급(KTX · SRT …) · 버스 등급(우등 · 프리미엄 …) 바람.
 """
 from __future__ import annotations
 
@@ -26,6 +28,7 @@ _CODE = r"^[A-Z]{3}$"
 TIME_BANDS = (("dawn", "새벽", "00:00", "07:00"), ("morning", "오전", "07:00", "12:00"),
               ("afternoon", "오후", "12:00", "18:00"), ("evening", "저녁", "18:00", "24:00"))
 Band = Literal["dawn", "morning", "afternoon", "evening"]
+Mode = Literal["flight", "train", "bus"]
 
 
 class InterpretationInvalid(ValueError):
@@ -36,8 +39,9 @@ class Interpretation(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     task: Literal["search", "status", "unclear"]
-    origin: str | None = Field(default=None, pattern=_CODE)
-    destination: str | None = Field(default=None, pattern=_CODE)
+    mode: Mode = "flight"
+    origin: str | None = Field(default=None, max_length=40)
+    destination: str | None = Field(default=None, max_length=40)
     depart_date: date | None = None
     return_date: date | None = None
     adults: int | None = Field(default=None, ge=1, le=9)
@@ -56,6 +60,9 @@ class Interpretation(BaseModel):
     max_price_basis: Literal["round_trip", "one_way"] | None = None
     other_requests: list[str] = Field(default_factory=list)
     domestic: bool | None = None
+    #: `[2026-10-14]` 기차 · 버스 — 열차 등급 · 버스 등급 바람(그대로 문장 조각), 버스 종류(express · suburbs)
+    grade: str | None = Field(default=None, max_length=20)
+    kind: Literal["express", "suburbs"] | None = None
     missing: list[str] = Field(default_factory=list)
     question: str | None = None
 
@@ -77,9 +84,15 @@ def parse(raw: Any) -> Interpretation:
     except ValidationError as exc:
         fields = sorted({".".join(str(part) for part in error["loc"]) for error in exc.errors()})
         raise InterpretationInvalid(f"invalid fields: {fields}") from exc
-    if found.task == "search" and found.origin and found.destination and found.domestic is None:
-        # ★공항 둘을 알면서 국내 · 국제를 안 정했다 — 어느 도구를 부를지 서버가 추측하지 않는다
-        raise InterpretationInvalid("invalid fields: ['domestic']")
+    if found.mode == "flight":
+        bad = [name for name in ("origin", "destination") if getattr(found, name) and not re.fullmatch(_CODE, getattr(found, name))]
+        if bad:
+            raise InterpretationInvalid(f"invalid fields: {bad}")       # 항공은 공항 코드(영문 대문자 3글자)만
+        if found.task == "search" and found.origin and found.destination and found.domestic is None:
+            # ★공항 둘을 알면서 국내 · 국제를 안 정했다 — 어느 도구를 부를지 서버가 추측하지 않는다
+            raise InterpretationInvalid("invalid fields: ['domestic']")
+    elif found.domestic is None:
+        found = found.model_copy(update={"domestic": True})            # 기차 · 버스는 국내뿐
     return found
 
 

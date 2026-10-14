@@ -199,6 +199,7 @@ class ReadToolbox:
             "read.stay_google": self.stay_google,
             # ★`[2026-10-10]` booking 모듈 — 여러 판매처를 한 번에 비교(팀 피드백: 에이전트 → booking → 어댑터). 항공 팀 · 숙소 팀이 쓴다
             "read.booking_search_flights": self.booking_search_flights,
+            "read.booking_search_transit": self.booking_search_transit,   # `[2026-10-14]` 열차 · 버스(TAGO)
             "read.booking_search_stays": self.booking_search_stays,
             # ★`[2026-10-13]` 숙소 이름 → 주소 · 좌표(카카오 로컬 → 관광공사). 숙소 팀이 마이리얼트립을 못 쓸 때 「내 숙소」 위치에만 쓴다
             "read.stay_lookup": self.stay_lookup,
@@ -1005,6 +1006,17 @@ class ReadToolbox:
         wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
         return search_flights(self.travel, origin=str(origin), destination=str(destination), depart_date=str(depart_date),
                               **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def booking_search_transit(self, scope: ToolContext, *, mode: str | None = None, origin: str | None = None,
+                               destination: str | None = None, depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """열차 · 버스 운행 비교(booking 모듈, TAGO) — 역 · 터미널로 옮겨 그날 운행을 출발 시각순으로. 소스가 없으면 `None`. `[2026-10-14]`"""
+        if not self.travel or mode not in ("train", "bus") or not origin or not destination or not depart_date:
+            return None
+        from app.domains.travel_ops.components.booking.offers import search_transit
+
+        wanted = ("adults", "kind")
+        return search_transit(self.travel, mode=str(mode), origin=str(origin), destination=str(destination),
+                              depart_date=str(depart_date), **{key: options[key] for key in wanted if options.get(key) is not None})
 
     def booking_search_stays(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
                              check_out: str | None = None, **options: Any) -> dict[str, Any] | None:

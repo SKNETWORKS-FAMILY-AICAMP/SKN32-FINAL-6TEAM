@@ -27,6 +27,13 @@ GATE: dict[str, dict[str, str]] = {
     "test_choose_recheck.py": {
         "test_same_changed_gone_and_unreadable": "고를 때 숙소 가격 재확인 — 같음 · 바뀜 · 객실 없음 · 확인 못 함",
     },
+    "test_transit_module.py": {                                   # `[2026-10-14]` 예약 모듈 — 기차 · 버스(TAGO)
+        "test_the_rules_read_the_transport_mode_and_station_names": "규칙이 교통수단(기차 · 버스 · 비행기) · 역 · 등급을 읽음",
+        "test_the_adapter_uses_the_2026_03_addresses_and_normalises_rows": "TAGO 어댑터 — 2026-03 주소 · 응답 정리",
+        "test_train_search_turns_names_into_stations_and_sorts_by_departure": "역 이름 → 역 id · 운행 출발 시각순",
+        "test_bus_search_asks_every_matching_terminal_pair_express_first_and_suburbs_only_when_needed": "터미널 조합 조회 · 고속 먼저 · 시외는 없을 때만",
+        "test_a_train_sentence_is_answered_from_tago_by_time_band_with_booking_links": "기차 답 — 시간대별 운행 · 요금 · 예매 링크",
+    },
     "test_lodging_team.py": {
         "test_search_calls_the_model_once_and_answers_from_tool_values": "숙소 검색 — 모델은 해석 한 번, 답은 도구 값으로",
         "test_missing_values_are_asked_back_without_any_search": "빠진 값(날짜 · 인원 · 지역)을 검색 없이 되묻기",

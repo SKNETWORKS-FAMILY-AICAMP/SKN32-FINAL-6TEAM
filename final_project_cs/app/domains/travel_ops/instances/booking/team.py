@@ -5,6 +5,8 @@
 (`instances/flight/` → `instances/booking/`, `FlightTeam` → `BookingTeam`). 코어와 주고받는 식별자(`team_id="flight"` · `flight.*` 능력 ·
 항목 `kind:"flight"` · case type `flight`)는 그대로다 — `booking.*` 은 `booking_handoff` 팀 능력 이름이라 겹친다(팀장 결정 대기).
 옛 이름 `FlightTeam` 은 별칭으로 남긴다.
+`[2026-10-14 저녁]` **기차 · 버스**(`mode` train · bus): 같은 규칙 해석 → 같은 서버 검증 → `read.booking_search_transit`(TAGO 열차 · 고속 · 시외버스) 한 번(오는 날이 있으면 두 번) →
+운행을 출발 시각순 · 시간대별로 보여 주고 예매 사이트 링크를 준다(`_search_transit`). 일정 항목(`kind` train · bus)은 아직 안 만든다 — 검색 답만.
 
 흐름(`flight.assist`): 모델 **한 번**이 문장(+ 여행 일정 요약)을 고정된 구조로 옮긴다(도시 이름 → 공항 코드도 모델이) →
 서버가 검증한다 → 빠진 값이 있으면 되묻고, 없으면 booking 모듈(`read.booking_search_flights`) **한 번** → 받은 값으로 답을 쓴다.
@@ -94,6 +96,45 @@ def _band(option: dict[str, Any]) -> str | None:
 
 #: 시간대 이름 → 한국어
 BAND_LABEL = {name: label for name, label, _, _ in TIME_BANDS}
+
+#: `[2026-10-14]` 기차 · 버스 — 시간대를 말했으면 그 시간대 운행을 출발 시각순으로 최대 이만큼, 안 말했으면 시간대마다 앞 운행 이만큼
+TRANSIT_SHOWN, TRANSIT_PER_BAND = 6, 2
+
+
+def _band_of(clock: Any) -> str | None:
+    clock = str(clock or "")
+    if len(clock) != 5 or clock[2] != ":":
+        return None
+    return next((name for name, _, start, end in TIME_BANDS if start <= clock < end), None)
+
+
+def _pick_transit(options: list[dict[str, Any]], wanted: list[str]) -> tuple[list[dict[str, Any]], list[str]]:
+    """운행을 고른다 — 말한 시간대가 있으면 그 시간대 안에서 출발 시각순 `TRANSIT_SHOWN` 개, 없으면 시간대마다 앞 `TRANSIT_PER_BAND` 개.
+    둘째 값은 말했지만 운행이 없던 시간대."""
+    by_band: dict[str, list[dict[str, Any]]] = {}
+    for option in options:
+        band = _band_of(option.get("depart"))
+        if band:
+            by_band.setdefault(band, []).append(option)
+    if wanted:
+        picked = [option for band in wanted for option in by_band.get(band, [])]
+        picked.sort(key=lambda option: str(option.get("depart") or "99:99"))
+        return picked[:TRANSIT_SHOWN], [band for band in wanted if band not in by_band]
+    picked = [option for name, _, _, _ in TIME_BANDS for option in by_band.get(name, [])[:TRANSIT_PER_BAND]]
+    return picked, []
+
+
+def _transit_line(option: dict[str, Any], adults: int | None) -> str:
+    took = f"{option['minutes'] // 60}시간 {option['minutes'] % 60}분" if isinstance(option.get("minutes"), int) else "소요 모름"
+    grade = option.get("grade") or ("열차" if option.get("mode") == "train" else "버스")
+    number = f" {option['number']}" if option.get("mode") == "train" and option.get("number") else ""
+    kind = {"express": "고속", "suburbs": "시외"}.get(option.get("kind") or "", "")
+    price = option.get("price")
+    fare = _won(price, "KRW") if isinstance(price, int) else "요금 모름"
+    total = f"(성인 {adults}명 {price * adults:,}원)" if isinstance(price, int) and isinstance(adults, int) and adults > 1 else ""
+    band = BAND_LABEL.get(_band_of(option.get("depart")) or "", "")
+    return (f"[{band or '시각 모름'}] {kind}{grade}{number} — {option.get('origin') or '?'} {option.get('depart') or '?'} → "
+            f"{option.get('destination') or '?'} {option.get('arrive') or '?'} ({took}) · 어른 {fare} {total}").rstrip()
 
 
 def _carriers(option: dict[str, Any]) -> list[str]:
@@ -381,6 +422,7 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         policy_optional_capabilities=["flight.assist", "flight.status", "flight.itinerary"],
         allowed_tools=["read.booking", "read.itinerary", "read.booking_search_flights", "read.policy", "read.booking_terms",
                        "read.offers_shown",
+                       "read.booking_search_transit",       # `[2026-10-14]` 기차 · 버스(TAGO)
                        *[name for name in ITINERARY_TOOLS if name != "read.itinerary"]],
         knowledge_scope=["travel_cancellation", "travel_access"],
         max_steps=4,                                  # 일정 1 + booking 1 + 여유(규정 질문 · 되돌리기) 2
@@ -437,6 +479,8 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         missing = needs(found, today=today)
         if missing:
             return self._respond(task, evidence, {**decision, "needs": missing}, ask(found, missing))
+        if found.mode != "flight":
+            return self._search_transit(task, found, seen, evidence, decision)
         return self._search(task, found, seen, evidence, decision)
 
     def _status(self, task: TeamTask, seen: set[str], base: list[Evidence] | None = None) -> TeamResult:
@@ -582,6 +626,78 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                                               "dropped_slow": slow, "dropped_connecting": via, "no_direct": no_direct,
                                               **limits},
                              "\n".join([head, *lines, *pages, *others, tail]))
+
+    # ── 기차 · 버스 (`[2026-10-14]` 예약 모듈 확장) ─────────────
+    def _search_transit(self, task: TeamTask, found: Interpretation, seen: set[str], evidence: list[Evidence],
+                        decision: dict[str, Any]) -> TeamResult:
+        """열차 · 버스 운행 비교 — TAGO 한 소스. 가는 날 한 번, 오는 날이 있으면 방향을 바꿔 한 번 더. 예매는 링크로."""
+        label = "기차" if found.mode == "train" else "버스"
+        legs = [("가는 편", found.origin, found.destination, found.depart_date, found.depart_times)]
+        if found.return_date:
+            legs.append(("오는 편", found.destination, found.origin, found.return_date, found.return_times))
+        results: list[tuple[str, dict[str, Any] | None, list[str] | None]] = []
+        for name, origin, destination, day, times in legs:
+            arguments = {"mode": found.mode, "origin": origin, "destination": destination, "depart_date": day.isoformat(),
+                         "adults": found.adults, "kind": found.kind}
+            got = self._read(task, "read.booking_search_transit", {k: v for k, v in arguments.items() if v is not None}, seen)
+            evidence = self._evidence(task, source_id=f"read.booking_search_transit:{name}",
+                                      claim=f"{label} 운행 비교 결과(booking: TAGO)", value=got, base=evidence)
+            results.append((name, got, times))
+        states = [((got or {}).get("sources", {}).get("tago") or {}).get("status", "failed") for _, got, _ in results]
+        if all(state == "failed" for state in states):
+            return self._unknown(task, f"{label} 운행 검색 결과", evidence)
+        when = found.depart_date.isoformat() + (f"~{found.return_date.isoformat()}" if found.return_date else "")
+        party = f"성인 {found.adults}명"
+        head = f"{found.origin} → {found.destination} · {when} · {party} 조건으로 찾은 {label} 운행입니다."
+        lines: list[str] = [head]
+        shown_all: list[dict[str, Any]] = []
+        for (name, got, times), state in zip(results, states):
+            source = (got or {}).get("sources", {}).get("tago") or {}
+            if state == "failed":
+                lines.append(f"[{name}] 운행 정보를 가져오지 못했습니다(조회 실패).")
+                continue
+            if state == "unresolved":
+                places = " · ".join(source.get("unresolved") or [])
+                lines.append(f"[{name}] 「{places}」을(를) {'역' if found.mode == 'train' else '터미널'} 이름으로 찾지 못했습니다. "
+                             f"{'역' if found.mode == 'train' else '터미널'} 이름을 정확히 알려 주세요.")
+                continue
+            options = (got or {}).get("options") or []
+            resolved = (got or {}).get("resolved") or {}
+            where = (f"{resolved.get('origin')} → {resolved.get('destination')}"
+                     if resolved.get("origin") and resolved.get("destination") else "")
+            if not options:
+                lines.append(f"[{name}] {where + ' ' if where else ''}그날 운행이 없습니다(공급자 결과 기준). 날짜나 역 · 터미널을 바꿔 다시 말씀해 주세요.")
+                continue
+            if found.grade:
+                graded = [option for option in options if found.grade.casefold() in str(option.get("grade") or "").casefold()]
+                note = "" if graded else f"{found.grade} 운행은 없어 전체를 보여 드립니다. "
+                options = graded or options
+            else:
+                note = ""
+            picked, bands_empty = _pick_transit(options, list(times or []))
+            fallback = bool(times) and not picked
+            if fallback:
+                picked, bands_empty = _pick_transit(options, [])
+            said = " · ".join(BAND_LABEL[band] for band in (times or []))
+            how = (f"{said} 출발 {len(picked)}편" if times and not fallback
+                   else f"{said} 출발은 없어 시간대마다 앞 운행을" if fallback else "시간대마다 앞 운행을")
+            lines.append(f"[{name}] {where} · 전체 {len(options)}편 중 {note}{how} 보여 드립니다.")
+            for number, option in enumerate(picked, start=1):
+                lines.append(f"  {number}. {_transit_line(option, found.adults)}")
+            if times and bands_empty and not fallback:
+                lines.append(f"  받은 결과에 {' · '.join(BAND_LABEL[b] for b in bands_empty)} 출발은 없었습니다.")
+            shown_all += [{"leg": name, "grade": option.get("grade"), "depart": option.get("depart"), "price": option.get("price")}
+                          for option in picked]
+        sites = {site["name"]: site["url"] for _, got, _ in results for site in ((got or {}).get("elsewhere") or [])}
+        if sites:
+            lines.append("예매는 아래 사이트에서 직접(조건을 채워 주지는 않습니다 — 날짜 · 역 · 터미널을 다시 고르셔야 합니다):")
+            lines += [f"   · {name}: {url}" for name, url in sites.items()]
+        lines.append("요금은 공급자가 준 어른 1인 기준 조회 시점 참고값이며 좌석 등급 · 할인에 따라 예매 화면에서 달라질 수 있습니다. "
+                     "좌석이 남았는지는 예매 화면에서 확인해 주세요.")
+        calls = sum(len(((got or {}).get("sources", {}).get("tago") or {}).get("calls") or []) for _, got, _ in results)
+        return self._respond(task, evidence, {**decision, "mode": found.mode, "legs": len(results), "shown": shown_all,
+                                              "tago_calls": calls, "states": states},
+                             "\n".join(lines))
 
     # ── 일정 항공편 항목 (`flight.itinerary`, 2026-10-11) ─────────────
     def _change(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:

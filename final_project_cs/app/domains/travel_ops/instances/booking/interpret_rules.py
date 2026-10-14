@@ -18,6 +18,9 @@ LLM 판단이 아니라 채우기다 → 「예약 모듈」(규칙 기반). 숙
 - 시간대: 절(쉼표 · 마침표 · 「~고」)마다 새벽 · 오전(아침) · 오후(점심 · 낮) · 저녁(밤) · 「N시」. 「오는 날 · 올 때 · 귀국」 절은 오는 편.
   빼는 말이 있으면 나머지 시간대, 「~도 괜찮 · 상관없」이면 제한 없음. 「갈 때랑 똑같이」면 가는 편과 같게.
 - 가격: 「N만 원」 「N만원 이하 · 까지」 「왕복으로 N」(만 원 단위) — 「왕복」이 붙으면 round_trip, 「편도」면 one_way.
+- `[2026-10-14]` 교통수단(`mode`): 기차 · 열차 · KTX · SRT · ITX · 무궁화 · 새마을 → train, 고속버스 · 시외버스 · 버스 → bus, 없으면 flight.
+  「X 말고 Y」면 Y. 기차 · 버스의 출발 · 도착은 역 · 터미널 **이름**(`offers/transit.STATIONS` 사전 + 「역 · 터미널」 붙은 말) — 공항 표를 안 본다.
+  열차 등급(KTX · SRT · ITX · 무궁화 · 새마을) · 버스 등급(프리미엄 · 우등 · 일반)은 `grade`, 「시외 · 고속」은 `kind`.
 - 할 일: 「확정 · 예약 상태 · 발권」 → status, 「항공(권) 말고 · 비행기 말고」 → unclear, 그 밖 → search.
 """
 from __future__ import annotations
@@ -25,6 +28,8 @@ from __future__ import annotations
 from datetime import date, timedelta
 import re
 from typing import Any
+
+from app.domains.travel_ops.components.booking.offers.transit import STATIONS
 
 #: 공항 · 도시 이름 → 코드. 긴 이름을 먼저 맞춘다(「김포공항」 「인천공항」). 우리가 고른 표 — 자주 가는 곳 위주
 AIRPORTS: dict[str, str] = {
@@ -83,6 +88,7 @@ _NEXT_MONTH_DAY = re.compile(r"(다음\s*달|담달|다음달)\s*(\d{1,2})\s*일
 _DAY_ONLY = re.compile(r"(?<![\d/월])(\d{1,2})\s*일(?!\s*(?:뒤|후|동안|간|정도|쯤|째))")
 _RELATIVE = {"오늘": 0, "내일": 1, "모레": 2, "낼모레": 2, "글피": 3, "내일모레": 2}
 _WEEK = re.compile(r"(다다음\s*주|다음\s*주|담주|이번\s*주)\s*([월화수목금토일])요일")
+_BARE_WEEKDAY = re.compile(r"(?<![주\s])\s*([월화수목금토일])요일|(?<=^)([월화수목금토일])요일")
 _OFFSET = re.compile(r"(\d+|일|이|삼|사|오|한|두|세|네)\s*(주일|일|주|달|개월)\s*(뒤|후|있다가|지나서)")
 _KOREAN_NUMBER = {"일": 1, "한": 1, "이": 2, "두": 2, "삼": 3, "세": 3, "사": 4, "네": 4, "오": 5}
 #: 받는 칸이 없는 바람 — 답 끝에 「아직 반영하지 못한 것」으로 돌려준다(문장 조각 그대로)
@@ -100,12 +106,13 @@ def _safe(year: int, month: int, day: int) -> date | None:
 
 
 # ---------------------------------------------------------------- 공항
-def _places(text: str) -> list[tuple[int, int, str, str]]:
-    """문장에 나온 공항 · 도시를 (시작, 끝, 코드, 이름) 으로, 긴 이름 우선 · 겹치지 않게."""
+def _places(text: str, table: dict[str, str] | None = None) -> list[tuple[int, int, str, str]]:
+    """문장에 나온 공항 · 도시(또는 `table` 의 역 · 터미널)를 (시작, 끝, 값, 이름) 으로, 긴 이름 우선 · 겹치지 않게."""
+    table = AIRPORTS if table is None else table
     low = text.casefold()
     found: list[tuple[int, int, str, str]] = []
     taken: list[tuple[int, int]] = []
-    for name in sorted(AIRPORTS, key=len, reverse=True):
+    for name in sorted(table, key=len, reverse=True):
         start = 0
         while True:
             index = low.find(name, start)
@@ -116,10 +123,10 @@ def _places(text: str) -> list[tuple[int, int, str, str]]:
                 start = end
                 continue                                   # 「la」가 「plan」 안에서 잡히지 않게
             if not any(s < end and index < e for s, e in taken):
-                found.append((index, end, AIRPORTS[name], name))
+                found.append((index, end, table[name], name))
                 taken.append((index, end))
             start = end
-    for match in _CODE.finditer(text):
+    for match in (_CODE.finditer(text) if table is AIRPORTS else ()):
         if match.group(1) in set(AIRPORTS.values()) and not any(s < match.end() and match.start() < e for s, e in taken):
             found.append((match.start(), match.end(), match.group(1), match.group(1)))
             taken.append((match.start(), match.end()))
@@ -133,10 +140,10 @@ _ORIGIN_AFTER = ("에서", "공항에서", "출발", "공항에 도착", "공항
 _DEST_AFTER = ("로", "으로", "행", "가는", "까지", "도착", "에 가", "에가", "을", "를", " 가")
 
 
-def _airports(text: str) -> tuple[str | None, str | None]:
+def _endpoints(text: str, table: dict[str, str] | None = None) -> tuple[str | None, str | None]:
     """출발 · 도착을 표지로 가른다 — 「X에서 · X 출발 · X공항에 도착(해서 떠남) · from X」는 출발, 「Y로 · Y행 · Y 가는 · to Y」는 도착.
     표지가 없으면 순서(앞 = 출발, 뒤 = 도착). 도시 + 공항이 붙어 있으면(「도쿄 하네다」) 공항 쪽을 쓴다."""
-    places = _places(text)
+    places = _places(text, table)
     merged: list[tuple[int, int, str, str]] = []
     for place in places:
         if merged and place[0] - merged[-1][1] <= 1 and _CITY.get(merged[-1][3]) is not None and _CITY.get(merged[-1][3]) == _CITY_OF.get(place[2]) and merged[-1][2] != place[2]:
@@ -162,6 +169,63 @@ def _airports(text: str) -> tuple[str | None, str | None]:
         elif destination is None and code != origin:
             destination = code
     return origin, destination
+
+
+def _airports(text: str) -> tuple[str | None, str | None]:
+    return _endpoints(text, AIRPORTS)
+
+
+# ---------------------------------------------------------------- 교통수단 (2026-10-14 기차 · 버스)
+#: 고객 말 → 역 · 터미널 사전 값(이름 그대로). 「서울역」 「부산 터미널」처럼 붙은 말도 같은 곳
+_STATION_TABLE: dict[str, str] = {name: name for name in STATIONS}
+_STATION_TABLE.update({f"{name}역": name for name in STATIONS if not name.endswith("역")})
+_STATION_TABLE.update({f"{name} 터미널": name for name in STATIONS} | {f"{name}터미널": name for name in STATIONS})
+_MODE_WORDS = {"train": ("기차", "열차", "ktx", "srt", "itx", "무궁화", "새마을", "train"),
+               "bus": ("고속버스", "시외버스", "고속 버스", "시외 버스", "버스", "bus"),
+               "flight": ("비행기", "항공권", "항공편", "항공", "flight", "플라이트")}
+_NOT_BUS = ("공항버스", "공항 버스", "리무진", "시내버스", "셔틀")
+_GRADES = ("KTX", "SRT", "ITX", "무궁화", "새마을", "프리미엄", "우등", "일반")
+
+
+def _mode(text: str) -> str | None:
+    """문장이 말하는 교통수단. 「X 말고 Y」면 X 는 뺀다. 말하지 않았으면 None(→ 항공)."""
+    low = text.casefold()
+    said: list[tuple[int, str]] = []
+    for mode, words in _MODE_WORDS.items():
+        for word in words:
+            start = 0
+            while (index := low.find(word, start)) >= 0:
+                start = index + len(word)
+                if mode == "bus" and any(low[max(0, index - 4):index + 6].find(no) >= 0 for no in _NOT_BUS):
+                    continue
+                if word.isascii() and ((index > 0 and low[index - 1].isalpha()) or (start < len(low) and low[start].isalpha())):
+                    continue
+                tail = low[start:start + 8]
+                if any(no in tail for no in ("말고", "빼고", "말구", "아니고", "아니라")):
+                    continue                                 # 「기차 말고 비행기」 — 기차는 뺀다
+                said.append((index, mode))
+    if not said:
+        return None
+    return sorted(said)[0][1]
+
+
+def _kind(text: str) -> str | None:
+    low = text.casefold()
+    if "시외" in low:
+        return "suburbs"
+    if "고속" in low:
+        return "express"
+    return None
+
+
+def _grade(text: str) -> str | None:
+    found = [grade for grade in _GRADES if grade.casefold() in text.casefold()]
+    for grade in found:
+        tail = text.casefold()[text.casefold().find(grade.casefold()) + len(grade):][:6]
+        if any(no in tail for no in _NEG):
+            continue
+        return grade
+    return None
 
 
 # ---------------------------------------------------------------- 날짜
@@ -190,6 +254,10 @@ def _dates(text: str, *, today: date, trip: dict[str, Any] | None) -> list[tuple
         weeks = 2 if head.startswith("다다음") else 1 if head in ("다음주", "담주") else 0
         monday = today - timedelta(days=today.weekday()) + timedelta(days=7 * weeks)
         put(m.start(), m.end(), monday + timedelta(days=weekday), m.group(0))
+    for m in _BARE_WEEKDAY.finditer(text):
+        # `[2026-10-14]` 「토요일에 가서 일요일 저녁에」 — 주(週) 말 없이 요일만: 오늘 이후 가장 가까운 그 요일(오늘이 그 요일이면 오늘)
+        weekday = "월화수목금토일".index(m.group(1))
+        put(m.start(), m.end(), today + timedelta(days=(weekday - today.weekday()) % 7), m.group(0))
     for m in _OFFSET.finditer(text):
         raw, unit = m.group(1), m.group(2)
         count = int(raw) if raw.isdigit() else _KOREAN_NUMBER.get(raw, 1)
@@ -339,7 +407,7 @@ def _price(text: str) -> tuple[int | None, str | None]:
 
 
 def _task(text: str) -> str:
-    if re.search(r"(항공권|비행기|항공|티켓)\s*(은|는)?\s*말고\s*(숙소|호텔|식당|맛집|렌터카|기차|버스)", text):
+    if re.search(r"(항공권|비행기|항공|티켓|기차|열차|버스)\s*(은|는)?\s*말고\s*(숙소|호텔|식당|맛집|렌터카)", text):
         return "unclear"
     if any(word in text for word in ("확정", "예약 상태", "예약상태", "발권", "예약됐", "예약 됐", "예약 확인")) and "찾" not in text:
         return "status"
@@ -352,7 +420,8 @@ def interpret(text: str, *, today: date, trip: dict[str, Any] | None = None) -> 
     task = _task(text)
     if task != "search":
         return {"task": task, "other_requests": [], "missing": [], "question": None}
-    origin, destination = _airports(text)
+    mode = _mode(text) or "flight"
+    origin, destination = _airports(text) if mode == "flight" else _endpoints(text, _STATION_TABLE)
     if origin and destination and origin == destination:
         destination = None
     dates = _dates(text, today=today, trip=trip)
@@ -382,13 +451,17 @@ def interpret(text: str, *, today: date, trip: dict[str, Any] | None = None) -> 
     depart_times, depart_quote, return_times, return_quote = _times(text)
     price, basis = _price(text)
     domestic = None
-    if origin and destination:
+    if mode != "flight":
+        domestic = True
+    elif origin and destination:
         domestic = origin in _KOREAN and destination in _KOREAN
     return {
-        "task": "search", "origin": origin, "destination": destination,
+        "task": "search", "mode": mode, "origin": origin, "destination": destination,
+        "grade": _grade(text) if mode != "flight" else None, "kind": _kind(text) if mode == "bus" else None,
         "depart_date": depart[0].isoformat() if depart else None, "depart_date_text": depart[1] if depart else None,
         "return_date": back[0].isoformat() if back else None, "return_date_text": back[1] if back else None,
-        "adults": adults, "children": children, "infants": infants, "cabin": _cabin(text), "direct_only": _direct(text),
+        "adults": adults, "children": children, "infants": infants,
+        "cabin": _cabin(text) if mode == "flight" else None, "direct_only": _direct(text) if mode == "flight" else None,
         "depart_times": depart_times, "depart_times_text": depart_quote,
         "return_times": return_times, "return_times_text": return_quote,
         "max_price": price, "max_price_basis": basis if price else None, "domestic": domestic,
@@ -396,4 +469,4 @@ def interpret(text: str, *, today: date, trip: dict[str, Any] | None = None) -> 
     }
 
 
-__all__ = ["AIRPORTS", "interpret"]
+__all__ = ["AIRPORTS", "STATIONS", "interpret"]
