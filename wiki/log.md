@@ -9,6 +9,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력
 
+## 2026-10-14 21:40 — 도커 이미지 정리 규칙 · 월별 복원용 보존 인계
+
+x600 서버와 오라클 서버의 도커 이미지 정리 규칙·월별 복원 절차·WSL 디스크 압축을 문서화하고 인계 목차에 한 일 목록을 남겼습니다. [정본](../final_project_cs/wiki/operations/image-retention.md) · [기록](../final_project_cs/wiki/records/reports/2026-10-14_도커이미지_정리규칙과_월별보존.md)
+
 ## 2026-10-14 15:00 — wiki 머리말·log 순서·검사기 정리
 
 상투 설명 문구 59 → 0(현재 문서 267), 통제 밖 태그 6 → 0, log 날짜 어긋남 9 → 0(위치만 옮김), 검사기 위반 9 → 1(링크 `%20` 해석 · 머리말 2 · 분야 1 · 이유 칸 1). 남은 1 은 활동 팀 계획서 543줄. 결정 번호 중복 D-CS-008 · D-CS-015 발견. [기록](../final_project_cs/wiki/records/reports/2026-10-14_1500_wiki-rule-and-test-followup.md)
