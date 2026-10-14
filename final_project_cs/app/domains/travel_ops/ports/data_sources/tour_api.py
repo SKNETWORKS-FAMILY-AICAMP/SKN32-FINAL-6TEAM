@@ -52,7 +52,7 @@ def _joined(title: str, bare_name: str) -> bool:
         and re.fullmatch(r"(과|와|및)\S+", rest[len(bare_name):]) is not None
 
 
-#: 관광 타입. v11 §5 의 Activity 범위(A01 자연·A02 인문·A03 레포츠·A04 쇼핑)와
+#: 관광 타입. Activity 범위(관광공사 신분류체계 NA·HS·VE·LS·EX·EV·SH)와
 #: 대응한다. 39(음식점)는 Dining 쪽이고 32(숙박)는 Lodging 쪽이다.
 CONTENT_TYPE_NAMES = {
     "12": "관광지", "14": "문화시설", "15": "행사·공연·축제", "25": "여행코스",
