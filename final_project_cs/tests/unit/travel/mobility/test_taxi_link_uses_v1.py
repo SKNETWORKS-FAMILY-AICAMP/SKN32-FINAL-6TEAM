@@ -1,4 +1,7 @@
-"""택시 후보의 `uses` 에 지나는 도로 구간 번호(`링크:`)를 싣는다 — 실제 이동 자료가 있을 때만 돈다(없으면 건너뜀)."""
+"""택시 후보의 `uses` 에 지나는 도로 구간 번호(`링크:`)를 싣는다 — 실제 이동 자료가 있을 때만 돈다(없으면 건너뜀).
+
+☆`[2026-10-14]` 번호 체계를 TOPIS 대응표에서 **전국 표준 링크**(경찰청 UTIC 원문과 같은 체계)로 바꿨다 — 서울 실경보 28건의 원문 번호 133개 중
+TOPIS 대응표에는 20개, 표준 링크 대응표(stdlink_v1)에는 128개가 있다(records/reports/2026-10-14_road_event_direction_stdlink/REPORT.md)."""
 import datetime as dt
 import json
 from pathlib import Path
@@ -12,8 +15,9 @@ ENGINE = ROOT / "final_project_cs/app/domains/travel_ops/instances/mobility/engi
 
 @pytest.fixture(scope="module")
 def svc():
-    if not (DATA / "mobility/graph/osm_way_seg_topis_link_v1.csv").exists() or not (DATA / "mobility/road_graph_v2/edges.jsonl.gz").exists():
-        pytest.skip("이동 자료(graph · road_graph_v2) 없음")
+    if (not (DATA / "mobility/graph/osm_way_seg_topis_link_v1.csv").exists() or not (DATA / "mobility/road_graph_v2/edges.jsonl.gz").exists()
+            or not (DATA / "mobility/stdlink_v1/osm_way_seg_stdlink_v1.csv.gz").exists()):
+        pytest.skip("이동 자료(graph · road_graph_v2 · stdlink_v1) 없음")
     from app.domains.travel_ops.instances.mobility.engine import paths
     paths.configure(DATA, source="test_taxi_link_uses")
     from app.domains.travel_ops.instances.mobility.engine.car import CarGraph, CarService
@@ -28,39 +32,37 @@ DEPART = dt.datetime(2026, 10, 14, 10, 0, tzinfo=dt.timezone(dt.timedelta(hours=
 A, B = (126.97690, 37.57170), (126.97795, 37.56620)
 
 
-def test_link_ids_are_real(svc):
+def test_std_link_ids_are_real(svc):
     go = svc.leg(A, B, DEPART, taxi=True)
-    known = {lk for tab in svc.g.seg.values() for lk in tab.values()}
-    assert go["link_ids"], "세종대로는 TOPIS 링크가 있는 큰길이다"
-    assert set(go["link_ids"]) <= known, "대응표에 없는 번호를 지어내지 않는다"
+    known = {lk for tab in svc.g.std.values() for lk in tab.values()}
+    assert go["std_link_source"] == "stdlink_v1"
+    assert go["std_link_ids"], "세종대로는 표준 링크가 붙은 큰길이다"
+    assert set(go["std_link_ids"]) <= known, "대응표에 없는 번호를 지어내지 않는다"
 
 
 def _way_with_both_directions(g):
-    for way, tab in g.seg.items():
+    for way, tab in g.std.items():
         if way not in g.wayinfo:
             continue
         for (k, d), lk in tab.items():
             other = tab.get((k, "bwd" if d == "fwd" else "fwd"))
             if d == "fwd" and other and other != lk and k + 1 < len(g.wayinfo[way][1]):
                 return way, k, lk, other
-    pytest.skip("양방향 링크가 다른 조각을 찾지 못했다")
+    pytest.skip("양방향 표준 링크가 다른 조각을 찾지 못했다")
 
 
-def test_same_segment_gets_direction_specific_link(svc):
-    """같은 도로 조각을 정방향으로 지나면 fwd 번호, 거꾸로 지나면 bwd 번호 — 반대 방향 사건 오탐을 막는 핵심."""
+def test_same_segment_gets_direction_specific_std_link(svc):
+    """같은 도로 조각을 정방향으로 지나면 fwd 표준 링크, 거꾸로 지나면 bwd 표준 링크 — 반대 방향 사건 오탐을 막는 핵심."""
     g = svc.g
     way, k, fwd_link, bwd_link = _way_with_both_directions(g)
     pts = g.wayinfo[way][1][k:k + 2]
     def route(p):
         return {"paths": [{"points": {"coordinates": p}, "details": {"osm_way_id": [[0, len(p) - 1, way]]}, "distance": 0}]}
-    forward = g.compute(route(pts), DEPART)["link_ids"]
-    backward = g.compute(route(list(reversed(pts))), DEPART)["link_ids"]
-    assert fwd_link in forward and bwd_link not in forward
-    assert bwd_link in backward and fwd_link not in backward
+    forward = g.compute(route(pts), DEPART)["std_link_ids"]
+    backward = g.compute(route(list(reversed(pts))), DEPART)["std_link_ids"]
+    assert forward == [fwd_link] and backward == [bwd_link]
 
 
-def test_link_ids_follow_first_traversal_order_without_duplicates(svc):
+def test_std_link_ids_follow_first_traversal_order_without_duplicates(svc):
     got = svc.leg(A, B, DEPART, taxi=True)
-    assert len(got["link_ids"]) == len(set(got["link_ids"]))
-    top = [x["link_id"] for x in got["links"]]
-    assert set(top) <= set(got["link_ids"]), "길이 상위 20 요약의 링크는 모두 지난 링크다"
+    assert len(got["std_link_ids"]) == len(set(got["std_link_ids"]))

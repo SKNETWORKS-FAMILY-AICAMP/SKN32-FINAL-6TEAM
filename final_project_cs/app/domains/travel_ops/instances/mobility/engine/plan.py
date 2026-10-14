@@ -1045,7 +1045,8 @@ class Planner:
         fare = c.get("fare_won")
         # ☆`[2026-10-13]` 지나는 도로 구간 번호(진행 방향별 TOPIS 링크)를 `링크:` 로 싣는다 — 도로 사건이 같은 방향·같은 구간인지
         #   감시·출발 안내·재계획이 가린다(계약 rest-endpoints/trips.md 「도로 구간(방향)」). 대응 없는 조각은 빼고 지어내지 않는다.
-        uses = [f"링크:{lk}" for lk in c.get("link_ids") or () if isinstance(lk, str) and LINK_ID_RE.match(lk)]
+        #   ☆`[2026-10-14]` 번호는 **전국 표준 링크**(UTIC 원문과 같은 체계) — TOPIS 번호(link_ids)는 원문과 거의 안 겹쳐 쓰지 않는다. 표가 없으면 비운다.
+        uses = [f"링크:{lk}" for lk in c.get("std_link_ids") or () if isinstance(lk, str) and LINK_ID_RE.match(lk)]
         return {"eta_min": ride, "uses": uses, "_legs": [], "_taxi": True, "_n": 300, "_key": ("taxi", 0, 0),
                 "_route": taxi_label(c),
                 "_start": guess, "_transfers": 0, "_margin": buf, "_slack": slack, "_walk_min": 0, "_walk_m": 0,

@@ -85,6 +85,16 @@ class CarGraph:
         with open(self.dir / "osm_way_seg_topis_link_v1.csv", encoding="utf-8") as f:
             for r in csv.DictReader(f):
                 self.seg[int(r["osm_way_id"])][(int(r["seg_idx"]), r["dir"])] = r["link_id"]
+        # ☆`[2026-10-14]` 전국 표준 링크 대응표(OSM 조각 × 방향 → 표준 링크 번호) — 도로 사건(경찰청 UTIC) 원문 구간 번호와 같은 체계.
+        #   TOPIS 대응표 번호는 원문 번호와 133개 중 20개만 겹쳐(서울 실경보 28건) 경로의 `링크:` 로 쓰지 않는다. 표가 없으면 비운다.
+        self.std = defaultdict(dict)
+        self.std_source = None
+        stdf = self.dir.parent / "stdlink_v1" / "osm_way_seg_stdlink_v1.csv.gz"
+        if stdf.exists():
+            with gzip.open(stdf, "rt", encoding="utf-8") as f:
+                for r in csv.DictReader(f):
+                    self.std[int(r["osm_way_id"])][(int(r["seg_idx"]), r["dir"])] = r["link_id"]
+            self.std_source = "stdlink_v1"
         self.wayinfo = {}                     # way → (highway, pts)
         with open(self.dir / "osm_way_geom_v1.csv", encoding="utf-8") as f:
             for r in csv.DictReader(f):
@@ -153,6 +163,7 @@ class CarGraph:
         cover = {"topis": 0.0, "class": 0.0, "default": 0.0}
         links = defaultdict(float)
         link_seq = {}                       # 지난 TOPIS 링크(진행 방향별 번호) — 처음 지난 순서. 대응 없는 조각은 넣지 않는다
+        std_seq = {}                        # 지난 전국 표준 링크(진행 방향별) — 같은 조각·같은 방향만(이웃 조각으로 메우지 않는다)
         slow_s = slow_m = 0.0
         n_edges = 0
         for a, b, way in det:
@@ -176,6 +187,10 @@ class CarGraph:
                             break
                 if link:
                     link_seq.setdefault(link, None)
+                if segidx[i] is not None:
+                    std = getattr(self, "std", {}).get(way, {}).get((segidx[i], d))   # 시험용 그래프·옛 적재본엔 표가 없다 → 비움
+                    if std:
+                        std_seq.setdefault(std, None)
                 remaining = L
                 while remaining > 1e-8:
                     dtp, h = self.daytype(t), t.hour
@@ -217,7 +232,7 @@ class CarGraph:
                 "coverage_m": {k: round(v, 1) for k, v in cover.items()},
                 "coverage_pct": {k: round(v / max(tot, 1) * 100, 1) for k, v in cover.items()},
                 "links": [{"link_id": k, "m": round(m, 1)} for k, m in top],
-                "n_links": len(links), "link_ids": list(link_seq)}
+                "n_links": len(links), "link_ids": list(link_seq), "std_link_ids": list(std_seq)}
 
 
 # ── 라우터 ─────────────────────────────────────────────────────────────────
@@ -419,6 +434,7 @@ class CarService:
                "hour_start": r["hour_start"],
                "coverage_m": r["coverage_m"], "coverage_pct": cov, "n_edges": r["n_edges"],
                "links": r["links"], "n_links": r["n_links"], "link_ids": list(r.get("link_ids") or ()),
+               "std_link_ids": list(r.get("std_link_ids") or ()), "std_link_source": getattr(self.g, "std_source", None),
                "source_id": [SOURCE_ID, GRAPH_SOURCE_ID], "warn": warn}
         if routing_evidence is not None:
             out['routing_evidence'] = routing_evidence

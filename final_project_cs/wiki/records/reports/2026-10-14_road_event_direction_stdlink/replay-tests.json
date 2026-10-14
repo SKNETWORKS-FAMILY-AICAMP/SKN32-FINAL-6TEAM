@@ -1,0 +1,2378 @@
+[
+  {
+    "incident_id": "L90174193387",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L90174193387",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L90174193387",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L90174193387",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L90174193387",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L90174193387",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L90174193387",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L90174193387",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L90174193387",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L90174193387",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_evidence_missing",
+    "expected": true,
+    "actual": null,
+    "passed": null,
+    "meaning": "반대 방향 구간 번호의 로컬 근거 없음. 통과로 세지 않음"
+  },
+  {
+    "incident_id": "L93174151378",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174169980",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "advisory",
+    "actual": "advisory",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174169980",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "clear",
+    "actual": "clear",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174169980",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174169980",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174169980",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174169980",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174169980",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174169980",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174170006",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174171556",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "advisory",
+    "actual": "advisory",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174171556",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "clear",
+    "actual": "clear",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174171556",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174171556",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174171556",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174171556",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174171556",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174171556",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174172025",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "advisory",
+    "actual": "advisory",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174172025",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "clear",
+    "actual": "clear",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174172025",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174172025",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174172025",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174172025",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174172025",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174172025",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174172323",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174172575",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "advisory",
+    "actual": "advisory",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174172575",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "clear",
+    "actual": "clear",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174172575",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174172575",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174172575",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174172575",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174172575",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174172575",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174175732",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "advisory",
+    "actual": "advisory",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174175732",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "clear",
+    "actual": "clear",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174175732",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174175732",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174175732",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174175732",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174175732",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174175732",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174176052",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174176080",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_evidence_missing",
+    "expected": false,
+    "actual": null,
+    "passed": null,
+    "meaning": "반대 방향 구간 번호의 로컬 근거 없음. 통과로 세지 않음"
+  },
+  {
+    "incident_id": "L93174176081",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174182933",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174182934",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174182985",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174183055",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174183110",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174183189",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174183223",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174183245",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174183275",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174191976",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "advisory",
+    "actual": "advisory",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174191976",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "clear",
+    "actual": "clear",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174191976",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174191976",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174191976",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174191976",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174191976",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174191976",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174193668",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174193690",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_acceptance",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 구간 번호(대응표 근거)를 실은 시험 경로"
+  },
+  {
+    "incident_id": "L93174193779",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "disruption",
+    "actual": "disruption",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "disrupted",
+    "actual": "disrupted",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": true,
+    "actual": true,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "opposite_direction_acceptance",
+    "kind": "direction_evidence_missing",
+    "expected": false,
+    "actual": null,
+    "passed": null,
+    "meaning": "반대 방향 구간 번호의 로컬 근거 없음. 통과로 세지 않음"
+  },
+  {
+    "incident_id": "L93174193892",
+    "name": "opposite_direction_rule_synthetic",
+    "kind": "direction_rule_synthetic",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "반대 방향 번호를 원문과 다른 번호로 놓은 규칙 시험. 데이터 근거가 아니라 수용 집계에서 뺌"
+  },
+  {
+    "incident_id": "L93174213703",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "advisory",
+    "actual": "advisory",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174213703",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "clear",
+    "actual": "clear",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174213703",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174213703",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174213703",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174213703",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174213703",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174213703",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  },
+  {
+    "incident_id": "L93174214863",
+    "name": "point_at_observation",
+    "kind": "product_rule",
+    "expected": "advisory",
+    "actual": "advisory",
+    "passed": true,
+    "meaning": "공급자 지점을 통과한다는 시험 조건의 사고/주의 구분"
+  },
+  {
+    "incident_id": "L93174214863",
+    "name": "traffic_check_integration",
+    "kind": "product_rule",
+    "expected": "clear",
+    "actual": "clear",
+    "passed": true,
+    "meaning": "교통 소스만 연결한 판정기. 다른 미연결 소스의 안전 통과를 뜻하지 않음"
+  },
+  {
+    "incident_id": "L93174214863",
+    "name": "different_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "위도 0.1도를 옮긴 명시적 시험 좌표. 실제 관광지 좌표가 아님"
+  },
+  {
+    "incident_id": "L93174214863",
+    "name": "after_recorded_end_point",
+    "kind": "product_rule",
+    "expected": "absent",
+    "actual": "absent",
+    "passed": true,
+    "meaning": "저장 종료 시각 경계만 재현. 현장의 실제 해제를 확인한 결과가 아님"
+  },
+  {
+    "incident_id": "L93174214863",
+    "name": "declared_road_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "명시적으로 같은 도로를 통과하는 시험. 세부 구간·방향 검증과 구별"
+  },
+  {
+    "incident_id": "L93174214863",
+    "name": "different_road",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": ""
+  },
+  {
+    "incident_id": "L93174214863",
+    "name": "declared_links_at_observation",
+    "kind": "product_rule",
+    "expected": false,
+    "actual": false,
+    "passed": true,
+    "meaning": "원문 구간 번호를 그대로 지나는 시험 경로. 구간 근거(link_overlap)로 잡혀야 함"
+  },
+  {
+    "incident_id": "L93174214863",
+    "name": "after_recorded_end_route",
+    "kind": "product_rule",
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "meaning": "기존 응답의 종료시각 계산. 새 종료 관측을 공급하지 않음"
+  }
+]
