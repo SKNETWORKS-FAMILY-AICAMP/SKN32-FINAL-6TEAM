@@ -368,11 +368,41 @@ def test_every_ranked_option_blocked_by_the_recheck_is_announced_the_same_way(ap
     assert len(sent) == len(first.notified) and "일정은 그대로 두었어요" in sent[0]["text"]
 
 
-def test_an_action_rejected_for_another_reason_is_not_announced_to_the_customer(api):
-    """인자 오류 · 지어낸 장소 같은 다른 `action_rejected` 는 고객 알림이 아니라 **운영자의 오류**다."""
-    _create(api)
+@pytest.mark.parametrize("guardrail, observed", [
+    ("action_rejected", "itinerary.apply arguments are malformed: x"),
+    ("unknown_장소 목록", "장소 목록 을(를) 확인하지 못했다"),
+    ("case_wall_clock_seconds", "301.2")])
+def test_a_failure_nobody_retries_is_told_to_the_customer_once_with_its_code(api, guardrail, observed):
+    """★`[2026-10-14]` 전에는 「운영자의 오류」라며 고객에게 알리지 않았다 — 운영자가 없으니(D-018 · D-CS-014) 고객도 모르고 아무도 처리하지 않았다.
+    재시도하지 않는 실패는 **일정은 그대로**라는 것과 확인 시각 · 오류 코드를 한 번 알린다. 내부 문구(`observed`)는 싣지 않고, 다시 확인하겠다는 약속도 하지 않는다."""
+    trip_id = _create(api)["trip_id"]
     before = len(_notices(api))
-    first = _tick(_opener(api, _check_activities(DISRUPTED),
-                          _escalating("action_rejected", observed="itinerary.apply arguments are malformed: x")))
-    assert first.opened and first.notified == []
-    assert [n for n in _notices(api)[before:] if n.get("kind") in ("recheck_failed", "no_alternate")] == []
+    opener = _opener(api, _check_activities(DISRUPTED), _escalating(guardrail, observed=observed))
+    first = _tick(opener)
+    assert first.opened and len(first.notified) == len(first.opened)
+    sent = [n for n in _notices(api)[before:] if n.get("kind") == "unhandled"]
+    assert len(sent) == len(first.notified)
+    note = sent[0]
+    assert note["type"] == "guidance" and "자동으로 처리하지 못해" in note["text"] and "일정은 그대로 두었어요" in note["text"]
+    assert note["unhandled"][0]["code"] == guardrail and note["unhandled"][0]["checked_at"] in note["text"]
+    assert observed not in note["text"] and "다시 확인할게요" not in note["text"]
+    assert "사람" not in note["text"] and "담당자" not in note["text"]
+    second = _tick(opener)
+    assert second.notified == [] and len([n for n in _notices(api)[before:] if n.get("kind") == "unhandled"]) == len(sent)
+    with get_connection() as conn:
+        assert api["store"].latest(conn, UUID(trip_id))[0]["version"] == 1
+
+
+def test_a_batch_failure_nobody_retries_is_told_once_for_the_set(api, guardrails):
+    _create(api)
+    guardrails.update({"travel.watch.batch_enabled": True})
+    before = len(_notices(api))
+    opener = _opener(api, _check_activities(DISRUPTED),
+                     _escalating("action_proposal_verification_failed", observed="proposal cites unknown place"))
+    first = _tick(opener)
+    [opened] = first.opened
+    [note] = [n for n in _notices(api)[before:] if n.get("batch")]
+    assert note["kind"] == "unhandled" and note["text"].count("자동으로 처리하지 못해") == len(opened["items"])
+    assert "proposal cites" not in note["text"]
+    _tick(opener)
+    assert len([n for n in _notices(api)[before:] if n.get("batch")]) == 1

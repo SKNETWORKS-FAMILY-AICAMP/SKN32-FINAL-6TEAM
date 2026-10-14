@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS places (
 def linkable(conn):
     """코어 places 와 매칭기(202) · 판정 때 잇기(220)를 올린다. conftest 는 202 를 뺀다."""
     conn.execute(PLACES)
-    for name in ("202_dining_matcher.sql", "224_dining_runtime_link.sql"):
+    for name in ("202_dining_matcher.sql", "224_dining_runtime_link.sql", "233_dining_link_same_name.sql"):
         conn.execute(open(os.path.join(MIGRATIONS, name), encoding="utf-8").read())
     return conn
 
@@ -121,6 +121,56 @@ def test_same_name_far_away_is_not_linked(linkable, world):
     uid = place("소울", 37.5432, 126.9876)               # 용산 — 미쉐린 「소울」
     name = linkable.execute("SELECT name_ko FROM dining.dn_place WHERE place_uid = %s", (uid,)).fetchone()[0]
     core_id = core(name, 37.5800, 126.9690)              # 종로 자하문로 — 4km
+
+    assert dining_state(linkable, tenant, core_id, AT)["linked"] is False
+    assert link_of(core_id) is None
+
+# ── 233 — 같은 이름을 150m 까지 · 지점 표시를 떼고 ───────────────────────────
+# 연결 정답셋(eval/reports/2026-10-14_dining_link.md)에서 등록 뒤 길이 놓친 것 — 좌표가 80m 넘게 어긋난 같은 가게, 「○○ 강남점」.
+
+
+def _named(linkable, place, name, lat, lng):
+    uid = place(name, lat, lng)
+    linkable.execute("UPDATE dining.dn_place SET name_ko = %s WHERE place_uid = %s", (name, uid))
+    return uid
+
+
+def test_same_name_120m_away_is_the_same_shop(linkable, world):
+    tenant, core, _, link_of, place = world
+    name = f"백이십{uuid.uuid4().hex[:6]}"
+    uid = _named(linkable, place, name, 37.5600, 126.9800)
+    core_id = core(name, 37.5610, 126.9802)              # 약 112m — 80m 매칭기 밖, 150m 안
+
+    assert dining_state(linkable, tenant, core_id, AT)["linked"] is True
+    assert link_of(core_id) == (uid, "runtime:same_name_150m")
+
+
+def test_a_branch_label_is_dropped_before_comparing(linkable, world):
+    tenant, core, _, link_of, place = world
+    name = f"리알토{uuid.uuid4().hex[:2]}"                # 실제 「리알토」처럼 짧게 — 길면 유사도 0.75 를 넘어 매칭기(2단계)가 먼저 잇는다
+    uid = _named(linkable, place, name, 37.5000, 127.0300)
+    core_id = core(f"{name} 강남점", 37.50025, 127.0300)  # 약 28m
+
+    assert dining_state(linkable, tenant, core_id, AT)["linked"] is True
+    assert link_of(core_id) == (uid, "runtime:same_name_150m")
+
+
+def test_two_same_name_shops_within_150m_are_not_guessed(linkable, world):
+    tenant, core, _, link_of, place = world
+    name = f"두집{uuid.uuid4().hex[:6]}"
+    _named(linkable, place, name, 37.5300, 126.9600)
+    _named(linkable, place, name, 37.5312, 126.9600)     # 약 133m 떨어진 같은 이름
+    core_id = core(name, 37.5306, 126.9600)              # 둘 다 80m 밖 · 150m 안
+
+    assert dining_state(linkable, tenant, core_id, AT)["linked"] is False
+    assert link_of(core_id) is None
+
+
+def test_same_name_beyond_150m_is_not_linked(linkable, world):
+    tenant, core, _, link_of, place = world
+    name = f"이백{uuid.uuid4().hex[:6]}"
+    _named(linkable, place, name, 37.5400, 126.9500)
+    core_id = core(name, 37.5418, 126.9500)              # 약 200m
 
     assert dining_state(linkable, tenant, core_id, AT)["linked"] is False
     assert link_of(core_id) is None
