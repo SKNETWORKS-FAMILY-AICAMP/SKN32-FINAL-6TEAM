@@ -160,7 +160,9 @@ def _team_job(method):
 
 def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
     # 독립 정리 작업만 요청한 회차에는 Team 조립을 요구하지 않는다.
-    if only in (None, "routing", "trip", "trip_cases", "trip_dawn", "trip_reminders"):
+    # ★`[2026-10-14]` 팀 정기 작업(`team:<이름>`)도 조립이 필요하다 — 작업 목록이 조립 판(`bind_services`) 안에만 있다.
+    #   전에는 `--only team:<이름>` 이 조립 없이 돌아 등록된 작업을 못 찾고 빈 결과(`{}`)로 끝났다(손으로 부르는 입구가 아무것도 안 했다).
+    if only in (None, "routing", "trip", "trip_cases", "trip_dawn", "trip_reminders") or (only or "").startswith("team:"):
         try:
             return _run_bound_once(tenant_id, only)
         except _CompositionFailed:
