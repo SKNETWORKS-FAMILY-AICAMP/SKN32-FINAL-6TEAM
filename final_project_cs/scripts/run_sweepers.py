@@ -273,6 +273,15 @@ def _run_jobs(tenant_id: str, only: str | None, *, composition_failed=False,
         run("web_guard", lambda: _run_web_guard(tenant_id))
     if only == "retention":
         run("retention", lambda: _run_retention(tenant_id, forced=True))
+    # ★`[2026-10-14 사용자 지시]` 일일 정기점검이 03:30 까지 안 끝났으면 관리자 웹앱에 보고 — 모든 작업이 돈 **뒤** 이 회차 결과로 판정한다
+    if only is None:
+        try:
+            deadline = _daily_check_deadline(tenant_id, result)
+        except Exception as exc:                          # noqa: BLE001 — 보고가 터져도 회차 결과는 남긴다. 세어서 남긴다
+            logger.error("sweeper_job_failed job=daily_check error_type=%s", type(exc).__name__)
+            deadline = {"fatal": 1}
+        if deadline is not None:
+            result["daily_check"] = deadline
     return result
 
 
@@ -285,14 +294,19 @@ def _run_place_facts(tenant_id: str) -> dict[str, object]:
     from app.domains.travel_ops.components.places.place_info import fill_missing_facts
 
     from app.core.settings import get_guardrails
-    from app.domains.travel_ops.components.places.catalog_hours import day_start
+    from app.domains.travel_ops.components.places.place_info import FILL_PER_TICK
+    from app.domains.travel_ops.components.watch import daily_check
 
-    settings, now = get_settings(), datetime.now(ZoneInfo("Asia/Seoul"))
-    # ★`[2026-10-14 사용자 지시]` 일일 정기점검(03시 시작 · 마감 없음) — 고객이 일정에 넣은 장소는 그날 03시 전에 읽은 값이면 하루 한 번 다시 읽는다
-    refresh_from = day_start(now, str(get_guardrails().get("travel.catalog_hours.start"))).isoformat()
+    settings, now, guard = get_settings(), datetime.now(ZoneInfo("Asia/Seoul")), get_guardrails()
+    # ★`[2026-10-14 사용자 지시]` 일일 정기점검(03시 시작 · 가능하면 03:30 까지 · 08:00 멈춤) — 고객이 일정에 넣은 장소는 그날 03시 전에 읽은 값이면
+    #   창 안에서 하루 한 번 다시 읽는다. 창 밖에서는 새로 들어온 장소만 읽는다(정기점검이 아니다)
+    win = daily_check.from_guardrails(now, guard)
+    cap = int(guard.get("travel.daily_check.max_per_tick"))
     with get_connection() as conn:
         return fill_missing_facts(conn, tenant_id, source=build_travel_sources(settings).place,
-                                  chat=from_settings(settings), now=now, refresh_from=refresh_from)
+                                  chat=from_settings(settings), now=now,
+                                  refresh_from=win.started_at.isoformat() if win.open else None,
+                                  pace=lambda left: daily_check.paced(left, base=FILL_PER_TICK, cap=cap, win=win))
 
 
 def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
@@ -304,16 +318,60 @@ def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
     from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
     from app.domains.travel_ops.components.places.catalog_hours import prefill
 
+    from app.domains.travel_ops.components.watch import daily_check
+
     settings, guard = get_settings(), get_guardrails()
+    now = datetime.now(ZoneInfo("Asia/Seoul"))
+    win = daily_check.from_guardrails(now, guard)
+    base, cap = int(guard.get("travel.catalog_hours.per_tick")), int(guard.get("travel.daily_check.max_per_tick"))
     with get_connection() as conn:
-        # ★`[2026-10-14 사용자 지시]` 일일 정기점검은 03시 시작 · 마감 없음 — `until` 이 비어 있으면 끝을 두지 않는다
+        # ★`[2026-10-14 사용자 지시]` 일일 정기점검 — 03시 시작 · 가능하면 03:30 까지 끝나게 양을 맞추고 · 08:00 에 멈춘다(`travel.daily_check`)
         return prefill(conn, tenant_id=tenant_id, source=build_travel_sources(settings).place,
-                       chat=from_settings(settings), now=datetime.now(ZoneInfo("Asia/Seoul")),
-                       start=str(guard.get("travel.catalog_hours.start")),
-                       until=guard.get("travel.catalog_hours.until") or None,
+                       chat=from_settings(settings), now=now,
+                       start=str(guard.get("travel.daily_check.start")),
+                       until=str(guard.get("travel.daily_check.stop")),
                        per_night=int(guard.get("travel.catalog_hours.per_night")),
-                       per_tick=int(guard.get("travel.catalog_hours.per_tick")),
-                       retry_days=int(guard.get("travel.catalog_hours.retry_days")))
+                       per_tick=base,
+                       retry_days=int(guard.get("travel.catalog_hours.retry_days")),
+                       pace=lambda left: daily_check.paced(left, base=base, cap=cap, win=win))
+
+
+def _daily_check_deadline(tenant_id: str, result: dict, *, now=None) -> dict[str, object] | None:
+    """일일 정기점검이 `finish_by`(03:30)까지 안 끝났으면 관리자 웹앱 「운영 진단」에 **하루 한 건** 보고한다. `[2026-10-14 사용자 지시]`
+
+    ★판정은 03:30 이 지난 **첫 회차**에 한 번 한다(주기 문 `daily_check_deadline`) — 그 회차 결과에서 아직 남은 일이 있는 작업을 고른다(`daily_check.unfinished`).
+    ★보고는 운영 진단 사건(`processing_error` · `DAILY_CHECK_OVERDUE`)이고, 조건에 안 끝난 작업 코드를 싣는다. 사건 번호를 날짜로 정해 같은 날 두 번 세지 않는다.
+    ★08:00 이 지났거나 03:30 전이면 아무것도 안 한다(멈춤은 각 작업의 창이 지킨다)."""
+    from datetime import datetime
+    from uuid import NAMESPACE_URL, uuid5
+    from zoneinfo import ZoneInfo
+
+    from app.application.job_gate import claim
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.watch import daily_check
+
+    now = now or datetime.now(ZoneInfo("Asia/Seoul"))
+    win = daily_check.from_guardrails(now, get_guardrails())
+    if not win.past_finish_by:
+        return None
+    with get_connection() as conn, conn.transaction():
+        if not claim(conn, tenant_id=tenant_id, gate="daily_check_deadline", min_seconds=20 * 3600):
+            return None
+    late, unknown = daily_check.unfinished(result)
+    out: dict[str, object] = {"day": win.day, "late": late, "unknown": unknown}
+    if not late:
+        return out
+    from app import composition
+    from app.application import operations_diagnostics as diagnostics
+
+    event = diagnostics.Event(
+        event_id=uuid5(NAMESPACE_URL, f"triPilot:daily_check_overdue:{tenant_id}:{win.day}"), tenant_id=tenant_id,
+        kind="processing_error", code="DAILY_CHECK_OVERDUE", deployment=diagnostics.deployment_version(),
+        policy_version=composition.config_revision(composition.load_project_config()),
+        conditions=[daily_check.code_of(name) for name in late])
+    out["report"] = diagnostics.record(event, connection_factory=get_connection)["status"]
+    logger.warning("daily_check_overdue day=%s late=%s", win.day, ",".join(late))
+    return out
 
 
 def _in_window(now, start: str, until: str) -> bool:

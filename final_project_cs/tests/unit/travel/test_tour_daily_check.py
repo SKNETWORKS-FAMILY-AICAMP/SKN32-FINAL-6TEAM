@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""관광공사 일일 정기점검 — 03시 시작 · 마감 없음 · 고객이 일정에 넣은 장소만 하루 한 번 다시 읽는다. `[2026-10-14 사용자 지시]` DB 없이 본다.
+"""일일 정기점검 — 03시 시작 · 가능하면 03:30 까지 · 안 끝나면 관리자 웹앱 보고 · 08:00 에 모두 멈춤. `[2026-10-14 사용자 지시]` DB 없이 본다.
 
-사용자 말: 「관광공사에서 장소 자체가 잘 바뀌지 않아 그래서 하루 1회 일일 정기점검 때 하기로 했어. 일일 정기점검은 마감시간 8시 아니고 그냥 3시 시작」.
+사용자 말: 「관광공사에서 장소 자체가 잘 바뀌지 않아 그래서 하루 1회 일일 정기점검 때 하기로 했어」 · 「전체 받는 게 아니라 사용자가 등록한 장소에 대한 부분들만」 ·
+「3시 시작 가능하면 3시 30분까지 마감하게 하고 안 끝나고 있으면 관리자 웹앱에 보고 들어가게 만들어놔. 그리고 8시에는 모두 멈추게 해 지금처럼」.
 """
 from __future__ import annotations
 
@@ -10,21 +11,52 @@ from datetime import datetime, timedelta, timezone
 
 from app.domains.travel_ops.components.places import catalog_hours as ch
 from app.domains.travel_ops.components.places import place_info
+from app.domains.travel_ops.components.watch import daily_check as dc
 
 KST = timezone(timedelta(hours=9))
 
 
-# ── 하루 몫의 시작 ────────────────────────────────────────────────
-def test_the_day_starts_at_three_and_before_three_belongs_to_yesterday():
-    assert ch.day_start(datetime(2030, 1, 2, 10, 0, tzinfo=KST), "03:00") == datetime(2030, 1, 2, 3, 0, tzinfo=KST)
-    assert ch.day_start(datetime(2030, 1, 2, 3, 0, tzinfo=KST), "03:00") == datetime(2030, 1, 2, 3, 0, tzinfo=KST)
-    assert ch.day_start(datetime(2030, 1, 2, 2, 59, tzinfo=KST), "03:00") == datetime(2030, 1, 1, 3, 0, tzinfo=KST)
+def _at(hour, minute=0, day=2):
+    return datetime(2030, 1, day, hour, minute, tzinfo=KST)
 
 
-# ── 운영시간 읽기: 08시 마감이 없다 ───────────────────────────────
+def _win(now):
+    return dc.window(now, start="03:00", finish_by="03:30", stop="08:00")
+
+
+# ── 시각 ──────────────────────────────────────────────────────────
+def test_the_window_opens_at_three_aims_at_half_past_and_stops_at_eight():
+    assert not _win(_at(2, 59)).open and _win(_at(2, 59)).day == "2030-01-01"
+    assert _win(_at(3, 0)).open and not _win(_at(3, 0)).past_finish_by
+    assert _win(_at(3, 30)).past_finish_by and _win(_at(7, 59)).open
+    assert not _win(_at(8, 0)).open and not _win(_at(8, 0)).past_finish_by      # 8시에는 모두 멈춘다
+
+
+def test_pacing_spreads_the_rest_over_the_minutes_left_to_half_past_three():
+    assert dc.paced(600, base=10, cap=25, win=_win(_at(3, 0))) == 20           # 600곳 ÷ 30분
+    assert dc.paced(30, base=10, cap=25, win=_win(_at(3, 0))) == 10            # 적으면 최소 양
+    assert dc.paced(600, base=10, cap=25, win=_win(_at(3, 20))) == 25          # 많아야 상한(관광공사 몰림 허용 안)
+    assert dc.paced(5, base=10, cap=25, win=_win(_at(3, 40))) == 25            # 지났으면 상한으로 마저 한다
+
+
+def test_unfinished_jobs_are_told_apart_from_finished_and_unknown_ones():
+    late, unknown = dc.unfinished({
+        "place_facts": {"asked": 25, "remaining": 40},
+        "catalog_hours": {"skipped": "오늘 밤 몫을 다 썼다"},
+        "trip_dawn": {"outside_window": False, "disabled": None, "checked": 0, "fatal": 0},
+        "team:activity_live_status": {"checked": 3},
+        "team:dining_refresh": {"remaining": 0},
+        "team:broken": {"fatal": 1},
+        "web_guard": {"fatal": 1},                                           # 정기점검 작업이 아니다
+    })
+    assert late == ["place_facts", "team:broken"] and unknown == ["team:activity_live_status"]
+    assert dc.code_of("team:activity_live_status") == "TEAM_ACTIVITY_LIVE_STATUS"
+
+
+# ── 운영시간 읽기(대체 후보용): 03:30 까지 양을 맞추고 08:00 에 멈춘다 ──
 class _Conn:
-    def __init__(self, done=0):
-        self.done, self.params = done, []
+    def __init__(self, done=0, due=0):
+        self.answers, self.params = [(done,), (due,)], []
 
     def cursor(self):
         return self
@@ -39,7 +71,7 @@ class _Conn:
         self.params.append(params)
 
     def fetchone(self):
-        return (self.done,)
+        return self.answers.pop(0)
 
     def fetchall(self):
         return []
@@ -50,31 +82,30 @@ class _Tour:
         raise AssertionError("읽을 곳이 없으면 부르지 않는다")
 
 
-def test_without_an_end_time_the_hours_job_still_runs_after_eight():
-    conn = _Conn()
-    got = ch.prefill(conn, tenant_id="t", source=_Tour(), chat=None, now=datetime(2030, 1, 2, 9, 30, tzinfo=KST),
-                     start="03:00", until=None, per_night=600, per_tick=10, retry_days=7)
-    assert "skipped" not in got
-    assert conn.params[0][1] == datetime(2030, 1, 2, 3, 0, tzinfo=KST)        # 하루 몫은 그날 03시부터 센다
+def _prefill(conn, now, **kw):
+    return ch.prefill(conn, tenant_id="t", source=_Tour(), chat=None, now=now, start="03:00", until="08:00",
+                      per_night=600, per_tick=10, retry_days=7, **kw)
+
+
+def test_the_hours_job_stops_at_eight():
+    assert _prefill(_Conn(), _at(8, 0))["skipped"] == "창 밖"
+
+
+def test_the_hours_job_reads_more_per_tick_to_finish_by_half_past_three():
+    conn = _Conn(due=600)
+    got = _prefill(conn, _at(3, 0), pace=lambda left: dc.paced(left, base=10, cap=25, win=_win(_at(3, 0))))
+    assert conn.params[-1][-1] == 20 and got["remaining"] == 600                # 이번에 20곳(흉내 연결이 0곳을 돌려줘 남은 수는 그대로)
+    assert conn.params[0][1] == _at(3, 0)                                       # 하루 몫은 그날 03시부터 센다
 
 
 def test_the_day_budget_still_stops_it():
-    got = ch.prefill(_Conn(done=600), tenant_id="t", source=_Tour(), chat=None,
-                     now=datetime(2030, 1, 2, 23, 0, tzinfo=KST), start="03:00", until=None,
-                     per_night=600, per_tick=10, retry_days=7)
-    assert got["skipped"] == "오늘 밤 몫을 다 썼다"
+    assert _prefill(_Conn(done=600), _at(5, 0))["skipped"] == "오늘 밤 몫을 다 썼다"
 
 
-def test_an_explicit_end_time_still_works_for_rollback():
-    got = ch.prefill(_Conn(), tenant_id="t", source=_Tour(), chat=None, now=datetime(2030, 1, 2, 9, 0, tzinfo=KST),
-                     start="03:00", until="08:00", per_night=600, per_tick=10, retry_days=7)
-    assert got["skipped"] == "창 밖"
-
-
-# ── 일정에 넣은 장소: 하루 한 번 다시 읽기 ─────────────────────────
+# ── 일정에 넣은 장소: 창 안에서 하루 한 번 다시 읽기 ───────────────
 class _FactsConn:
-    def __init__(self, rows):
-        self.rows, self.select, self.updates = rows, None, []
+    def __init__(self, rows, counts=(0, 0)):
+        self.rows, self.counts, self.selects, self.updates = rows, counts, [], []
 
     def cursor(self):
         return self
@@ -90,9 +121,12 @@ class _FactsConn:
 
     def execute(self, sql, params=()):
         if sql.startswith("SELECT"):
-            self.select = (sql, params)
+            self.selects.append((sql, params))
         else:
             self.updates.append(params)
+
+    def fetchone(self):
+        return self.counts
 
     def fetchall(self):
         return self.rows
@@ -108,8 +142,8 @@ class _Intro:
         return self.intro
 
 
-NOW = datetime(2030, 1, 2, 3, 5, tzinfo=KST)
-DAY = ch.day_start(NOW, "03:00").isoformat()
+NOW = _at(3, 5)
+DAY = _win(NOW).started_at.isoformat()
 READ_BEFORE = {"source_content_id": "1", "source_content_type_id": "12", "hours_week": {"1": ["09:00-18:00"]},
                "hours_read": {"source": "tour_api", "method": "rule", "read_at": "2030-01-01T10:00:00+09:00"}}
 
@@ -118,25 +152,27 @@ def _row(attributes):
     return [("p1", "경복궁", "activity", 37.5, 126.9, attributes)]
 
 
-def test_only_places_in_trips_are_asked_and_the_daily_refresh_is_in_the_query():
-    conn = _FactsConn([])
-    place_info.fill_missing_facts(conn, "t", source=_Intro(), chat=None, now=NOW, refresh_from=DAY)
-    sql, params = conn.select
-    assert "FROM trips t JOIN itinerary_items i" in sql                    # 일정에 넣은 장소만 — 관광공사 전체 목록이 아니다
-    assert "hours_refresh" in sql and params.count(DAY) == 2
+def test_only_places_in_trips_are_asked_paced_and_counted():
+    conn = _FactsConn([], counts=(300, 280))
+    got = place_info.fill_missing_facts(conn, "t", source=_Intro(), chat=None, now=NOW, refresh_from=DAY,
+                                        pace=lambda left: dc.paced(left, base=10, cap=25, win=_win(NOW)))
+    _, rows_sql = conn.selects
+    assert "FROM trips t JOIN itinerary_items i" in rows_sql[0]              # 일정에 넣은 장소만 — 관광공사 전체 목록이 아니다
+    assert "hours_refresh" in rows_sql[0] and rows_sql[1][-1] == 12          # 300곳 ÷ 25분 → 12곳
+    assert got["remaining"] == 280
 
 
-def test_without_the_daily_refresh_only_new_places_are_asked():
+def test_outside_the_window_only_new_places_are_asked_and_nothing_is_counted():
     conn = _FactsConn([])
-    place_info.fill_missing_facts(conn, "t", source=_Intro(), chat=None, now=NOW)
-    assert "hours_refresh" not in conn.select[0]
+    got = place_info.fill_missing_facts(conn, "t", source=_Intro(), chat=None, now=_at(9, 0))
+    assert len(conn.selects) == 1 and "hours_refresh" not in conn.selects[0][0] and "remaining" not in got
 
 
 def test_a_failed_reread_keeps_the_hours_read_yesterday():
-    conn = _FactsConn(_row(dict(READ_BEFORE)))
+    conn = _FactsConn(_row(dict(READ_BEFORE)), counts=(1, 1))
     got = place_info.fill_missing_facts(conn, "t", source=_Intro(fail=True), chat=None, now=NOW, refresh_from=DAY)
     patch, drop = json.loads(conn.updates[0][0]), conn.updates[0][1]
-    assert set(patch) == {"hours_refresh"} and drop == [] and got["unknown"] == 1   # 어제 읽은 요일표는 그대로
+    assert set(patch) == {"hours_refresh"} and drop == [] and got["unknown"] == 1 and got["remaining"] == 0
 
 
 def test_a_reread_that_cannot_make_a_week_drops_the_old_week(monkeypatch):
@@ -149,7 +185,53 @@ def test_a_reread_that_cannot_make_a_week_drops_the_old_week(monkeypatch):
             return {"source": "tour_api", "method": "none_week", **kw}
 
     monkeypatch.setattr(place_hours, "read_hours", lambda usetime, restdate, chat: _Read())
-    conn = _FactsConn(_row(dict(READ_BEFORE)))
+    conn = _FactsConn(_row(dict(READ_BEFORE)), counts=(1, 1))
     place_info.fill_missing_facts(conn, "t", source=_Intro({"usetime_text": "문의", "restdate_text": ""}), chat=None,
                                   now=NOW, refresh_from=DAY)
     assert conn.updates[0][1] == ["hours_week"]
+
+
+# ── 03:30 이 지나면 안 끝난 작업을 관리자 웹앱에 보고 ─────────────────
+def _deadline(monkeypatch, now, result, *, claimed=True):
+    from contextlib import contextmanager
+
+    import scripts.run_sweepers as rs
+    from app.application import job_gate, operations_diagnostics
+
+    events = []
+
+    class _C:
+        def transaction(self):
+            return self
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    @contextmanager
+    def connect():
+        yield _C()
+
+    monkeypatch.setattr(rs, "get_connection", connect)
+    monkeypatch.setattr(job_gate, "claim", lambda conn, **kw: claimed)
+    monkeypatch.setattr(operations_diagnostics, "record",
+                        lambda event, **kw: events.append(event) or {"status": "stored", "event_id": str(event.event_id)})
+    return rs._daily_check_deadline("tenant_a", result, now=now), events
+
+
+def test_after_half_past_three_unfinished_work_is_reported_with_its_codes(monkeypatch):
+    out, events = _deadline(monkeypatch, _at(3, 31), {"place_facts": {"remaining": 40}, "catalog_hours": {"remaining": 0}})
+    assert out["late"] == ["place_facts"] and out["report"] == "stored"
+    assert events[0].code == "DAILY_CHECK_OVERDUE" and events[0].conditions == ["PLACE_FACTS"]
+    _, again = _deadline(monkeypatch, _at(5, 0), {"place_facts": {"remaining": 40}})
+    assert again[0].event_id == events[0].event_id                           # 같은 날은 같은 사건 번호 — 운영 진단에 두 번 세지 않는다
+
+
+def test_nothing_is_reported_before_half_past_three_after_eight_or_when_all_is_done(monkeypatch):
+    assert _deadline(monkeypatch, _at(3, 20), {"place_facts": {"remaining": 40}})[0] is None
+    assert _deadline(monkeypatch, _at(8, 5), {"place_facts": {"remaining": 40}})[0] is None
+    out, events = _deadline(monkeypatch, _at(3, 31), {"place_facts": {"remaining": 0}})
+    assert out["late"] == [] and events == []
+    assert _deadline(monkeypatch, _at(4, 0), {"place_facts": {"remaining": 9}}, claimed=False)[0] is None   # 오늘 이미 판정했다
