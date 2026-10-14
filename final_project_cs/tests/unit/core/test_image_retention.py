@@ -108,7 +108,9 @@ def test_never_deletes_current_tag_running_image_or_foreign_names():
     docker = FakeDocker(rows, used={'sha256:tripilot-web-5'})
     run(docker, apply=True, keep_months=0, protected_tags=[sha(6)])
     api = docker.tags('tripilot-api')
-    assert sha(6) in api and sha(5) in api            # 현재 배포 태그 · 실행 중 컨테이너가 쓰는 묶음
+    assert sha(6) in api                              # 현재 배포 태그
+    assert sha(5) in docker.tags('tripilot-web')       # 실행 중 컨테이너가 쓰는 그 이미지 자체는 남는다
+    assert sha(5) not in api                          # 같은 커밋의 다른 저장소 이미지까지 묶음째 지키지는 않는다
     assert 'local' in api and 'manual-rollback' in api
     assert docker.tags('tripilot-chat-rollback-api') == [sha(9)]
     assert docker.tags('jikimi-docker-llm') == ['latest']
@@ -264,3 +266,26 @@ def test_builder_cache_prune_runs_only_when_asked_and_only_on_apply():
     assert not any(c[0] == 'builder' for c in docker.calls)
     run(docker, apply=True, builder_keep_gb=20)
     assert ['builder', 'prune', '-f', '--keep-storage', '20GB'] in docker.calls
+
+
+def test_shared_unchanged_image_does_not_pin_every_commit_forever():
+    """웹처럼 안 바뀌는 이미지를 모든 커밋이 공유해도 api·admin 이미지는 한도 밖이면 지워진다."""
+    rows = []
+    for n in range(1, 21):
+        rows.append(('tripilot-api', sha(n), f'sha256:api-{n}', at(n)))
+        rows.append(('tripilot-admin', sha(n), f'sha256:admin-{n}', at(n)))
+        rows.append(('tripilot-web', sha(n), 'sha256:web-shared', at(30)))   # 웹은 한 번도 안 바뀜
+    docker = FakeDocker(rows, used={'sha256:web-shared'})
+    run(docker, apply=True, keep_months=0)
+    assert docker.tags('tripilot-api') == [sha(1), sha(2), sha(3)]
+    assert docker.tags('tripilot-admin') == [sha(1), sha(2), sha(3)]
+    assert docker.tags('tripilot-web') == [sha(1), sha(2), sha(3)]       # 같은 이미지라 이름표만 정리된다
+
+
+def test_last_reference_of_a_running_image_is_left_alone_and_reported():
+    rows = app_images({1: 1, 2: 2, 3: 3, 4: 4})
+    docker = FakeDocker(rows, used={'sha256:tripilot-api-4'})
+    lines = []
+    out = run(docker, apply=True, keep_months=0, say=lines.append)
+    assert sha(4) in docker.tags('tripilot-api') and sha(4) not in docker.tags('tripilot-web')
+    assert out['failed'] == 0 and any('실행 중인 컨테이너가 쓰는 이미지' in line for line in lines)

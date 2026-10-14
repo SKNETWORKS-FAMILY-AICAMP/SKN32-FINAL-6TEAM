@@ -122,9 +122,6 @@ def plan_apps(images, app_repos, now, keep_recent, keep_months, protected_tags, 
     for tag in protected_tags:
         if tag in by_tag:
             keep.setdefault(tag, "현재 배포")
-    for tag, group in by_tag.items():
-        if any(i["id"] in used_ids for i in group):
-            keep.setdefault(tag, "실행 중 컨테이너가 사용")
     # 달마다 하나 — 성공한 반영 기록이 있으면 그 중에서만, 기록이 전혀 없으면 만들어진 시각으로 고른다.
     eligible = [t for t in ordered if (lookup(good, t) is not None or not good)]
     aliases = {}
@@ -133,7 +130,18 @@ def plan_apps(images, app_repos, now, keep_recent, keep_months, protected_tags, 
         if pick:
             keep.setdefault(pick, "달별 보존 " + month)
             aliases[month] = pick
-    delete = [(i["repo"], i["tag"]) for tag in ordered if tag not in keep for i in by_tag[tag]]
+    # 실행 중(정지된 컨테이너 포함)인 이미지는 「그 이미지 자체」만 지키고 같은 커밋 이름표의 다른 저장소 이미지까지 지키지 않는다.
+    # 웹처럼 바뀌지 않아 이미지 ID 를 여러 커밋이 공유하면, 묶음째 지키는 순간 api 이미지가 영영 안 지워진다.
+    kept_ids = {i["id"] for tag in keep for i in by_tag[tag]}
+    delete, in_use = [], []
+    for tag in ordered:
+        if tag in keep:
+            continue
+        for i in by_tag[tag]:
+            if i["id"] in used_ids and i["id"] not in kept_ids:
+                in_use.append((i["repo"], i["tag"]))      # 이 이름표가 마지막 참조다 — 쓰는 동안은 둔다
+            else:
+                delete.append((i["repo"], i["tag"]))
     # 달별 별칭(`keep-YYYY-MM`): 창 안의 달은 고른 태그로 옮겨 붙이고, 창 밖의 달은 뗀다.
     retag, drop_alias = [], []
     existing = {(i["repo"], i["tag"]): i for i in images if i["repo"] in app_repos and KEEP_TAG.match(i["tag"])}
@@ -145,7 +153,7 @@ def plan_apps(images, app_repos, now, keep_recent, keep_months, protected_tags, 
     for (repo, alias), _ in existing.items():
         if alias[len("keep-"):] not in aliases:
             drop_alias.append((repo, alias))
-    return {"keep": keep, "delete": delete, "retag": retag, "drop_alias": drop_alias, "tags": by_tag}
+    return {"keep": keep, "delete": delete, "in_use": in_use, "retag": retag, "drop_alias": drop_alias, "tags": by_tag}
 
 
 def safety_dirs(state_dir):
@@ -253,9 +261,12 @@ def run_retention(docker, *, app_repos, recovery_repo=None, state_dir=None, prot
     images = list_images(docker)
     used = used_image_ids(docker)
     apps = plan_apps(images, set(app_repos), now, keep_recent, keep_months, set(protected_tags), used, good or {})
-    say(f"앱 이미지 묶음 {len(apps['tags'])}개 중 남김 {len(apps['keep'])} · 지움 {len(apps['delete'])}개 이미지 이름표")
+    say(f"앱 이미지 묶음 {len(apps['tags'])}개 중 남김 {len(apps['keep'])} · 지움 {len(apps['delete'])}개 이미지 이름표"
+        f" · 실행 중이라 둠 {len(apps['in_use'])}개")
     for tag, why in sorted(apps["keep"].items()):
         say(f"  남김 {tag} ({why})")
+    for repo, tag in apps["in_use"]:
+        say(f"  둠 {repo}:{tag} (실행 중인 컨테이너가 쓰는 이미지)")
     plan = {"retag": apps["retag"], "delete": list(apps["delete"]), "drop_alias": apps["drop_alias"], "drop_dirs": []}
     if recovery_repo and state_dir:
         rec = plan_recovery(docker, images, recovery_repo, state_dir, now, recovery_keep, timedelta(hours=min_age_hours))
