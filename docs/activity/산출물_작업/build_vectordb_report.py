@@ -40,6 +40,27 @@ with get_connection() as conn, conn.cursor() as cur:
     cur.execute("SELECT vector_dims(embedding) FROM knowledge_chunks WHERE embedding IS NOT NULL LIMIT 1")
     DIM = cur.fetchone()[0]
 
+    # 벡터 예시 — 저장된 숫자를 그대로 꺼낸다(예시 청크 + 의미 거리 비교용 3청크)
+    import numpy as np
+    from pgvector.psycopg import register_vector
+    register_vector(conn)
+
+    def _vec(title, section):
+        cur.execute("""SELECT k.embedding FROM knowledge_chunks k JOIN knowledge_documents d USING(document_id)
+                       WHERE d.title=%s AND k.metadata_json->>'section_title'=%s LIMIT 1""", (title, section))
+        e = cur.fetchone()[0]
+        if isinstance(e, str):
+            e = json.loads(e)
+        elif hasattr(e, "to_list"):
+            e = e.to_list()
+        return np.array(e, dtype=np.float32)
+
+    STD_T, LEI_T = "국내여행 표준약관 — 해제·변경·해지", "소비자분쟁해결기준 — 체육시설·레저·공연"
+    V_EX = _vec("관람·자연 갈래의 운영 중단과 통제", "휴관일은 규정이 아니라 사실이다")
+    V_A = _vec(STD_T, "가족 사망·질병 등 개인 사유로 위약금 없이 해제하는 경우")
+    V_B = _vec(STD_T, "천재지변·정부 명령 등 위약금 없이 해제할 수 있는 공통 사유")
+    V_C = _vec(LEI_T, "관객이 환급을 요구하는 경우")
+
 N10 = sum(1 for o in Q10 if o["rank"])
 M1 = sum(1 for o in Q10 if o["rank"] == 1)
 NR2 = sum(1 for o in R2 if o["rank"])
@@ -229,6 +250,17 @@ ex = [
     plain(K[64], f"문서: {title} · scope {scope} · 출처 {uri}"),
     plain(K[64], f"절 제목(청크 {no}): {meta.get('section_title')} · 버전 {meta.get('version')} · 개인정보 등급 {meta.get('pii_class')}"),
     plain(K[64], "본문: " + content.replace("\n", " ")[:260] + ("…" if len(content) > 260 else "")),
+]
+def _cos(a, b):
+    return float(a @ b / np.linalg.norm(a) / np.linalg.norm(b))
+
+ex += [
+    plain(K[64], f"저장된 벡터(위 청크): {len(V_EX):,}차원 · 크기 {np.linalg.norm(V_EX):.4f}(정규화) · 최소 {V_EX.min():+.4f} · 최대 {V_EX.max():+.4f} · 평균 {V_EX.mean():+.5f}"),
+    mono(K[64], "앞 12개: " + " ".join(f"{x:+.4f}" for x in V_EX[:12])),
+    mono(K[64], "뒤  4개: " + " ".join(f"{x:+.4f}" for x in V_EX[-4:])),
+    plain(K[64], "숫자 하나하나에는 사람이 읽을 의미가 없고, 전체가 이 글의 의미 좌표를 이룬다. 검색은 질문 벡터와 청크 벡터 사이의 코사인 유사도로 한다. 청크의 원문 텍스트는 같은 행(content)에 함께 저장되어 있다."),
+    plain(K[64], f"의미 거리 예시(코사인 유사도): 개인 사유(가족 사망·질병) ↔ 공통 사유(천재지변·정부 명령) {_cos(V_A, V_B):.3f}, "
+                 f"개인 사유(가족 사망·질병) ↔ 공연 관객 환급(다른 주제) {_cos(V_A, V_C):.3f}. 같은 주제 안의 절이 더 가깝게 나온다."),
 ]
 for p in ex:
     anchor.addnext(p)
