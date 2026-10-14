@@ -21,6 +21,7 @@ TPL, OUT = sys.argv[1], sys.argv[2]
 HERE = Path(__file__).resolve().parent
 RESULTS = json.loads((HERE / "retrieval_results_2026-10-13.json").read_text(encoding="utf-8"))
 Q20 = json.loads((HERE / "retrieval_results_20q_2026-10-14.json").read_text(encoding="utf-8"))
+Q10 = json.loads((HERE / "retrieval_results_10q_after_colloquial_2026-10-14.json").read_text(encoding="utf-8"))
 EXT = json.loads((HERE / "retrieval_results_ext_2026-10-14.json").read_text(encoding="utf-8"))
 
 # ── DB 에서 실측 ─────────────────────────────────────────────
@@ -38,6 +39,8 @@ with get_connection() as conn, conn.cursor() as cur:
     cur.execute("SELECT vector_dims(embedding) FROM knowledge_chunks WHERE embedding IS NOT NULL LIMIT 1")
     DIM = cur.fetchone()[0]
 
+N10 = sum(1 for o in Q10 if o["rank"])
+M1 = sum(1 for o in Q10 if o["rank"] == 1)
 N20 = sum(1 for o in Q20 if o["rank"])
 N1 = sum(1 for o in Q20 if o["rank"] == 1)
 def _doc_hit(o):
@@ -178,7 +181,7 @@ set_p(K[34], "Long-term (Persisted): 판정 결과·근거(Evidence)·변경 이
 # ── 검색 성능 및 정확도 검증 ─────────────────────────────────
 hits = sum(1 for r in RESULTS if r["id"] != "R-07")
 fill_table(K[38], None, [
-    ["검색 적중률", "정답 절이 상위 3 안에 있는 질문 비율(Hit@3)", f"20문항 시험(공식 자료 추가 후): 절 단위 Hit@3 {N20}/20 ({N20/20:.0%}), Hit@1 {N1}/20 ({N1/20:.0%}), 문서 단위 Hit@3 {ND}/20 ({ND/20:.0%}). 기본 코퍼스 7문항 시험은 5/6", "기준 미설정(결과 보고)", "질문 20건 수동 시험(정답 절을 결과 확인 전에 지정, 아래 4장 표). 표본이 작아 방향성만 본다"],
+    ["검색 적중률", "정답 절이 상위 3 안에 있는 질문 비율(Hit@3)", f"20문항 시험(공식 자료 추가 후): 절 단위 Hit@3 {N20}/20 ({N20/20:.0%}), Hit@1 {N1}/20 ({N1/20:.0%}), 문서 단위 Hit@3 {ND}/20 ({ND/20:.0%}). 레저·공연 문서에 구어체 표현을 반영한 뒤 새 질문 10문항: Hit@3 {N10}/10, Hit@1 {M1}/10. 기본 코퍼스 7문항 시험은 5/6", "기준 미설정(결과 보고)", "질문 20건 + 개선 후 새 질문 10건 수동 시험(정답 절을 결과 확인 전에 지정, 아래 4장 표). 표본이 작아 방향성만 본다"],
     ["유사도 점수 분리", "범위 안 질문 1위 점수 대 범위 밖 질문 최고 점수", "기본: 범위 안 0.495~0.758 / 범위 밖 0.333. 추가 후 범위 안 1위 0.461~0.696(범위 밖은 재측정하지 않음)", "제안 임계치 0.4 안팎", "7문항 + 5문항, 코사인 유사도"],
     ["응답 속도", "질문 임베딩 + 검색 소요 시간", "0.21~0.43초 (첫 호출 1.1~1.6초)", "2.0초 이내", "호출 시간 직접 측정"],
     ["적재 정합성", "청크 수 대비 벡터 채움률, 차원", f"{sum(v[2] for v in SCOPES.values())}/{sum(v[1] for v in SCOPES.values())} (100%), {DIM:,}차원", "100%", "DB 직접 조회 + 적재 시 차원 검사"],
@@ -265,6 +268,12 @@ fill_table(tbl_q, ["ID", "질문", "1위 문서 · 절", "1위 점수", "판정"
 cap_q = plain(K[64], f"20문항 검색 시험 — 활동 4개 scope, top-3, 2026-10-14. 절 단위 {N20}/20, 1위 {N1}/20, 문서 단위 {ND}/20. 정답 절은 결과 확인 전에 질문마다 지정했고 결과를 본 뒤 질문·문서를 바꾸지 않았다. 레저·공연 질문(Q11~Q13, Q15)이 약했고 취소 일반 질문은 강했다.")
 tbl_e.addnext(cap_q)
 cap_q.addnext(tbl_q)
+tbl_n = copy.deepcopy(K[38])
+fill_table(tbl_n, ["ID", "질문", "1위 문서 · 절", "1위 점수", "판정"], [
+    [o["id"], o["query"], f'{o["top3"][0]["document"]} · {o["top3"][0]["section"]}', f'{o["top3"][0]["score"]:.3f}', _verdict(o)] for o in Q10])
+cap_n = plain(K[64], f"개선 후 새 질문 10문항 — 레저·공연 문서(travel_ext 03)에 일상 표현(리프트, 수강권, 콘서트 등)을 반영하고 6청크를 재적재한 뒤, 이전 20문항과 겹치지 않는 새 질문으로 측정(2026-10-14). 절 단위 {N10}/10, 1위 {M1}/10. N01·N08은 정답이 3위, N03·N07은 미적중이다. 질문 구성이 달라(레저·공연 8, 대조 2) 20문항 결과와 직접 비교할 수 없다.")
+tbl_q.addnext(cap_n)
+cap_n.addnext(tbl_n)
 
 anchor = K[67]            # 「화면 캡처 또는 실행 결과」
 lines = ["$ python retrieval_test.py   # 활동 scope 4개, top-3", ""]
@@ -281,6 +290,10 @@ lines += ["", "$ python retrieval_test_20q.py   # 20문항, 활동 scope 4개, t
 for o in Q20:
     lines.append(f'{o["id"]} {"적중" if o["rank"] else "미적중"} rank={o["rank"]} [{o["ms"]}ms] {o["query"]}')
 lines += [f"Hit@3 {N20}/20 · Hit@1 {N1}/20 · 문서 단위 {ND}/20"]
+lines += ["", "$ python retrieval_test_10q.py   # 구어체 반영 후 새 질문 10문항", ""]
+for o in Q10:
+    lines.append(f'{o["id"]} {"적중" if o["rank"] else "미적중"} rank={o["rank"]} [{o["ms"]}ms] {o["query"]}')
+lines += [f"Hit@3 {N10}/10 · Hit@1 {M1}/10"]
 lines += ["", "-- scope 별 적재 현황 (documents, chunks, embedded)"]
 for s, v in SCOPES.items():
     lines.append(f"   {s:<20} {v[0]:>3} {v[1]:>4} {v[2]:>4}")
