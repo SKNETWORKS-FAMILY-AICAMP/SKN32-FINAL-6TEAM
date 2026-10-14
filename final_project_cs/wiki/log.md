@@ -8,6 +8,10 @@ domain: travel
 
 # cs wiki 변경 기록
 
+## 2026-10-14 — 확인 화면의 택시 호출 상품 고르기를 관리 콘솔 스위치로 끄고 기본 꺼짐으로 했습니다
+
+택시 요금 계산을 아직 믿을 수 없다는 사용자 지시로, 이미 develop 에 올라간 「택시 호출 상품」 고르기 칸을 관리 콘솔 「운영 설정」 스위치(`travel.mobility.taxi_call_product_enabled`)로 끄고 켜게 했고 기본을 꺼짐으로 했습니다. 꺼짐이면 확인 응답이 `taxi_pricing: null` 이라 칸이 사라지고, 저장된 고른 값은 계산에 안 쓰며, 고르기 요청은 거절합니다. 팀 · 개인 develop 과 role-manager 에 올라갔고 x600 서버의 cs 프로젝트 서버에도 자동 배포됐습니다(코드 · 설정 확인). 파이썬 단위 5053/5053 통과 · 접수 e2e 는 로컬 DB 가 낡아 못 돌렸고 · 고객 화면 확인은 안 했습니다. 계약 [taxi-pricing-web-v1.md](external/taxi-pricing-web-v1.md) 에 스위치 절 추가. [기록](records/reports/2026-10-14_택시상품_고르기_스위치_핫픽스.md)
+
 ## 2026-10-14 21:40 — 도커 이미지 정리 규칙 · 월별 복원용 보존 · WSL 디스크 압축
 
 배포마다 쌓이던 도커 이미지를 성공한 배포 직후 지우고(앱 이미지 최근 3개 + 달마다 하나, 복구용 최신 2세트) x600 서버 193 → 28개, 오라클 서버 29 → 14개로 정리했습니다. WSL 가상 디스크는 226.3 → 149.7GiB, E 드라이브 여유 1.45 → 79.8GiB. 복원 시험 도구를 추가했고, 새 설정 이름이 옛 판 복원을 막는다는 처음 보고는 도구 재현 확인이 실패해 정정했습니다. 운영 컨테이너 교체·복귀 시험은 21:33~21:41 에 x600 서버에서 통과(직전 판 · `keep-2026-10` · 오래된 판 · 현재 복귀, 각 전환의 이미지 ID·`/health`·재시작 0 확인). 새 문서 [image-retention.md](operations/image-retention.md), 목차 [operations/index.md](operations/index.md), 오라클 배포 문서 [arm-develop-cd.md](operations/arm-develop-cd.md) 한 문장 수정. [기록](records/reports/2026-10-14_도커이미지_정리규칙과_월별보존.md)
