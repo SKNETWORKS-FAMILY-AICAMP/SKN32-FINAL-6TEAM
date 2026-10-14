@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """원장 ↔ 장소 연결 평가 — 정답셋(`eval/datasets/dining_link_v1.jsonl`)으로 두 연결 길을 잰다. `[2026-10-14]`
 
-    python -m eval.runners.dining_link [--holdout] [--dsn ...] [--out REPORT.json]
+    python -m eval.runners.dining_link [--holdout] [--dsn ...] [--out REPORT.json] [--with-sql MIGRATION.sql]
 
 ★재는 길
     db       등록 뒤 — `dining.link_core_place`(224): 관광공사 번호 → 없으면 80m · 이름(유사도 0.75)으로 후보가 하나일 때
@@ -13,6 +13,7 @@
     missed           이어야 하는데 잇지 않았다(판정이 「모름」으로 남는다)
     stale            정답 가게가 원장에서 사라졌다(원장을 다시 세웠다) — 점수에서 뺀다
 ★DB 길은 사례마다 장소 한 행을 넣고 연결 함수를 부른 뒤 **되돌린다**(ROLLBACK). 원장 · 코어 표에 남는 것이 없다.
+★`--with-sql` — 아직 원장 DB 에 안 올린 마이그레이션(함수 교체)을 **이 실행의 트랜잭션 안에서만** 올리고 끝에 되돌린다.
 """
 from __future__ import annotations
 
@@ -65,10 +66,12 @@ def names(conn, uids: set[str]) -> dict[str, str]:
         return dict(cur.fetchall())
 
 
-def run(dsn: str, path: Path) -> dict:
+def run(dsn: str, path: Path, *, with_sql: str | None = None) -> dict:
     cases = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     rows = []
     with psycopg.connect(dsn) as conn:
+        if with_sql:
+            conn.execute(with_sql)            # 바깥 트랜잭션 — 끝에 되돌린다
         alive = names(conn, {c["expect"]["place_uid"] for c in cases if c["expect"]["place_uid"]})
         for case in cases:
             expected = case["expect"]["place_uid"]
@@ -85,6 +88,7 @@ def run(dsn: str, path: Path) -> dict:
                 row[way] = {"label": label(expected, got), "got": got}
             rows.append(row)
         got_names = names(conn, {r[w]["got"] for r in rows for w in ("db", "review") if r[w].get("got")})
+        conn.rollback()                       # ★with 블록은 끝에 커밋한다 — 올린 함수 · 아무것도 남기지 않는다
     for r in rows:
         for way in ("db", "review"):
             if r[way].get("got"):
@@ -114,9 +118,12 @@ def main() -> int:
     ap.add_argument("--dsn", default="postgresql://postgres:postgres@127.0.0.1:5433/dining_rebuild")
     ap.add_argument("--holdout", action="store_true")
     ap.add_argument("--out")
+    ap.add_argument("--with-sql", help="이 실행 안에서만 올렸다가 되돌릴 SQL 파일")
     a = ap.parse_args()
-    report = run(a.dsn, HOLDOUT if a.holdout else DEV)
-    report["env"] = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "db": a.dsn.rsplit("/", 1)[-1]}
+    sql = Path(a.with_sql).read_text(encoding="utf-8") if a.with_sql else None
+    report = run(a.dsn, HOLDOUT if a.holdout else DEV, with_sql=sql)
+    report["env"] = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "db": a.dsn.rsplit("/", 1)[-1],
+                     "with_sql": Path(a.with_sql).name if a.with_sql else None}
     text = json.dumps(report, ensure_ascii=False, indent=1)
     if a.out:
         Path(a.out).write_text(text + "\n", encoding="utf-8")
