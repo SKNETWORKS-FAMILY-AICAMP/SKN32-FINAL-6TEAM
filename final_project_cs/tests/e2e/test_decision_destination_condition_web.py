@@ -42,8 +42,20 @@ def test_a_change_without_a_named_destination_still_applies(decided):
 
 
 def test_a_conditional_change_is_not_applied_now(decided):
+    """★`[2026-10-14]` 조건이 붙으면 바로 바꾸지 않고 다른 안을 보여 고르게 한다 — 전에는 통째로 막아 「다른 식당으로」 같은
+    정상 요청까지 「조건이 붙은 변경은 미리 걸어 둘 수 없다」로 답했다(모델이 원하는 곳 설명을 조건 칸에 적은 경우)."""
     _answer_with(decided, condition_text="비 오면")
     before = _versions(decided)
     body = _say(decided, "비 오면 점심 다른 데로 바꿔", "conditional-change")
-    assert _versions(decided) == before and body["status"] == "answered", body
-    assert "「비 오면」처럼 조건이 붙은 변경은 아직 미리 걸어 둘 수 없어 지금은 일정을 바꾸지 않았어요." in body["answer"]
+    assert _versions(decided) == before and body["status"] != "adjusted", body       # 일정은 바뀌지 않았다
+    assert body["decision"]["action"] == "propose_alternatives", body
+    assert body["decision"]["raw"]["condition_guard"] == {"condition": "비 오면", "blocked_action": "apply_change"}
+    assert "미리 걸어 둘 수 없어" not in body["answer"], body
+
+
+def test_a_destination_mistaken_for_a_condition_still_gets_alternatives(decided):
+    _answer_with(decided, condition_text="다른 식당으로")
+    before = _versions(decided)
+    body = _say(decided, "토속촌 삼계탕 다른 식당으로 바꿔줘", "condition-false-positive")
+    assert _versions(decided) == before, body
+    assert body["decision"]["action"] == "propose_alternatives" and body.get("choices"), body

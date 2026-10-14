@@ -94,6 +94,24 @@ describe("a long request with live progress (POST …/messages · …/plan with 
     expect(seen.at(-1)?.lost).toBe(false);
   });
 
+  it("a gateway 502/504 before the stream opens (the API was being swapped) sends the very same request again", async () => {
+    replies.push(() => new Response("<html>502 Bad Gateway</html>", { status: 502, headers: { "Content-Type": "text/html" } }));
+    replies.push(() => new Response("", { status: 504 }));
+    replies.push(() => stream([event("accepted", {}), event("result", { status: "answered", answer: "서버 답" })]));
+    const seen: OpProgress[] = [];
+    const result = await streamApi<{ answer: string }>("/v1/web/trips/t1/messages", "ko", init, (progress) => seen.push(progress), fast);
+    expect(result.answer).toBe("서버 답");
+    expect(calls).toHaveLength(3);
+    expect(calls[2].init.body).toBe(calls[0].init.body);
+    expect(seen.some((progress) => progress.lost)).toBe(true);
+  });
+
+  it("other refusals before the stream opens are not retried (a 503 from the API itself is its own answer)", async () => {
+    replies.push(() => json({ error: { code: "model_unavailable", message: "모델이 잠시 쉬고 있어요" } }, 503));
+    await expect(streamApi("/v1/web/trips/t1/messages", "ko", init, undefined, fast)).rejects.toMatchObject({ code: "model_unavailable" });
+    expect(calls).toHaveLength(1);
+  });
+
   it("stops after the last reconnect with `connection_lost` — the screen offers to send it again", async () => {
     replies.push(() => stream([event("accepted", {})], true), () => stream([event("accepted", {})], true), () => stream([event("accepted", {})], true));
     await expect(streamApi("/v1/web/trips/t1/messages", "ko", init, undefined, fast)).rejects.toMatchObject({ code: "connection_lost" });

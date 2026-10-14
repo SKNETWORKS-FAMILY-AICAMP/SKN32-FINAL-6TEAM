@@ -379,10 +379,15 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         action = "other"
     # ★`[2026-10-13]` 조건부 변경(「비 오면 바꿔 줘」)은 미리 걸어 둘 수 없다 — 지금 실행하지 않는다.
     #   전에는 조건을 담을 칸이 없어 비가 안 왔는데도 바로 바꿨다(x600 서버 웹 채팅 시험 2026-10-13, 처리 기록 416번).
+    #   ★`[2026-10-14]` 막지 않고 **바로 바꾸지만 않는다** — 바꾸는 할 일을 「다른 안 보여 주기」로 돌려 고객이 고르게 한다.
+    #   조건 칸을 모델이 조건이 아닌 말로 채우는 일이 많았다(학습 E4B 재생 434건: 막힌 10건 중 진짜 조건은 「내일 비 오면」 1건,
+    #   나머지는 「다른 식당으로」「더 싼 데로」 같은 원하는 곳 설명이나 「비 오니까」 같은 지금의 이유). 통째로 막으면 정상 요청까지
+    #   「조건이 붙은 변경은 미리 걸어 둘 수 없다」는 엉뚱한 답이 됐다(x600 서버 웹 채팅 재시험 2026-10-14). 다른 안 보여 주기는
+    #   일정을 바꾸지 않으므로 진짜 조건부 요청도 미리 바뀌지 않는다.
     condition = str(raw.get("condition_text") or "").strip()[:200]
-    if action in {"apply_change", "propose_alternatives", "report_closed"} and condition:
+    if action in {"apply_change", "report_closed"} and condition:
         raw = {**raw, "condition_guard": {"condition": condition, "blocked_action": action}}
-        action = "other"
+        action = "propose_alternatives"
     # ★`[2026-10-13]` 고객이 바꿀 곳을 직접 말했는데(「통인시장으로」) 그곳으로 바로 바꾸는 실행은 아직 없다. 전에는 근처 첫 후보로
     #   바꾸고 「요청하신 대로」라고 답했다(16건 중 14건). 이제 바꾸지 않고 후보를 보여 고르게 한다 — 말한 곳이 후보에 있으면 거기서 고른다.
     destination = str(raw.get("destination_text") or "").strip()[:200]
@@ -428,9 +433,6 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         social = "시간이나 날짜 변경 요청을 장소 교체로 실행하지 않았습니다. 이 채팅에서는 시간·날짜 변경을 적용하지 못하므로 일정표에서 직접 수정해 주세요."
     if raw.get("unsupported"):
         social = UNSUPPORTED[raw["unsupported"]]
-    if raw.get("condition_guard"):
-        social = (f"「{raw['condition_guard']['condition']}」처럼 조건이 붙은 변경은 아직 미리 걸어 둘 수 없어 지금은 일정을 바꾸지 않았어요. "
-                  "그 일이 실제로 생기면 그때 다시 말씀해 주세요.")
     # ★`[2026-10-13]` 고른 할 일에 **쓰지 않는 칸**(읽기 질문 · 조회 범위)이 채워져 있어도 해석 전체를 버리지 않는다 — 그 칸만 무시하고 남긴다.
     #   전에는 할 일은 맞게 골라도(예: 「점심 1시간 당겨줘」→ 시간 변경) 군더더기 읽기 칸 때문에 「해석 실패」가 났다
     #   (x600 서버 웹 채팅 시험 2026-10-13: 해석 실패 13건 중 9건 · 같은 입력 재생에서 gemma4:12b 56건 중 33건).
