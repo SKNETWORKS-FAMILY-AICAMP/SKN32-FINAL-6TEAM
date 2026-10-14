@@ -628,3 +628,11 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **검증 화면 줄 ①**(`rail-list.tsx` `toScale` · `time-rail.ts` `RAIL_PX_PER_MIN` 1.2): 계획 확인 · 수정 모드는 1분 = 1.2px(카드는 내용 높이), 여행 화면은 ② 그대로. `[사용자 지적]` 일정 사이 ＋ 가 이동 줄 머리에 겹쳐서 ＋ 마다 자기 칸 28px 를 주고(`.insertPoint`), ① 에서는 이동 줄이 앞 일정의 빈 시간 자리를 빌리지 않는다.
 - **「지금 HH:MM」**(`trip-screen.tsx` · `rail-list.tsx` `RailNow.label` · `.nowLabel`): 10-13 에 뺀 꼬리표를 되살렸다(여행 화면 · 수정 모드 목록 `trip-edit.tsx`) — 서버 여행 조회의 `now_label`(관리 콘솔 「운영 설정」 스위치, 기본 켜짐, 칸이 없으면 켜짐)이 켜졌을 때만. 서버 스위치는 이번에 같이 만들었다([계약](../../../wiki/external/rest-endpoints/web-trips.md)).
 - 검증 · 남은 일: [리포트](../../../wiki/records/reports/2026-10-15_0108_웹_자동추천위치_검증화면시간비례_지금시각스위치.md). 웹 단위 59파일 530/530 · 서버 단위 21 · 통합 2+51 · 계약 · 구조 504 · 보안 101, 로컬 실서버에서 세 가지 확인. `check` · `test:live` 는 돌리지 않았다 — 계획 확인 줄 간격 · `topActions` 선택자를 보는 시험이 바뀐다.
+
+## 2026-10-15 (이어서) — 지도 경로의 걷는 구간 = 회색 점(ST4F-495)
+
+`[2026-10-15 사용자 결정 — B안 · 회색 점]` 웹 여행 화면 10항목 중 묶음 4. 이 가지는 `role-manager` 로 PR 한다.
+- **서버가 경계를 준다**: 지하철 · 버스 이동은 선 하나에 양 끝 걸음이 이어 붙어 와서 화면은 어디까지가 걸음인지 모른다 — 경로선 응답의 새 칸 `walks`(line 좌표 번호 [처음, 끝], [계약](../../../wiki/external/rest-endpoints/web-trips.md))를 읽는다(`lib/live/route-shapes.ts` — 줄 밖 · 순서가 어긋난 번호 · 점을 버린 선이면 믿지 않는다). 칸이 없는 응답(옛 서버 · 모방 서버)은 걷기 이동만 점이다(`route-lines.ts` `walksOf`).
+- **그리기**(`providers/lines.ts` `linePieces` · `walkStyle`): 한 이동의 선을 걷는 조각 · 타는 조각으로 잘라(끝점 공유 — 선이 끊기지 않는다) 걷는 조각은 도보 색(`--color-muted`) 둥근 점, 나머지는 그 이동의 모양 그대로. OSM = `dashArray "0.1 10"` + 둥근 끝, 구글 = 원 기호(`SymbolPath.CIRCLE`) 반복, 네이버 = `strokeStyle: "dot"`. 길을 몰라 이은 직선(`dashed`)은 자르지 않고 흐린 긴 점선 그대로. 누른 경로 강조는 그 이동의 조각이 함께(OSM), 누르는 투명 선은 이동마다 하나.
+- **안내 문구**: 직선 추정 선과 걸음 점이 함께 있으면 「점선은 길을 몰라 …」 아래에 「동그란 점은 걷는 구간이에요.」를 더한다(기존 문장은 그대로). 지도 위 범례(`RouteTags`)는 지금 화면에 쓰이지 않아 고치지 않았다.
+- 검증 · 남은 일: [리포트](../../../wiki/records/reports/2026-10-15_0206_웹_지도경로_도보구간점선.md). `check` · `test:live` 는 돌리지 않았다(PR 직전에 몰아서).
