@@ -50,11 +50,13 @@ PLANS = (
         "10:00~12:00 국립중앙박물관 관람\n16:00~17:00 N서울타워 관람",)),
     ("하루 한 곳씩 서울 2일", "하루에 한 곳씩 방문해 날짜 전환을 확인하는 기본안입니다.", (
         "10:00~11:00 청계천 산책", "10:00~12:00 국립중앙박물관 관람")),
+    ("숙소가 있는 서울 2일", "이름이 있는 호텔 체크인이 든 일정으로 숙소 후보와 바꾸기를 확인합니다.", (
+        "10:00~11:30 경복궁 관람\n15:00 더 플라자 호텔 서울 체크인", "11:00~12:30 N서울타워 관람")),
 )
 
 # 시험 목적 분류이며 실제 검증 결과의 문제 분류를 대신하지 않는다.
 CATEGORIES = ("general", "time", "hours", "hours", "place", "mobility", "input",
-              "general", "general", "input", "general", "general", "normal", "normal", "normal")
+              "general", "general", "input", "general", "general", "normal", "normal", "normal", "general")
 
 
 class TestPlanRejected(ValueError):

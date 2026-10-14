@@ -46,7 +46,9 @@ for (const width of [375, 1280]) {
     const select = page.getByLabel("테스트 계획", { exact: true });
     await select.click();
     await page.locator('button[data-plan-code="test12"]').click();
-    await expect(page.getByLabel("나의 여행 계획")).toHaveValue("test12");
+    // 선택하면 입력칸에 코드가 아니라 준비된 계획 원문이 채워진다(2026-10-14 사용자 지적 — 선택해도 계획서에 자동 입력이 안 되던 것).
+    await expect(page.getByLabel("나의 여행 계획")).toHaveValue(catalog.scenarios.find((plan) => plan.code === "test12")!.text);
+    await expect(select).toContainText("test12 ·");
     await expect(page.getByRole("status").filter({ hasText: "서울의 활동·식사·이동" })).toBeVisible();
     await page.getByLabel("나의 여행 계획").fill("test1을 참고해서 서울을 여행할 거예요");
     await expect(select).toContainText("분류별 테스트 계획 선택");
@@ -54,6 +56,34 @@ for (const width of [375, 1280]) {
     await noHorizontalScroll(page);
   });
 }
+
+test("목록에서 고른 계획을 고치지 않고 보내면 코드로 보내고, 고쳐서 보내면 고친 글을 보낸다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.reset();
+  await server.scenario({ readingPolls: 0, questions: "none" });
+  await openPlans(page);
+  await page.getByLabel("테스트 계획", { exact: true }).click();
+  await page.locator('button[data-plan-code="test16"]').click();
+  await expect(page.getByLabel("나의 여행 계획")).toHaveValue(catalog.scenarios.find((plan) => plan.code === "test16")!.text);
+  await expect(page.getByLabel("나의 여행 계획")).toHaveValue(/더 플라자 호텔 서울 체크인/);
+  await checkPlan(page);
+  await expect.poll(async () => (await server.received("POST", "/v1/web/trip-intakes")).length).toBe(1);
+  const sentAsCode = JSON.stringify((await server.received("POST", "/v1/web/trip-intakes"))[0]);
+  expect(sentAsCode).toContain("test16");        // 서버가 시험 계획으로 기록하도록 코드로 간다
+  expect(sentAsCode).not.toContain("더 플라자");
+
+  await server.reset();
+  await server.scenario({ readingPolls: 0, questions: "none" });
+  await openPlans(page);
+  await page.getByLabel("테스트 계획", { exact: true }).click();
+  await page.locator('button[data-plan-code="test16"]').click();
+  await page.getByLabel("나의 여행 계획").fill(catalog.scenarios.find((plan) => plan.code === "test16")!.text + "\n19:00~20:00 인사동 산책");
+  await checkPlan(page);
+  await expect.poll(async () => (await server.received("POST", "/v1/web/trip-intakes")).length).toBe(1);
+  const sentAsText = JSON.stringify((await server.received("POST", "/v1/web/trip-intakes"))[0]);
+  expect(sentAsText).toContain("인사동 산책");   // 고친 글은 그대로 간다
+  expect(sentAsText).toContain("더 플라자");
+});
 
 test("시험 목록 오류는 일반 글 입력·전송을 막지 않고 다시 불러올 수 있다", async ({ page, request }) => {
   const server = mockServer(request);

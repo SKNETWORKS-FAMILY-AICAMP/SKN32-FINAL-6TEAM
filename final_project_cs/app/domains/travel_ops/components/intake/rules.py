@@ -82,6 +82,30 @@ _MEAL_ANY = re.compile(r"(?:(?<=에서)|(?<=에)|(?<![가-힣A-Za-z0-9]))(?P<mea
 _MEAL_HEAD = re.compile(r"\s*(?P<meal>" + _MEAL_WORD + r")(?:은|는|엔)?(?:\s*[·,/:|]\s*|\s+)")
 #: 이름 **뒤**의 끼니 말(「광장시장 점심식사」 · 「광장시장·점심」 · 「광장시장에서 점심」)
 _MEAL_TAIL = re.compile(r"(?:\s*(?:에서|에)\s*|\s*[·,/]\s*|\s+)(?P<meal>" + _MEAL_WORD + r")\s*$")
+_MEAL_CODE = {"아침": "breakfast", "조식": "breakfast", "점심": "lunch", "중식": "lunch", "저녁": "dinner", "석식": "dinner"}
+#: 끼니 말 뒤가 **때**를 말한다(「저녁 무렵 남산타워」) — 시각만 주고 식사로 보지 않는다
+_MEAL_AS_TIME = re.compile(r"\s*(?:무렵|쯤|즈음|께|때|시간대)")
+#: 끼니 말 뒤가 **먹은 뒤**다(「아침 먹고 나와서 경복궁」) — 그 장소의 일이 아니다. 시각도 주지 않는다
+_MEAL_BEFORE = re.compile(r"\s*(?:을|를)?\s*(?:먹고|먹은\s*(?:뒤|후|다음)|드시고|하고\s*나서|후|뒤|이후|다음)")
+
+
+#: 낱말로 선 끼니 말 — 뒤에 조사(은·는·엔·에·도)가 붙어도 된다(「점심은 통인시장」). 이름의 일부(「아침고요수목원」)는 아니다
+_MEAL_MENTION = re.compile(r"(?:(?<=에서)|(?<=에)|(?<![가-힣A-Za-z0-9]))(?P<meal>아침|조식|점심|중식|저녁|석식)"
+                           r"(?=$|[^가-힣A-Za-z0-9]|은|는|엔|에|도|으로|식사|먹|무렵|쯤|즈음|께|때)")
+
+
+def meal_mention(text: str, *, place_start: int | None = None) -> tuple[str, str, bool] | None:
+    """조각 안 끼니 말 → (말, 끼니, 식사인가). 없거나 「먹고 나서」처럼 다른 일을 말하면 None.
+    ★`[2026-10-14]` 줄 전체에 끼니 말이 있는지만 보다가 「아침 먹고 … 경복궁」이 08:00 이 되고 「저녁 무렵 남산타워」의 저녁이 서촌에 붙었다(테스트 서버 접수 87858b77)."""
+    for match in _MEAL_MENTION.finditer(text):
+        word = match.group("meal")
+        rest = text[match.end():]
+        # 「광장시장에서 점심 먹고」는 그 장소의 식사다. 장소 앞의
+        # 「아침 먹고 경복궁」만 이미 끝난 식사로 제외한다.
+        if _MEAL_BEFORE.match(rest) and (place_start is None or match.start() < place_start):
+            continue
+        return word, _MEAL_CODE[word], not _MEAL_AS_TIME.match(rest)
+    return None
 
 
 def _meal_head(line: str, start: int, end: int) -> tuple[int, re.Match | None]:
@@ -489,4 +513,4 @@ def _arrow_items(result: ReadResult, number: int, line: str, day: int | None, da
     result.read_lines.add(number)
 
 
-__all__ = ["Claim", "ReadItem", "ReadResult", "Span", "read_plan"]
+__all__ = ["Claim", "ReadItem", "ReadResult", "Span", "meal_mention", "read_plan"]

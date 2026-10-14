@@ -1,0 +1,906 @@
+{
+ "dataset": "dining_link_v1.jsonl",
+ "n": 53,
+ "rows": [
+  {
+   "id": "LK-001",
+   "group": "content_id",
+   "place": "브라이언스커피",
+   "expect": "브라이언스커피",
+   "db": {
+    "label": "correct_link",
+    "got": "11ed969a-c3f6-565c-90ae-8e05a803bad8",
+    "got_name": "브라이언스커피"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "11ed969a-c3f6-565c-90ae-8e05a803bad8",
+    "got_name": "브라이언스커피"
+   }
+  },
+  {
+   "id": "LK-002",
+   "group": "content_id",
+   "place": "쑥고개",
+   "expect": "쑥고개",
+   "db": {
+    "label": "correct_link",
+    "got": "ab755441-e389-5fc9-9bd5-da96ab8d4bd4",
+    "got_name": "쑥고개"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "ab755441-e389-5fc9-9bd5-da96ab8d4bd4",
+    "got_name": "쑥고개"
+   }
+  },
+  {
+   "id": "LK-003",
+   "group": "content_id",
+   "place": "초록뜰식당",
+   "expect": "초록뜰식당",
+   "db": {
+    "label": "correct_link",
+    "got": "2346e101-c0af-52da-ba5d-524b2a2cbe09",
+    "got_name": "초록뜰식당"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "2346e101-c0af-52da-ba5d-524b2a2cbe09",
+    "got_name": "초록뜰식당"
+   }
+  },
+  {
+   "id": "LK-004",
+   "group": "content_id",
+   "place": "한상차림밥상",
+   "expect": "한상차림밥상",
+   "db": {
+    "label": "correct_link",
+    "got": "89fa4a36-0bce-538f-ae74-0707939c1c7c",
+    "got_name": "한상차림밥상"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "89fa4a36-0bce-538f-ae74-0707939c1c7c",
+    "got_name": "한상차림밥상"
+   }
+  },
+  {
+   "id": "LK-005",
+   "group": "content_id",
+   "place": "에이치 450(h' 450)",
+   "expect": "에이치 450(h' 450)",
+   "db": {
+    "label": "correct_link",
+    "got": "1affd944-2552-5546-8e74-91b3b16948ac",
+    "got_name": "에이치 450(h' 450)"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "1affd944-2552-5546-8e74-91b3b16948ac",
+    "got_name": "에이치 450(h' 450)"
+   }
+  },
+  {
+   "id": "LK-006",
+   "group": "content_id",
+   "place": "대평갈비",
+   "expect": "대평갈비",
+   "db": {
+    "label": "correct_link",
+    "got": "46f4b5be-e7df-5c40-9f3b-36b114ebed67",
+    "got_name": "대평갈비"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "46f4b5be-e7df-5c40-9f3b-36b114ebed67",
+    "got_name": "대평갈비"
+   }
+  },
+  {
+   "id": "LK-007",
+   "group": "content_id",
+   "place": "모스가든",
+   "expect": "모스가든",
+   "db": {
+    "label": "correct_link",
+    "got": "57284c6c-76d7-59bf-9e47-266cd3e95977",
+    "got_name": "모스가든"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "57284c6c-76d7-59bf-9e47-266cd3e95977",
+    "got_name": "모스가든"
+   }
+  },
+  {
+   "id": "LK-008",
+   "group": "content_id",
+   "place": "배꼽집",
+   "expect": "배꼽집",
+   "db": {
+    "label": "correct_link",
+    "got": "368e7c10-3e3a-55f1-b684-2cc41e918789",
+    "got_name": "배꼽집"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "368e7c10-3e3a-55f1-b684-2cc41e918789",
+    "got_name": "배꼽집"
+   }
+  },
+  {
+   "id": "LK-009",
+   "group": "exact_near",
+   "place": "황금오리농장",
+   "expect": "황금오리농장",
+   "db": {
+    "label": "correct_link",
+    "got": "c3f02b2d-0bc8-55b9-b856-9e272f958eb9",
+    "got_name": "황금오리농장"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "c3f02b2d-0bc8-55b9-b856-9e272f958eb9",
+    "got_name": "황금오리농장"
+   }
+  },
+  {
+   "id": "LK-010",
+   "group": "exact_near",
+   "place": "조셉의커피나무",
+   "expect": "조셉의커피나무",
+   "db": {
+    "label": "correct_link",
+    "got": "5b8305ed-d72d-52c5-9692-0d9c46592d2e",
+    "got_name": "조셉의커피나무"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "5b8305ed-d72d-52c5-9692-0d9c46592d2e",
+    "got_name": "조셉의커피나무"
+   }
+  },
+  {
+   "id": "LK-011",
+   "group": "exact_near",
+   "place": "파고",
+   "expect": "파고",
+   "db": {
+    "label": "correct_link",
+    "got": "495f298e-fd4c-5811-b03f-dad844fa5009",
+    "got_name": "파고"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "495f298e-fd4c-5811-b03f-dad844fa5009",
+    "got_name": "파고"
+   }
+  },
+  {
+   "id": "LK-012",
+   "group": "exact_near",
+   "place": "송파아구찜",
+   "expect": "송파아구찜",
+   "db": {
+    "label": "correct_link",
+    "got": "6119e517-f23a-5203-a0d6-ce64b78e81d4",
+    "got_name": "송파아구찜"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "6119e517-f23a-5203-a0d6-ce64b78e81d4",
+    "got_name": "송파아구찜"
+   }
+  },
+  {
+   "id": "LK-013",
+   "group": "exact_near",
+   "place": "띠아낭",
+   "expect": "띠아낭",
+   "db": {
+    "label": "correct_link",
+    "got": "4a9c430d-0f98-5f37-a90a-4f010a818e9e",
+    "got_name": "띠아낭"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "4a9c430d-0f98-5f37-a90a-4f010a818e9e",
+    "got_name": "띠아낭"
+   }
+  },
+  {
+   "id": "LK-014",
+   "group": "exact_near",
+   "place": "맥심플랜트",
+   "expect": "맥심플랜트",
+   "db": {
+    "label": "correct_link",
+    "got": "9e8380c5-eeef-5cab-82a3-5066e6a67bc8",
+    "got_name": "맥심플랜트"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "9e8380c5-eeef-5cab-82a3-5066e6a67bc8",
+    "got_name": "맥심플랜트"
+   }
+  },
+  {
+   "id": "LK-015",
+   "group": "exact_near",
+   "place": "아재왔소",
+   "expect": "아재왔소",
+   "db": {
+    "label": "correct_link",
+    "got": "bf51ca98-859c-50ba-b30b-1d63c1441d55",
+    "got_name": "아재왔소"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "bf51ca98-859c-50ba-b30b-1d63c1441d55",
+    "got_name": "아재왔소"
+   }
+  },
+  {
+   "id": "LK-016",
+   "group": "exact_near",
+   "place": "메종조",
+   "expect": "메종조",
+   "db": {
+    "label": "correct_link",
+    "got": "2c807180-d84f-5be9-9060-4599ed8e0cf6",
+    "got_name": "메종조"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "2c807180-d84f-5be9-9060-4599ed8e0cf6",
+    "got_name": "메종조"
+   }
+  },
+  {
+   "id": "LK-017",
+   "group": "name_variant",
+   "place": "삼호복집신촌",
+   "expect": "삼호복집 신촌",
+   "db": {
+    "label": "correct_link",
+    "got": "a89fedb4-7ab0-58e3-879f-052b3893531a",
+    "got_name": "삼호복집 신촌"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "a89fedb4-7ab0-58e3-879f-052b3893531a",
+    "got_name": "삼호복집 신촌"
+   }
+  },
+  {
+   "id": "LK-018",
+   "group": "name_variant",
+   "place": "콤바 크",
+   "expect": "콤바크",
+   "db": {
+    "label": "correct_link",
+    "got": "ab7c278b-f48b-5b54-bd7a-9536eae1238e",
+    "got_name": "콤바크"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "ab7c278b-f48b-5b54-bd7a-9536eae1238e",
+    "got_name": "콤바크"
+   }
+  },
+  {
+   "id": "LK-019",
+   "group": "name_variant",
+   "place": "바른쌀국수 본점",
+   "expect": "바른쌀국수",
+   "db": {
+    "label": "correct_link",
+    "got": "0318f341-d460-5a0b-94ec-384178c1c194",
+    "got_name": "바른쌀국수"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "0318f341-d460-5a0b-94ec-384178c1c194",
+    "got_name": "바른쌀국수"
+   }
+  },
+  {
+   "id": "LK-020",
+   "group": "name_variant",
+   "place": "장꼬 방김치찌개전문",
+   "expect": "장꼬방김치찌개전문",
+   "db": {
+    "label": "correct_link",
+    "got": "0aaa01f0-ec76-5a52-83b8-a248ee6d058e",
+    "got_name": "장꼬방김치찌개전문"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "0aaa01f0-ec76-5a52-83b8-a248ee6d058e",
+    "got_name": "장꼬방김치찌개전문"
+   }
+  },
+  {
+   "id": "LK-021",
+   "group": "name_variant",
+   "place": "리알토 강남점",
+   "expect": "리알토",
+   "db": {
+    "label": "correct_link",
+    "got": "7d08a723-11b8-5c33-b3f4-ecd7653de668",
+    "got_name": "리알토"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "7d08a723-11b8-5c33-b3f4-ecd7653de668",
+    "got_name": "리알토"
+   }
+  },
+  {
+   "id": "LK-022",
+   "group": "name_variant",
+   "place": "마주이야기 본점",
+   "expect": "마주이야기",
+   "db": {
+    "label": "correct_link",
+    "got": "90cdfaaf-94fe-5022-ad13-b5856b9c1ee1",
+    "got_name": "마주이야기"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "90cdfaaf-94fe-5022-ad13-b5856b9c1ee1",
+    "got_name": "마주이야기"
+   }
+  },
+  {
+   "id": "LK-023",
+   "group": "name_variant",
+   "place": "만두향 중랑점",
+   "expect": "만두향",
+   "db": {
+    "label": "correct_link",
+    "got": "0996a616-a5bb-5a32-8ff2-d06b498e8e33",
+    "got_name": "만두향"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "0996a616-a5bb-5a32-8ff2-d06b498e8e33",
+    "got_name": "만두향"
+   }
+  },
+  {
+   "id": "LK-024",
+   "group": "name_variant",
+   "place": "백야드빌더성수 성동점",
+   "expect": "백야드빌더성수",
+   "db": {
+    "label": "correct_link",
+    "got": "da264dbb-41d2-5e5a-b31b-6144122518d5",
+    "got_name": "백야드빌더성수"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "da264dbb-41d2-5e5a-b31b-6144122518d5",
+    "got_name": "백야드빌더성수"
+   }
+  },
+  {
+   "id": "LK-025",
+   "group": "far_offset",
+   "place": "스태픽스",
+   "expect": "스태픽스",
+   "db": {
+    "label": "correct_link",
+    "got": "f59291ef-90c9-5b0a-8756-efcf8f1c9ced",
+    "got_name": "스태픽스"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "f59291ef-90c9-5b0a-8756-efcf8f1c9ced",
+    "got_name": "스태픽스"
+   }
+  },
+  {
+   "id": "LK-026",
+   "group": "far_offset",
+   "place": "응옥환 까페",
+   "expect": "응옥환 까페",
+   "db": {
+    "label": "missed",
+    "got": null
+   },
+   "review": {
+    "label": "missed",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-027",
+   "group": "far_offset",
+   "place": "우묵배미",
+   "expect": "우묵배미",
+   "db": {
+    "label": "correct_link",
+    "got": "dbdea2b4-ff68-56c0-ae3d-a62f7b56a27b",
+    "got_name": "우묵배미"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "dbdea2b4-ff68-56c0-ae3d-a62f7b56a27b",
+    "got_name": "우묵배미"
+   }
+  },
+  {
+   "id": "LK-028",
+   "group": "far_offset",
+   "place": "홍이네떡볶이",
+   "expect": "홍이네떡볶이",
+   "db": {
+    "label": "correct_link",
+    "got": "cb030707-5aae-5714-b26e-a292b47553b8",
+    "got_name": "홍이네떡볶이"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "cb030707-5aae-5714-b26e-a292b47553b8",
+    "got_name": "홍이네떡볶이"
+   }
+  },
+  {
+   "id": "LK-029",
+   "group": "far_offset",
+   "place": "오선채",
+   "expect": "오선채",
+   "db": {
+    "label": "correct_link",
+    "got": "09006681-0057-5e8d-a93a-f8571c0034ad",
+    "got_name": "오선채"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "09006681-0057-5e8d-a93a-f8571c0034ad",
+    "got_name": "오선채"
+   }
+  },
+  {
+   "id": "LK-030",
+   "group": "far_offset",
+   "place": "꼴통감독",
+   "expect": "꼴통감독",
+   "db": {
+    "label": "missed",
+    "got": null
+   },
+   "review": {
+    "label": "missed",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-031",
+   "group": "neighbor",
+   "place": "여기가거기",
+   "expect": "여기가거기",
+   "db": {
+    "label": "correct_link",
+    "got": "2717e7f9-acca-5570-ab1f-db124a7ba673",
+    "got_name": "여기가거기"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "2717e7f9-acca-5570-ab1f-db124a7ba673",
+    "got_name": "여기가거기"
+   }
+  },
+  {
+   "id": "LK-032",
+   "group": "neighbor",
+   "place": "사또양념치킨 공덕1분점",
+   "expect": "사또양념치킨 공덕1분점",
+   "db": {
+    "label": "correct_link",
+    "got": "6c4774c9-62cd-5f85-a437-7a3315c4a111",
+    "got_name": "사또양념치킨 공덕1분점"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "6c4774c9-62cd-5f85-a437-7a3315c4a111",
+    "got_name": "사또양념치킨 공덕1분점"
+   }
+  },
+  {
+   "id": "LK-033",
+   "group": "neighbor",
+   "place": "누메로뜨레쓰",
+   "expect": "누메로뜨레쓰",
+   "db": {
+    "label": "correct_link",
+    "got": "d241f7df-b0f1-59f9-b07a-66444f56fcb1",
+    "got_name": "누메로뜨레쓰"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "d241f7df-b0f1-59f9-b07a-66444f56fcb1",
+    "got_name": "누메로뜨레쓰"
+   }
+  },
+  {
+   "id": "LK-034",
+   "group": "neighbor",
+   "place": "전주유할머니비빔밥",
+   "expect": "전주유할머니비빔밥",
+   "db": {
+    "label": "correct_link",
+    "got": "2e3b66aa-be17-55f0-84f5-83e3a8304fb6",
+    "got_name": "전주유할머니비빔밥"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "2e3b66aa-be17-55f0-84f5-83e3a8304fb6",
+    "got_name": "전주유할머니비빔밥"
+   }
+  },
+  {
+   "id": "LK-035",
+   "group": "neighbor",
+   "place": "청담 마코토",
+   "expect": "청담 마코토",
+   "db": {
+    "label": "correct_link",
+    "got": "df6d3237-66b8-5ebb-a295-70f5578f6302",
+    "got_name": "청담 마코토"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "df6d3237-66b8-5ebb-a295-70f5578f6302",
+    "got_name": "청담 마코토"
+   }
+  },
+  {
+   "id": "LK-036",
+   "group": "neighbor",
+   "place": "필즈커피 FILLZ COFFEE",
+   "expect": "필즈커피 FILLZ COFFEE",
+   "db": {
+    "label": "correct_link",
+    "got": "e7ead9ba-f28a-5cda-9c7f-92eb79d4738e",
+    "got_name": "필즈커피 FILLZ COFFEE"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "e7ead9ba-f28a-5cda-9c7f-92eb79d4738e",
+    "got_name": "필즈커피 FILLZ COFFEE"
+   }
+  },
+  {
+   "id": "LK-037",
+   "group": "neighbor",
+   "place": "모녀김밥",
+   "expect": "모녀김밥",
+   "db": {
+    "label": "correct_link",
+    "got": "307ee549-26a5-57b1-9437-b6875b5a8d9d",
+    "got_name": "모녀김밥"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "307ee549-26a5-57b1-9437-b6875b5a8d9d",
+    "got_name": "모녀김밥"
+   }
+  },
+  {
+   "id": "LK-038",
+   "group": "neighbor",
+   "place": "오구반점",
+   "expect": "오구반점",
+   "db": {
+    "label": "correct_link",
+    "got": "c06fae1b-3c73-5228-8fc4-bd219ad674e6",
+    "got_name": "오구반점"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "c06fae1b-3c73-5228-8fc4-bd219ad674e6",
+    "got_name": "오구반점"
+   }
+  },
+  {
+   "id": "LK-039",
+   "group": "similar_pair",
+   "place": "원대구탕",
+   "expect": "원대구탕",
+   "db": {
+    "label": "missed",
+    "got": null
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "3ceb544e-c9bb-5aa0-a47a-79204a320007",
+    "got_name": "원대구탕"
+   }
+  },
+  {
+   "id": "LK-040",
+   "group": "not_in_ledger",
+   "place": "배스킨라빈스 강서역점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-041",
+   "group": "not_in_ledger",
+   "place": "뚜레쥬르 강남점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-042",
+   "group": "not_in_ledger",
+   "place": "버거킹 종로역점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-043",
+   "group": "not_in_ledger",
+   "place": "맘스터치 중시청점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-044",
+   "group": "not_in_ledger",
+   "place": "롯데리아 영등포역점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-045",
+   "group": "not_in_ledger",
+   "place": "메가MGC커피 종로점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-046",
+   "group": "not_in_ledger",
+   "place": "다이소 성동중앙점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-047",
+   "group": "not_in_ledger",
+   "place": "다이소 종로중앙점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-048",
+   "group": "other_branch",
+   "place": "목금",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-049",
+   "group": "other_branch",
+   "place": "스바루",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-050",
+   "group": "other_branch",
+   "place": "초류향",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-051",
+   "group": "other_branch",
+   "place": "쵸이양식",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-052",
+   "group": "other_branch",
+   "place": "부베트 본점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LK-053",
+   "group": "other_branch",
+   "place": "운종가",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  }
+ ],
+ "summary": {
+  "db": {
+   "labels": {
+    "correct_link": 36,
+    "missed": 3,
+    "correct_abstain": 14
+   },
+   "accuracy": "50/53",
+   "wrong_link": 0,
+   "error": 0,
+   "precision": "36/36",
+   "recall": "36/39",
+   "by_group": {
+    "content_id": {
+     "correct_link": 8
+    },
+    "exact_near": {
+     "correct_link": 8
+    },
+    "name_variant": {
+     "correct_link": 8
+    },
+    "far_offset": {
+     "correct_link": 4,
+     "missed": 2
+    },
+    "neighbor": {
+     "correct_link": 8
+    },
+    "similar_pair": {
+     "missed": 1
+    },
+    "not_in_ledger": {
+     "correct_abstain": 8
+    },
+    "other_branch": {
+     "correct_abstain": 6
+    }
+   }
+  },
+  "review": {
+   "labels": {
+    "correct_link": 37,
+    "missed": 2,
+    "correct_abstain": 14
+   },
+   "accuracy": "51/53",
+   "wrong_link": 0,
+   "error": 0,
+   "precision": "37/37",
+   "recall": "37/39",
+   "by_group": {
+    "content_id": {
+     "correct_link": 8
+    },
+    "exact_near": {
+     "correct_link": 8
+    },
+    "name_variant": {
+     "correct_link": 8
+    },
+    "far_offset": {
+     "correct_link": 4,
+     "missed": 2
+    },
+    "neighbor": {
+     "correct_link": 8
+    },
+    "similar_pair": {
+     "correct_link": 1
+    },
+    "not_in_ledger": {
+     "correct_abstain": 8
+    },
+    "other_branch": {
+     "correct_abstain": 6
+    }
+   }
+  }
+ },
+ "env": {
+  "at": "2026-10-14T06:25:52+00:00",
+  "db": "dining_rebuild",
+  "with_sql": "233_dining_link_same_name.sql"
+ }
+}

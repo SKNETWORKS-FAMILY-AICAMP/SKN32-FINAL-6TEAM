@@ -7,7 +7,7 @@
     CREATED → (분류) CLASSIFIED → ROUTED(여행 창구) → COMPLETED(= resolved)
   분류 실패는 `classify_case` 가 escalated 로 보낸다. 신고 내용을 못 뽑았거나 창구가
   받지 않는 문장이면 ROUTING_FAILED, 창구가 처리하지 못하면 GUARDRAIL_ESCALATED —
-  **추측으로 일정을 바꾸지 않고 사람에게 넘긴다.**
+  **추측으로 일정을 바꾸지 않고 처리 불가로 닫는다**(고객에게는 처리하지 못했다고 답한다. 상담원 대기는 없다 — D-018 · D-CS-014).
 ★같은 `request_id` 는 Case 를 새로 만들지 않는다.
 ★재요청(「다른 안으로 바꿔 줘」, v11 §1) — 가장 최근에 바뀐 항목을 우리가 들고 있던
   「다른 안」으로 바꾼다. 무엇으로 바꿀지 모델이 지어내게 두지 않는다.
@@ -563,7 +563,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             outcome = desk.fresh_alternate(trip_id=trip_id, item_id=target.item_id, base_version=current["version"],
                                            message=message, request_id=request_id)
     else:
-        # ★모르는 종류는 어떤 처리로도 떨어뜨리지 않는다 — 사람에게
+        # ★모르는 종류는 어떤 처리로도 떨어뜨리지 않는다 — 처리하지 못한 것으로 남긴다
         outcome = {"status": f"unhandled_{report['type']}"}
     with get_connection() as conn:
         def move2(event_type, payload):
@@ -844,9 +844,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     elif action == "answer_service":
         from app.domains.travel_ops.components.conversation import service_help
 
+        # ★`[2026-10-14]` 기능 안내는 규정 답과 다른 문턱을 쓴다(`travel.service_help.min_score` — 근거는 설정 파일 주석)
         status, text, basis = service_help.reply(
             message=message, tenant_id=tenant, policy_search=policy_search,
-            min_score=float(get_guardrails().get("travel.question.min_policy_score")), now=at)
+            min_score=float(get_guardrails().get("travel.service_help.min_score")), now=at)
         outcome = {"status": status, "text": text}
     elif action == "answer_fact" and decision.fact in ("schedule", "changeability"):
         from app.domains.travel_ops.components.conversation import schedule_query

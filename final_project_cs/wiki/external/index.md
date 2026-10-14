@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 고객 API·MCP 접속
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 고객 접속 계약은 REST 엔드포인트·여행 MCP·권한 경계에서 확인합니다
 status: draft
 domain: travel
 ---

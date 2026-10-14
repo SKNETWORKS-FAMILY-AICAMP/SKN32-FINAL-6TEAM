@@ -159,8 +159,13 @@ class SeoulWalkRouter:
         return doc
 
 def seoul_walk_dir():
+    """☆`[2026-10-14]` v3(v2 + 역·지하상가 안 통로 — 도로명주소 내부도로 전자지도)가 있으면 v3, 없으면 v2."""
     from .paths import PROCESSED
-    return Path(PROCESSED) / "mobility" / "walk_graph_seoul_v2"
+    base = Path(PROCESSED) / "mobility"
+    v3 = base / "walk_graph_seoul_v3"
+    if (v3 / "nodes.jsonl.gz").exists() and (v3 / "edges.jsonl.gz").exists():
+        return v3
+    return base / "walk_graph_seoul_v2"
 
 
 def wrap_with_seoul_walk(base, graph_dir=None):

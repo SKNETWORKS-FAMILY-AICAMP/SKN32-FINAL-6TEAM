@@ -1,0 +1,1365 @@
+{
+ "eval": "dining_agent",
+ "label": "direct-4omini-holdout",
+ "config": "direct",
+ "model": "gpt-4o-mini",
+ "dataset": "dining_agent_holdout_v1.jsonl",
+ "dataset_sha": "de9693835742fb95",
+ "repeats": 3,
+ "run_at": "2026-10-13T17:37:09+09:00",
+ "summary": {
+  "must_accuracy": {
+   "num": 49,
+   "den": 66,
+   "rate": 0.742
+  },
+  "missing": {
+   "num": 3,
+   "den": 66,
+   "rate": 0.045
+  },
+  "wrong_verdict": {
+   "num": 14,
+   "den": 66,
+   "rate": 0.212
+  },
+  "unnecessary": 2,
+  "by_check": {
+   "dietary": {
+    "num": 3,
+    "den": 6,
+    "rate": 0.5
+   },
+   "found": {
+    "num": 27,
+    "den": 27,
+    "rate": 1.0
+   },
+   "kids": {
+    "num": 3,
+    "den": 3,
+    "rate": 1.0
+   },
+   "open_at": {
+    "num": 13,
+    "den": 27,
+    "rate": 0.481
+   },
+   "payment": {
+    "num": 3,
+    "den": 3,
+    "rate": 1.0
+   }
+  },
+  "by_expected": {
+   "bad": {
+    "num": 10,
+    "den": 12,
+    "rate": 0.833
+   },
+   "ok": {
+    "num": 39,
+    "den": 54,
+    "rate": 0.722
+   }
+  },
+  "runs": 24,
+  "run_failures": {},
+  "validation_failures": 2,
+  "seconds_mean": 5.56,
+  "seconds_p95": 7.91,
+  "tool_calls_mean": 3.2,
+  "turns_mean": 3.1,
+  "tokens": {
+   "prompt": 123837,
+   "completion": 9715
+  },
+  "usd": 0.0244
+ },
+ "rows": [
+  {
+   "case": "DGH-001",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-001",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-002",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-002",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-002",
+   "item": "m1",
+   "check": "payment",
+   "kind": "unnecessary",
+   "got": "unknown",
+   "repeat": 0
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "dietary",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "dietary",
+   "kind": "must",
+   "expected": "ok",
+   "got": null,
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "kids",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-006",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-006",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "payment",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-008",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-008",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "unknown",
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-008",
+   "item": "m2",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-008",
+   "item": "m2",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-001",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-001",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-002",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-002",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "dietary",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "dietary",
+   "kind": "must",
+   "expected": "ok",
+   "got": null,
+   "correct": false,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "kids",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-006",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-006",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "payment",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-008",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-008",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-008",
+   "item": "m2",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-008",
+   "item": "m2",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 1
+  },
+  {
+   "case": "DGH-001",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-001",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-002",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-002",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "dietary",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "dietary",
+   "kind": "must",
+   "expected": "ok",
+   "got": null,
+   "correct": false,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "kids",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-006",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-006",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-006",
+   "item": "m1",
+   "check": "payment",
+   "kind": "unnecessary",
+   "got": "unknown",
+   "repeat": 2
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "payment",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-008",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-008",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "unknown",
+   "correct": false,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-008",
+   "item": "m2",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 2
+  },
+  {
+   "case": "DGH-008",
+   "item": "m2",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "bad",
+   "correct": false,
+   "repeat": 2
+  }
+ ],
+ "runs": [
+  {
+   "case": "DGH-001",
+   "repeat": 0,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 6.31,
+   "prompt_tokens": 5126,
+   "completion_tokens": 271,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 2,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-002",
+   "repeat": 0,
+   "turns": 4,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 7.91,
+   "prompt_tokens": 6754,
+   "completion_tokens": 558,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad",
+     "closed_day": "bad",
+     "business": "unknown",
+     "payment": "unknown"
+    }
+   }
+  },
+  {
+   "case": "DGH-003",
+   "repeat": 0,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 4.82,
+   "prompt_tokens": 4912,
+   "completion_tokens": 382,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "check_attributes": 1,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad",
+     "dietary": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-004",
+   "repeat": 0,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 5.17,
+   "prompt_tokens": 4929,
+   "completion_tokens": 333,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "check_attributes": 1,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-005",
+   "repeat": 0,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 4.72,
+   "prompt_tokens": 4840,
+   "completion_tokens": 379,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "ok",
+     "kids": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-006",
+   "repeat": 0,
+   "turns": 3,
+   "tool_calls": 2,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 3.57,
+   "prompt_tokens": 4731,
+   "completion_tokens": 233,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-007",
+   "repeat": 0,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 5.15,
+   "prompt_tokens": 4888,
+   "completion_tokens": 388,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "check_attributes": 1,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad",
+     "payment": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-008",
+   "repeat": 0,
+   "turns": 3,
+   "tool_calls": 4,
+   "refused": 0,
+   "validation_failures": 1,
+   "seconds": 6.21,
+   "prompt_tokens": 5696,
+   "completion_tokens": 515,
+   "failure": null,
+   "validation": {
+    "evidence_value_mismatch": 1
+   },
+   "tools_used": {
+    "find_place": 2,
+    "place_detail": 2
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "unknown"
+    },
+    "m2": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-001",
+   "repeat": 1,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 1,
+   "validation_failures": 0,
+   "seconds": 4.99,
+   "prompt_tokens": 4957,
+   "completion_tokens": 393,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-002",
+   "repeat": 1,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 5.31,
+   "prompt_tokens": 4913,
+   "completion_tokens": 405,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-003",
+   "repeat": 1,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 5.28,
+   "prompt_tokens": 4911,
+   "completion_tokens": 389,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad",
+     "dietary": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-004",
+   "repeat": 1,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 5.04,
+   "prompt_tokens": 4929,
+   "completion_tokens": 333,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "check_attributes": 1,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-005",
+   "repeat": 1,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 5.85,
+   "prompt_tokens": 4840,
+   "completion_tokens": 375,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "ok",
+     "kids": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-006",
+   "repeat": 1,
+   "turns": 4,
+   "tool_calls": 6,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 6.21,
+   "prompt_tokens": 6863,
+   "completion_tokens": 447,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 4
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-007",
+   "repeat": 1,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 6.17,
+   "prompt_tokens": 4888,
+   "completion_tokens": 424,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "check_attributes": 1,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad",
+     "payment": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-008",
+   "repeat": 1,
+   "turns": 3,
+   "tool_calls": 4,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 8.15,
+   "prompt_tokens": 5696,
+   "completion_tokens": 643,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 2,
+    "place_detail": 2
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    },
+    "m2": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-001",
+   "repeat": 2,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 1,
+   "validation_failures": 0,
+   "seconds": 5.05,
+   "prompt_tokens": 4957,
+   "completion_tokens": 400,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-002",
+   "repeat": 2,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 6.41,
+   "prompt_tokens": 4913,
+   "completion_tokens": 526,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-003",
+   "repeat": 2,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 4.9,
+   "prompt_tokens": 4912,
+   "completion_tokens": 382,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "check_attributes": 1,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad",
+     "dietary": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-004",
+   "repeat": 2,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 4.87,
+   "prompt_tokens": 4929,
+   "completion_tokens": 334,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "check_attributes": 1,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-005",
+   "repeat": 2,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 4.98,
+   "prompt_tokens": 4840,
+   "completion_tokens": 380,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "ok",
+     "kids": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-006",
+   "repeat": 2,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 4.86,
+   "prompt_tokens": 4829,
+   "completion_tokens": 349,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "place_detail": 1,
+    "check_attributes": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad",
+     "payment": "unknown"
+    }
+   }
+  },
+  {
+   "case": "DGH-007",
+   "repeat": 2,
+   "turns": 3,
+   "tool_calls": 3,
+   "refused": 0,
+   "validation_failures": 0,
+   "seconds": 5.13,
+   "prompt_tokens": 4888,
+   "completion_tokens": 361,
+   "failure": null,
+   "validation": {},
+   "tools_used": {
+    "find_place": 1,
+    "check_attributes": 1,
+    "place_detail": 1
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad",
+     "payment": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-008",
+   "repeat": 2,
+   "turns": 3,
+   "tool_calls": 4,
+   "refused": 0,
+   "validation_failures": 1,
+   "seconds": 6.33,
+   "prompt_tokens": 5696,
+   "completion_tokens": 515,
+   "failure": null,
+   "validation": {
+    "evidence_value_mismatch": 1
+   },
+   "tools_used": {
+    "find_place": 2,
+    "place_detail": 2
+   },
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "unknown"
+    },
+    "m2": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  }
+ ],
+ "vs_baseline": {
+  "baseline": "c-rule-holdout",
+  "only_new_correct": 3,
+  "only_base_correct": 5,
+  "p": 0.7266
+ }
+}

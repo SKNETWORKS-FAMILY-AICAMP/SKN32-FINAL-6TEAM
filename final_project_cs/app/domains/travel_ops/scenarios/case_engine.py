@@ -34,7 +34,7 @@ ACTOR = "case_engine"
 def _no_policy(*_: Any, **__: Any) -> list[Any]:
     """일정 관리(`*.itinerary`)는 규정을 면제받는다 — 불리면 안 되는 자리라 빈 값이 아니라 실패로.
     ★`[2026-09-25]` 규정 질문(`*.itinerary_question`)은 규정을 **읽는다** — 그 경로를 돌리려면
-      `policy_search` 를 넣는다. 안 넣으면 검색 실패 → degraded → 사람에게(지어내지 않는다)."""
+      `policy_search` 를 넣는다. 안 넣으면 검색 실패 → degraded → 처리 불가(지어내지 않는다)."""
     raise RuntimeError("policy search is not wired in the itinerary case engine")
 
 
@@ -134,6 +134,8 @@ def cleanup_tenant(tenant_id: str) -> None:
                     "DELETE FROM agent_runs WHERE case_id IN "
                     "(SELECT case_id FROM customer_cases WHERE tenant_id=%s)"):
             cur.execute(sql, (tenant_id,))
+        # ★`case_events` 는 DB 가 추가만 하게 막는다(904) — 이 트랜잭션에서만 정리 스위치를 켠다.
+        cur.execute("SET LOCAL app.case_events_purge = 'on'")
         for sql in ("DELETE FROM action_requests WHERE tenant_id=%s",
                     "DELETE FROM case_events WHERE tenant_id=%s",
                     "DELETE FROM customer_cases WHERE tenant_id=%s",

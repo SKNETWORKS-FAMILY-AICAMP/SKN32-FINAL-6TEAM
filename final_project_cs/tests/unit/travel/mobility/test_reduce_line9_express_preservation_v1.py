@@ -13,6 +13,11 @@ from app.domains.travel_ops.instances.mobility.engine.congestion import Congesti
 ROOT = Path(__file__).resolve().parents[5]
 SCRIPT = ROOT/'datasets/mobility/scripts/reduce_75.py'
 
+# ☆`[2026-10-14]` 이 시험은 저장소 맨 위의 줄임 스크립트를 실행한다(앱 폴더 밖). 저장소 전체를 받는 GitHub CI 에서는 있다.
+#   앱 폴더(final_project_cs)만 꺼내 돌리는 환경(메모리 때문에 git archive 로 앱만 푸는 commit 세션 등)에는 없어서 4건이 실패했다 —
+#   코드 결함이 아니므로 그때는 이유를 남기고 건너뛴다(통과로 세지 않는다).
+pytestmark = pytest.mark.skipif(not SCRIPT.exists(), reason=f'저장소 맨 위 datasets/mobility/scripts/reduce_75.py 가 없다(앱 폴더만 꺼낸 실행 환경) — 찾은 자리 {SCRIPT}')
+
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()

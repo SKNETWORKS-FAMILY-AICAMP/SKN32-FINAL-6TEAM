@@ -3,7 +3,7 @@ type: decision
 title: develop 판 활동 팀에 판정 LLM 을 섀도로 붙인다 — 기본은 규칙, 켜는 환경만 섀도
 description: D-CS-008(role-activity-test 한정 실험)을 develop 판 활동 팀(team.py) 위로 옮긴다. 기본 모드는 rule, 섀도 기록을 모을 환경만 .env 로 shadow. 정기휴무 · 실내외 · 재난문자 · 실시간 운영 상태 넷만, 운영시간은 붙이지 않는다
 status: draft
-tags: [architecture, llm, travel, activity]
+tags: [architecture, agent]
 owners: [human:미배정]
 domain: travel
 ---

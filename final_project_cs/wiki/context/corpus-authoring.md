@@ -1,7 +1,7 @@
 ---
 type: policy
 title: 여행 코퍼스 작성 규칙
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 여행 코퍼스(규정·안내 문서) 작성 규칙 — 범위·출처는 여행 코퍼스가 소유
 status: draft
 domain: travel
 ---

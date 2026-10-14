@@ -8,7 +8,7 @@
 #   ① 한 번에 하나만(flock). ② 대상 커밋에 `final_project_cs/deploy/docker-compose.yml` 이 **없으면 건드리지 않는다**(배포 구성이 아직 안 합쳐진 브랜치).
 #   ③ 배포에 쓰이는 폴더(app · config · prompts · scripts · deploy · frontend/apps/web · requirements)가 **바뀌지 않았으면 다시 빌드하지 않는다**(문서만 바뀐 커밋).
 #   ④ 빌드 실패 → 실행 중인 것은 그대로(건드리지 않음). ⑤ 새 이미지로 기동했는데 건강하지 않으면 **이전 이미지로 되돌린다**. ⑥ 실패한 커밋은 다음 새 커밋이 올 때까지 다시 시도하지 않는다.
-#   ⑦ DB 는 절대 지우지 않는다 — 마이그레이션은 재실행 안전한 앞으로 가기뿐이다. ⑧ 이전 이미지는 최근 3개만 남긴다.
+#   ⑦ DB 는 절대 지우지 않는다 — 마이그레이션은 재실행 안전한 앞으로 가기뿐이다. ⑧ 이미지 정리 — 최근 3개 + 달마다 하나(복원용), 복구용 이미지는 최신 2세트(deploy/image_retention.py).
 # ★마이그레이션은 되돌리지 않는다(앞으로 가기뿐) — 되돌려도 이전 이미지가 새 표 구조를 견딘다는 가정이다. 파괴적인 마이그레이션은 이 방식에 맞지 않는다.
 set -u
 
@@ -122,9 +122,10 @@ else
   exit 1
 fi
 
-# ── 6. 정리 — 이전 이미지는 최근 3개만 ───────────────────────────
-for img in tripilot-api tripilot-web; do
-  docker images "$img" --format '{{.CreatedAt}}|{{.Tag}}' </dev/null | sort -r | cut -d'|' -f2 | grep -v '^local$' | tail -n +4 \
-    | while read -r tag; do docker rmi "$img:$tag" >/dev/null 2>&1 || true; done
-done
+# ── 6. 정리 — 앱·운영 웹앱 이미지는 최근 3개 + 달마다 하나(복원용), 복구용 이미지는 최신 2세트만 ───────────────────────────
+# ★옛 판은 api·web 만 세고 `tripilot-recovery`(복구용 이름표)·`tripilot-admin` 은 지우지 않아 이틀에 72GB 가 쌓였다.
+#   달마다 하나는 `keep-YYYY-MM` 이름표로 남긴다(deploy.log 의 「반영 완료」 중 그달 마지막). 자세한 규칙: deploy/image_retention.py
+python3 "$REPO/$CS/deploy/image_retention.py" --base "$BASE" --apply \
+    --app-repo tripilot-api --app-repo tripilot-web --app-repo tripilot-admin --recovery-repo tripilot-recovery \
+    --builder-keep-gb 20 >>"$LOG" 2>&1 </dev/null || log "경고: 이미지 정리 실패 — 반영은 이미 끝났다. 다음 반영 때 다시 시도한다"
 exit 0

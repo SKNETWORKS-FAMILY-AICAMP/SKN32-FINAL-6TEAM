@@ -3,7 +3,7 @@ type: decision
 title: 활동 판정 일부를 LLM(gpt-5.4-nano + 웹 검색)으로 — 테스트 브랜치 한정, 섀도 모드로 시작
 description: v10 §4-D 「판정은 계산으로 한다」의 예외를 role-activity-test 브랜치 안에서만 둔다. 글 해석 판정 4종과 실시간 운영 상태만 대상이고, 고객 답변은 섀도 기간 동안 규칙 결과로 만든다
 status: draft
-tags: [architecture, llm, travel, activity]
+tags: [architecture, agent]
 owners: [human:미배정]
 domain: travel
 ---

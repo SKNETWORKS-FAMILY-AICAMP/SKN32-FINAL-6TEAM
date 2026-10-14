@@ -700,6 +700,34 @@ def wire_domain_teams(*, config: ProjectConfig | None = None, registry: TeamRegi
     return connected
 
 
+def _dining_agent_shadow():
+    """요식 판정 에이전트 그림자 운행 — 가드레일 `travel.dining.agent_shadow.enabled` 를 켰을 때만 실행기를 만든다(기본 꺼짐 → None). `[2026-10-13]`
+
+    모델은 가드레일 `model` 로 고른다 — `openai:<모델>`(키 `ACOP_OPENAI_API_KEY`) · `ollama:<모델>`(주소 `ACOP_OLLAMA_BASE_URL`).
+    ★키 · 주소가 없으면 만들지 않고 경고만 남긴다(그림자는 없어도 되는 것이다 — 기동을 막지 않는다)."""
+    from app.core.settings import dining_agent_shadow, get_settings
+
+    shadow_settings = dining_agent_shadow()
+    if shadow_settings is None:
+        return None
+    from functools import partial
+
+    from app.domains.travel_ops.instances.dining import shadow as dining_shadow
+    from app.infrastructure.llm.tool_chat import OllamaToolChat, OpenAIToolChat
+
+    settings = get_settings()
+    kind, _, model = shadow_settings["model"].partition(":")
+    if kind == "openai" and (settings.openai_api_key or "").strip():
+        chat = OpenAIToolChat(api_key=settings.openai_api_key, model=model or "gpt-4o-mini")
+    elif kind == "ollama" and (settings.ollama_base_url or "").strip():
+        chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model)
+    else:
+        logging.getLogger(__name__).warning("dining agent shadow enabled but model %s has no key/address — shadow is off",
+                                            shadow_settings["model"])
+        return None
+    return partial(dining_shadow.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"])
+
+
 def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> list[str]:
     """Connect only active, loaded providers; collect_services isolates candidate assembly.
 
@@ -752,7 +780,8 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                slot_verdicts=dining_ledger_impl.slot_verdicts,
                                planner_factory=dining_ledger_impl.PlannerLedger,
                                link_core_place=dining_ledger_impl.link_core_place_to,
-                               closure_observation=dining_ledger_impl.closure_observation)
+                               closure_observation=dining_ledger_impl.closure_observation,
+                               agent_shadow=_dining_agent_shadow())
 
     if "activity" in active_ids:
         # 활동 — 비슷한 곳 순서와 설문 선호.
@@ -804,6 +833,13 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
             raise                                                   # jobs.py 안의 import 가 깨졌다 — 숨기지 않는다
         for job in getattr(jobs_module, "JOBS", ()):
             scheduled_jobs.register(team_id, job)
+    if "activity" in active_ids:
+        # ★`[2026-10-14]` 활동 웹 운영 확인 정기 작업에 연결 · 판정 LLM · 웹 예산을 꽂는다 — 팀 폴더는 인프라를 직접 열지 않는다(DoD-22).
+        #   판정 LLM 이 없으면(`rule` · 키 없음) 작업이 `disabled` 로 답한다. 만드는 것 자체는 I/O 가 없다.
+        from app.domains.travel_ops.instances.activity import jobs as activity_jobs
+
+        activity_jobs.configure(connection_factory=get_connection, judge_llm=build_activity_judge_llm(),
+                                budget=build_activity_judge_budget())
 
     names = {"mobility": ("legs",), "dining": ("dining_ledger",), "activity": ("similarity", "activity_ledger")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다

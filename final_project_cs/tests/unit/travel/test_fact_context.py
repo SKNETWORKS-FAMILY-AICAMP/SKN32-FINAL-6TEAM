@@ -90,3 +90,38 @@ def test_model_guess_cannot_bypass_focus_expiry():
     decision, focus, stale = resolve(_decision(item), items=[item], message="자세히 알려줘", selected=None,
                                     turns=turns, version=2, now=NOW, ttl_seconds=1800)
     assert decision.item is None and focus is None and stale
+
+
+def _previous(item):
+    from dataclasses import replace
+    return replace(_decision(item), fact="time", reads=[{"reference": "previous"}])
+
+
+def test_a_self_contained_question_marked_previous_uses_the_model_target_when_there_is_no_previous():
+    """★`[2026-10-14]` 「내일 첫 일정 몇 시야?」를 모델이 「앞에서 말한 것」으로 적어도, 앞 대상이 없으면 모델이 고른 일정으로 답한다."""
+    first, second = _item("남산서울타워"), _item("명동교자")
+    decision, focus, stale = resolve(_previous(first), items=[first, second], message="내일 첫 일정 몇 시야?", selected=None,
+                                    turns=[], version=1, now=NOW, ttl_seconds=1800)
+    assert decision.item is first and focus["source"] in ("decision", "decision_without_previous") and not stale
+
+
+def test_a_question_that_names_a_time_does_not_inherit_the_previous_target_even_if_marked_previous():
+    first, second = _item("경복궁 관람"), _item("온지음")
+    turns = [{"role": "assistant", "reply": {"focus": {"item_id": str(first.item_id), "version": 1, "at": NOW.isoformat()}}}]
+    decision, focus, stale = resolve(_previous(second), items=[first, second], message="12시 반에 뭐 해?", selected=None,
+                                    turns=turns, version=1, now=NOW, ttl_seconds=1800)
+    assert decision.item is second and focus["source"] == "decision" and not stale
+
+
+def test_a_bare_followup_still_never_falls_back_to_the_model_guess():
+    first = _item("경복궁")
+    decision, focus, stale = resolve(_previous(first), items=[first], message="거기 알려줘", selected=None,
+                                    turns=[], version=1, now=NOW, ttl_seconds=1800)
+    assert decision.item is None and focus is None and stale
+
+
+def test_a_pointing_followup_without_a_previous_target_is_asked_back_not_guessed():
+    first = _item("성수 점심")
+    decision, focus, stale = resolve(_previous(first), items=[first], message="그쪽 몇 시까지 열어?", selected=None,
+                                    turns=[], version=1, now=NOW, ttl_seconds=1800)
+    assert decision.item is None and focus is None and stale

@@ -42,7 +42,7 @@ for (const width of [375, 1280]) {
       if (screen.intake) await expect(needsBadge(page)).toBeVisible();
       if (screen.name === "registration" || screen.name === "starting-revisit") {
         await expect(page.locator("#test-plan-code")).toHaveAttribute("aria-disabled", "false");
-        await expect(page.locator("button[data-plan-code]")).toHaveCount(15);
+        await expect(page.locator("button[data-plan-code]")).toHaveCount(16);
       }
       if (screen.name === "support") {
         await expect(page.getByText("아직 접수한 문의가 없어요. 위의 「문의 작성」으로 첫 문의를 보내 주세요.", { exact: true })).toBeVisible();

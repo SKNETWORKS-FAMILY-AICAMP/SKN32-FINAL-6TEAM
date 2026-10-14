@@ -12,7 +12,7 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     headers = _key(client)
     listing = client.get("/v1/web/test-scenarios")
     assert listing.status_code == 200
-    assert len(listing.json()["scenarios"]) == 15
+    assert len(listing.json()["scenarios"]) == 16
     view = _send(client, headers, " TEST1 ")
     assert view["status"] == "review"
     assert sum(len(s["items"]) for s in view["sources"]) == 6
@@ -32,7 +32,7 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     assert ordinary["test_scenario"] is None
 
 
-@pytest.mark.parametrize("text,code", (("test16", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
+@pytest.mark.parametrize("text,code", (("test17", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
 def test_rejected_code_does_not_create_empty_intake(rv, text, code):
     client, _, _ = _client()
     headers = _key(client)
@@ -70,3 +70,16 @@ def test_normal_codes_expand_and_keep_category_in_intake(rv, code):
     assert view["test_scenario"]["code"] == code
     assert view["test_scenario"]["category"] == "normal"
     assert view["review"]["test_scenario"] == view["test_scenario"]
+
+
+def test_lodging_code_expands_to_a_named_hotel_check_in(rv):
+    """test16 — 이름 있는 호텔 체크인이 든 일정이 접수에서 숙소 줄(체크인)로 읽힌다."""
+    client, _, _ = _client()
+    headers = _key(client)
+    view = _send(client, headers, "test16")
+    assert view["status"] == "review"
+    assert view["test_scenario"]["code"] == "test16"
+    assert view["test_scenario"]["category"] == "general"
+    lines = "\n".join(line["text"] for source in view["sources"] for line in source["lines"])
+    assert "더 플라자 호텔 서울" in lines
+    assert sum(len(source["items"]) for source in view["sources"]) == 3

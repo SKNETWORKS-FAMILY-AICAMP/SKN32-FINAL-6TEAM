@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 Team 구축 순서
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 새 에이전트 팀을 만드는 순서 — 범위·계약 확인부터 판정·대기·재개 조건, 시험, 등록까지
 status: draft
 domain: travel
 ---

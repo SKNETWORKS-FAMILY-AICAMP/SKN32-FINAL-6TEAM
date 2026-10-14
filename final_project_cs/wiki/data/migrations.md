@@ -1,7 +1,7 @@
 ---
 type: guide
 title: SQL 파일과 적용 방식
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 자동 생성 목록이 현재 실행 SQL·역사 보존 SQL·보류 SQL의 파일 수와 경로를 소유합니다
 status: draft
 domain: travel
 ---

@@ -9,6 +9,14 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력
 
+## 2026-10-14 21:40 — 도커 이미지 정리 규칙 · 월별 복원용 보존 인계
+
+x600 서버와 오라클 서버의 도커 이미지 정리 규칙·월별 복원 절차·WSL 디스크 압축을 문서화하고 인계 목차에 한 일 목록을 남겼습니다. [정본](../final_project_cs/wiki/operations/image-retention.md) · [기록](../final_project_cs/wiki/records/reports/2026-10-14_도커이미지_정리규칙과_월별보존.md)
+
+## 2026-10-14 15:00 — wiki 머리말·log 순서·검사기 정리
+
+상투 설명 문구 59 → 0(현재 문서 267), 통제 밖 태그 6 → 0, log 날짜 어긋남 9 → 0(위치만 옮김), 검사기 위반 9 → 1(링크 `%20` 해석 · 머리말 2 · 분야 1 · 이유 칸 1). 남은 1 은 활동 팀 계획서 543줄. 결정 번호 중복 D-CS-008 · D-CS-015 발견. [기록](../final_project_cs/wiki/records/reports/2026-10-14_1500_wiki-rule-and-test-followup.md)
+
 ## 2026-10-12 22:00 — 진입 문서 정리 · 인계 목차 신설
 
 루트 `CLAUDE.md` 줄바꿈 복구, `AGENTS.md` 에만 있던 규칙 둘(그림 · 커밋·푸시 대상)을 옮기고 두 파일을 함께 고치는 규칙을 넣었습니다. 사실 표 위에 「바뀐 값」 5행(D-018 · D-020 · D-023 · D-CS-012). 허브에 영역 지도와 [인계 목차](handoff/index.md), 깨진 링크 3 · 고아 문서 6 연결. [통합 인계](handoff/2026-10-12_2200_claude-integrated-handoff.md)
@@ -25,6 +33,14 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 ## 2026-10-11 — wiki 우선 기준 정정·1차 검토
 
 현재 본문 284개 구조·도입부와 핵심 31개 본문을 검토해 25개 문제·미결 주제를 [보고했다](../final_project_cs/wiki/records/reports/2026-10-11_1539_wiki-baseline-first-review.md); 전체 본문 정독과 제품 합의·수정은 남아 있으며 v12와 최종 베이스라인은 아직 확정하지 않았다.
+
+## 2026-10-11 — 응답 완성 검증 일일 연구
+
+논문 조건을 현재 실패와 연결하고 연결기 로컬 보호·재생 결과 및 미적용 후보를 분리했습니다. [연구·실측 근거](../final_project_cs/wiki/records/reports/2026-10-11_1030_daily-response-completion-research.md).
+
+## 2026-10-11 — 현재 사실·작성 지침 정리 v3
+
+현재 안내와 과거 기록을 분리하고 데이터·평가·학습·경로·문서 형식을 정리했습니다. [적용·검증 보고서](../final_project_cs/wiki/records/reports/2026-10-11_wiki-current-and-governance-v3.md).
 
 ## 2026-10-10 — triPilot 기준선 v2 현재 버전 반영·재검토
 
@@ -297,11 +313,3 @@ program/
 | `A-COP_문서표준_설계_codex초안.md` | 참고자료. 이관 안 함 | 제외 |
 
 전체 범위 산정은 [governance/migration.md](governance/migration.md).
-
-## 2026-10-11 — 응답 완성 검증 일일 연구
-
-논문 조건을 현재 실패와 연결하고 연결기 로컬 보호·재생 결과 및 미적용 후보를 분리했습니다. [연구·실측 근거](../final_project_cs/wiki/records/reports/2026-10-11_1030_daily-response-completion-research.md).
-
-## 2026-10-11 — 현재 사실·작성 지침 정리 v3
-
-현재 안내와 과거 기록을 분리하고 데이터·평가·학습·경로·문서 형식을 정리했습니다. [적용·검증 보고서](../final_project_cs/wiki/records/reports/2026-10-11_wiki-current-and-governance-v3.md).

@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 현재 여행 코드 실행·검증
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: cs 프로젝트 폴더에서 앱·작업자·시험을 실행하는 명령 모음
 status: draft
 domain: travel
 ---

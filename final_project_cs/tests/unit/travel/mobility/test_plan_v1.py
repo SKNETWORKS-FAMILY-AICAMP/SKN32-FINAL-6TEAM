@@ -31,8 +31,15 @@ from app.domains.travel_ops.instances.mobility.engine.plan import (  # noqa: E40
 
 KST = timezone(timedelta(hours=9))
 IN = HERE / "plan_example_in_v1.json"
-GOLD = HERE / "plan_example_out_v1.json"
-GOLD_ALL = HERE / "plan_example_out_all_v1.json"   # 23 — 버스 포함(자전거는 실시간 조회라 뺀다)
+# ☆`[2026-10-14 v2]` 사용자 지시로 정답 파일을 새 판으로 만들었다(옛 판 v1 은 그대로 둔다). v1 과 다른 칸은 셋이고 모두 원인을 확인했다
+#   (records/reports/2026-10-14_mobility_golden_v2/REPORT.md):
+#   ① 경복궁→성수 — 실제 다음 열차(경복궁 12:52 3호선 → 을지로3가 13:01 2호선, 카카오 평일 시간표 확인)를 찾아 출발 12:34→12:41,
+#      두 번째 후보(충무로 경유)는 「더 이른 출발 필요」로 빠짐 ② 성수→저녁 — 서울 안 걸음이 서울시 도보 그래프의 검증된 더 짧은 길(214→199 m)
+#   ③ 저녁→롯데마트 — 매장 좌표가 서울역 건물 안(보행망과 85~91 m)이라 도보가 「보행 접근 미검증」으로 빠지고 그 항목은 skipped.
+#      매장 좌표는 바꾸지 않았다(입력을 결과에 맞추지 않는다). 건물 출입구 자료가 들어오면 다시 본다.
+#   함께 고친 결함: GTX-A 시간표의 「서울」이 `GTX-A:서울` 로 표기 검사에 걸려 후보가 버려지던 것(options.station_name).
+GOLD = HERE / "plan_example_out_v2.json"
+GOLD_ALL = HERE / "plan_example_out_all_v2.json"   # 23 — 버스 포함(자전거는 실시간 조회라 뺀다)
 MODES = ["subway", "walk"]           # 골든은 지하철·도보로 뽑았다(노트북 버스 데이터가 옛 판 · 41 뒤 재추출)
 MODES_ALL = ["subway", "walk", "bus"]
 
@@ -639,18 +646,48 @@ def test_line_names_contract():
     assert len(lines) >= 20
 
 
+def _route_part(label):
+    return label.split(" — ")[0]
+
+
+def _facts(label):
+    return label.split(" — ", 1)[1].split(" · ") if " — " in label else []
+
+
 def test_reasons_axis():
-    """이유 = 축별 사실(실린 후보끼리) · 순위 말 없음 · 후보 하나면 비교 문구 없음."""
+    """이유 = 축별 사실(실린 후보끼리) · 순위 말 없음 · 후보 하나면 비교 문구 없음.
+
+    ☆`[2026-10-14]` 앞 판은 경복궁→성수에 후보가 둘이라는 값을 박아 두었다 — 실제 다음 열차를 찾은 뒤 후보가 하나가 되자 규칙과 무관하게 깨졌다.
+    이제 예시 일정(지하철·도보)과 남산타워→이태원(버스 포함)에서 **후보가 둘 이상인 모든 경로**에 같은 규칙이 지켜지는지 본다."""
     _skip_if_no_data()
-    _, got = _run()
-    r = got["routes"]["gyeongbokgung_to_seongsu"]["options"]
-    assert "소요 가장 짧음" in r[0]["label"] and "환승 가장 적음(1회)" in r[0]["label"], r[0]["label"]
-    assert r[1]["label"].endswith("— 도보 거리 가장 짧음"), r[1]["label"]   # 전부 walk_m 이 있으면 거리로(GPT 23 #7)
-    for rr in got["routes"].values():
-        for o in rr["options"]:
-            assert not any(w in o["label"] for w in ("추천", "순위", "1위", "최선", "best")), o["label"]
-            if len(rr["options"]) == 1:
-                assert "가장" not in o["label"], o["label"]
+    multi = 0
+    for got in (_run()[1], _ns_it(modes=MODES_ALL)[1]):
+        for rr in got["routes"].values():
+            opts = rr["options"]
+            for o in opts:
+                assert not any(w in o["label"] for w in ("추천", "순위", "1위", "최선", "best")), o["label"]
+                if len(opts) == 1:
+                    assert "가장" not in o["label"], o["label"]
+            if len(opts) < 2:
+                continue
+            multi += 1
+            etas = [o["eta_min"] for o in opts]
+            trs = [len(_route_part(o["label"]).split(" → ")) - 1 for o in opts]
+            for o, tr in zip(opts, trs):
+                facts = _facts(o["label"])
+                want_eta = min(etas) != max(etas) and o["eta_min"] == min(etas)
+                assert ("소요 가장 짧음" in facts) == want_eta, (o["label"], etas)
+                want_tr = min(trs) != max(trs) and tr == min(trs)
+                has_tr = any(f == "환승 없음" or f.startswith("환승 가장 적음(") for f in facts)
+                assert has_tr == want_tr, (o["label"], trs)
+                if has_tr and tr > 0:
+                    assert f"환승 가장 적음({tr}회)" in facts, o["label"]
+            if all(o.get("walk_m") is not None for o in opts):
+                wms = [round(o["walk_m"]) for o in opts]
+                for o, w in zip(opts, wms):
+                    want_w = min(wms) != max(wms) and w == min(wms)
+                    assert ("도보 거리 가장 짧음" in _facts(o["label"])) == want_w, (o["label"], wms)
+    assert multi >= 1, "후보가 둘 이상인 경로가 하나도 없으면 축 규칙을 시험하지 못한다"
 
 
 def test_reasons_unit():
@@ -676,8 +713,14 @@ def test_walk_m_and_fare():
     from app.domains.travel_ops.instances.mobility.engine.options import transfer_walk_m
     v = _runtime()._v
     _, got = _run()
-    w = got["routes"]["dinner_to_lotte_mart"]["options"][0]
-    assert w["id"] == "walk" and w["fare_krw"] == 0 and w["walk_m"] > 0
+    # ☆`[2026-10-14]` 저녁→롯데마트 도보는 매장 좌표가 서울역 건물 안이라 「보행 접근 미검증」 — 거리를 만들지 않고 skipped 에 이유를 남긴다
+    #   (앞 판은 이 도보 후보의 walk_m · 요금 0 을 봤다). 도보 후보가 있으면 그 계약을, 없으면 미검증 근거가 남았는지를 본다.
+    walks = [o for rr in got["routes"].values() for o in rr["options"] if o["id"] == "walk"]
+    for w in walks:
+        assert w["fare_krw"] == 0 and w["walk_m"] > 0, w
+    lotte = [s for s in got["skipped"] if s["to"] == "롯데마트 서울역점"]
+    assert lotte and any(x["code"] == "walk_source_unavailable" and x["walk_basis"]["reason"] == "unverified_walk_access"
+                         for x in lotte[0]["left_out"]), lotte
     from app.domains.travel_ops.instances.mobility.engine.options import fare_of
     for rr in got["routes"].values():
         for o in rr["options"]:

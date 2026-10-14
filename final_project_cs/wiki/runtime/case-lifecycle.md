@@ -27,7 +27,7 @@ domain: neutral
 | `waiting_external` | 외부 callback 대기 |
 | `resuming` | 대기 해제 후 재개 중 |
 | `resolved` | 해결 |
-| `escalated` | 사람에게 넘김 |
+| `escalated` | 처리 불가로 닫힘 — 고객에게 처리하지 못했다고 안내하고 개발자·QA 가 결함으로 분석한다. **상담원 대기가 아니다**([D-018](../../../wiki/decisions/D-018-decision15-stop-paths.md) · [D-CS-014](../decisions/D-CS-014-routing-reroute.md)) |
 | `failed` | 실패 |
 | `cancelled` | 취소. **종단** |
 
@@ -61,7 +61,7 @@ cancelled       → (없음)
 
 **세 가지 성질이 보인다.**
 
-1. **진행 중인 상태에서는 언제든 `escalated`로 갈 수 있다.** 막히면 사람에게 넘기는 게 항상 가능하다 — `classifying`·`routing`·`running`·대기 셋·`resuming`·`failed`. `[정정 2026-09-10]` 「어느 상태에서든」으로 적혀 있었는데 **바로 위 표와 모순이다** — `new`(→ classifying·cancelled)·`resolved`(→ cancelled)·`escalated`(자기 자신)·`cancelled`(종단) **넷은 직접 못 간다.**
+1. **진행 중인 상태에서는 언제든 `escalated`로 갈 수 있다.** 막히면 처리 불가로 닫는 길이 항상 있다(`[2026-10-14 정정]` 전에는 「사람에게 넘긴다」로 적었다 — 상주 상담원 구조는 기각됐다) — `classifying`·`routing`·`running`·대기 셋·`resuming`·`failed`. `[정정 2026-09-10]` 「어느 상태에서든」으로 적혀 있었는데 **바로 위 표와 모순이다** — `new`(→ classifying·cancelled)·`resolved`(→ cancelled)·`escalated`(자기 자신)·`cancelled`(종단) **넷은 직접 못 간다.**
 2. **대기 상태는 `resuming`을 거쳐야 `running`으로 돌아간다.** 직접 못 간다
 3. **`failed`는 종단이 아니다.** `escalated`로 간다. 실패를 방치하지 않는다
 
@@ -108,7 +108,7 @@ cancelled       → (없음)
 
 **`customer_cases`를 직접 `UPDATE`하지 않는다.** `transition_case()`만이 진입점이다.
 
-`case_events`는 append-only다. `UPDATE`·`DELETE`하지 않는다.
+`case_events`는 append-only다. `UPDATE`·`DELETE`하지 않는다. DB 가 `UPDATE`·`DELETE`·`TRUNCATE` 를 막는다(마이그레이션 904) — 정리 작업(여행 삭제·회원·게스트 정리의 처리 기록 파기, 시험 정리)만 그 트랜잭션에서 `app.case_events_purge` 를 켜고 문을 연다.
 
 ```
 transition_case()  →  case_events 추가  →  customer_cases projection 갱신

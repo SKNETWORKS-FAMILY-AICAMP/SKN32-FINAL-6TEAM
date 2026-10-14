@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 현재 여행 제품 범위
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 고객이 이용하는 화면과 연결 경로는 아래 세 가지이며 같은 고객·여행·최신 일정 상태를 사용합니다
 status: draft
 domain: travel
 ---

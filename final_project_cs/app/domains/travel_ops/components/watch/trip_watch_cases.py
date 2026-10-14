@@ -21,7 +21,7 @@
   `unchecked`(경로 소스가 답할 수 없는 대상)는 시나리오 버전과 같게 **센다.**
 
 ★`[2026-10-02 결함 인계 #1·#2·#3]` 이 반복이 **멈추지 않고 끝을 맺게** 한다.
-  ① Case 하나의 실행이 예외로 터져도 **그 회차의 나머지 Case 는 계속 돈다** — 터진 Case 는 `escalated`(`team_error`)로 닫아 운영자가 오류로 본다(죽은 채
+  ① Case 하나의 실행이 예외로 터져도 **그 회차의 나머지 Case 는 계속 돈다** — 터진 Case 는 `escalated`(`team_error`)로 닫아 개발자·QA 가 결함으로 본다(죽은 채
      `running` 으로 남지 않는다)
   ② 무응답 제안 만료(`PendingStore.expire`)를 이 반복도 한다 — 전에는 시나리오 버전(`trip_watch`)만 불러서, 기본 일꾼(Case 버전)이 도는 동안 끝난 일정의
      제안이 `open` 으로 남았다
@@ -66,6 +66,11 @@ ACTOR = "trip_watch"
 #: ★`[2026-10-03]` `action_target_changed`(Team 이 계산하는 사이 일정 판이 움직였다 — 낡은 기준이라 적용기가 거절) · `team_timeout_seconds`(묶음은 항목이 많아 Team 시간 제한에 걸릴 수 있다)를 더했다.
 #:  둘 다 **같은 사건이 그대로면 다음 회차에 새 기준으로 다시 계산하면 되는** 일시 실패다 — 전에는 같은 지문의 닫힌 Case 가 영원히 막았다(고객이 일정을 만지는 순간 그 항목의 감시가 멈췄다)
 RETRYABLE_GUARDRAILS = frozenset({"fatal_source_failure", "classification_failed", "team_error", "action_target_changed", "team_timeout_seconds"})
+
+
+def _code(guardrail: str | None) -> str:
+    """고객 문장에 싣는 오류 코드 — 닫힘 사유 이름만(내부 관찰 문구는 싣지 않는다). 글자 · 숫자 · 밑줄 · 공백 · 점 · 줄표만 남긴다."""
+    return re.sub(r"[^\w .-]", "_", str(guardrail or "escalated"))[:80]
 
 
 @dataclass
@@ -272,8 +277,8 @@ class TripWatchCaseOpener:
             result.notified.append({"trip_id": str(trip_id), "item": item.title, "code": code})
 
     def _close_failed(self, case_id: UUID, exc: BaseException) -> None:
-        """예외로 터진 Case — **죽은 채 `running` 으로 남기지 않고** `escalated`(`team_error`)로 닫는다. 운영자가 오류로 본다.
-        (Controller 는 예외가 나면 그 실행 기록만 실패로 닫고 Case 는 그대로 둔다 — 다시 실행되지도, 사람 눈에 띄지도 않았다.)"""
+        """예외로 터진 Case — **죽은 채 `running` 으로 남기지 않고** `escalated`(`team_error`)로 닫는다. 개발자·QA 가 결함으로 본다(상주 운영자는 없다).
+        (Controller 는 예외가 나면 그 실행 기록만 실패로 닫고 Case 는 그대로 둔다 — 다시 실행되지도, 결함 기록에 잡히지도 않았다.)"""
         from app.core.transition import transition_case
         from app.core.case_lifecycle.events import CaseStatus, EventType
 
@@ -314,12 +319,14 @@ class TripWatchCaseOpener:
                                {"error_code": guardrail, "failed_categories": ["execution"]},
                                self.clock(), result, case_id=case_id)
             return
-        # ★바꿀 곳이 없어서(`itinerary_unresolved`) 또는 **바꿀 곳은 찾았는데 일정 전체 재판정이 막아서**(`action_rejected` + 머리가 `RECHECK_FAILED`). 다른 `action_rejected`(인자 오류 등)는
-        #   운영자 몫이라 고객에게 알리지 않는다
+        # ★바꿀 곳이 없어서(`itinerary_unresolved`) 또는 **바꿀 곳은 찾았는데 일정 전체 재판정이 막아서**(`action_rejected` + 머리가 `RECHECK_FAILED`).
         # ★`[2026-10-03]` Team 이 다음 순위 안까지 다 시험해 걸렸으면(`itinerary_recheck_failed`) 적용기에 닿기 전에 끝난다 — 같은 문장으로 알린다
         recheck_failed = (guardrail == "itinerary_recheck_failed"
                           or (guardrail == "action_rejected" and observed.startswith(RECHECK_FAILED)))
         if guardrail != "itinerary_unresolved" and not recheck_failed:
+            # ★`[2026-10-14]` 그 밖의 실패(인자 오류로 적용기 거절 · 모름 · 제안 검증 실패 · 시간 초과 …)는 다시 시도하지 않는다. 전에는 「운영자 몫」이라
+            #   알리지 않았는데 운영자가 없다(D-018 · D-CS-014) — 고객도 모르고 아무도 처리하지 않았다. 일정은 그대로라는 것과 시각 · 코드를 한 번 알린다
+            self._unhandled_notice(context["trip_id"], context["item"], context["causes"], guardrail, result, case_id)
             return
         item, causes = context["item"], context["causes"]
         # ★`[2026-10-03 사용자 지적]` 못 찾았다고 곧바로 끝내지 않는다 — 조건을 풀어 **비슷한 안**이 있으면 그것을 묻는다(자동 적용 없음). 한 곳도 없을 때만 아래 옛 알림
@@ -330,6 +337,21 @@ class TripWatchCaseOpener:
                                        key=f"watch-unresolved:{item.item_id}:{_fingerprint(causes)}",
                                        payload=unresolved_notice(item=item, causes=causes, recheck_failed=recheck_failed))
         result.notified.append({"case_id": str(case_id), "trip_id": str(context["trip_id"]), "item": item.title})
+
+    def _unhandled_notice(self, trip_id: UUID, item: Item, causes: list[dict[str, Any]], guardrail: str | None,
+                          result: CaseTickResult, case_id: UUID) -> None:
+        """다시 시도하지 않는 실패를 고객에게 한 번 알린다 — 같은 항목 · 같은 원인 · 같은 코드면 다시 안 보낸다."""
+        from app.domains.travel_ops.components.watch.trip_watch_batch import Outcome, digest
+
+        code = _code(guardrail)
+        payload = digest([Outcome(item, "unhandled", causes=causes, reasons=[code], checked_at=self.clock().isoformat())],
+                         kind="guidance")
+        with self._connect() as conn, conn.transaction():
+            added = self.store.enqueue_message(conn, trip_id=trip_id,
+                                               key=f"watch-unhandled:{item.item_id}:{_fingerprint(causes)}:{code}",
+                                               payload=payload)
+        if added:
+            result.notified.append({"case_id": str(case_id), "trip_id": str(trip_id), "item": item.title, "code": code})
 
     def _offer_relaxed(self, trip_id: UUID, item: Item, causes: list[dict[str, Any]], recheck_failed: bool,
                        result: CaseTickResult, case_id: UUID) -> bool:
@@ -628,12 +650,16 @@ class TripWatchCaseOpener:
                      for match in re.finditer(r"outcome:([0-9a-fA-F-]{36}):(no_alternate|recheck_failed|source_failed|error|retry)", observed)]
             if not found and guardrail in RETRYABLE_GUARDRAILS:
                 found = [(item_id, "retry") for item_id in issues]
+            elif not found:
+                # ★`[2026-10-14]` 항목 표지 없이 다시 시도하지 않는 실패로 끝났다 — 전에는 구성원 전원이 말없이 남았다(단일 Case 의 `_unhandled_notice` 와 같다)
+                found = [(item_id, "unhandled") for item_id in issues]
         outcomes = [Outcome(issues[item_id].item, kind, causes=issues[item_id].causes,
-                            reasons=[guardrail or kind], checked_at=self.clock().isoformat())
+                            reasons=[_code(guardrail) if kind == "unhandled" else (guardrail or kind)],
+                            checked_at=self.clock().isoformat())
                     for item_id, kind in found if item_id in issues]
         # ★`[2026-10-03 사용자 지적]` 못 푼 항목마다 조건을 푼 안을 먼저 묻는다 — 묻는 항목은 이 「그대로 두었어요」 알림에서 빠진다(제안 알림이 따로 나간다). 하나도 없는 항목만 남는다
         outcomes = [o for o in outcomes
-                    if o.kind in ("source_failed", "error", "retry") or
+                    if o.kind in ("source_failed", "error", "retry", "unhandled") or
                     not self._offer_relaxed(context["trip_id"], o.item, o.causes, o.kind == "recheck_failed", result, case_id)]
         if not outcomes:
             return

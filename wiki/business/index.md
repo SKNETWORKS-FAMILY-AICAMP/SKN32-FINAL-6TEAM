@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 제품 비용·가격 검토
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 여행 상품 가격과 사업 가정은 여행 가격 검토를 출처·추정 여부·날짜와 함께 확인합니다
 status: draft
 domain: travel
 ---

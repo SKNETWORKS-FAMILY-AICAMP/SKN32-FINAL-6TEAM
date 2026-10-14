@@ -80,7 +80,8 @@ def build_router() -> APIRouter:
 
 
 def _public(value: dict) -> dict:
-    """Receipt means recorded, never a promise of agent assignment or resolution."""
+    """Receipt means recorded. Only an operator reply written in the admin console is shown, and never with the operator's identity."""
+    replies = [{"body": item["body"], "operator": "triPilot 운영팀", "at": item["at"]} for item in value.get("replies") or []]
     return {**{key: value.get(key) for key in ("id", "title", "body", "language", "receivedAt")},
-            "status": "기록 완료", "recordType": "suggestion", "replies": [],
+            "status": "답변 완료" if replies else "기록 완료", "recordType": "suggestion", "replies": replies,
             "message": "개선을 위한 기록을 저장했습니다. 여행 문제는 여행 화면에서 다시 요청하거나 장소 정보를 직접 보완해 주세요."}

@@ -252,6 +252,8 @@ class BikeRouter:
             out["foot_timing"] = dict(p["foot_timing"])
         if isinstance(p.get("walk_candidates"), dict):      # 서울 안 걸음 — 두 보행 자료 후보와 고른 쪽(walk_router)
             out["walk_candidates"] = p["walk_candidates"]
+        if profile == "foot" and isinstance(p.get("indoor"), dict):   # 역·지하상가 안 통로를 지난 거리(walk_graph_seoul_v3)
+            out["indoor"] = dict(p["indoor"])
         q = p.get("quality")
         if q:                                          # 로컬 길찾기가 낸 품질 표시(낙관 가능 · 접근 거리 · 큰길 비율)
             out["quality"] = q

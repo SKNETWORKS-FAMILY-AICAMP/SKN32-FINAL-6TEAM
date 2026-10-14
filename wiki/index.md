@@ -1,7 +1,7 @@
 ---
 type: guide
 title: triPilot wiki
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 제품 사양은 확정 결정·현재 계약, 구현·배포 상태는 코드·환경별 실행 기록으로 확인합니다
 status: draft
 domain: travel
 ---

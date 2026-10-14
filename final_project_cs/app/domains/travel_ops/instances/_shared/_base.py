@@ -135,7 +135,8 @@ class TravelTeamBase:
     def _escalate(cls, task: TeamTask, code: str,
                   evidence: list[Evidence] | None = None,
                   warnings: list[str] | None = None) -> TeamResult:
-        """사람에게 넘긴다. ★`failure_code` 를 **반드시** 남긴다 — 왜 못 했는지가
+        """처리 불가(`escalated`)로 닫는다 — 상담원 대기가 아니다(D-018 · D-CS-014). 고객에게는 처리하지 못했다고 안내하고,
+        개발자·QA 가 결함으로 사후 분석한다. ★`failure_code` 를 **반드시** 남긴다 — 왜 못 했는지가
         없으면 다음 사람이 같은 자리를 다시 판다."""
         return cls._result(task, outcome="escalated", confidence=0.0,
                            evidence=evidence or list(task.context.evidence),

@@ -1,7 +1,7 @@
 ---
 type: guide
 title: cs 프로젝트 구현 wiki
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 여행 CS triPilot의 현재 계약·구현 안내입니다
 status: draft
 domain: travel
 ---
