@@ -225,20 +225,26 @@ export function ChatBar({ chat, open, inChat, subject, onOpen, onClose, onEnterC
   const fab = useRef<HTMLButtonElement>(null);
   const shown = open || inChat;
   const wasShown = useRef(shown);
+  const wasInChat = useRef(inChat);
   const backToFab = useRef(false);
   const field = useRef<HTMLTextAreaElement>(null);
   // The keyboard focus follows the bar: to its close button when it opens from the round button (which is gone), back to the round button when its close button shut it.
   useEffect(() => {
     if (shown && !wasShown.current && !inChat && document.activeElement === document.body) closeButton.current?.focus({ preventScroll: true });
+    // `[2026-10-15 검토]` ← left the chat but the bar stays open (a draft is kept): ← is gone and ✕ stands in its place — the focus goes there, not to the page.
+    if (shown && !inChat && wasInChat.current && backToFab.current) { backToFab.current = false; closeButton.current?.focus({ preventScroll: true }); }
     if (!shown && backToFab.current) { backToFab.current = false; fab.current?.focus({ preventScroll: true }); }
     wasShown.current = shown;
+    wasInChat.current = inChat;
   }, [shown, inChat]);
-  // The field's height follows its text (the CSS `max-height` stops it at three lines, then it scrolls).
+  // The field's height follows its text (the CSS `max-height` stops it at three lines, then it scrolls) — and the width (a turned phone wraps the same text differently).
   useLayoutEffect(() => {
     const box = field.current;
     if (!box) return;
-    box.style.height = "auto";
-    box.style.height = `${box.scrollHeight}px`;
+    const fit = () => { box.style.height = "auto"; box.style.height = `${box.scrollHeight}px`; };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
   }, [chat.draft, shown, inChat]);
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

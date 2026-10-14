@@ -111,7 +111,8 @@ export function TripCredits({ facts, skipAnimation, onClose }: { facts: CreditFa
         <p className={styles.line}>{line}</p>
         <div className={styles.sum}>{numbers.map(([label, value]) => <div key={label}><small>{label}</small><b>{value}</b></div>)}</div>
         <div className={styles.buttons}>
-          <button type="button" onClick={() => { setShared("idle"); setPhase("roll"); }}>{t("다시 보기", "Replay")}</button>
+          {/* `[2026-10-15 검토]` With motion reduced (or animation skipped) the credits never roll, so there is nothing to replay. */}
+          {!still && <button type="button" onClick={() => { setShared("idle"); setPhase("roll"); }}>{t("다시 보기", "Replay")}</button>}
           <button type="button" data-primary disabled={!picture} onClick={() => void share()} aria-describedby="trip-credits-share">{t("공유하기", "Share")}</button>
           <button ref={close} type="button" onClick={onClose}>{t("닫기", "Close")}</button>
         </div>
