@@ -20,6 +20,7 @@ from docx.oxml.ns import qn
 TPL, OUT = sys.argv[1], sys.argv[2]
 HERE = Path(__file__).resolve().parent
 RESULTS = json.loads((HERE / "retrieval_results_2026-10-13.json").read_text(encoding="utf-8"))
+EXT = json.loads((HERE / "retrieval_results_ext_2026-10-14.json").read_text(encoding="utf-8"))
 
 # ── DB 에서 실측 ─────────────────────────────────────────────
 from app.infrastructure.db.session import get_connection  # noqa: E402
@@ -35,6 +36,12 @@ with get_connection() as conn, conn.cursor() as cur:
     EX = cur.fetchone()
     cur.execute("SELECT vector_dims(embedding) FROM knowledge_chunks WHERE embedding IS NOT NULL LIMIT 1")
     DIM = cur.fetchone()[0]
+
+ACT_SCOPES = ("travel_activity", "travel_weather", "travel_cancellation", "travel_access")
+N_DOC = sum(v[0] for v in SCOPES.values())
+N_CHUNK = sum(v[1] for v in SCOPES.values())
+A_DOC = sum(v[0] for s_, v in SCOPES.items() if s_ in ACT_SCOPES)
+A_CHUNK = sum(v[1] for s_, v in SCOPES.items() if s_ in ACT_SCOPES)
 
 
 # ── 문서 조작 도우미 ─────────────────────────────────────────
@@ -114,7 +121,7 @@ K = list(body)          # 원본 인덱스(양식 구조 고정)
 # ── 표지 ─────────────────────────────────────────────────────
 cover = K[4]
 cells = [[tc for tc in tr.findall(qn("w:tc"))] for tr in cover.findall(qn("w:tr"))]
-set_cell(cells[1][1], "2026. 10. 13.")
+set_cell(cells[1][1], "2026. 10. 14.")
 set_cell(cells[2][1], "https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM (브랜치 role-activity-b)")
 
 # ── 1. 구축 목적 및 적용 범위 ────────────────────────────────
@@ -122,14 +129,14 @@ set_p(K[10], "문제 정의 (Problem Definition): 여행 활동의 취소·변�
               "서비스가 정한 운영 기준 문서를 근거(출처 포함)로 찾아 인용해야 한다. 질문 표현이 달라지면(위약금·환불·무료 취소 등) "
               "단순 키워드 검색은 맞는 절을 찾지 못해 의미 기반 검색이 필요하며, 근거가 없을 때 답을 지어내지 않도록 검색 실패를 신호로 다룬다.")
 set_p(K[12], "벡터 데이터베이스: 서비스 운영 기준 문서(취소·변경 접수, 무료·무예약 판정, 운영 통제, 날씨·재난, 취소 공통 절차, 동행 조건 등) "
-              "16문서·134청크의 임베딩과 유사도 검색 엔진을 PostgreSQL pgvector 로 구축. 활동 에이전트가 쓰는 범위는 4개 scope 10문서·82청크.")
+              f"및 공정거래위원회 국내여행 표준약관·소비자분쟁해결기준(공식 자료 3문서)을 더한 총 {N_DOC}문서·{N_CHUNK}청크의 임베딩과 유사도 검색 엔진을 PostgreSQL pgvector 로 구축. 활동 에이전트가 쓰는 범위는 4개 scope {A_DOC}문서·{A_CHUNK}청크.")
 set_p(K[13], "그래프 데이터베이스: 활동 에이전트에서는 도입하지 않음(2.2 참고). 장소·예약·일정의 관계는 관계형 DB 와 코드 판정으로 처리.")
 
 fill_table(K[15], None, [
     ["정형 데이터", "관계형 DB (PostgreSQL)", "장소 원장·운영시간 요일표·예약·취소 조건·일정 버전 등 판정 입력, PK/FK 기반 정합성 관리",
      "활동 장소 6,338곳(ac_place), 실내외(ac_indoor), 웹 공지 확인 결과(ac_live_status), 취소 조건(cancellation_terms), 예약·일정"],
     ["비정형 데이터", "벡터 DB (pgvector, PostgreSQL 확장)", "규정 문장 근거 검색(RAG) — 규정 질문·취소/변경 근거 인용",
-     "서비스 운영 기준 문서 16건(134청크) — 활동 관련 4개 scope 10문서"],
+     f"서비스 운영 기준 문서 + 공식 자료(표준약관·분쟁해결기준) {N_DOC}건({N_CHUNK}청크) — 활동 관련 4개 scope {A_DOC}문서"],
     ["관계형 데이터", "그래프 DB — 미도입", "코어에 SQL 재귀 CTE 기반 GraphStore 포트가 있으나 활동 에이전트는 사용하지 않음", "해당 없음"],
     ["상태/대화 데이터", "Case 상태 (PostgreSQL)", "재개를 위한 질문 상태·고객 답 이력(current_state), 판정 근거(Evidence), LLM 섀도 기록",
      "required_input_schema, customer_input(_history), evidence, activity_judge_shadow"],
@@ -156,23 +163,23 @@ set_p(K[28], "도입 전까지 노드·엣지·제약 조건 설계와 성능 �
 body.remove(K[29])
 
 set_p(K[31], "원문 저장소: 청크 본문(content)과 메타데이터(scope, 문서 ID, 절 제목, 버전, 개인정보 등급, 시행일)는 knowledge_chunks 에, "
-              "문서 단위 정보(제목·출처 URI·scope·버전)는 knowledge_documents 에 저장한다. 원문 파일은 저장소 knowledge/travel/ 이며 S3 연동은 없다.")
+              "문서 단위 정보(제목·출처 URI·scope·버전)는 knowledge_documents 에 저장한다. 원문 파일은 저장소 knowledge/travel/ 과 knowledge/travel_ext/(공식 자료 정리본) 이며 S3 연동은 없다.")
 set_p(K[33], "Short-term (Case 상태 기반): required_input_schema·customer_input·customer_input_history 를 팀에 전달해 질문 후 재개 시 이어서 판정한다(LangGraph 미사용).")
 set_p(K[34], "Long-term (Persisted): 판정 결과·근거(Evidence)·변경 이력은 PostgreSQL 에 영구 저장(일정 버전은 추가만 가능). 고객 취향 프로필(과거 여행 집계)은 미구축 — 향후 과제.")
 
 # ── 검색 성능 및 정확도 검증 ─────────────────────────────────
 hits = sum(1 for r in RESULTS if r["id"] != "R-07")
 fill_table(K[38], None, [
-    ["검색 적중률", "정답 절이 상위 3 안에 있는 질문 비율(Hit@3)", "5/6 (83.3%) — 1건 부분(R-05)", "기준 미설정(결과 보고)", "질문 6건 수동 시험(정답 절 사전 지정, 아래 4장 표)"],
-    ["유사도 점수 분리", "범위 안 질문 1위 점수 대 범위 밖 질문 최고 점수", "범위 안 0.495~0.758 / 범위 밖 0.333", "제안 임계치 0.4 안팎", "7문항, 코사인 유사도"],
-    ["응답 속도", "질문 임베딩 + 검색 소요 시간", "0.17~0.35초 (첫 호출 1.1초)", "2.0초 이내", "호출 시간 직접 측정"],
+    ["검색 적중률", "정답 절이 상위 3 안에 있는 질문 비율(Hit@3)", "기본 코퍼스 5/6 (83.3%, 1건 부분 R-05) · 공식 자료 추가 후 신규 질문 2/4 (50%, E-01·E-02는 상위 3 밖)", "기준 미설정(결과 보고)", "질문 6건 + 신규 4건 수동 시험(정답 절 사전 지정, 아래 4장 표)"],
+    ["유사도 점수 분리", "범위 안 질문 1위 점수 대 범위 밖 질문 최고 점수", "기본: 범위 안 0.495~0.758 / 범위 밖 0.333. 추가 후 범위 안 1위 0.461~0.696(범위 밖은 재측정하지 않음)", "제안 임계치 0.4 안팎", "7문항 + 5문항, 코사인 유사도"],
+    ["응답 속도", "질문 임베딩 + 검색 소요 시간", "0.17~0.35초 (첫 호출 1.1~1.3초)", "2.0초 이내", "호출 시간 직접 측정"],
     ["적재 정합성", "청크 수 대비 벡터 채움률, 차원", f"{sum(v[2] for v in SCOPES.values())}/{sum(v[1] for v in SCOPES.values())} (100%), {DIM:,}차원", "100%", "DB 직접 조회 + 적재 시 차원 검사"],
     ["연결성(Graph)", "노드 간 탐색 성공률", "해당 없음 (GraphDB 미도입)", "—", "—"],
     ["MCP 연동 성공률", "외부 도구 호출·수신", "해당 없음 (RAG 경로에서 미사용)", "—", "—"],
 ])
 
 set_p(K[40], "검색 0건: 문서는 있는데 선택한 제공자의 벡터 칸이 비어 있으면 0건으로 돌려주지 않고 예외로 알린다. 0건이면 지어내지 않고 '관련 규정을 찾지 못했다'(모름)로 답하며, 규정 질문은 운영 담당자 인계 경로로 간다.")
-set_p(K[41], "유사도 임계치: 현재 구현은 top-k(8)만 적용하고 임계치는 두지 않는다. 시험 결과 범위 안 1위가 0.495 이상, 범위 밖 최고가 0.333 이므로 0.4 안팎을 제안 임계치로 기록하고 적용 여부는 후속 결정으로 둔다.")
+set_p(K[41], "유사도 임계치: 현재 구현은 top-k(8)만 적용하고 임계치는 두지 않는다. 기본 시험에서 범위 안 1위가 0.495 이상, 범위 밖 최고가 0.333 이었다. 공식 자료를 추가한 뒤 범위 안 1위는 0.461까지 내려갔고 3위 점수는 0.368 까지 있어 0.4 는 경계에 가깝다. 범위 밖 질문은 추가 후 다시 측정하지 않았으므로 임계치는 제안으로만 기록하고 적용은 후속 결정으로 둔다.")
 set_p(K[42], "Safe Mode: 규정 근거가 없으면 LLM 의 일반 지식으로 답하지 않는다. 답변에는 규정 문서의 고객용 문장을 출처와 함께 싣고, 근거가 부족하면 모름 또는 인계로 전환한다(Graceful Degradation).")
 
 # ── 3. 데이터 운영 흐름 ──────────────────────────────────────
@@ -199,8 +206,8 @@ LABEL = {"travel_activity": "활동 운영 기준 (travel_activity)", "travel_we
 rows = [[LABEL[s], str(v[0]), str(v[1])] for s, v in SCOPES.items()]
 rows.append(["합계", str(sum(v[0] for v in SCOPES.values())), str(sum(v[1] for v in SCOPES.values()))])
 fill_table(K[63], None, rows)
-set_p(K[64], "총 16개 문서를 134개 청크로 적재했고 모든 청크에 1,536차원 벡터가 채워진 것을 확인했다(134/134). 활동 에이전트가 사용하는 범위는 "
-              "4개 scope 10문서·82청크이다. 그래프 DB 는 구축하지 않았다. 측정: 2026-10-13, 로컬 개발 DB(PostgreSQL + pgvector, Docker), OpenAI 임베딩 호출 3회(입력 43,287 토큰).")
+set_p(K[64], f"총 {N_DOC}개 문서를 {N_CHUNK}개 청크로 적재했고 모든 청크에 1,536차원 벡터가 채워진 것을 확인했다({sum(v[2] for v in SCOPES.values())}/{N_CHUNK}). 활동 에이전트가 사용하는 범위는 "
+              f"4개 scope {A_DOC}문서·{A_CHUNK}청크이다. 이 중 3문서·18청크는 공정거래위원회 국내여행 표준약관(제10020호)과 소비자분쟁해결기준(고시 제2025-14호)을 판단 단위로 풀어 쓴 것이며(knowledge/travel_ext/), 원문과 대조해 문장 6곳을 고친 뒤 재적재했다. 장소별·업체별 약관은 담지 않았다. 그래프 DB 는 구축하지 않았다. 측정: 2026-10-13~14, 로컬 개발 DB(PostgreSQL + pgvector, Docker), OpenAI 임베딩 호출 기본 코퍼스 3회(입력 43,287 토큰) + 공식 자료 적재 2회(재적재 포함, 각 약 5,000 토큰).")
 
 anchor = K[65]            # 「주요 예시 데이터」
 title, scope, uri, no, meta, content = EX
@@ -228,9 +235,25 @@ cap = plain(K[64], f'상위 3 결과 예시 — {r3["id"]} "{r3["query"]}" (scop
 tbl_a.addnext(cap)
 cap.addnext(tbl_b)
 
+# 공식 자료 추가 후 검색 시험 표
+tbl_e = copy.deepcopy(K[38])
+EXT_LABEL = {"R-05": "부분 적중(재측정)", "E-01": "미적중(기대 절이 상위 3 밖)", "E-02": "미적중(기대 절이 상위 3 밖)",
+             "E-03": "적중", "E-04": "적중"}
+fill_table(tbl_e, ["ID", "질문", "1위 문서 · 절", "1위 점수", "판정"], [
+    [r["id"], r["query"], f'{r["top3"][0]["document"]} · {r["top3"][0]["section"]}', f'{r["top3"][0]["score"]:.3f}',
+     EXT_LABEL[r["id"]]] for r in EXT])
+cap_e = plain(K[64], "공식 자료(표준약관·분쟁해결기준) 추가 후 검색 시험 — 활동 4개 scope, top-3, 2026-10-14. E-01~E-04 는 새 질문이고 R-05 는 재측정이다.")
+tbl_b.addnext(cap_e)
+cap_e.addnext(tbl_e)
+
 anchor = K[67]            # 「화면 캡처 또는 실행 결과」
 lines = ["$ python retrieval_test.py   # 활동 scope 4개, top-3", ""]
 for r in RESULTS:
+    lines.append(f'{r["id"]} {r["query"]}  [{r["ms"]}ms]')
+    for t in r["top3"]:
+        lines.append(f'   {t["score"]:.3f}  {t["scope"]} | {t["document"]} · {t["section"]}')
+lines += ["", "$ python retrieval_test_ext.py   # 공식 자료 추가 후, 활동 scope 4개, top-3", ""]
+for r in EXT:
     lines.append(f'{r["id"]} {r["query"]}  [{r["ms"]}ms]')
     for t in r["top3"]:
         lines.append(f'   {t["score"]:.3f}  {t["scope"]} | {t["document"]} · {t["section"]}')
