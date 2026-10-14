@@ -6,6 +6,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { openApi } from "@/lib/live/client";
 import { useSettings, useT } from "@/lib/settings";
 import styles from "./test-plans.module.css";
+import { planOfInput } from "./test-plan-input";
 
 interface PreparedPlan { code: string; name: string; description: string; expected: string; text: string; category?: string }
 interface Catalog { enabled: boolean; scenarios: PreparedPlan[] }
@@ -21,13 +22,13 @@ const categories = [
 function categoryOf(plan: PreparedPlan) { return categories.find(([code]) => code === plan.category) ?? categories[categories.length - 1]; }
 
 /** 목록은 부가 기능이다. 읽기를 기다리거나 실패해도 일반 계획 입력을 막지 않는다. */
-export function TestPlans({ value, onChoose, disabled }: { value: string; onChoose: (code: string) => void; disabled: boolean }) {
+export function TestPlans({ value, onChoose, disabled }: { value: string; onChoose: (code: string, text: string) => void; disabled: boolean }) {
   const { language } = useSettings();
   const t = useT();
   const picker = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
   const query = useQuery({ queryKey: ["test-plans", language], queryFn: () => openApi<Catalog>("/v1/web/test-scenarios", language), retry: false });
-  const entry = query.data?.scenarios.find((plan) => plan.code === value.trim().toLowerCase());
+  const entry = planOfInput(query.data?.scenarios, value);
   const selectedCategory = entry && categoryOf(entry);
   const close = () => { if (picker.current) picker.current.open = false; trigger.current?.focus(); };
   function navigate(event: KeyboardEvent<HTMLDetailsElement>) {
@@ -53,7 +54,7 @@ export function TestPlans({ value, onChoose, disabled }: { value: string; onChoo
           const plans = query.data.scenarios.filter(plan => categoryOf(plan)[0] === category[0]);
           return plans.length > 0 && <fieldset key={category[0]} className={styles.group}>
             <legend><span className={styles.badge} data-category={category[0]}>{t(category[1], category[2])}</span><span className={styles.count}>{plans.length}</span></legend>
-            {plans.map(plan => <button key={plan.code} type="button" data-plan-code={plan.code} data-category={category[0]} aria-pressed={entry?.code === plan.code} onClick={() => { onChoose(plan.code); close(); }}>
+            {plans.map(plan => <button key={plan.code} type="button" data-plan-code={plan.code} data-category={category[0]} aria-pressed={entry?.code === plan.code} onClick={() => { onChoose(plan.code, plan.text); close(); }}>
               <span className={styles.code}>{plan.code}</span><span>{plan.name}</span><Check size={16} aria-hidden="true" className={entry?.code === plan.code ? styles.checked : styles.unchecked} />
             </button>)}
           </fieldset>;

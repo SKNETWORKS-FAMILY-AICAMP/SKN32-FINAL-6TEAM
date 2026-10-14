@@ -85,6 +85,28 @@ class CarGraph:
         with open(self.dir / "osm_way_seg_topis_link_v1.csv", encoding="utf-8") as f:
             for r in csv.DictReader(f):
                 self.seg[int(r["osm_way_id"])][(int(r["seg_idx"]), r["dir"])] = r["link_id"]
+        # ☆`[2026-10-14]` 전국 표준 링크 대응표(OSM 조각 × 방향 → 표준 링크 번호) — 도로 사건(경찰청 UTIC) 원문 구간 번호와 같은 체계.
+        #   TOPIS 대응표 번호는 원문 번호와 133개 중 20개만 겹쳐(서울 실경보 28건) 경로의 `링크:` 로 쓰지 않는다. 표가 없으면 비운다.
+        #   ☆v2(같은 날): 경로 계산 도로망의 큰길·연결로 전체(v1 은 TOPIS 가 붙은 way 8,664개뿐) + 일방통행 길은 갈 수 있는 방향만.
+        #   v1 형상 파일에 없는 way 는 v2 폴더의 형상(osm_way_geom_std_v2)으로 조각 번호를 찾는다 — 표준 번호에만 쓰고 속도 계산은 그대로.
+        self.std = defaultdict(dict)
+        self.std_source = None
+        self.std_geom = {}                    # way → (highway, pts) — v1 형상(wayinfo)에 없는 way 만
+        for ver in ("stdlink_v2", "stdlink_v1"):
+            stdf = self.dir.parent / ver / f"osm_way_seg_{ver}.csv.gz"
+            if not stdf.exists():
+                continue
+            with gzip.open(stdf, "rt", encoding="utf-8") as f:
+                for r in csv.DictReader(f):
+                    self.std[int(r["osm_way_id"])][(int(r["seg_idx"]), r["dir"])] = r["link_id"]
+            geomf = stdf.parent / "osm_way_geom_std_v2.csv.gz"
+            if ver == "stdlink_v2" and geomf.exists():
+                with gzip.open(geomf, "rt", encoding="utf-8") as f:
+                    for r in csv.DictReader(f):
+                        self.std_geom[int(r["osm_way_id"])] = (
+                            r["highway"], [tuple(map(float, p.split(","))) for p in r["pts"].split(" ")])
+            self.std_source = ver
+            break
         self.wayinfo = {}                     # way → (highway, pts)
         with open(self.dir / "osm_way_geom_v1.csv", encoding="utf-8") as f:
             for r in csv.DictReader(f):
@@ -112,8 +134,8 @@ class CarGraph:
     def daytype(self, t):
         return daytype_kr(t.date(), self.holidays | self.cal_hol)
 
-    def _way_dir_and_segs(self, way, sub):
-        hw, pts = self.wayinfo[way]
+    def _way_dir_and_segs(self, way, sub, info=None):
+        hw, pts = info or self.wayinfo[way]
         cum = [0.0]
         for i in range(len(pts) - 1):
             cum.append(cum[-1] + hav(pts[i], pts[i + 1]))
@@ -153,6 +175,7 @@ class CarGraph:
         cover = {"topis": 0.0, "class": 0.0, "default": 0.0}
         links = defaultdict(float)
         link_seq = {}                       # 지난 TOPIS 링크(진행 방향별 번호) — 처음 지난 순서. 대응 없는 조각은 넣지 않는다
+        std_seq = {}                        # 지난 전국 표준 링크(진행 방향별) — 같은 조각·같은 방향만(이웃 조각으로 메우지 않는다)
         slow_s = slow_m = 0.0
         n_edges = 0
         for a, b, way in det:
@@ -164,6 +187,11 @@ class CarGraph:
                 d = "fwd" if fwd else "bwd"
             else:
                 hw, segidx, d = None, [None] * len(sub), "fwd"
+            std_segidx, std_d = segidx, d
+            std_info = getattr(self, "std_geom", {}).get(way) if way not in self.wayinfo else None
+            if std_info:                     # 표준 번호만 찾는다 — hw·TOPIS 조각은 건드리지 않아 소요 계산은 그대로
+                _, std_fwd, std_segidx = self._way_dir_and_segs(way, sub, std_info)
+                std_d = "fwd" if std_fwd else "bwd"
             segtab = self.seg.get(way, {})
             for i in range(len(sub) - 1):
                 L = hav(sub[i], sub[i + 1])
@@ -176,6 +204,10 @@ class CarGraph:
                             break
                 if link:
                     link_seq.setdefault(link, None)
+                if std_segidx[i] is not None:
+                    std = getattr(self, "std", {}).get(way, {}).get((std_segidx[i], std_d))   # 시험용 그래프·옛 적재본엔 표가 없다 → 비움
+                    if std:
+                        std_seq.setdefault(std, None)
                 remaining = L
                 while remaining > 1e-8:
                     dtp, h = self.daytype(t), t.hour
@@ -217,7 +249,7 @@ class CarGraph:
                 "coverage_m": {k: round(v, 1) for k, v in cover.items()},
                 "coverage_pct": {k: round(v / max(tot, 1) * 100, 1) for k, v in cover.items()},
                 "links": [{"link_id": k, "m": round(m, 1)} for k, m in top],
-                "n_links": len(links), "link_ids": list(link_seq)}
+                "n_links": len(links), "link_ids": list(link_seq), "std_link_ids": list(std_seq)}
 
 
 # ── 라우터 ─────────────────────────────────────────────────────────────────
@@ -419,6 +451,7 @@ class CarService:
                "hour_start": r["hour_start"],
                "coverage_m": r["coverage_m"], "coverage_pct": cov, "n_edges": r["n_edges"],
                "links": r["links"], "n_links": r["n_links"], "link_ids": list(r.get("link_ids") or ()),
+               "std_link_ids": list(r.get("std_link_ids") or ()), "std_link_source": getattr(self.g, "std_source", None),
                "source_id": [SOURCE_ID, GRAPH_SOURCE_ID], "warn": warn}
         if routing_evidence is not None:
             out['routing_evidence'] = routing_evidence

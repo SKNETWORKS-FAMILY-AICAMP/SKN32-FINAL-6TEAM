@@ -27,6 +27,11 @@
 ★이동 계산기 묶음(`needs: mobility`, transit) — 실제 좌표(`latlng`)로 놓고 `--mobility <이동 자료 폴더>` 를 줄 때만 잰다.
   그 시나리오만 계산기를 쓴다(계산 코드 · 평가기 모두) — 다른 시나리오는 지은 좌표라 도보 기준으로 정답을 정했다.
   계산기를 안 켜면 그 묶음은 `skipped` 로 따로 세고 점수에서 뺀다.
+★`[2026-10-13]` 모델이 상위 3곳 중 하나를 고르게(`meal_pick`, 설계 §7-2) — `--picker openai|gemma`. 기본 `rule`(지금 그대로).
+    `--gate auto`   부를 조건(`meal_pick.should_ask` — 취향 문장 · 규칙상 차이 없음)일 때만 부른다(운영과 같다)
+    `--gate always` 후보가 둘 이상이면 늘 부른다 — 모델 자체의 실력(규칙 1등을 깨뜨리나)을 잰다
+    시나리오의 `preference` 는 일정 `constraints.meal_preference` 로 들어간다. 모델 호출마다 시간 · 토큰 · 확인 실패 이유를 남긴다.
+    ★OpenAI 는 `.env` 의 `ACOP_OPENAI_API_KEY`(개인 키 — 개발 평가용) · gemma 는 `ACOP_OLLAMA_BASE_URL` 을 읽는다. 키 값은 찍지 않는다.
 ★장소 id 를 바꿔 가며 여러 번 돈다(`--seeds`, 기본 5). 순위가 같을 때 마지막 기준이 장소 id 라서(`replan.Candidate.rank`),
   id 하나로만 재면 우연히 맞은 것을 정답으로 센다. **모든 판에서 같은 판정**일 때만 그 판정이고, 갈리면 `unstable` 이다.
 """
@@ -56,6 +61,7 @@ NS = uuid.UUID("6c1d7a2e-0000-4000-8000-000000000da1")
 
 LABELS = ("correct", "ok", "correct_no_change", "wrong_violation", "wrong", "missed", "wrong_change", "unstable")
 _LEG: dict[str, Any] = {"leg": None}            # --mobility 로 켠 이동 계산기(needs: mobility 시나리오에서만 쓴다)
+_PICK: dict[str, Any] = {"picker": None, "log": [], "usage": None}   # --picker 로 켠 선택기 · 이번 판의 호출 기록 · 토큰 셈
 GOOD = frozenset({"correct", "correct_no_change"})
 
 
@@ -111,7 +117,13 @@ def build(case: dict[str, Any], seed: int = 0) -> tuple[dict[str, Any], list[Any
                           title=spec["title"], place_id=uuid.UUID(place["place_id"]), starts_at=_at(spec["start"]),
                           ends_at=_at(spec["end"]), locked=bool(spec.get("locked")), detail=dict(spec.get("detail") or {}),
                           place=place))
-    trip = {"trip_id": str(uuid.uuid5(NS, case["id"])), "constraints": case.get("constraints") or {}}
+    constraints = dict(case.get("constraints") or {})
+    preference = _PICK.get("preference") or case.get("preference")      # --preference 는 모든 시나리오에 같은 문장(압박 시험)
+    if preference:
+        from app.domains.travel_ops.components.planning.meal_pick import PREFERENCE_KEY
+
+        constraints[PREFERENCE_KEY] = preference
+    trip = {"trip_id": str(uuid.uuid5(NS, case["id"])), "constraints": constraints}
     return trip, items, places
 
 
@@ -131,15 +143,17 @@ def _plan(case, trip, items, places, changes) -> Any:
 
     pool = list(places.values())
     meal = next(i for i in items if i.seq == case["meal"])
+    picker = _PICK["picker"]
     if case["path"] == "closed_on_day":
         return changes.plan_closed_on_day(trip=trip, items=items, places=pool, meal=meal, source="eval",
-                                          detail="평가 시나리오 휴무", checked_at=_at("03:00"))
+                                          detail="평가 시나리오 휴무", checked_at=_at("03:00"), meal_picker=picker)
     if case["path"] == "closed_now":
         return changes.plan_closed(trip=trip, items=items, places=pool, at=_at(case["at"]),
-                                   message="오늘 휴무래요", request_id=None)
+                                   message="오늘 휴무래요", request_id=None, meal_picker=picker)
     if case["path"] == "delay":
         return changes.plan_delay(trip=trip, items=items, places=pool, at=_at(case["at"]),
-                                  minutes=case["delay_min"], message=f"{case['delay_min']}분 늦어요", request_id=None)
+                                  minutes=case["delay_min"], message=f"{case['delay_min']}분 늦어요", request_id=None,
+                                  meal_picker=picker)
     raise ValueError(f"모르는 경로: {case['path']}")
 
 
@@ -243,12 +257,100 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 def run_once(case: dict[str, Any], seed: int) -> dict[str, Any]:
     trip, items, places = build(case, seed)
+    _PICK["log"] = []
     result = plan(case, trip, items, places)
     key, new_item = chosen(result, places)
     route = route_check(case, items, places, key, new_item) if key else None
-    return {"picked": key, "picked_name": places[key]["name"] if key else None,
-            "status": getattr(result, "status", None) or "changed", "route": route,
-            "label": score_case(case, key, route)}
+    out = {"picked": key, "picked_name": places[key]["name"] if key else None,
+           "status": getattr(result, "status", None) or "changed", "route": route,
+           "label": score_case(case, key, route)}
+    if _PICK["log"]:
+        call = _PICK["log"][-1]
+        out["pick"] = {**call, "final_label": out["label"],
+                       "rule_label": score_case(case, call["rule_key"], None) if call["by"] == "llm" else None}
+    return out
+
+
+def _logging(picker: Any) -> Any:
+    """선택기를 감싸 이번 판의 호출을 남긴다 — 규칙 1등 · 누가 골랐나 · 확인 실패 · 시간."""
+    def wrapped(best, alternates, context):
+        pick = picker(best, alternates, context)
+        _PICK["log"].append({"by": pick.by, "rule_key": (best.place or {}).get("key"),
+                             "llm_key": (pick.best.place or {}).get("key") if pick.by == "llm" else None,
+                             "asked": len(pick.asked_ids), "failure": pick.failure, "reason": pick.reason or None,
+                             "seconds": pick.seconds})
+        return pick
+    return wrapped
+
+
+class _CountingClient:
+    """OpenAI 클라이언트를 감싸 토큰을 센다(`response.usage`) — 비용을 리포트에 적는다."""
+
+    def __init__(self, client: Any, usage: dict[str, int]) -> None:
+        self._client, self._usage = client, usage
+        self.chat = self
+        self.completions = self
+
+    def create(self, **kwargs: Any) -> Any:
+        response = self._client.chat.completions.create(**kwargs)
+        usage = getattr(response, "usage", None)
+        if usage is not None:
+            self._usage["prompt_tokens"] += int(getattr(usage, "prompt_tokens", 0) or 0)
+            self._usage["completion_tokens"] += int(getattr(usage, "completion_tokens", 0) or 0)
+        self._usage["calls"] += 1
+        return response
+
+
+def enable_picker(kind: str, *, model: str | None, gate: str) -> dict[str, Any]:
+    """`--picker` 를 켠다. 키 · 주소가 없으면 멈춘다(지어낸 결과로 재지 않는다). 돌려주는 것은 리포트의 모델 정보."""
+    from app.core.settings import get_settings
+    from app.domains.travel_ops.components.planning import meal_pick
+
+    settings = get_settings()
+    if kind == "openai":
+        from openai import OpenAI
+
+        from app.infrastructure.llm_failover import OpenAIChat
+
+        key = (getattr(settings, "openai_api_key", "") or "").strip()
+        if not key:
+            raise SystemExit("ACOP_OPENAI_API_KEY 가 비어 있다")
+        model = model or "gpt-4o-mini"
+        _PICK["usage"] = {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
+        client = _CountingClient(OpenAI(api_key=key, timeout=30.0, max_retries=1), _PICK["usage"])
+        chat = OpenAIChat(api_key=key, model=model, timeout=30.0, client=client)
+    elif kind == "gemma":
+        from app.infrastructure.ollama_chat import OllamaChat
+
+        base = (getattr(settings, "ollama_base_url", "") or "").strip()
+        if not base:
+            raise SystemExit("ACOP_OLLAMA_BASE_URL 이 비어 있다 — 서버 gemma 주소(포트포워딩)를 .env 에 넣는다")
+        model = model or getattr(settings, "ollama_model", "gemma4:12b")
+        chat = OllamaChat(base_url=base, model=model, timeout=60.0, keep_alive="30m")
+    else:
+        raise SystemExit(f"모르는 선택기: {kind}")
+    ask = meal_pick.should_ask if gate == "auto" else (lambda best, alternates, context: [best, *alternates][:meal_pick.TOP]
+                                                          if alternates else [])
+    _PICK["picker"] = _logging(meal_pick.make_picker(chat, ask=ask))
+    return {"picker": kind, "model": model, "gate": gate}
+
+
+def pick_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """모델 선택 셈 — 판(시드) 단위. 규칙 1등을 바꾼 판이 맞았나 틀렸나로 나눈다."""
+    calls = [run["pick"] for r in results for run in r.get("runs") or [] if run.get("pick")]
+    asked = [c for c in calls if c["by"] != "rule"]
+    overrides = [c for c in asked if c["by"] == "llm" and c["llm_key"] != c["rule_key"]]
+    seconds = sorted(c["seconds"] for c in asked)
+    out = {"runs_with_meal": len(calls), "asked": len(asked),
+           "by": dict(Counter(c["by"] for c in calls)),
+           "failures": dict(Counter(c["failure"] for c in asked if c["failure"])),
+           "overrides": len(overrides),
+           "override_vs_rule": dict(Counter(f"{c['rule_label']}→{c.get('final_label')}" for c in overrides)),
+           "seconds_mean": round(sum(seconds) / len(seconds), 2) if seconds else None,
+           "seconds_p95": seconds[min(len(seconds) - 1, int(len(seconds) * 0.95))] if seconds else None}
+    if _PICK["usage"]:
+        out["usage"] = dict(_PICK["usage"])
+    return out
 
 
 def run_case(case: dict[str, Any], seeds: int = 5) -> dict[str, Any]:
@@ -262,6 +364,10 @@ def run_case(case: dict[str, Any], seeds: int = 5) -> dict[str, Any]:
            "label": first["label"] if len(labels) == 1 else "unstable"}
     if len(labels) > 1:
         out["by_seed"] = [f"{r['picked']}:{r['label']}" for r in runs]
+    if _PICK["picker"] is not None:
+        out["runs"] = [{"picked": r["picked"], "label": r["label"], **({"pick": r["pick"]} if r.get("pick") else {})}
+                       for r in runs]
+        out.pop("pick", None)
     return out
 
 
@@ -295,7 +401,8 @@ def run(*, label: str, dataset: Path = DATASET, seeds: int = 5) -> dict[str, Any
             "env": {"run_at": datetime.now(KST).isoformat(timespec="seconds"), "git_commit": git("rev-parse", "--short", "HEAD"),
                     "git_branch": git("rev-parse", "--abbrev-ref", "HEAD"),
                     "git_dirty": bool(git("status", "--porcelain", "--", "app"))},
-            "summary": summarize(results), "results": results}
+            "summary": summarize(results), **({"picker": {**_PICK["info"], **pick_summary(results)}} if _PICK.get("info") else {}),
+            "results": results}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -305,13 +412,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path)
     parser.add_argument("--seeds", type=int, default=5, help="장소 id 를 바꿔 도는 판 수")
     parser.add_argument("--mobility", help="이동 자료 폴더(datasets/mobility/processed) — 주면 transit 묶음도 잰다")
+    parser.add_argument("--picker", choices=("rule", "openai", "gemma"), default="rule",
+                        help="상위 3곳 중 하나를 누가 고르나(meal_pick) — 기본 rule(지금 그대로)")
+    parser.add_argument("--model", help="모델 이름(기본: openai gpt-4o-mini · gemma 설정값)")
+    parser.add_argument("--gate", choices=("auto", "always"), default="auto",
+                        help="auto = 부를 조건일 때만(운영과 같다) · always = 후보가 둘 이상이면 늘")
+    parser.add_argument("--preference", help="모든 시나리오에 넣을 취향 문장 — 취향이 동선을 깨뜨리지 않나 보는 압박 시험")
     args = parser.parse_args(argv)
+    _PICK["preference"] = args.preference
     if args.mobility:
         enable_mobility(args.mobility)
+    if args.picker != "rule":
+        _PICK["info"] = {**enable_picker(args.picker, model=args.model, gate=args.gate),
+                         **({"preference_all": args.preference} if args.preference else {})}
     report = run(label=args.label, dataset=args.dataset, seeds=args.seeds)
     if args.out:
         args.out.write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(json.dumps(report["summary"], ensure_ascii=False, indent=1))
+    print(json.dumps({"summary": report["summary"], **({"picker": report["picker"]} if "picker" in report else {})},
+                     ensure_ascii=False, indent=1))
     return 0
 
 

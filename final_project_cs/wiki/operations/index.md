@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 제품 개발·배포·운영 안내
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 환경별 실제 상태와 운영 절차 문서의 목차
 status: draft
 domain: travel
 ---
@@ -16,6 +16,7 @@ domain: travel
 | 정상 판정·장애 대응 | [상시 운영 점검·복구](always-on.md) |
 | 로컬 실행·회귀 | [로컬 안내](local-setup.md)·[실행·검증](run.md) |
 | 공개 배포 정의·절차 | [Docker 배포 파일](../../deploy/README.md) |
+| 도커 이미지 정리·월별 복원·WSL 디스크 압축 | [이미지 정리와 월별 복원용 보존](image-retention.md) |
 | Oracle ARM 앱 실험 | [앱 배포·실제 요청 검사](arm-develop-cd.md) |
 | 모델·GPU 연구 | [ARM 모델 시험](arm-serving-queue.md)·[GPU 대기열](gpu-work-queue.md) |
 | 결과를 모르는 부수효과 | [unknown 상태 확인](unknown-state.md) |

@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 도메인과 공통 엔진의 경계
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 업무 구현은 app/domains/travel_ops/와 프로젝트 선언에서 조립합니다
 status: draft
 domain: travel
 ---

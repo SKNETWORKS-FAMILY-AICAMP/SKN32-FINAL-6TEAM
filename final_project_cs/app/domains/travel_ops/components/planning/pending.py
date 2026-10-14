@@ -231,7 +231,7 @@ def unresolved_notice(*, item: Item, causes: list[dict[str, Any]], recheck_faile
     """`[2026-10-02 결함 인계 #3]` 감시가 사건을 찾았는데 **바꿀 곳이 없다** — 고객에게 **알린다**(전에는 아무 말도 안 나갔다).
 
     ★일정은 바꾸지 않았다는 것과 무엇이 문제인지만 말한다 — 원인에 있는 말만(`_cause_text`), 지어낸 대안·약속 없음. 「사람이 확인합니다」 같은 대기 약속도 안 한다
-      (사람 대기 없음 — 운영자는 오류만 본다). 안전 사건(지진·재난문자·경보)이면 머리가 「안전 알림」이고 알림 종류도 `safety_alert` 다.
+      (사람 대기 없음 — 개발자·QA 는 결함을 사후 분석할 뿐이다). 안전 사건(지진·재난문자·경보)이면 머리가 「안전 알림」이고 알림 종류도 `safety_alert` 다.
     """
     safety = is_safety({"disruptions": causes})
     head = "⚠️ 안전 알림 — " if safety else ""

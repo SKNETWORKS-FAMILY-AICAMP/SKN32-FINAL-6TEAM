@@ -261,7 +261,8 @@ class ReplacementMixin:
         mode = kind_mode(alternative_order.KIND)
         if llm is None or mode == "rule":
             return None
-        pool = [a for a in [*alt["alternatives"], *alt["more_alternatives"]] if a.get("revalidated")]
+        # ★`[2026-10-13 사용자 결정 A안]` 화면에 보일 3곳만 넘긴다 — 어떤 3곳이 보이는지는 코드가 정하고 LLM 은 그 순서만 정한다.
+        pool = [a for a in alt["alternatives"] if a.get("revalidated")]
         preference = alternative_order.preference_inputs(survey, task.input_text)
         if len(pool) < 2 or preference is None:
             return None
@@ -317,9 +318,7 @@ class ReplacementMixin:
             warnings.append("대체 후보 순서 LLM 의 답을 쓸 수 없어 코드 순서로 보여 줬다")
             return {"by": "code", "failed": fc.LLM_SCHEMA_INVALID}
         ordered, record = applied
-        shown = sum(1 for a in alt["alternatives"] if a.get("revalidated"))
-        alt["alternatives"] = [*ordered[:shown], *[a for a in alt["alternatives"] if not a.get("revalidated")]]
-        alt["more_alternatives"] = [*ordered[shown:], *[a for a in alt["more_alternatives"] if not a.get("revalidated")]]
+        alt["alternatives"] = [*ordered, *[a for a in alt["alternatives"] if not a.get("revalidated")]]   # 더보기는 그대로
         if record["dropped"]:
             warnings.append(f"대체 후보 순서 LLM 이 목록에 없는 장소 {record['dropped']}곳을 냈다 — 버렸다")
         return {**record, "model": getattr(call, "model", None)}

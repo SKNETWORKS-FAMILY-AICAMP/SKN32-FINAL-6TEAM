@@ -36,14 +36,47 @@ def state(conn, tenant: str, trip_id: UUID, *, now: datetime | None = None) -> d
         row = None
     if row is None:
         return {"revision": 0, "active": False, "categories": []}
-    revision, value, version = row
+    return _state_of(*row, now=now)
+
+
+def _state_of(revision, value, version, *, now: datetime | None = None) -> dict:
     active = bool(value.get("categories") and datetime.fromisoformat(value["expires_at"]) > (now or datetime.now(UTC))
                   and value["base_version"] == version)
     return {**value, "revision": int(revision), "active": active}
 
 
+def states(conn, tenant: str, trip_ids: list, *, now: datetime | None = None) -> dict[str, dict]:
+    """여러 여행의 시험 상태를 **한 번에** 읽는다(`[2026-10-14]` — 감시가 여행마다 따로 묻지 않게). 시험이 없는 여행은 빠진다(`state` 의 빈 값과 같은 뜻)."""
+    ids = [str(trip_id) for trip_id in trip_ids]
+    if not ids:
+        return {}
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT r.id,r.revision,r.value,t.latest_version FROM admin_records r "
+                        "JOIN trips t ON t.tenant_id=r.tenant_id AND t.trip_id::text=r.id "
+                        "WHERE r.tenant_id=%s AND r.kind=%s AND r.id = ANY(%s)", (tenant, KIND, ids))
+            rows = cur.fetchall()
+    except Exception as exc:
+        if type(exc).__name__ != "UndefinedTable":
+            raise
+        rows = []
+    return {row[0]: _state_of(*row[1:], now=now) for row in rows}
+
+
 def attach(conn, tenant: str, trip_id: UUID, version: int, items: list) -> None:
-    current = state(conn, tenant, trip_id)
+    _mark(state(conn, tenant, trip_id), tenant, trip_id, version, items)
+
+
+def attach_many(conn, tenant: str, versions: dict, items_by_trip: dict) -> None:
+    """`attach` 의 여러 여행 판 — 시험 상태를 한 번에 읽고 여행마다 같은 규칙으로 표시를 붙인다."""
+    found = states(conn, tenant, list(items_by_trip))
+    for trip_id, items in items_by_trip.items():
+        current = found.get(str(trip_id))
+        if current is not None:
+            _mark(current, tenant, trip_id, versions[trip_id], items)
+
+
+def _mark(current: dict, tenant: str, trip_id: UUID, version: int, items: list) -> None:
     if not current["active"] or current["base_version"] != version:
         return
     for item in items:

@@ -1,7 +1,7 @@
 ---
 type: policy
 title: 현재 여행 정책 코퍼스
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 입력은 여행 manifest와 그 파일이 참조하는 여행 문서입니다
 status: draft
 domain: travel
 ---

@@ -51,10 +51,13 @@ def line_name(line):
 
 
 def station_name(nm):
-    """uses 역명 — 괄호 병기와 끝의 「역」을 뺀다. 이름 자체가 「서울역」이면 그대로(9/24 표기)."""
+    """uses 역명 — 괄호 병기와 끝의 「역」을 뺀다. 이름 자체가 「서울역」이면 그대로(9/24 표기).
+
+    ☆`[2026-10-14]` GTX-A 시간표는 서울역을 「서울」로 적는다 — 그대로 두면 `GTX-A:서울` 이 표기 검사(`서울` ✗)에 걸려
+    서울역에서 타는 GTX-A 후보가 전부 버려졌다(예시 일정 저녁 식당→롯데마트 left_out 의 uses_format). 「서울」도 「서울역」으로 적는다."""
     s = str(nm).split("(")[0].strip()
-    if s == "서울역":
-        return s
+    if s in ("서울역", "서울"):
+        return "서울역"
     return s[:-1] if s.endswith("역") and len(s) > 1 else s
 
 

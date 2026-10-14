@@ -121,7 +121,8 @@ def snapshot(docker, command, directory):
         config["services"][service]["image"] = image
         config["services"][service].pop("build", None)
     # A separate repository name keeps ordinary app-tag retention from deleting
-    # the exact recovery image. Remove these tags only after recovery expires.
+    # the exact recovery image. Expired tags (and their state directories) are
+    # removed by deploy/image_retention.py at the end of each successful deployment.
     token = uuid4().hex
     for service, record in records.items():
         record["recovery_tag"] = "tripilot-recovery:" + token + "-" + service

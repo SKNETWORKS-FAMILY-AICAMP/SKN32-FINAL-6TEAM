@@ -110,6 +110,11 @@ def _line(outcome: Outcome) -> str:
         code = outcome.reasons[0] if outcome.reasons else outcome.kind
         return (f"{title} — 이번 회차에 확인을 끝내지 못해 기존 일정을 유지했어요. "
                 f"자료와 조건을 다시 확인할게요. 확인 시각: {outcome.checked_at}, 오류 코드: {code}.")
+    if outcome.kind == "unhandled":
+        # ★`[2026-10-14]` 다시 시도하지 않는 실패(적용기 거절 · 모름 · 제안 검증 실패 · 시간 초과) — 다시 확인하겠다고 약속하지 않는다. 내부 문구는 싣지 않고 코드만
+        code = outcome.reasons[0] if outcome.reasons else outcome.kind
+        return (f"{title} — {why}. 자동으로 처리하지 못해 **일정은 그대로 두었어요.** "
+                f"확인 시각: {outcome.checked_at}, 오류 코드: {code}.")
     if outcome.kind == "applied":
         change = outcome.change
         text = str(change.notice["text"])
@@ -130,8 +135,8 @@ def _line(outcome: Outcome) -> str:
 
 
 #: 고객에게 말할 결과 — 안 바꿨거나 못 푼 것까지(바꾸지 않는 것과 알림을 끄는 것은 별개다)
-_TELL = ("applied", "asked", "consent", "no_alternate", "recheck_failed", "source_failed", "error", "retry")
-_UNCHANGED = ("no_alternate", "recheck_failed")
+_TELL = ("applied", "asked", "consent", "no_alternate", "recheck_failed", "unhandled", "source_failed", "error", "retry")
+_UNCHANGED = ("no_alternate", "recheck_failed", "unhandled")
 #: 기존 일정 유지·고객 안내와 함께 다음 회차에 다시 확인할 항목.
 _RETRY = ("source_failed", "error", "retry")
 
@@ -160,6 +165,9 @@ def digest(outcomes: list[Outcome], *, kind: str) -> dict[str, Any]:
         "keys": [f"{o.item.item_id}:{cause_fingerprint(o.causes)}" for o in told]}
     payload["deferred"] = [{"item_id": str(o.item.item_id), "code": o.reasons[0] if o.reasons else o.kind,
                             "checked_at": o.checked_at} for o in told if o.kind in _RETRY]
+    # 다시 확인하지 않는 실패 — 같은 모양으로 따로 둔다(`deferred` 는 다음 회차에 다시 보는 것만)
+    payload["unhandled"] = [{"item_id": str(o.item.item_id), "code": o.reasons[0] if o.reasons else o.kind,
+                             "checked_at": o.checked_at} for o in told if o.kind == "unhandled"]
     if kind == "guidance":
         payload["kind"] = (next(iter(kinds)) if len(kinds) == 1 else "mixed") if kinds else "guidance"
         payload["reason"] = payload["kind"]

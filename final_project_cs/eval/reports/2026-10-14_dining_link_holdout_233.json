@@ -1,0 +1,377 @@
+{
+ "dataset": "dining_link_holdout_v1.jsonl",
+ "n": 19,
+ "rows": [
+  {
+   "id": "LH-001",
+   "group": "content_id",
+   "place": "남문토방",
+   "expect": "남문토방",
+   "db": {
+    "label": "correct_link",
+    "got": "353514da-29e0-5aba-853d-9c708bf80892",
+    "got_name": "남문토방"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "353514da-29e0-5aba-853d-9c708bf80892",
+    "got_name": "남문토방"
+   }
+  },
+  {
+   "id": "LH-002",
+   "group": "content_id",
+   "place": "자원대구탕",
+   "expect": "자원대구탕",
+   "db": {
+    "label": "correct_link",
+    "got": "285b6d1e-771f-5561-9e73-9e402adcacf9",
+    "got_name": "자원대구탕"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "285b6d1e-771f-5561-9e73-9e402adcacf9",
+    "got_name": "자원대구탕"
+   }
+  },
+  {
+   "id": "LH-003",
+   "group": "content_id",
+   "place": "더소가 카페 서촌",
+   "expect": "더소가 카페 서촌",
+   "db": {
+    "label": "correct_link",
+    "got": "653b3f71-09e3-5647-9f29-10662b43241e",
+    "got_name": "더소가 카페 서촌"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "653b3f71-09e3-5647-9f29-10662b43241e",
+    "got_name": "더소가 카페 서촌"
+   }
+  },
+  {
+   "id": "LH-004",
+   "group": "exact_near",
+   "place": "가산물갈비&백년불고기",
+   "expect": "가산물갈비&백년불고기",
+   "db": {
+    "label": "correct_link",
+    "got": "f7830a0c-4427-59d5-9ce4-107d2265e772",
+    "got_name": "가산물갈비&백년불고기"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "f7830a0c-4427-59d5-9ce4-107d2265e772",
+    "got_name": "가산물갈비&백년불고기"
+   }
+  },
+  {
+   "id": "LH-005",
+   "group": "exact_near",
+   "place": "새봄떡국국수",
+   "expect": "새봄떡국국수",
+   "db": {
+    "label": "correct_link",
+    "got": "ce3c26db-cf04-582a-afd4-8d246b80c0b3",
+    "got_name": "새봄떡국국수"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "ce3c26db-cf04-582a-afd4-8d246b80c0b3",
+    "got_name": "새봄떡국국수"
+   }
+  },
+  {
+   "id": "LH-006",
+   "group": "exact_near",
+   "place": "빈호",
+   "expect": "빈호",
+   "db": {
+    "label": "correct_link",
+    "got": "a18f50ba-cc8f-571c-aa7f-d93c60d865c3",
+    "got_name": "빈호"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "a18f50ba-cc8f-571c-aa7f-d93c60d865c3",
+    "got_name": "빈호"
+   }
+  },
+  {
+   "id": "LH-007",
+   "group": "name_variant",
+   "place": "영화장 본점",
+   "expect": "영화장",
+   "db": {
+    "label": "correct_link",
+    "got": "6ff7c48d-d0bf-5cc3-96e9-68978967b805",
+    "got_name": "영화장"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "6ff7c48d-d0bf-5cc3-96e9-68978967b805",
+    "got_name": "영화장"
+   }
+  },
+  {
+   "id": "LH-008",
+   "group": "name_variant",
+   "place": "춘보 만두",
+   "expect": "춘보만두",
+   "db": {
+    "label": "correct_link",
+    "got": "df3f21d7-b74f-5a70-888f-d24b10bab2e3",
+    "got_name": "춘보만두"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "df3f21d7-b74f-5a70-888f-d24b10bab2e3",
+    "got_name": "춘보만두"
+   }
+  },
+  {
+   "id": "LH-009",
+   "group": "name_variant",
+   "place": "합정옥 본점",
+   "expect": "합정옥",
+   "db": {
+    "label": "correct_link",
+    "got": "fe5fdee0-fb7e-53e7-8e85-989adc4b6cce",
+    "got_name": "합정옥"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "fe5fdee0-fb7e-53e7-8e85-989adc4b6cce",
+    "got_name": "합정옥"
+   }
+  },
+  {
+   "id": "LH-010",
+   "group": "far_offset",
+   "place": "와가리피순대",
+   "expect": "와가리피순대",
+   "db": {
+    "label": "missed",
+    "got": null
+   },
+   "review": {
+    "label": "missed",
+    "got": null
+   }
+  },
+  {
+   "id": "LH-011",
+   "group": "far_offset",
+   "place": "하츠베이커리",
+   "expect": "하츠베이커리",
+   "db": {
+    "label": "correct_link",
+    "got": "95b7eb8f-4bb8-5afd-b85b-cadf78cc6fc1",
+    "got_name": "하츠베이커리"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "95b7eb8f-4bb8-5afd-b85b-cadf78cc6fc1",
+    "got_name": "하츠베이커리"
+   }
+  },
+  {
+   "id": "LH-012",
+   "group": "neighbor",
+   "place": "성수지앵협동조합",
+   "expect": "성수지앵협동조합",
+   "db": {
+    "label": "correct_link",
+    "got": "4bf597ef-305e-579e-90d7-a9c236983257",
+    "got_name": "성수지앵협동조합"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "4bf597ef-305e-579e-90d7-a9c236983257",
+    "got_name": "성수지앵협동조합"
+   }
+  },
+  {
+   "id": "LH-013",
+   "group": "neighbor",
+   "place": "난포",
+   "expect": "난포",
+   "db": {
+    "label": "correct_link",
+    "got": "040cfad1-f619-5390-a1aa-e59af250548e",
+    "got_name": "난포"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "040cfad1-f619-5390-a1aa-e59af250548e",
+    "got_name": "난포"
+   }
+  },
+  {
+   "id": "LH-014",
+   "group": "neighbor",
+   "place": "피에르 가니에르",
+   "expect": "피에르 가니에르",
+   "db": {
+    "label": "correct_link",
+    "got": "51db135d-176f-5a40-b8ee-80922f59c30e",
+    "got_name": "피에르 가니에르"
+   },
+   "review": {
+    "label": "correct_link",
+    "got": "51db135d-176f-5a40-b8ee-80922f59c30e",
+    "got_name": "피에르 가니에르"
+   }
+  },
+  {
+   "id": "LH-015",
+   "group": "not_in_ledger",
+   "place": "올리브영 종로점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LH-016",
+   "group": "not_in_ledger",
+   "place": "배스킨라빈스 강남시청점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LH-017",
+   "group": "not_in_ledger",
+   "place": "롯데리아 성동시청점",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LH-018",
+   "group": "other_branch",
+   "place": "텐바",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  },
+  {
+   "id": "LH-019",
+   "group": "other_branch",
+   "place": "웍셔너리",
+   "expect": null,
+   "db": {
+    "label": "correct_abstain",
+    "got": null
+   },
+   "review": {
+    "label": "correct_abstain",
+    "got": null
+   }
+  }
+ ],
+ "summary": {
+  "db": {
+   "labels": {
+    "correct_link": 13,
+    "missed": 1,
+    "correct_abstain": 5
+   },
+   "accuracy": "18/19",
+   "wrong_link": 0,
+   "error": 0,
+   "precision": "13/13",
+   "recall": "13/14",
+   "by_group": {
+    "content_id": {
+     "correct_link": 3
+    },
+    "exact_near": {
+     "correct_link": 3
+    },
+    "name_variant": {
+     "correct_link": 3
+    },
+    "far_offset": {
+     "missed": 1,
+     "correct_link": 1
+    },
+    "neighbor": {
+     "correct_link": 3
+    },
+    "not_in_ledger": {
+     "correct_abstain": 3
+    },
+    "other_branch": {
+     "correct_abstain": 2
+    }
+   }
+  },
+  "review": {
+   "labels": {
+    "correct_link": 13,
+    "missed": 1,
+    "correct_abstain": 5
+   },
+   "accuracy": "18/19",
+   "wrong_link": 0,
+   "error": 0,
+   "precision": "13/13",
+   "recall": "13/14",
+   "by_group": {
+    "content_id": {
+     "correct_link": 3
+    },
+    "exact_near": {
+     "correct_link": 3
+    },
+    "name_variant": {
+     "correct_link": 3
+    },
+    "far_offset": {
+     "missed": 1,
+     "correct_link": 1
+    },
+    "neighbor": {
+     "correct_link": 3
+    },
+    "not_in_ledger": {
+     "correct_abstain": 3
+    },
+    "other_branch": {
+     "correct_abstain": 2
+    }
+   }
+  }
+ },
+ "env": {
+  "at": "2026-10-14T06:25:57+00:00",
+  "db": "dining_rebuild",
+  "with_sql": "233_dining_link_same_name.sql"
+ }
+}

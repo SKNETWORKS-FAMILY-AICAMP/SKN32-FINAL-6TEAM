@@ -33,6 +33,7 @@ from .hours import HoursFacts, closed_weekdays, facts_for, week_known_all, weekd
 from .moves import Leg, late_text, leg_between
 from .terms import category_label
 from . import taxi_pricing
+from app.domains.travel_ops.components import settings_hook
 
 KST = ZoneInfo("Asia/Seoul")
 #: 한 번 계산하는 동안 이동 계산기에 쓰는 시간 상한(초). 넘으면 남은 구간은 어림값으로 낸다(이유가 줄에 적힌다) — 화면이 끝없이 기다리지 않게. ★우리가 고른 값
@@ -405,7 +406,9 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             pass
 
     got = collect(sources=sources, claims=claims)
-    pricing = taxi_pricing.from_trip(got.trip)
+    # ★`[2026-10-14 핫픽스]` 택시 호출 상품 고르기가 꺼져 있으면(관리 콘솔 스위치) 앞서 저장된 고른 값도 계산에 쓰지 않는다
+    taxi_pick_on = settings_hook.taxi_call_product_enabled(tenant_id)
+    pricing = taxi_pricing.from_trip(got.trip) if taxi_pick_on else None
     pricing_constraints = taxi_pricing.constraints(pricing)
     rows = got.rows
     positions = {str(s["source_id"]): int(s["position"]) for s in sources}
@@ -606,7 +609,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     return {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
             "engine": ("timetable" if engines == {"timetable"} else "estimate" if engines == {"estimate"}
                        else "mixed" if engines else None),
-            "items": items, "moves": moves, "taxi_pricing": pricing if pricing is not None else taxi_pricing.default(),
+            "items": items, "moves": moves, "taxi_pricing": (pricing if pricing is not None else taxi_pricing.default()) if taxi_pick_on else None,
             "needs": {"items": needs_items, "moves": needs_moves, "total": needs_items + needs_moves},
             "ready": bool(items) and not got.problems and needs_items + needs_moves == 0}
 
@@ -616,10 +619,15 @@ def public_place(place: dict[str, Any] | None) -> dict[str, Any] | None:
     return {k: v for k, v in place.items() if k != "place_id"} if place else None
 
 
-def public(payload: dict[str, Any] | None) -> dict[str, Any] | None:
-    """응답에 싣는 모양 — 저장본에서 **내부 칸**(이동 재사용 키 `sig` · 공용 장소 행 번호 `place_id`)을 뺀 복사본. 저장본은 그대로(자동 추천이 쓴다)."""
+def public(payload: dict[str, Any] | None, *, tenant_id: str | None = None) -> dict[str, Any] | None:
+    """응답에 싣는 모양 — 저장본에서 **내부 칸**(이동 재사용 키 `sig` · 공용 장소 행 번호 `place_id`)을 뺀 복사본. 저장본은 그대로(자동 추천이 쓴다).
+
+    ★`[2026-10-14 핫픽스]` `tenant_id` 를 주면 택시 호출 상품 고르기가 꺼져 있는 한 `taxi_pricing` 을 비워 보낸다 —
+    스위치를 끄기 전에 만들어 저장된 검사에도 화면 칸이 남지 않게. (주지 않으면 저장본 그대로 — 이전 호출과 같다)"""
     if payload is None:
         return None
+    if tenant_id is not None and not settings_hook.taxi_call_product_enabled(tenant_id):
+        payload = {**payload, "taxi_pricing": None}
     items = []
     for it in payload.get("items", []):
         place = it.get("place")

@@ -174,7 +174,7 @@ def from_settings(settings: Any) -> Any:
     base = (getattr(settings, "ollama_base_url", "") or "").strip()
     if not base:
         return None
-    chat = OllamaChat(base_url=base, model=getattr(settings, "ollama_model", "gemma4:12b"),
+    chat = OllamaChat(base_url=base, model=getattr(settings, "ollama_model", "tripilot-pointer:e4b-ft"),
                       timeout=float(getattr(settings, "ollama_timeout_seconds", 60.0)),
                       keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""),
                       num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0))

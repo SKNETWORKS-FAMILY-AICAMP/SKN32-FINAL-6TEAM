@@ -1,0 +1,410 @@
+{
+ "eval": "dining_agent",
+ "label": "c-rule-holdout",
+ "config": "rule",
+ "model": null,
+ "dataset": "dining_agent_holdout_v1.jsonl",
+ "dataset_sha": "de9693835742fb95",
+ "repeats": 1,
+ "run_at": "2026-10-13T17:32:23+09:00",
+ "summary": {
+  "must_accuracy": {
+   "num": 18,
+   "den": 22,
+   "rate": 0.818
+  },
+  "missing": {
+   "num": 4,
+   "den": 22,
+   "rate": 0.182
+  },
+  "wrong_verdict": {
+   "num": 0,
+   "den": 22,
+   "rate": 0.0
+  },
+  "unnecessary": 0,
+  "by_check": {
+   "dietary": {
+    "num": 0,
+    "den": 2,
+    "rate": 0.0
+   },
+   "found": {
+    "num": 9,
+    "den": 9,
+    "rate": 1.0
+   },
+   "kids": {
+    "num": 0,
+    "den": 1,
+    "rate": 0.0
+   },
+   "open_at": {
+    "num": 9,
+    "den": 9,
+    "rate": 1.0
+   },
+   "payment": {
+    "num": 0,
+    "den": 1,
+    "rate": 0.0
+   }
+  },
+  "by_expected": {
+   "bad": {
+    "num": 4,
+    "den": 4,
+    "rate": 1.0
+   },
+   "ok": {
+    "num": 14,
+    "den": 18,
+    "rate": 0.778
+   }
+  },
+  "runs": 8,
+  "run_failures": {},
+  "validation_failures": 0,
+  "seconds_mean": 0.0,
+  "seconds_p95": 0.0,
+  "tool_calls_mean": 0.0,
+  "turns_mean": 0.0,
+  "tokens": {
+   "prompt": 0,
+   "completion": 0
+  }
+ },
+ "rows": [
+  {
+   "case": "DGH-001",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-001",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-002",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-002",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-003",
+   "item": "m1",
+   "check": "dietary",
+   "kind": "must",
+   "expected": "ok",
+   "got": null,
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-004",
+   "item": "m1",
+   "check": "dietary",
+   "kind": "must",
+   "expected": "ok",
+   "got": null,
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-005",
+   "item": "m1",
+   "check": "kids",
+   "kind": "must",
+   "expected": "ok",
+   "got": null,
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-006",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-006",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-007",
+   "item": "m1",
+   "check": "payment",
+   "kind": "must",
+   "expected": "ok",
+   "got": null,
+   "correct": false,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-008",
+   "item": "m1",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-008",
+   "item": "m1",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "bad",
+   "got": "bad",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-008",
+   "item": "m2",
+   "check": "found",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  },
+  {
+   "case": "DGH-008",
+   "item": "m2",
+   "check": "open_at",
+   "kind": "must",
+   "expected": "ok",
+   "got": "ok",
+   "correct": true,
+   "repeat": 0
+  }
+ ],
+ "runs": [
+  {
+   "case": "DGH-001",
+   "repeat": 0,
+   "seconds": 0.0,
+   "tool_calls": 0,
+   "turns": 0,
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-002",
+   "repeat": 0,
+   "seconds": 0.0,
+   "tool_calls": 0,
+   "turns": 0,
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-003",
+   "repeat": 0,
+   "seconds": 0.0,
+   "tool_calls": 0,
+   "turns": 0,
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-004",
+   "repeat": 0,
+   "seconds": 0.0,
+   "tool_calls": 0,
+   "turns": 0,
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-005",
+   "repeat": 0,
+   "seconds": 0.0,
+   "tool_calls": 0,
+   "turns": 0,
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-006",
+   "repeat": 0,
+   "seconds": 0.0,
+   "tool_calls": 0,
+   "turns": 0,
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    }
+   }
+  },
+  {
+   "case": "DGH-007",
+   "repeat": 0,
+   "seconds": 0.0,
+   "tool_calls": 0,
+   "turns": 0,
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "ok"
+    }
+   }
+  },
+  {
+   "case": "DGH-008",
+   "repeat": 0,
+   "seconds": 0.0,
+   "tool_calls": 0,
+   "turns": 0,
+   "reported": {
+    "m1": {
+     "found": "ok",
+     "open_at": "bad"
+    },
+    "m2": {
+     "found": "ok",
+     "open_at": "ok"
+    }
+   }
+  }
+ ]
+}

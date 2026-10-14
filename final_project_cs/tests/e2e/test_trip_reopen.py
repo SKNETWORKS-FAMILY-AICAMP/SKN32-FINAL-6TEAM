@@ -335,3 +335,50 @@ def test_reopening_shows_the_mode_saved_on_the_trip_and_done_without_touching_it
     assert move["mode"] == "taxi"                                                  # ★저장된 수단 — 추천(지하철)이 아니다
     untouched = _confirm(api, key, again)
     assert (untouched["changed"], untouched["version"]) == (False, done["version"])  # 가져온 수단은 고친 것이 아니다
+
+
+def _small_trip(api, key: str, *items) -> dict:
+    body = {"request_id": "reopen-hotfix", "title": "서울 하루", "locale": "ko", "party_size": 2, "constraints": {},
+            "places": [_place("bc", "북촌한옥마을", 37.5826, 126.9836), _place("is", "인사동", 37.5740, 126.9850)],
+            "items": list(items)}
+    response = api["client"].post("/v1/web/trips", json=body, headers=_h(key))
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def test_a_booking_without_a_number_is_kept_when_reopened_and_after_a_time_change(api):
+    """`[2026-10-14 ST4F-491]` 「예약 완료」라고만 적어 등록한 일정(예약번호 없음)을 다시 열면 예약 표시가 빠졌다."""
+    key = _user(api)
+    booked = {**_item(1, "activity", "북촌한옥마을", "bc", TOMORROW, "10:00", "11:30"), "detail": {"booking": {"declared_by": "customer_plan"}}}
+    trip = _small_trip(api, key, booked, _item(2, "activity", "인사동", "is", TOMORROW, "14:00", "15:30"))
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    by_title = {i["title"]: i for i in view["review"]["items"]}
+    assert by_title["북촌한옥마을"]["booked"] is True and by_title["인사동"]["booked"] is None      # 예약 줄 · 자동 추천 제외가 다시 선다
+    source = view["sources"][0]["source_id"]
+    view = _edit(api, key, view, {"source_id": source, "field": f"items[{_index(view, '북촌한옥마을')}].starts_at", "value": "10:30"})
+    done = _confirm(api, key, view)
+    assert done["changed"] is True
+    after = {i.title: i for i in _stored(api, trip["trip_id"])[1] if i.kind != "mobility"}
+    assert after["북촌한옥마을"].starts_at == datetime.fromisoformat(_at(TOMORROW, "10:30"))
+    assert after["북촌한옥마을"].detail["booking"] == {"declared_by": "customer_plan"}          # 시각만 고쳐도 예약 표시가 남는다
+    assert "booking" not in after["인사동"].detail
+
+
+def test_an_item_past_midnight_is_frozen_so_done_is_not_refused(api):
+    """`[2026-10-14 ST4F-491]` 23:00 → 다음 날 01:00 일정이 있으면 「완료」가 항상 422(time_order)였다 — 고정 일정으로 둔다."""
+    key = _user(api)
+    next_day = (NOW + timedelta(days=2)).date().isoformat()
+    overnight = {**_item(2, "activity", "인사동", "is", TOMORROW, "23:00", "23:30"), "ends_at": _at(next_day, "01:00")}
+    trip = _small_trip(api, key, _item(1, "activity", "북촌한옥마을", "bc", TOMORROW, "10:00", "11:30"), overnight)
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    _, items = _stored(api, trip["trip_id"])
+    by_title = {i.title: str(i.item_id) for i in items}
+    assert view["reopen"]["frozen_item_ids"] == [by_title["인사동"]]
+    assert [i["fields"]["title"]["value"] for i in view["sources"][0]["items"]] == ["북촌한옥마을"]
+    source = view["sources"][0]["source_id"]
+    view = _edit(api, key, view, {"source_id": source, "field": f"items[{_index(view, '북촌한옥마을')}].starts_at", "value": "10:30"})
+    assert view["check"]["ready"] is True, view["check"]["problems"]
+    done = _confirm(api, key, view)
+    assert done["changed"] is True and done["version"] == trip["version"] + 1
+    kept = next(i for i in _stored(api, trip["trip_id"])[1] if i.title == "인사동")
+    assert str(kept.item_id) == by_title["인사동"]                                          # 고정 일정은 같은 id 그대로

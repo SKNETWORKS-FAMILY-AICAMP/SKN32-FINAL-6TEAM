@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 평가 지표와 보고 기준
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 여행 자료에 적용할 지표의 정의입니다
 status: draft
 domain: travel
 ---

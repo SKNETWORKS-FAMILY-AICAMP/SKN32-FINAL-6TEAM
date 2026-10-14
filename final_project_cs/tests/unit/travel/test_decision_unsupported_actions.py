@@ -37,6 +37,13 @@ def test_unsupported_requests_get_the_same_honest_reply_and_change_nothing(actio
     assert du.stands_alone(decision)                     # 대기 중인 되묻기가 있어도 새 요청으로 처리한다
 
 
+@pytest.mark.parametrize("action", ["add_item", "remove_item"])
+def test_add_and_remove_say_where_to_do_it_instead(action):
+    # `[2026-10-14 활동 회신 10번]` 못 한다고만 하지 않고 다음에 할 곳(등록한 여행의 「일정 수정」)을 말한다
+    decision, _ = _decide({"action": action, "target_item": "i1"})
+    assert "「일정 수정」" in decision.social
+
+
 def test_unsupported_requests_are_not_offered_as_clarify_choices():
     _, schema = _decide({"action": "other"})
     offered = schema["properties"]["choices"]["items"]["properties"]["action"]["enum"]

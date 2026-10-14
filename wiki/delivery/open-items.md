@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 현재 남은 작업
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 남은 작업은 최신 확정 결정과 해당 작업의 실행 기록으로 갱신합니다
 status: draft
 domain: travel
 ---

@@ -227,7 +227,8 @@ RETRY_HOURS = 6
 
 
 def fill_missing_facts(conn, tenant_id: str, *, source: Any, chat: Any, now: Any,
-                       limit: int = FILL_PER_TICK) -> dict[str, Any]:
+                       limit: int = FILL_PER_TICK, refresh_from: str | None = None,
+                       pace: Any = None) -> dict[str, Any]:
     """진행 중인 여행에 들어간 장소 중 **운영시간을 아직 안 읽은 곳**을 관광공사에서 한 번 읽어 장소 행에 적는다.
 
     ★`[2026-09-29 ui 세션 지적]` 등록으로 들어온 활동(「경복궁」)은 장소 행이 비어 있어 일정 상세에 전화·운영시간이
@@ -236,6 +237,13 @@ def fill_missing_facts(conn, tenant_id: str, *, source: Any, chat: Any, now: Any
     ★적는 것: `hours_week`(요일별 — 옮길 수 있을 때만) · `hours_read`(읽은 방법·인용·조건·시각) · `hours_origin`
       (관광공사 원문 `usetime`·`restdate` — 사실 정보) · `phone`(문의 전화, 없을 때만). 식당 원장에 이어진 곳은 원장이 답하므로 뺀다.
     ★못 읽으면 `hours_read.method = "none"` 과 이유를 적고 `RETRY_HOURS` 뒤에 다시 본다.
+    ★`[2026-10-14 사용자 지시]` **일일 정기점검(매일 03시 시작 · 가능하면 03:30 까지 · 08:00 에 멈춤 — `watch/daily_check.py`)** — 실행기는 그 창 안에서만
+      `refresh_from`(그날 03시)을 준다. 주면 관광공사에서 읽은 지 그 시각보다 오래된
+      장소도 **하루 한 번** 다시 읽는다. 대상은 고객이 일정에 넣은(아직 안 끝난) 장소뿐이다 — 관광공사 전체 목록은 매일 다시 받지 않는다(「장소 자체는 잘 안 바뀐다」).
+      새 장소가 먼저다. 다시 읽기가 실패하면 **전에 읽은 값을 지우지 않고** `hours_refresh.failed_at` 만 적어 그날은 다시 부르지 않는다.
+      사람이 확인한 값(`hours_read.source` 가 `tour_api` 가 아닌 것)은 다시 읽지 않는다.
+      `pace(남은 수) -> 이번에 읽을 수` 를 주면 03:30 까지 끝나도록 한 번에 읽는 양을 늘린다. 결과의 `remaining` 은 이번 회차 뒤에도
+      오늘 다시 읽어야 할 곳의 수다(정기점검일 때만 싣는다) — 03:30 이 지났는데 0 보다 크면 실행기가 관리자 웹앱에 보고한다.
     """
     import json
     from datetime import timedelta
@@ -245,21 +253,38 @@ def fill_missing_facts(conn, tenant_id: str, *, source: Any, chat: Any, now: Any
     if source is None or not hasattr(source, "operating"):
         return {"skipped": "관광공사 조회가 연결돼 있지 않다"}
     retry_before = (now - timedelta(hours=RETRY_HOURS)).isoformat()
+    refresh, params = "", [tenant_id, now, retry_before]
+    if refresh_from:
+        refresh = (" OR (p.attributes->'hours_read'->>'source' = 'tour_api' AND p.attributes->'hours_read'->>'read_at' < %s "
+                   "     AND coalesce(p.attributes->'hours_refresh'->>'failed_at', '') < %s)")
+        params += [refresh_from, refresh_from]
+    inner = ("SELECT DISTINCT p.place_id, p.name, p.kind, p.latitude, p.longitude, p.attributes "
+             "FROM trips t JOIN itinerary_items i ON i.tenant_id=t.tenant_id AND i.trip_id=t.trip_id "
+             "  AND i.version=t.latest_version "
+             "JOIN places p ON p.place_id=i.place_id AND p.tenant_id=i.tenant_id "
+             "WHERE t.tenant_id=%s AND i.kind IN ('activity','dining') AND i.ends_at > %s "
+             "AND NOT (p.attributes ? 'dining_place_uid') "
+             "AND (NOT (p.attributes ? 'hours_read') OR (p.attributes->'hours_read'->>'method' = 'none' "
+             "     AND p.attributes->'hours_read'->>'read_at' < %s)" + refresh + ")")
+    rereads = 0
     with conn.cursor() as cur:
-        cur.execute(
-            "SELECT DISTINCT p.place_id, p.name, p.kind, p.latitude, p.longitude, p.attributes "
-            "FROM trips t JOIN itinerary_items i ON i.tenant_id=t.tenant_id AND i.trip_id=t.trip_id "
-            "  AND i.version=t.latest_version "
-            "JOIN places p ON p.place_id=i.place_id AND p.tenant_id=i.tenant_id "
-            "WHERE t.tenant_id=%s AND i.kind IN ('activity','dining') AND i.ends_at > %s "
-            "AND NOT (p.attributes ? 'dining_place_uid') "
-            "AND (NOT (p.attributes ? 'hours_read') OR (p.attributes->'hours_read'->>'method' = 'none' "
-            "     AND p.attributes->'hours_read'->>'read_at' < %s)) "
-            "LIMIT %s", (tenant_id, now, retry_before, limit))
+        if refresh_from:
+            # ★정기점검 몫(이미 읽은 곳 다시 읽기)과 전체 남은 수 — 양 맞추기 · 「안 끝남」 판정에 쓴다
+            cur.execute("SELECT count(*), count(*) FILTER (WHERE q.attributes ? 'hours_read') FROM (" + inner + ") q",
+                        tuple(params))
+            total, rereads = (int(v) for v in cur.fetchone())
+            limit = pace(total) if pace else limit
+        cur.execute("SELECT place_id, name, kind, latitude, longitude, attributes FROM (" + inner + ") q "
+                    "ORDER BY (q.attributes ? 'hours_read'), q.place_id LIMIT %s", (*params, limit))
         rows = cur.fetchall()
     out: dict[str, Any] = {"asked": len(rows), "read": 0, "unknown": 0, "phone": 0, "failed": []}
+    if refresh_from:
+        out["remaining"] = max(0, rereads - sum(1 for row in rows if (row[5] or {}).get("hours_read")))
     for place_id, name, kind, lat, lon, attributes in rows:
         attributes = attributes or {}
+        #: 전에 제대로 읽은 곳을 하루 한 번 다시 읽는 중인가 — 실패해도 전 값을 지우지 않는다
+        rereading = bool(refresh_from) and (attributes.get("hours_read") or {}).get("method") not in (None, "none")
+        drop_week = False
         content_id = str(attributes.get("source_content_id") or "")
         type_id = str(attributes.get("source_content_type_id") or "")
         patch: dict[str, Any] = {}
@@ -281,20 +306,24 @@ def fill_missing_facts(conn, tenant_id: str, *, source: Any, chat: Any, now: Any
                 patch["hours_week"] = read.week
                 out["read"] += 1
             else:
+                drop_week = rereading            # 새로 읽은 원문으로 요일표를 못 만들면 옛 요일표를 남기지 않는다(원문 · 읽은 방법과 어긋나게 두지 않는다)
                 out["unknown"] += 1
             if intro.get("info_phone") and not attributes.get("phone"):
                 patch["phone"] = intro["info_phone"]
                 out["phone"] += 1
         except Exception as exc:                 # noqa: BLE001 — 장소 하나의 실패가 나머지를 막지 않는다(세어 보고)
-            patch = {"hours_read": {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
-                                    "dropped": [str(exc) if isinstance(exc, LookupError)
-                                                else f"조회 오류 {type(exc).__name__}"]}}
+            reason = str(exc) if isinstance(exc, LookupError) else f"조회 오류 {type(exc).__name__}"
+            if rereading:
+                patch = {"hours_refresh": {"failed_at": now.isoformat(), "reason": reason}}
+            else:
+                patch = {"hours_read": {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
+                                        "dropped": [reason]}}
             out["unknown"] += 1
-            out["failed"].append(f"{name}: {patch['hours_read']['dropped'][0]}")
+            out["failed"].append(f"{name}: {reason}")
         with conn.transaction(), conn.cursor() as cur:
-            cur.execute("UPDATE places SET attributes = coalesce(attributes, '{}'::jsonb) || %s::jsonb "
+            cur.execute("UPDATE places SET attributes = (coalesce(attributes, '{}'::jsonb) || %s::jsonb) - %s::text[] "
                         "WHERE tenant_id=%s AND place_id=%s",
-                        (json.dumps(patch, ensure_ascii=False), tenant_id, place_id))
+                        (json.dumps(patch, ensure_ascii=False), ["hours_week"] if drop_week else [], tenant_id, place_id))
     return out
 
 

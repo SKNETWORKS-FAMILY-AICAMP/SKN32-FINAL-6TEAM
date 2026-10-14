@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 문제와 검증 범위
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 여행 일정은 장소 운영시간·이동 조건·외부 상황이 달라지면 실행하기 어려워집니다
 status: draft
 domain: travel
 ---

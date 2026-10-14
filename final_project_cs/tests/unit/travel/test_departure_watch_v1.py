@@ -20,8 +20,9 @@ def test_only_unannounced_departures_before_next_visit_are_selected(monkeypatch,
     move.ends_at = NOW + timedelta(minutes=1)
     items[-1].starts_at = NOW + timedelta(minutes=30)
     trip_id = uuid4()
-    store = SimpleNamespace(active_trip_ids=lambda conn, now: [trip_id],
-        latest=lambda *a: ({}, items), message_exists=lambda *a, **k: published)
+    store = SimpleNamespace(_open_trips=lambda conn, columns, now, order='': [(trip_id, 1)],
+        _items_of_trips=lambda conn, trips: {trip_id: items},
+        sent_messages=lambda conn, keys: {(str(t), k) for t, k in keys} if published else set())
     got = TripStore.pending_departures(store, None, now=NOW+timedelta(minutes=offset))
     assert len(got) == expected
     if got:
