@@ -37,6 +37,7 @@
     "tests/unit/core/test_debug_report_status.py",
     "tests/unit/core/test_full_suite_commands.py",
     "tests/unit/core/test_idempotency_request_id.py",
+    "tests/unit/core/test_image_retention.py",
     "tests/unit/core/test_migration_atomic_sql.py",
     "tests/unit/core/test_migration_safe_deploy.py",
     "tests/unit/core/test_ops_guard.py",
