@@ -164,12 +164,13 @@ set_p(K[28], "장애 방어(Fallback): 호출 실패·시간 초과·근거(인�
 # ── 3. LLM 보조 판정 평가 (sLLM 파인튜닝은 해당 없음) ───────────
 set_cell(K[30].findall(qn("w:tr"))[0].findall(qn("w:tc"))[0], "3. LLM 보조 판정 평가 결과 (자체 sLLM 파인튜닝은 해당 없음)")
 cond, kinds = JUDGE["conditions"], JUDGE["kinds"]
+LABELED = ("closure", "disaster_effect", "operating_hours", "weather_sensitive")
 set_p(K[31], "3.1 평가 환경 (sLLM 파인튜닝은 수행하지 않음)")
-set_p(K[32], f"평가 대상: 외부 LLM {cond['model']}(reasoning {cond['reasoning_effort']}, 웹 검색 사용)의 판정을 규칙과 비교. 사례 {cond['cases']}건 × {cond['repeats']}회 반복, 사람 검토 라벨(휴무·재난·운영시간 {sum(kinds[k]['cases'] for k in ('closure','disaster_effect','operating_hours'))}사례) 기준.")
+set_p(K[32], f"평가 대상: 외부 LLM {cond['model']}(reasoning {cond['reasoning_effort']}, 웹 검색 사용)의 판정을 규칙과 비교. 사례 {cond['cases']}건 × {cond['repeats']}회 반복, 사람 검토 라벨({sum(kinds[k]['cases'] for k in LABELED)}사례: 휴무 16·운영시간 14·실내외 10·재난 12) 기준.")
 set_p(K[33], f"실행 조건: 데이터셋 SHA-256 {cond['dataset_sha256'][:12]}…, 프롬프트 {cond['prompt_version']}, 부트스트랩 {cond['bootstrap']['n']:,}회. 소요 {JUDGE['elapsed_s']:.0f}초, 비용 ${JUDGE['cost_usd_total']:.2f}(전체 {JUDGE['observations']}관측).")
 set_p(K[34], "파인튜닝: 하지 않음. 규칙 먼저, LLM 은 규칙이 읽지 못하는 원문만 보조로 쓰는 구조이며 sLLM 학습 데이터·하이퍼파라미터는 해당 없음.")
 set_p(K[35], "3.2 규칙 대비 정확도 비교")
-c, d, o = kinds["closure"], kinds["disaster_effect"], kinds["operating_hours"]
+c, d, o, w = kinds["closure"], kinds["disaster_effect"], kinds["operating_hours"], kinds["weather_sensitive"]
 fill_table(K[36], ["평가 지표", "규칙(rule)", f"LLM({cond['model']})", "차이"], [
     ["휴무 판정 정확도", f"{pct(c['rule_accuracy']['num'], c['rule_accuracy']['den'])} ({c['rule_accuracy']['num']}/{c['rule_accuracy']['den']} 사례)",
      f"{pct(c['llm_accuracy']['num'], c['llm_accuracy']['den'])} ({c['llm_accuracy']['num']}/{c['llm_accuracy']['den']} 관측)", f"{(c['llm_accuracy']['value'] - c['rule_accuracy']['value']) * 100:+.1f}%p"],
@@ -177,14 +178,16 @@ fill_table(K[36], ["평가 지표", "규칙(rule)", f"LLM({cond['model']})", "�
      f"{pct(d['llm_accuracy']['num'], d['llm_accuracy']['den'])} ({d['llm_accuracy']['num']}/{d['llm_accuracy']['den']} 관측)", f"{(d['llm_accuracy']['value'] - d['rule_accuracy']['value']) * 100:+.1f}%p"],
     ["운영시간 판정 정확도", f"{pct(o['rule_accuracy']['num'], o['rule_accuracy']['den'])} ({o['rule_accuracy']['num']}/{o['rule_accuracy']['den']} 사례)",
      f"{pct(o['llm_accuracy']['num'], o['llm_accuracy']['den'])} ({o['llm_accuracy']['num']}/{o['llm_accuracy']['den']} 관측)", f"{(o['llm_accuracy']['value'] - o['rule_accuracy']['value']) * 100:+.1f}%p"],
-    ["위험 오답(닫힌 곳을 열렸다고 하는 등)", f"{sum(kinds[k]['rule_dangerous']['num'] for k in ('closure','disaster_effect','operating_hours'))}건",
-     f"{sum(kinds[k]['llm_dangerous']['num'] for k in ('closure','disaster_effect','operating_hours'))}건 / {sum(kinds[k]['observations'] for k in ('closure','disaster_effect','operating_hours'))}관측", "—"],
+    ["실내외 판정 정확도", f"{pct(w['rule_accuracy']['num'], w['rule_accuracy']['den'])} ({w['rule_accuracy']['num']}/{w['rule_accuracy']['den']} 사례, 나머지는 「모름」)",
+     f"{pct(w['llm_accuracy']['num'], w['llm_accuracy']['den'])} ({w['llm_accuracy']['num']}/{w['llm_accuracy']['den']} 관측)", f"{(w['llm_accuracy']['value'] - w['rule_accuracy']['value']) * 100:+.1f}%p"],
+    ["위험 오답(닫힌 곳을 열렸다고 하는 등)", f"{sum(kinds[k]['rule_dangerous']['num'] for k in LABELED)}건",
+     f"{sum(kinds[k]['llm_dangerous']['num'] for k in LABELED)}건 / {sum(kinds[k]['observations'] for k in LABELED)}관측", "—"],
 ])
 ls = kinds["live_status"]
 set_p(K[37], f"관찰: 규칙은 위험 오답이 0건이지만 운영시간은 읽지 못하는 사례가 많아 정확도가 낮고, LLM 은 운영시간을 모두 맞혔으나 휴무·재난에서 위험 오답이 나왔다. "
               f"웹 공지 확인(실시간 상태, {ls['cases']}사례 × 3회)은 LLM 이 「모름」으로 답한 비율 {ls['llm_unknown']['num']}/{ls['llm_unknown']['den']}, 지연 중앙값 {ls['latency_ms']['p50'] / 1000:.1f}초(p95 {ls['latency_ms']['p95'] / 1000:.1f}초), 건당 약 ${ls['cost_usd_per_call_mean']:.3f}였다.")
 set_p(K[38], "3.3 한계 및 개선 방향")
-set_p(K[39], "한계점: 사례가 적고(라벨 42사례) 반복 3회는 같은 사례의 반복이라 독립 표본이 아니다. 위험 오답이 규칙 0건 대비 LLM 5건이므로 LLM 을 판정의 주 경로로 쓰지 않는다. 실운영 정확도·장기 변동은 측정하지 못했다.")
+set_p(K[39], "한계점: 사례가 적고(라벨 52사례) 반복 3회는 같은 사례의 반복이라 독립 표본이 아니다. 위험 오답이 규칙 0건 대비 LLM 5건(전부 「풀어 주는 쪽」)이므로 LLM 을 판정의 주 경로로 쓰지 않는다. 실운영 정확도·장기 변동은 측정하지 못했다.")
 set_p(K[40], "개선 방향: LLM 은 현재 섀도(백그라운드에서 돌려 규칙과의 차이를 기록)로만 쓰고, 웹 공지는 배치 저장값으로 읽는다. 기록이 쌓이고 사람 라벨로 정확도를 다시 확인한 뒤 신뢰할 수 있으면 모드(rule → shadow → llm)를 올려 LLM 판정으로 교체한다.")
 
 # ── 4. 시나리오 기반 통합 테스트 ──────────────────────────────
@@ -248,9 +251,9 @@ tp = tot["pass"]; tf = tot["fail"]
 rows.append(["자동 시험 합계", str(tp + tf), str(tp), str(tf), pct(tp, tp + tf), f"예상 실패(xfail) {tot['skip']}건은 제외, 2026-10-14 실행"])
 rows.append(["RAG 검색 시험(수동, 6묶음 {}문항)".format(tot_n), str(tot_n), str(tot_on), str(tot_n - tot_on), pct(tot_on, tot_n),
              f"Hit@3, 질문 변환 켠 때(끈 때 {tot_off}/{tot_n}). 학습 질문 포함 — 일반화 미입증"])
-llm_obs = sum(kinds[k]["observations"] for k in ("closure", "disaster_effect", "operating_hours"))
-llm_ok = sum(kinds[k]["llm_accuracy"]["num"] for k in ("closure", "disaster_effect", "operating_hours"))
-rows.append([f"LLM 판정 평가(휴무·재난·운영시간)", str(llm_obs), str(llm_ok), str(llm_obs - llm_ok), pct(llm_ok, llm_obs),
+llm_obs = sum(kinds[k]["observations"] for k in LABELED)
+llm_ok = sum(kinds[k]["llm_accuracy"]["num"] for k in LABELED)
+rows.append([f"LLM 판정 평가(휴무·운영시간·실내외·재난)", str(llm_obs), str(llm_ok), str(llm_obs - llm_ok), pct(llm_ok, llm_obs),
              "관측 단위(사례×3회). 규칙이 주 경로이고 LLM 은 보조·섀도"])
 fill_table(K[63], None, rows)
 clone_after(K[27], K[63], "재현 조건: 본 결과는 2026-10-14 로컬 개발 환경(PostgreSQL 16.15 + pgvector 0.8.6, 마이그레이션 전체 적용, 브랜치 role-activity-b)에서 측정했다. 다른 환경에서는 DB 적재 상태(문서 적재 여부), 마이그레이션 적용 여부, 설치 패키지, API 키와 모드 설정에 따라 시험 건수와 검색·판정 결과가 달라질 수 있다.")
