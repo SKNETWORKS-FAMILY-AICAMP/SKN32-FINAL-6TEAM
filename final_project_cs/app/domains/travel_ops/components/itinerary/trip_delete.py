@@ -10,7 +10,7 @@
 ★운영 쪽은 먼저 **정상 전이로 닫는다.** 그 여행을 가리키는 **열린 Case**(`state_json.subject_ref.id`)는 상태 전이표(`domain/events.py`)가 허용하는
   **정상 전이만으로 `cancelled` 까지 닫는다**(가장 짧은 길을 찾아 한 걸음씩 — 이유 `trip_deleted`).
 ★`[2026-10-07 사용자 결정 — 약관 보관 기간]` 약관이 「처리 기록 — 여행 · 게스트 자료가 지워질 때 **함께 파기**」라고 적는다. 그래서 닫은 **뒤에** 그 여행을 가리키는 Case 전부(해결된 것 포함)와
-  딸린 줄(`case_events` · `action_requests` · `agent_runs`)을 지운다 — `case_events` 는 append-only 가 **코드 규칙**이고(DB 트리거는 없다) **이 파기가 유일한 예외**다(`purge_cases`).
+  딸린 줄(`case_events` · `action_requests` · `agent_runs`)을 지운다 — `case_events` 는 append-only 이고 DB 가 막는다(마이그레이션 904) — **이 파기가 유일한 예외**라 `purge_cases` 가 이 트랜잭션에서만 `app.case_events_purge` 를 켠다.
   설정 `retention.case_follows_trip` 이 false 면 옛 동작(닫기만, 기록은 남김). 사용자 행에 걸린 그 여행과 무관한 Case 는 회원 · 게스트 정리(`member_cleanup` · `guest_cleanup`)가 지운다.
 ★바깥함(`outbox`)의 그 여행 알림(`trip.notice`, `dedupe_key` 가 `{trip_id}:` 로 시작)은 **대기분만 취소가 아니라 전부 지운다** — 알림 문장에 일정이 실려 있다.
 ★`trip_id` 가 NULL 인 옛 접수 · 알림은 고객 번호만으로 지우지 않는다(여행과 연결이 확인된 행만).
@@ -94,9 +94,12 @@ def purge_cases(conn, *, tenant_id: str, case_ids: list[UUID]) -> dict[str, int]
     if not case_ids:
         return out
     with conn.cursor() as cur:
+        # ★`case_events` 는 DB 가 추가만 하게 막는다(904) — 파기하는 동안만 스위치를 켠다. SET LOCAL 이라 호출자의 트랜잭션이 끝나면 저절로 꺼지고, 아래에서 바로 다시 끈다.
+        cur.execute("SET LOCAL app.case_events_purge = 'on'")
         for table in out:
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s AND case_id = ANY(%s)", (tenant_id, case_ids))
             out[table] = cur.rowcount
+        cur.execute("SET LOCAL app.case_events_purge = 'off'")
     return out
 
 

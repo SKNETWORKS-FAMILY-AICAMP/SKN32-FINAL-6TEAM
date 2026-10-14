@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.application.case_service import CaseService, ResumeTokenError
 from app.application.controller import Controller, ControllerError
 from app.core.contracts import ActionProposal, ContextPack, Evidence, InvalidTransition, NextAction, StateConflict, TeamManifest, TeamResult
@@ -107,6 +108,7 @@ def db():
                     cur.execute("DELETE FROM llm_calls WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
                     cur.execute("DELETE FROM agent_runs WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+                    allow_case_events_purge(cur)
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
                     # ★`[2026-10-06]` 쇼핑몰 표(returns · order_items)는 DB 에서 지웠다(D-023).

@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.core.contracts import CaseStatus, StateConflict
 from app.core.transition import OutboxMessage, transition_case
 from app.core.case_lifecycle.events import EventType
@@ -30,6 +31,7 @@ def db():
                     cur.execute("DELETE FROM llm_calls WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
                     cur.execute("DELETE FROM agent_runs WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+                    allow_case_events_purge(cur)
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))

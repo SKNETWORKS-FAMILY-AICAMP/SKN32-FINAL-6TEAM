@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { agree, mockServer, openRegistration, STUB, useKorean } from "./helpers";
 
-test("공개 시험계획 15개·7분류를 세션 없이 읽고 화면에서 선택해도 게스트를 만들지 않는다", async ({ page, request }) => {
+test("공개 시험계획 16개·7분류를 세션 없이 읽고 화면에서 선택해도 게스트를 만들지 않는다", async ({ page, request }) => {
   const mock = mockServer(request);
   await mock.reset();
   await mock.scenario({ consents: "gate" });
@@ -12,7 +12,7 @@ test("공개 시험계획 15개·7분류를 세션 없이 읽고 화면에서 �
   expect(catalog.enabled).toBe(true);
   expect(catalog.realtime_enabled).toBe(false);
   expect(catalog.catalog_version).toBe("seoul-text-v2");
-  expect(catalog.scenarios.map(plan => plan.code)).toEqual(Array.from({ length: 15 }, (_, index) => "test" + (index + 1)));
+  expect(catalog.scenarios.map(plan => plan.code)).toEqual(Array.from({ length: 16 }, (_, index) => "test" + (index + 1)));
   expect([...new Set(catalog.scenarios.map(plan => plan.category))].sort()).toEqual(["general", "hours", "input", "mobility", "normal", "place", "time"]);
   expect(catalog.scenarios.filter(plan => plan.category === "normal").map(plan => plan.code)).toEqual(["test13", "test14", "test15"]);
   for (const plan of catalog.scenarios) expect(plan.text).toMatch(/서울 [1-7]일 여행 · 4명[\s\S]*1일차 · 2026-10-\d{2}/);
@@ -24,11 +24,11 @@ test("공개 시험계획 15개·7분류를 세션 없이 읽고 화면에서 �
   await expect(picker).toHaveAttribute("aria-disabled", "false");
   await picker.click();
   const options = page.locator('[aria-label="분류별 테스트 계획"]');
-  await expect(options.locator("button[data-plan-code]")).toHaveCount(15);
+  await expect(options.locator("button[data-plan-code]")).toHaveCount(16);
   await expect(options.locator("fieldset")).toHaveCount(7);
   await expect(options.locator('button[data-category="normal"]')).toHaveCount(3);
   await options.locator('button[data-plan-code="test13"]').click();
-  await expect(page.getByLabel("나의 여행 계획")).toHaveValue("test13");
+  await expect(page.getByLabel("나의 여행 계획")).toHaveValue(catalog.scenarios.find(plan => plan.code === "test13")!.text);
   await expect(picker).toContainText("문제 없는 기본안");
   const log = await mock.log();
   expect(log.filter(entry => entry.method === "GET" && entry.path === "/v1/web/test-scenarios").length).toBeGreaterThanOrEqual(2);

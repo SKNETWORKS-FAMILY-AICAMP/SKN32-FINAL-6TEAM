@@ -70,6 +70,25 @@
 - ★**브랜치의 코드가 곧 공개 서비스다.** 건강 검사로 못 걸러내는 기능 결함은 그대로 올라간다 — 확인이 필요한 브랜치는 따라가는 브랜치를 따로 둔다.
 - ★서버는 저장소를 **읽기만** 한다(공개 저장소라 인증이 없다). 비공개가 되면 읽기 전용 배포 키를 서버에 둬야 한다.
 
+## 월별 보존 판으로 되돌리기 (복원)
+달마다 하나는 `keep-YYYY-MM` 이름표로 남는다(`tripilot-api` · `tripilot-web` · `tripilot-admin`). 문제가 생기면 그 판으로 되돌린다.
+
+1. **있는 판 보기**: `docker images 'tripilot-*' --format '{{.Repository}}:{{.Tag}}' | grep keep-`
+2. **먼저 시험하기 (운영을 건드리지 않는다)**: `python3 deploy/restore_check.py --old-image tripilot-api:keep-YYYY-MM --new-image tripilot-api:local --mobility-dir <이동 자료 폴더>`
+   - 바깥과 연결되지 않는 임시 네트워크에 빈 DB 를 만들고, 최신 이미지의 마이그레이션으로 「지금의 DB 구조」를 만든 뒤 옛 이미지의 마이그레이션 · API 기동 · `/health` · 로그 오류를 확인하고 임시 자원(컨테이너 · 네트워크)을 **항상** 지운다. 운영 DB 와 운영 `.env` 는 읽지 않는다. 임시 DB 는 이 시험이 도는 동안에만 있다.
+   - **설정 이름은 걸림돌이 아니다(시험으로 확인)**: 설정은 `extra="forbid"` 라서 `.env` **파일**에서 읽은 모르는 이름은 거부하지만, 운영은 compose `env_file` 로 값을 컨테이너 **환경변수**에 넣고 `.env` 는 이미지에 없다(`.dockerignore`). 환경변수로 들어온 모르는 이름은 무시되므로 최신 판에만 있는 설정(2026-10-14: `ACOP_JUSO_COORD_API_KEY` · `ACOP_JUSO_SEARCH_API_KEY`)이 운영 환경 파일에 있어도 옛 이미지는 켜진다. 도구가 이를 직접 재현하고(통과 항목), 파일로 읽을 때의 차이는 참고 줄로 알려 준다. 배포 방식을 `.env` 파일 마운트로 바꾸면 이 점을 다시 본다.
+3. **되돌리기 (운영 반영과 같은 안전 절차를 쓴다)**: 자동 반영이 끼어들지 않게 `systemctl stop tripilot-autodeploy.timer` 를 하고, 배포 폴더에서
+   ```
+   export TRIPILOT_SRC=./repo/final_project_cs
+   D=state/migration-safety-ffffffffff-$(date +%s)        # 이름 규칙을 지키면 image_retention 이 나중에 치운다
+   TRIPILOT_TAG=<지금 실행 중인 판>  python3 repo/final_project_cs/deploy/migration_safe_deploy.py snapshot --state-dir $D
+   TRIPILOT_TAG=keep-YYYY-MM         python3 repo/final_project_cs/deploy/migration_safe_deploy.py check    --state-dir $D
+   TRIPILOT_TAG=keep-YYYY-MM         python3 repo/final_project_cs/deploy/migration_safe_deploy.py rollout  --state-dir $D --timeout 240 --settle 30
+   ```
+   `rollout` 은 새로 띄운 것이 건강하지 않거나 재시작하면 스스로 직전 이미지(이미지 ID 고정)로 복구한다. DB 는 되돌리지 않는다 — 마이그레이션이 앞으로만 가므로(위 자동 반영 표) 옛 이미지가 새 표 구조를 견디는지가 2번이 확인하는 핵심이다.
+   - **3번은 2026-10-14 에 운영(x600 서버)에서 시험했다**: 현재 → 직전 판 → `keep-2026-10` → 오래된 판 → 현재 복귀를 위 절차로 네 번 전환해 모두 통과했다(전환마다 1~3분 끊김, 환경 파일은 건드리지 않았다).
+4. **최신 판으로 돌아오기**: 같은 절차를 `TRIPILOT_TAG=<state/current_tag 의 값>` 으로 한 번 더 하고 `systemctl start tripilot-autodeploy.timer`. 배포 버전 표시(`ACOP_DEPLOYMENT_VERSION`)가 `keep-…` 로 남으면 다음 자동 반영의 사전 검사(실행 중 구성 일치)에 걸릴 수 있다고 보고 복귀시킨다 — 이 걸림 자체는 확인하지 않았고, 시험에서는 복귀 뒤 사전 검사가 통과했다.
+
 ## 알아둘 것
 - **DB 는 서버에 하나가 정본이다.** 개발 PC 의 DB 와 합치지 않는다 — 서버에는 사용자 데이터를 안 가져갔고, 거기 쌓이는 것은 서버 것이다.
 - **모델은 서버의 Ollama**(해석·일정 짚기는 우리 데이터로 가르친 E4B `tripilot-pointer:e4b-ft`, 임베딩은 `bge-m3`)를 쓴다 — 요금이 안 나간다. 코드 기본값도 `tripilot-pointer:e4b-ft` 이고(`ACOP_OLLAMA_MODEL`, `make_server_env.py` 가 같은 값을 적는다), 문맥 길이 `ACOP_OLLAMA_NUM_CTX=8192` 와 함께여야 한다. 컨테이너가 그 Ollama 에 닿는 길은 서버 쪽 설정이다.

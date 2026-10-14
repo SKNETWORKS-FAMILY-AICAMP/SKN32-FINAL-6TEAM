@@ -4,7 +4,7 @@ from __future__ import annotations
 from copy import copy
 from dataclasses import is_dataclass, replace
 
-from . import fact_context, schedule_query, trip_facts
+from . import fact_context, schedule_query, time_anchor, trip_facts
 
 
 def _origin_matches(items, phrase):
@@ -56,6 +56,23 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
     for request in decision.reads:
         fact = request["fact"]
         item = by_alias.get(request["target_item"])
+        # ★`[2026-10-14]` 앞뒤 · 시각 질문은 모델이 적은 **기준**(일정 · 끼니 · 시각 · 지금 · 앞 답)으로 서버가 답할 일정을 계산한다
+        #   (`time_anchor.py`, Codex 와 합의한 D안) — 모델이 고른 일정보다 앞선다. 「다음」 사실은 그 자체로 「기준 바로 뒤」다.
+        clause = request.get("text") or ""
+        clause = clause if clause and clause in message else message
+        anchor_read = request
+        if (fact == "next" and request.get("relation", "at") == "at"
+                and (request.get("anchor_kind", "none") != "none" or request.get("target_item", "none") == "none")):
+            anchor_read = {**request, "relation": "after"}
+        anchored, anchor_basis = time_anchor.resolve(
+            anchor_read, items=items, anchor=by_alias.get(request.get("anchor_item") or "none"),
+            previous=time_anchor.previous_item(turns, items, version=version, now=context_now, ttl_seconds=ttl_seconds),
+            named=fact_context.named_items(items, clause), now=now, target=item)
+        anchor_conflict = bool(anchor_basis and anchor_basis.get("time_anchor") == "anchor_conflict")
+        if anchored is not None:
+            item, fact = anchored, ("time" if fact == "next" else fact)
+            request = {**request, "fact": fact, "reference": "explicit",
+                       "target_item": next((a for a, i in by_alias.items() if i.item_id == anchored.item_id), "none")}
         sub = replace(decision, item=item, fact=fact, query=request.get("query"), reads=[request])
         fragment = request.get("text") or ""
         scoped_message = fragment if fragment and fragment in message else message
@@ -64,6 +81,8 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
             now=context_now, ttl_seconds=ttl_seconds)
         item = sub.item
         basis = {"kind": fact, "item_id": str(item.item_id) if item else None, "version": version}
+        if anchor_basis:
+            basis["time_anchor"] = anchor_basis
         place = (item.place or {}) if item else {}
         provenance = (item.detail.get("provenance") or {}).get("place") or {} if item else {}
         note = ""
@@ -76,7 +95,11 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
                     f"제목의 「{item.title}」 자체 정보는 아니에요.")
             basis["place_identity"] = {"title": item.title, "place": place["name"], "method": "customer"}
             item = _renamed(item, place["name"])
-        if stale:
+        if anchor_conflict:
+            # 문장 속 일정 이름과 모델이 적은 기준 일정이 다르다 — 어느 쪽인지 추측하지 않고 되묻는다
+            text = "어느 일정을 기준으로 물으셨는지 하나로 확인하지 못했어요. 기준이 되는 일정 이름을 알려 주세요."
+            basis["unresolved"] = "anchor"
+        elif stale:
             text = "가리키는 일정을 현재 여행에서 하나로 확인하지 못했어요. 일정 이름이나 날짜를 알려 주세요."
             basis["unresolved"] = "target"
         elif fact in (*schedule_query.QUERY_FACTS, "day", "outdoor"):

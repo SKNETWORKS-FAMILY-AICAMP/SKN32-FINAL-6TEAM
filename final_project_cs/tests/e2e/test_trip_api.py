@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.domains.travel_ops.ports.data_sources.base import TravelSources
 from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
 from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
@@ -155,6 +156,7 @@ def api(monkeypatch):
         # ★자유 문장 경로가 Case 를 만든다 — FK 순서대로 먼저 지운다
         cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM agent_runs WHERE tenant_id=%s", (tenant,))
+        allow_case_events_purge(cur)
         cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s", (tenant,))     # 웹 사용자 키(025)

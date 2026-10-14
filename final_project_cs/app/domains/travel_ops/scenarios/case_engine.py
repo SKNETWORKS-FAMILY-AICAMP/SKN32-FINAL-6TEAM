@@ -134,6 +134,8 @@ def cleanup_tenant(tenant_id: str) -> None:
                     "DELETE FROM agent_runs WHERE case_id IN "
                     "(SELECT case_id FROM customer_cases WHERE tenant_id=%s)"):
             cur.execute(sql, (tenant_id,))
+        # ★`case_events` 는 DB 가 추가만 하게 막는다(904) — 이 트랜잭션에서만 정리 스위치를 켠다.
+        cur.execute("SET LOCAL app.case_events_purge = 'on'")
         for sql in ("DELETE FROM action_requests WHERE tenant_id=%s",
                     "DELETE FROM case_events WHERE tenant_id=%s",
                     "DELETE FROM customer_cases WHERE tenant_id=%s",

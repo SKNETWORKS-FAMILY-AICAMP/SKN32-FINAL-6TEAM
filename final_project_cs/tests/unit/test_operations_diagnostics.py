@@ -88,10 +88,47 @@ def test_policy_bounds_cannot_be_expanded(changes):
         SourcePolicy(**changes).validate_bounds()
 
 
+def _inquiry_conn(monkeypatch, stored):
+    from unittest.mock import MagicMock
+    saved = {}
+    monkeypatch.setattr(admin_service, "record", lambda conn, tenant, kind, identity, lock=False: dict(stored) if stored else {})
+    monkeypatch.setattr(admin_service, "put", lambda conn, tenant, kind, identity, value, **kw: saved.update(value=value, **kw))
+    return MagicMock(), saved
+
+
+def test_operator_reply_is_stored_on_the_inquiry(monkeypatch):
+    stored = {"userId": "u1", "title": "t", "body": "b", "status": "기록 완료", "assignee": "", "replies": [], "history": []}
+    conn, saved = _inquiry_conn(monkeypatch, stored)
+    admin_service.mutate(conn, "test_operations", "qa", {"type": "reply", "inquiryId": "i1", "body": "확인했습니다."})
+    value = saved["value"]
+    assert value["status"] == "답변 완료" and value["assignee"] == "qa"
+    assert value["replies"][0]["body"] == "확인했습니다." and value["replies"][0]["operator"] == "qa"
+    assert saved["action"] == "reply" and value["history"]
+
+
+def test_operator_can_change_inquiry_status_and_assignee(monkeypatch):
+    stored = {"userId": "u1", "title": "t", "body": "b", "status": "접수", "assignee": "", "replies": [], "history": []}
+    conn, saved = _inquiry_conn(monkeypatch, stored)
+    admin_service.mutate(conn, "test_operations", "qa", {"type": "inquiry-status", "inquiryId": "i1", "status": "처리 중", "assignee": "qa", "reason": "확인 시작"})
+    assert saved["value"]["status"] == "처리 중" and saved["value"]["assignee"] == "qa"
+    assert "확인 시작" in saved["value"]["history"][0]["text"]
+
+
 @pytest.mark.parametrize("kind", ["reply", "inquiry-status"])
-def test_manual_customer_processing_is_refused(kind):
-    with pytest.raises(admin_service.AdminServiceError, match="상담원 배정"):
-        admin_service.mutate(None, "test_operations", "qa", {"type": kind})
+def test_unknown_inquiry_is_not_created_by_reply(monkeypatch, kind):
+    conn, saved = _inquiry_conn(monkeypatch, None)
+    command = {"type": kind, "inquiryId": "missing", "body": "x", "status": "접수", "assignee": "", "reason": "x"}
+    with pytest.raises(admin_service.AdminServiceError) as raised:
+        admin_service.mutate(conn, "test_operations", "qa", command)
+    assert raised.value.status_code == 404
+    assert not saved
+
+
+def test_customer_sees_operator_reply_without_operator_identity():
+    from app.domains.travel_ops.modules.web_account.admin_customer_api import _public
+    answered = _public({"id": "i1", "title": "t", "body": "b", "language": "ko", "receivedAt": "x", "replies": [{"body": "안내", "operator": "qa", "at": "y"}]})
+    assert answered["status"] == "답변 완료" and answered["replies"] == [{"body": "안내", "operator": "triPilot 운영팀", "at": "y"}]
+    assert _public({"id": "i1", "title": "t", "body": "b", "language": "ko", "receivedAt": "x", "replies": []})["status"] == "기록 완료"
 
 
 def test_periodic_replay_recovers_same_event_after_commit_before_queue_ack(tmp_path, monkeypatch):

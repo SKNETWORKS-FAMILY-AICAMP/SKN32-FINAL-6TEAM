@@ -18,6 +18,7 @@ import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { examplePlan } from "./example-plan";
 import { TestPlans } from "./test-plans";
+import { textToSend } from "./test-plan-input";
 import { emptyAsk, paneOfSending, paneReason, seoulToday, type PlanAsk, type RegistrationPane } from "./model";
 import { PlanAskFields } from "./plan-ask-fields";
 import { clearLoginDraft, keepLoginDraft, takeLoginDraft } from "./login-draft";
@@ -75,6 +76,8 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const [returned] = useState(intakeFailure);
   const [source, setSource] = useState<string | undefined>(() => returned?.text);
   const [validation, setValidation] = useState("");
+  // 시험 계획을 고르면 입력칸에 그 원문이 채워진다. 원문을 고치지 않고 보내면 서버가 시험 계획으로 기록하도록 코드로 보낸다.
+  const [testPlan, setTestPlan] = useState<{ code: string; text: string } | null>(null);
   // Raised on every press that is turned back, so the notice is brought into view again even when it says the same words.
   const [nudge, setNudge] = useState(0);
   const [draftWarning, setDraftWarning] = useState("");
@@ -150,7 +153,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
       const plan: PlanRequest = { start_date: ask.start, days: ask.days, party_size: ask.party, wish: ask.wish, ...(survey && { survey }) };
       beginIntake({ ...base, text: ask.wish.trim(), files: [], plan });
     } else if (active === "files") beginIntake({ ...base, text: "", files });
-    else beginIntake({ ...base, text: value, files: [] });
+    else beginIntake({ ...base, text: textToSend(value, testPlan), files: [] });
     onSending?.();
     router.push(routes.intakeStarting);
   }
@@ -189,6 +192,11 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     setRestored("");
     try { sessionStorage.setItem(draftKey, next); setDraftWarning(""); }
     catch { setDraftWarning(t("임시 저장을 사용할 수 없어요. 이 화면을 닫으면 입력 내용이 사라질 수 있어요.", "Drafts cannot be saved here. Closing this page may lose your input.")); }
+  }
+
+  function chooseTestPlan(code: string, text: string) {
+    setTestPlan({ code, text });
+    updateSource(text);
   }
 
   /** The empty panel's own input takes the focus, so the way on is where the words are. */
@@ -244,7 +252,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
       placeholder={t("예시 — 이런 식으로 적어 주세요\n\n1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "Example — write it like this\n\nDAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
     <div className={styles.inputMeta}><span id="plan-format">{t("날짜 · 시간 · 장소를 함께 적어 주세요.", "Include dates, times, and places.")}</span><span>{value.length.toLocaleString()} / 12,000</span></div>
     {active === "text" && errorNode}
-    <TestPlans value={value} onChoose={updateSource} disabled={pending} />
+    <TestPlans value={value} onChoose={chooseTestPlan} disabled={pending} />
   </>;
   // 2026-09-30: file picker designed by Codex astra — the native input stays (hidden) for keyboard and screen readers.
   const filePicker = (
