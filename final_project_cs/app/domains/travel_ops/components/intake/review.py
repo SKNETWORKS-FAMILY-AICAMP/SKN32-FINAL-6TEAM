@@ -102,6 +102,8 @@ def place_state(row: dict[str, Any]) -> tuple[str, dict[str, Any] | None]:
     evidence = (claim or {}).get("evidence") or {}
     if claim and claim["method"] == "customer":
         return ("none", None) if (value is None or evidence.get("none")) else ("customer", value)
+    if claim and claim["method"] == "trip" and value is None:
+        return "none", None                # ★`[2026-10-13]` 등록한 여행의 「장소 없음」 일정을 다시 연 것(`reopen.py`)
     if evidence.get("method") == "nameless":
         return ("needs_name" if evidence.get("booked") is True else "needs_choice"), None
     if not value or row["place"] is None:
@@ -633,13 +635,29 @@ MOVE_LABEL = {"subway": "지하철", "bus": "버스", "taxi": "택시", "walk": 
 
 
 def picked_modes(claims: list[dict[str, Any]]) -> dict[str, str]:
-    """고객이 구간마다 고른 수단 — 값 줄 `moves[{from}~{to}].mode`(고객 값 · `recommended` 로 되돌리면 값이 비어 이 표에서 빠진다)."""
+    """고객이 구간마다 고른 수단 — 값 줄 `moves[{from}~{to}].mode`(고객 값 · `recommended` 로 되돌리면 값이 비어 이 표에서 빠진다).
+
+    ★`[2026-10-14]` 수정 접수는 등록한 여행에 이미 정해 둔 수단을 `method: "trip"` 값 줄로 싣는다(`reopen.open_for_trip`) — 그것도 고른 수단으로 본다.
+    안 그러면 다시 연 수정 화면이 저장된 수단(예: 지하철) 대신 추천(예: 도보)을 보였다(x600 실서버 확인). 칸마다 **마지막 값**이 이긴다 — 고객이 뒤에
+    「추천으로」(빈 값)를 고르면 여행에서 가져온 수단도 빠진다."""
     out: dict[str, str] = {}
     for c in claims:
         field = str(c.get("field") or "")
-        if field.startswith("moves[") and field.endswith("].mode") and c.get("method") == "customer" and c.get("value") in MOVE_MODES:
-            out[field[len("moves["):-len("].mode")]] = c["value"]
+        if not (field.startswith("moves[") and field.endswith("].mode") and c.get("method") in ("customer", "trip")):
+            continue
+        pair = field[len("moves["):-len("].mode")]
+        if c.get("value") in MOVE_MODES:
+            out[pair] = c["value"]
+        else:
+            out.pop(pair, None)
     return out
+
+
+def customer_mode_pairs(claims: list[dict[str, Any]]) -> set[str]:
+    """`[2026-10-14]` 고객이 **이 접수에서** 수단을 고르거나 「추천으로」 되돌린 구간 — 수정 접수의 「완료」가 그 구간만 옛 이동을 갈음한다(`registered_moves.fill_edited_moves`).
+    여행에서 가져온 수단(`method: "trip"`)은 고친 것이 아니다."""
+    return {str(c.get("field"))[len("moves["):-len("].mode")] for c in claims
+            if str(c.get("field") or "").startswith("moves[") and str(c.get("field")).endswith("].mode") and c.get("method") == "customer"}
 
 
 def mode_fits(leg: Leg) -> bool:

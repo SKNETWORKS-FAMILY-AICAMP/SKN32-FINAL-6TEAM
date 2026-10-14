@@ -188,6 +188,7 @@ class ReadToolbox:
             "read.place_catalog": self.place_catalog,
             "read.route_events": self.route_events_for,
             "read.customer_report": self.customer_report,
+            "read.last_survey_answer": self.last_survey_answer,
             # ★`[2026-10-07]` 숙소·항공 검색(마이리얼트립 MCP · 검색 전용) — 숙소 팀 · 항공 팀이 쓴다
             "read.stay_search": self.stay_search,
             "read.stay_detail": self.stay_detail,
@@ -583,6 +584,20 @@ class ReadToolbox:
         unsupported = getattr(source, "unsupported", None)
         return {"events": source.affecting(wanted),
                 "unsupported": list(unsupported(wanted)) if callable(unsupported) else []}
+
+    def last_survey_answer(self, scope: ToolContext, *, question_id: str | None = None,
+                           **_: Any) -> dict[str, Any] | None:
+        """이 고객이 여행 설문 문항(`question_id`)에 마지막으로 고른 답 — `survey_answers.last_answer`. 없으면 `None`. `[2026-10-14]`
+
+        ★이 고객 것만 읽는다(tenant · customer). 다시 물을 때 지난 답을 미리 알려 주는 용도다 — 답으로 대신 쓰지 않는다.
+        """
+        if not question_id:
+            return None
+        from app.domains.travel_ops.components.intake import survey_answers
+
+        with self.connection_factory() as conn:
+            return survey_answers.last_answer(conn, tenant_id=scope.tenant_id, customer_id=scope.customer_id,
+                                              question_id=str(question_id))
 
     def customer_report(self, scope: ToolContext, *, text: str | None = None,
                         **_: Any) -> dict[str, Any] | None:

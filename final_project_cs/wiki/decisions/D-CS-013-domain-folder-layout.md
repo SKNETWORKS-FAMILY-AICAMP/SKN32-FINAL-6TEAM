@@ -112,6 +112,8 @@ app/
 | `similarity.py` | 비슷한 정도 · 설문 선호 · 거리 우선 | 활동 팀 | 점수 `None`(거리만 본다) | 2 |
 | `watch_planners.py` | 항목 종류별 감시 판정 | 세 팀 | `None` — 그 종류는 처리하지 않는다 | 3 |
 
+`[2026-10-13 추가]` `activity_ledger.py` — 관광지 휴무 · 운영시간(끝나는 시각까지 · 중간에 닫힘) · 재난문자 영향 판정. 꽂는 쪽은 활동 팀(원장 `instances/activity/ledger.py` · 판정 `verdicts.py`), 미등록이면 판정 `None`(모름 — 확인 화면은 장소 행 · 관광공사 운영시간 표만, 감시는 공유 점검 결과 그대로). 부르는 곳: 확인 화면 사실 `intake/hours.py` · 등록 판정 `itinerary_checks.py` · 감시 `watch/activity_disasters.py`. 근거 [2026-10-13 활동 판정 끼움 자리 연결](../records/reports/2026-10-13_activity_ledger_hook.md).
+
 ★**미등록일 때의 답은 새로 만든 기본값이 아니다.** 네 자리 모두 그 팀이 조립에 없을 때 부품이 이미
 가지고 있던 길이다. **값을 지어내지 않는다** — 영업 여부를 모르면서 「열었다」로 답하는 것이 이
 자리에서 가장 나쁜 일이고, 다른 팀 계산으로 **대신하지도 않는다**.

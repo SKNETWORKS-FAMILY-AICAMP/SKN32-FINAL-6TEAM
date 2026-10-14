@@ -272,13 +272,14 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
     """확인 화면이 읽는 모양. ★남의 접수는 없는 것과 같다(None)."""
     reap_stalled(conn, tenant_id=tenant_id, intake_id=intake_id)
     with conn.cursor() as cur:
-        cur.execute("SELECT status, stage, revision, fatal_code, fatal_detail, trip_id, received_at "
+        cur.execute("SELECT status, stage, revision, fatal_code, fatal_detail, trip_id, received_at, "
+                    "reopen_trip_id, reopen_version, reopen_frozen "
                     "FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s",
                     (tenant_id, intake_id, customer_id))
         row = cur.fetchone()
         if row is None:
             return None
-        status, stage, revision, fatal_code, fatal_detail, trip_id, received_at = row
+        status, stage, revision, fatal_code, fatal_detail, trip_id, received_at, reopen_trip, reopen_version, frozen = row
         cur.execute("SELECT metadata FROM intake_test_scenarios WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s",
                     (tenant_id, intake_id, customer_id))
         scenario_row = cur.fetchone()
@@ -322,6 +323,9 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "test_scenario": test_scenario,
             "revision": revision, "fatal": {"code": fatal_code, "detail": fatal_detail} if fatal_code else None,
             "trip_id": str(trip_id) if trip_id else None, "received_at": received_at.isoformat(),
+            # ★`[2026-10-13]` 등록한 여행을 다시 연 수정 접수(`reopen.py`) — 어느 여행의 몇 판인가 · 접수에 넣지 않고 그대로 두는 일정. 보통 접수는 None
+            "reopen": ({"trip_id": str(reopen_trip), "version": reopen_version, "frozen_item_ids": list(frozen or [])}
+                       if reopen_trip else None),
             "sources": out_sources, "check": check, "review": review, "review_error": review_error,
             # ★`[2026-10-06]` 로딩 중 질문 — 계획서만으로 알 수 없는 것만(쓰는 문항만, 최대 3). 답은 `POST …/survey` 로 한 문항씩 저장한다(`survey_answers.py`)
             "questions": survey_answers.questions(survey_answers.stored(conn, tenant_id=tenant_id, intake_id=intake_id)),
@@ -378,17 +382,20 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
     if not edits:
         raise IntakeRejected("no_edits", "고칠 값이 없습니다")
     with conn.transaction(), conn.cursor() as cur:
-        cur.execute("SELECT status, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s "
-                    "FOR UPDATE", (tenant_id, intake_id, customer_id))
+        cur.execute("SELECT status, revision, reopen_trip_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s "
+                    "AND customer_id=%s FOR UPDATE", (tenant_id, intake_id, customer_id))
         row = cur.fetchone()
         if row is None:
             raise LookupError("intake")
-        status, current = row
+        status, current, reopened = row
         if status != "review":
             raise IntakeConflict("intake_not_editable", f"지금은 고칠 수 없습니다(상태 {status})", status=status)
         if revision != current:
             raise IntakeConflict("stale_revision", "그 사이 다른 화면에서 고쳤습니다 — 새로 불러와 주세요",
                                  current_revision=current)
+        if reopened is not None and any(str(e.get("field") or "").startswith("trip.") for e in edits):
+            # ★`[2026-10-13]` 수정 접수(`reopen.py`)는 일정만 고친다 — 등록한 여행의 이름 · 인원 · 첫날은 「완료」가 새 판에 싣지 않는다
+            raise IntakeRejected("trip_field_locked", "등록한 여행의 이름 · 인원 · 첫날은 여기서 바꾸지 않아요")
         source_rows = _sources(conn, tenant_id, intake_id)
         sources = {str(s["source_id"]) for s in source_rows}
         our_places = None

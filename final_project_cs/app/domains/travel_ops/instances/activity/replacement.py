@@ -14,6 +14,7 @@ from typing import Any
 from app.core.contracts import TeamTask
 
 from . import failure_codes as fc
+from app.domains.travel_ops.components.intake.survey_answers import QUESTIONS as SURVEY_QUESTIONS
 from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
 
 from . import alternative_order
@@ -23,6 +24,24 @@ from .judge.llm import file_instructions
 from .judge.modes import _run, default_runner, kind_mode
 
 _order_log = logging.getLogger("acop.activity.alternative_order")
+
+#: ★`[2026-10-14]` 여행을 못 찾은 예약에서 다시 묻는 문항 — 여행 설문의 그 문항 그대로다(새 형식을 만들지 않는다).
+#:  활동 → 코어 전달 8번 회신(`wiki/records/reports/2026-10-13_활동_전달8_설문전달_회신.md`).
+ASK_QUESTION_ID = "priority"
+#: 고객 답에서 고른 선택지를 알아보는 말(띄어쓰기 무시) — 설문 선택지 글에 들어 있는 핵심 구절. 둘 다 들어 있으면 고르지 않는다.
+REPLY_PHRASES = {"activity": "활동이비슷한", "mobility": "이동이편한"}
+
+
+def ask_question():
+    """다시 물을 설문 문항(`survey_answers.QUESTIONS` 의 `priority`)."""
+    return next(q for q in SURVEY_QUESTIONS if q.id == ASK_QUESTION_ID)
+
+
+def reply_choice(text: str | None) -> str | None:
+    """고객 문장에서 고른 선택지 — 선택지 핵심 구절이 **하나만** 들어 있을 때만. 없거나 둘 다면 `None`(짐작하지 않는다)."""
+    flat = "".join(str(text or "").split())
+    found = [value for value, phrase in REPLY_PHRASES.items() if phrase in flat]
+    return found[0] if len(found) == 1 else None
 
 
 class ReplacementMixin:
@@ -40,29 +59,88 @@ class ReplacementMixin:
                     or (decisions.get("live_status") or {}).get("closed")
                     or operating.get("hours_verdict") == "outside")
 
-    @staticmethod
-    def _survey(task: TeamTask) -> dict[str, Any] | None:
-        """설문(`trips.constraints.survey`)이 Case 상태에 실려 오면 읽는다. 없으면 `None`."""
+    def _survey(self, task: TeamTask, booking: dict[str, Any] | None, seen: set[str], evidence: list, *,
+                reserve: int = 0) -> tuple[dict[str, Any] | None, dict[str, Any], list, list[str]]:
+        """여행 설문(`trips.constraints.survey`)과 어디서 읽었나 — `(설문, 출처, 근거, 경고)`. 못 찾으면 설문이 `None`.
+
+        찾는 순서(`[2026-10-14]` 활동 → 코어 전달 8번 회신):
+          1. Case 상태에 실려 온 설문(`survey` · `constraints.survey`) — 지금은 코어가 싣지 않지만 받는 자리는 둔다.
+          2. 예약이 속한 여행(`read.booking` 의 `trip` — 공용 도구가 찾는다) → `read.itinerary` 로 그 여행의 설문.
+             여행을 기간으로 추정했거나(`trip_period`) 예약 자체를 추정으로 골랐으면(`nearest`) 추정이라고 남긴다.
+        ★`reserve` — 뒤에 꼭 불러야 하는 도구 수. 도구 호출 상한이 모자라면 설문을 읽지 않고 경고만 남긴다(판정을 멈추지 않는다).
+        ★근거에는 설문 칸 이름만 싣는다 — 고객이 직접 쓴 답(자유 글)을 근거 · 로그에 복사하지 않는다.
+        """
         state = task.context.current_state or {}
         survey = state.get("survey") or (state.get("constraints") or {}).get("survey")
-        return survey if isinstance(survey, dict) else None
+        if isinstance(survey, dict):
+            return survey, {"from": "case_state"}, evidence, []
+        trip = (booking or {}).get("trip") or {}
+        trip_id = trip.get("trip_id")
+        if not trip_id:
+            return None, {"from": None, "why": trip.get("why_unknown") or "no_trip"}, evidence, []
+        if len(seen) + 1 + reserve > self.manifest.max_steps:
+            return (None, {"from": None, "why": "tool_budget", "trip_id": trip_id}, evidence,
+                    ["도구 호출 상한이 가까워 예약이 속한 여행의 설문을 읽지 않았다"])
+        try:
+            view = self._read(task, "read.itinerary", {"trip_id": trip_id}, seen)
+        except Exception as exc:  # noqa: BLE001 — 실패 코드는 `_read` 가 남겼다. 설문 없이 판정은 계속한다(경고로 드러낸다)
+            return (None, {"from": None, "why": "itinerary_unreadable", "trip_id": trip_id}, evidence,
+                    [f"예약이 속한 여행의 설문을 읽지 못했다({type(exc).__name__})"])
+        guessed = trip.get("matched_by") == "trip_period" or (booking or {}).get("matched_by") == "nearest"
+        info = {"from": "trip", "trip_id": trip_id, "matched_by": trip.get("matched_by"), "guessed": guessed}
+        survey = (((view or {}).get("trip") or {}).get("constraints") or {}).get("survey")
+        if not isinstance(survey, dict) or not survey:
+            return None, {**info, "from": None, "why": "trip_without_survey"}, evidence, []
+        evidence = self._evidence(task, source_id="read.itinerary", claim="예약이 속한 여행의 설문",
+                                  value={"trip_id": trip_id, "matched_by": trip.get("matched_by"), "guessed": guessed,
+                                         "survey_fields": sorted(survey)}, base=evidence)
+        return survey, info, evidence, (["예약이 속한 여행을 추정으로 찾아 그 여행의 설문을 썼다"] if guessed else [])
 
-    @classmethod
-    def _preference(cls, task: TeamTask) -> tuple[str | None, list[str]]:
-        """선호도 — `current_state["activity_preference"]` 를 먼저, 없으면 설문 `priority` 에서. 둘 다 없으면 `None`.
+    @staticmethod
+    def _preference(task: TeamTask, survey: dict[str, Any] | None) -> tuple[str | None, list[str], str | None]:
+        """선호도 — `(값, 경고, 출처)`. 순서: `current_state["activity_preference"]` → 이번 문의의 고객 답(다시 물은 문항에 고른 말)
+        → 설문 `priority`. 모두 없으면 `None`.
 
         ★모르는 값이 들어 있으면 짐작하지 않고 경고를 남긴 채 `None`(폴백 없음)으로 처리한다.
+        ★`[2026-10-14]` 고객 답은 **이번 문의에만** 쓴다(사용자 결정) — 저장하지 않는다. 재개면 `customer_input`, 새 문의면 그 문장.
         """
         state = task.context.current_state or {}
         raw = state.get("activity_preference")
-        if raw is None:
-            return preference_from_survey(cls._survey(task)), []
-        if raw in FALLBACK_DROPS:
-            return raw, []
-        return None, [f"알 수 없는 선호도 값({raw!r})이라 선호도를 반영하지 않았다"]
+        if raw is not None:
+            if raw in FALLBACK_DROPS:
+                return raw, [], "case_state"
+            return None, [f"알 수 없는 선호도 값({raw!r})이라 선호도를 반영하지 않았다"], None
+        reply = state.get("customer_input")
+        chosen = reply_choice(reply if isinstance(reply, str) else task.input_text)
+        if chosen is not None:
+            return chosen, [], "customer_reply"
+        found = preference_from_survey(survey)
+        return found, [], ("survey" if found else None)
+
+    def _ask_preference(self, task: TeamTask, seen: set[str], evidence: list) -> tuple[dict[str, Any], str, list]:
+        """설문을 못 찾았을 때 다시 묻는 질문 한 줄 — 같은 고객의 지난 답이 있으면 함께 알려 준다. `(기록, 문장, 근거)`.
+
+        ★안내를 막지 않는다 — 대체 후보는 코드 순서로 먼저 보내고, 이 문장은 답변 끝에 붙는다. 답은 다음 문장으로 온다.
+        """
+        question = ask_question()
+        options = [{"id": o.id, "label": o.label} for o in question.options]
+        last = None
+        if len(seen) + 1 <= self.manifest.max_steps:
+            try:
+                last = self._read(task, "read.last_survey_answer", {"question_id": ASK_QUESTION_ID}, seen)
+            except Exception:  # noqa: BLE001 — 실패 코드는 `_read` 가 남겼다. 지난 답 없이 묻는다
+                last = None
+        if last:
+            evidence = self._evidence(task, source_id="read.last_survey_answer", claim="같은 고객의 지난 설문 답",
+                                      value={"question_id": ASK_QUESTION_ID, "option_id": last.get("option_id")},
+                                      base=evidence)
+        choices = " 또는 ".join(f"「{o['label']}」" for o in options)
+        line = (f"취향을 알려 주시면 후보 순서를 다시 정해 드려요 — {question.title} {choices}로 답해 주세요."
+                + (f" 지난번에는 「{last['label']}」을 고르셨어요." if last and last.get("label") else ""))
+        return {"question_id": ASK_QUESTION_ID, "title": question.title, "options": options, "last": last}, line, evidence
 
     def _recommend_alternatives(self, task: TeamTask, place: Any, starts_at: Any, seen: set[str],
-                                evidence: list, decisions: dict[str, Any],
+                                evidence: list, decisions: dict[str, Any], booking: dict[str, Any] | None = None,
                                 ) -> tuple[dict[str, Any], list, str, list[str]]:
         """원래 장소 기준 대체 후보를 `read.place_candidates` 로 읽어 `rank_alternatives` 로 줄 세운다.
 
@@ -73,6 +151,8 @@ class ReplacementMixin:
           (`disaster_msg.near()`) 다른 구의 후보는 막히지 않을 수 있다. 후보마다 그 위치의 문자를
           `read.disaster_points` 로 한 번에 다시 보고, 위급재난이 걸린 후보는 빼고, 모르는 후보는
           안내문에 싣지 않는다(`_recheck_disaster`). 후보가 전부 걸리면 `withheld` 다.
+        ★`[2026-10-14]` 취향(설문)은 예약이 속한 여행에서 읽는다(`_survey`). 못 찾았고 검증된 후보가 두 곳 이상이면 답변 끝에
+          설문 문항 하나를 다시 묻는다(`_ask_preference`) — 활동 → 코어 전달 8번 회신. 어디서 정했는지는 `alt["preference"]`.
         """
         disaster_blocked = bool((decisions.get("disaster") or {}).get("blocks"))
         content_id = place.get("source_content_id") if isinstance(place, dict) else None
@@ -94,7 +174,10 @@ class ReplacementMixin:
                                          "pool_size": len(candidates), "source": pool.get("source"),
                                          "confirmed_at": pool.get("confirmed_at")},
                                   base=evidence)
-        preference, warnings = self._preference(task)
+        survey, survey_info, evidence, warnings = self._survey(task, booking, seen, evidence,
+                                                               reserve=1 if disaster_blocked else 0)
+        preference, more_warnings, source = self._preference(task, survey)
+        warnings = [*warnings, *more_warnings]
         ranked = rank_alternatives(pool["origin"], candidates, starts_at, preference=preference)
         if ranked["reason"] == "origin_no_coordinates":
             # ★근처를 잴 기준이 없다 — 「근처에 없음」으로 읽지 않는다.
@@ -124,9 +207,14 @@ class ReplacementMixin:
         alt = {"status": "ranked", **ranked,
                "revalidation": {"checked": ["time", "weekday_closure", "business_hours", "disaster"],
                                 "not_checked": ["capacity"]},
-               "source": pool.get("source"), "confirmed_at": pool.get("confirmed_at")}
+               "source": pool.get("source"), "confirmed_at": pool.get("confirmed_at"),
+               "preference": {"value": preference, "from": source, "survey": survey_info}}
         passed = [a for a in ranked["alternatives"] if a["revalidated"]]
         more = sum(1 for a in ranked["more_alternatives"] if a["revalidated"])
+        ask_line = ""
+        if preference is None and survey is None and len(passed) + more >= 2:
+            # ★순서가 취향에 따라 갈릴 만큼 후보가 있을 때만 묻는다. 안내는 막지 않는다(답변 끝 한 줄)
+            alt["preference"]["asked"], ask_line, evidence = self._ask_preference(task, seen, evidence)
         if not passed:
             self._record_failure(task, fc.ALTERNATIVES_NONE if not ranked["alternatives"]
                                  else fc.ALTERNATIVES_UNCONFIRMED)
@@ -141,11 +229,13 @@ class ReplacementMixin:
             if more:
                 # ★선호도 없음 — 화면 칸은 정확한 분류만 쓰므로 비지만, 비슷한 곳은 더보기에 있다.
                 note += f" 비슷한 분류의 장소 {more}곳은 더보기에 있습니다."
+            if ask_line:
+                note += "\n" + ask_line
             return alt, evidence, note, warnings
 
         # ★`[2026-10-12 사용자 결정]` 검증된 후보 안에서 LLM 이 고객 취향에 맞춰 먼저 보여 줄 순서를 정한다(`alternative_order`).
         #   후보를 새로 만들지 않는다 — 꺼져 있거나 · 취향 단서가 없거나 · 실패하면 코드 순서 그대로다.
-        order = self._order_alternatives(task, place, alt, candidates, warnings)
+        order = self._order_alternatives(task, place, alt, candidates, warnings, survey)
         if order is not None:
             alt["order"] = order
             passed = [a for a in alt["alternatives"] if a["revalidated"]]
@@ -156,10 +246,11 @@ class ReplacementMixin:
                 f"대체 장소 후보:\n{lines}\n"
                 + (f"(AI 가 고객님 취향에 맞춰 먼저 보여 드리는 순서예요 — {why})\n" if why else "")
                 + (f"더보기에 후보 {more}곳이 더 있습니다.\n" if more else "")
-                + "후보는 휴무 요일·운영시간·재난문자만 다시 확인했고 정원은 확인하지 않았습니다.", warnings)
+                + "후보는 휴무 요일·운영시간·재난문자만 다시 확인했고 정원은 확인하지 않았습니다."
+                + (f"\n{ask_line}" if ask_line else ""), warnings)
 
     def _order_alternatives(self, task: TeamTask, place: Any, alt: dict[str, Any], candidates: list[dict[str, Any]],
-                            warnings: list[str]) -> dict[str, Any] | None:
+                            warnings: list[str], survey: dict[str, Any] | None = None) -> dict[str, Any] | None:
         """검증된 후보의 보여 줄 순서 — `kind_modes.alternative_order`(rule · shadow · llm). `[2026-10-12 사용자 결정]`
 
         ★`rule`(기본) · 판정 LLM 없음 · 후보 1곳 이하 · 취향 단서 없음 → 부르지 않는다(`None`).
@@ -171,7 +262,7 @@ class ReplacementMixin:
         if llm is None or mode == "rule":
             return None
         pool = [a for a in [*alt["alternatives"], *alt["more_alternatives"]] if a.get("revalidated")]
-        preference = alternative_order.preference_inputs(self._survey(task), task.input_text)
+        preference = alternative_order.preference_inputs(survey, task.input_text)
         if len(pool) < 2 or preference is None:
             return None
         budget = getattr(self, "judge_budget", None)

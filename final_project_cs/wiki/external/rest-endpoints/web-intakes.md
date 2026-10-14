@@ -12,7 +12,7 @@ domain: travel
 
 `[실측]` `app/domains/travel_ops/components/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·
 저장 `trip_intakes` · `intake_sources` · `intake_claims`(마이그레이션 028). 설계 `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md`.
-★**모델은 위치만 가리키고 값은 원문과 조회가 낸다.** 값마다 방법(`rule` · `llm_span` · `lookup` · `customer`)과 근거가 붙는다.
+★**모델은 위치만 가리키고 값은 원문과 조회가 낸다.** 값마다 방법(`rule` · `llm_span` · `lookup` · `customer` · ★`[2026-10-13]` `trip` — 수정 접수가 등록한 여행에서 가져온 값)과 근거가 붙는다.
 
 | 경로 | 인증 | 뜻 |
 |---|---|---|
@@ -21,7 +21,7 @@ domain: travel
 | `POST /v1/web/trip-intakes/{intake_id}/survey` | 키 | ★`[2026-10-06]` 로딩 중 질문의 답을 **한 문항씩 바로** 저장 `{answers: {문항 id: 선택지 id}}` → `{ok, answered[], questions_version}` — 아래 「설문 질문」 |
 | `POST /v1/web/trip-intakes/{intake_id}/edits` | 키 | 확인 화면에서 고친 값 `{revision, edits:[{source_id, field, value}]}` → **새 판**(앞 판의 값은 남는다). 칸: `items[n].title·date·starts_at·ends_at·kind·place·booking_no·removed` · `trip.title·party_size·first_day`. 장소는 `{"name":…}` 로 받아 **다시 찾고**(못 찾으면 422 `place_not_found`), `{"none": true}` 는 「장소 없음」. 낡은 판은 **409 `stale_revision`** |
 | `POST /v1/web/trip-intakes/{intake_id}/restore` | 키 | 전체 되돌리기 `{revision, restore_revision}` → 과거 완료 판의 값을 새 판으로 복원한 접수 전체 응답. 본인 접수·현재 판·원판을 검증하고 잠금/예약 보호 위반 및 검사 실패는 전체 취소한다. [복원 계약](../web-intake-restore.md) |
-| `POST /v1/web/trip-intakes/{intake_id}/confirm` | 키 | 「등록하고 관리 시작」 `{revision, survey?}`. ★`survey`(선택, `TripSurvey` 판 `2026-09-24.v1`)는 등록 몸통의 `constraints.survey` 로 실려 여행에 남는다 — 틀리면 422 `invalid_survey`. 서버가 **다시 조립·판정**한 뒤 `_create_trip` 한 곳으로 등록 — `request_id = intake:{접수}:r{판}` 이라 두 번 눌러도 여행은 하나. 막으면 422 `intake_incomplete`(문제 목록) · 판정기의 422 그대로 |
+| `POST /v1/web/trip-intakes/{intake_id}/confirm` | 키 | 「등록하고 관리 시작」 `{revision, survey?}`. ★`survey`(선택, `TripSurvey` 판 `2026-09-24.v1`)는 등록 몸통의 `constraints.survey` 로 실려 여행에 남는다 — 틀리면 422 `invalid_survey`. 서버가 **다시 조립·판정**한 뒤 `_create_trip` 한 곳으로 등록 — `request_id = intake:{접수}:r{판}` 이라 두 번 눌러도 여행은 하나. 막으면 422 `intake_incomplete`(문제 목록) · 판정기의 422 그대로. ★`[2026-10-13]` 수정 접수(`reopen`)면 새 여행이 아니라 **같은 여행의 새 판** — 아래 「등록한 여행 고치기」 |
 | `POST /v1/web/trip-intakes/{intake_id}/plan` | 키 | 「일정 짜 줘」 `{revision, start_date, days(1~7), party_size(1~4), keep_read_items?, survey?}` — ★`survey` 는 생성기가 먼저 적용하고(16번 여유 → 하루 곳 수) 여행에 남는다(15번은 감시가 읽는다), 틀리면 422 `invalid_survey` — 원문 그대로를 선호로 일정 생성기(`planner.plan_trip`)가 짜고, **같은 판정**을 지난 초안을 `_create_trip` 으로 등록. `request_id = intake:{접수}:plan:r{판}` — 다시 눌러도 모델을 안 부르고 같은 여행. 못 짜면 422(이유·완화 조건). ★`keep_read_items`(기본 true) — 읽은 일정은 **옮기지도 바꾸지도 않고** 빈 시간만 채운다(`planner.plan_around`: 겹치거나 앞뒤 30분에 걸린 짠 항목 · 같은 때 식사를 빼고, 이동 자리가 모자라면 고정 일정을 밀지 않고 그 앞의 짠 항목을 뺀다. 읽은 장소는 후보에서 뺀다 — ★`[2026-10-01]` 이름이 정확히 같은 것만이 아니라 **같은 곳**(같은 주소 · 30 m 안 · 이름 첫 낱말이 같고 1.5 km 안)이면 다른 이름이어도 뺀다. 고객이 쓴 「경복궁 건청궁」을 고정했는데 생성기가 「경복궁」을 따로 넣던 것을 막는다. 식당은 같은 건물에 다른 가게가 흔해 이 비교에서 뺀다). 읽은 일정이 고른 날짜 밖이면 422 `read_items_outside_days`. false 면 읽은 일정 없이 새로 짠다 |
 
 읽는 순서(원본마다): 규칙 → **남은 줄만** 모델에 보내 원문 조각을 인용하게 함(원문에 글자 그대로 없는 인용은 버린다) →
@@ -238,6 +238,33 @@ Team이 추가 정보를 요청하면 **`case_status: "waiting_input"`**이며 �
 **여행 조회 항목에 더한 칸** `[2026-09-27]` — `lat`·`lon`(그 고객 자신의 여행 장소 좌표, 웹 지도 핀) · `booked`(예약 표 연결 또는
 `detail.booking`). **웹 메시지 응답**에는 「바꾸지 않아도 되는 결과」(`no_meal` · `still_fits` · `no_alternate` · `clear` · `gone`)일 때
 대화 경로와 **같은 문장표**(`itinerary_team.ANSWERS`)의 `answer` 가 실린다 — 웹이 문장을 지어내지 않게.
+
+### 등록한 여행 고치기(수정 모드) — `POST /v1/web/trips/{trip_id}/reopen` · 수정 접수의 `/confirm` `[2026-10-13 사용자 결정]`
+
+등록한 여행 화면의 「일정 수정」은 **계획 확인 화면의 기능을 그대로** 쓴다. 등록한 여행을 확인 화면 접수로 **다시 열고**(이 경로), 시각 · 일정 추가 · 장소 바꾸기 · 삭제 · 자동 추천 · 잠금 · 이동 수단 · 되돌리기 · 재검증은 **기존 `/v1/web/trip-intakes/{intake_id}/*` 그대로** 부른다. 「완료」(`/confirm`)는 새 여행을 만들지 않고 **같은 여행의 새 판**을 쓴다 — 채팅 변경과 같은 길(새 판 · 변경 이력 · 알림 하나). 등록한 여행을 고치는 API 를 따로 두지 않는다(같은 계산의 두 구현을 만들지 않는다).
+`[실측]` `app/domains/travel_ops/components/intake/reopen.py` · `entry/trip_api.py` · 저장 `trip_intakes.reopen_trip_id · reopen_version · reopen_frozen`(마이그레이션 232) · 시험 `tests/e2e/test_trip_reopen.py`.
+
+**다시 열기** `POST /v1/web/trips/{trip_id}/reopen {version}` — 키 · 본인 여행만(남의 것 404).
+- `version` = 화면이 보고 있는 여행 판. 지금 판과 다르면 **409 `stale_itinerary`** `{version: 지금 판}` — 화면이 여행을 다시 읽는다.
+- 같은 여행 · 같은 판으로 열린 수정 접수가 있으면 **그것을 그대로** 돌려준다(고치던 값이 남는다 — 새로 고침 · 다시 들어오기). 그 사이 판이 바뀌었으면(채팅 · 감시 변경) 남은 수정 접수는 닫고(`status: closed`) 새로 연다. 여행 하나에 열린 수정 접수는 하나뿐이다.
+- **접수에 넣는 것 = 고칠 수 있는 일정만** — 활동 · 식사(`kind` activity · dining) 중 아직 끝나지 않았고(끝 시각 > 지금, 끝이 없으면 시작 > 지금 · 서울 시각) 업체 예약 표(`booking_id`)에 묶이지 않은 것. ★`[2026-10-14]` **자정을 넘는 일정**(끝 날짜가 시작 날짜와 다른 활동 · 식사, 예: 23:00 → 다음 날 01:00)도 고정이다 — 접수는 끝을 「시작 날짜 + HH:MM」으로만 담아 다시 열면 끝이 시작보다 앞서 「완료」가 `time_order` 로 막혔다(끝 날짜를 접수에 담는 근본 수정은 따로 정한다). 나머지(끝난 일정 · 숙소 등 다른 종류 · 예약 표에 묶인 일정 · 자정을 넘는 일정)는 **고정**이라 접수에 넣지 않고 `reopen.frozen_item_ids` 로 알린다 — 「완료」 때 그대로 남는다. 이동 항목(`mobility`)은 넣지 않는다(확인 화면이 앞뒤 일정으로 이동을 다시 계산한다).
+- 일정마다 값 줄을 **`method: "trip"`**(등록한 여행에서 가져온 값 — 고객이 고친 값 `customer` 과 다르다)으로 싣는다: 제목 · 날짜 · 시작 · 끝 · 종류 · 장소(그 여행의 장소 행 — `place_id` 포함) · 예약번호(`detail.booking.booking_no`) — ★`[2026-10-14]` 예약번호 없이 「예약 있음」으로만 등록한 일정(`detail.booking = {declared_by: customer_plan}`)은 `booked: true` 값 줄로 싣는다(확인 화면의 예약 줄 · 자동 추천 제외가 서고, 시각만 고쳐 새 항목이 돼도 예약 표시가 남는다) · 고정(`detail.customer_pinned` 또는 `locked`). 근거에 원래 일정 id(`evidence.item_id`). 장소가 없는 일정은 「장소 없음」(`place: null`). 여행 이름 · 인원은 `trip.title` · `trip.party_size` 로 싣지만 **고칠 수 없다**.
+- 응답 = 접수 조회(`GET /v1/web/trip-intakes/{id}`)와 같은 모양 + `reopen: {trip_id, version, frozen_item_ids[]}` · `status: review`. 접수 조회도 수정 접수면 `reopen` 이 있다(보통 접수는 `null`).
+
+**수정 접수에서 달라지는 것** — 그 밖의 확인 화면 경로는 보통 접수와 같다.
+- `POST …/edits` 의 `trip.title` · `trip.party_size` · `trip.first_day` → **422 `trip_field_locked`**(등록한 여행의 이름 · 인원 · 첫날은 여기서 바꾸지 않는다).
+- `POST …/plan` → **409 `intake_reopened`**(일정 짜기는 새 여행을 만든다).
+- `POST …/confirm {revision}` — `survey` 를 실으면 422 `trip_field_locked`. 서버가 그 판을 **다시 조립 · 판정**한 뒤:
+  1. 막는 문제가 있으면 422 `intake_incomplete`(보통 접수와 같다). 단 고정 일정이 남아 있으면 「읽은 일정이 없어요」(`no_items`)로 막지 않는다 — 앞으로의 일정을 모두 뺄 수 있다.
+  2. 여행 판이 다시 연 판과 다르면 **409 `stale_itinerary`** `{version}` — 그 사이 채팅 · 감시가 일정을 바꿨다. 아무것도 쓰지 않는다.
+  3. 원래 일정과 견줘 **바뀐 일정**(제목 · 종류 · 날짜 · 시각 · 장소 · 예약번호 · 예약 있음 표시 · 고정 중 하나라도) · **추가한 일정** · **뺀 일정**을 가른다. 바뀌거나 빠지거나 더해진 일정이 이미 끝났으면(원래 값 · 새 값 중 하나라도 끝 ≤ 지금) **422 `item_in_past`** `{items: [제목…]}` — 지난 일정은 바꿀 수 없다.
+  4. 바뀐 일정은 **새 id** 로 원래 일정을 가리키고(`replaces_item_id` — 채팅 변경과 같다), 안 바뀐 일정 · 고정 일정은 같은 id 그대로 둔다. 이동 항목은 앞뒤 일정이 둘 다 안 바뀌고 여전히 이웃일 때만 남긴다. ★`[2026-10-14 매니저 합침]` 그 밖의 같은 날 이웃(바뀐 일정 옆 · 새로 이웃이 된 구간)에는 **확인 화면이 검증한 이동**(그 판의 `review.moves`)을 새 이동 항목으로 넣고, 고객이 수단을 고른 구간(`mode_choice.state=kept`)은 옛 이동을 그 이동으로 갈음한다(`replaces_item_id`) — 출발 알림이 이 이동 항목으로 나간다. 수단만 바꿔도 「바뀐 것」이라 새 판을 쓴다(`registered_moves.fill_edited_moves`). ☆처음 판은 바뀐 일정 옆 이동을 빼기만 해서 그 구간 출발 알림이 사라지고 고른 수단도 저장되지 않았다 고객이 고른 곳(후보 · 검색 · 자동 추천 — 장소 값 줄이 `customer`)은 **그 이름이 일정 이름**이 된다 — 확인 화면 카드가 그렇게 보인다(원래 적힌 말은 `detail.provenance.title` 에 남는다).
+  5. **이번 변경으로 새로 생긴 위반**(채팅 변경과 같은 판정 — 바꾸기 전에도 같은 일정에 있던 위반은 이 변경 탓이 아니다)이 있으면 **422 `itinerary_infeasible`** `{violations}`.
+  6. 같은 여행에 새 판을 쓴다 — `reason: customer_request` · 원인 `{category: customer_request, type: edit, summary, intake_id, request_id: "intake:{접수}:r{판}"}`(`summary` 예: 「일정을 직접 고쳤어요 — 바꾼 일정 광장시장 → 충신시장 · 뺀 일정 N서울타워」) · 알림 하나(「받은 알림」 · 디스코드). 다시 눌러도 같은 `request_id` 라 판은 하나다. **바뀐 것이 없으면 판을 쓰지 않는다.**
+  - 응답 `{intake_id, status: "confirmed", trip(여행 조회와 같은 모양), version, changed}` — `changed: false` 면 판을 안 썼다(`version` = 그대로). 접수는 `confirmed` 가 된다.
+- ★`[2026-10-13 사용자 지시]` **수정 취소** `POST /v1/web/trip-intakes/{intake_id}/cancel` — 수정 모드의 「취소」. 열린 수정 접수를 닫는다(`status: closed`) — 고친 값은 여행에 쓰지 않고 **다음 「일정 수정」은 새 접수**다(닫지 않으면 같은 판으로 다시 열 때 고치던 값이 되살아난다). 응답 `{intake_id, status: "closed"}` · 이미 닫힌 것은 그대로 200 · 보통 접수 409 `intake_not_reopened` · 이미 「완료」한 것 409 `intake_not_editable` · 남의 것 404.
+- 여행을 지우면(`POST /v1/web/trips/{trip_id}/delete`) 그 여행의 수정 접수도 지운다.
+- `[미정]` 재난으로 일정이 정지된 동안 수정을 막을지 · 진행 중 일정의 시작을 앞당기는 것(지금은 화면만 막는다) · 등록한 여행의 이름 · 인원 바꾸기(화면 요청 ①).
 
 ### 설문 질문 — `questions[]` · `POST /v1/web/trip-intakes/{intake_id}/survey` `[2026-10-06 사용자 지시 · uiux 인계]`
 

@@ -73,6 +73,11 @@ export interface PlanItem {
   info: PlaceInfo | null;
   /** The first alternative's name, said under the card's 「자동 추천」 — null when none is known. */
   suggestion: string | null;
+  /**
+   * `[2026-10-13 사용자 결정 — 수정 모드]` A stop of the registered trip that is not in the edit (its end has passed — `reopen.frozen_item_ids`): one grey line, nothing on it can change,
+   * nothing pushes it. Absent on the plan check of a new plan.
+   */
+  past?: boolean;
 }
 
 /**
