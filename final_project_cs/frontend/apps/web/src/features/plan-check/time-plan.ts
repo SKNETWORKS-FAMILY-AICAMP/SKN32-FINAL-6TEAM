@@ -21,6 +21,8 @@ export interface MoveResult { start: number; changes: Retime[]; clamped: boolean
 export const DAY_END = 1440;
 /** Times are moved in steps of this many minutes. */
 export const SNAP = 5;
+/** `[2026-10-14]` The earliest a time edit may push the day's earlier stops to (06:00) — see `pushRange`'s `dayStart`. */
+export const PUSH_DAY_START = 6 * 60;
 /** A stop with no known end takes this long for the maths. */
 export const ASSUMED_MINUTES = 60;
 
@@ -165,14 +167,16 @@ export function ownRange(stops: readonly TimedStop[], legs: readonly TimedLeg[],
  * `{ min: start, max: start }`. A `fixed` stop can only stay where it is; a stop already standing outside the range keeps its
  * place in it (see `inwards`). This is the range a drag may use (`ownRange` is the smaller range that moves nobody else).
  */
-export function pushRange(stops: readonly TimedStop[], legs: readonly TimedLeg[], index: number, step: number = SNAP): TimeRange {
+export function pushRange(stops: readonly TimedStop[], legs: readonly TimedLeg[], index: number, step: number = SNAP, dayStart: number = 0): TimeRange {
   const stop = stopAt(stops, index);
   if (stop.fixed) return { min: stop.start, max: stop.start };
   const leg = legLookup(legs);
 
   // Earliest: everything before is packed against the nearest fixed stop before this one (or against the start of the day).
+  // `[2026-10-14 실서버 확인]` `dayStart` — how early the stops before may be pushed (the screen passes `PUSH_DAY_START`); a day whose first stop already starts earlier
+  // keeps that start. With 0 the editor offered 「가능한 시각 01:50」 for a stop after a 10:00 visit (the visit pushed back to midnight).
   let packedBefore = 0;
-  let floor = 0;
+  let floor = Math.min(dayStart, stops[0]?.start ?? dayStart);
   for (let k = index - 1; k >= 0; k--) {
     packedBefore += occupancy(stops[k]) + leg(stops[k].id, stops[k + 1].id);
     if (stops[k].fixed) { floor = stops[k].start; break; }

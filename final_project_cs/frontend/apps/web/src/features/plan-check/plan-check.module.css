@@ -606,7 +606,8 @@ button.time:focus-visible { outline: 2px solid var(--color-selected); outline-of
 /* Two big fields on a line of their own (the clock icon of the browser hidden - the numbers are the thing); the grip, −5 and +5 stand on the next line. */
 .timeEditor { grid-template-columns: 1fr 1fr; align-items: start; }
 .timeEditor[data-kind="depart"] { grid-template-columns: 1fr; }
-.timeEditor input[type="time"] { width: 100%; min-width: 0; font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0; padding-inline: 10px; }
+/* `[2026-10-14 실서버 확인]` 19px · 10px 여백이면 휴대폰 폭(칸 약 109px)에서 「오후 12:30」이 「오후 12:3」으로 잘렸다 — 16px · 8px 로 줄인다 */
+.timeEditor input[type="time"] { width: 100%; min-width: 0; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0; padding-inline: 8px; }
 .timeEditor input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
 .timeSteps .timeGrip { width: 44px; height: 38px; border-radius: 999px; }
 .timeEditor { animation: timePop .3s cubic-bezier(.2, .9, .3, 1.2); transform-origin: 30px 0; }
