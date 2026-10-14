@@ -106,6 +106,38 @@ def test_closure_is_judged_on_the_korean_date():
     assert read_closure("매주 월요일", sunday_utc).value is True
 
 
+@pytest.mark.parametrize("text, when, expected", [
+    ("명절, 월1회", at(10, 12), None),                    # ★전에는 월요일 True(weekly) — 「월」을 요일로 읽었다
+    ("월 1회", at(10, 12), None),
+    ("월 1회 비정기 휴무", at(10, 14), None),
+    ("매월 2회 휴무", at(10, 12), None),
+    ("명절, 월 1회 월요일", at(10, 12), None),             # 월요일 가운데 어느 날인지 모른다
+    ("명절, 월 1회 월요일", at(10, 13), False),            # 화요일 — 이 원문으로는 휴무가 아니다
+    ("명절, 월2회 일요일", at(10, 18), None),
+    ("명절, 월2회 일요일", at(10, 12), False),             # ★전에는 월요일 True
+    ("매월 5번째 월요일", at(11, 30), True),               # 숫자 서수 — 11/30 은 다섯째 월요일
+    ("매월 5번째 월요일", at(10, 12), False),              # ★전에는 매주 월요일 True
+    ("2·4주차 일요일", at(10, 25), True),                  # 넷째 일요일
+    ("2·4주차 일요일", at(10, 18), False),                 # ★전에는 매주 일요일 True — 셋째 일요일
+    ("2,4주 수요일", at(10, 14), True),
+    ("2,4주 수요일", at(10, 21), False),
+])
+def test_monthly_count_is_not_a_monday(text, when, expected):
+    """결함 2026-10-14_2208 — 「월 N회」의 「월」은 달이다. 날짜가 정해지지 않았으니 모름이다."""
+    assert read_closure(text, when, known).value is expected
+
+
+@pytest.mark.skipif(not CSV_PATH.exists(), reason="CSV 장소 목록이 없다")
+def test_no_monthly_count_text_in_the_csv_closes_every_week():
+    """CSV 「월 N회」 원문 중 공휴일 없는 주에 휴무(True)로 잡히는 날이 하나도 없다. 고치기 전 101/102행이 월요일 True."""
+    with CSV_PATH.open(encoding="utf-8-sig", newline="") as fh:
+        texts = [(r.get("closed_days") or "").strip() for r in csv.DictReader(fh)]
+    monthly = [t for t in texts if re.search(r"(?:매월|(?<![가-힣\d])월)\s*(?:\d+|한|두|세)\s*(?:회|번|차례)(?!\s*째)", t)]
+    week = [at(10, 12 + i) for i in range(7)]
+    closed = [t for t in monthly if any(read_closure(t, day, known).value for day in week)]
+    assert len(monthly) > 90 and closed == [], closed[:5]
+
+
 def test_holiday_dates_needed():
     assert holiday_dates_needed("매주 월요일", at(10, 12)) == []        # 공휴일 조건 없음 — 도구를 부르지 않는다
     assert holiday_dates_needed("매주 월요일 / 법정공휴일", at(10, 12)) == [date(2026, 10, 12)]

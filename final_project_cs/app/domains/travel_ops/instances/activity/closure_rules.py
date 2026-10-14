@@ -15,6 +15,9 @@
      ★예외 — 「매주 X요일 (단, 공휴일이면 개방)」은 요일이 맞고 공휴일 여부를 모르면 **휴무**로 두고 단서를 단다
        (`needs_caveat`). 대부분의 날은 공휴일이 아니고, 전에도 이렇게 단서를 달아 안내했다. 공휴일인 걸 알면 「아님」이다.
   5. 날짜 계산(몇째 주 · 마지막 주 · 월·일)은 코드가 한다.
+  6. `[2026-10-14 사용자]` 「(매)월 N회」(백화점 「명절, 월1회」 등)는 **날짜가 정해지지 않은 휴무**다 — 요일이 없으면
+     어느 날이든 모름(`monthly_irregular`), 요일이 함께 있으면(「월2회 일요일」) 그 요일만 모름이고 다른 요일은 아님.
+     ★「월」은 달이지 월요일이 아니다 — 결함 `wiki/records/reports/debugs/2026-10-14_2208_정기휴무_규칙이_월N회를_매주_월요일로_읽는다.md`.
 """
 from __future__ import annotations
 
@@ -42,9 +45,15 @@ _KO = "월화수목금토일"
 UNKNOWN_MARKERS = ("상이", "참조", "확인", "문의", "별도", "변동", "공연별", "공연 별")
 _ALWAYS_OPEN = re.compile(r"^(?:연중\s*무휴|연중\s*개방|연중\s*운영|휴무\s*없음|휴관\s*없음|무휴|없음)(?:\s*운영)?$")
 _ORD = {"첫째": 1, "첫번째": 1, "첫 번째": 1, "둘째": 2, "두번째": 2, "두 번째": 2, "셋째": 3, "세번째": 3,
-        "세 번째": 3, "넷째": 4, "네번째": 4, "네 번째": 4, "다섯째": 5, "마지막": -1}
+        "세 번째": 3, "넷째": 4, "네번째": 4, "네 번째": 4, "다섯째": 5, "마지막": -1,
+        # 「매월 5번째 월요일」 — 숫자 서수(결함 2026-10-14_2208 함께 발견)
+        **{f"{n}{sp}번째": n for n in range(1, 6) for sp in ("", " ")}}
 _ORD_WORD = "|".join(sorted((re.escape(k) for k in _ORD), key=len, reverse=True))
-_NTH = re.compile(rf"((?:{_ORD_WORD})(?:\s*주)?(?:\s*[·,/및]\s*(?:{_ORD_WORD})(?:\s*주)?)*)\s*주?\s*([월화수목금토일])요일")
+#: 「2·4주차 일요일」 · 「2,4주 수요일」 — 숫자만 쓴 서수. 뒤에 「주차 · 주 · 째」가 와야 서수다(「3월 토요일」은 아니다)
+_ORD_NUM = r"(?<!\d)[1-5](?=[\s·,/및1-5]*(?:주차|주|째))"
+_ORD_TOKEN = rf"(?:{_ORD_WORD}|{_ORD_NUM})"
+_NTH = re.compile(rf"((?:{_ORD_TOKEN})(?:\s*(?:주차|주|째))?(?:\s*[·,/및]\s*(?:{_ORD_TOKEN})(?:\s*(?:주차|주|째))?)*)"
+                  rf"\s*(?:주차|주)?\s*([월화수목금토일])요일")
 _DATE = re.compile(r"(\d{1,2})\s*월\s*(\d{1,2})\s*일")
 _MONTH_LIST = re.compile(r"(\d{1,2})\s*월")
 _HOLIDAY = re.compile(r"공휴일|국경일|대체\s*휴일")
@@ -53,6 +62,9 @@ _FESTIVE_NAME = re.compile(r"설|추석")
 _EXCEPT_OPEN = re.compile(r"(?:단|다만)[,\s].*(?:공휴일|휴일).*(?:개방|정상|운영|개관|개장)")
 _CARRY_OVER = re.compile(r"다음|익일|이튿날|첫\s*번째\s*(?:평일|비공휴일)")
 _WEEKEND = re.compile(r"주말")
+#: 「월 1회」 · 「매월 2회」 · 「월 한 번」 — 한 달에 몇 번(날짜 미정). 「매월 두 번째」 같은 서수는 아니다.
+_MONTHLY = re.compile(r"(?:매월|(?<![가-힣\d])월)\s*(?:\d+|한|두|세)\s*(?:회|번|차례)(?!\s*째)")
+_IRREGULAR = re.compile(r"비정기|부정기")
 #: 요일 글자만 쓴 나열 — 「매주 월, 화」 · 「월·화」
 _BARE_DAY = re.compile(r"(?<![가-힣])([월화수목금토일])(?=\s*(?:[,·~]|요일|$|\s))")
 #: 판정에 쓰지 않는 군말 — 이것만 남으면 「못 읽은 조각」이 아니다
@@ -159,7 +171,7 @@ def _clause(c: str, d: date, holiday: HolidayLookup) -> tuple[bool | None, str]:
     for m in _NTH.finditer(c):
         wd = _KO.index(m.group(2))
         n, last = _nth_of(d)
-        wanted = [_ORD[w] for w in re.findall(_ORD_WORD, m.group(1))]
+        wanted = [_ORD[w] if w in _ORD else int(w) for w in re.findall(rf"{_ORD_WORD}|[1-5]", m.group(1))]
         months = {int(x) for x in _MONTH_LIST.findall(c[:m.start()])}       # 「매년 3월, 6월 … 첫 번째 월요일」
         in_month = not months or d.month in months
         hit = in_month and d.weekday() == wd and any((w == -1 and last) or w == n for w in wanted)
@@ -183,10 +195,19 @@ def _clause(c: str, d: date, holiday: HolidayLookup) -> tuple[bool | None, str]:
         verdicts.append((d.weekday() >= 5, "weekend"))
         rest = _WEEKEND.sub(" ", rest)
 
+    # ★「월 N회」의 「월」은 달이다 — 요일보다 먼저 떼어 낸다(결함 2026-10-14_2208)
+    monthly = bool(_MONTHLY.search(rest))
+    if monthly:
+        rest = _IRREGULAR.sub(" ", _MONTHLY.sub(" ", rest))
+
     days = _weekday_days(rest)
     if days:
-        verdicts.append((DAYS[d.weekday()] in days, "weekly"))
+        on_day = DAYS[d.weekday()] in days
+        # 「월2회 일요일」 — 그 요일 가운데 어느 날인지 모른다. 다른 요일은 이 절로는 휴무가 아니다
+        verdicts.append(((None if on_day else False), "monthly_irregular") if monthly else (on_day, "weekly"))
         rest = re.sub(r"[월화수목금토일](?:요일)?", " ", rest)
+    elif monthly:
+        verdicts.append((None, "monthly_irregular"))
 
     leftover = _FILLER.sub("", rest)
     leftover = re.sub(r"\d+", "", leftover)
