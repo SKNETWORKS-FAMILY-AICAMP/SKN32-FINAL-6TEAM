@@ -33,6 +33,8 @@ GATE: dict[str, dict[str, str]] = {
         "test_train_search_turns_names_into_stations_and_sorts_by_departure": "역 이름 → 역 id · 운행 출발 시각순",
         "test_bus_search_asks_every_matching_terminal_pair_express_first_and_suburbs_only_when_needed": "터미널 조합 조회 · 고속 먼저 · 시외는 없을 때만",
         "test_a_train_sentence_is_answered_from_tago_by_time_band_with_booking_links": "기차 답 — 시간대별 운행 · 요금 · 예매 링크",
+        "test_change_on_a_train_item_offers_same_grade_runs_near_the_original_departure_without_touching_the_plan": "기차 항목 「바꿔 줘」 → 같은 등급 · 앞뒤 3시간 운행을 보류 제안으로",
+        "test_choosing_a_train_run_moves_both_times_and_rechecks_the_fare": "운행 고르기 → 출발 · 도착 시각 교체 · 요금 재확인",
     },
     "test_lodging_team.py": {
         "test_search_calls_the_model_once_and_answers_from_tool_values": "숙소 검색 — 모델은 해석 한 번, 답은 도구 값으로",

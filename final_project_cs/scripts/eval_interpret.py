@@ -52,8 +52,12 @@ def team_parts(team):
     return PROMPT_KEY, interpret
 
 
+PROMPT_KEY_OVERRIDE = ""     # `[2026-10-14]` 대조용 프롬프트(`--prompt-key flight.interpret_transit` → prompts/flight/interpret_transit.v*.md)
+
+
 async def run_case(llm, team, case, today, trip):
     key, interpret = team_parts(team)
+    key = PROMPT_KEY_OVERRIDE or key
     context = interpret.model_context(today, trip if case.get("trip") else None)   # 팀과 같은 context(달력 포함)
     if PLAIN:                                         # 비교용 — 달력 없이 오늘 · 여행만(2026-10-10 1차 측정 때 모양)
         context = {key: value for key, value in context.items() if key in ("today", "trip")}
@@ -90,12 +94,15 @@ def main():
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--only", default="", help="쉼표로 나눈 문장 id(L01,F04 …)")
     parser.add_argument("--plain-context", action="store_true", help="달력 없이(1차 측정 때 context) — 달력의 효과를 따로 본다")
+    parser.add_argument("--prompt-key", default="", help="모델 쪽 프롬프트 키 바꾸기(대조용 — 예: flight.interpret_transit, 운영 프롬프트는 그대로)")
     parser.add_argument("--set", dest="case_set", default="", help="base(처음 40문장) · hard(10-10 밤 추가) · user(사용자가 쓴 20문장) · real(실제 문장) — 없으면 전부")
     parser.add_argument("--rules", action="store_true", help="`[2026-10-14]` 항공을 규칙 해석으로(모델 호출 0) — flight 만")
     parser.add_argument("--compare", action="store_true", help="`[2026-10-14]` 항공 50문장을 규칙과 모델 둘 다 돌려 칸마다 대조(모델 호출 문장 수만큼)")
     args = parser.parse_args()
     if (args.rules or args.compare) and (args.teams or ["flight"]) != ["flight"]:
         parser.error("--rules · --compare 는 flight 만")
+    global PROMPT_KEY_OVERRIDE
+    PROMPT_KEY_OVERRIDE = args.prompt_key
     if args.compare:
         return compare(args)
     global PLAIN

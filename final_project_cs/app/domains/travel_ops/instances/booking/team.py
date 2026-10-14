@@ -6,7 +6,11 @@
 항목 `kind:"flight"` · case type `flight`)는 그대로다 — `booking.*` 은 `booking_handoff` 팀 능력 이름이라 겹친다(팀장 결정 대기).
 옛 이름 `FlightTeam` 은 별칭으로 남긴다.
 `[2026-10-14 저녁]` **기차 · 버스**(`mode` train · bus): 같은 규칙 해석 → 같은 서버 검증 → `read.booking_search_transit`(TAGO 열차 · 고속 · 시외버스) 한 번(오는 날이 있으면 두 번) →
-운행을 출발 시각순 · 시간대별로 보여 주고 예매 사이트 링크를 준다(`_search_transit`). 일정 항목(`kind` train · bus)은 아직 안 만든다 — 검색 답만.
+운행을 출발 시각순 · 시간대별로 보여 주고 예매 사이트 링크를 준다(`_search_transit`).
+`[2026-10-14 2차]` 일정 항목 `kind` train · bus 도 이 모듈이 맡는다(`ITEM_KINDS`) — 「바꿔 줘」는 같은 날 같은 구간의 다른 운행을 보류 제안으로
+(원래 출발 앞뒤 3시간 · 같은 등급 먼저), 고르면 그 운행으로(출발 · 도착 시각 둘 다 — 국내라 시간대가 같다), 고를 때 운행 재확인(같음 · 요금 바뀜 · 없음).
+★코어 라우팅(`trip_messages.ITEM_TEAMS` · `owner_team`)은 항목 kind == 팀 id 로 보므로 train · bus 항목이 이 팀으로 오려면 코어가 kind → 팀 표를
+두어야 한다(항공 항목 입구와 같은 몫 — 팀장). 우리 쪽은 받으면 돈다.
 
 흐름(`flight.assist`): 모델 **한 번**이 문장(+ 여행 일정 요약)을 고정된 구조로 옮긴다(도시 이름 → 공항 코드도 모델이) →
 서버가 검증한다 → 빠진 값이 있으면 되묻고, 없으면 booking 모듈(`read.booking_search_flights`) **한 번** → 받은 값으로 답을 쓴다.
@@ -99,6 +103,72 @@ BAND_LABEL = {name: label for name, label, _, _ in TIME_BANDS}
 
 #: `[2026-10-14]` 기차 · 버스 — 시간대를 말했으면 그 시간대 운행을 출발 시각순으로 최대 이만큼, 안 말했으면 시간대마다 앞 운행 이만큼
 TRANSIT_SHOWN, TRANSIT_PER_BAND = 6, 2
+#: 이 모듈이 맡는 일정 항목 종류 — 항공 · 기차 · 버스(코어가 kind → 팀 표를 두면 train · bus 항목이 이리 온다)
+ITEM_KINDS = ("flight", "train", "bus")
+KIND_LABEL = {"flight": "항공편", "train": "기차", "bus": "버스"}
+
+
+def _transit_key(option: dict[str, Any]) -> str:
+    """운행 열쇠 — 버스는 노선 id(`number`)가 터미널 쌍마다 같은 값이라 출발 · 도착 터미널을 넣는다(☆10-14 시험: 서울경부 · 서울호남 10:00 이 같은 열쇠였다)."""
+    where = f":{option.get('origin') or '?'}-{option.get('destination') or '?'}" if option.get("mode") != "train" else ""
+    return f"{option.get('mode')}:{option.get('grade') or '?'}:{option.get('number') or '?'}:{option.get('date') or '?'}:{option.get('depart') or '?'}{where}"
+
+
+def _same_run(option: dict[str, Any], pick: dict[str, Any]) -> bool:
+    """다시 찾은 운행이 고른 운행과 같은가 — 종류 · 등급 · 날짜 · 출발 시각 + 열차는 번호, 버스는 출발 · 도착 터미널(터미널 조합을 합쳐 받으므로 — 검토 10-14)."""
+    keys = ("mode", "grade", "date", "depart") + (("number",) if option.get("mode") == "train" else ("origin", "destination"))
+    return all(option.get(key) is not None and option.get(key) == pick.get(key) for key in keys)
+
+
+def _is_own_run(option: dict[str, Any], item: Any, clock: str) -> bool:
+    """후보가 지금 타는 운행인가 — 출발 시각이 같고, 번호(있으면)가 같거나 등급이 같은 계열(「KTX」 ↔ 「KTX-산천」). 버스 항목엔 노선 id 가 없다(검토 10-14)."""
+    if option.get("depart") != clock:
+        return False
+    chosen = item.detail.get("chosen") or {}
+    number, grade = chosen.get("number") or item.detail.get("number"), chosen.get("grade") or item.detail.get("grade")
+    if number and option.get("number"):
+        return str(number).lstrip("0") == str(option["number"]).lstrip("0")
+    mine, theirs = str(grade or "").casefold(), str(option.get("grade") or "").casefold()
+    return not mine or not theirs or mine.startswith(theirs) or theirs.startswith(mine)
+
+
+def _transit_option(rank: int, option: dict[str, Any], item: Any, people: int | None, sites: list[dict[str, Any]]) -> dict[str, Any]:
+    """운행 하나 → 식당 · 활동의 「다른 안」 기록 모양 + 기차 · 버스 칸. 출발 · 도착은 국내 같은 시간대(항목 시각의 시간대)."""
+    def at(clock: Any) -> str | None:
+        try:
+            return datetime.fromisoformat(f"{option.get('date')}T{clock}").replace(tzinfo=item.starts_at.tzinfo).isoformat()
+        except (TypeError, ValueError):
+            return None
+    price = option.get("price") if isinstance(option.get("price"), int) else None
+    number = f" {option['number']}" if option.get("mode") == "train" and option.get("number") else ""
+    site = sites[0] if sites else {}
+    return {"key": _transit_key(option), "rank": rank,
+            "name": f"{option.get('grade') or KIND_LABEL.get(option.get('mode'), '')}{number} {option.get('depart') or '?'}→{option.get('arrive') or '?'}",
+            "place_id": None, "option": None, "option_label": None,
+            "starts_at": at(option.get("depart")) or item.starts_at.isoformat(), "ends_at": at(option.get("arrive")), "walk_min": None,
+            "mode": option.get("mode"), "kind": option.get("kind"), "grade": option.get("grade"), "number": option.get("number"),
+            "date": option.get("date"), "depart": option.get("depart"), "arrive": option.get("arrive"), "minutes": option.get("minutes"),
+            "origin": option.get("origin"), "destination": option.get("destination"), "band": _band_of(option.get("depart")),
+            "per_person": price, "best": price * people if price is not None and people else price,
+            "seller": site.get("name"), "link": site.get("url"), "link_seller": site.get("name"), "link_price": None, "link_kind": "site",
+            "sources": ["tago"]}
+
+
+def _fresh_runs(options: list[dict[str, Any]], exclude: set[str], *, around: int | None, grade: str | None,
+                by_price: bool = False) -> list[dict[str, Any]]:
+    """새 운행 고르기 — 보여 준 것 · 원래 운행은 빼고, 같은 등급 먼저, 원래 출발 앞뒤 `NEAR_HOURS` 안을 가까운 순, 나머지는 원래 출발에서 먼 순.
+    `by_price` 면 등급 · 시각 대신 어른 요금 낮은 순(전체에서 — 검토 10-14: 자른 뒤 정렬하면 더 싼 운행이 빠진다). 최대 `SHOWN`."""
+    fresh = [option for option in options if _transit_key(option) not in exclude and option.get("depart")]
+    if by_price:
+        return sorted(fresh, key=lambda option: (option.get("price") if isinstance(option.get("price"), int) else 10 ** 9,
+                                                 option.get("depart") or "99:99"))[:SHOWN]
+    def rank(option: dict[str, Any]) -> tuple[int, int, int]:
+        same = 0 if grade and str(option.get("grade") or "").casefold() == grade.casefold() else 1
+        clock = _clock_minutes(option.get("depart"))
+        near = 0 if around is not None and clock is not None and abs(clock - around) <= NEAR_HOURS * 60 else 1
+        distance = abs(clock - around) if around is not None and clock is not None else (clock or 0)
+        return (same, near, distance)
+    return sorted(fresh, key=rank)[:SHOWN]
 
 
 def _band_of(clock: Any) -> str | None:
@@ -344,6 +414,11 @@ def _eun(word: str) -> str:
     """「은 / 는」 — 마지막 글자에 받침이 있으면 「은」."""
     last = str(word or "").rstrip()[-1:]
     return "은" if last and "가" <= last <= "힣" and (ord(last) - 0xAC00) % 28 else "는"
+
+
+def _ira(word: str) -> str:
+    """「이라 / 라」 — 받침이 있으면 「이라」(항공편이라 · 기차라 · 버스라)."""
+    return "이라" if _eun(word) == "은" else "라"
 
 
 def _missing_note(sources: dict[str, Any] | None) -> str:
@@ -647,8 +722,11 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         if all(state == "failed" for state in states):
             return self._unknown(task, f"{label} 운행 검색 결과", evidence)
         when = found.depart_date.isoformat() + (f"~{found.return_date.isoformat()}" if found.return_date else "")
-        party = f"성인 {found.adults}명"
+        party = f"성인 {found.adults}명" + (f" · 아동 {found.children}명" if found.children else "") \
+            + (f" · 유아 {found.infants}명" if found.infants else "")
         head = f"{found.origin} → {found.destination} · {when} · {party} 조건으로 찾은 {label} 운행입니다."
+        if found.children or found.infants:
+            head += " 요금은 어른 기준이라 아동 · 유아 요금은 예매 화면에서 확인해 주세요."
         lines: list[str] = [head]
         shown_all: list[dict[str, Any]] = []
         for (name, got, times), state in zip(results, states):
@@ -668,12 +746,17 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
             if not options:
                 lines.append(f"[{name}] {where + ' ' if where else ''}그날 운행이 없습니다(공급자 결과 기준). 날짜나 역 · 터미널을 바꿔 다시 말씀해 주세요.")
                 continue
+            note = ""
             if found.grade:
                 graded = [option for option in options if found.grade.casefold() in str(option.get("grade") or "").casefold()]
                 note = "" if graded else f"{found.grade} 운행은 없어 전체를 보여 드립니다. "
                 options = graded or options
-            else:
-                note = ""
+            if found.max_price is not None:
+                # 말한 가격 상한(어른 1인) — 조용히 버리지 않는다(검토 10-14). 안 맞으면 전체를 보여 주고 그렇다고 적는다
+                within = [option for option in options if isinstance(option.get("price"), int) and option["price"] <= found.max_price]
+                note += (f"어른 1인 {_won(found.max_price, 'KRW')} 이하만 " if within
+                         else f"어른 1인 {_won(found.max_price, 'KRW')} 이하 운행은 없어 전체를 보여 드립니다. ")
+                options = within or options
             picked, bands_empty = _pick_transit(options, list(times or []))
             fallback = bool(times) and not picked
             if fallback:
@@ -707,19 +790,21 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         target = ref.get("part_id") or ref.get("recent_part_id")
         item = next((i for i in items if str(i.item_id) == str(target)), None) if target else None
         if item is None:
-            return self._unknown(task, "항공편 일정 항목", ctx["evidence"])
-        if item.kind != self.manifest.team_id:
+            return self._unknown(task, "항공편 · 기차 · 버스 일정 항목", ctx["evidence"])
+        if item.kind not in ITEM_KINDS:
             return self._escalate(task, "target_kind_mismatch", ctx["evidence"],
                                   warnings=[f"{item.kind} 항목은 {self.manifest.team_id} 팀 일이 아니다"])
         if item.locked or item.booking_id or item.detail.get("booked"):
             return self._result(task, outcome="completed", confidence=1.0, evidence=ctx["evidence"],
                                 next_action=NextAction.RESPOND,
-                                answer=f"{item.title}은(는) 이미 예약하신 항공편이라 바꾸지 않았어요. 다른 편을 원하시면 예약하신 곳에서 "
+                                answer=f"{item.title}은(는) 이미 예약하신 {KIND_LABEL[item.kind]}{_ira(KIND_LABEL[item.kind])} 바꾸지 않았어요. 다른 편을 원하시면 예약하신 곳에서 "
                                        "먼저 변경 · 취소 조건을 확인해 주세요.",
                                 decisions=[{"itinerary": "booked_kept", "item": item.title}])
         choice = (ctx.get("request") or {}).get("choice")
         if choice:
             return self._choose(task, ctx, item, str(choice))
+        if item.kind != "flight":
+            return self._change_transit(task, ctx, item)
         query = self._flight_query(item, trip)
         if query is None:
             return self._unknown(task, "항공편 항목의 공항 · 날짜 · 인원", ctx["evidence"])
@@ -803,7 +888,7 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                                   warnings=[f"고른 안 {choice} 이(가) 이 항목의 후보에 없다: {[o.get('key') for o in alternates]}"])
         before = (item.detail.get("chosen") or {}).get("name") or item.title
         held = pick
-        pick, check = self._recheck(task, ctx, item, pick, people)
+        pick, check = (self._recheck if item.kind == "flight" else self._recheck_transit)(task, ctx, item, pick, people)
         if check["status"] == "gone":
             return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
                                 next_action=NextAction.RESPOND,
@@ -819,8 +904,10 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                               "message": task.input_text}, task.context.current_state.get("request_id"))
         text = (f"요청하신 대로 {before} 대신 {pick['name']}(으)로 바꿨습니다. 아직 예약 전이에요" + _booking_note(pick, people) + "."
                 + _price_note(check))
-        # ★도착 시각은 비운다 — 편 응답의 도착 시각은 도착 공항 현지 시각이라 출발과 같은 시간대로 적으면 틀린다(확인 안 함 — 시간대 정보가 없다)
-        replacement = replace(item.replaced_by(place=None, title=item.title, detail=detail, starts_at=starts), ends_at=None)
+        # ★항공은 도착 시각을 비운다 — 편 응답의 도착 시각은 도착 공항 현지 시각이라 출발과 같은 시간대로 적으면 틀린다(확인 안 함 — 시간대 정보가 없다)
+        #   기차 · 버스는 국내라 같은 시간대 — 도착 시각을 그대로 적는다(`[2026-10-14 2차]`)
+        ends = datetime.fromisoformat(pick["ends_at"]) if item.kind != "flight" and pick.get("ends_at") else None
+        replacement = replace(item.replaced_by(place=None, title=item.title, detail=detail, starts_at=starts), ends_at=ends)
         change = ItineraryChange(reason="customer_request", causes=[cause],
                                  notice={"text": text, "language": "ko", "causes": [cause],
                                          "changed": {"from": before, "to": pick["name"], "at": starts.isoformat()},
@@ -860,6 +947,105 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         seller_before, seller_now = pick.get("seller"), renewed.get("seller")
         return renewed, {"status": "same" if now == before else "changed", "before": before, "now": now,
                          "seller_before": seller_before, "seller_now": seller_now}
+
+    # ── 기차 · 버스 항목 (`[2026-10-14 2차]`) ─────────────
+    @staticmethod
+    def _transit_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:
+        """기차 · 버스 항목 · 여행 → 같은 날 같은 구간 검색 조건. 출발 · 도착 이름(역 · 터미널 또는 도시) · 인원을 모르면 `None`."""
+        origin, destination = item.detail.get("origin"), item.detail.get("destination")
+        adults = trip.get("party_size")
+        if item.kind not in ("train", "bus") or not origin or not destination or not isinstance(adults, int) or adults < 1:
+            return None
+        query = {"mode": item.kind, "origin": str(origin), "destination": str(destination),
+                 "depart_date": item.starts_at.date().isoformat(), "adults": adults}
+        if item.detail.get("bus_kind") in ("express", "suburbs"):
+            query["kind"] = item.detail["bus_kind"]
+        return query
+
+    def _change_transit(self, task: TeamTask, ctx: dict[str, Any], item: Any) -> TeamResult:
+        """기차 · 버스 「바꿔 줘」 — 같은 날 같은 구간의 다른 운행을 보류 제안으로(항공과 같은 모양). 모델 0회 · TAGO 한 번."""
+        trip, label = ctx["trip"], KIND_LABEL[item.kind]
+        query = self._transit_query(item, trip)
+        if query is None:
+            return self._unknown(task, f"{label} 항목의 출발 · 도착 · 날짜 · 인원", ctx["evidence"])
+        got = self._read(task, "read.booking_search_transit", query, ctx["seen"]) or {}
+        ctx["evidence"] = self._evidence(task, source_id="read.booking_search_transit",
+                                         claim=f"{label} 새 후보(booking: TAGO)", value=got or None, base=ctx["evidence"])
+        state = ((got.get("sources") or {}).get("tago") or {}).get("status", "failed")
+        if not got or state == "failed":
+            return self._unknown(task, f"{label} 운행 검색 결과", ctx["evidence"])
+        shown_key = f"{item.kind}:{query['origin']}-{query['destination']}:{query['depart_date']}"
+        ledger = self._read(task, "read.offers_shown", {"trip_id": trip["trip_id"], "item_key": shown_key}, ctx["seen"])
+        shown = [str(key) for key in item.detail.get("shown") or []] \
+            + [str(offer["key"]) for offer in (ledger or {}).get("offers") or [] if offer.get("key")]
+        clock = item.starts_at.strftime("%H:%M")
+        around = _clock_minutes(clock)
+        chosen = item.detail.get("chosen") or {}
+        # 지금 타는 운행은 뺀다 — 항목 상세(등급 · 번호)와 출발 시각으로 열쇠를 만든다(고른 뒤에는 `detail.key`)
+        exclude = {*shown, *([str(item.detail["key"])] if item.detail.get("key") else [])}
+        conditions, people = _conditions(ctx), query["adults"]
+        reference = next((value for value in (chosen.get("per_person"), item.detail.get("per_person"))
+                          if isinstance(value, (int, float)) and value > 0), None)
+        price_limit = conditions["max_price"]
+        if conditions["cheaper"] and reference is not None:
+            price_limit = min(price_limit or reference, reference - 1)
+        options = [option for option in got.get("options") or [] if not _is_own_run(option, item, clock)]
+        if price_limit is not None:
+            options = [option for option in options if isinstance(option.get("price"), int) and option["price"] <= price_limit]
+        grade = (chosen.get("grade") or item.detail.get("grade")) if not conditions["cheaper"] else None
+        by_price = conditions["cheaper"] and reference is None
+        picks = _fresh_runs(options, exclude, around=around, grade=grade, by_price=by_price)
+        near_count = sum(1 for option in picks if (c := _clock_minutes(option.get("depart"))) is not None and around is not None
+                         and abs(c - around) <= NEAR_HOURS * 60)
+        resolved = got.get("resolved") or {}
+        record = {"itinerary": f"{item.kind}_options", "item": item.title, "query": query, "resolved": resolved, "shown_before": len(shown),
+                  "around": clock, "near_original": near_count, "conditions": {**conditions, "price_limit": price_limit},
+                  "options": [_transit_key(option) for option in picks], "sources": {"tago": state},
+                  "unresolved": ((got.get("sources") or {}).get("tago") or {}).get("unresolved")}
+        asked = "더 싼" if conditions["cheaper"] else (f"1인 {_won(price_limit, 'KRW')} 이하" if price_limit is not None else "")
+        if not picks:
+            why = (" 역 · 터미널 이름을 찾지 못했어요(「" + " · ".join(record["unresolved"]) + "」)." if record["unresolved"] else "")
+            return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
+                                next_action=NextAction.RESPOND, decisions=[record],
+                                answer=f"{item.title} 대신 탈 수 있는 {asked + ' ' if asked else ''}{label} 운행을 더 찾지 못했어요.{why} 일정은 그대로 두었어요.")
+        alternates = [_transit_option(rank, option, item, people, got.get("elsewhere") or []) for rank, option in enumerate(picks, start=1)]
+        listed = " · ".join(f"{o['rank']}) {o['name']}" + (f"(1인 {_won(o['per_person'], 'KRW')})" if o.get("per_person") is not None else "")
+                            for o in alternates)
+        where = (f"({resolved['origin']} → {resolved['destination']}) " if resolved.get("origin") and resolved.get("destination") else "")
+        answer = (f"{item.title} 대신 탈 수 있는 {label} 운행이에요 {where}— {listed}."
+                  + (f" 원래 출발({clock}) 앞뒤 {NEAR_HOURS}시간 안에는 새 운행이 없어 다른 시간대예요." if not near_count and not by_price else "")
+                  + (f" 지금 운행(1인 {_won(reference, 'KRW')})보다 싼 것만 골랐어요." if conditions["cheaper"] and reference is not None
+                     else " 지금 운행 요금을 몰라 1인 요금이 낮은 순으로 골랐어요." if conditions["cheaper"]
+                     else f" 말씀하신 대로 1인 {_won(price_limit, 'KRW')} 이하만 골랐어요." if price_limit is not None else "")
+                  + " 요금은 어른 1인 기준 조회 시점 값이에요. 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
+        keys = [o["key"] for o in alternates]
+        cause = with_request({"category": "customer_request", "type": "requested_options", "from": item.title,
+                              "message": task.input_text}, task.context.current_state.get("request_id"))
+        return self.offer(task, ctx, item, options=alternates, text=answer, causes=[cause], decision=record, shown_key=shown_key,
+                          summary={f"{item.kind}_options": keys, "shown_total": len(shown) + len(keys), "near_original": near_count,
+                                   "conditions": record["conditions"], "sources": record["sources"]})
+
+    def _recheck_transit(self, task: TeamTask, ctx: dict[str, Any], item: Any, pick: dict[str, Any],
+                         people: int | None) -> tuple[dict[str, Any], dict[str, Any]]:
+        """고른 운행을 같은 조건으로 한 번 더 찾는다(TAGO 1번). `same` · `changed`(어른 요금) · `gone`(소스가 답했는데 그 운행이 없다) · `unchecked`."""
+        before = pick.get("per_person")
+        unchecked = {"status": "unchecked", "before": before, "now": None}
+        query = item.detail.get("query") or self._transit_query(item, ctx["trip"])
+        if not query:
+            return pick, unchecked
+        got = self._read(task, "read.booking_search_transit", query, ctx["seen"]) or {}
+        ctx["evidence"] = self._evidence(task, source_id="read.booking_search_transit:recheck",
+                                         claim="고른 운행 재확인(booking: TAGO)", value=got or None, base=ctx["evidence"])
+        state = ((got.get("sources") or {}).get("tago") or {}).get("status")
+        fresh = next((option for option in got.get("options") or [] if _same_run(option, pick)), None)
+        if fresh is None:
+            return pick, ({"status": "gone", "before": before, "now": None} if state == "ok" else unchecked)
+        renewed = {**_transit_option(pick.get("rank") or 1, fresh, item, people, got.get("elsewhere") or []),
+                   "key": pick["key"], "name": pick["name"]}
+        now = renewed.get("per_person")
+        if before is None or now is None:
+            return renewed, {"status": "unchecked", "before": before, "now": now}
+        return renewed, {"status": "same" if now == before else "changed", "before": before, "now": now}
 
     @staticmethod
     def _flight_query(item: Any, trip: dict[str, Any]) -> dict[str, Any] | None:

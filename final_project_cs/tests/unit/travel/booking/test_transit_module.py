@@ -39,12 +39,27 @@ def _rules(text):
     ("기차 말고 비행기 김포 제주 내일 1명", "flight", "GMP", "CJU", None, None),
     ("11월 6일 인천에서 나리타 가는 편도 2명", "flight", "ICN", "NRT", None, None),
     ("대구에서 광주 가는 열차 11월 6일 2명", "train", "대구", "광주", None, None),   # 말한 이름 그대로 — 동대구 · 광주송정으로 옮기는 것은 booking 모듈
+    ("서울에서 부산 KTX로 2명 내일", "train", "서울", "부산", "KTX", None),               # 검토 10-14: 영문 뒤 한글 조사는 단어 경계
+    ("SRT를 타고 수서에서 부산 내일 1명", "train", "수서", "부산", "SRT", None),
 ])
+
+
 def test_the_rules_read_the_transport_mode_and_station_names(text, mode, origin, destination, grade, kind):
     found, _ = _rules(text)
     assert (found.mode, found.origin, found.destination, found.grade, found.kind) == (mode, origin, destination, grade, kind)
     if mode != "flight":
         assert found.domestic is True and found.cabin is None and found.direct_only is None
+
+
+@pytest.mark.parametrize("text,adults,bands", [
+    ("저녁 7시 KTX 서울에서 부산 2명 내일", 2, ["evening"]),                # 검토 10-14: 「저녁 7시」는 저녁만(전에는 오전이 섞였다)
+    ("밤 11시 서울에서 부산 버스 1명 내일", 1, ["evening"]),
+    ("서울에서 부산 가는 KTX 오후 3시 30분 2명 내일", 2, ["afternoon"]),   # 「30분」은 인원이 아니다
+    ("오후에 3시 비행기 김포 제주 내일 1명", 1, ["afternoon"]),
+])
+def test_hours_with_evening_words_and_minutes_are_read_right(text, adults, bands):
+    found, _ = _rules(text)
+    assert (found.adults, found.depart_times) == (adults, bands)
 
 
 def test_a_train_sentence_without_a_station_is_asked_back_not_guessed():
@@ -116,6 +131,24 @@ def test_the_adapter_uses_the_2026_03_addresses_and_normalises_rows():
     assert sent["depPlandTime"] == STAMP and sent["depPlaceId"] == "NAT010000"
 
 
+def test_a_failed_city_list_is_not_cached_as_empty():
+    """검토 10-14: 도시 목록을 한 번 못 받으면 빈 목록이 굳어 열차 검색이 영영 「역 이름 못 찾음」이 되던 것."""
+    import httpx
+
+    answers = [None, _payload([{"citycode": 11, "cityname": "서울특별시"}])]
+
+    def transport(url, params):
+        payload = answers.pop(0)
+        if payload is None:
+            raise httpx.ConnectError("down")
+        return _Response(payload)
+
+    source = TagoTransit(service_key="k", transport=transport)
+    assert source.train_cities() is None and source._cities is None, "실패는 None — 빈 목록으로 굳히지 않는다"
+    assert source.train_cities() == [{"code": "11", "name": "서울특별시"}]
+    assert source.train_stations("강원") == [], "목록에 없는 시 · 도는 빈 목록(못 찾음) — 장애가 아니다"
+
+
 # ── booking 모듈 ─────────────────────────────────────────────
 class FakeTago:
     """어댑터 대신 — 역 · 터미널 · 운행을 정해 둔 값으로. 부른 것을 남긴다."""
@@ -131,7 +164,7 @@ class FakeTago:
 
     def train_stations(self, city):
         self.calls.append(("train_stations", city))
-        return self.stations.get(city)
+        return self.stations.get(city, [])            # 목록에 없는 시 · 도는 빈 목록(어댑터와 같다 — None 은 장애)
 
     def train_schedules(self, *, dep_id, arr_id, date):
         self.calls.append(("train_schedules", dep_id, arr_id, date))
@@ -197,6 +230,24 @@ def test_bus_search_asks_every_matching_terminal_pair_express_first_and_suburbs_
     assert [site["name"] for site in got["elsewhere"]] == ["버스타고 시외버스 예매", "티머니 시외버스 예매"]
 
 
+def test_a_broken_adapter_is_failed_not_blamed_on_the_customer():
+    """검토 10-14: 어댑터가 None(장애 · 한도)이면 「역 이름을 찾지 못했다」가 아니라 `failed`."""
+    class _Down(FakeTago):
+        def train_stations(self, city):
+            return None
+
+        def bus_terminals(self, kind, keyword):
+            return None
+
+    got = search_transit(SimpleNamespace(transit_schedule=_Down()), mode="train", origin="서울", destination="부산", depart_date=GO.isoformat())
+    assert got["sources"]["tago"]["status"] == "failed" and "unresolved" not in got["sources"]["tago"]
+    got = search_transit(SimpleNamespace(transit_schedule=_Down()), mode="bus", origin="서울", destination="부산", depart_date=GO.isoformat())
+    assert got["sources"]["tago"]["status"] == "failed"
+    # 터미널은 찾았는데 그날 운행이 없다 — 「못 찾음」이 아니라 ok · 0편
+    got = search_transit(SimpleNamespace(transit_schedule=FakeTago(express={}, suburbs={})), mode="bus", origin="서울", destination="부산", depart_date=GO.isoformat())
+    assert got["sources"]["tago"]["status"] == "ok" and got["options"] == [] and "unresolved" not in got["sources"]["tago"]
+
+
 def test_a_requested_bus_kind_skips_the_other_and_a_missing_source_is_failed():
     tago = FakeTago(express={}, suburbs={})
     search_transit(SimpleNamespace(transit_schedule=tago), mode="bus", origin="서울", destination="부산", depart_date=GO.isoformat(), kind="suburbs")
@@ -207,23 +258,25 @@ def test_a_requested_bus_kind_skips_the_other_and_a_missing_source_is_failed():
 
 # ── 팀(답) ─────────────────────────────────────────────
 class FakeTools:
-    def __init__(self, tago):
-        self.calls, self.travel = [], SimpleNamespace(transit_schedule=tago)
+    def __init__(self, tago, values=None):
+        self.calls, self.travel, self.values = [], SimpleNamespace(transit_schedule=tago), dict(values or {})
 
     def call(self, name, context, arguments, allowed_tools, seen, budget=None):
         if name not in allowed_tools:
             raise ToolNotAllowed(name)
         seen.add(name + repr(sorted(arguments.items())))
         self.calls.append((name, dict(arguments)))
-        assert name == "read.booking_search_transit", "기차 · 버스는 항공 도구를 부르지 않는다"
+        if name in self.values:
+            return self.values[name]
+        assert name == "read.booking_search_transit", f"기차 · 버스는 항공 도구를 부르지 않는다: {name}"
         return search_transit(self.travel, **arguments)
 
 
-def _run(text, tago):
-    toolbox, case_id = FakeTools(tago), uuid4()
+def _run(text, tago, *, values=None, capability="flight.assist", state=None):
+    toolbox, case_id = FakeTools(tago, values), uuid4()
     pack = ContextPack(pack_id=uuid4(), case_id=case_id, team_id="flight", tenant_id="t", knowledge_scope=["flight"],
-                       current_state={"customer_id": str(uuid4())}, estimated_input_tokens=1)
-    task = TeamTask(task_id=uuid4(), run_id=uuid4(), case_id=case_id, team_id="flight", capability="flight.assist",
+                       current_state={"customer_id": str(uuid4()), **(state or {})}, estimated_input_tokens=1)
+    task = TeamTask(task_id=uuid4(), run_id=uuid4(), case_id=case_id, team_id="flight", capability=capability,
                     case_version=1, input_text=text, context=pack, allowed_tools=BookingTeam.manifest.allowed_tools,
                     deadline_at=datetime.now(UTC) + timedelta(seconds=90))
     return asyncio.run(BookingTeam(toolbox, None).execute(task)), toolbox
@@ -280,3 +333,121 @@ def test_a_bus_sentence_shows_the_terminal_used_and_the_bus_links():
     assert "[가는 편] 서울경부 → 부산 · 전체 1편 중 새벽 출발 1편 보여 드립니다." in result.answer
     assert "[새벽] 고속우등 — 서울경부 06:00 → 부산 ? (소요 모름) · 어른 26,600원 (성인 3명 79,800원)" in result.answer
     assert "코버스 고속버스 예매: https://www.kobus.co.kr/" in result.answer
+
+
+# ── 일정 기차 · 버스 항목 — `flight.itinerary` (`[2026-10-14 2차]`, 항공 항목과 같은 모양) ─────────
+TRIP_ID, RUN_ID = "11111111-1111-4111-8111-111111111111", "88888888-8888-4888-8888-888888888888"
+
+
+def _plan(kind="train", detail=None, booking_id=None, starts="09:00", ends="11:40"):
+    run = {"item_id": RUN_ID, "seq": 1, "kind": kind, "title": "서울 → 부산 KTX", "place_id": None,
+           "starts_at": f"{GO.isoformat()}T{starts}:00+09:00", "ends_at": f"{GO.isoformat()}T{ends}:00+09:00", "locked": False,
+           "booking_id": booking_id, "replaces_item_id": None, "place": None,
+           "detail": {"origin": "서울", "destination": "부산", "grade": "KTX", "number": "11", "per_person": 59800, **(detail or {})}}
+    return {"trip": {"trip_id": TRIP_ID, "version": 5, "party_size": 2, "customer_id": "c"}, "items": [run]}
+
+
+RUN_STATE = {"subject_ref": {"kind": "trip", "id": TRIP_ID, "part_id": RUN_ID, "base_version": 5},
+             "interpretation": {"report": {"type": "change"}}, "request_id": "r-train-1"}
+TRAINS = [_train("KTX", "07:00", "09:40", 59800, "101"), _train("KTX", "08:30", "11:10", 59800, "107"),
+          _train("KTX", "09:00", "11:40", 59800, "11"),            # 원래 타는 운행 — 빠져야 한다
+          _train("무궁화호", "09:20", "14:50", 28600, "1203"), _train("KTX", "10:30", "13:10", 59800, "117"),
+          _train("SRT", "11:00", "13:20", 52600, "321"), _train("KTX", "19:00", "21:40", 59800, "161")]
+
+
+def _runchange(plan, tago=None, text="이 기차 다른 걸로 바꿔줘", state=None):
+    return _run(text, tago or FakeTago(trains=list(TRAINS)), values={"read.itinerary": plan, "read.offers_shown": {"offers": []}},
+                capability="flight.itinerary", state=state or RUN_STATE)
+
+
+def test_change_on_a_train_item_offers_same_grade_runs_near_the_original_departure_without_touching_the_plan():
+    result, tools = _runchange(_plan())
+    assert [name for name, _ in tools.calls] == ["read.itinerary", "read.booking_search_transit", "read.offers_shown"]
+    assert tools.calls[1][1] == {"mode": "train", "origin": "서울", "destination": "부산", "depart_date": GO.isoformat(), "adults": 2}
+    assert result.answer == ("서울 → 부산 KTX 대신 탈 수 있는 기차 운행이에요 (서울 → 부산) — 1) KTX 107 08:30→11:10(1인 59,800원) · "
+                             "2) KTX 117 10:30→13:10(1인 59,800원) · 3) KTX 101 07:00→09:40(1인 59,800원). "
+                             "요금은 어른 1인 기준 조회 시점 값이에요. 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."), \
+        "같은 등급(KTX) 먼저 · 원래 09:00 앞뒤 3시간을 가까운 순 · 원래 운행(KTX 11 09:00)은 뺌"
+    (proposal,) = result.action_proposals
+    assert proposal.action_type == "itinerary.apply" and proposal.arguments["reason"] == "requested_options"
+    assert "replacements" not in proposal.arguments, "후보를 보여 줄 때 일정 판을 올리지 않는다"
+    ask = proposal.arguments["ask_options"]
+    assert ask["item_id"] == RUN_ID and ask["shown_key"] == f"train:서울-부산:{GO.isoformat()}"
+    first = ask["options"][0]
+    assert {"key", "name", "place_id", "starts_at", "ends_at", "walk_min"} <= set(first), "식당 · 활동의 「다른 안」 칸"
+    assert first["starts_at"] == f"{GO.isoformat()}T08:30:00+09:00" and first["ends_at"] == f"{GO.isoformat()}T11:10:00+09:00", "국내 — 도착 시각도"
+    assert first["per_person"] == 59800 and first["best"] == 119600 and first["link"] == "https://www.letskorail.com/"
+    assert proposal.arguments["summary"]["train_options"] == [o["key"] for o in ask["options"]]
+    assert proposal.arguments["summary"]["near_original"] == 3
+
+
+def test_cheaper_on_a_train_item_keeps_only_runs_below_the_current_fare_and_drops_the_grade_rule():
+    state = {**RUN_STATE, "interpretation": {"report": {"type": "change", "cheaper": True}}}
+    result, _ = _runchange(_plan(), state=state)
+    assert "1) 무궁화호 1203 09:20→14:50(1인 28,600원) · 2) SRT 321 11:00→13:20(1인 52,600원)" in result.answer, "등급 규칙 없이 원래 출발에 가까운 순"
+    assert "지금 운행(1인 59,800원)보다 싼 것만 골랐어요." in result.answer
+
+
+def test_cheaper_without_a_known_fare_sorts_every_run_by_price_before_cutting():
+    """검토 10-14: 전에는 출발 시각순 3편을 자른 뒤 요금순으로 돌려 더 싼 SRT 11:00 이 빠졌다."""
+    state = {**RUN_STATE, "interpretation": {"report": {"type": "change", "cheaper": True}}}
+    plan = _plan(detail={"per_person": None})
+    result, _ = _runchange(plan, state=state)
+    assert "1) 무궁화호 1203 09:20→14:50(1인 28,600원) · 2) SRT 321 11:00→13:20(1인 52,600원) · 3) KTX 101 07:00→09:40(1인 59,800원)" in result.answer
+    assert "지금 운행 요금을 몰라 1인 요금이 낮은 순으로 골랐어요." in result.answer
+
+
+def test_the_bus_the_customer_already_rides_is_not_offered_again_and_recheck_matches_the_terminal():
+    """검토 10-14: 버스 항목엔 노선 id 가 없어 지금 타는 운행이 후보로 다시 나왔고, 재확인이 다른 터미널의 같은 시각 운행을 「같다」고 봤다."""
+    express = {("T1", "T7"): [_bus("express", "서울경부", "부산", "09:00", 43300), _bus("express", "서울경부", "부산", "10:00", 43300)],
+               ("T2", "T7"): [_bus("express", "서울호남", "부산", "10:00", 39000)]}
+    plan = _plan(kind="bus", detail={"bus_kind": "express", "grade": "우등", "number": None, "per_person": 43300}, starts="09:00", ends="13:00")
+    plan["items"][0]["title"] = "서울 → 부산 고속버스"
+    first, _ = _runchange(plan, tago=FakeTago(express=express, suburbs={}))
+    options = first.action_proposals[0].arguments["ask_options"]["options"]
+    assert [(o["origin"], o["depart"]) for o in options] == [("서울경부", "10:00"), ("서울호남", "10:00")], "09:00 우등(지금 타는 것)은 뺀다"
+    plan["items"][0]["detail"] = {**plan["items"][0]["detail"], "alternates": options, "other_options": [o["name"] for o in options]}
+    key = options[1]["key"]                                           # 서울호남 10:00 39,000원
+    state = {**RUN_STATE, "subject_ref": {**RUN_STATE["subject_ref"], "request": {"type": "change", "choice": key}}}
+    result, _ = _runchange(plan, tago=FakeTago(express=express, suburbs={}), text="2번", state=state)
+    new = result.action_proposals[0].arguments["replacements"][0]["item"]
+    assert new["detail"]["chosen"]["origin"] == "서울호남" and new["detail"]["chosen"]["per_person"] == 39000, "같은 시각 서울경부 운행과 섞지 않는다"
+    assert result.answer.endswith(" 지금 가격도 1인 39,000원 그대로예요.")
+
+
+def test_choosing_a_train_run_moves_both_times_and_rechecks_the_fare():
+    plan = _plan()
+    first, _ = _runchange(plan)
+    options = first.action_proposals[0].arguments["ask_options"]["options"]
+    plan["items"][0]["detail"] = {**plan["items"][0]["detail"], "alternates": options, "other_options": [o["name"] for o in options]}
+    key = options[0]["key"]
+    state = {**RUN_STATE, "subject_ref": {**RUN_STATE["subject_ref"], "request": {"type": "change", "choice": key}}}
+    result, tools = _runchange(plan, text="1번", state=state)
+    assert [name for name, _ in tools.calls] == ["read.itinerary", "read.booking_search_transit"], "고르면 운행 재확인 한 번"
+    assert result.answer == ("요청하신 대로 서울 → 부산 KTX 대신 KTX 107 08:30→11:10(으)로 바꿨습니다. 아직 예약 전이에요 — 예약은 이 링크에서 해 주세요: "
+                             "https://www.letskorail.com/. 지금 가격도 1인 59,800원 그대로예요.")
+    new = result.action_proposals[0].arguments["replacements"][0]["item"]
+    assert new["starts_at"] == f"{GO.isoformat()}T08:30:00+09:00" and new["ends_at"] == f"{GO.isoformat()}T11:10:00+09:00"
+    assert new["detail"]["chosen"]["key"] == key and new["detail"]["booked"] is False
+    assert new["detail"]["alternates"][-1]["name"] == "서울 → 부산 KTX", "원래 운행은 「다른 안」 끝으로"
+
+    dearer = FakeTago(trains=[{**t, "price": 61000} if t["number"] == "107" else t for t in TRAINS])
+    changed, _ = _runchange(plan, tago=dearer, text="1번", state=state)
+    assert changed.answer.endswith(" 보여 드릴 때 1인 59,800원이던 가격이 지금 1인 61,000원이에요.")
+    assert changed.action_proposals[0].arguments["summary"]["price_check"] == {"status": "changed", "before": 59800, "now": 61000}
+
+    gone, _ = _runchange(plan, tago=FakeTago(trains=[t for t in TRAINS if t["number"] != "107"]), text="1번", state=state)
+    assert gone.answer.startswith("KTX 107 08:30→11:10 편을 다시 찾아보니 지금은 나오지 않아요") and not gone.action_proposals
+
+
+def test_a_booked_train_is_kept_and_a_bus_item_asks_tago_with_its_terminal_kind():
+    kept, tools = _runchange(_plan(booking_id="77777777-7777-4777-8777-777777777777"))
+    assert kept.answer.startswith("서울 → 부산 KTX은(는) 이미 예약하신 기차라 바꾸지 않았어요") and len(tools.calls) == 1   # 「기차라」(받침 없음)
+    express = {("T1", "T7"): [_bus("express", "서울경부", "부산", "08:00", 43300), _bus("express", "서울경부", "부산", "10:00", 45000, "프리미엄")]}
+    plan = _plan(kind="bus", detail={"bus_kind": "express", "grade": "우등", "number": None, "per_person": 43300}, starts="09:00", ends="13:00")
+    plan["items"][0]["title"] = "서울 → 부산 고속버스"
+    result, tools = _runchange(plan, tago=FakeTago(express=express, suburbs={}))
+    assert tools.calls[1][1] == {"mode": "bus", "origin": "서울", "destination": "부산", "depart_date": GO.isoformat(), "adults": 2, "kind": "express"}
+    assert result.answer.startswith("서울 → 부산 고속버스 대신 탈 수 있는 버스 운행이에요 (서울경부 → 부산) — 1) 우등 08:00→?(1인 43,300원) · "
+                                    "2) 프리미엄 10:00→?(1인 45,000원).")
+    assert result.action_proposals[0].arguments["ask_options"]["options"][0]["link"] == "https://www.kobus.co.kr/"

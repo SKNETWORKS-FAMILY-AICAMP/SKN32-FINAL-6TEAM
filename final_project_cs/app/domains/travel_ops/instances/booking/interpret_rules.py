@@ -73,7 +73,7 @@ _RETURN_WORDS = ("오는날", "오는 날", "올때", "올 때", "귀국", "돌�
 _CLAUSE = re.compile(r"[.。!?\n]|,\s*|\s(?:그리고|근데|그런데|그래서)\s")
 
 _NUM_WORD = {"하나": 1, "한": 1, "둘": 2, "두": 2, "셋": 3, "세": 3, "넷": 4, "네": 4, "다섯": 5, "여섯": 6}
-_PEOPLE = re.compile(r"(\d+)\s*(?:명|인|분)")
+_PEOPLE = re.compile(r"(?<![\d시])(?<!시\s)(\d+)\s*(?:명|인|분)")     # 「3시 30분」의 「30분」은 인원이 아니다(검토 10-14)
 _ADULTS = re.compile(r"(?:성인|어른|대인)\s*(\d+|하나|한|둘|두|셋|세|넷|네)")
 _CHILDREN = re.compile(r"(?:아이|어린이|애|소아|아동)\s*(\d+|하나|한|둘|두|셋|세|넷|네)")
 _INFANTS = re.compile(r"(?:유아|아기)\s*(\d+|하나|한|둘|두)")
@@ -106,6 +106,10 @@ def _safe(year: int, month: int, day: int) -> date | None:
 
 
 # ---------------------------------------------------------------- 공항
+def _ascii_letter(ch: str) -> bool:
+    return bool(ch) and ch.isascii() and ch.isalpha()
+
+
 def _places(text: str, table: dict[str, str] | None = None) -> list[tuple[int, int, str, str]]:
     """문장에 나온 공항 · 도시(또는 `table` 의 역 · 터미널)를 (시작, 끝, 값, 이름) 으로, 긴 이름 우선 · 겹치지 않게."""
     table = AIRPORTS if table is None else table
@@ -119,9 +123,9 @@ def _places(text: str, table: dict[str, str] | None = None) -> list[tuple[int, i
             if index < 0:
                 break
             end = index + len(name)
-            if name.isascii() and ((index > 0 and low[index - 1].isalpha()) or (end < len(low) and low[end].isalpha())):
+            if name.isascii() and (_ascii_letter(low[index - 1:index]) or _ascii_letter(low[end:end + 1])):
                 start = end
-                continue                                   # 「la」가 「plan」 안에서 잡히지 않게
+                continue                                   # 「la」가 「plan」 안에서 잡히지 않게(한글 조사 「incheon에서」는 경계로 본다)
             if not any(s < end and index < e for s, e in taken):
                 found.append((index, end, table[name], name))
                 taken.append((index, end))
@@ -198,8 +202,8 @@ def _mode(text: str) -> str | None:
                 start = index + len(word)
                 if mode == "bus" and any(low[max(0, index - 4):index + 6].find(no) >= 0 for no in _NOT_BUS):
                     continue
-                if word.isascii() and ((index > 0 and low[index - 1].isalpha()) or (start < len(low) and low[start].isalpha())):
-                    continue
+                if word.isascii() and (_ascii_letter(low[index - 1:index]) or _ascii_letter(low[start:start + 1])):
+                    continue                                 # 「ktx로」 「srt를」 — 한글 조사는 단어 경계(검토 10-14)
                 tail = low[start:start + 8]
                 if any(no in tail for no in ("말고", "빼고", "말구", "아니고", "아니라")):
                     continue                                 # 「기차 말고 비행기」 — 기차는 뺀다
@@ -315,7 +319,10 @@ def _bands_in(clause: str) -> tuple[list[str], list[str]]:
             break
     for m in _HOUR.finditer(clause):
         hour = int(m.group(1))
-        if "오후" in clause and hour < 12:
+        before = clause[max(0, m.start() - 4):m.start()]
+        if hour < 12 and any(word in before for word in ("오후", "저녁", "밤", "낮")):
+            hour += 12                                  # 「저녁 7시」 「밤 11시」 — 그 시각의 시간대만(검토 10-14: 전에는 「오후」만 봐 오전이 섞였다)
+        elif hour < 12 and "오후" in clause and not any(word in clause for word in ("오전", "아침", "새벽")):
             hour += 12
         band = "dawn" if hour < 7 else "morning" if hour < 12 else "afternoon" if hour < 18 else "evening"
         if band not in said:

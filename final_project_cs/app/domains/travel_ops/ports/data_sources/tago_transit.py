@@ -126,9 +126,11 @@ class TagoTransit(TravelSource):
         return {key: (type(value).__name__, len(str(value))) for key, value in rows[0].items()}
 
     # ── 열차 ─────────────────────────────────────────────
-    def train_cities(self) -> list[dict[str, Any]]:
+    def train_cities(self) -> list[dict[str, Any]] | None:
         if self._cities is None:
-            rows = self._call(TRAIN, "GetCtyCodeList", {}, rows=50) or []
+            rows = self._call(TRAIN, "GetCtyCodeList", {}, rows=50)
+            if rows is None:
+                return None                               # 못 불렀다 — 빈 목록으로 굳히지 않고 다음에 다시 부른다(검토 10-14)
             self._cities = [{"code": _text(row.get("citycode")), "name": _text(row.get("cityname"))}
                             for row in rows if _text(row.get("citycode"))]
         return self._cities
@@ -136,11 +138,13 @@ class TagoTransit(TravelSource):
     def train_stations(self, city: str) -> list[dict[str, Any]] | None:
         """시 · 도 이름(사전 값: 서울 · 경기 · 충북 …)의 역 목록 [{id, name}]. 도시 코드를 못 찾으면 `None`(모름)."""
         prefixes = CITY_PREFIX.get(city, (city,))
-        code = next((item["code"] for item in self.train_cities()
-                     if item["name"] and item["name"].startswith(prefixes)), None)
+        cities = self.train_cities()
+        if cities is None:
+            return None
+        code = next((item["code"] for item in cities if item["name"] and item["name"].startswith(prefixes)), None)
         if code is None:
             self._miss("unknown_city", city)
-            return None
+            return []                                     # 공급자 목록에 그 시 · 도가 없다 — 장애가 아니라 「못 찾음」
         rows = self._call(TRAIN, "GetCtyAcctoTrainSttnList", {"cityCode": code}, rows=200)
         if rows is None:
             return None

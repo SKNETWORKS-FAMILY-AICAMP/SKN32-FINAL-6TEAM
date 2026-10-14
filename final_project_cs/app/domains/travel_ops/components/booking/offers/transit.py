@@ -53,16 +53,19 @@ BOOKING_SITES = {
 }
 
 
-def _station(adapter: Any, said: str, calls: list[str]) -> dict[str, Any] | None:
-    """말한 이름 → 역 {id, name}. 사전에 없으면 말한 이름을 역 이름으로 보고 시 · 도를 모르니 못 찾는다(`None`)."""
+FAILED = object()      # 어댑터가 못 불렀다(장애 · 한도) — 「이름을 못 찾음」과 가른다(검토 10-14)
+
+
+def _station(adapter: Any, said: str, calls: list[str]) -> dict[str, Any] | None | object:
+    """말한 이름 → 역 {id, name}. 사전에 없거나 목록에 없으면 `None`, 어댑터가 못 불렀으면 `FAILED`."""
     entry = STATIONS.get(said) or STATIONS.get(said.replace("역", "")) or STATIONS.get(said + "역")
     if entry is None:
         return None
     wanted, city = entry
     calls.append(f"train_stations:{city}")
     stations = adapter.train_stations(city)
-    if not stations:
-        return None
+    if stations is None:
+        return FAILED
     exact = [s for s in stations if s["name"] == wanted]
     starts = [s for s in stations if s["name"].startswith(wanted)]
     holds = [s for s in stations if wanted in s["name"]]
@@ -72,10 +75,12 @@ def _station(adapter: Any, said: str, calls: list[str]) -> dict[str, Any] | None
     return None
 
 
-def _terminals(adapter: Any, kind: str, said: str, calls: list[str]) -> list[dict[str, Any]]:
+def _terminals(adapter: Any, kind: str, said: str, calls: list[str]) -> list[dict[str, Any]] | object:
     keyword = TERMINAL_HINT.get(said, said)
     calls.append(f"bus_terminals:{kind}:{keyword}")
-    found = adapter.bus_terminals(kind, keyword) or []
+    found = adapter.bus_terminals(kind, keyword)
+    if found is None:
+        return FAILED
     exact = [t for t in found if t["name"] == keyword]
     starts = [t for t in found if t["name"].startswith(keyword) and t not in exact]
     rest = [t for t in found if t not in exact and t not in starts]
@@ -107,7 +112,9 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
     unresolved: list[str] = []
     if mode == "train":
         dep, arr = _station(adapter, origin, calls), _station(adapter, destination, calls)
-        if dep is None or arr is None:
+        if dep is FAILED or arr is FAILED:
+            status = "failed"
+        elif dep is None or arr is None:
             unresolved = [name for name, found in ((origin, dep), (destination, arr)) if found is None]
             status = "unresolved"
         else:
@@ -122,11 +129,17 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
     else:
         kinds = [kind] if kind in ("express", "suburbs") else ["express", "suburbs"]
         used: list[str] = []
+        broken = paired = False
         for bus_kind in kinds:
             deps, arrs = _terminals(adapter, bus_kind, origin, calls), _terminals(adapter, bus_kind, destination, calls)
-            if not deps or not arrs:
-                unresolved = [name for name, found in ((origin, deps), (destination, arrs)) if not found]
+            if deps is FAILED or arrs is FAILED:
+                broken = True
                 continue
+            if not deps or not arrs:
+                if not unresolved:
+                    unresolved = [name for name, found in ((origin, deps), (destination, arrs)) if not found]
+                continue
+            paired = True
             got_any = False
             for dep in deps:
                 for arr in arrs:
@@ -149,8 +162,12 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
             names_dep = sorted({option["origin"] for option in options if option.get("origin")})
             names_arr = sorted({option["destination"] for option in options if option.get("destination")})
             result["resolved"] = {"origin": " · ".join(names_dep) or None, "destination": " · ".join(names_arr) or None}
-        elif unresolved:
-            status = "unresolved"
+        elif broken or status == "failed":
+            status = "failed"
+        elif unresolved and not paired:
+            status = "unresolved"                        # 터미널을 한 쌍도 못 찾았을 때만 「못 찾음」
+        else:
+            status, unresolved = "ok", []                 # 터미널은 찾았는데 그날 운행이 없다
         result["elsewhere"] = [site for bus_kind in (used or kinds) for site in BOOKING_SITES[bus_kind]]
     options.sort(key=_sort_key)
     result["options"] = options
