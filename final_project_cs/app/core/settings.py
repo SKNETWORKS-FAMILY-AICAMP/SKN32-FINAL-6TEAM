@@ -551,6 +551,17 @@ def dining_agent_shadow() -> dict[str, Any] | None:
     return {"model": str(section.get("model") or "openai:gpt-4o-mini"), "deadline_s": float(section.get("deadline_s") or 120)}
 
 
+def activity_live_check_enabled() -> bool:
+    """활동 장소 임시휴무 · 폐업 새벽 웹 확인을 돌리나 — 가드레일 `travel.activity_judge.live_status_batch_enabled`. ★기본 꺼짐.
+
+    `[2026-10-14 사용자 지시]` 유료 웹 검색이라 관리 콘솔에서 켤 때만 돈다. 가드레일을 못 읽어도 **꺼짐**으로 본다.
+    """
+    try:
+        return get_guardrails().get("travel.activity_judge.live_status_batch_enabled") is True
+    except ConfigError:
+        return False
+
+
 def google_price_enabled() -> bool:
     """식당 대안의 구글 가격 조회를 켰나 — 가드레일 `travel.dining.google_price_enabled`. ★기본 꺼짐.
 

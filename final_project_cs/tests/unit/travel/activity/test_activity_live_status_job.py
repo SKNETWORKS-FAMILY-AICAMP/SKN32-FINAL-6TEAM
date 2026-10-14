@@ -86,6 +86,7 @@ def on(monkeypatch):
     from app.domains.travel_ops.instances.activity.judge import modes
 
     monkeypatch.setattr(modes, "kind_mode", lambda kind, modes=None: "shadow")
+    monkeypatch.setattr(jobs, "_console_on", lambda tenant_id: True)
 
 
 def _tick(parts, hour, minute):
@@ -168,3 +169,31 @@ def test_the_assembly_wires_the_job(monkeypatch):
     assert [job.name for job in scheduled_jobs.registered()] == ["activity_live_status"]
     assert set(jobs._wired) == {"connection_factory", "judge_llm", "budget"}
     scheduled_jobs.clear()
+
+
+def test_the_console_switch_is_off_by_default_and_calls_nothing(monkeypatch):
+    """관리 콘솔 스위치가 꺼져 있으면(기본) 판정 모델이 있어도 아무것도 부르지 않는다 — 유료 웹 검색이라 운영자가 켤 때만. `[2026-10-14]`"""
+    from app.domains.travel_ops.components import settings_hook
+    from app.domains.travel_ops.instances.activity.judge import modes
+
+    monkeypatch.setattr(modes, "kind_mode", lambda kind, modes=None: "shadow")
+    settings_hook.clear()
+    parts = _Parts(5)
+    result = jobs.live_status_tick("demo", datetime(2026, 10, 15, 3, 0, tzinfo=KST), parts=parts, wired=parts.wired())
+    assert result == {"disabled": 1, "console_off": 1} and parts.seen == set()
+    assert daily_check.unfinished({"team:activity_live_status": result}) == ([], [])
+
+
+def test_the_console_value_wins_over_the_default():
+    from app.domains.travel_ops.components import settings_hook
+
+    settings_hook.register(lambda tenant_id, name: True if name == settings_hook.ACTIVITY_LIVE_CHECK else None)
+    try:
+        assert settings_hook.activity_live_check_enabled("demo") is True
+    finally:
+        settings_hook.clear()
+    settings_hook.register(lambda tenant_id, name: "yes")               # 참/거짓이 아닌 값은 켠 것으로 보지 않는다
+    try:
+        assert settings_hook.activity_live_check_enabled("demo") is False
+    finally:
+        settings_hook.clear()

@@ -9,7 +9,7 @@
   남은 건수는 팀에게 묻지 않고 **대상 목록에서 직접 센다**(최근 6시간 안에 본 곳은 뺀다 — `live_batch.pending`).
 ★연결 · 판정 LLM · 웹 예산은 조립이 `configure` 로 꽂는다 — 팀 폴더는 인프라를 직접 열지 않는다(DoD-22, `team.live_lookup` 과 같은 방식).
   꽂히지 않았으면 `not_wired` 를 싣는다(정기점검 판정에서는 「모름」으로 센다 — 조용히 「끝남」이 되지 않는다).
-★꺼져 있으면(판정 종류 `live_status` 가 `rule` · 판정 LLM 없음 — 전역 판정 모드 `rule` 이거나 OpenAI 키 없음) 아무것도 부르지 않고
+★꺼져 있으면(관리 콘솔 스위치 꺼짐 — 기본 · 판정 종류 `live_status` 가 `rule` · 판정 LLM 없음 — 전역 판정 모드 `rule` 이거나 OpenAI 키 없음) 아무것도 부르지 않고
   `disabled` 를 싣는다 — 정기점검 판정에서 빠진다(안 끝난 것이 아니다).
 ★웹 예산(하루 50회)이 다 차면 `skipped` 를 싣는다 — 오늘 몫을 다 쓴 것이라 「안 끝남」으로 보고하지 않는다. 남은 곳은 `remaining` 에 그대로 남는다.
 """
@@ -48,6 +48,8 @@ def live_status_tick(tenant_id: str, now: datetime, *, parts=None, wired: dict[s
     wired = _wired if wired is None else wired
     if kind_mode("live_status") == "rule":
         return {"disabled": 1}
+    if not _console_on(tenant_id):
+        return {"disabled": 1, "console_off": 1}               # 관리 콘솔 「운영 설정」 스위치가 꺼짐(기본)
     if not wired:
         return {"not_wired": 1}
     judge = parts.judge_runner(wired["judge_llm"])
@@ -72,6 +74,13 @@ def live_status_tick(tenant_id: str, now: datetime, *, parts=None, wired: dict[s
     if result["budget_stop"]:
         out["skipped"] = 1                                       # 오늘 웹 예산을 다 썼다 — 늦은 것이 아니다
     return out
+
+
+def _console_on(tenant_id: str) -> bool:
+    """관리 콘솔 스위치(`travel.activity_judge.live_status_batch_enabled`, 기본 꺼짐) — 유료 웹 검색이라 운영자가 켤 때만 돈다."""
+    from app.domains.travel_ops.components.settings_hook import activity_live_check_enabled
+
+    return activity_live_check_enabled(tenant_id)
 
 
 JOBS = [TeamJob(name="activity_live_status", tick=live_status_tick, window="dawn")]
