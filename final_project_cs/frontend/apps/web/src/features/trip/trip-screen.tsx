@@ -21,6 +21,7 @@ import { useDayGestures } from "@/features/plan-check/use-day-gestures";
 import { useTripGuardian } from "@/features/guardian/trip-guardian";
 import pc from "@/features/plan-check/plan-check.module.css";
 import { RailList, type RailNow } from "@/features/plan-check/rail-list";
+import { formatHm } from "@/features/plan-check/time-plan";
 import { LiveError } from "@/lib/live/client";
 import { getRouteShapes } from "@/lib/live/route-shapes";
 import type { Language, Translate } from "@/lib/i18n";
@@ -498,7 +499,9 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const drawn = visibleShapes(shapes, mapStops);
   const unlocated = mapStops.filter((stop) => !hasValidCoordinates(stop.coordinates));
   /** `[2026-10-12 사용자 결정 — B]` 「지금」 on a day: the mark at now on today (`[2026-10-13]` the dot alone, no 「지금 HH:MM」), the line filled to the end on a day that is over, nothing on a day to come. */
-  const railNow = (date: string): RailNow | null => date < now.date ? { kind: "over" } : date === now.date ? { kind: "today", minute: now.minute } : null;
+  // `[2026-10-15 사용자 결정 — ST4F-494]` 「지금 HH:MM」 beside the dot again while the operator's switch is on (`trip.nowLabel` — on by default in the test period).
+  const railNow = (date: string): RailNow | null => date < now.date ? { kind: "over" }
+    : date === now.date ? { kind: "today", minute: now.minute, ...(trip.nowLabel ? { label: t(`지금 ${formatHm(now.minute)}`, `Now ${formatHm(now.minute)}`) } : {}) } : null;
   const dayList = (date: string) => {
     const index = days.indexOf(date);
     const entries = dayTimeline(trip, date, shapes);

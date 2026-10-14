@@ -156,6 +156,8 @@ export interface Trip {
   warnings?: TripWarning[];
   /** The server's per-trip plan page (a link that needs no login). */
   planUrl?: string;
+  /** `[2026-10-15 사용자 결정 — ST4F-494]` Whether the 「지금 HH:MM」 label stands beside the 「지금」 dot (`now_label` — an operator switch, on by default). */
+  nowLabel?: boolean;
   /** The itinerary version on the server now (an undo is offered only for the change that made it). */
   version?: number;
   /** The day's route to open in the customer's map app, by date. Several links when a day has more stops than one link holds. */
