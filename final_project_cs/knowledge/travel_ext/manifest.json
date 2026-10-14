@@ -1,0 +1,22 @@
+{
+ "version": "1.0",
+ "tenant_id": "demo",
+ "collection": "travel-ext",
+ "documents": [
+  {
+   "document_id": "t_ext_01",
+   "file": "documents/ext01_standard-terms-domestic.md",
+   "section_count": 7
+  },
+  {
+   "document_id": "t_ext_02",
+   "file": "documents/ext02_dispute-standard-domestic-travel.md",
+   "section_count": 5
+  },
+  {
+   "document_id": "t_ext_03",
+   "file": "documents/ext03_dispute-standard-leisure-performance.md",
+   "section_count": 6
+  }
+ ]
+}
