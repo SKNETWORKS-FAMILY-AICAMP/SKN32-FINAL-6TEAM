@@ -632,6 +632,11 @@ travel:
     advisory_wind_speed_kmh: 40
   # ★`[2026-10-06]` 활동 판정 LLM(D-CS-008, `app/domains/travel_ops/instances/activity/judge/`).
   #   시간 제한은 `reliability.activity_judge_call_timeout_seconds` 에 있다.
+  # 활동 규정 검색의 질문 변환(2026-10-14). rule = 고객 말을 규정 문서 용어로 **덧붙여** 검색한다(사전·LLM 호출 없음), off = 끈다.
+  # ★출처: **우리가 고른 값**이다. 새 질문 10문항으로 켠 때와 끈 때를 재서 정했다 — `docs/activity/산출물_작업/` 의 검색 시험.
+  activity_policy_query:
+    mode: rule
+
   activity_judge:
     # 웹 근거의 게시일이 이보다 오래되면 버린다(임시휴무·행사 공지는 최근 것이어야 한다).
     # ★게시일이 **없는** 근거는 버리지 않는다 — 스파이크에서 3회 중 2회가 비었고, 버리면 거의 모두

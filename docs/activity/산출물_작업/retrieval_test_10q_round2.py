@@ -5,6 +5,7 @@
     PYTHONPATH=. python ../docs/activity/산출물_작업/retrieval_test_20q.py
 """
 import json
+import os
 import time
 from pathlib import Path
 
@@ -43,7 +44,12 @@ with get_connection() as conn, conn.cursor() as cur:
 
     for cid, q, expect in CASES:
         t0 = time.time()
-        hits = search_policy("demo", q, SCOPES, top_k=3)
+        if os.environ.get("EXPAND") == "1":
+            from app.domains.travel_ops.instances.activity.policy_query import expand_policy_query
+            qq = expand_policy_query(q)
+        else:
+            qq = q
+        hits = search_policy("demo", qq, SCOPES, top_k=3)
         ms = int((time.time() - t0) * 1000)
         rows = []
         for h in hits:

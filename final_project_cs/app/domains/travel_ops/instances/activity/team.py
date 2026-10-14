@@ -166,11 +166,23 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
 
     def _read(self, task: TeamTask, name: str, arguments: dict[str, Any], seen: set[str]) -> Any:
         """도구 예외(API·DB 실패)를 코드로 남기고 **그대로 다시 던진다** — 삼켜서 「모름」으로 바꾸지 않는다(RULE §3.2)."""
+        if name == "read.policy" and isinstance(arguments.get("query"), str):
+            arguments = {**arguments, "query": self._policy_query(arguments["query"])}
         try:
             return super()._read(task, name, arguments, seen)
         except Exception as exc:
             self._record_failure(task, fc.TOOL_ERROR, tool=name, error=type(exc).__name__)
             raise
+
+    @staticmethod
+    def _policy_query(query: str) -> str:
+        """★`[2026-10-14]` 규정 검색 질문에 규정 문서의 용어를 **덧붙인다**(사전 · LLM 없음). 끄면 원문 그대로 간다.
+        모든 `read.policy` 가 이 `_read` 를 지나므로 일정 질문 경로(공유 `_answer_question`)도 같이 적용된다 — 코어는 그대로다."""
+        from app.core.settings import get_guardrails
+        if str(get_guardrails().get("travel.activity_policy_query.mode")) != "rule":
+            return query
+        from .policy_query import expand_policy_query
+        return expand_policy_query(query)
 
     @staticmethod
     def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
