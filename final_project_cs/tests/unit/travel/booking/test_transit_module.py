@@ -92,8 +92,10 @@ def test_rail_codes_cover_the_station_dictionary_and_booking_links_fill_the_cond
     assert bustago_link("동서울종합터미널", "강릉시외버스터미널", "2026-10-16") is not None, "「터미널 · 종합 · 시외버스」를 뗀 이름으로 맞춤"
     assert bustago_link("부산", "동서울", "2026-10-16") is None, "「부산」은 버스타고에 동부 · 서부 · 해운대가 있어 애매 → 안 만든다"
     assert bustago_link("동서울", "없는곳", "2026-10-16") is None
-    assert run_links(_train("SRT", "19:00", "21:20", 52600))[0]["site"] == "srt"
-    assert run_links(_train("KTX", "07:00", "09:40", 59800), adults=2)[0]["site"] == "trip"
+    assert [link["site"] for link in run_links(_train("SRT", "19:00", "21:20", 52600))] == ["srt", "trip"]
+    assert [link["site"] for link in run_links(_train("KTX", "07:00", "09:40", 59800), adults=2)] == ["trip"]
+    suseo = {**_train("KTX", "05:30", "08:06", 52700, "301"), "origin": "수서"}
+    assert [link["site"] for link in run_links(suseo)] == ["srt", "trip"], "TAGO 는 SRT 운행도 등급 KTX 로 준다(10-14) — 수서 · 동탄이 끼면 SRT"
     assert run_links(_bus("express", "서울경부", "부산", "06:00", 26600)) == [], "고속버스(코버스)는 없다"
     assert run_links(_bus("suburbs", "동서울", "강릉시외터미널", "07:00", 15000))[0]["site"] == "bustago"
     assert run_links(_bus("suburbs", "동서울", "부산", "07:00", 15000)) == []
@@ -325,7 +327,7 @@ def test_a_train_sentence_is_answered_from_tago_by_time_band_with_booking_links(
     assert "KTX 103" in answer and "KTX 105" not in answer, "시간대마다 앞 2편"
     assert "[오후] 무궁화호 1205" in answer and "[저녁] SRT 381" in answer
     assert "예매는 아래 주소로 — 출발 · 도착 · 날짜를 채워 엽니다(운행은 그 화면에서 고르세요):" in answer
-    assert ("   · 가는 편 트립닷컴 코레일 열차(출발 · 도착 · 날짜 채움): https://kr.trip.com/trains/asia/list?tripTab=train&scheduleType=single"
+    assert ("   · 가는 편 트립닷컴 기차(출발 · 도착 · 날짜 채움): https://kr.trip.com/trains/asia/list?tripTab=train&scheduleType=single"
             f"&hidadultnum=2&hidchildnum=0&biztype=SouthKorea&departurecountrycode=KR&arrivalcountrycode=KR&departdate={GO.isoformat()}"
             "&departhouript=07&departminuteipt=00&departurecitycode=KR0001&arrivalcitycode=KR0020") in answer, "보여 준 첫 KTX 운행(07시) 기준"
     assert ("   · 가는 편 SRT 예매(출발 · 도착 · 날짜 · 시각 채움): https://etk.srail.kr/hpg/hra/01/selectScheduleList.do?pageId=TK0101010000"
@@ -416,7 +418,7 @@ def test_change_on_a_train_item_offers_same_grade_runs_near_the_original_departu
     assert first["starts_at"] == f"{GO.isoformat()}T08:30:00+09:00" and first["ends_at"] == f"{GO.isoformat()}T11:10:00+09:00", "국내 — 도착 시각도"
     assert first["per_person"] == 59800 and first["best"] == 119600
     assert first["link"].startswith("https://kr.trip.com/trains/asia/list?") and "departhouript=08" in first["link"], "운행 시각이 채워진 주소"
-    assert first["link_kind"] == "route_search" and first["link_seller"] == "트립닷컴 코레일 열차(출발 · 도착 · 날짜 채움)"
+    assert first["link_kind"] == "route_search" and first["link_seller"] == "트립닷컴 기차(출발 · 도착 · 날짜 채움)"
     assert proposal.arguments["summary"]["train_options"] == [o["key"] for o in ask["options"]]
     assert proposal.arguments["summary"]["near_original"] == 3
 

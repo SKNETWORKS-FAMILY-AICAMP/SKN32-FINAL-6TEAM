@@ -3,7 +3,7 @@
 
 어느 사이트가 GET 주소로 조건(출발 · 도착 · 날짜 · 시각 · 인원)을 받는지 2026-10-14 playdata 에서 직접 열어 봤다(기록 `transit_deeplink_probe`):
 - SRT(`etk.srail.kr`) — 받음(조회 폼이 채워져 열림 · 목록까지 자동으로 뜨는지는 확인 안 함). 역 코드 = 코레일 역 코드(수서 0551 · 부산 0020).
-- 트립닷컴 기차(`kr.trip.com/trains`) — 받음(KTX 목록 · 시각 · 요금까지 바로 뜸). 도시 코드 = 「KR」+ 코레일 역 코드. SRT 는 안 나온다(코레일 열차만).
+- 트립닷컴 기차(`kr.trip.com/trains`) — 받음(KTX 목록 · 시각 · 요금까지 바로 뜸). 도시 코드 = 「KR」+ 코레일 역 코드. 수서 출발(SRT) 운행도 목록에 나온다(17:0x).
 - 버스타고(`bustago.or.kr`) — 받음(폼이 채워짐 · 목록 자동 표시는 확인 안 함). 터미널 id 는 버스타고 고유(`SUBURBS_TERMINALS`).
 - 코레일(세션 · 자동화 차단) · 코버스(POST 전용) · 티머니(GET 405) — 안 받음 → 첫 화면 주소(`transit.BOOKING_SITES`)만.
 
@@ -63,6 +63,9 @@ SUBURBS_TERMINALS: dict[str, tuple[str, str]] = {
     "장승포": ("6455", "1"),
 }
 
+#: SRT 만 서는 역 — 이 역이 출발 · 도착에 끼면 SRT 운행이다(등급 이름으로는 못 가른다)
+SRT_ONLY_STATIONS = frozenset({"수서", "동탄"})
+
 SRT_URL = "https://etk.srail.kr/hpg/hra/01/selectScheduleList.do"
 TRIP_URL = "https://kr.trip.com/trains/asia/list"
 BUSTAGO_URL = "https://www.bustago.or.kr/newweb/kr/ticket/ticket.do"
@@ -83,6 +86,10 @@ def _rail_code(name: str | None) -> str | None:
         return RAIL_CODES[squashed]
     bare = _PAREN.sub("", text).replace("역", "")                             # 「울산(통도사)」 → 「울산」
     return RAIL_CODES.get(bare)
+
+
+def _bare(name: str | None) -> str:
+    return _PAREN.sub("", str(name or "")).replace("역", "")
 
 
 def _norm_terminal(name: str) -> str:
@@ -153,15 +160,17 @@ def run_links(option: dict[str, Any], *, adults: int | None = None) -> list[dict
     dep, arr, date = option.get("origin"), option.get("destination"), option.get("date")
     links: list[dict[str, Any]] = []
     if option.get("mode") == "train":
+        # ★TAGO 는 SRT 운행도 등급을 「KTX」 「KTX-산천」으로 준다(10-14 17:06 수서→부산 40편 전부) — 등급으로는 SRT 를 못 가른다.
+        #   수서 · 동탄은 SRT 만 서는 역이라 그 역이 끼면 SRT 주소를 앞에 둔다. 트립닷컴은 수서 출발 운행도 목록에 보여 줬다(17:0x 직접 열어 봄).
         grade = str(option.get("grade") or "")
-        if grade.upper().startswith("SRT"):
+        is_srt = grade.upper().startswith("SRT") or bool({_bare(dep), _bare(arr)} & SRT_ONLY_STATIONS)
+        if is_srt:
             url = srt_link(dep, arr, date, hour=hour, adults=people)
             if url:
                 links.append({"name": "SRT 예매(출발 · 도착 · 날짜 · 시각 채움)", "url": url, "link_kind": "route_search", "site": "srt"})
-        else:
-            url = trip_link(dep, arr, date, hour=hour, adults=people)
-            if url:
-                links.append({"name": "트립닷컴 코레일 열차(출발 · 도착 · 날짜 채움)", "url": url, "link_kind": "route_search", "site": "trip"})
+        url = trip_link(dep, arr, date, hour=hour, adults=people)
+        if url:
+            links.append({"name": "트립닷컴 기차(출발 · 도착 · 날짜 채움)", "url": url, "link_kind": "route_search", "site": "trip"})
     elif option.get("mode") == "bus" and option.get("kind") == "suburbs":
         url = bustago_link(dep, arr, date, hour=hour, adults=people)
         if url:
