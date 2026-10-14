@@ -47,8 +47,8 @@ def team_parts(team):
         from app.domains.travel_ops.instances.lodging import interpret
         from app.domains.travel_ops.instances.lodging.team import PROMPT_KEY
     else:
-        from app.domains.travel_ops.instances.flight import interpret
-        from app.domains.travel_ops.instances.flight.team import PROMPT_KEY
+        from app.domains.travel_ops.instances.booking import interpret
+        from app.domains.travel_ops.instances.booking.team import PROMPT_KEY
     return PROMPT_KEY, interpret
 
 
@@ -59,7 +59,7 @@ async def run_case(llm, team, case, today, trip):
         context = {key: value for key, value in context.items() if key in ("today", "trip")}
     started = time.perf_counter()
     if llm is None:                                   # `[2026-10-14]` 규칙 해석(항공 예약 모듈) — 모델 호출 없음
-        from app.domains.travel_ops.instances.flight.interpret_rules import interpret as rules
+        from app.domains.travel_ops.instances.booking.interpret_rules import interpret as rules
         raw = rules(case["text"], today=today, trip=trip if case.get("trip") else None)
     else:
         try:

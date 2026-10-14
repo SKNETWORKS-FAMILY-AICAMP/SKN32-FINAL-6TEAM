@@ -91,7 +91,7 @@ def main():
                 print(f"구글 호텔 안 부름 — {exc}")
         travel = TravelSources(travel_search=source, stay_google=google)
     else:
-        from app.domains.travel_ops.instances.flight import FlightTeam as Team
+        from app.domains.travel_ops.instances.booking import FlightTeam as Team
         from app.domains.travel_ops.ports.data_sources.ignav import IgnavMcp
         from scripts.probe_ignav_mcp import load_key
         try:

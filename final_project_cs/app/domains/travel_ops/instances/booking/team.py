@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Flight Team — 항공편을 찾아 준다. `[2026-10-08]` 숙소 팀(`instances/lodging/`)과 같은 모양이다.
+"""Booking Module(예약 모듈) — 항공편을 찾아 준다. `[2026-10-08]` 숙소 팀(`instances/lodging/`)과 같은 모양이다.
+
+`[2026-10-14 팀장 결정]` 항공은 **규칙 기반 예약 모듈**(LLM 없음)이고 기차 · 버스로 넓힌다 — 폴더 · 클래스 이름을 `booking` 으로 바꿨다
+(`instances/flight/` → `instances/booking/`, `FlightTeam` → `BookingTeam`). 코어와 주고받는 식별자(`team_id="flight"` · `flight.*` 능력 ·
+항목 `kind:"flight"` · case type `flight`)는 그대로다 — `booking.*` 은 `booking_handoff` 팀 능력 이름이라 겹친다(팀장 결정 대기).
+옛 이름 `FlightTeam` 은 별칭으로 남긴다.
 
 흐름(`flight.assist`): 모델 **한 번**이 문장(+ 여행 일정 요약)을 고정된 구조로 옮긴다(도시 이름 → 공항 코드도 모델이) →
 서버가 검증한다 → 빠진 값이 있으면 되묻고, 없으면 booking 모듈(`read.booking_search_flights`) **한 번** → 받은 값으로 답을 쓴다.
@@ -360,10 +365,10 @@ def _price_note(check: dict[str, Any]) -> str:
     return ""
 
 
-class FlightTeam(ItineraryWork, TravelTeamBase):
+class BookingTeam(ItineraryWork, TravelTeamBase):
     manifest = TeamManifest(
         team_id="flight",
-        display_name="Flight Team",
+        display_name="Booking Module (항공)",
         contract_name="a_cop.team_task",
         supported_contract_versions=["1.0"],
         capabilities=["flight.assist", "flight.status",
@@ -784,4 +789,6 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
                             next_action=NextAction.RESPOND, answer=answer[:6000], decisions=[decision])
 
 
-__all__ = ["FlightTeam", "PROMPT_KEY"]
+FlightTeam = BookingTeam   # 옛 이름 — 등록 문자열 · 시험 · 스크립트가 옮겨 갈 때까지
+
+__all__ = ["BookingTeam", "FlightTeam", "PROMPT_KEY"]

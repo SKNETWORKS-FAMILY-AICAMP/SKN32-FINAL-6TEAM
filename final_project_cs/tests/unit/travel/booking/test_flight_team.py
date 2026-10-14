@@ -12,8 +12,8 @@ import pytest
 
 from app.core.contracts import ContextPack, TeamTask, ToolNotAllowed
 from app.domains.travel_ops.components.booking.offers import search_flights
-from app.domains.travel_ops.instances.flight import FlightTeam
-from app.domains.travel_ops.instances.flight.interpret import InterpretationInvalid, needs, parse
+from app.domains.travel_ops.instances.booking import FlightTeam
+from app.domains.travel_ops.instances.booking.interpret import InterpretationInvalid, needs, parse
 from app.tools.read_tools import ALLOWED_PROMPT_KEYS
 
 TODAY = datetime.now(ZoneInfo("Asia/Seoul")).date()
@@ -474,8 +474,8 @@ def test_a_per_person_price_cap_keeps_only_flights_under_it_and_says_how_it_coun
 
 
 def test_return_times_pick_the_return_leg_band():
-    from app.domains.travel_ops.instances.flight.interpret import parse
-    from app.domains.travel_ops.instances.flight.team import _apply_limits
+    from app.domains.travel_ops.instances.booking.interpret import parse
+    from app.domains.travel_ops.instances.booking.team import _apply_limits
 
     def option(back_time, price):
         return {"legs": [{**LEG}, {**LEG, "origin": "ICN", "destination": "TPE", "departTime": back_time}], "best": price}
@@ -620,7 +620,7 @@ def test_choosing_rechecks_the_price_and_says_it_is_the_same_or_changed():
 
 def test_a_cheaper_seller_on_recheck_is_said_as_a_seller_change_not_a_price_change():
     """☆10-12 18:41 playdata — 같은 편인데 고를 때 다른 판매처(Ignav)가 더 싸게 들어왔다. 값이 「바뀌었다」고 하지 않고 판매처를 적는다."""
-    from app.domains.travel_ops.instances.flight.team import _price_note
+    from app.domains.travel_ops.instances.booking.team import _price_note
 
     note = _price_note({"status": "changed", "before": 150700, "now": 143616,
                         "seller_before": "마이리얼트립", "seller_now": "Gotogate(여행사)"})
@@ -654,7 +654,7 @@ def test_change_again_skips_flights_the_ledger_says_were_shown():
 
 
 def test_new_flights_near_the_original_departure_come_first_then_the_rest_by_price():
-    from app.domains.travel_ops.instances.flight.team import _fresh_flights
+    from app.domains.travel_ops.instances.booking.team import _fresh_flights
 
     def flight(clock, price):
         return {"airline": "A", "legs": [{**LEG, "departTime": clock, "flightNumber": clock}], "best": price}
@@ -670,7 +670,7 @@ def test_new_flights_near_the_original_departure_come_first_then_the_rest_by_pri
 
 def test_the_booking_link_skips_a_results_page_and_says_why():
     """`[2026-10-12]` ☆이스타 편 — 가장 싼 판매처가 구글 항공권(결과 페이지)이면 그 편을 바로 고를 수 있는 다음 판매처 링크를 쓴다."""
-    from app.domains.travel_ops.instances.flight.team import _booking_note, _flight_option
+    from app.domains.travel_ops.instances.booking.team import _booking_note, _flight_option
 
     item = SimpleNamespace(starts_at=datetime.fromisoformat(f"{GO}T10:00:00+09:00"))
     option = {"airline": "이스타항공", "legs": [{**LEG, "flightNumber": "ZE607"}], "best": 300000,
