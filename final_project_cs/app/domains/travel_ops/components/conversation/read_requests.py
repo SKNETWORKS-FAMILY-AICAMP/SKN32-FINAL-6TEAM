@@ -4,7 +4,7 @@ from __future__ import annotations
 from copy import copy
 from dataclasses import is_dataclass, replace
 
-from . import fact_context, schedule_query, trip_facts
+from . import fact_context, schedule_query, time_anchor, trip_facts
 
 
 def _origin_matches(items, phrase):
@@ -56,6 +56,13 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
     for request in decision.reads:
         fact = request["fact"]
         item = by_alias.get(request["target_item"])
+        # ★`[2026-10-14]` 고객이 날 · 시각 · 앞뒤를 말했으면 답할 일정은 서버가 일정표로 계산한다(`time_anchor.py`) — 모델이 고른 일정보다 앞선다.
+        #   「다음 일정」처럼 이미 다음 일정을 가리키게 계산했으면 「다음」 사실 대신 그 일정의 시각을 답한다(두 번 넘기지 않게).
+        anchored, anchor_basis = time_anchor.resolve(request, items=items, target=item, now=now)
+        if anchored is not None:
+            item, fact = anchored, ("time" if fact == "next" else fact)
+            request = {**request, "fact": fact, "reference": "explicit",
+                       "target_item": next((a for a, i in by_alias.items() if i.item_id == anchored.item_id), "none")}
         sub = replace(decision, item=item, fact=fact, query=request.get("query"), reads=[request])
         fragment = request.get("text") or ""
         scoped_message = fragment if fragment and fragment in message else message
@@ -64,6 +71,8 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
             now=context_now, ttl_seconds=ttl_seconds)
         item = sub.item
         basis = {"kind": fact, "item_id": str(item.item_id) if item else None, "version": version}
+        if anchor_basis:
+            basis["time_anchor"] = anchor_basis
         place = (item.place or {}) if item else {}
         provenance = (item.detail.get("provenance") or {}).get("place") or {} if item else {}
         note = ""

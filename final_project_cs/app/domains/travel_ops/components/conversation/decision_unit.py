@@ -133,6 +133,11 @@ food의 advice는 고객이 말한 식단 조건에 맞는 일반 조언만 짧�
 현재 위치가 필요한 route_here/nearby_dining/nearby_activity는 기존 단일 요청 계약을 사용하므로 reads=[]로 둔다.
 이동에는 origin_text에 고객이 적은 출발지 이름 부분만 그대로 복사한다. 예컨대 출발지를 넓은 종류로 부르면 그 표현을 유지하며 일정의 긴 이름으로 바꾸지 않는다. 출발지를 말하지 않으면 빈 문자열이다.
 transport_mode는 any(수단 미지정), transit(대중교통), subway(지하철), bus(버스), walk(도보), taxi(택시)다. 지정한 수단을 버리지 않는다. 이동 외 질문은 origin_text="", transport_mode=any다.
+날·시각·앞뒤는 일정을 직접 고르지 말고 아래 칸에 옮긴다 — 그 시각의 일정은 서버가 일정표로 찾는다.
+at_time: 고객이 말한 시각을 24시간 HH:MM 으로(「오후 3시」 15:00, 「정오」 12:00, 「두시 반」은 낮이면 14:30, 「30분 뒤」는 「지금」 줄 시각+30분). 시각을 말하지 않았으면 "".
+at_day: 고객이 말한 날(today/tomorrow/dN). 말하지 않았으면 none.
+relation: 그 시각·일정 자체를 물으면 at, 「바로 앞·그 전·직전」이면 before, 「다음·그 다음·직후·다다음」이면 after. steps는 몇 번째인지(다음 1, 다다음 2), 보통 1.
+예: 「오후 3시에 뭐 해?」 at_time=15:00, at_day=none, relation=at / 「미술관 바로 앞 일정」 target_item=미술관, relation=before / 「다음 일정 뭐야?」 target_item=none, relation=after.
 """
 
 # 일정 밖 장소의 역사·유래와 추천 이유는 모델 기억만으로 사실처럼 말하지 않는다. 확인 자료가 있는 경로(규정·여행 자료 검색)로 보내거나, 근거를 밝힌다.
@@ -308,7 +313,7 @@ def _prompt(stops: list[Stop], changes: list[Change], history: list[dict[str, An
 
 
 def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
-    from .schedule_query import query_schema
+    from .schedule_query import query_days, query_schema
     items = [s.alias for s in stops] + ["none"]
     change_ids = sorted({c.alias for c in changes}) + ["none"]
     choice = {"type": "object", "properties": {
@@ -325,8 +330,14 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "transport_mode": {"type": "string", "enum": ["any", "transit", "subway", "bus", "walk", "taxi"]},
         "reference": {"type": "string", "enum": ["explicit", "previous", "selection", "none"]},
         "query": {"anyOf": [query_schema(stops), {"type": "null"}]},
-        "text": {"type": "string"}, "advice": {"type": "string"}},
-        "required": ["fact", "target_item", "origin_item", "origin_text", "transport_mode", "reference", "query", "text", "advice"], "additionalProperties": False}
+        "text": {"type": "string"}, "advice": {"type": "string"},
+        # ★`[2026-10-14]` 고객이 말한 날 · 시각 · 앞뒤 — 서버가 일정표로 대상을 계산한다(`time_anchor.py`). 반드시 낸다(없으면 none · "" · at · 1)
+        "at_day": {"type": "string", "enum": [*query_days(stops), "none"]},
+        "at_time": {"type": "string"},
+        "relation": {"type": "string", "enum": ["at", "before", "after"]},
+        "steps": {"type": "integer"}},
+        "required": ["fact", "target_item", "origin_item", "origin_text", "transport_mode", "reference", "query", "text", "advice",
+                     "at_day", "at_time", "relation", "steps"], "additionalProperties": False}
     return {"type": "object", "properties": {
         "action": {"type": "string", "enum": list(ACTIONS)},
         "target_item": {"type": "string", "enum": items},
@@ -335,6 +346,11 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "change_scope": {"type": "string", "enum": ["place", "time", "date", "mixed", "none", "unclear"]},
         "destination_text": {"type": "string"},
         "condition_text": {"type": "string"},
+        # ★`[2026-10-14]` 읽기 항목 없이 맨 위 칸으로만 답할 때도 날 · 시각 · 앞뒤를 낸다(읽기 항목과 같은 뜻)
+        "at_day": {"type": "string", "enum": [*query_days(stops), "none"]},
+        "at_time": {"type": "string"},
+        "relation": {"type": "string", "enum": ["at", "before", "after"]},
+        "steps": {"type": "integer"},
         "minutes": {"type": "integer"},
         "query": query_schema(stops),
         "reads": {"type": "array", "items": read},
@@ -346,7 +362,7 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         # ★되묻는 문장은 모델이 쓰지 않는다 — 서버가 후보로 만든다(답이 길어져 p95 가 7초였다, 재생 시험 2026-09-29)
         # ★`[2026-10-14]` 목적지 · 조건 칸은 **반드시 낸다**(없으면 빈 문자열) — 선택 칸이면 학습 E4B 가 아예 내지 않았다(재생 434건 중 목적지 0/43)
         "required": ["action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests",
-                     "destination_text", "condition_text"]}
+                     "destination_text", "condition_text", "at_day", "at_time", "relation", "steps"]}
 
 
 def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list[dict[str, Any]],
@@ -405,7 +421,8 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     if change_alias != "none" and change_alias not in changes_by:
         raise DecisionFailed(f"변경이 목록 밖이다: {change_alias!r}")
     fact = raw.get("fact") if raw.get("fact") in FACTS else "none"
-    from .schedule_query import QUERY_FACTS, valid_query
+    from .schedule_query import QUERY_FACTS, query_days, valid_query
+    from .time_anchor import clean as clean_time
 
     query = raw.get("query")
     general = raw.get("general_requests", [])
@@ -466,9 +483,24 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         if (read.get("transport_mode", "any") not in {"any", "transit", "subway", "bus", "walk", "taxi"}
                 or not isinstance(read.get("origin_text", ""), str)):
             raise DecisionFailed("이동의 출발지 표현·수단이 유효하지 않습니다")
-        if (scoped and not valid_query(read.get("query"), stops)) or (not scoped and read.get("query") is not None):
+        if scoped and not valid_query(read.get("query"), stops):
             raise DecisionFailed("읽기 질문의 범위가 유효하지 않습니다")
-        reads.append(dict(read))
+        if not scoped and read.get("query") is not None:
+            # ★`[2026-10-14]` 한 일정 사실(시각 · 주소 …) 읽기에 붙은 조회 범위는 그 칸만 버린다 — 읽기라 아무것도 바꾸지 않는다.
+            #   전에는 해석 전체를 버려 「오후 3시에 뭐 해?」가 「해석하지 못했어요」로 끝났다(재생 107건 중 9건)
+            read = {**read, "query": None, "ignored_query": read.get("query")}
+        # ★`[2026-10-14]` 날 · 시각 · 앞뒤 칸은 틀려도 해석을 버리지 않고 그 칸만 비운다(`time_anchor.clean`)
+        reads.append(clean_time(dict(read), [*query_days(stops), "none"]))
+    top_time = clean_time(raw, [*query_days(stops), "none"])
+    if (action == "answer_fact" and not reads and fact not in (*QUERY_FACTS, "day", "outdoor", *LOCATION_FACTS)
+            and (top_time["at_time"] or (top_time["relation"] != "at" and target == "none"))):
+        # ★`[2026-10-14]` 읽기 항목 없이 맨 위 칸에만 날 · 시각 · 앞뒤를 적었으면 읽기 항목 하나로 옮긴다 — 그래야 서버가 일정표로 계산한다
+        #   (`time_anchor.py`). 날 · 시각이 없는 맨 위 답은 그대로 둔다. 재생 107건 v2 에서 「다음 일정 뭐야?」 「30분 뒤에 뭐 해?」
+        #   「오늘 18시 30분에 뭐 해?」 등 14건이 이 경로로 와서 계산을 거치지 못했다.
+        reads = [{"fact": fact if fact != "none" else "time", "target_item": target, "origin_item": "none", "origin_text": "",
+                  "transport_mode": "any", "reference": "explicit" if target != "none" else "none", "query": None,
+                  "text": message or "", "advice": "", **{k: top_time[k] for k in ("at_day", "at_time", "relation", "steps")},
+                  "from_top_level": True}]
     if reads:
         first_read = reads[0]
         fact, target, query = first_read["fact"], first_read["target_item"], first_read.get("query")
