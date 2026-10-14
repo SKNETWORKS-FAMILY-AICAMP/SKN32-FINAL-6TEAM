@@ -124,6 +124,7 @@ LLM 이 받는 입력은 아래 「입력 데이터」 칸이 전부다. **웹 �
 | 일반 Team LLM | `gpt-4o-mini` — OpenAI | `.env` 의 `ACOP_LLM_MODEL` |
 | 정책 검색(RAG) 임베딩 | `bge-m3` — 로컬 Ollama, 1024차원 | `.env` 의 `ACOP_EMBEDDING_PROVIDER=ollama`(10/07 사용자 변경) |
 
+- ★`[2026-10-14]` 위 표는 10-07 당시 값이다. 그 뒤 코드 기본 로컬 모델(`ollama_model`)이 `gemma4:12b` → 우리 데이터로 가르친 E4B `tripilot-pointer:e4b-ft` 로 바뀌었다(`wiki/records/reports/2026-10-14_채팅해석_근본개선_1차.md`).
 - 활동 판정은 섀도 모드라 `gpt-5.4-nano` 의 판정은 비교 기록(`activity_judge_shadow`)에만 남고 고객 답변에는 쓰이지 않는다.
 - 판정 모델을 바꾸려면 `.env` 의 `# ACOP_ACTIVITY_JUDGE_MODEL=gpt-5.4-nano` 주석을 풀고 값을 바꾼다.
 

@@ -83,6 +83,7 @@ def main() -> None:
         # ★`[2026-10-14 사용자 지시]` 요청 해석(할 일 고르기)도 **우리 데이터로 학습한 E4B** 하나로 — 일정 짚기와 같은 모델이라 12GB GPU 에서 교체가 없다.
         #   434 문장 재생(채점용 126): 할 일 85% · 대상 78% — 학습 없는 12B 74%·72%, 유료 대체 79%·67%보다 낫고 더 빠르다
         #   (datasets/chat_probe/2026-10-13_x600_web_chat/replay/RESULTS.md). 문맥 길이는 아래 8,192 와 함께여야 한다(기본 4,096 이면 입력이 잘린다)
+        #   (같은 날 코드 기본값도 이 모델로 바꿨다 — 운영 설정과 어긋나 있던 것을 맞췄다. 줄은 명시적으로 남긴다)
         "ACOP_OLLAMA_MODEL=tripilot-pointer:e4b-ft",
         "ACOP_OLLAMA_POINTER_MODEL=tripilot-pointer:e4b-ft",
         "ACOP_OLLAMA_NUM_CTX=8192",

@@ -72,6 +72,6 @@
 
 ## 알아둘 것
 - **DB 는 서버에 하나가 정본이다.** 개발 PC 의 DB 와 합치지 않는다 — 서버에는 사용자 데이터를 안 가져갔고, 거기 쌓이는 것은 서버 것이다.
-- **모델은 서버의 Ollama**(`gemma4:12b` · `bge-m3`)를 쓴다 — 요금이 안 나간다. 컨테이너가 그 Ollama 에 닿는 길은 서버 쪽 설정이다.
+- **모델은 서버의 Ollama**(해석·일정 짚기는 우리 데이터로 가르친 E4B `tripilot-pointer:e4b-ft`, 임베딩은 `bge-m3`)를 쓴다 — 요금이 안 나간다. 코드 기본값도 `tripilot-pointer:e4b-ft` 이고(`ACOP_OLLAMA_MODEL`, `make_server_env.py` 가 같은 값을 적는다), 문맥 길이 `ACOP_OLLAMA_NUM_CTX=8192` 와 함께여야 한다. 컨테이너가 그 Ollama 에 닿는 길은 서버 쪽 설정이다.
 - **사람 확인(Turnstile)**: `ACOP_ENV=prod` 는 사람 확인 키가 없으면 서버가 안 켜진다. 키가 없는 동안 `ACOP_ENV=public` 으로 두면 확인 없이 키 발급이 열린다(주소별 일일 한도만 지킨다). 키를 받으면 `ACOP_TURNSTILE_SECRET` · `NEXT_PUBLIC_TURNSTILE_SITE_KEY` 를 넣고 `prod` 로 올린다.
 - 이 폴더의 파일에는 **주소 · 계정 · 비밀을 적지 않는다.** 값은 서버 `.env` · `.env.apikeys` · 서버의 Caddyfile 에만 있다.

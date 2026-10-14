@@ -18,6 +18,10 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 `[2026-10-07 사용자 지시]` 「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」.
 코드 [llm_failover.py](../../app/infrastructure/llm_failover.py) · 시험 `tests/unit/infrastructure/test_llm_failover.py` · `test_retriever_failover.py`.
 
+## 평소 경로의 모델 `[2026-10-14 사용자 지시]`
+
+평소 경로(Ollama)의 코드 기본 모델은 우리 데이터로 가르친 E4B `tripilot-pointer:e4b-ft` 다(전에는 학습 없는 `gemma4:12b`). 요청 해석·일정 짚기를 이 모델 하나가 맡고, 문맥 길이 `ollama_num_ctx` 기본 8192 와 함께 쓴다. 그 모델이 없는 곳(개발 PC 등)은 `ACOP_OLLAMA_MODEL` 로 있는 모델을 지정한다. 아래 「정확도」 표의 Gemma 4 12B 는 **2026-10-07 에 잰 당시 평소 경로**다. x600 서버 운영은 로컬 대기 한도를 코드 기본(6초)보다 긴 9초로 둔다(학습 E4B 한 건 5.1~7.3초 — `wiki/records/reports/2026-10-14_채팅해석_근본개선_1차.md`).
+
 ## 한 줄 요약
 
 모델 서버(Ollama)가 연결 실패 · 시간 초과 · 5xx · 빈 답을 내면 **그 한 호출**을 서버용 OpenAI 키로 다시 부른다. 연속으로 실패하면 서버를 한동안 건너뛰고 곧장 OpenAI 로 간다. **스위치는 기본 꺼짐**이고, 배포(운영) 환경 파일에서만 켠다.

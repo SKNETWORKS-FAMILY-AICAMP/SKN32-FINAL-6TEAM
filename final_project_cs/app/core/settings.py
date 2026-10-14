@@ -74,13 +74,18 @@ class Settings(BaseSettings):
     #: Ollama(로컬 LLM 서버) 주소 — 채우면 분류·추출·번역을 **Ollama 로** 한다. 비우면 OpenAI.
     #:  ★2026-09-14 OpenAI 크레딧 소진(429 실측) — Gemma 4 를 포트포워딩으로 붙여 쓴다.
     #:  ★OpenAI 호환 경로(`/v1`)는 쓰지 않는다 — 생각(thinking)이 본문에 섞여 나왔다(실측).
-    #:    자체 API(`/api/chat`, `think:false`)는 `gemma4:12b` 가 1.3초에 JSON 을 냈다.
+    #:    자체 API(`/api/chat`, `think:false`)는 `gemma4:12b` 가 1.3초에 JSON 을 냈다(2026-09 측정 당시 모델 — 지금 기본은 아래 `ollama_model`).
     #:  실제 주소는 `.env` 에만 적는다(공용 파일에 호스트를 적지 않는다).
     ollama_base_url: str = ""
     #: ★`[2026-09-30]` 더는 쓰지 않는다 — 시나리오(시연) 모드를 운영 앱에서 뗐다(`legacy/scenario_mode/`). 이름만 남겼다:
     #:  설정 검사가 모르는 이름을 거부(`extra="forbid"`)해서, 옛 `.env` 가 이 이름을 적고 있으면 앱이 못 뜬다.
     scenario_mode_enabled: bool = False
-    ollama_model: str = "gemma4:12b"
+    #: ★`[2026-10-14 사용자 지시]` 기본 모델은 **우리 데이터로 가르친 E4B** `tripilot-pointer:e4b-ft`(Ollama `gemma4:e4b` Q4_K_M 에 일정 항목 짚기 자료로 LoRA 학습).
+    #:  전에는 학습 없는 `gemma4:12b` 였다. 요청 해석(할 일 고르기)·일정 짚기를 이 모델 하나가 맡는다 — 12GB GPU 에서 모델 교체가 없고,
+    #:  434 문장 재생(채점용 126)에서 할 일 85%·대상 78% 로 학습 없는 12B(74%·72%)보다 맞고 빠르다(`wiki/records/reports/2026-10-14_채팅해석_근본개선_1차.md`).
+    #:  ★이 이름의 모델은 학습으로 만든 것이라 Ollama 에 올려 둔 곳에만 있다. 없는 곳(개발 PC 등)은 `ACOP_OLLAMA_MODEL` 로 있는 모델을 지정한다(예 `gemma4:12b`).
+    #:  문맥 길이는 아래 `ollama_num_ctx`(8192)와 함께여야 한다(Ollama 기본 4,096 이면 해석 입력의 앞이 잘린다).
+    ollama_model: str = "tripilot-pointer:e4b-ft"
     #: 정책 검색(RAG)의 임베딩을 어디서 만드나 — `openai` | `ollama`.
     #:  ★`[2026-09-22]` 크레딧 없이 돌릴 길을 **명시적으로** 둔다. 조용한 폴백이 아니다 —
     #:    고른 쪽의 벡터가 없으면 검색이 예외를 낸다(RULE.md §3.2 「신호 없는 축소 금지」).
