@@ -509,7 +509,7 @@ def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list
     best, alternates, rejected = choose(
         candidates, lambda c: check(place=c.place, starts_at=item.starts_at), distinct=_same_activity_site)
     if best is None:
-        # ★못 풀면 부분 반영하지 않는다(§6-C-5). 사람에게 넘길 재료를 남긴다.
+        # ★못 풀면 부분 반영하지 않는다(§6-C-5). 고객 안내와 결함 분석에 쓸 원인을 남긴다.
         return NoChange("unresolved", {"causes": causes,
                                        "rejected": {c.name: c.rejected for c in rejected}})
     replay = any(cause.get("mode") == "replay" for cause in causes)

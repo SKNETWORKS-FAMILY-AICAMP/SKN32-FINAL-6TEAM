@@ -21,7 +21,7 @@
   `unchecked`(경로 소스가 답할 수 없는 대상)는 시나리오 버전과 같게 **센다.**
 
 ★`[2026-10-02 결함 인계 #1·#2·#3]` 이 반복이 **멈추지 않고 끝을 맺게** 한다.
-  ① Case 하나의 실행이 예외로 터져도 **그 회차의 나머지 Case 는 계속 돈다** — 터진 Case 는 `escalated`(`team_error`)로 닫아 운영자가 오류로 본다(죽은 채
+  ① Case 하나의 실행이 예외로 터져도 **그 회차의 나머지 Case 는 계속 돈다** — 터진 Case 는 `escalated`(`team_error`)로 닫아 개발자·QA 가 결함으로 본다(죽은 채
      `running` 으로 남지 않는다)
   ② 무응답 제안 만료(`PendingStore.expire`)를 이 반복도 한다 — 전에는 시나리오 버전(`trip_watch`)만 불러서, 기본 일꾼(Case 버전)이 도는 동안 끝난 일정의
      제안이 `open` 으로 남았다
@@ -277,8 +277,8 @@ class TripWatchCaseOpener:
             result.notified.append({"trip_id": str(trip_id), "item": item.title, "code": code})
 
     def _close_failed(self, case_id: UUID, exc: BaseException) -> None:
-        """예외로 터진 Case — **죽은 채 `running` 으로 남기지 않고** `escalated`(`team_error`)로 닫는다. 운영자가 오류로 본다.
-        (Controller 는 예외가 나면 그 실행 기록만 실패로 닫고 Case 는 그대로 둔다 — 다시 실행되지도, 사람 눈에 띄지도 않았다.)"""
+        """예외로 터진 Case — **죽은 채 `running` 으로 남기지 않고** `escalated`(`team_error`)로 닫는다. 개발자·QA 가 결함으로 본다(상주 운영자는 없다).
+        (Controller 는 예외가 나면 그 실행 기록만 실패로 닫고 Case 는 그대로 둔다 — 다시 실행되지도, 결함 기록에 잡히지도 않았다.)"""
         from app.core.transition import transition_case
         from app.core.case_lifecycle.events import CaseStatus, EventType
 
