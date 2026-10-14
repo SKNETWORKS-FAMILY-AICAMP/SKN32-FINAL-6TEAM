@@ -20,6 +20,7 @@ from typing import Any, Callable
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+from app.domains.travel_ops.components import settings_hook
 from . import progress as progress_module
 from . import review as review_module
 from . import survey_answers
@@ -281,7 +282,7 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
                  "filled": built.filled, "items": len(built.body["items"]), "title": built.body["title"],
                  "plan": built.plan}
         review, review_error = _review_of(conn, tenant_id, intake_id, revision, sources, claims)
-        review = review_module.public(review)               # 내부 칸(이동 재사용 키 · 장소 행 번호)은 응답에 싣지 않는다
+        review = review_module.public(review, tenant_id=tenant_id)               # 내부 칸(이동 재사용 키 · 장소 행 번호)은 응답에 싣지 않는다
     out_sources = []
     for source in sources:
         mine = [c for c in claims if c["source_id"] == source["source_id"]]
@@ -406,6 +407,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             source_id, field_name = str(entry.get("source_id") or ""), str(entry.get("field") or "")
             if field_name.startswith("items[") and source_id not in sources:
                 raise IntakeRejected("unknown_source", f"{field_name}: 이 접수의 원본이 아닙니다")
+            if field_name == "trip.taxi_pricing" and not settings_hook.taxi_call_product_enabled(tenant_id):
+                # ★`[2026-10-14 핫픽스]` 화면에서 칸을 감췄어도 직접 보내는 요청은 여기서 막는다(관리 콘솔 스위치가 켜져야 받는다)
+                raise IntakeRejected("taxi_pricing_disabled", "택시 호출 상품 고르기는 지금 쓰지 않습니다")
             value, evidence, note = _checked(field_name, entry.get("value"))
             if field_name.endswith(".locked") and value is True:
                 _require_lockable(conn, tenant_id, intake_id, current, source_rows, current_claims, source_id, field_name)
