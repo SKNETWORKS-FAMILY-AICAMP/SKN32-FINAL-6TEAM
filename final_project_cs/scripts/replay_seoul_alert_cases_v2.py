@@ -6,6 +6,10 @@
   통과로 세지 않고 `direction_evidence_missing` 으로 따로 셉니다(판정 문턱을 낮추지 않습니다).
 - 같은 방향 구간 번호를 실은 경로가 사건을 구간 근거와 함께 잡는지(`declared_links_at_observation`) 봅니다.
 - 반대 방향 번호를 「원문과 다른 번호」로 놓은 규칙 시험(`direction_rule_synthetic`)은 수용 집계에 넣지 않고 따로 적습니다.
+- ☆`[2026-10-14]` 반대 방향 근거를 세 단계로 찾습니다(앞 단계에서 나오면 거기서 멈춤 · `--reverse-map` 을 안 주면 1·3단계만 = 예전과 같음).
+  1) 대응표의 같은 지도 조각 반대 방향 번호(원문에 없는 것) 2) 표준 링크 형상 짝 표(`--reverse-map`, 같은 도로 이름 · 반대 방향 · 평행 —
+  상·하행이 떨어진 도로·연결로용, 원문에 없는 것) 3) 원문이 이미 양쪽 방향 번호를 모두 적은 경우(양방향 사건) — 첫 원문 번호의 반대쪽 원문 번호.
+  `--link-map` 은 .csv 와 .csv.gz 를 모두 받습니다.
 
 외부 통신·DB·하위 프로세스를 막고 기존 UTIC/DisruptionCheck 계산을 호출합니다.
 정답 검토 파일과 사건 원문은 git 밖 var에 둡니다. 제품 코드·원본을 수정하지 않습니다.
@@ -15,6 +19,7 @@ from __future__ import annotations
 import argparse
 import csv
 from collections import Counter
+import gzip
 from datetime import datetime, timedelta
 import hashlib
 import json
@@ -98,6 +103,8 @@ def main() -> int:
     parser.add_argument("--out", type=Path, help="새 폴더만 허용합니다. 생략하면 새 시각 폴더를 만듭니다.")
     parser.add_argument("--link-map", type=Path,
                         default=CS.parent / "datasets/mobility/processed/mobility/graph/osm_way_seg_topis_link_v1.csv")
+    parser.add_argument("--reverse-map", type=Path, default=None,
+                        help="표준 링크 반대 방향 짝 표(stdlink_reverse_v2.csv.gz). 없으면 쓰지 않습니다.")
     args = parser.parse_args()
     attempts = offline_boundary()
     sys.path.insert(0, str(CS))
@@ -115,21 +122,50 @@ def main() -> int:
     protected[str(args.annotations.resolve().relative_to(CS))] = sha(args.annotations)
     protected[str(Path(__file__).resolve().relative_to(CS))] = sha(Path(__file__))
     protected["../" + args.link_map.resolve().relative_to(CS.parent).as_posix()] = sha(args.link_map)
+    if args.reverse_map:
+        protected["../" + args.reverse_map.resolve().relative_to(CS.parent).as_posix()] = sha(args.reverse_map)
+
+    def open_table(path):
+        return gzip.open(path, "rt", encoding="utf-8", newline="") if path.suffix == ".gz" else path.open(encoding="utf-8", newline="")
+
+    std_reverse = {}
+    if args.reverse_map:
+        with open_table(args.reverse_map) as stream:
+            for entry in csv.DictReader(stream):
+                std_reverse[entry["link_id"]] = entry["reverse_link_ids"].split()
     segments, link_segments = {}, {}
-    with args.link_map.open(encoding="utf-8", newline="") as stream:
+    with open_table(args.link_map) as stream:
         for entry in csv.DictReader(stream):
             segments.setdefault((entry["osm_way_id"], entry["seg_idx"]), {})[entry["dir"]] = entry["link_id"]
             link_segments.setdefault(entry["link_id"], set()).add((entry["osm_way_id"], entry["seg_idx"], entry["dir"]))
 
+    def segment_opposites(link):
+        out = []
+        for way, index, direction in sorted(link_segments.get(link, ())):
+            other = segments[(way, index)].get({"fwd": "bwd", "bwd": "fwd"}[direction])
+            if other and other != link and other not in out:
+                out.append(other)
+        return out
+
     def reverse_links(links):
-        """대응표에서 사건 구간과 같은 지도 조각의 반대 방향 번호. 대응표 내부 일관성 근거이며 공식 링크 검증이 아닙니다."""
-        found = []
+        """반대 방향 번호와 그 근거 종류. 대응표·형상 판정이며 공식 링크 검증이 아닙니다(위 문서의 세 단계)."""
+        found = [o for link in links for o in segment_opposites(link) if o not in links]
+        if found:
+            return list(dict.fromkeys(found)), "mapping_reverse_link"
+        found = [o for link in links for o in std_reverse.get(link, ()) if o not in links]
+        if found:
+            return list(dict.fromkeys(found)), "std_geometry_reverse_link"
         for link in links:
-            for way, index, direction in sorted(link_segments.get(link, ())):
-                other = segments[(way, index)].get({"fwd": "bwd", "bwd": "fwd"}[direction])
-                if other and other not in links and other not in found:
-                    found.append(other)
-        return found
+            both = [o for o in segment_opposites(link) + std_reverse.get(link, []) if o in links and o != link]
+            if both:
+                return list(dict.fromkeys(both)), "declared_both_directions"
+        return [], None
+
+    basis_meaning = {
+        "mapping_reverse_link": "대응표의 같은 지도 조각 반대 방향 번호. 공식 링크 검증 아님",
+        "std_geometry_reverse_link": "표준 링크 형상 짝(같은 도로 이름·반대 방향·평행). 상·하행 분리 도로·연결로용. 공식 링크 검증 아님",
+        "declared_both_directions": "원문이 양쪽 방향 번호를 모두 적은 양방향 사건 — 첫 원문 번호의 반대쪽 원문 번호",
+    }
     original = read(args.input)
     annotations = read(args.annotations)
     labels = {row["id"]: row for row in annotations["cases"]}
@@ -302,17 +338,16 @@ def main() -> int:
         reverse_evidence = None
         if label["reverse"] != "not_tested":
             wanted = label["reverse"] == "affected"
-            evidence = reverse_links(known_links)
+            evidence, basis = reverse_links(known_links)
             if evidence:
                 reverse_uses = [target] + ["링크:" + link for link in evidence]
                 reverse_result = option_hits({"id": "taxi_reverse", "uses": reverse_uses},
                                              routes.affecting(reverse_uses, at=clock))
-                reverse_evidence = {"basis": "mapping_reverse_link", "links": evidence,
-                                    "meaning": "기존 대응표의 같은 지도 조각 반대 방향 번호. 공식 링크 검증 아님"}
+                reverse_evidence = {"basis": basis, "links": evidence, "meaning": basis_meaning[basis]}
                 record_test("opposite_direction_acceptance", wanted,
                             any(hit.get("incident_id") == incident_id for hit in reverse_result.values()),
                             kind="direction_acceptance",
-                            meaning="반대 방향 구간 번호(대응표 근거)를 실은 시험 경로")
+                            meaning="반대 방향 구간 번호(근거: " + basis + ")를 실은 시험 경로")
             else:
                 entry = {"name": "opposite_direction_acceptance", "kind": "direction_evidence_missing",
                          "expected": wanted, "actual": None, "passed": None,
