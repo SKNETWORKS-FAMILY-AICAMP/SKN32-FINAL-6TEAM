@@ -844,9 +844,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     elif action == "answer_service":
         from app.domains.travel_ops.components.conversation import service_help
 
+        # ★`[2026-10-14]` 기능 안내는 규정 답과 다른 문턱을 쓴다(`travel.service_help.min_score` — 근거는 설정 파일 주석)
         status, text, basis = service_help.reply(
             message=message, tenant_id=tenant, policy_search=policy_search,
-            min_score=float(get_guardrails().get("travel.question.min_policy_score")), now=at)
+            min_score=float(get_guardrails().get("travel.service_help.min_score")), now=at)
         outcome = {"status": status, "text": text}
     elif action == "answer_fact" and decision.fact in ("schedule", "changeability"):
         from app.domains.travel_ops.components.conversation import schedule_query
