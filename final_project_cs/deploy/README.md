@@ -70,6 +70,19 @@
 - ★**브랜치의 코드가 곧 공개 서비스다.** 건강 검사로 못 걸러내는 기능 결함은 그대로 올라간다 — 확인이 필요한 브랜치는 따라가는 브랜치를 따로 둔다.
 - ★서버는 저장소를 **읽기만** 한다(공개 저장소라 인증이 없다). 비공개가 되면 읽기 전용 배포 키를 서버에 둬야 한다.
 
+## 월별 보존 판으로 되돌리기 (복원)
+달마다 하나는 `keep-YYYY-MM` 이름표로 남는다(`tripilot-api` · `tripilot-web` · `tripilot-admin`). 문제가 생기면 그 판으로 되돌린다.
+
+1. **있는 판 보기**: `docker images 'tripilot-*' --format '{{.Repository}}:{{.Tag}}' | grep keep-`
+2. **먼저 시험하기 (운영을 건드리지 않는다)**: `python3 deploy/restore_check.py --old-image tripilot-api:keep-YYYY-MM --new-image tripilot-api:local --mobility-dir <이동 자료 폴더>`
+   - 바깥과 연결되지 않는 임시 네트워크에 빈 DB 를 만들고, 최신 이미지의 마이그레이션으로 「지금의 DB 구조」를 만든 뒤 옛 이미지의 마이그레이션 · API 기동 · `/health` · 설정 이름을 확인하고 임시 자원을 모두 지운다. 운영 DB 와 운영 `.env` 는 읽지 않는다.
+   - ★설정은 `extra="forbid"` 라 **옛 이미지가 모르는 새 설정 이름이 운영 `.env` 에 있으면 옛 이미지는 켜지지 않는다.** `--env-names-file <.env 경로>` 를 주면 이름만 대조한다(값은 읽지 않는다). 파일마다 한 번씩 준다.
+3. **설정 이름 충돌 처리 (2번이 「옛 이미지가 모르는 이름」을 알려 주면 반드시)**: 운영 `.env` · `.env.apikeys` 에서 그 이름의 줄을 **백업 후 앞에 `#` 을 붙여 잠시 끈다.** 설정은 모르는 이름이 하나라도 있으면 앱이 기동조차 못 하기 때문이다. 최신 판으로 돌아올 때 `#` 을 다시 뗀다.
+   - 실제 사례: 2026-10-14 에 최신 판에만 있는 `ACOP_JUSO_COORD_API_KEY` · `ACOP_JUSO_SEARCH_API_KEY` 가 운영 `.env.apikeys` 에 이미 들어 있어서, 그 전 판으로 되돌리면 이 두 줄 때문에 켜지지 않았을 것이다(시험으로 확인).
+4. **되돌리기**: 자동 반영 타이머를 멈추고(`systemctl disable --now tripilot-autodeploy.timer`) `TRIPILOT_TAG=keep-YYYY-MM docker compose up -d --no-build --no-deps tripilot-api tripilot-worker tripilot-web`.
+   - ★**4번은 운영에서 시험하지 않았다.** 1·2번만 시험했다. DB 는 되돌리지 않는다 — 마이그레이션이 앞으로만 가므로(위 자동 반영 표) 옛 이미지가 새 표 구조를 견디는지가 2번이 확인하는 핵심이다.
+5. 문제가 풀리면 3번에서 끈 줄을 되살리고 타이머를 다시 켠다. 새 커밋이 오면 최신 판으로 다시 반영된다.
+
 ## 알아둘 것
 - **DB 는 서버에 하나가 정본이다.** 개발 PC 의 DB 와 합치지 않는다 — 서버에는 사용자 데이터를 안 가져갔고, 거기 쌓이는 것은 서버 것이다.
 - **모델은 서버의 Ollama**(해석·일정 짚기는 우리 데이터로 가르친 E4B `tripilot-pointer:e4b-ft`, 임베딩은 `bge-m3`)를 쓴다 — 요금이 안 나간다. 코드 기본값도 `tripilot-pointer:e4b-ft` 이고(`ACOP_OLLAMA_MODEL`, `make_server_env.py` 가 같은 값을 적는다), 문맥 길이 `ACOP_OLLAMA_NUM_CTX=8192` 와 함께여야 한다. 컨테이너가 그 Ollama 에 닿는 길은 서버 쪽 설정이다.

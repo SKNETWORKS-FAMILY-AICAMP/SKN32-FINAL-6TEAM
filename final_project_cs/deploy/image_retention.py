@@ -15,7 +15,6 @@ import json
 import re
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 APP_TAG = re.compile(r"^[0-9a-f]{7,40}$")
@@ -83,7 +82,8 @@ def read_deploy_log(path):
         m = DEPLOYED.match(line)
         if m:
             y, mo, d, h, mi, s = (int(x) for x in m.groups()[:6])
-            good[m.group(7)] = datetime(y, mo, d, h, mi, s, tzinfo=timezone.utc)
+            # deploy.log 의 시각은 서버 지역 시각이다(`date '+%F %T'`) — 시간대 없는 값은 지역 시각으로 읽어 UTC 로 바꾼다.
+            good[m.group(7)] = datetime(y, mo, d, h, mi, s).astimezone(timezone.utc)
     return good
 
 
@@ -95,10 +95,12 @@ def lookup(good, tag):
 
 
 def month_key(when):
+    when = when.astimezone()       # 달이 바뀌는 시각은 서버 지역 시각 기준(KST 서버에서 11월 1일 새벽이 10월로 읽히지 않게)
     return f"{when.year:04d}-{when.month:02d}"
 
 
 def recent_months(now, count):
+    now = now.astimezone()
     months, year, month = [], now.year, now.month
     for _ in range(max(count, 0)):
         months.append(f"{year:04d}-{month:02d}")

@@ -235,7 +235,7 @@ def test_release_dirs_keep_kept_and_protected_only(tmp_path):
 
 
 def test_recent_months_wraps_year():
-    assert ret.recent_months(datetime(2026, 2, 3, tzinfo=timezone.utc), 4) == ['2026-02', '2026-01', '2025-12', '2025-11']
+    assert ret.recent_months(datetime(2026, 2, 3, 12, tzinfo=timezone.utc), 4) == ['2026-02', '2026-01', '2025-12', '2025-11']
 
 
 @pytest.mark.parametrize('text', ['2026-10-14 12:00:00 +0900 KST', '2026-10-14 12:00:00.123456789 +0900 KST',
@@ -289,3 +289,63 @@ def test_last_reference_of_a_running_image_is_left_alone_and_reported():
     out = run(docker, apply=True, keep_months=0, say=lines.append)
     assert sha(4) in docker.tags('tripilot-api') and sha(4) not in docker.tags('tripilot-web')
     assert out['failed'] == 0 and any('실행 중인 컨테이너가 쓰는 이미지' in line for line in lines)
+
+
+def monthly_state(docker):
+    return {(i['repo'], i['tag']): i['id'] for i in docker.images if i['tag'].startswith('keep-')}
+
+
+def test_month_rollover_creates_new_keeper_and_freezes_the_old_one():
+    """10월 마지막 성공 판은 11월이 와도 keep-2026-10 으로 남고, 11월 판은 keep-2026-11 이 된다."""
+    oct20, oct30 = datetime(2026, 10, 20, 12, tzinfo=timezone.utc), datetime(2026, 10, 30, 12, tzinfo=timezone.utc)
+    nov1, nov2 = datetime(2026, 11, 1, 12, tzinfo=timezone.utc), datetime(2026, 11, 2, 12, tzinfo=timezone.utc)
+    rows = []
+    for n, when in ((1, oct20), (2, oct30), (3, nov1), (4, nov2)):
+        for repo in ('tripilot-api', 'tripilot-web'):
+            rows.append((repo, sha(n), f'sha256:{repo}-{n}', when))
+    rows += [('tripilot-api', 'keep-2026-10', 'sha256:tripilot-api-2', oct30),
+             ('tripilot-web', 'keep-2026-10', 'sha256:tripilot-web-2', oct30)]
+    good = {sha(n): when for n, when in ((1, oct20), (2, oct30), (3, nov1), (4, nov2))}
+    docker = FakeDocker(rows)
+    run(docker, apply=True, now=nov2, good=good, app_repos=['tripilot-api', 'tripilot-web'])
+    state = monthly_state(docker)
+    assert state[('tripilot-api', 'keep-2026-11')] == 'sha256:tripilot-api-4'      # 11월에서 가장 새 성공 판
+    assert state[('tripilot-api', 'keep-2026-10')] == 'sha256:tripilot-api-2'      # 10월은 그대로(옮겨 붙지 않음)
+    assert state[('tripilot-web', 'keep-2026-11')] == 'sha256:tripilot-web-4'
+    assert sha(1) not in docker.tags('tripilot-api')                                # 10-20 판은 밀려 지워진다
+    # 11월 중 배포가 계속되어 10월 판이 「최근 3개」에서 밀려나도 월 보존이 붙들고 있다
+    later = [datetime(2026, 11, d, 12, tzinfo=timezone.utc) for d in (5, 6, 7, 8, 9)]
+    for k, when in enumerate(later, start=10):
+        for repo in ('tripilot-api', 'tripilot-web'):
+            docker.images.append(dict(repo=repo, tag=sha(k), id=f'sha256:{repo}-{k}', created=when))
+        good[sha(k)] = when
+    run(docker, apply=True, now=later[-1], good=good, app_repos=['tripilot-api', 'tripilot-web'])
+    assert sha(2) in docker.tags('tripilot-api')
+    assert monthly_state(docker)[('tripilot-api', 'keep-2026-10')] == 'sha256:tripilot-api-2'
+    assert monthly_state(docker)[('tripilot-api', 'keep-2026-11')] == 'sha256:tripilot-api-14'  # 11월은 계속 최신으로 옮겨 감
+
+
+def test_year_end_rollover_and_expiry_of_old_months():
+    dec, jan = datetime(2026, 12, 20, 12, tzinfo=timezone.utc), datetime(2027, 1, 10, 12, tzinfo=timezone.utc)
+    rows = [('tripilot-api', sha(1), 'sha256:a1', dec), ('tripilot-api', sha(2), 'sha256:a2', jan)]
+    docker = FakeDocker(rows)
+    run(docker, apply=True, now=jan, keep_recent=0, keep_months=6)
+    assert {'keep-2026-12', 'keep-2027-01'} <= set(docker.tags('tripilot-api'))
+    # 7개월 뒤에는 2026-12 가 창 밖으로 나가 이름표와 이미지가 함께 정리된다
+    run(docker, apply=True, now=datetime(2027, 8, 15, 12, tzinfo=timezone.utc), keep_recent=0, keep_months=6)
+    assert docker.tags('tripilot-api') == []
+
+
+def test_local_server_time_in_deploy_log_decides_the_month(monkeypatch, tmp_path):
+    """KST 서버에서 11월 1일 01:00 에 반영된 판은 UTC 로는 10월 31일이지만 11월 판이다."""
+    monkeypatch.setenv('TZ', 'Asia/Seoul')
+    import time
+    if hasattr(time, 'tzset'):
+        time.tzset()
+        log = tmp_path / 'deploy.log'
+        log.write_text('2026-11-01 01:00:00 반영 완료 aaaaaaaaaa (이전 bbbbbbbbbb)\n', encoding='utf-8')
+        when = ret.read_deploy_log(log)['aaaaaaaaaa']
+        assert ret.month_key(when) == '2026-11'
+        assert when.month == 10 and when.day == 31        # 내부 값은 UTC
+        monkeypatch.delenv('TZ')
+        time.tzset()
