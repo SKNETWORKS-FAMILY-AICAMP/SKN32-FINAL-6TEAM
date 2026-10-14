@@ -47,4 +47,6 @@ domain: neutral
 
 **감시 반복의 조회 묶기(2026-10-14).** 「곧 시작할 항목」·「안내 안 한 출발」 읽기를 여행마다 하던 DB 조회에서 여행 수와 상관없는 3~4번으로 묶었고(로컬 실측 107→3 · 213→3), 날씨(Open-Meteo)는 좌표를 약 1km 단위로 반올림해 가까운 장소끼리 답을 나눠 쓴다(서로 다른 좌표 51→32). 실서버 확인 안 함 — [보고](../records/reports/2026-10-14_감시_조회_묶기.md).
 
+**관광공사 일일 정기점검(2026-10-14).** 매일 03시부터(마감 없음) **고객이 일정에 넣은 장소만** 운영시간 · 전화를 하루 한 번 다시 읽는다 — 서울 전체 목록은 매일 다시 받지 않는다. 대체 후보용 운영시간 읽기도 03시 시작 · 마감 없음이다. 요청 자리 재사용은 하루다 — [보고](../records/reports/2026-10-14_감시_조회_묶기.md).
+
 관련: [rest-endpoints](../external/rest-endpoints.md)(외부 소스는 REST 가 아니라 여기) · 코드 `app/domains/travel_ops/ports/data_sources/call_budget.py` · `source_budget.py` · 보고 `scripts/report_source_budget.py` · 시험 `tests/unit/travel/test_source_budget.py` · `tests/integration/db/test_source_budget_db.py`.

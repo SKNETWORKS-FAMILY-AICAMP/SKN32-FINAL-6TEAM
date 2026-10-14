@@ -284,10 +284,15 @@ def _run_place_facts(tenant_id: str) -> dict[str, object]:
     from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
     from app.domains.travel_ops.components.places.place_info import fill_missing_facts
 
-    settings = get_settings()
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.places.catalog_hours import day_start
+
+    settings, now = get_settings(), datetime.now(ZoneInfo("Asia/Seoul"))
+    # ★`[2026-10-14 사용자 지시]` 일일 정기점검(03시 시작 · 마감 없음) — 고객이 일정에 넣은 장소는 그날 03시 전에 읽은 값이면 하루 한 번 다시 읽는다
+    refresh_from = day_start(now, str(get_guardrails().get("travel.catalog_hours.start"))).isoformat()
     with get_connection() as conn:
         return fill_missing_facts(conn, tenant_id, source=build_travel_sources(settings).place,
-                                  chat=from_settings(settings), now=datetime.now(ZoneInfo("Asia/Seoul")))
+                                  chat=from_settings(settings), now=now, refresh_from=refresh_from)
 
 
 def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
@@ -301,10 +306,11 @@ def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
 
     settings, guard = get_settings(), get_guardrails()
     with get_connection() as conn:
+        # ★`[2026-10-14 사용자 지시]` 일일 정기점검은 03시 시작 · 마감 없음 — `until` 이 비어 있으면 끝을 두지 않는다
         return prefill(conn, tenant_id=tenant_id, source=build_travel_sources(settings).place,
                        chat=from_settings(settings), now=datetime.now(ZoneInfo("Asia/Seoul")),
                        start=str(guard.get("travel.catalog_hours.start")),
-                       until=str(guard.get("travel.catalog_hours.until")),
+                       until=guard.get("travel.catalog_hours.until") or None,
                        per_night=int(guard.get("travel.catalog_hours.per_night")),
                        per_tick=int(guard.get("travel.catalog_hours.per_tick")),
                        retry_days=int(guard.get("travel.catalog_hours.retry_days")))
