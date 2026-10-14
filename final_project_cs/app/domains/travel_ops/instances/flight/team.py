@@ -45,11 +45,13 @@ from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, T
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, ItineraryWork
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, applied_record, with_request
-from .interpret import _KOREAN_AIRPORTS, TIME_BANDS, Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, settle_years
+from .interpret import _KOREAN_AIRPORTS, TIME_BANDS, Interpretation, InterpretationInvalid, ask, ground, needs, parse, settle_years
+from .interpret_rules import interpret as interpret_rules
 
 logger = logging.getLogger(__name__)
 
-PROMPT_KEY = "flight.interpret"
+PROMPT_KEY = "flight.interpret"            # `[2026-10-14]` 더는 부르지 않는다(규칙 해석) — 프롬프트 등록 표와 시험이 이름을 알아 당분간 남긴다
+RULES_KEY = "flight.interpret_rules"
 SEOUL = ZoneInfo("Asia/Seoul")
 #: 고객이 시간대를 말했을 때 그 시간대에서 보여 주는 편 수. 우리가 고른 값
 SHOWN = 3
@@ -402,24 +404,20 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
 
         trip, evidence = self._trip(task, seen)
         today = datetime.now(SEOUL).date()
-        if self.llm is None:
-            return self._escalate(task, "interpreter_missing", evidence)
+        # ★`[2026-10-14 팀장 결정]` 예약(항공 → 기차 · 버스)은 **규칙 기반 모듈** — 문장 해석에 모델을 쓰지 않는다(`interpret_rules`).
+        #   칸(공항 · 날짜 · 인원 · 좌석 · 직항 · 시간대 · 가격 상한)이 정해진 영역이라 판단이 아니라 채우기다. 정답 50문장 50/50(10-14).
+        #   뒤의 서버 검증(`parse → ground → settle_years → needs`)은 모델 때와 같다. 못 뽑으면 비워 두고 되묻는다. `self.llm` 은 쓰지 않는다.
         try:
-            raw = await self.llm.complete(PROMPT_KEY, task.input_text,
-                                          model_context(today, trip),   # `[2026-10-10]` 달력 · 요일을 함께 준다
-                                          run_id=task.run_id)
+            raw = interpret_rules(task.input_text, today=today, trip=trip)
             found, ungrounded = ground(parse(raw), task.input_text, has_trip=trip is not None, trip=trip)
             found, year_fixed = settle_years(found, today=today, text=task.input_text)   # `[2026-10-10]` 연도를 말하지 않은 날짜는 연도만 서버가 정한다
         except InterpretationInvalid as exc:
             logger.warning("flight interpretation invalid case=%s %s", task.case_id, exc)
             return self._escalate(task, "interpretation_invalid", evidence, warnings=[str(exc)[:200]])
-        except Exception as exc:                      # noqa: BLE001 — 모델 호출 실패의 종류를 남기고 사람에게 넘긴다
-            logger.warning("flight interpretation failed case=%s %s", task.case_id, type(exc).__name__)
-            return self._escalate(task, "interpretation_failed", evidence, warnings=[type(exc).__name__])
 
         evidence = [*evidence, Evidence(
-            evidence_id=f"interpretation:{task.team_id}", source_type="customer_message", source_id=PROMPT_KEY,
-            claim="고객 문장을 모델이 옮긴 구조", value={**found.model_dump(mode="json"), "ungrounded": ungrounded, "year_fixed": year_fixed}, confidence=1.0,
+            evidence_id=f"interpretation:{task.team_id}", source_type="customer_message", source_id=RULES_KEY,
+            claim="고객 문장을 규칙으로 옮긴 구조", value={**found.model_dump(mode="json"), "ungrounded": ungrounded, "year_fixed": year_fixed}, confidence=1.0,
             observed_at=datetime.now(SEOUL))]
         decision = {"task": found.task,
                     "interpretation": found.model_dump(mode="json", exclude={"question", "missing"}),

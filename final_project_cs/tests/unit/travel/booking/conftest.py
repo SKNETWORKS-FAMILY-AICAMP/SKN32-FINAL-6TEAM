@@ -40,9 +40,9 @@ GATE: dict[str, dict[str, str]] = {
         "test_a_booked_lodging_is_never_changed_and_nothing_is_searched": "예약한 숙소는 바꾸지 않음",
     },
     "test_flight_team.py": {
-        "test_search_calls_the_model_once_and_both_sources_once": "항공 검색 — 모델 한 번 · 소스마다 한 번",
+        "test_search_calls_the_model_once_and_both_sources_once": "항공 검색 — 규칙 해석(모델 0번) · 소스마다 한 번",
         "test_missing_values_are_asked_back_without_any_search": "빠진 값(공항 · 날짜 · 인원)을 검색 없이 되묻기",
-        "test_a_bad_or_failed_interpretation_is_not_repaired": "모델 해석이 깨지면 지어내지 않고 사람에게",
+        "test_what_the_rules_cannot_read_is_asked_back_never_invented": "규칙이 못 읽은 칸은 지어내지 않고 되묻기(2026-10-14 예약 모듈)",
         "test_one_source_is_enough_and_both_missing_is_unknown": "소스 하나로도 답 · 다 없으면 모름",
         "test_a_time_of_day_the_customer_said_keeps_only_those_flights": "말한 시간대만",
         "test_only_direct_flights_unless_the_traveller_says_connecting_is_fine": "직항 우선(경유는 말할 때만)",
