@@ -1,7 +1,7 @@
 ---
 type: guide
 title: Dining 식당 판정
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: Dining은 식당·식사 일정의 운영시간·휴무·예약·동행 조건을 확인하고 가능한 대안을 제안하는 에이전트 팀입니다
 status: draft
 domain: travel
 ---

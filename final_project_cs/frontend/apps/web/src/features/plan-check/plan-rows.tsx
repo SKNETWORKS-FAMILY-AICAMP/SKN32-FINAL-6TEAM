@@ -197,9 +197,12 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
     if ((event.target as HTMLElement).closest("button, a, input, select, textarea, label, form, [data-details]")) return;
     ctx.onPick(item.id);
   };
+  // `[2026-10-14 실서버 확인]` The time editor opens inside the card: the card is then «open» for the rail too, so the day's other folded cards are not stretched to the editor's
+  //   height (they were — empty tall boxes above and below it — because only an opened card was left out of 「every folded card as tall as the tallest」).
+  const editingTime = done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed;
   // `[2026-10-12 사용자 결정]` The rail (`rail-list.tsx`) reads the stop's start and end to draw it to scale; an opened card carries its line to the card's end.
   return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-reveal-current={current || undefined} data-reveal-waiting={waiting || undefined} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-time-follow={done && (open || review || showUndo || removed || Boolean(changedFrom && actions.canUndoAll?.())) || undefined} data-time-focused={timeFocused || undefined} data-changed={changed || undefined} data-removed={removed || undefined}
-    data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-rail-open={(open && !checking) || undefined}>
+    data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-rail-open={((open || editingTime) && !checking) || undefined}>
     {done
       // `[2026-10-12 사용자 결정 — A]` Every stop shows its end under its start (it was only the picked or opened one, 2026-10-10).
       ? <Act className={styles.time} data-editing={(ctx.time?.id === item.id && ctx.time.kind === "start") || undefined} data-adjusted={adjusted || undefined} data-grab={grab ? true : undefined} {...grab} why={timeWhy} explain={explain}
@@ -233,7 +236,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
             </span>
           </div>
         : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{stayTitle(item, t)}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights>{stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
-      {done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed && <TimeEditor item={item} ui={ctx.time} />}
+      {editingTime && <TimeEditor item={item} ui={ctx.time!} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
         {rows.length
           ? <Checks rows={rows} />

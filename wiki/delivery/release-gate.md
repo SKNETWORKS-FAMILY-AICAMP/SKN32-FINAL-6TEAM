@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 제품 릴리스 확인
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 여행 기능·권한·고객 승인·일정 변경·알림 계약을 해당 환경에서 검증한 증거로 판단합니다
 status: draft
 domain: travel
 ---

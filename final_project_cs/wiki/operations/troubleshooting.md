@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 기능 장애를 확인하는 순서
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 장애가 나면 환경·고객 기능·확인 시각·실행판부터 기록하고 원인을 좁히는 절차
 status: draft
 domain: travel
 ---

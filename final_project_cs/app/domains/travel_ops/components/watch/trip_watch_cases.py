@@ -53,7 +53,7 @@ from app.domains.travel_ops.components.watch.monitoring import record as record_
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
 from app.domains.travel_ops.components.actions.itinerary_actions import RECHECK_FAILED
-from app.domains.travel_ops.components.itinerary.itinerary_changes import planned_option, route_of, route_targets
+from app.domains.travel_ops.components.itinerary.itinerary_changes import option_hits, planned_option, route_of, route_targets
 from app.domains.travel_ops.components.planning.pending import PendingStore, cause_fingerprint, forecast_attention, unresolved_notice
 from app.domains.travel_ops.components.planning.replan import WEATHER_LIKE
 from app.domains.travel_ops.components.core_hooks.subjects import KIND, resolve_subject
@@ -393,7 +393,7 @@ class TripWatchCaseOpener:
         blind = unsupported(planned.get("uses", [])) if callable(unsupported) else []
         if blind:
             result.unchecked.append({"trip_id": str(trip_id), "item": item.title, "targets": blind})
-        hit = [target for target in planned.get("uses", []) if target in events]
+        hit = list(option_hits(planned, events))
         record_check('mobility', trip_id=trip_id, item_id=item.item_id, target_title=item.title,
                      report={'verdict': 'disrupted' if hit else 'unchecked' if blind else 'clear',
                              'targets': blind, 'disruptions': [{'target': target, **events[target]} for target in hit]})

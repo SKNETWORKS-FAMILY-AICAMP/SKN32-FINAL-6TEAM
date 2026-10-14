@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 고객·개발 담당자가 정할 일
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 고객이 직접 입력해야 할 정보와 개발 담당자가 결정·실행할 일을 구분합니다
 status: draft
 domain: travel
 ---

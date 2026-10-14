@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import json
-from typing import Any
+from typing import Any, Callable
 from uuid import UUID
 
 from app.core.contracts import StateConflict
@@ -58,6 +58,11 @@ def response(*, tenant: str, case_id: UUID, execution: dict[str, Any], decision:
     if decision is not None:
         result["decision"] = decision.record()
         result["reason"] = f"decision_{decision.action}"
+        named = (getattr(decision, "raw", None) or {}).get("named_destination")
+        if named and case["status"] not in ("escalated", "failed"):
+            # ★`[2026-10-13]` 말한 곳으로 바로 바꾸지 못했음을 먼저 밝힌다(`decision_unit.decide` — 바꾸지 않고 후보를 보여 준다)
+            result["answer"] = (f"말씀하신 「{named['text']}」(으)로 바로 바꾸는 기능은 아직 없어 일정은 바꾸지 않았어요. "
+                                f"아래에서 고르시면 그곳으로 바꿔 드릴게요.\n{result['answer']}")
     if case["status"] == "waiting_input":
         result["required_input_schema"] = state.get("required_input_schema")
         if execution.get("resume_token"):
@@ -158,8 +163,14 @@ def retry_initial(conn, *, controller: Any, tenant: str, trip: dict[str, Any], c
 
 def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], request_id: str,
                    message: str, actor_id: str, case_id: UUID | None, token: str | None,
-                   expected_version: int | None, desk: Any = None, chat: Any = None) -> dict[str, Any] | None:
-    """같은 여행·고객의 입력 대기만 재개한다. 명시한 ID는 완료 뒤에도 소유권을 확인한다."""
+                   expected_version: int | None, desk: Any = None, chat: Any = None,
+                   fresh: Callable[[], Any] | None = None) -> dict[str, Any] | None:
+    """같은 여행·고객의 입력 대기만 재개한다. 명시한 ID는 완료 뒤에도 소유권을 확인한다.
+
+    `fresh` — ★`[2026-10-13]` 대기 건이 있어도 새 문장을 **새 요청으로 한 번 읽어 보는** 자리(해석 모델 한 번, `(결정, 실패)` 를 돌려준다).
+    문장이 저장된 질문 형식에 맞는 답(번호 · 선택지 글자 · 분 · 판 번호 · 네/아니요)이면 부르지 않는다. 맞지 않는데 새로 읽은 결과가
+    혼자서도 완결된 요청(`decision_unit.stands_alone`)이면 대기 건을 잇지 않고 `{"fresh_decision": (결정, 실패)}` 를 돌려준다 —
+    부르는 쪽이 그 해석으로 새 요청을 처리한다. 완결되지 않으면(「아직 몰라요」 같은 말) 지금처럼 대기 건의 답으로 넘긴다."""
     with conn.cursor() as cur:
         cur.execute("SELECT case_id, state_json->'resume_requests' @> %s::jsonb FROM customer_cases WHERE tenant_id=%s AND customer_id=%s "
                     "AND state_json->'trip_message'->>'trip_id'=%s AND "
@@ -198,6 +209,12 @@ def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], 
     if (case is None or str(case["customer_id"]) != str(trip["customer_id"])
             or (state.get("trip_message") or {}).get("trip_id") != str(trip["trip_id"])):
         raise LookupError("case not found")
+    if fresh is not None and not replayed and not _matches_implicit_reply(state, message):
+        from .decision_unit import stands_alone
+
+        decided = fresh()
+        if stands_alone(decided[0]):
+            return {"fresh_decision": decided}
     if controller is None:
         raise RuntimeError("conversation Controller is not configured")
     conn.commit()

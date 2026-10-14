@@ -40,7 +40,8 @@ def _cell(module: str) -> tuple[str | None, str | None]:
 def _edges() -> dict[str, set[tuple[str, str]]]:
     found: dict[str, set[tuple[str, str]]] = {key: set() for key in CEILING}
     for path in sorted(BASE.rglob("*.py")):
-        if "__pycache__" in path.parts:
+        # 백업 사본은 코드가 아니다 — 다른 구조 시험(test_basement_layers 등)과 같이 뺀다(2026-10-14)
+        if {"__pycache__", "_backup", "legacy"}.intersection(path.parts):
             continue
         rel = path.relative_to(BASE).parts
         if len(rel) < 2:

@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 현재 여행 인프라 비용의 확인 기준
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 과거 구독·쇼핑몰 요청의 토큰·비용·처리시간과 당시 GPU 시세는 아래 기록으로 보존합니다
 status: draft
 domain: neutral
 domain_note: 사용 종료된 과거 자료로 연결하는 색인이며 현재 제품 판정 재료가 아니다

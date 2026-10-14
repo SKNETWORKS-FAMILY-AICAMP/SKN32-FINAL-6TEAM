@@ -80,7 +80,16 @@ def main() -> None:
         "ACOP_EMBEDDING_MODEL=text-embedding-3-small",
         "ACOP_LLM_PROVIDER=openai",
         f"ACOP_OLLAMA_BASE_URL={args.ollama_url}",
-        "ACOP_OLLAMA_MODEL=gemma4:12b",
+        # ★`[2026-10-14 사용자 지시]` 요청 해석(할 일 고르기)도 **우리 데이터로 학습한 E4B** 하나로 — 일정 짚기와 같은 모델이라 12GB GPU 에서 교체가 없다.
+        #   434 문장 재생(채점용 126): 할 일 85% · 대상 78% — 학습 없는 12B 74%·72%, 유료 대체 79%·67%보다 낫고 더 빠르다
+        #   (datasets/chat_probe/2026-10-13_x600_web_chat/replay/RESULTS.md). 문맥 길이는 아래 8,192 와 함께여야 한다(기본 4,096 이면 입력이 잘린다)
+        #   (같은 날 코드 기본값도 이 모델로 바꿨다 — 운영 설정과 어긋나 있던 것을 맞췄다. 줄은 명시적으로 남긴다)
+        "ACOP_OLLAMA_MODEL=tripilot-pointer:e4b-ft",
+        "ACOP_OLLAMA_POINTER_MODEL=tripilot-pointer:e4b-ft",
+        "ACOP_OLLAMA_NUM_CTX=8192",
+        # ★`[2026-10-14 x600 실측]` 학습 E4B 해석 한 건 5.1~7.3초(지시문 읽기 약 2초는 문장마다 다시 든다) — 6초면 8건 중 6건이 유료 대체로 넘어갔다.
+        #   9초면 8/8 로컬(같은 날 코드 기본값도 6 → 9초로 올렸다 — 줄은 명시적으로 남긴다). 넘어가도 유료 대체(2~3초)까지 고객 응답 15초 안이다
+        "ACOP_LLM_FAILOVER_PRIMARY_TIMEOUT_SECONDS=9",
         # 식은 모델 로딩이 30~64초 걸렸다(2026-10-03 실측) — 기본 60초면 첫 호출이 로딩 중에 끊기고, 끊으면 모델 서버가 로딩을 버린다
         "ACOP_OLLAMA_TIMEOUT_SECONDS=150",
         "ACOP_EMBEDDING_PROVIDER=ollama",

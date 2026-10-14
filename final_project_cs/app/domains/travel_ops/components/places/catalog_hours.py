@@ -5,8 +5,7 @@
   몰림(30건) 뒤로는 89초에 1건이라 연달아 요청하면 한도에 걸렸고, 모델로 읽는 곳은 몇 초씩 걸렸다(실측 첫 요청 33초).
   사용자 설계: **「장소 갱신은 매일 새벽 3시에 한 번, 요청은 DB 만 본다」.**
 ★하는 일(1분 작업이 부르고, 창 밖이면 아무것도 안 한다):
-  1. 창 `travel.catalog_hours.start`~`until`(03:00~08:00) 안에서만.
-  2. 오늘 밤 이미 읽은 수가 `per_night` 를 넘으면 멈춘다(개발 계정 하루 1,000건 — 낮 몫을 남긴다).
+  1. `travel.catalog_hours.start`(03:00)부터. ★`[2026-10-14 사용자 지시]` 일일 정기점검은 03시 시작 · 마감 없음 — `until` 을 비웠다(전에는 08:00).  2. 오늘 밤 이미 읽은 수가 `per_night` 를 넘으면 멈춘다(개발 계정 하루 1,000건 — 낮 몫을 남긴다).
   3. 목록(`place_catalog`)의 활동 중 **처음 보는 곳 · 목록 수정 시각이 읽을 때와 달라진 곳 · 못 읽은 지 `retry_days` 지난 곳**만
      `per_tick` 개씩 — 관광지·문화시설·레포츠 먼저, 쇼핑은 뒤.
   4. 원문을 규칙으로, 안 되면 모델로 읽어(`place_hours.read_hours` — 일정 짜기와 같은 함수) `catalog_hours` 에 적는다.
@@ -22,7 +21,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, time, timedelta
-from typing import Any
+from typing import Any, Callable
 
 from app.domains.travel_ops.components.planning.planner import KIND_BY_CONTENT_TYPE
 
@@ -64,37 +63,51 @@ def merge_official_web(read: dict[str, Any] | None, origin: dict[str, Any] | Non
     return texts["usetime"], texts["restdate"], remaining
 
 
-def prefill(conn, *, tenant_id: str, source: Any, chat: Any, now: datetime, start: str, until: str,
-            per_night: int, per_tick: int, retry_days: int) -> dict[str, Any]:
-    """한 틱 — 창 안이면 `per_tick` 곳을 읽어 적는다. 돌려주는 것은 세는 칸(작업 출력 JSON 한 줄)."""
+def day_start(now: datetime, start: str) -> datetime:
+    """`now` 가 속한 정기점검 회차의 시작 — 오늘 `start` 가 지났으면 오늘, 아니면 어제의 `start`."""
+    begun = now.replace(hour=_clock(start).hour, minute=_clock(start).minute, second=0, microsecond=0)
+    return begun if now >= begun else begun - timedelta(days=1)
+
+
+def prefill(conn, *, tenant_id: str, source: Any, chat: Any, now: datetime, start: str, until: str | None,
+            per_night: int, per_tick: int, retry_days: int,
+            pace: Callable[[int], int] | None = None) -> dict[str, Any]:
+    """한 틱 — 창 안이면 `per_tick` 곳을 읽어 적는다. 돌려주는 것은 세는 칸(작업 출력 JSON 한 줄).
+
+    ★`[2026-10-14 사용자 지시]` 일일 정기점검은 **03시 시작 · 가능하면 03:30 까지 끝냄 · 08:00 에 모두 멈춤**(`daily_check.py`).
+      하루 몫(`per_night`)은 그날 03시부터 센다(03시 전이면 어제 03시부터). `until` 이 비어 있으면 끝을 두지 않는다(시험용).
+    ★`pace(남은 수) -> 이번에 읽을 수` 를 주면 03:30 까지 끝나도록 한 번에 읽는 양을 늘린다. 결과의 `remaining` 은
+      이번 회차 뒤에도 오늘 읽어야 할 곳의 수다 — 03:30 이 지났는데 0 보다 크면 실행기가 관리자 웹앱에 보고한다."""
     from app.domains.travel_ops.components.places.place_hours import clean, read_hours
 
-    if not (_clock(start) <= now.time() < _clock(until)):
+    if until and not (_clock(start) <= now.time() < _clock(until)):
         return {"skipped": "창 밖", "window": f"{start}~{until}"}
     if source is None or not hasattr(source, "operating"):
         return {"skipped": "관광공사 조회가 연결돼 있지 않다"}
-    night = now.replace(hour=_clock(start).hour, minute=_clock(start).minute, second=0, microsecond=0)
+    night = day_start(now, start)
     with conn.cursor() as cur:
         cur.execute("SELECT count(*) FROM catalog_hours WHERE tenant_id=%s AND read_at >= %s", (tenant_id, night))
         done_tonight = int(cur.fetchone()[0])
-        room = min(per_tick, per_night - done_tonight)
-        if room <= 0:
+        if per_night - done_tonight <= 0:
             return {"skipped": "오늘 밤 몫을 다 썼다", "done_tonight": done_tonight, "per_night": per_night}
+        due = ("FROM place_catalog pc "
+               "LEFT JOIN catalog_hours ch ON ch.tenant_id = pc.tenant_id AND ch.source = pc.source "
+               "  AND ch.content_id = pc.content_id "
+               "WHERE pc.tenant_id=%s AND pc.source='tour_api' AND pc.content_type_id = ANY(%s) "
+               "AND (ch.content_id IS NULL "
+               "     OR ch.source_modified_at IS DISTINCT FROM pc.source_modified_at "
+               "     OR (ch.hours_week IS NULL AND ch.read_at < %s)) ")
+        args = (tenant_id, ACTIVITY_TYPES, now - timedelta(days=retry_days))
+        cur.execute("SELECT count(*) " + due, args)
+        left = min(int(cur.fetchone()[0]), per_night - done_tonight)        # 오늘 읽어야 할 곳 — 하루 몫을 넘지 않는다
+        room = min(pace(left) if pace else per_tick, per_night - done_tonight)
         cur.execute(
             "SELECT pc.content_id, pc.content_type_id, pc.title, pc.source_modified_at, ch.hours_read, ch.hours_origin "
-            "FROM place_catalog pc "
-            "LEFT JOIN catalog_hours ch ON ch.tenant_id = pc.tenant_id AND ch.source = pc.source "
-            "  AND ch.content_id = pc.content_id "
-            "WHERE pc.tenant_id=%s AND pc.source='tour_api' AND pc.content_type_id = ANY(%s) "
-            "AND (ch.content_id IS NULL "
-            "     OR ch.source_modified_at IS DISTINCT FROM pc.source_modified_at "
-            "     OR (ch.hours_week IS NULL AND ch.read_at < %s)) "
-            "ORDER BY (ch.content_id IS NOT NULL), array_position(%s::text[], pc.content_type_id), pc.content_id "
-            "LIMIT %s",
-            (tenant_id, ACTIVITY_TYPES, now - timedelta(days=retry_days), list(TYPE_ORDER), room))
+            + due + "ORDER BY (ch.content_id IS NOT NULL), array_position(%s::text[], pc.content_type_id), pc.content_id "
+            "LIMIT %s", (*args, list(TYPE_ORDER), room))
         rows = cur.fetchall()
     out: dict[str, Any] = {"asked": len(rows), "read": 0, "unknown": 0, "stopped": None,
-                           "done_tonight": done_tonight}
+                           "done_tonight": done_tonight, "remaining": left}
     for content_id, type_id, title, modified, old_read, old_origin in rows:
         try:
             intro = source.operating(str(content_id), str(type_id))
@@ -136,6 +149,7 @@ def prefill(conn, *, tenant_id: str, source: Any, chat: Any, now: datetime, star
                  json.dumps({"usetime": usetime, "restdate": restdate}, ensure_ascii=False),
                  intro.get("info_phone") or None, modified, now))
         out["read" if read.week else "unknown"] += 1
+    out["remaining"] = max(0, left - out["read"] - out["unknown"] - out.get("kept_official_web", 0))
     return out
 
 

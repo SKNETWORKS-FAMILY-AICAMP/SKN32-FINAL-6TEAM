@@ -161,3 +161,50 @@ def search_policy(
         )
         for row in rows
 ]
+
+
+#: 임베딩 모델 예열을 마지막으로 시작한 때(프로세스 안) — 같은 시간에 여러 번 부르지 않는다
+_WARM_STARTED: list[float] = [0.0]
+
+
+def warm_embedding(*, dedupe_seconds: float = 60.0) -> dict[str, object]:
+    """★`[2026-10-13]` 규정 검색용 임베딩 모델을 **미리 올린다**(Ollama 제공자일 때만). 채팅 예열(`/v1/web/warmup`)과 함께 부른다.
+
+    ☆왜 — 검색은 고객 응답 시간 안에 끝나야 해서 임베딩을 짧게(넘김 장치가 켜져 있으면 `llm_failover_primary_timeout_seconds`) 기다린다.
+      식은 모델은 그 안에 못 올라가고, 대체 경로(1536 칸)는 여행 규정에 비어 있어 규정·날씨 질문이 모두 「규정을 찾다가 오류」로 끝났다
+      (x600 서버 웹 채팅 시험 2026-10-13: 17건 · 재현 시 `TimeoutError` 6.0초). 예열은 모델을 올리는 데 드는 시간(`ollama_timeout_seconds`)만큼 기다린다.
+    이미 올라가 있거나 방금 시작했으면 아무것도 안 한다. 실패는 이유를 돌려주고 경고로 남긴다(삼키지 않는다)."""
+    import json
+    import logging
+    import time
+    import urllib.request
+
+    settings = get_settings()
+    name, _, _ = _provider()
+    model = settings.ollama_embedding_model
+    if name != "ollama" or not settings.ollama_base_url:
+        return {"status": "skipped", "reason": "provider_not_ollama"}
+    base = settings.ollama_base_url.rstrip("/")
+    try:
+        with urllib.request.urlopen(base + "/api/ps", timeout=5) as response:
+            loaded = json.loads(response.read()).get("models") or []
+        if any(m.get("name") == model or m.get("model") == model for m in loaded):
+            return {"status": "warm", "model": model}
+    except Exception as exc:                                   # noqa: BLE001 — 상태를 못 물어도 올려 본다
+        logging.getLogger(__name__).warning("embedding warm: /api/ps failed: %s", type(exc).__name__)
+    now = time.monotonic()
+    if _WARM_STARTED[0] and now - _WARM_STARTED[0] < dedupe_seconds:
+        return {"status": "warming", "model": model, "deduped": True}
+    _WARM_STARTED[0] = now
+    request = urllib.request.Request(base + "/api/embed", data=json.dumps({"model": model, "input": "."}).encode(),
+                                     headers={"content-type": "application/json"})
+    try:
+        with urllib.request.urlopen(request, timeout=float(settings.ollama_timeout_seconds)) as response:
+            payload = json.loads(response.read())
+        if payload.get("error"):
+            raise RuntimeError(str(payload["error"])[:200])
+    except Exception as exc:                                   # noqa: BLE001 — 이유를 남기고 돌려준다
+        logging.getLogger(__name__).warning("embedding warm failed: %s: %s", type(exc).__name__, str(exc)[:200])
+        return {"status": "failed", "model": model, "reason": type(exc).__name__,
+                "seconds": round(time.monotonic() - now, 1)}
+    return {"status": "warmed", "model": model, "seconds": round(time.monotonic() - now, 1)}

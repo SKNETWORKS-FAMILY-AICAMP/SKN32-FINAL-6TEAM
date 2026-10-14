@@ -1,3 +1,11 @@
+---
+type: reference
+title: activity_total_data.csv 컬럼 정의
+description: 활동 장소 최종 데이터셋 30개 컬럼의 뜻과 채우는 코드(fill_tourapi_details.py)
+status: draft
+domain: travel
+---
+
 # activity_total_data.csv 컬럼 정의
 
 `[2026-10-12]` 최종 데이터셋 컬럼(30개). 채우는 코드는 `fill_tourapi_details.py` 다.

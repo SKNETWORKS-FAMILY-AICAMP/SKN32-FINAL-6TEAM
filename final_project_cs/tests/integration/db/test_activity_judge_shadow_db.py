@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""섀도 기록 표(`031_activity_judge_shadow.sql`, A안)를 **실 PostgreSQL** 로 돌린다.
+"""섀도 기록 표(`305_activity_judge_shadow.sql`, A안)를 **실 PostgreSQL** 로 돌린다.
 
 ★전부 **롤백되는 트랜잭션** 안에서 한다 — 개발 DB 에 시험 행을 남기지 않는다.
 ★DB 에 못 붙거나 표가 없으면 **건너뛴다**(실패가 아니다).

@@ -833,6 +833,13 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
             raise                                                   # jobs.py 안의 import 가 깨졌다 — 숨기지 않는다
         for job in getattr(jobs_module, "JOBS", ()):
             scheduled_jobs.register(team_id, job)
+    if "activity" in active_ids:
+        # ★`[2026-10-14]` 활동 웹 운영 확인 정기 작업에 연결 · 판정 LLM · 웹 예산을 꽂는다 — 팀 폴더는 인프라를 직접 열지 않는다(DoD-22).
+        #   판정 LLM 이 없으면(`rule` · 키 없음) 작업이 `disabled` 로 답한다. 만드는 것 자체는 I/O 가 없다.
+        from app.domains.travel_ops.instances.activity import jobs as activity_jobs
+
+        activity_jobs.configure(connection_factory=get_connection, judge_llm=build_activity_judge_llm(),
+                                budget=build_activity_judge_budget())
 
     names = {"mobility": ("legs",), "dining": ("dining_ledger",), "activity": ("similarity", "activity_ledger")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다

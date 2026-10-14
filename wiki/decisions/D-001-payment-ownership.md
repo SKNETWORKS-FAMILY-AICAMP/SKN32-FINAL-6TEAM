@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 과거 기록 — 결제 소유 경계
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 결제 소유 경계 — 당시 자료를 보존하는 기록 입구(현재 사양·수치로 쓰지 않는다)
 status: draft
 domain: neutral
 domain_note: 사용 종료된 과거 자료로 연결하는 색인이며 현재 제품 판정 재료가 아니다

@@ -23,7 +23,8 @@ impl_scope: cs — 여행 제품의 도메인 결정이다. sample의 독립 계
 
 - **실행 주기와 데이터 나이는 다릅니다.** 모니터링 툴의 여행 상태 점검 작업은 현재 설정상 3분 주기로 제어하지만 공유 응답 캐시 기본 유지시간은 300초입니다. 3분마다 검사한다는 사실만으로 사용한 원본 정보가 항상 180초 이하라고 보장하지 않습니다. 캐시 나이·원본 공표 지연·실제 감지 지연은 별도 측정 대상입니다.
 - **에이전트 팀 선택 장치**는 `TeamRegistry.resolve`, 실행 계약은 `TeamExecutorPort.execute`입니다. Controller는 Case 처리 흐름을 담당하는 실행 장치이며 분류 모델 자체가 아닙니다.
-- **현재 코드의 WatchBatch**는 여러 문제를 함께 계산하는 처리기입니다. 활동→식당→이동 고정 순서가 코드에 있으며 Activity 경로에서 실행됩니다. 이는 이번에 채택한 분류 에이전트의 상황·성향별 순서 결정 계약과 다릅니다. `watch_planners` 계산 등록만으로 동적 팀 조정이 완성된 것은 아닙니다. 모니터링 툴은 문제 발견, 분류 에이전트는 처리 계획 판단, 각 에이전트 팀은 배정 업무 계산을 담당합니다.
+- **현재 코드의 WatchBatch**는 여러 문제를 함께 계산하는 처리기입니다. `[2026-10-13 코드 대조로 정정]` 고정 순서(`WatchBatch.ORDER`)는 코드에 더 이상 없습니다. 감시 회차의 묶음 Case는 로컬 실행 장치(`TravelBatchExecutor`, `config/project.yaml` 의 `team_executor: local`)가 받아, 분류 에이전트 계획(`classify_plan`)을 검증(`validate_plan`)한 뒤 그 순서·의존 관계대로 각 항목의 담당 팀이 계산합니다. 같은 날 남아 있던 빈틈 하나 — 계획이 단계마다 준 도구 목록·호출 상한이 실제 계산에 적용되지 않던 것(같은 이름의 함수가 두 번 정의돼 뒤쪽이 덮음) — 을 고쳤습니다. 근거: [2026-10-13 보고서](../../final_project_cs/wiki/records/reports/2026-10-13_감시회차_팀순서_도로사건방향.md). 아래 10-11 문장은 당시 기록입니다.
+  당시(2026-10-11) 기록: 활동→식당→이동 고정 순서가 코드에 있으며 Activity 경로에서 실행됩니다. 이는 이번에 채택한 분류 에이전트의 상황·성향별 순서 결정 계약과 다릅니다. `watch_planners` 계산 등록만으로 동적 팀 조정이 완성된 것은 아닙니다. 모니터링 툴은 문제 발견, 분류 에이전트는 처리 계획 판단, 각 에이전트 팀은 배정 업무 계산을 담당합니다.
 - **문제 묶음의 범위**는 한 회차·한 여행입니다. 새 문제 수와 설정 상한에 따라 Case가 나뉠 수 있으므로 여행 전체 수명 동안 언제나 Case 하나라고 약속하지 않습니다. 조정 결과·실패 처리의 제품 정책은 아래 후속 결정과 별도 검토 항목을 함께 확인합니다.
 
 근거: [D-CS-013](../../final_project_cs/wiki/decisions/D-CS-013-domain-folder-layout.md), [현재 에이전트 팀 경로](../../final_project_cs/wiki/teams/code-layout.md), [Controller](../../final_project_cs/app/application/controller.py), [Registry](../../final_project_cs/app/core/registry.py).
@@ -42,7 +43,7 @@ impl_scope: cs — 여행 제품의 도메인 결정이다. sample의 독립 계
 
 분류 에이전트는 질의·계획서·현재 상황·고객 성향·활성 팀 목록을 입력받고 담당·순서·우선순위·이유·의존 관계를 반환하도록 정합니다. 실행 장치는 등록 여부·권한·도구/시간 예산·순환을 검증합니다. 예약·결제 승인을 모델이 대신하지 않습니다.
 
-[실측] 확인한 `composition.build_classifier` 반환값은 intent·issue_code·sentiment이며 `classify_case`가 기록합니다. `TeamRegistry.resolve`는 담당 하나를 고르고 `WatchBatch.ORDER`는 고정 순서입니다. 사용자 성향별 다중 팀 처리 계획이 이미 구현됐다고 판정하지 않습니다. [이번 코드·산출물 대조](../../final_project_cs/wiki/records/reports/2026-10-11_review-comments-v7.md).
+[실측] 확인한 `composition.build_classifier` 반환값은 intent·issue_code·sentiment이며 `classify_case`가 기록합니다. `TeamRegistry.resolve`는 담당 하나를 고르고 `WatchBatch.ORDER`는 고정 순서입니다(2026-10-11 기준. `[2026-10-13]` 감시 회차는 분류 에이전트 계획으로 바뀐 것을 위 「현재 읽는 기준」에 적었습니다). 사용자 성향별 다중 팀 처리 계획이 이미 구현됐다고 판정하지 않습니다. [이번 코드·산출물 대조](../../final_project_cs/wiki/records/reports/2026-10-11_review-comments-v7.md).
 
 ## 결과·확인 범위
 

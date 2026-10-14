@@ -13,6 +13,7 @@ import glob
 import json
 import os
 import re
+from urllib.parse import unquote  # 링크의 %20(띄어쓰기) 같은 표기를 풀어서 찾는다 — 2026-10-14
 import sys
 from datetime import datetime
 from collections import Counter, defaultdict
@@ -284,7 +285,7 @@ def main() -> int:
         for f in records:
             raw = Path(f).read_text(encoding="utf-8-sig", errors="replace")
             for p in LINK.findall(FENCE.sub("", raw)):
-                if not os.path.exists(os.path.normpath(os.path.join(os.path.dirname(f), p))):
+                if not os.path.exists(os.path.normpath(os.path.join(os.path.dirname(f), unquote(p)))):
                     record_broken.append(f"{f} -> {p}")
 
     for f in docs:
@@ -301,7 +302,7 @@ def main() -> int:
         if "/records/" in rel:
             d = os.path.dirname(f)
             for p in LINK.findall(FENCE.sub("", raw)):
-                if not os.path.exists(os.path.normpath(os.path.join(d, p))):
+                if not os.path.exists(os.path.normpath(os.path.join(d, unquote(p)))):
                     record_broken.append(f"{rel} -> {p}")
             continue
 
@@ -372,7 +373,7 @@ def main() -> int:
         # --- 현재 문서의 없는 대상은 부모 폴더 유무와 관계없이 위반이다.
         d = os.path.dirname(f)
         for p in LINK.findall(body):
-            target = os.path.normpath(os.path.join(d, p))
+            target = os.path.normpath(os.path.join(d, unquote(p)))
             if os.path.exists(target):
                 continue
             if os.path.isdir(os.path.dirname(target)):

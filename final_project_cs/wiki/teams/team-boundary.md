@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 Team 책임 경계
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: Team은 요청의 업무 판단과 제안 반환을 맡습니다
 status: draft
 domain: travel
 ---

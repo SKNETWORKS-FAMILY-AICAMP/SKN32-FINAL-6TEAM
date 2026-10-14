@@ -56,7 +56,9 @@ class OpenMeteoWeather(TravelSource):
             return None
 
         payload = self._fetch_json(ENDPOINT, {
-            "latitude": latitude, "longitude": longitude,
+            # ★`[2026-10-14 사용자 지시]` 좌표를 둘째 자리(약 1km)로 줄여 묻는다 — 원값이면 장소가 조금만 달라도 다른 요청이라 장소마다 따로 불렀다.
+            #   가까운 장소끼리 응답 캐시를 나눠 쓴다(대기질 `air_quality.py` 와 같은 방식). 예보 모델 격자(한국 최소 약 1.5km)보다 촘촘해 고르는 칸은 거의 같다 — 값 차이는 재지 않았다
+            "latitude": round(float(latitude), 2), "longitude": round(float(longitude), 2),
             "hourly": ",".join(HOURLY_FIELDS),
             "timezone": "auto",          # ★장소의 현지 시각으로 받는다
             "forecast_days": days,
