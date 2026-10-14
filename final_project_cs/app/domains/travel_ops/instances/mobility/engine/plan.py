@@ -43,6 +43,7 @@ import collections
 import copy
 import json
 import math
+import re
 import sys
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
@@ -75,6 +76,8 @@ KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike", "taxi"}
 #   그래서 길 거리를 직선의 이 배수로 **상한**한다 — 우회계수(1.4)보다는 크게 두어 진짜 우회(철도·하천 건너편)는 거의 그대로 둔다. 상한이 걸리면 `Planner.walk_capped` 에 남고 로그가 난다(조용한 보정이 아니다).
 #   ★우리가 고른 값이다 — 측정으로 나온 상수가 아니다. 규칙 파일(rules)에 올리는 것은 다음 규칙판에서 한 번에(STATION_K_PROPOSED 와 같은 취급).
 WALK_ROUTED_CAP_PROPOSED = 2.0
+#: 택시 `링크:` 표기의 번호 모양 — 계약(route_uses._LINK_ID)과 같다: 숫자 6~12자리
+LINK_ID_RE = re.compile(r"^\d{6,12}$")
 #: 역과 지하로 이어진 건물(연결통로 표 — connectors.py)까지 걷는 거리 = 역~장소 직선 × 이 값(추정 — 표에 거리가 없다). 지상 우회보다 길면 안 쓴다
 CONNECTOR_FACTOR_PROPOSED = 1.2
 CONNECTOR_MAX_M_PROPOSED = 700           # 역에서 이만큼 안의 장소만 — 연결통로는 역 바로 옆 건물이다
@@ -1040,7 +1043,10 @@ class Planner:
             return None
         guess, c, ride, slack = best
         fare = c.get("fare_won")
-        return {"eta_min": ride, "uses": [], "_legs": [], "_taxi": True, "_n": 300, "_key": ("taxi", 0, 0),
+        # ☆`[2026-10-13]` 지나는 도로 구간 번호(진행 방향별 TOPIS 링크)를 `링크:` 로 싣는다 — 도로 사건이 같은 방향·같은 구간인지
+        #   감시·출발 안내·재계획이 가린다(계약 rest-endpoints/trips.md 「도로 구간(방향)」). 대응 없는 조각은 빼고 지어내지 않는다.
+        uses = [f"링크:{lk}" for lk in c.get("link_ids") or () if isinstance(lk, str) and LINK_ID_RE.match(lk)]
+        return {"eta_min": ride, "uses": uses, "_legs": [], "_taxi": True, "_n": 300, "_key": ("taxi", 0, 0),
                 "_route": taxi_label(c),
                 "_start": guess, "_transfers": 0, "_margin": buf, "_slack": slack, "_walk_min": 0, "_walk_m": 0,
                 "_fare": fare, "_severe": [], "_covered": False,

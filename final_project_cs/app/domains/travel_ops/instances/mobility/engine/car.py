@@ -152,6 +152,7 @@ class CarGraph:
         t = depart
         cover = {"topis": 0.0, "class": 0.0, "default": 0.0}
         links = defaultdict(float)
+        link_seq = {}                       # 지난 TOPIS 링크(진행 방향별 번호) — 처음 지난 순서. 대응 없는 조각은 넣지 않는다
         slow_s = slow_m = 0.0
         n_edges = 0
         for a, b, way in det:
@@ -173,6 +174,8 @@ class CarGraph:
                         link = segtab.get((segidx[i] + k, d))
                         if link:
                             break
+                if link:
+                    link_seq.setdefault(link, None)
                 remaining = L
                 while remaining > 1e-8:
                     dtp, h = self.daytype(t), t.hour
@@ -214,7 +217,7 @@ class CarGraph:
                 "coverage_m": {k: round(v, 1) for k, v in cover.items()},
                 "coverage_pct": {k: round(v / max(tot, 1) * 100, 1) for k, v in cover.items()},
                 "links": [{"link_id": k, "m": round(m, 1)} for k, m in top],
-                "n_links": len(links)}
+                "n_links": len(links), "link_ids": list(link_seq)}
 
 
 # ── 라우터 ─────────────────────────────────────────────────────────────────
@@ -358,6 +361,18 @@ class CarService:
         self.C = rules["car"]
         self.F = rules["taxi"]["fare"]
         self.B = rules["taxi"]["planning_budget"]
+        self._rc, self._rc_why, self._rc_tried = None, None, False
+        self._rc_lock = __import__("threading").Lock()
+
+    def _route_cost(self):
+        """☆`[2026-10-13]` 길을 고를 때도 TOPIS 시간대 속도를 쓴다(car_route_cost). 처음 한 번만 올린다 — 못 쓰면 이유를 근거에 남긴다."""
+        if not self._rc_tried:
+            with self._rc_lock:
+                if not self._rc_tried:
+                    from .car_route_cost import TopisRouteCost
+                    self._rc, self._rc_why = TopisRouteCost.try_load(self.g, self.router)
+                    self._rc_tried = True
+        return self._rc
 
     def in_airport_box(self, pt):
         b = self.C["공항_상자"]["value"]
@@ -368,7 +383,8 @@ class CarService:
         if depart.tzinfo is not None:
             depart = depart.astimezone(dt.timezone(dt.timedelta(hours=9)))
         thr = self.F[kind]["time_speed_threshold_kmh"]["value"] if taxi else None
-        route = self.router.route(s, e)
+        rc = self._route_cost()
+        route = self.router.route(s, e, car_cost=rc.at(depart)) if rc is not None else self.router.route(s, e)
         r = self.g.compute(route, depart, slow_threshold_kmh=thr)
         paths = route.get('paths')
         path = paths[0] if paths else {}
@@ -383,6 +399,11 @@ class CarService:
                 routing_evidence['snap_selection'] = deepcopy(turn_data['snap_selection'])
             if 'snap_m' in path:
                 routing_evidence['snap_m'] = deepcopy(path['snap_m'])
+        if isinstance(path.get('route_cost'), dict):          # 길을 무엇으로 골랐나(TOPIS 시간대 속도 / 도로급 고정 속도 + 이유)
+            routing_evidence = routing_evidence or {}
+            routing_evidence['route_cost'] = dict(path['route_cost'])
+            if routing_evidence['route_cost'].get('kind') == 'static_class_speed' and self._rc_why:
+                routing_evidence['route_cost']['reason'] = self._rc_why
         del route                                   # 경로는 여기서 끝난다
         cov = r["coverage_pct"]
         warn = []
@@ -397,7 +418,7 @@ class CarService:
                "depart": r["depart"], "arrive": r["arrive"], "day_type": r["day_type"],
                "hour_start": r["hour_start"],
                "coverage_m": r["coverage_m"], "coverage_pct": cov, "n_edges": r["n_edges"],
-               "links": r["links"], "n_links": r["n_links"],
+               "links": r["links"], "n_links": r["n_links"], "link_ids": list(r.get("link_ids") or ()),
                "source_id": [SOURCE_ID, GRAPH_SOURCE_ID], "warn": warn}
         if routing_evidence is not None:
             out['routing_evidence'] = routing_evidence

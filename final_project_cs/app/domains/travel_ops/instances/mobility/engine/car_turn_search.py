@@ -10,8 +10,12 @@ from .turn_restrictions import permitted
 NODE_EPS_M = 1e-6  # 실제 부분 간선은 교차로 시작으로 바꾸지 않는다.
 
 
-def pieces(router, starts_snaps, goal_snaps, policy):
+def pieces(router, starts_snaps, goal_snaps, policy, car_cost=None):
+    """car_cost(선택) — 출발 시각에 묶인 TOPIS 길 선택 비용(car_route_cost.BucketCost). 없으면 고정 속도 비용."""
     deg, to, arcs, weights = router._adjacency('car')
+    if car_cost is not None:
+        weights = car_cost.weights()
+    edge_cost = car_cost.cost if car_cost is not None else (lambda edge: router._cost('car', edge))
     starts, goals = {}, {}
 
     def endpoints(snap, starting):
@@ -20,7 +24,7 @@ def pieces(router, starts_snaps, goal_snaps, policy):
         if length <= 0:
             raise RouterDown('turn_restrictions: 길이 없는 간선')
         forward, backward = router._allowed('car', edge)
-        costs = router._cost('car', edge)
+        costs = edge_cost(edge)
         # 시작은 부분 간선의 도착 방향, 목표는 마지막 부분 간선의 출발 방향이다.
         parts = [(router.eu[edge], snap.d_u, 'u', edge*2+(1 if starting else 0), backward if starting else forward),
                  (router.ev[edge], length-snap.d_u, 'v', edge*2+(0 if starting else 1), forward if starting else backward)]
@@ -47,7 +51,7 @@ def pieces(router, starts_snaps, goal_snaps, policy):
             forward, backward = router._allowed('car', start.e)
             delta = goal.d_u-start.d_u
             if (delta >= 0 and forward) or (delta < 0 and backward):
-                cost = router._cost('car', start.e)*abs(delta)/router._geom(start.e)[1][-1]
+                cost = edge_cost(start.e)*abs(delta)/router._geom(start.e)[1][-1]
                 if cost < best:
                     best, direct = cost, (start, goal)
 

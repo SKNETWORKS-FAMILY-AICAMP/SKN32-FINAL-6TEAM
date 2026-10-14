@@ -407,8 +407,10 @@ class GraphRouter:
         return near[:6]
 
     # ── 길 찾기 ───────────────────────────────────────────────────────────────
-    def route(self, s, e, profile="car", via=None):
-        """s, e = (lng, lat). GraphHopper `/route` 응답 모양으로 돌려준다. 못 찾으면 RouterDown."""
+    def route(self, s, e, profile="car", via=None, car_cost=None):
+        """s, e = (lng, lat). GraphHopper `/route` 응답 모양으로 돌려준다. 못 찾으면 RouterDown.
+
+        car_cost(선택, 자동차만) — 출발 시각에 묶인 길 선택 비용(car_route_cost.BucketCost). 없으면 도로급 고정 속도로 고른다."""
         if via:
             raise RouterDown("via(경유지)는 이 라우터가 지원하지 않는다")
         if profile not in ("car", "bike", "foot"):
@@ -431,7 +433,7 @@ class GraphRouter:
             turn_policy = load(self)
             if turn_policy is not None:
                 from .car_turn_search import pieces
-                parts, arcs, cost_seconds, selected_start, selected_end = pieces(self, Ss, Ts, turn_policy)
+                parts, arcs, cost_seconds, selected_start, selected_end = pieces(self, Ss, Ts, turn_policy, car_cost=car_cost)
                 path = self._response(parts, profile, s, e)
                 path['snap_m'] = [round(selected_start.dist, 1), round(selected_end.dist, 1)]
                 path['quality'] = {'access_max_m': round(max(selected_start.dist, selected_end.dist), 1),
@@ -439,8 +441,14 @@ class GraphRouter:
                 path['turn_restrictions'] = dict(turn_policy[2], arc_codes=arcs,
                                                 search_cost_seconds=cost_seconds,
                                                 snap_selection=selection_evidence(selected_start, selected_end))
+                path['route_cost'] = car_cost.evidence() if car_cost is not None else {'kind': 'static_class_speed'}
                 return {'paths': [path]}
-        cost = lambda ed: self._cost(profile, ed)           # noqa: E731
+        if profile == 'car' and car_cost is not None:
+            deg, to, pe, _w = self._adjacency(profile)
+            w = car_cost.weights()
+            cost = car_cost.cost
+        else:
+            cost = lambda ed: self._cost(profile, ed)       # noqa: E731
         L = lambda ed: self._geom(ed)[1][-1]                # noqa: E731  간선 형상 길이(m)
 
         # 시작: 간선 위 점에서 나갈 수 있는 끝점 / 도착: 들어와 닿을 수 있는 끝점. 값 = (비용, 어느 끝, 어느 붙임)
@@ -555,6 +563,8 @@ class GraphRouter:
 
         path = self._response(pieces, profile, s, e)
         path["snap_m"] = [round(S.dist, 1), round(T.dist, 1)]
+        if profile == "car":
+            path["route_cost"] = car_cost.evidence() if car_cost is not None else {"kind": "static_class_speed"}
         # ☆`[2026-10-04]` 낙관 가능 표시 — GraphHopper 기록보다 크게 짧게 나온 두 쌍을 지도 태그와 코덱스 교차 판정으로 따져 봤더니
         #   「우리 로직이 더 나아서」가 아니라 ①길 밖 직선 접근 구간이 전체의 절반이 넘거나(고가 보행로 위 점이 85 m 밖 길에 붙음)
         #   ②보도·횡단 정보 없이 큰길 중앙선을 따라 걷는 경로여서였다. 거리 보정이 아니라 **불확실성을 드러낸다**(근거 문구 · 대체 비교).
