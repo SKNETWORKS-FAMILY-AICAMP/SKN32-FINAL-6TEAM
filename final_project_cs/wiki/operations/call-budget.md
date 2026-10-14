@@ -45,4 +45,6 @@ domain: neutral
 
 **따릉이.** 서울 열린데이터광장 일반 키로 부르는 따릉이 거치 대수의 하루 상한은 `ACOP_RATE_SEOUL_BIKE_PER_DAY`(기본 1,000 — 공식 하루 한도를 못 찾아 **우리가 고른 보수적 값** `[미확인]`). 이동 모듈이 `bike.py` 에서 위 문을 쓰도록 잇는 일은 이동 세션 몫이다.
 
+**감시 반복의 조회 묶기(2026-10-14).** 「곧 시작할 항목」·「안내 안 한 출발」 읽기를 여행마다 하던 DB 조회에서 여행 수와 상관없는 3~4번으로 묶었고(로컬 실측 107→3 · 213→3), 날씨(Open-Meteo)는 좌표를 약 1km 단위로 반올림해 가까운 장소끼리 답을 나눠 쓴다(서로 다른 좌표 51→32). 실서버 확인 안 함 — [보고](../records/reports/2026-10-14_감시_조회_묶기.md).
+
 관련: [rest-endpoints](../external/rest-endpoints.md)(외부 소스는 REST 가 아니라 여기) · 코드 `app/domains/travel_ops/ports/data_sources/call_budget.py` · `source_budget.py` · 보고 `scripts/report_source_budget.py` · 시험 `tests/unit/travel/test_source_budget.py` · `tests/integration/db/test_source_budget_db.py`.
