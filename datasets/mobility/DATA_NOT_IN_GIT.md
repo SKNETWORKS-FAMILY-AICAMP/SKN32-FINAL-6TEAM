@@ -84,3 +84,12 @@
 ## 정본 폴더 정리 기록
 
 정본 `processed\mobility\` 는 줄인 판을 만들 때 바꾸지 않는다. 9/30 에 중복 v2 3개를 `_backup` 으로 옮기고, `graph\_build\*.py` 를 저장소 `scripts/graph_*.py` 로 옮겼다(데이터 파일 무변경).
+
+## C-7 2026-10-14 추가 (「이동경로 최적화」 세션)
+
+| 폴더 | 크기 | 출처 | 산출(스크립트) |
+|---|---:|---|---|
+| `raw\mobility\its_nodelink_20261014_v1\` | 259 MB(zip) | 국가교통정보센터 전국표준노드링크 2026-10-14판 (www.its.go.kr/nodelink/nodelinkRef) | `stdlink_v1/` · `stdlink_v2/` · `stdlink_reverse_v2/` · `link_reverse_v1/` |
+| `raw\mobility\juso_internal_road_202512_v1\` | 2 MB(zip) | 행정안전부 도로명주소 내부도로 전자지도 2025-12판 (business.juso.go.kr — 본인 확인 후 신청) · 칸 설명은 폴더 REPORT.md | `walk_graph_seoul_v3/` |
+| `raw\mobility\juso_3d_road_202609_v1\` | 2 MB(zip) | 행정안전부 도로명주소 입체도로 전자지도 2026-09판 (같은 곳) | 지금 산출 없음(서울 44구간 모두 차도) |
+| `processed\mobility\stdlink_v2\` · `walk_graph_seoul_v3\` | 3 MB · 12 MB | 위 원자료로 만든 판정기 입력 | x600 서버 같은 경로에도 올림(2026-10-14) |

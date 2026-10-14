@@ -1,0 +1,39 @@
+{
+ "version": "walk_graph_seoul_v3",
+ "built_at": "2026-10-14T17:42:49+09:00",
+ "rule": {
+  "join_m": 12.0,
+  "rw_tol_m": 1.0,
+  "surface_snap_m": 30.0,
+  "cnln_snap_m": 0.5,
+  "height": "VSLN_HG(가시화 기준 높이 — 측량값 아님)",
+  "stairs_len": "max(hypot(수평,수직), 2×수직)",
+  "elevator_len": "수평+수직"
+ },
+ "counts": {
+  "gate_cut_near": 95,
+  "gate_cut_pieces": 363,
+  "chains": 546,
+  "join_rejected_gate": 210,
+  "joins": 271,
+  "join_rejected_outside_rw": 159,
+  "cnln_unattached": 88,
+  "vertical_unattached": 116,
+  "exit_snapped": 408,
+  "exit_unsnapped": 129,
+  "exit_snap_m_max": 30.0,
+  "paid_unknown_structures": 119,
+  "dropped_paid_unknown_edges": 3158,
+  "dropped_platform_edges": 2384,
+  "dropped_isolated_edges": 706,
+  "edges_corridor": 640,
+  "edges_join": 63,
+  "edges_cnln": 385,
+  "edges_vertical": 233,
+  "edges_surface_link": 187,
+  "new_nodes": 1300,
+  "new_edges": 1508,
+  "structures_kept": 55
+ },
+ "elapsed_s": 42.8
+}

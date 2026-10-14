@@ -62,6 +62,7 @@ SNAP_TIE_M = 12.0                                  # 가장 가까운 간선보�
 CELL_LAT, CELL_LON = 0.004, 0.005                  # 격자 한 칸 ≈ 440 m
 F_CAR, F_BIKE, F_MAIN, F_BMAIN = 1, 2, 4, 8
 F_FOOT, F_FMAIN, F_STEPS = 16, 32, 64                # road_graph_v2 — 걸음 통행 · 걸음 최대 연결 성분 · 계단
+F_INDOOR = 128                                       # walk_graph_seoul_v3 — 역·지하상가 안 통로(도로명주소 내부도로 전자지도)
 
 
 def decode_polyline(s, precision=1e6):
@@ -135,9 +136,11 @@ class GraphRouter:
                 self._graph_version = m.get("version") or "road_graph_v1"
                 day = str(m.get("osm_data_at") or "")[:10]
                 if str(m.get("version") or "").startswith("walk_graph_seoul"):
-                    # 서울시 도보 네트워크(원자료 갱신일) + 계단 표시에 쓴 OSM 기준일
+                    # 서울시 도보 네트워크(원자료 갱신일) + 계단 표시에 쓴 OSM 기준일 (+ v3: 역·지하상가 안 통로 원자료 판)
                     wd = (m.get("work_dates") or [""])[-1]
                     got = f"seoul_walk_network@{wd}" + (f"+osm_steps@{day}" if day else "")
+                    if m.get("juso_internal_at"):
+                        got += f"+juso_internal@{m['juso_internal_at']}"
                 elif day:
                     got = f"osm_road_graph{'_v2' if m.get('version') == 'road_graph_v2' else ''}@{day}"
             except (OSError, ValueError, AttributeError, TypeError):
@@ -246,7 +249,8 @@ class GraphRouter:
                 self.eflag.append((F_CAR if r.get("car") else 0) | (F_BIKE if r.get("bike") else 0)
                                   | (F_MAIN if r.get("main") else 0) | (F_BMAIN if r.get("bmain") else 0)
                                   | (F_FOOT if r.get("foot") else 0) | (F_FMAIN if r.get("fmain") else 0)
-                                  | (F_STEPS if r.get("st") else 0))
+                                  | (F_STEPS if r.get("st") else 0)
+                                  | (F_INDOOR if str(r.get("src") or "").startswith("juso_internal") else 0))
                 self.eow.append(int(r.get("ow") or 0))
                 self.ebow.append(int(r.get("bow") or 0))
                 g = r["g"]
@@ -608,7 +612,7 @@ class GraphRouter:
 
     def _response(self, pieces, profile, s, e):
         coords, det_way, det_cls = [], [], []
-        dist_m = secs = stairs_m = 0.0
+        dist_m = secs = stairs_m = indoor_m = 0.0
         for ed, pts in pieces:
             clean = [pts[0]]
             for p in pts[1:]:
@@ -638,6 +642,8 @@ class GraphRouter:
                 secs += length / (STEPS_MPS if self.eflag[ed] & F_STEPS else FOOT_MPS)
                 if self.eflag[ed] & F_STEPS:
                     stairs_m += length
+                if self.eflag[ed] & F_INDOOR:
+                    indoor_m += length
         if not coords:                                        # 같은 점 — 0 m 경로
             coords = [list(s), list(e)]
         result = {"distance": round(dist_m, 2), "time": int(round(secs * 1000)),
@@ -646,4 +652,6 @@ class GraphRouter:
         if profile == "foot":
             # 내부 시간 계약: 거리와 계단 시간은 별개다. 일정의 평지 속도로 정규화할 때도 계단 시간을 보존한다.
             result["foot_timing"] = {"flat_mps": FOOT_MPS, "stairs_m": stairs_m, "seconds": secs}
+            if indoor_m > 0:
+                result["indoor"] = {"m": round(indoor_m, 1)}          # 역·지하상가 안 통로를 지난 거리
         return result

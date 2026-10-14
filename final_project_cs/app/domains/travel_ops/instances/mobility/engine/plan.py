@@ -416,6 +416,8 @@ class Planner:
                         evidence["source_id"] = r["source_id"]
                     if r.get("walk_candidates"):                    # 서울 안: 두 보행 자료 후보와 고른 쪽
                         evidence["walk_candidates"] = r["walk_candidates"]
+                    if r.get("indoor"):                             # 역·지하상가 안 통로를 지난 거리
+                        evidence["indoor"] = r["indoor"]
                 routed_m = float(r["distance_m"])
                 used_m = routed_m
                 seconds = used_m / self.speed
