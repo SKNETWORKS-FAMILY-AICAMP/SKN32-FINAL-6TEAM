@@ -34,6 +34,7 @@ from app.domains.travel_ops.components.itinerary.itinerary_checks import FROM_ST
 from app.domains.travel_ops.components.planning.replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, DiningStateLookup, activity_candidates, alternate_record,
                      apply_google_prices, brand_of, change_notice, choose, dining_candidates, dining_fits, dining_notice,
                      MealRoute, meal_route, route_candidates, route_notice, store_candidates)
+from app.domains.travel_ops.components.planning.meal_pick import MealPicker, Pick, day_context, preference_of
 
 #: 구글 가격 조회 — 장소 목록 → {place_id: {level, low, high}}. ★선택 기능(스위치 기본 꺼짐 — `replan` 머리말)
 PriceLookup = Callable[[list[dict[str, Any]]], "dict[str, dict[str, int | None] | None] | None"]
@@ -675,12 +676,22 @@ def plan_departure_adjustment(*, item: Item, previous: Item | None, following: I
 
 
 # ── 고객 신고 — 식당 ───────────────────────────────────────────
+def _meal_pick(trip: dict[str, Any], items: list[Item], meal: Item, best, alternates,
+               picker: MealPicker | None) -> tuple[Any, list[Any], Pick | None]:
+    """★`[2026-10-13]` 규칙이 고른 상위 3곳 중 하나를 모델이 고른다(`meal_pick`, 설계 §7-2). 선택기가 없으면 규칙 1등 그대로."""
+    if picker is None:
+        return best, alternates, None
+    pick = picker(best, list(alternates), day_context(items, meal, preference_of(trip.get("constraints"))))
+    return pick.best, pick.alternates, pick
+
+
 def _dining_change(meal: Item, best, alternates, notice: dict[str, Any], *,
-                   reason: str = "customer_report") -> ItineraryChange:
+                   reason: str = "customer_report", pick: Pick | None = None) -> ItineraryChange:
     replacement = meal.replaced_by(
         place=best.place, title=f"{best.name} 식사", starts_at=best.starts_at,
         ends_at=best.ends_at,
         detail={"other_options": notice["other_options"],
+                **({"meal_pick": pick.record()} if pick is not None and pick.by != "rule" else {}),
                 **({"customer_reported": True} if reason == "customer_report" else {}),
                 **({"price_compare": best.price_compare} if best.price_compare else {}),
                 **({"warnings": list(best.warnings)} if best.warnings else {}),
@@ -703,7 +714,8 @@ def _leg_engine(trip: dict[str, Any]):
 
 def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
                at: datetime, minutes: int, message: str, request_id: str | None,
-               price_lookup: PriceLookup | None = None, state_lookup: DiningStateLookup | None = None) -> Plan:
+               price_lookup: PriceLookup | None = None, state_lookup: DiningStateLookup | None = None,
+               meal_picker: MealPicker | None = None) -> Plan:
     """「N분 늦는다」. 다음 식사 항목이 그 도착 시각에 성립하는지 보고, 안 되면 바꾼다."""
     from zoneinfo import ZoneInfo
 
@@ -761,16 +773,18 @@ def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str
     if best is None:
         return NoChange("unresolved", {"reason": why,
                                        "rejected": {c.name: c.rejected for c in rejected}})
+    best, alternates, pick = _meal_pick(trip, items, meal, best, alternates, meal_picker)
     notice = dining_notice(
         original=meal.place, best=best, alternates=alternates,
         reason=f"점심 도착이 {arrival:%H:%M}(으)로 늦어져 {meal.place['name']}은 {why}",
         cause=cause, after=None, constraint_note="브레이크타임 없는")
-    return _dining_change(meal, best, alternates, notice)
+    return _dining_change(meal, best, alternates, notice, pick=pick)
 
 
 def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
                 at: datetime, message: str, request_id: str | None,
-                price_lookup: PriceLookup | None = None, state_lookup: DiningStateLookup | None = None) -> Plan:
+                price_lookup: PriceLookup | None = None, state_lookup: DiningStateLookup | None = None,
+                meal_picker: MealPicker | None = None) -> Plan:
     """「오늘 임시휴무」. 지금 식사 항목을 걸어갈 수 있는 대체 식당으로 바꾼다."""
     meal = next((i for i in items if i.kind == "dining"
                  and i.starts_at <= at < (i.ends_at or i.starts_at + timedelta(hours=1))), None)
@@ -794,6 +808,7 @@ def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[st
     best, alternates, rejected = choose(candidates)
     if best is None:
         return NoChange("unresolved", {"rejected": {c.name: c.rejected for c in rejected}})
+    best, alternates, pick = _meal_pick(trip, items, meal, best, alternates, meal_picker)
     after = None
     later_activity = next((i for i in items if i.seq > meal.seq and i.kind == "activity"), None)
     if later_activity and best.ends_at and best.ends_at <= later_activity.starts_at:
@@ -804,14 +819,14 @@ def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[st
         reason=f"{meal.place['name']}이(가) 오늘 임시휴무라고 알려 주셨습니다",
         cause=cause, after=after,
         constraint_note="카드 결제가 가능한" if payment == "card" else None)
-    return _dining_change(meal, best, alternates, notice)
+    return _dining_change(meal, best, alternates, notice, pick=pick)
 
 
 # ── 새벽 확인 — 그날 그 시각에 안 연다 (D-020, 2026-09-25) ──────────
 def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
                        meal: Item, source: str, detail: str, checked_at: datetime,
                        exclude: set[str] = frozenset(), price_lookup: PriceLookup | None = None,
-                       state_lookup: DiningStateLookup | None = None) -> Plan:
+                       state_lookup: DiningStateLookup | None = None, meal_picker: MealPicker | None = None) -> Plan:
     """새벽 확인에서 **계획한 시각에 안 여는** 식당 — 같은 시각에 근처 대체 식당으로 바꾼다.
 
     ★고객 신고(`plan_closed`)와 다르다 — 그쪽은 고객이 **지금 가게 앞에** 있어 걸어갈 시간만큼 입장을
@@ -837,6 +852,7 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
     if best is None:
         return NoChange("unresolved", {"causes": [cause],
                                        "rejected": {c.name: c.rejected for c in rejected}})
+    best, alternates, pick = _meal_pick(trip, items, meal, best, alternates, meal_picker)
     payment = (trip.get("constraints") or {}).get("payment")
     notice = dining_notice(
         original=meal.place, best=best, alternates=alternates,
@@ -844,7 +860,7 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
                 f"새벽에 확인했습니다({detail})"),
         cause=cause, after=None,
         constraint_note="카드 결제가 가능한" if payment == "card" else None)
-    return _dining_change(meal, best, alternates, notice, reason="auto_adjusted")
+    return _dining_change(meal, best, alternates, notice, reason="auto_adjusted", pick=pick)
 
 
 #: 낮 감시가 식사 대체 후보를 다시 점검하는 곳 수 — ★우리가 고른 값(2026-09-29). 식당 Team 의 도구 예산(12)

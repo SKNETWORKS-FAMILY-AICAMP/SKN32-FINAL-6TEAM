@@ -1,0 +1,153 @@
+{
+ "eval": "dining_alternatives",
+ "dataset": "dining_alternatives_pref_holdout_v1.jsonl",
+ "dataset_sha": "9b46ec69a19bd38f",
+ "label": "rule-pref_holdout_v1",
+ "seeds": 3,
+ "mobility": false,
+ "env": {
+  "run_at": "2026-10-13T16:44:00+09:00",
+  "git_commit": "687561a0",
+  "git_branch": "role-dining",
+  "git_dirty": true
+ },
+ "summary": {
+  "accuracy": {
+   "num": 2,
+   "den": 6,
+   "rate": 0.333
+  },
+  "acceptable": {
+   "num": 2,
+   "den": 6,
+   "rate": 0.333
+  },
+  "violations": {
+   "num": 0,
+   "den": 6,
+   "rate": 0.0
+  },
+  "violations_any_seed": {
+   "num": 0,
+   "den": 6,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct": 2,
+   "ok": 0,
+   "correct_no_change": 0,
+   "wrong_violation": 0,
+   "wrong": 4,
+   "missed": 0,
+   "wrong_change": 0,
+   "unstable": 0
+  },
+  "by_group": {
+   "preference": {
+    "num": 2,
+    "den": 6,
+    "rate": 0.333
+   }
+  },
+  "added_walk_min_mean": 0.0,
+  "skipped": []
+ },
+ "results": [
+  {
+   "id": "DPH-001",
+   "group": "preference",
+   "why": "매운 것을 피하고 순한 국물",
+   "picked": "A",
+   "picked_name": "훠궈천하",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DPH-002",
+   "group": "preference",
+   "why": "고기 구이 원함 — 국물집 대신 고깃집",
+   "picked": "A",
+   "picked_name": "뼈해장국",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DPH-003",
+   "group": "preference",
+   "why": "원래와 같은 메뉴 — 규칙 1등",
+   "picked": "A",
+   "picked_name": "을지면옥",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DPH-004",
+   "group": "preference",
+   "why": "양식 원함 — 파스타",
+   "picked": "A",
+   "picked_name": "보리밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DPH-005",
+   "group": "preference",
+   "why": "해산물 못 먹음 — 비슷한 해산물 대신",
+   "picked": "C",
+   "picked_name": "생선구이",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DPH-006",
+   "group": "preference",
+   "why": "상관없음 — 규칙 1등",
+   "picked": "A",
+   "picked_name": "기사식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  }
+ ]
+}
