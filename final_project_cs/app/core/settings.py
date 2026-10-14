@@ -176,7 +176,10 @@ class Settings(BaseSettings):
     #:  작은 모델은 엉뚱한 대상을 바꾸거나(4o-mini 1건) 쓸데없이 되묻는다(4.1-mini 9건)
     llm_failover_model: str = "gpt-4.1"
     #:  Ollama 를 기다리는 시간(초) — 고객 응답 SLA 15초 안에 API 까지 끝나게 `ollama_timeout_seconds`(60)보다 짧다. 서버가 식어 느린 첫 호출도 여기서 걸러진다(예열이 그 몫)
-    llm_failover_primary_timeout_seconds: float = 6.0
+    #:  ★`[2026-10-14 사용자 지시]` 6 → 9초. 기본 모델이 가르친 E4B 로 바뀌었고(`ollama_model`), 그 해석 한 건이 5.1~7.3초(x600 실측 —
+    #:    지시문 읽기 약 2초는 문장마다 다시 든다)라 6초면 8건 중 6건이 유료 대체로 넘어갔다. 9초면 8/8 로컬(운영이 이미 9초).
+    #:    넘어가도 유료 대체(2~3초)까지 `llm_failover_total_seconds`(15) 안이다. 정책 검색의 임베딩 대기(`rag/retriever.py`)도 같은 값을 쓴다.
+    llm_failover_primary_timeout_seconds: float = 9.0
     #:  OpenAI 를 기다리는 시간(초)
     llm_failover_api_timeout_seconds: float = 8.0
     #:  한 호출에 쓸 수 있는 전체 시간(초) — 이 안에 다시 시도(429·5xx 1회)와 넘김이 다 들어가야 한다

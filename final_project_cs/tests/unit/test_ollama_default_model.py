@@ -25,6 +25,14 @@ def test_the_context_length_default_goes_with_it():
     assert Settings.model_fields["ollama_num_ctx"].default == 8192
 
 
+def test_the_local_wait_default_fits_the_trained_e4b_and_the_customer_deadline():
+    """학습 E4B 해석 한 건이 5.1~7.3초(x600 실측)라 6초로는 유료 대체로 넘어간다 — 9초로 둔다. 넘어가도 전체 한도(15초) 안이어야 한다."""
+    fields = Settings.model_fields
+    primary = fields["llm_failover_primary_timeout_seconds"].default
+    assert primary == 9.0
+    assert primary < fields["llm_failover_total_seconds"].default
+
+
 def test_a_settings_object_without_a_model_name_still_gets_the_trained_e4b():
     chat = from_settings(SimpleNamespace(ollama_base_url="http://ollama.test:11434"))
     assert chat.model == DEFAULT_MODEL
