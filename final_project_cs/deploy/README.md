@@ -75,13 +75,19 @@
 
 1. **있는 판 보기**: `docker images 'tripilot-*' --format '{{.Repository}}:{{.Tag}}' | grep keep-`
 2. **먼저 시험하기 (운영을 건드리지 않는다)**: `python3 deploy/restore_check.py --old-image tripilot-api:keep-YYYY-MM --new-image tripilot-api:local --mobility-dir <이동 자료 폴더>`
-   - 바깥과 연결되지 않는 임시 네트워크에 빈 DB 를 만들고, 최신 이미지의 마이그레이션으로 「지금의 DB 구조」를 만든 뒤 옛 이미지의 마이그레이션 · API 기동 · `/health` · 설정 이름을 확인하고 임시 자원을 모두 지운다. 운영 DB 와 운영 `.env` 는 읽지 않는다.
-   - ★설정은 `extra="forbid"` 라 **옛 이미지가 모르는 새 설정 이름이 운영 `.env` 에 있으면 옛 이미지는 켜지지 않는다.** `--env-names-file <.env 경로>` 를 주면 이름만 대조한다(값은 읽지 않는다). 파일마다 한 번씩 준다.
-3. **설정 이름 충돌 처리 (2번이 「옛 이미지가 모르는 이름」을 알려 주면 반드시)**: 운영 `.env` · `.env.apikeys` 에서 그 이름의 줄을 **백업 후 앞에 `#` 을 붙여 잠시 끈다.** 설정은 모르는 이름이 하나라도 있으면 앱이 기동조차 못 하기 때문이다. 최신 판으로 돌아올 때 `#` 을 다시 뗀다.
-   - 실제 사례: 2026-10-14 에 최신 판에만 있는 `ACOP_JUSO_COORD_API_KEY` · `ACOP_JUSO_SEARCH_API_KEY` 가 운영 `.env.apikeys` 에 이미 들어 있어서, 그 전 판으로 되돌리면 이 두 줄 때문에 켜지지 않았을 것이다(시험으로 확인).
-4. **되돌리기**: 자동 반영 타이머를 멈추고(`systemctl disable --now tripilot-autodeploy.timer`) `TRIPILOT_TAG=keep-YYYY-MM docker compose up -d --no-build --no-deps tripilot-api tripilot-worker tripilot-web`.
-   - ★**4번은 운영에서 시험하지 않았다.** 1·2번만 시험했다. DB 는 되돌리지 않는다 — 마이그레이션이 앞으로만 가므로(위 자동 반영 표) 옛 이미지가 새 표 구조를 견디는지가 2번이 확인하는 핵심이다.
-5. 문제가 풀리면 3번에서 끈 줄을 되살리고 타이머를 다시 켠다. 새 커밋이 오면 최신 판으로 다시 반영된다.
+   - 바깥과 연결되지 않는 임시 네트워크에 빈 DB 를 만들고, 최신 이미지의 마이그레이션으로 「지금의 DB 구조」를 만든 뒤 옛 이미지의 마이그레이션 · API 기동 · `/health` · 로그 오류를 확인하고 임시 자원(컨테이너 · 네트워크)을 **항상** 지운다. 운영 DB 와 운영 `.env` 는 읽지 않는다. 임시 DB 는 이 시험이 도는 동안에만 있다.
+   - **설정 이름은 걸림돌이 아니다(시험으로 확인)**: 설정은 `extra="forbid"` 라서 `.env` **파일**에서 읽은 모르는 이름은 거부하지만, 운영은 compose `env_file` 로 값을 컨테이너 **환경변수**에 넣고 `.env` 는 이미지에 없다(`.dockerignore`). 환경변수로 들어온 모르는 이름은 무시되므로 최신 판에만 있는 설정(2026-10-14: `ACOP_JUSO_COORD_API_KEY` · `ACOP_JUSO_SEARCH_API_KEY`)이 운영 환경 파일에 있어도 옛 이미지는 켜진다. 도구가 이를 직접 재현하고(통과 항목), 파일로 읽을 때의 차이는 참고 줄로 알려 준다. 배포 방식을 `.env` 파일 마운트로 바꾸면 이 점을 다시 본다.
+3. **되돌리기 (운영 반영과 같은 안전 절차를 쓴다)**: 자동 반영이 끼어들지 않게 `systemctl stop tripilot-autodeploy.timer` 를 하고, 배포 폴더에서
+   ```
+   export TRIPILOT_SRC=./repo/final_project_cs
+   D=state/migration-safety-ffffffffff-$(date +%s)        # 이름 규칙을 지키면 image_retention 이 나중에 치운다
+   TRIPILOT_TAG=<지금 실행 중인 판>  python3 repo/final_project_cs/deploy/migration_safe_deploy.py snapshot --state-dir $D
+   TRIPILOT_TAG=keep-YYYY-MM         python3 repo/final_project_cs/deploy/migration_safe_deploy.py check    --state-dir $D
+   TRIPILOT_TAG=keep-YYYY-MM         python3 repo/final_project_cs/deploy/migration_safe_deploy.py rollout  --state-dir $D --timeout 240 --settle 30
+   ```
+   `rollout` 은 새로 띄운 것이 건강하지 않거나 재시작하면 스스로 직전 이미지(이미지 ID 고정)로 복구한다. DB 는 되돌리지 않는다 — 마이그레이션이 앞으로만 가므로(위 자동 반영 표) 옛 이미지가 새 표 구조를 견디는지가 2번이 확인하는 핵심이다.
+   - ★**3번은 운영에서 시험하지 않았다(2026-10-14 기준).** 1·2번만 시험했다.
+4. **최신 판으로 돌아오기**: 같은 절차를 `TRIPILOT_TAG=<state/current_tag 의 값>` 으로 한 번 더 하고 `systemctl start tripilot-autodeploy.timer`. 배포 버전 표시(`ACOP_DEPLOYMENT_VERSION`)가 `keep-…` 로 남으면 다음 자동 반영의 사전 검사(실행 중 구성 일치)에 걸릴 수 있다 — 이것도 운영에서 확인하지 않았다.
 
 ## 알아둘 것
 - **DB 는 서버에 하나가 정본이다.** 개발 PC 의 DB 와 합치지 않는다 — 서버에는 사용자 데이터를 안 가져갔고, 거기 쌓이는 것은 서버 것이다.

@@ -4,8 +4,9 @@
   1. 최신 이미지의 마이그레이션으로 임시 DB(메모리 위, 비어 있음)에 「지금의 DB 구조」를 만든다.
   2. 옛 이미지의 마이그레이션이 그 구조에서 오류 없이 끝나는지 본다(롤백 때 옛 이미지가 새 표를 견디는지).
   3. 옛 이미지의 API 를 그 DB 에 붙여 띄우고 /health 가 나오는지, 로그에 표·칸 오류가 없는지 본다.
-  4. 두 이미지의 설정 이름을 비교한다. 설정은 `extra="forbid"` 라서 옛 이미지가 모르는 새 이름이 운영 `.env` 에 있으면
-     옛 이미지는 켜지지 않는다 — `--env-names-file` 로 이름만(값은 읽지 않는다) 대조할 수 있다.
+  4. 두 이미지의 설정 이름을 비교하고, 옛 이미지가 모르는 새 이름이 **환경변수로** 들어와도 켜지는지 본다. 운영은 compose
+     `env_file` 로 값을 컨테이너 환경변수에 넣고 `.env` 파일은 이미지에 없다(`.dockerignore`). 설정의 `extra="forbid"` 는
+     `.env` **파일**에서 읽은 모르는 이름만 거부하므로, 운영 방식에서는 새 이름이 옛 이미지를 막지 않는다(아래 4번 확인이 이를 직접 재현).
 끝나면 임시 컨테이너·네트워크를 항상 지운다. 일꾼(worker)은 띄우지 않는다(알림이 나가면 안 되므로).
 
 사용: python3 restore_check.py --old-image tripilot-api:keep-2026-10 --new-image tripilot-api:local [--mobility-dir DIR]
@@ -16,10 +17,12 @@ import argparse
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 import time
 from uuid import uuid4
 
 SCHEMA_ERRORS = re.compile(r"UndefinedTable|UndefinedColumn|does not exist|ValidationError|Extra inputs|Traceback", re.I)
+SETTINGS_PROBE = "from app.core.settings import get_settings; get_settings()"
 LIST_FIELDS = ("from app.core.settings import Settings; "
                "print('\\n'.join(sorted(Settings.model_fields)))")
 
@@ -49,18 +52,8 @@ def settings_fields(docker, image):
     return {line.strip() for line in out.splitlines() if re.fullmatch(r"[a-z0-9_]+", line.strip())}
 
 
-def env_names(path):
-    """환경 파일에서 `ACOP_` 이름만 읽는다. 값은 읽어도 버린다."""
-    names = set()
-    for line in Path(path).read_text(encoding="utf-8", errors="replace").splitlines():
-        match = re.match(r"^\s*(?:export\s+)?(ACOP_[A-Za-z0-9_]+)\s*=", line)
-        if match:
-            names.add(match.group(1)[len("ACOP_"):].lower())
-    return names
-
-
 def run_check(docker, *, old_image, new_image, db_image="pgvector/pgvector:pg17", mobility_dir=None,
-              env_names_files=(), wait_seconds=240, say=print, sleep=time.sleep):
+              wait_seconds=240, say=print, sleep=time.sleep):
     token = uuid4().hex[:10]
     net, db, api = f"rc-{token}", f"rc-{token}-db", f"rc-{token}-api"
     password = uuid4().hex
@@ -131,12 +124,22 @@ def run_check(docker, *, old_image, new_image, db_image="pgvector/pgvector:pg17"
         only_new = sorted(new_fields - old_fields)
         say(f"설정 이름: 최신에만 있는 것 {len(only_new)}개" + (f" — {', '.join('ACOP_' + n.upper() for n in only_new[:12])}"
                                                            + (" …" if len(only_new) > 12 else "") if only_new else ""))
-        for path in env_names_files:
-            conflicts = sorted(env_names(path) & set(only_new))
-            record(f"설정 파일 {Path(path).name} 의 새 이름이 옛 이미지를 막지 않음", not conflicts,
-                   "" if not conflicts else "옛 이미지가 모르는 이름: " + ", ".join("ACOP_" + n.upper() for n in conflicts))
-        if not env_names_files and only_new:
-            say("주의: 운영 .env 에 위 이름이 하나라도 있으면 옛 이미지는 켜지지 않는다(extra=forbid). --env-names-file 로 대조할 수 있다")
+        if only_new:
+            # 운영 방식(환경변수로 주입): 옛 이미지가 모르는 새 이름이 있어도 설정이 정상적으로 읽혀야 한다.
+            name = only_new[0]
+            env_code, env_out = app_run(old_image, ["-c", SETTINGS_PROBE], "conf-env",
+                                        ["-e", f"ACOP_{name.upper()}=restore-check"])
+            record("옛 이미지가 모르는 새 설정 이름이 환경변수로 들어와도 켜진다(운영 방식: compose env_file)",
+                   env_code == 0, "" if env_code == 0 else env_out.strip()[-200:])
+            # 참고: `.env` 파일로 읽는 방식이면 막힌다(extra=forbid). 운영은 이 방식이 아니므로 통과·실패에 넣지 않고 알려만 준다.
+            with tempfile.TemporaryDirectory() as tmp:
+                dotenv = Path(tmp) / "dotenv"
+                dotenv.write_text(f"ACOP_{name.upper()}=restore-check\n", encoding="utf-8")
+                dotenv.chmod(0o644)
+                file_code, _file_out = app_run(old_image, ["-c", SETTINGS_PROBE], "conf-file",
+                                               ["-v", f"{dotenv}:/srv/.env:ro"])
+            say("참고: 같은 이름을 컨테이너 안 `.env` 파일로 읽게 하면 옛 이미지는 " + ("거부한다(extra=forbid)" if file_code else "그대로 켜진다")
+                + " — 배포 방식을 `.env` 파일 마운트로 바꾸면 이 점을 다시 본다")
         return results
     finally:
         for name in (api, db):
@@ -150,13 +153,11 @@ def main(argv=None):
     parser.add_argument("--new-image", required=True)
     parser.add_argument("--db-image", default="pgvector/pgvector:pg17")
     parser.add_argument("--mobility-dir", help="이동 자료 폴더(읽기 전용으로 붙인다). 없으면 API 가 못 뜰 수 있다")
-    parser.add_argument("--env-names-file", action="append", default=[], help="환경 파일(이름만 읽는다)")
     parser.add_argument("--wait-seconds", type=int, default=240)
     args = parser.parse_args(argv)
     try:
         results = run_check(Docker(), old_image=args.old_image, new_image=args.new_image, db_image=args.db_image,
-                            mobility_dir=args.mobility_dir, env_names_files=args.env_names_file,
-                            wait_seconds=args.wait_seconds)
+                            mobility_dir=args.mobility_dir, wait_seconds=args.wait_seconds)
     except CheckError as exc:
         print(f"복원 시험 실패: {exc}")
         raise SystemExit(2)
