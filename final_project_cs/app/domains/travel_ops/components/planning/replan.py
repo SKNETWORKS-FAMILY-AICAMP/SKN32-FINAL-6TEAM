@@ -630,15 +630,14 @@ def route_candidates(*, route: dict[str, Any], depart: datetime, planned_arrival
     # ☆`[2026-09-29 이동 계산기 문제목록 #23]` 원래 계획의 요금을 모르면 0원으로 두지 않는다 — 앞 판은 0 으로 두어
     #   대안 요금 전체가 「추가 비용」으로 잡혔다. 모르면 추가 비용을 모름(None)으로 둔다(지어내지 않는다).
     planned_fare = (options.get(route.get("planned")) or {}).get("fare_krw")
+    # 후보마다 실제로 걸린 사건만 본다 — 구간 번호(`링크:`)를 실은 후보는 다른 방향 사건을 거른다(`[2026-10-13]`). 이 모듈을 먼저 부르는 쪽이 있어 함수 안에서 부른다
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import option_hits
     out = []
     for option in options.values():
         eta = option.get("eta_min")
         candidate = Candidate(key=option["id"], place=None, changed_items=1,
                               extra_cost_krw=None, shift_minutes=0, option=dict(option))
-        for target in option.get("uses", []):
-            event = events.get(target)
-            if event is None:
-                continue
+        for target, event in option_hits(option, events).items():
             if event.get("effect") == "skip_station":
                 candidate.rejected.append(f"{event.get('summary')} — 이 경로로는 도달할 수 없다")
             elif event.get("effect") == "road_control":

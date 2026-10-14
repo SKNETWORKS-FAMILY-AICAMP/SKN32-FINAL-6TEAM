@@ -32,7 +32,7 @@ from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStor
 from app.domains.travel_ops.components.team_hooks import similarity
 from app.domains.travel_ops.components.watch.activity_disasters import rejudge as rejudge_activity_disasters
 from app.domains.travel_ops.components.itinerary.itinerary_changes import (ItineraryChange, NoChange, next_after, place_before, plan_activity_adjustment,
-                                plan_route_adjustment, planned_option, route_of, route_targets)
+                                option_hits, plan_route_adjustment, planned_option, route_of, route_targets)
 from app.domains.travel_ops.components.planning.pending import PendingStore, apply_or_ask, ask_consent, forecast_attention, needs_consent, weather_only
 
 DEFAULT_LOOKAHEAD = timedelta(minutes=90)
@@ -175,7 +175,7 @@ class TripWatcher:
         if blind:
             result.unchecked.append({"trip_id": str(trip_id), "item": item.title,
                                      "targets": blind})
-        if not any(target in events for target in planned.get("uses", [])):
+        if not option_hits(planned, events):
             return
         with self._connect() as conn:
             _, items = self.store.latest(conn, trip_id)
