@@ -215,6 +215,7 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }:
  * and it scrolls. Enter still sends (as the one-line field did); Shift+Enter is a new line, and the Enter the browser reports while a Korean syllable is still being composed is not a
  * send (Chrome reports that Enter once more when the syllable is done — sending on both sends the last syllable twice). On a phone (no mouse, a finger — there is no Shift+Enter)
  * Enter is always a new line and the send button sends. The hint is drawn over the empty field so a long one ends in 「…」(a textarea's own placeholder cannot).
+ * `[2026-10-14 사용자 결정]` Opening, the round button becomes the send button in its place (💬 turns into ➤ — `chatSendFrom` · `chatSendTo`, CSS in trip-screen.module.css).
  */
 const touchKeyboard = () => typeof matchMedia === "function" && matchMedia("(hover: none) and (pointer: coarse)").matches;
 
@@ -260,7 +261,7 @@ export function ChatBar({ chat, open, inChat, subject, onOpen, onClose, onEnterC
         onChange={(event) => { chat.setDraft(event.target.value); if (chat.inputError) chat.setInputError(""); }} />
       {!chat.draft && <span className={styles.chatHint} aria-hidden="true">{hint}</span>}
       </span>
-      <button type="submit" className={styles.chatSend} aria-disabled={chat.message.isPending || undefined} style={chat.message.isPending ? { opacity: .5, cursor: "not-allowed" } : undefined} aria-label={t("메시지 전송", "Send message")}><Send size={18} strokeWidth={1.8} aria-hidden="true" /></button>
+      <button type="submit" className={styles.chatSend} aria-disabled={chat.message.isPending || undefined} style={chat.message.isPending ? { opacity: .5, cursor: "not-allowed" } : undefined} aria-label={t("메시지 전송", "Send message")}><MessageCircle className={styles.chatSendFrom} size={18} strokeWidth={1.8} aria-hidden="true" /><Send className={styles.chatSendTo} size={18} strokeWidth={1.8} aria-hidden="true" /></button>
     </form>
     {chat.inputError && <p id="trip-chat-error" className={styles.chatError} role="alert">{chat.inputError}</p>}
   </div>;

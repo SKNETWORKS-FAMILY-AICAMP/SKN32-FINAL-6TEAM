@@ -127,11 +127,26 @@
 /* `[2026-10-14 사용자 지시 — ST4F-493]` 열린 막대는 입력칸이 줄바꿈으로 자라는 만큼 높아지고(최대 3줄, 그 뒤 입력칸 스크롤), 양쪽 단추는 맨 아랫줄에 남는다. 한 줄일 때는 전과 같은 58px. */
 .chatBar[data-open] { height: auto; min-height: 58px; align-items: flex-end; padding-block: 6px; }
 .chatBar[data-open] > .chatClose { margin-bottom: 2px; }
-.chatBar[data-open]:focus-within { border-color: var(--color-selected); box-shadow: 0 0 0 3px var(--color-selected-soft), 0 10px 26px color-mix(in srgb, var(--color-text) 22%, transparent); }
+.chatBar[data-open]:focus-within { border-color: var(--color-selected); box-shadow: 0 0 0 4px var(--color-selected-soft), 0 10px 26px color-mix(in srgb, var(--color-text) 22%, transparent); }  /* `[2026-10-14 사용자 결정]` 링 3px → 4px */
+/* `[2026-10-14 사용자 결정 — ST4F-493 · 샘플 B+C 「튕김 보통」]` 펼칠 때: 막대가 살짝 지나쳤다 돌아오며 펼쳐지고(접을 때는 위의 0.3초 그대로), 둥근 단추가 그 자리의 전송 단추가 된다 —
+   전송 단추가 둥근 단추 크기(58/44 = 1.32배)에서 줄어들며 💬 가 ➤ 로 돌아 바뀐다(두 단추의 중심이 같은 자리). 펼치는 동안 전송 단추는 오른쪽에 붙어 있고(`justify-content: flex-end`),
+   ✕ · ← 와 입력칸은 0.2초 뒤에 나타난다. 이어지는 효과는 없다. 동작 줄이기 설정이면 모두 끈다. */
+.chatBar[data-open] { transition: width .55s cubic-bezier(.34, 1.45, .64, 1); }
+.chatBar[data-open] > .chatClose, .chatBar[data-open] .chatField { animation: chatContentIn .2s .2s both; }
+.chatBar[data-open] .chatSend { position: relative; z-index: 1; animation: chatSendIn .55s cubic-bezier(.34, 1.45, .64, 1) both; }
+.chatSendTo { animation: chatIconIn .55s cubic-bezier(.34, 1.45, .64, 1) both; }
+.chatSendFrom { position: absolute; inset: 0; margin: auto; opacity: 0; animation: chatIconOut .3s ease-out; }
+@keyframes chatContentIn { from { opacity: 0; } }
+@keyframes chatSendIn { from { transform: scale(1.32); } }
+@keyframes chatIconIn { from { opacity: 0; transform: rotate(90deg) scale(.6); } }
+@keyframes chatIconOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: rotate(-90deg) scale(.6); } }
+@media (prefers-reduced-motion: reduce) { .chatBar, .chatBar[data-open] { transition: none; } .chatBar[data-open] > .chatClose, .chatBar[data-open] .chatField, .chatBar[data-open] .chatSend, .chatSendTo, .chatSendFrom { animation: none; } }
 .chatFab { display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--color-on-primary); cursor: pointer; }
 .chatClose { display: grid; flex: none; place-items: center; width: 40px; height: 40px; margin-left: 7px; padding: 0; border: 0; border-radius: 50%; background: var(--color-subtle); color: var(--color-muted); cursor: pointer; }
-.chatForm { display: flex; flex: 1; align-items: flex-end; gap: 6px; min-width: 0; padding: 0 6px 0 12px; }
+.chatForm { display: flex; flex: 1; align-items: flex-end; justify-content: flex-end; gap: 6px; min-width: 0; padding: 0 6px 0 12px; }
 .chatInput { box-sizing: border-box; display: block; flex: 1; min-width: 0; height: 44px; max-height: 88px; padding: 11px 2px; overflow-y: auto; border: 0; background: none; color: var(--color-text); font: inherit; font-size: 16px; line-height: 22px; outline: none; resize: none; }  /* 한 줄 44px · 세 줄 88px(22px × 3 + 위아래 11px) */
+/* `[2026-10-14 사용자 결정]` 포커스는 막대의 초록 테두리 · 링이 보여 준다 — 입력칸 자체의 안쪽 상자(globals.css 의 공통 `textarea:focus-visible`)는 겹쳐서 뺀다. */
+.chatInput:focus-visible { outline: none; }
 /* 안내 문구: 입력칸 자체의 문구는 투명한 한 줄(접히면 빈 입력칸이 두 줄 높이로 자란다 · 화면 읽기와 시험은 이 문구를 읽는다)이고, 보이는 문구는 위에 겹친 글자 —
    textarea 의 문구에는 「…」가 붙지 않아서다. */
 .chatField { position: relative; display: flex; flex: 1; min-width: 0; }
