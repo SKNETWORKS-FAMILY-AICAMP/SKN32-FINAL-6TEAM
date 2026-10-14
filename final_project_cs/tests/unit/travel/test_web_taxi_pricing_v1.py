@@ -6,10 +6,19 @@ import json
 
 import pytest
 
+from app.domains.travel_ops.components import settings_hook
 from app.domains.travel_ops.components.intake import assemble, move_options, pipeline, registered_moves, review, taxi_pricing
 from app.domains.travel_ops.components.intake.hours import HoursFacts
 from app.domains.travel_ops.components.team_hooks import legs
 from tests.unit.travel.test_registered_moves import example
+
+
+@pytest.fixture(autouse=True)
+def _taxi_call_product_on():
+    """이 파일은 택시 호출 상품 고르기가 **켜진** 때의 동작을 본다 — 꺼짐은 test_taxi_call_product_switch.py."""
+    settings_hook.register(lambda tenant, name: True if name == settings_hook.TAXI_CALL_PRODUCT else None)
+    yield
+    settings_hook.clear()
 
 
 def pricing(product="km_blue_immediate"):

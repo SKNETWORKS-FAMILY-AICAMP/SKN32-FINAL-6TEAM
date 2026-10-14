@@ -126,6 +126,11 @@ def specs() -> dict[str, LimitSpec]:
     out["travel.dining.google_price_enabled"] = LimitSpec(
         "travel.dining.google_price_enabled", "식당 대체 후보 구글 가격 비교(유료 호출 — 결제 뒤 켜기)", "", "bool",
         guard.get("travel.dining.google_price_enabled") is True)
+    # ★`[2026-10-14 사용자 지시 · 핫픽스]` 확인 화면의 「택시 호출 상품」 고르기 — 택시 요금 계산이 믿을 만해질 때까지 기본 꺼짐.
+    #   읽는 곳은 `settings_hook.taxi_call_product_enabled` 하나다(검사 응답 · 고르기 요청 · 계산 입력)
+    out["travel.mobility.taxi_call_product_enabled"] = LimitSpec(
+        "travel.mobility.taxi_call_product_enabled", "확인 화면의 택시 호출 상품 고르기(택시 요금 계산 확인 뒤 켜기)", "", "bool",
+        guard.get("travel.mobility.taxi_call_product_enabled") is True)
     return out
 
 

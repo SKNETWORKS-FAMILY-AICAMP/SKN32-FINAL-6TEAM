@@ -62,3 +62,20 @@ def google_price_enabled(tenant_id: str) -> bool:
     from app.core.settings import google_price_enabled as guardrail_default
 
     return guardrail_default()
+
+
+TAXI_CALL_PRODUCT = "travel.mobility.taxi_call_product_enabled"
+
+
+def taxi_call_product_enabled(tenant_id: str) -> bool:
+    """확인 화면에서 택시 호출 상품을 고르게 하나. `[2026-10-14 사용자 지시 · 핫픽스]` 택시 요금 계산 확인 뒤 관리 콘솔에서 켠다.
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.taxi_call_product_enabled`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다 — 켜는 것은 명시한 경우뿐이다.
+    """
+    value = operator_setting(tenant_id, TAXI_CALL_PRODUCT)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import taxi_call_product_enabled as guardrail_default
+
+    return guardrail_default()

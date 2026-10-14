@@ -191,7 +191,7 @@ def choose(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision
     new = _store(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision,
                  field=f"moves[{from_id}~{to_id}].mode", value=None if mode == "recommended" else mode)
     _, found2 = pipeline.current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=new)
-    return {"revision": new, "review": review_module.public(found2)}
+    return {"revision": new, "review": review_module.public(found2, tenant_id=tenant_id)}
 
 
 def _store(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, field: str, value: Any) -> int:
