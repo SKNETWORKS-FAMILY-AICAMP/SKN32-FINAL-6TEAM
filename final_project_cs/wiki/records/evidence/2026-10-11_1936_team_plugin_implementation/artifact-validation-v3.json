@@ -1,0 +1,20 @@
+{
+  "artifact": "wiki/records/reports/assets/2026-10-11_team_plugin/plugin-flow.html",
+  "sha256": "218e43f0f62c7c3055705ad725931dcd097803f1d7fa68565b8c194c61af60a0",
+  "html_parse": true,
+  "svg_parse": true,
+  "view_box": "0 0 1000 1080",
+  "details_count": 4,
+  "links": [
+    {
+      "target": "../../../evidence/2026-10-11_1936_team_plugin_implementation/acceptance-mapping-v2.json",
+      "exists": true
+    },
+    {
+      "target": "../../../../teams/team-plugin-lifecycle.md",
+      "exists": true
+    }
+  ],
+  "visual_render_checked": false,
+  "scope": "문서 구조·링크 검사. 화면 렌더링·제품 화면 시험 아님."
+}

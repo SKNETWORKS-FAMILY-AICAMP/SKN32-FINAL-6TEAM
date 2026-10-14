@@ -1,0 +1,274 @@
+...................................................................FFF.. [ 52%]
+.F........F....F............................FFF..........F..F...         [100%]
+================================== FAILURES ===================================
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1217_\ubc84\uc2a4_\uc218\ub2e8\ud544\ud130\uc640_\ud658\uc2b9\ud0d0\uc0c9_\ub204\ub77d] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-08_1217_버스_수단필터와_환승탐색_누락.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+        assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+    
+>       assert not (resolved and still_open), (
+            f"{path.name} 에 '해결됨' 과 '미해결' 이 둘 다 있다. 지금 상태 하나만 남긴다.\n"
+            "  부분 해결이면 `## 해결됨 (날짜, 부분) — 무엇이 닫혔는지` 로 적고,\n"
+            "  열려 있는 부분을 그 아래 본문에 분명히 남긴다.")
+E       AssertionError: 2026-10-08_1217_버스_수단필터와_환승탐색_누락.md 에 '해결됨' 과 '미해결' 이 둘 다 있다. 지금 상태 하나만 남긴다.
+E           부분 해결이면 `## 해결됨 (날짜, 부분) — 무엇이 닫혔는지` 로 적고,
+E           열려 있는 부분을 그 아래 본문에 분명히 남긴다.
+E       assert not (True and True)
+
+tests\unit\core\test_debug_report_status.py:51: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1257_\uc774\ub3d9_\uae30\ub3d9_\uac04\uc811import_\uae68\uc9d0] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-08_1257_이동_기동_간접import_깨짐.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+        assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+    
+>       assert not (resolved and still_open), (
+            f"{path.name} 에 '해결됨' 과 '미해결' 이 둘 다 있다. 지금 상태 하나만 남긴다.\n"
+            "  부분 해결이면 `## 해결됨 (날짜, 부분) — 무엇이 닫혔는지` 로 적고,\n"
+            "  열려 있는 부분을 그 아래 본문에 분명히 남긴다.")
+E       AssertionError: 2026-10-08_1257_이동_기동_간접import_깨짐.md 에 '해결됨' 과 '미해결' 이 둘 다 있다. 지금 상태 하나만 남긴다.
+E           부분 해결이면 `## 해결됨 (날짜, 부분) — 무엇이 닫혔는지` 로 적고,
+E           열려 있는 부분을 그 아래 본문에 분명히 남긴다.
+E       assert not (True and True)
+
+tests\unit\core\test_debug_report_status.py:51: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1310_\ubd80\ubd84\uc21c\ud658\uc120_\uc5c6\ub294\uc5f0\uacb0_\uc0dd\uc131] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-08_1310_부분순환선_없는연결_생성.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+        assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+    
+>       assert not (resolved and still_open), (
+            f"{path.name} 에 '해결됨' 과 '미해결' 이 둘 다 있다. 지금 상태 하나만 남긴다.\n"
+            "  부분 해결이면 `## 해결됨 (날짜, 부분) — 무엇이 닫혔는지` 로 적고,\n"
+            "  열려 있는 부분을 그 아래 본문에 분명히 남긴다.")
+E       AssertionError: 2026-10-08_1310_부분순환선_없는연결_생성.md 에 '해결됨' 과 '미해결' 이 둘 다 있다. 지금 상태 하나만 남긴다.
+E           부분 해결이면 `## 해결됨 (날짜, 부분) — 무엇이 닫혔는지` 로 적고,
+E           열려 있는 부분을 그 아래 본문에 분명히 남긴다.
+E       assert not (True and True)
+
+tests\unit\core\test_debug_report_status.py:51: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1735_\uc2dc\uac04\ucd08\uae30\ud654_\uc77c\ubd80\uc77c\uc815\ub9cc_\ub418\ub3cc\ub9bc] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-08_1735_시간초기화_일부일정만_되돌림.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+        assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+    
+>       assert not (resolved and still_open), (
+            f"{path.name} 에 '해결됨' 과 '미해결' 이 둘 다 있다. 지금 상태 하나만 남긴다.\n"
+            "  부분 해결이면 `## 해결됨 (날짜, 부분) — 무엇이 닫혔는지` 로 적고,\n"
+            "  열려 있는 부분을 그 아래 본문에 분명히 남긴다.")
+E       AssertionError: 2026-10-08_1735_시간초기화_일부일정만_되돌림.md 에 '해결됨' 과 '미해결' 이 둘 다 있다. 지금 상태 하나만 남긴다.
+E           부분 해결이면 `## 해결됨 (날짜, 부분) — 무엇이 닫혔는지` 로 적고,
+E           열려 있는 부분을 그 아래 본문에 분명히 남긴다.
+E       assert not (True and True)
+
+tests\unit\core\test_debug_report_status.py:51: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_0122_\ucd9c\ubc1c\uc2dc\uc810_\ubc84\uc2a4\uc7ac\uac80\uc99d] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-09_0122_출발시점_버스재검증.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+>       assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+E       AssertionError: 2026-10-09_0122_출발시점_버스재검증.md 에 상태 표기가 없다.
+E           문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.
+E           ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.
+E           근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md
+E       assert (False or False)
+
+tests\unit\core\test_debug_report_status.py:45: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_0306_\ucc28\ub7c9_\uc2e4\uc81c\uc120\ud0dd\ub3c4\ub85c_\uac70\ub9ac\uadfc\uac70_\uc720\uc2e4] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-09_0306_차량_실제선택도로_거리근거_유실.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+>       assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+E       AssertionError: 2026-10-09_0306_차량_실제선택도로_거리근거_유실.md 에 상태 표기가 없다.
+E           문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.
+E           ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.
+E           근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md
+E       assert (False or False)
+
+tests\unit\core\test_debug_report_status.py:45: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1056_\uc9c0\ud558\ucca0_\ud604\uc7ac\ucd9c\ubc1c_\uc81c\ud488\uc5f0\uacb0] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-09_1056_지하철_현재출발_제품연결.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+>       assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+E       AssertionError: 2026-10-09_1056_지하철_현재출발_제품연결.md 에 상태 표기가 없다.
+E           문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.
+E           ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.
+E           근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md
+E       assert (False or False)
+
+tests\unit\core\test_debug_report_status.py:45: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1125_\uacf5\uc2dd\ubcd1\uae30\uc5ed\uba85_\uc885\ucc29\uacbd\ub85c\ubcf5\uad6c] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-09_1125_공식병기역명_종착경로복구.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+>       assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+E       AssertionError: 2026-10-09_1125_공식병기역명_종착경로복구.md 에 상태 표기가 없다.
+E           문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.
+E           ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.
+E           근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md
+E       assert (False or False)
+
+tests\unit\core\test_debug_report_status.py:45: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1143_\uc9c0\ud558\ucca0_\uc2e4\uc81c\ud0a4_\uc2b9\ucc28\uc870\ud68c] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-09_1143_지하철_실제키_승차조회.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+>       assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+E       AssertionError: 2026-10-09_1143_지하철_실제키_승차조회.md 에 상태 표기가 없다.
+E           문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.
+E           ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.
+E           근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md
+E       assert (False or False)
+
+tests\unit\core\test_debug_report_status.py:45: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1945_\uac70\ub9ac\uce69_\ub9c8\ucee4\uc911\ubcf5] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-09_1945_거리칩_마커중복.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+>       assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+E       AssertionError: 2026-10-09_1945_거리칩_마커중복.md 에 상태 표기가 없다.
+E           문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.
+E           ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.
+E           근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md
+E       assert (False or False)
+
+tests\unit\core\test_debug_report_status.py:45: AssertionError
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_2048_\uc77c\uc815\uc0bd\uc785_\ucde8\uc18c\uc640\uc785\ub825\ub77c\ubca8] _
+
+path = WindowsPath('C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/debugs/2026-10-09_2048_일정삽입_취소와입력라벨.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+>       assert resolved or still_open, (
+            f"{path.name} 에 상태 표기가 없다.\n"
+            "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
+            "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
+            "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+E       AssertionError: 2026-10-09_2048_일정삽입_취소와입력라벨.md 에 상태 표기가 없다.
+E           문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.
+E           ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.
+E           근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md
+E       assert (False or False)
+
+tests\unit\core\test_debug_report_status.py:45: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1217_\ubc84\uc2a4_\uc218\ub2e8\ud544\ud130\uc640_\ud658\uc2b9\ud0d0\uc0c9_\ub204\ub77d]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1257_\uc774\ub3d9_\uae30\ub3d9_\uac04\uc811import_\uae68\uc9d0]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1310_\ubd80\ubd84\uc21c\ud658\uc120_\uc5c6\ub294\uc5f0\uacb0_\uc0dd\uc131]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1735_\uc2dc\uac04\ucd08\uae30\ud654_\uc77c\ubd80\uc77c\uc815\ub9cc_\ub418\ub3cc\ub9bc]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_0122_\ucd9c\ubc1c\uc2dc\uc810_\ubc84\uc2a4\uc7ac\uac80\uc99d]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_0306_\ucc28\ub7c9_\uc2e4\uc81c\uc120\ud0dd\ub3c4\ub85c_\uac70\ub9ac\uadfc\uac70_\uc720\uc2e4]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1056_\uc9c0\ud558\ucca0_\ud604\uc7ac\ucd9c\ubc1c_\uc81c\ud488\uc5f0\uacb0]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1125_\uacf5\uc2dd\ubcd1\uae30\uc5ed\uba85_\uc885\ucc29\uacbd\ub85c\ubcf5\uad6c]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1143_\uc9c0\ud558\ucca0_\uc2e4\uc81c\ud0a4_\uc2b9\ucc28\uc870\ud68c]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1945_\uac70\ub9ac\uce69_\ub9c8\ucee4\uc911\ubcf5]
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_2048_\uc77c\uc815\uc0bd\uc785_\ucde8\uc18c\uc640\uc785\ub825\ub77c\ubca8]
+11 failed, 125 passed in 31.12s

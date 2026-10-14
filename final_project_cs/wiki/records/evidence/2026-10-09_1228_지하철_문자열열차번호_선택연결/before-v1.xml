@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="11" skipped="0" tests="28" time="4.596" timestamp="2026-10-09T12:29:11.842778+09:00" hostname="playdata"><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[A2099]" time="0.048"><failure message="AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': 'A2099'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}&#10;assert 'no_boardable_prediction' == 'predicted'&#10;  &#10;  - predicted&#10;  + no_boardable_prediction">number = 'A2099'
+
+    @pytest.mark.parametrize('number', ['A2099', 'X2099', 'a2099', '12A', '001A02', '0005010'])
+    def test_valid_literal_number_is_preserved_without_operator_or_type_guess(number):
+        got = select(snapshot([row(number)]))
+&gt;       assert got['status'] == 'predicted', got
+E       AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': 'A2099'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}
+E       assert 'no_boardable_prediction' == 'predicted'
+E         
+E         - predicted
+E         + no_boardable_prediction
+
+tests\unit\travel\test_subway_train_identity_v1.py:20: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[X2099]" time="0.001"><failure message="AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': 'X2099'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}&#10;assert 'no_boardable_prediction' == 'predicted'&#10;  &#10;  - predicted&#10;  + no_boardable_prediction">number = 'X2099'
+
+    @pytest.mark.parametrize('number', ['A2099', 'X2099', 'a2099', '12A', '001A02', '0005010'])
+    def test_valid_literal_number_is_preserved_without_operator_or_type_guess(number):
+        got = select(snapshot([row(number)]))
+&gt;       assert got['status'] == 'predicted', got
+E       AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': 'X2099'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}
+E       assert 'no_boardable_prediction' == 'predicted'
+E         
+E         - predicted
+E         + no_boardable_prediction
+
+tests\unit\travel\test_subway_train_identity_v1.py:20: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[a2099]" time="0.001"><failure message="AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': 'a2099'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}&#10;assert 'no_boardable_prediction' == 'predicted'&#10;  &#10;  - predicted&#10;  + no_boardable_prediction">number = 'a2099'
+
+    @pytest.mark.parametrize('number', ['A2099', 'X2099', 'a2099', '12A', '001A02', '0005010'])
+    def test_valid_literal_number_is_preserved_without_operator_or_type_guess(number):
+        got = select(snapshot([row(number)]))
+&gt;       assert got['status'] == 'predicted', got
+E       AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': 'a2099'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}
+E       assert 'no_boardable_prediction' == 'predicted'
+E         
+E         - predicted
+E         + no_boardable_prediction
+
+tests\unit\travel\test_subway_train_identity_v1.py:20: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[12A]" time="0.001"><failure message="AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': '12A'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}&#10;assert 'no_boardable_prediction' == 'predicted'&#10;  &#10;  - predicted&#10;  + no_boardable_prediction">number = '12A'
+
+    @pytest.mark.parametrize('number', ['A2099', 'X2099', 'a2099', '12A', '001A02', '0005010'])
+    def test_valid_literal_number_is_preserved_without_operator_or_type_guess(number):
+        got = select(snapshot([row(number)]))
+&gt;       assert got['status'] == 'predicted', got
+E       AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': '12A'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}
+E       assert 'no_boardable_prediction' == 'predicted'
+E         
+E         - predicted
+E         + no_boardable_prediction
+
+tests\unit\travel\test_subway_train_identity_v1.py:20: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[001A02]" time="0.001"><failure message="AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': '001A02'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}&#10;assert 'no_boardable_prediction' == 'predicted'&#10;  &#10;  - predicted&#10;  + no_boardable_prediction">number = '001A02'
+
+    @pytest.mark.parametrize('number', ['A2099', 'X2099', 'a2099', '12A', '001A02', '0005010'])
+    def test_valid_literal_number_is_preserved_without_operator_or_type_guess(number):
+        got = select(snapshot([row(number)]))
+&gt;       assert got['status'] == 'predicted', got
+E       AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': '001A02'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}
+E       assert 'no_boardable_prediction' == 'predicted'
+E         
+E         - predicted
+E         + no_boardable_prediction
+
+tests\unit\travel\test_subway_train_identity_v1.py:20: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_valid_literal_number_is_preserved_without_operator_or_type_guess[0005010]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[None]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[True]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[2.5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[number4]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[number5]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[ ]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[ A2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[A2099 ]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[A 2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[A-2099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[\uff212099]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[A\uff12\uff10\uff19\uff19]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_bad_identity_stays_excluded_without_crashing[0000]" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_duplicate_literal_number_does_not_invent_a_vehicle" time="0.001"><failure message="AssertionError: assert ['train_ident...tity_missing'] == ['duplicate_t...ain_identity']&#10;  &#10;  At index 0 diff: 'train_identity_missing' != 'duplicate_train_identity'&#10;  Use -v to get more diff">def test_duplicate_literal_number_does_not_invent_a_vehicle():
+        got = select(snapshot([row('A2099'), row('A2099')]))
+        assert got['status'] == 'no_boardable_prediction'
+&gt;       assert [x['reason'] for x in got['excluded']] == ['duplicate_train_identity'] * 2
+E       AssertionError: assert ['train_ident...tity_missing'] == ['duplicate_t...ain_identity']
+E         
+E         At index 0 diff: 'train_identity_missing' != 'duplicate_train_identity'
+E         Use -v to get more diff
+
+tests\unit\travel\test_subway_train_identity_v1.py:36: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_prefix_is_not_removed_to_merge_different_trains" time="0.001"><failure message="AssertionError: assert ('predicted' == 'predicted'&#10;  &#10;    predicted and '2099' == 'A2099'&#10;  &#10;  - A2099&#10;  ? -&#10;  + 2099)">def test_prefix_is_not_removed_to_merge_different_trains():
+        first = row('A2099')
+        second = dict(row('2099'), eta_seconds=240)
+        got = select(snapshot([first, second]))
+&gt;       assert got['status'] == 'predicted' and got['train_number'] == 'A2099'
+E       AssertionError: assert ('predicted' == 'predicted'
+E         
+E           predicted and '2099' == 'A2099'
+E         
+E         - A2099
+E         ? -
+E         + 2099)
+
+tests\unit\travel\test_subway_train_identity_v1.py:43: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_letter_number_does_not_relax_station_ids_or_allow_express" time="0.001" /><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_departure_callback_recheck_accepts_literal_number_and_keeps_path_model[A2099]" time="0.050"><failure message="AssertionError: {'observations': [{'arrival_at': '2026-10-09T10:08:00+09:00', 'claim': '접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님', 'confirmed_at'... 'option_id': 'p', 'party_check': 'current_trip_not_supplied', 'reason': 'observation_identity_or_clock_mismatch', ...}&#10;assert 'fatal' == 'realtime'&#10;  &#10;  - realtime&#10;  + fatal">number = 'A2099'
+
+    @pytest.mark.parametrize('number', ['A2099', 'X2099'])
+    def test_departure_callback_recheck_accepts_literal_number_and_keeps_path_model(number):
+        rt, context = scene()
+        before = deepcopy(context)
+        def observation(*a, **kw):
+            return dict(source(*a, **kw), train_number=number)
+        got = call(rt, context, subway_arrival=observation)
+&gt;       assert got['status'] == 'realtime', got
+E       AssertionError: {'observations': [{'arrival_at': '2026-10-09T10:08:00+09:00', 'claim': '접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님', 'confirmed_at'... 'option_id': 'p', 'party_check': 'current_trip_not_supplied', 'reason': 'observation_identity_or_clock_mismatch', ...}
+E       assert 'fatal' == 'realtime'
+E         
+E         - realtime
+E         + fatal
+
+tests\unit\travel\test_subway_train_identity_v1.py:60: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_departure_callback_recheck_accepts_literal_number_and_keeps_path_model[X2099]" time="0.004"><failure message="AssertionError: {'observations': [{'arrival_at': '2026-10-09T10:08:00+09:00', 'claim': '접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님', 'confirmed_at'... 'option_id': 'p', 'party_check': 'current_trip_not_supplied', 'reason': 'observation_identity_or_clock_mismatch', ...}&#10;assert 'fatal' == 'realtime'&#10;  &#10;  - realtime&#10;  + fatal">number = 'X2099'
+
+    @pytest.mark.parametrize('number', ['A2099', 'X2099'])
+    def test_departure_callback_recheck_accepts_literal_number_and_keeps_path_model(number):
+        rt, context = scene()
+        before = deepcopy(context)
+        def observation(*a, **kw):
+            return dict(source(*a, **kw), train_number=number)
+        got = call(rt, context, subway_arrival=observation)
+&gt;       assert got['status'] == 'realtime', got
+E       AssertionError: {'observations': [{'arrival_at': '2026-10-09T10:08:00+09:00', 'claim': '접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님', 'confirmed_at'... 'option_id': 'p', 'party_check': 'current_trip_not_supplied', 'reason': 'observation_identity_or_clock_mismatch', ...}
+E       assert 'fatal' == 'realtime'
+E         
+E         - realtime
+E         + fatal
+
+tests\unit\travel\test_subway_train_identity_v1.py:60: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_actual_source_normalizer_and_selector_accept_letter_without_extra_http_calls" time="0.001"><failure message="AssertionError: {'confirmed_at': '2026-10-09T03:29:16.415006+00:00', 'evaluated_at': '2026-10-09T12:29:18.415006+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': 'A2099'}], 'line_id': '1005', ...}&#10;assert (1 == 1 and 'no_boardable_prediction' == 'predicted'&#10; +  where 1 = len([True])&#10;  &#10;  - predicted&#10;  + no_boardable_prediction)">def test_actual_source_normalizer_and_selector_accept_letter_without_extra_http_calls():
+        now = datetime.now(NOW.tzinfo)
+        calls = []
+        path = policy()['allowed_services'][0]['path_station_ids']
+        def transport(url, params):
+            calls.append(True)
+            raw = {'subwayId': policy()['line_id'], 'statnId': path[0], 'statnTid': path[1],
+                   'bstatnId': path[-1], 'btrainSttus': '일반', 'btrainNo': 'A2099',
+                   'barvlDt': '200', 'arvlCd': '99', 'recptnDt': now.isoformat()}
+            return httpx.Response(200, json={'errorMessage': {'code': 'INFO-000', 'total': 1},
+                                            'realtimeArrivalList': [raw]}, request=httpx.Request('GET', url))
+        src = SeoulSubwayArrival(service_key='controlled-test-key', transport=transport,
+                                 now=lambda: now + timedelta(seconds=2))
+        got = src.boardable_arrival('양평', **policy(now=now, ready_at=now + timedelta(seconds=100)))
+&gt;       assert len(calls) == 1 and got['status'] == 'predicted', got
+E       AssertionError: {'confirmed_at': '2026-10-09T03:29:16.415006+00:00', 'evaluated_at': '2026-10-09T12:29:18.415006+09:00', 'excluded': [{'reason': 'train_identity_missing', 'train_number': 'A2099'}], 'line_id': '1005', ...}
+E       assert (1 == 1 and 'no_boardable_prediction' == 'predicted'
+E        +  where 1 = len([True])
+E         
+E         - predicted
+E         + no_boardable_prediction)
+
+tests\unit\travel\test_subway_train_identity_v1.py:81: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_subway_train_identity_v1" name="test_letter_number_reaches_departure_notice_with_new_eta" time="0.011"><failure message="AssertionError: ('fatal', {'observations': [{'arrival_at': '2026-10-09T10:08:00+09:00', 'claim': '접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님', 'con...'option_id': 'p', 'party_check': 'current_trip_not_supplied', 'reason': 'observation_identity_or_clock_mismatch', ...})&#10;assert 'fatal' == 'ok'&#10;  &#10;  - ok&#10;  + fatal">def test_letter_number_reaches_departure_notice_with_new_eta():
+        from app.domains.travel_ops.components.watch.trip_reminders import build_departure
+        from .test_departure_observer_notice_v1 import NoEvents, scene as notice_scene
+        rt, context = scene()
+        def observation(*a, **kw):
+            return dict(source(*a, **kw), train_number='A2099')
+        result = call(rt, context, subway_arrival=observation)
+        move, items = notice_scene()
+        move.detail['route_def']['options'][0].update(label='지하철', uses=['05호선'])
+        status, phrase = build_departure(move, items, route_events=NoEvents(), routes=None, now=NOW,
+                                         departure_observer=lambda *a, **kw: result)
+&gt;       assert status == 'ok', (status, result)
+E       AssertionError: ('fatal', {'observations': [{'arrival_at': '2026-10-09T10:08:00+09:00', 'claim': '접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님', 'con...'option_id': 'p', 'party_check': 'current_trip_not_supplied', 'reason': 'observation_identity_or_clock_mismatch', ...})
+E       assert 'fatal' == 'ok'
+E         
+E         - ok
+E         + fatal
+
+tests\unit\travel\test_subway_train_identity_v1.py:96: AssertionError</failure></testcase></testsuite></testsuites>

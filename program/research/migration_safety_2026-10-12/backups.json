@@ -1,0 +1,37 @@
+[
+  {
+    "file": "final_project_cs\\app\\infrastructure\\db\\migrate.py",
+    "backup": "final_project_cs\\app\\infrastructure\\db\\_backup\\2026-10-12_033243_migration_safety\\migrate.py",
+    "sha256": "fd3d0b4369c4f4a5a162fa68a7c1fea6ccf3ed8a8376429b7833036c3ac43d7c"
+  },
+  {
+    "file": "final_project_cs\\wiki\\data\\migrations.md",
+    "backup": "final_project_cs\\wiki\\data\\_backup\\2026-10-12_033243_migration_safety\\migrations.md",
+    "sha256": "350e4307bdc1ff6566e8d487fc4be93bd2742014619ea5d7b9b40a7647372eb7"
+  },
+  {
+    "file": "final_project_cs\\deploy\\auto_deploy.sh",
+    "backup": "final_project_cs\\deploy\\_backup\\2026-10-12_033243_migration_safety\\auto_deploy.sh",
+    "sha256": "bf7218289a7ad0caeacf23f88489297baccf1707bf660ba8cda95e469889ed67"
+  },
+  {
+    "file": "final_project_cs\\deploy\\server_up.sh",
+    "backup": "final_project_cs\\deploy\\_backup\\2026-10-12_033243_migration_safety\\server_up.sh",
+    "sha256": "26c467b47edffe06a00318f2c57d880a1bf163d1434c952bd6bb5a2380f58f89"
+  },
+  {
+    "file": "final_project_cs\\deploy\\Dockerfile.api",
+    "backup": "final_project_cs\\deploy\\_backup\\2026-10-12_033243_migration_safety\\Dockerfile.api",
+    "sha256": "8cfa96935e08a323392810d1658c4e16ca8a97d9dccf35eb74faef4e76f088d7"
+  },
+  {
+    "file": "final_project_cs\\requirements.txt",
+    "backup": "final_project_cs\\_backup\\2026-10-12_033243_migration_safety\\requirements.txt",
+    "sha256": "a3989f9b47491eb52a7a0d97e3d8681a47f3caa75fddd6059f59f80203807ce5"
+  },
+  {
+    "file": "final_project_cs\\tests\\unit\\core\\test_current_migration_plan.py",
+    "backup": "final_project_cs\\tests\\unit\\core\\_backup\\2026-10-12_033243_migration_safety\\test_current_migration_plan.py",
+    "sha256": "bb5889b93645707802a280c3c3e7e579584afd9d1a0ce56557b2fe9c89a32c89"
+  }
+]

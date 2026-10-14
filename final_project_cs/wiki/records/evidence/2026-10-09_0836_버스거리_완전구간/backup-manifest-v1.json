@@ -1,0 +1,42 @@
+[
+  {
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0836_버스거리_완전구간/bus.py",
+    "sha256": "750a89399a5dfdcc84d9e8fb6468684932a4e3e68f3c22018329440ef49c28c4"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0836_버스거리_완전구간/mobility.md",
+    "sha256": "2189258755937ce15a9c8cef2b5396ca0958f22d0f4e79599f3bfed9e8d94af0"
+  },
+  {
+    "source": "final_project_cs/tests/unit/travel/mobility/test_bus_distance_completeness_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0840_출발판정_기존계약/test_bus_distance_completeness_v1.py",
+    "sha256": "d97112fbf51e80420b13688bd4006295972d3ab8dc06ac30e79dd44b14533a36"
+  },
+  {
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus_profile.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0842_버스프로파일_완전구간/bus_profile.py",
+    "sha256": "18a4298ed54f0e64c1e6d3fb78bf47e2af1a70fe5a95f7ecdcba57ad34853d87"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0842_버스프로파일_완전구간/mobility.md",
+    "sha256": "f26542abbe9a97dfdde2a51d3f9e5ce63ce9579c9e137a226932286ae19a0f73"
+  },
+  {
+    "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0836_버스거리_완전구간_중간정류장_누락을_일부거리로_합산.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0842_버스프로파일_완전구간/2026-10-09_0836_버스거리_완전구간_중간정류장_누락을_일부거리로_합산.md",
+    "sha256": "1c36ec3b0399730d43cf7248904df5b60708e8b7b2fb0fab847d6896853e139e"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0847_버스완전구간_검증결과/mobility.md",
+    "sha256": "a791d4d6b061f16be6ec3dbc8fa3970cb1d9ea0da37d11f7cb7db3d6de77992c"
+  },
+  {
+    "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0836_버스거리_완전구간_중간정류장_누락을_일부거리로_합산.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0847_버스완전구간_결함종료/2026-10-09_0836_버스거리_완전구간_중간정류장_누락을_일부거리로_합산.md",
+    "sha256": "cbd7e43cfa9ebfc3f9cc3bcad4d204d6715a8737bc40e1f3d6dd6ec973e3548e"
+  }
+]

@@ -260,3 +260,4 @@ def test_component_lookup_rollback_does_not_rollback_case_transitions(decided, m
         assert [r[0] for r in cur.fetchall()] == ["created", "classified", "routed", "completed"]
         cur.execute("SELECT count(*) FROM agent_runs WHERE case_id=%s", (case_id,))
         assert cur.fetchone()[0] == 0
+

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 
@@ -30,9 +31,14 @@ A = {"key": "a", "name": "A", "lat": 0.0, "lon": 0.0}
 B = {"key": "b", "name": "B", "lat": 0.0, "lon": 0.01}
 
 
-def _bare():
+def _bare(walk_m=None):
+    """walk_m 을 주면 그 길 거리를 돌려주는 합성 보행망(검증된 경로 · 낙관 아님)을 단다. ☆`[2026-10-12]` 직접 도보는 보행망 없이
+    직선×계수로 만들지 않는다 — 도보 후보가 필요한 축은 보행망을 명시적으로 준다(값은 시험용 · 실측 아님)."""
     v = Verifier(Timetable(), None, RULES, set())
     v.sc, v.ex = None, None
+    if walk_m is not None:
+        v.bike_router = SimpleNamespace(available=lambda: True, route=lambda *a: {"distance_m": float(walk_m)},
+                                        last_error=None)
     return P.Planner(Runtime(v, timetable_built_at="t", rules_version="v", stats={}))
 
 
@@ -257,7 +263,7 @@ def test_summary_fields_follow_output_spec_names():
 
 def test_leg_attaches_earliest_only_when_asked(monkeypatch):
     """기본(끄기)은 앞 판과 같다 — earliest 를 부르지 않는다. 켜면 arrive_late 이유에 earliest 를 붙인다."""
-    pl = _bare()
+    pl = _bare(walk_m=70)                                                      # 합성 보행망 70 m(직선 약 55 m)
     calls = []
     monkeypatch.setattr(pl, "earliest", lambda *a, **k: (calls.append(1), (None, {"code": "before_first", "reason": "r"}))[1])
     walk_far = {"key": "c", "name": "C", "lat": 0.0, "lon": 0.0005}          # 약 55 m — 도보 직행만
@@ -284,7 +290,7 @@ def test_summary_requested_arrive_by_is_floored_minute():
 
 def test_walk_only_earliest_real_planner():
     """도보만 되는 짧은 구간 — 가장 이른 도착 목표 = 앞 일정 끝 + 도보 분 + 정책 버퍼(데이터 없이 도는 실제 계산)."""
-    pl = _bare()
+    pl = _bare(walk_m=70)                                                      # 합성 보행망 70 m(직선 약 55 m)
     near = {"key": "c", "name": "C", "lat": 0.0, "lon": 0.0005}
     prev_end = D("2026-09-23T11:29:00+09:00")
     got, why = pl.earliest(A, near, prev_end, {}, True, "c")
@@ -294,6 +300,7 @@ def test_walk_only_earliest_real_planner():
     assert s["starts_at"] == "2026-09-23T11:29:00+09:00" and s["planned"] == "walk"
     assert D(s["arrive_by"]) == prev_end + timedelta(minutes=s["eta_min"] + buf)
     assert s["slack_min"] == -(s["eta_min"] + buf - 1)
+    assert s["eta_min"] == max(1, -(-70 // (pl.speed * 60))), "도보 분은 보행망 거리 ÷ 걷는 속도(직선×계수 아님)"
 
 
 def test_plan_version_bumped():

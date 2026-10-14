@@ -1,0 +1,83 @@
+{
+  "our_training": true,
+  "seed": 20261013,
+  "basic_B": [
+    814,
+    835
+  ],
+  "basic_C": [
+    748,
+    835
+  ],
+  "single_correct": [
+    748,
+    769
+  ],
+  "compound_B": [
+    66,
+    66
+  ],
+  "compound_C": [
+    0,
+    66
+  ],
+  "errors": 0,
+  "missing": 0,
+  "sets": [
+    {
+      "set": "mix8",
+      "saved": 171,
+      "errors": 0,
+      "sha256": "cb752ed21709ed8780d8fd9f3987dbbc009e79709b875864238c0cef27adece7"
+    },
+    {
+      "set": "mix9",
+      "saved": 165,
+      "errors": 0,
+      "sha256": "07581422d062b11b972ad39630888a3ceaa38ac6f15e8b1238fc4f7a4fc1dda3"
+    },
+    {
+      "set": "mix10",
+      "saved": 160,
+      "errors": 0,
+      "sha256": "74288c380711c9f6bc7a7fc3bfa9cfd68f60287676cf15d056d95f03b940aeee"
+    },
+    {
+      "set": "mix11",
+      "saved": 163,
+      "errors": 0,
+      "sha256": "e82e50e187bafdf1d2abc7060abdfdc9a379ffe8d1bc3c633c5477a05cf21470"
+    },
+    {
+      "set": "mix12",
+      "saved": 176,
+      "errors": 0,
+      "sha256": "63e1ed0110470862d2a666483a62c7740578962cec7d3feffd5dc186c7237199"
+    }
+  ],
+  "output_contract": "Single item basic HF NF4; compound C is diagnostic and not strict multi-item role",
+  "optimizer_steps": [
+    654,
+    654
+  ],
+  "lr_cap_steps": [
+    639,
+    654
+  ],
+  "lr_cap_intervals": [
+    [
+      16,
+      654
+    ]
+  ],
+  "lr_min": 3.986732956153178e-05,
+  "lr_max": 5e-05,
+  "training_seconds": 17880.204771757126,
+  "initial_loss_seconds": 2186.6233065128326,
+  "rank": 16,
+  "epochs": 2,
+  "accum": 8,
+  "train_sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c",
+  "independent_holdout": false,
+  "final_ranking": false
+}

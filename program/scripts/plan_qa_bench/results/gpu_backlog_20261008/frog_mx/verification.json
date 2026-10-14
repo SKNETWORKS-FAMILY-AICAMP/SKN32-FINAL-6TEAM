@@ -1,0 +1,17 @@
+{
+  "checks_passed": 7,
+  "checks_total": 7,
+  "answer_sha256_matches_remote": true,
+  "strict_coverage": 4014,
+  "expected": 4014,
+  "independent_request_count": [
+    898,
+    1033
+  ],
+  "independent_false_pick_count": [
+    167,
+    974
+  ],
+  "missing_error_unparsed_denominator_examples_passed": 3,
+  "comparison_scope": "One model, paired request-only versus mixed; no model rank decided"
+}

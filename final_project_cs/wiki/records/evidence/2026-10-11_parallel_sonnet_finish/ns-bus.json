@@ -1,0 +1,404 @@
+{
+  "input": [
+    {
+      "seq": 1,
+      "kind": "activity",
+      "title": "A",
+      "place": "ns",
+      "starts_at": "2026-09-29T11:00:00+09:00",
+      "ends_at": "2026-09-29T12:00:00+09:00"
+    },
+    {
+      "seq": 2,
+      "kind": "activity",
+      "title": "B",
+      "place": "it",
+      "starts_at": "2026-09-29T15:00:00+09:00"
+    }
+  ],
+  "output": {
+    "items": [
+      {
+        "seq": 1,
+        "kind": "activity",
+        "title": "A",
+        "place": "ns",
+        "starts_at": "2026-09-29T11:00:00+09:00",
+        "ends_at": "2026-09-29T12:00:00+09:00"
+      },
+      {
+        "seq": 2,
+        "kind": "mobility",
+        "title": "남산타워 → 이태원",
+        "starts_at": "2026-09-29T13:58:00+09:00",
+        "ends_at": "2026-09-29T14:39:00+09:00",
+        "route": "ns_to_it",
+        "detail": {
+          "departure_context": {
+            "schema_version": 1,
+            "captured_at": "2026-10-11T10:36:48.475804+00:00",
+            "from_place": {
+              "key": "ns",
+              "name": "남산타워",
+              "lat": 37.5512,
+              "lon": 126.9882
+            },
+            "to_place": {
+              "key": "it",
+              "name": "이태원",
+              "lat": 37.5345,
+              "lon": 126.9946
+            },
+            "basis": {
+              "timetable_built_at": "built:2026-10-01T10:38:34+09:00|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+              "rules_version": "v0.9.2",
+              "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+              "subway_station_version": "12ddcf1b102fcaea22236aad3fa3c5219c4fb12c2abefd279d49eb3acdbd7f5a"
+            },
+            "stage": "planning",
+            "party": {
+              "size": 1
+            },
+            "first_visit": true,
+            "service_date": "2026-09-29",
+            "start_min": 838,
+            "timing_unit": "model_minutes",
+            "options": {
+              "bus_405": {
+                "option_id": "bus_405",
+                "eta_min": 41,
+                "start_min": 838,
+                "path_kind": "vehicle",
+                "legs": [
+                  {
+                    "mode": "bus",
+                    "route": "405",
+                    "from": "후암약수터",
+                    "to": "이태원119안전센터",
+                    "route_id": "100100597",
+                    "from_sequence": 51,
+                    "to_sequence": 59,
+                    "from_stop_id": "102000076",
+                    "to_stop_id": "102000098"
+                  }
+                ],
+                "subway_identity": null,
+                "check": {
+                  "date": "2026-09-29",
+                  "legs": [
+                    {
+                      "mode": "bus",
+                      "route": "405",
+                      "from": "후암약수터",
+                      "to": "이태원119안전센터",
+                      "route_id": "100100597",
+                      "from_sequence": 51,
+                      "to_sequence": 59,
+                      "from_stop_id": "102000076",
+                      "to_stop_id": "102000098"
+                    }
+                  ],
+                  "off": 0,
+                  "walk_place_in": 16,
+                  "walk_place_out": 3,
+                  "walk_stop_in": 0,
+                  "walk_stop_out": 0,
+                  "by_station": 897
+                },
+                "leg_results": [
+                  {
+                    "idx": 0,
+                    "verdict": "feasible",
+                    "depart_min": 862,
+                    "arrive_min": 876,
+                    "wait_min": 8,
+                    "ride_min": 14.0,
+                    "walk_min": null,
+                    "ride_src": "profile",
+                    "ride_grade": "추정"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        "seq": 3,
+        "kind": "activity",
+        "title": "B",
+        "place": "it",
+        "starts_at": "2026-09-29T15:00:00+09:00"
+      }
+    ],
+    "routes": {
+      "ns_to_it": {
+        "from": "남산타워",
+        "to": "이태원",
+        "planned": "bus_405",
+        "options": [
+          {
+            "id": "bus_405",
+            "label": "버스 405 후암약수터→이태원119안전센터",
+            "eta_min": 41,
+            "walk_m": 1123,
+            "fare_krw": 1500,
+            "uses": [
+              "버스:405"
+            ]
+          }
+        ]
+      }
+    },
+    "skipped": [],
+    "left_out": {
+      "ns_to_it": [
+        {
+          "label": "그 밖 혼합 후보 3개",
+          "code": "mix_skipped",
+          "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+        },
+        {
+          "label": "버스 01A 남산서울타워→남산도서관.용산도서관 → 버스 405 남산도서관.용산도서관→이태원119안전센터",
+          "code": "earlier_departure",
+          "reason": "이동 출발 13:58 출발은 재판정에서 불성립 · 13:49 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 46분"
+        },
+        {
+          "label": "버스 01B 남산서울타워→남산도서관.용산도서관 → 버스 405 남산도서관.용산도서관→이태원119안전센터",
+          "code": "earlier_departure",
+          "reason": "이동 출발 13:58 출발은 재판정에서 불성립 · 13:44 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 49분"
+        },
+        {
+          "label": "버스 01A 남산서울타워→숭례문.남대문시장8번출입구 → 버스 421 숭례문→이태원역4번출구.해밀턴호텔",
+          "code": "earlier_departure",
+          "reason": "이동 출발 13:58 출발은 재판정에서 불성립 · 13:44 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 53분"
+        },
+        {
+          "label": "그 밖 버스 직행 1개",
+          "code": "bus_more",
+          "reason": "도보 긴 쪽 — earlier_departure 1"
+        }
+      ]
+    },
+    "not_linked": [],
+    "kept_unverified": [],
+    "basis": {
+      "timetable_built_at": "built:2026-10-01T10:38:34+09:00|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+      "rules_version": "v0.9.2",
+      "plan_version": "plan-v2.10",
+      "decided_at": "2026-10-11T19:36:00+09:00"
+    }
+  },
+  "trace": [
+    {
+      "case": "ns_to_it",
+      "date": "2026-09-29",
+      "arrive_by_min": 900,
+      "planned": "bus_405",
+      "options": [
+        {
+          "id": "bus_405",
+          "start_min": 838,
+          "eta_min": 41,
+          "margin_min": 21,
+          "slack_min": 0,
+          "transfers": 0,
+          "check": {
+            "date": "2026-09-29",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "405",
+                "from": "후암약수터",
+                "to": "이태원119안전센터",
+                "route_id": "100100597",
+                "from_sequence": 51,
+                "to_sequence": 59,
+                "from_stop_id": "102000076",
+                "to_stop_id": "102000098"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 16,
+            "walk_place_out": 3,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 897
+          },
+          "wait_min": 8
+        }
+      ],
+      "left_out": [
+        {
+          "label": "그 밖 혼합 후보 3개",
+          "code": "mix_skipped",
+          "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+        },
+        {
+          "label": "버스 01A 남산서울타워→남산도서관.용산도서관 → 버스 405 남산도서관.용산도서관→이태원119안전센터",
+          "code": "earlier_departure",
+          "reason": "이동 출발 13:58 출발은 재판정에서 불성립 · 13:49 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 46분"
+        },
+        {
+          "label": "버스 01B 남산서울타워→남산도서관.용산도서관 → 버스 405 남산도서관.용산도서관→이태원119안전센터",
+          "code": "earlier_departure",
+          "reason": "이동 출발 13:58 출발은 재판정에서 불성립 · 13:44 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 49분"
+        },
+        {
+          "label": "버스 01A 남산서울타워→숭례문.남대문시장8번출입구 → 버스 421 숭례문→이태원역4번출구.해밀턴호텔",
+          "code": "earlier_departure",
+          "reason": "이동 출발 13:58 출발은 재판정에서 불성립 · 13:44 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 53분"
+        },
+        {
+          "label": "그 밖 버스 직행 1개",
+          "code": "bus_more",
+          "reason": "도보 긴 쪽 — earlier_departure 1"
+        }
+      ],
+      "left_checks": [
+        {
+          "code": "mix_skipped",
+          "check": null
+        },
+        {
+          "code": "earlier_departure",
+          "check": {
+            "date": "2026-09-29",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "405",
+                "from": "후암약수터",
+                "to": "이태원역.보광동입구",
+                "route_id": "100100597",
+                "from_sequence": 38,
+                "to_sequence": 60,
+                "from_stop_id": "102000075",
+                "to_stop_id": "102000189"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 15,
+            "walk_place_out": 3,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 897
+          }
+        },
+        {
+          "code": "earlier_departure",
+          "check": {
+            "date": "2026-09-29",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "01A",
+                "from": "남산서울타워",
+                "to": "남산도서관.용산도서관",
+                "route_id": "100100001",
+                "from_sequence": 9,
+                "to_sequence": 10,
+                "from_stop_id": "102000226",
+                "to_stop_id": "102000316"
+              },
+              {
+                "mode": "bus",
+                "route": "405",
+                "from": "남산도서관.용산도서관",
+                "to": "이태원119안전센터",
+                "route_id": "100100597",
+                "from_sequence": 50,
+                "to_sequence": 59,
+                "from_stop_id": "102000074",
+                "to_stop_id": "102000098"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 6,
+            "walk_place_out": 4,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 896,
+            "fast": true
+          }
+        },
+        {
+          "code": "earlier_departure",
+          "check": {
+            "date": "2026-09-29",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "01B",
+                "from": "남산서울타워",
+                "to": "남산도서관.용산도서관",
+                "route_id": "106000004",
+                "from_sequence": 12,
+                "to_sequence": 13,
+                "from_stop_id": "102000226",
+                "to_stop_id": "102000316"
+              },
+              {
+                "mode": "bus",
+                "route": "405",
+                "from": "남산도서관.용산도서관",
+                "to": "이태원119안전센터",
+                "route_id": "100100597",
+                "from_sequence": 50,
+                "to_sequence": 59,
+                "from_stop_id": "102000074",
+                "to_stop_id": "102000098"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 6,
+            "walk_place_out": 4,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 896,
+            "fast": true
+          }
+        },
+        {
+          "code": "earlier_departure",
+          "check": {
+            "date": "2026-09-29",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "01A",
+                "from": "남산서울타워",
+                "to": "숭례문.남대문시장8번출입구",
+                "route_id": "100100001",
+                "from_sequence": 9,
+                "to_sequence": 13,
+                "from_stop_id": "102000226",
+                "to_stop_id": "101000029"
+              },
+              {
+                "mode": "bus",
+                "route": "421",
+                "from": "숭례문",
+                "to": "이태원역4번출구.해밀턴호텔",
+                "route_id": "100100409",
+                "from_sequence": 89,
+                "to_sequence": 96,
+                "from_stop_id": "101000008",
+                "to_stop_id": "102000097"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 6,
+            "walk_place_out": 3,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 897,
+            "fast": true
+          }
+        }
+      ],
+      "start_min": 838,
+      "route": "ns_to_it"
+    }
+  ]
+}

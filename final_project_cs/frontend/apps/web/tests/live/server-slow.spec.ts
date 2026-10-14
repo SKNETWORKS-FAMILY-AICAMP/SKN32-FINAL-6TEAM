@@ -16,7 +16,7 @@ async function send(page: Page) {
   await checkPlan(page);
 }
 
-test("서버가 답을 안 주고 8초가 넘으면 맨 위에 안내가 뜨고(몇 초째인지 함께), 답이 오면 저절로 사라진다. 빨리 답하는 평소에는 아무것도 안 뜬다", async ({ page, request }) => {
+test("서버가 답을 안 주고 10초가 넘으면 맨 위에 안내가 뜨고(몇 초째인지 함께), 답이 오면 저절로 사라진다. 빨리 답하는 평소에는 아무것도 안 뜬다", async ({ page, request }) => {
   test.setTimeout(60_000);
   const server = mockServer(request);
   await start(page);
@@ -25,8 +25,8 @@ test("서버가 답을 안 주고 8초가 넘으면 맨 위에 안내가 뜨고(
   await send(page);
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible({ timeout: 15_000 });
   await expect(banner(page)).toHaveCount(0);
-  // 서버가 늦다: 접수에 답하는 데 12초
-  await server.scenario({ intakeDelay: 12_000, readingPolls: 0 });
+  // 서버가 늦다: 접수에 답하는 데 16초(`[2026-10-13]` 첫 안내가 10초라, 뜬 뒤 확인할 시간을 남긴다)
+  await server.scenario({ intakeDelay: 16_000, readingPolls: 0 });
   await send(page);
   await expect(page).toHaveURL(/\/intakes\/starting$/);
   await page.waitForTimeout(5_000);

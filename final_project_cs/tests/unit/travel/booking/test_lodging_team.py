@@ -585,29 +585,27 @@ def test_change_on_a_lodging_item_holds_three_new_options_like_dining_and_activi
     (proposal,) = result.action_proposals
     assert proposal.action_type == "itinerary.apply" and proposal.approval_required is False
     arguments = proposal.arguments
-    assert arguments["reason"] == "customer_request" and arguments["base_version"] == 3
-    (replaced,) = arguments["replacements"]
-    new = replaced["item"]
-    assert replaced["item_id"] == STAY_ID and new["title"] == "기존 호텔" and new["place_id"] == "33333333-3333-4333-8333-333333333333", "숙소는 그대로"
-    options = new["detail"]["alternates"]
+    # `[2026-10-13]` 일정은 바꾸지 않는다 — 「선택이 필요해요」 보류 제안으로 내민다(식당 · 활동의 「다른 후보」와 같다). 일정 판 그대로
+    assert arguments["reason"] == "requested_options" and arguments["base_version"] == 3
+    assert "replacements" not in arguments and "full_items" not in arguments, "후보를 보여 줄 때 일정 판을 올리지 않는다"
+    ask = arguments["ask_options"]
+    assert ask["item_id"] == STAY_ID and ask["text"] == result.answer
+    assert ask["shown_key"] == f"lodging:{IN}:{OUT}", "보여 준 후보는 숙소 · 항공 원장에 적는다(적용기가)"
+    options = ask["options"]
     assert [(o["rank"], o["key"], o["name"]) for o in options] == [
         (1, "google:가까운호텔", "가까운 호텔"), (2, "myrealtrip:11", "해밀톤 호텔"), (3, "myrealtrip:12", "둘째 호텔")]
     first = options[1]
     assert {"key", "name", "place_id", "starts_at", "ends_at", "walk_min"} <= set(first), "식당 · 활동의 「다른 안」 칸"
     assert first["place_id"] is None and first["starts_at"] == f"{IN}T15:00:00+09:00" and first["price_per_night"] == 188597
     assert first["link"].startswith("https://accommodation.myrealtrip.com/union/products/11?")
-    assert options[0]["latitude"] == 37.5430 and options[0]["distance_km"] == 2.0
-    assert new["detail"]["other_options"] == ["가까운 호텔", "해밀톤 호텔", "둘째 호텔"]
-    assert new["detail"]["shown"] == ["가까운 호텔", "해밀톤 호텔", "둘째 호텔"]
-    assert [o["key"] for o in arguments["notice"]["options"]] == ["google:가까운호텔", "myrealtrip:11", "myrealtrip:12"]
+    assert options[0]["latitude"] == 37.5430 and options[0]["distance_km"] == 2.0, "좌표가 있는 후보는 고를 때 그 여행 전용 장소로 들여놓는다"
     assert arguments["summary"]["anchor"] == "원래 숙소" and arguments["summary"]["near"] == 1
 
 
 def test_choosing_an_option_moves_the_item_to_that_lodging_and_keeps_the_old_one_as_an_option():
     plan = _plan()
     first, _, _ = _itinerary(plan)
-    held = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
-    plan["items"][1]["detail"] = held
+    plan["items"][1]["detail"] = _held(first, plan)
     state = {**ITEM_STATE, "subject_ref": {**ITEM_STATE["subject_ref"], "request": {"type": "change", "choice": "myrealtrip:12"}}}
     result, _, tools = _run({"task": "unclear"}, {"read.itinerary": plan}, text="2번으로 할게", capability="lodging.itinerary",
                             state=state)
@@ -626,11 +624,17 @@ def test_choosing_an_option_moves_the_item_to_that_lodging_and_keeps_the_old_one
     assert result.outcome == "escalated" and result.failure_code == "itinerary_unknown_choice"
 
 
+def _held(first, plan):
+    """`[2026-10-13]` 후보는 이제 보류 제안(`ask_options`)에 있다 — Case 경로 고르기 시험은 그 안을 항목 「다른 안」에 얹어 흉내 낸다."""
+    options = first.action_proposals[0].arguments["ask_options"]["options"]
+    return {**plan["items"][1]["detail"], "alternates": options, "other_options": [o["name"] for o in options]}
+
+
 def _choose(choice, detail=None):
     """후보를 보여 준 뒤 `choice` 를 고른다. 고를 때 상세(`read.stay_detail`)는 `detail` 을 돌려준다."""
     plan = _plan()
     first, _, _ = _itinerary(plan)
-    plan["items"][1]["detail"] = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
+    plan["items"][1]["detail"] = _held(first, plan)
     state = {**ITEM_STATE, "subject_ref": {**ITEM_STATE["subject_ref"], "request": {"type": "change", "choice": choice}}}
     return _run({"task": "unclear"}, {"read.itinerary": plan, "read.stay_detail": detail}, text="고를게",
                 capability="lodging.itinerary", state=state)
@@ -678,11 +682,10 @@ def test_a_chosen_google_hotel_is_not_rechecked_and_says_so():
     assert result.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_recheck_tool"
 
 
-def _choose_google(detail_now, *, listed=120000.0, shown=None):
-    """구글 후보(token 있음)를 보여 준 뒤 고른다. 고를 때 상세(`read.stay_google_details`)는 `detail_now` 를 돌려준다.
-    `shown` — 보여 줄 때 상세(없으면 판매처 `listed - 5000` · `listed`)."""
+def _choose_google(detail_now, *, listed=120000.0):
+    """구글 후보(token 있음)를 보여 준 뒤 고른다. 고를 때 상세(`read.stay_google_details`)는 `detail_now` 를 돌려준다."""
     google = {**NEAR_GOOGLE, "stays": [{**row, "property_token": f"tok-{i}", "image": None} for i, row in enumerate(NEAR_GOOGLE["stays"])]}
-    shown = shown or {"address": None, "image": None, "sellers": [
+    shown = {"address": None, "image": None, "sellers": [
         {"seller": "Agoda", "price_per_night": listed - 5000, "link": None, "official": False},
         {"seller": "Trip.com", "price_per_night": listed, "link": "https://kr.trip.com/x", "official": False}]}
     calls = {"n": 0}
@@ -692,7 +695,7 @@ def _choose_google(detail_now, *, listed=120000.0, shown=None):
         return {"details": {t: (shown if calls["n"] == 1 else detail_now) for t in a["tokens"]}}
     plan = _plan()
     first, _, _ = _itinerary(plan, {"read.stay_google": google, "read.stay_google_details": details})
-    plan["items"][1]["detail"] = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
+    plan["items"][1]["detail"] = _held(first, plan)
     state = {**ITEM_STATE, "subject_ref": {**ITEM_STATE["subject_ref"], "request": {"type": "change", "choice": "google:가까운호텔"}}}
     return _run({"task": "unclear"}, {"read.itinerary": plan, "read.stay_google": google, "read.stay_google_details": details},
                 text="고를게", capability="lodging.itinerary", state=state)
@@ -721,19 +724,6 @@ def test_a_chosen_google_hotel_is_rechecked_by_its_seller_prices():
     assert empty.action_proposals and empty.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_price", \
         "판매처가 없으면 「없어졌다」가 아니라 확인 못 함 — 매진인지 표시만 안 된 건지 가를 수 없다"
     assert "지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1박 115,000원)" in empty.answer
-
-
-def test_google_recheck_compares_seller_lows_even_when_the_list_price_was_lower():
-    """`[2026-10-13]` ☆x600(팀장 확인) — 보여 줄 때 「1박 ○원~」이 구글 **목록가**(173,845원)였고 판매처 최저는 176,766원이었는데, 재확인이
-    목록가(`price_from`)와 판매처 최저가를 비교해 「바뀜」이라고 했다. 기준은 보여 준 판매처의 최저가 — 판매처가 그대로면 「그대로」."""
-    sellers = [{"seller": "Agoda", "price_per_night": 115000.0, "link": None, "official": False},
-               {"seller": "Trip.com", "price_per_night": 120000.0, "link": "https://kr.trip.com/x", "official": False}]
-    shown = {"address": None, "image": None, "sellers": sellers}
-    # 보여 줄 때: 목록가 100,000 → price_from = 100,000(목록가가 더 쌈) · 판매처 최저 115,000. 다시 봐도 판매처 115,000
-    result, _, _ = _choose_google({"address": None, "image": None, "sellers": list(sellers)}, listed=100000.0, shown=shown)
-    assert result.action_proposals[0].arguments["summary"]["price_check"] == \
-        {"status": "same", "before": 115000.0, "now": 115000.0, "basis": "sellers"}, "목록가 100,000 ↔ 판매처 115,000 을 「바뀜」이라 하면 안 된다"
-    assert result.answer.endswith(" 지금도 판매처 최저가 1박 115,000원~ 그대로예요.")
 
 
 def test_the_same_stay_from_both_sources_is_shown_once_as_myrealtrip():
@@ -793,7 +783,7 @@ def test_google_options_carry_seller_prices_photo_and_address():
     assert asked["tokens"] == ["tok-2"] and asked["keyword"] == "중구", "구글 호텔 후보만, 한 번에"
     assert "1) 가까운 호텔(1박 117,000원~ · 원래 숙소에서 2.0km · 판매처 공식 사이트 117,000원 · 트립닷컴 118,000원 · 아고다 125,000원)" in result.answer, \
         "Vio.com 처럼 목록에 없는 판매처는 빼고, 싼 순 3곳. `[2026-10-13 사용자 결정]` 대표 가격은 가장 싼 곳 「○원~」(목록 120,000원보다 공식 117,000원)"
-    option = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"][0]
+    option = result.action_proposals[0].arguments["ask_options"]["options"][0]
     assert (option["image"], option["address"]) == ("https://img/2.jpg", "서울 용산구 어딘가")
     assert (option["price_from"], option["price_per_night"]) == (117000.0, 120000), "순서 · 재확인은 목록 값 그대로"
     assert (option["link"], option["link_seller"]) == ("https://us.trip.com/hotels/redirect?hotelid=1", "트립닷컴"), \
@@ -810,15 +800,18 @@ def test_a_google_option_named_in_japanese_is_shown_with_the_detail_korean_name(
               "sellers": [{"seller": "Agoda", "price_per_night": 125000.0, "link": None, "official": False}]}
     result, _, _ = _itinerary(_plan(), {"read.stay_google": {**NEAR_GOOGLE, "stays": rows},
                                         "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
-    new = result.action_proposals[0].arguments["replacements"][0]["item"]
-    option = new["detail"]["alternates"][0]
+    option = result.action_proposals[0].arguments["ask_options"]["options"][0]
     assert (option["name"], option["source_name"], option["key"]) == ("소테츠 프레사 인 서울 명동", "相鉄フレッサイン ソウル明洞", "google:相鉄フレッサインソウル明洞"), \
         "보이는 이름은 한글, 키 · source_name 은 목록 이름 그대로"
     assert "1) 소테츠 프레사 인 서울 명동(" in result.answer and "相鉄" not in result.answer
-    assert "相鉄フレッサイン ソウル明洞" in new["detail"]["shown"] and "소테츠 프레사 인 서울 명동" in new["detail"]["shown"]
+    # `[2026-10-13]` 보여 준 후보는 원장에 「보인 이름」으로 남는다 — 다음 「바꿔 줘」는 후보 key(google:<목록 이름 열쇠>)로도 뺀다
+    shown = {"offers": [{"key": option["key"], "name": option["name"]}]}
+    again, _, _ = _itinerary(_plan(), {"read.stay_google": {**NEAR_GOOGLE, "stays": rows}, "read.offers_shown": shown,
+                                       "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
+    assert "소테츠" not in again.answer and "相鉄" not in again.answer, "원어 이름으로 다시 와도 같은 곳은 빠진다"
     same, _, _ = _itinerary(_plan(), {"read.stay_google": {**NEAR_GOOGLE, "stays": rows},
                                       "read.stay_google_details": lambda a: {"details": {t: {**detail, "name": "相鉄フレッサイン"} for t in a["tokens"]}}})
-    option = same.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"][0]
+    option = same.action_proposals[0].arguments["ask_options"]["options"][0]
     assert (option["name"], option["source_name"]) == ("相鉄フレッサイン ソウル明洞", None), "상세도 원어면 목록 이름 그대로(지어내지 않는다)"
 
 
@@ -828,7 +821,7 @@ def test_a_resting_source_is_said_in_the_change_answer():
     result, _, _ = _itinerary(_plan(), {"read.stay_search": resting, "read.stay_google": NEAR_GOOGLE})
     assert "마이리얼트립은 요청 한도로 잠시 쉬는 중이에요 — 그쪽 숙소는 빠져 있어요. 고르시면 바꿀게요." in result.answer
     assert result.decisions[0]["sources"] == {"myrealtrip": "resting", "google": "ok"}
-    assert [o["source"] for o in result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]] == ["구글 호텔"] * 3
+    assert [o["source"] for o in result.action_proposals[0].arguments["ask_options"]["options"]] == ["구글 호텔"] * 3
     plain, _, _ = _itinerary(_plan())
     assert "쉬는 중" not in plain.answer and plain.decisions[0]["sources"] == {"myrealtrip": "ok", "google": "ok"}
 
@@ -837,14 +830,24 @@ def test_change_again_skips_what_was_already_shown():
     result, _, _ = _itinerary(_plan(stay_detail={"shown": ["해밀톤 호텔", "둘째 호텔", "가까운 호텔"]}))
     assert result.answer.startswith("기존 호텔 대신 갈 수 있는 곳이에요 — 1) 먼 호텔(1박 100,000원 · 원래 숙소에서 11.5km) · "
                                     "2) 좌표 없는 호텔(1박 110,000원).")
-    new = result.action_proposals[0].arguments["replacements"][0]["item"]
-    assert new["detail"]["shown"] == ["해밀톤 호텔", "둘째 호텔", "가까운 호텔", "먼 호텔", "좌표 없는 호텔"]
+    assert result.action_proposals[0].arguments["summary"]["shown_total"] == 5
+
+
+def test_change_again_skips_what_the_ledger_says_was_shown():
+    """`[2026-10-13]` 보여 준 후보는 숙소 · 항공 원장에 있다(`read.offers_shown`) — 항목 상세에 없어도 뺀다."""
+    shown = {"item_key": f"lodging:{IN}:{OUT}", "offers": [{"key": "google:가까운호텔", "name": "가까운 호텔"},
+                                                         {"key": "myrealtrip:11", "name": "해밀톤 호텔"},
+                                                         {"key": "myrealtrip:12", "name": "둘째 호텔"}]}
+    result, _, tools = _itinerary(_plan(), {"read.offers_shown": shown})
+    assert [a for name, a in tools.calls if name == "read.offers_shown"] == [
+        {"trip_id": TRIP_ID, "item_key": f"lodging:{IN}:{OUT}"}]
+    assert [o["name"] for o in result.action_proposals[0].arguments["ask_options"]["options"]] == ["먼 호텔", "좌표 없는 호텔"]
 
 
 def test_alternates_near_the_old_stay_and_in_its_price_band_come_first():
     """`[2026-10-12]` 원래 1박 가격을 알면 ±30% 안을 먼저, 그 안에서 원래 숙소 3km 안을 가까운 순으로, 나머지는 모은 순서."""
     result, _, _ = _itinerary(_plan(stay_detail={"price_per_night": 110000}))
-    options = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]
+    options = result.action_proposals[0].arguments["ask_options"]["options"]
     assert [o["name"] for o in options] == ["가까운 호텔", "먼 호텔", "해밀톤 호텔"], \
         "77,000~143,000원 안(가까운 · 먼)이 먼저 — 셋째는 마이리얼트립이 하나도 없어 마이리얼트립 첫 곳으로 바꾼다"
     assert result.decisions[0]["anchor"] == "원래 숙소"
@@ -855,7 +858,7 @@ def test_myrealtrip_details_give_distances_and_drop_full_stays():
     full = {**DETAIL, "gid": 12, "name": "둘째 호텔", "no_rooms": True}
     result, _, tools = _itinerary(_plan(), {"read.stay_detail": lambda a: DETAIL if a["gid"] == 11 else full})
     assert [a["gid"] for name, a in tools.calls if name == "read.stay_detail"] == [11, 12]
-    options = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]
+    options = result.action_proposals[0].arguments["ask_options"]["options"]
     assert [o["name"] for o in options] == ["가까운 호텔", "해밀톤 호텔", "먼 호텔"], "해밀톤은 2.9km 라 가까운 곳 · 둘째는 객실 없어 뺌"
     assert "해밀톤 호텔(1박 188,597원 · 원래 숙소에서 2.9km)" in result.answer
     assert result.decisions[0]["details_read"] == 2 and result.decisions[0]["near"] == 2
@@ -879,7 +882,7 @@ def test_a_price_limit_from_the_intake_keeps_only_stays_under_it():
     """`[2026-10-12]` 조건은 접수 해석이 뽑아 넘긴다(사용자 결정) — 문장을 다시 해석하지 않고 `max_price` 칸만 읽는다."""
     result, llm, _ = _with_conditions(_plan(), max_price=130000)
     assert llm.calls == []
-    options = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]
+    options = result.action_proposals[0].arguments["ask_options"]["options"]
     assert [o["name"] for o in options] == ["가까운 호텔", "먼 호텔", "좌표 없는 호텔"], "13만 원 넘는 해밀톤 · 둘째는 뺀다"
     assert "말씀하신 대로 1박 130,000원 이하만 골랐어요." in result.answer
     assert result.decisions[0]["conditions"]["price_limit"] == 130000
@@ -887,11 +890,11 @@ def test_a_price_limit_from_the_intake_keeps_only_stays_under_it():
 
 def test_cheaper_uses_the_old_stays_price_or_says_it_sorted_by_price():
     result, _, _ = _with_conditions(_plan(stay_detail={"price_per_night": 120000}), cheaper=True)
-    options = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]
+    options = result.action_proposals[0].arguments["ask_options"]["options"]
     assert [o["name"] for o in options] == ["먼 호텔", "좌표 없는 호텔"], "원래 12만 원보다 싼 곳만"
     assert "원래 숙소(1박 120,000원)보다 싼 곳만 골랐어요." in result.answer
     result, _, _ = _with_conditions(_plan(), cheaper=True)
-    options = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["alternates"]
+    options = result.action_proposals[0].arguments["ask_options"]["options"]
     assert [o["price_per_night"] for o in options] == [100000.0, 110000.0, 120000.0], "원래 가격을 모르면 낮은 순"
     assert "원래 숙소 가격을 몰라 1박 가격이 낮은 순으로 골랐어요." in result.answer
 

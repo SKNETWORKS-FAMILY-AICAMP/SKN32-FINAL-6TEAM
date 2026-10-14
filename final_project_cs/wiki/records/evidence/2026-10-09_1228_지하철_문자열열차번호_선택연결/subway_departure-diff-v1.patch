@@ -1,0 +1,20 @@
+--- before/final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py
++++ after/final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py
+@@ -1,5 +1,7 @@
+ """일반 비순환 첫 승차의 정적 경로를 공급자 ID와 연결한다. 넓은 역명 별칭은 추정하지 않는다."""
+ from __future__ import annotations
++
++from app.domains.travel_ops.ports.subway_train_identity import valid_train_number
+ 
+ from .subway_identity import boarding_identity
+ 
+@@ -42,8 +44,7 @@
+     if any(observation.get(k) != identity.get(k) for k in ('line_id', 'station_id', 'target_station_id')):
+         return None
+     train = observation.get('train_number')
+-    if (not isinstance(train, str) or not train.isascii() or not train.isdigit()
+-            or not any(c != '0' for c in train) or observation.get('train_status') != '일반'
++    if (not valid_train_number(train) or observation.get('train_status') != '일반'
+             or observation.get('eta_basis') != 'provider_generation_time'):
+         return None
+     matches = [s for s in services

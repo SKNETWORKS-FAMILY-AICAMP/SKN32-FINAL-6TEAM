@@ -1,0 +1,28 @@
+{
+  "at_kst": "2026-10-12T21:38:06.996562+09:00",
+  "exit": 1,
+  "args": [
+    "-m",
+    "not live",
+    "-m",
+    "not live",
+    "tests/unit/travel/mobility/test_plan_bike_v1.py",
+    "tests/unit/travel/mobility/test_plan_v1.py",
+    "tests/unit/travel/mobility/test_route_shape_context_v1.py",
+    "tests/unit/travel/mobility/test_earliest_v1.py",
+    "tests/unit/travel/mobility/test_bus_only_planner_candidates.py",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "-p",
+    "no:langsmith",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_213331_654488_isolated_integration\\tmp",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_213331_654488_isolated_integration\\junit.xml"
+  ],
+  "network_blocks": [],
+  "source_changed": [
+    "app/domains/travel_ops/components/conversation/trip_messages.py"
+  ],
+  "scope": "new separate test database in task-owned PostgreSQL; current safe SQL runner; external and business DB blocked"
+}

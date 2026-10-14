@@ -1,0 +1,27 @@
+[
+  {
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0852_혼합요금_조조경계/options.py",
+    "sha256": "5b89a8581ec95bcbe177890eec192e089e36c7cbe1f2de4584185ed3c0e3231d"
+  },
+  {
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0852_혼합요금_조조경계/plan.py",
+    "sha256": "5ca945b41c920304d40b8527e5a8608e589804072b038ac7b0533142d22dbd22"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0852_혼합요금_조조경계/mobility.md",
+    "sha256": "6ffe294fcf8c9832be423be9290c3fa69ea2001fea66d811a2876a8eaee73a76"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0857_혼합조조_상단검증결과/mobility.md",
+    "sha256": "76d17a845fa77d4c91ec1d0940bc249e4eb545b8a197fb1c45006f9e64578504"
+  },
+  {
+    "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0852_혼합요금_조조경계_버스조조_불확실성으로_혼합상단요금까지_누락.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0857_혼합조조_결함종료/2026-10-09_0852_혼합요금_조조경계_버스조조_불확실성으로_혼합상단요금까지_누락.md",
+    "sha256": "aee0e63730ac44e295ba26df977102984ea883d6fb6de14f1ffa4d74e0bf716a"
+  }
+]

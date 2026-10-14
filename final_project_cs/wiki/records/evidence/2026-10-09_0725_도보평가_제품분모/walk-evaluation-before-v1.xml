@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="4.135" timestamp="2026-10-09T07:25:37.939146+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_walk_comparison_scope_v1" name="test_policy_rejected_legacy_diagnostic_is_not_a_product_comparison" time="1.394"><failure message="assert 1 == 0">def test_policy_rejected_legacy_diagnostic_is_not_a_product_comparison():
+        row = {"bucket": "short", "ours_walk": {"m": 300, "min": 5}, "kakao": reference()}
+        got = comparison.summarise([row])
+&gt;       assert got["walk_minutes_vs_kakao_shortest"]["n"] == 0
+E       assert 1 == 0
+
+tests\unit\travel\mobility\test_walk_comparison_scope_v1.py:12: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_walk_comparison_scope_v1" name="test_product_duration_is_not_reconstructed_from_distance" time="0.001"><failure message="assert 0 == 4">def test_product_duration_is_not_reconstructed_from_distance():
+        row = {"bucket": "short", "ours_walk": {"m": 300, "min": 5},
+               "ours_walk_product": {"m": 300, "min": 9}, "kakao": reference()}
+        got = comparison.summarise([row])
+&gt;       assert got["walk_minutes_vs_kakao_shortest"]["median"] == 4
+E       assert 0 == 4
+
+tests\unit\travel\mobility\test_walk_comparison_scope_v1.py:21: AssertionError</failure></testcase></testsuite></testsuites>

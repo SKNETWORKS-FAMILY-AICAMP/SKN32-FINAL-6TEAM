@@ -1,0 +1,62 @@
+{
+  "valen_08b_original_d_a1/d_test_valen_08b_original_d_a1.jsonl": {
+    "bytes": 12746587,
+    "sha256": "4f94ddb159b82fd3d988c01fa630cd8e2723961b9b94db8f19e936a07b5dec65"
+  },
+  "valen_08b_original_d_a1/job.log": {
+    "bytes": 1628,
+    "sha256": "b65132c2b709c098c272d884c75dc32bd2e598b7beba76ed02633072b3820928"
+  },
+  "valen_08b_original_d_a1/started.json": {
+    "bytes": 1536,
+    "sha256": "0df5d9feedc017958804dbd6b40c3e305c96766cfd39b48e33aa8c9467fe0351"
+  },
+  "valen_08b_original_d_a1/valen_contract.json": {
+    "bytes": 2695,
+    "sha256": "446189cbfab8eb3550852683c1cb41c2ebc00f57b3492d5608aeed75dedce6a9"
+  },
+  "valen_08b_original_d_a1/valen_resources.jsonl": {
+    "bytes": 37737,
+    "sha256": "6375c702afb3b0284f8853bb94ae8a79eaf37d438aea6e9a3c9ee04d2b83c158"
+  },
+  "valen_08b_original_d_a1/valen_summary.json": {
+    "bytes": 340,
+    "sha256": "4b467920f631b5060695b736e387c3ef6a52ec3bb618eaf69a5cd99065c0903e"
+  },
+  "valen_08b_original_d2_a1/job.log": {
+    "bytes": 328,
+    "sha256": "ffd42bde3b0540831508e7e433ecd2dcdddbcd62278c49a60470cdbbc5f63715"
+  },
+  "valen_08b_original_d2_a1/started.json": {
+    "bytes": 1540,
+    "sha256": "7edfc05e78680f789970e089ed7367736404b82706cfc3b213a73ccf9b99655f"
+  },
+  "g12bbase_multi_items_bc_a1/d_test_g12bbase_multi_items_bc_a1.jsonl": {
+    "bytes": 269619,
+    "sha256": "74127382252cb662572a752a6a880b0c76ed227eeb98375b089c39acd19b3edc"
+  },
+  "g12bbase_multi_items_bc_a1/dtest_server_g12bbase_multi_items_bc_a1.log": {
+    "bytes": 682171,
+    "sha256": "ee597ffb11ccb13b637bbe0ae896353424f9f42bc143e0fd0392dee1da2c61bc"
+  },
+  "g12bbase_multi_items_bc_a1/job.log": {
+    "bytes": 128,
+    "sha256": "84d3beb125225e5d85a1759041ae2c0ecba32a6195c69ee8479b3b3ffb1992d1"
+  },
+  "g12bbase_multi_items_bc_a1/multi_contract.json": {
+    "bytes": 371,
+    "sha256": "296f176d5f4c164c128c964dca7160217669c7fa06496fabcee35c4e24a2b8b8"
+  },
+  "g12bbase_multi_items_bc_a1/started.json": {
+    "bytes": 1511,
+    "sha256": "53d840b34585d8e3ea870eba561d1bf51076b07d4095bc8d5edb72f41bd77410"
+  },
+  "snapshot.json": {
+    "bytes": 18528,
+    "sha256": "57639d8b6dae9f33393e4b3522198a6d2047e2c9f029572f623193cb90a0d809"
+  },
+  "manifest.json": {
+    "bytes": 91091,
+    "sha256": "a4974c4ebf4640b8b1ef1006f7d373bba9b6810325cdbde74eadf4724cbde94a"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "recorded_at": "2026-10-12T07:44:15.030122+00:00",
+  "new_files_only": true,
+  "source_code_modified": false,
+  "api_calls": 0,
+  "private_receipt_access": 0,
+  "secret_values_output": false,
+  "local_link_checks": [
+    {
+      "target": "TMAP-preparation-flow-20261012-v1.html",
+      "exists": true
+    },
+    {
+      "target": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/.env.apikeys",
+      "exists": true
+    },
+    {
+      "target": "local-variable-presence-v1.json",
+      "exists": true
+    }
+  ],
+  "diagram_self_check_exit_code": 0,
+  "files": [
+    {
+      "name": "diagram-self-check-v1.log",
+      "bytes": 149,
+      "sha256": "76da146d0c1e94b12e1d4ce550c0a0546c07e5b15dba0eefdb4a959a7cfc6f75"
+    },
+    {
+      "name": "local-variable-presence-v1.json",
+      "bytes": 1225,
+      "sha256": "105075ad3091f53c4674621d5400d36cde20dfa3092614ee063d8b9bfe1bd213"
+    },
+    {
+      "name": "official-reference-facts-v1.json",
+      "bytes": 2531,
+      "sha256": "e16848883d3da01d03b868111d0c5eb6ff2201fe9d03e26f337994fef7190b9b"
+    },
+    {
+      "name": "TMAP-key-preparation-20261012-v1.md",
+      "bytes": 9402,
+      "sha256": "224b3aaf081da1d44ef83a0b61a3e2c870b0105e09a07a60956ec05d0506c80e"
+    },
+    {
+      "name": "TMAP-preparation-flow-20261012-v1.html",
+      "bytes": 3985,
+      "sha256": "228c51d645f1f35083e3469660b87d6afb6544f117011bc9c1264103f383f844"
+    }
+  ]
+}

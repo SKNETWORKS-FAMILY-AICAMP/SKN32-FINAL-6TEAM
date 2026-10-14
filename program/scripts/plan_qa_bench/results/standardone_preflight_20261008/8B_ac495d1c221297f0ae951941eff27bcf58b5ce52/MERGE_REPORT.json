@@ -1,0 +1,60 @@
+{
+  "snapshot": "mistralai/Ministral-3-8B-Instruct-2512-BF16@f6fae9795746f63c9be8344932f01275f3c63734",
+  "adapter": "StandardOne-8B-LoRA v2.2",
+  "adapter_sha256": "123ddd039f4053e82e8ca18d7c247691dc49cbcabb6e1b7d98077bb7c5c7446e",
+  "changed_params": 238,
+  "unchanged_params": 293,
+  "changed_outside_lm_projections": [],
+  "max_abs_delta": 0.002109527587890625,
+  "changed_sample": [
+    [
+      "model.language_model.layers.0.self_attn.q_proj.weight",
+      0.00152587890625
+    ],
+    [
+      "model.language_model.layers.0.self_attn.k_proj.weight",
+      0.00091552734375
+    ],
+    [
+      "model.language_model.layers.0.self_attn.v_proj.weight",
+      0.0012216567993164062
+    ],
+    [
+      "model.language_model.layers.0.self_attn.o_proj.weight",
+      0.001377105712890625
+    ],
+    [
+      "model.language_model.layers.0.mlp.gate_proj.weight",
+      0.00113677978515625
+    ],
+    [
+      "model.language_model.layers.0.mlp.up_proj.weight",
+      0.001220703125
+    ],
+    [
+      "model.language_model.layers.0.mlp.down_proj.weight",
+      0.0006103515625
+    ],
+    [
+      "model.language_model.layers.1.self_attn.q_proj.weight",
+      0.0009765625
+    ]
+  ],
+  "file_sha256": {
+    "SYSTEM_PROMPT.txt": "66e0fda8c8ab269ccd010dca6196931d475a22c3f2eebe5b6b3a2ec33a354d0e",
+    "chat_template.jinja": "74eeb55fd3341286ec3fd44e902b7120721acc81cd394e96b431f85e93a1ea56",
+    "config.json": "111827aa7ae6d936f48afb2f0776f51b00add45c857c708af2b893499f76d882",
+    "generation_config.json": "e0923390059f84a9180b00e5501778acc45ea9856cd7f2fd68208b360927c677",
+    "model-00001-of-00004.safetensors": "cac498368970b8ffb9785583c954648a40472b3cfa061ad0924af7babdee3f53",
+    "model-00002-of-00004.safetensors": "9a9fbec75dc4013463a57ad1cf61c2ed6fb558db9d379fb671dba0e448326be0",
+    "model-00003-of-00004.safetensors": "2f89f2111ee337b3b8b1278d0ec32bce3c20bfe5f2bab8caa6dd3e01a3c76ad5",
+    "model-00004-of-00004.safetensors": "125adfa505e3f9c1b33767601060c773a421876c3630fb8172dcdc886adf137f",
+    "model.safetensors.index.json": "71e022361d37d84c2b6224acbddca2c74bedcc7addc523cfc6a57420d4b22ceb",
+    "params.json": "81b8377f36c5b3d60900b333214d85160a0500b84576e969092c6fd214f69538",
+    "processor_config.json": "ece2373c2ae391bce18785a1810543bc6173a1f28b6767cffab2c35dbea5f002",
+    "special_tokens_map.json": "0a5c981e8c5c6f8886ee007a6d4543a0be6b221cb9ca32a8709384a4c6fc8cbb",
+    "tekken.json": "600bb27946565481ecf51ba8aee252e49b9a68507866080ac9c30185bb312843",
+    "tokenizer.json": "d5f6046775b112f0e2d456ee9dba450684ab964fe5c4e231599bdc6773028135",
+    "tokenizer_config.json": "f59f7294e4f26383d0ea93840fe21cf197784be0842a8301a0343e8c34ed0d6d"
+  }
+}

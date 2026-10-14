@@ -1,0 +1,60 @@
+{
+  "created_at": "2026-10-09T10:32:14.969423+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/runtime.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1023_계획지하철_공식ID연결/runtime.py",
+      "sha256": "697822ebc44e7c4c3659faade8dcf3502ee800fbaaadba9a5c7e3d13a9abb9c5"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/datacheck.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1023_계획지하철_공식ID연결/datacheck.py",
+      "sha256": "2729d4b4a5c2408cd863e444eaea5f2906032812f99960b17d0061d7230e78c6"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1023_계획지하철_공식ID연결/departure_context.py",
+      "sha256": "9a40b0592653faa982c8682deb86cb0729e7a7c1838f9327622bf3aa461c2486"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1023_계획지하철_공식ID연결/departure_observer.py",
+      "sha256": "5fef46e74d491a0f45f2c24044a54ed6d7c16ab48ece2939de24c0bcb9977b3b"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/_backup/2026-10-09_1023_계획지하철_공식ID연결/wiring.py",
+      "sha256": "f9f228818a3d70e3641d96c2cbf52ebe3a1e59ba153d5b4017852546a22c79df"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1023_계획지하철_공식ID연결/mobility.md",
+      "sha256": "772e4599574d8929bf7517862a2f627dc07f0ac0da013da407e27d6ee5c2f444"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/mobility/test_subway_binding_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_1028_연결시험_미사용import/test_subway_binding_v1.py",
+      "sha256": "78f7a8395ef03541885d14fa83a9ddccfb217aa655f3522064012f869eaf07ea"
+    },
+    {
+      "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1023_계획지하철_공식ID연결.md",
+      "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_1032_공식ID연결_상태갱신/2026-10-09_1023_계획지하철_공식ID연결.md",
+      "sha256": "5c4e2e4396c7d5075d3db939e83c7a3ecec2d5fbb02d9a1c442de0564c10bb16"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1032_공식ID연결_결과기록/mobility.md",
+      "sha256": "322ad2f4da42941bfa674613bf0eab32f58af90274d1db8e822f6e037de60a0f"
+    },
+    {
+      "source": "datasets/mobility/README.md",
+      "backup": "datasets/mobility/_backup/2026-10-09_1032_공식역ID_런타임연결/README.md",
+      "sha256": "6f672b4083160a3dedcc35dedbef8e692320ab159cf5a199945c40958c5db4c3"
+    },
+    {
+      "source": "datasets/mobility/REPORT.md",
+      "backup": "datasets/mobility/_backup/2026-10-09_1032_공식역ID_런타임연결/REPORT.md",
+      "sha256": "ed4eb0922f3616e6acf700f51b6815739f5658a00bbe11ad86eff200786e782c"
+    }
+  ]
+}

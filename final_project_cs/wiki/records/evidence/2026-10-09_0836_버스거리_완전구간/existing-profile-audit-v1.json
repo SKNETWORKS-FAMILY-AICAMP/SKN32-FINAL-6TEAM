@@ -1,0 +1,32 @@
+{
+  "adjacent_queries": 82206,
+  "equal_adjacent": 82206,
+  "whole_queries": 1434,
+  "equal_whole": 1434,
+  "valid_adjacent": 82206,
+  "valid_whole": 1434,
+  "routes": 717,
+  "stop_rows": 41820,
+  "differences": [],
+  "inputs": {
+    "datasets/mobility/processed/mobility/bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "datasets/mobility/processed/mobility/bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+    "datasets/mobility/processed/mobility/bus_seg_profile_v1.jsonl.gz": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074"
+  },
+  "conditions": {
+    "depart_min": 600,
+    "day_types": [
+      "weekday"
+    ],
+    "min_days": 5,
+    "fallback_kmh": 20,
+    "quantiles": [
+      "p50",
+      "p90"
+    ]
+  },
+  "scope": "fixed model replay of stored profiles; not production speed, actual travel or new web validation",
+  "map_developer_api_calls": 0,
+  "new_web_routes": 0,
+  "actual_trips": 0
+}

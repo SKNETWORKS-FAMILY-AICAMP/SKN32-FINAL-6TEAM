@@ -1,0 +1,35 @@
+--- before/turn_restrictions.py
++++ after/turn_restrictions.py
+@@ -64,10 +64,22 @@
+     """자료 교체는 재검사한다. 적용 뒤 삭제·손상은 옛 경로로 조용히 돌아가지 않는다."""
+     records = router._records
+     path = router.dir/FILE_NAME if records is None else None
+-    sig = signature(path) if path is not None else 'records'
+     if records is None and graph_signature(router.dir) != router._graph_signature:
+         raise RouterDown('turn_restrictions: 적재한 도로 그래프가 바뀌었다')
+     with router._lock:
++        if path is None:
++            sig = 'records'
++        else:
++            try:
++                payload = path.read_bytes()
++            except FileNotFoundError:
++                sig = None
++            except OSError as exc:
++                raise RouterDown('turn_restrictions: 자료를 읽지 못했다') from exc
++            else:
++                # copy2/원자 교체는 크기와 수정시각을 보존할 수 있다.
++                # 비교한 것과 같은 바이트를 아래에서 검증하고 파싱한다.
++                sig = hashlib.sha256(payload).hexdigest()
+         if router._turns_loaded and sig == router._turn_signature:
+             return router._turn_tables
+         if sig is None:
+@@ -77,7 +89,7 @@
+         else:
+             try:
+                 data = (records.get('turn_restrictions') if records is not None
+-                        else json.loads(path.read_text(encoding='utf8')))
++                        else json.loads(payload.decode('utf8')))
+                 if data is None:
+                     selected = None
+                 else:

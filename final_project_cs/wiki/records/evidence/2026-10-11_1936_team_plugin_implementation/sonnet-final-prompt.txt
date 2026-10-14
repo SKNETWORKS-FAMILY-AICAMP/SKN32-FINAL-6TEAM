@@ -1,0 +1,5 @@
+사용자가 요청한 Claude Sonnet 5.5 독립 코드 검증입니다. RULE.md 및 wiki/teams/team-contract/plugin-availability.md를 읽고, 이전 검토 파일 wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/sonnet-review-attempt2.json의 지적이 현재 코드에서 해결되었는지 확인하세요. 현재 작업자들이 코드 검증 마무리 중입니다. 파일 수정/삭제/커밋/배포/외부전송은 하지 마세요. .env, 자격 증명, 개인 운영 메모, 고객 데이터를 읽지 마세요.
+반드시 Bash 도구로 아래 로컬 회귀 시험을 직접 실행하세요. Python 경로는 C:/Users/playdata2/anaconda3/python.exe입니다. 사용자 합성 시험 데이터만 사용하는 시험입니다.
+"C:/Users/playdata2/anaconda3/python.exe" -m pytest tests/unit/core/test_plugin_availability.py tests/unit/test_plugin_composition_runtime.py tests/unit/travel/test_plugin_worker_availability.py tests/integration/controller/test_plugin_unavailable.py -q --tb=short
+로그는 사용자에게 반환할 result에 실행 명령·실제 출력·exit status를 남기세요. 실행이 실패/불가능하면 사실대로 적고 통과로 부르지 마세요.
+Read/Glob/Grep으로 최종 코드의 남은 실제 결함을 검토하세요: service_bindings/runtime/composition, Controller 재개, SSE context 전달, worker한회차, optionalhook격리, A2A artifact identity. 새 결함은 경로·함수·재현·영향을 구체적으로 적고 의견과 사실을 구분하세요. 호환성 위험도 검토하세요. 짧게 한국어로 결론과 실제 실행 결과를 반환하세요. 모델 정체성을 바꾸지 마세요. 다른 모델/서브에이전트 호출 금지.

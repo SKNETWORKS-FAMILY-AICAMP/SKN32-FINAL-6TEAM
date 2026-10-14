@@ -1,0 +1,22 @@
+[
+  {
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\itinerary\\_backup\\2026-10-09_0430_현재문맥검사\\itinerary_changes.py.bak",
+    "sha256": "d71e7dac8b7a3c9188d60273ca7557e3abbc6147920be7aa9971ac3f0edf7846"
+  },
+  {
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\travel\\_backup\\2026-10-09_0430_현재문맥검사\\test_departure_replan_v1.py.bak",
+    "sha256": "66e4fb88dd29cbf0c0128b119e7f7e5bf0c90479f13e861ff34625cbf2cb06bd"
+  },
+  {
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\scenario\\_backup\\2026-10-09_0430_현재문맥검사\\test_departure_watch_db_v1.py.bak",
+    "sha256": "94bedce6c2c8d679c041dc4df73fd3ed85e79aecded6566acaed5847e36df427"
+  },
+  {
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\scenario\\_backup\\2026-10-09_0432_적용종류_분모\\test_departure_watch_db_v1.py.bak",
+    "sha256": "058b54c1da104fcddb3568c9498df361d1a64c222b56f2cddc1070d3c4c24dc8"
+  },
+  {
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\scenario\\_backup\\2026-10-09_0433_미사용가져오기\\test_departure_watch_db_v1.py.bak",
+    "sha256": "a12bbf115fee16d662d1b418072e4cf6d363141f0479e11c44d915b71bf71254"
+  }
+]

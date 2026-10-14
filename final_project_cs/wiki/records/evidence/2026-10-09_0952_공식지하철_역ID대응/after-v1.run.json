@@ -1,0 +1,21 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/travel/test_subway_line_identity_v1.py",
+    "tests/unit/travel/test_subway_station_extract_v1.py",
+    "tests/unit/travel/test_subway_identity_v1.py",
+    "tests/unit/travel/test_seoul_subway_arrival.py",
+    "tests/unit/travel/test_subway_observation_time.py",
+    "tests/unit/travel/test_departure_observer_notice_v1.py",
+    "tests/unit/travel/mobility/test_arrival_query_clock_v1.py",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-subway-station-map-after-v1",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0952_공식지하철_역ID대응\\after-v1.xml"
+  ],
+  "time": "2026-10-09T09:55:41.627053+09:00",
+  "exit_code": 0
+}

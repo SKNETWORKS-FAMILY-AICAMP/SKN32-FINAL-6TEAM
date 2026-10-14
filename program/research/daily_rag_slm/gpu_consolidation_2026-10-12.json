@@ -1,0 +1,131 @@
+{
+  "observed_at_utc": "2026-10-12T03:22:27.517623+00:00",
+  "user_instruction": "All future GPU work on RTX A4000; stop RTX 2000 Ada after preservation",
+  "hardware_mapping": {
+    "A": "NVIDIA RTX 2000 Ada Generation",
+    "B": "NVIDIA RTX A4000"
+  },
+  "ada": {
+    "historical_terminal_jobs": 196,
+    "pending_registered_jobs": 0,
+    "idle_worker_stopped": true,
+    "pod_stop_verified": true,
+    "pod_stop_blocker": null,
+    "new_work_disabled": true,
+    "persistent_models_retained": true,
+    "volatile_valen_model_preserved": true,
+    "volatile_valen_bytes": 3417285852,
+    "preservation_blocker": null,
+    "oracle_archive_attempt": "Completed after explicit human destination-specific authorization",
+    "oracle_archive_requires_explicit_authorization": false,
+    "existing_storage_models_deleted": false,
+    "archive_verification": {
+      "utc": "2026-10-12T03:57:20.763795+00:00",
+      "verified_files": 54,
+      "uncompressed_bytes": 3437346011,
+      "archive_bytes": 3437455360,
+      "archive_sha256": "b602e2063a4ae43731ebfee98c37ddb5e9e0230f9a7c105deef50a39ec661bdd",
+      "free_bytes_after": 23436042240,
+      "model_started": false,
+      "nice": 19,
+      "io_class": "idle",
+      "private_mode": "0700 directory / 0600 archive",
+      "sha256_model": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48"
+    },
+    "stop_header_attempt": {
+      "utc": "2026-10-12T04:00:31.830072+00:00",
+      "gpu": "NVIDIA RTX 2000 Ada Generation",
+      "terminal_jobs": 196,
+      "target_matches": true,
+      "desired_status": "EXITED",
+      "errors": [],
+      "credential_transport": "Authorization header; no URL key",
+      "stop_requested": true,
+      "pod_stop_verified": true
+    },
+    "post_stop_runtime": {
+      "ssh_exit_code": 255,
+      "runtime_reachable": false,
+      "transport_result": "connection_refused",
+      "api_desired_status": "EXITED"
+    }
+  },
+  "migration": {
+    "verified_files": 1397,
+    "verified_bytes": 1701155373,
+    "terminal_jobs": 196,
+    "pending_jobs": 0,
+    "free_bytes_after": 3791351808,
+    "ada_idle_worker_stopped": true
+  },
+  "a4000": {
+    "live": {
+      "utc": "2026-10-12T04:01:40.813616+00:00",
+      "gpu": "NVIDIA RTX A4000, 10469 MiB, 25 %",
+      "free_bytes": 3772653568,
+      "hf_states": {
+        "finch_initial_app_completion_v2": "completed",
+        "cosine_initial_app_completion_v2": "completed",
+        "finch_seed20261013_app_completion_v2": "running",
+        "cosine_seed20261013_app_completion_v2": "pending"
+      },
+      "hf_worker_alive": true,
+      "dispatcher_alive": true,
+      "new_manifest_jobs": 4,
+      "new_states": {}
+    },
+    "new_queue": {
+      "registered_jobs": 4,
+      "expected": 1592,
+      "dispatcher_pid": 2814996,
+      "predecessor": 2814363,
+      "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64",
+      "free_bytes": 3791290368,
+      "new_gpu_process_started": false
+    },
+    "new_job_expected": 1592,
+    "new_job_attempted": 0,
+    "future_queue_jobs": 5,
+    "existing_running_job_interrupted": false,
+    "frozen1448": {
+      "registered_jobs": 1,
+      "expected": 1448,
+      "measured": 0,
+      "registration_utc": "2026-10-12T03:46:47.381356+00:00",
+      "engine_version": "version: 0.5.0-dev (build 1, commit bed0a85)\nbuilt with GNU 13.3.0 for Linux x86_64",
+      "free_bytes_at_registration": 3773767680,
+      "product_end_to_end": false
+    }
+  },
+  "quality_claims": {
+    "new_accuracy_improvement_measured": false,
+    "independent_holdout_passed": false,
+    "product_model_adopted": false
+  },
+  "records": {
+    "raw_evidence": "program/scripts/plan_qa_bench/results/gpu_consolidation_20261012",
+    "preregistration": "program/research/daily_rag_slm/2026-10-12_single_gpu_missing_qat_prereg_v1.json",
+    "completion_report": "final_project_cs/wiki/records/reports/2026-10-12_1302_a4000-consolidation-ada-stop-completed.md"
+  },
+  "next": [
+    "Collect existing HF completion and stability results without combining repeated items with independent accuracy",
+    "Allow new single queue after predecessor states terminal and process exited",
+    "Keep ADA disabled in automations; only refill A4000 with meaningful nonduplicate work",
+    "Collect fixed1448 current product decision regression using full denominator; policy search and independent holdout remain separate"
+  ],
+  "followup_observed_at_utc": "2026-10-12T04:01:36.376626+00:00",
+  "policy_guard_reverification": {
+    "utc": "2026-10-12T03:55:18.694673+00:00",
+    "checks": {
+      "private_A_disabled": true,
+      "private_active_B": true,
+      "rag_A_disabled": true,
+      "rag_strata_A_disabled": true,
+      "feeder_disabled_exit": true
+    },
+    "passed": 5,
+    "expected": 5,
+    "feeder_sha256": "d0ebc53f4abfc5865c1bb7b3b5dab08f122416dfbb2913677b660ff87dfc713e",
+    "gpu_started": false
+  }
+}

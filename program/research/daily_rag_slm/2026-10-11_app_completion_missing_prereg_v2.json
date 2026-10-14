@@ -1,0 +1,26 @@
+{
+  "created_at_utc": "2026-10-11T13:34:21.373295+00:00",
+  "purpose": "Missing full application reply comparisons, fixed existing development diagnostic; no tuning or independent validation",
+  "input_sha256": "0162d560348efc5b9a0f929c7e9a8198c82da41c71e79d717e95cca1e82ac93c",
+  "unique_conditions": 12,
+  "baseline_calls_per_condition": 48,
+  "budgets": [
+    400,
+    800,
+    800,
+    400
+  ],
+  "temperature": 0,
+  "seed": 20261011,
+  "new_training": false,
+  "new_downloads": false,
+  "adoption": false,
+  "independent_holdout": false,
+  "automatic_retry": false,
+  "minimum_free_bytes": 3221225472,
+  "A": "Three unmeasured grammar-enforced adapter conditions: cosine seed20261014 and oos2r/oos3 on Q4_K_M base; retain 48 denominators",
+  "B": "Four unmeasured HF NF4 full-reply conditions: existing FINCH/cosine adapters initial and second training seeds; unchanged prior runner and gate, conditional maximum6h soak per successful condition",
+  "B_gate": "24/24 at800 over12conditions and2repeats, no runtime errors; otherwise stop stability and preserve48baseline denominator",
+  "latency": "Separate engine, quantization and hardware; descriptive within-profile only",
+  "next": "Collect completion once, preserve failed generic generation, compare with grammar path, do not adopt without independent validation"
+}

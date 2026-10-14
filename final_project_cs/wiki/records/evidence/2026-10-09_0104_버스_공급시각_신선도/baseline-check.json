@@ -1,0 +1,114 @@
+{
+  "checked_at": "2026-10-09T01:04:14.927404+09:00",
+  "prior_sources": [
+    {
+      "path": "app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+      "bytes": 1825,
+      "sha256": "9c20c053282bbb831030d645153618ff17aac18bc1c14aa7d737ed2f626bc8b9",
+      "current_sha256": "9c20c053282bbb831030d645153618ff17aac18bc1c14aa7d737ed2f626bc8b9",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/instances/mobility/engine/plan.py",
+      "bytes": 146683,
+      "sha256": "187b3ad7f75222a193de1e533edb839c1e1196a2628dc65c334d59fcdd80626e",
+      "current_sha256": "187b3ad7f75222a193de1e533edb839c1e1196a2628dc65c334d59fcdd80626e",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/instances/mobility/wiring.py",
+      "bytes": 16581,
+      "sha256": "b6ab0527e26095bba9e064252e5e5763fd8d8b6ba7dc85efcf64364817e5f102",
+      "current_sha256": "b6ab0527e26095bba9e064252e5e5763fd8d8b6ba7dc85efcf64364817e5f102",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/components/planning/planner.py",
+      "bytes": 109824,
+      "sha256": "0ef25ce09ce4dfe603ab83451ef789e93676ba7c32b92b0413f2e0434f08cd63",
+      "current_sha256": "0ef25ce09ce4dfe603ab83451ef789e93676ba7c32b92b0413f2e0434f08cd63",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+      "bytes": 88816,
+      "sha256": "10f72574c83104363a6c21a2da86ec931d0b61469b3ea5b12c15564ab247d6af",
+      "current_sha256": "10f72574c83104363a6c21a2da86ec931d0b61469b3ea5b12c15564ab247d6af",
+      "unchanged": true
+    },
+    {
+      "path": "tests/unit/travel/test_departure_context_storage_v1.py",
+      "bytes": 6330,
+      "sha256": "2ddc1fb0ef3229a89ee7836d37b3fcadace563dc0323e0bce2b5aaed826d8e3e",
+      "current_sha256": "2ddc1fb0ef3229a89ee7836d37b3fcadace563dc0323e0bce2b5aaed826d8e3e",
+      "unchanged": true
+    },
+    {
+      "path": "tests/unit/travel/mobility/test_plan_v1.py",
+      "bytes": 77766,
+      "sha256": "9bd0dd4f1dc5500c7b1a60ca400260b052750cc98fb1582bfaabd1fdf6b11369",
+      "current_sha256": "9bd0dd4f1dc5500c7b1a60ca400260b052750cc98fb1582bfaabd1fdf6b11369",
+      "unchanged": true
+    },
+    {
+      "path": "tests/unit/travel/mobility/test_review_fixes_plan.py",
+      "bytes": 11436,
+      "sha256": "7effee1149b00cb1168013633145cc35f31e1940d843beded2cf4215e7c5629e",
+      "current_sha256": "7effee1149b00cb1168013633145cc35f31e1940d843beded2cf4215e7c5629e",
+      "unchanged": true
+    },
+    {
+      "path": "app/domains/travel_ops/ports/data_sources/seoul_bus.py",
+      "bytes": 9502,
+      "sha256": "543da2549c780d254818daf11c323d82447075815b80f895662fa7f9ada79965",
+      "current_sha256": "543da2549c780d254818daf11c323d82447075815b80f895662fa7f9ada79965",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/mobility/build_readiness_visual_v8.py",
+      "bytes": 19868,
+      "sha256": "ab6a11162ee14d3893a116618ce0a309b29962a77403b34ded5ee43fe58e7cc9",
+      "current_sha256": "ab6a11162ee14d3893a116618ce0a309b29962a77403b34ded5ee43fe58e7cc9",
+      "unchanged": true
+    },
+    {
+      "path": "../datasets/mobility/scripts/build_road_graph_v2.py",
+      "bytes": 11702,
+      "sha256": "7c9255bd152d08c05f21278c2bec0130fb96d5e46789652c273de10b5c2b1fd6",
+      "current_sha256": "7c9255bd152d08c05f21278c2bec0130fb96d5e46789652c273de10b5c2b1fd6",
+      "unchanged": true
+    }
+  ],
+  "w03_raw": [
+    {
+      "path": "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-09_v1\\W03_kakao_walk_forward.json",
+      "bytes": 436,
+      "sha256": "62fb32cc0418939eb707e04bf0f5e838848b75af5b474b0bf7ae084cbe37b706"
+    },
+    {
+      "path": "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-09_v1\\W03_kakao_walk_forward.png",
+      "bytes": 56805,
+      "sha256": "aa0e983deea9b14aead4529268f55bec98f7b39595f1dd71bda3bb63f56e5dc8"
+    },
+    {
+      "path": "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-09_v1\\W03_kakao_walk_forward.txt",
+      "bytes": 4746,
+      "sha256": "ddbaeb8441aa33a5ba647ef86e75170d4fb93484a25da7a3e646e91cb6ca5bff"
+    },
+    {
+      "path": "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-09_v1\\W03_naver_walk_forward.json",
+      "bytes": 548,
+      "sha256": "650a59b08542480f440b1fc03075f4ca88754e960be2fe15d7b2d4c271011591"
+    },
+    {
+      "path": "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-09_v1\\W03_naver_walk_forward.png",
+      "bytes": 41573,
+      "sha256": "bebfa433d72fa0e98b0f9369d9c9791da5e2c302947c833972512f223f5ead45"
+    },
+    {
+      "path": "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-09_v1\\W03_naver_walk_forward.txt",
+      "bytes": 5592,
+      "sha256": "5722022521618c875b51a9be66ddbe274843cf0e739c53a77ecd36becee13132"
+    }
+  ]
+}

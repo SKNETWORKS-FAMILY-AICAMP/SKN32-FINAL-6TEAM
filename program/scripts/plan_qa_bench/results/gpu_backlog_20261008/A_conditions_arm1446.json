@@ -1,0 +1,16 @@
+{
+  "root_space": {
+    "path": "/root",
+    "available_bytes": 8794890240,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "temp_space": {
+    "path": "/tmp",
+    "available_bytes": 8794890240,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "ready": [],
+  "blocked": [],
+  "worker_pid": 342497,
+  "observed_at_utc": "2026-10-08T05:45:42.159692+00:00"
+}

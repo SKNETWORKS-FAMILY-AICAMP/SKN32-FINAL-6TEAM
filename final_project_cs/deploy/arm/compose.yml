@@ -1,0 +1,83 @@
+name: tripilot-arm
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: acop
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+      POSTGRES_DB: acop_cs
+    ports: ["127.0.0.1:15432:5432"]
+    volumes: ["pg:/var/lib/postgresql/data"]
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=40"]
+    mem_limit: 768m
+    cpus: 0.4
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acop -d acop_cs"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  model-adapter:
+    image: python:3.12-slim
+    restart: unless-stopped
+    network_mode: host
+    command: ["python", "/adapter.py"]
+    environment:
+      CHAT_URL: ${CHAT_URL:?}
+      EMBED_URL: ${EMBED_URL:?}
+      CHAT_ID: ${CHAT_ID:?}
+      EMBED_ID: ${EMBED_ID:?}
+      CHAT_MODEL: arm-resident
+      EMBED_MODEL: arm-embedding
+      ADAPTER_PORT: "18312"
+    volumes: ["./ollama_adapter.py:/adapter.py:ro"]
+    mem_limit: 128m
+    cpus: 0.2
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18312/health', timeout=5).read()"]
+      interval: 5s
+      timeout: 6s
+      start_period: 10s
+      retries: 36
+  api:
+    image: tripilot-arm-api:${IMAGE_TAG:?}
+    restart: "on-failure:3"
+    network_mode: host
+    env_file: [.env, .env.apikeys]       # x600 서버와 같은 두 파일 — 뒤가 이긴다
+    command: ["uvicorn", "app.presentation.api.app:app", "--host", "127.0.0.1", "--port", "8043", "--no-server-header"]
+    environment:
+      ACOP_DEPLOYMENT_VERSION: ${IMAGE_TAG:?}
+      ACOP_DIAGNOSTIC_SPOOL: /srv/var/operations-diagnostics/pending.sqlite3
+    volumes: ["ops:/srv/var/ops", "diagnostics:/srv/var/operations-diagnostics", "${MOBILITY_DIR:?}:/data/mobility/processed:ro"]
+    mem_limit: 1536m
+    cpus: 0.6
+  worker:
+    image: tripilot-arm-api:${IMAGE_TAG:?}
+    restart: unless-stopped
+    network_mode: host
+    env_file: [.env, .env.apikeys]       # x600 서버와 같은 두 파일 — 뒤가 이긴다
+    command: ["/srv/deploy/worker.sh"]
+    environment:
+      ACOP_DEPLOYMENT_VERSION: ${IMAGE_TAG:?}
+      ACOP_DIAGNOSTIC_SPOOL: /srv/var/operations-diagnostics/pending.sqlite3
+    volumes: ["ops:/srv/var/ops", "diagnostics:/srv/var/operations-diagnostics", "${MOBILITY_DIR:?}:/data/mobility/processed:ro"]
+    mem_limit: 1g
+    cpus: 0.3
+    healthcheck:
+      disable: true
+  web:
+    image: tripilot-arm-web:${IMAGE_TAG:?}
+    restart: unless-stopped
+    network_mode: host
+    command: ["./node_modules/.bin/next", "start", "--hostname", "127.0.0.1", "--port", "13000"]
+    mem_limit: 512m
+    cpus: 0.4
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:13000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+volumes:
+  pg:
+  ops:
+  diagnostics:

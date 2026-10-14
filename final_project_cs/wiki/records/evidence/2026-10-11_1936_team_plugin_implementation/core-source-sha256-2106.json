@@ -1,0 +1,13 @@
+{
+  "app/core/team_availability.py": "1ef185a44b5a49bac30672a8a66cbab11f28e3a4b67b46cc05b2787e6c7f63e9",
+  "app/core/registry.py": "e9439bdb90d782246fdbebec16b69f4121a76b2b332ad973d80c8f97fe1a4b23",
+  "app/core/project_config.py": "2d3d46a7cc16861ab71b29500c2cc98bc724f17dc5632bded9c812b40c07b88d",
+  "app/core/remote_team/executor.py": "5acad19f9e2e04adc3f3c637c4105a5b559ba3eb238ae639951e9f828a2c4724",
+  "app/core/remote_team/a2a_executor.py": "577c614fef64903414c687529c5370d750f874c31efbe0f1f7d5395cb3f82e5b",
+  "app/infrastructure/a2a/http_transport.py": "cc064c4d18b424c01d3f0b3e5e26141908cd1e7948f415b7d25707e6ae341ffb",
+  "app/presentation/a2a/travel_remote_agent.py": "fc55034010458508e7f6fef64a675c4b96b1636b312e2ee33bfdb8e563b2f187",
+  "config/guardrails.yaml": "4204f44cdd5a9725cbf85ee6b6e213c7bfc9638cdfdec8ddb74f43e1d1129b8a",
+  "tests/unit/core/test_plugin_availability.py": "d48214f2c50a8b4c79b23ee1ff0d1aa092c4909f7e32f8b4fe4a7c4db8979942",
+  "tests/unit/ports/test_team_ports.py": "b97449a17747cddc103352d6408ca70ab1b24ec162a872446e63ace960b6eb96",
+  "tests/integration/a2a/test_travel_remote_round_trip.py": "8c0245d68eb478a0ed46896afbed37a31377db1f0dd25280f790111c82209603"
+}

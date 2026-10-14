@@ -293,9 +293,12 @@ def _web_trip(api, key, request_id="op-1") -> dict:
 MESSAGE = {"message": "식당이 휴무예요", "at": "2030-01-01T12:00:00+09:00"}   # 모델 없이 끝나는 문장(`no_meal`) — 웹 시험과 같다
 
 
-def test_planning_over_sse_streams_stages_and_ends_with_the_same_body_as_json(plan_api, fast_stream):
-    """⑤ 일정 짜기를 SSE 로 — `planning` → `registering` 단계 뒤 `result` 가 JSON 응답과 같은 모양(`trip` 등록)."""
+def test_planning_over_sse_reports_missing_required_engine_like_json(plan_api, fast_stream):
+    """계산 자료를 끈 API 시험은 추정 여행을 발행하지 않고 JSON/SSE 모두 원인을 알린다."""
     client = plan_api["client"]
+    from tests.helpers.plugin_bindings import publish_test_services
+
+    publish_test_services(client.app, {("legs", "leg_planner"): lambda *a, **kw: None})
     key = _key(plan_api)
     intake = client.post("/v1/web/trip-intakes", headers=key, data={"text": ""}).json()["intake_id"]
     view = client.get(f"/v1/web/trip-intakes/{intake}", headers=key).json()
@@ -304,15 +307,14 @@ def test_planning_over_sse_streams_stages_and_ends_with_the_same_body_as_json(pl
     assert streamed.status_code == 200 and streamed.headers["content-type"].startswith("text/event-stream")
     events = _events(streamed.text)
     names = [n for n, _ in events]
-    assert names[0] == "accepted" and names[-1] == "result"
+    assert names[0] == "accepted" and names[-1] == "error"
     stages = [d["stage"] for n, d in events if n == "stage"]
-    assert stages[:1] == ["planning"] and "registering" in stages
+    assert stages[:1] == ["planning"] and "registering" not in stages
     final = events[-1][1]
-    assert final["status"] == "confirmed" and final["trip"]["created"] is True and "planner" in final
-    # 같은 접수·같은 판을 다시 → 이미 등록된 여행을 곧바로(`accepted` → `result`) — 두 번 짜지 않는다
-    again = _events(client.post(f"/v1/web/trip-intakes/{intake}/plan", headers={**key, **SSE}, json=body).text)
-    assert [n for n, _ in again] == ["accepted", "result"]
-    assert again[-1][1]["trip"]["created"] is False and again[-1][1]["trip"]["trip_id"] == final["trip"]["trip_id"]
+    assert (final["code"], final["status"], final["reason"]) == ("team_unavailable", 503, "engine_unavailable")
+    ordinary = client.post(f"/v1/web/trip-intakes/{intake}/plan", headers=key, json=body)
+    assert ordinary.status_code == 503
+    assert ordinary.json()["error"]["reason"] == final["reason"]
 
 
 def test_a_refusal_before_the_stream_opens_is_a_normal_http_error(plan_api, fast_stream):

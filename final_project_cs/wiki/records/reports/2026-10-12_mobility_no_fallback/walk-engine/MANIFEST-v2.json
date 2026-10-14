@@ -1,0 +1,142 @@
+{
+  "backup-before-goal-fix-v1.json": {
+    "bytes": 1169,
+    "sha256": "b966a6a04e1c1a3caedef6770fe7ef3c650a7aa6480ee59ca6b91e22dc9c482a"
+  },
+  "backup-before-goal-fix-v1.py": {
+    "bytes": 1781,
+    "sha256": "4f420f8a844d8f57656d52746f45ecfc3c04807e22be075eaf4be46e01327e2b"
+  },
+  "build-report-v1.py": {
+    "bytes": 9729,
+    "sha256": "3cbf3c25a4fc09ed0dfe25e503ad1ae3bf4b03350a034a51b47e574880b3bd27"
+  },
+  "build-report-v2.py": {
+    "bytes": 10391,
+    "sha256": "7497cef251b1b75b3609858b311c7a32211a19b752f3e309fb6d0d0bcf83bcb0"
+  },
+  "diagnose-v1.py": {
+    "bytes": 5194,
+    "sha256": "b360916a9fede915cbb3960a3c07ed9a4a4a323c79631435f2774d399f987e4e"
+  },
+  "diagnosis-v1.json": {
+    "bytes": 250398,
+    "sha256": "bcbece6c71ac1a1d87bd0d61ae32fd8e254fb27bcd36366344509d1d42b8b5ba"
+  },
+  "goal-boundary-final-v4.xml": {
+    "bytes": 593,
+    "sha256": "83f3b1d9caa1b79d5b3ca5d8c480c5ca4ddee468a5ab9a21ae45f3a3b28c2d19"
+  },
+  "goal-heuristic-before-v1.xml": {
+    "bytes": 1485,
+    "sha256": "b9ce42b304a3d404b5ea861ac4984773765eb7b7681aea3c0159a2d5790813cc"
+  },
+  "goal-heuristic-change-v2.diff": {
+    "bytes": 2476,
+    "sha256": "b23519c5a5708e62db9e01186b33d3251a98ab5a459d557cf3f43779ccf2db51"
+  },
+  "graph-router-final-v3.xml": {
+    "bytes": 9342,
+    "sha256": "f4fa832c7e6be85f7a6787f134116044bd16ad48e4fa0877d5f787ce7e46a625"
+  },
+  "graph-router-regression-after-v1.xml": {
+    "bytes": 88583,
+    "sha256": "f9d45a1eb34bc30095a6e96f8d56d6eb7ba270c5e37fef08f28ce8b2a366516f"
+  },
+  "graph-router-related-after-v2.xml": {
+    "bytes": 6216,
+    "sha256": "799d8c44308205726982adb1e89b2203959723c0461d81a2858639f6a48ff639"
+  },
+  "local-topology-v1.json": {
+    "bytes": 2839,
+    "sha256": "31aa630b907ea154f9f8c85521af4e40fcf4e6742770dec6555c4182daaf71a7"
+  },
+  "local-topology-v1.py": {
+    "bytes": 2706,
+    "sha256": "b4de187413a617c76ab10e099dbdf023c192cbf60cdf8157974884395c3d12ad"
+  },
+  "new-pbf-targeted-v1.json": {
+    "bytes": 126043,
+    "sha256": "b8e9503f916e8effe8d0077777905bedfc53411a97316d7424fc8b859216826d"
+  },
+  "new-pbf-targeted-v1.py": {
+    "bytes": 2509,
+    "sha256": "99999de8051fb0d0a877969e0b300a7cf911b16636906f260304ddeffa27cfb9"
+  },
+  "paired-counterexample-v1.json": {
+    "bytes": 4971,
+    "sha256": "57d4478fa955e6bf2d6b028cc359da43d02cdf46cacab608366fdd05bc86422d"
+  },
+  "paired-counterexample-v1.py": {
+    "bytes": 2024,
+    "sha256": "da5ccb8ed71b1748ee3297dae0a17e976814ec0f6e3869138b8710ee67ef94b4"
+  },
+  "paired-counterexample-v2.json": {
+    "bytes": 4971,
+    "sha256": "a8b868554bb8e1e9c757d0eb1e6cbc987f37b092322e9a13565fa8ad3332f7e7"
+  },
+  "paired-counterexample-v2.py": {
+    "bytes": 2049,
+    "sha256": "d47dae9551ac649c0fece4fb56d82359046394a2de98fee56900f27195c8be51"
+  },
+  "pbf-audit-v1.json": {
+    "bytes": 371575,
+    "sha256": "f110803818a3b129dfc9a516f3597132a991ac585400a4e5df2d7e5eb4bd0cf9"
+  },
+  "pbf-audit-v1.py": {
+    "bytes": 2936,
+    "sha256": "5cb15a21fae093b77452f839b9bdde68b2a93a4c6d39c94216b1622e9c384893"
+  },
+  "plot-v1.py": {
+    "bytes": 2878,
+    "sha256": "9b73eee76326fd4d3a4ea12376636f6028beedcab11fd272651e84c971c28869"
+  },
+  "plot-v2.py": {
+    "bytes": 2940,
+    "sha256": "b82f457e3c9ff05d46880819d17ccfd784c9fcf2407d210b762595e96b2d89eb"
+  },
+  "postfix-w01-v1.json": {
+    "bytes": 7299,
+    "sha256": "43c150d81cd760fb9149b10fb3baae3156d5a261d262823b697afda63659d790"
+  },
+  "postfix-w01-v1.py": {
+    "bytes": 1642,
+    "sha256": "50a4866857cf137278b30320b7dedc41c90134595251447a38d67d520e02920e"
+  },
+  "prepare-final-v2.py": {
+    "bytes": 2635,
+    "sha256": "9c70bfc38514e849e73de9b9f5fda7d816b2eb37d29bed8f61ce5e9ace36fe27"
+  },
+  "prepare-plot-v2.py": {
+    "bytes": 318,
+    "sha256": "6ed1e400abf9cf99aa9f56d3e9075b6569c05a1b76bfaf8a546c2051291b5f2f"
+  },
+  "REPORT-v2.md": {
+    "bytes": 8105,
+    "sha256": "cdf4a1b302fc04d855ff31de514af7b079a4534717bbf41a9d140de03ec9445f"
+  },
+  "route-diagnosis-v1.svg": {
+    "bytes": 145181,
+    "sha256": "135257c920401b8e5144d8cea08df170133e8d9aae7810283bbad874def3d375"
+  },
+  "route-diagnosis-v2.png": {
+    "bytes": 284597,
+    "sha256": "b12b632033084f1331e8f8e8929ba825ec06f9fe0d02082836530a31a2ea6800"
+  },
+  "route-diagnosis-v2.svg": {
+    "bytes": 216689,
+    "sha256": "b287681b2609a3475970ed55b566ba77b871435ee322bb617c19ae0b4fbad2bc"
+  },
+  "summary-v2.json": {
+    "bytes": 1611,
+    "sha256": "6c58418c712b78e682c3ce6986c53d645512cc25865a192465cb387aeb9a2329"
+  },
+  "way-tags-v1.json": {
+    "bytes": 99003,
+    "sha256": "08bc743bdf9118bbe90d63a6d3c901f937eef2286761a5ae8cd2b21dfbcaf762"
+  },
+  "way-tags-v1.py": {
+    "bytes": 1029,
+    "sha256": "3dc2a4e83c0a66113097d14e6c4cb2d9e7804363ec3b81643ce591fe8b07716d"
+  }
+}

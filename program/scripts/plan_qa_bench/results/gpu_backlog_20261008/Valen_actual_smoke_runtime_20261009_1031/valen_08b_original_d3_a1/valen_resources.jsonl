@@ -1,0 +1,7 @@
+{"timestamp": 1791509333.2318285, "memory": {"used": 26126950400, "limit": 30999998464, "headroom": 4873048064}, "gpu": "3460 MiB, 58 %", "torch_allocated": 3433748992, "torch_reserved": 3544186880}
+{"timestamp": 1791509338.3156352, "memory": {"used": 26561044480, "limit": 30999998464, "headroom": 4438953984}, "gpu": "4784 MiB, 100 %", "torch_allocated": 4524984832, "torch_reserved": 4886364160}
+{"timestamp": 1791509343.3497891, "memory": {"used": 26561306624, "limit": 30999998464, "headroom": 4438691840}, "gpu": "4784 MiB, 100 %", "torch_allocated": 3426551296, "torch_reserved": 4886364160}
+{"timestamp": 1791509348.3910115, "memory": {"used": 26561564672, "limit": 30999998464, "headroom": 4438433792}, "gpu": "4784 MiB, 87 %", "torch_allocated": 3428311552, "torch_reserved": 4886364160}
+{"timestamp": 1791509353.4329429, "memory": {"used": 26561826816, "limit": 30999998464, "headroom": 4438171648}, "gpu": "4784 MiB, 100 %", "torch_allocated": 3426551296, "torch_reserved": 4886364160}
+{"timestamp": 1791509358.467229, "memory": {"used": 26562088960, "limit": 30999998464, "headroom": 4437909504}, "gpu": "4784 MiB, 88 %", "torch_allocated": 4307149312, "torch_reserved": 4886364160}
+{"timestamp": 1791509363.4996145, "memory": {"used": 26562351104, "limit": 30999998464, "headroom": 4437647360}, "gpu": "4784 MiB, 100 %", "torch_allocated": 3426551296, "torch_reserved": 4886364160}

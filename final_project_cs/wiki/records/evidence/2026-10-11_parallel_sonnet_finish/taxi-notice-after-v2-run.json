@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-c",
+    "import socket,sys,json\nfrom pathlib import Path\ncalls=[]\ndef deny(*a,**kw):\n    calls.append(1);raise RuntimeError('offline network denied')\nsocket.socket.connect=deny;socket.socket.connect_ex=deny\nfrom app.domains.travel_ops.instances.mobility.engine import runtime\noriginal=runtime.build_verifier\ndef offline(**kw):\n    kw.setdefault('local_router',True);kw.setdefault('seoul_key','');kw.setdefault('gh_url','')\n    return original(**kw)\nruntime.build_verifier=offline\nimport pytest\ncode=pytest.main(sys.argv[1:])\nPath('C:\\\\Users\\\\playdata2\\\\Documents\\\\final_workspace\\\\final_project_cs\\\\wiki\\\\records\\\\evidence\\\\2026-10-11_parallel_sonnet_finish\\\\taxi-notice-after-v2-network.json').write_text(json.dumps({'network_attempts':len(calls),'limited_api_calls':0}),encoding='utf8')\nsys.exit(code)\n",
+    "tests/unit/travel/mobility/test_departure_taxi_v1.py",
+    "tests/unit/travel/mobility/test_departure_walk_v1.py",
+    "tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py",
+    "tests/unit/travel/mobility/test_plan_taxi.py",
+    "tests/unit/travel/test_departure_observer_notice_v1.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\pytest-taxi-notice-after-v2",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_parallel_sonnet_finish\\taxi-notice-after-v2.xml"
+  ],
+  "exit_code": 0
+}

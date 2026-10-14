@@ -1,0 +1,27 @@
+[
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/express.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0627_급행표_내용판_보강/express.py",
+    "sha256": "29a32bb638dfc320aee9b16a72ac24b55bdb9013f662dd122158eba2e4deb62b"
+  },
+  {
+    "file": "final_project_cs/tests/unit/travel/mobility/test_express_source_reload_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0627_급행표_내용판_보강/test_express_source_reload_v1.py",
+    "sha256": "d29b522dad24bbc0ff390e6b3445dc6125a61ece21d04ff214dd489a7f228f8e"
+  },
+  {
+    "file": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0627_급행표_내용판_보강/mobility.md",
+    "sha256": "894d5b322fa7fee487a1b4e60fa0be0c04088718e1d2e6a8775c75e5ffabe95f"
+  },
+  {
+    "file": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0613_급행_운행표_변경이_다음계산에_반영되지않음.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0627_급행표_내용판_보강/2026-10-09_0613_급행_운행표_변경이_다음계산에_반영되지않음.md",
+    "sha256": "e870f4c35799b661b35c03cb477a7cd98c8335d3f1fe67646701e51bb5c02f8a"
+  },
+  {
+    "file": "final_project_cs/scripts/mobility/build_readiness_visual_v22.py",
+    "backup": "final_project_cs/scripts/mobility/_backup/2026-10-09_0627_급행표_내용판_보강/build_readiness_visual_v22.py",
+    "sha256": "b1e7b558fe1e2665285f92e6d860480659c5ea646e608fcb5f842b87247388fe"
+  }
+]

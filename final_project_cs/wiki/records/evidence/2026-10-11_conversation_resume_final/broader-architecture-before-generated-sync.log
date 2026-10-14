@@ -1,0 +1,59 @@
+........................................................................ [ 73%]
+.......................FF.                                               [100%]
+================================== FAILURES ===================================
+______________________ test_cell_rules_do_not_get_worse _______________________
+
+    def test_cell_rules_do_not_get_worse():
+        found = _edges()
+        report = []
+        for key, ceiling in CEILING.items():
+            now = len(found[key])
+            listing = "\n".join(f"      {src} �� {target}" for src, target in sorted(found[key]))
+            if now > ceiling:
+                report.append(f"  {key}: {now} > \uc0c1\ud55c {ceiling} \u2014 \ub298\uc5c8\ub2e4\\n{listing}")
+            elif now < ceiling:
+                report.append(f"  {key}: {now} < \uc0c1\ud55c {ceiling} \u2014 \uc904\uc5c8\ub2e4. CEILING \uc744 {now} \ub85c \ub0b4\ub9b0\ub2e4\\n{listing}")
+>       assert not report, "ĭ���� �θ��� ��Ģ:\n" + "\n".join(report)
+E       AssertionError: ĭ���� �θ��� ��Ģ:
+E           \ud544\uc218 \ubd80\ud488 \u2192 \ub04c \uc218 \uc788\ub294 \uae30\ub2a5\xb7\uc785\uad6c: 1 > \uc0c1\ud55c 0 \u2014 \ub298\uc5c8\ub2e4
+E               components/customer/service_improvement.py �� modules.web_account
+E           \ubc14\uafd4 \ub07c\uc6b0\ub294 \uc790\ub9ac \u2192 \uae30\ub2a5\xb7\ubd80\ud488\xb7\uc785\uad6c\xb7\ud300 \uc18d: 1 > \uc0c1\ud55c 0 \u2014 \ub298\uc5c8\ub2e4
+E               ports/data_sources/disruptions.py �� components.watch
+E       assert not ['  \ud544\uc218 \ubd80\ud488 \u2192 \ub04c \uc218 \uc788\ub294 \uae30\ub2a5\xb7\uc785\uad6c: 1 > \uc0c1\ud55c 0 \u2014 \ub298\uc5c8\ub2e4\\n      components/customer/service_improvement.py \u2192 modules.web_account', '  \ubc14\uafd4 \ub07c\uc6b0\ub294 \uc790\ub9ac \u2192 \uae30\ub2a5\xb7\ubd80\ud488\xb7\uc785\uad6c\xb7\ud300 \uc18d: 1 > \uc0c1\ud55c 0 \u2014 \ub298\uc5c8\ub2e4\\n      ports/data_sources/disruptions.py \u2192 components.watch']
+
+tests\architecture\test_travel_ops_cells.py:93: AssertionError
+_______________ test_state_diagram_is_regenerated_from_the_code _______________
+
+    def test_state_diagram_is_regenerated_from_the_code():
+        """�ڱ׸��� `app/core/case_lifecycle/events.py:TRANSITIONS` ������ ���´�."""
+        assert OUT.exists(), (
+            "���̵� ������ ����. `python -m scripts.make_state_diagram` �� �����:\n  %s"
+            % OUT)
+>       assert OUT.read_text(encoding="utf-8") == render(), (
+            "���̵��� �ڵ�� ��߳���. ������ ��ġ�� ���� �ٽ� �����:\n"
+            "  python -m scripts.make_state_diagram\n  ����: %s" % OUT)
+E       AssertionError: ���̵��� �ڵ�� ��߳���. ������ ��ġ�� ���� �ٽ� �����:
+E           python -m scripts.make_state_diagram
+E           ����: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\runtime\case-state-machine.generated.md
+E       assert '<!-- �� ������ `... | ���� | �� |\n' == '<!-- �� ������ `... | ���� | �� |\n'
+E         
+E         Skipping 160 identical leading characters in diff, use -v to show
+E         - 12�� �� ���� 26��. �� ǥ�� ���� ���̴� `transition_case()` �� �ź��Ѵ�.
+E         ?           ^
+E         + 12�� �� ���� 25��. �� ǥ�� ���� ���̴� `transition_case()` �� �ź��Ѵ�.
+E         ?           ^
+E           ...
+E         
+E         ...Full output truncated (63 lines hidden), use '-vv' to show
+
+tests\architecture\test_state_diagram_matches_code.py:29: AssertionError
+============================== warnings summary ===============================
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+FAILED tests/architecture/test_state_diagram_matches_code.py::test_state_diagram_is_regenerated_from_the_code
+2 failed, 96 passed, 2 warnings in 29.04s

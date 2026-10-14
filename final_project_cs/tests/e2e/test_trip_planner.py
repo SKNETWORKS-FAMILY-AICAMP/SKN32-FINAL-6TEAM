@@ -30,8 +30,8 @@ from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, c
 from app.domains.travel_ops.entry.trip_api import build_trip_router
 from app.presentation import security
 from app.presentation.api.app import create_app
-from app.domains.travel_ops.components.planning.planner import MOVE_BUFFER_MIN
 from tests.helpers.plugin_bindings import publish_fixed_mobility
+from app.domains.travel_ops.components.planning.planner import MOVE_BUFFER_MIN
 
 START = date(2026, 10, 5)
 
@@ -145,17 +145,17 @@ def api(monkeypatch):
     def build(chat=None, tour=None):
         # ★라우터가 모델을 **처음 쓸 때 한 번만** 만들어 캐시한다(`_lazy`). 그래서 모델을 바꾸려면
         #   앱을 새로 만든다 — 한 앱에서 모델을 갈아 끼우는 시험은 첫 값만 보게 된다(실측으로 겪음).
-        made = TestClient(create_app(
+        client = TestClient(create_app(
             classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
             domain_routers=[build_trip_router(
                 check_factory=lambda: (lambda **_k: {"verdict": "clear"}),
                 chat_factory=(lambda: chat) if chat is not None else None,
                 place_factory=(lambda: tour) if tour is not None else None)]))
-        # ☆`[2026-10-12]` 이동 계산은 시험용 고정 구간으로 명시한다 — 이동 자료(시간표) 없는 CI · 팀원 PC 에서
-        #   이동 팀이 「엔진 미준비」로 거절해(plugin-availability 계약) 이 시험들이 깨졌다. 실제 이동 정확도는 이동 팀 시험이 본다.
-        #   실제 계산기처럼 「다음 일정 시작 − 이동 시간 − 여유」에 떠나게 도착 여유를 준다(`add_moves` 출발 규칙).
-        publish_fixed_mobility(made.app, source="trip_planner_test", arrival_buffer_min=MOVE_BUFFER_MIN)
-        return made
+        # 초안 검증·선호·등록 흐름의 고정 입력이며 실제 이동 정확도는 별도 엔진 시험이 본다.
+        from app.domains.travel_ops.components.planning.planner import MOVE_BUFFER_MIN
+
+        publish_fixed_mobility(client.app, source="planner_scenario_test", arrival_buffer_min=MOVE_BUFFER_MIN)
+        return client
 
     client = build()
 

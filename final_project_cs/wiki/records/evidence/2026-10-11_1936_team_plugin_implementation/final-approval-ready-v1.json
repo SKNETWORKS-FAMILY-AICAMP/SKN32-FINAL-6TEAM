@@ -1,0 +1,24 @@
+{
+  "created_at": "2026-10-12T00:35:28.173574+09:00",
+  "phase": "awaiting_explicit_production_approval",
+  "production_switch_performed": false,
+  "production_write_smoke_performed": false,
+  "commit_or_push_performed": false,
+  "candidate_linux_tests_passed": 388,
+  "candidate_linux_tests_total": 388,
+  "current_required_gates_passed": 464,
+  "current_required_gates_total": 464,
+  "test_sets_must_not_be_added": true,
+  "image_verification_success": true,
+  "image_id": "sha256:9f14e94f2f0acfee4a20a8dde2fac6d9d2f154be69cccf7f9b98b6368e574bed",
+  "docs": {
+    "documents": 39,
+    "file_targets": 556,
+    "broken": 0,
+    "rendering_or_anchors_checked": false
+  },
+  "report": "wiki/records/reports/2026-10-12_0021_team_plugin_verification.md",
+  "report_sha256": "e60407e44c82788a921efad6bd22f1e30e58dcbad508e33d6efd895e63ed489f",
+  "approval_scope": "API/worker image replacement and restart; readonly startup/composition/worker-round checks; restore original image on failure",
+  "excluded": "production data writes, external messages, DB schema updates, web replacement, commit, push"
+}

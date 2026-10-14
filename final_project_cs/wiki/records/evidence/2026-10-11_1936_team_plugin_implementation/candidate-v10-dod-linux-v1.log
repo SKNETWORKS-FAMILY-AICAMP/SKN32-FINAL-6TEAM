@@ -1,0 +1,147 @@
+ISOLATED_LINUX_BEGIN {"python": "3.12.15", "platform": "linux", "verified_files": 1327, "selected_tests": ["tests/architecture/test_supplier_tier_gate.py", "tests/contract/test_case_state_table.py", "tests/contract/test_contracts.py", "tests/contract/test_team_tool_discipline.py", "tests/e2e/test_booking_change_link.py", "tests/e2e/test_trip_api.py", "tests/integration/controller/test_delegation_scope.py", "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py", "tests/scenario/test_case_version_day.py", "tests/scenario/test_confirmed_scenario.py", "tests/scenario/test_travel_eval_scenarios.py", "tests/scenario/test_trip_reminders.py", "tests/security/test_query_scope.py", "tests/unit/travel/test_air_fallback.py", "tests/unit/travel/test_evidence_accumulates.py", "tests/unit/travel/test_feedback_case_type_alignment.py", "tests/unit/travel/test_itinerary_checks.py"], "database": "ephemeral-synthetic-only", "inherited_environment_cleared": true}
+SYNTHETIC_DATABASE_READY {"baseline_migrations": 85, "database": "synthetic", "user": "synthetic", "operating_data_copied": false}
+SYNTHETIC_PROMPTS_REGISTERED {"public_prompt_fixture": true, "operating_prompts_read": false}
+==============================================================================
+triPilot DoD 검증 — 기준선 v11 §12 · 전체 26항목 (판정: 자동 20 · 아키텍처 4 · 측정 2)
+==============================================================================
+  #  항목                                                   판정     근거      결과
+ 1 외부 일정을 받아 저장하고 최신 버전을 반환한다                           자동     0/2     시험 없음
+ 2 예약 시간 충돌·이동 여유·예산·동행 조건을 코드로 판정한다                    자동     0/8     시험 없음
+ 3 불가능한 일정을 이유와 완화 조건을 붙여 거절한다                          자동     0/3     시험 없음
+ 4 모든 판정 근거에 출처와 확인 시각이 붙는다                             자동     0/4     시험 없음
+ 5 대체 소스로 값을 내고, 대체까지 안 되면 멈춘다(결정 15)                   자동     0/3     시험 없음
+ 6 다음 확인 시점이 도래하면 시스템이 Case 를 만든다                       자동     0/2     시험 없음
+ 7 재계획하고 재검증을 통과한 뒤에만 통지한다                              자동     0/2     시험 없음
+ 8 다시 요청하면 되돌리거나 제시했던 다른 안으로 바꾼다                        자동     0/3     시험 없음
+ 9 되돌림 후에도 이력이 남는다(append-only)                         자동     0/2     시험 없음
+10 자동 처리 한계에서 근거를 붙여 사람에게 넘긴다                           자동     0/3     시험 없음
+11 다른 여행의 상태에 접근할 수 없다                                  자동     0/3     시험 없음
+12 같은 변경을 두 번 받아도 일정이 두 번 바뀌지 않는다                       자동     0/3     시험 없음
+13 Team 이 side effect 를 직접 실행하지 않는다                     아키텍처   0/3     시험 없음
+14* 실제 공급자에는 자동 실행이 걸리지 않는다                              아키텍처   0/3     시험 없음
+15* 자동 실행 분기는 tier=='simulated' 에서만 열린다                  아키텍처   0/5     시험 없음
+16* 업체 건은 실행하지 않고 변경 링크를 만든다                             자동     0/2     시험 없음
+17* 변경 링크에 바뀔 항목·대안·차액이 들어 있다                            자동     0/2     시험 없음
+18* (시연) 위임 범위를 벗어난 자동 실행이 0건                            측정     0/3     시험 없음
+19* (시연) 위임을 철회하면 진행 중인 자동 실행이 멈춘다                       자동     0/3     시험 없음
+20* (시연) 자동 실행에 무엇을·왜·얼마에·되돌림 기한이 기록된다                   자동     0/2     시험 없음
+21* (시연) 되돌림이 실패하면 사람에게 넘어간다                             자동     0/4     시험 없음
+22 평가 시나리오에서 필수 조건 위반 0건                                측정     0/2     시험 없음
+23 등록된 모든 Team 에 도달하는 issue_code 접두가 있다                 아키텍처   0/3     시험 없음
+24 한 Case 에서 대상 객체가 다른 제안 둘이 각각 저장된다                    자동     0/2     시험 없음
+25 알림을 못 받아도 링크에서 최신 버전과 「무엇이 왜 바뀌었나」를 본다               자동     0/2     시험 없음
+26 때가 되면 어디로·언제·어떻게 가는지 안내가 나가고, 두 번 나가지 않는다            자동     0/3     시험 없음
+------------------------------------------------------------------------------
+통과 0/26 = 0% · 미통과 0 · 미측정 0 · 시험 없음 26
+★분모는 v11 §12 의 전체 26항목다. **미측정은 통과로도 실패로도 세지 않는다** — 무엇이 왜 미측정인지는 `--list` 가 적는다.
+참고 — MVP 판정(14~21 제외) 0/18 = 0%
+------------------------------------------------------------------------------
+★1: 시험이 없다 — tests/e2e/test_trip_api.py::test_create_is_idempotent_and_the_first_notice_carries_the_plan_link
+★1: 시험이 없다 — tests/e2e/test_trip_api.py::test_a_second_trip_reuses_known_places_without_overwriting_them
+★2: 시험이 없다 — tests/unit/travel/test_itinerary_checks.py::test_two_items_that_overlap
+★2: 시험이 없다 — tests/unit/travel/test_itinerary_checks.py::test_a_move_shorter_than_the_planned_option
+★2: 시험이 없다 — tests/unit/travel/test_itinerary_checks.py::test_zero_minutes_between_two_districts
+★2: 시험이 없다 — tests/unit/travel/test_itinerary_checks.py::test_outside_opening_hours_and_inside_the_break
+★2: 시험이 없다 — tests/unit/travel/test_itinerary_checks.py::test_a_place_that_does_not_take_the_agreed_payment
+★2: 시험이 없다 — tests/unit/travel/test_itinerary_checks.py::test_a_plan_over_the_budget_counts_heads
+★2: 시험이 없다 — tests/unit/travel/test_itinerary_checks.py::test_what_we_do_not_know_is_not_a_violation
+★2: 시험이 없다 — tests/e2e/test_trip_api.py::test_create_rejects_unknown_references_and_needs_the_write_scope
+★3: 시험이 없다 — tests/e2e/test_trip_api.py::test_an_impossible_itinerary_is_refused_with_reasons_and_remedies
+★3: 시험이 없다 — tests/e2e/test_trip_api.py::test_the_confirmed_day_is_accepted_as_submitted
+★3: 시험이 없다 — tests/unit/travel/test_itinerary_checks.py::test_every_violation_carries_a_reason_and_a_remedy
+★4: 시험이 없다 — tests/contract/test_contracts.py::test_answer_without_evidence_is_rejected
+★4: 시험이 없다 — tests/contract/test_contracts.py::test_proposal_cannot_cite_unknown_evidence
+★4: 시험이 없다 — tests/unit/travel/test_evidence_accumulates.py::test_activity_keeps_every_source_it_read
+★4: 시험이 없다 — tests/unit/travel/test_evidence_accumulates.py::test_a_missing_value_adds_no_evidence_but_keeps_the_earlier_ones
+★5: 시험이 없다 — tests/unit/travel/test_air_fallback.py::test_a_dead_airkorea_falls_back_to_the_model_instead_of_going_fatal
+★5: 시험이 없다 — tests/unit/travel/test_air_fallback.py::test_when_every_air_source_fails_it_is_fatal_and_names_them_all
+★5: 시험이 없다 — tests/scenario/test_trip_reminders.py::test_a_route_that_cannot_be_read_is_not_announced
+★6: 시험이 없다 — tests/scenario/test_case_version_day.py::test_the_case_version_runs_the_whole_day_like_the_trip_version
+★6: 시험이 없다 — tests/scenario/test_case_version_day.py::test_the_same_disruption_opens_one_case
+★7: 시험이 없다 — tests/scenario/test_confirmed_scenario.py::test_act02_air_alert_one_hour_ahead_moves_the_sky_deck_to_the_aquarium
+★7: 시험이 없다 — tests/scenario/test_confirmed_scenario.py::test_the_whole_day_in_order
+★8: 시험이 없다 — tests/e2e/test_trip_api.py::test_swap_to_the_other_option_and_back
+★8: 시험이 없다 — tests/e2e/test_trip_api.py::test_rollback_restores_and_the_watcher_leaves_it_alone
+★8: 시험이 없다 — tests/scenario/test_case_version_day.py::test_re_requests_run_through_cases
+★9: 시험이 없다 — tests/e2e/test_trip_api.py::test_rollback_restores_and_the_watcher_leaves_it_alone
+★9: 시험이 없다 — tests/contract/test_case_state_table.py::test_rejection_does_not_resume
+★10: 시험이 없다 — tests/e2e/test_trip_api.py::test_a_sentence_the_desk_cannot_use_is_escalated_not_guessed
+★10: 시험이 없다 — tests/scenario/test_case_version_day.py::test_a_failing_interpreter_is_recorded_and_the_case_still_routes_by_classification
+★10: 시험이 없다 — tests/contract/test_contracts.py::test_escalate_requires_failure_code_or_warnings
+★11: 시험이 없다 — tests/scenario/test_case_version_day.py::test_another_customers_trip_is_not_found
+★11: 시험이 없다 — tests/security/test_query_scope.py::test_case_list_does_not_leak_across_customers_in_one_tenant
+★11: 시험이 없다 — tests/e2e/test_trip_api.py::test_the_plan_link_always_shows_the_latest_version
+★12: 시험이 없다 — tests/e2e/test_trip_api.py::test_a_repeated_message_does_not_open_a_second_case
+★12: 시험이 없다 — tests/e2e/test_trip_api.py::test_create_is_idempotent_and_the_first_notice_carries_the_plan_link
+★12: 시험이 없다 — tests/scenario/test_case_version_day.py::test_the_same_disruption_opens_one_case
+★13: 시험이 없다 — tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly
+★13: 시험이 없다 — tests/contract/test_team_tool_discipline.py::test_tool_outside_allowed_tools_is_refused_at_runtime
+★13: 시험이 없다 — tests/contract/test_contracts.py::test_approval_required_proposal_forces_wait_for_approval
+★14: 시험이 없다 — tests/architecture/test_supplier_tier_gate.py::test_no_booking_handler_applies_without_human_approval
+★14: 시험이 없다 — tests/architecture/test_supplier_tier_gate.py::test_the_tier_column_defaults_to_the_real_supplier
+★14: 시험이 없다 — tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_an_approved_cancel_on_a_real_supplier_never_touches_the_ledger
+★15: 시험이 없다 — tests/architecture/test_supplier_tier_gate.py::test_every_write_to_the_supplier_ledger_passes_the_tier_gate_first
+★15: 시험이 없다 — tests/architecture/test_supplier_tier_gate.py::test_the_gate_actually_catches_an_ungated_write
+★15: 시험이 없다 — tests/architecture/test_supplier_tier_gate.py::test_the_gate_opens_only_for_the_simulated_tier
+★15: 시험이 없다 — tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_supplier_row_without_a_tier_is_treated_as_real
+★15: 시험이 없다 — tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_the_ledger_only_moves_for_the_simulated_tier
+★16: 시험이 없다 — tests/e2e/test_booking_change_link.py::test_a_real_supplier_booking_is_handed_off_by_link_and_the_ledger_stays_put
+★16: 시험이 없다 — tests/e2e/test_booking_change_link.py::test_a_wrong_token_never_says_whether_the_booking_exists
+★17: 시험이 없다 — tests/e2e/test_booking_change_link.py::test_the_link_shows_the_item_the_alternatives_and_the_difference
+★17: 시험이 없다 — tests/e2e/test_booking_change_link.py::test_a_difference_we_cannot_compute_says_so_instead_of_inventing_one
+★18: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_no_out_of_scope_automatic_execution_in_the_measured_flood
+★18: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_every_limit_actually_blocked_something
+★18: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_every_rejection_names_its_gate
+★19: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_revoking_after_the_approval_stops_the_execution
+★19: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_after_a_revocation_no_new_execution_opens
+★19: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_one_out_of_scope_proposal_rolls_the_whole_batch_back
+★20: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_the_ledger_records_what_why_how_much_and_the_revert_deadline
+★20: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_an_amount_we_do_not_know_is_left_empty_not_invented
+★21: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_a_revert_restores_both_ledgers
+★21: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_a_revert_after_the_deadline_goes_to_a_human
+★21: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_a_revert_without_a_recorded_prior_state_goes_to_a_human
+★21: 시험이 없다 — tests/integration/controller/test_delegation_scope.py::test_a_revert_on_a_real_supplier_never_touches_the_ledger
+★22: 시험이 없다 — tests/scenario/test_travel_eval_scenarios.py::test_a_scenario_runs_without_breaking_a_hard_constraint
+★22: 시험이 없다 — tests/scenario/test_travel_eval_scenarios.py::test_the_dataset_and_the_runner_still_match
+★23: 시험이 없다 — tests/unit/travel/test_feedback_case_type_alignment.py::test_every_routable_case_type_has_at_least_one_issue_code
+★23: 시험이 없다 — tests/unit/travel/test_feedback_case_type_alignment.py::test_every_issue_code_either_routes_or_is_deliberately_unroutable
+★23: 시험이 없다 — tests/unit/travel/test_feedback_case_type_alignment.py::test_request_kinds_are_not_used_as_case_types
+★24: 시험이 없다 — tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_two_proposals_for_two_bookings_in_one_case_both_survive
+★24: 시험이 없다 — tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_second_proposal_that_would_be_swallowed_goes_to_a_human
+★25: 시험이 없다 — tests/e2e/test_trip_api.py::test_the_plan_link_always_shows_the_latest_version
+★25: 시험이 없다 — tests/scenario/test_trip_reminders.py::test_a_change_notice_carries_the_plan_link
+★26: 시험이 없다 — tests/scenario/test_trip_reminders.py::test_a_day_of_ticks_sends_each_reminder_once
+★26: 시험이 없다 — tests/scenario/test_trip_reminders.py::test_the_same_moment_twice_is_already_sent
+★26: 시험이 없다 — tests/scenario/test_trip_reminders.py::test_windows_follow_the_first_item_and_each_move
+================ short test summary info ============================
+ERROR tests/scenario/test_case_version_day.py
+ERROR tests/scenario/test_travel_eval_scenarios.py - FileNotFoundError: [Errn...
+ERROR tests/scenario/test_trip_reminders.py
+127 tests collected, 3 errors in 2.76s
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_case_version_day.py::test_a_failing_interpreter_is_recorded_and_the_case_still_routes_by_classification
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_case_version_day.py::test_another_customers_trip_is_not_found
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_case_version_day.py::test_re_requests_run_through_cases
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_case_version_day.py::test_the_case_version_runs_the_whole_day_like_the_trip_version
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_case_version_day.py::test_the_same_disruption_opens_one_case
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_travel_eval_scenarios.py::test_a_scenario_runs_without_breaking_a_hard_constraint
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_travel_eval_scenarios.py::test_the_dataset_and_the_runner_still_match
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_trip_reminders.py::test_a_change_notice_carries_the_plan_link
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_trip_reminders.py::test_a_day_of_ticks_sends_each_reminder_once
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_trip_reminders.py::test_a_route_that_cannot_be_read_is_not_announced
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_trip_reminders.py::test_the_same_moment_twice_is_already_sent
+
+ERROR: found no collectors for /tmp/candidate-check/tests/scenario/test_trip_reminders.py::test_windows_follow_the_first_item_and_each_move
+
+
+ISOLATED_LINUX_END {"exit_code": 1, "seconds": 3.855}
+ISOLATED_DB_ORCHESTRATION {"operating_database_connected": false, "operating_volumes_connected": false, "operating_environment_forwarded": false, "image_pull": false, "images": ["sha256:8e49ec862b1ff798fe96c8a54af61bdcddcd888ef57070e50dab9c18d3ce2892", "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"], "network_internal": true, "database_tmpfs_destinations": ["/tmp", "/var/lib/postgresql/data"], "database_mounts": [], "pytest_process_exit_code": 1, "remaining_temporary_containers": [], "remaining_temporary_network": false, "cleanup_errors": []}

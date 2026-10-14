@@ -1,0 +1,24 @@
+{
+  "source": "통합 c46327eb의 전체 웹 CI 및 시험 skip 조건 대조",
+  "skipped": 18,
+  "passedContribution": 0,
+  "groups": [
+    {
+      "count": 13,
+      "kind": "별도 촬영·비교 실행",
+      "reason": "촬영 출력 경로·지도 타일·전용 입력이 제공된 실행에서만 검사",
+      "examples": [
+        "alert-snapshots",
+        "location-entry-captures",
+        "map-card-capture"
+      ]
+    },
+    {
+      "count": 5,
+      "file": "tests/live/maps.spec.ts",
+      "kind": "naver 지도 SDK",
+      "reason": "같은 지도 공급자로 빌드한 전용 실행에서만 검사"
+    }
+  ],
+  "note": "일반 웹 CI에서 제외된 조건이며 통과로 합산하지 않습니다. 실제 공개 화면 증거와도 구분합니다."
+}

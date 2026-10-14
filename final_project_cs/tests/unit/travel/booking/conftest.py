@@ -21,6 +21,12 @@ MARK = "booking_full"
 
 #: 병합 게이트 — 파일 → {시험 이름: 깨지면 무엇이 죽었나}
 GATE: dict[str, dict[str, str]] = {
+    "test_serpapi_budget.py": {
+        "test_hotels_and_flights_count_the_same_serpapi_budget": "SerpApi 무료 월 250회 — 호텔 · 항공 같은 줄, 월 250 · 하루 8, DB 로 센다",
+    },
+    "test_choose_recheck.py": {
+        "test_same_changed_gone_and_unreadable": "고를 때 숙소 가격 재확인 — 같음 · 바뀜 · 객실 없음 · 확인 못 함",
+    },
     "test_lodging_team.py": {
         "test_search_calls_the_model_once_and_answers_from_tool_values": "숙소 검색 — 모델은 해석 한 번, 답은 도구 값으로",
         "test_missing_values_are_asked_back_without_any_search": "빠진 값(날짜 · 인원 · 지역)을 검색 없이 되묻기",

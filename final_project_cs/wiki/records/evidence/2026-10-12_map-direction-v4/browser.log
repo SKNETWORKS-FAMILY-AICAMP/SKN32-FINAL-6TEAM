@@ -1,0 +1,21 @@
+[WebServer] (node:10740) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:16664) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:9560) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\checking-read-list-20261012.spec.ts:9:3 › 첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 375px (11.4s)
+  ok  2 tests\live\checking-read-list-20261012.spec.ts:9:3 › 첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 1280px (11.0s)
+  ok  3 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (10.3s)
+  ok  4 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 375px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (9.0s)
+  ok  5 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 false › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (10.3s)
+  ok  6 tests\live\map-reveal-continuity-20261012.spec.ts:17:5 › 1280px 순서대로 지도 표시 · 동작 줄이기 true › 먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다 (9.3s)
+  ok  7 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 개별 거리 버튼으로 남는다 375px (10.5s)
+  ok  8 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 두 일정은 실제 방향의 개별 거리 버튼으로 남는다 1280px (11.0s)
+  ok  9 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 개별 거리 버튼으로 남는다 375px (10.8s)
+  ok 10 tests\live\uiux-sonnet-map-reveal-20261012.spec.ts:29:3 › 세 번째 일정 공개 중 서쪽 1번·동쪽 2번은 실제 방향의 개별 거리 버튼으로 남는다 1280px (11.0s)
+
+  10 passed (1.8m)

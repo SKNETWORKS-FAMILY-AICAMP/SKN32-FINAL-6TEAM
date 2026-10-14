@@ -3,7 +3,7 @@
  "cases": [
   {
    "id": "J-SLACK-01",
-   "note": "도착 목표 있음 · 여유 양수. 예정 14:05 + @10 = 14:15 ≤ 14:20 → 여유 5. 마지막 성립 출발 14:00(14:06 편은 14:21 로 1분 늦다)",
+   "note": "도착 목표 있음 · 공식 열차2252 14:04 도착 + 기존 버퍼10분 =14:14 ≤14:20 → 여유6분. 공식 다음편14:06→14:10도 +10분=14:20으로 성립. 근거: datasets/mobility/raw/subway_train_precision_20261012_v1/fixture-official-facts-v1.json. 예정 시간표이며 실제 도착 실측 아님.",
    "date": "2026-09-11",
    "depart_at": "14:00",
    "arrive_by": "14:20",
@@ -16,16 +16,16 @@
    ],
    "expect": "feasible",
    "expect_internal": "feasible",
-   "expect_arrive": "14:05",
+   "expect_arrive": "14:04",
    "expect_slack_min": [
-    5,
-    5
+    6,
+    6
    ],
    "expect_margin_min": [
     10,
     10
    ],
-   "expect_last_depart": "14:00"
+   "expect_last_depart": "14:06"
   },
   {
    "id": "J-SLACK-02",
@@ -90,7 +90,7 @@
   },
   {
    "id": "J-WORST-02",
-   "note": "★best 성립 · worst 불가(규칙 14 — 막차는 값이다). N73 잠실→건대입구 24:09: 예정 대기 18분이면 건대입구 02호선 24:58 막차를 타지만(25:01 도착), 최악 대기 35분이면 25:04 도착이라 막차를 놓친다 → 불가 after_last · 늦어도 24:03 출발",
+   "note": "★best 성립 · worst 불가(규칙 14 — 막차는 값이다). N73 잠실→건대입구 24:09: 예정 대기 18분이면 건대입구 02호선 24:58 막차를 타지만(25:01 도착), 최악 대기 35분이면 25:04 도착이라 막차를 놓친다 → 불가 after_last · 늦어도 24:03 출발 · 2026-10-12: 서울교통공사 20260901 공식 CSV의 열차별 도착초 적용. 이전 문장 속 평균시간 설명은 과거 이력이며 현재 기대값 근거는 datasets/mobility/raw/subway_train_precision_20261012_v1/fixture-official-facts-v1.json. 실제 도착 실측 아님.",
    "date": "2026-09-11",
    "depart_at": "24:09",
    "legs": [
@@ -109,7 +109,7 @@
    "expect": "infeasible",
    "expect_internal": "infeasible",
    "expect_reason": "after_last",
-   "expect_arrive": "25:01",
+   "expect_arrive": "25:00",
    "expect_last_depart": "24:02",
    "expect_warn_codes": [
     "MOB_W_BEST_OK_WORST_FAIL"

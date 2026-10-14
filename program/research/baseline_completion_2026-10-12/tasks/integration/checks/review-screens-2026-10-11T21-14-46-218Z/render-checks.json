@@ -1,0 +1,61 @@
+{
+  "checks": [
+    {
+      "file": "program/plan/triPilot_구현계획서_v12.html",
+      "width": 1440,
+      "title": "triPilot 구현계획서 v12 · 검토본",
+      "body": 1440,
+      "viewport": 1440,
+      "images": [],
+      "svgTextOutside": [],
+      "duplicateIds": [],
+      "reviewNotice": true,
+      "errors": [],
+      "external": [],
+      "passed": true
+    },
+    {
+      "file": "program/plan/triPilot_구현계획서_v12.html",
+      "width": 375,
+      "title": "triPilot 구현계획서 v12 · 검토본",
+      "body": 375,
+      "viewport": 375,
+      "images": [],
+      "svgTextOutside": [],
+      "duplicateIds": [],
+      "reviewNotice": true,
+      "errors": [],
+      "external": [],
+      "passed": true
+    },
+    {
+      "file": "program/baseline/triPilot-baseline-2026-10-12.html",
+      "width": 1440,
+      "title": "triPilot 제품 전체 기준선 — 2026-10-12 · 검토본",
+      "body": 1440,
+      "viewport": 1440,
+      "images": [],
+      "svgTextOutside": [],
+      "duplicateIds": [],
+      "reviewNotice": true,
+      "errors": [],
+      "external": [],
+      "passed": true
+    },
+    {
+      "file": "program/baseline/triPilot-baseline-2026-10-12.html",
+      "width": 375,
+      "title": "triPilot 제품 전체 기준선 — 2026-10-12 · 검토본",
+      "body": 375,
+      "viewport": 375,
+      "images": [],
+      "svgTextOutside": [],
+      "duplicateIds": [],
+      "reviewNotice": true,
+      "errors": [],
+      "external": [],
+      "passed": true
+    }
+  ],
+  "scope": "로컬 문서 렌더링; 고객 제품 화면 시험 아님"
+}

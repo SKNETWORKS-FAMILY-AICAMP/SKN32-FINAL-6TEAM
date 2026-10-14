@@ -29,22 +29,30 @@ class OllamaContentError(OllamaError):
 
 class OllamaChat:
     def __init__(self, *, base_url: str, model: str, timeout: float = 60.0,
-                 transport: Callable[..., httpx.Response] | None = None, keep_alive: str = "") -> None:
+                 transport: Callable[..., httpx.Response] | None = None, keep_alive: str = "", num_ctx: int = 0) -> None:
         if not base_url:
             raise OllamaError("Ollama 주소가 비어 있다")
         self.base_url, self.model, self.timeout = base_url.rstrip("/"), model, timeout
         #: ★`[2026-09-29]` 모델을 메모리에 붙잡아 둘 시간(Ollama `keep_alive`, 예 "30m"). 비우면 Ollama 기본(5분) —
         #:  5분 안 쓰이면 내려가서 다음 첫 호출이 30초 가까이 걸렸다(ui 세션 실측 29.8초). 원격 GPU 메모리를 그만큼 잡는다
         self.keep_alive = keep_alive
+        #: ★`[2026-10-14]` 문맥 길이(Ollama `num_ctx`). 0 이면 Ollama 기본 — **12~16GB GPU 에서는 4,096**이고, 넘치는 입력은 **앞에서부터 잘린다.**
+        #:  요청 해석 입력(지시문 + 일정 + 대화)은 약 4,600 토큰이라 기본값이면 지시문 앞부분(할 일 정의)이 잘려 「다음 일정 뭐야?」를
+        #:  「규정 질문」으로 골랐다(2026-10-14 GPU 서버 B 실측: 기본 2,051 토큰만 들어감 → 8,192 주면 4,576 토큰 다 들어가 맞게 고름).
+        #:  ★같은 모델에 호출마다 다른 값을 보내면 Ollama 가 모델을 다시 올린다 — 이 객체의 모든 호출(예열 포함)이 같은 값을 보낸다.
+        self.num_ctx = int(num_ctx or 0)
         self._injected = transport is not None      # 시험이 넣은 가짜 — 받아쓰기도 이것을 쓴다
         #: ★`[2026-10-07]` 연결은 5초 안에 안 되면 끊는다 — 서버가 꺼졌을 때 읽기 제한(60초)만큼 기다리지 않게(넘김 장치가 빨리 알아야 한다)
         self._post = transport or (lambda url, payload: httpx.post(url, json=payload,
                                                                   timeout=httpx.Timeout(self.timeout, connect=min(5.0, self.timeout))))
 
+    def _options(self, base: dict[str, Any]) -> dict[str, Any]:
+        return {**base, "num_ctx": self.num_ctx} if self.num_ctx > 0 else base
+
     def _chat(self, system: str, user: str, *, json_mode: bool) -> str:
         payload: dict[str, Any] = {
             "model": self.model, "stream": False, "think": False,
-            "options": {"temperature": 0},
+            "options": self._options({"temperature": 0}),
             "messages": [{"role": "system", "content": system},
                          {"role": "user", "content": user}]}
         if json_mode:
@@ -83,7 +91,7 @@ class OllamaChat:
         temperature 0 · 짧은 답(`num_predict`). 실측(화면 세션, gemma4:12b): 25문장 중 24 맞음, 2.0~3.2초."""
         payload: dict[str, Any] = {
             "model": self.model, "stream": False, "think": False, "format": schema,
-            "options": {"temperature": 0, "num_predict": int(num_predict)},
+            "options": self._options({"temperature": 0, "num_predict": int(num_predict)}),
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
         if self.keep_alive:
             payload["keep_alive"] = self.keep_alive
@@ -114,7 +122,7 @@ class OllamaChat:
     def warm(self) -> None:
         """아주 짧은 생성 한 번(한 토큰)으로 모델을 올린다. 실패하면 `OllamaError`(모델 서버가 준 이유 그대로)."""
         payload: dict[str, Any] = {"model": self.model, "stream": False, "think": False,
-                                   "options": {"temperature": 0, "num_predict": 1},
+                                   "options": self._options({"temperature": 0, "num_predict": 1}),
                                    "messages": [{"role": "user", "content": "."}]}
         if self.keep_alive:
             payload["keep_alive"] = self.keep_alive
@@ -135,7 +143,7 @@ class OllamaChat:
         import base64
 
         payload: dict[str, Any] = {
-            "model": self.model, "stream": False, "think": False, "options": {"temperature": 0},
+            "model": self.model, "stream": False, "think": False, "options": self._options({"temperature": 0}),
             "messages": [{"role": "user", "content": prompt,
                           "images": [base64.b64encode(image).decode("ascii")]}]}
         if self.keep_alive:
@@ -168,7 +176,8 @@ def from_settings(settings: Any) -> Any:
         return None
     chat = OllamaChat(base_url=base, model=getattr(settings, "ollama_model", "gemma4:12b"),
                       timeout=float(getattr(settings, "ollama_timeout_seconds", 60.0)),
-                      keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""))
+                      keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""),
+                      num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0))
     if not getattr(settings, "llm_failover_enabled", False):
         return chat
     from app.infrastructure.llm_failover import wrap_from_settings

@@ -1,0 +1,124 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="8" skipped="0" tests="8" time="4.139" timestamp="2026-10-09T04:24:26.353899+09:00"><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[-1-False-0]" time="0.056"><failure message="AttributeError: type object 'TripStore' has no attribute 'pending_departures'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002732AC849E0&gt;
+offset = -1, published = False, expected = 0
+
+    @pytest.mark.parametrize('offset, published, expected', [(-1, False, 0), (0, False, 1),
+        (2, False, 1), (2, True, 0), (30, False, 0)])
+    def test_only_unannounced_departures_before_next_visit_are_selected(monkeypatch, offset, published, expected):
+        move, items, _, _, _ = walking(monkeypatch)
+        move.starts_at = NOW
+        move.ends_at = NOW + timedelta(minutes=1)
+        items[-1].starts_at = NOW + timedelta(minutes=30)
+        trip_id = uuid4()
+        store = SimpleNamespace(active_trip_ids=lambda conn, now: [trip_id],
+            latest=lambda *a: ({}, items), message_exists=lambda *a, **k: published)
+&gt;       got = TripStore.pending_departures(store, None, now=NOW+timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: type object 'TripStore' has no attribute 'pending_departures'
+
+tests\unit\travel\test_departure_watch_v1.py:25: AttributeError</failure></testcase><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[0-False-1]" time="0.005"><failure message="AttributeError: type object 'TripStore' has no attribute 'pending_departures'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002732ACD0860&gt;
+offset = 0, published = False, expected = 1
+
+    @pytest.mark.parametrize('offset, published, expected', [(-1, False, 0), (0, False, 1),
+        (2, False, 1), (2, True, 0), (30, False, 0)])
+    def test_only_unannounced_departures_before_next_visit_are_selected(monkeypatch, offset, published, expected):
+        move, items, _, _, _ = walking(monkeypatch)
+        move.starts_at = NOW
+        move.ends_at = NOW + timedelta(minutes=1)
+        items[-1].starts_at = NOW + timedelta(minutes=30)
+        trip_id = uuid4()
+        store = SimpleNamespace(active_trip_ids=lambda conn, now: [trip_id],
+            latest=lambda *a: ({}, items), message_exists=lambda *a, **k: published)
+&gt;       got = TripStore.pending_departures(store, None, now=NOW+timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: type object 'TripStore' has no attribute 'pending_departures'
+
+tests\unit\travel\test_departure_watch_v1.py:25: AttributeError</failure></testcase><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[2-False-1]" time="0.007"><failure message="AttributeError: type object 'TripStore' has no attribute 'pending_departures'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002732ACD3D10&gt;
+offset = 2, published = False, expected = 1
+
+    @pytest.mark.parametrize('offset, published, expected', [(-1, False, 0), (0, False, 1),
+        (2, False, 1), (2, True, 0), (30, False, 0)])
+    def test_only_unannounced_departures_before_next_visit_are_selected(monkeypatch, offset, published, expected):
+        move, items, _, _, _ = walking(monkeypatch)
+        move.starts_at = NOW
+        move.ends_at = NOW + timedelta(minutes=1)
+        items[-1].starts_at = NOW + timedelta(minutes=30)
+        trip_id = uuid4()
+        store = SimpleNamespace(active_trip_ids=lambda conn, now: [trip_id],
+            latest=lambda *a: ({}, items), message_exists=lambda *a, **k: published)
+&gt;       got = TripStore.pending_departures(store, None, now=NOW+timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: type object 'TripStore' has no attribute 'pending_departures'
+
+tests\unit\travel\test_departure_watch_v1.py:25: AttributeError</failure></testcase><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[2-True-0]" time="0.005"><failure message="AttributeError: type object 'TripStore' has no attribute 'pending_departures'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002732ACD0350&gt;
+offset = 2, published = True, expected = 0
+
+    @pytest.mark.parametrize('offset, published, expected', [(-1, False, 0), (0, False, 1),
+        (2, False, 1), (2, True, 0), (30, False, 0)])
+    def test_only_unannounced_departures_before_next_visit_are_selected(monkeypatch, offset, published, expected):
+        move, items, _, _, _ = walking(monkeypatch)
+        move.starts_at = NOW
+        move.ends_at = NOW + timedelta(minutes=1)
+        items[-1].starts_at = NOW + timedelta(minutes=30)
+        trip_id = uuid4()
+        store = SimpleNamespace(active_trip_ids=lambda conn, now: [trip_id],
+            latest=lambda *a: ({}, items), message_exists=lambda *a, **k: published)
+&gt;       got = TripStore.pending_departures(store, None, now=NOW+timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: type object 'TripStore' has no attribute 'pending_departures'
+
+tests\unit\travel\test_departure_watch_v1.py:25: AttributeError</failure></testcase><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[30-False-0]" time="0.005"><failure message="AttributeError: type object 'TripStore' has no attribute 'pending_departures'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002732ACD1760&gt;
+offset = 30, published = False, expected = 0
+
+    @pytest.mark.parametrize('offset, published, expected', [(-1, False, 0), (0, False, 1),
+        (2, False, 1), (2, True, 0), (30, False, 0)])
+    def test_only_unannounced_departures_before_next_visit_are_selected(monkeypatch, offset, published, expected):
+        move, items, _, _, _ = walking(monkeypatch)
+        move.starts_at = NOW
+        move.ends_at = NOW + timedelta(minutes=1)
+        items[-1].starts_at = NOW + timedelta(minutes=30)
+        trip_id = uuid4()
+        store = SimpleNamespace(active_trip_ids=lambda conn, now: [trip_id],
+            latest=lambda *a: ({}, items), message_exists=lambda *a, **k: published)
+&gt;       got = TripStore.pending_departures(store, None, now=NOW+timedelta(minutes=offset))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: type object 'TripStore' has no attribute 'pending_departures'
+
+tests\unit\travel\test_departure_watch_v1.py:25: AttributeError</failure></testcase><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_current_walk_revalidation_reaches_watch_without_event_source[False-0]" time="0.005"><failure message="TypeError: TripWatchCaseOpener.__init__() got an unexpected keyword argument 'departure_observer'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002732ACFBB90&gt;
+no_path = False, expected = 0
+
+    @pytest.mark.parametrize('no_path, expected', [(False, 0), (True, 1)])
+    def test_current_walk_revalidation_reaches_watch_without_event_source(monkeypatch, no_path, expected):
+        move, items, _, observer, _ = walking(monkeypatch, no_path=no_path)
+        move.starts_at = NOW
+        trip_id = uuid4()
+        store = SimpleNamespace(latest=lambda *a: ({}, items), message_exists=lambda *a, **k: False)
+&gt;       opener = TripWatchCaseOpener(store=store, check=None, connection_factory=lambda: nullcontext(None),
+            clock=lambda: NOW, repository=None, run_case=None, departure_observer=observer)
+E       TypeError: TripWatchCaseOpener.__init__() got an unexpected keyword argument 'departure_observer'
+
+tests\unit\travel\test_departure_watch_v1.py:37: TypeError</failure></testcase><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_current_walk_revalidation_reaches_watch_without_event_source[True-1]" time="0.005"><failure message="TypeError: TripWatchCaseOpener.__init__() got an unexpected keyword argument 'departure_observer'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002732ACF8200&gt;
+no_path = True, expected = 1
+
+    @pytest.mark.parametrize('no_path, expected', [(False, 0), (True, 1)])
+    def test_current_walk_revalidation_reaches_watch_without_event_source(monkeypatch, no_path, expected):
+        move, items, _, observer, _ = walking(monkeypatch, no_path=no_path)
+        move.starts_at = NOW
+        trip_id = uuid4()
+        store = SimpleNamespace(latest=lambda *a: ({}, items), message_exists=lambda *a, **k: False)
+&gt;       opener = TripWatchCaseOpener(store=store, check=None, connection_factory=lambda: nullcontext(None),
+            clock=lambda: NOW, repository=None, run_case=None, departure_observer=observer)
+E       TypeError: TripWatchCaseOpener.__init__() got an unexpected keyword argument 'departure_observer'
+
+tests\unit\travel\test_departure_watch_v1.py:37: TypeError</failure></testcase><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_broken_observation_is_fatal_instead_of_replan_case" time="0.005"><failure message="TypeError: TripWatchCaseOpener.__init__() got an unexpected keyword argument 'departure_observer'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002732ACFB020&gt;
+
+    def test_broken_observation_is_fatal_instead_of_replan_case(monkeypatch):
+        move, items, _, _, _ = walking(monkeypatch)
+        move.starts_at = NOW
+        store = SimpleNamespace(latest=lambda *a: ({}, items), message_exists=lambda *a, **k: False)
+&gt;       opener = TripWatchCaseOpener(store=store, check=None, connection_factory=lambda: nullcontext(None),
+            clock=lambda: NOW, repository=None, run_case=None,
+            departure_observer=lambda *a, **k: {'status': 'fatal', 'reason': 'source_failed'})
+E       TypeError: TripWatchCaseOpener.__init__() got an unexpected keyword argument 'departure_observer'
+
+tests\unit\travel\test_departure_watch_v1.py:54: TypeError</failure></testcase></testsuite></testsuites>

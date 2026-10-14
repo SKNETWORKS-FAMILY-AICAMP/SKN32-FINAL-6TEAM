@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-10-12T02:57:32.084312+09:00",
+  "unique_receipts": 6,
+  "compared_seoul_receipts": 4,
+  "excluded_unsupported_city": 2,
+  "comparison_work_complete": true,
+  "meter_mae_won": 1100,
+  "meter_mape_percent": 6.673650824854227,
+  "meter_underestimated": 4,
+  "descriptive_meter_within_1000_won": 2,
+  "budget_covers_meter": 4,
+  "previous_budget_covers_total": 3,
+  "budget_with_observed_fee_covers_total": 4,
+  "option_fee_basis": "영수증에서 확인한 실제 차액; 사전 예측 아님",
+  "reserve_rate_changed": false,
+  "model_unchanged_during_evaluation": true,
+  "developer_api_calls": 0,
+  "network_connect_blocked": true,
+  "source_file_sha256": "1b594300fca787ae63d03eb5a36e1b11fb24017cefc76356184a26c9cad77fce",
+  "scope": "제공 서울 중형 표본의 사후 재생·결제 대조 완료. 도시 전체 정확도·사전 옵션료 예측·새 독립 표본 통과 아님",
+  "quality_gate_passed": null
+}

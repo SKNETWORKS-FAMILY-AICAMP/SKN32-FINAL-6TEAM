@@ -1,0 +1,1693 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="180" time="55.946" timestamp="2026-10-12T05:45:07.593821+09:00" hostname="playdata"><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_delete_removes_the_trip_and_everything_tied_to_it_but_nothing_else" time="2.647" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_someone_elses_missing_and_already_deleted_trips_are_the_same_404" time="2.104" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_cases_about_the_trip_are_purged_with_their_events_and_other_trips_cases_stay" time="1.832" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_open_cases_about_the_trip_are_closed_by_normal_transitions_and_resolved_ones_stay_when_purge_is_off" time="1.538" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_every_table_that_carries_a_trip_number_is_accounted_for" time="0.057" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_the_plan_link_can_be_downloaded_as_a_file_without_logging_in" time="1.465" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_a_guest_gets_one_trip_and_is_asked_to_log_in_for_a_second" time="1.601" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_two_simultaneous_creations_make_only_one_trip_for_a_guest" time="1.418" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_guest_trip_dates_are_bounded" time="0.910" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_agent_api_customers_have_no_guest_limit" time="0.808" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_a_guests_trip_is_not_watched_but_a_members_is" time="1.360" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_only_expired_guests_are_deleted_with_their_trips" time="2.076" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_a_guest_with_a_trip_still_to_come_is_held_until_the_trip_ends_plus_grace" time="1.133" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_the_keep_cap_is_measured_from_the_last_use_not_from_now" time="1.390" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_a_guest_cleanup_also_purges_the_cases_and_the_profile_so_no_row_is_left_behind" time="1.029" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_when_another_record_points_at_the_guest_only_the_empty_user_row_stays_and_the_profile_goes" time="1.444" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_guest_cleanup_does_nothing_when_switched_off_and_follows_the_operator_hours" time="0.954" /><testcase classname="tests.e2e.test_guest_and_trip_delete" name="test_the_sweeper_job_runs_the_guest_cleanup" time="0.730" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_public_view_needs_no_key_and_builds_both_languages_from_the_values" time="0.370" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_span_reads_naturally[365-days-1\ub144-1 year]" time="0.002" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_span_reads_naturally[730-days-2\ub144-2 years]" time="0.002" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_span_reads_naturally[180-days-6\uac1c\uc6d4-6 months]" time="0.002" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_span_reads_naturally[45-days-45\uc77c-45 days]" time="0.002" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_span_reads_naturally[6-months-6\uac1c\uc6d4-6 months]" time="0.002" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_span_reads_naturally[24-months-2\ub144-2 years]" time="0.004" /><testcase classname="tests.e2e.test_legal_retention" name="test_an_operator_change_raises_the_revision_and_the_terms_version_and_is_audited" time="0.584" /><testcase classname="tests.e2e.test_legal_retention" name="test_an_old_terms_version_is_refused_after_the_values_change" time="0.515" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_history_cannot_be_edited_or_deleted" time="0.631" /><testcase classname="tests.e2e.test_legal_retention" name="test_a_bad_change_is_refused_and_nothing_is_written[body0-422-out_of_range]" time="0.414" /><testcase classname="tests.e2e.test_legal_retention" name="test_a_bad_change_is_refused_and_nothing_is_written[body1-422-out_of_range]" time="0.464" /><testcase classname="tests.e2e.test_legal_retention" name="test_a_bad_change_is_refused_and_nothing_is_written[body2-422-None]" time="0.474" /><testcase classname="tests.e2e.test_legal_retention" name="test_a_bad_change_is_refused_and_nothing_is_written[body3-422-unknown_cell]" time="0.679" /><testcase classname="tests.e2e.test_legal_retention" name="test_a_bad_change_is_refused_and_nothing_is_written[body4-422-unknown_cell]" time="0.499" /><testcase classname="tests.e2e.test_legal_retention" name="test_a_bad_change_is_refused_and_nothing_is_written[body5-422-actor_required]" time="0.572" /><testcase classname="tests.e2e.test_legal_retention" name="test_a_bad_change_is_refused_and_nothing_is_written[body6-422-reason_required]" time="0.544" /><testcase classname="tests.e2e.test_legal_retention" name="test_a_stale_revision_is_a_conflict_and_the_scopes_are_split" time="0.621" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_consent_purge_uses_the_value_the_operator_set" time="0.489" /><testcase classname="tests.e2e.test_legal_retention" name="test_the_default_mode_only_counts_and_deletes_nothing" time="1.232" /><testcase classname="tests.e2e.test_legal_retention" name="test_off_does_nothing_and_on_deletes_only_members_idle_past_the_period" time="2.684" /><testcase classname="tests.e2e.test_legal_retention" name="test_a_shorter_period_set_by_the_operator_widens_the_candidates" time="1.098" /><testcase classname="tests.scenario.test_departure_express_db_v1" name="test_express_basis_change_replans_and_announces_once[tracked]" time="1.980" /><testcase classname="tests.scenario.test_departure_express_db_v1" name="test_express_basis_change_replans_and_announces_once[legacy]" time="1.674" /><testcase classname="tests.scenario.test_departure_party_db_v1" name="test_current_party_change_is_held_then_replanned_and_announced_once[size]" time="1.708" /><testcase classname="tests.scenario.test_departure_party_db_v1" name="test_current_party_change_is_held_then_replanned_and_announced_once[fatigue]" time="1.670" /><testcase classname="tests.unit.eval.test_defense_metrics" name="test_ratio_without_a_denominator_reports_none_not_zero" time="0.002" /><testcase classname="tests.unit.eval.test_defense_metrics" name="test_every_metric_reports_its_denominator" time="0.002" /><testcase classname="tests.unit.eval.test_defense_metrics" name="test_attack_fixtures_are_all_blocked" time="0.002" /><testcase classname="tests.unit.eval.test_defense_metrics" name="test_known_gaps_still_exist_and_are_named" time="0.002" /><testcase classname="tests.unit.eval.test_defense_metrics" name="test_legitimate_proposals_are_not_blocked" time="0.003" /><testcase classname="tests.unit.eval.test_defense_metrics" name="test_metric_is_not_circular_with_the_fixture_file" time="0.003" /><testcase classname="tests.unit.eval.test_defense_metrics" name="test_flipping_the_ground_truth_does_change_abstention" time="0.003" /><testcase classname="tests.unit.eval.test_defense_metrics" name="test_parse_failures_are_not_counted_as_abstention" time="0.001" /><testcase classname="tests.unit.eval.test_defense_metrics" name="test_fixture_file_covers_the_v7_attack_classes" time="0.002" /><testcase classname="tests.unit.travel.mobility.test_car_fare" name="test_every_check_passes" time="0.002" /><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[-1-False-0]" time="0.007" /><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[0-False-1]" time="0.006" /><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[2-False-1]" time="0.006" /><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[2-True-0]" time="0.007" /><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_only_unannounced_departures_before_next_visit_are_selected[30-False-0]" time="0.007" /><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_current_walk_revalidation_reaches_watch_without_event_source[False-0]" time="0.007" /><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_current_walk_revalidation_reaches_watch_without_event_source[True-1]" time="0.009" /><testcase classname="tests.unit.travel.test_departure_watch_v1" name="test_broken_observation_is_fatal_instead_of_replan_case" time="0.006" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_linked_ledger_verdict_wins_over_missing_or_stale_core_hours[True-True]" time="0.001" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_linked_ledger_verdict_wins_over_missing_or_stale_core_hours[False-False]" time="0.001" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_linked_ledger_verdict_wins_over_missing_or_stale_core_hours[None-None]" time="0.001" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_unlinked_place_keeps_the_existing_hours_check" time="0.001" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_candidates_batch_only_nearby_dining_slots_and_keep_unknown_out" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_delay_checks_the_original_at_the_delayed_slot_then_the_alternative" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_closed_report_batches_actual_arrival_slots_instead_of_querying_each_place_twice" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_dawn_replacement_uses_ledger_at_the_original_planned_slot" time="0.001" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_dining_team_reads_candidate_states_in_one_scoped_tool_call" time="0.003" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_trip_desk_uses_its_tenant_when_reading_alternative_states" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_batch_read_tool_uses_scope_tenant_and_existing_ledger_lookup" time="0.001" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_dawn_check_wires_ledger_without_calling_google_for_alternatives" time="0.004" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_an_unreadable_ledger_leaves_the_places_as_they_were" time="0.001" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_a_closed_report_finds_an_alternative_from_the_ledger" time="0.002" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_a_closed_report_replans_when_the_ledger_removes_an_existing_alias" time="0.002" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_a_delay_that_still_fits_reads_nothing_from_the_ledger" time="0.004" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_a_delay_that_breaks_the_meal_looks_around_the_next_meal_only" time="0.003" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_no_meal_means_no_ledger_read" time="0.002" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[False]" time="0.002" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[True]" time="0.002" /><testcase classname="tests.unit.travel.test_moves_refresh_after_swap" name="test_44_place_swap_refreshes_the_move_before_it" time="0.001" /><testcase classname="tests.unit.travel.test_moves_refresh_after_swap" name="test_44_no_place_change_leaves_moves_alone" time="0.001" /><testcase classname="tests.unit.travel.test_moves_refresh_after_swap" name="test_44_swap_to_a_place_next_door_keeps_the_route_but_renames_the_move" time="0.002" /><testcase classname="tests.unit.travel.test_moves_refresh_after_swap" name="test_44_swap_next_door_is_rejudged_when_the_engine_is_on" time="0.002" /><testcase classname="tests.unit.travel.test_moves_refresh_after_swap" name="test_44_the_basis_text_follows_the_new_state_so_chat_does_not_overclaim" time="0.002" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_http_rejects_unavailable_owner_before_domain_io[meal-disabled]" time="0.113" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_http_rejects_unavailable_owner_before_domain_io[meal-not_installed]" time="0.252" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_http_rejects_unavailable_owner_before_domain_io[meal-load_failed]" time="0.087" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-disabled]" time="0.108"><failure message="TypeError: replace() should be called on dataclass instances">+ Exception Group Traceback (most recent call last):
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 183, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 811, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 344, in from_call
+    |     result: TResult | None = func()
+    |                              ^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 246, in &lt;lambda&gt;
+    |     lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    |     raise exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\logging.py", line 850, in pytest_runtest_call
+    |     yield
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\capture.py", line 900, in pytest_runtest_call
+    |     return (yield)
+    |             ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 53, in run_old_style_hookwrapper
+    |     return result.get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_result.py", line 103, in get_result
+    |     raise exc.with_traceback(tb)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 38, in run_old_style_hookwrapper
+    |     res = yield
+    |           ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\skipping.py", line 263, in pytest_runtest_call
+    |     return (yield)
+    |             ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    |     res = hook_impl.function(*args)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 178, in pytest_runtest_call
+    |     item.runtest()
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\python.py", line 1671, in runtest
+    |     self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    |     raise exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 53, in run_old_style_hookwrapper
+    |     return result.get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_result.py", line 103, in get_result
+    |     raise exc.with_traceback(tb)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 38, in run_old_style_hookwrapper
+    |     res = yield
+    |           ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    |     res = hook_impl.function(*args)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\python.py", line 157, in pytest_pyfunc_call
+    |     result = testfunction(**testargs)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 129, in test_actual_http_rejects_unavailable_owner_before_domain_io
+    |     f = http_boundary
+    |                       
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 479, in get
+    |     return super().get(
+    |            ^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1053, in get
+    |     return self.request(
+    |            ^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 451, in request
+    |     return super().request(
+    |            ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 825, in request
+    |     return self.send(request, auth=auth, follow_redirects=follow_redirects)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    |     response = self._send_handling_auth(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    |     response = self._send_handling_redirects(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    |     response = self._send_single_request(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    |     response = transport.handle_request(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 354, in handle_request
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 351, in handle_request
+    |     portal.call(self.app, scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 338, in call
+    |     return cast(T_Retval, self.start_task_soon(func, *args).result())
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 456, in result
+    |     return self.__get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    |     raise self._exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 263, in _call_func
+    |     retval = await retval_or_awaitable
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    |     self.gen.throw(value)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 101, in bind
+    |     @app.middleware("http")
+    |                    ^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 78, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 75, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 302, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 215, in run_endpoint_function
+    |     return await run_in_threadpool(dependant.call, **values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\concurrency.py", line 38, in run_in_threadpool
+    |     return await anyio.to_thread.run_sync(func)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    |     return await get_async_backend().run_sync_in_worker_thread(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    |     return await future
+    |            ^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    |     result = context.run(func, *args)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 2480, in web_route_shapes
+    |     items = registered_moves.recover_for_routes(items, checked)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\registered_moves.py", line 113, in recover_for_routes
+    |     return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\dataclasses.py", line 1559, in replace
+    |     raise TypeError("replace() should be called on dataclass instances")
+    | TypeError: replace() should be called on dataclass instances
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 129, in test_actual_http_rejects_unavailable_owner_before_domain_io
+    f = http_boundary
+                      
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 479, in get
+    return super().get(
+           ^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1053, in get
+    return self.request(
+           ^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 451, in request
+    return super().request(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 354, in handle_request
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 351, in handle_request
+    portal.call(self.app, scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 338, in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 263, in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 101, in bind
+    @app.middleware("http")
+                   ^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 215, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 2480, in web_route_shapes
+    items = registered_moves.recover_for_routes(items, checked)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\registered_moves.py", line 113, in recover_for_routes
+    return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\dataclasses.py", line 1559, in replace
+    raise TypeError("replace() should be called on dataclass instances")
+TypeError: replace() should be called on dataclass instances
+
+During handling of the above exception, another exception occurred:
+tests\unit\travel\test_trip_api_plugin_boundaries.py:129: in test_actual_http_rejects_unavailable_owner_before_domain_io
+    f = http_boundary
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:479: in get
+    return super().get(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1053: in get
+    return self.request(
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:451: in request
+    return super().request(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:914: in send
+    response = self._send_handling_auth(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:354: in handle_request
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:338: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:263: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\applications.py:113: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:182: in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\contextlib.py:158: in __exit__
+    self.gen.throw(value)
+..\..\..\anaconda3\Lib\site-packages\starlette\_utils.py:85: in collapse_excgroups
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:184: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\test_trip_api_plugin_boundaries.py:101: in bind
+    @app.middleware("http")
+                   ^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:159: in call_next
+    raise app_exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:78: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:75: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:302: in app
+    raw_response = await run_endpoint_function(
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:215: in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\concurrency.py:38: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\to_thread.py:63: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:2596: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:1029: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\entry\trip_api.py:2480: in web_route_shapes
+    items = registered_moves.recover_for_routes(items, checked)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\intake\registered_moves.py:113: in recover_for_routes
+    return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+            ^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\dataclasses.py:1559: in replace
+    raise TypeError("replace() should be called on dataclass instances")
+E   TypeError: replace() should be called on dataclass instances</failure></testcase><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-not_installed]" time="0.093"><failure message="TypeError: replace() should be called on dataclass instances">+ Exception Group Traceback (most recent call last):
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 183, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 811, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 344, in from_call
+    |     result: TResult | None = func()
+    |                              ^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 246, in &lt;lambda&gt;
+    |     lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    |     raise exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\logging.py", line 850, in pytest_runtest_call
+    |     yield
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\capture.py", line 900, in pytest_runtest_call
+    |     return (yield)
+    |             ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 53, in run_old_style_hookwrapper
+    |     return result.get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_result.py", line 103, in get_result
+    |     raise exc.with_traceback(tb)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 38, in run_old_style_hookwrapper
+    |     res = yield
+    |           ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\skipping.py", line 263, in pytest_runtest_call
+    |     return (yield)
+    |             ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    |     res = hook_impl.function(*args)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 178, in pytest_runtest_call
+    |     item.runtest()
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\python.py", line 1671, in runtest
+    |     self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    |     raise exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 53, in run_old_style_hookwrapper
+    |     return result.get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_result.py", line 103, in get_result
+    |     raise exc.with_traceback(tb)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 38, in run_old_style_hookwrapper
+    |     res = yield
+    |           ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    |     res = hook_impl.function(*args)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\python.py", line 157, in pytest_pyfunc_call
+    |     result = testfunction(**testargs)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 129, in test_actual_http_rejects_unavailable_owner_before_domain_io
+    |     f = http_boundary
+    |                       
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 479, in get
+    |     return super().get(
+    |            ^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1053, in get
+    |     return self.request(
+    |            ^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 451, in request
+    |     return super().request(
+    |            ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 825, in request
+    |     return self.send(request, auth=auth, follow_redirects=follow_redirects)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    |     response = self._send_handling_auth(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    |     response = self._send_handling_redirects(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    |     response = self._send_single_request(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    |     response = transport.handle_request(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 354, in handle_request
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 351, in handle_request
+    |     portal.call(self.app, scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 338, in call
+    |     return cast(T_Retval, self.start_task_soon(func, *args).result())
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 456, in result
+    |     return self.__get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    |     raise self._exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 263, in _call_func
+    |     retval = await retval_or_awaitable
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    |     self.gen.throw(value)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 101, in bind
+    |     @app.middleware("http")
+    |                    ^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 78, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 75, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 302, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 215, in run_endpoint_function
+    |     return await run_in_threadpool(dependant.call, **values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\concurrency.py", line 38, in run_in_threadpool
+    |     return await anyio.to_thread.run_sync(func)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    |     return await get_async_backend().run_sync_in_worker_thread(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    |     return await future
+    |            ^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    |     result = context.run(func, *args)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 2480, in web_route_shapes
+    |     items = registered_moves.recover_for_routes(items, checked)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\registered_moves.py", line 113, in recover_for_routes
+    |     return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\dataclasses.py", line 1559, in replace
+    |     raise TypeError("replace() should be called on dataclass instances")
+    | TypeError: replace() should be called on dataclass instances
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 129, in test_actual_http_rejects_unavailable_owner_before_domain_io
+    f = http_boundary
+                      
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 479, in get
+    return super().get(
+           ^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1053, in get
+    return self.request(
+           ^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 451, in request
+    return super().request(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 354, in handle_request
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 351, in handle_request
+    portal.call(self.app, scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 338, in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 263, in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 101, in bind
+    @app.middleware("http")
+                   ^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 215, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 2480, in web_route_shapes
+    items = registered_moves.recover_for_routes(items, checked)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\registered_moves.py", line 113, in recover_for_routes
+    return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\dataclasses.py", line 1559, in replace
+    raise TypeError("replace() should be called on dataclass instances")
+TypeError: replace() should be called on dataclass instances
+
+During handling of the above exception, another exception occurred:
+tests\unit\travel\test_trip_api_plugin_boundaries.py:129: in test_actual_http_rejects_unavailable_owner_before_domain_io
+    f = http_boundary
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:479: in get
+    return super().get(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1053: in get
+    return self.request(
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:451: in request
+    return super().request(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:914: in send
+    response = self._send_handling_auth(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:354: in handle_request
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:338: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:263: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\applications.py:113: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:182: in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\contextlib.py:158: in __exit__
+    self.gen.throw(value)
+..\..\..\anaconda3\Lib\site-packages\starlette\_utils.py:85: in collapse_excgroups
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:184: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\test_trip_api_plugin_boundaries.py:101: in bind
+    @app.middleware("http")
+                   ^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:159: in call_next
+    raise app_exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:78: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:75: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:302: in app
+    raw_response = await run_endpoint_function(
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:215: in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\concurrency.py:38: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\to_thread.py:63: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:2596: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:1029: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\entry\trip_api.py:2480: in web_route_shapes
+    items = registered_moves.recover_for_routes(items, checked)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\intake\registered_moves.py:113: in recover_for_routes
+    return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+            ^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\dataclasses.py:1559: in replace
+    raise TypeError("replace() should be called on dataclass instances")
+E   TypeError: replace() should be called on dataclass instances</failure></testcase><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_http_rejects_unavailable_owner_before_domain_io[trip-shapes-load_failed]" time="0.090"><failure message="TypeError: replace() should be called on dataclass instances">+ Exception Group Traceback (most recent call last):
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 183, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 811, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 344, in from_call
+    |     result: TResult | None = func()
+    |                              ^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 246, in &lt;lambda&gt;
+    |     lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    |     raise exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\logging.py", line 850, in pytest_runtest_call
+    |     yield
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\capture.py", line 900, in pytest_runtest_call
+    |     return (yield)
+    |             ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 53, in run_old_style_hookwrapper
+    |     return result.get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_result.py", line 103, in get_result
+    |     raise exc.with_traceback(tb)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 38, in run_old_style_hookwrapper
+    |     res = yield
+    |           ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\skipping.py", line 263, in pytest_runtest_call
+    |     return (yield)
+    |             ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    |     res = hook_impl.function(*args)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 178, in pytest_runtest_call
+    |     item.runtest()
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\python.py", line 1671, in runtest
+    |     self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    |     raise exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 53, in run_old_style_hookwrapper
+    |     return result.get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_result.py", line 103, in get_result
+    |     raise exc.with_traceback(tb)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 38, in run_old_style_hookwrapper
+    |     res = yield
+    |           ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    |     res = hook_impl.function(*args)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\python.py", line 157, in pytest_pyfunc_call
+    |     result = testfunction(**testargs)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 129, in test_actual_http_rejects_unavailable_owner_before_domain_io
+    |     f = http_boundary
+    |                       
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 479, in get
+    |     return super().get(
+    |            ^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1053, in get
+    |     return self.request(
+    |            ^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 451, in request
+    |     return super().request(
+    |            ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 825, in request
+    |     return self.send(request, auth=auth, follow_redirects=follow_redirects)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    |     response = self._send_handling_auth(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    |     response = self._send_handling_redirects(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    |     response = self._send_single_request(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    |     response = transport.handle_request(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 354, in handle_request
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 351, in handle_request
+    |     portal.call(self.app, scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 338, in call
+    |     return cast(T_Retval, self.start_task_soon(func, *args).result())
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 456, in result
+    |     return self.__get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    |     raise self._exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 263, in _call_func
+    |     retval = await retval_or_awaitable
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    |     self.gen.throw(value)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 101, in bind
+    |     @app.middleware("http")
+    |                    ^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 78, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 75, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 302, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 215, in run_endpoint_function
+    |     return await run_in_threadpool(dependant.call, **values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\concurrency.py", line 38, in run_in_threadpool
+    |     return await anyio.to_thread.run_sync(func)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    |     return await get_async_backend().run_sync_in_worker_thread(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    |     return await future
+    |            ^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    |     result = context.run(func, *args)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 2480, in web_route_shapes
+    |     items = registered_moves.recover_for_routes(items, checked)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\registered_moves.py", line 113, in recover_for_routes
+    |     return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\dataclasses.py", line 1559, in replace
+    |     raise TypeError("replace() should be called on dataclass instances")
+    | TypeError: replace() should be called on dataclass instances
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 129, in test_actual_http_rejects_unavailable_owner_before_domain_io
+    f = http_boundary
+                      
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 479, in get
+    return super().get(
+           ^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1053, in get
+    return self.request(
+           ^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 451, in request
+    return super().request(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 354, in handle_request
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 351, in handle_request
+    portal.call(self.app, scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 338, in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 263, in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 101, in bind
+    @app.middleware("http")
+                   ^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 215, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 2480, in web_route_shapes
+    items = registered_moves.recover_for_routes(items, checked)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\registered_moves.py", line 113, in recover_for_routes
+    return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\dataclasses.py", line 1559, in replace
+    raise TypeError("replace() should be called on dataclass instances")
+TypeError: replace() should be called on dataclass instances
+
+During handling of the above exception, another exception occurred:
+tests\unit\travel\test_trip_api_plugin_boundaries.py:129: in test_actual_http_rejects_unavailable_owner_before_domain_io
+    f = http_boundary
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:479: in get
+    return super().get(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1053: in get
+    return self.request(
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:451: in request
+    return super().request(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:914: in send
+    response = self._send_handling_auth(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:354: in handle_request
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:338: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:263: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\applications.py:113: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:182: in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\contextlib.py:158: in __exit__
+    self.gen.throw(value)
+..\..\..\anaconda3\Lib\site-packages\starlette\_utils.py:85: in collapse_excgroups
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:184: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\test_trip_api_plugin_boundaries.py:101: in bind
+    @app.middleware("http")
+                   ^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:159: in call_next
+    raise app_exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:78: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:75: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:302: in app
+    raw_response = await run_endpoint_function(
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:215: in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\concurrency.py:38: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\to_thread.py:63: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:2596: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:1029: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\entry\trip_api.py:2480: in web_route_shapes
+    items = registered_moves.recover_for_routes(items, checked)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\intake\registered_moves.py:113: in recover_for_routes
+    return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+            ^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\dataclasses.py:1559: in replace
+    raise TypeError("replace() should be called on dataclass instances")
+E   TypeError: replace() should be called on dataclass instances</failure></testcase><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_http_rejects_unavailable_owner_before_domain_io[intake-shapes-disabled]" time="0.089" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_http_rejects_unavailable_owner_before_domain_io[intake-shapes-not_installed]" time="0.100" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_http_rejects_unavailable_owner_before_domain_io[intake-shapes-load_failed]" time="0.083" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_active_http_keeps_original_ledger_and_graph_algorithms[meal]" time="0.096" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_active_http_keeps_original_ledger_and_graph_algorithms[trip-shapes]" time="0.101"><failure message="TypeError: replace() should be called on dataclass instances">+ Exception Group Traceback (most recent call last):
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 183, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 811, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 344, in from_call
+    |     result: TResult | None = func()
+    |                              ^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 246, in &lt;lambda&gt;
+    |     lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    |     raise exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\logging.py", line 850, in pytest_runtest_call
+    |     yield
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\capture.py", line 900, in pytest_runtest_call
+    |     return (yield)
+    |             ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 53, in run_old_style_hookwrapper
+    |     return result.get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_result.py", line 103, in get_result
+    |     raise exc.with_traceback(tb)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 38, in run_old_style_hookwrapper
+    |     res = yield
+    |           ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\skipping.py", line 263, in pytest_runtest_call
+    |     return (yield)
+    |             ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    |     res = hook_impl.function(*args)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\runner.py", line 178, in pytest_runtest_call
+    |     item.runtest()
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\python.py", line 1671, in runtest
+    |     self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    |     raise exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    |     teardown.throw(exception)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 53, in run_old_style_hookwrapper
+    |     return result.get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_result.py", line 103, in get_result
+    |     raise exc.with_traceback(tb)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 38, in run_old_style_hookwrapper
+    |     res = yield
+    |           ^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    |     res = hook_impl.function(*args)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\python.py", line 157, in pytest_pyfunc_call
+    |     result = testfunction(**testargs)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 146, in test_active_http_keeps_original_ledger_and_graph_algorithms
+    |     f = http_boundary
+    |                       
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 479, in get
+    |     return super().get(
+    |            ^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1053, in get
+    |     return self.request(
+    |            ^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 451, in request
+    |     return super().request(
+    |            ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 825, in request
+    |     return self.send(request, auth=auth, follow_redirects=follow_redirects)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    |     response = self._send_handling_auth(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    |     response = self._send_handling_redirects(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    |     response = self._send_single_request(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    |     response = transport.handle_request(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 354, in handle_request
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 351, in handle_request
+    |     portal.call(self.app, scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 338, in call
+    |     return cast(T_Retval, self.start_task_soon(func, *args).result())
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 456, in result
+    |     return self.__get_result()
+    |            ^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    |     raise self._exception
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 263, in _call_func
+    |     retval = await retval_or_awaitable
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    |     self.gen.throw(value)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 101, in bind
+    |     @app.middleware("http")
+    |                    ^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 78, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 75, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 302, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 215, in run_endpoint_function
+    |     return await run_in_threadpool(dependant.call, **values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\concurrency.py", line 38, in run_in_threadpool
+    |     return await anyio.to_thread.run_sync(func)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    |     return await get_async_backend().run_sync_in_worker_thread(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    |     return await future
+    |            ^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    |     result = context.run(func, *args)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 2480, in web_route_shapes
+    |     items = registered_moves.recover_for_routes(items, checked)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\registered_moves.py", line 113, in recover_for_routes
+    |     return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\playdata2\anaconda3\Lib\dataclasses.py", line 1559, in replace
+    |     raise TypeError("replace() should be called on dataclass instances")
+    | TypeError: replace() should be called on dataclass instances
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 146, in test_active_http_keeps_original_ledger_and_graph_algorithms
+    f = http_boundary
+                      
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 479, in get
+    return super().get(
+           ^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1053, in get
+    return self.request(
+           ^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 451, in request
+    return super().request(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 354, in handle_request
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\testclient.py", line 351, in handle_request
+    portal.call(self.app, scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 338, in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\from_thread.py", line 263, in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\tests\unit\travel\test_trip_api_plugin_boundaries.py", line 101, in bind
+    @app.middleware("http")
+                   ^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\fastapi\routing.py", line 215, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\starlette\concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 2480, in web_route_shapes
+    items = registered_moves.recover_for_routes(items, checked)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\registered_moves.py", line 113, in recover_for_routes
+    return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\anaconda3\Lib\dataclasses.py", line 1559, in replace
+    raise TypeError("replace() should be called on dataclass instances")
+TypeError: replace() should be called on dataclass instances
+
+During handling of the above exception, another exception occurred:
+tests\unit\travel\test_trip_api_plugin_boundaries.py:146: in test_active_http_keeps_original_ledger_and_graph_algorithms
+    f = http_boundary
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:479: in get
+    return super().get(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1053: in get
+    return self.request(
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:451: in request
+    return super().request(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:914: in send
+    response = self._send_handling_auth(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:354: in handle_request
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:338: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:263: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\applications.py:113: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:182: in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\contextlib.py:158: in __exit__
+    self.gen.throw(value)
+..\..\..\anaconda3\Lib\site-packages\starlette\_utils.py:85: in collapse_excgroups
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:184: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\test_trip_api_plugin_boundaries.py:101: in bind
+    @app.middleware("http")
+                   ^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:159: in call_next
+    raise app_exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:78: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:75: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:302: in app
+    raw_response = await run_endpoint_function(
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:215: in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\concurrency.py:38: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\to_thread.py:63: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:2596: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\anyio\_backends\_asyncio.py:1029: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\entry\trip_api.py:2480: in web_route_shapes
+    items = registered_moves.recover_for_routes(items, checked)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\intake\registered_moves.py:113: in recover_for_routes
+    return [replace(item, seq=seq) for seq, item in enumerate(result, 1)]
+            ^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\dataclasses.py:1559: in replace
+    raise TypeError("replace() should be called on dataclass instances")
+E   TypeError: replace() should be called on dataclass instances</failure></testcase><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_active_http_keeps_original_ledger_and_graph_algorithms[intake-shapes]" time="0.100" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_saved_trip_read_remains_independent[disabled]" time="0.239" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_actual_saved_trip_read_remains_independent[not_installed]" time="0.101" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_dining_http_provider_uses_pinned_callable_and_arguments[lookup_factory]" time="0.003" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_dining_http_provider_uses_pinned_callable_and_arguments[slot_verdicts]" time="0.002" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_dining_http_provider_uses_pinned_callable_and_arguments[planner_factory]" time="0.002" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_dining_http_provider_uses_pinned_callable_and_arguments[link_core_place]" time="0.003" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_dining_http_provider_uses_pinned_callable_and_arguments[closure_observation]" time="0.004" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_real_assembly_captures_original_providers_without_changing_legacy_globals" time="0.004" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_non_standalone_unbound_http_hook_never_uses_legacy_provider[&lt;lambda&gt;0]" time="0.004" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_non_standalone_unbound_http_hook_never_uses_legacy_provider[&lt;lambda&gt;1]" time="0.003" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_ledger_unavailable_is_not_converted_to_unknown_success" time="0.003" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_activity_only_resolve_does_not_load_disabled_dining_factory" time="0.007" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_deferred_real_dining_lookup_still_checks_owner_before_factory" time="0.001" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_remaining_dining_hooks_reject_from_actual_http[lookup-disabled]" time="0.210" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_remaining_dining_hooks_reject_from_actual_http[lookup-not_installed]" time="0.105" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_remaining_dining_hooks_reject_from_actual_http[lookup-load_failed]" time="0.115" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_remaining_dining_hooks_reject_from_actual_http[planner-disabled]" time="0.124" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_remaining_dining_hooks_reject_from_actual_http[planner-not_installed]" time="0.111" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_remaining_dining_hooks_reject_from_actual_http[planner-load_failed]" time="0.093" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_remaining_dining_hooks_reject_from_actual_http[uid-link-disabled]" time="0.198" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_remaining_dining_hooks_reject_from_actual_http[uid-link-not_installed]" time="0.101" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_remaining_dining_hooks_reject_from_actual_http[uid-link-load_failed]" time="0.125" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_no_saved_review_returns_empty_shapes_without_mobility_calculation[disabled]" time="0.115" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_no_saved_review_returns_empty_shapes_without_mobility_calculation[not_installed]" time="0.127" /><testcase classname="tests.unit.travel.test_trip_api_plugin_boundaries" name="test_default_engine_preserves_non_standalone_unbound_failure" time="0.001" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_metadata_is_discoverable_and_dcr_disabled" time="0.030" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change0]" time="0.026" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change1]" time="0.015" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change2]" time="0.016" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change3]" time="0.018" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change4]" time="0.016" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change5]" time="0.017" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change6]" time="0.014" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change7]" time="0.012" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change8]" time="0.019" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change9]" time="0.015" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change10]" time="0.017" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_login_and_guest_are_given_actual_login_screen" time="0.028" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_consent_is_escaped_and_requires_display_then_same_session_csrf" time="0.055" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_cancel_round_trips_state_without_issuing_code" time="0.034" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change0]" time="0.040" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change1]" time="0.038" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change2]" time="0.041" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change3]" time="0.039" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change4]" time="0.050" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change5]" time="0.045" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_code_is_single_use_and_storage_never_contains_raw_credentials" time="0.040" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_code_expiry" time="0.031" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_pending_expiry" time="0.024" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_native_consent_origin_works_when_customer_frontend_is_a_different_origin" time="0.039" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_login_link_uses_existing_allowed_origin_default" time="0.021" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_access_expiry_refresh_rotation_and_replay_revoke_family" time="0.060" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_refresh_cannot_expand_scope_or_resource_or_change_client" time="0.076" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_expired_used_refresh_still_revokes_an_active_rotated_connection" time="0.063" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_refresh_idle_or_absolute_expiry[2592001]" time="0.045" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_refresh_idle_or_absolute_expiry[7776001]" time="0.048" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_disconnect_and_last_social_unlink_disable_tokens" time="0.065" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_revoke_only_own_client_and_browser_only_own_connection" time="0.065" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_revoke_refresh_disables_access" time="0.049" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_browser_disconnect_confirmation_names_own_client_and_requires_csrf" time="0.202" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_duplicate_parameters_and_cookie_on_token_endpoint_rejected" time="0.052" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_direct_rest_tokens_shared_link_and_context_reset" time="0.034" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[POST-/v1/web/trips-403]" time="0.013" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[GET-/v1/web/profile-403]" time="0.015" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[GET-/v1/web/agent-connections-403]" time="0.008" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[POST-/v1/web/moves/judge-200]" time="0.012" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[GET-/v1/web/trips-200]" time="0.014" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_concurrent_code_exchange_has_only_one_winner" time="0.045" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_access_record_must_match_its_grant_audience_owner_client_and_scope[resource-https://api.example.test/different]" time="0.047" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_access_record_must_match_its_grant_audience_owner_client_and_scope[customer-5fe4d2b4-d714-44ea-8b93-d977fb83390e]" time="0.037" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_access_record_must_match_its_grant_audience_owner_client_and_scope[client_id-other-ai]" time="0.038" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_access_record_must_match_its_grant_audience_owner_client_and_scope[scopes-value3]" time="0.039" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_mcp_transport_rejects_ambiguous_credentials_and_token_in_wrong_location" time="0.074" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_backend_passes_identity_without_forwarding_oauth_token_and_clears_context" time="0.018" /><testcase classname="tests.integration.api.test_openapi_surface" name="test_every_contract_path_exists" time="0.062" /><testcase classname="tests.integration.api.test_openapi_surface" name="test_new_paths_are_allowed_but_must_be_scoped" time="0.003" /><testcase classname="tests.integration.api.test_openapi_surface" name="test_write_endpoints_require_a_scope_dependency" time="0.002" /><testcase classname="tests.integration.api.test_openapi_surface" name="test_the_open_write_path_list_names_only_real_paths" time="0.002" /><testcase classname="tests.integration.api.test_openapi_surface" name="test_v1_surface_is_documented_when_it_grows" time="0.002" /><testcase classname="tests.integration.api.test_openapi_surface" name="test_health_exists" time="0.002" /><testcase classname="tests.integration.api.test_openapi_surface" name="test_ui_is_not_part_of_v1_api" time="0.001" /></testsuite></testsuites>

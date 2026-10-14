@@ -1,0 +1,20 @@
+{
+  "checked_at": "2026-10-09T10:52:35.795886+09:00",
+  "sources": [
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "scope": "Full fields and result codes: line/current/next/terminal IDs, train number/type, ETA seconds, generation timestamp, departure state."
+    },
+    {
+      "url": "https://data.seoul.go.kr/dataList/OA-12764/F/1/datasetView.do",
+      "scope": "Official search text states ETA should be corrected by current time minus recptnDt; opened A-view lacked this dynamic description, official indexed F-view confirmed it."
+    }
+  ],
+  "applied_formula": "arrival_at = provider_generation_at + ETA_seconds; cache elapsed is freshness only",
+  "new_map_web_samples": 0,
+  "map_developer_api_calls": 0,
+  "new_live_arrival_snapshots": 0,
+  "actual_boarding_payment_samples": 0,
+  "paper_algorithm_applied": false,
+  "reason": "The time-origin gap is explicitly resolved by the provider specification; no new research algorithm is asserted."
+}

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>지도 등장 · 이전 마커 유지</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf2ef;color:#233b32;font:16px/1.65 system-ui,sans-serif}main{max-width:1140px;margin:auto;padding:40px 24px}h1{font-size:clamp(25px,4vw,36px);line-height:1.4;margin:0 0 12px}p{margin:0 0 24px;color:#53685e}.layout{display:grid;grid-template-columns:375px minmax(0,1fr);gap:36px;align-items:start}.panel{padding:24px;border:1px solid #d3ded7;border-radius:24px;background:white}video{display:block;width:100%;border:1px solid #ccd9d1;border-radius:20px;background:#fff}.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button,a.link{border:1px solid #bccdc2;background:#fff;color:#285c45;border-radius:12px;padding:10px 16px;font:600 15px/1.4 system-ui;cursor:pointer;min-height:44px}button[aria-pressed=true]{color:#fff;background:#2f6049;border-color:#2f6049}button:focus-visible,a:focus-visible,video:focus-visible{outline:3px solid #2f5bd8;outline-offset:3px}.steps{padding:0;list-style:none;margin:0 0 24px}.steps li{padding:14px 0;border-bottom:1px solid #e0e8e2}.steps b{display:block;font-size:18px}.steps span{color:#53685e;font-size:15px}.stage{margin:0}.stage img{display:block;width:100%;max-width:375px;margin:auto;border:1px solid #d5dfd8;border-radius:16px}.stage figcaption{margin:12px 0;font-size:15px;color:#53685e}.meta{font-size:14px;margin-top:24px}h2{margin:0 0 12px;font-size:21px}.wide{margin-top:24px}.wide img{display:block;width:100%;border-radius:14px}.link{display:inline-block;text-decoration:none}a{color:#2f6049}@media(max-width:840px){main{padding:24px 16px}.layout{grid-template-columns:minmax(0,1fr);gap:24px}.player{max-width:375px;margin:auto;width:100%}.panel{padding:20px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+<main>
+<h1>새 일정은 가운데로, 이전 일정은 거리 표시로</h1>
+<p>1 → 2 → 3번 순서로 등장합니다. 지도 밖으로 멀어진 일정도 번호와 거리를 표시합니다.</p>
+<div class="layout">
+ <section class="player" aria-label="실제 화면 재생">
+  <video id="replay" controls muted loop playsinline preload="metadata" poster="step-2-375.png" aria-label="지도 이동과 마커 순차 등장 영상"><source src="reveal-375.mp4" type="video/mp4"></video>
+  <div class="tools"><button id="again" type="button">처음부터 재생</button><button id="pause" type="button">일시 정지</button></div>
+ </section>
+ <section class="panel">
+  <h2>장면별 확인</h2>
+  <ol class="steps">
+   <li><b>1번 등장</b><span>첫 일정을 지도 가운데에서 보여 줍니다.</span></li>
+   <li><b>2번으로 부드럽게 이동</b><span>2번은 지도에, 멀어진 1번은 왼쪽에 ‘1 · 3.8km’로 따로 표시합니다.</span></li>
+   <li><b>3번 등장 후 전체 보기</b><span>앞선 일정을 유지하고, 확인이 끝나면 그날 일정을 함께 보여 줍니다.</span></li>
+  </ol>
+  <div class="tools" role="group" aria-label="장면 선택">
+   <button type="button" data-shot="1" aria-pressed="false">1번</button>
+   <button type="button" data-shot="2" aria-pressed="true">2번 · 거리 표시</button>
+   <button type="button" data-shot="3" aria-pressed="false">3번</button>
+   <button type="button" data-shot="done" aria-pressed="false">완료</button>
+  </div>
+  <figure class="stage"><figcaption id="caption">2번은 지도 가운데, 1번은 왼쪽 거리 표시로 유지됩니다.</figcaption><a id="shot-link" href="step-2-375.png"><img id="shot" src="step-2-375.png" width="375" height="812" alt="2번 지도 마커와 왼쪽 1번 거리 표시가 분리된 실제 화면"></a></figure>
+ </section>
+</div>
+<details class="panel wide"><summary>넓은 화면 확인 · 1280px</summary><img src="step-2-1280.png" width="1280" height="812" alt="1280px 화면에서도 2번 마커와 1번 거리 표시 유지"><div class="tools"><a class="link" href="reveal-1280.mp4">넓은 화면 영상 보기</a></div></details>
+<p class="meta">수정한 로컬 앱을 Chrome에서 촬영한 목업입니다. 시험용 일정의 위치 간격을 넓혀 거리 표시를 확인했습니다. 지도 배경 © OpenStreetMap contributors. 공개 서비스 반영 전입니다.</p>
+</main>
+<script>
+const video=document.querySelector('#replay');
+document.querySelector('#again').onclick=()=>{video.currentTime=0;video.play()};
+document.querySelector('#pause').onclick=()=>video.pause();
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches)video.play().catch(()=>{});
+const captions={'1':'첫 일정 1번이 지도 가운데에 등장합니다.','2':'2번은 지도 가운데, 1번은 왼쪽 거리 표시로 유지됩니다.','3':'3번으로 이동해도 이전 일정은 거리 표시로 남습니다.','done':'확인이 끝나면 그날 일정 전체를 함께 보여 줍니다.'};
+document.querySelectorAll('[data-shot]').forEach(button=>button.onclick=()=>{const step=button.dataset.shot;document.querySelectorAll('[data-shot]').forEach(other=>other.setAttribute('aria-pressed',String(other===button)));const file=`step-${step}-375.png`;document.querySelector('#shot').src=file;document.querySelector('#shot').alt=captions[step];document.querySelector('#shot-link').href=file;document.querySelector('#caption').textContent=captions[step]});
+</script>
+</html>

@@ -36,6 +36,7 @@ sys.path.insert(0, str(HERE.parents[3]))
 
 from app.domains.travel_ops.instances.mobility.engine.plan import Planner, plan  # noqa: E402
 from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime  # noqa: E402
+from app.domains.travel_ops.instances.mobility.engine.verify_time import leg_txt  # noqa: E402
 
 IN = HERE / "plan_example_in_v1.json"
 GOLD_BIKE = HERE / "plan_example_out_bike_v1.json"
@@ -83,14 +84,23 @@ def _fake(eta=30, buf=10, feasible=True, ride=True, seq=None, fail_at=None):
                 if slack < 0:           # 판정기와 같이 — 늦어도 eta·@ 는 낸다(verify_case arrive_late 분기)
                     o = {"verdict": "infeasible", "code": "arrive_late", "reason": "늦는다", "eta_min": e,
                          "margin_min": buf, "slack_min": slack}
-            return NS(out=o, reason=o.get("reason"), legs=[NS(walk_min=8, ride_min=None)], day_type="평일",
-                      verdict=o["verdict"], warnings=[])
+            # 구간 이름은 진짜 판정기(verify_leg_bike)와 같은 「자전거 출발→도착」 — 고른 편성 짝짓기(ride_results)가 이 이름을 본다
+            return NS(out=o, reason=o.get("reason"), legs=[NS(walk_min=8, ride_min=None, label=leg_txt(case["legs"][0]))],
+                      day_type="평일", verdict=o["verdict"], warnings=[])
     v = V()
     return Runtime(v, timetable_built_at="t", rules_version="r", stats={}), v, calls
 
 
 A = {"name": "A", "lat": 37.5636, "lon": 126.9826}
 B = {"name": "B", "lat": 37.5445, "lon": 127.0560}          # 약 7 km — 도보 직행 후보가 안 생긴다
+NEAR_WALK_M = 210.0                                          # 합성 보행망이 돌려주는 A→C 길 거리(시험용 값 · 실측 아님)
+
+
+def _walk_net(v, distance_m=NEAR_WALK_M):
+    """검증된(낙관 아님) 보행망 응답을 돌려주는 합성 라우터. ☆`[2026-10-12]` 직접 도보는 보행망 없이 직선×계수로 만들지 않는다 —
+    도보 후보가 실리는 축은 보행망을 명시적으로 준다. 도보 값이 이 응답에서 나왔는지도 함께 본다."""
+    v.bike_router = NS(available=lambda: True, route=lambda *a: {"distance_m": distance_m}, last_error=None)
+    return v
 
 
 def _dt(hhmm, day=KST_DAY):
@@ -135,8 +145,10 @@ def test_bike_not_feasible_reason():
     assert got is None and not why["reason"].startswith("자전거"), "지하철도 고른 구간은 역 이유를 그대로"
     # 다른 후보(도보)는 실리고 자전거가 안 되면 — 봉투 left_out 에 자전거 이유 한 줄(코어로는 안 나감)
     near = {"name": "C", "lat": 37.5650, "lon": 126.9826}             # A 에서 약 160 m
+    _walk_net(_v)
     got, why = Planner(rt, modes=["walk", "bike"]).leg(A, near, _dt("13:30"), {}, True, "a_to_c")
     assert why is None and got[0]["planned"] == "walk", (why, got)
+    assert got[0]["options"][0]["walk_m"] == round(NEAR_WALK_M), "도보 거리는 보행망 응답 그대로(직선×계수 아님)"
     assert [(e["label"], e["code"]) for e in got[4]] == [("자전거(따릉이)", "mode_unavailable")], got[4]
 
 
@@ -185,6 +197,7 @@ def test_bike_recheck_fails_not_listed():
     assert got is None and why["code"] == "no_data" and "소요를 못 냈다" in why["reason"], why
     near = {"name": "C", "lat": 37.5650, "lon": 126.9826}
     rt, _v, _ = _fake(fail_at=1)                         # 새 판정기(호출 순번을 처음부터)
+    _walk_net(_v)
     got, why = Planner(rt, modes=["walk", "bike"]).leg(A, near, _dt("13:30"), {}, True, "a_to_c")
     assert why is None and [o["id"] for o in got[0]["options"]] == ["walk"], got
     assert [(e["label"], e["code"]) for e in got[4]] == [("자전거(따릉이)", "no_data")], got[4]

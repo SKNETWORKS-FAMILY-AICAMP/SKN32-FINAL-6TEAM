@@ -241,11 +241,12 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
           setHiddenPoints([...hiddenPoints]);
           relayout();
         }
+        const revealId = points.find(point => point.revealFocus)?.id;   // `[2026-10-13]` 검증 로딩 중 지금 드러나는 마커
         markers.forEach(({ id, pin, marker }) => {
           const selected = id === nextSelectedId;
-          setPinSelected(pin, selected);
+          setPinSelected(pin, selected, id === revealId);
           marker.setAttribute("aria-pressed", String(selected));
-          marker.zIndex = selected ? 100 : 1;
+          marker.zIndex = selected || id === revealId ? 100 : 1;
         });
         if (changed) {
           previousGeometry = geometry;

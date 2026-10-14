@@ -1,0 +1,38 @@
+CANDIDATE=legacy/deployment_candidates/2026-10-12_015017_plugin_v11
+FIXED_PYTEST_COMMAND=C:\Users\playdata2\anaconda3\python.exe -m pytest tests/unit/travel/test_fact_read_recovery.py tests/unit/travel/test_fact_context.py tests/unit/travel/test_initial_retry_boundaries.py tests/unit/core/test_controller_resume_recovery.py -q --tb=short -p no:cacheprovider -o faulthandler_timeout=60
+...................FFF.................................................. [ 98%]
+.                                                                        [100%]
+================================== FAILURES ===================================
+_ test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit[classifying] _
+tests\unit\travel\test_fact_read_recovery.py:176: in test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit
+    assert result["status"] == "answered" and result["case_status"] == "resolved"
+E   AssertionError: assert ('answered' == 'answered'
+E     
+E       answered and 'CaseStatus.RESOLVED' == 'resolved'
+E     
+E     - resolved
+E     + CaseStatus.RESOLVED)
+_ test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit[routing] _
+tests\unit\travel\test_fact_read_recovery.py:176: in test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit
+    assert result["status"] == "answered" and result["case_status"] == "resolved"
+E   AssertionError: assert ('answered' == 'answered'
+E     
+E       answered and 'CaseStatus.RESOLVED' == 'resolved'
+E     
+E     - resolved
+E     + CaseStatus.RESOLVED)
+_ test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit[running] _
+tests\unit\travel\test_fact_read_recovery.py:176: in test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit
+    assert result["status"] == "answered" and result["case_status"] == "resolved"
+E   AssertionError: assert ('answered' == 'answered'
+E     
+E       answered and 'CaseStatus.RESOLVED' == 'resolved'
+E     
+E     - resolved
+E     + CaseStatus.RESOLVED)
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_fact_read_recovery.py::test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit[classifying]
+FAILED tests/unit/travel/test_fact_read_recovery.py::test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit[routing]
+FAILED tests/unit/travel/test_fact_read_recovery.py::test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit[running]
+3 failed, 70 passed in 5.37s
+PYTEST_EXIT=1

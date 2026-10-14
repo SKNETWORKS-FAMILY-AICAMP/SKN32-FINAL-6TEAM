@@ -149,8 +149,9 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
                     text += "\n일정은 바꾸지 않았어요."
                     basis["unresolved"] = "verified_menu"
         else:
+            # ★`[2026-10-13]` 대상은 결정 단위 · 위의 확인(`fact_context.resolve`)이 정했다 — 문장을 다시 읽어 덮지 않는다
             text, fact_basis = trip_facts.fact_reply(fact, message=message, items=items, now=now,
-                                                    item=item, place_source=place_source)
+                                                    item=item, place_source=place_source, retarget=False)
             basis.update(fact_basis)
         core, _, more = text.partition(trip_facts.MORE_MARK)
         if core not in answers:

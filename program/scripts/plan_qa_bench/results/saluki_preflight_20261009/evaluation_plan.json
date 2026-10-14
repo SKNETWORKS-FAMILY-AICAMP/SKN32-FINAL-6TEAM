@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "created_at_kst": "2026-10-09T01:17:10.492765+09:00",
+  "candidate_revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+  "repo_id": "ConwayResearch/Underdog-Saluki-27B-1.0",
+  "weight_file": "Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+  "weight_bytes": 7898369152,
+  "weight_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+  "weights_downloaded": true,
+  "status": "smoke_passed_D3_actually_running_full_comparison_not_complete",
+  "download_gates": [
+    "existing GPU resources only",
+    "no identical revision/SHA duplicate",
+    "file bytes + queued training growth + outputs + 3GiB reserve fit",
+    "quota and writable directory probe pass",
+    "preserve partial files and existing models"
+  ],
+  "execution_gates": [
+    "no concurrent GPU task or duplicate worker",
+    "stock llama.cpp installed-version GGUF architecture load verified",
+    "same item/null JSON contract; no gold in request",
+    "freeze prompt hashes, IDs, runner hash, engine version, settings before score run",
+    "Verify full prompt token lengths fit the frozen context without truncation; otherwise isolate a new protocol and matched baselines"
+  ],
+  "settings": {
+    "jinja": true,
+    "enable_thinking": false,
+    "temperature": 0,
+    "context_tokens": 4096,
+    "max_output_tokens": 16,
+    "parallel_slots": 1,
+    "precision": "publisher IQ2-mix; differs from other releases and is explicitly recorded"
+  },
+  "local_runner_reference": "program/scripts/plan_qa_bench/server/d_test_llama.py",
+  "runtime_runner_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+  "engine_commit": "4ebdf2c74acce30883d8e34b7c70b3eb8146f2fe",
+  "smoke": {
+    "rows": 12,
+    "request": 6,
+    "no_request": 6,
+    "status": "model_load_and_12_calls_passed; original_9_of_12_accuracy_is_separate",
+    "purpose": "load/template/parser/memory check, not accuracy improvement evidence",
+    "input_file": "program/scripts/plan_qa_bench/results/saluki_preflight_20261009/smoke_prompts_d3_12.json",
+    "input_sha256": "3b9a5b20fcb236fc5c140b353d2f05ff439dfe9be48a418de82bbaaafbaec726",
+    "source_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+    "saved": 12,
+    "parsed": 12,
+    "errors": 0,
+    "correct": 9,
+    "max_prompt_tokens": 1953,
+    "canonical_input_match": [
+      12,
+      12
+    ],
+    "runtime_evidence": "program/scripts/plan_qa_bench/results/saluki_preflight_20261009/runtime_20261009_0232/runtime_verification.json"
+  },
+  "matched_suites": [
+    {
+      "name": "D3",
+      "expected_rows": 360,
+      "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+      "completed": 0,
+      "status": "running",
+      "job_id": "saluki_original_d3_a1",
+      "saved_partial_snapshot": 184,
+      "complete": false
+    },
+    {
+      "name": "E/MX",
+      "expected_rows": 4014,
+      "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+      "completed": 0,
+      "status": "ready_sequential_after_current_D3",
+      "job_id": "saluki_original_mx_a1",
+      "saved_partial_snapshot": 0,
+      "complete": false
+    },
+    {
+      "name": "H",
+      "expected_rows": 1316,
+      "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+      "completed": 0,
+      "status": "ready_sequential_after_current_D3",
+      "job_id": "saluki_original_h_a1",
+      "saved_partial_snapshot": 0,
+      "complete": false
+    },
+    {
+      "name": "D",
+      "expected_rows": 2735,
+      "prompt_sha256": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
+      "completed": 0,
+      "status": "ready_sequential_after_current_D3",
+      "job_id": "saluki_original_d_a1",
+      "saved_partial_snapshot": 0,
+      "complete": false
+    },
+    {
+      "name": "D2",
+      "expected_rows": 1000,
+      "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+      "completed": 0,
+      "status": "ready_sequential_after_current_D3",
+      "job_id": "saluki_original_d2_a1",
+      "saved_partial_snapshot": 0,
+      "complete": false
+    }
+  ],
+  "planned_total": 9425,
+  "completed_total": 0,
+  "BC_multi_item_contract": "separate baseline 835-row multi-selection runner adaptation pending; do not treat single item D runner as exact multi-set C",
+  "comparison": "matched publisher originals only; developer training and our training distinguished; failures and missing answers stay in denominator",
+  "latency_and_memory": "record actual engine/quantization/context/cache, per-row ms and peak memory; no engine speed conclusion from changing model",
+  "adoption": "development/regression diagnostics first; no adoption before independent holdout/repetition criteria",
+  "ARM": "not queued; 7.9GB weight size alone does not establish 12GB runtime memory or acceptable CPU latency",
+  "fine_tuning": "not automatically eligible as approximately 27B exceeds project SLM scope; distributed GGUF is not proof of additional training fit",
+  "runtime_runner_reference": "program/scripts/plan_qa_bench/server/queues/saluki_eval_20261009.py",
+  "observed_at_utc": "2026-10-08T17:32:49.017338+00:00",
+  "saved_total_partial": 184,
+  "completed_suites": 0,
+  "expected_suites": 5,
+  "execution_report": "final_project_cs/wiki/records/reports/2026-10-09_023533_saluki-install-smoke-and-evaluation.md",
+  "model_storage": "A existing /dev/shm RAM; volatile; B root disk preservation receiving, not completed",
+  "local_off_machine_weight_archive_complete": false,
+  "state_change_backup": "program/scripts/plan_qa_bench/results/saluki_preflight_20261009/_backup/2026-10-09_023622_before_actual_smoke_and_D3/evaluation_plan.json"
+}

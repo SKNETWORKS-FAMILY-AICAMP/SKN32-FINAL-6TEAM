@@ -1,0 +1,5 @@
+﻿21:21:57 start pid=9124 start>=3.5 abort<0.4
+21:28:00 try 1 free=4.9GB log=C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\local-embedding-lowpeak-2026-10-12_2121-try1.log
+21:32:15 encode exit= aborted=False
+21:32:15 embeddings=datasets\travel\baseline_completion_20261012\embeddings-2026-10-12_213211.json
+21:33:05 rag exit=0 log=C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\rag-16-2026-10-12_2121.log

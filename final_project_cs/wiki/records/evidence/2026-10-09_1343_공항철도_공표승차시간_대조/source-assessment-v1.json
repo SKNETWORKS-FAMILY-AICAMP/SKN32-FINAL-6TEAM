@@ -1,0 +1,1097 @@
+{
+  "created_at": "2026-10-09T13:50:01.151190+09:00",
+  "stored_hongik_rows": 786,
+  "published_minutes": 682,
+  "unsupported_rows": [
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "06:01:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "06:45:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "07:15:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "07:50:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "08:55:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "09:43:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "10:15:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "10:55:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "11:35:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "12:15:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "12:55:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "13:30:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "14:05:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "14:45:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "15:25:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "16:05:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "16:45:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "17:25:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "18:05:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "18:55:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "19:20:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "20:00:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "20:50:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "21:40:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "22:35:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "23:25:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "06:05:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "06:50:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "07:25:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "08:11:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "09:00:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "09:50:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "10:25:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "11:01:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "11:40:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "12:15:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "12:55:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "13:35:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "14:15:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "14:55:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "15:35:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "16:15:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "16:55:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "17:30:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "18:05:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "19:00:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "19:41:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "20:15:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "20:50:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "21:35:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "22:25:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dep_time": "23:05:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "06:01:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "06:45:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "07:15:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "07:50:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "08:55:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "09:43:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "10:15:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "10:55:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "11:35:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "12:15:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "12:55:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "13:30:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "14:05:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "14:45:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "15:25:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "16:05:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "16:45:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "17:25:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "18:05:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "18:55:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "19:20:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "20:00:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "20:50:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "21:40:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "22:35:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "23:25:20",
+      "dir": "U",
+      "dest_nm": "서울역",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "06:05:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "06:50:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "07:25:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "08:11:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "09:00:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "09:50:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "10:25:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "11:01:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "11:40:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "12:15:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "12:55:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "13:35:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "14:15:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "14:55:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "15:35:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "16:15:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "16:55:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "17:30:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "18:05:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "19:00:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "19:41:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "20:15:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "20:50:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "21:35:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "22:25:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dep_time": "23:05:40",
+      "dir": "D",
+      "dest_nm": "인천공항2터미널",
+      "dest_inferred": null,
+      "fetched_at": "2026-10-01"
+    }
+  ],
+  "express_pattern": [
+    {
+      "day_type": "weekday",
+      "dir": "U",
+      "paired_by_sorted_order": 26,
+      "offset_seconds": -340,
+      "inference": "공식 직통열차 서울역 도착/출발 시각에서 일정한 이동시간 차이. 운행ID를 잃어 같은 열차임을 개별 확정하지는 않음."
+    },
+    {
+      "day_type": "weekday",
+      "dir": "D",
+      "paired_by_sorted_order": 26,
+      "offset_seconds": 340,
+      "inference": "공식 직통열차 서울역 도착/출발 시각에서 일정한 이동시간 차이. 운행ID를 잃어 같은 열차임을 개별 확정하지는 않음."
+    },
+    {
+      "day_type": "holiday",
+      "dir": "U",
+      "paired_by_sorted_order": 26,
+      "offset_seconds": -340,
+      "inference": "공식 직통열차 서울역 도착/출발 시각에서 일정한 이동시간 차이. 운행ID를 잃어 같은 열차임을 개별 확정하지는 않음."
+    },
+    {
+      "day_type": "holiday",
+      "dir": "D",
+      "paired_by_sorted_order": 26,
+      "offset_seconds": 340,
+      "inference": "공식 직통열차 서울역 도착/출발 시각에서 일정한 이동시간 차이. 운행ID를 잃어 같은 열차임을 개별 확정하지는 않음."
+    }
+  ],
+  "express_url": "https://www.airportrailroad.com/train/express/info",
+  "normal_url": "https://www.airportrailroad.com/train/normal/info/030/0",
+  "mechanism": "원래 종류/정차 정보가 통합·축소 자료에서 비어 있고 적재기는 모든 dep_time을 승차 후보로 읽음. 공표 일반열차 정차 시각 집합과 전체 대조하는 방법으로 해결.",
+  "research": [
+    {
+      "url": "https://gtfs.org/documentation/schedule/reference/#stop_timestxt",
+      "checked_at": "2026-10-09T13:50:01.151190+09:00",
+      "application": "stop_times의 pickup_type/drop_off_type은 승하차 가능 여부이며 시간 필드만으로 승차를 보장하지 않는다. timepoint는 보간/예정 시각을 구분한다. TAGO/AREX가 GTFS라는 주장이 아님."
+    },
+    {
+      "url": "https://www.kasa.go.kr/prog/bbsArticle/BBSMSTR_000000000010/view.do?bbsId=B000000000010&nttId=B000000001860Pe2zT3",
+      "application": "2026-10-09 한글날 휴일. 현재 휴일 달력은 이미 맞으며 수정 안 함."
+    }
+  ],
+  "source_trace": "설정된 raw 경로 data/travel/raw/mobility와 datasets/mobility 전수 파일명 검색에서는 원 TAGO 시간표를 확보하지 못함. 다른 저장 기기의 원자료는 이번 검색 범위 밖.",
+  "limits": "104행을 직통열차 통과 시각으로 보는 것은 전체 시각 패턴에 근거한 추론. 시각 블랙리스트나 이 추론을 필터 조건으로 쓰지 않고 공식 일반열차 전체 시각을 대조함. 공식 시각도 실제 도착 오차 측정이 아님.",
+  "browser_schedule_rendered": false,
+  "map_developer_api_calls": 0,
+  "actual_eta_error_samples": 0,
+  "actual_boardings": 0
+}

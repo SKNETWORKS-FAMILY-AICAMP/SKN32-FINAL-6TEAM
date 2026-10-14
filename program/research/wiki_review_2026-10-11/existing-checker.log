@@ -1,0 +1,150 @@
+문서 2126개 검사
+불변식 83개 (automated 연결 138개)
+코드 역방향 표식 62개
+기록(records/) 1510개 — 규칙 면제. 깨진 링크 242곳은 집계만 한다
+도메인 축 표시 603/604 = 100%  (commerce 42 · neutral 286 · travel 275)
+    미표시 1개 — 위반 아님. 다음 교체 때 대상인지 알 수 없다
+    ★옛 도메인인데 이유가 없다 1개 — 판올림을 못 따라간 문서다
+        wiki/product/pitch-questions.md
+    옛 도메인이나 이유가 붙어 있다 41개 — 그대로 둔다
+
+[134] 문서가 인용한 코드 파일이 없다 — 위반 아니고 집계다
+    ★둘을 가려야 한다 — 「삭제를 기록한 결정 문서」는 맞고,
+      「근거로 인용했는데 사라진 것」은 근거 없는 문장이 남은 것이다
+    datasets/wiki/coupang-extension.md -> scripts/extension/README.md
+    datasets/wiki/coupang-extension.md -> scripts/legacy/README.md
+    datasets/wiki/scraper-notes.md -> scripts/track.py
+    final_project_cs/wiki/context/rag-retrieval.md -> app/domains/travel_ops/instances/activity.py
+    final_project_cs/wiki/decisions/D-CS-001-composer-ui-removal.md -> app/presentation/api/composer.py
+    final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md -> app/application/composer_service.py
+    final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md -> app/presentation/api/composer.py
+    final_project_cs/wiki/decisions/D-CS-004-composer-boundary.md -> app/presentation/composer_auth.py
+    final_project_cs/wiki/operations/_backup/2026-10-08_1014_rag_wiki_links/index.md -> eval/finetune/diag_3b.py
+    final_project_cs/wiki/operations/_backup/2026-10-08_143628_arm_serving_setup/index.md -> eval/finetune/diag_3b.py
+    final_project_cs/wiki/operations/_backup/2026-10-09_234438_arm_cd/index.md -> eval/finetune/diag_3b.py
+    final_project_cs/wiki/operations/index.md -> eval/finetune/diag_3b.py
+    ... 외 122건
+
+[5] 인용한 코드 파일이 디스크엔 있고 git 이 모른다 — 위반 아니고 집계다
+    ★미커밋 구현을 근거로 쓴 것이다. 되돌려지면 그 문장이 거짓이 된다.
+      근거로 남기려면 「작업 트리 기준」이라고 적는다 — governance/evidence-grades.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> eval/reports/raw_proposed.jsonl
+    wiki/_backup/2026-10-10_052423_baseline_v2/log.md -> eval/reports/raw_proposed.jsonl
+    wiki/_backup/2026-10-11_102112_daily_research_close/log.md -> eval/reports/raw_proposed.jsonl
+    wiki/business/infrastructure-cost.md -> eval/reports/raw_proposed.jsonl
+    wiki/log.md -> eval/reports/raw_proposed.jsonl
+
+미작성 문서로 가는 링크 972건 (고유 50개) — 위반 아님
+    ../../../datasets/dining/식당_방문_체크리스트.md
+    a2a-adoption.md
+    accessibility-data-sources.md
+    activity.md
+    always-on.md
+    arm-serving-queue.md
+    auth-boundary.md
+    blind-spots.md
+    ... 외 42개
+
+[15620] 경로 오타 (폴더도 없음)
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> research/dietary-data-sources.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> research/accessibility-data-sources.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> product/traveler-profile.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> product/traveler-profile.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> product/index.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> research/dietary-data-sources.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> research/accessibility-data-sources.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> product/index.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> product/scope.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> ../final_project_cs/wiki/index.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> decisions/D-001-payment-ownership.md
+    wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md -> governance/type-verification/index.md
+    ... 외 15608건
+
+[134] 500줄 초과 (분할 필요)
+    final_project_cs/wiki/_backup/2026-10-08_140625_winnow_original_d3_completion/log.md  (501줄)
+    final_project_cs/wiki/_backup/2026-10-08_140836_winnow_oos_d3_completion/log.md  (505줄)
+    final_project_cs/wiki/_backup/2026-10-08_141100_winnow_d3_comparison/log.md  (509줄)
+    final_project_cs/wiki/_backup/2026-10-08_141257_active_training_log/log.md  (511줄)
+    final_project_cs/wiki/_backup/2026-10-08_142120_B57_repeat_queue/log.md  (513줄)
+    final_project_cs/wiki/_backup/2026-10-08_143628_arm_serving_setup/log.md  (515줄)
+    final_project_cs/wiki/_backup/2026-10-08_1443_arm_steady/log.md  (519줄)
+    final_project_cs/wiki/_backup/2026-10-08_145604_winnow_three_completion_refill/log.md  (521줄)
+    final_project_cs/wiki/_backup/2026-10-08_150227_winnow_oos_mx_completion/log.md  (523줄)
+    final_project_cs/wiki/_backup/2026-10-08_150608_qat_refill_five_suite/log.md  (527줄)
+    final_project_cs/wiki/_backup/2026-10-08_151129_qat_original_d2_h_completion/log.md  (533줄)
+    final_project_cs/wiki/_backup/2026-10-08_153821_qat_three_completion_refill/log.md  (539줄)
+    ... 외 122건
+
+[62] 300줄 초과 (분할 검토)
+    wiki/delivery/_backup/2026-10-09_2012_notice_channel_split/open-items.md  (325줄)
+    wiki/delivery/open-items.md  (325줄)
+    final_project_cs/wiki/_backup/2026-10-08_0130_대화복구기록전/log.md  (400줄)
+    final_project_cs/wiki/_backup/2026-10-08_0200_화면브랜치비교/log.md  (404줄)
+    final_project_cs/wiki/_backup/2026-10-08_0356_화면결정반영/log.md  (415줄)
+    final_project_cs/wiki/_backup/2026-10-08_1014_rag_wiki_links/log.md  (421줄)
+    final_project_cs/wiki/_backup/2026-10-08_1020_rag_wiki_log_order/log.md  (425줄)
+    final_project_cs/wiki/_backup/2026-10-08_1035_frog_mx_completion/log.md  (425줄)
+    final_project_cs/wiki/_backup/2026-10-08_103915_e4b_h_completion/log.md  (429줄)
+    final_project_cs/wiki/_backup/2026-10-08_105446_gemma_mx_completion/log.md  (433줄)
+    final_project_cs/wiki/_backup/2026-10-08_110706_gemma_choice_completion/log.md  (437줄)
+    final_project_cs/wiki/_backup/2026-10-08_112247_gemma12b_h_completion/log.md  (441줄)
+    ... 외 50건
+
+[61] 통제 목록에 없는 tag
+    wiki/decisions/D-018-decision15-stop-paths.md  (runtime)
+    wiki/decisions/D-018-decision15-stop-paths.md  (travel)
+    final_project_cs/wiki/context/travel-corpus.md  (travel)
+    final_project_cs/wiki/decisions/D-CS-006-cancellation-terms-are-structured.md  (rag)
+    final_project_cs/wiki/decisions/D-CS-006-cancellation-terms-are-structured.md  (travel)
+    final_project_cs/wiki/decisions/D-CS-007-ui-operator-login.md  (auth)
+    final_project_cs/wiki/decisions/D-CS-008-ops-console-separate-app.md  (ops)
+    final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md  (travel)
+    final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md  (watch)
+    final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md  (dining)
+    final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md  (activity)
+    final_project_cs/wiki/decisions/D-CS-010-google-calls-in-dawn-batch-only.md  (travel)
+    ... 외 49건
+
+[11] front matter 없음
+    wiki/travel_api_competitor_census_2026-09-11.md
+    final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md
+    final_project_cs/wiki/external/admin-screen-api.md
+    final_project_cs/wiki/external/api-environment-limits.md
+    final_project_cs/wiki/external/api-key-issue-guide.md
+    final_project_cs/wiki/external/watch-monitoring.md
+    final_project_cs/wiki/external/web-auth-transfer.md
+    final_project_cs/wiki/external/web-flow-2026-10-09.md
+    final_project_cs/wiki/external/web-intake-restore.md
+    final_project_cs/wiki/runtime/case-state-machine.generated.md
+    final_project_cs/wiki/runtime/langgraph-comparison.md
+
+[7] hub 가 한 구현만 가리킨다
+    decisions/D-017-watch-cadence-golden-time.md  (final_project_cs 2회 · final_project_sample 0회)
+    decisions/D-018-decision15-stop-paths.md  (final_project_cs 4회 · final_project_sample 0회)
+    decisions/D-019-travel-density.md  (final_project_cs 4회 · final_project_sample 0회)
+    decisions/D-020-trip-survey-and-ask-first.md  (final_project_cs 5회 · final_project_sample 0회)
+    decisions/D-021-email-verified-key-recovery.md  (final_project_cs 2회 · final_project_sample 0회)
+    decisions/D-022-study-only-kto-images.md  (final_project_cs 1회 · final_project_sample 0회)
+    decisions/D-023-no-commerce-assets-in-use.md  (final_project_cs 1회 · final_project_sample 0회)
+
+[4] neutral 인데 도메인 어휘가 있다
+    final_project_cs/wiki/operations/google-login-setup.md  (travel 어휘 3회 — 고치거나 domain_note 로 이유를 적는다)
+    final_project_cs/wiki/operations/local-setup.md  (travel 어휘 3회 — 고치거나 domain_note 로 이유를 적는다)
+    final_project_cs/wiki/teams/team-contract/fields.md  (travel 어휘 6회 — 고치거나 domain_note 로 이유를 적는다)
+    acop_dojo/wiki/guide.md  (commerce 어휘 4회 — 고치거나 domain_note 로 이유를 적는다)
+
+[1] 알 수 없는 domain
+    final_project_cs/wiki/context/rag-retrieval.md  (domain: mixed)
+
+[1] 알 수 없는 type
+    acop_dojo/wiki/handoff-2026-09-14.md  (type: handoff)
+
+[1] 코드에만 있는 불변식 ID
+    INV-CS-ARCH-007
+
+[1] impl_scope 인데 이유 없음
+    wiki/research/_backup/2026-10-08_1017_rag_wiki_final/rag-slm-improvements.md
+
+위반 15903건
+
+STDERR

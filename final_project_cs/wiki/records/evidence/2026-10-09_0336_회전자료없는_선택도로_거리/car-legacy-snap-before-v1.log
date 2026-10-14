@@ -1,0 +1,157 @@
+FFFF                                                                     [100%]
+================================== FAILURES ===================================
+____ test_no_turn_sidecar_reports_actual_parallel_road_choice[False-False] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000022F9E052030>
+dijkstra = False, direct = False
+
+    @pytest.mark.parametrize('dijkstra', [False, True])
+    @pytest.mark.parametrize('direct', [False, True])
+    def test_no_turn_sidecar_reports_actual_parallel_road_choice(monkeypatch, dijkstra, direct):
+        router = GraphRouter(records=parallel_roads())
+        router.force_dijkstra = dijkstra
+        router.warm(('car',))
+        start = (127, 37.5004)
+        end = (127, 37.5008 if direct else 37.5016)
+    
+        def snap(edge, fraction, requested):
+            coords, cum, _ = router._geom(edge)
+            point = tuple((1-fraction)*a+fraction*b for a, b in zip(coords[0], coords[-1]))
+            return _Snap(edge, fraction*cum[-1], hav(requested, point), point, (0, fraction))
+    
+        starts = [snap(0, .4, start), snap(2, .4, start)]
+        ends = [snap(0 if direct else 1, .8 if direct else .6, end),
+                snap(2 if direct else 3, .8 if direct else .6, end)]
+        monkeypatch.setattr(router, '_snap_many', lambda profile, lng, lat:
+                            starts if (lng, lat) == start else ends)
+        path = router.route(start, end)['paths'][0]
+        assert path['points']['coordinates'][0] == list(starts[1].pt)
+        assert path['points']['coordinates'][-1] == list(ends[1].pt)
+        actual_distances = [round(starts[1].dist, 1), round(ends[1].dist, 1)]
+        assert actual_distances == [8.8, 8.8]
+>       assert path['snap_m'] == actual_distances
+E       assert [0.0, 0.0] == [8.8, 8.8]
+E         
+E         At index 0 diff: 0.0 != 8.8
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_car_legacy_selected_snap_v1.py:47: AssertionError
+____ test_no_turn_sidecar_reports_actual_parallel_road_choice[False-True] _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000022F9DFD0C50>
+dijkstra = True, direct = False
+
+    @pytest.mark.parametrize('dijkstra', [False, True])
+    @pytest.mark.parametrize('direct', [False, True])
+    def test_no_turn_sidecar_reports_actual_parallel_road_choice(monkeypatch, dijkstra, direct):
+        router = GraphRouter(records=parallel_roads())
+        router.force_dijkstra = dijkstra
+        router.warm(('car',))
+        start = (127, 37.5004)
+        end = (127, 37.5008 if direct else 37.5016)
+    
+        def snap(edge, fraction, requested):
+            coords, cum, _ = router._geom(edge)
+            point = tuple((1-fraction)*a+fraction*b for a, b in zip(coords[0], coords[-1]))
+            return _Snap(edge, fraction*cum[-1], hav(requested, point), point, (0, fraction))
+    
+        starts = [snap(0, .4, start), snap(2, .4, start)]
+        ends = [snap(0 if direct else 1, .8 if direct else .6, end),
+                snap(2 if direct else 3, .8 if direct else .6, end)]
+        monkeypatch.setattr(router, '_snap_many', lambda profile, lng, lat:
+                            starts if (lng, lat) == start else ends)
+        path = router.route(start, end)['paths'][0]
+        assert path['points']['coordinates'][0] == list(starts[1].pt)
+        assert path['points']['coordinates'][-1] == list(ends[1].pt)
+        actual_distances = [round(starts[1].dist, 1), round(ends[1].dist, 1)]
+        assert actual_distances == [8.8, 8.8]
+>       assert path['snap_m'] == actual_distances
+E       assert [0.0, 0.0] == [8.8, 8.8]
+E         
+E         At index 0 diff: 0.0 != 8.8
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_car_legacy_selected_snap_v1.py:47: AssertionError
+____ test_no_turn_sidecar_reports_actual_parallel_road_choice[True-False] _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000022F9E052DE0>
+dijkstra = False, direct = True
+
+    @pytest.mark.parametrize('dijkstra', [False, True])
+    @pytest.mark.parametrize('direct', [False, True])
+    def test_no_turn_sidecar_reports_actual_parallel_road_choice(monkeypatch, dijkstra, direct):
+        router = GraphRouter(records=parallel_roads())
+        router.force_dijkstra = dijkstra
+        router.warm(('car',))
+        start = (127, 37.5004)
+        end = (127, 37.5008 if direct else 37.5016)
+    
+        def snap(edge, fraction, requested):
+            coords, cum, _ = router._geom(edge)
+            point = tuple((1-fraction)*a+fraction*b for a, b in zip(coords[0], coords[-1]))
+            return _Snap(edge, fraction*cum[-1], hav(requested, point), point, (0, fraction))
+    
+        starts = [snap(0, .4, start), snap(2, .4, start)]
+        ends = [snap(0 if direct else 1, .8 if direct else .6, end),
+                snap(2 if direct else 3, .8 if direct else .6, end)]
+        monkeypatch.setattr(router, '_snap_many', lambda profile, lng, lat:
+                            starts if (lng, lat) == start else ends)
+        path = router.route(start, end)['paths'][0]
+        assert path['points']['coordinates'][0] == list(starts[1].pt)
+        assert path['points']['coordinates'][-1] == list(ends[1].pt)
+        actual_distances = [round(starts[1].dist, 1), round(ends[1].dist, 1)]
+        assert actual_distances == [8.8, 8.8]
+>       assert path['snap_m'] == actual_distances
+E       assert [0.0, 0.0] == [8.8, 8.8]
+E         
+E         At index 0 diff: 0.0 != 8.8
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_car_legacy_selected_snap_v1.py:47: AssertionError
+_____ test_no_turn_sidecar_reports_actual_parallel_road_choice[True-True] _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000022F9E053B90>
+dijkstra = True, direct = True
+
+    @pytest.mark.parametrize('dijkstra', [False, True])
+    @pytest.mark.parametrize('direct', [False, True])
+    def test_no_turn_sidecar_reports_actual_parallel_road_choice(monkeypatch, dijkstra, direct):
+        router = GraphRouter(records=parallel_roads())
+        router.force_dijkstra = dijkstra
+        router.warm(('car',))
+        start = (127, 37.5004)
+        end = (127, 37.5008 if direct else 37.5016)
+    
+        def snap(edge, fraction, requested):
+            coords, cum, _ = router._geom(edge)
+            point = tuple((1-fraction)*a+fraction*b for a, b in zip(coords[0], coords[-1]))
+            return _Snap(edge, fraction*cum[-1], hav(requested, point), point, (0, fraction))
+    
+        starts = [snap(0, .4, start), snap(2, .4, start)]
+        ends = [snap(0 if direct else 1, .8 if direct else .6, end),
+                snap(2 if direct else 3, .8 if direct else .6, end)]
+        monkeypatch.setattr(router, '_snap_many', lambda profile, lng, lat:
+                            starts if (lng, lat) == start else ends)
+        path = router.route(start, end)['paths'][0]
+        assert path['points']['coordinates'][0] == list(starts[1].pt)
+        assert path['points']['coordinates'][-1] == list(ends[1].pt)
+        actual_distances = [round(starts[1].dist, 1), round(ends[1].dist, 1)]
+        assert actual_distances == [8.8, 8.8]
+>       assert path['snap_m'] == actual_distances
+E       assert [0.0, 0.0] == [8.8, 8.8]
+E         
+E         At index 0 diff: 0.0 != 8.8
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_car_legacy_selected_snap_v1.py:47: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\car-legacy-snap-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_car_legacy_selected_snap_v1.py::test_no_turn_sidecar_reports_actual_parallel_road_choice[False-False]
+FAILED tests/unit/travel/mobility/test_car_legacy_selected_snap_v1.py::test_no_turn_sidecar_reports_actual_parallel_road_choice[False-True]
+FAILED tests/unit/travel/mobility/test_car_legacy_selected_snap_v1.py::test_no_turn_sidecar_reports_actual_parallel_road_choice[True-False]
+FAILED tests/unit/travel/mobility/test_car_legacy_selected_snap_v1.py::test_no_turn_sidecar_reports_actual_parallel_road_choice[True-True]
+4 failed in 4.05s
+Exception ignored in: <function Console.__del__ at 0x0000022F8E851B20>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

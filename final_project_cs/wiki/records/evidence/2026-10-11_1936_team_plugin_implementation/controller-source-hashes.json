@@ -1,0 +1,9 @@
+{
+  "app/application/controller.py": "1fbf954c55090e98f588b00e2f9f4abc3b11f5cf511edb24d646d88ea72fcc20",
+  "app/domains/travel_ops/components/conversation/case_dispatch.py": "5c4f516f4ddcb42e307dc243460058e4a2a871d7c949f1881160bc6311094be9",
+  "app/domains/travel_ops/entry/trip_api.py": "bd05f8fa9b2164e784472d033cc4fdf6a603d7100c526435161197db8b433aff",
+  "app/presentation/api/cases.py": "11036b3989246a85cb11884535fadd0f784393aaa2a8b7c1930be3581ab37e94",
+  "app/presentation/errors.py": "718cc09a9633833f47e56fb7f4f677f4f66732415e3f98c78197b8bce678827b",
+  "tests/integration/controller/test_plugin_unavailable.py": "30d815a06d04301ac71a4ef9a61170f1fd2bc46d48b1d53704fa1278a6257f05",
+  "tests/integration/controller/test_conversation_resume.py": "fa9a3803dbfcf8f6eb97206dca92b311a0fc1b6b008390d47eba995084aa304f"
+}

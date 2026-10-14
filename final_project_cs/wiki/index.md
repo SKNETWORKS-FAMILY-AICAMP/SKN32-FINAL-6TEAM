@@ -1,189 +1,76 @@
 ---
 type: guide
-title: final_project_cs 지식 지도
-description: 릴리스 대상 저장소의 9개 영역과 각 영역이 답하는 질문
+title: cs 프로젝트 구현 wiki
+description: 현재 여행 기준과 사용 종료된 기록을 구분한다
 status: draft
 domain: travel
-domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 ---
 
-# final_project_cs 지식 지도
+# cs 프로젝트 구현 wiki
 
-> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
-> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
-> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+여행 CS triPilot의 현재 계약·구현 안내입니다. 제품 사양은 [상위 wiki](../../wiki/index.md)의 후속 확정 결정과 대조하며, 이력 문서는 당시 상태를 확인할 때만 엽니다.
 
-처음이면 [quickstart.md](quickstart.md)부터 본다.
+세션을 이어받는 경우 [인계 안내 목차](../../wiki/handoff/index.md)에서 가장 최근 인계부터 읽습니다.
+
+**지금 상태를 볼 곳**: 환경별 가동 상태는 [운영 현황](operations/current-state.md), 날짜별 변경은 [변경 기록](log.md), 이 저장소만의 결정은 [결정 목록](decisions/index.md), 시험은 [시험 지도](quality/test-map.md).
+
+| 영역 | 읽을 문서 |
+|---|---|
+| 개발 책임·실제 경로 | [코드·시험 경로](teams/code-layout.md)·[개발 역할](../../wiki/delivery/roles.md) |
+| 에이전트 팀 선택·실행 | [에이전트 팀](teams/index.md)·[Registry](teams/team-registry.md)·[Controller](runtime/agentic-controller.md)·[플러그인 가용성·교체](teams/team-plugin-lifecycle.md) |
+| 입력·결과 계약 | [Team 계약](teams/team-contract/index.md)·[Context](context/index.md) |
+| 고객 접속·인증 | [외부 접속](external/index.md)·[현재 MCP](external/mcp-tools.md) |
+| 변경·승인·중복 방지 | [ActionProposal](actions/action-proposal.md)·[멱등성](actions/idempotency.md) |
+| 데이터·SQL | [데이터](data/index.md)·[SQL 적용](data/migrations.md) |
+| 시험·평가·실행 | [시험 지도](quality/test-map.md)·[실행](operations/run.md)·[불변식](quality/invariants.md) |
+| 운영 현황·변경 기록 | [운영 현황](operations/current-state.md)·[운영 목차](operations/index.md)·[변경 기록](log.md) |
+| 흐름·상태 | [실행 흐름 목차](runtime/index.md)·[품질 목차](quality/index.md)·[결정 목록](decisions/index.md) |
+
+`TeamRegistry`는 에이전트 팀을 선택하는 장치이고 `Controller`는 처리 흐름을 진행합니다. 감시 작업과 모니터링 도구의 구분은 해당 아키텍처 계약에서 확인합니다. 개발자·QA의 사후 결함 분석과 고객 요청 처리의 자동화를 혼동하지 않습니다.
+
+## 2026-10-12 작업 기록 요약
+
+각 줄은 그날의 기록이다. 현재 상태는 위 「지금 상태를 볼 곳」에서 다시 확인한다.
+
+2026-10-12 12:55 운영 확인: WSL 기동 복구 뒤 공개 첫 화면·상태 주소 HTTP 200과 실제 Chrome 화면을 재확인했습니다. 추가 용량 관리는 별도 세션에 인계했습니다. 이후 매니저 배포에서 빠진 플러그인 수정의 복구 후보는 아직 검증 중이며 새벽 반영 기록을 현재 완료 상태로 재사용하지 않습니다. [복구 근거·검사 범위](records/reports/2026-10-12_1255_public_screen_recovery.md).
+
+2026-10-12 UI/UX 검사: 실제 Claude Sonnet 5.5 코드 검토 2/2, 고정 검증 사본 단위 686/686, 최종 관련 Chrome 52/52와 문의 후속 7/7을 확인했습니다. 로딩 중 전체 접힌 일정·이전 먼 마커 유지·팝업 넘침을 수정했습니다. 최초 전체 실행 745건과 후속 검사·다른 작업의 동시 변경은 구분하며 공개 배포하지 않았습니다. [최종 결과·검사 범위·원본 증거](records/reports/2026-10-12_UIUX전수검사_최종결과.md).
 
 `[2026-10-12]` 실행·대기·재개 복구와 되돌리기 버튼의 검증·공개 반영 상태는 [최종 자동 반영 보고서](records/reports/2026-10-12_manager_recovery_release_followup.md)에서 확인합니다. 현재 제품 사양은 후속 wiki 결정·계약을 따르며 과거 계획 상태표를 오늘 배포 상태로 재사용하지 않습니다.
 
-여기는 **코드와 같은 커밋에서 바뀌어야 하는 지식**만 둔다. 제품·일정·사업성은 [중앙 허브](../../wiki/index.md)에 있다.
+2026-10-12 설계 초안: 여행 관련 잡담과 다섯 입력 경로를 고객별 취향으로 연결하는 [통합 구현 계획](records/plans/2026-10-12_여행대화와_고객취향_통합_구현계획.md)을 작성했습니다. 취향 기억과 일정 변경 허가를 분리하며 구현·운영 반영은 하지 않았습니다.
 
-★**[2026-09-08] 도메인이 여행으로 바뀌었다**(그 판이 v10, 지금 기준선은 **v11**). **코어는 그대로 쓴다** — `runtime/`·`actions/`·`context/`의 계약·동시성·승인 경계는 도메인을 모르므로 유효하다. `[정정 2026-09-10]` 이 자리는 「`teams/` 에 쇼핑몰 Team 페이지 다섯이 남아 있고 여행 Team 페이지는 아직 없다」(09-09)였다. **지금은 반대다** — 여행 Team 페이지 넷이 있고 쇼핑몰 Team 문서 일곱은 legacy 로 옮겼다(아래 teams 절).
+2026-10-12 구현: 일정 밖 장소의 역사 질문을 검색 근거 경로로 보내고, 일반 추천 답변의 근거 범위를 제한했습니다. 관련 로컬 시험 41/41 통과; 실제 모델 응답과 운영 반영은 미확인입니다. [검토·변경·검증 기록](records/reports/2026-10-12_1105_여행대화_역사질문과_추천근거.md).
 
-여행에서 코어가 바뀌는 것은 **일곱**이다(v11 §5-A 표 7행 — `[정정 2026-09-10]` 「여섯」으로 적혀 있었는데 아래 목록도 일곱이다) — 분류 라벨(슬러그 `itinerary_submit`/`incident_report`/`confirm_request`/`adjust_reject`/`other`), **라우팅 축 둘**(`case_type`+`intent`, §5-B), **분류 어휘의 자리**(코드 상수 → `config/` 선언 하나), **capability 선택**(팀이 `select_capability` 로 고른다, §5-C), Context Broker가 싣는 것(여행 상태), Action 3종(장소·운영 / 이동 시간 / 기상), Composer 소재(**한국어** 통지 문구 — `[정정 2026-09-10]` v10 은 영어였다). 새 집합체는 **Trip** 하나이고 `Case`에 `trigger_source`·`trip_id`가 붙는다(§4-B).
+2026-10-12 구현: 일정 입력의 “지금”을 접수 시각 기준 날짜·시각으로 해석하고, 시간·날짜 변경 요청이 장소 교체 경로로 들어가지 않도록 막았습니다. 관련 로컬 단위 시험 54/54 통과; 사용자가 겪은 대화 기록과 운영 반영은 미확인입니다. [원인·수정·검증 기록](records/reports/2026-10-12_여행_날짜시각_오인과_장소교체_보호.md).
 
-## 말 네 개를 먼저 나눈다
+## 과거 기록
 
-이 저장소는 아래 네 말을 **다른 뜻으로** 쓴다. 섞으면 소유 판단이 틀어진다.
+[수정 전 문서](records/commerce_2026-10-11/wiki--index.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
-| 말 | 뜻 | 구성기에서 |
-|---|---|---|
-| **컴포넌트** | 제거하면 시스템이 성립하지 않는 구성물 | **선택 불가** — 항상 포함 |
-| **모듈** | 켜고 끌 수 있는 단위. 빼도 나머지가 돈다 | **선택 가능** |
-| **Port** | 구현을 갈아 끼우는 지점 | 구현체를 **고른다** |
-| **인스턴스** | 같은 계약을 만족하는 것을 **여러 개** 둘 수 있다 | 개수를 **더하고 뺀다** |
+## 관계
 
-★"모듈형 Basement" 의 실체는 **컴포넌트는 고정이고 모듈은 가변**이라는 것이다.
+- [여행 사양 허브](../../wiki/index.md) — 현재 정본을 찾는 입구
 
-`[실측 2026-09-07]` 지금 실제로 꺼질 수 있는 것은 둘뿐이다 — `config.require_module()`
-호출처가 `vector_rag`(기본 ReadToolbox)와 `graph_store`(GraphStore 어댑터) 둘이다
-(`app/composition.py`).
+## 이전 절 링크
 
-★**이 구분이 실제로 사고를 냈다.** 인라인 분류는 필수 기능이라 컴포넌트인데
-2026-08-30 모듈 토글 작업이 그것을 `voc` **모듈** 아래 묶었다. 그래서 `voc: false`
-로는 제품이 아예 안 떴다 — **빼도 되는 자리에 뺄 수 없는 것을 넣은 것**이다.
-지금은 풀렸고 `require_module("voc")` 호출은 0곳이다. 경위는
-[../../program/research/2026-09-01_VOC가_팀모듈로_흘러간_경위.md](../../program/research/2026-09-01_VOC가_팀모듈로_흘러간_경위.md).
-
-## 영역
-
-### [runtime/](runtime/index.md) — Case가 흘러가는 곳
-`app/core/` (평면)
-Case 생명주기, Shared State, Controller, 충돌 처리, 메시지 배달.
-**이 영역은 도메인을 모른다.** 환불이든 배송이든 여행 일정 조정이든 다 같은 Case다 — 그래서 여행 판올림에서 **그대로 승계한다**(v11 §6). 다만 Case를 시스템도 만든다는 것이 새로 붙는다(`trigger_source`).
-
-### [teams/](teams/index.md) — 업무 책임 단위
-`app/domains/travel_ops/`
-Team 계약, Registry, 경계, 개별 Team 페이지.
-`[실측 2026-09-10]` **개별 Team 문서는 여행 넷이다** — [activity](teams/activity.md)·[booking-handoff](teams/booking-handoff.md)·[dining](teams/dining.md)·[mobility](teams/mobility.md). **쇼핑몰 7종은 [records/legacy/teams/](records/legacy/teams/) 로 옮겼다.** 계약·Registry·경계 문서는 도메인과 무관하게 유효하다 → v11 §5.
-
-### [context/](context/index.md) — 읽기 경로
-`app/core/context.py`, `app/infrastructure/rag/`
-Team이 필요한 자료를 모아 주는 계층. **Team은 직접 읽지 않는다.**
-
-### [actions/](actions/index.md) — 쓰기 경로
-`app/core/` (평면)
-**side effect가 일어나는 유일한 곳.** 제안·근거대조·승인·실행·발행.
-
-### [external/](external/index.md) — 바깥과 만나는 면
-`app/presentation/`
-REST, MCP, A2A, Trust Boundary. 사용자 웹 화면과 API를 연결할 때는 [화면별 연동 문서](external/web-screen-api.md)부터 읽는다.
-
-### [data/](data/index.md) — 저장
-`app/infrastructure/db/`
-스키마, 마이그레이션, tenant 격리.
-
-### [quality/](quality/index.md) — 무엇으로 보증하는가
-`tests/`
-**불변식 카탈로그**, 테스트 지도, 평가 하네스, 사각지대.
-
-### [operations/](operations/index.md) — 돌리는 법
-로컬 셋업, 실행, 문제 해결.
-
-### [decisions/](decisions/index.md) — 이 저장소에만 영향을 주는 결정
-여러 저장소에 걸친 결정은 [중앙 허브](../../wiki/decisions/index.md)에 있다.
-
-## 흐름으로 보기
-
-읽기와 쓰기가 갈리는 게 이 설계의 핵심이다.
-
-```text
-                    ┌─────────────┐
-   요청 ──────────→ │  external/  │
-                    └──────┬──────┘
-                           ↓
-                    ┌─────────────┐
-                    │  runtime/   │ ←──── data/
-                    │ Controller  │
-                    └──┬───────┬──┘
-              읽기 ↙          ↘ 위임
-        ┌──────────┐      ┌─────────┐
-        │ context/ │ ───→ │ teams/  │
-        └──────────┘      └────┬────┘
-                               │ ActionProposal (제안만)
-                               ↓
-                         ┌───────────┐
-                         │ actions/  │ ← side effect는 여기서만
-                         └───────────┘
-```
-
-## 이 저장소의 불변식
-
-전체는 [quality/invariants.md](quality/invariants.md).
-
-| ID | 불변식 | 판정 |
-|---|---|---|
-| `INV-CS-ARCH-001` | Core 계층은 도메인 어휘에 의존하지 않는다 | automated |
-| `INV-CS-ARCH-002` | Core는 Team 내부를 import하지 않는다 | automated |
-| `INV-CS-ACT-001` | Team은 side effect를 실행하지 않는다 | automated |
-| `INV-CS-ACT-002` | 동일 idempotency key는 1회만 실행된다 | automated |
-| `INV-CS-RT-001` | Shared State가 Case의 단일 원천이다 | automated |
-
-## sample과의 관계
-
-`final_project_sample`에서 먼저 검증한 계약을 여기로 이식한다.
-
-**sample의 예시 Team과 검증 상태를 여기의 릴리스 완료로 간주하지 않는다.**
-
-### ★ [2026-09-03] 계약은 이식하고 파일은 복사하지 않는다
-
-`[실측]` `wiki/records/handoff/11_basement_version_reference.md` 에서 이관. **전량 미이관이었다.**
-
-> **CS 는 sample 의 basement 참조를 기록만 하고, basement 파일을 복사·적용하지 않는다.**
-
-**위 서술이 "이식한다"라고만 적고 있었다.** 이 부정 진술이 없으면 **파일을 복사해도 되는 것처럼 읽힌다.**
-
-```
-basement_version   0.2.0
-source_commit      92b4c438a8f3bce1a5c65a54b38285d150020225
-source_branch      project-final_project_sample
-applied_at         2026-08-18T13:13:26Z
-```
-
-기록은 `wiki/records/manuals/basement_version.json` 에 있다.
-
-#### 이 참조는 낡았다
-
-`[실측]` 2026-09-03 확인.
-
-| | 커밋 |
-|---|---|
-| 기록된 참조 | `92b4c43…` (2026-08-18) |
-| **sample 의 현재 HEAD** | **`8a1ac56`** — "cs 가 먼저 고친 결함 넷을 sample 에도 이식한다" |
-
-**16일 벌어져 있다.** 그리고 그 사이 변경이 **cs → sample** 방향이었다.
-
-> **향후 basement 갱신은 명시적으로 기록하고 sample manifest 와 재대조해야 한다.**
-
-`[미확보]` **재대조 시점이 정해져 있지 않다.** [drift-case-voc](../../wiki/governance/drift-case-voc.md) 와 같은 종류다 — 참조가 낡았는데 아무도 안 센다.
-
-## 중앙 허브
-
-| 알고 싶은 것 | 어디 |
-|---|---|
-| 제품이 무엇인가 | [product/](../../wiki/product/index.md) |
-| 왜 이렇게 설계했나 | [decisions/](../../wiki/decisions/index.md) |
-| 일정과 DoD | [delivery/](../../wiki/delivery/index.md) |
-| 평가 기준 | [evaluation/](../../wiki/evaluation/index.md) |
-
-## 최근 변경
-
-[log.md](log.md)
-- [domain-swap.md](domain-swap.md) — **도메인을 갈아 끼울 때 무엇을 바꾸고 무엇을 두나.** 11행이 Core 의 정본
-
-## 기록 구역 `records/` (2026-09-08)
-
-옛 `docs/`가 이 wiki 아래 `records/`로 합쳐졌다. **읽는 순서는 wiki 본문 먼저**, `records/`는 본문이 인용한 근거를 확인할 때 연다.
-
-| `records/` | 지위 |
-|---|---|
-| `evidence/` · `reports/` | 계속 쓴다 — 재현 출력과 작업 리포트. 날짜 파일명 그대로, 고치지 않는다 |
-| `handoff/` · `history/` · `plans/` · `vision/` 등 | 동결된 기록. 현재 계약·계획·결정은 wiki 본문 |
-
-규칙은 허브 [governance/work-loop.md](../../wiki/governance/work-loop.md) 2026-09-08 절. 검사기는 `records/`를 면제한다.
-
-
-## 웹 CI 회귀 검증 기록
-
-기존 웹 CI 실패 54개의 원인과 최신 화면 기준 수정, 전체 첫 회귀 및 후속 재검증을 기록했습니다. [원인·조치·검증 보고](records/reports/2026-10-12_0239_web_CI_54_failures.md). 원격 CI 완료와 로컬 검사 결과를 구분합니다.
+<a id="final_project_cs-지식-지도"></a>
+<a id="말-네-개를-먼저-나눈다"></a>
+<a id="영역"></a>
+<a id="runtime--case가-흘러가는-곳"></a>
+<a id="teams--업무-책임-단위"></a>
+<a id="context--읽기-경로"></a>
+<a id="actions--쓰기-경로"></a>
+<a id="external--바깥과-만나는-면"></a>
+<a id="data--저장"></a>
+<a id="quality--무엇으로-보증하는가"></a>
+<a id="operations--돌리는-법"></a>
+<a id="decisions--이-저장소에만-영향을-주는-결정"></a>
+<a id="흐름으로-보기"></a>
+<a id="이-저장소의-불변식"></a>
+<a id="sample과의-관계"></a>
+<a id="-2026-09-03-계약은-이식하고-파일은-복사하지-않는다"></a>
+<a id="이-참조는-낡았다"></a>
+<a id="중앙-허브"></a>
+<a id="최근-변경"></a>
+<a id="기록-구역-records-2026-09-08"></a>

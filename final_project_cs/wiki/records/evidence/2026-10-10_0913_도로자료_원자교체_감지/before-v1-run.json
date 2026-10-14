@@ -1,0 +1,18 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/mobility/test_graph_atomic_replacement_v1.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\graph_identity_before_v1",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-10_0913_도로자료_원자교체_감지\\before-v1.xml"
+  ],
+  "files": [
+    "test_graph_atomic_replacement_v1.py"
+  ],
+  "exit_code": 1,
+  "finished_at": "2026-10-10T09:14:48.148534+09:00"
+}

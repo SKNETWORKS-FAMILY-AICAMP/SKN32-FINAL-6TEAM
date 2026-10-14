@@ -1,0 +1,172 @@
+{
+  "observed_at_utc": "2026-10-11T13:37:21.963506+00:00",
+  "report": "final_project_cs/wiki/records/reports/2026-10-11_2240_six-hour-gpu-arm-report.md",
+  "A": {
+    "observed_at": "2026-10-11T13:37:22.601020+00:00",
+    "gpu_instant": "3478 MiB, 68 %",
+    "registered": 196,
+    "status_counts": {
+      "completed": 156,
+      "completed_with_errors": 33,
+      "failed": 2,
+      "running": 1
+    },
+    "running": 1,
+    "ready_pending": 4,
+    "newly_registered": 3,
+    "current_progress": {
+      "e4bbase_original_appschema800_soak6h_20261011": {
+        "attempted": 1837,
+        "correct": 1837,
+        "failed": 0,
+        "transport_errors": 0,
+        "not_independent_accuracy": true,
+        "elapsed_seconds": 7905.99780084379,
+        "concurrency": 1,
+        "phase_seconds": 3600
+      }
+    },
+    "worker_preserved": true,
+    "free_bytes": 3654438912,
+    "completed_soaks": {
+      "finch_appschema_soak6h_20261011": {
+        "summary": {
+          "attempted": 4773,
+          "correct": 4773,
+          "failed": 0,
+          "transport_errors": 0,
+          "not_independent_accuracy": true,
+          "elapsed_seconds": 21608.005753828213,
+          "stop": "duration_completed",
+          "unique_conditions": 12,
+          "independent_accuracy": false,
+          "slots": 2,
+          "context_total": 8192,
+          "latency_scope": "co-running host; within-job concurrency phases only"
+        },
+        "baseline_rows": 0,
+        "baseline_correct": 0,
+        "observations": 4773,
+        "observations_correct": 4773,
+        "budgets": {
+          "400": {
+            "saved": 0,
+            "correct": 0
+          },
+          "800": {
+            "saved": 0,
+            "correct": 0
+          }
+        }
+      },
+      "saluki_original_appschema800_soak6h_20261011": {
+        "summary": {
+          "attempted": 8874,
+          "correct": 8874,
+          "failed": 0,
+          "transport_errors": 0,
+          "not_independent_accuracy": true,
+          "elapsed_seconds": 21601.76515173167,
+          "stop": "duration_completed",
+          "unique_conditions": 12,
+          "independent_accuracy": false,
+          "slots": 2,
+          "context_total": 8192,
+          "latency_scope": "co-running host; within-job concurrency phases only"
+        },
+        "baseline_rows": 0,
+        "baseline_correct": 0,
+        "observations": 8874,
+        "observations_correct": 8874,
+        "budgets": {
+          "400": {
+            "saved": 0,
+            "correct": 0
+          },
+          "800": {
+            "saved": 0,
+            "correct": 0
+          }
+        }
+      }
+    }
+  },
+  "B": {
+    "observed_at": "2026-10-11T13:37:21.963506+00:00",
+    "gpu_instant": "9851 MiB, 26 %",
+    "old_five_conditions_terminal": true,
+    "initial_idle": true,
+    "running": 1,
+    "ready_pending": 3,
+    "newly_registered": 4,
+    "new_baseline_planned": 192,
+    "conditional_soak_max_hours": 24,
+    "worker_pid": 2814363,
+    "worker_alive": true,
+    "lock_held": true,
+    "free_bytes": 5537116160,
+    "completion_results": {
+      "finch_s20261014_app_completion_v1": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 6,
+        "correct": 32,
+        "stability_eligible": false,
+        "stability_attempted": 0,
+        "stability_correct": 0,
+        "stop": "prerequisite_failed",
+        "peak_gpu_bytes": 9897931776,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T05:27:00.936218+00:00"
+      },
+      "cosine_s20261014_app_completion_v1": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 10,
+        "correct": 28,
+        "stability_eligible": false,
+        "stability_attempted": 0,
+        "stability_correct": 0,
+        "stop": "prerequisite_failed",
+        "peak_gpu_bytes": 9897931776,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T05:47:52.777097+00:00"
+      },
+      "oos2r_app_completion_v1": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 0,
+        "correct": 48,
+        "stability_eligible": true,
+        "stability_attempted": 4960,
+        "stability_correct": 4960,
+        "stop": "duration_completed",
+        "peak_gpu_bytes": 10347614208,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T11:53:15.585824+00:00"
+      },
+      "oos3_app_completion_v1": {
+        "expected": 48,
+        "saved": 48,
+        "errors": 0,
+        "unparsed": 0,
+        "correct": 16,
+        "stability_eligible": false,
+        "stability_attempted": 0,
+        "stability_correct": 0,
+        "stop": "prerequisite_failed",
+        "peak_gpu_bytes": 9897931776,
+        "independent_holdout": false,
+        "model_adoption": false,
+        "completed_at": "2026-10-11T11:58:32.498237+00:00"
+      }
+    }
+  },
+  "previous_state_backup": "see six_hour_report_2026-10-11_2240_backups.json"
+}

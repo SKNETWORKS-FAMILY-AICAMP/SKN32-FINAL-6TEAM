@@ -235,6 +235,13 @@ def _fresh_flights(options: list[dict[str, Any]], exclude: set[str], *, direct_o
     return (near + [option for option in fresh if not _near(option, around)])[:SHOWN]
 
 
+def _shown_key(query: dict[str, Any]) -> str | None:
+    """원장(`lg_offer_shown`)에서 이 항목을 부르는 이름 — 숙소 원장 `ledger.item_key("flight", …)` 와 같은 모양(팀끼리 import 하지 않으려고 여기 둔다)."""
+    if query.get("origin") and query.get("destination") and query.get("depart_date"):
+        return f"flight:{query['origin']}-{query['destination']}:{query['depart_date']}"
+    return None
+
+
 def _flight_option(rank: int, option: dict[str, Any], item: Any, people: int) -> dict[str, Any]:
     """새 편 하나 → 식당 · 활동의 「다른 안」 기록 모양 + 항공 칸(항공사 · 구간 · 총액 · 1인 값 · 가장 싼 판매처 · 링크).
     출발 시각은 첫 다리의 날짜 · 시각에 항목 시각의 시간대를 붙인다(출발 공항 현지 시각으로 본다 — 확인 안 함)."""
@@ -366,6 +373,7 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         required_context=["case_state", "policy", "db_facts", "history"],
         policy_optional_capabilities=["flight.assist", "flight.status", "flight.itinerary"],
         allowed_tools=["read.booking", "read.itinerary", "read.booking_search_flights", "read.policy", "read.booking_terms",
+                       "read.offers_shown",
                        *[name for name in ITINERARY_TOOLS if name != "read.itinerary"]],
         knowledge_scope=["travel_cancellation", "travel_access"],
         max_steps=4,                                  # 일정 1 + booking 1 + 여유(규정 질문 · 되돌리기) 2
@@ -604,6 +612,10 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         if not booked:
             return self._unknown(task, "항공편 검색 결과", ctx["evidence"])
         shown = [str(key) for key in item.detail.get("shown") or []]
+        # `[2026-10-13]` 후보는 이제 일정에 싣지 않고 보류 제안으로 내민다 — 앞서 보여 준 편은 숙소 · 항공 원장에서 읽는다(항목 상세 `shown` 은 옛 판 몫)
+        shown_key = _shown_key(query)
+        ledger = self._read(task, "read.offers_shown", {"trip_id": trip["trip_id"], "item_key": shown_key}, ctx["seen"])             if shown_key else None
+        shown += [str(offer["key"]) for offer in (ledger or {}).get("offers") or [] if offer.get("key")]
         exclude = {*shown, *([str(item.detail["key"])] if item.detail.get("key") else [])}
         prefer_direct = query.get("direct_only") is not False
         clock = item.starts_at.strftime("%H:%M")
@@ -650,21 +662,13 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
                   + _missing_note(booked.get("sources"))
                   + " 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
         keys = [o["key"] for o in alternates]
-        detail = {**item.detail, "alternates": alternates, "other_options": [o["name"] for o in alternates],
-                  "shown": [*shown, *keys], "query": query}
         cause = with_request({"category": "customer_request", "type": "requested_options", "from": item.title,
                               "message": task.input_text}, task.context.current_state.get("request_id"))
-        replacement = item.replaced_by(place=None, title=item.title, detail=detail)
-        notice = {"text": answer, "language": "ko", "causes": [cause], "reason": "requested_options", "item_id": str(item.item_id),
-                  "options": [{"key": o["key"], "rank": o["rank"], "name": o["name"], "starts_at": o["starts_at"], "note": None}
-                              for o in alternates],
-                  "other_options": detail["other_options"], "replay": False}
-        change = ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
-                                 replacements={item.item_id: replacement},
-                                 summary={"flight_options": keys, "shown_total": len(detail["shown"]),
-                                          "widened_to_connecting": widened, "near_original": near_count,
-                                          "conditions": record["conditions"], "sources": record["sources"]})
-        return self.settle(task, ctx, change)
+        # ★`[2026-10-13]` 일정은 바꾸지 않는다 — 「선택이 필요해요」 제안으로 내민다(일정 판 그대로). 고르면 고르기 경로(`pending.choose` → `plan_swap`)가 바꾼다
+        return self.offer(task, ctx, item, options=alternates, text=answer, causes=[cause], decision=record, shown_key=shown_key,
+                          summary={"flight_options": keys, "shown_total": len(shown) + len(keys),
+                                   "widened_to_connecting": widened, "near_original": near_count,
+                                   "conditions": record["conditions"], "sources": record["sources"]})
 
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:
         """후보 중 고른 편으로 항목을 바꾼다 — 출발 시각을 그 편으로, 원래 편은 「다른 안」 끝으로. 예약 전(`detail.booked = False`)."""

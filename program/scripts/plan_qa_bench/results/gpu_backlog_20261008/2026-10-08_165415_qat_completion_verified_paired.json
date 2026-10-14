@@ -1,0 +1,28 @@
+{
+  "e4bqat_oos2r_mx": {
+    "control_request": {
+      "total": 1033,
+      "trained_only_correct": 40,
+      "original_only_correct": 42,
+      "exact_p": 0.9121566075526022
+    },
+    "control_no_request": {
+      "total": 974,
+      "trained_only_correct": 301,
+      "original_only_correct": 1,
+      "exact_p": 7.437276599926056e-89
+    },
+    "mixed_request": {
+      "total": 1033,
+      "trained_only_correct": 41,
+      "original_only_correct": 93,
+      "exact_p": 8.233374857241987e-06
+    },
+    "mixed_no_request": {
+      "total": 974,
+      "trained_only_correct": 203,
+      "original_only_correct": 1,
+      "exact_p": 1.5946476649519176e-59
+    }
+  }
+}

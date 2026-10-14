@@ -3,7 +3,7 @@ type: plan
 title: 고객 실시간 제보 — 도착 시각 질문 · 일정 카드 제보 버튼 · 제보 공유
 description: C6(당일 문제)를 고객 제보로 잡는 설계. ①식사 일정 시작 시각에 「영업 중인가요?」를 버튼으로 묻고 ②일정 카드에 원탭 제보 버튼을 두며 ④한 고객의 「닫혀 있어요」를 같은 날 같은 식당을 가는 다른 여행에 반영한다. 기존 알림(②다음 일정) · 요식 원장 관측 표(dn_live_check) · 신고 경로(report_closed) · D-020 위에 얹는다
 status: draft
-tags: [dining, customer-report, c6, notifications]
+tags: [customer-operations, agent, ui]
 owners: [human:정세환]
 domain: travel
 ---

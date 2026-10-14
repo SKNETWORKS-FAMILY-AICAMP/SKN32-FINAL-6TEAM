@@ -1,0 +1,102 @@
+FFFF.FF                                                                  [100%]
+================================== FAILURES ===================================
+___________ test_pending_delay_does_not_capture_a_new_fact_question ___________
+
+decided = {'calculation_calls': [], 'client': <starlette.testclient.TestClient object at 0x000001D90AD29DF0>, 'decider': <tests....sion_unit_web._Decider object at 0x000001D91C3D0470>, 'key': 'acop_u_-sC0wUJ34pzaWqfKKSslYTJu9dKZmnRRr7XUBlGYiJA', ...}
+
+    def test_pending_delay_does_not_capture_a_new_fact_question(decided):
+        _delay(decided)
+        first = _say(decided, "�Ĵ翡 �ʾ��", "isolation-wait")
+        before = _saved(first["case_id"])
+        fact = _say(decided, "���� ���� �Ĵ� �˷���", "isolation-fact")
+>       assert fact["case_id"] != first["case_id"] and fact["status"] == "answered", fact
+E       AssertionError: {'answer': '�� ���� ��������? ���� ��� ��30���̿䡯��� �˷� �ּ���.', 'basis_sources': [], 'case_id': '087b1c9f-6805-4fbf-990d-75b4843110fb', 'case_status': 'waiting_input', ...}
+E       assert ('087b1c9f-6805-4fbf-990d-75b4843110fb' != '087b1c9f-6805-4fbf-990d-75b4843110fb')
+
+tests\e2e\test_web_conversation_isolation.py:39: AssertionError
+__________ test_pending_delay_does_not_capture_a_new_change_request ___________
+
+decided = {'calculation_calls': [], 'client': <starlette.testclient.TestClient object at 0x000001D91CEC7440>, 'decider': <tests....sion_unit_web._Decider object at 0x000001D91CD23FE0>, 'key': 'acop_u_wHVYlS-kt8EONa2990SzcOjyKVKZaNvadXfCtLdzDHg', ...}
+
+    def test_pending_delay_does_not_capture_a_new_change_request(decided):
+        _delay(decided)
+        first = _say(decided, "�Ĵ翡 �ʾ��", "isolation-change-wait")
+        before = _saved(first["case_id"])
+        changed = _say(decided, "���� �ٸ� ���� �ٲ�", "isolation-change")
+>       assert changed["case_id"] != first["case_id"] and changed["status"] == "adjusted", changed
+E       AssertionError: {'answer': '�� ���� ��������? ���� ��� ��30���̿䡯��� �˷� �ּ���.', 'basis_sources': [], 'case_id': 'b31eb715-761e-406a-96f1-5754bdf85c25', 'case_status': 'waiting_input', ...}
+E       assert ('b31eb715-761e-406a-96f1-5754bdf85c25' != 'b31eb715-761e-406a-96f1-5754bdf85c25')
+
+tests\e2e\test_web_conversation_isolation.py:51: AssertionError
+___ test_disabled_pending_owner_allows_independent_fact_but_preserves_reply ___
+
+decided = {'calculation_calls': [], 'client': <starlette.testclient.TestClient object at 0x000001D91D788EC0>, 'decider': <tests....sion_unit_web._Decider object at 0x000001D91CC05A30>, 'key': 'acop_u_4gHY0swD9nQ3wvUAbwHcsKRDzp1gCfouzBz2f8z8UOQ', ...}
+
+    def test_disabled_pending_owner_allows_independent_fact_but_preserves_reply(decided):
+        _delay(decided)
+        first = _say(decided, "�Ĵ翡 �ʾ��", "isolation-disabled-wait")
+        before = _saved(first["case_id"])
+        enable = _disable(decided, "dining")
+        fact = _post(decided, "���� ���� �Ĵ� �˷���", "isolation-disabled-fact")
+>       assert fact.status_code == 200 and fact.json()["case_id"] != first["case_id"], fact.text
+E       AssertionError: {"error":{"code":"team_unavailable","message":"��û�� ������ ��� ����� ����� �� �����ϴ�","team_id":"dining","reason":"disabled","retryable":false}}
+E       assert (503 == 200)
+E        +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+tests\e2e\test_web_conversation_isolation.py:61: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:188 team execution unavailable
+___ test_expired_implicit_reply_becomes_a_new_message_without_discarding_it ___
+
+decided = {'calculation_calls': [], 'client': <starlette.testclient.TestClient object at 0x000001D91CDD9400>, 'decider': <tests....sion_unit_web._Decider object at 0x000001D91FADD2E0>, 'key': 'acop_u_nVSyiX9k5IXC2qbmD_oFN5z51AtZlriAYuvR4nwbCLQ', ...}
+
+    def test_expired_implicit_reply_becomes_a_new_message_without_discarding_it(decided):
+        _delay(decided)
+        first = _say(decided, "�Ĵ翡 �ʾ��", "isolation-expired-wait")
+        _expire(first["case_id"])
+        reply = _post(decided, "30���̿�", "isolation-expired-reply")
+>       assert reply.status_code == 200 and reply.json()["case_id"] != first["case_id"], reply.text
+E       AssertionError: {"error":{"code":"invalid_resume_token","message":"resume token expired"}}
+E       assert (401 == 200)
+E        +  where 401 = <Response [401 Unauthorized]>.status_code
+
+tests\e2e\test_web_conversation_isolation.py:73: AssertionError
+__ test_two_pending_cases_allow_facts_and_reject_an_ambiguous_numeric_reply ___
+
+decided = {'calculation_calls': [], 'client': <starlette.testclient.TestClient object at 0x000001D91CE1CA70>, 'decider': <tests....sion_unit_web._Decider object at 0x000001D91CD70710>, 'key': 'acop_u_EiqM6FxdWH6UgGyolVvDdO62f6RRGoNdVM8ujxBGAEY', ...}
+
+    def test_two_pending_cases_allow_facts_and_reject_an_ambiguous_numeric_reply(decided):
+        _delay(decided)
+        first = _say(decided, "�Ĵ翡 �ʾ��", "isolation-multi-first")
+        second = _say(decided, "�Ĵ翡 �ʾ��", "isolation-multi-second")
+>       assert second["case_id"] != first["case_id"]
+E       AssertionError: assert '1755f1de-9df7-43a8-9c3e-0664207135c0' != '1755f1de-9df7-43a8-9c3e-0664207135c0'
+
+tests\e2e\test_web_conversation_isolation.py:92: AssertionError
+______ test_initial_disabled_request_retries_same_case_and_applies_once _______
+
+decided = {'calculation_calls': [], 'client': <starlette.testclient.TestClient object at 0x000001D91C9329C0>, 'decider': <tests....sion_unit_web._Decider object at 0x000001D91C89CE30>, 'key': 'acop_u_CySExhWszjEswarbzMRSp1EAzEydo47zp49VCpRb7tI', ...}
+
+    def test_initial_disabled_request_retries_same_case_and_applies_once(decided):
+        enable = _disable(decided, "dining")
+        first = _post(decided, "���� �ٸ� ���� �ٲ�", "isolation-initial-retry")
+        assert first.status_code == 503, first.text
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT case_id FROM customer_cases WHERE state_json->'trip_message'->>'request_id'=%s",
+                        ("isolation-initial-retry",))
+>           case_id = str(cur.fetchone()[0])
+                          ^^^^^^^^^^^^^^^^^
+E           TypeError: 'NoneType' object is not subscriptable
+
+tests\e2e\test_web_conversation_isolation.py:106: TypeError
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:188 team execution unavailable
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\conversation-isolation-before-v2.xml -
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_conversation_isolation.py::test_pending_delay_does_not_capture_a_new_fact_question
+FAILED tests/e2e/test_web_conversation_isolation.py::test_pending_delay_does_not_capture_a_new_change_request
+FAILED tests/e2e/test_web_conversation_isolation.py::test_disabled_pending_owner_allows_independent_fact_but_preserves_reply
+FAILED tests/e2e/test_web_conversation_isolation.py::test_expired_implicit_reply_becomes_a_new_message_without_discarding_it
+FAILED tests/e2e/test_web_conversation_isolation.py::test_two_pending_cases_allow_facts_and_reject_an_ambiguous_numeric_reply
+FAILED tests/e2e/test_web_conversation_isolation.py::test_initial_disabled_request_retries_same_case_and_applies_once
+6 failed, 1 passed in 96.65s (0:01:36)

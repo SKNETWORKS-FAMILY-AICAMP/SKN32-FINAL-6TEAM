@@ -1,0 +1,31 @@
+{
+  "source": "newbase",
+  "source_path": "legacy/deployment_baselines/2026-10-12_012805_drift",
+  "actual_function": "handle_trip_message",
+  "db_io": false,
+  "http": false,
+  "rows": [
+    {
+      "status": "routing",
+      "stored_answer": false,
+      "result": {
+        "status": "duplicate",
+        "case_id": "575d181d-ae49-438c-a16c-bc998a9a7659",
+        "case_status": "routing",
+        "answer": "같은 요청을 이미 받았어요."
+      },
+      "recovery_executed": false
+    },
+    {
+      "status": "classifying",
+      "stored_answer": true,
+      "result": {
+        "status": "duplicate",
+        "case_id": "575d181d-ae49-438c-a16c-bc998a9a7659",
+        "case_status": "classifying",
+        "answer": "같은 요청을 이미 받았어요.\n경복궁 주소 합성 답변"
+      },
+      "recovery_executed": false
+    }
+  ]
+}

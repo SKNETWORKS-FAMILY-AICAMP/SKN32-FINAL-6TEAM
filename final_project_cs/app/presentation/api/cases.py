@@ -135,7 +135,8 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
                                    actor_type="api", actor_id=principal.key_id,
                                    idempotency_key=request.idempotency_key, subject_ref=subject,
                                    subject_resolver=subject_resolver, classifier=classifier,
-                                   subject_interpreter=subject_interpreter)
+                                   subject_interpreter=subject_interpreter,
+                                   diagnostic_recorder=getattr(controller, "diagnostic_recorder", None))
             except IdempotencyConflict as exc:
                 raise _error(409, "idempotency_key_reused", str(exc)) from exc
             except SubjectNotFound as exc:
@@ -303,3 +304,13 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
                                     payload={"action_id": str(action_id), "approver_id": request.approver_id}, actor_type="human", actor_id=request.approver_id)
             return _view(repository.get_case(conn, tenant_id=principal.tenant_id, case_id=case_id))
     return router
+
+
+
+
+
+
+
+
+
+

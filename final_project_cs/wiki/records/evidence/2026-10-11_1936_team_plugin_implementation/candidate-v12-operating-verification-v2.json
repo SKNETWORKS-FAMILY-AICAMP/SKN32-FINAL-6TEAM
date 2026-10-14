@@ -1,0 +1,273 @@
+{
+  "candidate": "legacy/deployment_candidates/2026-10-12_022208_plugin_v12",
+  "candidate_manifest_sha256": "ca7e302485dd9db116ec57dfe13713dd82da9c51e3d2648b691d20e42130853b",
+  "runtime_files_verified": 52,
+  "runtime_hash_mismatches": 0,
+  "full_linux": {
+    "log": "candidate-v12-full-linux-v1.log",
+    "sha256": "58a5ac58cea782b6f252f3e24135b5f4246107e5f6e029fef4e720c16e2de8e8",
+    "counts": {
+      "PASSED": 474
+    },
+    "failed": [],
+    "ISOLATED_LINUX_END": {
+      "exit_code": 0,
+      "seconds": 56.288
+    },
+    "ISOLATED_DB_ORCHESTRATION": {
+      "operating_database_connected": false,
+      "operating_volumes_connected": false,
+      "operating_environment_forwarded": false,
+      "image_pull": false,
+      "images": [
+        "sha256:a7c6414e5d7ab15fe26ca7d358b754cff73de6c31d31484e2155b3e9d52989b1",
+        "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+      ],
+      "network_internal": true,
+      "database_tmpfs_destinations": [
+        "/tmp",
+        "/var/lib/postgresql/data"
+      ],
+      "database_mounts": [],
+      "pytest_process_exit_code": 0,
+      "remaining_temporary_containers": [],
+      "remaining_temporary_network": false,
+      "cleanup_errors": []
+    }
+  },
+  "required_linux": {
+    "log": "candidate-v12-required-linux-v1.log",
+    "sha256": "6bbbd5d0ee382406b519c1de11f7f6a0f03c3f2312620b99f6e229bbd50f861f",
+    "counts": {
+      "PASSED": 447,
+      "FAILED": 3
+    },
+    "failed": [
+      {
+        "node": "tests/contract/test_api_key_file.py::test_every_template_name_is_declared_in_settings[ACOP_SEOUL_BUS_API_KEY]",
+        "status": "FAILED"
+      },
+      {
+        "node": "tests/contract/test_retired_domain_assets.py::test_current_runtime_and_business_fixtures_do_not_use_retired_assets",
+        "status": "FAILED"
+      },
+      {
+        "node": "tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned",
+        "status": "FAILED"
+      }
+    ],
+    "ISOLATED_LINUX_END": {
+      "exit_code": 1,
+      "seconds": 9.447
+    },
+    "ISOLATED_DB_ORCHESTRATION": {
+      "operating_database_connected": false,
+      "operating_volumes_connected": false,
+      "operating_environment_forwarded": false,
+      "image_pull": false,
+      "images": [
+        "sha256:8e49ec862b1ff798fe96c8a54af61bdcddcd888ef57070e50dab9c18d3ce2892",
+        "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+      ],
+      "network_internal": true,
+      "database_tmpfs_destinations": [
+        "/tmp",
+        "/var/lib/postgresql/data"
+      ],
+      "database_mounts": [],
+      "pytest_process_exit_code": 1,
+      "remaining_temporary_containers": [],
+      "remaining_temporary_network": false,
+      "cleanup_errors": []
+    }
+  },
+  "required_synthetic_git": {
+    "passed": 3,
+    "total": 3,
+    "log": "candidate-v12-synthetic-git-security-v1.log",
+    "platform": "Windows, same public-input synthetic Git index, no DB"
+  },
+  "required_combined": {
+    "passed": 450,
+    "total": 453,
+    "baseline_mismatches": 3
+  },
+  "DoD_original": {
+    "executed": true,
+    "candidate": "v12 frozen runtime",
+    "command": "python -m scripts.verify_dod_v11",
+    "log": "candidate-v12-dod-linux-v1.log",
+    "log_sha256": "c9bc4894fb143bfb9b601260bce7cac7b9276c4787c49c95f5d0fc65b68bcdaf",
+    "passed": 0,
+    "total": 26,
+    "collection_blocked": true,
+    "missing_module": "app.domains.travel_ops.scenarios.synthetic_services",
+    "runtime_support_overlay_added": false,
+    "orchestration": {
+      "operating_database_connected": false,
+      "operating_volumes_connected": false,
+      "operating_environment_forwarded": false,
+      "image_pull": false,
+      "images": [
+        "sha256:8e49ec862b1ff798fe96c8a54af61bdcddcd888ef57070e50dab9c18d3ce2892",
+        "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+      ],
+      "network_internal": true,
+      "database_tmpfs_destinations": [
+        "/tmp",
+        "/var/lib/postgresql/data"
+      ],
+      "database_mounts": [],
+      "pytest_process_exit_code": 1,
+      "remaining_temporary_containers": [],
+      "remaining_temporary_network": false,
+      "cleanup_errors": []
+    },
+    "partially_collected_tests": 132,
+    "collection_errors": 2,
+    "functional_test_execution_reached": false,
+    "tool_item_ratio_is_test_pass_rate": false
+  },
+  "operating_switch_executed": true,
+  "previous_DoD_v10": {
+    "executed": true,
+    "log": "candidate-v10-dod-linux-v2.log",
+    "passed": 0,
+    "total": 26,
+    "collection_blocked": true,
+    "missing_module": "app.domains.travel_ops.scenarios.synthetic_services",
+    "original_frozen_v10_runtime_only": true
+  },
+  "operating_apply_begin": {
+    "started_at": "2026-10-11T17:34:39.561206+00:00",
+    "mode": "apply",
+    "approval_message": "운영 교체·읽기 전용 확인 승인",
+    "approval_message_timestamp": null
+  },
+  "operating_apply_result": {
+    "success": true,
+    "mode": "apply",
+    "operating_restarts": 2,
+    "actual_api_http": {
+      "health_ok": true,
+      "introspection_status": 200,
+      "active_revision": "c65a6cbd5dd55f57b080cbb9b1919c9bb41bc91ad1c3be17128d2656f1d4e2da",
+      "desired_revision": "c65a6cbd5dd55f57b080cbb9b1919c9bb41bc91ad1c3be17128d2656f1d4e2da",
+      "revision_matches_file": true,
+      "declared_teams": {
+        "activity": true,
+        "booking_handoff": true,
+        "mobility": true,
+        "dining": true,
+        "lodging": true,
+        "flight": true
+      },
+      "loaded_manifest_active": {
+        "activity": true,
+        "booking_handoff": true,
+        "mobility": true,
+        "dining": true,
+        "lodging": true,
+        "flight": true
+      },
+      "teams_match": true,
+      "customer_rows_read": false,
+      "http_methods": [
+        "GET",
+        "GET"
+      ]
+    },
+    "worker": {
+      "normal_loop_sleep_observed": true,
+      "observed_child_kinds": [
+        "sleep",
+        "sweepers"
+      ],
+      "round_summary_count": 1,
+      "job_exit_error_count": 0,
+      "preexisting_failure_categories": [],
+      "new_failure_categories": 0,
+      "worker_global_runtime_revision_claimed": false,
+      "validator_triggered_rounds": 0,
+      "evidence": "normal_worker_script_reached_sleep_after_its_existing_jobs",
+      "numeric_log_counts": {
+        "round_summaries": 1,
+        "composition_fatal": 0,
+        "features_fatal": 0,
+        "job_exit_errors": 0,
+        "fatal_jobs": {},
+        "errored_jobs": {},
+        "structured_failure_markers": 0
+      }
+    },
+    "validator_business_http_writes": 0,
+    "validator_external_messages": 0,
+    "host_settings_files_overwritten": 0,
+    "schema_changes": 0,
+    "normal_worker_continues_existing_jobs": true,
+    "non_target_services": {
+      "observed_services": 2,
+      "unchanged_services": 2,
+      "before": {
+        "tripilot-web": {
+          "container_id": "2d04528f3d1df52b826d00ef2c6154e18453dad8779c50c367ba568023638f73",
+          "image_id": "sha256:d323b587e59cdfad9f2c53a15d8b6e900827958641f3b575c6da0ec449bdf192"
+        },
+        "tripilot-db": {
+          "container_id": "abcf7c37d0251f1bc54141359571b013b1a76b7a5ddd31787ab6a0e004f67b7a",
+          "image_id": "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+        }
+      },
+      "after": {
+        "tripilot-web": {
+          "container_id": "2d04528f3d1df52b826d00ef2c6154e18453dad8779c50c367ba568023638f73",
+          "image_id": "sha256:d323b587e59cdfad9f2c53a15d8b6e900827958641f3b575c6da0ec449bdf192"
+        },
+        "tripilot-db": {
+          "container_id": "abcf7c37d0251f1bc54141359571b013b1a76b7a5ddd31787ab6a0e004f67b7a",
+          "image_id": "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+        }
+      },
+      "observed_change_outside_executor_targets": false,
+      "executor_up_targets": [
+        "tripilot-api",
+        "tripilot-worker"
+      ],
+      "executor_up_no_deps": true,
+      "causal_attribution_of_external_change_claimed": false
+    }
+  },
+  "operating_post_source": {
+    "checked_at": "2026-10-11T17:35:54.029371+00:00",
+    "services": [
+      {
+        "role": "api",
+        "container_id": "be5aa379341ee54e185b3c858a61594afba6adc9fdf484ebf974b592441e8964",
+        "image_id": "sha256:7a4daa194987bdd0e7ac8be67ed3a79f76d5145f48a8b4f158bedc00bea25c75",
+        "same_verified_new_image": true,
+        "running": true,
+        "restart_count": 0,
+        "source_hashes": {
+          "checked": 413,
+          "mismatches": 0
+        }
+      },
+      {
+        "role": "worker",
+        "container_id": "f11a243baa3ebac4e12b1c5a6088d3f5735d6201a1bde163898c1cda8805838a",
+        "image_id": "sha256:7a4daa194987bdd0e7ac8be67ed3a79f76d5145f48a8b4f158bedc00bea25c75",
+        "same_verified_new_image": true,
+        "running": true,
+        "restart_count": 0,
+        "source_hashes": {
+          "checked": 413,
+          "mismatches": 0
+        }
+      }
+    ],
+    "operating_writes": 0,
+    "business_http_writes": 0,
+    "external_messages": 0
+  },
+  "created_at": "2026-10-12T02:41:44.285606+09:00"
+}

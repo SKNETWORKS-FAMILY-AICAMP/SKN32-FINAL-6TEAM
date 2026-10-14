@@ -1,0 +1,75 @@
+........................................................................ [ 20%]
+........................................................................ [ 40%]
+........................................................................ [ 60%]
+....F................................................................... [ 80%]
+.....................................................................    [100%]
+================================== FAILURES ===================================
+____ test_product_service_generation_and_departure_use_corrected_neighbor _____
+
+    def test_product_service_generation_and_departure_use_corrected_neighbor():
+        from app.domains.travel_ops.instances.mobility.engine.departure_context import input_basis
+        from app.domains.travel_ops.instances.mobility.engine.line_order import LineOrder
+        from app.domains.travel_ops.instances.mobility.engine.subway_identity import SubwayStationIndex
+        from .mobility.test_subway_departure_v1 import call, scene
+    
+        rt, context = scene()
+        doc = deepcopy(rt._v.lo.doc)
+        line = doc['lines']['05호선']
+        line['stations'].append({'station_nm': '오목교'})
+        line['edges'].append({'a': '오목교', 'b': '양평', 'grade': '확정', 'travel_min': 3,
+                              'travel_min_grade': '추정', 'dir_a_to_b': 'U', 'dir_b_to_a': 'D'})
+        rt._v.lo = LineOrder(doc)
+        stations = [rt.subway_stations.lookup('05호선', name) for name in ('양평', '영등포구청', '영등포시장')]
+        stations.append({'line_id': '1005', 'station_id': PREVIOUS, 'line': '5호선',
+                         'station': '오목교', 'query_station': '오목교'})
+        rt.subway_stations = SubwayStationIndex({'schema_version': '1.0', 'station_count': 4,
+                                                  'line_count': 1, 'stations': stations}, content_sha256='b' * 64)
+        context['basis'] = input_basis(rt)
+        seen = []
+    
+        def arrival(station, **kw):
+            path = max(kw['allowed_services'], key=lambda s: len(s['path_station_ids']))
+            assert set(path['boarding_neighbor_ids']) == {PREVIOUS, NEXT}
+            row = observed(terminal_station_id=path['path_station_ids'][-1], eta_seconds=480,
+                           received_at=kw['now'].isoformat(),
+                           route_label=path['terminal'] + '행 - 영등포구청방면')
+            got = select(snapshot([row]), **kw)
+            seen.append(got)
+            return got
+    
+>       got = call(rt, context, subway_arrival=arrival)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_direction_v1.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_subway_departure_v1.py:67: in call
+    return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:152: in observe
+    observation = subway_arrival(rail_identity['query_station'], line_id=rail_identity['line_id'],
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+station = '양평'
+kw = {'allowed_services': [{'path_station_ids': ['1005000522', '1005000523'], 'train_status': '일반'}, {'path_station_ids': [...), 'ready_at': datetime.datetime(2026, 10, 9, 10, 6, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), ...}
+path = {'path_station_ids': ['1005000522', '1005000523', '1005000524'], 'train_status': '일반'}
+
+    def arrival(station, **kw):
+        path = max(kw['allowed_services'], key=lambda s: len(s['path_station_ids']))
+>       assert set(path['boarding_neighbor_ids']) == {PREVIOUS, NEXT}
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'boarding_neighbor_ids'
+
+tests\unit\travel\test_subway_direction_v1.py:119: KeyError
+============================== warnings summary ===============================
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1248_지하철_방면과_인접역ID_대조\after-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_product_service_generation_and_departure_use_corrected_neighbor
+1 failed, 356 passed, 1 warning in 11.71s
+Exception ignored in: <function Console.__del__ at 0x0000020736665DA0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

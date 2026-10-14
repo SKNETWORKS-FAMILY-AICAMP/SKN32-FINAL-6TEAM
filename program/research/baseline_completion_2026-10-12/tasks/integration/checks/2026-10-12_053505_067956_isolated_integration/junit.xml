@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="5" failures="8" skipped="0" tests="71" time="23.933" timestamp="2026-10-12T05:35:23.442069+09:00" hostname="playdata"><testcase classname="tests.scenario.test_place_status_policy" name="test_free_observation_precedes_google_and_preserves_times[yes-closed]" time="0.683" /><testcase classname="tests.scenario.test_place_status_policy" name="test_free_observation_precedes_google_and_preserves_times[no-open]" time="0.430" /><testcase classname="tests.scenario.test_place_status_policy" name="test_unverified_observations_never_become_open[wrong_slot]" time="0.496" /><testcase classname="tests.scenario.test_place_status_policy" name="test_unverified_observations_never_become_open[expired]" time="0.436" /><testcase classname="tests.scenario.test_place_status_policy" name="test_unverified_observations_never_become_open[trial]" time="0.423" /><testcase classname="tests.scenario.test_place_status_policy" name="test_unverified_observations_never_become_open[unknown]" time="0.466" /><testcase classname="tests.scenario.test_place_status_policy" name="test_unverified_observations_never_become_open[failed]" time="0.480" /><testcase classname="tests.scenario.test_place_status_policy" name="test_unverified_observations_never_become_open[future]" time="0.468" /><testcase classname="tests.scenario.test_place_status_policy" name="test_wrong_customer_never_calls_free_or_paid" time="0.333" /><testcase classname="tests.scenario.test_place_status_policy" name="test_dawn_first_http_is_reserved_once_and_details_separately" time="0.562"><error message="failed on teardown with &quot;psycopg.errors.ForeignKeyViolation: update or delete on table &quot;tenants&quot; violates foreign key constraint &quot;admin_audit_tenant_id_fkey&quot; on table &quot;admin_audit&quot;&#10;DETAIL:  Key (tenant_id)=(status_db8d4130e006) is still referenced from table &quot;admin_audit&quot;.&quot;">tests\scenario\test_place_status_policy.py:38: in world
+    cleanup_tenant(tenant)
+app\domains\travel_ops\scenarios\case_engine.py:147: in cleanup_tenant
+    cur.execute(sql, (tenant_id,))
+..\..\..\anaconda3\Lib\site-packages\psycopg\cursor.py:117: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ForeignKeyViolation: update or delete on table "tenants" violates foreign key constraint "admin_audit_tenant_id_fkey" on table "admin_audit"
+E   DETAIL:  Key (tenant_id)=(status_db8d4130e006) is still referenced from table "admin_audit".</error></testcase><testcase classname="tests.scenario.test_place_status_policy" name="test_denial_does_not_make_an_http_request[disabled]" time="0.470" /><testcase classname="tests.scenario.test_place_status_policy" name="test_denial_does_not_make_an_http_request[daytime]" time="0.490"><error message="failed on teardown with &quot;psycopg.errors.ForeignKeyViolation: update or delete on table &quot;tenants&quot; violates foreign key constraint &quot;admin_audit_tenant_id_fkey&quot; on table &quot;admin_audit&quot;&#10;DETAIL:  Key (tenant_id)=(status_39586c5d0e73) is still referenced from table &quot;admin_audit&quot;.&quot;">tests\scenario\test_place_status_policy.py:38: in world
+    cleanup_tenant(tenant)
+app\domains\travel_ops\scenarios\case_engine.py:147: in cleanup_tenant
+    cur.execute(sql, (tenant_id,))
+..\..\..\anaconda3\Lib\site-packages\psycopg\cursor.py:117: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ForeignKeyViolation: update or delete on table "tenants" violates foreign key constraint "admin_audit_tenant_id_fkey" on table "admin_audit"
+E   DETAIL:  Key (tenant_id)=(status_39586c5d0e73) is still referenced from table "admin_audit".</error></testcase><testcase classname="tests.scenario.test_place_status_policy" name="test_denial_does_not_make_an_http_request[outside_dawn]" time="0.537"><error message="failed on teardown with &quot;psycopg.errors.ForeignKeyViolation: update or delete on table &quot;tenants&quot; violates foreign key constraint &quot;admin_audit_tenant_id_fkey&quot; on table &quot;admin_audit&quot;&#10;DETAIL:  Key (tenant_id)=(status_2632dbd6da6f) is still referenced from table &quot;admin_audit&quot;.&quot;">tests\scenario\test_place_status_policy.py:38: in world
+    cleanup_tenant(tenant)
+app\domains\travel_ops\scenarios\case_engine.py:147: in cleanup_tenant
+    cur.execute(sql, (tenant_id,))
+..\..\..\anaconda3\Lib\site-packages\psycopg\cursor.py:117: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ForeignKeyViolation: update or delete on table "tenants" violates foreign key constraint "admin_audit_tenant_id_fkey" on table "admin_audit"
+E   DETAIL:  Key (tenant_id)=(status_2632dbd6da6f) is still referenced from table "admin_audit".</error></testcase><testcase classname="tests.scenario.test_place_status_policy" name="test_denial_does_not_make_an_http_request[provider_budget]" time="0.615"><error message="failed on teardown with &quot;psycopg.errors.ForeignKeyViolation: update or delete on table &quot;tenants&quot; violates foreign key constraint &quot;admin_audit_tenant_id_fkey&quot; on table &quot;admin_audit&quot;&#10;DETAIL:  Key (tenant_id)=(status_f324ef0697a7) is still referenced from table &quot;admin_audit&quot;.&quot;">tests\scenario\test_place_status_policy.py:38: in world
+    cleanup_tenant(tenant)
+app\domains\travel_ops\scenarios\case_engine.py:147: in cleanup_tenant
+    cur.execute(sql, (tenant_id,))
+..\..\..\anaconda3\Lib\site-packages\psycopg\cursor.py:117: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ForeignKeyViolation: update or delete on table "tenants" violates foreign key constraint "admin_audit_tenant_id_fkey" on table "admin_audit"
+E   DETAIL:  Key (tenant_id)=(status_f324ef0697a7) is still referenced from table "admin_audit".</error></testcase><testcase classname="tests.scenario.test_place_status_policy" name="test_place_mismatch_is_one_distinct_diagnostic_and_no_details" time="0.621"><error message="failed on teardown with &quot;psycopg.errors.ForeignKeyViolation: update or delete on table &quot;tenants&quot; violates foreign key constraint &quot;admin_audit_tenant_id_fkey&quot; on table &quot;admin_audit&quot;&#10;DETAIL:  Key (tenant_id)=(status_601145e69ec7) is still referenced from table &quot;admin_audit&quot;.&quot;">tests\scenario\test_place_status_policy.py:38: in world
+    cleanup_tenant(tenant)
+app\domains\travel_ops\scenarios\case_engine.py:147: in cleanup_tenant
+    cur.execute(sql, (tenant_id,))
+..\..\..\anaconda3\Lib\site-packages\psycopg\cursor.py:117: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ForeignKeyViolation: update or delete on table "tenants" violates foreign key constraint "admin_audit_tenant_id_fkey" on table "admin_audit"
+E   DETAIL:  Key (tenant_id)=(status_601145e69ec7) is still referenced from table "admin_audit".</error></testcase><testcase classname="tests.scenario.test_place_status_policy" name="test_dawn_unknown_retries_without_marking_day_complete_and_notifies_once" time="4.087"><failure message="psycopg.ProgrammingError: only '%s', '%b', '%t' are allowed as placeholders, got '%''">tests\scenario\test_place_status_policy.py:153: in test_dawn_unknown_retries_without_marking_day_complete_and_notifies_once
+    count = conn.execute("SELECT count(*) FROM outbox WHERE tenant_id=%s AND dedupe_key LIKE 'dawn-deferred:%'", (w.tenant,)).fetchone()[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.ProgrammingError: only '%s', '%b', '%t' are allowed as placeholders, got '%''</failure></testcase><testcase classname="tests.scenario.test_place_status_policy" name="test_daytime_closed_and_failed_merge_preserve_other_failures" time="0.404" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_verdict_covers_the_whole_planned_slot[payload0-13:00-13:50-closed]" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_verdict_covers_the_whole_planned_slot[payload1-13:00-13:50-closed]" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_verdict_covers_the_whole_planned_slot[payload2-13:00-13:50-open]" time="0.003" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_verdict_covers_the_whole_planned_slot[payload3-13:00-13:50-open]" time="0.003" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_verdict_covers_the_whole_planned_slot[payload4-13:00-13:50-closed]" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_verdict_covers_the_whole_planned_slot[payload5-13:00-13:50-closed]" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_verdict_covers_the_whole_planned_slot[payload6-00:30-01:30-open]" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_verdict_covers_the_whole_planned_slot[payload7-13:00-13:50-closed]" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_verdict_covers_the_whole_planned_slot[payload8-13:00-13:50-unknown]" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_adapter_sends_key_and_field_mask_and_matches_only_nearby" time="0.003" /><testcase classname="tests.scenario.test_dawn_check" name="test_an_error_body_or_status_is_a_counted_miss_not_a_verdict" time="0.003" /><testcase classname="tests.scenario.test_dawn_check" name="test_no_key_no_adapter" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_no_budget_no_adapter" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_budget_refuses_once_the_cap_is_reached_and_the_call_is_never_made" time="0.294" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_month_cap_holds_across_budget_objects_like_separate_processes" time="0.282" /><testcase classname="tests.scenario.test_dawn_check" name="test_counting_without_a_cap_passes_the_free_tier_and_marks_the_crossing_once" time="0.334" /><testcase classname="tests.scenario.test_dawn_check" name="test_prices_use_the_matched_google_id_and_leave_unmatched_places_unknown" time="0.119" /><testcase classname="tests.scenario.test_dawn_check" name="test_prices_fall_back_to_the_ledger_google_id_a_person_verified" time="0.129" /><testcase classname="tests.scenario.test_dawn_check" name="test_an_unknown_meter_is_refused" time="0.002" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_configured_caps_stay_under_the_free_tier" time="0.013" /><testcase classname="tests.scenario.test_dawn_check" name="test_without_a_key_it_says_so_and_calls_nothing" time="0.170" /><testcase classname="tests.scenario.test_dawn_check" name="test_outside_the_dawn_window_it_does_not_call_the_restaurant" time="0.231" /><testcase classname="tests.scenario.test_dawn_check" name="test_a_lunch_that_is_closed_today_is_replaced_before_the_day_starts" time="1.381" /><testcase classname="tests.scenario.test_dawn_check" name="test_the_day_start_notice_carries_what_changed_at_dawn" time="1.203" /><testcase classname="tests.scenario.test_dawn_check" name="test_ask_first_asks_instead_of_replacing" time="0.995" /><testcase classname="tests.scenario.test_dawn_check" name="test_unmatched_and_failed_calls_are_counted_not_called_open" time="1.293" /><testcase classname="tests.scenario.test_dawn_check" name="test_an_activity_closed_today_is_replaced_with_one_open_at_that_time" time="1.109" /><testcase classname="tests.scenario.test_dawn_check" name="test_an_activity_with_nothing_open_nearby_is_left_for_a_person_not_swapped_blindly" time="1.026" /><testcase classname="tests.scenario.test_dawn_check" name="test_a_dawn_replacement_that_fails_the_whole_recheck_is_counted_and_not_written" time="1.155" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_linked_ledger_verdict_wins_over_missing_or_stale_core_hours[True-True]" time="0.004" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_linked_ledger_verdict_wins_over_missing_or_stale_core_hours[False-False]" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_linked_ledger_verdict_wins_over_missing_or_stale_core_hours[None-None]" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_unlinked_place_keeps_the_existing_hours_check" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_candidates_batch_only_nearby_dining_slots_and_keep_unknown_out" time="0.004" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_delay_checks_the_original_at_the_delayed_slot_then_the_alternative" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_closed_report_batches_actual_arrival_slots_instead_of_querying_each_place_twice" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_dawn_replacement_uses_ledger_at_the_original_planned_slot" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_dining_team_reads_candidate_states_in_one_scoped_tool_call" time="0.007" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_trip_desk_uses_its_tenant_when_reading_alternative_states" time="0.002"><failure message="AttributeError: 'object' object has no attribute 'cursor'">tests\unit\travel\test_dining_alternative_opening.py:161: in test_trip_desk_uses_its_tenant_when_reading_alternative_states
+    plan = desk.report_closed(trip_id=uuid4(), at=at("12:00"), message="휴무")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\conversation\trip_desk.py:147: in report_closed
+    self._with_nearby(trip_id, meal, places, plan), gate=True)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\conversation\trip_desk.py:99: in _with_nearby
+    first = plan(places)
+            ^^^^^^^^^^^^
+app\domains\travel_ops\components\conversation\trip_desk.py:142: in plan
+    return plan_closed(trip=trip, items=items, places=candidates, at=at, message=message,
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:712: in plan_closed
+    candidates = dining_candidates(
+app\domains\travel_ops\components\planning\replan.py:475: in dining_candidates
+    states = (state_lookup([{"place_id": c.key, "at": c.starts_at, "until": c.ends_at}
+app\domains\travel_ops\components\conversation\trip_desk.py:120: in _dining_states
+    return dining_ledger.states(conn, self.store.tenant_id, slots)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\team_hooks\dining_ledger.py:78: in states
+    return _selected_0(conn, tenant_id, slots, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\ledger.py:303: in dining_states
+    return {str(slot["place_id"]): dining_state(conn, tenant_id, slot["place_id"],
+app\domains\travel_ops\instances\dining\ledger.py:222: in dining_state
+    if not ledger_ready(conn):
+           ^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\ledger.py:86: in ledger_ready
+    with conn.cursor() as cur:
+         ^^^^^^^^^^^
+E   AttributeError: 'object' object has no attribute 'cursor'</failure></testcase><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_batch_read_tool_uses_scope_tenant_and_existing_ledger_lookup" time="0.002" /><testcase classname="tests.unit.travel.test_dining_alternative_opening" name="test_dawn_check_wires_ledger_without_calling_google_for_alternatives" time="0.014"><failure message="AttributeError: 'types.SimpleNamespace' object has no attribute 'cursor'">tests\unit\travel\test_dining_alternative_opening.py:220: in test_dawn_check_wires_ledger_without_calling_google_for_alternatives
+    checker._check(uuid4(), item, item.starts_at.date(), [origin, candidate], result)
+app\domains\travel_ops\components\watch\dawn_check.py:161: in _check
+    return self._apply_verdict(trip_id, meal, day, places, result, state, detail)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\dawn_check.py:188: in _apply_verdict
+    plan = replan(places)
+           ^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\dawn_check.py:183: in replan
+    return plan_closed_on_day(trip=trip, items=items, places=candidates, meal=meal, source=source,
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:755: in plan_closed_on_day
+    candidates = dining_candidates(
+app\domains\travel_ops\components\planning\replan.py:475: in dining_candidates
+    states = (state_lookup([{"place_id": c.key, "at": c.starts_at, "until": c.ends_at}
+app\domains\travel_ops\components\team_hooks\dining_ledger.py:86: in &lt;lambda&gt;
+    return lambda slots: _selected_0(conn, tenant_id, slots, **kwargs)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\ledger.py:303: in dining_states
+    return {str(slot["place_id"]): dining_state(conn, tenant_id, slot["place_id"],
+app\domains\travel_ops\instances\dining\ledger.py:222: in dining_state
+    if not ledger_ready(conn):
+           ^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\ledger.py:86: in ledger_ready
+    with conn.cursor() as cur:
+         ^^^^^^^^^^^
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'cursor'</failure></testcase><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_an_unreadable_ledger_leaves_the_places_as_they_were" time="0.002" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_a_closed_report_finds_an_alternative_from_the_ledger" time="0.003"><failure message="AssertionError: assert [] == [['토속촌삼계탕']]&#10;  &#10;  Right contains one more item: ['토속촌삼계탕']&#10;  Use -v to get more diff">tests\unit\travel\test_dining_nearby_fallback.py:83: in test_a_closed_report_finds_an_alternative_from_the_ledger
+    assert calls == [["토속촌삼계탕"]]                    # 그 식사 하나 기준 — 저녁은 보지 않는다
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: assert [] == [['토속촌삼계탕']]
+E     
+E     Right contains one more item: ['토속촌삼계탕']
+E     Use -v to get more diff</failure></testcase><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_a_closed_report_replans_when_the_ledger_removes_an_existing_alias" time="0.002"><failure message="AssertionError: assert (False)&#10; +  where False = isinstance(ItineraryChange(reason='customer_report', causes=[{'category': 'customer_report', 'type': 'closed_today', 'message': '...'longitude': 126.9715, 'attributes': {}})}, full_items=None, summary={'to': '원장 별칭', 'price': 'unknown'}, fallbacks=[]), &lt;class 'app.domains.travel_ops.components.itinerary.itinerary_changes.NoChange'&gt;)">tests\unit\travel\test_dining_nearby_fallback.py:97: in test_a_closed_report_replans_when_the_ledger_removes_an_existing_alias
+    assert isinstance(plan, NoChange) and plan.status == "unresolved"
+E   AssertionError: assert (False)
+E    +  where False = isinstance(ItineraryChange(reason='customer_report', causes=[{'category': 'customer_report', 'type': 'closed_today', 'message': '...'longitude': 126.9715, 'attributes': {}})}, full_items=None, summary={'to': '원장 별칭', 'price': 'unknown'}, fallbacks=[]), &lt;class 'app.domains.travel_ops.components.itinerary.itinerary_changes.NoChange'&gt;)</failure></testcase><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_a_delay_that_still_fits_reads_nothing_from_the_ledger" time="0.005" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_a_delay_that_breaks_the_meal_looks_around_the_next_meal_only" time="0.003"><failure message="AssertionError: assert [] == [['저녁집']]&#10;  &#10;  Right contains one more item: ['저녁집']&#10;  Use -v to get more diff">tests\unit\travel\test_dining_nearby_fallback.py:118: in test_a_delay_that_breaks_the_meal_looks_around_the_next_meal_only
+    assert calls == [["저녁집"]]
+E   AssertionError: assert [] == [['저녁집']]
+E     
+E     Right contains one more item: ['저녁집']
+E     Use -v to get more diff</failure></testcase><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_no_meal_means_no_ledger_read" time="0.002" /><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[False]" time="0.002"><failure message="TypeError: test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed.&lt;locals&gt;.&lt;lambda&gt;() got an unexpected keyword argument 'source'">tests\unit\travel\test_dining_nearby_fallback.py:167: in test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed
+    checker._check(uuid.uuid4(), item, item.starts_at.date(), [lunch, alt] if remove_alias else [lunch], result)
+app\domains\travel_ops\components\watch\dawn_check.py:161: in _check
+    return self._apply_verdict(trip_id, meal, day, places, result, state, detail)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\dawn_check.py:195: in _apply_verdict
+    self._insert_check(conn, trip_id, meal, day, "closed", detail, source=source)
+E   TypeError: test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed.&lt;locals&gt;.&lt;lambda&gt;() got an unexpected keyword argument 'source'</failure></testcase><testcase classname="tests.unit.travel.test_dining_nearby_fallback" name="test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed[True]" time="0.002"><failure message="AttributeError: 'types.SimpleNamespace' object has no attribute 'cursor'">tests\unit\travel\test_dining_nearby_fallback.py:167: in test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_removed
+    checker._check(uuid.uuid4(), item, item.starts_at.date(), [lunch, alt] if remove_alias else [lunch], result)
+app\domains\travel_ops\components\watch\dawn_check.py:161: in _check
+    return self._apply_verdict(trip_id, meal, day, places, result, state, detail)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\dawn_check.py:188: in _apply_verdict
+    plan = replan(places)
+           ^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\dawn_check.py:183: in replan
+    return plan_closed_on_day(trip=trip, items=items, places=candidates, meal=meal, source=source,
+app\domains\travel_ops\components\itinerary\itinerary_changes.py:755: in plan_closed_on_day
+    candidates = dining_candidates(
+app\domains\travel_ops\components\planning\replan.py:475: in dining_candidates
+    states = (state_lookup([{"place_id": c.key, "at": c.starts_at, "until": c.ends_at}
+app\domains\travel_ops\components\team_hooks\dining_ledger.py:86: in &lt;lambda&gt;
+    return lambda slots: _selected_0(conn, tenant_id, slots, **kwargs)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\ledger.py:303: in dining_states
+    return {str(slot["place_id"]): dining_state(conn, tenant_id, slot["place_id"],
+app\domains\travel_ops\instances\dining\ledger.py:222: in dining_state
+    if not ledger_ready(conn):
+           ^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\dining\ledger.py:86: in ledger_ready
+    with conn.cursor() as cur:
+         ^^^^^^^^^^^
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'cursor'</failure></testcase></testsuite></testsuites>

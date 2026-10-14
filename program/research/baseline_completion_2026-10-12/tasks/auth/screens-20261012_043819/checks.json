@@ -1,0 +1,260 @@
+[
+  {
+    "screen": "login",
+    "width": 375,
+    "scroll": 375,
+    "bodySize": "16px",
+    "controls": [
+      {
+        "name": "로그인 화면 열기",
+        "tag": "A",
+        "width": 123.25,
+        "height": 44,
+        "size": "16px"
+      },
+      {
+        "name": "로그인 후 다시 확인",
+        "tag": "BUTTON",
+        "width": 293,
+        "height": 47.59375,
+        "size": "16px"
+      }
+    ],
+    "keyboard_focus": {
+      "tag": "A",
+      "text": "로그인 화면 열기",
+      "outline": "solid"
+    }
+  },
+  {
+    "screen": "login",
+    "width": 1280,
+    "scroll": 1280,
+    "bodySize": "16px",
+    "controls": [
+      {
+        "name": "로그인 화면 열기",
+        "tag": "A",
+        "width": 123.25,
+        "height": 44,
+        "size": "16px"
+      },
+      {
+        "name": "로그인 후 다시 확인",
+        "tag": "BUTTON",
+        "width": 182.875,
+        "height": 47.59375,
+        "size": "16px"
+      }
+    ],
+    "keyboard_focus": {
+      "tag": "A",
+      "text": "로그인 화면 열기",
+      "outline": "solid"
+    }
+  },
+  {
+    "screen": "consent",
+    "width": 375,
+    "scroll": 375,
+    "bodySize": "16px",
+    "controls": [
+      {
+        "name": "연결 허용",
+        "tag": "BUTTON",
+        "width": 142.5,
+        "height": 47.59375,
+        "size": "16px"
+      },
+      {
+        "name": "연결 취소",
+        "tag": "BUTTON",
+        "width": 142.5,
+        "height": 47.59375,
+        "size": "16px"
+      },
+      {
+        "name": "연결 목록 열기",
+        "tag": "A",
+        "width": 107.25,
+        "height": 44,
+        "size": "16px"
+      }
+    ],
+    "keyboard_focus": {
+      "tag": "BUTTON",
+      "text": "연결 허용",
+      "outline": "solid"
+    }
+  },
+  {
+    "screen": "consent",
+    "width": 1280,
+    "scroll": 1280,
+    "bodySize": "16px",
+    "controls": [
+      {
+        "name": "연결 허용",
+        "tag": "BUTTON",
+        "width": 107.625,
+        "height": 47.59375,
+        "size": "16px"
+      },
+      {
+        "name": "연결 취소",
+        "tag": "BUTTON",
+        "width": 107.625,
+        "height": 47.59375,
+        "size": "16px"
+      },
+      {
+        "name": "연결 목록 열기",
+        "tag": "A",
+        "width": 107.25,
+        "height": 44,
+        "size": "16px"
+      }
+    ],
+    "keyboard_focus": {
+      "tag": "BUTTON",
+      "text": "연결 허용",
+      "outline": "solid"
+    }
+  },
+  {
+    "screen": "connections",
+    "width": 375,
+    "scroll": 375,
+    "bodySize": "16px",
+    "controls": [
+      {
+        "name": "q",
+        "tag": "INPUT",
+        "width": 293,
+        "height": 44,
+        "size": "16px"
+      },
+      {
+        "name": "전체 상태\n연결됨\n만료됨\n폐기됨",
+        "tag": "SELECT",
+        "width": 293,
+        "height": 44,
+        "size": "16px"
+      },
+      {
+        "name": "연결 검색",
+        "tag": "BUTTON",
+        "width": 293,
+        "height": 47.59375,
+        "size": "16px"
+      },
+      {
+        "name": "연결 폐기 확인",
+        "tag": "A",
+        "width": 107.25,
+        "height": 44,
+        "size": "16px"
+      }
+    ],
+    "keyboard_focus": {
+      "tag": "INPUT",
+      "text": "",
+      "outline": "solid"
+    }
+  },
+  {
+    "screen": "connections",
+    "width": 1280,
+    "scroll": 1280,
+    "bodySize": "16px",
+    "controls": [
+      {
+        "name": "q",
+        "tag": "INPUT",
+        "width": 494,
+        "height": 44,
+        "size": "16px"
+      },
+      {
+        "name": "전체 상태\n연결됨\n만료됨\n폐기됨",
+        "tag": "SELECT",
+        "width": 494,
+        "height": 44,
+        "size": "16px"
+      },
+      {
+        "name": "연결 검색",
+        "tag": "BUTTON",
+        "width": 107.625,
+        "height": 47.59375,
+        "size": "16px"
+      },
+      {
+        "name": "연결 폐기 확인",
+        "tag": "A",
+        "width": 107.25,
+        "height": 44,
+        "size": "16px"
+      }
+    ],
+    "keyboard_focus": {
+      "tag": "INPUT",
+      "text": "",
+      "outline": "solid"
+    }
+  },
+  {
+    "screen": "disconnect",
+    "width": 375,
+    "scroll": 375,
+    "bodySize": "16px",
+    "controls": [
+      {
+        "name": "연결 목록으로 돌아가기",
+        "tag": "A",
+        "width": 171.25,
+        "height": 44,
+        "size": "16px"
+      },
+      {
+        "name": "연결 폐기",
+        "tag": "BUTTON",
+        "width": 293,
+        "height": 47.59375,
+        "size": "16px"
+      }
+    ],
+    "keyboard_focus": {
+      "tag": "BUTTON",
+      "text": "연결 폐기",
+      "outline": "solid"
+    }
+  },
+  {
+    "screen": "disconnect",
+    "width": 1280,
+    "scroll": 1280,
+    "bodySize": "16px",
+    "controls": [
+      {
+        "name": "연결 목록으로 돌아가기",
+        "tag": "A",
+        "width": 171.25,
+        "height": 44,
+        "size": "16px"
+      },
+      {
+        "name": "연결 폐기",
+        "tag": "BUTTON",
+        "width": 107.625,
+        "height": 47.59375,
+        "size": "16px"
+      }
+    ],
+    "keyboard_focus": {
+      "tag": "BUTTON",
+      "text": "연결 폐기",
+      "outline": "solid"
+    }
+  }
+]

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { LanguageButton } from "@/components/ui/language-picker";
 import { requiredAgreed, type ConsentCode } from "@/features/consent/consent-model";
 import { saveConsents } from "@/features/consent/consent-sync";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
@@ -19,8 +20,16 @@ import { PreferencesSummary, QuestionCarousel } from "./preferences";
 import { TermsCardBody, TermsReader, termsDoc } from "./terms";
 import styles from "./onboarding.module.css";
 
+/**
+ * ★`[2026-10-12 사용자 지시]` The terms card opens with its animation once. The consent gate first shows the open terms while it checks the server,
+ * then sends the customer to `/start?terms=required` — that second drawing of the same card is shown without the opening animation.
+ */
+let termsShownOnce = false;
+
 /** Discord alerts, terms and travel preferences before the first plan. Everything stays in page state. */
 export function Onboarding({ termsRequired = false }: { termsRequired?: boolean } = {}) {
+  const [quietOpen] = useState(() => termsRequired && termsShownOnce);
+  useEffect(() => { termsShownOnce = termsRequired && !quietOpen; }, [termsRequired, quietOpen]);
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
@@ -134,7 +143,9 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
   /**
    * 「동의하고 다음으로」: this press is what records the consent (the browser's copy at once, the server's record right behind it).
    * ★`[2026-10-06 사용자 지시]` The first agreement goes straight on to registering a plan — the preference survey is no longer part of the first run
-   *   (it stays here as the third card, opened from the menu / My page). A customer who already agreed and only changes their boxes stays on this screen.
+   *   (it stays here as the third card, opened from the menu / My page).
+   * ★`[2026-10-12 사용자 지시]` A customer who already agreed (e.g. sent back here because the consent check failed) goes to My trips —
+   *   this press never opens the preference card (「여행 취향 설정 완료」 kept coming back after re-agreeing).
    */
   function continueTerms() {
     if (!requiredAgreed(state.choices)) return;
@@ -142,9 +153,7 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
     void saveConsents(state.choices, language);
     flushWebhook(state.choices.alert_channel);
     feedback("complete");
-    if (firstAgreement) { router.push(routes.newTrip); return; }
-    setState((current) => ({ ...current, open: 2 }));
-    setSceneStage(2);
+    router.push(firstAgreement ? routes.newTrip : routes.trips);
   }
 
   function closeTerms() {
@@ -173,8 +182,8 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
     <div className={styles.cardContent} id={`content-${id}`} inert={state.open !== id} aria-hidden={state.open !== id}><div className={styles.contentInner}><div className={styles.cardPadding}><div className={styles.divider} />{content}</div></div></div>
   </section>;
 
-  return <DeviceFrame headerInert={termsOpen}>
-    <div className={styles.setup} data-terms={termsOpen}>
+  return <DeviceFrame headerInert={termsOpen} headerExtra={<LanguageButton />}>
+    <div className={styles.setup} data-terms={termsOpen} data-quiet-open={quietOpen || undefined}>
       <Scene stage={sceneStage} step={state.step - INTRO_STEP} totalSteps={questions.length + 1} complete={state.complete} pulse={pulse} sizes="(max-width: 720px) 100vw, 402px" />
       <div className={styles.scroller} data-locked={expanded} inert={termsOpen}>
         <main id="main-content" className={`${styles.phone} ${firstRender ? styles.firstRender : ""}`}>
@@ -185,7 +194,7 @@ export function Onboarding({ termsRequired = false }: { termsRequired?: boolean 
           </section>
           <div className={styles.stack}>
             {card(0, false,
-              cardHead(0, t("디스코드 알림", "Discord alerts"), state.webhook.trim() ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : t("여행 알림을 받을 디스코드 채널.", "The Discord channel for your trip alerts."), false, false,
+              cardHead(0, t("디스코드 알림", "Discord alerts"), state.webhook.trim() ? t("입력했어요 · 설정에서 바꿀 수 있어요", "Entered · you can change it in Settings") : t("여행 알림을 받을 디스코드 채널.", "The Discord channel for your trip alerts."), false, false,
                 <span className={styles.optional}>{t("선택", "Optional")}</span>),
               <ContactBody t={t} webhook={state.webhook} webhookError={webhookError} webhookInput={webhookInput}
                 onWebhook={editWebhook} onContinue={() => openCard(1)} />)}

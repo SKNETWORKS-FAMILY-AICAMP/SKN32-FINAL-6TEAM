@@ -1,0 +1,45 @@
+{
+  "created_at": "2026-10-09T11:31:06.774937+09:00",
+  "source": "서울특별시 OA-12764 공개 sample",
+  "license": "공공누리 제1유형, 출처: 서울특별시",
+  "requests": [
+    {
+      "station": "양평",
+      "started_at": "2026-10-09T11:31:06.631638+09:00",
+      "finished_at": "2026-10-09T11:31:06.727490+09:00",
+      "url": "http://swopenapi.seoul.go.kr/api/subway/sample/json/realtimeStationArrival/0/5/%EC%96%91%ED%8F%89",
+      "http_status": 200,
+      "raw_path": "datasets/mobility/raw/2026-10-09_1125_공식병기역명_종착경로복구_public_retry/response-1-v1.json",
+      "raw_sha256": "547e4bb6bcb74975a547318a13d7461efb3279e353da79a3b1a942cb84637737",
+      "response_code": null,
+      "provider_total": null,
+      "normalized_rows": null,
+      "normalized_replay": true,
+      "misses": {
+        "body_error": 1
+      },
+      "claim": "한 시각의 최대5행 공개 부분응답. 전체 서비스 제공/실제 도착 오차/탑승/독립 웹 경로 성능 아님."
+    },
+    {
+      "station": "군자(능동)",
+      "started_at": "2026-10-09T11:31:06.737167+09:00",
+      "finished_at": "2026-10-09T11:31:06.770822+09:00",
+      "url": "http://swopenapi.seoul.go.kr/api/subway/sample/json/realtimeStationArrival/0/5/%EA%B5%B0%EC%9E%90%28%EB%8A%A5%EB%8F%99%29",
+      "http_status": 200,
+      "raw_path": "datasets/mobility/raw/2026-10-09_1125_공식병기역명_종착경로복구_public_retry/response-2-v1.json",
+      "raw_sha256": "547e4bb6bcb74975a547318a13d7461efb3279e353da79a3b1a942cb84637737",
+      "response_code": null,
+      "provider_total": null,
+      "normalized_rows": null,
+      "normalized_replay": true,
+      "misses": {
+        "body_error": 1
+      },
+      "claim": "한 시각의 최대5행 공개 부분응답. 전체 서비스 제공/실제 도착 오차/탑승/독립 웹 경로 성능 아님."
+    }
+  ],
+  "public_requests_attempted": 2,
+  "map_developer_api_calls": 0,
+  "actual_boarding_payment": 0,
+  "raw_dir": "datasets/mobility/raw/2026-10-09_1125_공식병기역명_종착경로복구_public_retry"
+}

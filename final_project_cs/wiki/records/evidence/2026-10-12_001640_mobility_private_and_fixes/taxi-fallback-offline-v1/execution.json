@@ -1,0 +1,16 @@
+{
+  "args": [
+    "-m",
+    "not live",
+    "tests/unit/travel/mobility/test_taxi_fallback.py",
+    "-q",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\taxi-fallback-offline-v1\\temp",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\taxi-fallback-offline-v1\\after.xml"
+  ],
+  "exit_code": 0,
+  "elapsed_s": 73.52,
+  "network": "Only current-thread standard socketpair internal loopback connect is allowed; other connect/create_connection/connect_ex blocked",
+  "change": "Explicit empty GraphHopper URL and Seoul key in local-router test runtime; assertions unchanged"
+}

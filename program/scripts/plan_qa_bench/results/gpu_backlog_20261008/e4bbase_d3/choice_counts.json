@@ -1,0 +1,242 @@
+{
+  "model": "Gemma-4-E4B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "Instruct release",
+  "suite": "D3",
+  "saved": 360,
+  "expected": 360,
+  "missing": 0,
+  "failed_or_unparsed": 2,
+  "single_choice_expected": 360,
+  "compound_diagnostic_total": 0,
+  "positive": {
+    "total": 120,
+    "correct": 103,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.7848050551014282,
+      0.9096312089651676
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.031019166418703486
+    ]
+  },
+  "negative": {
+    "total": 240,
+    "correct": 219,
+    "false_pick": 19,
+    "failed_or_missing": 2,
+    "correct_wilson95": [
+      0.8699448520048005,
+      0.9420581640434134
+    ],
+    "false_pick_wilson95": [
+      0.05126524186067317,
+      0.12032764075680552
+    ]
+  },
+  "subtypes": {
+    "change_request": {
+      "total": 7,
+      "correct": 7,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6456695649333126,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        5.551115123125783e-17,
+        0.35433043506668743
+      ]
+    },
+    "confusable_name": {
+      "total": 14,
+      "correct": 14,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7846891972623643,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.3877787807814457e-17,
+        0.2153108027376358
+      ]
+    },
+    "context_pronoun": {
+      "total": 6,
+      "correct": 6,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6096657120978346,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        2.7755575615628914e-17,
+        0.3903342879021653
+      ]
+    },
+    "duplicate_place": {
+      "total": 9,
+      "correct": 9,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7008549515804559,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.2991450484195441
+      ]
+    },
+    "nameless_description": {
+      "total": 16,
+      "correct": 12,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.5050168346449122,
+        0.8981793250878696
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.1936076805344365
+      ]
+    },
+    "negation": {
+      "total": 6,
+      "correct": 5,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.43649717781352987,
+        0.9699466302516935
+      ],
+      "false_pick_wilson95": [
+        2.7755575615628914e-17,
+        0.3903342879021653
+      ]
+    },
+    "ordinal_relative": {
+      "total": 12,
+      "correct": 10,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.5519691377470266,
+        0.9530348578161463
+      ],
+      "false_pick_wilson95": [
+        2.7755575615628914e-17,
+        0.24249400665524085
+      ]
+    },
+    "synth_chat_A": {
+      "total": 120,
+      "correct": 117,
+      "false_pick": 3,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9290699666721339,
+        0.9914618252300978
+      ],
+      "false_pick_wilson95": [
+        0.008538174769902228,
+        0.0709300333278661
+      ]
+    },
+    "synth_chat_B": {
+      "total": 120,
+      "correct": 102,
+      "false_pick": 16,
+      "failed_or_missing": 2,
+      "correct_wilson95": [
+        0.775324706432755,
+        0.9029618770741527
+      ],
+      "false_pick_wilson95": [
+        0.08376608962687311,
+        0.20564796574684285
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 41,
+      "correct": 31,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6065666377742431,
+        0.8617499726190967
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.08566757018443186
+      ]
+    },
+    "typo_slang": {
+      "total": 9,
+      "correct": 9,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7008549515804559,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.2991450484195441
+      ]
+    }
+  },
+  "failed_records": [
+    {
+      "i": 800140,
+      "set": "d3",
+      "qi": 140,
+      "type": "synth_chat_B",
+      "gold": null,
+      "content": "{\"item\": [27, 32]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 478
+    },
+    {
+      "i": 800210,
+      "set": "d3",
+      "qi": 210,
+      "type": "synth_chat_B",
+      "gold": null,
+      "content": "{\"item\": [4, 11, 14, 3",
+      "parsed": false,
+      "pick": null,
+      "ms": 405
+    }
+  ],
+  "answer_sha256": "d11e34627fb3a27a2ca9f5faf0718a5c4f415af63e3e478b1896a28217ec44f7",
+  "gold_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+  "execution": {
+    "job": {
+      "id": "e4bbase_d3",
+      "label": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "prompts": "/workspace/heavy/all_prompts_d3.json",
+      "script": "/workspace/heavy/d_test_llama.py",
+      "tag": "d3_backlog_e4bbase",
+      "port": 8401,
+      "logprobs": "0",
+      "expected": 360
+    },
+    "started": "2026-10-08T02:02:16.810545+00:00",
+    "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+    "script_sha256": "e84b538e2069a60563357d322ba32537bdb7896e99a9503589ba5b8498372ea8",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

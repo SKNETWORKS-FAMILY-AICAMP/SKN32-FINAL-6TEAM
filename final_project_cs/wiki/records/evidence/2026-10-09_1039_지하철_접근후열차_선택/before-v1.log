@@ -1,0 +1,1445 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                  [100%]
+================================== FAILURES ===================================
+_ test_provider_generation_time_is_eta_origin_and_cache_age_not_subtracted_twice _
+
+    def test_provider_generation_time_is_eta_origin_and_cache_age_not_subtracted_twice():
+        original = snapshot()
+        kept = deepcopy(original)
+>       got = select(original)
+              ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+____ test_missed_first_train_selects_second_without_using_old_age_summary _____
+
+    def test_missed_first_train_selects_second_without_using_old_age_summary():
+        first = train()
+        first.update(eta_seconds=90, received_age_seconds=-999)
+        second = train()
+        second.update(eta_seconds=240, train_number='5011')
+>       got = select(snapshot([first, second]))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'a...', 'line_id': '1005', ...}, {'arrival_code': '99', 'eta_seconds': 240, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[line_id-1002-boarding_identity_mismatch] _
+
+field = 'line_id', value = '1002', reason = 'boarding_identity_mismatch'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1002', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[station_id-1005000500-boarding_identity_mismatch] _
+
+field = 'station_id', value = '1005000500'
+reason = 'boarding_identity_mismatch'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[next_station_id-1005000521-service_path_mismatch] _
+
+field = 'next_station_id', value = '1005000521'
+reason = 'service_path_mismatch'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[terminal_station_id-1005000523-service_path_mismatch] _
+
+field = 'terminal_station_id', value = '1005000523'
+reason = 'service_path_mismatch'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[train_status-\uae09\ud589-service_path_mismatch] _
+
+field = 'train_status', value = '급행', reason = 'service_path_mismatch'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[train_status-ITX-service_path_mismatch] _
+
+field = 'train_status', value = 'ITX', reason = 'service_path_mismatch'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[train_number-None-train_identity_missing] _
+
+field = 'train_number', value = None, reason = 'train_identity_missing'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[arrival_code-2-departed_or_unknown_state] _
+
+field = 'arrival_code', value = '2', reason = 'departed_or_unknown_state'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '2', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[arrival_code-None-departed_or_unknown_state] _
+
+field = 'arrival_code', value = None, reason = 'departed_or_unknown_state'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': None, 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[arrival_code-True-departed_or_unknown_state] _
+
+field = 'arrival_code', value = True, reason = 'departed_or_unknown_state'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': True, 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[received_at-bad-invalid_provider_received_at] _
+
+field = 'received_at', value = 'bad', reason = 'invalid_provider_received_at'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[eta_seconds-True-no_numeric_eta] _
+
+field = 'eta_seconds', value = True, reason = 'no_numeric_eta'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': True, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[eta_seconds--1-no_numeric_eta] _
+
+field = 'eta_seconds', value = -1, reason = 'no_numeric_eta'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': -1, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[eta_seconds-inf-no_numeric_eta] _
+
+field = 'eta_seconds', value = inf, reason = 'no_numeric_eta'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': inf, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[eta_seconds-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000-invalid_arrival_time] _
+
+field = 'eta_seconds', value = 100000000000000000...0000000000000000000
+reason = 'invalid_arrival_time'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'a..._code': '99', 'eta_seconds': 100000000000000000...0000000000000000000, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_unrelated_or_invalid_train_is_not_selected[eta_status-missing-no_numeric_eta] _
+
+field = 'eta_status', value = 'missing', reason = 'no_numeric_eta'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', '1002', 'boarding_identity_mismatch'),
+        ('station_id', '1005000500', 'boarding_identity_mismatch'),
+        ('next_station_id', '1005000521', 'service_path_mismatch'),
+        ('terminal_station_id', NEXT, 'service_path_mismatch'),
+        ('train_status', '급행', 'service_path_mismatch'),
+        ('train_status', 'ITX', 'service_path_mismatch'),
+        ('train_number', None, 'train_identity_missing'),
+        ('arrival_code', '2', 'departed_or_unknown_state'),
+        ('arrival_code', None, 'departed_or_unknown_state'),
+        ('arrival_code', True, 'departed_or_unknown_state'),
+        ('received_at', 'bad', 'invalid_provider_received_at'),
+        ('eta_seconds', True, 'no_numeric_eta'),
+        ('eta_seconds', -1, 'no_numeric_eta'),
+        ('eta_seconds', float('inf'), 'no_numeric_eta'),
+        ('eta_seconds', 10**100, 'invalid_arrival_time'),
+        ('eta_status', 'missing', 'no_numeric_eta'),
+    ])
+    def test_unrelated_or_invalid_train_is_not_selected(field, value, reason):
+        row = train()
+        row[field] = value
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'missing', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[line_id-True-boarding_identity_invalid] _
+
+field = 'line_id', value = True, reason = 'boarding_identity_invalid'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None, changes = {'line_id': True}, function = None, @py_assert2 = None
+@py_assert1 = False, @py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[station_id-bad-boarding_identity_invalid] _
+
+field = 'station_id', value = 'bad', reason = 'boarding_identity_invalid'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None, changes = {'station_id': 'bad'}, function = None
+@py_assert2 = None, @py_assert1 = False, @py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[target_station_id-1005000522-boarding_identity_invalid] _
+
+field = 'target_station_id', value = '1005000522'
+reason = 'boarding_identity_invalid'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None, changes = {'target_station_id': '1005000522'}, function = None
+@py_assert2 = None, @py_assert1 = False, @py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[max_age_seconds-0-invalid_freshness_policy] _
+
+field = 'max_age_seconds', value = 0, reason = 'invalid_freshness_policy'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None, changes = {'max_age_seconds': 0}, function = None
+@py_assert2 = None, @py_assert1 = False, @py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[max_provider_age_seconds-nan-invalid_freshness_policy] _
+
+field = 'max_provider_age_seconds', value = nan
+reason = 'invalid_freshness_policy'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None, changes = {'max_provider_age_seconds': nan}, function = None
+@py_assert2 = None, @py_assert1 = False, @py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[max_provider_clock_ahead_seconds--1-invalid_freshness_policy] _
+
+field = 'max_provider_clock_ahead_seconds', value = -1
+reason = 'invalid_freshness_policy'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None, changes = {'max_provider_clock_ahead_seconds': -1}, function = None
+@py_assert2 = None, @py_assert1 = False, @py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[now-value6-timezone_required] _
+
+field = 'now', value = datetime.datetime(2026, 10, 9, 10, 0)
+reason = 'timezone_required'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None, changes = {'now': datetime.datetime(2026, 10, 9, 10, 0)}
+function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[ready_at-value7-invalid_ready_at] _
+
+field = 'ready_at'
+value = datetime.datetime(2026, 10, 9, 9, 59, 59, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))
+reason = 'invalid_ready_at'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None
+changes = {'ready_at': datetime.datetime(2026, 10, 9, 9, 59, 59, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))}
+function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value8-service_path_invalid] _
+
+field = 'allowed_services', value = [], reason = 'service_path_invalid'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None, changes = {'allowed_services': []}, function = None
+@py_assert2 = None, @py_assert1 = False, @py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value9-service_path_invalid] _
+
+field = 'allowed_services'
+value = [{'path_station_ids': ['1005000522', '1005000523', '1005000524', '1005000530'], 'train_status': '급행'}]
+reason = 'service_path_invalid'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None
+changes = {'allowed_services': [{'path_station_ids': ['1005000522', '1005000523', '1005000524', '1005000530'], 'train_status': '급행'}]}
+function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value10-service_path_invalid] _
+
+field = 'allowed_services'
+value = [{'path_station_ids': ['1005000522', '1005000523', '1005000522', '1005000524'], 'train_status': '일반'}]
+reason = 'service_path_invalid'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None
+changes = {'allowed_services': [{'path_station_ids': ['1005000522', '1005000523', '1005000522', '1005000524'], 'train_status': '일반'}]}
+function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value11-service_path_invalid] _
+
+field = 'allowed_services'
+value = [{'path_station_ids': ['1005000522', '1005000523', '1005000530'], 'train_status': '일반'}]
+reason = 'service_path_invalid'
+
+    @pytest.mark.parametrize('field,value,reason', [
+        ('line_id', True, 'boarding_identity_invalid'),
+        ('station_id', 'bad', 'boarding_identity_invalid'),
+        ('target_station_id', STATION, 'boarding_identity_invalid'),
+        ('max_age_seconds', 0, 'invalid_freshness_policy'),
+        ('max_provider_age_seconds', float('nan'), 'invalid_freshness_policy'),
+        ('max_provider_clock_ahead_seconds', -1, 'invalid_freshness_policy'),
+        ('now', NOW.replace(tzinfo=None), 'timezone_required'),
+        ('ready_at', NOW - timedelta(seconds=1), 'invalid_ready_at'),
+        ('allowed_services', [], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '급행', 'path_station_ids': PATH['path_station_ids']}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, STATION, TARGET]}], 'service_path_invalid'),
+        ('allowed_services', [{'train_status': '일반', 'path_station_ids': [STATION, NEXT, TERMINAL]}], 'service_path_invalid'),
+    ])
+    def test_invalid_caller_inputs_are_explicit_and_do_not_mutate(field, value, reason):
+>       got = select(**{field: value})
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = None
+changes = {'allowed_services': [{'path_station_ids': ['1005000522', '1005000523', '1005000530'], 'train_status': '일반'}]}
+function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_provider_freshness_is_separate_from_recent_http_confirmation[-3-no_boardable_prediction-provider_clock_in_future] _
+
+delta = -3, status = 'no_boardable_prediction'
+reason = 'provider_clock_in_future'
+
+    @pytest.mark.parametrize('delta,status,reason', [(-3, 'no_boardable_prediction', 'provider_clock_in_future'),
+                                                   (91, 'no_boardable_prediction', 'provider_refresh_required')])
+    def test_provider_freshness_is_separate_from_recent_http_confirmation(delta, status, reason):
+        row = train()
+        row['received_at'] = (NOW - timedelta(seconds=delta)).isoformat()
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_provider_freshness_is_separate_from_recent_http_confirmation[91-no_boardable_prediction-provider_refresh_required] _
+
+delta = 91, status = 'no_boardable_prediction'
+reason = 'provider_refresh_required'
+
+    @pytest.mark.parametrize('delta,status,reason', [(-3, 'no_boardable_prediction', 'provider_clock_in_future'),
+                                                   (91, 'no_boardable_prediction', 'provider_refresh_required')])
+    def test_provider_freshness_is_separate_from_recent_http_confirmation(delta, status, reason):
+        row = train()
+        row['received_at'] = (NOW - timedelta(seconds=delta)).isoformat()
+>       got = select(snapshot([row]))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_cache_age_boundary_and_future_confirmation[30-stale-refresh_required] __
+
+delta = 30, status = 'stale', reason = 'refresh_required'
+
+    @pytest.mark.parametrize('delta,status,reason', [(30, 'stale', 'refresh_required'),
+                                                   (-1, 'unavailable', 'confirmation_in_future')])
+    def test_cache_age_boundary_and_future_confirmation(delta, status, reason):
+        data = snapshot()
+        data['confirmed_at'] = (NOW - timedelta(seconds=delta)).isoformat()
+>       got = select(data)
+              ^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:30+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_cache_age_boundary_and_future_confirmation[-1-unavailable-confirmation_in_future] _
+
+delta = -1, status = 'unavailable', reason = 'confirmation_in_future'
+
+    @pytest.mark.parametrize('delta,status,reason', [(30, 'stale', 'refresh_required'),
+                                                   (-1, 'unavailable', 'confirmation_in_future')])
+    def test_cache_age_boundary_and_future_confirmation(delta, status, reason):
+        data = snapshot()
+        data['confirmed_at'] = (NOW - timedelta(seconds=delta)).isoformat()
+>       got = select(data)
+              ^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T10:00:01+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_____________ test_duplicate_train_number_cannot_invent_a_choice ______________
+
+    def test_duplicate_train_number_cannot_invent_a_choice():
+>       got = select(snapshot([train(), train()]))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'a...', 'line_id': '1005', ...}, {'arrival_code': '99', 'eta_seconds': 200, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+__________ test_zero_eta_needs_station_arrival_state_and_zero_access __________
+
+    def test_zero_eta_needs_station_arrival_state_and_zero_access():
+        row = train()
+        row.update(eta_seconds=0, arrival_code='0', received_at=NOW.isoformat())
+>       assert select(snapshot([row]), ready_at=NOW)['status'] == 'predicted'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': [{'arrival_code': '0', 'eta_seconds': 0, 'eta_status': 'valid', 'line_id': '1005', ...}]}
+changes = {'ready_at': datetime.datetime(2026, 10, 9, 10, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400)))}
+function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+______________ test_no_train_after_ready_is_not_no_service_claim ______________
+
+    def test_no_train_after_ready_is_not_no_service_claim():
+>       got = select(snapshot([]))
+              ^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_subway_boardable_v1.py:143: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'confirmed_at': '2026-10-09T09:59:55+09:00', 'kind': 'subway_arrival', 'source': 'controlled/arrival', 'trains': []}
+changes = {}, function = None, @py_assert2 = None, @py_assert1 = False
+@py_format4 = 'None is not None'
+@py_format6 = '지하철의 접근 이후 선택기가 없다\n>assert None is not None'
+
+    def select(data=None, **changes):
+        function = getattr(subway, 'select_boardable_arrival', None)
+>       assert function is not None, '지하철의 접근 이후 선택기가 없다'
+E       AssertionError: 지하철의 접근 이후 선택기가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:37: AssertionError
+_ test_query_completion_preserves_whole_access_and_does_not_shift_provider_eta _
+
+    def test_query_completion_preserves_whole_access_and_does_not_shift_provider_eta():
+        source = subway.SeoulSubwayArrival(service_key='controlled-test-key', now=lambda: NOW + timedelta(seconds=1))
+        calls = []
+        def arrivals(station, *, line=None):
+            calls.append((station, line))
+            row = train()
+            row.update(received_at=NOW.isoformat(), eta_seconds=150)
+            return snapshot([row])
+        source.arrivals = arrivals
+        function = getattr(source, 'boardable_arrival', None)
+>       assert function is not None, '소스 조회→현재 시각 선택이 없다'
+E       AssertionError: 소스 조회→현재 시각 선택이 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:157: AssertionError
+___________ test_invalid_selection_input_never_spends_an_http_call ____________
+
+    def test_invalid_selection_input_never_spends_an_http_call():
+        source = subway.SeoulSubwayArrival(service_key='controlled-test-key', now=lambda: NOW)
+        source.arrivals = lambda *a, **kw: pytest.fail('유효하지 않은 입력은 API를 부르면 안 됨')
+        function = getattr(source, 'boardable_arrival', None)
+>       assert function is not None, '입력 선검사가 없다'
+E       AssertionError: 입력 선검사가 없다
+E       assert None is not None
+
+tests\unit\travel\test_subway_boardable_v1.py:169: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1039_지하철_접근후열차_선택\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_provider_generation_time_is_eta_origin_and_cache_age_not_subtracted_twice
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_missed_first_train_selects_second_without_using_old_age_summary
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[line_id-1002-boarding_identity_mismatch]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[station_id-1005000500-boarding_identity_mismatch]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[next_station_id-1005000521-service_path_mismatch]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[terminal_station_id-1005000523-service_path_mismatch]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[train_status-\uae09\ud589-service_path_mismatch]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[train_status-ITX-service_path_mismatch]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[train_number-None-train_identity_missing]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[arrival_code-2-departed_or_unknown_state]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[arrival_code-None-departed_or_unknown_state]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[arrival_code-True-departed_or_unknown_state]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[received_at-bad-invalid_provider_received_at]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[eta_seconds-True-no_numeric_eta]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[eta_seconds--1-no_numeric_eta]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[eta_seconds-inf-no_numeric_eta]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[eta_seconds-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000-invalid_arrival_time]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_unrelated_or_invalid_train_is_not_selected[eta_status-missing-no_numeric_eta]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[line_id-True-boarding_identity_invalid]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[station_id-bad-boarding_identity_invalid]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[target_station_id-1005000522-boarding_identity_invalid]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[max_age_seconds-0-invalid_freshness_policy]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[max_provider_age_seconds-nan-invalid_freshness_policy]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[max_provider_clock_ahead_seconds--1-invalid_freshness_policy]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[now-value6-timezone_required]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[ready_at-value7-invalid_ready_at]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value8-service_path_invalid]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value9-service_path_invalid]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value10-service_path_invalid]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_caller_inputs_are_explicit_and_do_not_mutate[allowed_services-value11-service_path_invalid]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_provider_freshness_is_separate_from_recent_http_confirmation[-3-no_boardable_prediction-provider_clock_in_future]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_provider_freshness_is_separate_from_recent_http_confirmation[91-no_boardable_prediction-provider_refresh_required]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_cache_age_boundary_and_future_confirmation[30-stale-refresh_required]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_cache_age_boundary_and_future_confirmation[-1-unavailable-confirmation_in_future]
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_duplicate_train_number_cannot_invent_a_choice
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_zero_eta_needs_station_arrival_state_and_zero_access
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_no_train_after_ready_is_not_no_service_claim
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_query_completion_preserves_whole_access_and_does_not_shift_provider_eta
+FAILED tests/unit/travel/test_subway_boardable_v1.py::test_invalid_selection_input_never_spends_an_http_call
+39 failed in 5.45s
+Exception ignored in: <function Console.__del__ at 0x0000026CE37A5DA0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -1,0 +1,42 @@
+[
+  {
+    "path": "frontend/apps/web/src/lib/live/intake.ts",
+    "source_sha256": "18af66074bf4ef06b13288c8ea7294cc746d611f06efa2f414dc2e8726a952df",
+    "tested_sha256": "18af66074bf4ef06b13288c8ea7294cc746d611f06efa2f414dc2e8726a952df"
+  },
+  {
+    "path": "frontend/apps/web/src/features/plan-check/plan-check.tsx",
+    "source_sha256": "5e24830e52e5da528599e1a176d9c81a63e4ba3723b421890886ecda48b86cad",
+    "tested_sha256": "5e24830e52e5da528599e1a176d9c81a63e4ba3723b421890886ecda48b86cad"
+  },
+  {
+    "path": "frontend/apps/web/src/features/plan-check/plan-rows.tsx",
+    "source_sha256": "12232ded132afb9976d10db9455a719f830021e64232ea2c638d129e581ea252",
+    "tested_sha256": "12232ded132afb9976d10db9455a719f830021e64232ea2c638d129e581ea252"
+  },
+  {
+    "path": "frontend/apps/web/src/features/plan-check/review-undo.ts",
+    "source_sha256": "b6e4e00cb4c17589f4bf63a5b2ba76003929f849ef8fe28d8f0ce148a090b0a4",
+    "tested_sha256": "b6e4e00cb4c17589f4bf63a5b2ba76003929f849ef8fe28d8f0ce148a090b0a4"
+  },
+  {
+    "path": "frontend/apps/web/src/features/plan-check/use-server-review.ts",
+    "source_sha256": "ae5bec5f0734d2ae5344b9898177bd8610f0a71da171b18e18ed2eb912da0109",
+    "tested_sha256": "ae5bec5f0734d2ae5344b9898177bd8610f0a71da171b18e18ed2eb912da0109"
+  },
+  {
+    "path": "frontend/apps/web/tests/live/stub-server.mjs",
+    "source_sha256": "7f62c82e83e5d269023648889ac43e4eed95a858d722d255a4b302c243a95a6f",
+    "tested_sha256": "7f62c82e83e5d269023648889ac43e4eed95a858d722d255a4b302c243a95a6f"
+  },
+  {
+    "path": "frontend/apps/web/src/features/plan-check/review-item-undo.test.ts",
+    "source_sha256": "126c898fbdc48888191f3fa5b8f7ce4666b95dbf2da990ca94568f3ae349af14",
+    "tested_sha256": "126c898fbdc48888191f3fa5b8f7ce4666b95dbf2da990ca94568f3ae349af14"
+  },
+  {
+    "path": "frontend/apps/web/tests/live/changed-item-undo-20261011.spec.ts",
+    "source_sha256": "c2d43f7470d0fbff03905e7be40df40a4b3c68b152b166a08358f5e4dd6f3680",
+    "tested_sha256": "c2d43f7470d0fbff03905e7be40df40a4b3c68b152b166a08358f5e4dd6f3680"
+  }
+]

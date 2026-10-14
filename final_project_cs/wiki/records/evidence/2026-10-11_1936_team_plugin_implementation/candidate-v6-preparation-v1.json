@@ -1,0 +1,37 @@
+{
+  "created_at": "2026-10-11T23:43:58.928467+09:00",
+  "candidate_status": "draft-awaiting-stability",
+  "runtime_snapshot_updated": false,
+  "image_build_performed": false,
+  "operating_service_modified": false,
+  "public_asset_count": 1,
+  "public_asset_manifest": "legacy/deployment_assets/2026-10-11_233615_tokenizer/asset-manifest.json",
+  "prepared_scripts_syntax_passed": 3,
+  "prepared_script_count": 3,
+  "files": [
+    {
+      "path": "legacy/deployment_assets/2026-10-11_233615_tokenizer/Dockerfile.overlay-with-tokenizer",
+      "sha256": "cc6567eb25a969c3533544e642690aba708aea68b27b9a75341942150b4b0c15"
+    },
+    {
+      "path": ".tmp/plugin_release_20261011/prepare_full_linux_payload_v3.py",
+      "sha256": "2bdd6b46d64d7533fc806ad2cfcb6aa2c2f479f7342d93735ae33f597d01d670"
+    },
+    {
+      "path": ".tmp/plugin_release_20261011/prepare_release_build_context.py",
+      "sha256": "05736f885a580bdf611ee9d5a09003b1a3996b29fe59d373a9f652674135e6b4"
+    },
+    {
+      "path": ".tmp/plugin_release_20261011/offline_tokenizer_smoke.py",
+      "sha256": "70562368991bdd076b5847140c7eebfa4bb0b536335e60b2c556bc6c66d7c89b"
+    }
+  ],
+  "additional_test_files_pending_stability": [
+    "tests/e2e/test_web_conversation_isolation.py",
+    "tests/e2e/test_web_initial_retry.py",
+    "tests/e2e/test_watch_plugin_recovery.py",
+    "tests/unit/travel/test_watch_recovery_race.py"
+  ],
+  "runtime_cache_mount_evidence": "deployed-tokenizer-cache-mount-preflight-v1.json",
+  "base_image_evidence": "deployed-base-image-tokenizer-build-preflight-v1.json"
+}

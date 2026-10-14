@@ -1,0 +1,92 @@
+{
+  "model": "Winnow-E4B (Jev family)",
+  "suite": "D3",
+  "saved_each": 360,
+  "original_our_training": false,
+  "trained_our_training": true,
+  "original": {
+    "positive": {
+      "total": 120,
+      "correct": 95,
+      "false_pick": 0,
+      "failed_or_missing": 3,
+      "correct_wilson95": [
+        0.7105232156701865,
+        0.8547156039189031
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    },
+    "negative": {
+      "total": 240,
+      "correct": 203,
+      "false_pick": 27,
+      "failed_or_missing": 10,
+      "correct_wilson95": [
+        0.794734435251077,
+        0.8860357701226782
+      ],
+      "false_pick_wilson95": [
+        0.07847738239304883,
+        0.15873190556165928
+      ]
+    },
+    "failed_or_unparsed": 13,
+    "answer_sha256": "f11b69bdc1d630d585b5035c75ba8a00de33d4b5a64a2fe34f6be23150eba910"
+  },
+  "trained": {
+    "positive": {
+      "total": 120,
+      "correct": 109,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.843291530273291,
+        0.9480428171514347
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    },
+    "negative": {
+      "total": 240,
+      "correct": 240,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9842460800584412,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.015753919941558815
+      ]
+    },
+    "failed_or_unparsed": 0,
+    "answer_sha256": "b46ce991ffe3922f7bcc756d4af6dea0c1c795dc9216e3520a1cc2ebe2cd5dc7"
+  },
+  "paired": {
+    "request": {
+      "total": 120,
+      "original_only_correct": 0,
+      "trained_only_correct": 14,
+      "exact_two_sided_p": 0.0001220703125
+    },
+    "no_request": {
+      "total": 240,
+      "original_only_correct": 0,
+      "trained_only_correct": 37,
+      "exact_two_sided_p": 1.4551915228366852e-11
+    }
+  },
+  "matching_prompt_script_engine_and_q8_base": true,
+  "missing_each": 0,
+  "repetitions": 1,
+  "heldout_validation_complete": false,
+  "final_ranking": false,
+  "product_adoption": false,
+  "speed_comparison": false
+}

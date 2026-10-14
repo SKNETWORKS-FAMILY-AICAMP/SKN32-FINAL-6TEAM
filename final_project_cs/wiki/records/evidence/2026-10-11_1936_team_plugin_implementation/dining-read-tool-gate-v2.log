@@ -1,0 +1,44 @@
+................FFFF.........................................            [100%]
+================================== FAILURES ===================================
+_ test_unbound_non_standalone_rejected_even_when_ledger_disabled[True-read.dining_state] _
+tests\unit\travel\test_dining_read_tool_availability.py:90: in test_unbound_non_standalone_rejected_even_when_ledger_disabled
+    tools.call(name, context(), arguments(name), [name], set())
+app\tools\read_tools.py:604: in call
+    return functions[name](ToolContext.from_pack(context), **arguments)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\tools\read_tools.py:287: in dining_state
+    with self.connection_factory() as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\test_dining_read_tool_availability.py:88: in <lambda>
+    tools = ReadToolbox(lambda: pytest.fail("must not open connection"), dining_ledger=ledger_enabled)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: must not open connection
+_ test_unbound_non_standalone_rejected_even_when_ledger_disabled[True-read.dining_states] _
+tests\unit\travel\test_dining_read_tool_availability.py:90: in test_unbound_non_standalone_rejected_even_when_ledger_disabled
+    tools.call(name, context(), arguments(name), [name], set())
+app\tools\read_tools.py:604: in call
+    return functions[name](ToolContext.from_pack(context), **arguments)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\tools\read_tools.py:303: in dining_states
+    with self.connection_factory() as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\test_dining_read_tool_availability.py:88: in <lambda>
+    tools = ReadToolbox(lambda: pytest.fail("must not open connection"), dining_ledger=ledger_enabled)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: must not open connection
+_ test_unbound_non_standalone_rejected_even_when_ledger_disabled[False-read.dining_state] _
+tests\unit\travel\test_dining_read_tool_availability.py:89: in test_unbound_non_standalone_rejected_even_when_ledger_disabled
+    with pytest.raises(TeamUnavailable, match="composition_unbound"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'app.core.team_availability.TeamUnavailable'>
+_ test_unbound_non_standalone_rejected_even_when_ledger_disabled[False-read.dining_states] _
+tests\unit\travel\test_dining_read_tool_availability.py:89: in test_unbound_non_standalone_rejected_even_when_ledger_disabled
+    with pytest.raises(TeamUnavailable, match="composition_unbound"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'app.core.team_availability.TeamUnavailable'>
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_dining_read_tool_availability.py::test_unbound_non_standalone_rejected_even_when_ledger_disabled[True-read.dining_state]
+FAILED tests/unit/travel/test_dining_read_tool_availability.py::test_unbound_non_standalone_rejected_even_when_ledger_disabled[True-read.dining_states]
+FAILED tests/unit/travel/test_dining_read_tool_availability.py::test_unbound_non_standalone_rejected_even_when_ledger_disabled[False-read.dining_state]
+FAILED tests/unit/travel/test_dining_read_tool_availability.py::test_unbound_non_standalone_rejected_even_when_ledger_disabled[False-read.dining_states]
+4 failed, 57 passed in 6.59s

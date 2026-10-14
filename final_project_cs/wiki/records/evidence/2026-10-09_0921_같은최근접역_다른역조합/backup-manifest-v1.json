@@ -1,0 +1,27 @@
+[
+  {
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0921_같은최근접역_다른역조합/plan.py",
+    "sha256": "4b028b495e768b46339f4ae542d4bc225c808383c3d6a3dce52d944087cf5ae5"
+  },
+  {
+    "source": "final_project_cs/tests/unit/travel/mobility/test_station_fallback_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0921_같은최근접역_다른역조합/test_station_fallback_v1.py",
+    "sha256": "123bc7324b0682d00bb175cd0be203b9ce12a652ecb1476d83009ed69a25cd1c"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0921_같은최근접역_다른역조합/mobility.md",
+    "sha256": "6d66f6d61d7fdeba3bcfe621fc152f76fcca77a13e95914fa1c5520fea7fc03e"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0928_최근접역_경로검증결과/mobility.md",
+    "sha256": "b3879ba9de1b96fbf77f3175a33ef8ba84abbeff2b93ad7a69904ddf1ef1ac80"
+  },
+  {
+    "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0921_최근접역이_같을때_전체역조합_제외.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0928_최근접역_결함종료/2026-10-09_0921_최근접역이_같을때_전체역조합_제외.md",
+    "sha256": "91913a6817b91da7d1305a1214a3fba14c21704a16f494ae97a0f9d77d52294d"
+  }
+]

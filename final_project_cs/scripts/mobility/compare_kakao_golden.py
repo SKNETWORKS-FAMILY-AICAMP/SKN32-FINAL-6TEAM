@@ -9,13 +9,15 @@
 대조
   - 대중교통: 우리 계획 수단의 소요(`eta_min` — 승차·환승 대기 포함, 정책 여유 제외) vs 카카오 최단안 · 추천안(총 소요에 **대기가 없다**)
   - 택시: 우리 택시 후보(`modes=[taxi]`)의 소요 · 요금 vs 카카오 자동차 길찾기의 소요 · 택시 요금
-  - 걷기: 우리 보행 길 그래프의 거리 · 시간 vs 카카오 도보 최단(성인 4 km/h 환산)
+  - 걷기: 실제 공개 도보 옵션의 거리 · 시간 vs 카카오 도보 최단. 원시 계산 진단은 별도 집계한다.
+    출입점·경로·조회 시각 정렬이 확인되지 않은 개발 비교이며 독립 정확도 검증이 아니다.
 출력: 요약 숫자(저장소에 적어도 되는 집계)와, 쌍별 표(카카오 값이 들어 있어 **로컬 파일로만** 쓴다).
 """
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import pathlib
 import re
@@ -63,6 +65,42 @@ def _planner_leg(rt, modes):
     return leg
 
 
+def _positive_number(value):
+    return (not isinstance(value, bool) and isinstance(value, (int, float))
+            and math.isfinite(value) and value > 0)
+
+
+def _valid_walk(record, distance_key="m"):
+    # 옛 원시 기록에는 status가 없다. 오류·미제공 상태의 수치를 성공으로 세지 않는다.
+    return (isinstance(record, dict) and record.get("status") in (None, "available")
+            and _positive_number(record.get(distance_key)) and _positive_number(record.get("min")))
+
+
+def _product_walk(result, why):
+    """정책과 후보 판정을 통과해 공개된 도보 옵션의 소요를 그대로 쓴다."""
+    options = ((result or {}).get("route") or {}).get("options") or []
+    option = next((o for o in options if o.get("id") == "walk"), None)
+    if option is None:
+        return {"status": "unavailable", "reason": (why or {}).get("code") or "walk_option_not_offered"}
+    if not (_positive_number(option.get("walk_m")) and _positive_number(option.get("eta_min"))):
+        return {"status": "error", "reason": "invalid_walk_values"}
+    return {"status": "available", "m": option["walk_m"], "min": option["eta_min"]}
+
+
+def _walk_diagnostic(planner, a, b, straight):
+    """정책 밖 입력도 보존하되 제품 제공률에서 제외한다. 실패를 숨기지 않는다."""
+    evidence = {}
+    try:
+        distance, minutes, no_path = planner._walk_path(a, b, straight, evidence=evidence)
+    except Exception as ex:  # noqa: BLE001 — 쌍별 진단 실패를 분모와 함께 공개한다
+        return {"status": "error", "error_type": type(ex).__name__}
+    if no_path or distance is None or minutes is None:
+        return {"status": "unavailable", "reason": "no_path", "evidence": evidence}
+    if not (_positive_number(distance) and _positive_number(minutes)):
+        return {"status": "error", "reason": "invalid_walk_values", "evidence": evidence}
+    return {"status": "available", "m": round(distance), "min": round(minutes, 1), "evidence": evidence}
+
+
 def run(arrive: datetime, only: set[str] | None = None, log=print, direct: bool = True) -> dict:
     sys.path.insert(0, str(ROOT))
     from app.core.settings import get_settings
@@ -91,6 +129,7 @@ def run(arrive: datetime, only: set[str] | None = None, log=print, direct: bool 
         row = {"id": p["id"], "a": p["a"], "b": p["b"], "bucket": p["bucket"], "straight_m": p["straight_m"]}
         t0 = time.time()
         res, why = leg(a, b, arrive) if leg else (None, {"code": "off"})
+        row["ours_walk_product"] = _product_walk(res, why)
         if res is not None:
             r = res["route"]
             planned = next(o for o in r["options"] if o["id"] == r["planned"])
@@ -109,13 +148,7 @@ def run(arrive: datetime, only: set[str] | None = None, log=print, direct: bool 
             o = tx["route"]["options"][0]
             km = re.search(r"([\d.]+)km", str(o.get("label")))
             row["ours_taxi"] = {"eta": o["eta_min"], "fare": o.get("fare_krw"), "km": float(km.group(1)) if km else None}
-        try:
-            straight = float(p["straight_m"])
-            dist, no_path = pl._walk_net(a, b, straight)
-            if dist is not None and not no_path:
-                row["ours_walk"] = {"m": round(dist), "min": round(dist / pl.speed / 60, 1)}
-        except Exception:                                    # noqa: BLE001
-            pass
+        row["ours_walk_diagnostic"] = _walk_diagnostic(pl, a, b, float(p["straight_m"]))
         row["kakao"] = k
         row["secs"] = round(time.time() - t0, 1)
         rows.append(row)
@@ -172,17 +205,38 @@ def summarise(rows: list[dict]) -> dict:
     out["taxi_fare_under_reference"] = {"n": len(taxi_f), "count": sum(x < 0 for x in taxi_f),
                                        "rate": sum(x < 0 for x in taxi_f) / len(taxi_f) if taxi_f else None}
     out["taxi_distance_percent_vs_kakao"] = _stats(taxi_km, tol=10) if taxi_km else {"n": 0}
-    walk_m, walk_min = [], []
+    walk_m, walk_min, raw_m, raw_min = [], [], [], []
+    walk_reference_rows = 0
     for r in rows:
         kw = (r.get("kakao") or {}).get("walk") or {}
-        ow = r.get("ours_walk") or {}
-        if "shortest" in kw and "m" in ow:
-            kmeters = kw["shortest"]["km"] * 1000
-            walk_m.append((ow["m"] - kmeters) / kmeters * 100)
-            walk_min.append(ow["min"] - kw["shortest"]["min"])
+        reference = kw.get("shortest") or {}
+        if not _valid_walk(reference, "km"):
+            continue
+        walk_reference_rows += 1
+        kmeters = reference["km"] * 1000
+        for key, distances, minutes in (("ours_walk_product", walk_m, walk_min),
+                                       ("ours_walk_diagnostic", raw_m, raw_min)):
+            ours = r.get(key) or (r.get("ours_walk") if key == "ours_walk_diagnostic" else None) or {}
+            if _valid_walk(ours):
+                distances.append((ours["m"] - kmeters) / kmeters * 100)
+                minutes.append(ours["min"] - reference["min"])
     out["walk_distance_percent_vs_kakao_shortest"] = _stats(walk_m, tol=10) if walk_m else {"n": 0}
     out["walk_minutes_vs_kakao_shortest"] = _stats(walk_min, tol=5)
+    out["walk_raw_diagnostic_distance_percent_vs_kakao_shortest"] = _stats(raw_m, tol=10)
+    out["walk_raw_diagnostic_minutes_vs_kakao_shortest"] = _stats(raw_min, tol=5)
+    out["walk_comparison_scope"] = "개발 비교; 출입점·경로·조회 시각 정렬 미검증, 독립 정확도 아님"
     out["coverage"] = {"pairs": len(rows),
+                       "walk_reference_rows": walk_reference_rows,
+                       "walk_reference_invalid": sum(bool(ref) and not _valid_walk(ref, "km")
+                           for r in rows for ref in [((r.get("kakao") or {}).get("walk") or {}).get("shortest")]),
+                       "walk_product_offered": sum(_valid_walk(r.get("ours_walk_product")) for r in rows),
+                       "walk_product_invalid": sum(bool(walk) and walk.get("status") != "unavailable"
+                           and not _valid_walk(walk) for r in rows for walk in [r.get("ours_walk_product")]),
+                       "walk_product_missing": sum((r.get("ours_walk_product") or {}).get("status") == "unavailable" for r in rows),
+                       "walk_product_unobserved": sum(not r.get("ours_walk_product") for r in rows),
+                       "walk_product_comparisons": len(walk_min),
+                       "walk_raw_diagnostic_comparisons": len(raw_min),
+                       "walk_diagnostic_errors": sum((r.get("ours_walk_diagnostic") or {}).get("status") == "error" for r in rows),
                        "web_car": sum(((r.get("kakao") or {}).get("car") or {}).get("source") == "kakao_map_web" for r in rows),
                        "car_reused_by_user": sum(((r.get("kakao") or {}).get("car") or {}).get("source") == "legacy_api_user_reused" for r in rows),
                        "car_excluded_legacy_api": sum(bool((r.get("kakao") or {}).get("car")) and

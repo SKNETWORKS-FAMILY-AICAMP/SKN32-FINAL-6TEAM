@@ -1,0 +1,11 @@
+{
+  "tests": 32,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "seconds": 23.331,
+  "timestamp": "2026-10-11T03:58:02.930412+09:00",
+  "hashes_unchanged": true,
+  "hashed_files": 8,
+  "pytest_exit_code": 0
+}

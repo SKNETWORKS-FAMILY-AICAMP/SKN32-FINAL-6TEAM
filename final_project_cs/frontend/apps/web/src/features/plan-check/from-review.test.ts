@@ -35,6 +35,14 @@ describe("the finished check, from the server's review", () => {
       rows: [{ row: "closed", result: "bad", text: "수요일은 쉬어요" }] })],
     moves: [move()],
   };
+  it("preserves the saved service and actual revision used to invalidate old move candidates", () => {
+    const next = intake("review", "review", { revision: 4, review: { ...review, revision: 4, taxi_pricing: { product: "capsi_immediate", quotes: [] } } });
+    const mapped = reviewResultOf(next, readingOf(next))!;
+    expect(mapped.revision).toBe(4);
+    expect(mapped.taxiPricing).toEqual({ product: "capsi_immediate", quotes: [] });
+    const older = intake("review", "review", { review });
+    expect(reviewResultOf(older, readingOf(older))!.taxiPricing).toBeNull();
+  });
   const view = reviewResultOf(intake("review", "review", { review, check: { ready: true, problems: [], filled: [], items: 2, title: "10월 서울 여행", plan: { requested: false, start_date: null, days: null, party_size: null, preferences: "" } } }), readingOf(intake("review", "review")))!;
 
   it("is done, titled by the server, with a day for every stop", () => {

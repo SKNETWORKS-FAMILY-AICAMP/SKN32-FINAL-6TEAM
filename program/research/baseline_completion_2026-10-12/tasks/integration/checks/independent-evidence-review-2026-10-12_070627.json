@@ -1,0 +1,41 @@
+{
+  "at_kst": "2026-10-12T07:06:27.056997+09:00",
+  "runs": [
+    {
+      "label": "prior22-final",
+      "passed": 22,
+      "total": 22,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/prior22-final.xml",
+      "junit_sha256": "5f2d87474dff3bed524af33b86b7f3d2cb1029c94911a9c6def8e4d27b8b3850",
+      "source_files": 1410,
+      "source_changed": []
+    },
+    {
+      "label": "cookie-security-final",
+      "passed": 156,
+      "total": 156,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/cookie-security-final.xml",
+      "junit_sha256": "a6b407d1d1d247448cf2a7c66345c5c4b592222c0c02667db7e6702dd961da11",
+      "source_files": 1410,
+      "source_changed": []
+    },
+    {
+      "label": "mapping-final",
+      "passed": 14,
+      "total": 14,
+      "junit": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/mapping-final.xml",
+      "junit_sha256": "db042361a86ed110fe28d77d586dfee4becd93a5147ad5cbcb19f6dbe4e7e3e6",
+      "source_files": 1410,
+      "source_changed": []
+    }
+  ],
+  "original_runs_match": 7,
+  "original_runs_total": 7,
+  "handoff": {
+    "path": "program/research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_064826/final-handoff.json",
+    "sha256": "e4916d19c5c3d063dc79aa2d56f6819ba7a8928bbdbedf084f29026da014e0cb"
+  },
+  "remaining_tests": 23,
+  "product_acceptance": "not_accepted",
+  "backup": "program/research/baseline_completion_2026-10-12/tasks/integration/_backup/2026-10-12_070627_independent_evidence"
+}

@@ -1,0 +1,22 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback _
+tests\e2e\test_watch_plugin_recovery.py:87: in test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback
+    assert first.opened and len(first.unavailable) == len(first.opened) and not first.ran
+E   AssertionError: assert ([])
+E    +  where [] = CaseTickResult(checked=0, unavailable=[{'trip_id': '3551a4e2-abfd-4a4a-935d-59860240b047', 'item_id': 'a3b04fa6-b7a4-4...], ran=[], fatal=[], unhandled=[], pinned=[], unchecked=[], expired=[], failed=[], retried=[], notified=[], relaxed=[]).opened
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=not_installed composition_revision=watch-off
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_watch_plugin_recovery.py::test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback
+1 failed in 10.73s

@@ -1,0 +1,23 @@
+{
+  "recorded_at": "2026-10-11T18:01:48.534611+00:00",
+  "sha256": {
+    "frontend-before.json": "05c950bca576e0034f179e33f11dfdd5da8edbe486d38d4425bc5edeac349d14",
+    "frontend-after-v3.json": "30c90d3fdb3e0c6e0de304cde79dfdca1fa3396a3a211af0e12a1f27a670e3b8",
+    "bike-tests-v1/result.xml": "c827f332fcdabd1ca477c659e847aa7c83ce3a36c3d1b79e9ab1d735a71b0f46",
+    "bike-tests-v1/execution.json": "c1e3973d3bf43d1aecd130e4f748bb5b8016857643075433cc4365049f9042d2",
+    "public-map-model-v1.json": "4361ea562c0d906b234bf8f284fc566412a700905a89938280d72d1544c999a7",
+    "public-map-375-v1.svg": "74380d873858687a6464b12c3595db224e722af9426f33155eac5c4854ababb5",
+    "public-map-375-v1.png": "27567171ed83b32d1186d5f492710cba722d572e12b7eb474e5af8d5127a6a01",
+    "svg-render-result-v1.json": "8bbfc56872ae51f6e795018f90e4dce0688244751fb7db02d58c655c50f47f53",
+    "official-web-evidence-v1.json": "6dd8969aad3c2de05715e4c93bd66f02834c10c751bee709f8ff3782d5ebf35e",
+    "field-preparation-v1.json": "ed220db3c664d257b39668dd3dcc0d72ab2ac1cbc58a099d7d6c94465fd32633",
+    "REPORT-v1.md": "ad56ffa753fbd92d72600835765fd9f5a56ba3c2bf3d4b399feb1cbf73ddf546"
+  },
+  "typecheck": {
+    "command": "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+    "exit_code": 0
+  },
+  "physical_completed": 0,
+  "physical_required": 2,
+  "developer_api_calls": 0
+}

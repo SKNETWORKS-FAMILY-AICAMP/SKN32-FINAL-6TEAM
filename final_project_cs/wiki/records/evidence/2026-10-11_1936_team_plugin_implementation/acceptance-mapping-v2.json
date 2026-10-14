@@ -1,0 +1,658 @@
+{
+  "generated_at": "2026-10-11T22:37:07.551386+09:00",
+  "authority": "wiki/teams/team-plugin-lifecycle.md 인수 시나리오 24개",
+  "scope": "최종 로컬 코드에서 24개 인수 조건에 직접 연결된 65개 시험 ID만 재실행. 전체 제품·운영 기능 E2E 또는 지도 정확도 검증이 아님.",
+  "scenario_passed": 24,
+  "scenario_total": 24,
+  "pytest_passed": 65,
+  "pytest_total": 65,
+  "limitations": [
+    "인수 조건 통과는 제품 전체 무결함 보장이 아님.",
+    "A2A cancel은 async transport 대역으로 검증했으며 실제 원격 기계의 취소를 실측한 것은 아님.",
+    "mock 서버 화면 시험이 아니라 Python 실행과 로컬 개발 DB 시험임. x600 서버의 cs 프로젝트 서버에는 미배포."
+  ],
+  "logs": [
+    {
+      "path": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+      "sha256": "f9308bc0f8d3eac5b1295995018ce77eb0279229c8a4b777e3b4f772b75b8d18"
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario": 1,
+      "condition": "비활성 구현 패키지 없음: import 0회·독립 앱 기동",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/travel/test_plugin_read_boundaries.py::test_clean_process_imports_no_disabled_team_implementation",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 69,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_disabled_package_not_imported_and_other_team_loaded",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 49,
+          "result": "passed"
+        },
+        {
+          "test": "tests/e2e/test_mcp_server.py::test_saved_trip_remains_readable_with_every_team_disabled",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 10,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 2,
+      "condition": "Team 선언 제거: 해당 업무 불가·독립 Team 요청 정상",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_removed_team_rejects_only_its_business_and_independent_team_runs",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 25,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 3,
+      "condition": "모든 선택 Team 비활성: Core·기존 계획 조회 유지",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/e2e/test_mcp_server.py::test_saved_trip_remains_readable_with_every_team_disabled",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 10,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/travel/test_plugin_worker_availability.py::test_all_teams_off_default_round_keeps_independent_cleanup",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 70,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 4,
+      "condition": "선택 import·생성 실패 격리·독립 실행",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_optional_load_failure_keeps_independent_team_executable[import]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 23,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_optional_load_failure_keeps_independent_team_executable[constructor]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 22,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 5,
+      "condition": "자동·직접 지정 disabled 실행 0회",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[disabled]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 41,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[not_installed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 43,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[load_failed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 42,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[remote_unavailable]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 44,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_local_disabled_team_execute_is_never_called",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 45,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_routing_disabled_owner_creates_no_run_and_never_reroutes",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 26,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 6,
+      "condition": "기존 owner disabled: 변경 0회·운영 실패 기록",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-disabled]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 31,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-not_installed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 33,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-load_failed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 32,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-disabled]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 28,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-not_installed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 30,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-load_failed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 29,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 7,
+      "condition": "필수 계산 disabled: 이전 callback·어림값 성공 0회",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_missing_request_context_never_uses_legacy_callback",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 57,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/travel/test_plugin_worker_availability.py::test_batch_does_not_use_legacy_disabled_planner",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 71,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_review_does_not_swallow_disabled_required_calculation",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 62,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 8,
+      "condition": "후보 실패 시 게시 Controller·계산 표·revision 불변",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_invalid_candidate_keeps_published_controller_hooks_revision[duplicate_capability]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 19,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_invalid_candidate_keeps_published_controller_hooks_revision[incompatible_contract]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 20,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_required_hook_failure_keeps_published_generation",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 61,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_failed_optional_hook_discards_partial_registrations[ImportError]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 52,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_failed_optional_hook_discards_partial_registrations[AttributeError]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 51,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_failed_optional_hook_discards_partial_registrations[RuntimeError]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 53,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 9,
+      "condition": "같은 요청 hook 읽기 사이 reload: 같은 판",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_request_two_hook_reads_keep_old_generation_across_disable",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 60,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 10,
+      "condition": "실행 중 disable: 옛 요청 종료·신규 거절·일정 1회 적용",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_inflight_disable_keeps_old_team_and_applies_real_itinerary_once",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 18,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 11,
+      "condition": "연속 enabled reload 중 일시 부재·부분 등록 없음",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_repeated_enabled_reload_never_changes_pinned_callbacks",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 59,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 12,
+      "condition": "waiting_input disable 뒤 답변: 버전·답변·토큰 불변",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-disabled]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 31,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-not_installed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 33,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-load_failed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 32,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-disabled]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 28,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-not_installed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 30,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-load_failed]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 29,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 13,
+      "condition": "재활성화 동일 답변: 호환 계약·실제 일정 1회 변경",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_reactivation_same_reply_changes_real_itinerary_only_once",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 24,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 14,
+      "condition": "Local/A2A disabled: 같은 불가 의미·transport 0회",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_local_disabled_team_execute_is_never_called",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 45,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_a2a_disabled_and_missing_registry_never_resolve_or_send",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 34,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 15,
+      "condition": "JSON/SSE/MCP 불가: 422·completed 위장 없음",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_json_and_mcp_keep_disabled_reason_while_independent_reads_work",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 56,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[disabled-False]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 63,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[not_installed-False]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 66,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[load_failed-False]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 65,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[remote_unavailable-True]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 67,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[engine_unavailable-False]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 64,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_message_http503_and_read_view_expose_unavailable_without_consuming_token",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 21,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 16,
+      "condition": "중복 capability·계약 불일치 후보 거절·이전 판 보존",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_invalid_candidate_keeps_published_controller_hooks_revision[duplicate_capability]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 19,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_invalid_candidate_keeps_published_controller_hooks_revision[incompatible_contract]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 20,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 17,
+      "condition": "최종 ROUTED 관문 unavailable: owner 잔류·후보 쓰기 없음",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_at_final_route_gate_leaves_no_owner_or_candidate_write",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 27,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 18,
+      "condition": "enabled 엔진 off: disabled 구별·어림값 성공 없음",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_enabled_engine_off_never_returns_estimate",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 50,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 19,
+      "condition": "독립 정렬 유사도 생략·이유 표시·Activity 업무 우회 없음",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_independent_candidate_sort_omits_similarity_without_replacing_activity_business",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 17,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 20,
+      "condition": "감시 한 종류 disabled: 미실행 기록·독립 종류 계속",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/travel/test_plugin_worker_availability.py::test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch_cases-TripWatchCaseOpener]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 73,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/travel/test_plugin_worker_availability.py::test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch-TripWatcher]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 72,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 21,
+      "condition": "sync·백그라운드 한 요청/회차 같은 판",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_sync_resolver_copies_context_and_supports_awaitable_result[False]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 47,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_sync_resolver_copies_context_and_supports_awaitable_result[True]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 48,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_stream_worker_and_deferred_work_keep_request_generation",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 68,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/travel/test_plugin_worker_availability.py::test_nested_jobs_hold_one_controller_and_new_round_sees_new_generation",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 74,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 22,
+      "condition": "A2A endpoint·결과 식별자 불일치 거절",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_a2a_endpoint_mismatch_is_rejected_before_submit",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 35,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[team_id]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 40,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[task_id]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 39,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[run_id]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 38,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_a2a_unknown_status_cannot_accept_completed_artifact",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 36,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 23,
+      "condition": "remote_unavailable과 resolver 구현·전송 실패 구분",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_a2a_valid_result_and_remote_unavailable_are_distinct",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 37,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/core/test_plugin_availability.py::test_resolver_implementation_errors_are_not_turned_into_unavailability",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 46,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.06]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 11,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.08]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 12,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.1]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 13,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.06]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 14,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.08]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 15,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.1]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 16,
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "scenario": 24,
+      "condition": "필수 Team·Core 실패 숨기지 않음·옛 종료 revision 보존",
+      "status": "passed",
+      "evidence": [
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_import_failure_optional_vs_required[False]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 54,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_import_failure_optional_vs_required[True]",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 55,
+          "result": "passed"
+        },
+        {
+          "test": "tests/unit/test_plugin_composition_runtime.py::test_publication_rejects_mixed_registry_or_revision",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 58,
+          "result": "passed"
+        },
+        {
+          "test": "tests/integration/controller/test_plugin_unavailable.py::test_inflight_disable_keeps_old_team_and_applies_real_itinerary_once",
+          "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-final-mapped-v1.log",
+          "line": 18,
+          "result": "passed"
+        }
+      ]
+    }
+  ],
+  "prior_mapping": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-mapping.json",
+  "test_source_hashes": {
+    "tests/e2e/test_mcp_server.py": "c9cacc461b19be4c11693aeee4cd3f6429dab753a30483d701797b916dbee53c",
+    "tests/integration/controller/test_plugin_unavailable.py": "b4eeb500330c64e69dbc348512f30c1e2cbe08991e575d8ec0c5c0c196c0ec67",
+    "tests/unit/core/test_plugin_availability.py": "f6992f30f821a55cbc28e8f33ca2dc3211970881302c2bdb49520f65a3780825",
+    "tests/unit/test_plugin_composition_runtime.py": "e297fe7815f591f016b15bfda7890e4c150d2c4faf90fbfb9ad9532aa29e3084",
+    "tests/unit/travel/test_plugin_read_boundaries.py": "2297e65eeed7332982c6f0e68a15bdad9db6cf4cb9187b119c8aa5d6f46723a4",
+    "tests/unit/travel/test_plugin_worker_availability.py": "1f1e464ceb664842f791eea44872494a79a30f90019f52ecd13f0d599d3ca97f"
+  },
+  "warnings": [
+    "MCP streamable_http_client 사용 안내 DeprecationWarning 1건. 시험 결과와 구분."
+  ]
+}

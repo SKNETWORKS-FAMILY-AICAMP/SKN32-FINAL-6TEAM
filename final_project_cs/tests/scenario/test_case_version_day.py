@@ -36,6 +36,7 @@ from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStor
 from app.domains.travel_ops.components.core_hooks.subjects import resolve_subject
 from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
+from tests.unit.travel.execution_plan_fixture import fixture_plan
 
 KST = ZoneInfo("Asia/Seoul")
 SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
@@ -139,6 +140,7 @@ def case_world():
     check, route_events = _sources(clock)
     engine = CaseEngine(tenant_id=tenant, check=check, route_events=route_events, classifier=_classifier,
                         report_extractor=_extractor, clock=clock,
+                        execution_planner=fixture_plan,
                         service_overrides=replay_leg_services(SCENARIO))
     from app.core.service_bindings import bind_services
 

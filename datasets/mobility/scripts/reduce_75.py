@@ -16,9 +16,11 @@
 옵션:
     --src  <DATA_DIR>\\travel\\processed\\mobility            (기본 · .env 의 DATA_DIR)
     --dst  <repo>\\datasets\\mobility\\processed\\mobility     (기본 · 있으면 안 지우고 멈춘다 · --clean 이면 비우고 다시)
-    (기본 = 9/30 채택안) 50 MB 넘는 파일은 .gz 로 교체(판정기 `paths.timetable_file` 이 .gz 우선) · 시간표 출발없음 행(18,411 · 시·종착역 표기)과
-    9호선 혼잡도 급행 행(2,432 · congestion.py 가 local 만 씀)을 뺀다 — 회귀 게이트·전체층·pytest 가 정본 판과 같은 값(p4 · 9/30)
-    --no-gz / --keep-no-dep / --keep-express   각각 끈다(비교 시험용)
+    기본: 50 MB 넘는 파일은 .gz 로 교체(판정기 `paths.timetable_file` 이 .gz 우선) · 시간표 출발없음 행은 제외한다.
+    9호선 혼잡도는 일반·급행 행을 모두 보존한다(2026-10-12: 제품 조회가 service를 구분하므로 급행 삭제 금지).
+    --no-gz / --keep-no-dep   각각 압축 교체/시간표 출발없음 행 제외를 끈다(비교 시험용).
+    --keep-express   일반·급행 보존을 명시하는 호환 옵션(기본값과 같음).
+    --drop-express   진단·옛 결과 비교에만 사용하는 급행 삭제 옵션(제품 자료 재생성에는 사용하지 않는다).
 산출:
     <dst>\\**                       줄인 판(A 그대로 · B 열 제거) + 보고서 md
     <dst>\\MANIFEST_git_v1.json      파일 · 크기 · sha256 · 행수 · 원자료 · 확인 시각 · 전/후
@@ -70,6 +72,10 @@ FILES = [
     ("timetable_v1_meta.json", A, "build_timetable_v1.py 가 시간표와 같이 씀", "datasets/mobility/scripts/build_timetable_v1.py", "engine/runtime.py(built_at)"),
     ("line_station_order_v1.json", A, "국가철도공단 표준데이터 FR_CODE + 시간표 관측 + 서울교통공사 역간거리 CSV(54)",
      "datasets/mobility/scripts/build_line_station_order_v1.py", "engine/line_order.py · candidates.py"),
+    ("rail_edge_track_v2.jsonl.gz", A, "Geofabrik OSM 선로 + station_coords.json + line_station_order_v1.json · 등급: 추정(OSM 선로 길이)",
+     "final_project_cs/scripts/mobility/build_rail_track_v2.py --out <새 파일 경로>", "engine/line_order.py · runtime.py · datacheck.py"),
+    ("rail_distance_overlay_v1.json", A, "data.go.kr 국가철도공단 역간거리 CSV 24종 · 등급: 공표값·대응방향 추정(확정 운임거리 아님)",
+     "final_project_cs/scripts/mobility/build_rail_distance_overlay.py --out <새 파일 경로>", "engine/line_order.py · runtime.py · datacheck.py"),
     ("transfer_walk_v1.json", A, "서울교통공사_환승역거리 소요시간 정보_20251231.csv", "datasets/mobility/scripts/build_transfer_walk_v1.py", "engine/transfer_walk.py"),
     ("bus_route_v1.jsonl", A, "서울시 버스 정보 API(seoul_bus_all_routes.json · 캐시)", "datasets/mobility/scripts/seoul_bus_find_routes.py → build_bus_all_v1.py(45)", "engine/bus.py"),
     ("bus_stops_v1.jsonl", A, "서울시 버스 정보 API(seoul_bus_all_stops.json · 캐시)", "datasets/mobility/scripts/build_bus_all_v1.py", "engine/bus.py · geo.py"),
@@ -119,7 +125,7 @@ def md5sum(p: Path) -> str:
 
 
 def reduce_congestion_line9(src: Path, dst: Path, drop_express: bool):
-    """9호선 혼잡도 — 열 그대로. --drop-express 면 service=express 행을 뺀다(congestion.py loader 가 local 만 쓴다)."""
+    """9호선 혼잡도 — 열·일반/급행 행을 보존. 명시적 진단용 --drop-express만 급행 행을 뺀다."""
     n_in = n_out = n_express = 0
     with open(src, encoding="utf-8") as fi, open(dst, "w", encoding="utf-8", newline="\n") as fo:
         for raw in fi:
@@ -197,14 +203,14 @@ def main():
     ap.add_argument("--src", default=default_src(), help="정본 processed/mobility (기본 .env DATA_DIR)")
     ap.add_argument("--dst", default=str(DEFAULT_DST))
     ap.add_argument("--clean", action="store_true")
-    # 9/30 채택안이 기본(p4 검증: 회귀 게이트 22 · 전체층 156 · pytest 게이트 210+1 · 전체층 185 — 정본 판과 같은 값)
+    # 시간표/압축 기본값은 유지한다. 일반/급행 구분 조회가 사용하는 혼잡도 행은 기본 보존한다.
     ap.add_argument("--no-gz", dest="gz", action="store_false", help="50 MB 넘는 파일도 텍스트로 둔다(기본: .gz 로 교체)")
     ap.add_argument("--gz", dest="gz", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--keep-no-dep", dest="drop_no_dep", action="store_false", help="출발없음 행을 남긴다(기본: 뺀다)")
-    ap.add_argument("--keep-express", dest="drop_express", action="store_false", help="9호선 급행 행을 남긴다(기본: 뺀다)")
+    ap.add_argument("--keep-express", dest="drop_express", action="store_false", help="9호선 일반·급행 행을 남긴다(기본값과 같은 호환 옵션)")
     ap.add_argument("--drop-no-dep", dest="drop_no_dep", action="store_true", help=argparse.SUPPRESS)
-    ap.add_argument("--drop-express", dest="drop_express", action="store_true", help=argparse.SUPPRESS)
-    ap.set_defaults(gz=True, drop_no_dep=True, drop_express=True)
+    ap.add_argument("--drop-express", dest="drop_express", action="store_true", help="진단·옛 결과 비교용 급행 행 제외(제품 자료 생성에는 사용 금지)")
+    ap.set_defaults(gz=True, drop_no_dep=True, drop_express=False)
     a = ap.parse_args()
     if not a.src:
         print("! --src 를 주거나 .env 에 DATA_DIR 을 넣어라"); sys.exit(2)

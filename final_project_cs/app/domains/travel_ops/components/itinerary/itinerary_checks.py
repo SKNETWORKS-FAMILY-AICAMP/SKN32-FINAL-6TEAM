@@ -12,6 +12,7 @@
                 이동 항목이 없는 구간은 **간격이 0 일 때만** 걸린다 — 몇 분 걸리는지 모르기 때문이다.
     영업시간    장소 속성의 `hours`·`break` 가 있을 때만 본다. 없으면 모른다(통과시킨다).
                 식당은 요식 원장의 그 시각 판정(`place["ledger"]`)도 본다 — 붙이는 것은 부르는 쪽(`with_ledger`)이다.
+                관광지는 활동 원장 판정(`place["activity"]`)도 본다 — 붙이는 것은 확인 화면(`intake.review`)이다.
     결제·예산   여행 제약(`constraints.payment`·`budget_krw`)이 있을 때만 본다.
 
 ★**거절은 「무엇이·왜·무엇을 바꾸면 되는지」를 같이 낸다.** 완화 조건(`remedy`)이 없는 위반은
@@ -30,6 +31,37 @@ from zoneinfo import ZoneInfo
 
 KST = ZoneInfo("Asia/Seoul")
 logger = logging.getLogger(__name__)
+#: `[2026-10-13]` 며칠에 걸치는 항목 — 숙소(한 항목 = 한 숙박). 앞뒤 일정끼리의 검사(겹침 · 이동 시간)에서 뺀다
+STAY_KINDS = frozenset({"lodging"})
+
+
+#: `[2026-10-13]` 이동 항목 표시 — 「그날 묵는 숙소에서 출발」(아침 숙소 → 첫 일정). 숙소를 id 로 가리키지 않는다:
+#:  숙소를 바꾸면 새 항목 id 가 생기므로, 날짜로 그날의 숙소를 찾는다(`stay_on`)
+FROM_STAY = "from_stay"
+
+
+def stay_on(items: Iterable[Any], day: Any) -> Any | None:
+    """`day`(서울 날짜) 아침에 묵고 있는 숙소 — 체크인 다음 날부터 체크아웃 날까지. 없으면 None."""
+    found = [i for i in items if getattr(i, "kind", None) in STAY_KINDS and getattr(i, "ends_at", None) is not None
+             and _seoul(i.starts_at).date() < day <= _seoul(i.ends_at).date()]
+    return max(found, key=lambda i: i.starts_at) if found else None
+
+
+def origin_of(items: Iterable[Any], move: Any) -> Any | None:
+    """이동 항목의 출발지 — 「숙소에서 출발」 표시면 그날 묵는 숙소, 아니면 순서상 바로 앞의 장소 일정(이동 아님)."""
+    items = list(items)
+    if ((getattr(move, "detail", None) or {}).get(FROM_STAY)):
+        return stay_on(items, _seoul(move.starts_at).date())
+    earlier = [i for i in items if i.seq < move.seq and i.kind != "mobility"]
+    return max(earlier, key=lambda i: i.seq) if earlier else None
+
+
+def leave_at(item: Any) -> datetime:
+    """이 일정을 **떠나는** 시각 — 다음 일정으로 가는 이동의 출발 하한. 보통은 끝 시각(없으면 시작).
+    ★`[2026-10-13]` 숙소는 체크인 시각이다 — 끝(체크아웃)은 며칠 뒤라, 그대로 쓰면 체크인 날 저녁 이동이 체크아웃 날로 밀린다."""
+    if getattr(item, "kind", None) in STAY_KINDS:
+        return item.starts_at
+    return item.ends_at or item.starts_at
 
 
 @dataclass(frozen=True)
@@ -118,8 +150,19 @@ def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | N
                                    "끝나는 시각을 시작 뒤로 보내거나 비워 둔다"))
         found += _place_violations(part)
 
-    for earlier, later in zip(items, items[1:]):
+    # ★`[2026-10-13 사용자 결정 — 숙소 항목 B안]` 숙소는 체크인부터 체크아웃까지 며칠에 걸친다(한 항목 = 한 숙박) — 그 사이 낮 일정과
+    #   시간이 겹치는 것이 정상이다. 그래서 앞뒤 일정끼리의 겹침 · 이동 시간 검사에서 빼고, 숙소끼리만 겹치지 않는지 본다(같은 밤 두 곳)
+    timed = [part for part in items if part.kind not in STAY_KINDS]
+    for earlier, later in zip(timed, timed[1:]):
         found += _pair_violations(earlier, later)
+    stays = [part for part in items if part.kind in STAY_KINDS]
+    for earlier, later in zip(stays, stays[1:]):
+        out = earlier.ends_at or earlier.starts_at
+        if later.starts_at < out:
+            found.append(Violation("stay_overlap", (earlier.seq, later.seq),
+                                   f"{earlier.title}(체크아웃 {seoul(out):%m-%d %H:%M})과 {later.title}"
+                                   f"(체크인 {seoul(later.starts_at):%m-%d %H:%M}) 숙박 기간이 겹친다",
+                                   f"{earlier.title} 체크아웃을 {later.title} 체크인 전으로 맞추거나 한 곳을 뺀다"))
 
     found += _trip_violations(items, constraints, party_size)
     return found
@@ -165,6 +208,7 @@ def _place_violations(part: Part) -> list[Violation]:
             found.append(Violation("after_last_entry", (part.seq,),
                                    f"{part.title}: {_hm(part.starts_at)} 시작인데 입장·주문 마감이 {last} 다",
                                    f"{last} 전에 들어가게 앞당기거나 다른 곳으로 바꾼다"))
+    found += _activity_violations(part, (part.place or {}).get("activity") or {}, {v.code for v in found}, start)
     span = break_span(attributes)
     if span is not None:
         starts, ends = span
@@ -173,6 +217,31 @@ def _place_violations(part: Part) -> list[Violation]:
                                    f"{part.title}: {starts:%H:%M}~{ends:%H:%M} 은 브레이크 타임인데 그 시간에 걸친다",
                                    f"{ends:%H:%M} 이후로 옮기거나 {starts:%H:%M} 전에 끝낸다"))
     return found
+
+
+def _activity_violations(part: Part, verdict: Mapping[str, Any], seen: set[str], start: datetime) -> list[Violation]:
+    """활동 원장 판정(`[2026-10-13]` 활동 코어 전달 사항 3번). ★요일표 판정이 먼저다 — 같은 뜻의 위반이 이미 있으면 더하지 않는다.
+    None 은 모름이라 거르지 않는다."""
+    if not verdict:
+        return []
+    if verdict.get("closed") is True:
+        if "closed_day" in seen:
+            return []
+        why = f" — {verdict['quote']}" if verdict.get("quote") else ""
+        return [Violation("closed_day", (part.seq,), f"{part.title}: {start:%m월 %d일}은 쉬는 날이다(활동 원장{why})",
+                          "그날 여는 다른 곳으로 바꾼다")]
+    if verdict.get("cut_short") is True and verdict.get("closes_at"):
+        closes, minutes = verdict["closes_at"], verdict.get("usable_minutes")
+        stay = f" {minutes}분만 머물 수 있다" if minutes else ""
+        reason = f"{part.title}: {closes} 에 닫아{stay}"
+        remedy = f"{closes} 이전에 끝나게 줄이거나 앞당긴다"
+        if "after_closing" in seen:
+            return []
+        return [Violation("after_closing", (part.seq,), reason, remedy)]
+    if verdict.get("within_hours") is False and verdict.get("closed") is False and             not seen & {"before_opening", "after_closing", "after_last_entry"}:
+        return [Violation("outside_hours", (part.seq,), f"{part.title}: {_hm(part.starts_at)} 에는 운영시간 밖이다(활동 원장)",
+                          "운영시간 안으로 옮기거나 그 시각에 여는 다른 곳으로 바꾼다")]
+    return []
 
 
 def _pair_violations(earlier: Part, later: Part) -> list[Violation]:
@@ -287,4 +356,4 @@ def _ledger_key(part: Part) -> dict[str, str] | None:
     return None
 
 
-__all__ = ["Part", "Violation", "check_itinerary", "parts_from_items", "seoul", "seoul_part", "with_ledger"]
+__all__ = ["STAY_KINDS", "Part", "Violation", "check_itinerary", "parts_from_items", "seoul", "seoul_part", "with_ledger"]

@@ -62,7 +62,7 @@ def _target(module: str) -> str | None:
 def _edges() -> dict[tuple[str, str], set[tuple[str, str]]]:
     found: dict[tuple[str, str], set[tuple[str, str]]] = {}
     for path in sorted(APP.rglob("*.py")):
-        if "__pycache__" in path.parts:
+        if {"__pycache__", "_backup", "legacy"}.intersection(path.parts):
             continue
         rel = path.relative_to(APP).parts
         source = _layer(rel)

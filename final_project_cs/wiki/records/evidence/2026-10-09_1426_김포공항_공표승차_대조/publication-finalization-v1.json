@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-10-09T21:13:58.864461+09:00",
+  "preserved_after_publication": 308,
+  "preservation_total": 308,
+  "allowed_publication_changes": [
+    "datasets/mobility/REPORT.md",
+    "final_project_cs/wiki/records/reports/debugs/2026-10-09_1426_김포공항_공표승차_대조.md",
+    "final_project_cs/wiki/teams/mobility.md"
+  ],
+  "limited_api_calls": 0,
+  "network_attempts": 0,
+  "test_passed": 97,
+  "test_selected": 97,
+  "test_deselected": 165,
+  "replays_passed": 16,
+  "replays_total": 16,
+  "product_code_or_data_mutations_this_resume": 0,
+  "full_feature_completion": false
+}

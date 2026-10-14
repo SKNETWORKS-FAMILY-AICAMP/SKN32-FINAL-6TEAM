@@ -1,0 +1,154 @@
+{
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_140358_gpu-finch-seed2-completion-valen-final-refill.md",
+  "state": "program/research/daily_rag_slm/gpu_backlog_2026-10-09.json",
+  "backup": "program/research/daily_rag_slm/_backup/2026-10-09_140358_gpu_hb1355_completion_refill/gpu_backlog_2026-10-09.json",
+  "links": [
+    17,
+    17
+  ],
+  "A": {
+    "observed_at_utc": "2026-10-09T05:02:29.201849+00:00",
+    "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_hb1405_20261009.json",
+    "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_hb1405_20261009.json",
+    "gpu_snapshot": "3482 MiB, 98 %",
+    "worker_pid": 342497,
+    "worker_restarted": false,
+    "manifest_jobs": 103,
+    "manifest_questions": 176611,
+    "completed_jobs": 91,
+    "failed_jobs": 2,
+    "running_jobs": [
+      "e4bbase_finch_s20261013_d3"
+    ],
+    "running_answers_saved": {
+      "e4bbase_finch_s20261013_d3": 209
+    },
+    "ready_jobs": 9,
+    "ready_ids": [
+      {
+        "id": "e4bqat_finch_s20261013_d3",
+        "input_checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bbase_finch_s20261013_d",
+        "input_checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bqat_finch_s20261013_d",
+        "input_checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bbase_finch_s20261013_d2",
+        "input_checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bqat_finch_s20261013_d2",
+        "input_checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bbase_finch_s20261013_h",
+        "input_checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bqat_finch_s20261013_h",
+        "input_checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bbase_finch_s20261013_mx",
+        "input_checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bqat_finch_s20261013_mx",
+        "input_checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      }
+    ],
+    "input_blocked_jobs": 0,
+    "blocked_ids": [],
+    "filesystem_available_bytes": 4191072256,
+    "space_observed_at_utc": "2026-10-09T05:02:33.363799+00:00",
+    "refill_audit": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/A_seed13_registration.json",
+    "new_jobs": 10,
+    "new_questions": 18850,
+    "pre_refill_idle_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_hb1355_20261009.json",
+    "worker_lock_held_on_registration": true
+  },
+  "B": {
+    "observed_at_utc": "2026-10-09T05:02:29.639026+00:00",
+    "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_hb1405_20261009.json",
+    "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_hb1405_20261009.json",
+    "gpu_snapshot": "12781 MiB, 100 %",
+    "active_training": [
+      "oos2r_cosine_5e5_seed20261013_20261008"
+    ],
+    "training_steps_saved": 180,
+    "training_steps_expected": 654,
+    "active_log": "/root/daily_rag_repeat_20261008/train_cosine.log",
+    "prepared_training_jobs": 2,
+    "ready_sequences": [
+      {
+        "queue": "B58",
+        "seed": 20261014,
+        "remaining_jobs": 2,
+        "order": [
+          "cosine",
+          "finch"
+        ],
+        "dependency": "B57 ALLDONE",
+        "pid": 2798582
+      }
+    ],
+    "filesystem_available_bytes": 6305652736,
+    "space_observed_at_utc": "2026-10-09T05:02:33.781805+00:00",
+    "B57_process_alive_in_latest_snapshot": true,
+    "B58_process_alive_in_latest_snapshot": true,
+    "preparation_target_met": false,
+    "target_prepared_jobs": 3,
+    "unnecessary_extra_seed_added": false,
+    "existing_candidate_inventory": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/B_existing_candidates.json"
+  }
+}

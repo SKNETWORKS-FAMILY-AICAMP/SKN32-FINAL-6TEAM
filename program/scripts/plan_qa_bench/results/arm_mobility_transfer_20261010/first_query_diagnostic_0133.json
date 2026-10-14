@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-10-09T16:33:04.783571+00:00",
+  "api_bounded_log": [],
+  "model-adapter_bounded_log": [],
+  "health": {
+    "status": "ok"
+  },
+  "slots": [
+    {
+      "id": 0,
+      "n_ctx": 4096,
+      "is_processing": true
+    },
+    {
+      "id": 1,
+      "n_ctx": 4096,
+      "is_processing": true
+    }
+  ]
+}

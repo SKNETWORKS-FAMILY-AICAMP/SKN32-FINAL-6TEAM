@@ -1,0 +1,7 @@
+{
+  "passed": 3,
+  "planned": 3,
+  "idempotent": true,
+  "conflicting_upstream_rejected": true,
+  "files": 15
+}

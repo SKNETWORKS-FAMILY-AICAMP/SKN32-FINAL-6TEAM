@@ -1,0 +1,399 @@
+{
+  "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release and quantization-aware training; our-travel oos1 adapter recorded separately",
+  "saved": 4014,
+  "expected": 4014,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "repetitions": 1,
+  "counts": {
+    "control": {
+      "request": {
+        "total": 1033,
+        "correct": 996,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9510206789772844,
+          0.973903755555618
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 934,
+        "false_pick": 40,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9445611083942818,
+          0.9696975292770955
+        ],
+        "false_pick_wilson95": [
+          0.030302470722904526,
+          0.055438891605718174
+        ]
+      }
+    },
+    "mixed": {
+      "request": {
+        "total": 1033,
+        "correct": 865,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8136199077237585,
+          0.8586140139336274
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 946,
+        "false_pick": 28,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9587656766882093,
+          0.9800368170280371
+        ],
+        "false_pick_wilson95": [
+          0.019963182971962878,
+          0.041234323311790624
+        ]
+      }
+    }
+  },
+  "paired": {
+    "request": {
+      "pairs": 1033,
+      "itineraries": 59,
+      "correct_control": 996,
+      "correct_mixed": 865,
+      "loss_pp": 12.681510164569216,
+      "loss_cluster95_pp": [
+        10.703864597443241,
+        14.782880173745971
+      ],
+      "mixed_accuracy_cluster95": [
+        0.8138162936149406,
+        0.8597337011088635
+      ],
+      "paired_exact": {
+        "a_only": 132,
+        "b_only": 1,
+        "p": 2.4611912970341645e-38
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    },
+    "no_request": {
+      "pairs": 974,
+      "itineraries": 59,
+      "correct_control": 934,
+      "correct_mixed": 946,
+      "loss_pp": -1.2320328542094456,
+      "loss_cluster95_pp": [
+        -2.4870466321243567,
+        -0.10120946305156117
+      ],
+      "mixed_accuracy_cluster95": [
+        0.9611449257617157,
+        0.9803729125841357
+      ],
+      "paired_exact": {
+        "a_only": 10,
+        "b_only": 22,
+        "p": 0.050102459732443094
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    }
+  },
+  "subtypes_mixed": {
+    "MX1": {
+      "total": 525,
+      "correct": 454,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8328458394588768,
+        0.8913787719285934
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0072639138944599795
+      ]
+    },
+    "MX2": {
+      "total": 474,
+      "correct": 379,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7611960282561094,
+        0.8331433593326274
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.008039191137108092
+      ]
+    },
+    "MX3": {
+      "total": 457,
+      "correct": 432,
+      "false_pick": 25,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9204923920710383,
+        0.9626746759300139
+      ],
+      "false_pick_wilson95": [
+        0.037325324069986184,
+        0.07950760792896178
+      ]
+    },
+    "MX4": {
+      "total": 121,
+      "correct": 120,
+      "false_pick": 1,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9546693563957512,
+        0.9985396266145802
+      ],
+      "false_pick_wilson95": [
+        0.0014603733854198359,
+        0.04533064360424888
+      ]
+    },
+    "MX5a": {
+      "total": 236,
+      "correct": 234,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9696327767183001,
+        0.9976728806970162
+      ],
+      "false_pick_wilson95": [
+        0.002327119302983828,
+        0.03036722328170005
+      ]
+    },
+    "MX5b": {
+      "total": 160,
+      "correct": 160,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9765538048284949,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.02344619517150519
+      ]
+    },
+    "MX6a": {
+      "total": 34,
+      "correct": 32,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.80906393095719,
+        0.9837173447898772
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.10151455415332376
+      ]
+    }
+  },
+  "sources": {
+    "code": {
+      "control": {
+        "request": {
+          "total": 940,
+          "correct": 906,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9498816099052971,
+            0.97400236642431
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 794,
+          "false_pick": 34,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9431674023631013,
+            0.9704682332993192
+          ],
+          "false_pick_wilson95": [
+            0.02953176670068077,
+            0.05683259763689882
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 940,
+          "correct": 775,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.7988419380565496,
+            0.8474530453850334
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 800,
+          "false_pick": 28,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9515600186509388,
+            0.9765014428377303
+          ],
+          "false_pick_wilson95": [
+            0.023498557162269684,
+            0.04843998134906115
+          ]
+        }
+      }
+    },
+    "llm": {
+      "control": {
+        "request": {
+          "total": 93,
+          "correct": 90,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9094061748887851,
+            0.988969387184108
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 140,
+          "false_pick": 6,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9132470514592993,
+            0.9810314816958631
+          ],
+          "false_pick_wilson95": [
+            0.01896851830413694,
+            0.08675294854070074
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 93,
+          "correct": 90,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9094061748887851,
+            0.988969387184108
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 146,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9743631779153262,
+            1.0
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.025636822084673896
+          ]
+        }
+      }
+    }
+  },
+  "aggregate_gates": {
+    "request_accuracy": false,
+    "false_pick": false,
+    "request_loss": false,
+    "false_pick_increase": true
+  },
+  "aggregate_gates_passed": 1,
+  "aggregate_gates_total": 4,
+  "subtype_gates": {
+    "MX3": false,
+    "MX4": true,
+    "MX5a": true
+  },
+  "complete_valid": true,
+  "failed_records": [],
+  "false_pick_increase_pp": -1.2320328542094454,
+  "answer_sha256": "8bedebf62ab472638704c8f6a3941cbc15f732538a30b9a492dba6d2c7b4da51",
+  "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+  "execution": {
+    "job": {
+      "id": "e4bqat_oos1_mx",
+      "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+      "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "prompts": "/workspace/heavy/all_prompts_mx.json",
+      "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "mx_backlog_e4bqat_oos1",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 4014,
+      "purpose": "Missing H/MX coverage of known oos1 adapter on QAT base; deployment quantization robustness against matched QAT original and Q4_K_M oos1; no retraining or D repetition",
+      "lora": "/workspace/tripilot/oos1_lora_f16.gguf",
+      "lora_sha256": "6d3cf6786fb5e99511930e493776d38695adf6fd201fd16398df7ade01f767ba"
+    },
+    "started": "2026-10-08T06:28:18.831562+00:00",
+    "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "limits": [
+    "one run",
+    "existing developer/regression suite; not new independent final holdout",
+    "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+    "no complete matched original cohort ranking",
+    "token p_null is not verbal confidence or calibrated option probability"
+  ],
+  "role_metadata_correction": {
+    "original_description": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+    "our_training": true,
+    "adapter_sha256": "6d3cf6786fb5e99511930e493776d38695adf6fd201fd16398df7ade01f767ba",
+    "original_started_json_preserved": true
+  }
+}

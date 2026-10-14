@@ -1,0 +1,51 @@
+{
+  "this_work_record_checks": {
+    "passed": 4,
+    "total": 4,
+    "records": [
+      {
+        "file": "2026-10-11_1925_택시_출발시각과소요_불일치.md",
+        "resolved": true,
+        "verification_links": true
+      },
+      {
+        "file": "2026-10-11_1930_후속버스_환승시간폭_누락.md",
+        "resolved": true,
+        "verification_links": true
+      },
+      {
+        "file": "2026-10-11_1937_택시_출발직전_문맥누락.md",
+        "resolved": true,
+        "verification_links": true
+      },
+      {
+        "file": "2026-10-11_0439_이동_기존기대결과_불일치.md",
+        "resolved": true,
+        "verification_links": true
+      }
+    ]
+  },
+  "repository_record_format_check": {
+    "passed": 146,
+    "total": 161,
+    "failures": 15,
+    "failed_parameter_names_at_run_time": [
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1217_\\ubc84\\uc2a4_\\uc218\\ub2e8\\ud544\\ud130\\uc640_\\ud658\\uc2b9\\ud0d0\\uc0c9_\\ub204\\ub77d]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1257_\\uc774\\ub3d9_\\uae30\\ub3d9_\\uac04\\uc811import_\\uae68\\uc9d0]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1310_\\ubd80\\ubd84\\uc21c\\ud658\\uc120_\\uc5c6\\ub294\\uc5f0\\uacb0_\\uc0dd\\uc131]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-08_1735_\\uc2dc\\uac04\\ucd08\\uae30\\ud654_\\uc77c\\ubd80\\uc77c\\uc815\\ub9cc_\\ub418\\ub3cc\\ub9bc]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_0122_\\ucd9c\\ubc1c\\uc2dc\\uc810_\\ubc84\\uc2a4\\uc7ac\\uac80\\uc99d]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_0306_\\ucc28\\ub7c9_\\uc2e4\\uc81c\\uc120\\ud0dd\\ub3c4\\ub85c_\\uac70\\ub9ac\\uadfc\\uac70_\\uc720\\uc2e4]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1056_\\uc9c0\\ud558\\ucca0_\\ud604\\uc7ac\\ucd9c\\ubc1c_\\uc81c\\ud488\\uc5f0\\uacb0]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1125_\\uacf5\\uc2dd\\ubcd1\\uae30\\uc5ed\\uba85_\\uc885\\ucc29\\uacbd\\ub85c\\ubcf5\\uad6c]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1143_\\uc9c0\\ud558\\ucca0_\\uc2e4\\uc81c\\ud0a4_\\uc2b9\\ucc28\\uc870\\ud68c]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_1945_\\uac70\\ub9ac\\uce69_\\ub9c8\\ucee4\\uc911\\ubcf5]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-09_2048_\\uc77c\\uc815\\uc0bd\\uc785_\\ucde8\\uc18c\\uc640\\uc785\\ub825\\ub77c\\ubca8]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-10_2120_\\ucd9c\\ubc1c\\uc548\\ub0b4_\\ud0d1\\uc2b9\\ud658\\uc2b9\\uc2dc\\uac01_\\uc5f0\\uacb0_\\uc2b9\\ucc28\\uc2dc\\uac01\\uc62c\\ub9bc]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-10_\\uc88c\\uc6b0\\ub9c8\\ucee4_\\ub0a0\\uc9dc_\\ucd94\\uac00\\uc548]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_1010_arm-adapter-incomplete-s]",
+      "test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_web_conversation_resume]"
+    ]
+  },
+  "note": "문서 형식 검사이며 제품 코드 시험283/283과 별도. 다른 기록의 해결/부분 해결 표제가 규정된 상태 형식과 달랐음. 다른 작업자의 기록은 수정하지 않음."
+}

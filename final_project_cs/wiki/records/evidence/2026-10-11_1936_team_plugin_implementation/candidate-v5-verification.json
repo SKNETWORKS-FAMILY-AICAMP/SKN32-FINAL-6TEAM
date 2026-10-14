@@ -1,0 +1,118 @@
+{
+  "candidate": "legacy/deployment_candidates/2026-10-11_222547_plugin_v5",
+  "manifest_sha256": "2b243194cce56302846ad486b78d36f72bc9d74d0645a4c6f6df5fc7ca0f4cd1",
+  "runtime_files_verified": 50,
+  "passed": 327,
+  "failed": 0,
+  "skipped": 0,
+  "seconds": 69.82,
+  "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/candidate-plugin-v5-combined-v1.log",
+  "log_sha256": "257a615e922e8264c09cd6157f96d34595a354064a395984d3625deeda7451e0",
+  "test_files": [
+    {
+      "path": "tests/unit/core/test_plugin_availability.py",
+      "passed": 45,
+      "sha256": "f6992f30f821a55cbc28e8f33ca2dc3211970881302c2bdb49520f65a3780825"
+    },
+    {
+      "path": "tests/unit/test_plugin_composition_runtime.py",
+      "passed": 27,
+      "sha256": "e297fe7815f591f016b15bfda7890e4c150d2c4faf90fbfb9ad9532aa29e3084"
+    },
+    {
+      "path": "tests/unit/travel/test_plugin_read_boundaries.py",
+      "passed": 10,
+      "sha256": "2297e65eeed7332982c6f0e68a15bdad9db6cf4cb9187b119c8aa5d6f46723a4"
+    },
+    {
+      "path": "tests/unit/travel/test_plugin_worker_availability.py",
+      "passed": 26,
+      "sha256": "20a6f0636c0f792915ea1110898cc1cf6ced882f01b8e175c95994a0d833af39"
+    },
+    {
+      "path": "tests/integration/controller/test_plugin_unavailable.py",
+      "passed": 33,
+      "sha256": "b4eeb500330c64e69dbc348512f30c1e2cbe08991e575d8ec0c5c0c196c0ec67"
+    },
+    {
+      "path": "tests/integration/controller/test_conversation_resume.py",
+      "passed": 19,
+      "sha256": "fa9a3803dbfcf8f6eb97206dca92b311a0fc1b6b008390d47eba995084aa304f"
+    },
+    {
+      "path": "tests/integration/controller/test_unknown_route_availability.py",
+      "passed": 5,
+      "sha256": "34da680e43aa1ce5db61bca2531f0066d4c356522c8750ff1e97f516aa8ff29b"
+    },
+    {
+      "path": "tests/contract/test_case_state_table.py",
+      "passed": 23,
+      "sha256": "61dcf9ad2ee85cc20c7f8423088bd9d292bd30341d938ce961046d8c2618a891"
+    },
+    {
+      "path": "tests/unit/test_candidate_packaging.py",
+      "passed": 2,
+      "sha256": "66aed1154026d086a4e646aa25008a23d2c61e54ad687d89c9189110cbfcac05"
+    },
+    {
+      "path": "tests/e2e/test_web_conversation_resume.py",
+      "passed": 9,
+      "sha256": "376edbdeea1f9ba9ace86076f0d902df4ce58b19bb5a5b783734f2df07d3c78f"
+    },
+    {
+      "path": "tests/unit/travel/test_conversation_work.py",
+      "passed": 45,
+      "sha256": "9ddd48de2f8c865d897421331893f51ffff3edb6927dc71eac5e252467022aee"
+    },
+    {
+      "path": "tests/unit/travel/test_trip_api_plugin_boundaries.py",
+      "passed": 36,
+      "sha256": "bd21ad2e47386c1c2484a7b389f6ada2b8f887c4961b7b093f5fa81d7d77e37e"
+    },
+    {
+      "path": "tests/unit/travel/test_intake_resolve_dining.py",
+      "passed": 11,
+      "sha256": "3d908633cb1d060c099281977cb66143182a5a16d5785ef55f2afb530f1044a0"
+    },
+    {
+      "path": "tests/unit/travel/test_plugin_unavailable_propagation.py",
+      "passed": 9,
+      "sha256": "a3e954ae8957456ffb60f351ec9002655f0878f1858c8811824d1e8b86f5faba"
+    },
+    {
+      "path": "tests/unit/travel/test_dining_read_tool_availability.py",
+      "passed": 22,
+      "sha256": "2acd55455a6a294aec5f20f13d55c7148fa4d87dc7e46cfd9416caaaabe73fed"
+    },
+    {
+      "path": "tests/integration/dining/test_catalog_state_plugin.py",
+      "passed": 3,
+      "sha256": "f114f22defb95420b3dcfb3b018f050c5a8175d0b0d548dc43c09e87d5b89dab"
+    },
+    {
+      "path": "tests/security/test_query_scope.py",
+      "passed": 2,
+      "sha256": "5069a3b392d0f929ac8a335649cb216ff4182b9ffc2d3365713011ae62bb2d6e"
+    }
+  ],
+  "baseline_preserved": {
+    "matched": 404,
+    "total": 404
+  },
+  "local_database": "tripilot_candidate_20261011_221806",
+  "operating_database_schema_read_only": true,
+  "operating_database_rows_read": false,
+  "image_build_performed": false,
+  "deployment_performed": false,
+  "windows_functional_platform": "Python3.12.7",
+  "operating_linux_syntax_only": {
+    "python": "3.12.15",
+    "compiled": 48,
+    "total": 48,
+    "application_executed": false
+  },
+  "schema_comparison": "candidate-deployed-schema-comparison-v1.json",
+  "fixture_adaptation": "test_plugin_worker_availability.py: absent forecast_attention monkeypatch raising=False; excluded monitoring mock removed; gate/result assertions retained",
+  "requirements_unchanged": true,
+  "sql_unchanged": true
+}

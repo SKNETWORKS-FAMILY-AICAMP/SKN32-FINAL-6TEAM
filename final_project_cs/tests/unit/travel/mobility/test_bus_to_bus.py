@@ -75,10 +75,11 @@ def test_a_bus_to_bus_candidate_is_found_through_a_nearby_transfer_stop():
     assert c.est_min > 0 and c.grade == "추정"
 
 
-def test_the_first_route_that_reaches_the_destination_alone_is_left_to_the_direct_bus():
+def test_a_direct_route_does_not_remove_transfer_candidates_before_comparison():
     def r1_reaches_b(routes, stops):
         return routes, stops + [_stop("R1", 4, "가도착", 37.6102, 127.0102)]      # R1 이 도착점 근처까지 간다
-    assert _gen(_world(x=r1_reaches_b)).bus_to_bus(*A, *B, 800) == []
+    got = _gen(_world(x=r1_reaches_b)).bus_to_bus(*A, *B, 800)
+    assert len(got) == 1 and got[0].route_nm == '1111→2222'
 
 
 def test_a_transfer_stop_beyond_the_link_limit_is_not_used():

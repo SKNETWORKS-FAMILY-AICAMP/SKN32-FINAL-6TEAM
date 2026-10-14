@@ -1,0 +1,23 @@
+[
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "sha256": "1b32755f5ac505395567fbd58d05d72157523b9ee2342faf6dc43049c491d8ae",
+    "functions": [
+      "_taxi_option"
+    ]
+  },
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "sha256": "1968f4cd26e37808cafbb814455cb86a1b828a6ba96225f11ef0261d24be3634",
+    "functions": [
+      "_boarding_steps"
+    ]
+  },
+  {
+    "file": "app/domains/travel_ops/components/watch/trip_reminders.py",
+    "sha256": "a8cbbf3d3866c194eae9b7e75bb8b31077e8c6049ff30c5bb0aa3693ca0c62b6",
+    "functions": [
+      "_with_boarding_steps"
+    ]
+  }
+]

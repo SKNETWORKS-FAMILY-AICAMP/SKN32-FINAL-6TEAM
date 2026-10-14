@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """일정이 꼬였을 때 **바꿀지 · 물을지 · 알리기만 할지** — 확정 시나리오로 흘린다. `[2026-09-24]` D-020
 
-★기본(설문 15번이 없거나 「비슷한 곳으로」)은 지금까지와 같다 — `tests/e2e/test_trip_api.py` 가 본다.
+★직접 자동 변경을 켠 여행의 동작 — `tests/e2e/test_trip_api.py` 가 본다.
   이 파일은 새로 갈린 길을 본다.
 
     「먼저 물어봐줘」   → 바꾸지 않고 안 1·2·3을 보관하고 묻는다. 고르면 그 안으로, 답이 없으면 그 일정이
                         끝날 때 닫고(바꾸지 않음) 다음 일정으로 간다
     「변경 안 할 일정」 → 15번 답과 상관없이 바꾸지 않고 묻는다
-    안전 사건           → 「먼저 물어봐줘」면 알림만(바꾸지 않음), 아니면 최적 일정으로 바로 바꾼다
+    안전 사건           → 미응답·꺼짐이면 알림만, 직접 켰으면 검증된 변경을 적용한다(재난 정지는 별도)
 
 재현:
 
@@ -198,11 +198,13 @@ def test_ask_first_with_a_safety_event_only_alerts():
     assert (decision.action, decision.reason, decision.safety) == ("safety_alert", "safety_alert", True)
 
 
-def test_default_with_a_safety_event_changes_to_the_best_plan():
-    """★15번이 없거나 「비슷한 곳으로」면 안전 사건도 **최적 일정으로 바로** 바꾼다."""
+def test_unanswered_safety_event_alerts_and_explicit_enable_allows_change():
+    """미응답·옛 기본값은 알림만 보내고, 직접 켠 기록이 있어야 자동 변경한다."""
     for constraints in ({}, {"survey": {"version": SURVEY_VERSION, "on_disruption": "replace"}}):
         decision = decide(constraints=constraints, item=_item(), report=QUAKE)
-        assert decision.action == "apply" and decision.safety is True
+        assert decision.action == "safety_alert" and decision.safety is True
+    enabled = {"survey": {"on_disruption": "replace"}, "survey_answered": ["on_disruption"]}
+    assert decide(constraints=enabled, item=_item(), report=QUAKE).action == "apply"
 
 
 def test_a_do_not_change_item_hit_by_a_safety_event_is_asked_with_a_safety_head():
@@ -214,5 +216,6 @@ def test_money_alone_does_not_protect_an_item():
     """★돈이 걸렸는지(예약 연결)는 따지지 않는다 — 바꾸기 싫은 일정은 「변경 안 할 일정」으로 적는다."""
     from uuid import uuid4
 
-    decision = decide(constraints={}, item=_item(booking_id=uuid4()), report=DUST)
+    enabled = {"survey": {"on_disruption": "replace"}, "survey_answered": ["on_disruption"]}
+    decision = decide(constraints=enabled, item=_item(booking_id=uuid4()), report=DUST)
     assert decision.action == "apply"

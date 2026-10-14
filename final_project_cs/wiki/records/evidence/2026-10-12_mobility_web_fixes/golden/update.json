@@ -1,0 +1,8 @@
+{
+  "target": "final_project_cs\\tests\\unit\\travel\\mobility\\plan_example_out_all_v1.json",
+  "backup": "final_project_cs\\tests\\unit\\travel\\mobility\\_backup\\2026-10-12_verified_bus_transfer_candidates",
+  "sha256_before": "f831ae655a6921b6d3a2d9fb0428b5c2c1dabff79ba8643fb8306e932c9a3fc6",
+  "sha256_after": "73fc86ed1bbc0d22e52174381bf5801ccba5041b024f8dea2a5f1d1e2fa98ac4",
+  "private_golden_accessed": false,
+  "developer_api_calls": 0
+}

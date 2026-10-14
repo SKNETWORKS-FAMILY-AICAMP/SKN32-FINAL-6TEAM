@@ -1,0 +1,8 @@
+{
+  "app/core/registry.py": "b538ae5aae7a1b459caaa6468ef31f1ab6f651db497884b5e35ebf1feb1ad5db",
+  "app/domains/travel_ops/components/core_hooks/routing.py": "28c03d0bd9d6a4ff7792c8a3735a9a099f5e2aed31b729da4fb9ebc874fa05c0",
+  "tests/unit/core/test_plugin_availability.py": "f6992f30f821a55cbc28e8f33ca2dc3211970881302c2bdb49520f65a3780825",
+  "tests/integration/controller/test_unknown_route_availability.py": "34da680e43aa1ce5db61bca2531f0066d4c356522c8750ff1e97f516aa8ff29b",
+  "tests/unit/travel/test_routing_reroute.py": "0db3512f305fca9ae2ca0027444054789a9a8834c7e1ab085704e9f3a51b7bf4",
+  "wiki/teams/team-contract/plugin-availability.md": "897fd52db4027faa08cd84c1505b17f859633fbc6a7aa9cf48f7a4f601c525de"
+}

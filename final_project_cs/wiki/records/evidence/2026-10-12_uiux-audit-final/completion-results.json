@@ -1,0 +1,2258 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.completion-audit.config.ts",
+      "checking-read-list-20261012.spec.ts",
+      "first-map-reveal-20261011.spec.ts",
+      "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "map-reveal-continuity-20261012.spec.ts",
+      "loading-handoff.spec.ts",
+      "map-status-bar.spec.ts",
+      "uiux-sonnet-plan-20261012.spec.ts",
+      "uiux-time-boundary-20261012.spec.ts",
+      "uiux-route-audit-20261012.spec.ts"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\playwright.completion-audit.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-resume-20261012-v1/completion-evidence",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+        "testIgnore": [
+          "**/_backup/**"
+        ],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../uiux-resume-20261012-v1/completion-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "checking-read-list-20261012.spec.ts",
+      "file": "checking-read-list-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12489,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:07:18.236Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "first-marker-list-geometry",
+                      "contentType": "application/json",
+                      "body": "eyJjdXJyZW50WSI6Mjg2LjA3ODEyNSwiZnV0dXJlWSI6NDYxLjc4MTI1LCJ0b3AiOjI0OC42NDA2MjUsImJvdHRvbSI6ODEyLCJzY3JvbGxUb3AiOjAsInNjcm9sbEhlaWdodCI6NjMzLCJoZWlnaHQiOjU2M30="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\checking-read-list-2026101-f5328--접혀-있고-현재-검증-카드만-펼쳐진다-375px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "75d14824361448ae0a7f-2b4a9b96cc13c3f8d493",
+          "file": "checking-read-list-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "첫 마커부터 전체 읽힌 목록이 접혀 있고 현재 검증 카드만 펼쳐진다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12538,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:07:31.114Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "first-marker-list-geometry",
+                      "contentType": "application/json",
+                      "body": "eyJjdXJyZW50WSI6Mjk5LjA3ODEyNSwiZnV0dXJlWSI6NDc0Ljc4MTI1LCJ0b3AiOjI2MS42NDA2MjUsImJvdHRvbSI6Nzg3LCJzY3JvbGxUb3AiOjAsInNjcm9sbEhlaWdodCI6NjE0LCJoZWlnaHQiOjUyNX0="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\checking-read-list-2026101-0a0c8-접혀-있고-현재-검증-카드만-펼쳐진다-1280px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "75d14824361448ae0a7f-6e8fbcca5191aa6683f0",
+          "file": "checking-read-list-20261012.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "first-map-reveal-20261011.spec.ts",
+      "file": "first-map-reveal-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "375px 실제 시간의 첫 지도 표시",
+          "file": "first-map-reveal-20261011.spec.ts",
+          "line": 8,
+          "column": 8,
+          "specs": [
+            {
+              "title": "질문 뒤 전체 일정은 먼저 접혀 있고 마커만 하나씩 등장하며 읽기 화면은 되돌아오지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9239,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T19:08:56.006Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "actual-frame-counts",
+                          "contentType": "application/json",
+                          "body": "W3siYXQiOjIwNDEuMzAwMDAwMDAwMDQ2Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMDQ0LjE5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MH0seyJhdCI6MjA1NCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMTIwLjg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMTM4LjgwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MH0seyJhdCI6MjE1My44MDAwMDAwMDAwNDY2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIxNzAuMzAwMDAwMDAwMDQ2Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMTg2LjgwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MH0seyJhdCI6MjIwNC44MDAwMDAwMDAwNDY2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIyMTkuNTk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMjM2LjMwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MH0seyJhdCI6MjI1Mi41OTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIyNzAuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIyODYuNTk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMzAzLjgwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MH0seyJhdCI6MjMyMC4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIzMzYuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMzkyLjA5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjQwMC41OTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI0MDYuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI0ODgsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjUwNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNTE5LjY5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjUzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNTU0LjA5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjU3MC44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjU4Ni42OTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI2MDMuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNjIzLjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNjM3LjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNjU0LjA5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjY3MS41OTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI2ODcuNjk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNzA0LjA5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjcxOS41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI3MzcuMDk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNzUzLjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mjc2OS42OTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI3ODcuMzAwMDAwMDAwMDQ2Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyODA0LjA5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjgxOS44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjgzNy4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI4NTUuODAwMDAwMDAwMDQ2Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyODcwLjgwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mjg4Ni4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI5MDUuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyOTE5LjgwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjkzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyOTUzLjE5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mjk2OS41OTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI5ODYuNjk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMDA0LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzAyMS4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzAzOC4zMDAwMDAwMDAwNDY2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMwNTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzA3MSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMDg3LjU5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzEwNC4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMxMjAuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMxNDAuODAwMDAwMDAwMDQ2Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMTU0LjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMTcxLjY5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzE4Ny41OTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMyMDUuMDk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMjIxLjY5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzIzNi41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMyNTMuNjk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMjg0LjgwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzI4OS4wOTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMzMDMuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMzIwLjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMzM2LjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMzUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMzNzAuMTk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMzg2LjMwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzQwMy41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM0MjAuMTk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNDM2LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzQ1My4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzQ3MC4zMDAwMDAwMDAwNDY2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM0ODkuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM1MTEsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzUyMC4zMDAwMDAwMDAwNDY2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM1MzYuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM1NTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzU3MC44MDAwMDAwMDAwNDY2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM1ODYuMzAwMDAwMDAwMDQ2Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNjAzLjMwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzYxOS42OTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM2MzYuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM2NTguNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNjcxLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM2ODguNTk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNzA0LjE5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzcxOS41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM3MzcuMDk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNzUzLjU5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mzc3MC41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM3ODcuMzAwMDAwMDAwMDQ2Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozODAzLjgwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzgxOS44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzgzOC41OTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM4NTMuNjk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozODY5Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozODg3Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozOTAzLjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzkxOS42OTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM5MzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mzk1My4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mzk3MC4wOTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM5ODYuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQwMDMuNTk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MDIwLjMwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDAzNi41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQwNTIuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQwNzAuMDk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MDg2LjMwMDAwMDAwMDA0NjYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDEwMy4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDEyMCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MTUwLjgwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MTU0LjMwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MTcwLjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MTg2LjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MjAyLjg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MjE5LjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQyMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDI1My44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDI3MC41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQyODcuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDMwMi42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDMxOS44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDMzNi42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDM1My44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDM3MC42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDM4Ni41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0NDA3LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQ0MjEuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDQzNy4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDQ1NC44MDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDQ5MC44MDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDQ5Ni41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ1MDQuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ1MzQuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDU0NC4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0NTU1LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDU3Mi44MDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDU4OS4zMDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDYwNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0NjIwLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ2MzcuNjk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ2NTMuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDY3MC41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0Njg3LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ3MDUuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ3MjAuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0NzM3LjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0NzU0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ3NzAuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0Nzg3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ4MDMuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDgyMi41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0ODM3LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDg1My4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDg3MC41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ4ODcuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ5MDMuNjk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ5MjAuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ5MzYuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ5NTYuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ5NzEuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ5ODcuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MDAzLjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUwMjUuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUwMzguMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUwNTMuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MDcwLjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MDg3LjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MTA1LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUxMjAuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUxMzcuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUxNTMuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTE3MC4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTE4Ny44MDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTIwNC4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MjIxLjg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MjM5Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MjU4Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MjcwLjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTI4Ny44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTMwNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MzIwLjg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MzM3LjMwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MzUzLjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MzcwLjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1Mzg3Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NDA0LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU0MjAuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU0MzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTQ1My44MDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTQ3MSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NDg3LjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NTAzLjgwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NTIwLjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NTM3LjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU1NTMuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU1NzAuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NTg2LjgwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NjAzLjgwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NjIxLjMwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NjM3LjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NjU0LjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NjcwLjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1Njg3LjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU3MDMuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTcyMC4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTczNy41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NzU4LjgwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NzcxLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU3ODYuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU4MDUuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU4MjAuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1ODM2LjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1ODUzLjg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1ODcxLjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU4ODcuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU5MDIuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU5MjcuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU5MzYuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTk1My41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU5NzAuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU5ODcuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjYwMDQuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjAyMi4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo2MDM3LjMwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo2MDU0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjYwNzIuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjYwODguNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo2MTA0LjgwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo2MTIwLjgwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo2MTM3LjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo2MTU1LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjYxNzMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjE4Ny4zMDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjIwNC4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo2MjIwLjgwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo2MjM3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjYyNjMuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjYyNzcuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjYyODcuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjYzMDQuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjYzMjEuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjYzMzcuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjYzNTMuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjYzNzAuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjYzOTIuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY0MDQuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjQyMC44MDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjQzOS41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY0NTUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjQ3Mi4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NDg4LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY1MDQuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjUyNC41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NTM3LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjU1NSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NTcwLjgwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NTg3LjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NjA0LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY2MjAuNjk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY2MzcuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY2NTMuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjY3MC4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjY4Ny4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjcwNC4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjcyMC41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NzM3LjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NzUzLjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NzcwLjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NzkzLjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2ODAzLjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY4MjAuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY4NDEuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY4NTMuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY4NzAuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY4ODcuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY5MDQuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY5MjEuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY5MzYuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY5NTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6Njk3MS44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6Njk4Ni44MDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzAwNC4zMDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzAyMi41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcwMzkuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcwNTMuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcwNzEuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcwODcuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcxMDQuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcxMjAuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcxMzYuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcxNTMuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcxNzAuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3MTg2LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzIwMy4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzIyMC4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzIzNi4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzI1My41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3MjY5LjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcyODcuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzMwOC4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3MzIwLjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjczMzYuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzM1My44MDAwMDAwMDAwNDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzM2OS41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3Mzg4LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc0MDMuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzQyMCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NDM2LjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NDUzLjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NDY5Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NDg2LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzUwMy41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc1MTkuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc1MzYuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzU1My44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzU2OS41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NTg3LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc2MDMuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc2MjAuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NjM2LjMwMDAwMDAwMDA0Nywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NjU0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc2NjkuODAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc2ODcuMzAwMDAwMDAwMDQ3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc3ODAsInN0YWdlIjoiZG9uZSIsImNvdW50IjozLCJwaW5zIjozfV0="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\first-map-reveal-20261011--80e9a-만-하나씩-등장하며-읽기-화면은-되돌아오지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7d3b3674620ae3b77abf-7f265ae20ba234e96a22",
+              "file": "first-map-reveal-20261011.spec.ts",
+              "line": 10,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "1280px 실제 시간의 첫 지도 표시",
+          "file": "first-map-reveal-20261011.spec.ts",
+          "line": 8,
+          "column": 8,
+          "specs": [
+            {
+              "title": "질문 뒤 전체 일정은 먼저 접혀 있고 마커만 하나씩 등장하며 읽기 화면은 되돌아오지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9584,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T19:09:06.204Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "actual-frame-counts",
+                          "contentType": "application/json",
+                          "body": "W3siYXQiOjIwMDguNTk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMDExLjc5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MH0seyJhdCI6MjAxNi4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIwMzIuMjk5OTk5OTk5ODEzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMTAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIxMTYuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIxMjUuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIxMzIuMDk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMTQ4Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMTY1LjU5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MH0seyJhdCI6MjE5NCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMjE5LjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MH0seyJhdCI6MjI0Mi43OTk5OTk5OTk4MTM3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIyNjAsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MH0seyJhdCI6MjI3Ni4wOTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIyOTAuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjB9LHsiYXQiOjIyOTkuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjowfSx7ImF0IjoyMzc2Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyMzg4LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjM5MC42OTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjIzOTkuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNDE5LjU5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjQzMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNDUwLjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjQ2NS44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjQ4My4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI0OTkuMjk5OTk5OTk5ODEzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNTE5LjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjUzMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNTUwLjc5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjU2Ni4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjU4Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNTk5LjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjYxNi4wOTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI2MzMuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNjQ4LjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNjY1Ljc5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MjY4Mi41OTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI2OTguNTk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNzE2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI3MzIsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mjc0OS4wOTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI3NjYuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyNzgyLjY5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mjc5OC41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI4MTcuMjk5OTk5OTk5ODEzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyODMyLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI4NTAuNTk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyODY1LjE5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mjg4Mi4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI4OTguMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI5MTUuNjk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyOTMxLjg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyOTQ4LjY5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mjk2NS4wOTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjI5ODEuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjoyOTk4LjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzAxOC44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzAzMS41OTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMwNDksInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzA2NS4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMwODIuNzk5OTk5OTk5ODEzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMDk5LjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzExNS43OTk5OTk5OTk4MTM3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMxMzIuMDk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMTQ4LjY5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzE2NS41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMxODIuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMxOTkuNzk5OTk5OTk5ODEzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMjE3LjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzIzMi4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMyNDkuNzk5OTk5OTk5ODEzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMjY1LjA5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzI4Mi42OTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMyOTkuMTk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMzE1LjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzMzMS44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzM0OC42OTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMzNjUuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjMzODEuNjk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozMzk4LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzQxNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNDMyLjU5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzQ0OC42OTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM0NjUuNzk5OTk5OTk5ODEzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNDgxLjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzUwMC4xOTk5OTk5OTk5NTM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM1MTUuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM1MzMuMTk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNTQ4LjU5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzU4MS4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzU5OC4yOTk5OTk5OTk4MTM3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM2MTYuMDk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNjMyLjU5OTk5OTk5OTg2MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzY0OC43OTk5OTk5OTk4MTM3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM2NjUuMTk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNjgyLjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6MzY5OC43OTk5OTk5OTk4MTM3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM3MTUuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozNzMyLjE5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mzc0OC4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mzc2OC4wOTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM3ODEuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM3OTguMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM4MTYuMjk5OTk5OTk5ODEzNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozODM0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM4NTEuMTk5OTk5OTk5OTUzNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozODY1Ljc5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mzg4Mi43OTk5OTk5OTk4MTM3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM5MDAuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozOTE1Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozOTMyLjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mzk0OSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0IjozOTY1LjE5OTk5OTk5OTk1MzQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6Mzk4MS41OTk5OTk5OTk4NjAzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjM5OTkuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQwMTUuNTk5OTk5OTk5ODYwMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MDMzLjI5OTk5OTk5OTgxMzcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDA0OS41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQwODEuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MDk5LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQxMTYuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDEzNy44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDE1MS42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDE2NS4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDE4MS42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDE5OC41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQyMTYuMjk5OTk5OTk5ODE0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQyMzEuNzk5OTk5OTk5ODE0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQyNDkuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQyODUuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQyOTguODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQzMTUuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDMzMi41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MzQ4LjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MzY1LjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0MzgyLjc5OTk5OTk5OTgxNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0Mzk5LjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0NDE2LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6MX0seyJhdCI6NDQzMiwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoxfSx7ImF0Ijo0NDUwLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjF9LHsiYXQiOjQ0NzkuNjk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ0ODkuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ1MDUuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ1MTYuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDUzMi44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDU1MC4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDU2OS4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDU4My4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0NTk5LjI5OTk5OTk5OTgxNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0NjE2LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDYzMi4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDY1MS4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDY2Ny4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDY4My42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDcwMC44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDcxNy4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0NzMyLjg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0NzUwLjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ3NjYuNjk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ3ODMuNjk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ4MDMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDgxNy41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ4MzMuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ4NTAsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDg2Ni42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDg4Ni4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDkwMS4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDkyMy41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0OTMzLjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo0OTUwLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjQ5NjYuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NDk4My4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTAwMC4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTAxNS44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTAzMi44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTA0OS41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUwNjYuMjk5OTk5OTk5ODE0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUwODIuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MDk4Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MTE3LjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MTMzLjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTE0OS41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUxNjYuMjk5OTk5OTk5ODE0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUxODIuNzk5OTk5OTk5ODE0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUxOTkuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUyMTYuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTIzMi4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTI0OS4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTI2NS41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUyODIuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUzMDAuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTMxNy41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MzMzLjc5OTk5OTk5OTgxNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1MzQ5LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUzNjYuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjUzODMuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU0MDIuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTQxNS44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTQzMy4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NDUwLjI5OTk5OTk5OTgxNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NDY2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU0ODIuNzk5OTk5OTk5ODE0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU0OTkuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU1MTYuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NTMzLjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NTQ5Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NTY2LjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NTgzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU1OTkuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTYxOCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NjMzLjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NjQ5LjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NjY2LjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NjgzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU3MDAuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU3MTcuNjk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU3MzMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTc0OS41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1NzY3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjU3ODMuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTc5OS44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTgxNiwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1ODMyLjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTg0OS4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTg2Ni4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTg4My41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo1ODk5LjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTkxNi4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTkzNi42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTk1MC4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTk2Ni4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NTk4My4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjAwMi43OTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjAxNS4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjAzMywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjoyfSx7ImF0Ijo2MDQ5LjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjYwNjcuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjA4Mi44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjA5OC44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjExNi41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjYxMzMuMjk5OTk5OTk5ODE0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjYxNTAuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjJ9LHsiYXQiOjYxNjYuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjE4My4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjIwMS43OTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjIxNi43OTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjIzMy42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6Mn0seyJhdCI6NjI3Mi41OTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2MjgzLjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2MzAxLjc5OTk5OTk5OTgxNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2MzE2Ljc5OTk5OTk5OTgxNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2MzMzLjI5OTk5OTk5OTgxNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2MzUwLjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2MzY2LjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2Mzg0Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NDAxLjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NDE1LjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY0NDkuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY0NjkuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjQ4NC4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjUwMC4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjUxNy4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjUzMy4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjU1MC4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NTY5LjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY1ODQuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjYwMCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NjIwLjI5OTk5OTk5OTgxNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NjMzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY2NTAuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY2NjYuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY2ODMuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjY5OS41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY3MTcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjczNi4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NzUwLjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2NzY3LjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY3ODMuMzk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY4MDEuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjgyMCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2ODMzLjM5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo2ODUwLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY4NjcuMTk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY4ODIsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NjkwNC41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY5MTUuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjY5MzIsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6Njk0OS4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6Njk2NS43OTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6Njk4Mi4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6Njk5OC43OTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzAxNC44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzAzMi4zOTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzA0OC41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcwNzMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzA4My4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzEwMC42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzExNy42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzEzMi4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3MTUwLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcxNjUsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzE4Mi43OTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzE5OS4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzIxNC41LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjcyMzMuNSwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3MjQ4Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3MjY1Ljg5OTk5OTk5OTkwNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3MjgyLjc5OTk5OTk5OTgxNCwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3Mjk4LjU5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjczMTYuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzMzMS43OTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzM0OS4yOTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzM2Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3MzgyLjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjczOTkuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc0MTYuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzQzMy4wOTk5OTk5OTk4Niwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NDQ4LjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc0NjcuNjk5OTk5OTk5OTUzLCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc0ODEuNTk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzQ5OC44OTk5OTk5OTk5MDcsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzUxNywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NTMyLjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc1NTAuMDk5OTk5OTk5ODYsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzU2Ni4xOTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzU4MS43OTk5OTk5OTk4MTQsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzU5OC42OTk5OTk5OTk5NTMsInN0YWdlIjoiY2hlY2tpbmciLCJjb3VudCI6MywicGlucyI6M30seyJhdCI6NzYxNiwic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NjMyLjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NjQ4LjE5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NjY2LjY5OTk5OTk5OTk1Mywic3RhZ2UiOiJjaGVja2luZyIsImNvdW50IjozLCJwaW5zIjozfSx7ImF0Ijo3NjgzLjA5OTk5OTk5OTg2LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc3MDAuNzk5OTk5OTk5ODE0LCJzdGFnZSI6ImNoZWNraW5nIiwiY291bnQiOjMsInBpbnMiOjN9LHsiYXQiOjc4MDEuODk5OTk5OTk5OTA3LCJzdGFnZSI6ImRvbmUiLCJjb3VudCI6MywicGlucyI6M31d"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\first-map-reveal-20261011--0ec55-만-하나씩-등장하며-읽기-화면은-되돌아오지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7d3b3674620ae3b77abf-6092c841da7923e82acb",
+              "file": "first-map-reveal-20261011.spec.ts",
+              "line": 10,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "loading-handoff.spec.ts",
+      "file": "loading-handoff.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "전송 요청 전에 클라이언트 진행 화면이 보이고, 첫 조회를 기다리는 동안에도 SSE는 먼저 연결된다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3788,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:09:59.371Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e80a152176c9d6d54c38-e532114b9f1bf3ecddae",
+          "file": "loading-handoff.spec.ts",
+          "line": 8,
+          "column": 1
+        },
+        {
+          "title": "설문에 머무는 동안 재생이 소진되지 않고 다음을 누른 순간부터 축적된 결과를 재생한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7693,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:03.942Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e80a152176c9d6d54c38-44ec8ee7a471d6446298",
+          "file": "loading-handoff.spec.ts",
+          "line": 36,
+          "column": 1
+        },
+        {
+          "title": "다음 로딩에서는 저장한 설문 답을 유지하고 첫 미응답 질문부터 이어서 보여준다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6531,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:11.659Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e80a152176c9d6d54c38-9f4d00fd34d7543aaef9",
+          "file": "loading-handoff.spec.ts",
+          "line": 73,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "map-reveal-continuity-20261012.spec.ts",
+      "file": "map-reveal-continuity-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "375px 순서대로 지도 표시 · 동작 줄이기 false",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11688,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T19:07:43.716Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIxMTkwLDI2OSIsIjEwODMsMjUyIiwiMTAyOSwyNDMiLCI5MTMsMjI0IiwiODM4LDIxMyIsIjc2MCwxOTkiLCI2OTEsMTg5IiwiNjM4LDE4MCIsIjU4NSwxNzIiLCI1MzksMTY0IiwiNTAxLDE1OCIsIjQ2NiwxNTIiLCI0MzQsMTQ4IiwiNDA0LDE0MiIsIjM4MywxMzkiLCIzNjEsMTM2IiwiMzQzLDEzMiIsIjMyNywxMzAiLCIzMTQsMTI4IiwiMjk1LDEyNSIsIjI4NiwxMjMiLCIyNzcsMTIxIiwiMjY4LDEyMCIsIjI1OSwxMTkiLCIyNDgsMTE3IiwiMjQ0LDExNyIsIjIzNywxMTYiLCIyMzIsMTE1IiwiMjI2LDExNCIsIjIyMCwxMTMiLCIyMTUsMTEyIiwiMjExLDExMSIsIjIwNywxMTAiLCIyMDMsMTEwIiwiMTk5LDEwOSIsIjE5NywxMDkiLCIxOTQsMTA5IiwiMTkxLDEwOCIsIjE5MCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjIwMiwxMDQiLCIyMDcsMTAzIiwiMjE1LDEwMSIsIjIyNSw5OCIsIjIzMyw5NiIsIjI0NCw5MyIsIjI1Myw5MSIsIjI2Myw4OCIsIjI3Myw4NiIsIjI4Myw4MyIsIjI5NCw4MCIsIjMwNSw3NyIsIjMyMCw3NCIsIjMyOSw3MiIsIjMzOSw2OSIsIjM1MSw2NiIsIjM2NCw2MyIsIjM3OSw1OSIsIjM5MSw1NiIsIjQwNSw1MiIsIjQyMCw0OCIsIjQzNSw0NSIsIjQ1MCw0MSIsIjQ2NiwzNyIsIjQ4NCwzMiIsIjQ5NiwyOSIsIjUxMiwyNSIsIjUyOCwyMSIsIjU0NywxNyIsIjU2MiwxMiIsIjU3NCwxMCIsIjU5MCw1IiwiNjA2LDEiLCI2MTcsLTEiLCI2MzEsLTQiLCI2NDEsLTciLCI2NTEsLTEwIiwiNjU4LC0xMiIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY5NCw5IiwiNzM5LDI5IiwiNzY4LDUyIiwiNjgxLDc2IiwiNjQyLDEwMiIsIjYyNCwxMTIiLCI2MTIsMTIxIiwiNTk5LDEyOCIsIjU4NiwxMzQiLCI1NzMsMTQwIiwiNTYyLDE0NCIsIjU1MiwxNDciLCI1NDIsMTUwIiwiNTMzLDE1MyIsIjUyNSwxNTUiLCI1MTgsMTU3IiwiNTEzLDE1OSIsIjUwNywxNTkiLCI0OTcsMTYxIiwiNDg4LDE2MiIsIjQ4MywxNjQiLCI0NzEsMTY2IiwiNDY3LDE2NyIsIjQ2MCwxNjgiLCI0NTQsMTY5IiwiNDQ2LDE3MCIsIjQzOCwxNzIiLCI0MzMsMTcyIiwiNDI1LDE3MyIsIjQxNCwxNzUiLCI0MTAsMTc2IiwiNDA2LDE3NyIsIjQwMCwxNzgiLCIzOTQsMTc4IiwiMzg5LDE3OSIsIjM4NCwxODAiLCIzNzksMTgxIiwiMzc0LDE4MiIsIjM3MSwxODMiLCIzNjcsMTgzIiwiMzYyLDE4NCIsIjM1OCwxODUiLCIzNTUsMTg2IiwiMzUyLDE4NiIsIjM0NywxODciLCIzNDQsMTg4IiwiMzQyLDE4OSIsIjMzNiwxOTAiLCIzMzUsMTg5IiwiMzMyLDE5MSIsIjMzMSwxOTAiLCIzMjksMTkxIiwiMzI2LDE5MiIsIjMyNSwxOTIiLCIzMjIsMTkyIiwiMzIxLDE5MyIsIjMxOSwxOTMiLCIzMTgsMTkzIiwiMzE3LDE5NSIsIjMxNSwxOTUiLCIzMTQsMTk1IiwiMzE0LDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiXSwiYW5pbWF0aW9ucyI6WzkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDMwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDBdLCJzdG9wIjp0cnVlfQ=="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\map-reveal-continuity-2026-7c8e4-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-109d3099443eaf843eb3",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "375px 순서대로 지도 표시 · 동작 줄이기 true",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10170,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T19:07:55.429Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI0MTk1LDI2NyIsIjQxOTUsMjY3IiwiNDE5NSwyNjciLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSJdLCJhbmltYXRpb25zIjpbXSwic3RvcCI6dHJ1ZX0="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\map-reveal-continuity-2026-c6a76-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-f5bf04c95f0c9f68a6b7",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "1280px 순서대로 지도 표시 · 동작 줄이기 false",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11646,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T19:08:05.639Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIxMjAyLDI2MyIsIjExMDAsMjQ3IiwiMTA0MCwyMzciLCI5NjgsMjI2IiwiODgxLDIxMSIsIjc5MiwxOTciLCI3MjMsMTg2IiwiNjQwLDE3MiIsIjYwNywxNjgiLCI1NzEsMTYxIiwiNTMzLDE1NSIsIjQ5NiwxNTAiLCI0NjQsMTQ0IiwiNDM2LDE0MCIsIjQxMCwxMzUiLCIzODksMTMyIiwiMzY4LDEyOCIsIjM1MiwxMjYiLCIzMzYsMTI0IiwiMzIzLDEyMSIsIjMxMCwxMTkiLCIyOTgsMTE3IiwiMjg5LDExNiIsIjI3OSwxMTQiLCIyNzAsMTEzIiwiMjYzLDExMSIsIjI1NCwxMTAiLCIyNDcsMTEwIiwiMjQyLDEwOCIsIjIzNywxMDciLCIyMzEsMTA2IiwiMjI3LDEwNiIsIjIyMiwxMDUiLCIyMTgsMTA0IiwiMjE1LDEwNCIsIjIxMSwxMDMiLCIyMDcsMTAzIiwiMjA0LDEwMiIsIjIwMywxMDIiLCIyMDEsMTAyIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwOSwxMDAiLCIyMTQsOTgiLCIyMjIsOTYiLCIyMzAsOTQiLCIyNDcsOTAiLCIyNTQsODgiLCIyNjIsODYiLCIyNjksODQiLCIyODAsODEiLCIyOTAsNzkiLCIzMTEsNzMiLCIzMjUsNzAiLCIzMzQsNjciLCIzNDYsNjQiLCIzNTgsNjEiLCIzNzIsNTgiLCIzODcsNTUiLCIzOTgsNTEiLCI0MTIsNDgiLCI0MjYsNDQiLCI0NDEsNDAiLCI0NTQsMzciLCI0NjksMzMiLCI0ODUsMjkiLCI1MDAsMjYiLCI1MTQsMjIiLCI1MzMsMTciLCI1NDgsMTMiLCI1NjMsMTAiLCI1NzgsNiIsIjU5MSwyIiwiNjA2LC0xIiwiNjIwLC01IiwiNjMyLC05IiwiNjQ1LC0xMSIsIjY1NSwtMTQiLCI2NjYsLTE3IiwiNjcyLC0xOCIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI3MTgsNyIsIjc1MiwyMSIsIjc2NywzNyIsIjgwMSw1NyIsIjY4Nyw4OCIsIjY1OCw5NyIsIjYyMywxMDkiLCI2MDksMTE1IiwiNTk1LDExOSIsIjU4MiwxMjMiLCI1NjYsMTI3IiwiNTUyLDEzMCIsIjU0MywxMzIiLCI1MzUsMTMzIiwiNTI2LDEzNiIsIjUyMCwxMzciLCI1MTcsMTM5IiwiNTEyLDEzOSIsIjUwNSwxNDAiLCI0OTgsMTQxIiwiNDg5LDE0MiIsIjQ4NCwxNDMiLCI0NzksMTQ0IiwiNDY4LDE0NSIsIjQ2MSwxNDciLCI0NTAsMTQ4IiwiNDQzLDE0OCIsIjQzNiwxNDkiLCI0MzEsMTUwIiwiNDI2LDE1MiIsIjQxOSwxNTMiLCI0MTIsMTU0IiwiNDA3LDE1NSIsIjQwMiwxNTUiLCIzOTUsMTU2IiwiMzkxLDE1NyIsIjM4NiwxNTgiLCIzODIsMTU5IiwiMzc4LDE2MCIsIjM3MywxNjAiLCIzNjksMTYxIiwiMzY1LDE2MiIsIjM2MiwxNjIiLCIzNTksMTYyIiwiMzU1LDE2NCIsIjM0NywxNjUiLCIzNDYsMTY2IiwiMzQ1LDE2NiIsIjM0MSwxNjYiLCIzNDAsMTY3IiwiMzM4LDE2NyIsIjMzNiwxNjgiLCIzMzQsMTY5IiwiMzMxLDE2OCIsIjMzMCwxNjgiLCIzMjksMTY5IiwiMzI4LDE2OSIsIjMyNiwxNjkiLCIzMjYsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiXSwiYW5pbWF0aW9ucyI6WzkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMF0sInN0b3AiOnRydWV9"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\map-reveal-continuity-2026-53e1a-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-d2e9801dd61538e6b103",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "1280px 순서대로 지도 표시 · 동작 줄이기 true",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10171,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T19:08:17.304Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI0MjA4LDI2MSIsIjQyMDgsMjYxIiwiNDIwOCwyNjEiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIl0sImFuaW1hdGlvbnMiOltdLCJzdG9wIjp0cnVlfQ=="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\map-reveal-continuity-2026-aa6f1-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-c71b620788ee559ebb86",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "map-status-bar.spec.ts",
+      "file": "map-status-bar.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6989,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:18.262Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "307ebc2271188419de72-970ccd3f13499ab04fb7",
+          "file": "map-status-bar.spec.ts",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "title": "변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3230,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:25.274Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "307ebc2271188419de72-250ab22adb2fec48372f",
+          "file": "map-status-bar.spec.ts",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "확대한 경로선에 수단 이름이 붙고 지도 이동·축소에 따라 바뀌며 클릭은 선으로 통과한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15921,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:28.525Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "307ebc2271188419de72-ad741c17739711349962",
+          "file": "map-status-bar.spec.ts",
+          "line": 103,
+          "column": 1
+        },
+        {
+          "title": "마커 선택은 일정만 열고 설명 알림을 띄우지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6041,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:44.472Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "307ebc2271188419de72-16da8cec12dadd708d76",
+          "file": "map-status-bar.spec.ts",
+          "line": 148,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "uiux-route-audit-20261012.spec.ts",
+      "file": "uiux-route-audit-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "전체 경로 · intro · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2448,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:50.588Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii8iLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOmZhbHNlLCJmb3VuZEZyYW1lU2Nyb2xsIjpmYWxzZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-2f0532036b9ab64ac787",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · terms-preferences · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1918,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:53.067Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9zdGFydCIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9zdGFydCIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-1ea05cc155dd85c49a58",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · registration · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1564,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:55.008Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy9uZXciLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvdHJpcHMvbmV3IiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOnRydWUsImZvdW5kRnJhbWVTY3JvbGwiOnRydWV9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-c4551447c10742141526",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · trips · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1366,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:56.599Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcyIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny90cmlwcyIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-59b7a7d1ce54bd4a9953",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · registered-trip · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2207,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:10:57.986Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvdHJpcHMvMTExMTExMTEtMjIyMi0zMzMzLTQ0NDQtNTU1NTU1NTU1NTU1IiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOmZhbHNlLCJmb3VuZEZyYW1lU2Nyb2xsIjpmYWxzZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-5ed94a99f7277343d1c1",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · verification-redirect · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2298,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:00.225Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUvdmVyaWZpY2F0aW9uIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3RyaXBzLzExMTExMTExLTIyMjItMzMzMy00NDQ0LTU1NTU1NTU1NTU1NSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-4f2462e5c1cdf7e42ad1",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · results-redirect · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2312,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:02.545Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUvcmVzdWx0cyIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJkaW1lbnNpb25zIjp7ImRvY3VtZW50IjowLCJtYWluIjowLCJzY3JvbGwiOjAsImV4cGVjdHNGcmFtZVNjcm9sbCI6ZmFsc2UsImZvdW5kRnJhbWVTY3JvbGwiOmZhbHNlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-09c80b769a46a259f060",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3638,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:04.876Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-6a53b90029670da0f8a7",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · starting-revisit · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2050,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:08.549Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL3N0YXJ0aW5nIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3RyaXBzL25ldyIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-9d722fe140502a9a2657",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · account · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1775,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:10.621Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvbXlwYWdlIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOnRydWUsImZvdW5kRnJhbWVTY3JvbGwiOnRydWV9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-5a6ad8b4d3b9e0ef8625",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · profile · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1650,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:12.425Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UvZWRpdCIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9teXBhZ2UvZWRpdCIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-42ee85068cb250c74655",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · support · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1616,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:14.093Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9zdXBwb3J0IiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3N1cHBvcnQiLCJkaW1lbnNpb25zIjp7ImRvY3VtZW50IjowLCJtYWluIjowLCJzY3JvbGwiOjAsImV4cGVjdHNGcmFtZVNjcm9sbCI6dHJ1ZSwiZm91bmRGcmFtZVNjcm9sbCI6dHJ1ZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-29b1c76d8042bc58d703",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · social-cancelled · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1471,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:15.729Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9hdXRoL2RvbmU/ZXJyb3I9Y2FuY2VsbGVkIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L2F1dGgvZG9uZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-d07a4a1b75b526f3002b",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · intro · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1563,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:17.220Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii8iLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOmZhbHNlLCJmb3VuZEZyYW1lU2Nyb2xsIjpmYWxzZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-cf158acc8c930623c913",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · terms-preferences · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1837,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:18.803Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9zdGFydCIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9zdGFydCIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-b5ff25cf2f7c8a2100d0",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · registration · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1868,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:20.660Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy9uZXciLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvdHJpcHMvbmV3IiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOnRydWUsImZvdW5kRnJhbWVTY3JvbGwiOnRydWV9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-3da83e5a91ba148a9db9",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · trips · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1777,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:22.549Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcyIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny90cmlwcyIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-c698415e6a28847746c1",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · registered-trip · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2318,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:24.341Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvdHJpcHMvMTExMTExMTEtMjIyMi0zMzMzLTQ0NDQtNTU1NTU1NTU1NTU1IiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOmZhbHNlLCJmb3VuZEZyYW1lU2Nyb2xsIjpmYWxzZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-aa7a18ef6b1003e912e9",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · verification-redirect · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2582,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:26.679Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUvdmVyaWZpY2F0aW9uIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3RyaXBzLzExMTExMTExLTIyMjItMzMzMy00NDQ0LTU1NTU1NTU1NTU1NSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-1ba4d7055f62e96291dc",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · results-redirect · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3307,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:29.283Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUvcmVzdWx0cyIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJkaW1lbnNpb25zIjp7ImRvY3VtZW50IjowLCJtYWluIjowLCJzY3JvbGwiOjAsImV4cGVjdHNGcmFtZVNjcm9sbCI6ZmFsc2UsImZvdW5kRnJhbWVTY3JvbGwiOmZhbHNlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-3d3f336b930f91629f8c",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · intake · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2716,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:32.606Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-743648a5961510207bb5",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · starting-revisit · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2214,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:35.341Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL3N0YXJ0aW5nIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3RyaXBzL25ldyIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-26effe60d41cf9994e77",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · account · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1965,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:37.573Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvbXlwYWdlIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOnRydWUsImZvdW5kRnJhbWVTY3JvbGwiOnRydWV9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-cd5d26a23e5f169553af",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · profile · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1924,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:39.557Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UvZWRpdCIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9teXBhZ2UvZWRpdCIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-0614882fb3a44ceb921a",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · support · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1990,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:41.501Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9zdXBwb3J0IiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3N1cHBvcnQiLCJkaW1lbnNpb25zIjp7ImRvY3VtZW50IjowLCJtYWluIjowLCJzY3JvbGwiOjAsImV4cGVjdHNGcmFtZVNjcm9sbCI6dHJ1ZSwiZm91bmRGcmFtZVNjcm9sbCI6dHJ1ZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-80ad8b9e28f0f31569da",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · social-cancelled · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1779,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:43.509Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9hdXRoL2RvbmU/ZXJyb3I9Y2FuY2VsbGVkIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L2F1dGgvZG9uZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-b38a3a3b26af090dff12",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11545,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:08:27.541Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjMwMywidGhpcmRGcmFtZXMiOjg4LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MiwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIyIl0sWyIxIl1dLCJjZW50ZXJEZWx0YSI6WzAuNSwwLjU1NDY4NzVdLCJwcmV2aW91c0hpZGRlbiI6W3RydWUsdHJ1ZV0sInByZXZpb3VzUmV0YWluZWQiOlt0cnVlLHRydWVdfSwiZmFpbHVyZUNvdW50IjowLCJmYWlsdXJlcyI6W10sInN0b3AiOnRydWV9"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\uiux-sonnet-map-reveal-202-08f40--먼-일정은-각각-거리-버튼으로-남는다-375px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-621f3725db2c2f491af0",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 24,
+          "column": 3
+        },
+        {
+          "title": "세 번째 일정 공개 중 이전 두 먼 일정은 각각 거리 버튼으로 남는다 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11229,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:08:39.119Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "previous-two-reveal-frame-evidence",
+                      "contentType": "application/json",
+                      "body": "eyJmcmFtZXMiOjMwNiwidGhpcmRGcmFtZXMiOjg3LCJzZXBhcmF0ZVByZXZpb3VzRnJhbWVzIjo3MSwiY29tcGxldGVUaGlyZEZyYW1lIjp7ImNoaXBzIjpbWyIyIl0sWyIxIl1dLCJjZW50ZXJEZWx0YSI6WzAsMC41NTQ2ODc1XSwicHJldmlvdXNIaWRkZW4iOlt0cnVlLHRydWVdLCJwcmV2aW91c1JldGFpbmVkIjpbdHJ1ZSx0cnVlXX0sImZhaWx1cmVDb3VudCI6MCwiZmFpbHVyZXMiOltdLCJzdG9wIjp0cnVlfQ=="
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\completion-evidence\\uiux-sonnet-map-reveal-202-74233-먼-일정은-각각-거리-버튼으로-남는다-1280px\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "976bd6c8e64dbdfe3f65-0a7fd47295bf24316feb",
+          "file": "uiux-sonnet-map-reveal-20261012.spec.ts",
+          "line": 24,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-plan-20261012.spec.ts",
+      "file": "uiux-sonnet-plan-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "계획 이름 편집을 Enter로 끝내면 제목 버튼에 초점이 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6536,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:45.364Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-3011aaed79807ae8a714",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 20,
+          "column": 3
+        },
+        {
+          "title": "계획 이름 편집을 Escape로 끝내면 제목 버튼에 초점이 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7787,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:51.921Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-ddaa3c0c9d5c0982c349",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 20,
+          "column": 3
+        },
+        {
+          "title": "목록 머리를 끈 직후 손잡이 첫 Enter 입력이 동작한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6729,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:11:59.730Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-48b6ea543486ffb4867e",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 37,
+          "column": 3
+        },
+        {
+          "title": "목록 머리를 끈 직후 손잡이 첫 Space 입력이 동작한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6708,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:12:06.479Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-a07bcd68512243691f37",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 37,
+          "column": 3
+        },
+        {
+          "title": "변경을 모두 되돌린 뒤 새로 바꾸면 이전 필터와 변경 메뉴가 되살아나지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8129,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:12:13.207Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-f8e3418ba003a772fe96",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 63,
+          "column": 1
+        },
+        {
+          "title": "잠금 요청이 진행 중이면 이전 시간 변경 토스트의 되돌리기가 추가 요청을 보내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5845,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:12:21.358Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-c1ba46b5b6fd4e6c226e",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 76,
+          "column": 1
+        },
+        {
+          "title": "확인 실패 안내가 해소된 뒤 같은 실패가 다시 생기면 안내를 다시 표시한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2925,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:12:27.225Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-f8f4e1d0f06db10127ae",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 99,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "uiux-time-boundary-20261012.spec.ts",
+      "file": "uiux-time-boundary-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (375px)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2587,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:12:30.250Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "actual-boundary",
+                      "contentType": "application/json",
+                      "body": "eyJvcmlnaW5hbCI6eyJ0b3AiOjYxNC41LCJjZW50ZXIiOjYyNSwidGl0bGVDZW50ZXIiOjYyNi45OTIxODc1LCJzdHJpcEJvdHRvbSI6NDUwLCJidXR0b25Cb3R0b20iOjQzOCwicm93Qm90dG9tIjo4MTQuMTg3NX0sInN0dWNrIjp7InRvcCI6NDM3LCJjZW50ZXIiOjQ0Ny41LCJ0aXRsZUNlbnRlciI6NDI5Ljk5MjE4NzUsInN0cmlwQm90dG9tIjo0NDYsImJ1dHRvbkJvdHRvbSI6NDM0LCJyb3dCb3R0b20iOjYxNy4xODc1fX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e1bf661f8bdb81613086-715a90a5e44018eff5e5",
+          "file": "uiux-time-boundary-20261012.spec.ts",
+          "line": 5,
+          "column": 34
+        },
+        {
+          "title": "시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (1280px)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3079,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T19:12:32.854Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "actual-boundary",
+                      "contentType": "application/json",
+                      "body": "eyJvcmlnaW5hbCI6eyJ0b3AiOjU4OS41LCJjZW50ZXIiOjYwMCwidGl0bGVDZW50ZXIiOjYwMS45OTIxODc1LCJzdHJpcEJvdHRvbSI6NDI1LCJidXR0b25Cb3R0b20iOjQxMywicm93Qm90dG9tIjo3NDYuMzEyNX0sInN0dWNrIjp7InRvcCI6NDEyLCJjZW50ZXIiOjQyMi41LCJ0aXRsZUNlbnRlciI6NDA0Ljk5MjE4NzUsInN0cmlwQm90dG9tIjo0MjEsImJ1dHRvbkJvdHRvbSI6NDA5LCJyb3dCb3R0b20iOjU0OS4zMTI1fX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e1bf661f8bdb81613086-b6759b2ba02cc2b8d9c5",
+          "file": "uiux-time-boundary-20261012.spec.ts",
+          "line": 5,
+          "column": 34
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T19:07:11.064Z",
+    "duration": 332526.9,
+    "expected": 52,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "scope": "과거 결함 보고서의 현재 확인 상태. 제품 결함을 해결했다고 표시하지 않음",
+  "source_hash_definition": "source_sha256은 원본 바이트, source_text_sha256은 Python UTF-8 텍스트 읽기 후 줄바꿈 정규화한 문자열",
+  "reports": [
+    {
+      "report": "2026-10-08_1217_버스_수단필터와_환승탐색_누락.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "32fdcecd5183122ac0be380413ab553f324575516ff429b45f915be1355ecf69",
+      "source_text_sha256": "32fdcecd5183122ac0be380413ab553f324575516ff429b45f915be1355ecf69",
+      "historical_status_headings": [
+        "## 미해결",
+        "## 해결됨 2026-10-08T13:22:06.264297+09:00"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-08_1257_이동_기동_간접import_깨짐.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "f7fe1e5d83a0c814163e01ec335c53538e4f53a988ffec6ed037d313ee52b51f",
+      "source_text_sha256": "f7fe1e5d83a0c814163e01ec335c53538e4f53a988ffec6ed037d313ee52b51f",
+      "historical_status_headings": [
+        "## 미해결",
+        "## 해결됨 2026-10-08T13:22:06.264297+09:00"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-08_1310_부분순환선_없는연결_생성.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "ea7352d4e5300912143b26a3cad0a98a0b8a49ebdca60d98f08529e20febae7e",
+      "source_text_sha256": "ea7352d4e5300912143b26a3cad0a98a0b8a49ebdca60d98f08529e20febae7e",
+      "historical_status_headings": [
+        "## 미해결",
+        "## 해결됨 2026-10-08T13:22:06.264297+09:00"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-08_1735_시간초기화_일부일정만_되돌림.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "26cc03fb031f6cb8aa03b3ce39f05e2461a408a27e3d7e4780e37d054ef47251",
+      "source_text_sha256": "26cc03fb031f6cb8aa03b3ce39f05e2461a408a27e3d7e4780e37d054ef47251",
+      "historical_status_headings": [
+        "## 해결됨 (2026-10-08) — 최신 전체 일정으로 초기화 대상 계산",
+        "## 미해결"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-09_0122_출발시점_버스재검증.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "bf1b9040d7a81af5660eb5cf05e923024ecb7bd72883b735ba8e5fb7e6ff7404",
+      "source_text_sha256": "bf1b9040d7a81af5660eb5cf05e923024ecb7bd72883b735ba8e5fb7e6ff7404",
+      "historical_status_headings": [
+        "## 부분 해결 — 내부 재검증·안내 주입, 운영 조립 남음"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-09_0306_차량_실제선택도로_거리근거_유실.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "1a33d4dffe16b7f3906c4baec8a65a9ca5c041422eac031615fe8e96492414c6",
+      "source_text_sha256": "1a33d4dffe16b7f3906c4baec8a65a9ca5c041422eac031615fe8e96492414c6",
+      "historical_status_headings": [
+        "## 해결 — 2026-10-09T03:25:20.144168+09:00"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-09_1056_지하철_현재출발_제품연결.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "9bc8eb3cd8815b0313f4467e7e24194bc7dc4f3bbe1b3d2fd05de41c3df234d8",
+      "source_text_sha256": "9bc8eb3cd8815b0313f4467e7e24194bc7dc4f3bbe1b3d2fd05de41c3df234d8",
+      "historical_status_headings": [
+        "## 부분 해결 — 일반 비순환 첫 승차의 제품 연결"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-09_1125_공식병기역명_종착경로복구.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "4a52e1f66eb0b1fa80f035dd20fdc9a299233e625fe8eae4aecc28a2624aa120",
+      "source_text_sha256": "4a52e1f66eb0b1fa80f035dd20fdc9a299233e625fe8eae4aecc28a2624aa120",
+      "historical_status_headings": [
+        "## 부분 해결 — 공식1~8호선 유일한 주역명 대응"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-09_1143_지하철_실제키_승차조회.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "77a29c76c776abd1a6a5cc9c8a82d7c5d3762faba0d320e40b4014a23c1f335e",
+      "source_text_sha256": "77a29c76c776abd1a6a5cc9c8a82d7c5d3762faba0d320e40b4014a23c1f335e",
+      "historical_status_headings": [],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-09_1945_거리칩_마커중복.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "b191180c4ee8fea984328894cafaee3c862cd48511787dd943f6f6dc9c3e56ef",
+      "source_text_sha256": "b191180c4ee8fea984328894cafaee3c862cd48511787dd943f6f6dc9c3e56ef",
+      "historical_status_headings": [
+        "## 해결 — 2026-10-09 19:56"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-09_2048_일정삽입_취소와입력라벨.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "92d7d1f5c6c41bdbb2fa7b4dc65457c65ecbd88847328874bcb72520991d5cfe",
+      "source_text_sha256": "92d7d1f5c6c41bdbb2fa7b4dc65457c65ecbd88847328874bcb72520991d5cfe",
+      "historical_status_headings": [
+        "## 해결·확인"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-10_2120_출발안내_탑승환승시각_연결_승차시각올림.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "c6200677e279219643869a7a7c33933034daf2f80c4ab6f11cb03f81e730545f",
+      "source_text_sha256": "c6200677e279219643869a7a7c33933034daf2f80c4ab6f11cb03f81e730545f",
+      "historical_status_headings": [],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-11_1010_arm-adapter-incomplete-success.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "e02b0b69a3e9cc1ed42bf19f5293c1996758f53e93d5f6cf9eaf512023453acf",
+      "source_text_sha256": "e02b0b69a3e9cc1ed42bf19f5293c1996758f53e93d5f6cf9eaf512023453acf",
+      "historical_status_headings": [
+        "## 부분 해결 — 로컬 검증 완료, 운영 미반영"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-11_2136_plugin_independent_audit.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "1b58ec60d4ada3e7278161e78f22c7a35f7be1cb52ccdd85c541091f6fc5ec6d",
+      "source_text_sha256": "1b58ec60d4ada3e7278161e78f22c7a35f7be1cb52ccdd85c541091f6fc5ec6d",
+      "historical_status_headings": [],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-11_2242_worker_feature_reregistration_loses_pointer_state.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "13b2b942eb72fb97ae0f312f3b7ad8910d4f6828fb56e9a2e31408ce6dfca8cc",
+      "source_text_sha256": "13b2b942eb72fb97ae0f312f3b7ad8910d4f6828fb56e9a2e31408ce6dfca8cc",
+      "historical_status_headings": [],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-11_web_conversation_resume.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "d7917b05900b59aaf1e5f0d3b47719b36e1181ec0819e4ae997c06852e7a1ab9",
+      "source_text_sha256": "d7917b05900b59aaf1e5f0d3b47719b36e1181ec0819e4ae997c06852e7a1ab9",
+      "historical_status_headings": [
+        "## 로컬 수정·관련 회귀 완료"
+      ],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    },
+    {
+      "report": "2026-10-12_0000_watch_failed_run_recovery.md",
+      "state": "unverified",
+      "checked_at_kst": "2026-10-12T04:37:07.283404+09:00",
+      "source_sha256": "f0b4cff0dab995938992b188f052ef0c312f8bebeb9073c24407135d1b53e7ca",
+      "source_text_sha256": "f0b4cff0dab995938992b188f052ef0c312f8bebeb9073c24407135d1b53e7ca",
+      "historical_status_headings": [],
+      "reason": "과거 보고서의 상태 제목이 없거나 발견·후속 상태가 함께 있어 기존 검사로 현재 상태를 하나로 판정하지 못했습니다. 원문 표기를 보존하며 현재 제품 코드·실행 결과의 해결 여부는 재검증하지 않았습니다.",
+      "required_verification": "해당 결함의 현재 코드·관련 시험·적용 환경을 대조한 뒤 해결 또는 미해결 상태와 근거를 추가합니다. 이 주석은 해결 선언이 아닙니다."
+    }
+  ]
+}

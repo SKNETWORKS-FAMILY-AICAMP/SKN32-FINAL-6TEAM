@@ -1,0 +1,71 @@
+## 최종 독립 감사 결과 (Sonnet 5.5)
+
+blocker급 결함은 찾지 못했습니다. 다만 아래 낮음~중간 수준의 미해결 지점이 있어 완벽하다거나 운영 배포가 끝났다고 말할 수는 없습니다.
+
+### 실행 결과
+- 승인된 runner를 그대로 한 번만 실행했습니다.
+- 출력은 `259 passed in 32.35s`, `PYTEST_EXIT=0`입니다. 실행 대상은 고정 16개 파일입니다.
+- 사용자가 인용한 24+97, 61, 86, 9, 4는 서로 겹치는 집합이어서 합산하지 않았고, 위 259는 이번 실행의 단일 수치입니다.
+- 전체 시나리오 148건은 runner에 없어 이번에 실행하지 않았습니다.
+- `scenario-full-v2.log`는 Read로만 확인했습니다. 내용은 `1 failed, 147 passed`이고, 실패는 `tests/scenario/test_watch_batch.py:220`의 `[(key, payload)] = _outbox(world)`에서 난 `too many values to unpack (expected 1)`입니다.
+- 이 실패의 원인은 분석하지 않았습니다. 시나리오 v2는 미완료입니다.
+
+### 항목별 판단
+
+**1) trip_api 직접 우회: 대체로 막혀 있습니다.**
+- `dining_ledger._http_provider`(`team_hooks/dining_ledger.py:117`)와 `mobility_shapes._provider`(`:25`)는 모두 `read_binding(..., required_team=...)`을 거칩니다.
+- `service_bindings.py:76-101`에서 `registry.require_runnable`을 호출한 뒤 값이 없으면 `not_installed`로 거절합니다.
+- 바인딩이 없고 standalone도 아니면 `composition_unbound`로 거절합니다.
+- 슬롯 판정은 `_ledger_verdicts`(`trip_api.py:428`)가 DB 연결을 열기 전에 `require_slot_verdicts()`를 호출합니다. `meal` 거절 시 `calls == []` 단언이 이를 확인합니다.
+- 조립(`composition.py:625-642`)은 `ledger.slot_verdicts`, `PlannerLedger`, `link_core_place_to`, `route_shape.shapes_for_*`를 그대로 캡처합니다. `collect_services` 안에서만 쓰이고, 전역 `_items`가 바뀌지 않는다는 시험이 있습니다.
+- `_dining_lookup`(`trip_api.py:113-136`)은 지연 생성이라 Activity만으로 해결되는 접수는 Dining을 건드리지 않습니다. 첫 `find`/`find_dish_near`에서만 거절합니다.
+- `with_ledger`(`itinerary_checks.py:268`)는 `TeamUnavailable`을 먼저 재전파하고 일반 예외만 `ledger_unavailable`(모름)로 처리합니다.
+
+**2) read_tools: 막혀 있습니다.**
+- `dining_state`는 `require_state_provider`를, `dining_states`는 `state_lookup(None, …)`를 `dining_ledger=False` 검사보다 먼저 호출합니다(`read_tools.py:284-301`).
+- non-standalone에서 바인딩이 없으면 `composition_unbound`로, 바인딩된 disabled/absent는 DB 연결 전에 거절합니다.
+
+**3) A2A: 문제 없습니다.**
+- submit/poll이 `None`이면 `TeamContractViolation`으로 거절합니다(`a2a_executor.py:60-61, 70-72`).
+- timeout sentinel은 `object()`(`expired`)라 `None`과 구분됩니다.
+- poll `None`은 `_cancel_best_effort`(`a2a_executor.py:86`)를 거칩니다. 이 함수는 `cancel_timeout_seconds` 안에서 끝나고 예외를 삼키므로 Controller의 cleanup 예산을 해치지 않습니다. 코드 읽기와 통과한 시험으로 판단했으며, 별도로 시간 경계를 재현하지는 않았습니다.
+
+**4) TeamUnavailable 재전파: 범위가 좁습니다.**
+- `replan.py:578`, `moves.py:130`, `move_options.py:123`은 `except TeamUnavailable: raise`를 앞에 두고 기존 `except Exception`은 그대로입니다. 불가 이유는 보존되고 일반 오류 정책은 넓어지지 않았습니다.
+- `move_options`의 스레드 풀은 contextvars를 복사하지 않습니다. 그러나 엔진은 요청 스레드에서 미리 만들어지고, 스레드 안에서는 캡처된 callable만 실행되어 문제가 없습니다.
+
+**5) 시나리오 재생: 대체로 범위를 지켰고 아래 한계가 있습니다.**
+- `case_engine.py:64-70`은 `BindingTable({**prior.values, **overrides}, prior.registry, prior.revision)`입니다. registry를 그대로 유지하므로 `read_binding`의 `require_runnable`을 통과해야 합니다.
+- `test_explicit_scenario_provider_cannot_activate_a_missing_team`이 disabled/not_installed에서 `TeamUnavailable`이 나는지 확인합니다.
+- `replay_services.py`는 대본의 `eta_min`과 `planned` 옵션을 재생합니다. 제품 코드의 5분 고정 추정은 `app` 아래에서 찾지 못했습니다. `fixed_leg_services(minutes=5)`는 `legacy/` 후보 복사본에만 남아 있습니다.
+- 한계 (a): 재생 도구는 `disruptions` 인자를 무시합니다. 이동 사고가 구간에 반영되는지는 이 재생으로 검증되지 않습니다.
+- 한계 (b): 반경 1200m와 `walk_limit_m=1200`이 하드코딩되어 있어, 가드레일 값과 달라질 수 있습니다. 파일 머리말은 이동 정확도 근거가 아니라고 밝히고 있습니다.
+- 한계 (c): `eval/runners/travel_scenarios.py:191`도 이 재생을 쓰므로, 해당 러너의 지표를 이동 정확도로 읽으면 안 됩니다.
+- 한계 (d): `TripWatcher`/`TripDesk`가 같은 고정 표를 쓰는지는 코드로 확인하지 못했습니다. 두 클래스는 `service_bindings`를 직접 받지 않아 미확인입니다.
+
+**6) 지난 감사 내용:** 훼손 징후는 없습니다. 이번 runner 안의 `test_unknown_route_availability`와 `test_plugin_worker_availability`가 통과했습니다. 두 시험이 지난 감사의 모든 사례를 덮는지는 시험 본문을 끝까지 대조하지 않았습니다.
+
+### 남은 결함·약점
+
+1. **중간-낮음, 확신 중간 — `intake/review.py:345-350` `default_engine`.**
+   - `except Exception`이 `TeamUnavailable`까지 잡습니다.
+   - `current_bindings()`가 `None`(바인딩 없음, non-standalone)이면 `composition_unbound`가 `None`(계산기 꺼짐)으로 바뀝니다.
+   - HTTP 요청은 `PinCompositionMiddleware`로 바인딩되므로 일반 경로에서는 영향이 작습니다. 바인딩 없는 호출자는 503 대신 조용한 어림값/404를 받을 수 있습니다. 재현은 하지 않았습니다.
+2. **낮음, 확신 높음 — 시험 공백.**
+   - HTTP 수준으로 `lookup_factory`, `planner_factory`, `link_core_place`가 disabled에서 503이 되는 것을 직접 확인하는 시험이 없습니다.
+   - `meal` 시험은 `slot_verdicts`가 먼저 걸려서 `link_core_place`까지 가지 않습니다.
+   - 세 훅은 모두 `_http_provider`로 같은 경로를 쓰고 `test_dining_http_provider_uses_pinned_callable_and_arguments`가 개별 호출을 확인합니다. 그래도 `dining_place_uid`가 있고 식사 항목이 없는 요청과 계획 생성 경로의 503은 HTTP로 증명되지 않았습니다.
+3. **낮음, 확신 높음 — 계획 생성 경로의 연결 순서.**
+   - `plan_trip` 호출부(`trip_api.py:955-959`, `1692`)는 `get_connection()`을 먼저 열고 `_planner_ledger(conn)`에서 거절합니다.
+   - SQL은 실행되지 않지만 "DB 연결 전 거절" 기준은 만족하지 못합니다. 이 경로에는 그 기준을 요구한 계약 조항이 없어 결함으로 분류하지 않았습니다.
+4. **낮음, 확신 중간 — `web_intake_route_shapes`(`trip_api.py:1272-1274`).**
+   - `stored`가 `None`인 접수도 `mobility_shapes.review`를 호출합니다.
+   - Mobility가 꺼져 있으면 빈 목록 대신 503이 납니다. 계약 문서의 "저장된 계획서 순수 조회는 허용" 문구와 정확히 맞는지는 해석이 필요합니다.
+5. **시험 fixture:** `http_boundary`의 `Cursor.fetchall`이 `[(True, False)]`로 고정되어 있습니다. 실제 `ledger.slot_verdicts` 파싱은 거치지만 SQL 결과 자체는 합성입니다. 따라서 "활성 시 닫힌 식사 → 422"는 파싱과 배선만 보증하고 실제 DB 영업 판정은 보증하지 않습니다. 생산 의미를 숨기는 정도는 아니라고 판단합니다.
+6. **미완료:** 전체 시나리오 v2의 `test_watch_batch.py:220` 실패(outbox 기대 1개, 실제 여러 개)는 원인이 이 후속 변경 때문인지 시험 기대값 때문인지 가려지지 않았습니다.
+
+### 읽지 못한 범위·검증하지 않은 것
+- DB, x600 서버, cs 프로젝트 서버, 모델 호출은 확인하지 않았습니다. 시험 안의 DB 접근 결과는 합성이거나 개발 DB 의존이며, 실제 DB 의존 시험이 통과했는지는 이번 runner 출력만으로 구분되지 않습니다.
+- 추가로 읽지 않은 파일은 `Controller` 본문, `registry.py`, `runtime.py`, `trip_watch_batch.py`, `scenario-full-v2.xml`, 그 밖의 증거 로그 전부입니다.
+- `.env`, 키, 자격증명, 고객 행, 실제 데이터셋은 읽지 않았습니다.
+- 소스 수정, 파일 생성, Git 쓰기, 추가 pytest는 하지 않았습니다.

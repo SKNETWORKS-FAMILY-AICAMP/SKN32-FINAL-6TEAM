@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { beginWait, CALL_STEPS, TASK_STEPS, waitLevel, worstWait } from "./waiting";
+import { beginWait, CALL_STEPS, SHOWN_STEPS, TASK_STEPS, waitLevel, worstWait } from "./waiting";
 
 describe("when the server is told to be slow", () => {
-  it("says nothing before the first step, then gets stronger at each step (a plain call: 8 s · 30 s · 60 s)", () => {
-    expect(CALL_STEPS).toEqual([8_000, 30_000, 60_000]);
-    expect([0, 7_999].map((ms) => waitLevel(ms, CALL_STEPS))).toEqual([0, 0]);
-    expect([8_000, 29_999].map((ms) => waitLevel(ms, CALL_STEPS))).toEqual([1, 1]);
+  it("says nothing before the first step, then gets stronger at each step (a plain call: 10 s · 30 s · 60 s)", () => {
+    expect(CALL_STEPS).toEqual([10_000, 30_000, 60_000]);
+    expect([0, 9_999].map((ms) => waitLevel(ms, CALL_STEPS))).toEqual([0, 0]);
+    expect([10_000, 29_999].map((ms) => waitLevel(ms, CALL_STEPS))).toEqual([1, 1]);
     expect([30_000, 59_999].map((ms) => waitLevel(ms, CALL_STEPS))).toEqual([2, 2]);
     expect([60_000, 600_000].map((ms) => waitLevel(ms, CALL_STEPS))).toEqual([3, 3]);
   });
@@ -48,5 +48,13 @@ describe("the calls that are counted", () => {
     first.end();
     expect(worstWait(clock)).toBeNull();
     first.end();                                                     // ending twice is harmless
+  });
+});
+
+describe("a call whose screen shows its own loading line", () => {
+  it("is not called slow before 30 s (it takes ~15 s normally), then 60 s · 120 s", () => {
+    expect(SHOWN_STEPS).toEqual([30_000, 60_000, 120_000]);
+    expect([15_000, 29_999].map((ms) => waitLevel(ms, SHOWN_STEPS))).toEqual([0, 0]);
+    expect([30_000, 60_000, 120_000].map((ms) => waitLevel(ms, SHOWN_STEPS))).toEqual([1, 2, 3]);
   });
 });

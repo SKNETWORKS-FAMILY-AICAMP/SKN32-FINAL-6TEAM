@@ -1,0 +1,125 @@
+{
+  "created_at": "2026-10-09T11:20:54.759804+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/composition.py",
+      "backup": "final_project_cs/app/_backup/2026-10-09_1056_지하철_현재출발_제품연결/composition.py",
+      "sha256": "0db55cfb5435dc3ff4d653cc0403c3a7e72f4511339597274e8b4ac4298b7f92"
+    },
+    {
+      "source": "final_project_cs/config/guardrails.yaml",
+      "backup": "final_project_cs/config/_backup/2026-10-09_1056_지하철_현재출발_제품연결/guardrails.yaml",
+      "sha256": "4061f17b699020d5cb23b0208fb677d1ea2a97d7237e67888bf57fa591025f13"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/base.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1056_지하철_현재출발_제품연결/base.py",
+      "sha256": "32d01ed41080a38da42e91d5f695c788a3bdc83932c0e98d0168b7bdfd67f77a"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1056_지하철_현재출발_제품연결/seoul_subway.py",
+      "sha256": "b57f7e061edce53eb621abde830796626e5bd891e29490d533a5413a98c31384"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/components/watch/departure_revalidation.py",
+      "backup": "final_project_cs/app/domains/travel_ops/components/watch/_backup/2026-10-09_1056_지하철_현재출발_제품연결/departure_revalidation.py",
+      "sha256": "34772d4b8c6948542f2dd37c28b8b02ff137170c4b6eecaa4a1db5002c75db9d"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/components/watch/trip_reminders.py",
+      "backup": "final_project_cs/app/domains/travel_ops/components/watch/_backup/2026-10-09_1056_지하철_현재출발_제품연결/trip_reminders.py",
+      "sha256": "12a778c08d484f3e542b861c70d50e1badd25d272c1709c1cea05af4ec5270e6"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/runtime.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1056_지하철_현재출발_제품연결/runtime.py",
+      "sha256": "4c004717a8bb1631a9afa73cb548514905e3e3cbb4652d91578d206bde35b8a0"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1056_지하철_현재출발_제품연결/verify_time.py",
+      "sha256": "814d646df4262f000ed993a328ca73a368bfa79c0382e6987c208dde0ece09be"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1056_지하철_현재출발_제품연결/departure_observer.py",
+      "sha256": "1719c702a2f687f6211169885fc4c144f205a64fddd4c3ccad0486514a66815f"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1056_지하철_현재출발_제품연결/mobility.md",
+      "sha256": "45cc87c0c04cecdcc86fbd98a80d31f92e542204288bbf84c444e1436bdd6b18"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1056_지하철_현재출발_제품연결_接続초안/departure_observer.py",
+      "sha256": "360a47982775ee24a06769718c028e3e1d515f3d676751cdadce5c7c50abfaf2"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1056_지하철_현재출발_제품연결_接続초안/verify_time.py",
+      "sha256": "14c959dae117df792d18ea057b0d40cb5be0d0419f31a8100190f78b28946710"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1056_지하철_현재출발_제품연결_첫검증후보강/verify_time.py",
+      "sha256": "14c959dae117df792d18ea057b0d40cb5be0d0419f31a8100190f78b28946710"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/mobility/test_subway_departure_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_1056_지하철_현재출발_제품연결_첫검증후보강/test_subway_departure_v1.py",
+      "sha256": "0149d4f488df7036a71f524305e5331112cf805d18375e6fc9f4e55734235c93"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1056_지하철_현재출발_제품연결_조립보관검사추가/departure_observer.py",
+      "sha256": "5df1c96c3f3180d4fb48244a76459b63ea9b5b4a1a6d5aef8b23d79947a57ea5"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/mobility/test_subway_departure_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_1056_지하철_현재출발_제품연결_조립보관검사추가/test_subway_departure_v1.py",
+      "sha256": "33ff415bf5f3a76d48b7536a45d6e073f87a73ac42b2126f9e5e0d0fc9570780"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1056_지하철_현재출발_제품연결_현재승차_첫차분기수정/verify_time.py",
+      "sha256": "58bd5d9251fc57e98d151036701d3b07ca59efbc8a8cb49cdd86d5b46f3671d4"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/mobility/test_subway_departure_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_1056_지하철_현재출발_제품연결_시험문맥정정/test_subway_departure_v1.py",
+      "sha256": "9016094db7abec99adaaf46e73087844b1e9b80438f898b75016d7871c4db3c2"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/mobility/test_subway_departure_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_1056_지하철_현재출발_제품연결_환승시험자료완성/test_subway_departure_v1.py",
+      "sha256": "af19fc6412c371147e00e8dffa2b2d781b434241385d3c062ecd541373631778"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/mobility/test_subway_departure_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_1056_지하철_현재출발_제품연결_현재단축운행_구간대응/test_subway_departure_v1.py",
+      "sha256": "970b43e903dfb0c99ec2027fec1fa29252750b3f33fa0568a858a2e3730d1e5c"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_1056_지하철_현재출발_제품연결_현재단축운행_구간대응/verify_time.py",
+      "sha256": "8950dfbfc35184c89e0d5f67f823c7a81500e4ed4dc88c7064600c89ada0d72b"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1056_지하철_현재출발_제품연결_소스설명_현행화/seoul_subway.py",
+      "sha256": "784bb2628da33b1fc19e4c558d8b4a4b2e50a286ffd306d53d9122b55b904858"
+    },
+    {
+      "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1056_지하철_현재출발_제품연결.md",
+      "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_1120_현재지하철_검증결과/2026-10-09_1056_지하철_현재출발_제품연결.md",
+      "sha256": "c528819488d72189fbdbcef9b67d842250cb2eeb991240c66d3c611a6e22d5ac"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_1120_현재지하철_검증결과/mobility.md",
+      "sha256": "3404b0d9fa2a8608fa6e92221195ddf04a00de9c5a6629be24d19468da5986cf"
+    }
+  ]
+}

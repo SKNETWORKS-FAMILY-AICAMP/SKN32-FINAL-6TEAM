@@ -1,0 +1,185 @@
+{
+  "scope": "D/D2/D3/H complete; MX not complete. One measurement per trained adapter. oos1 uses same training seed as oos2r; training dataset differs.",
+  "metrics": {
+    "D_oos1": {
+      "request_correct": {
+        "numerator": 797,
+        "denominator": 883
+      },
+      "chitchat_false_pick": {
+        "numerator": 4,
+        "denominator": 1300
+      }
+    },
+    "D_oos3": {
+      "request_correct": {
+        "numerator": 796,
+        "denominator": 883
+      },
+      "chitchat_false_pick": {
+        "numerator": 13,
+        "denominator": 1300
+      }
+    },
+    "D_oos2r": {
+      "request_correct": {
+        "numerator": 782,
+        "denominator": 883
+      },
+      "chitchat_false_pick": {
+        "numerator": 0,
+        "denominator": 1300
+      }
+    },
+    "D2_oos1": {
+      "chitchat_false_pick": {
+        "numerator": 4,
+        "denominator": 1000
+      }
+    },
+    "D2_oos3": {
+      "chitchat_false_pick": {
+        "numerator": 12,
+        "denominator": 1000
+      }
+    },
+    "D2_oos2r": {
+      "chitchat_false_pick": {
+        "numerator": 1,
+        "denominator": 1000
+      }
+    },
+    "D3_oos1": {
+      "no_answer_false_pick": {
+        "numerator": 0,
+        "denominator": 240
+      },
+      "request_correct": {
+        "numerator": 110,
+        "denominator": 120
+      }
+    },
+    "D3_oos3": {
+      "no_answer_false_pick": {
+        "numerator": 2,
+        "denominator": 240
+      },
+      "request_correct": {
+        "numerator": 110,
+        "denominator": 120
+      }
+    },
+    "D3_oos2r": {
+      "no_answer_false_pick": {
+        "numerator": 0,
+        "denominator": 240
+      },
+      "request_correct": {
+        "numerator": 104,
+        "denominator": 120
+      }
+    },
+    "H_oos1": {
+      "request_correct": {
+        "numerator": 436,
+        "denominator": 461
+      },
+      "no_answer_false_pick": {
+        "numerator": 78,
+        "denominator": 855
+      }
+    },
+    "H_oos3": {
+      "request_correct": {
+        "numerator": 434,
+        "denominator": 461
+      },
+      "no_answer_false_pick": {
+        "numerator": 195,
+        "denominator": 855
+      }
+    },
+    "H_oos2r": {
+      "request_correct": {
+        "numerator": 456,
+        "denominator": 461
+      },
+      "no_answer_false_pick": {
+        "numerator": 2,
+        "denominator": 855
+      }
+    }
+  },
+  "paired": {
+    "D_no_answer_oos2r_vs_oos1": {
+      "a_only": 7,
+      "b_only": 0,
+      "p": 0.015625
+    },
+    "D_request_oos2r_vs_oos1": {
+      "a_only": 9,
+      "b_only": 24,
+      "p": 0.013530986849218607
+    },
+    "D_no_answer_oos2r_vs_oos3": {
+      "a_only": 17,
+      "b_only": 0,
+      "p": 1.52587890625e-05
+    },
+    "D_request_oos2r_vs_oos3": {
+      "a_only": 8,
+      "b_only": 22,
+      "p": 0.016124801710247997
+    },
+    "D2_no_answer_oos2r_vs_oos1": {
+      "a_only": 3,
+      "b_only": 0,
+      "p": 0.25
+    },
+    "D2_no_answer_oos2r_vs_oos3": {
+      "a_only": 11,
+      "b_only": 0,
+      "p": 0.0009765625
+    },
+    "D3_no_answer_oos2r_vs_oos1": {
+      "a_only": 0,
+      "b_only": 0,
+      "p": 1.0
+    },
+    "D3_request_oos2r_vs_oos1": {
+      "a_only": 1,
+      "b_only": 7,
+      "p": 0.0703125
+    },
+    "D3_no_answer_oos2r_vs_oos3": {
+      "a_only": 2,
+      "b_only": 0,
+      "p": 0.5
+    },
+    "D3_request_oos2r_vs_oos3": {
+      "a_only": 0,
+      "b_only": 6,
+      "p": 0.03125
+    },
+    "H_no_answer_oos2r_vs_oos1": {
+      "a_only": 76,
+      "b_only": 0,
+      "p": 2.6469779601696886e-23
+    },
+    "H_request_oos2r_vs_oos1": {
+      "a_only": 21,
+      "b_only": 1,
+      "p": 1.0967254638671875e-05
+    },
+    "H_no_answer_oos2r_vs_oos3": {
+      "a_only": 194,
+      "b_only": 1,
+      "p": 7.806150364549016e-57
+    },
+    "H_request_oos2r_vs_oos3": {
+      "a_only": 23,
+      "b_only": 1,
+      "p": 2.9802322387695312e-06
+    }
+  }
+}

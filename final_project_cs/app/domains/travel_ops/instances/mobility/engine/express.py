@@ -12,8 +12,10 @@
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import pathlib
+import threading
 
 RULES = pathlib.Path(__file__).with_name("rules")
 FILES = {"09호선": RULES / "express_runs_line09_v1.json.gz", "01호선": RULES / "express_runs_line01_v1.json.gz"}
@@ -48,11 +50,44 @@ class Run:
 
 
 _CACHE = {}
+_CACHE_SIGNATURES = {}
+_CACHE_LOCK = threading.Lock()
+
+
+def source_signature(line):
+    """수정 시각·크기가 같은 교체도 내용의 SHA-256으로 구별한다."""
+    path = FILES.get(line)
+    if path is None:
+        return None, None
+    path = pathlib.Path(path).resolve()
+    try:
+        stat = path.stat()
+        digest = hashlib.sha256()
+        with path.open('rb') as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b''):
+                digest.update(block)
+        after = path.stat()
+    except FileNotFoundError:
+        return str(path), None
+    metadata = stat.st_mtime_ns, stat.st_size, stat.st_ino
+    if metadata != (after.st_mtime_ns, after.st_size, after.st_ino):
+        raise RuntimeError('급행 운행표의 입력 판을 확인하는 사이 파일이 바뀌었다')
+    return str(path), metadata, digest.hexdigest()
+
+
+def source_signatures():
+    return {line: source_signature(line) for line in FILES}
 
 
 def load_line(line):
-    """{day_type: [(역, 출발분, dir, 행선지, Run)]} 또는 None(표 없음). 프로세스 안에서 한 번만 읽는다."""
-    if line in _CACHE:
+    """{day_type: [(역, 출발분, Run)]} 또는 None. 같은 입력 판에서만 재사용한다."""
+    with _CACHE_LOCK:
+        return _load_line(line)
+
+
+def _load_line(line):
+    signature = source_signature(line)
+    if line in _CACHE and _CACHE_SIGNATURES.get(line) == signature:
         return _CACHE[line]
     path = FILES.get(line)
     out = None
@@ -72,7 +107,14 @@ def load_line(line):
                 out[day] = rows
         except (OSError, ValueError, KeyError):
             out = None
-    _CACHE[line] = out
+    if source_signature(line) != signature:
+        raise RuntimeError('급행 운행표를 읽는 사이 입력이 바뀌었다')
+    if out is None:
+        _CACHE.pop(line, None)
+        _CACHE_SIGNATURES.pop(line, None)
+    else:
+        _CACHE[line] = out
+        _CACHE_SIGNATURES[line] = signature
     return out
 
 

@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-10-09T04:39:49.801249+09:00",
+  "sources": [
+    {
+      "url": "https://arxiv.org/html/2505.14193v1",
+      "read_scope": "§2–4 현재 위치·시각과 연결 조건; §5.1 실험 전제",
+      "scope": "현재 시각·현재 위치 재탐색 원칙만 비교. CSA/envelope 구현과 논문 속도·절감 수치는 우리 결과로 사용하지 않음. 서울 아님, 합성 지연 실험."
+    },
+    {
+      "url": "https://gtfs.org/documentation/realtime/realtime-best-practices/",
+      "read_scope": "일반 권고·timestamp·TripUpdate",
+      "scope": "30초 갱신·90초 자료 신선도는 GTFS 권고. 서울 도착 API 형식/정확도를 증명하지 않음."
+    }
+  ]
+}

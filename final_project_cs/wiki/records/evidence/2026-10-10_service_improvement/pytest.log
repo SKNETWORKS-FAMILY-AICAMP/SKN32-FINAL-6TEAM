@@ -1,0 +1,537 @@
+........................................................................ [ 85%]
+....EEEEEEEE                                                             [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_eligibility_is_current_optional_consent_and_one_latest_trip_even_gate_off _
+
+    @pytest.fixture(scope="module")
+    def scratch():
+        parts = urlsplit(get_settings().database_url.replace("postgresql+psycopg://", "postgresql://", 1))
+        name = "acop_improve_" + uuid4().hex[:10]
+>       admin = psycopg.connect(urlunsplit(parts._replace(path="/postgres")), autocommit=True, connect_timeout=5)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\db\test_service_improvement.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=postgres host=127.0.0.1 port=5433 connect_timeout=5 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {'connect_timeout': 5}
+params = {'connect_timeout': 5, 'dbname': 'postgres', 'host': '127.0.0.1', 'port': '5433', ...}
+timeout = 5
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_ ERROR at setup of test_pending_not_exportable_review_hash_tampering_and_expiry_enforced _
+
+    @pytest.fixture(scope="module")
+    def scratch():
+        parts = urlsplit(get_settings().database_url.replace("postgresql+psycopg://", "postgresql://", 1))
+        name = "acop_improve_" + uuid4().hex[:10]
+>       admin = psycopg.connect(urlunsplit(parts._replace(path="/postgres")), autocommit=True, connect_timeout=5)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\db\test_service_improvement.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=postgres host=127.0.0.1 port=5433 connect_timeout=5 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {'connect_timeout': 5}
+params = {'connect_timeout': 5, 'dbname': 'postgres', 'host': '127.0.0.1', 'port': '5433', ...}
+timeout = 5
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_ ERROR at setup of test_withdrawal_invalidates_pending_in_same_transaction_and_keeps_budget[service_terms] _
+
+    @pytest.fixture(scope="module")
+    def scratch():
+        parts = urlsplit(get_settings().database_url.replace("postgresql+psycopg://", "postgresql://", 1))
+        name = "acop_improve_" + uuid4().hex[:10]
+>       admin = psycopg.connect(urlunsplit(parts._replace(path="/postgres")), autocommit=True, connect_timeout=5)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\db\test_service_improvement.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=postgres host=127.0.0.1 port=5433 connect_timeout=5 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {'connect_timeout': 5}
+params = {'connect_timeout': 5, 'dbname': 'postgres', 'host': '127.0.0.1', 'port': '5433', ...}
+timeout = 5
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_ ERROR at setup of test_withdrawal_invalidates_pending_in_same_transaction_and_keeps_budget[privacy] _
+
+    @pytest.fixture(scope="module")
+    def scratch():
+        parts = urlsplit(get_settings().database_url.replace("postgresql+psycopg://", "postgresql://", 1))
+        name = "acop_improve_" + uuid4().hex[:10]
+>       admin = psycopg.connect(urlunsplit(parts._replace(path="/postgres")), autocommit=True, connect_timeout=5)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\db\test_service_improvement.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=postgres host=127.0.0.1 port=5433 connect_timeout=5 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {'connect_timeout': 5}
+params = {'connect_timeout': 5, 'dbname': 'postgres', 'host': '127.0.0.1', 'port': '5433', ...}
+timeout = 5
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_ ERROR at setup of test_withdrawal_invalidates_pending_in_same_transaction_and_keeps_budget[service_improvement] _
+
+    @pytest.fixture(scope="module")
+    def scratch():
+        parts = urlsplit(get_settings().database_url.replace("postgresql+psycopg://", "postgresql://", 1))
+        name = "acop_improve_" + uuid4().hex[:10]
+>       admin = psycopg.connect(urlunsplit(parts._replace(path="/postgres")), autocommit=True, connect_timeout=5)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\db\test_service_improvement.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=postgres host=127.0.0.1 port=5433 connect_timeout=5 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {'connect_timeout': 5}
+params = {'connect_timeout': 5, 'dbname': 'postgres', 'host': '127.0.0.1', 'port': '5433', ...}
+timeout = 5
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_ ERROR at setup of test_failed_generation_and_empty_cohort_still_consume_budget_and_cannot_reset _
+
+    @pytest.fixture(scope="module")
+    def scratch():
+        parts = urlsplit(get_settings().database_url.replace("postgresql+psycopg://", "postgresql://", 1))
+        name = "acop_improve_" + uuid4().hex[:10]
+>       admin = psycopg.connect(urlunsplit(parts._replace(path="/postgres")), autocommit=True, connect_timeout=5)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\db\test_service_improvement.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=postgres host=127.0.0.1 port=5433 connect_timeout=5 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {'connect_timeout': 5}
+params = {'connect_timeout': 5, 'dbname': 'postgres', 'host': '127.0.0.1', 'port': '5433', ...}
+timeout = 5
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_ ERROR at setup of test_candidate_expiration_prunes_only_synthetic_and_migration_reruns_preserve_budget _
+
+    @pytest.fixture(scope="module")
+    def scratch():
+        parts = urlsplit(get_settings().database_url.replace("postgresql+psycopg://", "postgresql://", 1))
+        name = "acop_improve_" + uuid4().hex[:10]
+>       admin = psycopg.connect(urlunsplit(parts._replace(path="/postgres")), autocommit=True, connect_timeout=5)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\db\test_service_improvement.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=postgres host=127.0.0.1 port=5433 connect_timeout=5 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {'connect_timeout': 5}
+params = {'connect_timeout': 5, 'dbname': 'postgres', 'host': '127.0.0.1', 'port': '5433', ...}
+timeout = 5
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+_ ERROR at setup of test_review_requires_actual_evidence_fields_and_scope_and_tenant _
+
+    @pytest.fixture(scope="module")
+    def scratch():
+        parts = urlsplit(get_settings().database_url.replace("postgresql+psycopg://", "postgresql://", 1))
+        name = "acop_improve_" + uuid4().hex[:10]
+>       admin = psycopg.connect(urlunsplit(parts._replace(path="/postgres")), autocommit=True, connect_timeout=5)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\db\test_service_improvement.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=postgres host=127.0.0.1 port=5433 connect_timeout=5 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {'connect_timeout': 5}
+params = {'connect_timeout': 5, 'dbname': 'postgres', 'host': '127.0.0.1', 'port': '5433', ...}
+timeout = 5
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+=========================== short test summary info ===========================
+ERROR tests/integration/db/test_service_improvement.py::test_eligibility_is_current_optional_consent_and_one_latest_trip_even_gate_off
+ERROR tests/integration/db/test_service_improvement.py::test_pending_not_exportable_review_hash_tampering_and_expiry_enforced
+ERROR tests/integration/db/test_service_improvement.py::test_withdrawal_invalidates_pending_in_same_transaction_and_keeps_budget[service_terms]
+ERROR tests/integration/db/test_service_improvement.py::test_withdrawal_invalidates_pending_in_same_transaction_and_keeps_budget[privacy]
+ERROR tests/integration/db/test_service_improvement.py::test_withdrawal_invalidates_pending_in_same_transaction_and_keeps_budget[service_improvement]
+ERROR tests/integration/db/test_service_improvement.py::test_failed_generation_and_empty_cohort_still_consume_budget_and_cannot_reset
+ERROR tests/integration/db/test_service_improvement.py::test_candidate_expiration_prunes_only_synthetic_and_migration_reruns_preserve_budget
+ERROR tests/integration/db/test_service_improvement.py::test_review_requires_actual_evidence_fields_and_scope_and_tenant
+76 passed, 8 errors in 8.33s
+Exception ignored in: <function Console.__del__ at 0x0000022719031BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

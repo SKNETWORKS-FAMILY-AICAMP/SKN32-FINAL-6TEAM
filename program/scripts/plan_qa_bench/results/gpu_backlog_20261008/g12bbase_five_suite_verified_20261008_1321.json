@@ -1,0 +1,48 @@
+{
+  "model": "Gemma-4-12B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "Instruct release",
+  "suites_complete": 5,
+  "suites_expected": 5,
+  "saved": 9425,
+  "failed_or_unparsed": 2,
+  "repetitions": 1,
+  "final_ranking": false,
+  "suites": [
+    {
+      "suite": "h",
+      "saved": 1316,
+      "expected": 1316,
+      "failed": 0,
+      "answer_sha256": "89d099fb7d219298306fbe3da1e98d8218f4b9cac94e7d38cbd7163a8fc1dd62"
+    },
+    {
+      "suite": "mx",
+      "saved": 4014,
+      "expected": 4014,
+      "failed": 0,
+      "answer_sha256": "1c0963a3adc6aa7f24d89c8b38434b8aaf69672556b8d303ca82d8ed2e1d5729"
+    },
+    {
+      "suite": "d",
+      "saved": 2735,
+      "expected": 2735,
+      "failed": 2,
+      "answer_sha256": "c543ce53bb6a88f434351f02074fb2b18c5e0fa6f37ce4116247ffe0b6619584"
+    },
+    {
+      "suite": "d2",
+      "saved": 1000,
+      "expected": 1000,
+      "failed": 0,
+      "answer_sha256": "5711570428675c4b3ecf89c22d8efa7ea4abaaa861f68dd40c4291298d8329d0"
+    },
+    {
+      "suite": "d3",
+      "saved": 360,
+      "expected": 360,
+      "failed": 0,
+      "answer_sha256": "2d0e60ad00cb95e8dadb03b1f2a66dec3ffce1d71fbc87b27dddec9dfd53d935"
+    }
+  ]
+}

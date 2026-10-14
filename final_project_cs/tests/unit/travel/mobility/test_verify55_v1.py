@@ -140,7 +140,8 @@ def _runtime():
     if _RT is None:
         from app.domains.travel_ops.instances.mobility.engine.runtime import build_verifier
         try:
-            _RT = build_verifier(quiet=True)
+            # 이 회귀는 보유 자료를 검증한다. 환경의 GraphHopper·따릉이 키로 실조회하지 않는다.
+            _RT = build_verifier(quiet=True, gh_url="", seoul_key="", local_router=True)
         except RuntimeError as e:
             _RT = e
     if isinstance(_RT, Exception):

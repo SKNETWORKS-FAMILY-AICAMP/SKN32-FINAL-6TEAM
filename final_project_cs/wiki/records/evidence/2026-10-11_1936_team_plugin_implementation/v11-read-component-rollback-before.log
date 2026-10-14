@@ -1,0 +1,19 @@
+CANDIDATE=legacy/deployment_candidates/2026-10-12_015017_plugin_v11
+FIXED_PYTEST_COMMAND=C:\Users\playdata2\anaconda3\python.exe C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\v11-read-component-rollback-before.py
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\v11-read-component-rollback-before.py", line 19, in <module>
+    ns["test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit"](mp,saved,"classifying")
+  File "<string>", line 46, in test_saved_read_resumes_actual_reducer_without_model_or_team_or_middle_commit
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-12_015017_plugin_v11\app\domains\travel_ops\components\conversation\fact_read_retry.py", line 152, in retry_read
+    return _run_decision(conn, tenant=tenant, trip_id=UUID(str(trip["trip_id"])), case_id=case_id,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-12_015017_plugin_v11\app\domains\travel_ops\components\conversation\trip_messages.py", line 901, in _run_decision
+    move(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer, "trip_outcome": kept,
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-12_015017_plugin_v11\app\domains\travel_ops\components\conversation\trip_messages.py", line 692, in move
+    transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=case["version"],
+  File "<string>", line 19, in move
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-12_015017_plugin_v11\app\core\case_lifecycle\case.py", line 64, in apply_event
+    f"������ ���� ����: {current.status.value} --{event_type.value}--> ? "
+                           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'value'
+PYTEST_EXIT=1

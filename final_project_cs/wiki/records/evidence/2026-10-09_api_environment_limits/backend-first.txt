@@ -1,0 +1,34 @@
+..................................F..................................... [ 56%]
+.......................................................                  [100%]
+================================== FAILURES ===================================
+___________________ test_layer_directions_do_not_get_worse ____________________
+
+    def test_layer_directions_do_not_get_worse():
+        edges = _edges()
+        report = []
+        for name, callers, callees, ceiling, why in RULES:
+            pairs = sorted(pair for (src, dst), found in edges.items() if src in callers and dst in callees for pair in found)
+            now = len(pairs)
+            listing = "\n".join(f"      {src} �� {module}" for src, module in pairs)
+            if now > ceiling:
+                report.append(f"  {name}: {now} > \uc0c1\ud55c {ceiling} \u2014 \ub298\uc5c8\ub2e4 ({why})\\n{listing}")
+            elif now < ceiling:
+                report.append(f"  {name}: {now} < \uc0c1\ud55c {ceiling} \u2014 \uc904\uc5c8\ub2e4. \uc0c1\ud55c\uc744 {now} \ub85c \ub0b4\ub9b0\ub2e4\\n{listing}")
+>       assert not report, "������ �θ��� ����:\n" + "\n".join(report)
+E       AssertionError: ������ �θ��� ����:
+E           application \u2192 infrastructure: 4 > \uc0c1\ud55c 3 \u2014 \ub298\uc5c8\ub2e4 (`controller.py` \uc758 \ub2a6\uc740 \uae30\ubcf8\uac12(\uc5f0\uacb0 \ud329\ud1a0\ub9ac \xb7 \uac80\uc0c9\uae30) \u2014 \uc870\ub9bd \ub8e8\ud2b8\uac00 \ub2e4 \uaf42\uc544 \uc8fc\uc9c0\ub9cc \uc881\uc740 \uc2dc\ud5d8\uc774 \ube48\uc190\uc73c\ub85c \ub9cc\ub4e4 \uc218 \uc788\uac8c \ub0a8\uaca8 \ub480\ub2e4. \uc5c6\uc560\ub824\uba74 \uc2dc\ud5d8\uc744 \uace0\uccd0\uc57c \ud55c\ub2e4)
+E               application/api_limits.py �� app.infrastructure.db.session
+E               application/controller.py �� app.infrastructure.db
+E               application/controller.py �� app.infrastructure.db.session
+E               application/controller.py �� app.infrastructure.rag.retriever
+E       assert not ['  application \u2192 infrastructure: 4 > \uc0c1\ud55c 3 \u2014 \ub298\uc5c8\ub2e4 (`controller.py` \uc758 \ub2a6\uc740 \uae30\ubcf8\uac12(\uc5f0\uacb0 \ud329\ud1a0\ub9ac \xb7 \uac80\uc0c9\uae30) \u2014 \uc870\ub9bd \ub8e8\ud2b8\uac00 \ub2e4 \uaf42\uc544 \uc8fc\uc9c0\ub9cc \uc881\uc740 \uc2dc\ud5d8\uc774 \ube48\uc190\uc73c\ub85c...ion/controller.py \u2192 app.infrastructure.db.session\\n      application/controller.py \u2192 app.infrastructure.rag.retriever']
+
+tests\architecture\test_basement_layers.py:99: AssertionError
+============================== warnings summary ===============================
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+1 failed, 126 passed, 1 warning in 14.84s

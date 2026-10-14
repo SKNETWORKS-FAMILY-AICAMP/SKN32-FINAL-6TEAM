@@ -1,0 +1,123 @@
+{
+  "utc": "2026-10-11T15:11:04.950124+00:00",
+  "before": {
+    "tripilot-arm-app-model.service": {
+      "ActiveState": "active",
+      "MainPID": "1353353",
+      "CPUUsageNSec": "9172554060000",
+      "CPUWeight": "200",
+      "CPUQuotaPerSecUSec": "1.200000s"
+    },
+    "tripilot-arm-serving.service": {
+      "ActiveState": "active",
+      "MainPID": "171515",
+      "CPUUsageNSec": "498160786349000",
+      "CPUWeight": "[not set]",
+      "CPUQuotaPerSecUSec": "1.800000s"
+    }
+  },
+  "after": {
+    "tripilot-arm-app-model.service": {
+      "ActiveState": "active",
+      "MainPID": "1353353",
+      "CPUUsageNSec": "9182372682000",
+      "CPUWeight": "200",
+      "CPUQuotaPerSecUSec": "1.200000s"
+    },
+    "tripilot-arm-serving.service": {
+      "ActiveState": "active",
+      "MainPID": "171515",
+      "CPUUsageNSec": "498167208390000",
+      "CPUWeight": "20",
+      "CPUQuotaPerSecUSec": "1.800000s"
+    }
+  },
+  "pre_10s": {
+    "seconds": 10.020053638028912,
+    "pct_of_two_cores": {
+      "tripilot-arm-app-model.service": 48.604645004256085,
+      "tripilot-arm-serving.service": 31.87958483452165
+    },
+    "start": {
+      "tripilot-arm-app-model.service": {
+        "ActiveState": "active",
+        "MainPID": "1353353",
+        "CPUUsageNSec": "9172566369000",
+        "CPUWeight": "200",
+        "CPUQuotaPerSecUSec": "1.200000s"
+      },
+      "tripilot-arm-serving.service": {
+        "ActiveState": "active",
+        "MainPID": "171515",
+        "CPUUsageNSec": "498160791496000",
+        "CPUWeight": "[not set]",
+        "CPUQuotaPerSecUSec": "1.800000s"
+      }
+    },
+    "end": {
+      "tripilot-arm-app-model.service": {
+        "ActiveState": "active",
+        "MainPID": "1353353",
+        "CPUUsageNSec": "9182306792000",
+        "CPUWeight": "200",
+        "CPUQuotaPerSecUSec": "1.200000s"
+      },
+      "tripilot-arm-serving.service": {
+        "ActiveState": "active",
+        "MainPID": "171515",
+        "CPUUsageNSec": "498167180199000",
+        "CPUWeight": "[not set]",
+        "CPUQuotaPerSecUSec": "1.800000s"
+      }
+    }
+  },
+  "post_10s": {
+    "seconds": 10.01903303002473,
+    "pct_of_two_cores": {
+      "tripilot-arm-app-model.service": 59.213359035960345,
+      "tripilot-arm-serving.service": 32.856194705966296
+    },
+    "start": {
+      "tripilot-arm-app-model.service": {
+        "ActiveState": "active",
+        "MainPID": "1353353",
+        "CPUUsageNSec": "9182386867000",
+        "CPUWeight": "200",
+        "CPUQuotaPerSecUSec": "1.200000s"
+      },
+      "tripilot-arm-serving.service": {
+        "ActiveState": "active",
+        "MainPID": "171515",
+        "CPUUsageNSec": "498167209369000",
+        "CPUWeight": "20",
+        "CPUQuotaPerSecUSec": "1.800000s"
+      }
+    },
+    "end": {
+      "tripilot-arm-app-model.service": {
+        "ActiveState": "active",
+        "MainPID": "1353353",
+        "CPUUsageNSec": "9194252079000",
+        "CPUWeight": "200",
+        "CPUQuotaPerSecUSec": "1.200000s"
+      },
+      "tripilot-arm-serving.service": {
+        "ActiveState": "active",
+        "MainPID": "171515",
+        "CPUUsageNSec": "498173793115000",
+        "CPUWeight": "20",
+        "CPUQuotaPerSecUSec": "1.800000s"
+      }
+    }
+  },
+  "remote_backup": "/home/ubuntu/bench/continuous-travel-20261008/_backup/20261011_151054_cpu_priority",
+  "scope": "runtime_only_resets_on_reboot",
+  "rollback_command": [
+    "systemctl",
+    "set-property",
+    "--runtime",
+    "tripilot-arm-serving.service",
+    "CPUWeight="
+  ],
+  "jobs_interrupted": false
+}

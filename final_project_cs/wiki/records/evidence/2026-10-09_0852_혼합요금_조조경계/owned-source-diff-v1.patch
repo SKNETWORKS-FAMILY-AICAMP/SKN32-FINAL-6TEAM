@@ -1,0 +1,89 @@
+--- before/app/domains/travel_ops/instances/mobility/engine/options.py
++++ after/app/domains/travel_ops/instances/mobility/engine/options.py
+@@ -401,11 +401,12 @@
+     return None if est is None else _subway_fare_on(v, est, legs, rides)
+ 
+ 
+-def subway_fare_upper(v, legs, legs_result):
++def subway_fare_upper(v, legs, legs_result, *, apply_early_bird=True):
+     """알려진 거리 범위의 상단 예상액. 확정 운임·실제 결제 상한 보장은 아니다.
+ 
+-    탄 경로 거리까지 이어지는 자료만 허용한다. 조조 태그 시각이 불명확하면
+-    할인을 적용하지 않는다. 별도 운임·누락 거리의 기본요금 대체는 하지 않는다.
++    탄 경로 거리까지 이어지는 자료만 허용한다. 조조 태그 시각이 불명확하거나
++    혼합 경로의 할인 미적용 상단이면 할인을 적용하지 않는다.
++    별도 운임·누락 거리의 기본요금 대체는 하지 않는다.
+     """
+     rides = ride_results(legs, legs_result)
+     if not rides or rides[0].depart_min is None:
+@@ -418,7 +419,7 @@
+     eb = F['subway']['early_bird']['value']
+     early = early_bird(rides[0].depart_min, eb['until_min'],
+                        F['subway']['early_bird_gate_window']['value'])
+-    board = rides[0].depart_min if early is True else eb['until_min']
++    board = rides[0].depart_min if apply_early_bird and early is True else eb['until_min']
+     for net in (fare_net(v), fare_net_est(v)):
+         if net is not None and net.ridden_m(legs) is not None:
+             upper = net.upper_m(legs)
+@@ -479,6 +480,27 @@
+     return p["base"]
+ 
+ 
++def bus_fare_upper(v, legs, legs_result):
++    """알려진 버스 유형의 할인 미적용 기본요금. 배차 창이 조조 경계를 걸쳐도 상단은 유지한다."""
++    rides = ride_results(legs, legs_result)
++    if not rides or len(legs) != 1:
++        return None
++    bt = bus_type(v, legs[0])
++    if bt is None:
++        return None
++    typ, _term = bt
++    F = _fare(v)["bus"]
++    if typ in F["no_fare_types"]["value"] or typ not in F["by_type"]["value"]:
++        return None
++    won = F["by_type"]["value"][typ]
++    try:
++        if isinstance(won, bool) or not isinstance(won, (int, float)) or won <= 0 or not math.isfinite(won):
++            return None
++    except OverflowError:
++        return None
++    return won
++
++
+ def transfer_fare(F, parts):
+     """통합환승 합성(규칙 fare.transfer) — parts = [{kind, base, m, board, alight}] 탄 순서.
+     kind 는 'subway' 또는 버스 유형. 하나라도 규칙 밖(광역·심야·모르는 유형) · 거리 모름 · 환승 창 초과 · 승차 수 초과 → None.
+@@ -536,8 +558,8 @@
+ def fare_upper_of(v, legs, legs_result):
+     """버스가 섞인 환승의 **요금 상한**(1인) — 규칙 fare.transfer.cap = sum_of_single(확정): 통합요금은 탈것마다 따로 낸
+     요금의 합을 넘지 않는다. 합성 요금(fare_of)은 버스 운임거리 근거가 없어 못 내지만(fare.transfer.bus_distance),
+-    탈것별 단일 요금은 근거가 있다 — 지하철 묶음(개찰 안 환승)은 subway_fare,
+-    확정액이 없으면 승인된 거리 범위의 subway_fare_upper, 버스는 bus_fare.
++    탈것별 일반 요금은 근거가 있다 — 지하철 묶음(개찰 안 환승)은 승인된 거리 범위의
++    subway_fare_upper, 버스는 bus_fare_upper. 상단에서는 조조 할인을 적용하지 않는다.
+     거리 범위 추정이 포함될 수 있으므로 실제 결제 상한 보장이 아닌 예상액 상단이다.
+ 
+     ☆`[2026-09-29 문제목록 #20]` 앞 판은 이 경로의 요금 칸을 비웠다 → 우리 재계획이 「요금 미상」으로 후보를 떨어뜨렸다.
+@@ -560,9 +582,8 @@
+         return None                                         # 버스가 안 섞였다 — 이 함수의 몫이 아니다
+     total = 0
+     for m, gl, gr in groups:
+-        f = subway_fare(v, gl, gr) if m == "subway" else bus_fare(v, gl, gr) if m == "bus" else None
+-        if f is None and m == "subway":
+-            f = subway_fare_upper(v, gl, gr)
++        f = (subway_fare_upper(v, gl, gr, apply_early_bird=False) if m == "subway"
++             else bus_fare_upper(v, gl, gr) if m == "bus" else None)
+         if f is None:
+             return None
+         total += f
+--- before/app/domains/travel_ops/instances/mobility/engine/plan.py
++++ after/app/domains/travel_ops/instances/mobility/engine/plan.py
+@@ -1692,7 +1692,7 @@
+                 if up is not None:
+                     o["fare_krw"] = int(up)
+                     o["label"] += (" · 요금은 거리 범위 상단 예상액" if rail_only
+-                                   else " · 요금은 환승 할인 전 예상액 상단")
++                                   else " · 요금은 환승 할인 전 예상액 상단 · 조조 할인 미적용")
+             if self.display and o["_legs"]:
+                 tc = O.transfer_cars(self.v, self._tc, o["_legs"], o.get("_lr"), o.get("_day_type"))
+                 if tc:

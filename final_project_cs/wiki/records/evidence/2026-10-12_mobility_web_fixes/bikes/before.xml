@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="10" skipped="0" tests="12" time="5.658" timestamp="2026-10-12T00:30:54.070098+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[0-1000-60]" time="0.261"><failure message="KeyError: 'base_ride_min'">minutes = 0, won = 1000, base = 60
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+        assert result["total_won"] == won
+&gt;       assert result["base_ride_min"] == base
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'base_ride_min'
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:25: KeyError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[60-1000-60]" time="0.005"><failure message="KeyError: 'base_ride_min'">minutes = 60, won = 1000, base = 60
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+        assert result["total_won"] == won
+&gt;       assert result["base_ride_min"] == base
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'base_ride_min'
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:25: KeyError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[60.01-1200-60]" time="0.006"><failure message="KeyError: 'base_ride_min'">minutes = 60.01, won = 1200, base = 60
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+        assert result["total_won"] == won
+&gt;       assert result["base_ride_min"] == base
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'base_ride_min'
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:25: KeyError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[80-1800-60]" time="0.005"><failure message="KeyError: 'base_ride_min'">minutes = 80, won = 1800, base = 60
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+        assert result["total_won"] == won
+&gt;       assert result["base_ride_min"] == base
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'base_ride_min'
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:25: KeyError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[85-2000-120]" time="0.006"><failure message="KeyError: 'base_ride_min'">minutes = 85, won = 2000, base = 120
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+        assert result["total_won"] == won
+&gt;       assert result["base_ride_min"] == base
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'base_ride_min'
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:25: KeyError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[100-2000-120]" time="0.005"><failure message="assert 2600 == 2000">minutes = 100, won = 2000, base = 120
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+&gt;       assert result["total_won"] == won
+E       assert 2600 == 2000
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:24: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[120-2000-120]" time="0.005"><failure message="assert 3400 == 2000">minutes = 120, won = 2000, base = 120
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+&gt;       assert result["total_won"] == won
+E       assert 3400 == 2000
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:24: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[120.01-2200-120]" time="0.005"><failure message="assert 3600 == 2200">minutes = 120.01, won = 2200, base = 120
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+&gt;       assert result["total_won"] == won
+E       assert 3600 == 2200
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:24: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[145-3000-180]" time="0.005"><failure message="assert 4400 == 3000">minutes = 145, won = 3000, base = 180
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+&gt;       assert result["total_won"] == won
+E       assert 4400 == 3000
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:24: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_official_per_pass_rental_time_and_least_total[180-3000-180]" time="0.006"><failure message="assert 5800 == 3000">minutes = 180, won = 3000, base = 180
+
+    @pytest.mark.parametrize("minutes,won,base", [
+        (0, 1000, 60), (60, 1000, 60), (60.01, 1200, 60),
+        (80, 1800, 60), (85, 2000, 120), (100, 2000, 120),
+        (120, 2000, 120), (120.01, 2200, 120),
+        (145, 3000, 180), (180, 3000, 180),
+    ])
+    def test_official_per_pass_rental_time_and_least_total(minutes, won, base):
+        rules = json.loads(RULES.read_text(encoding="utf8"))["bike"]["ddareungi"]["fare"]
+        # 종일 외국인권의 현 판매·초과조건과 분리해 1/2/3시간 공식 일일권을 검증합니다.
+        rules["passes"]["value"] = [p for p in rules["passes"]["value"] if p["minutes"] &lt;= 180]
+        result = bike.fare(rules, minutes)
+&gt;       assert result["total_won"] == won
+E       assert 5800 == 3000
+
+tests\unit\travel\mobility\test_bike_official_pass_fare_v1.py:24: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_explicit_per_rental_limit_takes_precedence_over_validity_minutes" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_bike_official_pass_fare_v1" name="test_legacy_pass_without_minutes_uses_explicit_common_base" time="0.003" /></testsuite></testsuites>

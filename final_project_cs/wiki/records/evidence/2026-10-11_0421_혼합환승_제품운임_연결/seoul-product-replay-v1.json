@@ -1,0 +1,1547 @@
+{
+  "created_at": "2026-10-11T04:27:59.862160+09:00",
+  "selected_pairs": 12,
+  "completed_pairs": 12,
+  "mixed_options": 16,
+  "discounted_product_options": 0,
+  "changed_pairs": 0,
+  "lower_than_separate_sum": 0,
+  "fallback_options": 16,
+  "network_attempts": 0,
+  "limited_api_calls": 0,
+  "scope": "기존 개발 표본 좌표의 현재 제품 탐색. 신규 독립 웹 대조·실제 탑승·결제 측정이 아님.",
+  "fixed_arrive_at": "2026-10-08T10:30:00+09:00",
+  "inputs": {
+    "datasets/mobility/raw/kakao_golden/fresh_experiment_100_design.json": "af6fcf5460a71e3fd18cf3cf1eabe6ef03851e56c71e69ff06620dd2fc6dbe74",
+    "datasets/mobility/raw/kakao_golden/fresh_ours_transit_100_v1.json": "36bf8d1fcfb819ee3ec9a1b11ad03c7c4a423134a47c615ff5e0e906541534bd",
+    "datasets/mobility/raw/kakao_golden/fresh_web_100_v1.json": "e6a084921f95ab9c334c49685db40a23b7be56700505ead261d969999d632fc2"
+  },
+  "rows": [
+    {
+      "id": "N007",
+      "from": {
+        "key": "N007a",
+        "name": "신림역",
+        "lat": 37.4843,
+        "lon": 126.9298
+      },
+      "to": {
+        "key": "N007b",
+        "name": "인사동",
+        "lat": 37.5742,
+        "lon": 126.9857
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "subway_bus_1",
+            "label": "2호선 신림→을지로입구 → 버스 9401 우리은행종로지점→조계사 — 소요 가장 짧음 · 요금은 환승 할인 전 예상액 상단 · 조조 할인 미적용",
+            "eta_min": 53,
+            "walk_m": 637,
+            "fare_krw": 4750,
+            "uses": [
+              "2호선:신림",
+              "2호선:을지로입구",
+              "버스:9401"
+            ]
+          },
+          "discount_before_sum": 4750,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "line": "02호선",
+              "from": "신림",
+              "to": "을지로입구"
+            },
+            {
+              "mode": "bus",
+              "route": "9401",
+              "from": "우리은행종로지점",
+              "to": "조계사",
+              "route_id": "100100389",
+              "from_sequence": 30,
+              "to_sequence": 31,
+              "from_stop_id": "101000040",
+              "to_stop_id": "100000169"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 565,
+              "arrive_min": 598,
+              "wait_min": 0,
+              "ride_min": 33.0,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 606,
+              "arrive_min": 610,
+              "wait_min": 3,
+              "ride_min": 3.5,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "subway_1"
+    },
+    {
+      "id": "N015",
+      "from": {
+        "key": "N015a",
+        "name": "상봉역",
+        "lat": 37.5966,
+        "lon": 127.0855
+      },
+      "to": {
+        "key": "N015b",
+        "name": "선유도공원",
+        "lat": 37.5434,
+        "lon": 126.8991
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "subway_bus_1",
+            "label": "경의중앙선 상봉→왕십리 → 2호선 왕십리→합정 → 버스 761 합정역→선유도공원 — 소요 가장 짧음 · 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 59,
+            "walk_m": 602,
+            "fare_krw": 1750,
+            "uses": [
+              "경의중앙선:상봉",
+              "경의중앙선:왕십리",
+              "2호선:왕십리",
+              "2호선:합정",
+              "버스:761"
+            ]
+          },
+          "discount_before_sum": 3250,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "line": "경의선",
+              "from": "상봉",
+              "to": "왕십리"
+            },
+            {
+              "line": "02호선",
+              "from": "왕십리",
+              "to": "합정"
+            },
+            {
+              "mode": "bus",
+              "route": "761",
+              "from": "합정역",
+              "to": "선유도공원",
+              "route_id": "111000014",
+              "from_sequence": 33,
+              "to_sequence": 34,
+              "from_stop_id": "113000412",
+              "to_stop_id": "118000192"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 553,
+              "arrive_min": 566,
+              "wait_min": 0,
+              "ride_min": 13.0,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 569,
+              "arrive_min": 594,
+              "wait_min": 1,
+              "ride_min": 24.4,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": 601,
+              "arrive_min": 603,
+              "wait_min": 5,
+              "ride_min": 1.8,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        },
+        {
+          "public": {
+            "id": "subway_bus_2",
+            "label": "경의중앙선 상봉→왕십리 → 2호선 왕십리→합정 → 버스 7612 합정역→선유도공원 — 소요 가장 짧음 · 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 59,
+            "walk_m": 602,
+            "fare_krw": 1750,
+            "uses": [
+              "경의중앙선:상봉",
+              "경의중앙선:왕십리",
+              "2호선:왕십리",
+              "2호선:합정",
+              "버스:7612"
+            ]
+          },
+          "discount_before_sum": 3250,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "line": "경의선",
+              "from": "상봉",
+              "to": "왕십리"
+            },
+            {
+              "line": "02호선",
+              "from": "왕십리",
+              "to": "합정"
+            },
+            {
+              "mode": "bus",
+              "route": "7612",
+              "from": "합정역",
+              "to": "선유도공원",
+              "route_id": "100100346",
+              "from_sequence": 20,
+              "to_sequence": 21,
+              "from_stop_id": "113000412",
+              "to_stop_id": "118000192"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 553,
+              "arrive_min": 566,
+              "wait_min": 0,
+              "ride_min": 13.0,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 569,
+              "arrive_min": 594,
+              "wait_min": 1,
+              "ride_min": 24.4,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": 601,
+              "arrive_min": 603,
+              "wait_min": 5,
+              "ride_min": 1.9,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "subway_1"
+    },
+    {
+      "id": "N018",
+      "from": {
+        "key": "N018a",
+        "name": "북서울꿈의숲",
+        "lat": 37.6205,
+        "lon": 127.0415
+      },
+      "to": {
+        "key": "N018b",
+        "name": "고속터미널역",
+        "lat": 37.5049,
+        "lon": 127.0049
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "bus_subway_1",
+            "label": "버스 강북05 북서울꿈의숲서문→롯데백화점미아점 → 4호선 미아사거리→충무로 → 3호선 충무로→고속터미널 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 65,
+            "walk_m": 831,
+            "fare_krw": 1750,
+            "uses": [
+              "버스:강북05",
+              "4호선:미아사거리",
+              "4호선:충무로",
+              "3호선:충무로",
+              "3호선:고속터미널"
+            ]
+          },
+          "discount_before_sum": null,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "mode": "bus",
+              "route": "강북05",
+              "from": "북서울꿈의숲서문",
+              "to": "롯데백화점미아점",
+              "route_id": "108900008",
+              "from_sequence": 6,
+              "to_sequence": 10,
+              "from_stop_id": "108000151",
+              "to_stop_id": "108000189"
+            },
+            {
+              "line": "04호선",
+              "from": "미아사거리",
+              "to": "충무로"
+            },
+            {
+              "line": "03호선",
+              "from": "충무로",
+              "to": "고속터미널"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 564,
+              "arrive_min": 571,
+              "wait_min": 5,
+              "ride_min": 6.8,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 575,
+              "arrive_min": 591,
+              "wait_min": 1,
+              "ride_min": 15.5,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": 596,
+              "arrive_min": 612,
+              "wait_min": 3,
+              "ride_min": 15.5,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "bus_subway_1"
+    },
+    {
+      "id": "N020",
+      "from": {
+        "key": "N020a",
+        "name": "경희궁",
+        "lat": 37.5707,
+        "lon": 126.9696
+      },
+      "to": {
+        "key": "N020b",
+        "name": "반포한강공원",
+        "lat": 37.5107,
+        "lon": 126.9965
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "subway_bus_1",
+            "label": "5호선 서대문→공덕 → 버스 740 공덕역7번출구→반포한강공원.세빛섬 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 57,
+            "walk_m": 1100,
+            "fare_krw": 1550,
+            "uses": [
+              "5호선:서대문",
+              "5호선:공덕",
+              "버스:740"
+            ]
+          },
+          "discount_before_sum": 3050,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "line": "05호선",
+              "from": "서대문",
+              "to": "공덕"
+            },
+            {
+              "mode": "bus",
+              "route": "740",
+              "from": "공덕역7번출구",
+              "to": "반포한강공원.세빛섬",
+              "route_id": "100100537",
+              "from_sequence": 24,
+              "to_sequence": 34,
+              "from_stop_id": "113000059",
+              "to_stop_id": "121000939"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 561,
+              "arrive_min": 567,
+              "wait_min": 0,
+              "ride_min": 5.1,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 576,
+              "arrive_min": 601,
+              "wait_min": 6,
+              "ride_min": 24.7,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        },
+        {
+          "public": {
+            "id": "bus_1",
+            "label": "버스 702A 서울역사박물관.경희궁앞→롯데백화점 → 버스 143 롯데백화점→반포대교남단.한강시민공원입구 — 소요 가장 짧음 · 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 48,
+            "walk_m": 843,
+            "fare_krw": 1500,
+            "uses": [
+              "버스:702A",
+              "버스:143"
+            ]
+          },
+          "discount_before_sum": 3000,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "mode": "bus",
+              "route": "702A",
+              "from": "서울역사박물관.경희궁앞",
+              "to": "롯데백화점",
+              "route_id": "100100104",
+              "from_sequence": 39,
+              "to_sequence": 42,
+              "from_stop_id": "100000380",
+              "to_stop_id": "101000041"
+            },
+            {
+              "mode": "bus",
+              "route": "143",
+              "from": "롯데백화점",
+              "to": "반포대교남단.한강시민공원입구",
+              "route_id": "100100022",
+              "from_sequence": 19,
+              "to_sequence": 26,
+              "from_stop_id": "101000041",
+              "to_stop_id": "121000302"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 571,
+              "arrive_min": 579,
+              "wait_min": 5,
+              "ride_min": 7.7,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 583,
+              "arrive_min": 599,
+              "wait_min": 3,
+              "ride_min": 15.8,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        },
+        {
+          "public": {
+            "id": "bus_subway_1",
+            "label": "버스 370 서울역사박물관.경희궁앞→종로3가역.탑골공원 → 3호선 종로3가→고속터미널 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 65,
+            "walk_m": 1727,
+            "fare_krw": 1650,
+            "uses": [
+              "버스:370",
+              "3호선:종로3가",
+              "3호선:고속터미널"
+            ]
+          },
+          "discount_before_sum": null,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "mode": "bus",
+              "route": "370",
+              "from": "서울역사박물관.경희궁앞",
+              "to": "종로3가역.탑골공원",
+              "route_id": "100100061",
+              "from_sequence": 51,
+              "to_sequence": 55,
+              "from_stop_id": "100000380",
+              "to_stop_id": "100000390"
+            },
+            {
+              "line": "03호선",
+              "from": "종로3가",
+              "to": "고속터미널"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 559,
+              "arrive_min": 568,
+              "wait_min": 3,
+              "ride_min": 8.3,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 577,
+              "arrive_min": 596,
+              "wait_min": 3,
+              "ride_min": 18.5,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "subway_1"
+    },
+    {
+      "id": "N027",
+      "from": {
+        "key": "N027a",
+        "name": "구의역",
+        "lat": 37.537,
+        "lon": 127.0859
+      },
+      "to": {
+        "key": "N027b",
+        "name": "예술의전당",
+        "lat": 37.4789,
+        "lon": 127.0119
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "subway_bus_1",
+            "label": "2호선 구의→서초 → 버스 5413 서초역3번출구→서초동예술의전당 — 소요 가장 짧음 · 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 40,
+            "walk_m": 303,
+            "fare_krw": 1650,
+            "uses": [
+              "2호선:구의",
+              "2호선:서초",
+              "버스:5413"
+            ]
+          },
+          "discount_before_sum": 3150,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "line": "02호선",
+              "from": "구의",
+              "to": "서초"
+            },
+            {
+              "mode": "bus",
+              "route": "5413",
+              "from": "서초역3번출구",
+              "to": "서초동예술의전당",
+              "route_id": "100100249",
+              "from_sequence": 49,
+              "to_sequence": 53,
+              "from_stop_id": "121000300",
+              "to_stop_id": "121000076"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 574,
+              "arrive_min": 596,
+              "wait_min": 0,
+              "ride_min": 21.9,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 602,
+              "arrive_min": 609,
+              "wait_min": 4,
+              "ride_min": 6.1,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "subway_1"
+    },
+    {
+      "id": "N041",
+      "from": {
+        "key": "N041a",
+        "name": "길상사",
+        "lat": 37.5984,
+        "lon": 126.9918
+      },
+      "to": {
+        "key": "N041b",
+        "name": "인사동",
+        "lat": 37.5742,
+        "lon": 126.9857
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "bus_subway_1",
+            "label": "버스 성북02 길상사→한성대입구역5번출구 → 4호선 한성대입구→동대문 → 1호선 동대문→종로3가 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 47,
+            "walk_m": 1013,
+            "fare_krw": 1550,
+            "uses": [
+              "버스:성북02",
+              "4호선:한성대입구",
+              "4호선:동대문",
+              "1호선:동대문",
+              "1호선:종로3가"
+            ]
+          },
+          "discount_before_sum": null,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "mode": "bus",
+              "route": "성북02",
+              "from": "길상사",
+              "to": "한성대입구역5번출구",
+              "route_id": "107900003",
+              "from_sequence": 21,
+              "to_sequence": 30,
+              "from_stop_id": "107900310",
+              "to_stop_id": "107900090"
+            },
+            {
+              "line": "04호선",
+              "from": "한성대입구",
+              "to": "동대문"
+            },
+            {
+              "line": "01호선",
+              "from": "동대문",
+              "to": "종로3가"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 575,
+              "arrive_min": 582,
+              "wait_min": 7,
+              "ride_min": 6.9,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 587,
+              "arrive_min": 592,
+              "wait_min": 2,
+              "ride_min": 4.5,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": 599,
+              "arrive_min": 603,
+              "wait_min": 2,
+              "ride_min": 3.5,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "bus_subway_1"
+    },
+    {
+      "id": "N053",
+      "from": {
+        "key": "N053a",
+        "name": "이화여대",
+        "lat": 37.5619,
+        "lon": 126.9468
+      },
+      "to": {
+        "key": "N053b",
+        "name": "국립현대미술관 서울",
+        "lat": 37.5791,
+        "lon": 126.9804
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "subway_bus_1",
+            "label": "2호선 이대→시청 → 버스 종로11 시청역1호선.서울시청→정독도서관 — 소요 가장 짧음 · 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 34,
+            "walk_m": 834,
+            "fare_krw": 1550,
+            "uses": [
+              "2호선:이대",
+              "2호선:시청",
+              "버스:종로11"
+            ]
+          },
+          "discount_before_sum": 2750,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "line": "02호선",
+              "from": "이대",
+              "to": "시청"
+            },
+            {
+              "mode": "bus",
+              "route": "종로11",
+              "from": "시청역1호선.서울시청",
+              "to": "정독도서관",
+              "route_id": "100900007",
+              "from_sequence": 13,
+              "to_sequence": 16,
+              "from_stop_id": "101900006",
+              "to_stop_id": "100900105"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 587,
+              "arrive_min": 593,
+              "wait_min": 0,
+              "ride_min": 5.5,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 600,
+              "arrive_min": 608,
+              "wait_min": 5,
+              "ride_min": 7.2,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "bus_272"
+    },
+    {
+      "id": "N060",
+      "from": {
+        "key": "N060a",
+        "name": "청담역",
+        "lat": 37.519,
+        "lon": 127.0535
+      },
+      "to": {
+        "key": "N060b",
+        "name": "반포한강공원",
+        "lat": 37.5107,
+        "lon": 126.9965
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "subway_bus_1",
+            "label": "7호선 청담→논현 → 버스 9711 신사역→반포대교(가상) — 소요 가장 짧음 · 도보 거리 가장 짧음 · 요금은 환승 할인 전 예상액 상단 · 조조 할인 미적용",
+            "eta_min": 31,
+            "walk_m": 571,
+            "fare_krw": 4550,
+            "uses": [
+              "7호선:청담",
+              "7호선:논현",
+              "버스:9711"
+            ]
+          },
+          "discount_before_sum": 4550,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "line": "07호선",
+              "from": "청담",
+              "to": "논현"
+            },
+            {
+              "mode": "bus",
+              "route": "9711",
+              "from": "신사역",
+              "to": "반포대교(가상)",
+              "route_id": "100100607",
+              "from_sequence": 49,
+              "to_sequence": 52,
+              "from_stop_id": "121000016",
+              "to_stop_id": "121001311"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 586,
+              "arrive_min": 592,
+              "wait_min": 0,
+              "ride_min": 5.5,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 603,
+              "arrive_min": 610,
+              "wait_min": 6,
+              "ride_min": 6.3,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "subway_1"
+    },
+    {
+      "id": "N064",
+      "from": {
+        "key": "N064a",
+        "name": "길상사",
+        "lat": 37.5984,
+        "lon": 126.9918
+      },
+      "to": {
+        "key": "N064b",
+        "name": "동묘앞역",
+        "lat": 37.5727,
+        "lon": 127.0166
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "bus_subway_1",
+            "label": "버스 성북02 길상사→한성대입구역5번출구 → 4호선 한성대입구→동대문 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 37,
+            "walk_m": 835,
+            "fare_krw": 1550,
+            "uses": [
+              "버스:성북02",
+              "4호선:한성대입구",
+              "4호선:동대문"
+            ]
+          },
+          "discount_before_sum": null,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "mode": "bus",
+              "route": "성북02",
+              "from": "길상사",
+              "to": "한성대입구역5번출구",
+              "route_id": "107900003",
+              "from_sequence": 21,
+              "to_sequence": 30,
+              "from_stop_id": "107900310",
+              "to_stop_id": "107900090"
+            },
+            {
+              "line": "04호선",
+              "from": "한성대입구",
+              "to": "동대문"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 588,
+              "arrive_min": 595,
+              "wait_min": 7,
+              "ride_min": 6.9,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 601,
+              "arrive_min": 606,
+              "wait_min": 3,
+              "ride_min": 4.5,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "bus_subway_1"
+    },
+    {
+      "id": "N065",
+      "from": {
+        "key": "N065a",
+        "name": "길상사",
+        "lat": 37.5984,
+        "lon": 126.9918
+      },
+      "to": {
+        "key": "N065b",
+        "name": "효창공원",
+        "lat": 37.5439,
+        "lon": 126.961
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "bus_subway_1",
+            "label": "버스 성북02 길상사→한성대입구역5번출구 → 4호선 한성대입구→삼각지 → 6호선 삼각지→효창공원앞 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 67,
+            "walk_m": 1252,
+            "fare_krw": 1650,
+            "uses": [
+              "버스:성북02",
+              "4호선:한성대입구",
+              "4호선:삼각지",
+              "6호선:삼각지",
+              "6호선:효창공원앞"
+            ]
+          },
+          "discount_before_sum": null,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "mode": "bus",
+              "route": "성북02",
+              "from": "길상사",
+              "to": "한성대입구역5번출구",
+              "route_id": "107900003",
+              "from_sequence": 21,
+              "to_sequence": 30,
+              "from_stop_id": "107900310",
+              "to_stop_id": "107900090"
+            },
+            {
+              "line": "04호선",
+              "from": "한성대입구",
+              "to": "삼각지"
+            },
+            {
+              "line": "06호선",
+              "from": "삼각지",
+              "to": "효창공원앞"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 560,
+              "arrive_min": 567,
+              "wait_min": 7,
+              "ride_min": 6.9,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 573,
+              "arrive_min": 591,
+              "wait_min": 3,
+              "ride_min": 17.5,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": 600,
+              "arrive_min": 603,
+              "wait_min": 5,
+              "ride_min": 2.1,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "bus_subway_1"
+    },
+    {
+      "id": "N071",
+      "from": {
+        "key": "N071a",
+        "name": "서울역",
+        "lat": 37.5547,
+        "lon": 126.9707
+      },
+      "to": {
+        "key": "N071b",
+        "name": "북촌한옥마을",
+        "lat": 37.5826,
+        "lon": 126.983
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "subway_bus_1",
+            "label": "1호선 서울역→시청 → 버스 종로11 시청역1호선.서울시청→삼청파출소 — 소요 가장 짧음 · 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 26,
+            "walk_m": 441,
+            "fare_krw": 1550,
+            "uses": [
+              "1호선:서울역",
+              "1호선:시청",
+              "버스:종로11"
+            ]
+          },
+          "discount_before_sum": 2750,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "line": "01호선",
+              "from": "서울역",
+              "to": "시청"
+            },
+            {
+              "mode": "bus",
+              "route": "종로11",
+              "from": "시청역1호선.서울시청",
+              "to": "삼청파출소",
+              "route_id": "100900007",
+              "from_sequence": 13,
+              "to_sequence": 17,
+              "from_stop_id": "101900006",
+              "to_stop_id": "100900100"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 590,
+              "arrive_min": 592,
+              "wait_min": 0,
+              "ride_min": 2.0,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 599,
+              "arrive_min": 608,
+              "wait_min": 5,
+              "ride_min": 8.4,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "subway_1"
+    },
+    {
+      "id": "N074",
+      "from": {
+        "key": "N074a",
+        "name": "노들섬",
+        "lat": 37.5174,
+        "lon": 126.9586
+      },
+      "to": {
+        "key": "N074b",
+        "name": "경복궁",
+        "lat": 37.5796,
+        "lon": 126.977
+      },
+      "failure": null,
+      "options": [
+        {
+          "public": {
+            "id": "bus_subway_1",
+            "label": "버스 750B 노들섬→농협은행.유관순활동터 → 5호선 서대문→광화문 — 소요 가장 짧음 · 환승 가장 적음(1회) · 도보 시간 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 50,
+            "walk_m": 1170,
+            "fare_krw": 1550,
+            "uses": [
+              "버스:750B",
+              "5호선:서대문",
+              "5호선:광화문"
+            ]
+          },
+          "discount_before_sum": null,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "mode": "bus",
+              "route": "750B",
+              "from": "노들섬",
+              "to": "농협은행.유관순활동터",
+              "route_id": "100100565",
+              "from_sequence": 52,
+              "to_sequence": 60,
+              "from_stop_id": "102000248",
+              "to_stop_id": "101000020"
+            },
+            {
+              "line": "05호선",
+              "from": "서대문",
+              "to": "광화문"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 563,
+              "arrive_min": 587,
+              "wait_min": 3,
+              "ride_min": 23.2,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 591,
+              "arrive_min": 593,
+              "wait_min": 0,
+              "ride_min": 2.0,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        },
+        {
+          "public": {
+            "id": "subway_bus_1",
+            "label": "9호선 노들→노량진 → 1호선 노량진→시청 → 버스 종로11 시청역1호선.서울시청→정독도서관 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+            "eta_min": 53,
+            "fare_krw": 1650,
+            "uses": [
+              "9호선:노들",
+              "9호선:노량진",
+              "1호선:노량진",
+              "1호선:시청",
+              "버스:종로11"
+            ]
+          },
+          "discount_before_sum": 2750,
+          "discount_estimate": null,
+          "legs": [
+            {
+              "line": "09호선",
+              "from": "노들",
+              "to": "노량진"
+            },
+            {
+              "line": "01호선",
+              "from": "노량진",
+              "to": "시청"
+            },
+            {
+              "mode": "bus",
+              "route": "종로11",
+              "from": "시청역1호선.서울시청",
+              "to": "정독도서관",
+              "route_id": "100900007",
+              "from_sequence": 13,
+              "to_sequence": 16,
+              "from_stop_id": "101900006",
+              "to_stop_id": "100900105"
+            }
+          ],
+          "leg_results": [
+            {
+              "idx": 0,
+              "verdict": "feasible",
+              "depart_min": 572,
+              "arrive_min": 574,
+              "wait_min": 0,
+              "ride_min": 1.6666666666666667,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 1,
+              "verdict": "feasible",
+              "depart_min": 581,
+              "arrive_min": 592,
+              "wait_min": 1,
+              "ride_min": 11.0,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "추정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": null,
+              "arrive_min": null,
+              "wait_min": 0,
+              "ride_min": null,
+              "walk_min": null,
+              "ride_src": null,
+              "ride_grade": "확정"
+            },
+            {
+              "idx": 2,
+              "verdict": "feasible",
+              "depart_min": 599,
+              "arrive_min": 607,
+              "wait_min": 5,
+              "ride_min": 7.4,
+              "walk_min": null,
+              "ride_src": "profile",
+              "ride_grade": "추정"
+            }
+          ],
+          "product_connected": false
+        }
+      ],
+      "planned": "subway_1"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "missing": [],
+  "mismatched": [],
+  "manifest": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\mobility\\processed\\mobility\\MANIFEST_git_v1.json",
+  "data_dir": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\mobility\\processed",
+  "data_dir_source": "explicit_public_offline_audit",
+  "scope": "로컬 공개 자료 폴더를 명시한 명세 해시 점검; 운영환경 확인 아님"
+}

@@ -1,0 +1,39 @@
+.F.....................                                                  [100%]
+================================== FAILURES ===================================
+_______ test_a_proposal_that_is_decided_or_expires_also_sends_a_signal ________
+
+api = {'auth': <function api.<locals>.auth at 0x000001E3E9530D60>, 'client': <starlette.testclient.TestClient object at 0x00...': UUID('58692f92-3247-463e-a200-81b5af929c4d'), 'notices': <function api.<locals>.notices at 0x000001E3E9531260>, ...}
+fast = None
+
+    def test_a_proposal_that_is_decided_or_expires_also_sends_a_signal(api, fast):
+        """알림이 안 생기는 변화(제안 선택 · 만료)도 신호가 난다 — Codex 가 짚은 점."""
+        me = _session(api)
+        trip_id = _trip(api, me, "ev-2")
+        tenant = api["tenant"]
+        with get_connection() as conn:
+            _, items = TripStore(tenant).latest(conn, UUID(trip_id))
+        item = next(i for i in items if i.kind == "activity")
+    
+        def open_then_expire():
+            with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+                cur.execute("INSERT INTO pending_changes (tenant_id, trip_id, item_id, base_version, reason, status) "
+                            "VALUES (%s,%s,%s,1,'ask_first','open') RETURNING proposal_id", (tenant, trip_id, item.item_id))
+                proposal = cur.fetchone()[0]
+            time.sleep(0.5)
+            with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+                cur.execute("UPDATE pending_changes SET status='expired', decided_at=now() WHERE proposal_id=%s", (proposal,))
+    
+        thread = _later(0.3, open_then_expire)
+        response = api["client"].get(f"/v1/web/trips/{trip_id}/events", headers=_h(me["user_key"]))
+        thread.join()
+        changed = [data for name, data in _events(response.text) if name == "trip.changed"]
+>       assert len([c for c in changed if c["kinds"] == ["proposal"]]) >= 2, changed      # 생성 한 번 · 만료 한 번
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: [{'kinds': ['proposal'], 'trip_id': '36caf2e0-96a8-4161-a8e1-ad2e8deaf876', 'version': 1}]
+E       assert 1 >= 2
+E        +  where 1 = len([{'kinds': ['proposal'], 'trip_id': '36caf2e0-96a8-4161-a8e1-ad2e8deaf876', 'version': 1}])
+
+tests\e2e\test_trip_events.py:125: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_trip_events.py::test_a_proposal_that_is_decided_or_expires_also_sends_a_signal
+1 failed, 22 passed in 15.10s

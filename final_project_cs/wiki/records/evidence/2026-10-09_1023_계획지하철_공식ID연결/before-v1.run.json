@@ -1,0 +1,15 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/travel/mobility/test_subway_binding_v1.py",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-subway-binding-before-v1",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1023_계획지하철_공식ID연결\\before-v1.xml"
+  ],
+  "time": "2026-10-09T10:25:32.304631+09:00",
+  "exit_code": 1
+}

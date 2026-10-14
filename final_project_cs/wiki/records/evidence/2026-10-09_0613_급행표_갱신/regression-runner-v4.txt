@@ -1,0 +1,50 @@
+from pathlib import Path
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import time
+
+w=Path(__file__).resolve().parents[2]
+cs=w/'final_project_cs'
+sys.path.insert(0,str(cs))
+from app.domains.travel_ops.instances.mobility.engine import paths, runtime, express
+paths.load_cli_env()
+ev=cs/'wiki/records/evidence/2026-10-09_0613_급행표_갱신'
+engine=cs/'app/domains/travel_ops/instances/mobility/engine'
+files=set(engine.glob('*.py')) | set((engine/'rules').glob('*'))
+files.update((cs/'tests/unit/travel/mobility').glob('*.py'))
+files.update((cs/'tests/unit/travel/mobility').glob('*.json*'))
+files.update(p for p in runtime.default_paths().values() if p.exists())
+prior=json.loads((cs/'wiki/records/evidence/2026-10-09_0600_회전탐색_중복거리/verification-proof-v1.json').read_text(encoding='utf8'))
+files.update(w/name for name in prior['benchmark_source_data_hashes'])
+files.update(express.FILES.values())
+files={p for p in files if p.is_file()}
+def sha(p):
+    h=hashlib.sha256()
+    with p.open('rb') as stream:
+        for block in iter(lambda:stream.read(1024*1024),b''):h.update(block)
+    return h.hexdigest()
+snap={p.relative_to(w).as_posix():sha(p) for p in sorted(files)}
+target=ev/'regression-start-hashes-v4.json'; assert not target.exists()
+target.write_text(json.dumps(snap,indent=2),encoding='utf8')
+all_tests=sorted(p for p in (cs/'tests/unit/travel/mobility').glob('test_*.py') if p.name not in ('test_taxi_fallback.py','test_review_fixes_wiring.py'))
+parts=[all_tests,[cs/'tests/unit/travel/mobility/test_taxi_fallback.py']]
+temp_dir=Path(__file__).parent/'express-source-temp-v4'
+temp_dir.mkdir(exist_ok=False)
+test_env=dict(os.environ,TEMP=str(temp_dir),TMP=str(temp_dir),TMPDIR=str(temp_dir),PYTHONIOENCODING='utf-8')
+for i,part in enumerate(parts,1):
+    args=[sys.executable,'-m','pytest',*[str(p.relative_to(cs)) for p in part],'-q','-o','faulthandler_timeout=90','-m','not live and not mobility_full',
+        '--basetemp',str(Path(__file__).parent/f'express-source-full-pytest-v4-part{i}'),
+        '--junitxml',str(Path(__file__).parent/f'express-source-full-v4-part{i}.xml')]
+    log=Path(__file__).parent/f'express-source-full-v4-part{i}.log'
+    assert not log.exists()
+    start=time.perf_counter()
+    with log.open('w',encoding='utf8') as out:
+        proc=subprocess.run(args,cwd=cs,stdout=out,stderr=subprocess.STDOUT,env=test_env,timeout=900)
+    print(json.dumps(dict(part=i,exit_code=proc.returncode,seconds=time.perf_counter()-start)),flush=True)
+    if proc.returncode:sys.exit(proc.returncode)
+assert all(sha(w/name)==value for name,value in snap.items())
+print(json.dumps(dict(final_hash_matches=len(snap))),flush=True)
+

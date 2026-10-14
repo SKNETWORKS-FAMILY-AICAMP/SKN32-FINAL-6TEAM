@@ -1,0 +1,5 @@
+CANDIDATE=legacy/deployment_candidates/2026-10-12_015017_plugin_v11
+FIXED_PYTEST_COMMAND=C:\Users\playdata2\anaconda3\python.exe C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\v11-read-component-rollback-before-v2.py
+REPRODUCED: detail enrichment rollback reset pending read transitions; completing from classifying raised InvalidTransition
+Actual functions: retry_read, _run_decision, classify_case, apply_event; _place_extras rollback is a component seam, not a real DB schema-failure test.
+PYTEST_EXIT=0

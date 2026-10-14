@@ -52,7 +52,7 @@ test("일차·일정·지도 선택이 이어진다: 지도 보기는 안내 토
   const stop = page.locator("#stop-button-i-b");
   await stop.click();
   await expect(stop).toHaveAttribute("aria-expanded", "true");
-  await expect(page.locator("#stop-detail-i-b dl")).toContainText("다음 일정12:00 · 점심 식당");
+  await expect(page.locator("#stop-detail-i-b").getByRole("button", { name: "경복궁 관람 상세 보기" })).toBeVisible();   // `[2026-10-13 카드 A안]` 펼친 카드는 단추만(정보 줄은 상세 보기 화면)
   // `[2026-10-12 결정 E]` 펼친 카드의 「지도에서 보기」(시트만 내리던 단추)는 「상세 보기」로 바뀌었다 — 펼치는 것만으로 핀이 선택된다.
   await expect(map.locator('.leaflet-marker-icon[title^="2. 경복궁 관람"]')).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("status").filter({ hasText: "경복궁 관람" })).toHaveCount(0);

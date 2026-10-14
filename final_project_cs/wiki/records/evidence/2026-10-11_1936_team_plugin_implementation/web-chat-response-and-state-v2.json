@@ -1,0 +1,82 @@
+{
+  "body": {
+    "case_id": "61879a04-0177-480a-a21e-6880e2528eb8",
+    "case_status": "escalated",
+    "version": 4,
+    "classification": {
+      "intent": "incident_report",
+      "issue_code": "dining_hours"
+    },
+    "status": "escalated",
+    "reason": "team_conversation",
+    "outcome": {
+      "status": "escalated"
+    },
+    "answer": "요청을 완료하지 못했어요. 계획서에서 현재 일정을 확인해 주세요."
+  },
+  "status": "escalated",
+  "state": {
+    "last_event": "guardrail_escalated",
+    "subject_ref": {
+      "id": "a5a7d19b-6967-4890-95e7-cfb15233881b",
+      "kind": "trip",
+      "request": {
+        "at": "2030-01-01T09:00:00+09:00",
+        "type": "conversation",
+        "action": "report_delay",
+        "minutes": 30
+      },
+      "base_version": 1
+    },
+    "trip_message": {
+      "trip_id": "a5a7d19b-6967-4890-95e7-cfb15233881b",
+      "request_id": "late-1"
+    }
+  },
+  "events": [
+    [
+      "created",
+      {
+        "channel": "trip_message",
+        "message": "식당에 30분 늦을 것 같아요"
+      }
+    ],
+    [
+      "classified",
+      {
+        "intent": "incident_report",
+        "sentiment": "negative",
+        "issue_code": "dining_hours"
+      }
+    ],
+    [
+      "routed",
+      {
+        "capability": "dining.check_open",
+        "state_patch": {
+          "subject_ref": {
+            "id": "a5a7d19b-6967-4890-95e7-cfb15233881b",
+            "kind": "trip",
+            "request": {
+              "at": "2030-01-01T09:00:00+09:00",
+              "type": "conversation",
+              "action": "report_delay",
+              "minutes": 30
+            },
+            "base_version": 1
+          }
+        },
+        "owner_team_id": "dining"
+      }
+    ],
+    [
+      "guardrail_escalated",
+      {
+        "observed": [
+          "일정을 바꾸지 못했다: not_today"
+        ],
+        "guardrail": "itinerary_not_today"
+      }
+    ]
+  ]
+}

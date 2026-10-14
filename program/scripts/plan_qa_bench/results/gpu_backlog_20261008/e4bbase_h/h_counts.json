@@ -1,0 +1,216 @@
+{
+  "model": "Gemma-4-E4B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "Instruct release",
+  "saved": 1316,
+  "expected": 1316,
+  "missing": 0,
+  "failed_or_unparsed": 1,
+  "positive": {
+    "total": 461,
+    "correct": 433,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9136181498823405,
+      0.9576466487169232
+    ],
+    "false_pick_wilson95": [
+      8.673617379884035e-19,
+      0.008264019372196129
+    ]
+  },
+  "negative": {
+    "total": 855,
+    "correct": 452,
+    "false_pick": 402,
+    "failed_or_missing": 1,
+    "correct_wilson95": [
+      0.49514187579879615,
+      0.5619117276302741
+    ],
+    "false_pick_wilson95": [
+      0.43692847478044733,
+      0.5036892032831737
+    ]
+  },
+  "subtypes": {
+    "hard_N1": {
+      "total": 118,
+      "correct": 1,
+      "false_pick": 117,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0014975405219652578,
+        0.04644557241540204
+      ],
+      "false_pick_wilson95": [
+        0.953554427584598,
+        0.9985024594780347
+      ]
+    },
+    "hard_N2": {
+      "total": 150,
+      "correct": 118,
+      "false_pick": 32,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7143794210903474,
+        0.8446376388052887
+      ],
+      "false_pick_wilson95": [
+        0.15536236119471125,
+        0.28562057890965276
+      ]
+    },
+    "hard_N3": {
+      "total": 150,
+      "correct": 147,
+      "false_pick": 3,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9428533167296139,
+        0.9931752486770326
+      ],
+      "false_pick_wilson95": [
+        0.006824751322967459,
+        0.05714668327038608
+      ]
+    },
+    "hard_N4": {
+      "total": 150,
+      "correct": 43,
+      "false_pick": 107,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.22033812687205268,
+        0.36364917739166003
+      ],
+      "false_pick_wilson95": [
+        0.6363508226083401,
+        0.7796618731279474
+      ]
+    },
+    "hard_N5": {
+      "total": 150,
+      "correct": 95,
+      "false_pick": 54,
+      "failed_or_missing": 1,
+      "correct_wilson95": [
+        0.5537823804885079,
+        0.7062255543466717
+      ],
+      "false_pick_wilson95": [
+        0.28756583250443635,
+        0.43942583591862505
+      ]
+    },
+    "hard_N6": {
+      "total": 137,
+      "correct": 48,
+      "false_pick": 89,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.27554940331047595,
+        0.43334313200331065
+      ],
+      "false_pick_wilson95": [
+        0.5666568679966895,
+        0.724450596689524
+      ]
+    },
+    "hard_P1": {
+      "total": 118,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9684716609775057,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_P2": {
+      "total": 110,
+      "correct": 108,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9361198354061878,
+        0.994999645124672
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.033743935298164184
+      ]
+    },
+    "hard_P3": {
+      "total": 113,
+      "correct": 89,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7033939238268223,
+        0.8529154603255062
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03287753216595198
+      ]
+    },
+    "hard_P4": {
+      "total": 120,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.941264037027841,
+        0.9954174354340789
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    }
+  },
+  "failed_records": [
+    {
+      "i": 951127,
+      "set": "h",
+      "qi": 1127,
+      "type": "hard_N5",
+      "gold": null,
+      "content": "{\"item\": [31]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 239,
+      "p_null": 0.000116,
+      "p_mass": 0.9991
+    }
+  ],
+  "answer_sha256": "03690687044e0ceed2dac04b12da2d22fb7152d9d3055498570ab162db63a214",
+  "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "execution": {
+    "job": {
+      "id": "e4bbase_h",
+      "label": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "prompts": "/workspace/heavy/all_prompts_h.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "h_backlog_e4bbase",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1316
+    },
+    "started": "2026-10-08T01:27:05.244687+00:00",
+    "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

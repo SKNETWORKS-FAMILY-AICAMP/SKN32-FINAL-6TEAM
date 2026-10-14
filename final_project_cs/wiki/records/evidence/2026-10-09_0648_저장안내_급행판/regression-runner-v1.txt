@@ -1,0 +1,75 @@
+from pathlib import Path
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import time
+
+w = Path(__file__).resolve().parents[2]
+cs = w / 'final_project_cs'
+scratch = Path(__file__).parent
+ev = cs / 'wiki/records/evidence/2026-10-09_0648_저장안내_급행판'
+prior = cs / 'wiki/records/evidence/2026-10-09_0613_급행표_갱신/regression-start-hashes-v4.json'
+files = {w / name for name in json.loads(prior.read_text(encoding='utf8'))}
+files.update((cs / 'tests/unit/travel/mobility').glob('*.py'))
+files.update((cs / 'tests/unit/travel').glob('test_departure*.py'))
+files.update((cs / 'tests/scenario').glob('test_departure*.py'))
+files.update((cs / 'app').rglob('*departure*.py'))
+files.update((cs / 'app').rglob('*reminder*.py'))
+files.update((cs / 'app').rglob('*watcher*.py'))
+files.update((cs / 'app/composition').rglob('*.py'))
+files.update((cs / 'app/domains/travel_ops').rglob('*store*.py'))
+files = {p for p in files if p.is_file()}
+
+def sha(p):
+    h = hashlib.sha256()
+    with p.open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            h.update(block)
+    return h.hexdigest()
+
+def snapshot(name):
+    result = {p.relative_to(w).as_posix(): sha(p) for p in sorted(files)}
+    target = ev / name
+    assert not target.exists()
+    target.write_text(json.dumps(result, indent=2), encoding='utf8')
+    return result
+
+if sys.argv[1] == 'start':
+    print(json.dumps({'start_files': len(snapshot('regression-start-hashes-v1.json'))}), flush=True)
+elif sys.argv[1] == 'end':
+    end = snapshot('regression-end-hashes-v1.json')
+    start = json.loads((ev / 'regression-start-hashes-v1.json').read_text(encoding='utf8'))
+    assert start == end
+    print(json.dumps({'unchanged_files': len(end)}), flush=True)
+else:
+    part = sys.argv[1]
+    if part == 'base':
+        tests = sorted(p for p in (cs / 'tests/unit/travel/mobility').glob('test_*.py')
+                       if p.name not in ('test_taxi_fallback.py', 'test_review_fixes_wiring.py'))
+    elif part == 'taxi':
+        tests = [cs / 'tests/unit/travel/mobility/test_taxi_fallback.py']
+    elif part == 'wiring':
+        tests = [cs / 'tests/unit/travel/mobility/test_review_fixes_wiring.py']
+    elif part == 'integration':
+        tests = sorted((cs / 'tests/unit/travel').glob('test_departure*.py'))
+        tests += sorted((cs / 'tests/scenario').glob('test_departure*.py'))
+    else:
+        raise ValueError(part)
+    temp = scratch / f'express-context-temp-v1-{part}'
+    temp.mkdir(exist_ok=False)
+    test_env = dict(os.environ, TEMP=str(temp), TMP=str(temp), TMPDIR=str(temp), PYTHONIOENCODING='utf8')
+    args = [sys.executable, '-m', 'pytest', *[str(p.relative_to(cs)) for p in tests], '-q',
+            '-o', 'faulthandler_timeout=90', '-m', 'not live and not mobility_full',
+            '--basetemp', str(scratch / f'express-context-full-pytest-v1-{part}'),
+            '--junitxml', str(scratch / f'express-context-full-v1-{part}.xml')]
+    log = scratch / f'express-context-full-v1-{part}.log'
+    assert not log.exists()
+    started = time.perf_counter()
+    with log.open('w', encoding='utf8') as out:
+        result = subprocess.run(args, cwd=cs, stdout=out, stderr=subprocess.STDOUT,
+                                env=test_env, timeout=900)
+    print(json.dumps({'part': part, 'exit_code': result.returncode,
+                      'seconds': time.perf_counter() - started}), flush=True)
+    sys.exit(result.returncode)

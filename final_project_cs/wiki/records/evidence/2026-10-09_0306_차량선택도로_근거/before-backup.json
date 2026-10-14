@@ -1,0 +1,27 @@
+[
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-09_0306_차량선택도로_근거\\graph_router.py.bak",
+    "sha256": "58188f0a8fd358ac9b8dc4d6abaa2e7c2f5651e01e2f7fc2ea94948ea6791063"
+  },
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/car_turn_search.py",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-09_0306_차량선택도로_근거\\car_turn_search.py.bak",
+    "sha256": "cdf23a8f43677c8e0dca20a3ae8e4acc8282bd3cc3ae5dd15194603e0dcbcfeb"
+  },
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/car.py",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-09_0306_차량선택도로_근거\\car.py.bak",
+    "sha256": "83e2021e25916e794624dffebe39986c175ad04fc96b06f07c2e865860cad00e"
+  },
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/fold.py",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-09_0306_차량선택도로_근거\\fold.py.bak",
+    "sha256": "6818eafd4449445b5b75042d7aca79df46ff60011b52c19dab3d186c56b1f5eb"
+  },
+  {
+    "file": "wiki/teams/mobility.md",
+    "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\teams\\_backup\\2026-10-09_0306_차량선택도로_근거\\mobility.md.bak",
+    "sha256": "205f40af7ba22991341756e15f4aad0ea82d150434e88eeca5380845b2f07ed3"
+  }
+]

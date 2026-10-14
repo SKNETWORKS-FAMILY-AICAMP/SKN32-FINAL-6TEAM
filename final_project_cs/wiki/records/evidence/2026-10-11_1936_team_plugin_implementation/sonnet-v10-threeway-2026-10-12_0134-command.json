@@ -1,0 +1,30 @@
+{
+  "model": "claude-sonnet-5-5",
+  "argv": [
+    "C:\\Users\\playdata2\\AppData\\Roaming\\npm\\claude.cmd",
+    "--model",
+    "claude-sonnet-5-5",
+    "--print",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--permission-mode",
+    "dontAsk",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--setting-sources",
+    "",
+    "--settings",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_1936_team_plugin_implementation\\sonnet-v10-threeway-2026-10-12_0134-permissions.json",
+    "--no-session-persistence",
+    "--disable-slash-commands",
+    "--tools",
+    "Read,Glob,Grep,Bash",
+    "--allowedTools",
+    "Read",
+    "Glob",
+    "Grep",
+    "Bash(\"C:/Users/playdata2/anaconda3/python.exe\" wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/v10-threeway-2026-10-12_0134-unit.py)"
+  ]
+}

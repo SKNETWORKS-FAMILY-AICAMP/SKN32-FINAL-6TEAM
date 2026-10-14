@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-10-09T02:23:23.494170+09:00",
+  "report": "2026-10-09_0223_도보출발_현재경로_재검증.md",
+  "target_passed": 55,
+  "target_total": 55,
+  "regression_passed": 671,
+  "regression_total": 671,
+  "db_walk_passed": 2,
+  "db_walk_total": 2,
+  "development_validation": true,
+  "independent_web_accuracy_rows": 0,
+  "developer_api_calls": 0,
+  "data_unchanged": {
+    "W03_kakao_walk_forward.json": true,
+    "W03_kakao_walk_forward.png": true,
+    "W03_kakao_walk_forward.txt": true,
+    "W03_naver_walk_forward.json": true,
+    "W03_naver_walk_forward.png": true,
+    "W03_naver_walk_forward.txt": true
+  },
+  "source_sha256": {
+    "app/domains/travel_ops/instances/mobility/engine/plan.py": "03411bb15f564384edb83a24948cca7ff8027a59556f1722c0c9fa2d5628feb9",
+    "app/domains/travel_ops/instances/mobility/engine/departure_context.py": "0fbf038e9b7fe584ee14318da16fb972c3e461a55b16447fc40a63271e5e5ba2",
+    "app/domains/travel_ops/instances/mobility/engine/departure_observer.py": "5e181c145cb5d003292e071328183e863022f715edebea97f813b51b45ac5440",
+    "tests/unit/travel/mobility/test_departure_walk_v1.py": "a15fa4cd4a8bc40f51aa2f19c9dd81e6224f18b5177560ee5484508ee6a81792",
+    "tests/unit/travel/test_departure_walk_assembly_v1.py": "39cc707901f411e448442d07116de6ffed866bed4d45a3f96c2a582ee72ad6cc",
+    "tests/scenario/test_departure_walk_db_v1.py": "538abbde47eb7915ee23bbabc667e149953a95ccf44614970ed63e59d9e1a83c",
+    "scripts/mobility/build_readiness_visual_v12.py": "3fcacff5ce6d84249d0fb99e1678382c749676a1c22752571ed60f5e3f745051"
+  }
+}

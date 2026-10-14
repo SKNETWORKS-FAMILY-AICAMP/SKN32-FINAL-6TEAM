@@ -1,0 +1,30 @@
+{
+  "winnow_original_multi_items_bc_a1/d_test_winnow_original_multi_items_bc_a1.jsonl": {
+    "bytes": 270545,
+    "sha256": "71c7ed6b610e8fdcd4a03efb24bee6a00e6c96847abbccbbeab37f5793788235"
+  },
+  "winnow_original_multi_items_bc_a1/dtest_server_winnow_original_multi_items_bc_a1.log": {
+    "bytes": 681712,
+    "sha256": "8025d3d9971470037c7f30ba19ddd6aac8dc36d1fb8d5436f1ba56b469c9d400"
+  },
+  "winnow_original_multi_items_bc_a1/job.log": {
+    "bytes": 128,
+    "sha256": "84d3beb125225e5d85a1759041ae2c0ecba32a6195c69ee8479b3b3ffb1992d1"
+  },
+  "winnow_original_multi_items_bc_a1/multi_contract.json": {
+    "bytes": 371,
+    "sha256": "296f176d5f4c164c128c964dca7160217669c7fa06496fabcee35c4e24a2b8b8"
+  },
+  "winnow_original_multi_items_bc_a1/started.json": {
+    "bytes": 1420,
+    "sha256": "d60dabd4f7ff49cf9466c4c04919542476825014cab193b41cbd8e9661e0395a"
+  },
+  "snapshot.json": {
+    "bytes": 19256,
+    "sha256": "32629c12699a0380ea1033ed10f9508543f3603929b228b116c354b56aa67f56"
+  },
+  "manifest.json": {
+    "bytes": 97473,
+    "sha256": "a93b1a09d7a920c577808dcfec275f057f003d66f86296f5843379f42fb8095b"
+  }
+}

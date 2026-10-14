@@ -1,0 +1,13 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___________ test_a_change_request_still_answers_with_what_happened ____________
+tests\e2e\test_web_api.py:404: in test_a_change_request_still_answers_with_what_happened
+    assert body["answer"] == outcome_reply(body["status"], body["outcome"], "�Ĵ翡 30�� ���� �� ���ƿ�"), body
+E   AssertionError: {'answer': '\uc810\uc2ec \ub3c4\ucc29\uc774 13:30(\uc73c)\ub85c \ub2a6\uc5b4\uc838 \uc131\uc218 \uc810\uc2ec \uc2dd\ub2f9\uc740 14:10 \ube0c\ub808\uc774\ud06c\ud0c0\uc784 \uc804 \ub77c\uc2a4\ud2b8\uc624\ub354(13:30)\uae4c\uc9c0 0\ubd84 \u2014 \uc8fc\ubb38 \uac00\ub2a5\ud55c \uc2dc\uac04\uc774 \ucd09\ubc15\ud558\ub2e4. \ub3c4\ubcf4 6\ubd84 \uac70\ub9ac, \ube0c\ub808\uc774\ud06c\ud0c0\uc784 \uc5c6\ub294 \uc131\uc218 ...2eed85', 'case_status': 'resolved', 'classification': {'intent': 'incident_report', 'issue_code': 'dining_hours'}, ...}
+E   assert '���� ������ 13:30...(�ó�����) ī�� ����.' == '������ �ٲ���. ����... ������ Ȯ���� �ּ���.'
+E     
+E     - ������ �ٲ���. �����ȹ������ �ٲ� ������ Ȯ���� �ּ���.
+E     + \uc810\uc2ec \ub3c4\ucc29\uc774 13:30(\uc73c)\ub85c \ub2a6\uc5b4\uc838 \uc131\uc218 \uc810\uc2ec \uc2dd\ub2f9\uc740 14:10 \ube0c\ub808\uc774\ud06c\ud0c0\uc784 \uc804 \ub77c\uc2a4\ud2b8\uc624\ub354(13:30)\uae4c\uc9c0 0\ubd84 \u2014 \uc8fc\ubb38 \uac00\ub2a5\ud55c \uc2dc\uac04\uc774 \ucd09\ubc15\ud558\ub2e4. \ub3c4\ubcf4 6\ubd84 \uac70\ub9ac, \ube0c\ub808\uc774\ud06c\ud0c0\uc784 \uc5c6\ub294 \uc131\uc218 \ube0c\ub7f0\uce58 \uc2dd\ub2f9(\uc2dc\ub098\ub9ac\uc624)(\uc73c)\ub85c \uc548\ub0b4\ud569\ub2c8\ub2e4(13:30 \uc785\uc7a5). \ub2e4\ub978 \uc548: \uc131\uc218 \uad6d\uc218 \uc2dd\ub2f9(\uc2dc\ub098\ub9ac\uc624)(\ub3c4\ubcf4 6\ubd84). \uacb0\uc81c \ucc38\uace0(\ud655\uc778\ub41c \uacf3\ub9cc): \uc131\uc218 \ube0c\ub7f0\uce58 \uc2dd\ub2f9(\uc2dc\ub098\ub9ac\uc624) \uce74\ub4dc \uac00\ub2a5 \xb7 \uc131\uc218 \uad6d\uc218 \uc2dd\ub2f9(\uc2dc\ub098\ub9ac\uc624) \uce74\ub4dc \uac00\ub2a5.
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_api.py::test_a_change_request_still_answers_with_what_happened
+1 failed in 4.18s

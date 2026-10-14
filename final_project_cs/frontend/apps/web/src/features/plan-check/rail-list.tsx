@@ -2,13 +2,14 @@
 
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { parseHm } from "./time-plan";
-import { freePx, RAIL_FOLD_OVER_MIN, RAIL_PX_PER_MIN, railSpans, railY, type RailPoint, type RailRow } from "./time-rail";
+import { RAIL_GAP, railSpans, railY, type RailPoint, type RailRow } from "./time-rail";
 import styles from "./plan-check.module.css";
 
 /**
- * `[2026-10-12 사용자 결정 — 목업 Tripilot_personal/travel-careops/mockups/2026-10-12_타임라인_지금시각_목업.html]` The line at the left of a day's timeline, drawn to scale in one layer
+ * `[2026-10-12 사용자 결정 — 목업 Tripilot_personal/travel-careops/mockups/2026-10-12_타임라인_지금시각_목업.html]` The line at the left of a day's timeline, drawn in one layer
  * over the rows: solid = the time spent at a stop (its dot to its end, closed by ⊖), dashed = only the time travelling (leaving → arriving), thin = waiting to leave, the free time
- * after arriving and any space a card or a line of text takes beyond its time. An opened card carries its solid line and ⊖ to the card's end, an opened way its dashes to its box's end.
+ * after arriving and any space a line of text takes. `[2026-10-13 사용자 결정 — ② 일정한 간격]` Not to scale: the solid line runs to the card's end, a way takes `RAIL_GAP`; an opened
+ * way carries its dashes to its box's end.
  *
  * The rows say what they are with data attributes (the rest of the row is the screen's own): a stop `data-rail="stay"` with `data-start`/`data-end` ("HH:MM"), a way `data-rail="move"` with
  * `data-dep`/`data-arr`; `data-rail-open` when opened (its `article`, or its `[data-rail-box]`, is measured), `data-past` for a past row drawn small (not to scale).
@@ -20,11 +21,9 @@ const DOT_Y = 27.5, PAST_DOT_Y = 13;
 const DEP_ROOM = 23;
 /** The bottom of a stop's two-line time (start, and 「~end」 under it). */
 const TIME_BOTTOM = 56;
-/** The last stop of a day with no end: a short line that fades out (its end is not known). */
-const OPEN_END_PX = 60;
 
 /** Where 「now」 stands on this day: today (at `minute`), a day that is over (the line filled to its end), or none. */
-export type RailNow = { kind: "today"; minute: number; label: string } | { kind: "over" };
+export type RailNow = { kind: "today"; minute: number } | { kind: "over" };
 
 type Segment = { kind: "stay" | "travel" | "free"; y1: number; y2: number; past?: boolean; fade?: boolean };
 
@@ -46,25 +45,25 @@ function contentHeight(card: HTMLElement): number {
 }
 
 /**
- * `[2026-10-13 사용자 결정 — 줄 간격 ④ · 카드 테두리 · 카드 크기 통일]` A folded card is at least as tall as its time (its end where the stop ends — the empty room stays inside its frame), and
- * every folded card of the day is as tall as the tallest of them, so the cards line up. The time still reads off the line: its ⊖ stands where the stop ends, inside the card.
- * An opened card, a past one and a past one opened again keep their own height.
+ * `[2026-10-13 사용자 결정 — 카드 크기 통일]` Every folded card of the day is as tall as the tallest of them, so the cards line up. `[2026-10-13 ② · A]` No longer as tall as its time: at
+ * least `--rail-card-min` (a screen sets it on its list — the registered trip's 100 px puts two stops in the first view), else its content. An opened card, a past one and a past one
+ * opened again keep their own height.
  */
-function evenCards(rows: readonly HTMLElement[], spans: readonly { from: number | null; to: number | null }[]) {
+function evenCards(list: HTMLElement, rows: readonly HTMLElement[]) {
   const folded: { card: HTMLElement; need: number }[] = [];
   // Measure with every foot back in the flow: with `data-even` a foot sits at the bottom of the room it was given, and measuring that would feed the room back into the
   // height — the card grew a little on every layout and never settled (2026-10-13 CI: card-status-group 「element is not stable」). The min-heights stay meanwhile, so
   // nothing around moves.
   for (const card of rows.map((row) => row.querySelector<HTMLElement>(":scope > article"))) if (card) delete card.dataset.even;
-  rows.forEach((row, index) => {
+  rows.forEach((row) => {
     const card = row.dataset.rail === "move" ? null : row.querySelector<HTMLElement>(":scope > article");
     if (!card) return;
     if (row.hasAttribute("data-past") || row.hasAttribute("data-rail-open") || row.hasAttribute("data-past-open")) { card.style.removeProperty("min-height"); return; }
-    const { from, to } = spans[index];
-    const byTime = from !== null && to !== null ? DOT_Y + Math.max(0, to - from) * RAIL_PX_PER_MIN - card.offsetTop : 0;
-    folded.push({ card, need: Math.max(contentHeight(card), byTime) });
+    folded.push({ card, need: contentHeight(card) });
   });
-  const tallest = Math.ceil(Math.max(0, ...folded.map((entry) => entry.need)));
+  // A list with no `--rail-card-min` (the plan check) evens its cards to their content.
+  const floor = parseFloat(getComputedStyle(list).getPropertyValue("--rail-card-min")) || 0;
+  const tallest = Math.ceil(Math.max(floor, ...folded.map((entry) => entry.need)));
   // `data-even`: the card was made taller than its content — its foot (확인 필요 · 되돌리기) then stays at its bottom (plan-check.module.css).
   folded.forEach(({ card }) => { card.style.minHeight = `${tallest}px`; card.dataset.even = ""; });
 }
@@ -82,15 +81,12 @@ function contentBottom(row: HTMLElement): number {
 function layoutRail(list: HTMLElement): RailPoint[] {
   const rows = Array.from(list.querySelectorAll<HTMLElement>(":scope > [data-rail]"));
   const spans = railSpans(rows.map(readRow));
-  evenCards(rows, spans);
+  evenCards(list, rows);
   const segments: Segment[] = [];
   const caps: { y: number; past: boolean }[] = [];
-  /** `[2026-10-13 ④]` Where long free time was folded: a break mark on the line. */
-  const breaks: number[] = [];
   const points: RailPoint[] = [];
   let cursor: number | null = null;
   const free = (y1: number, y2: number) => { if (y2 - y1 > .5) segments.push({ kind: "free", y1, y2 }); };
-  const px = (minutes: number) => Math.max(0, minutes) * RAIL_PX_PER_MIN;
 
   rows.forEach((row, index) => {
     const { from, to } = spans[index];
@@ -109,11 +105,10 @@ function layoutRail(list: HTMLElement): RailPoint[] {
         cursor = end;
         return;
       }
-      const lastStop = !rows.slice(index + 1).some((other) => other.dataset.rail !== "move");
-      let length = to === null ? (lastStop ? OPEN_END_PX : 0) : px(to - from);
-      const card = row.hasAttribute("data-rail-open") ? row.querySelector<HTMLElement>("article") : null;
-      if (card) length = Math.max(length, card.offsetTop + card.offsetHeight - DOT_Y);
-      row.style.minHeight = `${DOT_Y + length}px`;
+      // ② The solid line runs to the card's end (folded cards are all one height, so every stop's line is as long); with no end it fades out there.
+      row.style.minHeight = "";
+      const card = row.querySelector<HTMLElement>(":scope > article");
+      const length = card ? card.offsetTop + card.offsetHeight - DOT_Y : 0;
       const pastOpen = row.hasAttribute("data-past-open");
       segments.push({ kind: "stay", y1: dotY, y2: dotY + length, past: pastOpen, fade: to === null });
       if (to !== null) caps.push({ y: dotY + length, past: pastOpen });
@@ -137,9 +132,8 @@ function layoutRail(list: HTMLElement): RailPoint[] {
     const before = rows[index - 1];
     const room = before && before.dataset.rail !== "move" && !before.hasAttribute("data-past") ? Math.max(0, before.offsetHeight - contentBottom(before)) : 0;
     if (depart === null || arrive === null || from === null || to === null || arrive < depart) {
-      // Not known when it leaves and arrives: no dashes, a thin line for the time between the two stops (folded when long).
-      const length = from !== null && to !== null ? freePx(to - from) : 0;
-      if (from !== null && to !== null && to - from > RAIL_FOLD_OVER_MIN) breaks.push(top + length / 2);
+      // Not known when it leaves and arrives: no dashes, a thin line between the two stops.
+      const length = RAIL_GAP.none;
       row.style.setProperty("--dep", `${Math.max(0, DEP_ROOM - room)}px`);
       row.style.minHeight = `${Math.max(0, length - DOT_Y)}px`;
       free(top, top + length);
@@ -147,12 +141,12 @@ function layoutRail(list: HTMLElement): RailPoint[] {
       cursor = top + length;
       return;
     }
-    // Waiting to leave and the free time after arriving are folded when long; the travelling itself is always to scale.
-    const wait = freePx(depart - from), after = freePx(to - arrive);
+    // ② Fixed lengths whatever the minutes: waiting to leave and the free time after arriving only when there is some.
+    const wait = depart > from ? RAIL_GAP.wait : 0, after = to > arrive ? RAIL_GAP.slack : 0;
     const pad = Math.max(0, DEP_ROOM - wait - room);
     const departY = top + pad + wait;
     row.style.setProperty("--dep", `${pad + wait}px`);
-    let travel = px(arrive - depart);
+    let travel: number = RAIL_GAP.travel;
     const box = row.hasAttribute("data-rail-open") ? row.querySelector<HTMLElement>("[data-rail-box]") : null;
     if (box) travel = Math.max(travel, box.offsetTop + box.offsetHeight - (pad + wait));
     row.style.minHeight = `${Math.max(0, pad + wait + travel + after - DOT_Y)}px`;
@@ -160,8 +154,6 @@ function layoutRail(list: HTMLElement): RailPoint[] {
     segments.push({ kind: "travel", y1: departY, y2: departY + travel });
     free(departY + travel, departY + travel + after);
     points.push({ minute: from, y: top + pad }, { minute: depart, y: departY }, { minute: arrive, y: departY + travel }, { minute: to, y: departY + travel + after });
-    if (depart - from > RAIL_FOLD_OVER_MIN) breaks.push(top + pad + wait / 2);
-    if (to - arrive > RAIL_FOLD_OVER_MIN) breaks.push(departY + travel + after / 2);
     cursor = departY + travel + after;
   });
 
@@ -183,36 +175,29 @@ function layoutRail(list: HTMLElement): RailPoint[] {
     if (cap.past) mark.dataset.past = "";
     mark.style.top = `${cap.y}px`;
     return mark;
-  }), ...breaks.map((y) => {
-    const mark = document.createElement("i");
-    mark.className = styles.railBreak;
-    mark.style.top = `${y}px`;
-    return mark;
   }));
   return points;
 }
 
-/** 「지금」: the dot and its label at now's height, and the line filled from the day's first dot to it (to the end on a day that is over). Only moved — nothing is laid out again. */
+/**
+ * 「지금」: the dot at now's height, and the line filled from the day's first dot to it (to the end on a day that is over). Only moved — nothing is laid out again.
+ * `[2026-10-13 사용자 결정]` The dot alone flows down the line — its 「지금 HH:MM」 label is gone.
+ */
 function placeNow(list: HTMLElement, points: readonly RailPoint[], now: RailNow | null, smooth: boolean) {
   const fill = list.querySelector<HTMLElement>(":scope > [data-now-fill]");
   const mark = list.querySelector<HTMLElement>(":scope > [data-now-mark]");
   if (!fill || !mark) return;
-  list.style.paddingBottom = "";
   if (!now || points.length === 0) { fill.style.display = "none"; mark.style.display = "none"; return; }
   const start = points[0].y;
   const last = Math.max(...points.map((point) => point.y));
   let y = last;
   if (now.kind === "today") {
     const at = railY(points, now.minute);
-    // Before the first stop the mark stands at the top of its row: above its time (the label would cover 「12:30」), under the day's heading.
+    // Before the first stop the mark stands at the top of its row, under the day's heading; past the day's last stop just under the line's end.
     y = Math.round(now.minute < points[0].minute ? start - DOT_Y + 4 : at ?? last + 6);
-    // Past the day's last stop the mark stands under the list: room for its label, so it does not sit on what follows.
-    if (now.minute >= points[0].minute && at === null) list.style.paddingBottom = "28px";
     mark.style.display = "";
     mark.style.transition = smooth ? "" : "none";
     mark.style.transform = `translateY(${y}px)`;
-    const label = mark.querySelector<HTMLElement>("[data-now-label]");
-    if (label) label.textContent = now.label;
   } else {
     mark.style.display = "none";
   }
@@ -223,7 +208,7 @@ function placeNow(list: HTMLElement, points: readonly RailPoint[], now: RailNow 
 }
 
 /**
- * A day's `<ol>` with its line drawn to scale. It is laid out after every render and when its size changes (a card opened, the width, a font); `now` only moves the 「지금」 mark —
+ * A day's `<ol>` with its line drawn. It is laid out after every render and when its size changes (a card opened, the width, a font); `now` only moves the 「지금」 mark —
  * a minute passing does not rebuild or re-measure the list, so scrolling is not interrupted (2026-10-12 사용자 지적 — the mockup rebuilt its list every minute and the scroll stuck).
  */
 export function RailList({ className, now = null, children }: { className: string; now?: RailNow | null; children: ReactNode }) {
@@ -251,6 +236,6 @@ export function RailList({ className, now = null, children }: { className: strin
     <li className={styles.railLines} aria-hidden="true" data-rail-lines />
     <li className={styles.railCaps} aria-hidden="true" data-rail-caps />
     {now && <li className={styles.nowFill} aria-hidden="true" data-now-fill />}
-    {now && <li className={styles.nowMark} aria-hidden="true" data-now-mark><span className={styles.nowDot} /><span className={styles.nowLabel} data-now-label /></li>}
+    {now && <li className={styles.nowMark} aria-hidden="true" data-now-mark><span className={styles.nowDot} /></li>}
   </ol>;
 }

@@ -1,0 +1,21 @@
+.FF............................................                          [100%]
+================================== FAILURES ===================================
+_________________ test_45_service_day_boundary_is_04_00_sharp _________________
+final_project_cs\tests\unit\travel\mobility\test_review_fixes_plan.py:51: in test_45_service_day_boundary_is_04_00_sharp
+    assert [it for it in out["items"] if it["kind"] == "mobility"], "03:59:59 는 같은 운행일 — 두 장소가 300 m 라 도보 이동이 만들어진다"
+E   AssertionError: 03:59:59 는 같은 운행일 — 두 장소가 300 m 라 도보 이동이 만들어진다
+E   assert []
+____________ test_45_same_day_move_is_made_and_keeps_input_detail _____________
+final_project_cs\tests\unit\travel\mobility\test_review_fixes_plan.py:66: in test_45_same_day_move_is_made_and_keeps_input_detail
+    assert len(moves) == 1 and moves[0]["route"] in out["routes"], out
+                               ^^^^^^^^^^^^^^^^^
+E   KeyError: 'route'
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_web_improve_20261012_v1\walk-no-fallback-v1.xml -
+=========================== short test summary info ===========================
+FAILED final_project_cs\tests\unit\travel\mobility\test_review_fixes_plan.py::test_45_service_day_boundary_is_04_00_sharp
+FAILED final_project_cs\tests\unit\travel\mobility\test_review_fixes_plan.py::test_45_same_day_move_is_made_and_keeps_input_detail
+2 failed, 45 passed in 8.48s
+Exception ignored in: <function Console.__del__ at 0x00000234DF4419E0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

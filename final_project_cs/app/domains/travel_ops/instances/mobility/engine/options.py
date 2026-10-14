@@ -6,8 +6,9 @@
             팀 시나리오도 id 를 이렇게 쓴다(`subway_direct` · `bus_sejong` · `taxi` · `walk`). 새 키 `modes` 를 안 만든다.
   label     경로 + **이유**(축별 사실 · 순위 아님). 예 「3호선 경복궁→을지로3가 → 2호선 을지로3가→성수 — 소요 가장 짧음」
   walk_m    경로 안 도보 합(m · 정수) — 소요 분과 **같은 모델**의 미터. 한 조각이라도 모르면 키를 뺀다
-  fare_krw  1인 요금 — **규칙 파일에 요금 근거가 있는 것만**(도보 0 · 자전거 이용권 · 54: 지하철 괄호 · 버스 한 번).
-            모르는 조각(거리 모르는 간선 · 경계에 걸린 괄호 · 공항버스 · 버스 섞인 환승)이 있으면 뺀다
+  fare_krw  1인 요금 — **규칙 파일에 근거가 있는 것만**. 도보·자전거·지하철·버스 단독에 더해
+            버스 혼합 환승은 선택 정류장 거리와 환승 조건으로 예상액을 안내한다.
+            추정·할인 조건은 label에 표시하며 거리·별도운임을 모르는 조각을 임의로 채우지 않는다.
   uses      plan.uses_of 그대로 + 팀 `route_uses.problem()` 자가 검사(불통과 후보는 싣지 않는다)
 
 표시 전용(◆칸 답 전 — 만들어만 둔다 · 기본 off)
@@ -15,11 +16,12 @@
 """
 from __future__ import annotations
 
-from . import express as _EX
+from . import express as _EX  # noqa: F401 — 불러오기만 해도 급행 표가 준비된다(원래 동작 유지)
 import collections
 import heapq
 import json
 import math
+from .bus_identity import route_for_leg, segment_for_leg
 import threading
 import weakref
 from pathlib import Path
@@ -151,7 +153,7 @@ class FareNet:
     하한 = 전 노선 그래프 최단 — **거리 모르는 간선은 0**(입증된 하한이 없다 · GPT 54 #2 — 좌표 직선은 공표 거리보다 길 수 있어 하한이 아니다),
            같은 역명·반경 안 다른 노선 역도 0 으로 잇는다(이음을 넓게 두면 하한이 낮아질 뿐이다)."""
 
-    def __init__(self, lo, sc, tw, cfg, est=None, tau=None, est_ok=None, floor=None):
+    def __init__(self, lo, sc, tw, cfg, est=None, tau=None, est_ok=None, floor=None, confirmed=None):
         """est — {(노선, a, b): 선로 길이 m} 공표 거리가 없는 간선의 **추정 길이**(OSM 선로 · 문제목록 #21). None 이면 종전 그대로(공표만).
         tau — 간선 하나일 때의 상대 오차 상한. 추정 간선을 n 개 지난 경로의 오차는 tau/√n 로 본다(오차가 서로 상쇄 — 공표가 있는
         1~8호선으로 연속 n 간선 합을 재니 오차 최대가 n=1 29% · 2 18% · 3 12% · 4 8% · 8 6% · 12 4% 였다).
@@ -176,6 +178,8 @@ class FareNet:
                 self.lb[(ln, s["station_nm"])]
             for e in doc["edges"]:
                 a, b, d = e["a"], e["b"], e.get("distance_m")
+                if d is None:
+                    d = (confirmed or {}).get((ln, a, b), (confirmed or {}).get((ln, b, a)))
                 w = int(d) if d is not None else self.est.get((ln, a, b), self.est.get((ln, b, a)))
                 if d is None and w is not None:
                     self._est_pairs.add((ln, frozenset((a, b))))
@@ -315,6 +319,7 @@ def est_lengths(v):
     fare.subway.distance_estimate. 규칙이 없거나 자료가 없으면 ({}, None, set(), {})."""
     rule = (_fare(v)["subway"].get("distance_estimate") or {}).get("value") or {}
     lines, tau, q = set(rule.get("lines") or ()), rule.get("tolerance"), rule.get("unknown_edge_floor")
+    lines.update(_fare(v)['subway'].get('special_lines', {}))
     est = getattr(v.lo, "est_edges", None) or {}
     if not lines or not tau or not est:
         return {}, None, set(), {}
@@ -331,7 +336,8 @@ def fare_net_est(v):
             net = _NETS_EST.get(v.lo)
             if net is None:
                 est, tau, ok, floor = est_lengths(v)
-                net = (FareNet(v.lo, v.sc, v.tw, {"연결_반경_m": _fare(v)["subway"]["하한_연결_반경_m"]["value"]}, est, tau, ok, floor)
+                from .special_rail import confirmed_distances
+                net = (FareNet(v.lo, v.sc, v.tw, {"연결_반경_m": _fare(v)["subway"]["하한_연결_반경_m"]["value"]}, est, tau, ok, floor, confirmed_distances(v))
                        if est else False)
                 _NETS_EST[v.lo] = net
     return net or None
@@ -344,7 +350,8 @@ def fare_net(v):
         with _NETS_LOCK:
             net = _NETS.get(v.lo)
             if net is None:
-                net = FareNet(v.lo, v.sc, v.tw, {"연결_반경_m": _fare(v)["subway"]["하한_연결_반경_m"]["value"]})
+                from .special_rail import confirmed_distances
+                net = FareNet(v.lo, v.sc, v.tw, {"연결_반경_m": _fare(v)["subway"]["하한_연결_반경_m"]["value"]}, confirmed=confirmed_distances(v))
                 _NETS[v.lo] = net
     return net
 
@@ -360,6 +367,10 @@ def early_bird(first_board_min, until_min, gate_window_min):
 
 
 def _subway_fare_on(v, net, legs, rides):
+    from .special_rail import surcharge
+    extra = surcharge(v, legs)
+    if extra is None:
+        return None
     if net.ridden_m(legs) is None:
         return None
     ub = net.upper_m(legs)
@@ -371,7 +382,19 @@ def _subway_fare_on(v, net, legs, rides):
         return None
     board = rides[0].depart_min if early else eb["until_min"]          # subway_fare_at 은 분으로 조조를 가른다
     lo_f, hi_f = subway_fare_at(F, lb, board), subway_fare_at(F, ub, board)
-    return hi_f if lo_f == hi_f else None
+    return hi_f + extra if lo_f == hi_f else None
+
+
+def _published_subway_fare(v, legs, rides, *, upper=False, apply_early_bird=True):
+    from .special_rail import published_od_fare
+    F = _fare(v)['subway']
+    eb = F['early_bird']['value']
+    early = early_bird(rides[0].depart_min, eb['until_min'],
+                       F['early_bird_gate_window']['value'])
+    # 상단은 태그 시각이 불명확할 때 정가를 유지한다.
+    if upper and (not apply_early_bird or early is None):
+        early = False
+    return published_od_fare(v, legs, early)
 
 
 def subway_fare(v, legs, legs_result):
@@ -384,11 +407,43 @@ def subway_fare(v, legs, legs_result):
     rides = ride_results(legs, legs_result)
     if not rides or rides[0].depart_min is None:
         return None
+    if any(leg.get('line') in _fare(v)['subway'].get('published_od_fares', {}) for leg in legs):
+        return _published_subway_fare(v, legs, rides)
     got = _subway_fare_on(v, fare_net(v), legs, rides)
     if got is not None:
         return got
     est = fare_net_est(v)
     return None if est is None else _subway_fare_on(v, est, legs, rides)
+
+
+def subway_fare_upper(v, legs, legs_result, *, apply_early_bird=True):
+    """알려진 거리 범위의 상단 예상액. 확정 운임·실제 결제 상한 보장은 아니다.
+
+    탄 경로 거리까지 이어지는 자료만 허용한다. 조조 태그 시각이 불명확하거나
+    혼합 경로의 할인 미적용 상단이면 할인을 적용하지 않는다.
+    별도 운임·누락 거리의 기본요금 대체는 하지 않는다.
+    """
+    rides = ride_results(legs, legs_result)
+    if not rides or rides[0].depart_min is None:
+        return None
+    if any(leg.get('line') in _fare(v)['subway'].get('published_od_fares', {}) for leg in legs):
+        return _published_subway_fare(v, legs, rides, upper=True,
+                                     apply_early_bird=apply_early_bird)
+    F = _fare(v)
+    from .special_rail import surcharge
+    extra = surcharge(v, legs)
+    if extra is None:
+        return None
+    eb = F['subway']['early_bird']['value']
+    early = early_bird(rides[0].depart_min, eb['until_min'],
+                       F['subway']['early_bird_gate_window']['value'])
+    board = rides[0].depart_min if apply_early_bird and early is True else eb['until_min']
+    for net in (fare_net(v), fare_net_est(v)):
+        if net is not None and net.ridden_m(legs) is not None:
+            upper = net.upper_m(legs)
+            if upper is not None:
+                return subway_fare_at(F, upper, board) + extra
+    return None
 
 
 def fare_is_est(v, legs, legs_result):
@@ -398,6 +453,8 @@ def fare_is_est(v, legs, legs_result):
     rides = ride_results(legs, legs_result)
     if not rides or rides[0].depart_min is None:
         return False
+    if _published_subway_fare(v, legs, rides) is not None:
+        return False
     if _subway_fare_on(v, fare_net(v), legs, rides) is not None:
         return False
     est = fare_net_est(v)
@@ -405,7 +462,7 @@ def fare_is_est(v, legs, legs_result):
 
 
 def bus_type(v, leg):
-    r = v.bus.route(leg.get("route")) if getattr(v, "bus", None) is not None else None
+    r = route_for_leg(v.bus, leg) if getattr(v, "bus", None) is not None else None
     return None if r is None else (r.route_type_nm, r.term_min)
 
 
@@ -443,35 +500,222 @@ def single_fare(F, p):
     return p["base"]
 
 
+def bus_fare_upper(v, legs, legs_result):
+    """알려진 버스 유형의 할인 미적용 기본요금. 배차 창이 조조 경계를 걸쳐도 상단은 유지한다."""
+    rides = ride_results(legs, legs_result)
+    if not rides or len(legs) != 1:
+        return None
+    bt = bus_type(v, legs[0])
+    if bt is None:
+        return None
+    typ, _term = bt
+    F = _fare(v)["bus"]
+    if typ in F["no_fare_types"]["value"] or typ not in F["by_type"]["value"]:
+        return None
+    won = F["by_type"]["value"][typ]
+    try:
+        if isinstance(won, bool) or not isinstance(won, (int, float)) or won <= 0 or not math.isfinite(won):
+            return None
+    except OverflowError:
+        return None
+    return won
+
+
 def transfer_fare(F, parts):
     """통합환승 합성(규칙 fare.transfer) — parts = [{kind, base, m, board, alight}] 탄 순서.
-    kind 는 'subway' 또는 버스 유형. 하나라도 규칙 밖(광역·심야·모르는 유형) · 거리 모름 · 환승 창 초과 · 승차 수 초과 → None.
-    요금 = 높은 기본운임 + 합산 거리 추가(**환승 단계 — 10km 넘으면 5km마다**, 지하철 단독의 50km 넘는 8km 단계가 아니다)
+    kind 는 'subway' 또는 버스 유형. 하나라도 규칙 밖(심야·모르는 유형) · 거리 모름 · 환승 창 초과 · 승차 수 초과 → None.
+    요금 = 높은 기본운임 + 합산 거리 추가(**환승 단계 — 10km, 광역 포함 30km 넘으면 5km마다**)
     · 단 개별 요금 합을 넘지 않는다(GPT 54 #3). 지하철 안 환승(개찰 안)은 부르는 쪽이 한 part 로 묶는다."""
     T = F["transfer"]
     if not parts or len(parts) > T["max_rides"]["value"]:
         return None
     if any(p["kind"] not in T["types"]["value"] or p["m"] is None or p["base"] is None for p in parts):
         return None
+    for p in parts:
+        for key in ("m", "base", "board", "alight"):
+            value = p.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                return None
+        if p["m"] < 0 or p["base"] < 0 or p["alight"] < p["board"]:
+            return None
     w = T["window_min"]["value"]
     for a, b in zip(parts, parts[1:]):
-        if a["alight"] is None or b["board"] is None:
-            return None
-        t = a["alight"] % MIN_DAY
+        # 서울시 공식 안내: 야간 창은 후속 승차 시각 기준이다(21시/07시 경계 포함).
+        t = b["board"] % MIN_DAY
         night = t >= w["night_from_min"] or t < w["night_until_min"]
-        if b["board"] - a["alight"] > (w["night"] if night else w["day"]):
+        gap = b["board"] - a["alight"]
+        if not 0 <= gap <= (w["night"] if night else w["day"]):
             return None
     d = T["distance_steps"]["value"]
-    steps = [dict(s, _from=d["base_m"] if i == 0 else d["steps"][i - 1]["upto_m"]) for i, s in enumerate(d["steps"])]
+    base_m = max([d['base_m']] + [d.get('base_m_by_type', {}).get(p['kind'], d['base_m']) for p in parts])
+    steps = [dict(s, _from=base_m if i == 0 else d["steps"][i - 1]["upto_m"]) for i, s in enumerate(d["steps"])]
     tot = max(p["base"] for p in parts) + distance_fare(sum(p["m"] for p in parts), steps)
     if T["cap"]["value"] == "sum_of_single":
         tot = min(tot, sum(single_fare(F, p) for p in parts))
     return tot
 
 
+def _transfer_boarding_window_fits(F, previous_alight, earliest, latest):
+    """후속 승차 폭 전체가 각 시각의 환승 창 안인가.21시·07시에서 폭을 나눈다."""
+    window = F['transfer']['window_min']['value']
+    if earliest < previous_alight or latest < earliest:
+        return False
+    if latest - previous_alight > max(window['day'], window['night']):
+        return False
+
+    def limit(at):
+        clock = at % MIN_DAY
+        night = clock >= window['night_from_min'] or clock < window['night_until_min']
+        return window['night'] if night else window['day']
+
+    if latest - previous_alight > limit(latest):
+        return False
+    cuts = [earliest, latest]
+    for day in range(int(earliest // MIN_DAY), int(latest // MIN_DAY) + 1):
+        for edge in (window['night_from_min'], window['night_until_min']):
+            at = day * MIN_DAY + edge
+            if earliest < at < latest:
+                cuts.append(at)
+    cuts = sorted(set(cuts))
+    return all(hi - previous_alight <= limit(lo + (hi - lo) / 2)
+               for lo, hi in zip(cuts, cuts[1:]))
+
+
+def mixed_first_bus_early_bird_discount(v, legs, legs_result):
+    """첫 버스 승차 폭 전체가 조조이면 첫 기본운임의 할인액, 불명확하면 0.
+
+    인정된 환승 예상액에만 호출한다. 후속 기본운임 차액·거리 추가·철도
+    별도운임은 할인하지 않는다. 첫 지하철의 개찰 시각은 이 경로에서 미검증이다.
+    """
+    if not legs or leg_mode(legs[0]) != 'bus':
+        return 0
+    rides = ride_results(legs, legs_result)
+    if not rides or rides[0].verdict != 'feasible':
+        return 0
+    bt = bus_type(v, legs[0])
+    if bt is None:
+        return 0
+    kind, term = bt
+    F = _fare(v)['bus']
+    if kind not in F['early_bird_types']['value']:
+        return 0
+    eb = F['early_bird']['value']
+    board, wait = rides[0].depart_min, rides[0].wait_min
+    rate, until = eb['rate'], eb['until_min']
+    values = (board, wait, term, rate, until)
+    if any(isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x)
+           for x in values):
+        return 0
+    if term <= 0 or not 0 <= wait <= term or not 0 < rate < 1:
+        return 0
+    earliest = board - wait
+    if not 0 <= earliest <= earliest + term < until:
+        return 0
+    base = bus_fare_upper(v, legs[:1], rides[:1])
+    return 0 if base is None else base - round(base * (1 - rate))
+
+
+def mixed_fare_estimate(v, legs, legs_result):
+    """선택 경로의 성인 1인 1카드·승하차 태그 조건부 환승 예상액.
+
+    버스 구간거리는 청구 운임거리로 확정하지 않는다. 지하철은 기존 거리 범위
+    상단을 쓴다. 확인된 첫 버스 조조 기본운임만 1회 할인한다.
+    식별값/거리/시각/환승 조건이 부족하면
+    None으로 반환하여 제품이 개별 요금 합으로 안내하도록 한다.
+    """
+    modes = modes_of(legs)
+    # 자전거·도보 전용 후보는 대중교통 운임 규칙을 읽을 필요가 없습니다.
+    if 'bus' not in modes or len(legs) < 2 or set(modes) - {'bus', 'subway'}:
+        return None
+    F = _fare(v)
+    T = F.get('transfer', {})
+    if T.get('bus_distance', {}).get('value') != 'selected_contiguous_sections':
+        return None
+    rides = ride_results(legs, legs_result)
+    if not rides:
+        return None
+    groups = []
+    previous_arrival = None
+    for leg, lr in zip(legs, rides):
+        times = (lr.depart_min, lr.arrive_min)
+        if lr.verdict != 'feasible' or any(isinstance(t, bool) or not isinstance(t, (int, float))
+                                         or not math.isfinite(t) for t in times):
+            return None
+        if lr.arrive_min < lr.depart_min or (previous_arrival is not None
+                                             and lr.depart_min < previous_arrival):
+            return None
+        previous_arrival = lr.arrive_min
+        mode = leg_mode(leg)
+        if mode == 'subway' and groups and groups[-1][0] == mode:
+            if groups[-1][1][-1]['to'] != leg['from']:
+                return None
+            groups[-1][1].append(leg)
+            groups[-1][2].append(lr)
+        else:
+            groups.append((mode, [leg], [lr]))
+    parts, bus_routes = [], set()
+    rail_legs = []
+    for mode, gl, gr in groups:
+        board, alight = gr[0].depart_min, gr[-1].arrive_min
+        if mode == 'bus':
+            leg = gl[0]
+            bus = getattr(v, 'bus', None)
+            if bus is None or not all(k in leg for k in ('route_id', 'from_sequence', 'to_sequence',
+                                                         'from_stop_id', 'to_stop_id')):
+                return None
+            route = route_for_leg(bus, leg)
+            if route is None or route.route_id in bus_routes:
+                return None
+            bus_routes.add(route.route_id)
+            segment = segment_for_leg(bus, route, leg)
+            kind = route.route_type_nm
+            if segment is None or kind not in T['types']['value']:
+                return None
+            a, b, _count = segment
+            meters = bus.distance_m(route.route_id, a['seq'], b['seq'])
+            base = bus_fare_upper(v, gl, gr)
+            if parts:
+                wait, term = gr[0].wait_min, route.term_min
+                if any(isinstance(t, bool) or not isinstance(t, (int, float))
+                       or not math.isfinite(t) for t in (wait, term)):
+                    return None
+                if term <= 0 or not 0 <= wait <= term:
+                    return None
+                earliest = board - wait
+                if not _transfer_boarding_window_fits(F, parts[-1]['alight'], earliest, earliest + term):
+                    return None
+        else:
+            from .special_rail import surcharge
+            rail_extra = surcharge(v, gl)
+            if rail_extra is None:
+                return None
+            rail_legs.extend(gl)
+            meters = None
+            for net in (fare_net(v), fare_net_est(v)):
+                if net is not None and net.ridden_m(gl) is not None:
+                    meters = net.upper_m(gl)
+                    if meters is not None:
+                        break
+            kind, base = 'subway', F['subway']['base']['value']['won']
+        cap = T.get('max_ride_min', {}).get('value', {})
+        duration_limit = cap.get(kind, cap.get(mode))
+        if duration_limit is None or alight - board > duration_limit:
+            return None
+        parts.append(dict(kind=kind, base=base, m=meters, board=board, alight=alight))
+    result = transfer_fare(F, parts)
+    if result is None:
+        return None
+    # 신분당선 여객약관 제9조6항: 인정된 환승 연쇄의 별도운임은 한 번만
+    # 합산한다. 버스를 사이에 둔 재진입도 전체 이용 구간의 조합으로 계산한다.
+    from .special_rail import surcharge
+    extra = surcharge(v, rail_legs)
+    return None if extra is None else result + extra - mixed_first_bus_early_bird_discount(v, legs, rides)
+
+
 def fare_of(v, legs, legs_result):
     """1인 요금 — 규칙 fare·bike 절에 근거가 있는 것만(모르는 조각이 있으면 None → 키를 뺀다).
-    도보 0 · 자전거 이용권 · 지하철만(괄호) · 버스 한 번(유형별) · 버스가 섞인 환승은 버스 운임거리 근거가 없어 None."""
+    도보 0 · 자전거 이용권 · 지하철만(괄호) · 버스 한 번(유형별).
+    버스 혼합 환승은 확정 운임으로 내지 않고 mixed_fare_estimate에서 조건부 예상액으로 계산한다."""
     ms = set(modes_of(legs))
     if ms == {"walk"}:
         return 0
@@ -487,13 +731,15 @@ def fare_of(v, legs, legs_result):
         return subway_fare(v, legs, legs_result)
     if ms == {"bus"} and len(legs) == 1:
         return bus_fare(v, legs, legs_result)
-    return None                         # 버스 섞인 환승 — fare.transfer.bus_distance 근거없음
+    return None                         # 버스 혼합 환승은 제품 표시 단계에서 조건부 예상액으로 안내
 
 
 def fare_upper_of(v, legs, legs_result):
     """버스가 섞인 환승의 **요금 상한**(1인) — 규칙 fare.transfer.cap = sum_of_single(확정): 통합요금은 탈것마다 따로 낸
-    요금의 합을 넘지 않는다. 합성 요금(fare_of)은 버스 운임거리 근거가 없어 못 내지만(fare.transfer.bus_distance),
-    탈것별 단일 요금은 근거가 있다 — 지하철 묶음(개찰 안 환승)은 subway_fare, 버스는 bus_fare.
+    요금의 합을 넘지 않는다. 조건부 할인 예상액을 못 내는 경로의 대체 안내다.
+    탈것별 일반 요금은 지하철 묶음(개찰 안 환승)의 승인된 거리 범위에 따른
+    subway_fare_upper, 버스는 bus_fare_upper. 상단에서는 조조 할인을 적용하지 않는다.
+    거리 범위 추정이 포함될 수 있으므로 실제 결제 상한 보장이 아닌 예상액 상단이다.
 
     ☆`[2026-09-29 문제목록 #20]` 앞 판은 이 경로의 요금 칸을 비웠다 → 우리 재계획이 「요금 미상」으로 후보를 떨어뜨렸다.
       상한은 지어낸 값이 아니라 확정 규칙에서 나온 값이다. 부르는 쪽은 「상한」이라고 밝힌다. 한 조각이라도 모르면 None."""
@@ -515,7 +761,8 @@ def fare_upper_of(v, legs, legs_result):
         return None                                         # 버스가 안 섞였다 — 이 함수의 몫이 아니다
     total = 0
     for m, gl, gr in groups:
-        f = subway_fare(v, gl, gr) if m == "subway" else bus_fare(v, gl, gr) if m == "bus" else None
+        f = (subway_fare_upper(v, gl, gr, apply_early_bird=False) if m == "subway"
+             else bus_fare_upper(v, gl, gr) if m == "bus" else None)
         if f is None:
             return None
         total += f
@@ -540,7 +787,7 @@ def ride_results(legs, legs_result):
 
 def chosen_departures(v, leg, lr, day_type):
     """판정기가 고른 편성 후보 — 그 승차 분에 떠나 그 도착 분에 닿는 (출발, 경로 판정) 목록.
-    판정기와 같은 `Verifier.candidates()`·`LineOrder.travel_min_on_path()` 로 다시 찾는다(판정기 무수정)."""
+    판정기와 같은 공식 도착초/급행/평균 소요 규칙으로 다시 찾는다."""
     if lr is None or lr.verdict != "feasible" or lr.depart_min is None or lr.arrive_min is None:
         return []
     line, a, b = leg["line"], leg["from"], leg["to"]
@@ -549,8 +796,11 @@ def chosen_departures(v, leg, lr, day_type):
     for d, verd, _f in cands:
         if d.min != lr.depart_min:
             continue
-        ride = _EX.ride_of(v.lo, line, d, verd, a, b)
-        if ride is None or d.min + math.ceil(ride) != lr.arrive_min:
+        ride = v.ride_of(line, d, verd, a, b)
+        if ride is None or v._scheduled_arrival_min(d, verd, b, ride) != lr.arrive_min:
+            continue
+        if (getattr(lr, 'arrival_sec', None) is not None
+                and v._scheduled_arrival_sec(d, verd, b) != lr.arrival_sec):
             continue
         out.append((d, verd))
     return out
@@ -570,11 +820,21 @@ def congestion_checked(v, legs, legs_result, date, day_type):
     levels = v.R["congestion"]["levels"]
     is_hol = date is not None and date.isoformat() in v.holidays
     for leg, lr in zip(legs, lrs):
-        dirs = {d.dir for d, _verd in chosen_departures(v, leg, lr, day_type)}
+        departures = chosen_departures(v, leg, lr, day_type)
+        dirs = {d.dir for d, _verd in departures}
         if len(dirs) != 1:
             return False
+        service = None
+        if leg["line"] in ("09호선", "9호선"):
+            services = {getattr(getattr(d, "run", None), "express", None) for d, _verd in departures}
+            if services == {True}:
+                service = "express"
+            elif services == {False}:
+                service = "local"
+            else:
+                return False
         hit = cg.lookup(leg["line"], leg["from"], dirs.pop(), day_type, date, lr.depart_min, levels,
-                        is_holiday=is_hol)
+                        is_holiday=is_hol, service=service)
         if hit is None or hit[1] == "극심":        # 셀이 없거나 그 셀이 극심이면 「극심 없음」이라 말할 수 없다(2차 #4)
             return False
     return True

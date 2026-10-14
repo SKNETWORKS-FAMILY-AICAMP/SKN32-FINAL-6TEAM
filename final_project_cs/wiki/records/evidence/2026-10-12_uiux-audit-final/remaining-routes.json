@@ -1,0 +1,369 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.audit.config.ts",
+      "tests/live/uiux-route-audit-20261012.spec.ts",
+      "-g",
+      "account · 375px|registered-trip · 1280px|starting-revisit · 1280px|account · 1280px|profile · 1280px|support · 1280px|social-cancelled · 1280px",
+      "--workers=1",
+      "--reporter=list,json",
+      "--output=remaining-routes-evidence"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\playwright.audit.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/remaining-routes-evidence",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "uiux-route-audit-20261012.spec.ts",
+      "file": "uiux-route-audit-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "전체 경로 · account · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1498,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:30:29.828Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODYvbXlwYWdlIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-5a6ad8b4d3b9e0ef8625",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · registered-trip · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1976,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:30:31.954Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODYvdHJpcHMvMTExMTExMTEtMjIyMi0zMzMzLTQ0NDQtNTU1NTU1NTU1NTU1IiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-aa7a18ef6b1003e912e9",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · starting-revisit · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1500,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:30:33.948Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL3N0YXJ0aW5nIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg2L3RyaXBzL25ldyIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MH0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-26effe60d41cf9994e77",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · account · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1372,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:30:35.465Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODYvbXlwYWdlIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-cd5d26a23e5f169553af",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · profile · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1335,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:30:36.861Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UvZWRpdCIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ni9teXBhZ2UvZWRpdCIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MH0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-0614882fb3a44ceb921a",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · support · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1169,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:30:38.214Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9zdXBwb3J0IiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg2L3N1cHBvcnQiLCJkaW1lbnNpb25zIjp7ImRvY3VtZW50IjowLCJtYWluIjowLCJzY3JvbGwiOjB9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-80ad8b9e28f0f31569da",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · social-cancelled · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1092,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:30:39.399Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9hdXRoL2RvbmU/ZXJyb3I9Y2FuY2VsbGVkIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg2L2F1dGgvZG9uZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MH0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-b38a3a3b26af090dff12",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T16:30:27.831Z",
+    "duration": 13795.899000000001,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

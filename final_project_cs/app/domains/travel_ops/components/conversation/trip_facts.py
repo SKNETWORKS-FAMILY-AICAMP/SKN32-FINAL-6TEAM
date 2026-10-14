@@ -289,15 +289,20 @@ def _clean(text: str | None) -> str | None:
 
 # ── 답 ───────────────────────────────────────────────────────────
 def fact_reply(kind: str, *, message: str, items: list[Any], now: datetime,
-               place_source: Any = None, item: Any = None) -> tuple[str, dict[str, Any]]:
+               place_source: Any = None, item: Any = None, retarget: bool = True) -> tuple[str, dict[str, Any]]:
     """(답, 근거). 근거에는 무엇을 보고 답했는지(`kind` · `item` · `day` · `lookups`)와 **문장을 누가 썼는지**
     (`writer: "template"`)를 싣는다.
 
-    `item` — ★`[2026-09-29]` 결정 단위가 고른 대상(서버가 id 로 확인한 항목). 주면 문장 낱말로 다시 찾지 않는다."""
+    `item` — ★`[2026-09-29]` 결정 단위가 고른 대상(서버가 id 로 확인한 항목). 주면 문장 낱말로 다시 찾지 않는다.
+    `retarget` — ★`[2026-10-13]` 거짓이면 대상이 없어도 **문장을 다시 읽어 대상을 찾지 않는다**. 결정 단위가 「대상 없음」이라고
+    판단한 읽기 질문(예: 「다음 일정 뭐야?」 — 지금 시각 기준)에 쓴다. 전에는 여기서 문장을 다시 읽어(일정 짚기) 마지막 일정을 짚고
+    「성수동 저녁 뒤로는 남은 일정이 없어요」라고 답했다(x600 서버 웹 채팅 시험 2026-10-13, 08:40 에 물음 · 처리 기록 435번)."""
     if item is not None:
         day = _local(item.starts_at).date()
-    else:
+    elif retarget:
         day, item = target(items, message, now)
+    else:
+        day = None
     basis: dict[str, Any] = {"kind": kind, "writer": "template", "day": day.isoformat() if day else None,
                              "item": item.title if item else None, "lookups": None}
     stops = _stops(items)
@@ -488,7 +493,11 @@ def _hours_answer(item: Any, lookup: dict[str, Any] | None) -> str:
             lines.append(f"쉬는 날(원문): {_clean(lookup['rest_text'])}")
     stored = _stored_hours(item.place or {}, _local(item.starts_at).date())
     if stored:
-        lines.append(f"{name} 영업시간(저장된 값): {stored}")
+        # ★`[2026-10-12 사용자]` 사람이 공식 페이지에서 확인한 값이면 그 출처를 붙인다(db_column.md 30번 `field_sources`)
+        from app.domains.travel_ops.components.places.place_info import official_web_note
+
+        note, _ = official_web_note(((item.place or {}).get("attributes") or {}).get("hours_read") or {})
+        lines.append(f"{name} 영업시간(저장된 값{' · ' + note if note else ''}): {stored}")
     if not lines:
         return f"{name}의 운영시간은 모르겠어요{_lookup_note(lookup)}."
     return "\n".join(lines)

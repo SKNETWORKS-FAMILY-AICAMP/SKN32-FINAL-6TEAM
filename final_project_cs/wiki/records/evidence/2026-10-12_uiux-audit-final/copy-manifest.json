@@ -1,0 +1,224 @@
+[
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\full-results.json",
+    "copy": "full-results.json",
+    "sha256": "9A2D9F68A2F9CAC28791A6F14E5242664FE858478BCBEB18F2228A6915BB5F89",
+    "bytes": 1220969
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\full-run.log",
+    "copy": "full-run.log",
+    "sha256": "62380B12FF8507EF8F06B7D254964A0446138E19B5184E789F54CF3A30FBD9EF",
+    "bytes": 278961
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\final-results.json",
+    "copy": "final-results.json",
+    "sha256": "08E20654C1CEA2EBD2A8955F72790E81871D0A07067BBDFF787DB2248020717E",
+    "bytes": 375260
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\final-run.log",
+    "copy": "final-run.log",
+    "sha256": "85014D99484C9DB7E34D6C2ED8CC0C03B64854F97707310D5ADAE6A241EA07E9",
+    "bytes": 73252
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-results.json",
+    "copy": "residual-results.json",
+    "sha256": "05ACFB0196EEDA6F225124A5CCCB103994CCD00083AB16CA56FC12830AE3C669",
+    "bytes": 85075
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-run.log",
+    "copy": "residual-run.log",
+    "sha256": "520A55323175E3ABE86C9E5A4A0863EE80650C095D88776AF3259E233EB7DDFB",
+    "bytes": 12704
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\map-proof-results.json",
+    "copy": "map-proof-results.json",
+    "sha256": "29A7FE56F153BAFF11C7F780D61E2AAA2F152C87C26BCC7D1F04E7A48501447E",
+    "bytes": 11438
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\map-proof-run.log",
+    "copy": "map-proof-run.log",
+    "sha256": "F1B09CB84BD1153A5C6F4BC85DA115646B4836EE477564B45CF4CA8046E4B779",
+    "bytes": 3293
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\diagnostics-results.json",
+    "copy": "diagnostics-results.json",
+    "sha256": "9903A88DD0F52777CF49138D3014E280A3ECDCDF948A56FB737B07400482DC36",
+    "bytes": 36045
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\diagnostics-run.log",
+    "copy": "diagnostics-run.log",
+    "sha256": "1237923382145DC8D4A6360DA95E6DADAE0A84E1B91F7C73CF1EAD113D8DE4D4",
+    "bytes": 10836
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\unit-residual.json",
+    "copy": "unit-residual.json",
+    "sha256": "761EC82D8B389D26490F8551BE0D1879FA08C00EB7129C0A220CB2F7AA8BB959",
+    "bytes": 285974
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\unit-residual.log",
+    "copy": "unit-residual.log",
+    "sha256": "725D70F3FDBA75C9BEEE660FCE4C9B1B6C3C09465D4FCB7837CF479450364926",
+    "bytes": 117
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\static-residual-status.json",
+    "copy": "static-residual-status.json",
+    "sha256": "A826BB36F3485CCB70FD57705124D2573BE9210AE2A9FBAB26DDA103592DB8C8",
+    "bytes": 41
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\type-residual.log",
+    "copy": "type-residual.log",
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "bytes": 0
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\lint-residual-status.json",
+    "copy": "lint-residual-status.json",
+    "sha256": "3FA0D27DE39DCE7F82FA9A32E669359D2717BC2A3D6E6B4C4D4590F4B18D1B27",
+    "bytes": 63
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\lint-residual.log",
+    "copy": "lint-residual.log",
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "bytes": 0
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\claude-ui-review.json",
+    "copy": "claude-ui-review.json",
+    "sha256": "5F5F92B461F222C0BBBE0450CE440D6DB2D22F324AE4C0BEC4E1C93CE5ED93E5",
+    "bytes": 10483
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\claude-map-review.json",
+    "copy": "claude-map-review.json",
+    "sha256": "7B0BB4090320551439B3A9F574DEFFD856A1E59B7D9E51CC018023B04B8A7CB7",
+    "bytes": 9981
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\failure-classification.json",
+    "copy": "failure-classification.json",
+    "sha256": "E4C08315E9B32A1A80C8384BD85856545368428780A80B3EEAA67A993B396BF2",
+    "bytes": 31572
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\rerun-selector-mapping.json",
+    "copy": "rerun-selector-mapping.json",
+    "sha256": "5BD3064B580AC8DBBBAB9BB85171E78FFE6BD0F26C99D71AFB18C6CF50EC407F",
+    "bytes": 16050
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-mapping-final.json",
+    "copy": "residual-mapping-final.json",
+    "sha256": "A18C829E729395A00EE9ADA1031E1481B4308B4B4F94B90DE2362346CC680943",
+    "bytes": 5004
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\final-arguments.json",
+    "copy": "final-arguments.json",
+    "sha256": "7731F462E4F8FE7082EE0B6A2064B158C946D1D233DED26884CE4071D4F33959",
+    "bytes": 2932
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-arguments.json",
+    "copy": "residual-arguments.json",
+    "sha256": "AAE4066CF4DE17D9BAE8343C3C526962A610AC358176A6BDA6F482208E763F96",
+    "bytes": 936
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-coverage-final.json",
+    "copy": "route-coverage-final.json",
+    "sha256": "0DCB63A1A4D567EB88FE75A4DD926D29DA4033CF6C91154DA001EA8D427F448E",
+    "bytes": 18884
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+    "copy": "route-audit.log",
+    "sha256": "17470F6FE1E14A1FE3F87FFBA5AA256A2709A66B4733C9A4131809BFCFF3ACC5",
+    "bytes": 6257
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\latest-core.json",
+    "copy": "latest-core.json",
+    "sha256": "C3B54122F03AA8A60B831C8C7741EB0B6691EBF7DE8A38AA445606A212AFC9A7",
+    "bytes": 15695
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\latest-core.log",
+    "copy": "latest-core.log",
+    "sha256": "7CE0917A7612566AF7C639F6B4B834217B0D191998E777FAFEB7224F3F947B6E",
+    "bytes": 3291
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes.json",
+    "copy": "remaining-routes.json",
+    "sha256": "F3EB77FFC2D726C5207C4D8CFA686D3C0FA45CF9EB3AA2BE53E9AD2138217964",
+    "bytes": 12698
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes.log",
+    "copy": "remaining-routes.log",
+    "sha256": "3021B95A75C6D4FC734A24A891398F1579350362B348729FDA25418701AC9D61",
+    "bytes": 1671
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\.tmp\\uiux-audit-20261012-v1\\evidence\\account-cache-guard-repro.cjs",
+    "copy": "account-cache-guard-repro.cjs",
+    "sha256": "4859BA42BB1E34ED8B55948D34F052046125B447515E9B98BF0C7D979ACC3F2E",
+    "bytes": 6033
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\.tmp\\uiux-audit-20261012-v1\\evidence\\account-cache-guard-results.json",
+    "copy": "account-cache-guard-results.json",
+    "sha256": "BC6F1CED58EDDE59FBAC68509BDDF17D59D64C80F96C6EBA69E2342C556970BE",
+    "bytes": 1348
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\.tmp\\uiux-audit-20261012-v1\\evidence\\reply-kept-race-repro.cjs",
+    "copy": "reply-kept-race-repro.cjs",
+    "sha256": "5D096CB79BA90533C6777E16C84E26C50208C3A94806D3FE43310170A2E1B8B9",
+    "bytes": 4550
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\.tmp\\uiux-audit-20261012-v1\\evidence\\reply-kept-race-results.json",
+    "copy": "reply-kept-race-results.json",
+    "sha256": "6D946415012FF9BC784D0E8CD61EB1982D91CA184482C4A5AD28DD1373839CB0",
+    "bytes": 1040
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\.tmp\\uiux-audit-20261012-v1\\evidence\\normal-reply-race-repro.cjs",
+    "copy": "normal-reply-race-repro.cjs",
+    "sha256": "94830A51802D51BDAD261CBA5C64E01F7B70B2DD220BB721D60770EE0AF4F55D",
+    "bytes": 4980
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\.tmp\\uiux-audit-20261012-v1\\evidence\\normal-reply-race-results.json",
+    "copy": "normal-reply-race-results.json",
+    "sha256": "43744A6A42DCC14D9E828DB88EED54D133277A17BCB091AABFB618021AA6F997",
+    "bytes": 2184
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\.tmp\\uiux-audit-20261012-v1\\evidence\\profile-cache-guard-repro.cjs",
+    "copy": "profile-cache-guard-repro.cjs",
+    "sha256": "CC6E3CFFFA01201F706CA25CF191781C483D4830B1B732775BAFCD196E9772F0",
+    "bytes": 9011
+  },
+  {
+    "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\.tmp\\uiux-audit-20261012-v1\\evidence\\profile-cache-guard-results.json",
+    "copy": "profile-cache-guard-results.json",
+    "sha256": "F6E88985F3A643BC660629FCAF6B70F2A17E6A8B2A6F3A2130841F5BA8C6D874",
+    "bytes": 11571
+  }
+]

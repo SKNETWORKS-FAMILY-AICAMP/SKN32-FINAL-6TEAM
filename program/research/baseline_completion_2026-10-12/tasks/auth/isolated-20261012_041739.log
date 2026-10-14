@@ -1,0 +1,11 @@
+........................................................................ [ 98%]
+.                                                                        [100%]
+============================== warnings summary ===============================
+tests/e2e/test_personal_ai_oauth_db.py: 4 warnings
+tests/e2e/test_mcp_server.py: 13 warnings
+  C:\Users\playdata2\anaconda3\Lib\contextlib.py:105: DeprecationWarning: Use `streamable_http_client` instead.
+    self.gen = func(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\auth\isolated-20261012_041739.xml -
+73 passed, 17 warnings in 213.41s (0:03:33)

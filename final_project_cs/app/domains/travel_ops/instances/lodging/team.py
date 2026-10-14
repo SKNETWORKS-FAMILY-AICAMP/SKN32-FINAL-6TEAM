@@ -54,6 +54,7 @@ from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, T
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, ItineraryWork
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, applied_record, with_request
+from .ledger import item_key
 from .interpret import Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, settle_years
 
 logger = logging.getLogger(__name__)
@@ -382,6 +383,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         required_context=["case_state", "policy", "db_facts", "history"],
         policy_optional_capabilities=["lodging.assist", "lodging.status", "lodging.itinerary"],
         allowed_tools=["read.booking", "read.itinerary", "read.stay_search", "read.stay_detail", "read.booking_search_stays",
+                       "read.offers_shown",
                        "read.stay_lookup",                    # `[2026-10-13]` 내 숙소 위치 — 마이리얼트립이 못 줄 때(카카오 · 관광공사)
                        "read.stay_google",                    # `[2026-10-13]` 내 숙소를 구글 호텔에서 같은 숙소로 찾기(가격 · 사진 · 판매처)
                        "read.stay_google_details",            # `[2026-10-13]` 구글 호텔 후보의 판매처별 가격 · 주소 · 사진
@@ -703,7 +705,15 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         by_price = conditions["cheaper"] and reference_price is None
         asked = "더 싼" if conditions["cheaper"] else (f"1박 {_won(price_limit)} 이하" if price_limit is not None else "")
         shown = [str(name) for name in item.detail.get("shown") or []]
+        # `[2026-10-13]` 후보는 이제 일정에 싣지 않고 보류 제안으로 내민다 — 앞서 보여 준 곳은 숙소 · 항공 원장에서 읽는다(항목 상세 `shown` 은 옛 판 몫)
+        shown_key = item_key("lodging", query)
+        ledger = self._read(task, "read.offers_shown", {"trip_id": trip["trip_id"], "item_key": shown_key}, ctx["seen"])             if shown_key else None
+        shown += [str(offer["name"]) for offer in (ledger or {}).get("offers") or [] if offer.get("name")]
         exclude = {_key(name) for name in [*shown, item.title, (item.place or {}).get("name") or ""] if name}
+        # `[2026-10-13]` 구글 호텔 후보는 원어 이름 대신 상세의 한글 이름으로 보일 수 있다 — 원장에는 보인 이름이 남으므로
+        #   후보 key(`google:<목록 이름 열쇠>`)의 열쇠로도 뺀다(다음 목록은 원어 이름으로 온다)
+        exclude |= {str(offer["key"]).split(":", 1)[1] for offer in (ledger or {}).get("offers") or []
+                    if str(offer.get("key") or "").startswith("google:")}
         picks: list[dict[str, Any]] = []
         booked: dict[str, Any] = {}
         sizes_used: list[int] = []
@@ -801,21 +811,13 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             said = f" 말씀하신 대로 1박 {_won(price_limit)} 이하만 골랐어요."
         answer = (f"{item.title} 대신 갈 수 있는 곳이에요 — {listed}.{said}{_missing_note(booked.get('sources'))}"
                   " 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
-        detail = {**item.detail, "alternates": options, "other_options": [option["name"] for option in options],
-                  "shown": [*shown, *(pick["name"] for pick in picks), *(pick["source_name"] for pick in picks if pick.get("source_name"))],
-                  "query": query}
         cause = with_request({"category": "customer_request", "type": "requested_options", "from": item.title,
                               "message": task.input_text}, task.context.current_state.get("request_id"))
-        replacement = item.replaced_by(place=None, title=item.title, detail=detail)
-        notice = {"text": answer, "language": "ko", "causes": [cause], "reason": "requested_options", "item_id": str(item.item_id),
-                  "options": [{"key": o["key"], "rank": o["rank"], "name": o["name"], "starts_at": o["starts_at"], "note": None}
-                              for o in options],
-                  "other_options": detail["other_options"], "replay": False}
-        change = ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
-                                 replacements={item.item_id: replacement},
-                                 summary={"lodging_options": [o["name"] for o in options], "shown_total": len(detail["shown"]),
-                                          **{k: v for k, v in record.items() if k in ("sizes", "shown_before", "anchor", "near", "details_read", "conditions", "google_details", "sources")}})
-        return self.settle(task, ctx, change)
+        # ★`[2026-10-13]` 일정은 바꾸지 않는다 — 식당 · 활동의 「다른 후보」처럼 「선택이 필요해요」 제안으로 내민다(일정 판 그대로).
+        #   고르면 고르기 경로가 숙소 원장으로 그 숙소를 여행 전용 장소로 들여놓고(좌표가 있을 때) 바꾼다(`pending.choose`)
+        return self.offer(task, ctx, item, options=options, text=answer, causes=[cause], decision=record, shown_key=shown_key,
+                          summary={"lodging_options": [o["name"] for o in options], "shown_total": len(shown) + len(options),
+                                   **{k: v for k, v in record.items() if k in ("sizes", "shown_before", "anchor", "near", "details_read", "conditions", "google_details", "sources")}})
 
     def _choose(self, task: TeamTask, ctx: dict[str, Any], item: Any, choice: str) -> TeamResult:
         """후보 중 고른 숙소로 항목을 바꾼다 — `plan_swap` 과 같은 일(원래 숙소는 「다른 안」 끝으로, 알림 문장도 같은 꼴)."""
@@ -891,7 +893,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         전에는 다시 볼 도구가 없어 「확인 못 함」이었다. 판매처가 하나도 없으면 「없어졌다」고 하지 않고 확인 못 함(`no_price`) — 구글 상세에
         가격이 없는 까닭(매진 · 표시 안 됨)을 가를 수 없다. 바뀌었으면 판매처 · 예약 버튼 · 「1박 ○원~」도 새 값으로."""
         # `[2026-10-13]` 판매처 최저가끼리 — 보여 준 판매처(`sellers`)의 최저가가 기준이다. `price_from` 은 구글 목록가까지 넣은 최저라
-        #   기준이 다르다(☆x600 팀장 확인 — 목록 173,845원 · 판매처 최저 176,766원이 「바뀜」으로 나왔다). 판매처를 못 읽었던 후보만 `price_from`
+        #   기준이 다르다(☆x600 확인 — 목록 173,845원 · 판매처 최저 176,766원이 「바뀜」으로 나왔다). 판매처를 못 읽었던 후보만 `price_from`
         shown = [s.get("price_per_night") for s in pick.get("sellers") or [] if isinstance(s.get("price_per_night"), (int, float))]
         before = min(shown) if shown else (pick.get("price_from") if pick.get("price_from") is not None else pick.get("price_per_night"))
         if not query:

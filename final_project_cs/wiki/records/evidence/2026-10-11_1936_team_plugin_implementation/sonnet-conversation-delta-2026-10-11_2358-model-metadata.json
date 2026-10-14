@@ -1,0 +1,101 @@
+{
+  "requested_model": "claude-sonnet-5-5",
+  "is_error": false,
+  "canonical_models": {
+    "claude-sonnet-5-5": "claude-sonnet-5-5"
+  },
+  "permission_denials": [],
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 28,
+      "outputTokens": 13386,
+      "cacheReadInputTokens": 906598,
+      "cacheCreationInputTokens": 98102,
+      "webSearchRequests": 0,
+      "costUSD": 0.7076435999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 5857,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "num_turns": 32,
+  "direct_Read_calls": [
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\RULE.md"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\AGENTS.md"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\teams\\team-contract\\plugin-availability.md"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_1936_team_plugin_implementation\\sonnet-conversation-delta-2026-10-11_2358-pytest.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\case_dispatch.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\application\\controller.py",
+      "offset": 770,
+      "limit": 260
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\application\\case_intake.py",
+      "offset": 1,
+      "limit": 200
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_watch_cases.py"
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py",
+      "offset": 255,
+      "limit": 260
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py",
+      "offset": 600,
+      "limit": 120
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\conversation\\trip_messages.py",
+      "offset": 895,
+      "limit": 120
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\application\\case_service.py",
+      "offset": 14,
+      "limit": 60
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\entry\\trip_api.py",
+      "offset": 1025,
+      "limit": 75
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\entry\\trip_api.py",
+      "offset": 1960,
+      "limit": 50
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\travel\\test_initial_retry_boundaries.py",
+      "offset": 85,
+      "limit": 30
+    },
+    {
+      "file_path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\travel\\test_initial_retry_boundaries.py",
+      "offset": 1,
+      "limit": 85
+    }
+  ],
+  "tools": {
+    "Glob": 1,
+    "Grep": 13,
+    "Read": 16,
+    "Bash": 1
+  }
+}

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="10" skipped="0" tests="25" time="5.003" timestamp="2026-10-09T11:26:35.920414+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uc2e0\uc815-\uc2e0\uc815(\uc740\ud589\uc815)]" time="0.049"><failure message="AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '신정(은행정)', 'station': '신정(은행정)', ...}&#10; +  where {'line': '5호선', 'line_id': '1005', 'query_station': '신정(은행정)', 'station': '신정(은행정)', ...} = lookup('5호선', '신정(은행정)')&#10; +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57A57D10&gt;.lookup">main = '신정', official = '신정(은행정)'
+
+    @pytest.mark.parametrize('main,official', [
+        ('신정', '신정(은행정)'), ('오목교', '오목교(목동운동장앞)'),
+        ('군자', '군자(능동)'), ('아차산', '아차산(어린이대공원후문)'),
+        ('광나루', '광나루(장신대)'), ('천호', '천호(풍납토성)'),
+        ('굽은다리', '굽은다리(강동구민회관앞)'), ('올림픽공원', '올림픽공원(한국체대)')])
+    def test_primary_lookup_preserves_official_id_name_query_and_copy(main, official):
+        ix = index([official])
+        got = ix.lookup('05호선', main)
+&gt;       assert got == ix.lookup('5호선', official)
+E       AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '신정(은행정)', 'station': '신정(은행정)', ...}
+E        +  where {'line': '5호선', 'line_id': '1005', 'query_station': '신정(은행정)', 'station': '신정(은행정)', ...} = lookup('5호선', '신정(은행정)')
+E        +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57A57D10&gt;.lookup
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:31: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uc624\ubaa9\uad50-\uc624\ubaa9\uad50(\ubaa9\ub3d9\uc6b4\ub3d9\uc7a5\uc55e)]" time="0.001"><failure message="AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '오목교(목동운동장앞)', 'station': '오목교(목동운동장앞)', ...}&#10; +  where {'line': '5호선', 'line_id': '1005', 'query_station': '오목교(목동운동장앞)', 'station': '오목교(목동운동장앞)', ...} = lookup('5호선', '오목교(목동운동장앞)')&#10; +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57A1E300&gt;.lookup">main = '오목교', official = '오목교(목동운동장앞)'
+
+    @pytest.mark.parametrize('main,official', [
+        ('신정', '신정(은행정)'), ('오목교', '오목교(목동운동장앞)'),
+        ('군자', '군자(능동)'), ('아차산', '아차산(어린이대공원후문)'),
+        ('광나루', '광나루(장신대)'), ('천호', '천호(풍납토성)'),
+        ('굽은다리', '굽은다리(강동구민회관앞)'), ('올림픽공원', '올림픽공원(한국체대)')])
+    def test_primary_lookup_preserves_official_id_name_query_and_copy(main, official):
+        ix = index([official])
+        got = ix.lookup('05호선', main)
+&gt;       assert got == ix.lookup('5호선', official)
+E       AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '오목교(목동운동장앞)', 'station': '오목교(목동운동장앞)', ...}
+E        +  where {'line': '5호선', 'line_id': '1005', 'query_station': '오목교(목동운동장앞)', 'station': '오목교(목동운동장앞)', ...} = lookup('5호선', '오목교(목동운동장앞)')
+E        +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57A1E300&gt;.lookup
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:31: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uad70\uc790-\uad70\uc790(\ub2a5\ub3d9)]" time="0.001"><failure message="AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '군자(능동)', 'station': '군자(능동)', ...}&#10; +  where {'line': '5호선', 'line_id': '1005', 'query_station': '군자(능동)', 'station': '군자(능동)', ...} = lookup('5호선', '군자(능동)')&#10; +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57AC3650&gt;.lookup">main = '군자', official = '군자(능동)'
+
+    @pytest.mark.parametrize('main,official', [
+        ('신정', '신정(은행정)'), ('오목교', '오목교(목동운동장앞)'),
+        ('군자', '군자(능동)'), ('아차산', '아차산(어린이대공원후문)'),
+        ('광나루', '광나루(장신대)'), ('천호', '천호(풍납토성)'),
+        ('굽은다리', '굽은다리(강동구민회관앞)'), ('올림픽공원', '올림픽공원(한국체대)')])
+    def test_primary_lookup_preserves_official_id_name_query_and_copy(main, official):
+        ix = index([official])
+        got = ix.lookup('05호선', main)
+&gt;       assert got == ix.lookup('5호선', official)
+E       AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '군자(능동)', 'station': '군자(능동)', ...}
+E        +  where {'line': '5호선', 'line_id': '1005', 'query_station': '군자(능동)', 'station': '군자(능동)', ...} = lookup('5호선', '군자(능동)')
+E        +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57AC3650&gt;.lookup
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:31: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uc544\ucc28\uc0b0-\uc544\ucc28\uc0b0(\uc5b4\ub9b0\uc774\ub300\uacf5\uc6d0\ud6c4\ubb38)]" time="0.001"><failure message="AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '아차산(어린이대공원후문)', 'station': '아차산(어린이대공원후문)', ...}&#10; +  where {'line': '5호선', 'line_id': '1005', 'query_station': '아차산(어린이대공원후문)', 'station': '아차산(어린이대공원후문)', ...} = lookup('5호선', '아차산(어린이대공원후문)')&#10; +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57AC2BA0&gt;.lookup">main = '아차산', official = '아차산(어린이대공원후문)'
+
+    @pytest.mark.parametrize('main,official', [
+        ('신정', '신정(은행정)'), ('오목교', '오목교(목동운동장앞)'),
+        ('군자', '군자(능동)'), ('아차산', '아차산(어린이대공원후문)'),
+        ('광나루', '광나루(장신대)'), ('천호', '천호(풍납토성)'),
+        ('굽은다리', '굽은다리(강동구민회관앞)'), ('올림픽공원', '올림픽공원(한국체대)')])
+    def test_primary_lookup_preserves_official_id_name_query_and_copy(main, official):
+        ix = index([official])
+        got = ix.lookup('05호선', main)
+&gt;       assert got == ix.lookup('5호선', official)
+E       AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '아차산(어린이대공원후문)', 'station': '아차산(어린이대공원후문)', ...}
+E        +  where {'line': '5호선', 'line_id': '1005', 'query_station': '아차산(어린이대공원후문)', 'station': '아차산(어린이대공원후문)', ...} = lookup('5호선', '아차산(어린이대공원후문)')
+E        +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57AC2BA0&gt;.lookup
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:31: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uad11\ub098\ub8e8-\uad11\ub098\ub8e8(\uc7a5\uc2e0\ub300)]" time="0.001"><failure message="AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '광나루(장신대)', 'station': '광나루(장신대)', ...}&#10; +  where {'line': '5호선', 'line_id': '1005', 'query_station': '광나루(장신대)', 'station': '광나루(장신대)', ...} = lookup('5호선', '광나루(장신대)')&#10; +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57AC36E0&gt;.lookup">main = '광나루', official = '광나루(장신대)'
+
+    @pytest.mark.parametrize('main,official', [
+        ('신정', '신정(은행정)'), ('오목교', '오목교(목동운동장앞)'),
+        ('군자', '군자(능동)'), ('아차산', '아차산(어린이대공원후문)'),
+        ('광나루', '광나루(장신대)'), ('천호', '천호(풍납토성)'),
+        ('굽은다리', '굽은다리(강동구민회관앞)'), ('올림픽공원', '올림픽공원(한국체대)')])
+    def test_primary_lookup_preserves_official_id_name_query_and_copy(main, official):
+        ix = index([official])
+        got = ix.lookup('05호선', main)
+&gt;       assert got == ix.lookup('5호선', official)
+E       AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '광나루(장신대)', 'station': '광나루(장신대)', ...}
+E        +  where {'line': '5호선', 'line_id': '1005', 'query_station': '광나루(장신대)', 'station': '광나루(장신대)', ...} = lookup('5호선', '광나루(장신대)')
+E        +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57AC36E0&gt;.lookup
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:31: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\ucc9c\ud638-\ucc9c\ud638(\ud48d\ub0a9\ud1a0\uc131)]" time="0.001"><failure message="AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '천호(풍납토성)', 'station': '천호(풍납토성)', ...}&#10; +  where {'line': '5호선', 'line_id': '1005', 'query_station': '천호(풍납토성)', 'station': '천호(풍납토성)', ...} = lookup('5호선', '천호(풍납토성)')&#10; +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57B88170&gt;.lookup">main = '천호', official = '천호(풍납토성)'
+
+    @pytest.mark.parametrize('main,official', [
+        ('신정', '신정(은행정)'), ('오목교', '오목교(목동운동장앞)'),
+        ('군자', '군자(능동)'), ('아차산', '아차산(어린이대공원후문)'),
+        ('광나루', '광나루(장신대)'), ('천호', '천호(풍납토성)'),
+        ('굽은다리', '굽은다리(강동구민회관앞)'), ('올림픽공원', '올림픽공원(한국체대)')])
+    def test_primary_lookup_preserves_official_id_name_query_and_copy(main, official):
+        ix = index([official])
+        got = ix.lookup('05호선', main)
+&gt;       assert got == ix.lookup('5호선', official)
+E       AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '천호(풍납토성)', 'station': '천호(풍납토성)', ...}
+E        +  where {'line': '5호선', 'line_id': '1005', 'query_station': '천호(풍납토성)', 'station': '천호(풍납토성)', ...} = lookup('5호선', '천호(풍납토성)')
+E        +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57B88170&gt;.lookup
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:31: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uad7d\uc740\ub2e4\ub9ac-\uad7d\uc740\ub2e4\ub9ac(\uac15\ub3d9\uad6c\ubbfc\ud68c\uad00\uc55e)]" time="0.001"><failure message="AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '굽은다리(강동구민회관앞)', 'station': '굽은다리(강동구민회관앞)', ...}&#10; +  where {'line': '5호선', 'line_id': '1005', 'query_station': '굽은다리(강동구민회관앞)', 'station': '굽은다리(강동구민회관앞)', ...} = lookup('5호선', '굽은다리(강동구민회관앞)')&#10; +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57B88B30&gt;.lookup">main = '굽은다리', official = '굽은다리(강동구민회관앞)'
+
+    @pytest.mark.parametrize('main,official', [
+        ('신정', '신정(은행정)'), ('오목교', '오목교(목동운동장앞)'),
+        ('군자', '군자(능동)'), ('아차산', '아차산(어린이대공원후문)'),
+        ('광나루', '광나루(장신대)'), ('천호', '천호(풍납토성)'),
+        ('굽은다리', '굽은다리(강동구민회관앞)'), ('올림픽공원', '올림픽공원(한국체대)')])
+    def test_primary_lookup_preserves_official_id_name_query_and_copy(main, official):
+        ix = index([official])
+        got = ix.lookup('05호선', main)
+&gt;       assert got == ix.lookup('5호선', official)
+E       AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '굽은다리(강동구민회관앞)', 'station': '굽은다리(강동구민회관앞)', ...}
+E        +  where {'line': '5호선', 'line_id': '1005', 'query_station': '굽은다리(강동구민회관앞)', 'station': '굽은다리(강동구민회관앞)', ...} = lookup('5호선', '굽은다리(강동구민회관앞)')
+E        +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57B88B30&gt;.lookup
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:31: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_lookup_preserves_official_id_name_query_and_copy[\uc62c\ub9bc\ud53d\uacf5\uc6d0-\uc62c\ub9bc\ud53d\uacf5\uc6d0(\ud55c\uad6d\uccb4\ub300)]" time="0.001"><failure message="AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '올림픽공원(한국체대)', 'station': '올림픽공원(한국체대)', ...}&#10; +  where {'line': '5호선', 'line_id': '1005', 'query_station': '올림픽공원(한국체대)', 'station': '올림픽공원(한국체대)', ...} = lookup('5호선', '올림픽공원(한국체대)')&#10; +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57B89070&gt;.lookup">main = '올림픽공원', official = '올림픽공원(한국체대)'
+
+    @pytest.mark.parametrize('main,official', [
+        ('신정', '신정(은행정)'), ('오목교', '오목교(목동운동장앞)'),
+        ('군자', '군자(능동)'), ('아차산', '아차산(어린이대공원후문)'),
+        ('광나루', '광나루(장신대)'), ('천호', '천호(풍납토성)'),
+        ('굽은다리', '굽은다리(강동구민회관앞)'), ('올림픽공원', '올림픽공원(한국체대)')])
+    def test_primary_lookup_preserves_official_id_name_query_and_copy(main, official):
+        ix = index([official])
+        got = ix.lookup('05호선', main)
+&gt;       assert got == ix.lookup('5호선', official)
+E       AssertionError: assert None == {'line': '5호선', 'line_id': '1005', 'query_station': '올림픽공원(한국체대)', 'station': '올림픽공원(한국체대)', ...}
+E        +  where {'line': '5호선', 'line_id': '1005', 'query_station': '올림픽공원(한국체대)', 'station': '올림픽공원(한국체대)', ...} = lookup('5호선', '올림픽공원(한국체대)')
+E        +    where lookup = &lt;app.domains.travel_ops.instances.mobility.engine.subway_identity.SubwayStationIndex object at 0x0000014A57B89070&gt;.lookup
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:31: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_same_primary_name_is_ambiguous_but_exact_names_still_resolve" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_exact_primary_name_is_never_overridden_by_different_official_id" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790()-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5\ub3d9)(\ubcd1\uae30)-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5(\ub3d9))-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[(\ub2a5\ub3d9)-\ub2a5\ub3d9]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790\uff08\ub2a5\ub3d9\uff09-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790 (\ub2a5\ub3d9)-\uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5\ub3d9)-\uad70\uc790\uc5ed]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5\ub3d9)- \uad70\uc790]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_malformed_or_unrequested_name_transform_is_not_invented[\uad70\uc790(\ub2a5\ub3d9)-\ub2a5\ub3d9]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_alias_is_limited_to_documented_one_to_eight_lines[9\ud638\uc120]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_alias_is_limited_to_documented_one_to_eight_lines[\uacbd\uc758\uc911\uc559\uc120]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_primary_alias_is_limited_to_documented_one_to_eight_lines[\uacf5\ud56d\ucca0\ub3c4]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_parenthetical_terminal_beyond_target_restores_full_service_and_current_departure" time="0.051"><failure message="assert False&#10; +  where False = any(&lt;generator object test_parenthetical_terminal_beyond_target_restores_full_service_and_current_departure.&lt;locals&gt;.&lt;genexpr&gt; at 0x0000014A57BB4930&gt;)">def test_parenthetical_terminal_beyond_target_restores_full_service_and_current_departure():
+        rt, context = world()
+        binding, services = boarding_services(rt, context['options']['p']['legs'][0])
+        assert binding['status'] == 'matched'
+&gt;       assert any(s['terminal'] == '영등포시장' for s in services)
+E       assert False
+E        +  where False = any(&lt;generator object test_parenthetical_terminal_beyond_target_restores_full_service_and_current_departure.&lt;locals&gt;.&lt;genexpr&gt; at 0x0000014A57BB4930&gt;)
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:76: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_old_unavailable_boarding_binding_requires_replan_before_query" time="0.005"><failure message="AssertionError: assert ('model_revalidated' == 'needs_replan'&#10;  &#10;  - needs_replan&#10;  + model_revalidated)">def test_old_unavailable_boarding_binding_requires_replan_before_query():
+        rt, context = world()
+        context['options']['p']['legs'][0]['from'] = '영등포시장'
+        context['options']['p']['check']['legs'][0]['from'] = '영등포시장'
+        context['options']['p']['subway_identity'] = {'status': 'unavailable', 'reason': 'station_identity_unmapped'}
+        queried = []
+        got = call(rt, context, subway_arrival=lambda *a, **kw: queried.append(a))
+&gt;       assert got['status'] == 'needs_replan' and got['reason'] == 'subway_identity_changed'
+E       AssertionError: assert ('model_revalidated' == 'needs_replan'
+E         
+E         - needs_replan
+E         + model_revalidated)
+
+tests\unit\travel\mobility\test_subway_primary_name_v1.py:88: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_primary_name_v1" name="test_missing_middle_identity_still_excludes_service_without_synthetic_id" time="0.005" /></testsuite></testsuites>

@@ -1,0 +1,1337 @@
+{
+ "pbf": "south-korea-latest.osm.pbf",
+ "radius_m": 45.0,
+ "targets": [
+  {
+   "od": "W01",
+   "seq": 7,
+   "ment": "횡단보도 이용",
+   "kakao_pts": [
+    [
+     126.9809322,
+     37.5688326
+    ],
+    [
+     126.9809367,
+     37.5688795
+    ]
+   ],
+   "osm": {
+    "ways": [
+     {
+      "id": 73541403,
+      "n_nodes": 18,
+      "tags": {
+       "highway": "primary",
+       "name": "청계천로",
+       "oneway": "yes"
+      },
+      "len_m": 660.5
+     },
+     {
+      "id": 156922847,
+      "n_nodes": 73,
+      "tags": {
+       "highway": "footway",
+       "layer": "-1"
+      },
+      "len_m": 1445.4
+     },
+     {
+      "id": 233651327,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "residential",
+       "name": "을지로3길"
+      },
+      "len_m": 239.8
+     },
+     {
+      "id": 238534228,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 4.7
+     },
+     {
+      "id": 302087645,
+      "n_nodes": 3,
+      "tags": {
+       "foot": "yes",
+       "highway": "steps",
+       "layer": "-1",
+       "name": "광통교 진출입 계단 3번"
+      },
+      "len_m": 4.7
+     },
+     {
+      "id": 350127794,
+      "n_nodes": 15,
+      "tags": {
+       "highway": "primary",
+       "name": "청계천로",
+       "oneway": "yes"
+      },
+      "len_m": 469.7
+     },
+     {
+      "id": 377289811,
+      "n_nodes": 48,
+      "tags": {
+       "highway": "footway",
+       "layer": "-1"
+      },
+      "len_m": 1449.9
+     },
+     {
+      "id": 506252730,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "residential",
+       "oneway": "yes"
+      },
+      "len_m": 107.7
+     },
+     {
+      "id": 656122968,
+      "n_nodes": 2,
+      "tags": {
+       "bridge": "yes",
+       "highway": "footway",
+       "layer": "1"
+      },
+      "len_m": 27.0
+     },
+     {
+      "id": 656122969,
+      "n_nodes": 4,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 9.1
+     },
+     {
+      "id": 769719698,
+      "n_nodes": 52,
+      "tags": {
+       "man_made": "dyke"
+      },
+      "len_m": 2729.0
+     },
+     {
+      "id": 1002205234,
+      "n_nodes": 9,
+      "tags": {
+       "leisure": "park"
+      },
+      "len_m": 225.8
+     },
+     {
+      "id": 1002205235,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 111.9
+     },
+     {
+      "id": 1212442527,
+      "n_nodes": 14,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 411.2
+     },
+     {
+      "id": 1212442529,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 1.3
+     },
+     {
+      "id": 1212442530,
+      "n_nodes": 7,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 280.2
+     },
+     {
+      "id": 1212442544,
+      "n_nodes": 11,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 285.5
+     },
+     {
+      "id": 1389696659,
+      "n_nodes": 45,
+      "tags": {
+       "man_made": "dyke"
+      },
+      "len_m": 2731.2
+     }
+    ],
+    "nodes": [
+     {
+      "id": 11233115446,
+      "ll": [
+       126.9810187,
+       37.5691802
+      ],
+      "tags": {
+       "highway": "crossing"
+      }
+     },
+     {
+      "id": 11233115532,
+      "ll": [
+       126.9811017,
+       37.5688031
+      ],
+      "tags": {
+       "highway": "crossing"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "od": "W01",
+   "seq": 9,
+   "ment": "교량 진입",
+   "kakao_pts": [
+    [
+     126.980982,
+     37.5688795
+    ],
+    [
+     126.9810137,
+     37.5690957
+    ]
+   ],
+   "osm": {
+    "ways": [
+     {
+      "id": 73541403,
+      "n_nodes": 18,
+      "tags": {
+       "highway": "primary",
+       "name": "청계천로",
+       "oneway": "yes"
+      },
+      "len_m": 660.5
+     },
+     {
+      "id": 156922847,
+      "n_nodes": 73,
+      "tags": {
+       "highway": "footway",
+       "layer": "-1"
+      },
+      "len_m": 1445.4
+     },
+     {
+      "id": 233651327,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "residential",
+       "name": "을지로3길"
+      },
+      "len_m": 239.8
+     },
+     {
+      "id": 238534228,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 4.7
+     },
+     {
+      "id": 302087645,
+      "n_nodes": 3,
+      "tags": {
+       "foot": "yes",
+       "highway": "steps",
+       "layer": "-1",
+       "name": "광통교 진출입 계단 3번"
+      },
+      "len_m": 4.7
+     },
+     {
+      "id": 350127794,
+      "n_nodes": 15,
+      "tags": {
+       "highway": "primary",
+       "name": "청계천로",
+       "oneway": "yes"
+      },
+      "len_m": 469.7
+     },
+     {
+      "id": 377289811,
+      "n_nodes": 48,
+      "tags": {
+       "highway": "footway",
+       "layer": "-1"
+      },
+      "len_m": 1449.9
+     },
+     {
+      "id": 506252730,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "residential",
+       "oneway": "yes"
+      },
+      "len_m": 107.7
+     },
+     {
+      "id": 656122968,
+      "n_nodes": 2,
+      "tags": {
+       "bridge": "yes",
+       "highway": "footway",
+       "layer": "1"
+      },
+      "len_m": 27.0
+     },
+     {
+      "id": 656122969,
+      "n_nodes": 4,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 9.1
+     },
+     {
+      "id": 769719698,
+      "n_nodes": 52,
+      "tags": {
+       "man_made": "dyke"
+      },
+      "len_m": 2729.0
+     },
+     {
+      "id": 829964064,
+      "n_nodes": 5,
+      "tags": {
+       "leisure": "park"
+      },
+      "len_m": 177.8
+     },
+     {
+      "id": 1002205234,
+      "n_nodes": 9,
+      "tags": {
+       "leisure": "park"
+      },
+      "len_m": 225.8
+     },
+     {
+      "id": 1002205235,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 111.9
+     },
+     {
+      "id": 1212442527,
+      "n_nodes": 14,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 411.2
+     },
+     {
+      "id": 1212442529,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 1.3
+     },
+     {
+      "id": 1212442530,
+      "n_nodes": 7,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 280.2
+     },
+     {
+      "id": 1212442544,
+      "n_nodes": 11,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 285.5
+     },
+     {
+      "id": 1389696659,
+      "n_nodes": 45,
+      "tags": {
+       "man_made": "dyke"
+      },
+      "len_m": 2731.2
+     }
+    ],
+    "nodes": [
+     {
+      "id": 11233115446,
+      "ll": [
+       126.9810187,
+       37.5691802
+      ],
+      "tags": {
+       "highway": "crossing"
+      }
+     },
+     {
+      "id": 11233115532,
+      "ll": [
+       126.9811017,
+       37.5688031
+      ],
+      "tags": {
+       "highway": "crossing"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "od": "W01",
+   "seq": 11,
+   "ment": "이마트24까지 횡단보도 이용",
+   "kakao_pts": [
+    [
+     126.98124,
+     37.5690813
+    ],
+    [
+     126.98124,
+     37.5691822
+    ]
+   ],
+   "osm": {
+    "ways": [
+     {
+      "id": 73541403,
+      "n_nodes": 18,
+      "tags": {
+       "highway": "primary",
+       "name": "청계천로",
+       "oneway": "yes"
+      },
+      "len_m": 660.5
+     },
+     {
+      "id": 156922847,
+      "n_nodes": 73,
+      "tags": {
+       "highway": "footway",
+       "layer": "-1"
+      },
+      "len_m": 1445.4
+     },
+     {
+      "id": 233651327,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "residential",
+       "name": "을지로3길"
+      },
+      "len_m": 239.8
+     },
+     {
+      "id": 238534228,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 4.7
+     },
+     {
+      "id": 302087645,
+      "n_nodes": 3,
+      "tags": {
+       "foot": "yes",
+       "highway": "steps",
+       "layer": "-1",
+       "name": "광통교 진출입 계단 3번"
+      },
+      "len_m": 4.7
+     },
+     {
+      "id": 350127794,
+      "n_nodes": 15,
+      "tags": {
+       "highway": "primary",
+       "name": "청계천로",
+       "oneway": "yes"
+      },
+      "len_m": 469.7
+     },
+     {
+      "id": 377289811,
+      "n_nodes": 48,
+      "tags": {
+       "highway": "footway",
+       "layer": "-1"
+      },
+      "len_m": 1449.9
+     },
+     {
+      "id": 656122968,
+      "n_nodes": 2,
+      "tags": {
+       "bridge": "yes",
+       "highway": "footway",
+       "layer": "1"
+      },
+      "len_m": 27.0
+     },
+     {
+      "id": 656122969,
+      "n_nodes": 4,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 9.1
+     },
+     {
+      "id": 769719698,
+      "n_nodes": 52,
+      "tags": {
+       "man_made": "dyke"
+      },
+      "len_m": 2729.0
+     },
+     {
+      "id": 829964067,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "residential"
+      },
+      "len_m": 95.9
+     },
+     {
+      "id": 1002205234,
+      "n_nodes": 9,
+      "tags": {
+       "leisure": "park"
+      },
+      "len_m": 225.8
+     },
+     {
+      "id": 1002205235,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 111.9
+     },
+     {
+      "id": 1212442527,
+      "n_nodes": 14,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 411.2
+     },
+     {
+      "id": 1212442529,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 1.3
+     },
+     {
+      "id": 1212442530,
+      "n_nodes": 7,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 280.2
+     },
+     {
+      "id": 1212442544,
+      "n_nodes": 11,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 285.5
+     },
+     {
+      "id": 1389696659,
+      "n_nodes": 45,
+      "tags": {
+       "man_made": "dyke"
+      },
+      "len_m": 2731.2
+     }
+    ],
+    "nodes": [
+     {
+      "id": 11233115446,
+      "ll": [
+       126.9810187,
+       37.5691802
+      ],
+      "tags": {
+       "highway": "crossing"
+      }
+     },
+     {
+      "id": 11233115532,
+      "ll": [
+       126.9811017,
+       37.5688031
+      ],
+      "tags": {
+       "highway": "crossing"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "od": "W02",
+   "seq": 2,
+   "ment": "정부서울청사교차로에서 횡단보도 이용",
+   "kakao_pts": [
+    [
+     126.974427,
+     37.5761029
+    ],
+    [
+     126.9741916,
+     37.5760813
+    ]
+   ],
+   "osm": {
+    "ways": [
+     {
+      "id": 221423578,
+      "n_nodes": 13,
+      "tags": {
+       "highway": "service",
+       "name": "자하문로2길",
+       "oneway": "yes",
+       "service": "alley"
+      },
+      "len_m": 152.8
+     },
+     {
+      "id": 305411251,
+      "n_nodes": 6,
+      "tags": {
+       "highway": "service",
+       "name": "사직로",
+       "service": "alley"
+      },
+      "len_m": 46.9
+     },
+     {
+      "id": 305411293,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "service",
+       "name": "사직로",
+       "service": "alley"
+      },
+      "len_m": 26.6
+     },
+     {
+      "id": 317763792,
+      "n_nodes": 62,
+      "tags": {
+       "footway": "sidewalk",
+       "highway": "footway"
+      },
+      "len_m": 1597.1
+     },
+     {
+      "id": 446665402,
+      "n_nodes": 16,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 214.1
+     },
+     {
+      "id": 446665406,
+      "n_nodes": 3,
+      "tags": {
+       "foot": "yes",
+       "footway": "crossing",
+       "highway": "footway"
+      },
+      "len_m": 23.4
+     },
+     {
+      "id": 446744658,
+      "n_nodes": 16,
+      "tags": {
+       "highway": "cycleway",
+       "oneway": "yes"
+      },
+      "len_m": 831.0
+     },
+     {
+      "id": 446747950,
+      "n_nodes": 46,
+      "tags": {
+       "area": "yes",
+       "highway": "pedestrian"
+      },
+      "len_m": 1026.0
+     },
+     {
+      "id": 908603619,
+      "n_nodes": 18,
+      "tags": {
+       "highway": "primary",
+       "name": "사직로",
+       "oneway": "yes",
+       "sidewalk:left": "no",
+       "sidewalk:right": "separate"
+      },
+      "len_m": 260.2
+     },
+     {
+      "id": 1147603101,
+      "n_nodes": 7,
+      "tags": {
+       "highway": "tertiary",
+       "name": "효자로"
+      },
+      "len_m": 134.5
+     },
+     {
+      "id": 1147603105,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "service",
+       "name": "사직로",
+       "service": "alley"
+      },
+      "len_m": 23.3
+     },
+     {
+      "id": 1153283296,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "tertiary_link",
+       "name": "새문안로5길",
+       "oneway": "yes"
+      },
+      "len_m": 15.0
+     },
+     {
+      "id": 1153283298,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "primary",
+       "name": "사직로",
+       "oneway": "yes",
+       "sidewalk:left": "no",
+       "sidewalk:right": "separate"
+      },
+      "len_m": 148.6
+     },
+     {
+      "id": 1153283300,
+      "n_nodes": 4,
+      "tags": {
+       "highway": "primary",
+       "name": "사직로",
+       "oneway": "yes"
+      },
+      "len_m": 147.1
+     },
+     {
+      "id": 1231339955,
+      "n_nodes": 2,
+      "tags": {
+       "foot": "yes",
+       "highway": "footway"
+      },
+      "len_m": 2.2
+     },
+     {
+      "id": 1350696281,
+      "n_nodes": 9,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 200.0
+     },
+     {
+      "id": 1487807695,
+      "n_nodes": 9,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 192.3
+     },
+     {
+      "id": 1498257492,
+      "n_nodes": 35,
+      "tags": {
+       "highway": "cycleway",
+       "oneway": "yes"
+      },
+      "len_m": 441.7
+     }
+    ],
+    "nodes": [
+     {
+      "id": 4439016772,
+      "ll": [
+       126.9741381,
+       37.5760105
+      ],
+      "tags": {
+       "barrier": "kerb"
+      }
+     },
+     {
+      "id": 4439016773,
+      "ll": [
+       126.974242,
+       37.5760298
+      ],
+      "tags": {
+       "crossing": "traffic_signals",
+       "highway": "crossing"
+      }
+     },
+     {
+      "id": 7676556629,
+      "ll": [
+       126.9743995,
+       37.5760446
+      ],
+      "tags": {
+       "barrier": "kerb"
+      }
+     },
+     {
+      "id": 11202943786,
+      "ll": [
+       126.9742486,
+       37.5759848
+      ],
+      "tags": {
+       "highway": "traffic_signals"
+      }
+     },
+     {
+      "id": 13639613442,
+      "ll": [
+       126.9744445,
+       37.5760968
+      ],
+      "tags": {
+       "barrier": "gate"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "od": "W03",
+   "seq": 5,
+   "ment": "마산아구찜 앞에서 횡단보도 이용",
+   "kakao_pts": [
+    [
+     126.9885776,
+     37.5726392
+    ],
+    [
+     126.9885776,
+     37.5725419
+    ]
+   ],
+   "osm": {
+    "ways": [
+     {
+      "id": 37403263,
+      "n_nodes": 11,
+      "tags": {
+       "highway": "tertiary",
+       "name": "돈화문로11길"
+      },
+      "len_m": 268.4
+     },
+     {
+      "id": 184444067,
+      "n_nodes": 10,
+      "tags": {
+       "highway": "residential",
+       "name": "수표로"
+      },
+      "len_m": 250.7
+     },
+     {
+      "id": 184445044,
+      "n_nodes": 5,
+      "tags": {
+       "highway": "residential"
+      },
+      "len_m": 115.9
+     },
+     {
+      "id": 329261513,
+      "n_nodes": 4,
+      "tags": {
+       "highway": "residential",
+       "name": "수표로28길"
+      },
+      "len_m": 90.9
+     },
+     {
+      "id": 419812905,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "residential",
+       "name": "종로17길"
+      },
+      "len_m": 67.2
+     },
+     {
+      "id": 842786700,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 60.8
+     },
+     {
+      "id": 1013396417,
+      "n_nodes": 4,
+      "tags": {
+       "highway": "tertiary",
+       "layer": "-1",
+       "name": "돈화문로11길",
+       "tunnel": "yes"
+      },
+      "len_m": 62.9
+     }
+    ],
+    "nodes": []
+   }
+  },
+  {
+   "od": "W03",
+   "seq": 7,
+   "ment": "상록한방 전통찻집 앞에서 왼쪽길로 87m 이동(종로17길)",
+   "kakao_pts": [
+    [
+     126.9884101,
+     37.5725599
+    ],
+    [
+     126.9881883,
+     37.5721021
+    ],
+    [
+     126.9881204,
+     37.5719363
+    ],
+    [
+     126.9881295,
+     37.5718173
+    ]
+   ],
+   "osm": {
+    "ways": [
+     {
+      "id": 37403263,
+      "n_nodes": 11,
+      "tags": {
+       "highway": "tertiary",
+       "name": "돈화문로11길"
+      },
+      "len_m": 268.4
+     },
+     {
+      "id": 184444067,
+      "n_nodes": 10,
+      "tags": {
+       "highway": "residential",
+       "name": "수표로"
+      },
+      "len_m": 250.7
+     },
+     {
+      "id": 184445044,
+      "n_nodes": 5,
+      "tags": {
+       "highway": "residential"
+      },
+      "len_m": 115.9
+     },
+     {
+      "id": 306381845,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 6.8
+     },
+     {
+      "id": 306381853,
+      "n_nodes": 25,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 307.0
+     },
+     {
+      "id": 306384115,
+      "n_nodes": 4,
+      "tags": {
+       "highway": "steps"
+      },
+      "len_m": 19.9
+     },
+     {
+      "id": 306384116,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "residential",
+       "name": "삼일대로"
+      },
+      "len_m": 45.6
+     },
+     {
+      "id": 329261513,
+      "n_nodes": 4,
+      "tags": {
+       "highway": "residential",
+       "name": "수표로28길"
+      },
+      "len_m": 90.9
+     },
+     {
+      "id": 344665758,
+      "n_nodes": 6,
+      "tags": {
+       "highway": "residential",
+       "name": "종로17길"
+      },
+      "len_m": 94.7
+     },
+     {
+      "id": 419812905,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "residential",
+       "name": "종로17길"
+      },
+      "len_m": 67.2
+     },
+     {
+      "id": 517318140,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "primary",
+       "layer": "-1",
+       "name": "삼일대로",
+       "oneway": "yes",
+       "tunnel": "yes"
+      },
+      "len_m": 78.3
+     },
+     {
+      "id": 717851360,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "primary",
+       "name": "삼일대로",
+       "oneway": "yes"
+      },
+      "len_m": 194.4
+     },
+     {
+      "id": 842786700,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 60.8
+     },
+     {
+      "id": 1013396414,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "primary",
+       "name": "삼일대로",
+       "oneway": "yes"
+      },
+      "len_m": 194.2
+     },
+     {
+      "id": 1013396415,
+      "n_nodes": 7,
+      "tags": {
+       "highway": "primary",
+       "layer": "-1",
+       "name": "삼일대로",
+       "oneway": "yes",
+       "tunnel": "yes"
+      },
+      "len_m": 170.2
+     },
+     {
+      "id": 1013396417,
+      "n_nodes": 4,
+      "tags": {
+       "highway": "tertiary",
+       "layer": "-1",
+       "name": "돈화문로11길",
+       "tunnel": "yes"
+      },
+      "len_m": 62.9
+     },
+     {
+      "id": 1214925515,
+      "n_nodes": 6,
+      "tags": {
+       "leisure": "garden"
+      },
+      "len_m": 69.8
+     },
+     {
+      "id": 1554513242,
+      "n_nodes": 19,
+      "tags": {
+       "area": "yes",
+       "highway": "pedestrian"
+      },
+      "len_m": 462.8
+     }
+    ],
+    "nodes": []
+   }
+  },
+  {
+   "od": "W03",
+   "seq": 9,
+   "ment": "서울원각사지 십층석탑까지 왼쪽길로 24m 이동",
+   "kakao_pts": [
+    [
+     126.9878941,
+     37.5714424
+    ],
+    [
+     126.9881567,
+     37.5713595
+    ]
+   ],
+   "osm": {
+    "ways": [
+     {
+      "id": 26658460,
+      "n_nodes": 36,
+      "tags": {
+       "highway": "residential",
+       "name": "인사동길",
+       "oneway": "yes",
+       "sidewalk": "both"
+      },
+      "len_m": 640.2
+     },
+     {
+      "id": 306381842,
+      "n_nodes": 29,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 121.6
+     },
+     {
+      "id": 306381845,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 6.8
+     },
+     {
+      "id": 306381853,
+      "n_nodes": 25,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 307.0
+     },
+     {
+      "id": 306381856,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 33.2
+     },
+     {
+      "id": 306381857,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 24.8
+     },
+     {
+      "id": 306384116,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "residential",
+       "name": "삼일대로"
+      },
+      "len_m": 45.6
+     },
+     {
+      "id": 468233448,
+      "n_nodes": 3,
+      "tags": {
+       "highway": "footway"
+      },
+      "len_m": 65.8
+     },
+     {
+      "id": 717851360,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "primary",
+       "name": "삼일대로",
+       "oneway": "yes"
+      },
+      "len_m": 194.4
+     },
+     {
+      "id": 1013396414,
+      "n_nodes": 8,
+      "tags": {
+       "highway": "primary",
+       "name": "삼일대로",
+       "oneway": "yes"
+      },
+      "len_m": 194.2
+     },
+     {
+      "id": 1316053180,
+      "n_nodes": 14,
+      "tags": {
+       "area": "yes",
+       "highway": "pedestrian"
+      },
+      "len_m": 113.9
+     },
+     {
+      "id": 1554513242,
+      "n_nodes": 19,
+      "tags": {
+       "area": "yes",
+       "highway": "pedestrian"
+      },
+      "len_m": 462.8
+     }
+    ],
+    "nodes": [
+     {
+      "id": 11480736801,
+      "ll": [
+       126.987561,
+       37.5712752
+      ],
+      "tags": {
+       "highway": "bus_stop",
+       "name": "남인사마당"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "od": "W02",
+   "seq": 5,
+   "ment": "지지배배한복 앞에서 오른쪽길로 39m 이동",
+   "kakao_pts": [
+    [
+     126.9733586,
+     37.5765355
+    ],
+    [
+     126.9733586,
+     37.5766724
+    ]
+   ],
+   "osm": {
+    "ways": [
+     {
+      "id": 221423578,
+      "n_nodes": 13,
+      "tags": {
+       "highway": "service",
+       "name": "자하문로2길",
+       "oneway": "yes",
+       "service": "alley"
+      },
+      "len_m": 152.8
+     },
+     {
+      "id": 305411250,
+      "n_nodes": 5,
+      "tags": {
+       "highway": "service",
+       "name": "사직로",
+       "service": "alley"
+      },
+      "len_m": 64.8
+     },
+     {
+      "id": 305411252,
+      "n_nodes": 6,
+      "tags": {
+       "highway": "service",
+       "name": "사직로",
+       "service": "alley"
+      },
+      "len_m": 72.6
+     },
+     {
+      "id": 305411293,
+      "n_nodes": 2,
+      "tags": {
+       "highway": "service",
+       "name": "사직로",
+       "service": "alley"
+      },
+      "len_m": 26.6
+     }
+    ],
+    "nodes": []
+   }
+  }
+ ]
+}

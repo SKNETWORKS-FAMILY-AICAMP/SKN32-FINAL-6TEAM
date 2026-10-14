@@ -1,0 +1,22 @@
+ISOLATED_LINUX_BEGIN {"python": "3.12.15", "platform": "linux", "verified_files": 434, "selected_tests": ["tests/e2e/test_web_conversation_resume.py::test_missing_minutes_waits_and_reply_reaches_same_real_team", "tests/e2e/test_web_conversation_resume.py::test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice", "tests/e2e/test_web_conversation_resume.py::test_authenticated_web_reply_after_refresh_does_not_require_raw_token"], "database": "ephemeral-synthetic-only", "inherited_environment_cleared": true}
+SYNTHETIC_DATABASE_READY {"baseline_migrations": 85, "database": "synthetic", "user": "synthetic", "operating_data_copied": false}
+============================= test session starts ==============================
+platform linux -- Python 3.12.15, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /tmp/candidate-check
+configfile: pytest.ini
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 3 items
+
+tests/e2e/test_web_conversation_resume.py::test_missing_minutes_waits_and_reply_reaches_same_real_team PASSED [ 33%]
+tests/e2e/test_web_conversation_resume.py::test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice PASSED [ 66%]
+tests/e2e/test_web_conversation_resume.py::test_authenticated_web_reply_after_refresh_does_not_require_raw_token PASSED [100%]
+
+=============================== warnings summary ===============================
+../../usr/local/lib/python3.12/site-packages/starlette/testclient.py:51
+  /usr/local/lib/python3.12/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 3 passed, 1 warning in 4.04s =========================
+ISOLATED_LINUX_END {"exit_code": 0, "seconds": 4.422}
+ISOLATED_DB_ORCHESTRATION {"operating_database_connected": false, "operating_volumes_connected": false, "operating_environment_forwarded": false, "image_pull": false, "images": ["sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294", "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"], "network_internal": true, "database_tmpfs_destinations": ["/tmp", "/var/lib/postgresql/data"], "database_mounts": [], "pytest_process_exit_code": 0, "remaining_temporary_containers": [], "remaining_temporary_network": false, "cleanup_errors": []}

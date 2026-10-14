@@ -1,6 +1,7 @@
 import { compareItems, streamedReview } from "@/features/intake-review/stream-model";
 import type { IntakeView } from "@/lib/live/intake";
 import { modeChoiceOf } from "@/lib/live/move-options";
+import { webTaxiPricingOf } from "@/lib/live/taxi-pricing";
 import type { StreamLine, StreamState } from "@/lib/live/intake-events";
 import type { Candidate, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
@@ -50,7 +51,7 @@ function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanIt
   // The place the customer picked names the card; the words they wrote stay for the editor and as a small line under it.
   const picked = item.place_state === "customer" && item.place?.name && item.place.name !== item.title ? item.place.name : null;
   return {
-    id: item.id, day, date: item.date ?? "", startsAt: item.starts_at ?? "", endsAt: item.ends_at ?? "",
+    id: item.id, day, date: item.date ?? "", startsAt: item.starts_at ?? "", endsAt: item.ends_at ?? "", ...(item.end_date ? { endDate: item.end_date } : {}),
     title: picked ?? item.title, ...(picked && { written: item.title }), place: item.place?.name ?? "", noPlace: item.place_state === "none", kind: item.kind ?? item.place?.kind ?? null,
     coordinates: located(item.place) ? { lat: item.place.latitude, lng: item.place.longitude } : null,
     checks: (item.rows ?? []).map(row), rereads: rereadsOf(item), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
@@ -59,7 +60,10 @@ function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanIt
 
 function planMove(move: ReviewMove, dayOf: Map<string, number>): PlanMove {
   return {
-    id: `${move.from}:${move.to}`, fromId: move.from, toId: move.to, day: dayOf.get(move.from) ?? move.day ?? 1,
+    id: `${move.from}:${move.to}`, fromId: move.from, toId: move.to,
+    // `[2026-10-13]` A morning move from the stay belongs to the day it opens (its `to`), not the check-in day of the stay.
+    day: move.from_stay ? (move.day ?? dayOf.get(move.to) ?? 1) : (dayOf.get(move.from) ?? move.day ?? 1),
+    ...(move.from_stay ? { fromStay: true } : {}),
     departAt: move.depart ?? "", mode: move.mode_label ?? "", summary: move.summary,
     minutes: move.minutes ?? null, arriveAt: move.arrive ?? "", slackMin: move.slack_min ?? null, estimated: move.basis === "estimate",
     modeKey: move.mode ?? null, recommendedMode: move.recommended_mode ?? null, modeChoice: modeChoiceOf(move.mode_choice),
@@ -89,7 +93,7 @@ export function viewOfReview(base: PlanCheckView, review: ReviewShape, stage: Pl
  */
 export function reviewResultOf(intake: ReviewedIntakeView, base: PlanCheckView, infos?: Readonly<Record<string, PlaceInfo>>): PlanCheckView | null {
   if (!intake.review) return null;
-  return viewOfReview({ ...base, title: intake.check?.title ?? null }, intake.review, "done", infos);
+  return viewOfReview({ ...base, revision: intake.revision, title: intake.check?.title ?? null, taxiPricing: webTaxiPricingOf(intake.review.taxi_pricing) }, intake.review, "done", infos);
 }
 
 /** Lines the stream has told about that the intake does not hold yet (a read that is a moment ahead of the GET). */

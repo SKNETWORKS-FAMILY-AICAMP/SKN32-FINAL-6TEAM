@@ -1,0 +1,18 @@
+{
+  "job": {
+    "id": "frog_h",
+    "label": "FrogNano-4B-2609",
+    "our_training": false,
+    "model": "/workspace/ollama/blobs/sha256-ea42d264c21d88b9bf6ce583bb3fd4dfddb22eb5b30efba9e305c56f75974c86",
+    "prompts": "/workspace/heavy/all_prompts_h.json",
+    "script": "/workspace/heavy/d_test_llama_lp.py",
+    "tag": "h_backlog_frog",
+    "port": 8401,
+    "logprobs": "1",
+    "expected": 1316
+  },
+  "started": "2026-10-08T00:46:14.339393+00:00",
+  "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

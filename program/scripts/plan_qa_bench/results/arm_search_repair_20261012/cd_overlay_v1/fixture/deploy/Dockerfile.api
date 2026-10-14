@@ -1,0 +1,39 @@
+# triPilot API 이미지 — 고객 릴리스 빌드(`app.presentation.api.app:app`)와 상시 작업(되잡기 · 바깥함 일꾼)이 같은 이미지를 쓴다.
+#
+# ★빌드 맥락 = 저장소의 `final_project_cs/` (이 파일은 `deploy/Dockerfile.api`).
+# ★비밀값은 이미지에 넣지 않는다 — `.env` 는 서버에서 `env_file` 로만 읽는다(`.dockerignore` 가 막는다).
+# ★관리용 빌드(`app.entrypoint`, `/composer/*` · `/admin/reload`)는 이 이미지로 안 띄운다 — 릴리스 빌드에는 그 경로가 아예 없다.
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    TZ=Asia/Seoul
+
+# tzdata — 앱이 `ZoneInfo("Asia/Seoul")` 을 쓴다. slim 이미지에는 시간대 표가 없다.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends tzdata curl \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /srv
+
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
+
+# 실행에 필요한 것만 — 시험 · 평가 · 문서 · 옛 판(legacy)은 넣지 않는다.
+COPY app ./app
+COPY config ./config
+COPY prompts ./prompts
+COPY scripts ./scripts
+COPY var/notice_phrasebook.json ./var/notice_phrasebook.json
+COPY deploy/worker.sh ./deploy/worker.sh
+
+# 기록이 쌓이는 곳(`var/ops`) — 서버에서 볼륨으로 붙인다.
+RUN mkdir -p /srv/var/ops && chmod +x /srv/deploy/worker.sh
+
+EXPOSE 8043
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:8043/health || exit 1
+
+# 앞에 역방향 프록시(Caddy)가 있다 — 원 주소는 `ACOP_TRUSTED_PROXIES` 가 믿는 주소에서 온 `X-Forwarded-For` 만 쓴다(앱이 직접 판단).
+CMD ["uvicorn", "app.presentation.api.app:app", "--host", "0.0.0.0", "--port", "8043", "--no-server-header"]

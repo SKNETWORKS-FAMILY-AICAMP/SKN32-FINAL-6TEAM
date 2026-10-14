@@ -1,0 +1,18 @@
+{
+  "disk": [
+    "107374182400 84127395840 23246786560 79% /",
+    "107374182400 84127395840 23246786560 79% /",
+    "107374182400 84127395840 23246786560 79% /"
+  ],
+  "configs": {
+    "/root/hf_models/spark_s1_4b/config.json": false,
+    "/root/hf_models/jevify_e4b/config.json": false,
+    "/root/hf_models/gemma-4-E4B-it/config.json": true
+  },
+  "download_space_check": "Avail\n  22G",
+  "b56_status": {
+    "/root/daily_rag_20261008/job.log": "[2026-10-08T00:33:06Z] FINCH 통합 검증 시작: 학습 자료 첫 16개, optimizer 4회\nSMOKE_VERIFIED 16/16 rows; 4/4 optimizer steps\n[2026-10-08T00:34:31Z] FINCH 통합 검증 완료\n[2026-10-08T00:34:31Z] 기존 세 후보 대기열 B54 종료 대기\n",
+    "/root/daily_rag_20261008/status.log": "[2026-10-08T00:33:06Z] FINCH 통합 검증 시작: 학습 자료 첫 16개, optimizer 4회\n[2026-10-08T00:34:31Z] FINCH 통합 검증 완료\n[2026-10-08T00:34:31Z] 기존 세 후보 대기열 B54 종료 대기\n",
+    "/root/daily_rag_20261008/smoke.log": "학습 문제 16/16 · 평균 길이 2063 토큰 · 정답 토큰 평균 6.6\n\nLoading weights:   0%|          | 0/2076 [00:00<?, ?it/s]\nLoading weights:   7%|▋         | 139/2076 [00:00<00:01, 1376.90it/s]\nLoading weights:  24%|██▍       | 504/2076 [00:00<00:00, 2694.88it/s]\nLoading weights:  37%|███▋      | 774/2076 [00:01<00:03, 430.68it/s] \nLoading weights:  45%|████▍     | 931/2076 [00:01<00:02, 451.19it/s]\nLoading weights:  50%|█████     | 1046/2076 [00:01<00:02, 472.92it/s]\nLoading weights:  55%|█████▍    | 1140/2076 [00:02<00:01, 472.80it/s]\nLoading weights:  59%|█████▊    | 1219/2076 [00:02<00:01, 474.64it/s]\nLoading weights:  62%|██████▏   | 1288/2076 [00:02<00:01, 478.08it/s]\nLoading weights:  65%|██████▌   | 1351/2076 [00:02<00:01, 463.63it/s]\nLoading weights:  68%|██████▊   | 1407/2076 [00:02<00:01, 461.74it/s]\nLoading weights:  84%|████████▍ | 1749/2076 [00:02<00:00, 1041.93it/s]\nLoading weights: 100%|██████████| 2076/2076 [00:02<00:00, 710.10it/s] \n모델 올림 Gemma4ForConditionalGeneration · GPU 메모리 8.7GB\ntrainable params: 34,881,536 || all params: 7,975,982,368 || trainable%: 0.4373\n초기 손실 측정 16/16\n초기 손실 0.088101\n[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.\nep 1 step 4/4 loss 0.0687 lr 5.00e-05 0.9분 · 남은 약 0분 · 최대 GPU 10.6GB\n저장 /root/adapters/smoke_finch_20261008 총 0.9분\n"
+  }
+}

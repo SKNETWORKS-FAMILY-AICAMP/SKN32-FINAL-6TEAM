@@ -1,0 +1,37 @@
+[
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0704_급행안내_저장대조/departure_context.py",
+    "sha256": "b07d0e72a2ed4e4d95e07922e41728131d5b7976021a413901c7b074a869d793"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/_backup/2026-10-09_0704_급행안내_저장대조/wiring.py",
+    "sha256": "d0ed6dca374ad2e2d0c4fbc242a77e822fbaca4138976f468ba13ded763c0d67"
+  },
+  {
+    "file": "final_project_cs/app/composition.py",
+    "backup": "final_project_cs/app/_backup/2026-10-09_0704_급행안내_저장대조/composition.py",
+    "sha256": "bbe529d6b9d6215de6166a1295df5e8288e2cfaa070dde19bed637d68615b08d"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_reminders.py",
+    "backup": "final_project_cs/app/domains/travel_ops/components/watch/_backup/2026-10-09_0704_급행안내_저장대조/trip_reminders.py",
+    "sha256": "2ce55016b35d05ca61d24c4fa31639caf177f017a6be5feb33554b30390772e4"
+  },
+  {
+    "file": "final_project_cs/app/domains/travel_ops/components/watch/departure_revalidation.py",
+    "backup": "final_project_cs/app/domains/travel_ops/components/watch/_backup/2026-10-09_0704_급행안내_저장대조/departure_revalidation.py",
+    "sha256": "f023b1e9974994851693da8e12d146bd82887bcb8b8fd51619b1d8a7fae2863f"
+  },
+  {
+    "file": "final_project_cs/tests/scenario/test_departure_express_db_v1.py",
+    "backup": "final_project_cs/tests/scenario/_backup/2026-10-09_0704_급행안내_저장대조/test_departure_express_db_v1.py",
+    "sha256": "44e138d723652b54e25bb7600d68ba9406aa41ada9ab8f2a5d17e0c7d6232cad"
+  },
+  {
+    "file": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0704_급행안내_저장대조/mobility.md",
+    "sha256": "5684e1496b393f8f0e24d2c4bd1afb03c53bf5505b1208ca77c19c440cdd8dad"
+  }
+]

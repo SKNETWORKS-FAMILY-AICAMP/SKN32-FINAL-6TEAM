@@ -1,0 +1,16 @@
+$ErrorActionPreference='Stop'
+$env:NODE_OPTIONS='--max-old-space-size=768'
+$env:NEXT_PUBLIC_DATA_MODE='live'
+$env:NEXT_PUBLIC_API_BASE='http://127.0.0.1:8187'
+$env:NEXT_PUBLIC_MAP_PROVIDER='osm'
+$env:NEXT_PUBLIC_OSM_TILE_URL='http://127.0.0.1:8187/__test/tile/{z}/{x}/{y}.png'
+$env:NEXT_PUBLIC_NAVER_MAP_CLIENT_ID=''
+$env:NEXT_PUBLIC_GOOGLE_MAP_API_KEY=''
+$env:NEXT_PUBLIC_GOOGLE_MAP_ID=''
+$env:NEXT_PUBLIC_TURNSTILE_SITE_KEY=''
+$env:NEXT_DIST_DIR='.next-live'
+& 'C:/Program Files/nodejs/node.exe' 'node_modules/next/dist/bin/next' build --webpack *> '../map-direction-20261012-v4/build-live.log'
+$taskExit=$LASTEXITCODE
+@{Exit=$taskExit;Completed=(Get-Date).ToString('o')} | ConvertTo-Json | Set-Content '../map-direction-20261012-v4/build-live-status.json'
+Get-Content '../map-direction-20261012-v4/build-live-status.json'
+exit $taskExit

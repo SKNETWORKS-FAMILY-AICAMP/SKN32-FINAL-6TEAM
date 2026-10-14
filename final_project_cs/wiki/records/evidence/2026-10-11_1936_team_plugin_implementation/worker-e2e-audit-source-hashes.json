@@ -1,0 +1,26 @@
+[
+  {
+    "sha256": "884F2A6A7868B6D916ADA155E5556A95F0E5F018F1CC2B614CD900D7929C079C",
+    "path": "scripts/run_sweepers.py"
+  },
+  {
+    "sha256": "DAB112C6E0ACAE913C20C859582575FB97C4A3BB367378028B3119BA35AE7FE5",
+    "path": "tests/unit/travel/test_plugin_worker_availability.py"
+  },
+  {
+    "sha256": "F06077D9701A7D5C634F069E97D2552E5866E5505E548685792A9F1588E2A750",
+    "path": "tests/helpers/plugin_bindings.py"
+  },
+  {
+    "sha256": "F91CEBE94B9AB8E6AEF37C2455F477FF3299BCAAC410F53531B736EDB2DAF621",
+    "path": "tests/e2e/test_case_version_rest.py"
+  },
+  {
+    "sha256": "34BD0851742CB681FFFC4B96BB5D96F6BF8E7A0C26B511B1045BFC87B82A50EB",
+    "path": "tests/e2e/test_decision_unit_web.py"
+  },
+  {
+    "sha256": "897FD52DB4027FAA08CD84C1505B17F859633FBC6A7AA9CF48F7A4F601C525DE",
+    "path": "wiki/teams/team-contract/plugin-availability.md"
+  }
+]

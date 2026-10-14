@@ -1,0 +1,74 @@
+[
+  {
+    "path": "app/application/case_intake.py",
+    "sha256": "9ABD0180E0D0B59FBE71C6340C597DEC8D4307287518DBD3AE84AC431C17CD3D"
+  },
+  {
+    "path": "app/application/controller.py",
+    "sha256": "3363B7903ED10E94DFDF288EF601A77DA94F800B7874838FE830E4E83A874064"
+  },
+  {
+    "path": "app/application/case_service.py",
+    "sha256": "C674B9364757BE713AC460C0AEE9C355B0B321CE4EB99569CD18F223B5B8B1BF"
+  },
+  {
+    "path": "app/core/case_lifecycle/events.py",
+    "sha256": "E1271EED99FD35000815DE6A60B931F40B23211A44ED95B23EF360A226418560"
+  },
+  {
+    "path": "app/core/case_lifecycle/reducer.py",
+    "sha256": null
+  },
+  {
+    "path": "app/domains/travel_ops/components/conversation/trip_messages.py",
+    "sha256": "316B9A494F6795B04E7A5AC7FE2B051AA0022870AD428DB22B4CCE7F629514B9"
+  },
+  {
+    "path": "app/domains/travel_ops/components/conversation/case_dispatch.py",
+    "sha256": "24C1141CF2A46EC3AA3B052B9DBE0EC768372F2120A3D5A1D370D5B51E36489D"
+  },
+  {
+    "path": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+    "sha256": "60A9CD7F498B80123C588968A5DA6379A97EDDF298A1AD48146415B51101444D"
+  },
+  {
+    "path": "wiki/teams/team-contract/plugin-availability.md",
+    "sha256": "4CBC2AAAC288BAB1BC3BAF81EC65A9FB91C4285A57A23703768030F536BD83A5"
+  },
+  {
+    "path": "tests/e2e/test_web_initial_retry.py",
+    "sha256": "52CD7E5CA2090DE657BAF4AD7D9EE5A1F09BD6C5739F431FD0B83F5E268C1631"
+  },
+  {
+    "path": "tests/e2e/test_web_initial_concurrency.py",
+    "sha256": "5E897FBCB51B3D185D526428C5D9CBA4AE5FDB17D0B09728B2F888B13E275127"
+  },
+  {
+    "path": "tests/e2e/test_web_resume_commit_recovery.py",
+    "sha256": "25CCBEE081DC3E6ADDEE22CDFB5454A0D8741162E1627E47017BD70F11CFA991"
+  },
+  {
+    "path": "tests/e2e/test_web_conversation_isolation.py",
+    "sha256": "009FE2420576D12E1F95419495989D475417D9FA307BDB956F7BD08EBCA37E9A"
+  },
+  {
+    "path": "tests/e2e/test_web_conversation_resume.py",
+    "sha256": "376EDBDEEA1F9BA9ACE86076F0D902DF4CE58B19BB5A5B783734F2DF07D3C78F"
+  },
+  {
+    "path": "tests/e2e/test_watch_plugin_recovery.py",
+    "sha256": "3C6477F5E2BC2B79F60F4B8F615F517D87FA11D8B474814B5F9A378D5FFF4814"
+  },
+  {
+    "path": "tests/unit/travel/test_initial_retry_boundaries.py",
+    "sha256": "3FE8645C5AED8E80163003706784EB463790FCB82A728FE81D41F5E8DADEC646"
+  },
+  {
+    "path": "tests/unit/core/test_controller_resume_recovery.py",
+    "sha256": "0D378A4D4A274F0622DD6DB8FAADFF811207C79D6040BA5D6A9296C3E4016131"
+  },
+  {
+    "path": "tests/unit/travel/test_watch_recovery_race.py",
+    "sha256": "244686187DE0ACDECD321B270C60FE7930EA41ECC1FDEC78030DBCE6B1C6306B"
+  }
+]

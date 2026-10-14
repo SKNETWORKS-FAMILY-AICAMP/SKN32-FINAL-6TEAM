@@ -1,0 +1,248 @@
+{
+  "source": "compare_resume_200_v5.json",
+  "source_sha256": "d4d8affedfceabfd97fa9528d14465df9b2e573afe4cc717d48ff89f227be83a",
+  "scope": "historical values only; no product replay",
+  "summary": {
+    "transit_vs_kakao_best": {
+      "n": 199,
+      "median": 1,
+      "mean": 2.0,
+      "within_5_count": 135,
+      "mae": 4.8,
+      "within_5": 0.68,
+      "ours_longer_than_5": 50,
+      "ours_shorter_than_5": 14
+    },
+    "transit_vs_kakao_recommended": {
+      "n": 199,
+      "median": 0,
+      "mean": -0.2,
+      "within_5_count": 125,
+      "mae": 5.3,
+      "within_5": 0.63,
+      "ours_longer_than_5": 36,
+      "ours_shorter_than_5": 38
+    },
+    "transit_our_fastest_option_vs_kakao_best": {
+      "n": 199,
+      "median": 1,
+      "mean": 1.6,
+      "within_5_count": 141,
+      "mae": 4.5,
+      "within_5": 0.71,
+      "ours_longer_than_5": 44,
+      "ours_shorter_than_5": 14
+    },
+    "transit_vs_kakao_best_by_bucket": {
+      "mid": {
+        "n": 80,
+        "median": 1.5,
+        "mean": 1.7,
+        "within_5_count": 53,
+        "mae": 4.8,
+        "within_5": 0.66,
+        "ours_longer_than_5": 20,
+        "ours_shorter_than_5": 7
+      },
+      "short": {
+        "n": 59,
+        "median": 0,
+        "mean": 1.5,
+        "within_5_count": 40,
+        "mae": 4.7,
+        "within_5": 0.68,
+        "ours_longer_than_5": 15,
+        "ours_shorter_than_5": 4
+      },
+      "long": {
+        "n": 60,
+        "median": 2.5,
+        "mean": 2.7,
+        "within_5_count": 42,
+        "mae": 4.8,
+        "within_5": 0.7,
+        "ours_longer_than_5": 15,
+        "ours_shorter_than_5": 3
+      }
+    },
+    "transit_eta_vs_best": {
+      "minutes": {
+        "n": 199,
+        "median": 1,
+        "mean": 2.0,
+        "within_5_count": 135,
+        "mae": 4.8,
+        "within_5": 0.68,
+        "ours_longer_than_5": 50,
+        "ours_shorter_than_5": 14
+      },
+      "percent": {
+        "n": 199,
+        "median": 4.1,
+        "mean": 5.5,
+        "within_10_count": 88,
+        "mae": 15.8,
+        "within_10": 0.44,
+        "ours_longer_than_10": 69,
+        "ours_shorter_than_10": 42
+      },
+      "percent_denominator": "각 경로의 카카오 소요 분",
+      "wait_known": 199,
+      "ours_median_min": 34,
+      "kakao_median_min": 32
+    },
+    "transit_eta_without_wait_vs_best": {
+      "minutes": {
+        "n": 199,
+        "median": 0,
+        "mean": 0.2,
+        "within_5_count": 147,
+        "mae": 4.2,
+        "within_5": 0.74,
+        "ours_longer_than_5": 27,
+        "ours_shorter_than_5": 25
+      },
+      "percent": {
+        "n": 199,
+        "median": 0.0,
+        "mean": 0.0,
+        "within_10_count": 99,
+        "mae": 13.7,
+        "within_10": 0.5,
+        "ours_longer_than_10": 42,
+        "ours_shorter_than_10": 58
+      },
+      "percent_denominator": "각 경로의 카카오 소요 분",
+      "wait_known": 199,
+      "ours_median_min": 32,
+      "kakao_median_min": 32
+    },
+    "transit_eta_vs_rec": {
+      "minutes": {
+        "n": 199,
+        "median": 0,
+        "mean": -0.2,
+        "within_5_count": 125,
+        "mae": 5.3,
+        "within_5": 0.63,
+        "ours_longer_than_5": 36,
+        "ours_shorter_than_5": 38
+      },
+      "percent": {
+        "n": 199,
+        "median": 0.0,
+        "mean": -0.6,
+        "within_10_count": 88,
+        "mae": 16.0,
+        "within_10": 0.44,
+        "ours_longer_than_10": 48,
+        "ours_shorter_than_10": 63
+      },
+      "percent_denominator": "각 경로의 카카오 소요 분",
+      "wait_known": 199,
+      "ours_median_min": 34,
+      "kakao_median_min": 35
+    },
+    "transit_eta_without_wait_vs_rec": {
+      "minutes": {
+        "n": 199,
+        "median": -1,
+        "mean": -2.0,
+        "within_5_count": 131,
+        "mae": 5.2,
+        "within_5": 0.66,
+        "ours_longer_than_5": 19,
+        "ours_shorter_than_5": 49
+      },
+      "percent": {
+        "n": 199,
+        "median": -4.3,
+        "mean": -5.7,
+        "within_10_count": 89,
+        "mae": 15.3,
+        "within_10": 0.45,
+        "ours_longer_than_10": 29,
+        "ours_shorter_than_10": 81
+      },
+      "percent_denominator": "각 경로의 카카오 소요 분",
+      "wait_known": 199,
+      "ours_median_min": 32,
+      "kakao_median_min": 35
+    },
+    "taxi_minutes_vs_kakao_car": {
+      "n": 200,
+      "median": 3.0,
+      "mean": 3.4,
+      "within_5_count": 135,
+      "mae": 4.7,
+      "within_5": 0.68,
+      "ours_longer_than_5": 58,
+      "ours_shorter_than_5": 7
+    },
+    "taxi_fare_percent_vs_kakao_taxi_fare": {
+      "n": 200,
+      "median": -16.3,
+      "mean": -11.6,
+      "within_10_count": 56,
+      "mae": 17.7,
+      "within_10": 0.28,
+      "ours_longer_than_10": 21,
+      "ours_shorter_than_10": 123
+    },
+    "taxi_fare_under_reference": {
+      "n": 200,
+      "count": 154,
+      "rate": 0.77
+    },
+    "taxi_distance_percent_vs_kakao": {
+      "n": 200,
+      "median": -5.7,
+      "mean": -5.8,
+      "within_10_count": 112,
+      "mae": 13.1,
+      "within_10": 0.56,
+      "ours_longer_than_10": 21,
+      "ours_shorter_than_10": 67
+    },
+    "walk_distance_percent_vs_kakao_shortest": {
+      "n": 0
+    },
+    "walk_minutes_vs_kakao_shortest": {
+      "n": 0
+    },
+    "walk_raw_diagnostic_distance_percent_vs_kakao_shortest": {
+      "n": 59,
+      "median": -0.8,
+      "mean": 4.0,
+      "within_10_count": 39,
+      "mae": 8.2,
+      "within_10": 0.66,
+      "ours_longer_than_10": 18,
+      "ours_shorter_than_10": 2
+    },
+    "walk_raw_diagnostic_minutes_vs_kakao_shortest": {
+      "n": 59,
+      "median": -0.1,
+      "mean": 0.8,
+      "within_5_count": 34,
+      "mae": 5.0,
+      "within_5": 0.58,
+      "ours_longer_than_5": 14,
+      "ours_shorter_than_5": 11
+    },
+    "walk_comparison_scope": "개발 비교; 출입점·경로·조회 시각 정렬 미검증, 독립 정확도 아님",
+    "coverage": {
+      "pairs": 200,
+      "walk_reference_rows": 59,
+      "walk_product_offered": 0,
+      "walk_product_missing": 200,
+      "walk_product_comparisons": 0,
+      "walk_raw_diagnostic_comparisons": 59,
+      "walk_diagnostic_errors": 0,
+      "web_car": 160,
+      "car_reused_by_user": 40,
+      "car_excluded_legacy_api": 0,
+      "wait_known": 200
+    }
+  }
+}

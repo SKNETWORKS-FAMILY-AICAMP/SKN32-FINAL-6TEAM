@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\probe_turn_web_public_v2.py", line 20, in <module>
+    g.warm(('car',))
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\engine\graph_router.py", line 182, in warm
+    self._load()
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\engine\graph_router.py", line 243, in _load
+    self.eg.append(g)
+MemoryError

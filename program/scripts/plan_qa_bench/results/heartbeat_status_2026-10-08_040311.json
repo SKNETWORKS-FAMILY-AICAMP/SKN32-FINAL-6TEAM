@@ -1,0 +1,170 @@
+{
+  "checked_at": "2026-10-08T04:03:11.753152+09:00",
+  "archived": {
+    "d_test_d3_mai_code_1_1_flash.jsonl": {
+      "saved": 360,
+      "failed": 0,
+      "sha256": "87a54069c4907b7ab1fedc27220228ed2968d1be89a0710c73fe4cb5cf7e8b29"
+    },
+    "d_test_lp_h_q4km_oos3.jsonl": {
+      "saved": 1316,
+      "failed": 0,
+      "sha256": "79be9c1b578432bda486940931112699cad8d0f1a07c4bc10b8db44ed41cd2d5"
+    },
+    "d_test_lp_mx_q4km_oos3.jsonl": {
+      "saved": 4014,
+      "failed": 0,
+      "sha256": "9dddee6f5571592d54129c884665dacc68436d7ba5b07ec24714157aa3f039af"
+    },
+    "verify_mai_code_1_1_flash.jsonl": {
+      "saved": 204,
+      "failed": 0,
+      "sha256": "aa60f6e44ea190f4425915e3b68d9b6ccd860da8da2fcca4bd467b5ae420be5b"
+    }
+  },
+  "mx_strict": {
+    "e4bt": {
+      "mixed_actual_request": {
+        "n": 1033,
+        "correct": 969,
+        "wrong_item_selected": 54
+      },
+      "mixed_no_request": {
+        "n": 974,
+        "correct": 847,
+        "wrong_item_selected": 127
+      },
+      "control_actual_request": {
+        "n": 1033,
+        "correct": 979,
+        "wrong_item_selected": 51
+      },
+      "control_no_request": {
+        "n": 974,
+        "correct": 831,
+        "wrong_item_selected": 143
+      }
+    },
+    "e4bs2": {
+      "mixed_actual_request": {
+        "n": 1033,
+        "correct": 965,
+        "wrong_item_selected": 64
+      },
+      "mixed_no_request": {
+        "n": 974,
+        "correct": 783,
+        "wrong_item_selected": 191
+      },
+      "control_actual_request": {
+        "n": 1033,
+        "correct": 1003,
+        "wrong_item_selected": 30
+      },
+      "control_no_request": {
+        "n": 974,
+        "correct": 842,
+        "wrong_item_selected": 132
+      }
+    },
+    "e4bs3": {
+      "mixed_actual_request": {
+        "n": 1033,
+        "correct": 969,
+        "wrong_item_selected": 48
+      },
+      "mixed_no_request": {
+        "n": 974,
+        "correct": 863,
+        "wrong_item_selected": 111
+      },
+      "control_actual_request": {
+        "n": 1033,
+        "correct": 993,
+        "wrong_item_selected": 35
+      },
+      "control_no_request": {
+        "n": 974,
+        "correct": 860,
+        "wrong_item_selected": 114
+      }
+    },
+    "oos1": {
+      "mixed_actual_request": {
+        "n": 1033,
+        "correct": 882,
+        "wrong_item_selected": 38
+      },
+      "mixed_no_request": {
+        "n": 974,
+        "correct": 954,
+        "wrong_item_selected": 20
+      },
+      "control_actual_request": {
+        "n": 1033,
+        "correct": 998,
+        "wrong_item_selected": 35
+      },
+      "control_no_request": {
+        "n": 974,
+        "correct": 930,
+        "wrong_item_selected": 44
+      }
+    },
+    "oos2": {
+      "mixed_actual_request": {
+        "n": 1033,
+        "correct": 928,
+        "wrong_item_selected": 32
+      },
+      "mixed_no_request": {
+        "n": 974,
+        "correct": 928,
+        "wrong_item_selected": 46
+      },
+      "control_actual_request": {
+        "n": 1033,
+        "correct": 998,
+        "wrong_item_selected": 34
+      },
+      "control_no_request": {
+        "n": 974,
+        "correct": 878,
+        "wrong_item_selected": 96
+      }
+    },
+    "oos3": {
+      "mixed_actual_request": {
+        "n": 1033,
+        "correct": 981,
+        "wrong_item_selected": 44
+      },
+      "mixed_no_request": {
+        "n": 974,
+        "correct": 906,
+        "wrong_item_selected": 68
+      },
+      "control_actual_request": {
+        "n": 1033,
+        "correct": 990,
+        "wrong_item_selected": 42
+      },
+      "control_no_request": {
+        "n": 974,
+        "correct": 873,
+        "wrong_item_selected": 101
+      }
+    }
+  },
+  "completed_oos3_sets": [
+    "D",
+    "D2",
+    "D3",
+    "H",
+    "MX"
+  ],
+  "training_in_progress": "oos2r: 100/654 at last check",
+  "strata": "unchanged quota block; no restart",
+  "MAI_confidence": "declared confidence; different from FrogNano token probabilities",
+  "repeat_count": 1
+}

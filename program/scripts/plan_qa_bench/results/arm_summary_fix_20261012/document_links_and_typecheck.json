@@ -1,0 +1,57 @@
+{
+  "observed_at": "2026-10-12T03:58:06.284731+00:00",
+  "links": [
+    {
+      "label": "수정 전 실제 응답",
+      "exists": true
+    },
+    {
+      "label": "수정 후 실제 응답과 초기 공개 경로 실패",
+      "exists": true
+    },
+    {
+      "label": "인증 조건을 갖춘 공개 경로 3회 측정",
+      "exists": true
+    },
+    {
+      "label": "Python 계약·보안 시험 로그",
+      "exists": true
+    },
+    {
+      "label": "기존 고정 분모 재집계",
+      "exists": true
+    },
+    {
+      "label": "GPU 이전과 정지 차단 기록",
+      "exists": true
+    },
+    {
+      "label": "최종 브라우저 실행 원본",
+      "exists": true
+    },
+    {
+      "label": "최종 실제 답변 화면",
+      "exists": true
+    },
+    {
+      "label": "12:52 실제 앱·모델 상태",
+      "exists": true
+    },
+    {
+      "label": "고정1,448문장 재측정 등록",
+      "exists": true
+    },
+    {
+      "label": "계약 수정 전 백업",
+      "exists": true
+    }
+  ],
+  "passed": 11,
+  "total": 11,
+  "typecheck": {
+    "exit_code": 0,
+    "command": "npx tsc --noEmit --incremental false"
+  },
+  "browser_valid_evidence": "browser_v11.json",
+  "invalid_initial_success": "browser_v8.json"
+}

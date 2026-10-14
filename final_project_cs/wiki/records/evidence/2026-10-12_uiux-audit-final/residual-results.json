@@ -1,0 +1,2300 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.residual-audit.config.ts",
+      "tests/live/flow.spec.ts:178",
+      "tests/live/guardian-card.spec.ts:41",
+      "tests/live/layout-mobile.spec.ts:13",
+      "tests/live/map-status-bar.spec.ts:10",
+      "tests/live/plan-focus.spec.ts:10",
+      "tests/live/trip-safety.spec.ts:166",
+      "tests/live/trip.spec.ts:336",
+      "tests/live/uiux-sonnet-map-reveal-20261012.spec.ts:22",
+      "tests/live/uiux-sonnet-plan-20261012.spec.ts:37",
+      "tests/live/uiux-sonnet-plan-20261012.spec.ts:76",
+      "tests/live/uiux-sonnet-plan-20261012.spec.ts:99",
+      "tests/live/uiux-sonnet-trip-20261012.spec.ts:73",
+      "tests/live/uiux-sonnet-trip-20261012.spec.ts:107",
+      "tests/live/web-flow-oct09.spec.ts:55",
+      "uiux-sonnet-plan-20261012.spec.ts",
+      "uiux-sonnet-trip-20261012.spec.ts",
+      "uiux-route-audit-20261012.spec.ts",
+      "test-plans-public-20261012.spec.ts",
+      "registration.spec.ts:9",
+      "registration.spec.ts:25"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\playwright.residual-audit.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-resume-20261012-v1/residual-evidence",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+        "testIgnore": [
+          "**/_backup/**"
+        ],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../uiux-resume-20261012-v1/residual-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "flow.spec.ts",
+      "file": "flow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "글에서 일정을 한 줄도 못 읽으면 입력 화면으로 자동 복귀하고 원문과 다시 입력할 안내를 보존한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1495,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:30:59.555Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f353db48c569834dc22b-c06fe2bf0f555f18d2dd",
+          "file": "flow.spec.ts",
+          "line": 178,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "guardian-card.spec.ts",
+      "file": "guardian-card.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지지 않고, 초점이 「계획 확인하기」로 돌아온다. Tab 은 카드 안에서만 돈다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1833,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:31:01.909Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a7eef6eb3c5956e5ff02-b4dae55e6d0bc3a9bfbb",
+          "file": "guardian-card.spec.ts",
+          "line": 41,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "layout-mobile.spec.ts",
+      "file": "layout-mobile.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "기본은 휴대폰 크기 틀이다 — 넓은 창(1280)에서도 계획 담기 · 내 여행 · 여행 · 마이페이지가 틀 폭(402px 이하) 안에 있고 가로로 넘치지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1889,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:31:03.783Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2595a259d88f5c6c0abe-436f055df2b435bea498",
+          "file": "layout-mobile.spec.ts",
+          "line": 13,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "map-status-bar.spec.ts",
+      "file": "map-status-bar.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 시간 초기화는 변경 메뉴에서 동작한다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 17263,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('article', { name: '호텔', exact: true })\nExpected substring: \u001b[32m\"장소\u001b[7m \u001b[27m주의\"\u001b[39m\nReceived string:    \u001b[31m\"\u001b[7m호텔호텔 자동 추천호텔 수정호텔 삭제!\u001b[27m장소주의\u001b[7m확인 필요\u001b[27m\"\u001b[39m\nTimeout: 12000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('article', { name: '호텔', exact: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('article', { name: '호텔', exact: true })\u001b[22m\n\u001b[2m    27 × locator resolved to <article aria-busy=\"false\" id=\"plan-card-0-3\" data-pickable=\"true\" class=\"plan-check_card__fbgri\" aria-labelledby=\"plan-item-0-3\">…</article>\u001b[22m\n\u001b[2m       - unexpected value \"호텔호텔 자동 추천호텔 수정호텔 삭제!장소주의확인 필요\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('article', { name: '호텔', exact: true })\nExpected substring: \u001b[32m\"장소\u001b[7m \u001b[27m주의\"\u001b[39m\nReceived string:    \u001b[31m\"\u001b[7m호텔호텔 자동 추천호텔 수정호텔 삭제!\u001b[27m장소주의\u001b[7m확인 필요\u001b[27m\"\u001b[39m\nTimeout: 12000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('article', { name: '호텔', exact: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('article', { name: '호텔', exact: true })\u001b[22m\n\u001b[2m    27 × locator resolved to <article aria-busy=\"false\" id=\"plan-card-0-3\" data-pickable=\"true\" class=\"plan-check_card__fbgri\" aria-labelledby=\"plan-item-0-3\">…</article>\u001b[22m\n\u001b[2m       - unexpected value \"호텔호텔 자동 추천호텔 수정호텔 삭제!장소주의확인 필요\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts:33:72",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts",
+                      "column": 72,
+                      "line": 33
+                    },
+                    "snippet": "  31 |   const group = page.getByRole(\"group\", { name: \"일정 확인과 변경\" });\n  32 |   // 확인 필요 → 되돌릴 변경 → 위치 미정 순서로 마커 미선택 안내를 표시합니다.\n> 33 |   await expect(page.getByRole(\"article\", { name: \"호텔\", exact: true })).toContainText(\"장소 주의\");\n     |                                                                        ^\n  34 |   await expect(needsBadge(page)).toHaveAccessibleName(\"확인 필요 2곳\");\n  35 |   await expect(group.getByText(\"위치 미정 · 호텔\", { exact: true })).toHaveCount(0);\n  36 |   await expect(group.getByText(\"확인 필요 · 올리브영\", { exact: true })).toBeVisible();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts",
+                        "column": 72,
+                        "line": 33
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('article', { name: '호텔', exact: true })\nExpected substring: \u001b[32m\"장소\u001b[7m \u001b[27m주의\"\u001b[39m\nReceived string:    \u001b[31m\"\u001b[7m호텔호텔 자동 추천호텔 수정호텔 삭제!\u001b[27m장소주의\u001b[7m확인 필요\u001b[27m\"\u001b[39m\nTimeout: 12000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('article', { name: '호텔', exact: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('article', { name: '호텔', exact: true })\u001b[22m\n\u001b[2m    27 × locator resolved to <article aria-busy=\"false\" id=\"plan-card-0-3\" data-pickable=\"true\" class=\"plan-check_card__fbgri\" aria-labelledby=\"plan-item-0-3\">…</article>\u001b[22m\n\u001b[2m       - unexpected value \"호텔호텔 자동 추천호텔 수정호텔 삭제!장소주의확인 필요\"\u001b[22m\n\n\n  31 |   const group = page.getByRole(\"group\", { name: \"일정 확인과 변경\" });\n  32 |   // 확인 필요 → 되돌릴 변경 → 위치 미정 순서로 마커 미선택 안내를 표시합니다.\n> 33 |   await expect(page.getByRole(\"article\", { name: \"호텔\", exact: true })).toContainText(\"장소 주의\");\n     |                                                                        ^\n  34 |   await expect(needsBadge(page)).toHaveAccessibleName(\"확인 필요 2곳\");\n  35 |   await expect(group.getByText(\"위치 미정 · 호텔\", { exact: true })).toHaveCount(0);\n  36 |   await expect(group.getByText(\"확인 필요 · 올리브영\", { exact: true })).toBeVisible();\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts:33:72"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:31:05.706Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\map-status-bar-위치·확인·변경-표시-a1d5c-란히-놓이고-시간-초기화는-변경-메뉴에서-동작한다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\map-status-bar-위치·확인·변경-표시-a1d5c-란히-놓이고-시간-초기화는-변경-메뉴에서-동작한다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\tests\\live\\map-status-bar.spec.ts",
+                    "column": 72,
+                    "line": 33
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "307ebc2271188419de72-970ccd3f13499ab04fb7",
+          "file": "map-status-bar.spec.ts",
+          "line": 10,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "plan-focus.spec.ts",
+      "file": "plan-focus.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14828,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:31:24.096Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "58827e149c4e5b3b970f-6b8bb6f9162f23d19fe2",
+          "file": "plan-focus.spec.ts",
+          "line": 10,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "registration.spec.ts",
+      "file": "registration.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "작성 중인 계획은 화면을 오가도·새로고침해도 보존되고, 「이전」은 소개 화면(약관 동의 뒤)으로 간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1113,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:31:39.282Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1e5aa7b6f95ae669165d-ae23b0f88b01523e0c5c",
+          "file": "registration.spec.ts",
+          "line": 9,
+          "column": 1
+        },
+        {
+          "title": "「예시 불러오기」는 글칸에 일주일 뒤부터의 서울 이틀 일정을 채울 뿐이다 — 서버에는 아무것도 가지 않고, 고칠 수 있다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1123,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:31:40.422Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1e5aa7b6f95ae669165d-d542ff6fba22cb899575",
+          "file": "registration.spec.ts",
+          "line": 25,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "test-plans-public-20261012.spec.ts",
+      "file": "test-plans-public-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "공개 시험계획 15개·7분류를 세션 없이 읽고 화면에서 선택해도 게스트를 만들지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 843,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:31:41.586Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0b0724df45c35fd583d5-676e4fa211e3eaca34ff",
+          "file": "test-plans-public-20261012.spec.ts",
+          "line": 4,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "trip-safety.spec.ts",
+      "file": "trip-safety.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 중 · 안전 알림」 막대가 대피 장소를 말하고 9초 동안 남는다 — 정지가 풀리면 칩도 없다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10437,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:31:42.464Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "18797389594469c47048-edc366dbb08674886766",
+          "file": "trip-safety.spec.ts",
+          "line": 166,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "trip.spec.ts",
+      "file": "trip.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 없다(없는 리소스·예외)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8583,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:31:52.940Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "33198bd4efd7d645cef2-85f04aaee17354e46a76",
+          "file": "trip.spec.ts",
+          "line": 336,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "uiux-route-audit-20261012.spec.ts",
+      "file": "uiux-route-audit-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "전체 경로 · intro · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1139,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:01.570Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii8iLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOmZhbHNlLCJmb3VuZEZyYW1lU2Nyb2xsIjpmYWxzZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-2f0532036b9ab64ac787",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · terms-preferences · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1281,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:02.734Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9zdGFydCIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9zdGFydCIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-1ea05cc155dd85c49a58",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · registration · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1186,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:04.030Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy9uZXciLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvdHJpcHMvbmV3IiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOnRydWUsImZvdW5kRnJhbWVTY3JvbGwiOnRydWV9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-c4551447c10742141526",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · trips · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 979,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:05.230Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcyIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny90cmlwcyIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-59b7a7d1ce54bd4a9953",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · registered-trip · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1927,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:06.223Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvdHJpcHMvMTExMTExMTEtMjIyMi0zMzMzLTQ0NDQtNTU1NTU1NTU1NTU1IiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOmZhbHNlLCJmb3VuZEZyYW1lU2Nyb2xsIjpmYWxzZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-5ed94a99f7277343d1c1",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · verification-redirect · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1660,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:08.168Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUvdmVyaWZpY2F0aW9uIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3RyaXBzLzExMTExMTExLTIyMjItMzMzMy00NDQ0LTU1NTU1NTU1NTU1NSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-4f2462e5c1cdf7e42ad1",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · results-redirect · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1480,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:09.847Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUvcmVzdWx0cyIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJkaW1lbnNpb25zIjp7ImRvY3VtZW50IjowLCJtYWluIjowLCJzY3JvbGwiOjAsImV4cGVjdHNGcmFtZVNjcm9sbCI6ZmFsc2UsImZvdW5kRnJhbWVTY3JvbGwiOmZhbHNlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-09c80b769a46a259f060",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1818,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:11.347Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-6a53b90029670da0f8a7",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · starting-revisit · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1394,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:13.189Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL3N0YXJ0aW5nIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3RyaXBzL25ldyIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-9d722fe140502a9a2657",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · account · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1112,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:14.601Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvbXlwYWdlIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOnRydWUsImZvdW5kRnJhbWVTY3JvbGwiOnRydWV9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-5a6ad8b4d3b9e0ef8625",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · profile · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1005,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:15.727Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UvZWRpdCIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9teXBhZ2UvZWRpdCIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-42ee85068cb250c74655",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · support · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 999,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:16.746Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9zdXBwb3J0IiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3N1cHBvcnQiLCJkaW1lbnNpb25zIjp7ImRvY3VtZW50IjowLCJtYWluIjowLCJzY3JvbGwiOjAsImV4cGVjdHNGcmFtZVNjcm9sbCI6dHJ1ZSwiZm91bmRGcmFtZVNjcm9sbCI6dHJ1ZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-29b1c76d8042bc58d703",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · social-cancelled · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 974,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:17.759Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9hdXRoL2RvbmU/ZXJyb3I9Y2FuY2VsbGVkIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L2F1dGgvZG9uZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-d07a4a1b75b526f3002b",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · intro · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1156,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:18.749Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii8iLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOmZhbHNlLCJmb3VuZEZyYW1lU2Nyb2xsIjpmYWxzZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-cf158acc8c930623c913",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · terms-preferences · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1260,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:19.919Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9zdGFydCIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9zdGFydCIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-b5ff25cf2f7c8a2100d0",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · registration · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1354,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:21.197Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy9uZXciLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvdHJpcHMvbmV3IiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOnRydWUsImZvdW5kRnJhbWVTY3JvbGwiOnRydWV9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-3da83e5a91ba148a9db9",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · trips · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1068,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:22.567Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcyIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny90cmlwcyIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-c698415e6a28847746c1",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · registered-trip · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1654,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:23.662Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvdHJpcHMvMTExMTExMTEtMjIyMi0zMzMzLTQ0NDQtNTU1NTU1NTU1NTU1IiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOmZhbHNlLCJmb3VuZEZyYW1lU2Nyb2xsIjpmYWxzZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-aa7a18ef6b1003e912e9",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · verification-redirect · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1648,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:25.330Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUvdmVyaWZpY2F0aW9uIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3RyaXBzLzExMTExMTExLTIyMjItMzMzMy00NDQ0LTU1NTU1NTU1NTU1NSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-1ba4d7055f62e96291dc",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · results-redirect · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1534,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:27.003Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUvcmVzdWx0cyIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny90cmlwcy8xMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJkaW1lbnNpb25zIjp7ImRvY3VtZW50IjowLCJtYWluIjowLCJzY3JvbGwiOjAsImV4cGVjdHNGcmFtZVNjcm9sbCI6ZmFsc2UsImZvdW5kRnJhbWVTY3JvbGwiOmZhbHNlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-3d3f336b930f91629f8c",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · intake · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1557,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:28.551Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjpmYWxzZSwiZm91bmRGcmFtZVNjcm9sbCI6ZmFsc2V9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-743648a5961510207bb5",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · starting-revisit · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1491,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:30.123Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL3N0YXJ0aW5nIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3RyaXBzL25ldyIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-26effe60d41cf9994e77",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · account · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1287,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:31.633Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UiLCJsYW5kZWQiOiJodHRwOi8vMTI3LjAuMC4xOjMxODcvbXlwYWdlIiwiZGltZW5zaW9ucyI6eyJkb2N1bWVudCI6MCwibWFpbiI6MCwic2Nyb2xsIjowLCJleHBlY3RzRnJhbWVTY3JvbGwiOnRydWUsImZvdW5kRnJhbWVTY3JvbGwiOnRydWV9LCJlcnJvcnMiOltdfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-cd5d26a23e5f169553af",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · profile · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1158,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:32.936Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9teXBhZ2UvZWRpdCIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ny9teXBhZ2UvZWRpdCIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-0614882fb3a44ceb921a",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · support · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1197,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:34.109Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9zdXBwb3J0IiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L3N1cHBvcnQiLCJkaW1lbnNpb25zIjp7ImRvY3VtZW50IjowLCJtYWluIjowLCJzY3JvbGwiOjAsImV4cGVjdHNGcmFtZVNjcm9sbCI6dHJ1ZSwiZm91bmRGcmFtZVNjcm9sbCI6dHJ1ZX0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-80ad8b9e28f0f31569da",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · social-cancelled · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1619,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:35.322Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9hdXRoL2RvbmU/ZXJyb3I9Y2FuY2VsbGVkIiwibGFuZGVkIjoiaHR0cDovLzEyNy4wLjAuMTozMTg3L2F1dGgvZG9uZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MCwiZXhwZWN0c0ZyYW1lU2Nyb2xsIjp0cnVlLCJmb3VuZEZyYW1lU2Nyb2xsIjp0cnVlfSwiZXJyb3JzIjpbXX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-b38a3a3b26af090dff12",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-plan-20261012.spec.ts",
+      "file": "uiux-sonnet-plan-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "계획 이름 편집을 Enter로 끝내면 제목 버튼에 초점이 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2713,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:36.979Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-3011aaed79807ae8a714",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 20,
+          "column": 3
+        },
+        {
+          "title": "계획 이름 편집을 Escape로 끝내면 제목 버튼에 초점이 돌아온다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2194,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:39.711Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-ddaa3c0c9d5c0982c349",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 20,
+          "column": 3
+        },
+        {
+          "title": "목록 머리를 끈 직후 손잡이 첫 Enter 입력이 동작한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5222,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:41.927Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-48b6ea543486ffb4867e",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 37,
+          "column": 3
+        },
+        {
+          "title": "목록 머리를 끈 직후 손잡이 첫 Space 입력이 동작한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5205,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:47.169Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-a07bcd68512243691f37",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 37,
+          "column": 3
+        },
+        {
+          "title": "변경을 모두 되돌린 뒤 새로 바꾸면 이전 필터와 변경 메뉴가 되살아나지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6724,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:52.396Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-f8e3418ba003a772fe96",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 63,
+          "column": 1
+        },
+        {
+          "title": "잠금 요청이 진행 중이면 이전 시간 변경 토스트의 되돌리기가 추가 요청을 보내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5391,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:32:59.168Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-c1ba46b5b6fd4e6c226e",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 76,
+          "column": 1
+        },
+        {
+          "title": "확인 실패 안내가 해소된 뒤 같은 실패가 다시 생기면 안내를 다시 표시한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4997,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:04.579Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3a507b67c18d8c7304a-f8f4e1d0f06db10127ae",
+          "file": "uiux-sonnet-plan-20261012.spec.ts",
+          "line": 99,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "uiux-sonnet-trip-20261012.spec.ts",
+      "file": "uiux-sonnet-trip-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "알림 센터 탭·재렌더 초점 유지와 Tab 순환 375px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2477,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:09.632Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-78283fadc3278c815160",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 15,
+          "column": 34
+        },
+        {
+          "title": "알림 센터 탭·재렌더 초점 유지와 Tab 순환 1280px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2266,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:12.132Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-e7d3301a4b3e9fd8996e",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 15,
+          "column": 34
+        },
+        {
+          "title": "알림의 일정에서 보기는 채팅·상세에서 목록을 열고 해당 제목으로 키보드 초점을 옮긴다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2745,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:14.437Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-1a092716bbacea3c9cdb",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 50,
+          "column": 1
+        },
+        {
+          "title": "등록 여행 하루 일정도 날짜줄 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1590,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:17.204Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-ba773bbccad802d7999a",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 73,
+          "column": 36
+        },
+        {
+          "title": "등록 여행 일정0개는 날짜줄 숨김",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1430,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:18.819Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-93807a1a2ae442345d3b",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 73,
+          "column": 36
+        },
+        {
+          "title": "제목 편집 Enter 종료 뒤 제목 버튼으로 초점 복귀",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1823,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:20.273Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-27a6b49640aadcefc2f1",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 95,
+          "column": 40
+        },
+        {
+          "title": "제목 편집 Escape 종료 뒤 제목 버튼으로 초점 복귀",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1821,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:22.120Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-45831240d51deb822eaa",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 95,
+          "column": 40
+        },
+        {
+          "title": "머리 영역 드래그 직후 첫 Enter가 목록 높이를 바꾼다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1873,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:23.964Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-215e9ef3b964885186a9",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 107,
+          "column": 39
+        },
+        {
+          "title": "머리 영역 드래그 직후 첫 Space가 목록 높이를 바꾼다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2110,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:25.858Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-8c4d853d4e103f59ec46",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 107,
+          "column": 39
+        },
+        {
+          "title": "채팅 Enter 전송 동안 입력 초점·초안을 유지하고 중복 전송하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4567,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:27.991Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-7fc9b7e7e8f2b49fbb5c",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 131,
+          "column": 1
+        },
+        {
+          "title": "문의 전송 성공 뒤 키보드 초점과 초안 처리",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1247,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:32.582Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-bed72227c29efd5f9165",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 154,
+          "column": 38
+        },
+        {
+          "title": "문의 전송 실패 뒤 키보드 초점과 초안 처리",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 998,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:33.851Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6399d855f4caa1ba948-1275c7502e5fca2ec952",
+          "file": "uiux-sonnet-trip-20261012.spec.ts",
+          "line": 154,
+          "column": 38
+        }
+      ]
+    },
+    {
+      "title": "web-flow-oct09.spec.ts",
+      "file": "web-flow-oct09.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "검증 이동은 출발만 표시하다 펼치면 도착을 표시하고 수단·소요·여유를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1964,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T18:33:34.888Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9ade63cd7865c9df7dd6-34f12462c0d741aaa931",
+          "file": "web-flow-oct09.spec.ts",
+          "line": 55,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T18:30:56.301Z",
+    "duration": 162215.457,
+    "expected": 55,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

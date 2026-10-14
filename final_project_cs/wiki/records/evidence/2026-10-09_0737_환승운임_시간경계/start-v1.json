@@ -1,0 +1,25 @@
+{
+  "tag": "2026-10-09_0737_환승운임_시간경계",
+  "created_at": "2026-10-09T07:37:15.706312+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0737_환승운임_시간경계/options.py",
+      "sha256": "6496ae2bb44b31f7601c37427678bdfe35e0d96da07189081dd7c761256c880e"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0737_환승운임_시간경계/mobility.md",
+      "sha256": "b524d62c6217ed68000e740c8a55385fed82bd203bc2f2fbbd93ca80485fc22e"
+    }
+  ],
+  "source": {
+    "url": "https://news.seoul.go.kr/traffic/transfer_discount",
+    "page_updated": "2026-02-02",
+    "read_scope": "전체 본문; 규정254~276줄",
+    "checked_at": "2026-10-09T07:37:15.706312+09:00"
+  },
+  "prior_hash_matches": 208,
+  "prior_artifact_matches": 7,
+  "debug": "wiki/records/reports/debugs/2026-10-09_0737_통합환승_야간창이_이전하차시각을_사용.md"
+}

@@ -1,0 +1,13 @@
+........................................................................ [ 48%]
+........................................................................ [ 97%]
+F...                                                                     [100%]
+================================== FAILURES ===================================
+_ test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set _
+tests\scenario\test_watch_batch.py:220: in test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set
+    [(key, payload)] = _outbox(world)                                    # �׸񸶴ٰ� �ƴ϶� **�� ��**
+    ^^^^^^^^^^^^^^^^
+E   ValueError: too many values to unpack (expected 1)
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\scenario-full-v2.xml -
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_watch_batch.py::test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set
+1 failed, 147 passed in 175.08s (0:02:55)

@@ -1,0 +1,26 @@
+
+ RUN  v5.0.1 C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web
+
+ ❯ src/features/map/map-geometry.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/map/map-geometry.test.ts [ src/features/map/map-geometry.test.ts ]
+Error: ENOENT: no such file or directory, open 'C:\Users\playdata2\AppData\Local\Packages\sandbox.{611f35ac-73a4-4be0-a4e5-61944233b77a}\AC\Temp\JAnBcOZHlnNRByinVZkfp\ssr\ba534c28ceed3e7cef1a1142cd244102f016fa1f'
+ ❯ src/features/map/map-controls.tsx:5:1
+      3| import { useLayoutEffect, useRef, useState } from "react";
+      4| import { ArrowRight, ChevronLeft, ChevronRight, LocateFixed, Minus, Pl…
+      5| import { edgeChips, formatDistance, niceScale, type EdgeChip } from ".…
+       | ^
+      6| import type { MapPoint, MapView } from "./model";
+      7| import styles from "./map.module.css";
+ ❯ src/features/map/map-geometry.test.ts:2:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  12 passed (12)
+   Start at  17:09:49
+   Duration  609ms (transform 69%, import 20%, worker 6%, tests 5%)
+

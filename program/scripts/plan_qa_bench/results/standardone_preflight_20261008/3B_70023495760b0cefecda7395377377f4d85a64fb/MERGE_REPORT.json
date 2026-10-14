@@ -1,0 +1,59 @@
+{
+  "snapshot": "mistralai/Ministral-3-3B-Instruct-2512-BF16@b6d637bef2393152b3da2b2fde72eecdee30557e",
+  "adapter": "StandardOne-3B-LoRA v2.2",
+  "adapter_sha256": "cfe06432d85efbe99df53dbfd3fa3881e5d6ef177c6e26d5800d8bf83afe79e4",
+  "changed_params": 182,
+  "unchanged_params": 276,
+  "changed_outside_lm_projections": [],
+  "max_abs_delta": 0.00223463773727417,
+  "changed_sample": [
+    [
+      "model.language_model.layers.0.self_attn.q_proj.weight",
+      0.0011110305786132812
+    ],
+    [
+      "model.language_model.layers.0.self_attn.k_proj.weight",
+      0.0010986328125
+    ],
+    [
+      "model.language_model.layers.0.self_attn.v_proj.weight",
+      0.001434326171875
+    ],
+    [
+      "model.language_model.layers.0.self_attn.o_proj.weight",
+      0.001007080078125
+    ],
+    [
+      "model.language_model.layers.0.mlp.gate_proj.weight",
+      0.00196075439453125
+    ],
+    [
+      "model.language_model.layers.0.mlp.up_proj.weight",
+      0.001804351806640625
+    ],
+    [
+      "model.language_model.layers.0.mlp.down_proj.weight",
+      0.0006103515625
+    ],
+    [
+      "model.language_model.layers.1.self_attn.q_proj.weight",
+      0.00146484375
+    ]
+  ],
+  "file_sha256": {
+    "SYSTEM_PROMPT.txt": "331b249682cd52226c50e533f59825184997f3b31f9a62b2c3fea940db6999c5",
+    "chat_template.jinja": "0701cfbdc2b7d44fdbad104dff604faee4b0543e8247624568777fe465746f9b",
+    "config.json": "c4446cf970fefd8b65f2e3119c30d406ea7026dca362dfb319c9aa08643131c3",
+    "generation_config.json": "e0923390059f84a9180b00e5501778acc45ea9856cd7f2fd68208b360927c677",
+    "model-00001-of-00002.safetensors": "521646ccb298cdb40ad3cd6819ae3ee13d3d7297818f05b42544c50830d72fcb",
+    "model-00002-of-00002.safetensors": "9529809ee3b5c0e087e6f2a3df68f1396cd7b15e4c662a8cdd68d566bf65b6a1",
+    "model.safetensors.index.json": "55641440eb385d8bc83a319b0a92f60fe45e6aef4b6992245eee91142237786e",
+    "params.json": "d15587c57574d2a92c66ff2552c6db5173d4c440ad47f7454dc51bad0ecaeb59",
+    "processor_config.json": "ece2373c2ae391bce18785a1810543bc6173a1f28b6767cffab2c35dbea5f002",
+    "special_tokens_map.json": "0a5c981e8c5c6f8886ee007a6d4543a0be6b221cb9ca32a8709384a4c6fc8cbb",
+    "tekken.json": "600bb27946565481ecf51ba8aee252e49b9a68507866080ac9c30185bb312843",
+    "tokenizer.json": "d5f6046775b112f0e2d456ee9dba450684ab964fe5c4e231599bdc6773028135",
+    "tokenizer_config.json": "f59f7294e4f26383d0ea93840fe21cf197784be0842a8301a0343e8c34ed0d6d"
+  },
+  "seconds": 8.8
+}

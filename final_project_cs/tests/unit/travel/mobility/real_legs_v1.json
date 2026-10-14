@@ -10,7 +10,7 @@
  "cases": [
   {
    "id": "R-BASE-01",
-   "note": "평일 낮 한 구간",
+   "note": "평일 낮 한 구간 · 2026-10-12: 서울교통공사 20260901 공식 CSV의 열차별 도착초 적용. 이전 문장 속 평균시간 설명은 과거 이력이며 현재 기대값 근거는 datasets/mobility/raw/subway_train_precision_20261012_v1/fixture-official-facts-v1.json. 실제 도착 실측 아님.",
    "date": "2026-09-11",
    "depart_at": "14:00",
    "legs": [
@@ -27,7 +27,7 @@
     10
    ],
    "expect_last_depart": "24:50",
-   "expect_arrive": "14:05"
+   "expect_arrive": "14:04"
   },
   {
    "id": "R-BASE-02",
@@ -345,7 +345,7 @@
   },
   {
    "id": "R-LOOP-01",
-   "note": "★순환선 시발역 — 성수 출발 592편이 전부 '성수행'. 종착으로 거르면 통째로 열차 없음이 된다 · 89(2026-10-01): 늦어도 출발 23:31→24:44 — 옛 판은 성수 상행 23:38 이후 6편 행선지 빈칸(막차 안전으로 버림) · 새 판 TAGO 행선지 + 서울 OA-15492 막차 성수→삼성 24:44 두 원천 일치(확정)",
+   "note": "★순환선 시발역 — 성수 출발 592편이 전부 '성수행'. 종착으로 거르면 통째로 열차 없음이 된다 · 89(2026-10-01): 늦어도 출발 23:31→24:44 — 옛 판은 성수 상행 23:38 이후 6편 행선지 빈칸(막차 안전으로 버림) · 새 판 TAGO 행선지 + 서울 OA-15492 막차 성수→삼성 24:44 두 원천 일치(확정) · 2026-10-12: 서울교통공사 20260901 공식 CSV의 열차별 도착초 적용. 이전 문장 속 평균시간 설명은 과거 이력이며 현재 기대값 근거는 datasets/mobility/raw/subway_train_precision_20261012_v1/fixture-official-facts-v1.json. 실제 도착 실측 아님.",
    "date": "2026-09-11",
    "depart_at": "14:00",
    "legs": [
@@ -362,7 +362,7 @@
     10
    ],
    "expect_last_depart": "24:44",
-   "expect_arrive": "14:11",
+   "expect_arrive": "14:10",
    "expect_warn_codes": [
     "MOB_W_ORIGIN_TERMINAL_DEST"
    ]
@@ -566,7 +566,7 @@
   },
   {
    "id": "R-HOL-01",
-   "note": "개천절(토) — 공휴일이면서 토요일이라 예외도 함께 걸린다",
+   "note": "개천절(토) — 공휴일이면서 토요일이라 예외도 함께 걸린다 · 2026-10-12: 서울교통공사 20260901 공식 CSV의 열차별 도착초 적용. 이전 문장 속 평균시간 설명은 과거 이력이며 현재 기대값 근거는 datasets/mobility/raw/subway_train_precision_20261012_v1/fixture-official-facts-v1.json. 실제 도착 실측 아님.",
    "date": "2026-10-03",
    "depart_at": "10:00",
    "legs": [
@@ -583,7 +583,7 @@
     10
    ],
    "expect_last_depart": "23:52",
-   "expect_arrive": "10:07"
+   "expect_arrive": "10:06"
   },
   {
    "id": "R-SAT-02",

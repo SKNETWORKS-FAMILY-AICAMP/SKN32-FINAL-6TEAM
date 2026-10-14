@@ -1,0 +1,46 @@
+{
+  "scope": "개발 입력의 모델 재생; 독립 웹·실주행·실탑승·결제 검증 아님",
+  "taxi_departure": {
+    "input": "목표09:40 · 여유10분 · 09시 전29분/후40분",
+    "before": {
+      "departure": "2026-10-11T09:01:00+09:00",
+      "display_eta_min": 29,
+      "actual_model_eta_min": 40,
+      "deadline_excess_with_margin_min": 11
+    },
+    "after": {
+      "departure": "2026-10-11T08:58:00+09:00",
+      "display_eta_min": 29,
+      "actual_model_eta_min": 29,
+      "deadline_excess_with_margin_min": 0,
+      "slack_min": 3
+    }
+  },
+  "transfer_window": {
+    "input": "지하철12:10 하차・버스12:35~12:45 승차 모델 폭",
+    "before": {
+      "fare_krw": 1550,
+      "discount_claim": true
+    },
+    "after": {
+      "fare_krw": 3050,
+      "discount_claim": false
+    }
+  },
+  "taxi_notice": {
+    "before": {
+      "status": "needs_replan",
+      "reason": "route_check_missing_or_changed"
+    },
+    "after": {
+      "status": "model_revalidated",
+      "departure_at": "2026-10-09T10:00:00+09:00",
+      "arrival_at": "2026-10-09T10:20:00+09:00",
+      "eta_min": 20,
+      "fare_krw": 19000,
+      "route_label": "택시 4.0km · 예상 요금 19,000원(예산 여유 포함 · 교통·대기·호출료에 따라 달라짐) [추정]"
+    }
+  },
+  "network_attempts": 0,
+  "limited_api_calls": 0
+}

@@ -59,6 +59,14 @@ def shown_keys(conn, tenant_id: str, trip_id: Any, key: str) -> list[str]:
         return [row[0] for row in cur.fetchall()]
 
 
+def shown_offers(conn, tenant_id: str, trip_id: Any, key: str) -> list[dict[str, Any]]:
+    """그 항목에 보여 준 후보의 key 와 이름 — 보여 준 순서대로. `[2026-10-13]` 숙소 팀은 이름으로, 항공 팀은 key 로 뺀다."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT offer_key, name FROM lg_offer_shown WHERE tenant_id=%s AND trip_id=%s AND item_key=%s "
+                    "ORDER BY shown_at, offer_key", (tenant_id, str(trip_id), key))
+        return [{"key": row[0], "name": row[1]} for row in cur.fetchall()]
+
+
 def adopt_option(conn, store: Any, trip_id: Any, option: dict[str, Any]) -> dict[str, Any] | None:
     """고른 숙소 후보 → 그 여행 전용 장소(코어 행) + 연결. 좌표가 없으면 None(들여놓지 않는다 — 좌표를 지어내지 않는다).
 
@@ -81,4 +89,4 @@ def adopt_option(conn, store: Any, trip_id: Any, option: dict[str, Any]) -> dict
     return place
 
 
-__all__ = ["adopt_option", "item_key", "remember_shown", "shown_keys"]
+__all__ = ["adopt_option", "item_key", "remember_shown", "shown_keys", "shown_offers"]

@@ -1,0 +1,14 @@
+[
+  {
+    "command": "\"C:/Users/playdata2/anaconda3/python.exe\" wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/v12-read-boundary-final-unit.py",
+    "decision": "allow"
+  },
+  {
+    "command": "ls",
+    "decision": "deny"
+  },
+  {
+    "command": "\"C:/Users/playdata2/anaconda3/python.exe\" wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/v12-read-boundary-final-unit.py; ls",
+    "decision": "deny"
+  }
+]

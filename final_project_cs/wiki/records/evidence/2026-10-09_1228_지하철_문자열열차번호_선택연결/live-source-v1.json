@@ -1,0 +1,42 @@
+{
+  "started_at": "2026-10-09T12:32:52.567712+09:00",
+  "finished_at": "2026-10-09T12:32:52.647030+09:00",
+  "station": "공덕",
+  "leg": {
+    "mode": "subway",
+    "line": "공항철도",
+    "from": "공덕",
+    "to": "홍대입구"
+  },
+  "identity": {
+    "status": "matched",
+    "line_id": "1065",
+    "station_id": "1065006502",
+    "target_station_id": "1065006503",
+    "query_station": "공덕",
+    "target_station": "홍대입구",
+    "line": "공항철도"
+  },
+  "static_service_combinations": 12,
+  "actual_http_responses": 0,
+  "misses": {
+    "transport_error": 1
+  },
+  "snapshot": null,
+  "selection": {
+    "source": null,
+    "line_id": "1065",
+    "station_id": "1065006502",
+    "target_station_id": "1065006503",
+    "status": "unavailable",
+    "reason": "invalid_snapshot",
+    "evaluated_at": "2026-10-09T12:32:52.647030+09:00",
+    "ready_at": "2026-10-09T12:34:52.567712+09:00"
+  },
+  "controlled_access_minutes": 2,
+  "native_callback_identity_match": false,
+  "actual_eta_accuracy_samples": 0,
+  "actual_boardings": 0,
+  "map_developer_api_calls": 0,
+  "claim": "새 실제 도착 응답1개. 식별 입력 및 정적 경로와 소스 선택 연결. 접근2분은 통제이며 실제 도착오차/탑승 측정 아님."
+}

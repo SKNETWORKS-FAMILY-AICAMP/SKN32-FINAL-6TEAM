@@ -1,0 +1,15 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/travel/test_late_departure_notice_v1.py",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_0317_\ubbf8\ubc1c\ud589\ucd9c\ubc1c_\uc9c0\uc5f0\ubcf5\uad6c\\before-v1.xml"
+  ],
+  "returncode": 1,
+  "elapsed_seconds": 12.989485502243042,
+  "files": [
+    "tests/unit/travel/test_late_departure_notice_v1.py"
+  ]
+}

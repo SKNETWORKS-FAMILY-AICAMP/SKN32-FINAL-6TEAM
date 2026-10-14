@@ -1,0 +1,26 @@
+{
+  "disk": [
+    "32212254720 23311826944 8900427776 73% /",
+    "32212254720 23311826944 8900427776 73% /",
+    "2317941501132800 1819705264701440 498236236431360 79% /workspace"
+  ],
+  "job_inputs": {
+    "frog_h": true,
+    "frog_mx": true,
+    "e4bbase_h": true,
+    "e4bbase_mx": true,
+    "e4bbase_d": true,
+    "e4bbase_d2": true,
+    "e4bbase_d3": true,
+    "g12bbase_h": true,
+    "g12bbase_mx": true,
+    "g12bbase_d": true,
+    "g12bbase_d2": true,
+    "g12bbase_d3": true,
+    "winnow_original_h": true,
+    "winnow_original_mx": true,
+    "winnow_original_d": true,
+    "winnow_original_d2": true,
+    "winnow_original_d3": true
+  }
+}

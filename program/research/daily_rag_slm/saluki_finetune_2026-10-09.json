@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "record_date_kst": "2026-10-09",
+  "status": "preparation_blocked",
+  "model": {
+    "repo": "ConwayResearch/Underdog-Saluki-27B-1.0",
+    "revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+    "language_parameters_approx": 27000000000,
+    "our_finetuning": false,
+    "published_representation": "IQ2-mix GGUF, qwen35",
+    "license": "Apache-2.0; LICENSE and NOTICE fully read",
+    "same_weights_only": true
+  },
+  "authorization": {
+    "saluki_27b_training": true,
+    "existing_gpu_only": true,
+    "new_rental_or_payment": false,
+    "delete_existing_models": false,
+    "product_promotion": false
+  },
+  "completed": {
+    "official_repository_inventory": "4/4",
+    "read_only_gpu_inventory": "2/2",
+    "train_completion_contract": "2613/2613",
+    "evaluated_fixture_exact_overlap_rows": "0/9425, checked against full selected train_oos2 2613",
+    "training_runs": "0/1",
+    "gpu_training_smoke": "0/1",
+    "added_hard_train_AI_agreement": "900/900",
+    "baseline_start_gate": "3/9",
+    "stage_gate_CPU_contract": "10/10"
+  },
+  "evidence_dir": "program/scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242",
+  "resource_observation_utc": "2026-10-09T02:32:46Z",
+  "observed": {
+    "gpu_A_vram_mib": 16380,
+    "gpu_B_vram_mib": 16376,
+    "gpu_A_root_free_bytes": 4271337472,
+    "gpu_B_root_free_bytes": 6515249152,
+    "gpu_A_cgroup_limit_bytes": 30999998464,
+    "gpu_B_cgroup_limit_bytes": 61999996928,
+    "gpu_B_runtime": {
+      "torch": "2.14.1",
+      "transformers": "5.18.0",
+      "peft": "0.21.2",
+      "bitsandbytes": "0.50.2",
+      "gguf_distribution": null,
+      "kernels_distribution": null,
+      "qwen35_in_installed_gguf_support_list": false,
+      "gguf_quantizer_is_trainable": false
+    }
+  },
+  "blockers": [
+    "No HF trainable Saluki weights in fixed official revision: seven files inspected, GGUF/projectors/docs only.",
+    "Installed GGUF Qwen3.5 CUDA backward support not verified; installed quantizer declares is_trainable=False.",
+    "Existing root free space does not fit dense equivalent plus 3GiB reserve; shared filesystem df does not establish tenant quota.",
+    "27B training peak memory not measured on approved 16GB GPUs; no fit guarantee from nominal 4-bit size."
+  ],
+  "proposed_recipe_unexecuted": {
+    "representation": "Exact Saluki HF weights if publisher provides them, or exact GGUF conversion/packed training only after lineage and CUDA backward validation",
+    "method": "QLoRA NF4 double quantization when exact HF representation is available; never rename Qwen base or different Underdog as Saluki",
+    "baseline": {
+      "seed": 20261019,
+      "rank": 8,
+      "alpha": 16,
+      "dropout": 0.05,
+      "learning_rate": 2e-05,
+      "schedule": "cosine",
+      "warmup_fraction": 0.05,
+      "epochs": 1,
+      "microbatch": 1,
+      "gradient_accumulation": 16,
+      "max_sequence_tokens": 4096,
+      "loss": "completion-only",
+      "gradient_checkpointing": true,
+      "precision": "BF16 if verified",
+      "target_modules": "Resolved language-only attention/linear-attention/MLP linear layers; exact list recorded before smoke; freeze vision, embeddings and output head",
+      "overlength_policy": "fail preflight, never silently drop or cut itinerary/question",
+      "optimizer": "paged AdamW 8bit if CUDA verified"
+    },
+    "smoke": {
+      "examples": 16,
+      "updates": 2,
+      "verify": [
+        "finite loss and gradients",
+        "adapter weights change",
+        "no base/vision weight updates",
+        "exact parsed target preserved",
+        "tokenizer/chat template identity",
+        "peak CUDA allocated/reserved and cgroup RAM",
+        "reserve at least 1GiB VRAM and 3GiB disk"
+      ],
+      "progressive_context_tokens": [
+        512,
+        2048,
+        4096
+      ],
+      "stop_after_failure": true
+    },
+    "data": {
+      "selected_first_baseline": "datasets/travel/train_oos2/train_oos2.jsonl",
+      "sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c",
+      "rows": 2613,
+      "normal_rows": 1377,
+      "none_rows": 1236,
+      "base_retained_rows": 1713,
+      "added_hard_rows": 900,
+      "added_normal_rows": 300,
+      "added_none_rows": 600,
+      "added_AI_agreed_rows": 900,
+      "generator": "gpt-6.1-sol",
+      "independent_labeler": "gpt-6-luna",
+      "human_review_verified": false,
+      "review_scope": "Additional H-train900 are AI agreed; do not extend that claim to every base1713 row. Completion contract checked2613/2613.",
+      "sampling": "Use all fixed2613 rows with original normal/NONE distribution; ordinary seeded shuffle only, no reweighting/resampling",
+      "no_D_or_E_eval_rows_moved_to_train": true,
+      "new_counterfactual_pairs_required_for_baseline": false,
+      "new_F_required_for_baseline": false,
+      "independent_holdout_required_for_baseline": false,
+      "independent_holdout_required_for_product_adoption": true,
+      "source_overlap_filter": "Existing builder excludes H-test/D2/D3 3gramJaccard>=0.6;99 candidates excluded; does not prove final semantic independence",
+      "evidence": "program/scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242/reviewed_train_oos2_audit_1206.json",
+      "exact_overlap_audit": "program/scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242/data_audit_oos2_1208.json"
+    },
+    "ablations": [
+      "Original exact Saluki reference",
+      "One first baseline: reviewed train_oos2 2613 unchanged, cosine rank8",
+      "Only after first baseline: additional seeds/methods if evidence justifies them; no mandatory1713 baseline",
+      "Product adoption separate: independent reviewed holdout and regressions"
+    ],
+    "decision_gates": {
+      "normal_request_noninferiority_margin_pp": 1.0,
+      "negative_false_pick_target_percent": 2.0,
+      "paired_fp_improvement": "two-sided exact paired test, multiplicity and uncertainty stated",
+      "normal_preservation": "confidence interval lower bound for paired accuracy difference >= -1pp; descriptive count alone is not pass",
+      "holdout": "independent fixed positive240/negative480 minimum target, person review pending",
+      "regressions": "D/D2/D3/H/E plus new selection-and-evidence-answer contract; every failure/incomplete remains in denominator",
+      "deployment": "not authorized by this recipe"
+    }
+  },
+  "conditional_backlog": {
+    "job_id": "saluki27b_sft_r8_s20261019_pending",
+    "ready": false,
+    "worker_registered": false,
+    "order": "Use available approved GPU after existing queue work; do not block ready jobs behind this preparation item",
+    "resume": [
+      "Recheck same Saluki trainable representation, CUDA backward and actual existing quota/memory",
+      "Use already frozen reviewed train_oos2 2613 without creating new data; verify identity/token lengths",
+      "Acquire existing exclusive queue lock and perform16-example GPU smoke",
+      "After smoke register one baseline run with new adapter output",
+      "Compare original and baseline normal requests/NONE simultaneously on fixed development tests; independent human-reviewed holdout needed only before product adoption"
+    ]
+  },
+  "gate_input": {
+    "repo": "ConwayResearch/Underdog-Saluki-27B-1.0",
+    "revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+    "same_weight_lineage_verified": false,
+    "cuda_backward_verified": false,
+    "train_data_audited": true,
+    "independent_holdout_frozen": false,
+    "local_weights_verified": false,
+    "free_bytes": 6515249152,
+    "required_bytes": 55563006776,
+    "gpu_exclusive_lock_available": false,
+    "gpu_smoke_passed": false,
+    "failed_attempt_requires_fix": false
+  },
+  "limitations": [
+    "Nominal 4bit 27B=13.5GB is a lower-bound estimate excluding embeddings, metadata, adapters, gradients and activations, not observed training memory.",
+    "55.56GB Qwen HF size is a base-model storage reference, not an identical Saluki checkpoint.",
+    "Exact overlap zero does not prove semantic or itinerary-family independence.",
+    "Model card and paper scores are external results, never our measured improvement."
+  ],
+  "references": [
+    "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0",
+    "https://huggingface.co/ConwayResearch/Underdog-27B-1.0",
+    "https://huggingface.co/Qwen/Qwen3.8-27B",
+    "https://huggingface.co/docs/transformers/v5.19.0/quantization/gguf",
+    "https://arxiv.org/abs/2305.14314",
+    "https://arxiv.org/abs/2402.09353",
+    "https://aclanthology.org/2024.naacl-long.394/",
+    "https://arxiv.org/abs/2602.22268",
+    "https://arxiv.org/abs/2608.13966",
+    "https://arxiv.org/abs/2609.12896"
+  ],
+  "baseline_revision": "existing-reviewed-train-oos2-20261009-v2",
+  "user_steering": "Use existing reviewed travel training set directly for the first correction baseline. Do not wait for new pairs/F/final holdout.",
+  "gate_stages": {
+    "smoke": "Same model/lineage, CUDA backward, existing train data audit, local weights, space and exclusive lock; no new pairs/F/independent holdout prerequisite",
+    "baseline": "Smoke prerequisites plus successful GPU smoke; no independent final holdout prerequisite",
+    "adoption": "Baseline plus frozen independent holdout, final evaluation and normal/NONE regression checks"
+  },
+  "updated_at_kst": "2026-10-09T12:08:49.965160+09:00",
+  "latest_recheck_2026_10_12": {
+    "report": "final_project_cs/wiki/records/reports/2026-10-12_saluki-training-runtime-recheck.md",
+    "recipe": ".tmp/saluki_recheck_20261012/conditional_recipe_2026-10-12.json",
+    "tensor_parameter_sum": 26895998464,
+    "official_binary_hash_matches": true,
+    "training_started": false,
+    "GPU_smoke_started": false,
+    "worker_registered": false,
+    "dense_required_bytes_is_route_specific_not_universal": true,
+    "old_record_values_are_historical": true
+  }
+}

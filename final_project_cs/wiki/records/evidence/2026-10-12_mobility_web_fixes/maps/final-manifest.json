@@ -1,0 +1,86 @@
+{
+  "recorded_at": "2026-10-11T15:52:52.311125+00:00",
+  "scope": "선택 버스 정류장·지하철 경유 방향 및 접수→등록 지도 내부 문맥 전달",
+  "code_sha256": {
+    "final_project_cs/app/domains/travel_ops/instances/mobility/route_shape.py": "bf0d4077620141b3084fed21bdc3a94d820ebc889d0e4bf86df719119f8916ee",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/shape_transit.py": "98db7bee5f8d5dc61148943ec15b0a62de1ac279d5005403d45c7530912fc421",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_context.py": "cbc6d9c6c0c938bafa8010d0c140a875d3e6010f270c7a9610c59f317e4b6584",
+    "final_project_cs/app/domains/travel_ops/components/intake/moves.py": "b0a045744a7c043c5eb9c4b85a62d754f0f02d31b7dda8efcd9cd8e33479918c",
+    "final_project_cs/app/domains/travel_ops/components/intake/review.py": "948c236a55af7fd0b1e419d5d26cebf7a71af68af7fd85b2ebd2055d230e18ed",
+    "final_project_cs/app/domains/travel_ops/components/intake/registered_moves.py": "ad8caf19fd367907e499852801155d2ecba0b3eec4378e89874382ebf0f21e1c",
+    "final_project_cs/tests/unit/travel/mobility/test_route_shape_context_v1.py": "6b845a1c3a358f29812e5952faec70c5c7b12b054d78dce00c92f4650a45f899",
+    "final_project_cs/tests/unit/travel/mobility/test_route_shape_intake_context_v1.py": "4f6c9ef31fb1c695e9015b2705e7fed8a784d862f5094e63cb809451f42546a0"
+  },
+  "data_sha256": {
+    "bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+    "station_coords.json": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d",
+    "line_station_order_v1.json": "693c616fa1a538d564b84c12cae1f8c744140da87f91574cfbb795394448d3e8",
+    "timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6"
+  },
+  "test_runs": [
+    {
+      "tests": "12",
+      "errors": "0",
+      "failures": "9",
+      "skipped": "0",
+      "time": "4.701",
+      "path": "before-v1/result.xml",
+      "sha256": "e1e9caad11c45381a4221d12091c5a9b7fdb789d1a48313a46a479598ba9f2b0"
+    },
+    {
+      "tests": "51",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "time": "5.358",
+      "path": "after-v3/result.xml",
+      "sha256": "2a7f814f89f3499a237ab46ba5379bd5b70bc237ac4a00aca40593976066ec42"
+    },
+    {
+      "tests": "129",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "time": "292.116",
+      "path": "regression-v2/result.xml",
+      "sha256": "a5ecfe10f474f5561890bd6e5c8c706936d415ec2ca6dfa25d527b143a1cc5c0"
+    },
+    {
+      "tests": "30",
+      "errors": "0",
+      "failures": "4",
+      "skipped": "0",
+      "time": "9.603",
+      "path": "intake-before-v2/result.xml",
+      "sha256": "5cb635cf8dbc58a59c5bea89ff9e24787b36a76f15ad3aae6a0ebb27e3c9ea46"
+    },
+    {
+      "tests": "107",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "time": "4.502",
+      "path": "intake-final-v3/result.xml",
+      "sha256": "8bc27a9f35ce134038772c99dffb68444923f0c294e45b8de4423f5abf8f2a4f"
+    }
+  ],
+  "public_replay": [
+    "public-replay-v2/before-after.json",
+    "public-replay-v2/bus-route-audit.json",
+    "public-intake-replay-v1/review-and-registered.json"
+  ],
+  "developer_api_calls": 0,
+  "private_receipt_accesses": 0,
+  "provider_daily_usage_before": "미조회·미확인",
+  "provider_daily_usage_after": "미조회·미확인",
+  "provider_remaining_and_reset": "미조회·미확인; 실제 호출하지 않음",
+  "deployment": "수행 안 함",
+  "actual_mobile_ui": "수행 안 함",
+  "limitations": [
+    "정류장·역 경유선은 실제 도로·선로 형상이 아님",
+    "717개 노선 점검은 보유 데이터 구조 완전성 점검이며 최신 현장 정확도 아님",
+    "공개 두 구간은 통제 개발 재생이며 독립 웹대조·실탑승 아님",
+    "예전 저장본의 누락 문맥은 임의로 복원하지 않음"
+  ]
+}

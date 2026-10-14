@@ -1,0 +1,57 @@
+{
+  "observed_at": "2026-10-08T18:07:31.942805+09:00",
+  "case": "ntower_namdae",
+  "data_runtime_load_s": 46.52535400000488,
+  "planner_leg_s": [
+    21.349510400003055,
+    19.081943500001216,
+    19.661031899995578
+  ],
+  "median_s": 19.661031899995578,
+  "range_s": [
+    19.081943500001216,
+    21.349510400003055
+  ],
+  "outcomes": [
+    {
+      "got_is_none": true,
+      "reason": "arrive_late",
+      "matches_expected": true,
+      "observed": [
+        "11:30",
+        "11:59",
+        "12:14",
+        [
+          "버스:01A"
+        ]
+      ]
+    },
+    {
+      "got_is_none": true,
+      "reason": "arrive_late",
+      "matches_expected": true,
+      "observed": [
+        "11:30",
+        "11:59",
+        "12:14",
+        [
+          "버스:01A"
+        ]
+      ]
+    },
+    {
+      "got_is_none": true,
+      "reason": "arrive_late",
+      "matches_expected": true,
+      "observed": [
+        "11:30",
+        "11:59",
+        "12:14",
+        [
+          "버스:01A"
+        ]
+      ]
+    }
+  ],
+  "conditions": "동일한 로컬 자료와 입력을 사용하고 Runtime 하나를 재사용했습니다. 매 호출마다 새 Planner를 만들었습니다. 실데이터 전체층 검증 및 다른 에이전트 계산이 동시에 진행되었으므로 분리된 처리량 성능 시험이 아닙니다."
+}

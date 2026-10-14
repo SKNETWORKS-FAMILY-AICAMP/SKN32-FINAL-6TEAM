@@ -1,0 +1,2095 @@
+{
+  "checked_at": "2026-10-08T04:24:23.043813+09:00",
+  "sources": [
+    "program/research/시험세트_목록_2026-10-07.md",
+    "program/research/분류_라우팅_모델_평가방법_조사_2026-10-07.md"
+  ],
+  "scope": "Recent 13 variants: raw D/D2/D3/H/MX plus verifier files; complete historical file inventory attached, not all historical roles mapped. Counts describe saved answers, not correct answers. 769 excludes 66 compound requests; single-item answers do not establish compound-task completion.",
+  "models": [
+    {
+      "model": "Gemma 4 E4B 기존 학습 시드 1",
+      "our_training": true,
+      "tag": "e4bt",
+      "additional_sets": {
+        "D": {
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_q4km_e4bt.jsonl"
+        },
+        "D2": {
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_d2_q4km_e4bt.jsonl"
+        },
+        "D3": {
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_d3_q4km_e4bt.jsonl"
+        },
+        "H": {
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_h_q4km_e4bt.jsonl"
+        },
+        "MX": {
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_mx_q4km_e4bt.jsonl"
+        }
+      }
+    },
+    {
+      "model": "Gemma 4 E4B 기존 학습 시드 2",
+      "our_training": true,
+      "tag": "e4bs2",
+      "additional_sets": {
+        "D": {
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_q4km_e4bs2.jsonl"
+        },
+        "D2": {
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_d2_q4km_e4bs2.jsonl"
+        },
+        "D3": {
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_d3_q4km_e4bs2.jsonl"
+        },
+        "H": {
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_h_q4km_e4bs2.jsonl"
+        },
+        "MX": {
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_mx_q4km_e4bs2.jsonl"
+        }
+      }
+    },
+    {
+      "model": "Gemma 4 E4B 기존 학습 시드 3",
+      "our_training": true,
+      "tag": "e4bs3",
+      "additional_sets": {
+        "D": {
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_q4km_e4bs3.jsonl"
+        },
+        "D2": {
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_d2_q4km_e4bs3.jsonl"
+        },
+        "D3": {
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_d3_q4km_e4bs3.jsonl"
+        },
+        "H": {
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_h_q4km_e4bs3.jsonl"
+        },
+        "MX": {
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_mx_q4km_e4bs3.jsonl"
+        }
+      }
+    },
+    {
+      "model": "Gemma 4 E4B 잡담 보강 시드 1",
+      "our_training": true,
+      "tag": "oos1",
+      "additional_sets": {
+        "D": {
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_q4km_oos1.jsonl"
+        },
+        "D2": {
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_d2_q4km_oos1.jsonl"
+        },
+        "D3": {
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_d3_q4km_oos1.jsonl"
+        },
+        "H": {
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_h_q4km_oos1.jsonl"
+        },
+        "MX": {
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_mx_q4km_oos1.jsonl"
+        }
+      }
+    },
+    {
+      "model": "Gemma 4 E4B 잡담 보강 시드 2",
+      "our_training": true,
+      "tag": "oos2",
+      "additional_sets": {
+        "D": {
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_q4km_oos2.jsonl"
+        },
+        "D2": {
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_d2_q4km_oos2.jsonl"
+        },
+        "D3": {
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_d3_q4km_oos2.jsonl"
+        },
+        "H": {
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_h_q4km_oos2.jsonl"
+        },
+        "MX": {
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_mx_q4km_oos2.jsonl"
+        }
+      }
+    },
+    {
+      "model": "Gemma 4 E4B 잡담 보강 시드 3",
+      "our_training": true,
+      "tag": "oos3",
+      "additional_sets": {
+        "D": {
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_q4km_oos3.jsonl"
+        },
+        "D2": {
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_d2_q4km_oos3.jsonl"
+        },
+        "D3": {
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_d3_q4km_oos3.jsonl"
+        },
+        "H": {
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_h_q4km_oos3.jsonl"
+        },
+        "MX": {
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_lp_mx_q4km_oos3.jsonl"
+        }
+      }
+    },
+    {
+      "model": "FrogNano-4B-2609",
+      "our_training": false,
+      "additional_sets": {
+        "D": {
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_a_frognano.jsonl"
+        },
+        "D2": {
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_d2_frog.jsonl"
+        },
+        "D3": {
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_d3_frog.jsonl"
+        },
+        "H": {
+          "saved": 0,
+          "expected": 1316,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "MX": {
+          "saved": 0,
+          "expected": 4014,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        }
+      },
+      "verification": {
+        "saved": 1677,
+        "expected": 1677,
+        "complete": true,
+        "errors": 0,
+        "unparsed": 0,
+        "file": "verify_frog.jsonl"
+      }
+    },
+    {
+      "model": "MAI-Code-1.1-Flash",
+      "our_training": false,
+      "additional_sets": {
+        "D": {
+          "saved": 0,
+          "expected": 2735,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "D2": {
+          "saved": 0,
+          "expected": 1000,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "D3": {
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "errors": 0,
+          "unparsed": 0,
+          "file": "d_test_d3_mai_code_1_1_flash.jsonl"
+        },
+        "H": {
+          "saved": 0,
+          "expected": 1316,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "MX": {
+          "saved": 0,
+          "expected": 4014,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        }
+      },
+      "verification": {
+        "saved": 204,
+        "expected": 1677,
+        "complete": false,
+        "errors": 0,
+        "unparsed": 0,
+        "file": "verify_mai_code_1_1_flash.jsonl"
+      },
+      "authorized_verification_subset": {
+        "saved": 204,
+        "expected": 204,
+        "scope": "D3 only; synthetic"
+      }
+    },
+    {
+      "model": "Jev 계열 모델 중 Winnow-E4B 원래 학습판",
+      "our_training": true,
+      "basic_835": {
+        "saved": 835,
+        "expected": 835,
+        "set_counts": [
+          171,
+          165,
+          160,
+          163,
+          176
+        ]
+      },
+      "additional_sets": {
+        "D": {
+          "saved": 0,
+          "expected": 2735,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "D2": {
+          "saved": 0,
+          "expected": 1000,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "D3": {
+          "saved": 0,
+          "expected": 360,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "H": {
+          "saved": 0,
+          "expected": 1316,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "MX": {
+          "saved": 0,
+          "expected": 4014,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        }
+      },
+      "new_oos_training": "queued separately; different adapter"
+    },
+    {
+      "model": "spark-s1-4b-v6 원래 학습판",
+      "our_training": true,
+      "basic_835": {
+        "saved": 835,
+        "expected": 835,
+        "set_counts": [
+          171,
+          165,
+          160,
+          163,
+          176
+        ]
+      },
+      "additional_sets": {
+        "D": {
+          "saved": 0,
+          "expected": 2735,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "D2": {
+          "saved": 0,
+          "expected": 1000,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "D3": {
+          "saved": 0,
+          "expected": 360,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "H": {
+          "saved": 0,
+          "expected": 1316,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "MX": {
+          "saved": 0,
+          "expected": 4014,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        }
+      },
+      "new_oos_training": "queued separately; different adapter"
+    },
+    {
+      "model": "Jev 계열 모델 중 jevify-gemma4-e4b 원래 학습판",
+      "our_training": true,
+      "basic_835": {
+        "saved": 835,
+        "expected": 835,
+        "set_counts": [
+          171,
+          165,
+          160,
+          163,
+          176
+        ]
+      },
+      "additional_sets": {
+        "D": {
+          "saved": 0,
+          "expected": 2735,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "D2": {
+          "saved": 0,
+          "expected": 1000,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "D3": {
+          "saved": 0,
+          "expected": 360,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "H": {
+          "saved": 0,
+          "expected": 1316,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        },
+        "MX": {
+          "saved": 0,
+          "expected": 4014,
+          "complete": false,
+          "status": "not_found_in_checked_result_locations"
+        }
+      },
+      "new_oos_training": "queued separately; different adapter"
+    },
+    {
+      "model": "Gemma 4 E4B 어려운 문장 보강판 oos2r",
+      "our_training": true,
+      "status": "training_in_progress; finished evaluation not found in checked locations"
+    },
+    {
+      "model": "Qwen3.8-Flash-Next via Niko1221/Strata",
+      "our_training": false,
+      "status": "model download blocked by volume quota; no benchmark answers collected"
+    }
+  ],
+  "local_raw_inventory": {
+    "codex_d3_gpt-6-sol.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "codex_d3_gpt-6.1-sol.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_a_12b.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 2
+    },
+    "d_test_a_base.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 17
+    },
+    "d_test_a_e4bs2.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_a_e4bs3.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_a_frognano.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_a_q4km_e4bs2.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_a_q4km_e4bs3.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_a_q4km_e4bt.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_a_taught.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d2_frog.jsonl": {
+      "attempts": 1000,
+      "unique": 1000,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d2_q4km_e4bs2.jsonl": {
+      "attempts": 1000,
+      "unique": 1000,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d2_q4km_e4bt.jsonl": {
+      "attempts": 1000,
+      "unique": 1000,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d3_frog.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d3_mai_code_1_1_flash.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d3_q4km_e4bs2.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d3_q4km_e4bs3.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d3_q4km_e4bt.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d3_q4km_oos1.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d3_q4km_oos2.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_d3_q4km_oos3.jsonl": {
+      "attempts": 360,
+      "unique": 360,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_d2_q4km_e4bs2.jsonl": {
+      "attempts": 1000,
+      "unique": 1000,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_d2_q4km_e4bs3.jsonl": {
+      "attempts": 1000,
+      "unique": 1000,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_d2_q4km_e4bt.jsonl": {
+      "attempts": 1000,
+      "unique": 1000,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_d2_q4km_oos1.jsonl": {
+      "attempts": 1000,
+      "unique": 1000,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_d2_q4km_oos2.jsonl": {
+      "attempts": 1000,
+      "unique": 1000,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_d2_q4km_oos3.jsonl": {
+      "attempts": 1000,
+      "unique": 1000,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_h_q4km_e4bs2.jsonl": {
+      "attempts": 1316,
+      "unique": 1316,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_h_q4km_e4bs3.jsonl": {
+      "attempts": 1316,
+      "unique": 1316,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_h_q4km_e4bt.jsonl": {
+      "attempts": 1316,
+      "unique": 1316,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_h_q4km_oos1.jsonl": {
+      "attempts": 1316,
+      "unique": 1316,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_h_q4km_oos2.jsonl": {
+      "attempts": 1316,
+      "unique": 1316,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_h_q4km_oos3.jsonl": {
+      "attempts": 1316,
+      "unique": 1316,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_htrain_q4km_oos1.jsonl": {
+      "attempts": 2534,
+      "unique": 2534,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_mx_q4km_e4bs2.jsonl": {
+      "attempts": 4014,
+      "unique": 4014,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_mx_q4km_e4bs3.jsonl": {
+      "attempts": 4014,
+      "unique": 4014,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_mx_q4km_e4bt.jsonl": {
+      "attempts": 4014,
+      "unique": 4014,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_mx_q4km_oos1.jsonl": {
+      "attempts": 4014,
+      "unique": 4014,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_mx_q4km_oos2.jsonl": {
+      "attempts": 4014,
+      "unique": 4014,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_mx_q4km_oos3.jsonl": {
+      "attempts": 4014,
+      "unique": 4014,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_q4km_e4bs2.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_q4km_e4bs3.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_q4km_e4bt.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_q4km_oos1.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_q4km_oos2.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "d_test_lp_q4km_oos3.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "gemma4_12b.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 5
+    },
+    "gemma4_e4b.jsonl": {
+      "attempts": 2735,
+      "unique": 2735,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "pointer_ft_769.jsonl": {
+      "attempts": 769,
+      "unique": 769,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_api_astra.jsonl": {
+      "attempts": 204,
+      "unique": 204,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_api_luna.jsonl": {
+      "attempts": 204,
+      "unique": 204,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_api_sol61.jsonl": {
+      "attempts": 204,
+      "unique": 204,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_e4bbase.jsonl": {
+      "attempts": 1662,
+      "unique": 1662,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_e4bq4km.jsonl": {
+      "attempts": 1662,
+      "unique": 1662,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_frog.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_g12b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_granite42_3b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_granite42_8b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_kanana2_3b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_lfm25_26b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_mai_code_1_1_flash.jsonl": {
+      "attempts": 204,
+      "unique": 204,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_oc_fledge-alpha-free.jsonl": {
+      "attempts": 204,
+      "unique": 204,
+      "latest_errors": 62,
+      "latest_unparsed": 0
+    },
+    "verify_oc_longcat-2.5-preview-free.jsonl": {
+      "attempts": 223,
+      "unique": 204,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_oc_mimo-v2.6-flash-free.jsonl": {
+      "attempts": 204,
+      "unique": 204,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_oc_muse-spark-1.3-contributor-free.jsonl": {
+      "attempts": 204,
+      "unique": 204,
+      "latest_errors": 40,
+      "latest_unparsed": 0
+    },
+    "verify_oc_nemotron-3-ultra-free.jsonl": {
+      "attempts": 204,
+      "unique": 204,
+      "latest_errors": 1,
+      "latest_unparsed": 0
+    },
+    "verify_oc_space-bunny-free.jsonl": {
+      "attempts": 204,
+      "unique": 204,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_qwen35_2b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_qwen35_4b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_qwen35_9b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_torchcast12b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_winnow12b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    },
+    "verify_winnow_e4b.jsonl": {
+      "attempts": 1677,
+      "unique": 1677,
+      "latest_errors": 0,
+      "latest_unparsed": 0
+    }
+  },
+  "remote_inventory": {
+    "remote_gpu_a": {
+      "d_test_a_12b.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 2
+      },
+      "d_test_a_base.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 17
+      },
+      "d_test_a_e4bs2.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_a_e4bs3.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_a_frognano.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_a_q4km_e4bs2.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_a_q4km_e4bs3.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_a_q4km_e4bt.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_a_qwen35_ollama.jsonl": {
+        "rows": 587,
+        "unique": 587,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_a_taught.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d2_frog.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d2_q4km_e4bs2.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d2_q4km_e4bs3.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d2_q4km_e4bt.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d3_frog.jsonl": {
+        "rows": 360,
+        "unique": 360,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d3_q4km_e4bs2.jsonl": {
+        "rows": 360,
+        "unique": 360,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d3_q4km_e4bs3.jsonl": {
+        "rows": 360,
+        "unique": 360,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d3_q4km_e4bt.jsonl": {
+        "rows": 360,
+        "unique": 360,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d3_q4km_oos1.jsonl": {
+        "rows": 360,
+        "unique": 360,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d3_q4km_oos2.jsonl": {
+        "rows": 360,
+        "unique": 360,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d3_qat_e4bt.jsonl": {
+        "rows": 360,
+        "unique": 360,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_d3_qat_oos1.jsonl": {
+        "rows": 360,
+        "unique": 360,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_d2_q4km_e4bs2.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_d2_q4km_e4bs3.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_d2_q4km_e4bt.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_d2_q4km_oos1.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_d2_q4km_oos2.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_d2_qat_e4bt.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_d2_qat_oos1.jsonl": {
+        "rows": 1000,
+        "unique": 1000,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_h_q4km_e4bs2.jsonl": {
+        "rows": 1316,
+        "unique": 1316,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_h_q4km_e4bs3.jsonl": {
+        "rows": 1316,
+        "unique": 1316,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_h_q4km_e4bt.jsonl": {
+        "rows": 1316,
+        "unique": 1316,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_h_q4km_oos1.jsonl": {
+        "rows": 1316,
+        "unique": 1316,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_h_q4km_oos2.jsonl": {
+        "rows": 1316,
+        "unique": 1316,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_htrain_q4km_oos1.jsonl": {
+        "rows": 2534,
+        "unique": 2534,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_mx_q4km_e4bs2.jsonl": {
+        "rows": 4014,
+        "unique": 4014,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_mx_q4km_e4bs3.jsonl": {
+        "rows": 4014,
+        "unique": 4014,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_mx_q4km_e4bt.jsonl": {
+        "rows": 4014,
+        "unique": 4014,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_mx_q4km_oos1.jsonl": {
+        "rows": 4014,
+        "unique": 4014,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_mx_q4km_oos2.jsonl": {
+        "rows": 4014,
+        "unique": 4014,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_q4km_e4bs2.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_q4km_e4bs3.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_q4km_e4bt.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_q4km_oos1.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_q4km_oos2.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      },
+      "d_test_lp_qat_oos1.jsonl": {
+        "rows": 2735,
+        "unique": 2735,
+        "errors": 0,
+        "unparsed": 0
+      }
+    },
+    "remote_gpu_b": {
+      "eval_e2b_mix10.json": {
+        "e2b#base": {
+          "rows": 160,
+          "errors": 0
+        },
+        "e2b#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_e2b_mix11.json": {
+        "e2b#base": {
+          "rows": 163,
+          "errors": 0
+        },
+        "e2b#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_e2b_mix12.json": {
+        "e2b#base": {
+          "rows": 176,
+          "errors": 0
+        },
+        "e2b#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_e2b_mix8.json": {
+        "e2b#base": {
+          "rows": 171,
+          "errors": 0
+        },
+        "e2b#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_e2b_mix9.json": {
+        "e2b#base": {
+          "rows": 165,
+          "errors": 0
+        },
+        "e2b#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_e2b_val.json": {
+        "e2b#base": {
+          "rows": 325,
+          "errors": 0
+        },
+        "e2b#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_e2bsmoke_val.json": {
+        "e2bsmoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "e2bsmoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_e4bconf_mix10.json": {
+        "e4bconf#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_e4bconf_mix11.json": {
+        "e4bconf#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_e4bconf_mix12.json": {
+        "e4bconf#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_e4bconf_mix8.json": {
+        "e4bconf#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_e4bconf_mix9.json": {
+        "e4bconf#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_e4bconf_val.json": {
+        "e4bconf#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_e4bconfsmoke_val.json": {
+        "e4bconfsmoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_e4bm_mix10.json": {
+        "e4bm#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_e4bm_mix11.json": {
+        "e4bm#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_e4bm_mix12.json": {
+        "e4bm#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_e4bm_mix8.json": {
+        "e4bm#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_e4bm_mix9.json": {
+        "e4bm#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_e4bm_val.json": {
+        "e4bm#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_e4bmsmoke_val.json": {
+        "e4bmsmoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_e4bs2_mix10.json": {
+        "e4bs2#base": {
+          "rows": 160,
+          "errors": 0
+        },
+        "e4bs2#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_e4bs2_mix11.json": {
+        "e4bs2#base": {
+          "rows": 163,
+          "errors": 1
+        },
+        "e4bs2#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_e4bs2_mix12.json": {
+        "e4bs2#base": {
+          "rows": 176,
+          "errors": 0
+        },
+        "e4bs2#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_e4bs2_mix8.json": {
+        "e4bs2#base": {
+          "rows": 171,
+          "errors": 0
+        },
+        "e4bs2#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_e4bs2_mix9.json": {
+        "e4bs2#base": {
+          "rows": 165,
+          "errors": 1
+        },
+        "e4bs2#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_e4bs2_val.json": {
+        "e4bs2#base": {
+          "rows": 325,
+          "errors": 2
+        },
+        "e4bs2#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_e4bs2smoke_val.json": {
+        "e4bs2smoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "e4bs2smoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_e4bs3_mix10.json": {
+        "e4bs3#base": {
+          "rows": 160,
+          "errors": 0
+        },
+        "e4bs3#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_e4bs3_mix11.json": {
+        "e4bs3#base": {
+          "rows": 163,
+          "errors": 1
+        },
+        "e4bs3#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_e4bs3_mix12.json": {
+        "e4bs3#base": {
+          "rows": 176,
+          "errors": 0
+        },
+        "e4bs3#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_e4bs3_mix8.json": {
+        "e4bs3#base": {
+          "rows": 171,
+          "errors": 0
+        },
+        "e4bs3#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_e4bs3_mix9.json": {
+        "e4bs3#base": {
+          "rows": 165,
+          "errors": 1
+        },
+        "e4bs3#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_e4bs3_val.json": {
+        "e4bs3#base": {
+          "rows": 325,
+          "errors": 2
+        },
+        "e4bs3#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_e4bs3smoke_val.json": {
+        "e4bs3smoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "e4bs3smoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_jevify_e4b_mix10.json": {
+        "jevify_e4b#base": {
+          "rows": 160,
+          "errors": 2
+        },
+        "jevify_e4b#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_jevify_e4b_mix11.json": {
+        "jevify_e4b#base": {
+          "rows": 163,
+          "errors": 1
+        },
+        "jevify_e4b#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_jevify_e4b_mix12.json": {
+        "jevify_e4b#base": {
+          "rows": 176,
+          "errors": 3
+        },
+        "jevify_e4b#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_jevify_e4b_mix8.json": {
+        "jevify_e4b#base": {
+          "rows": 171,
+          "errors": 0
+        },
+        "jevify_e4b#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_jevify_e4b_mix9.json": {
+        "jevify_e4b#base": {
+          "rows": 165,
+          "errors": 1
+        },
+        "jevify_e4b#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_jevify_e4b_val.json": {
+        "jevify_e4b#base": {
+          "rows": 325,
+          "errors": 7
+        },
+        "jevify_e4b#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_jevify_e4bsmoke_val.json": {
+        "jevify_e4bsmoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "jevify_e4bsmoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_kanana2_3b_mix10.json": {
+        "kanana2_3b#base": {
+          "rows": 160,
+          "errors": 1
+        },
+        "kanana2_3b#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_kanana2_3b_mix11.json": {
+        "kanana2_3b#base": {
+          "rows": 163,
+          "errors": 0
+        },
+        "kanana2_3b#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_kanana2_3b_mix12.json": {
+        "kanana2_3b#base": {
+          "rows": 176,
+          "errors": 6
+        },
+        "kanana2_3b#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_kanana2_3b_mix8.json": {
+        "kanana2_3b#base": {
+          "rows": 171,
+          "errors": 0
+        },
+        "kanana2_3b#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_kanana2_3b_mix9.json": {
+        "kanana2_3b#base": {
+          "rows": 165,
+          "errors": 2
+        },
+        "kanana2_3b#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_kanana2_3b_val.json": {
+        "kanana2_3b#base": {
+          "rows": 325,
+          "errors": 5
+        },
+        "kanana2_3b#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_kanana2_3bsmoke_val.json": {
+        "kanana2_3bsmoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "kanana2_3bsmoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_oos1_mix10.json": {
+        "oos1#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_oos1_mix11.json": {
+        "oos1#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_oos1_mix12.json": {
+        "oos1#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_oos1_mix8.json": {
+        "oos1#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_oos1_mix9.json": {
+        "oos1#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_oos2_mix10.json": {
+        "oos2#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_oos2_mix11.json": {
+        "oos2#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_oos2_mix12.json": {
+        "oos2#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_oos2_mix8.json": {
+        "oos2#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_oos2_mix9.json": {
+        "oos2#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_oos3_mix10.json": {
+        "oos3#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_oos3_mix11.json": {
+        "oos3#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_oos3_mix12.json": {
+        "oos3#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_oos3_mix8.json": {
+        "oos3#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_oos3_mix9.json": {
+        "oos3#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_qwen35_4b_mix10.json": {
+        "qwen35_4b#base": {
+          "rows": 160,
+          "errors": 0
+        },
+        "qwen35_4b#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_qwen35_4b_mix11.json": {
+        "qwen35_4b#base": {
+          "rows": 163,
+          "errors": 0
+        },
+        "qwen35_4b#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_qwen35_4b_mix12.json": {
+        "qwen35_4b#base": {
+          "rows": 176,
+          "errors": 0
+        },
+        "qwen35_4b#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_qwen35_4b_mix8.json": {
+        "qwen35_4b#base": {
+          "rows": 171,
+          "errors": 0
+        },
+        "qwen35_4b#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_qwen35_4b_mix9.json": {
+        "qwen35_4b#base": {
+          "rows": 165,
+          "errors": 0
+        },
+        "qwen35_4b#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_qwen35_4b_val.json": {
+        "qwen35_4b#base": {
+          "rows": 325,
+          "errors": 0
+        },
+        "qwen35_4b#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_qwen35_4bsmoke_val.json": {
+        "qwen35_4bsmoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "qwen35_4bsmoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_r16e2_mix10.json": {
+        "r16e2#base": {
+          "rows": 160,
+          "errors": 0
+        },
+        "r16e2#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_r16e2_mix11.json": {
+        "r16e2#base": {
+          "rows": 163,
+          "errors": 1
+        },
+        "r16e2#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_r16e2_mix12.json": {
+        "r16e2#base": {
+          "rows": 176,
+          "errors": 0
+        },
+        "r16e2#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_r16e2_mix8.json": {
+        "r16e2#base": {
+          "rows": 171,
+          "errors": 0
+        },
+        "r16e2#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_r16e2_mix9.json": {
+        "r16e2#base": {
+          "rows": 165,
+          "errors": 1
+        },
+        "r16e2#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_r16e2_val.json": {
+        "r16e2#base": {
+          "rows": 325,
+          "errors": 2
+        },
+        "r16e2#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_smoke_mix10.json": {
+        "smoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "smoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_smoke_val.json": {
+        "smoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "smoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_spark_s1_4b_mix10.json": {
+        "spark_s1_4b#base": {
+          "rows": 160,
+          "errors": 0
+        },
+        "spark_s1_4b#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_spark_s1_4b_mix11.json": {
+        "spark_s1_4b#base": {
+          "rows": 163,
+          "errors": 0
+        },
+        "spark_s1_4b#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_spark_s1_4b_mix12.json": {
+        "spark_s1_4b#base": {
+          "rows": 176,
+          "errors": 2
+        },
+        "spark_s1_4b#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_spark_s1_4b_mix8.json": {
+        "spark_s1_4b#base": {
+          "rows": 171,
+          "errors": 0
+        },
+        "spark_s1_4b#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_spark_s1_4b_mix9.json": {
+        "spark_s1_4b#base": {
+          "rows": 165,
+          "errors": 0
+        },
+        "spark_s1_4b#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_spark_s1_4b_val.json": {
+        "spark_s1_4b#base": {
+          "rows": 325,
+          "errors": 3
+        },
+        "spark_s1_4b#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_spark_s1_4bsmoke_val.json": {
+        "spark_s1_4bsmoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "spark_s1_4bsmoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      },
+      "eval_winnow_e4b_mix10.json": {
+        "winnow_e4b#base": {
+          "rows": 160,
+          "errors": 8
+        },
+        "winnow_e4b#lora": {
+          "rows": 160,
+          "errors": 0
+        }
+      },
+      "eval_winnow_e4b_mix11.json": {
+        "winnow_e4b#base": {
+          "rows": 163,
+          "errors": 3
+        },
+        "winnow_e4b#lora": {
+          "rows": 163,
+          "errors": 0
+        }
+      },
+      "eval_winnow_e4b_mix12.json": {
+        "winnow_e4b#base": {
+          "rows": 176,
+          "errors": 3
+        },
+        "winnow_e4b#lora": {
+          "rows": 176,
+          "errors": 0
+        }
+      },
+      "eval_winnow_e4b_mix8.json": {
+        "winnow_e4b#base": {
+          "rows": 171,
+          "errors": 3
+        },
+        "winnow_e4b#lora": {
+          "rows": 171,
+          "errors": 0
+        }
+      },
+      "eval_winnow_e4b_mix9.json": {
+        "winnow_e4b#base": {
+          "rows": 165,
+          "errors": 6
+        },
+        "winnow_e4b#lora": {
+          "rows": 165,
+          "errors": 0
+        }
+      },
+      "eval_winnow_e4b_val.json": {
+        "winnow_e4b#base": {
+          "rows": 325,
+          "errors": 14
+        },
+        "winnow_e4b#lora": {
+          "rows": 325,
+          "errors": 0
+        }
+      },
+      "eval_winnow_e4bsmoke_val.json": {
+        "winnow_e4bsmoke#base": {
+          "rows": 4,
+          "errors": 0
+        },
+        "winnow_e4bsmoke#lora": {
+          "rows": 4,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "method_gaps": [
+    "service-runtime calibration for new variants",
+    "paired style perturbation suites",
+    "risk-coverage curves for new variants",
+    "model-specific repeat/quantization/latency cards for all candidates"
+  ]
+}

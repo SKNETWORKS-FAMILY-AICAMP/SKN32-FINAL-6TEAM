@@ -1,0 +1,16 @@
+{
+  "ok": false,
+  "missing": [
+    "timetable",
+    "order",
+    "transfer_walk",
+    "bus_route",
+    "bus_stops",
+    "station_coords"
+  ],
+  "mismatched": [],
+  "manifest": null,
+  "data_dir": "\\data",
+  "data_dir_source": "unset",
+  "check_scope": "datacheck가 선택한 현재 필수/등록 입력; 전체 36개 해시 감사와 구분"
+}

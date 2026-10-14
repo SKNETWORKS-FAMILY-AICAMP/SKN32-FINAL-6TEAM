@@ -1,0 +1,567 @@
+Respond in Korean. User explicitly approved transmission of the selected mobility source/test code to Anthropic Sonnet 5.5. You receive only those approved code excerpts. No tools or file access. Do not speculate unseen helpers. Read supplied code, find a concrete correctness bug and give exact minimal diff plus failing input and regression tests. If uncertain distinguish it. Do not list general future work. Adult single-card tag assumption, maximum five boardings, repeat bus route exclusion, continuous rail grouped, 30/60-minute transfer window, max ride duration are current contracts. Do not change public schemas or invent external measurements.
+Find ONE concrete reproducible bug in mixed-transfer fare calculation, beyond intentionally unsupported earlybird. Check route identity, distance, clocks, fallback and arithmetic. 
+
+FILE: app/domains/travel_ops/instances/mobility/engine/options.py
+```python
+def distance_fare(m, steps):
+    """거리 추가운임(원) — base_m 을 넘은 몫을 단계마다 「every_m 마다 won」(올림)으로 매긴다."""
+    extra, cur = 0, 0
+    for s in steps:
+        cur = s["_from"]
+        if m <= cur:
+            break
+        end = m if s["upto_m"] is None else min(m, s["upto_m"])
+        extra += math.ceil((end - cur) / s["every_m"]) * s["won"]
+    return extra
+
+def _steps(F, base_m):
+    """규칙 distance_steps 에 구간 시작(_from)을 붙인다 — 첫 단계는 base_m 부터."""
+    out, cur = [], base_m
+    for s in F["subway"]["distance_steps"]["value"]:
+        out.append(dict(s, _from=cur))
+        cur = s["upto_m"] if s["upto_m"] is not None else cur
+    return out
+
+def subway_fare_at(F, m, first_board_min):
+    """지하철만 — 운임거리 m(정수) · 첫 승차 분 → 원. 조조는 기본운임에만."""
+    b = F["subway"]["base"]["value"]
+    base = b["won"]
+    eb = F["subway"]["early_bird"]["value"]
+    if first_board_min is not None and first_board_min < eb["until_min"]:
+        base = round(base * (1 - eb["rate"]))
+    return base + distance_fare(m, _steps(F, b["base_m"]))
+
+def early_bird(first_board_min, until_min, gate_window_min):
+    """조조 여부 — 기준은 **개찰 태그 시각**(「교통카드 사용 승차 시」 · GPT 54 #4). 태그는 [열차 출발 − 개찰_여유, 열차 출발] 어딘가.
+    True(열차가 until 전 출발 → 태그도 전) · False(창 전체가 until 이후) · None(창이 until 을 가로지른다 — 모른다)."""
+    if first_board_min < until_min:
+        return True
+    if first_board_min - gate_window_min >= until_min:
+        return False
+    return None
+
+def bus_fare(v, legs, legs_result):
+    """버스 한 번 — 유형별 단일요금(거리 무관). 공항·투어·모르는 유형 → None. 조조는 승차 창이 06:30 한쪽일 때만."""
+    rides = ride_results(legs, legs_result)
+    if not rides or len(legs) != 1:
+        return None
+    bt = bus_type(v, legs[0])
+    if bt is None:
+        return None
+    typ, term = bt
+    F = _fare(v)["bus"]
+    if typ in F["no_fare_types"]["value"] or typ not in F["by_type"]["value"]:
+        return None
+    won = F["by_type"]["value"][typ]
+    eb = F["early_bird"]["value"]
+    if typ not in F["early_bird_types"]["value"]:
+        return won
+    lr = rides[0]
+    if lr.depart_min is None or lr.wait_min is None or term is None:
+        return None
+    at_stop = lr.depart_min - lr.wait_min                  # 정류장 도착 — 승차는 [at_stop, at_stop + 배차] 어딘가(대기 모델 추정)
+    if at_stop + term < eb["until_min"]:
+        return round(won * (1 - eb["rate"]))
+    if at_stop >= eb["until_min"]:
+        return won
+    return None                                            # 06:30 을 가로지른다 — 조조인지 모른다
+
+def single_fare(F, p):
+    """환승 없이 그 탈것만 탔을 때 요금 — 통합요금 상한(개별 요금 합)용. 지하철은 자기 거리 단계 · 버스는 단일요금."""
+    if p["kind"] == "subway":
+        return subway_fare_at(F, p["m"], None)
+    return p["base"]
+
+def bus_fare_upper(v, legs, legs_result):
+    """알려진 버스 유형의 할인 미적용 기본요금. 배차 창이 조조 경계를 걸쳐도 상단은 유지한다."""
+    rides = ride_results(legs, legs_result)
+    if not rides or len(legs) != 1:
+        return None
+    bt = bus_type(v, legs[0])
+    if bt is None:
+        return None
+    typ, _term = bt
+    F = _fare(v)["bus"]
+    if typ in F["no_fare_types"]["value"] or typ not in F["by_type"]["value"]:
+        return None
+    won = F["by_type"]["value"][typ]
+    try:
+        if isinstance(won, bool) or not isinstance(won, (int, float)) or won <= 0 or not math.isfinite(won):
+            return None
+    except OverflowError:
+        return None
+    return won
+
+def transfer_fare(F, parts):
+    """통합환승 합성(규칙 fare.transfer) — parts = [{kind, base, m, board, alight}] 탄 순서.
+    kind 는 'subway' 또는 버스 유형. 하나라도 규칙 밖(심야·모르는 유형) · 거리 모름 · 환승 창 초과 · 승차 수 초과 → None.
+    요금 = 높은 기본운임 + 합산 거리 추가(**환승 단계 — 10km, 광역 포함 30km 넘으면 5km마다**)
+    · 단 개별 요금 합을 넘지 않는다(GPT 54 #3). 지하철 안 환승(개찰 안)은 부르는 쪽이 한 part 로 묶는다."""
+    T = F["transfer"]
+    if not parts or len(parts) > T["max_rides"]["value"]:
+        return None
+    if any(p["kind"] not in T["types"]["value"] or p["m"] is None or p["base"] is None for p in parts):
+        return None
+    for p in parts:
+        for key in ("m", "base", "board", "alight"):
+            value = p.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                return None
+        if p["m"] < 0 or p["base"] < 0 or p["alight"] < p["board"]:
+            return None
+    w = T["window_min"]["value"]
+    for a, b in zip(parts, parts[1:]):
+        # 서울시 공식 안내: 야간 창은 후속 승차 시각 기준이다(21시/07시 경계 포함).
+        t = b["board"] % MIN_DAY
+        night = t >= w["night_from_min"] or t < w["night_until_min"]
+        gap = b["board"] - a["alight"]
+        if not 0 <= gap <= (w["night"] if night else w["day"]):
+            return None
+    d = T["distance_steps"]["value"]
+    base_m = max([d['base_m']] + [d.get('base_m_by_type', {}).get(p['kind'], d['base_m']) for p in parts])
+    steps = [dict(s, _from=base_m if i == 0 else d["steps"][i - 1]["upto_m"]) for i, s in enumerate(d["steps"])]
+    tot = max(p["base"] for p in parts) + distance_fare(sum(p["m"] for p in parts), steps)
+    if T["cap"]["value"] == "sum_of_single":
+        tot = min(tot, sum(single_fare(F, p) for p in parts))
+    return tot
+
+def mixed_fare_estimate(v, legs, legs_result):
+    """선택 경로의 성인 1인 1카드·승하차 태그 조건부 환승 예상액.
+
+    버스 구간거리는 청구 운임거리로 확정하지 않는다. 지하철은 기존 거리 범위
+    상단을 쓰며 조조는 적용하지 않는다. 식별값/거리/시각/환승 조건이 부족하면
+    None으로 반환하여 제품이 개별 요금 합으로 안내하도록 한다.
+    """
+    F = _fare(v)
+    T = F.get('transfer', {})
+    if (T.get('bus_distance', {}).get('value') != 'selected_contiguous_sections'
+            or 'bus' not in modes_of(legs) or len(legs) < 2
+            or set(modes_of(legs)) - {'bus', 'subway'}):
+        return None
+    rides = ride_results(legs, legs_result)
+    if not rides:
+        return None
+    groups = []
+    previous_arrival = None
+    for leg, lr in zip(legs, rides):
+        times = (lr.depart_min, lr.arrive_min)
+        if lr.verdict != 'feasible' or any(isinstance(t, bool) or not isinstance(t, (int, float))
+                                         or not math.isfinite(t) for t in times):
+            return None
+        if lr.arrive_min < lr.depart_min or (previous_arrival is not None
+                                             and lr.depart_min < previous_arrival):
+            return None
+        previous_arrival = lr.arrive_min
+        mode = leg_mode(leg)
+        if mode == 'subway' and groups and groups[-1][0] == mode:
+            if groups[-1][1][-1]['to'] != leg['from']:
+                return None
+            groups[-1][1].append(leg)
+            groups[-1][2].append(lr)
+        else:
+            groups.append((mode, [leg], [lr]))
+    parts, bus_routes = [], set()
+    extra = 0
+    for mode, gl, gr in groups:
+        board, alight = gr[0].depart_min, gr[-1].arrive_min
+        if mode == 'bus':
+            leg = gl[0]
+            bus = getattr(v, 'bus', None)
+            if bus is None or not all(k in leg for k in ('route_id', 'from_sequence', 'to_sequence',
+                                                         'from_stop_id', 'to_stop_id')):
+                return None
+            route = route_for_leg(bus, leg)
+            if route is None or route.route_id in bus_routes:
+                return None
+            bus_routes.add(route.route_id)
+            segment = segment_for_leg(bus, route, leg)
+            kind = route.route_type_nm
+            if segment is None or kind not in T['types']['value']:
+                return None
+            a, b, _count = segment
+            meters = bus.distance_m(route.route_id, a['seq'], b['seq'])
+            base = bus_fare_upper(v, gl, gr)
+        else:
+            from .special_rail import surcharge
+            rail_extra = surcharge(v, gl)
+            if rail_extra is None:
+                return None
+            extra += rail_extra
+            meters = None
+            for net in (fare_net(v), fare_net_est(v)):
+                if net is not None and net.ridden_m(gl) is not None:
+                    meters = net.upper_m(gl)
+                    if meters is not None:
+                        break
+            kind, base = 'subway', F['subway']['base']['value']['won']
+        cap = T.get('max_ride_min', {}).get('value', {})
+        duration_limit = cap.get(kind, cap.get(mode))
+        if duration_limit is None or alight - board > duration_limit:
+            return None
+        parts.append(dict(kind=kind, base=base, m=meters, board=board, alight=alight))
+    result = transfer_fare(F, parts)
+    return None if result is None else result + extra
+
+def fare_upper_of(v, legs, legs_result):
+    """버스가 섞인 환승의 **요금 상한**(1인) — 규칙 fare.transfer.cap = sum_of_single(확정): 통합요금은 탈것마다 따로 낸
+    요금의 합을 넘지 않는다. 조건부 할인 예상액을 못 내는 경로의 대체 안내다.
+    탈것별 일반 요금은 지하철 묶음(개찰 안 환승)의 승인된 거리 범위에 따른
+    subway_fare_upper, 버스는 bus_fare_upper. 상단에서는 조조 할인을 적용하지 않는다.
+    거리 범위 추정이 포함될 수 있으므로 실제 결제 상한 보장이 아닌 예상액 상단이다.
+
+    ☆`[2026-09-29 문제목록 #20]` 앞 판은 이 경로의 요금 칸을 비웠다 → 우리 재계획이 「요금 미상」으로 후보를 떨어뜨렸다.
+      상한은 지어낸 값이 아니라 확정 규칙에서 나온 값이다. 부르는 쪽은 「상한」이라고 밝힌다. 한 조각이라도 모르면 None."""
+    ms = [leg_mode(x) for x in legs]
+    if "bus" not in ms or len(ms) < 2 or set(ms) - {"bus", "subway"}:
+        return None                                         # 버스가 섞인 환승이 아니다 — fare_of 의 몫이거나 규칙 밖
+    rides = ride_results(legs, legs_result)
+    if rides is None:
+        return None
+    groups = []                                             # (수단, [leg], [결과]) — 연속 지하철은 한 묶음
+    for leg, lr in zip(legs, rides):
+        m = leg_mode(leg)
+        if m == "subway" and groups and groups[-1][0] == "subway":
+            groups[-1][1].append(leg)
+            groups[-1][2].append(lr)
+        else:
+            groups.append((m, [leg], [lr]))
+    if not any(m == "bus" for m, _l, _r in groups):
+        return None                                         # 버스가 안 섞였다 — 이 함수의 몫이 아니다
+    total = 0
+    for m, gl, gr in groups:
+        f = (subway_fare_upper(v, gl, gr, apply_early_bird=False) if m == "subway"
+             else bus_fare_upper(v, gl, gr) if m == "bus" else None)
+        if f is None:
+            return None
+        total += f
+    return total
+
+def ride_results(legs, legs_result):
+    """판정기 구간 결과에서 「환승 …」 줄만 빼고, 남은 탄 구간이 legs 와 **개수·순서·표기 모두** 같을 때만 짝지어 준다
+    (같은 표기가 두 번이어도 순서로 · GPT 23 #5 · 2차 #5 — 예상 밖 승차 결과를 건너뛰어 맞추지 않는다). 아니면 None."""
+    rides = [lr for lr in (legs_result or []) if not str(lr.label).startswith("환승 ")]
+    if len(rides) != len(legs) or any(lr.label != leg_txt(leg) for lr, leg in zip(rides, legs)):
+        return None
+    return rides
+```
+
+FILE: tests/unit/travel/mobility/test_transfer_fare_product_v1.py
+```python
+"""환승 할인 계산을 성인 카드 조건부 예상액으로 제품 경로에 연결한다."""
+from copy import deepcopy
+from datetime import datetime
+
+import pytest
+
+from app.domains.travel_ops.instances.mobility.engine import options as O, plan as P
+from app.domains.travel_ops.instances.mobility.engine.bus import BusRoutes
+from app.domains.travel_ops.instances.mobility.engine.bus_identity import bus_leg
+from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime
+from app.domains.travel_ops.instances.mobility.engine.verify_time import LegResult, leg_txt
+from .test_mixed_fare_upper_v1 import fixture
+from .test_review_fixes_plan import PLACES
+
+
+def scenario(bus_m=2000, rail_m=6000):
+    v, _bus, rail = fixture({('09호선', 'A', 'B'): rail_m / 2,
+                             ('09호선', 'B', 'C'): rail_m / 2})
+    rows = [dict(route_id='r1', seq=1, station_id='s1', station_nm='갑'),
+            dict(route_id='r1', seq=2, station_id='s2', station_nm='을', sect_dist_m=bus_m)]
+    v.bus = BusRoutes([dict(route_id='r1', route_nm='101', route_type_nm='간선', term_min=10)], rows)
+    v.R['fare']['transfer']['bus_distance'] = {
+        'value': 'selected_contiguous_sections', 'grade': '추정'}
+    v.R['fare']['transfer']['max_ride_min'] = {'value': {'subway': 300, 'bus': 300, '마을': 60}}
+    bus = bus_leg(v.bus.route('101'), *rows)
+    legs = [bus, rail]
+    results = [LegResult(i + 1, leg_txt(leg), 'feasible', '', depart_min=720 + i * 20,
+                         arrive_min=730 + i * 20, wait_min=5) for i, leg in enumerate(legs)]
+    return v, legs, results
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_card_discount_reaches_both_mixed_orders(reverse):
+    v, legs, lr = scenario()
+    if reverse:
+        legs.reverse()
+        lr = [LegResult(i + 1, leg_txt(leg), 'feasible', '', depart_min=720 + i * 20,
+                        arrive_min=730 + i * 20, wait_min=5) for i, leg in enumerate(legs)]
+    assert O.mixed_fare_estimate(v, legs, lr) == 1550
+    assert O.fare_upper_of(v, legs, lr) == 3050
+
+
+@pytest.mark.parametrize('meters,expected', [(10000, 1550), (10001, 1650), (15000, 1650),
+                                             (15001, 1750), (60000, 2550)])
+def test_combined_distance_steps_use_transfer_rule(meters, expected):
+    v, legs, lr = scenario(bus_m=meters, rail_m=0)
+    # 명시된 0m 간선도 거리 누락과 구분한다.
+    assert O.mixed_fare_estimate(v, legs, lr) == expected
+
+
+@pytest.mark.parametrize('break_kind', [
+    'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+    'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+    'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+])
+def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+    v, legs, lr = scenario()
+    if break_kind == 'missing_distance':
+        v.bus.stops['r1'][1].pop('sect_dist_m')
+    elif break_kind in ('negative', 'infinite', 'bool_distance'):
+        v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                             'bool_distance': True}[break_kind]
+    elif break_kind == 'missing_identity':
+        legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+    elif break_kind == 'wrong_stop_id':
+        legs[0]['to_stop_id'] = 'other'
+    elif break_kind == 'wrong_sequence':
+        legs[0]['to_sequence'] = 3
+    elif break_kind == 'unknown_type':
+        v.bus.route('101').route_type_nm = '공항'
+    elif break_kind == 'unknown_rail':
+        legs[1]['line'] = '모르는철도'
+        lr[1].label = leg_txt(legs[1])
+    elif break_kind == 'misaligned':
+        lr.reverse()
+    elif break_kind == 'infeasible':
+        lr[0].verdict = 'infeasible'
+    elif break_kind == 'missing_clock':
+        lr[0].arrive_min = None
+    elif break_kind == 'overlap':
+        lr[1].depart_min = 729
+    elif break_kind == 'expired':
+        lr[1].depart_min = 761
+        lr[1].arrive_min = 771
+    elif break_kind == 'disabled':
+        v.R['fare']['transfer']['bus_distance']['value'] = None
+    elif break_kind == 'too_long':
+        lr[0].depart_min = 400
+    assert O.mixed_fare_estimate(v, legs, lr) is None
+
+
+def test_reboarding_same_bus_is_not_discounted_even_after_rail():
+    v, legs, lr = scenario()
+    legs.append(deepcopy(legs[0]))
+    lr.append(LegResult(3, leg_txt(legs[2]), 'feasible', '', depart_min=760, arrive_min=770))
+    assert O.mixed_fare_estimate(v, legs, lr) is None
+
+
+def test_consecutive_subway_transfers_count_as_one_boarding():
+    v, legs, lr = scenario()
+    legs[1]['to'] = 'B'
+    legs.append(dict(mode='subway', line='09호선', **{'from': 'B', 'to': 'C'}))
+    lr[1].label = leg_txt(legs[1])
+    lr.append(LegResult(3, leg_txt(legs[2]), 'feasible', '', depart_min=755, arrive_min=765))
+    assert O.mixed_fare_estimate(v, legs, lr) == 1550
+
+
+@pytest.mark.parametrize('count,expected', [(2, 1500), (5, 1500), (6, None)])
+def test_distinct_bus_routes_discount_and_five_boarding_limit(count, expected):
+    v, legs, lr = scenario()
+    template = v.bus.stops['r1']
+    routes, stops, legs, lr = [], [], [], []
+    for i in range(count):
+        rid, name = f'r{i}', str(100 + i)
+        rows = [dict(row, route_id=rid) for row in template]
+        routes.append(dict(route_id=rid, route_nm=name, route_type_nm='간선', term_min=10))
+        stops.extend(rows)
+    v.bus = BusRoutes(routes, stops)
+    for i in range(count):
+        route = v.bus.route(str(100 + i))
+        leg = bus_leg(route, *v.bus.stops[route.route_id])
+        legs.append(leg)
+        lr.append(LegResult(i + 1, leg_txt(leg), 'feasible', '',
+                            depart_min=720 + i * 20, arrive_min=730 + i * 20))
+    assert O.mixed_fare_estimate(v, legs, lr) == expected
+
+
+def test_special_rail_surcharge_is_not_lost_after_integration():
+    v, legs, lr = scenario()
+    v.R['fare']['subway']['special_lines'] = {
+        '09호선': {'stations': ['A', 'B', 'C'], 'confirmed_edges': [],
+                  'zones': [{'id': 'z1', 'from': 'A', 'to': 'C'}], 'surcharges': {'z1': 700}}}
+    assert O.mixed_fare_estimate(v, legs, lr) == 2250
+
+
+@pytest.mark.parametrize('meters,expected', [(30000, 3000), (30001, 3100),
+                                            (35000, 3100), (35001, 3200)])
+def test_seoul_express_bus_uses_thirty_km_transfer_base(meters, expected):
+    v, legs, lr = scenario(bus_m=meters, rail_m=0)
+    v.bus.route('101').route_type_nm = '광역'
+    assert O.mixed_fare_estimate(v, legs, lr) == expected
+
+
+@pytest.mark.parametrize('start,gap,discounted', [(1200, 30, True), (1200, 31, False),
+                                               (1250, 60, True), (1250, 61, False)])
+def test_product_transfer_window_uses_following_board_time(start, gap, discounted):
+    v, legs, lr = scenario()
+    lr[0].depart_min, lr[0].arrive_min = start - 10, start
+    lr[1].depart_min, lr[1].arrive_min = start + gap, start + gap + 10
+    assert O.mixed_fare_estimate(v, legs, lr) == (1550 if discounted else None)
+
+
+def test_public_planner_uses_discount_estimate_with_card_and_tag_condition(monkeypatch):
+    v, legs, results = scenario()
+    planner = P.Planner(Runtime(v, timetable_built_at='controlled', rules_version='controlled', stats={}),
+                        modes=['bus', 'subway'])
+    option = {'eta_min': 40, 'uses': P.uses_of(legs), '_legs': legs, '_route': P.label_of(legs),
+              '_start': 720, '_transfers': 1, '_n': 1, '_key': ('mixed', 0, 1), '_mixed': True,
+              '_margin': 0, '_slack': 0, '_walk_min': 0, '_walk_m': 0, '_fare': None,
+              '_severe': [], '_covered': False, '_lr': results, '_day_type': '평일'}
+    monkeypatch.setattr(planner, '_station_pairs', lambda *args: ([], [], []))
+    monkeypatch.setattr(planner, '_bus_direct', lambda *args: [])
+    monkeypatch.setattr(planner, '_bike_direct', lambda *args: ([], None))
+    monkeypatch.setattr(planner, '_mixed', lambda *args: [option])
+    got, why = planner.leg(PLACES[0], PLACES[1], datetime.fromisoformat('2026-10-05T12:30:00+09:00'),
+                           {}, True, 'controlled-discount')
+    assert why is None
+    public = got[0]['options'][0]
+    assert public['fare_krw'] == 1550
+    assert '1인 1카드' in public['label'] and '승하차 태그' in public['label']
+    assert '환승 할인 예상액' in public['label'] and '거리 모델' in public['label']
+    assert '할인 전 예상액 상단' not in public['label']
+
+```
+
+FILE: tests/unit/travel/mobility/test_transfer_fare_clock_v1.py
+```python
+"""서울시 환승 창은 다음 승차 시각 기준이다. 현재 제품 미연결 계산식 시험."""
+import pytest
+
+from app.domains.travel_ops.instances.mobility.engine.options import transfer_fare
+from .test_plan_v1 import _rules
+
+
+def parts(alight, board):
+    return [dict(kind="간선", base=1500, m=3000, board=alight-10, alight=alight),
+            dict(kind="subway", base=1550, m=3000, board=board, alight=board+10)]
+
+
+@pytest.mark.parametrize("alight,board,expected", [
+    (20*60+40, 21*60+20, 1550),
+    (20*60+30, 21*60+30, 1550),
+    (20*60+45, 21*60+46, None),
+    (6*60+40, 7*60+20, None),
+    (6*60+20, 7*60+1, None),
+    (6*60+30, 7*60, 1550),
+    (23*60+40, 24*60+30, 1550),
+    (12*60, 12*60+30, 1550),
+    (12*60, 12*60+31, None),
+])
+def test_following_board_controls_day_or_night_window(alight, board, expected):
+    assert transfer_fare(_rules()["fare"], parts(alight, board)) == expected
+
+
+def test_overlapping_rides_cannot_receive_transfer_discount():
+    assert transfer_fare(_rules()["fare"], parts(720, 719)) is None
+
+
+@pytest.mark.parametrize("field,value", [
+    ("m", float("nan")), ("m", float("inf")), ("m", -1), ("m", True),
+    ("base", -1), ("board", float("nan")), ("alight", None),
+])
+def test_invalid_distance_fare_or_clock_does_not_produce_money(field, value):
+    data = parts(720, 725)
+    data[0][field] = value
+    assert transfer_fare(_rules()["fare"], data) is None
+
+```
+
+FILE: tests/unit/travel/mobility/test_fare_discount_upper_v1.py
+```python
+"""할인 여부의 불확실성이 알려진 일반 요금 상단을 없애지 않는다."""
+from copy import deepcopy
+from datetime import datetime
+
+import pytest
+
+from app.domains.travel_ops.instances.mobility.engine import options as O, plan as P
+from app.domains.travel_ops.instances.mobility.engine.runtime import Runtime
+from tests.unit.travel.mobility.test_mixed_fare_upper_v1 import fixture, rides
+from tests.unit.travel.mobility.test_review_fixes_plan import PLACES
+
+
+@pytest.mark.parametrize('rail_first', [True, False])
+@pytest.mark.parametrize('first_board', [375, 385])
+def test_mixed_upper_does_not_depend_on_early_bird_or_a_crossing_boarding_window(rail_first, first_board):
+    v, bus, rail = fixture()
+    legs = [rail, bus] if rail_first else [bus, rail]
+    results = rides(legs)
+    for i, lr in enumerate(results):
+        lr.depart_min = first_board + i * 10
+        lr.arrive_min = lr.depart_min + 8
+    assert O.fare_of(v, legs, results) is None
+    assert O.fare_upper_of(v, legs, results) == 3150
+
+
+def test_midday_mixed_upper_is_preserved():
+    v, bus, rail = fixture()
+    assert O.fare_upper_of(v, [bus, rail], rides([bus, rail])) == 3150
+
+
+@pytest.mark.parametrize('kind,won', [('간선', 1500), ('지선', 1500), ('순환', 1400),
+                                   ('마을', 1200), ('광역', 3000), ('심야', 2500)])
+def test_known_bus_upper_uses_the_rule_amount_without_a_discount(kind, won):
+    v, bus, _ = fixture()
+    v.bus.route('101').route_type_nm = kind
+    result = rides([bus])
+    result[0].depart_min = 385
+    assert O.bus_fare_upper(v, [bus], result) == won
+
+
+@pytest.mark.parametrize('kind', ['공항', '투어', '없는유형', None])
+def test_unsupported_bus_has_no_upper_amount(kind):
+    v, bus, _ = fixture()
+    v.bus.route('101').route_type_nm = kind
+    assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+
+
+@pytest.mark.parametrize('amount', [-1, float('nan'), float('inf'), True, '1500', None])
+def test_invalid_rule_amount_does_not_become_a_budget_value(amount):
+    v, bus, _ = fixture()
+    v.R['fare']['bus']['by_type']['value']['간선'] = amount
+    assert O.bus_fare_upper(v, [bus], rides([bus])) is None
+
+
+def test_unknown_bus_or_unmatched_ride_is_not_filled():
+    v, bus, _ = fixture()
+    bad = dict(bus, route='없는노선')
+    assert O.bus_fare_upper(v, [bad], rides([bad])) is None
+    assert O.bus_fare_upper(v, [bus], []) is None
+
+
+@pytest.mark.parametrize('rail_first', [True, False])
+def test_public_mixed_option_carries_undiscounted_upper_and_explanation(monkeypatch, rail_first):
+    v, bus, rail = fixture()
+    runtime = Runtime(v, timetable_built_at='controlled', rules_version='controlled', stats={})
+    planner = P.Planner(runtime, modes=['bus', 'subway'])
+    legs = [rail, bus] if rail_first else [bus, rail]
+    results = rides(legs)
+    for i, lr in enumerate(results):
+        lr.depart_min = 370 + i * 10
+        lr.arrive_min = lr.depart_min + 8
+    option = {'eta_min': 40, 'uses': P.uses_of(legs), '_legs': legs, '_route': P.label_of(legs),
+              '_start': 370, '_transfers': 1, '_n': 1, '_key': ('mixed', 0, 1), '_mixed': True,
+              '_margin': 0, '_slack': 0, '_walk_min': 0, '_walk_m': 0, '_fare': None,
+              '_severe': [], '_covered': False, '_lr': results, '_day_type': '평일'}
+    snapshot = deepcopy(option)
+    monkeypatch.setattr(planner, '_station_pairs', lambda *args: ([], [], []))
+    monkeypatch.setattr(planner, '_bus_direct', lambda *args: [])
+    monkeypatch.setattr(planner, '_bike_direct', lambda *args: ([], None))
+    monkeypatch.setattr(planner, '_mixed', lambda *args: [deepcopy(option)])
+    got, why = planner.leg(PLACES[0], PLACES[1], datetime.fromisoformat('2026-10-09T06:50:00+09:00'),
+                           {}, True, 'controlled-mixed')
+    assert why is None
+    public = got[0]['options'][0]
+    assert public['fare_krw'] == 3150
+    assert '환승 할인 전 예상액 상단' in public['label']
+    assert '조조 할인 미적용' in public['label']
+    assert option == snapshot
+
+
+def test_standalone_rail_early_bird_policy_is_preserved():
+    v, _, rail = fixture()
+    result = rides([rail])
+    result[0].depart_min = 370
+    assert O.subway_fare_upper(v, [rail], result) == 1340
+
+```

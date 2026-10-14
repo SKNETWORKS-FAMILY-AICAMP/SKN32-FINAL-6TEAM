@@ -1,0 +1,11 @@
+{
+  "created_at": "2026-10-09T11:51:00.412739+09:00",
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_1151_지하철_실제인증키_출발환승_연결검증.md",
+  "assets": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v41",
+  "evidence": "final_project_cs/wiki/records/evidence/2026-10-09_1143_지하철_실제키_승차조회",
+  "source_code_changed": false,
+  "tests_reexecuted": false,
+  "prior_test_count": 197,
+  "previous_tests_timestamp": "2026-10-09 11:37 KST",
+  "full_feature_completion": false
+}

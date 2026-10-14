@@ -1,0 +1,2230 @@
+{
+  "rows": [
+    {
+      "id": "N091",
+      "a": "회현역",
+      "b": "광장시장",
+      "mode": "car",
+      "case": {
+        "id": "uturn/N091/car",
+        "date": "2026-10-11",
+        "stage": "pre_departure",
+        "depart_at": "10:00",
+        "arrive_by": "11:00",
+        "party": {},
+        "first_visit": false,
+        "no_alternatives": true,
+        "legs": [
+          {
+            "mode": "car",
+            "from": "37.5588,126.9786",
+            "to": "37.57,126.9996"
+          }
+        ]
+      },
+      "result": {
+        "id": "uturn/N091/car",
+        "verdict": "feasible",
+        "reason": "예정 10:09 +@10분(최악 10:09 + 버퍼 10분) · 여유 41분",
+        "grade": "추정",
+        "legs": [
+          {
+            "idx": 0,
+            "label": "자동차 37.5588,126.9786→37.57,126.9996",
+            "verdict": "feasible",
+            "reason": "10:00 출발 · 3.4 km · 소요 9분",
+            "grade": "추정",
+            "depart_min": 600,
+            "arrive_min": 609,
+            "wait_min": null,
+            "ride_min": 9.0,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "topis_link_profile_v1@2025-09~2026-05",
+                "grade": "추정",
+                "observed_at": "2026-05-31",
+                "claim": "자동차 3.4 km · 휴일 10시 출발 소요 8.9분 · 커버 topis 97.2% / class 2.8% / default 0.0% (링크 16개)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "osm_road_graph@2026-09-18",
+                "grade": "확정",
+                "observed_at": "2026-09-18",
+                "claim": "도로망 경로 거리 3,386 m (좌표열은 저장하지 않는다)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "car.등급"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "car.coverage"
+              }
+            ],
+            "car": {
+              "v": 1,
+              "kind": "car_leg",
+              "mode": "car",
+              "grade": "추정",
+              "distance_m": 3385.8,
+              "topis_time_s": 535,
+              "gh_time_s": 247,
+              "depart": "2026-10-11T10:00",
+              "arrive": "2026-10-11T10:08",
+              "day_type": "휴일",
+              "hour_start": 10,
+              "coverage_m": {
+                "topis": 3291.4,
+                "class": 94.4,
+                "default": 0.0
+              },
+              "coverage_pct": {
+                "topis": 97.2,
+                "class": 2.8,
+                "default": 0.0
+              },
+              "n_edges": 118,
+              "links": [
+                {
+                  "link_id": "1010015800",
+                  "m": 483.3
+                },
+                {
+                  "link_id": "1010014200",
+                  "m": 420.9
+                },
+                {
+                  "link_id": "1010002600",
+                  "m": 347.9
+                },
+                {
+                  "link_id": "1010016200",
+                  "m": 326.9
+                },
+                {
+                  "link_id": "1010018400",
+                  "m": 295.9
+                },
+                {
+                  "link_id": "1010011400",
+                  "m": 262.7
+                },
+                {
+                  "link_id": "1010014800",
+                  "m": 254.0
+                },
+                {
+                  "link_id": "1010014400",
+                  "m": 198.4
+                },
+                {
+                  "link_id": "1010007200",
+                  "m": 194.0
+                },
+                {
+                  "link_id": "1010005000",
+                  "m": 170.3
+                },
+                {
+                  "link_id": "1000004300",
+                  "m": 169.2
+                },
+                {
+                  "link_id": "1010013600",
+                  "m": 74.9
+                },
+                {
+                  "link_id": "1010013500",
+                  "m": 48.0
+                },
+                {
+                  "link_id": "1010005200",
+                  "m": 25.5
+                },
+                {
+                  "link_id": "1010002800",
+                  "m": 16.0
+                },
+                {
+                  "link_id": "1000006000",
+                  "m": 3.4
+                }
+              ],
+              "n_links": 16,
+              "source_id": [
+                "topis_link_profile_v1@2025-09~2026-05",
+                "osm_road_graph@2026-09-18"
+              ],
+              "routing_evidence": {
+                "turn_restrictions": {
+                  "status": "partial_static_motorcar",
+                  "applied_relations": 4706,
+                  "source_relations": 6258,
+                  "excluded_candidate_relations": 6,
+                  "complete_road_rules": false
+                },
+                "snap_selection": {
+                  "candidate_counts": [
+                    3,
+                    4
+                  ],
+                  "selected_candidate_ranks": [
+                    1,
+                    2
+                  ],
+                  "used_non_nearest": [
+                    true,
+                    true
+                  ],
+                  "nearest_snap_m": [
+                    1.7,
+                    71.3
+                  ],
+                  "physical_access_verified": false
+                },
+                "snap_m": [
+                  8.3,
+                  78.4
+                ]
+              }
+            },
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null
+          }
+        ],
+        "arrive_min": 609,
+        "slack_min": 41,
+        "relief": null,
+        "warnings": [
+          {
+            "code": "MOB_W_WORST_NO_SPREAD",
+            "class": "data",
+            "text": "자동차 37.5588,126.9786→37.57,126.9996 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+            "to_answer": false
+          }
+        ],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "topis_link_profile_v1@2025-09~2026-05",
+            "grade": "추정",
+            "observed_at": "2026-05-31",
+            "claim": "자동차 3.4 km · 휴일 10시 출발 소요 8.9분 · 커버 topis 97.2% / class 2.8% / default 0.0% (링크 16개)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "osm_road_graph@2026-09-18",
+            "grade": "확정",
+            "observed_at": "2026-09-18",
+            "claim": "도로망 경로 거리 3,386 m (좌표열은 저장하지 않는다)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "car.등급"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "car.coverage"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "근거없음",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst.car_spread"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "buffer.by_stage.pre_departure"
+          }
+        ],
+        "day_type": "holiday",
+        "alternatives": [],
+        "alt_tried": [],
+        "taxi": null,
+        "candidates": null,
+        "ties": null,
+        "dropped_candidates": null,
+        "bus_rejected": null,
+        "axis_best": null,
+        "code": null,
+        "verdict_best": "feasible",
+        "legs_worst": [
+          {
+            "idx": 0,
+            "label": "자동차 37.5588,126.9786→37.57,126.9996",
+            "verdict": "feasible",
+            "reason": "10:00 출발 · 3.4 km · 소요 9분",
+            "grade": "추정",
+            "depart_min": 600,
+            "arrive_min": 609,
+            "wait_min": null,
+            "ride_min": 9.0,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "topis_link_profile_v1@2025-09~2026-05",
+                "grade": "추정",
+                "observed_at": "2026-05-31",
+                "claim": "자동차 3.4 km · 휴일 10시 출발 소요 8.9분 · 커버 topis 97.2% / class 2.8% / default 0.0% (링크 16개)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "osm_road_graph@2026-09-18",
+                "grade": "확정",
+                "observed_at": "2026-09-18",
+                "claim": "도로망 경로 거리 3,386 m (좌표열은 저장하지 않는다)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "car.등급"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "car.coverage"
+              }
+            ],
+            "car": {
+              "v": 1,
+              "kind": "car_leg",
+              "mode": "car",
+              "grade": "추정",
+              "distance_m": 3385.8,
+              "topis_time_s": 535,
+              "gh_time_s": 247,
+              "depart": "2026-10-11T10:00",
+              "arrive": "2026-10-11T10:08",
+              "day_type": "휴일",
+              "hour_start": 10,
+              "coverage_m": {
+                "topis": 3291.4,
+                "class": 94.4,
+                "default": 0.0
+              },
+              "coverage_pct": {
+                "topis": 97.2,
+                "class": 2.8,
+                "default": 0.0
+              },
+              "n_edges": 118,
+              "links": [
+                {
+                  "link_id": "1010015800",
+                  "m": 483.3
+                },
+                {
+                  "link_id": "1010014200",
+                  "m": 420.9
+                },
+                {
+                  "link_id": "1010002600",
+                  "m": 347.9
+                },
+                {
+                  "link_id": "1010016200",
+                  "m": 326.9
+                },
+                {
+                  "link_id": "1010018400",
+                  "m": 295.9
+                },
+                {
+                  "link_id": "1010011400",
+                  "m": 262.7
+                },
+                {
+                  "link_id": "1010014800",
+                  "m": 254.0
+                },
+                {
+                  "link_id": "1010014400",
+                  "m": 198.4
+                },
+                {
+                  "link_id": "1010007200",
+                  "m": 194.0
+                },
+                {
+                  "link_id": "1010005000",
+                  "m": 170.3
+                },
+                {
+                  "link_id": "1000004300",
+                  "m": 169.2
+                },
+                {
+                  "link_id": "1010013600",
+                  "m": 74.9
+                },
+                {
+                  "link_id": "1010013500",
+                  "m": 48.0
+                },
+                {
+                  "link_id": "1010005200",
+                  "m": 25.5
+                },
+                {
+                  "link_id": "1010002800",
+                  "m": 16.0
+                },
+                {
+                  "link_id": "1000006000",
+                  "m": 3.4
+                }
+              ],
+              "n_links": 16,
+              "source_id": [
+                "topis_link_profile_v1@2025-09~2026-05",
+                "osm_road_graph@2026-09-18"
+              ],
+              "routing_evidence": {
+                "turn_restrictions": {
+                  "status": "partial_static_motorcar",
+                  "applied_relations": 4706,
+                  "source_relations": 6258,
+                  "excluded_candidate_relations": 6,
+                  "complete_road_rules": false
+                },
+                "snap_selection": {
+                  "candidate_counts": [
+                    3,
+                    4
+                  ],
+                  "selected_candidate_ranks": [
+                    1,
+                    2
+                  ],
+                  "used_non_nearest": [
+                    true,
+                    true
+                  ],
+                  "nearest_snap_m": [
+                    1.7,
+                    71.3
+                  ],
+                  "physical_access_verified": false
+                },
+                "snap_m": [
+                  8.3,
+                  78.4
+                ]
+              }
+            },
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null
+          }
+        ],
+        "arrive_worst_min": 609,
+        "buffer_min": 10,
+        "margin_min": 10,
+        "eta_min": 9,
+        "eta_worst_min": 9,
+        "p90_eta_min": null,
+        "last_feasible_depart_min": null,
+        "out": {
+          "verdict": "feasible",
+          "depart_min": 600,
+          "arrive_min": 609,
+          "arrive_worst_min": 609,
+          "margin_min": 10,
+          "slack_min": 41,
+          "eta_min": 9,
+          "eta_worst_min": 9,
+          "buffer_min": 10,
+          "arrive_by_min": 660
+        }
+      }
+    },
+    {
+      "id": "N091",
+      "a": "회현역",
+      "b": "광장시장",
+      "mode": "taxi",
+      "case": {
+        "id": "uturn/N091/taxi",
+        "date": "2026-10-11",
+        "stage": "pre_departure",
+        "depart_at": "10:00",
+        "arrive_by": "11:00",
+        "party": {},
+        "first_visit": false,
+        "no_alternatives": true,
+        "legs": [
+          {
+            "mode": "taxi",
+            "from": "37.5588,126.9786",
+            "to": "37.57,126.9996"
+          }
+        ]
+      },
+      "result": {
+        "id": "uturn/N091/taxi",
+        "verdict": "feasible",
+        "reason": "예정 10:09 +@10분(최악 10:09 + 버퍼 10분) · 여유 41분",
+        "grade": "추정",
+        "legs": [
+          {
+            "idx": 0,
+            "label": "택시 37.5588,126.9786→37.57,126.9996",
+            "verdict": "feasible",
+            "reason": "10:00 출발 · 3.4 km · 소요 9분 · 예상 요금 9,200원(중형) · 대기 0분(근거없음)",
+            "grade": "추정",
+            "depart_min": 600,
+            "arrive_min": 609,
+            "wait_min": 0,
+            "ride_min": 9.0,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [
+              {
+                "code": "MOB_W_TAXI_FARE_LOWER_BOUND",
+                "class": "cost",
+                "text": "택시 예상 요금 9,200원은 예산 여유를 포함한다. 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라질 수 있다",
+                "to_answer": true
+              }
+            ],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "topis_link_profile_v1@2025-09~2026-05",
+                "grade": "추정",
+                "observed_at": "2026-05-31",
+                "claim": "자동차 3.4 km · 휴일 10시 출발 소요 8.9분 · 커버 topis 97.2% / class 2.8% / default 0.0% (링크 16개)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "osm_road_graph@2026-09-18",
+                "grade": "확정",
+                "observed_at": "2026-09-18",
+                "claim": "도로망 경로 거리 3,386 m (좌표열은 저장하지 않는다)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "car.등급"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "car.coverage"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "taxi.fare.산식"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "seoul_taxi_fare@2023-02-01(확인 2026-09-19)",
+                "grade": "추정",
+                "observed_at": "2026-09-19",
+                "claim": "택시(중형) 예상 요금 9,200원 = 미터 6,700 + 예산 여유 2,500 · 심야율 0 · 저속 121초"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "근거없음",
+                "observed_at": "2026-09-29",
+                "claim": "car.택시_대기"
+              }
+            ],
+            "car": {
+              "v": 1,
+              "kind": "car_leg",
+              "mode": "taxi",
+              "grade": "추정",
+              "distance_m": 3385.8,
+              "topis_time_s": 535,
+              "gh_time_s": 247,
+              "depart": "2026-10-11T10:00",
+              "arrive": "2026-10-11T10:08",
+              "day_type": "휴일",
+              "hour_start": 10,
+              "coverage_m": {
+                "topis": 3291.4,
+                "class": 94.4,
+                "default": 0.0
+              },
+              "coverage_pct": {
+                "topis": 97.2,
+                "class": 2.8,
+                "default": 0.0
+              },
+              "n_edges": 118,
+              "links": [
+                {
+                  "link_id": "1010015800",
+                  "m": 483.3
+                },
+                {
+                  "link_id": "1010014200",
+                  "m": 420.9
+                },
+                {
+                  "link_id": "1010002600",
+                  "m": 347.9
+                },
+                {
+                  "link_id": "1010016200",
+                  "m": 326.9
+                },
+                {
+                  "link_id": "1010018400",
+                  "m": 295.9
+                },
+                {
+                  "link_id": "1010011400",
+                  "m": 262.7
+                },
+                {
+                  "link_id": "1010014800",
+                  "m": 254.0
+                },
+                {
+                  "link_id": "1010014400",
+                  "m": 198.4
+                },
+                {
+                  "link_id": "1010007200",
+                  "m": 194.0
+                },
+                {
+                  "link_id": "1010005000",
+                  "m": 170.3
+                },
+                {
+                  "link_id": "1000004300",
+                  "m": 169.2
+                },
+                {
+                  "link_id": "1010013600",
+                  "m": 74.9
+                },
+                {
+                  "link_id": "1010013500",
+                  "m": 48.0
+                },
+                {
+                  "link_id": "1010005200",
+                  "m": 25.5
+                },
+                {
+                  "link_id": "1010002800",
+                  "m": 16.0
+                },
+                {
+                  "link_id": "1000006000",
+                  "m": 3.4
+                }
+              ],
+              "n_links": 16,
+              "source_id": [
+                "topis_link_profile_v1@2025-09~2026-05",
+                "osm_road_graph@2026-09-18"
+              ],
+              "routing_evidence": {
+                "turn_restrictions": {
+                  "status": "partial_static_motorcar",
+                  "applied_relations": 4706,
+                  "source_relations": 6258,
+                  "excluded_candidate_relations": 6,
+                  "complete_road_rules": false
+                },
+                "snap_selection": {
+                  "candidate_counts": [
+                    3,
+                    4
+                  ],
+                  "selected_candidate_ranks": [
+                    1,
+                    2
+                  ],
+                  "used_non_nearest": [
+                    true,
+                    true
+                  ],
+                  "nearest_snap_m": [
+                    1.7,
+                    71.3
+                  ],
+                  "physical_access_verified": false
+                },
+                "snap_m": [
+                  8.3,
+                  78.4
+                ]
+              },
+              "fare_kind": "중형",
+              "fare_won": 9200,
+              "meter_won": 6700,
+              "toll_won": 0,
+              "planning_reserve_won": 2500,
+              "planning_reserve_rate": 0.37,
+              "toll_basis": null,
+              "slow_s": 121,
+              "slow_m": 466.2,
+              "night_rate": 0.0,
+              "out_of_city": null,
+              "fare_basis": "예상 요금(예산 여유 2,500원 포함) · 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라짐"
+            },
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null
+          }
+        ],
+        "arrive_min": 609,
+        "slack_min": 41,
+        "relief": null,
+        "warnings": [
+          {
+            "code": "MOB_W_TAXI_FARE_LOWER_BOUND",
+            "class": "cost",
+            "text": "택시 예상 요금 9,200원은 예산 여유를 포함한다. 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라질 수 있다",
+            "to_answer": true
+          },
+          {
+            "code": "MOB_W_WORST_NO_SPREAD",
+            "class": "data",
+            "text": "택시 37.5588,126.9786→37.57,126.9996 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+            "to_answer": false
+          }
+        ],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "topis_link_profile_v1@2025-09~2026-05",
+            "grade": "추정",
+            "observed_at": "2026-05-31",
+            "claim": "자동차 3.4 km · 휴일 10시 출발 소요 8.9분 · 커버 topis 97.2% / class 2.8% / default 0.0% (링크 16개)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "osm_road_graph@2026-09-18",
+            "grade": "확정",
+            "observed_at": "2026-09-18",
+            "claim": "도로망 경로 거리 3,386 m (좌표열은 저장하지 않는다)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "car.등급"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "car.coverage"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "taxi.fare.산식"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "seoul_taxi_fare@2023-02-01(확인 2026-09-19)",
+            "grade": "추정",
+            "observed_at": "2026-09-19",
+            "claim": "택시(중형) 예상 요금 9,200원 = 미터 6,700 + 예산 여유 2,500 · 심야율 0 · 저속 121초"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "근거없음",
+            "observed_at": "2026-09-29",
+            "claim": "car.택시_대기"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "근거없음",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst.car_spread"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "buffer.by_stage.pre_departure"
+          }
+        ],
+        "day_type": "holiday",
+        "alternatives": [],
+        "alt_tried": [],
+        "taxi": null,
+        "candidates": null,
+        "ties": null,
+        "dropped_candidates": null,
+        "bus_rejected": null,
+        "axis_best": null,
+        "code": null,
+        "verdict_best": "feasible",
+        "legs_worst": [
+          {
+            "idx": 0,
+            "label": "택시 37.5588,126.9786→37.57,126.9996",
+            "verdict": "feasible",
+            "reason": "10:00 출발 · 3.4 km · 소요 9분 · 예상 요금 9,200원(중형) · 대기 0분(근거없음)",
+            "grade": "추정",
+            "depart_min": 600,
+            "arrive_min": 609,
+            "wait_min": 0,
+            "ride_min": 9.0,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [
+              {
+                "code": "MOB_W_TAXI_FARE_LOWER_BOUND",
+                "class": "cost",
+                "text": "택시 예상 요금 9,200원은 예산 여유를 포함한다. 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라질 수 있다",
+                "to_answer": true
+              }
+            ],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "topis_link_profile_v1@2025-09~2026-05",
+                "grade": "추정",
+                "observed_at": "2026-05-31",
+                "claim": "자동차 3.4 km · 휴일 10시 출발 소요 8.9분 · 커버 topis 97.2% / class 2.8% / default 0.0% (링크 16개)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "osm_road_graph@2026-09-18",
+                "grade": "확정",
+                "observed_at": "2026-09-18",
+                "claim": "도로망 경로 거리 3,386 m (좌표열은 저장하지 않는다)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "car.등급"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "car.coverage"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "taxi.fare.산식"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "seoul_taxi_fare@2023-02-01(확인 2026-09-19)",
+                "grade": "추정",
+                "observed_at": "2026-09-19",
+                "claim": "택시(중형) 예상 요금 9,200원 = 미터 6,700 + 예산 여유 2,500 · 심야율 0 · 저속 121초"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "근거없음",
+                "observed_at": "2026-09-29",
+                "claim": "car.택시_대기"
+              }
+            ],
+            "car": {
+              "v": 1,
+              "kind": "car_leg",
+              "mode": "taxi",
+              "grade": "추정",
+              "distance_m": 3385.8,
+              "topis_time_s": 535,
+              "gh_time_s": 247,
+              "depart": "2026-10-11T10:00",
+              "arrive": "2026-10-11T10:08",
+              "day_type": "휴일",
+              "hour_start": 10,
+              "coverage_m": {
+                "topis": 3291.4,
+                "class": 94.4,
+                "default": 0.0
+              },
+              "coverage_pct": {
+                "topis": 97.2,
+                "class": 2.8,
+                "default": 0.0
+              },
+              "n_edges": 118,
+              "links": [
+                {
+                  "link_id": "1010015800",
+                  "m": 483.3
+                },
+                {
+                  "link_id": "1010014200",
+                  "m": 420.9
+                },
+                {
+                  "link_id": "1010002600",
+                  "m": 347.9
+                },
+                {
+                  "link_id": "1010016200",
+                  "m": 326.9
+                },
+                {
+                  "link_id": "1010018400",
+                  "m": 295.9
+                },
+                {
+                  "link_id": "1010011400",
+                  "m": 262.7
+                },
+                {
+                  "link_id": "1010014800",
+                  "m": 254.0
+                },
+                {
+                  "link_id": "1010014400",
+                  "m": 198.4
+                },
+                {
+                  "link_id": "1010007200",
+                  "m": 194.0
+                },
+                {
+                  "link_id": "1010005000",
+                  "m": 170.3
+                },
+                {
+                  "link_id": "1000004300",
+                  "m": 169.2
+                },
+                {
+                  "link_id": "1010013600",
+                  "m": 74.9
+                },
+                {
+                  "link_id": "1010013500",
+                  "m": 48.0
+                },
+                {
+                  "link_id": "1010005200",
+                  "m": 25.5
+                },
+                {
+                  "link_id": "1010002800",
+                  "m": 16.0
+                },
+                {
+                  "link_id": "1000006000",
+                  "m": 3.4
+                }
+              ],
+              "n_links": 16,
+              "source_id": [
+                "topis_link_profile_v1@2025-09~2026-05",
+                "osm_road_graph@2026-09-18"
+              ],
+              "routing_evidence": {
+                "turn_restrictions": {
+                  "status": "partial_static_motorcar",
+                  "applied_relations": 4706,
+                  "source_relations": 6258,
+                  "excluded_candidate_relations": 6,
+                  "complete_road_rules": false
+                },
+                "snap_selection": {
+                  "candidate_counts": [
+                    3,
+                    4
+                  ],
+                  "selected_candidate_ranks": [
+                    1,
+                    2
+                  ],
+                  "used_non_nearest": [
+                    true,
+                    true
+                  ],
+                  "nearest_snap_m": [
+                    1.7,
+                    71.3
+                  ],
+                  "physical_access_verified": false
+                },
+                "snap_m": [
+                  8.3,
+                  78.4
+                ]
+              },
+              "fare_kind": "중형",
+              "fare_won": 9200,
+              "meter_won": 6700,
+              "toll_won": 0,
+              "planning_reserve_won": 2500,
+              "planning_reserve_rate": 0.37,
+              "toll_basis": null,
+              "slow_s": 121,
+              "slow_m": 466.2,
+              "night_rate": 0.0,
+              "out_of_city": null,
+              "fare_basis": "예상 요금(예산 여유 2,500원 포함) · 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라짐"
+            },
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null
+          }
+        ],
+        "arrive_worst_min": 609,
+        "buffer_min": 10,
+        "margin_min": 10,
+        "eta_min": 9,
+        "eta_worst_min": 9,
+        "p90_eta_min": null,
+        "last_feasible_depart_min": null,
+        "out": {
+          "verdict": "feasible",
+          "depart_min": 600,
+          "arrive_min": 609,
+          "arrive_worst_min": 609,
+          "margin_min": 10,
+          "slack_min": 41,
+          "eta_min": 9,
+          "eta_worst_min": 9,
+          "buffer_min": 10,
+          "arrive_by_min": 660
+        }
+      }
+    },
+    {
+      "id": "N094",
+      "a": "화곡역",
+      "b": "구로디지털단지역",
+      "mode": "car",
+      "case": {
+        "id": "uturn/N094/car",
+        "date": "2026-10-11",
+        "stage": "pre_departure",
+        "depart_at": "10:00",
+        "arrive_by": "11:00",
+        "party": {},
+        "first_visit": false,
+        "no_alternatives": true,
+        "legs": [
+          {
+            "mode": "car",
+            "from": "37.5415,126.8408",
+            "to": "37.4853,126.9015"
+          }
+        ]
+      },
+      "result": {
+        "id": "uturn/N094/car",
+        "verdict": "feasible",
+        "reason": "예정 10:25 +@10분(최악 10:25 + 버퍼 10분) · 여유 25분",
+        "grade": "추정",
+        "legs": [
+          {
+            "idx": 0,
+            "label": "자동차 37.5415,126.8408→37.4853,126.9015",
+            "verdict": "feasible",
+            "reason": "10:00 출발 · 10.6 km · 소요 24.4분",
+            "grade": "추정",
+            "depart_min": 600,
+            "arrive_min": 625,
+            "wait_min": null,
+            "ride_min": 24.4,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [
+              {
+                "code": "MOB_W_CAR_SPEED_CLASS",
+                "class": "grade",
+                "text": "자동차 구간 길이의 11.1% 가 TOPIS 프로파일 없는 간선이라 도로급 평균속도(14번 계수, 오차 약 28%)로 냈다",
+                "to_answer": false
+              }
+            ],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "topis_link_profile_v1@2025-09~2026-05",
+                "grade": "추정",
+                "observed_at": "2026-05-31",
+                "claim": "자동차 10.6 km · 휴일 10시 출발 소요 24.4분 · 커버 topis 88.9% / class 11.1% / default 0.0% (링크 27개)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "osm_road_graph@2026-09-18",
+                "grade": "확정",
+                "observed_at": "2026-09-18",
+                "claim": "도로망 경로 거리 10,559 m (좌표열은 저장하지 않는다)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "car.등급"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "car.coverage"
+              }
+            ],
+            "car": {
+              "v": 1,
+              "kind": "car_leg",
+              "mode": "car",
+              "grade": "추정",
+              "distance_m": 10558.8,
+              "topis_time_s": 1461,
+              "gh_time_s": 921,
+              "depart": "2026-10-11T10:00",
+              "arrive": "2026-10-11T10:24",
+              "day_type": "휴일",
+              "hour_start": 10,
+              "coverage_m": {
+                "topis": 9382.9,
+                "class": 1175.8,
+                "default": 0.0
+              },
+              "coverage_pct": {
+                "topis": 88.9,
+                "class": 11.1,
+                "default": 0.0
+              },
+              "n_edges": 230,
+              "links": [
+                {
+                  "link_id": "1140019400",
+                  "m": 1206.4
+                },
+                {
+                  "link_id": "1180013600",
+                  "m": 837.5
+                },
+                {
+                  "link_id": "1180016400",
+                  "m": 755.8
+                },
+                {
+                  "link_id": "1160011100",
+                  "m": 655.2
+                },
+                {
+                  "link_id": "1150008600",
+                  "m": 637.1
+                },
+                {
+                  "link_id": "1160007700",
+                  "m": 549.5
+                },
+                {
+                  "link_id": "1140020700",
+                  "m": 425.3
+                },
+                {
+                  "link_id": "1200008900",
+                  "m": 424.2
+                },
+                {
+                  "link_id": "1140018500",
+                  "m": 405.6
+                },
+                {
+                  "link_id": "1140026300",
+                  "m": 367.7
+                },
+                {
+                  "link_id": "1160012904",
+                  "m": 361.4
+                },
+                {
+                  "link_id": "1150008000",
+                  "m": 352.5
+                },
+                {
+                  "link_id": "1160016300",
+                  "m": 317.3
+                },
+                {
+                  "link_id": "1180001300",
+                  "m": 297.8
+                },
+                {
+                  "link_id": "1180027800",
+                  "m": 247.6
+                },
+                {
+                  "link_id": "1140020300",
+                  "m": 207.9
+                },
+                {
+                  "link_id": "1150009400",
+                  "m": 202.1
+                },
+                {
+                  "link_id": "1140017900",
+                  "m": 197.9
+                },
+                {
+                  "link_id": "1160013900",
+                  "m": 186.6
+                },
+                {
+                  "link_id": "1150009600",
+                  "m": 182.9
+                }
+              ],
+              "n_links": 27,
+              "source_id": [
+                "topis_link_profile_v1@2025-09~2026-05",
+                "osm_road_graph@2026-09-18"
+              ],
+              "routing_evidence": {
+                "turn_restrictions": {
+                  "status": "partial_static_motorcar",
+                  "applied_relations": 4706,
+                  "source_relations": 6258,
+                  "excluded_candidate_relations": 6,
+                  "complete_road_rules": false
+                },
+                "snap_selection": {
+                  "candidate_counts": [
+                    2,
+                    3
+                  ],
+                  "selected_candidate_ranks": [
+                    1,
+                    1
+                  ],
+                  "used_non_nearest": [
+                    true,
+                    true
+                  ],
+                  "nearest_snap_m": [
+                    0.8,
+                    17.6
+                  ],
+                  "physical_access_verified": false
+                },
+                "snap_m": [
+                  5.5,
+                  24.9
+                ]
+              }
+            },
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null
+          }
+        ],
+        "arrive_min": 625,
+        "slack_min": 25,
+        "relief": null,
+        "warnings": [
+          {
+            "code": "MOB_W_CAR_SPEED_CLASS",
+            "class": "grade",
+            "text": "자동차 구간 길이의 11.1% 가 TOPIS 프로파일 없는 간선이라 도로급 평균속도(14번 계수, 오차 약 28%)로 냈다",
+            "to_answer": false
+          },
+          {
+            "code": "MOB_W_WORST_NO_SPREAD",
+            "class": "data",
+            "text": "자동차 37.5415,126.8408→37.4853,126.9015 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+            "to_answer": false
+          }
+        ],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "topis_link_profile_v1@2025-09~2026-05",
+            "grade": "추정",
+            "observed_at": "2026-05-31",
+            "claim": "자동차 10.6 km · 휴일 10시 출발 소요 24.4분 · 커버 topis 88.9% / class 11.1% / default 0.0% (링크 27개)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "osm_road_graph@2026-09-18",
+            "grade": "확정",
+            "observed_at": "2026-09-18",
+            "claim": "도로망 경로 거리 10,559 m (좌표열은 저장하지 않는다)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "car.등급"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "car.coverage"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "근거없음",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst.car_spread"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "buffer.by_stage.pre_departure"
+          }
+        ],
+        "day_type": "holiday",
+        "alternatives": [],
+        "alt_tried": [],
+        "taxi": null,
+        "candidates": null,
+        "ties": null,
+        "dropped_candidates": null,
+        "bus_rejected": null,
+        "axis_best": null,
+        "code": null,
+        "verdict_best": "feasible",
+        "legs_worst": [
+          {
+            "idx": 0,
+            "label": "자동차 37.5415,126.8408→37.4853,126.9015",
+            "verdict": "feasible",
+            "reason": "10:00 출발 · 10.6 km · 소요 24.4분",
+            "grade": "추정",
+            "depart_min": 600,
+            "arrive_min": 625,
+            "wait_min": null,
+            "ride_min": 24.4,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [
+              {
+                "code": "MOB_W_CAR_SPEED_CLASS",
+                "class": "grade",
+                "text": "자동차 구간 길이의 11.1% 가 TOPIS 프로파일 없는 간선이라 도로급 평균속도(14번 계수, 오차 약 28%)로 냈다",
+                "to_answer": false
+              }
+            ],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "topis_link_profile_v1@2025-09~2026-05",
+                "grade": "추정",
+                "observed_at": "2026-05-31",
+                "claim": "자동차 10.6 km · 휴일 10시 출발 소요 24.4분 · 커버 topis 88.9% / class 11.1% / default 0.0% (링크 27개)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "osm_road_graph@2026-09-18",
+                "grade": "확정",
+                "observed_at": "2026-09-18",
+                "claim": "도로망 경로 거리 10,559 m (좌표열은 저장하지 않는다)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "car.등급"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "car.coverage"
+              }
+            ],
+            "car": {
+              "v": 1,
+              "kind": "car_leg",
+              "mode": "car",
+              "grade": "추정",
+              "distance_m": 10558.8,
+              "topis_time_s": 1461,
+              "gh_time_s": 921,
+              "depart": "2026-10-11T10:00",
+              "arrive": "2026-10-11T10:24",
+              "day_type": "휴일",
+              "hour_start": 10,
+              "coverage_m": {
+                "topis": 9382.9,
+                "class": 1175.8,
+                "default": 0.0
+              },
+              "coverage_pct": {
+                "topis": 88.9,
+                "class": 11.1,
+                "default": 0.0
+              },
+              "n_edges": 230,
+              "links": [
+                {
+                  "link_id": "1140019400",
+                  "m": 1206.4
+                },
+                {
+                  "link_id": "1180013600",
+                  "m": 837.5
+                },
+                {
+                  "link_id": "1180016400",
+                  "m": 755.8
+                },
+                {
+                  "link_id": "1160011100",
+                  "m": 655.2
+                },
+                {
+                  "link_id": "1150008600",
+                  "m": 637.1
+                },
+                {
+                  "link_id": "1160007700",
+                  "m": 549.5
+                },
+                {
+                  "link_id": "1140020700",
+                  "m": 425.3
+                },
+                {
+                  "link_id": "1200008900",
+                  "m": 424.2
+                },
+                {
+                  "link_id": "1140018500",
+                  "m": 405.6
+                },
+                {
+                  "link_id": "1140026300",
+                  "m": 367.7
+                },
+                {
+                  "link_id": "1160012904",
+                  "m": 361.4
+                },
+                {
+                  "link_id": "1150008000",
+                  "m": 352.5
+                },
+                {
+                  "link_id": "1160016300",
+                  "m": 317.3
+                },
+                {
+                  "link_id": "1180001300",
+                  "m": 297.8
+                },
+                {
+                  "link_id": "1180027800",
+                  "m": 247.6
+                },
+                {
+                  "link_id": "1140020300",
+                  "m": 207.9
+                },
+                {
+                  "link_id": "1150009400",
+                  "m": 202.1
+                },
+                {
+                  "link_id": "1140017900",
+                  "m": 197.9
+                },
+                {
+                  "link_id": "1160013900",
+                  "m": 186.6
+                },
+                {
+                  "link_id": "1150009600",
+                  "m": 182.9
+                }
+              ],
+              "n_links": 27,
+              "source_id": [
+                "topis_link_profile_v1@2025-09~2026-05",
+                "osm_road_graph@2026-09-18"
+              ],
+              "routing_evidence": {
+                "turn_restrictions": {
+                  "status": "partial_static_motorcar",
+                  "applied_relations": 4706,
+                  "source_relations": 6258,
+                  "excluded_candidate_relations": 6,
+                  "complete_road_rules": false
+                },
+                "snap_selection": {
+                  "candidate_counts": [
+                    2,
+                    3
+                  ],
+                  "selected_candidate_ranks": [
+                    1,
+                    1
+                  ],
+                  "used_non_nearest": [
+                    true,
+                    true
+                  ],
+                  "nearest_snap_m": [
+                    0.8,
+                    17.6
+                  ],
+                  "physical_access_verified": false
+                },
+                "snap_m": [
+                  5.5,
+                  24.9
+                ]
+              }
+            },
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null
+          }
+        ],
+        "arrive_worst_min": 625,
+        "buffer_min": 10,
+        "margin_min": 10,
+        "eta_min": 25,
+        "eta_worst_min": 25,
+        "p90_eta_min": null,
+        "last_feasible_depart_min": null,
+        "out": {
+          "verdict": "feasible",
+          "depart_min": 600,
+          "arrive_min": 625,
+          "arrive_worst_min": 625,
+          "margin_min": 10,
+          "slack_min": 25,
+          "eta_min": 25,
+          "eta_worst_min": 25,
+          "buffer_min": 10,
+          "arrive_by_min": 660
+        }
+      }
+    },
+    {
+      "id": "N094",
+      "a": "화곡역",
+      "b": "구로디지털단지역",
+      "mode": "taxi",
+      "case": {
+        "id": "uturn/N094/taxi",
+        "date": "2026-10-11",
+        "stage": "pre_departure",
+        "depart_at": "10:00",
+        "arrive_by": "11:00",
+        "party": {},
+        "first_visit": false,
+        "no_alternatives": true,
+        "legs": [
+          {
+            "mode": "taxi",
+            "from": "37.5415,126.8408",
+            "to": "37.4853,126.9015"
+          }
+        ]
+      },
+      "result": {
+        "id": "uturn/N094/taxi",
+        "verdict": "feasible",
+        "reason": "예정 10:25 +@10분(최악 10:25 + 버퍼 10분) · 여유 25분",
+        "grade": "추정",
+        "legs": [
+          {
+            "idx": 0,
+            "label": "택시 37.5415,126.8408→37.4853,126.9015",
+            "verdict": "feasible",
+            "reason": "10:00 출발 · 10.6 km · 소요 24.4분 · 예상 요금 16,100원(중형) · 대기 0분(근거없음)",
+            "grade": "추정",
+            "depart_min": 600,
+            "arrive_min": 625,
+            "wait_min": 0,
+            "ride_min": 24.4,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [
+              {
+                "code": "MOB_W_CAR_SPEED_CLASS",
+                "class": "grade",
+                "text": "자동차 구간 길이의 11.1% 가 TOPIS 프로파일 없는 간선이라 도로급 평균속도(14번 계수, 오차 약 28%)로 냈다",
+                "to_answer": false
+              },
+              {
+                "code": "MOB_W_TAXI_FARE_LOWER_BOUND",
+                "class": "cost",
+                "text": "택시 예상 요금 16,100원은 예산 여유를 포함한다. 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라질 수 있다",
+                "to_answer": true
+              }
+            ],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "topis_link_profile_v1@2025-09~2026-05",
+                "grade": "추정",
+                "observed_at": "2026-05-31",
+                "claim": "자동차 10.6 km · 휴일 10시 출발 소요 24.4분 · 커버 topis 88.9% / class 11.1% / default 0.0% (링크 27개)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "osm_road_graph@2026-09-18",
+                "grade": "확정",
+                "observed_at": "2026-09-18",
+                "claim": "도로망 경로 거리 10,559 m (좌표열은 저장하지 않는다)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "car.등급"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "car.coverage"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "taxi.fare.산식"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "seoul_taxi_fare@2023-02-01(확인 2026-09-19)",
+                "grade": "추정",
+                "observed_at": "2026-09-19",
+                "claim": "택시(중형) 예상 요금 16,100원 = 미터 11,700 + 예산 여유 4,400 · 심야율 0 · 저속 0초"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "근거없음",
+                "observed_at": "2026-09-29",
+                "claim": "car.택시_대기"
+              }
+            ],
+            "car": {
+              "v": 1,
+              "kind": "car_leg",
+              "mode": "taxi",
+              "grade": "추정",
+              "distance_m": 10558.8,
+              "topis_time_s": 1461,
+              "gh_time_s": 921,
+              "depart": "2026-10-11T10:00",
+              "arrive": "2026-10-11T10:24",
+              "day_type": "휴일",
+              "hour_start": 10,
+              "coverage_m": {
+                "topis": 9382.9,
+                "class": 1175.8,
+                "default": 0.0
+              },
+              "coverage_pct": {
+                "topis": 88.9,
+                "class": 11.1,
+                "default": 0.0
+              },
+              "n_edges": 230,
+              "links": [
+                {
+                  "link_id": "1140019400",
+                  "m": 1206.4
+                },
+                {
+                  "link_id": "1180013600",
+                  "m": 837.5
+                },
+                {
+                  "link_id": "1180016400",
+                  "m": 755.8
+                },
+                {
+                  "link_id": "1160011100",
+                  "m": 655.2
+                },
+                {
+                  "link_id": "1150008600",
+                  "m": 637.1
+                },
+                {
+                  "link_id": "1160007700",
+                  "m": 549.5
+                },
+                {
+                  "link_id": "1140020700",
+                  "m": 425.3
+                },
+                {
+                  "link_id": "1200008900",
+                  "m": 424.2
+                },
+                {
+                  "link_id": "1140018500",
+                  "m": 405.6
+                },
+                {
+                  "link_id": "1140026300",
+                  "m": 367.7
+                },
+                {
+                  "link_id": "1160012904",
+                  "m": 361.4
+                },
+                {
+                  "link_id": "1150008000",
+                  "m": 352.5
+                },
+                {
+                  "link_id": "1160016300",
+                  "m": 317.3
+                },
+                {
+                  "link_id": "1180001300",
+                  "m": 297.8
+                },
+                {
+                  "link_id": "1180027800",
+                  "m": 247.6
+                },
+                {
+                  "link_id": "1140020300",
+                  "m": 207.9
+                },
+                {
+                  "link_id": "1150009400",
+                  "m": 202.1
+                },
+                {
+                  "link_id": "1140017900",
+                  "m": 197.9
+                },
+                {
+                  "link_id": "1160013900",
+                  "m": 186.6
+                },
+                {
+                  "link_id": "1150009600",
+                  "m": 182.9
+                }
+              ],
+              "n_links": 27,
+              "source_id": [
+                "topis_link_profile_v1@2025-09~2026-05",
+                "osm_road_graph@2026-09-18"
+              ],
+              "routing_evidence": {
+                "turn_restrictions": {
+                  "status": "partial_static_motorcar",
+                  "applied_relations": 4706,
+                  "source_relations": 6258,
+                  "excluded_candidate_relations": 6,
+                  "complete_road_rules": false
+                },
+                "snap_selection": {
+                  "candidate_counts": [
+                    2,
+                    3
+                  ],
+                  "selected_candidate_ranks": [
+                    1,
+                    1
+                  ],
+                  "used_non_nearest": [
+                    true,
+                    true
+                  ],
+                  "nearest_snap_m": [
+                    0.8,
+                    17.6
+                  ],
+                  "physical_access_verified": false
+                },
+                "snap_m": [
+                  5.5,
+                  24.9
+                ]
+              },
+              "fare_kind": "중형",
+              "fare_won": 16100,
+              "meter_won": 11700,
+              "toll_won": 0,
+              "planning_reserve_won": 4400,
+              "planning_reserve_rate": 0.37,
+              "toll_basis": null,
+              "slow_s": 0,
+              "slow_m": 0.0,
+              "night_rate": 0.0,
+              "out_of_city": null,
+              "fare_basis": "예상 요금(예산 여유 4,400원 포함) · 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라짐"
+            },
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null
+          }
+        ],
+        "arrive_min": 625,
+        "slack_min": 25,
+        "relief": null,
+        "warnings": [
+          {
+            "code": "MOB_W_CAR_SPEED_CLASS",
+            "class": "grade",
+            "text": "자동차 구간 길이의 11.1% 가 TOPIS 프로파일 없는 간선이라 도로급 평균속도(14번 계수, 오차 약 28%)로 냈다",
+            "to_answer": false
+          },
+          {
+            "code": "MOB_W_TAXI_FARE_LOWER_BOUND",
+            "class": "cost",
+            "text": "택시 예상 요금 16,100원은 예산 여유를 포함한다. 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라질 수 있다",
+            "to_answer": true
+          },
+          {
+            "code": "MOB_W_WORST_NO_SPREAD",
+            "class": "data",
+            "text": "택시 37.5415,126.8408→37.4853,126.9015 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+            "to_answer": false
+          }
+        ],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "topis_link_profile_v1@2025-09~2026-05",
+            "grade": "추정",
+            "observed_at": "2026-05-31",
+            "claim": "자동차 10.6 km · 휴일 10시 출발 소요 24.4분 · 커버 topis 88.9% / class 11.1% / default 0.0% (링크 27개)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "osm_road_graph@2026-09-18",
+            "grade": "확정",
+            "observed_at": "2026-09-18",
+            "claim": "도로망 경로 거리 10,559 m (좌표열은 저장하지 않는다)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "car.등급"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "car.coverage"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "taxi.fare.산식"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "seoul_taxi_fare@2023-02-01(확인 2026-09-19)",
+            "grade": "추정",
+            "observed_at": "2026-09-19",
+            "claim": "택시(중형) 예상 요금 16,100원 = 미터 11,700 + 예산 여유 4,400 · 심야율 0 · 저속 0초"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "근거없음",
+            "observed_at": "2026-09-29",
+            "claim": "car.택시_대기"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "근거없음",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst.car_spread"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "buffer.by_stage.pre_departure"
+          }
+        ],
+        "day_type": "holiday",
+        "alternatives": [],
+        "alt_tried": [],
+        "taxi": null,
+        "candidates": null,
+        "ties": null,
+        "dropped_candidates": null,
+        "bus_rejected": null,
+        "axis_best": null,
+        "code": null,
+        "verdict_best": "feasible",
+        "legs_worst": [
+          {
+            "idx": 0,
+            "label": "택시 37.5415,126.8408→37.4853,126.9015",
+            "verdict": "feasible",
+            "reason": "10:00 출발 · 10.6 km · 소요 24.4분 · 예상 요금 16,100원(중형) · 대기 0분(근거없음)",
+            "grade": "추정",
+            "depart_min": 600,
+            "arrive_min": 625,
+            "wait_min": 0,
+            "ride_min": 24.4,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [
+              {
+                "code": "MOB_W_CAR_SPEED_CLASS",
+                "class": "grade",
+                "text": "자동차 구간 길이의 11.1% 가 TOPIS 프로파일 없는 간선이라 도로급 평균속도(14번 계수, 오차 약 28%)로 냈다",
+                "to_answer": false
+              },
+              {
+                "code": "MOB_W_TAXI_FARE_LOWER_BOUND",
+                "class": "cost",
+                "text": "택시 예상 요금 16,100원은 예산 여유를 포함한다. 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라질 수 있다",
+                "to_answer": true
+              }
+            ],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "topis_link_profile_v1@2025-09~2026-05",
+                "grade": "추정",
+                "observed_at": "2026-05-31",
+                "claim": "자동차 10.6 km · 휴일 10시 출발 소요 24.4분 · 커버 topis 88.9% / class 11.1% / default 0.0% (링크 27개)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "osm_road_graph@2026-09-18",
+                "grade": "확정",
+                "observed_at": "2026-09-18",
+                "claim": "도로망 경로 거리 10,559 m (좌표열은 저장하지 않는다)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "car.등급"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "car.coverage"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "taxi.fare.산식"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "seoul_taxi_fare@2023-02-01(확인 2026-09-19)",
+                "grade": "추정",
+                "observed_at": "2026-09-19",
+                "claim": "택시(중형) 예상 요금 16,100원 = 미터 11,700 + 예산 여유 4,400 · 심야율 0 · 저속 0초"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "근거없음",
+                "observed_at": "2026-09-29",
+                "claim": "car.택시_대기"
+              }
+            ],
+            "car": {
+              "v": 1,
+              "kind": "car_leg",
+              "mode": "taxi",
+              "grade": "추정",
+              "distance_m": 10558.8,
+              "topis_time_s": 1461,
+              "gh_time_s": 921,
+              "depart": "2026-10-11T10:00",
+              "arrive": "2026-10-11T10:24",
+              "day_type": "휴일",
+              "hour_start": 10,
+              "coverage_m": {
+                "topis": 9382.9,
+                "class": 1175.8,
+                "default": 0.0
+              },
+              "coverage_pct": {
+                "topis": 88.9,
+                "class": 11.1,
+                "default": 0.0
+              },
+              "n_edges": 230,
+              "links": [
+                {
+                  "link_id": "1140019400",
+                  "m": 1206.4
+                },
+                {
+                  "link_id": "1180013600",
+                  "m": 837.5
+                },
+                {
+                  "link_id": "1180016400",
+                  "m": 755.8
+                },
+                {
+                  "link_id": "1160011100",
+                  "m": 655.2
+                },
+                {
+                  "link_id": "1150008600",
+                  "m": 637.1
+                },
+                {
+                  "link_id": "1160007700",
+                  "m": 549.5
+                },
+                {
+                  "link_id": "1140020700",
+                  "m": 425.3
+                },
+                {
+                  "link_id": "1200008900",
+                  "m": 424.2
+                },
+                {
+                  "link_id": "1140018500",
+                  "m": 405.6
+                },
+                {
+                  "link_id": "1140026300",
+                  "m": 367.7
+                },
+                {
+                  "link_id": "1160012904",
+                  "m": 361.4
+                },
+                {
+                  "link_id": "1150008000",
+                  "m": 352.5
+                },
+                {
+                  "link_id": "1160016300",
+                  "m": 317.3
+                },
+                {
+                  "link_id": "1180001300",
+                  "m": 297.8
+                },
+                {
+                  "link_id": "1180027800",
+                  "m": 247.6
+                },
+                {
+                  "link_id": "1140020300",
+                  "m": 207.9
+                },
+                {
+                  "link_id": "1150009400",
+                  "m": 202.1
+                },
+                {
+                  "link_id": "1140017900",
+                  "m": 197.9
+                },
+                {
+                  "link_id": "1160013900",
+                  "m": 186.6
+                },
+                {
+                  "link_id": "1150009600",
+                  "m": 182.9
+                }
+              ],
+              "n_links": 27,
+              "source_id": [
+                "topis_link_profile_v1@2025-09~2026-05",
+                "osm_road_graph@2026-09-18"
+              ],
+              "routing_evidence": {
+                "turn_restrictions": {
+                  "status": "partial_static_motorcar",
+                  "applied_relations": 4706,
+                  "source_relations": 6258,
+                  "excluded_candidate_relations": 6,
+                  "complete_road_rules": false
+                },
+                "snap_selection": {
+                  "candidate_counts": [
+                    2,
+                    3
+                  ],
+                  "selected_candidate_ranks": [
+                    1,
+                    1
+                  ],
+                  "used_non_nearest": [
+                    true,
+                    true
+                  ],
+                  "nearest_snap_m": [
+                    0.8,
+                    17.6
+                  ],
+                  "physical_access_verified": false
+                },
+                "snap_m": [
+                  5.5,
+                  24.9
+                ]
+              },
+              "fare_kind": "중형",
+              "fare_won": 16100,
+              "meter_won": 11700,
+              "toll_won": 0,
+              "planning_reserve_won": 4400,
+              "planning_reserve_rate": 0.37,
+              "toll_basis": null,
+              "slow_s": 0,
+              "slow_m": 0.0,
+              "night_rate": 0.0,
+              "out_of_city": null,
+              "fare_basis": "예상 요금(예산 여유 4,400원 포함) · 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라짐"
+            },
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null
+          }
+        ],
+        "arrive_worst_min": 625,
+        "buffer_min": 10,
+        "margin_min": 10,
+        "eta_min": 25,
+        "eta_worst_min": 25,
+        "p90_eta_min": null,
+        "last_feasible_depart_min": null,
+        "out": {
+          "verdict": "feasible",
+          "depart_min": 600,
+          "arrive_min": 625,
+          "arrive_worst_min": 625,
+          "margin_min": 10,
+          "slack_min": 25,
+          "eta_min": 25,
+          "eta_worst_min": 25,
+          "buffer_min": 10,
+          "arrive_by_min": 660
+        }
+      }
+    }
+  ],
+  "network_attempts": 0,
+  "limited_api_calls": 0
+}

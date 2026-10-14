@@ -1,0 +1,88 @@
+{
+  "backups": [
+    "program/research/daily_rag_slm/_backup/2026-10-10_022237_six_hour_0200/2026-10-10.md",
+    "program/research/daily_rag_slm/_backup/2026-10-10_022237_six_hour_0200/arm_develop_cd_2026-10-10.json",
+    "program/research/daily_rag_slm/_backup/2026-10-10_022237_six_hour_0200/arm_serving_queue_2026-10-10.json",
+    "program/research/daily_rag_slm/_backup/2026-10-10_022237_six_hour_0200/index.md",
+    "program/research/daily_rag_slm/_backup/2026-10-10_022237_six_hour_0200/scheduled_instructions_2026-10-08.json",
+    "final_project_cs/wiki/_backup/2026-10-10_022237_six_hour_0200/log.md",
+    "final_project_cs/wiki/operations/_backup/2026-10-10_022237_six_hour_0200/arm-develop-cd.md",
+    "final_project_cs/wiki/operations/_backup/2026-10-10_022237_six_hour_0200/arm-serving-queue.md",
+    "final_project_cs/wiki/operations/_backup/2026-10-10_022237_six_hour_0200/gpu-work-queue.md"
+  ],
+  "report_links": [
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/A_archive_verification.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/A_multi_archive_verification.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/human_review_check.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/research/daily_rag_slm/selection_answer_review_2026-10-09_v2.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/feeder/20261009T142738160462Z_cosine/verification.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/A_final_0220.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/A_multi_bc_registration.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/A_frog_multi_bc_registration.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/B_final_0220.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/research/daily_rag_slm/saluki_finetune_2026-10-09.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/ARM_deployment_final_0219.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/ARM_first_batch_answers.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/ARM_resources_0210.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/ARM_live_diagnosis_0213.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/ARM_staged_repair_verification.json",
+      "exists": true
+    },
+    {
+      "link": "../../../deploy/arm/_backup/2026-10-10_0216_think_and_timeout_telemetry/",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261010_0200/documentation_verification.json",
+      "exists": true
+    }
+  ],
+  "passed": 17,
+  "total": 17,
+  "B_files_rehashed": 18,
+  "B_basic_rows": 835,
+  "JSON_parsed": 5
+}

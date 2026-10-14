@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "width": 1920,
+    "height": 1080,
+    "duration": 53,
+    "error": null
+  },
+  "playback": {
+    "time": 0.821721,
+    "paused": false,
+    "frames": 29,
+    "muted": false,
+    "volume": 1
+  },
+  "seeks": [
+    {
+      "time": 6,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 11,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 15,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 17,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 22,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 27,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 31,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 36,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 42,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 46,
+      "readyState": 4,
+      "error": null
+    },
+    {
+      "time": 50,
+      "readyState": 4,
+      "error": null
+    }
+  ],
+  "chapterNavigation": true,
+  "mobileOverflow": false,
+  "pageErrors": []
+}

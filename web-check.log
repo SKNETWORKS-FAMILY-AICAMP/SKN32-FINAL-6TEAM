@@ -1,0 +1,67 @@
+
+> @tripilot/web@0.1.0 check
+> npm run lint && npm run typecheck && npm run test && npm run build
+
+
+> @tripilot/web@0.1.0 lint
+> eslint .
+
+
+> @tripilot/web@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @tripilot/web@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.1 C:/Users/playdata2/Documents/final_workspace/.tmp/full-release-20261008/release/final_project_cs/frontend/apps/web
+
+
+ Test Files  65 passed (65)
+      Tests  560 passed (560)
+   Start at  12:15:42
+   Duration  10.20s (import 55%, transform 31%, tests 11%, worker 3%)
+
+  Transform  transforming modules took 9.31s · 31% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
+
+> @tripilot/web@0.1.0 build
+> next build
+
+▲ Next.js 16.3.5 (Turbopack)
+✓ Running next.config.ts took 76ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 18.9s
+  Running TypeScript ...
+  Finished TypeScript in 15.6s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/10) ...
+  Generating static pages using 7 workers (2/10) 
+  Generating static pages using 7 workers (4/10) 
+  Generating static pages using 7 workers (7/10) 
+✓ Generating static pages using 7 workers (10/10) in 834ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /auth/done
+├ ƒ /intakes/[intakeId]
+├ ○ /intakes/starting
+├ ○ /mypage
+├ ○ /mypage/edit
+├ ○ /start
+├ ○ /trips
+├ ƒ /trips/[tripId]
+├ ƒ /trips/[tripId]/results
+├ ƒ /trips/[tripId]/verification
+└ ○ /trips/new
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

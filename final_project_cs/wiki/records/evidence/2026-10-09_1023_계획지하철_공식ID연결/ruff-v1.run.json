@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "ruff",
+    "check",
+    "app/domains/travel_ops/instances/mobility/engine/runtime.py",
+    "app/domains/travel_ops/instances/mobility/engine/datacheck.py",
+    "app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+    "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "app/domains/travel_ops/instances/mobility/engine/subway_identity.py",
+    "app/domains/travel_ops/instances/mobility/wiring.py",
+    "tests/unit/travel/mobility/test_subway_binding_v1.py"
+  ],
+  "exit_code": 0
+}

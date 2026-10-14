@@ -1,0 +1,26 @@
+Oracle ARM control directory
+python3 -m unittest test_serving_queue test_adapter test_deploy -v
+
+test_nested_secrets_removed ... ok
+test_setup_failure_keeps_all_eleven_checks ... ok
+test_success_records_full_contract_denominator ... ok
+test_completed_work_replenished_using_measurement ... ok
+test_crash_recovery_preserves_unfinished_failure ... ok
+test_failed_front_profile_skipped_not_retried ... ok
+test_lock_prevents_second_worker ... ok
+test_no_deployed_app_does_not_send_questions ... ok
+test_six_hour_budget_and_no_duplicate_refill ... ok
+test_actual_model_identity_matches ... ok
+test_benchmark_model_switch_cannot_change_app_silently ... ok
+test_images_refused_without_silent_loss ... ok
+test_json_mode ... ok
+test_json_schema_is_enforced_upstream ... ok
+test_limits_and_seed_preserved ... ok
+test_stream_refused_without_silent_change ... ok
+test_unknown_model_refused ... ok
+test_failures_keep_previous_images ... ok
+test_worker_excluded_from_http_wait_but_all_services_verified ... ok
+
+Ran 19 tests in 0.032s
+OK
+worker_already_running

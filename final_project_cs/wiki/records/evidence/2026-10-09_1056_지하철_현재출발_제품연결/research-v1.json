@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-10-09T11:20:54.759804+09:00",
+  "sources": [
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "use": "공식 필드: 현재역·다음역·종착역ID, 일반열차 종류, 생성시각과 초단위 ETA"
+    },
+    {
+      "url": "https://data.seoul.go.kr/dataList/OA-12764/F/1/datasetView.do",
+      "use": "2026-09-02 공식 역정보와 명시적 역 조회명 예외; 전체 역명 별칭을 추정하지 않음"
+    },
+    {
+      "url": "https://arxiv.org/abs/2505.14193",
+      "use": "2025 동적 재계획 초록/서지: 현재 스냅샷은 미래 지연을 알지 못함. 이번 재계산은 기존 구간열 재검증이며 논문의 push 시스템 구현/효과 재현 아님"
+    },
+    {
+      "url": "https://arxiv.org/abs/2605.18778",
+      "use": "2026 T-REX 초록/서지: trip/transfer와 시간표 업데이트 전제. 현재 ID-열차운행표 대응이 불완전하여 알고리즘 이식/속도 주장 보류"
+    }
+  ],
+  "paper_read_scope": "제목·초록·서지와 공개일. 논문 본문 알고리즘을 구현하거나 그 성능을 차용하지 않음",
+  "new_web_route_samples": 0,
+  "map_developer_api_calls": 0,
+  "new_live_arrival_snapshots": 0,
+  "actual_boarding_payment": 0
+}

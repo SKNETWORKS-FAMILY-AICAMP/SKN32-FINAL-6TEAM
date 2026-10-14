@@ -1,0 +1,12 @@
+..........................                                               [100%]
+============================== warnings summary ===============================
+tests/e2e/test_mcp_read_tools.py::test_both_tools_are_read_only_and_exist_even_with_the_write_switch_off
+tests/e2e/test_mcp_read_tools.py::test_the_risk_tool_over_mcp_matches_the_web_and_a_stranger_gets_a_tool_error
+tests/e2e/test_mcp_read_tools.py::test_the_risk_tool_over_mcp_matches_the_web_and_a_stranger_gets_a_tool_error
+tests/e2e/test_mcp_read_tools.py::test_the_move_tool_over_mcp_reports_the_grade_and_never_leaks_the_key
+tests/e2e/test_mcp_read_tools.py::test_the_move_tool_over_mcp_reports_the_grade_and_never_leaks_the_key
+  C:\Users\playdata2\anaconda3\Lib\contextlib.py:105: DeprecationWarning: Use `streamable_http_client` instead.
+    self.gen = func(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+26 passed, 5 warnings in 51.26s

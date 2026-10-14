@@ -1,0 +1,1351 @@
+{
+  "schema_version": 1,
+  "last_checked_date": "2026-10-11",
+  "scope": "Selected official releases and weight updates, not an exhaustive global inventory",
+  "comparison_group": "Publisher release without additional training on our data; publisher training disclosed separately",
+  "upper_tier_rule": {
+    "top_n": 3,
+    "metric": "Mean across completed matched suites of balanced request/no-request accuracy; negative-only suites use no-request accuracy",
+    "completion_required": true,
+    "failures_remain_in_denominator": true,
+    "ties_require_repeat_or_intervals": true,
+    "selection_is_not_production_promotion": true
+  },
+  "slm_working_scope": {
+    "language_parameters_approximate_max": 8000000000,
+    "not_universal_definition": true,
+    "total_active_and_vision_parameters_recorded_separately": true,
+    "existing_gpu_training_fit_required": true
+  },
+  "automatic_finetune_if_eligible": true,
+  "new_payments_rentals_and_existing_model_deletion": false,
+  "candidates": [
+    {
+      "repo_id": "StandardThinking/StandardOne-3B",
+      "version": "v2.2",
+      "publisher_reported_weights_update": "2026-10-04",
+      "checked_date": "2026-10-08",
+      "source_url": "https://huggingface.co/StandardThinking/StandardOne-3B",
+      "our_finetuning": false,
+      "publisher_training": "Decision-data LoRA merged into Ministral-3-3B-Instruct",
+      "status": "revision_license_and_cpu_choice_tokenizer_verified; GPU_weight_and_runner_smoke_pending",
+      "revision_sha": "70023495760b0cefecda7395377377f4d85a64fb",
+      "weights_bytes": 7698241064,
+      "license_body_verified": true,
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "finetune_eligibility": "pending_original_comparison",
+      "required_next_action": "Build isolated HF 4-bit label-score runner; reserve model space after existing B54/B56; smoke 8192-token context then run matched original suites; do not use existing 4096-token JSON worker",
+      "repository_last_modified": "2026-10-04T14:41:19.000Z",
+      "total_parameters": 3849090048,
+      "language_parameters_nominal": 3000000000,
+      "language_parameters_exact": null,
+      "active_parameters_exact": null,
+      "license_sha256": "1495e1e757ef4d0925a2350563cf5754bb23c51701a8ec4fb3c5cdcbedae6747",
+      "license_notice_preserved": true,
+      "cpu_tokenizer_probe": {
+        "repo_id": "StandardThinking/StandardOne-3B",
+        "revision": "70023495760b0cefecda7395377377f4d85a64fb",
+        "weights_downloaded": false,
+        "gpu_used": false,
+        "status": "passed",
+        "label_count": 255,
+        "tested_options": 47,
+        "prompt_tokens": 4715,
+        "label_boundary_verified": true,
+        "labels": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F",
+          "G",
+          "H",
+          "I",
+          "J",
+          "K",
+          "L",
+          "M",
+          "N",
+          "O",
+          "P",
+          "Q",
+          "R",
+          "S",
+          "T",
+          "U",
+          "V",
+          "W",
+          "X",
+          "Y",
+          "Z",
+          "AA",
+          "AB",
+          "AC",
+          "AD",
+          "AE",
+          "AF",
+          "AG",
+          "AH",
+          "AI",
+          "AK",
+          "AL",
+          "AM",
+          "AN",
+          "AO",
+          "AP",
+          "AR",
+          "AS",
+          "AT",
+          "AU",
+          "AV",
+          "AX"
+        ],
+        "token_ids": [
+          1065,
+          1066,
+          1067,
+          1068,
+          1069,
+          1070,
+          1071,
+          1072,
+          1073,
+          1074,
+          1075,
+          1076,
+          1077,
+          1078,
+          1079,
+          1080,
+          1081,
+          1082,
+          1083,
+          1084,
+          1085,
+          1086,
+          1087,
+          1088,
+          1089,
+          1090,
+          14229,
+          8062,
+          5193,
+          5516,
+          32484,
+          12763,
+          6970,
+          91939,
+          33613,
+          26039,
+          4286,
+          6758,
+          5010,
+          106550,
+          6292,
+          3905,
+          6003,
+          3313,
+          117778,
+          29970,
+          13339
+        ]
+      },
+      "prepared_suite": {
+        "suite": "H",
+        "rows": 1316,
+        "request_contains_gold": false,
+        "schema_and_information_checks_passed": 5,
+        "schema_and_information_checks_total": 5
+      },
+      "latest_revision_check_2026_10_10": {
+        "checked_at_utc": "2026-10-10T01:16:41.798080+00:00",
+        "revision_sha": "70023495760b0cefecda7395377377f4d85a64fb",
+        "last_modified": "2026-10-04T14:41:19.000Z",
+        "revision_changed": false
+      },
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "StandardThinking/StandardOne-3B",
+        "revision_sha": "70023495760b0cefecda7395377377f4d85a64fb",
+        "last_modified": "2026-10-04T14:41:19.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "70023495760b0cefecda7395377377f4d85a64fb"
+    },
+    {
+      "repo_id": "StandardThinking/StandardOne-8B",
+      "version": "v2.2",
+      "publisher_reported_weights_update": "2026-10-04",
+      "checked_date": "2026-10-08",
+      "source_url": "https://huggingface.co/StandardThinking/StandardOne-8B",
+      "our_finetuning": false,
+      "publisher_training": "Decision-data LoRA merged into Ministral-3-8B-Instruct",
+      "status": "revision_license_and_cpu_choice_tokenizer_verified; GPU_weight_and_runner_smoke_pending",
+      "revision_sha": "ac495d1c221297f0ae951941eff27bcf58b5ce52",
+      "weights_bytes": 17836123152,
+      "license_body_verified": true,
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "finetune_eligibility": "pending_original_comparison_and_training_fit",
+      "required_next_action": "Build isolated HF 4-bit label-score runner; reserve model space after existing B54/B56; smoke 8192-token context then run matched original suites; do not use existing 4096-token JSON worker",
+      "repository_last_modified": "2026-10-04T14:40:40.000Z",
+      "total_parameters": 8918026240,
+      "language_parameters_nominal": 8000000000,
+      "language_parameters_exact": null,
+      "active_parameters_exact": null,
+      "license_sha256": "1495e1e757ef4d0925a2350563cf5754bb23c51701a8ec4fb3c5cdcbedae6747",
+      "license_notice_preserved": true,
+      "cpu_tokenizer_probe": {
+        "repo_id": "StandardThinking/StandardOne-8B",
+        "revision": "ac495d1c221297f0ae951941eff27bcf58b5ce52",
+        "weights_downloaded": false,
+        "gpu_used": false,
+        "status": "passed",
+        "label_count": 255,
+        "tested_options": 47,
+        "prompt_tokens": 4715,
+        "label_boundary_verified": true,
+        "labels": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F",
+          "G",
+          "H",
+          "I",
+          "J",
+          "K",
+          "L",
+          "M",
+          "N",
+          "O",
+          "P",
+          "Q",
+          "R",
+          "S",
+          "T",
+          "U",
+          "V",
+          "W",
+          "X",
+          "Y",
+          "Z",
+          "AA",
+          "AB",
+          "AC",
+          "AD",
+          "AE",
+          "AF",
+          "AG",
+          "AH",
+          "AI",
+          "AK",
+          "AL",
+          "AM",
+          "AN",
+          "AO",
+          "AP",
+          "AR",
+          "AS",
+          "AT",
+          "AU",
+          "AV",
+          "AX"
+        ],
+        "token_ids": [
+          1065,
+          1066,
+          1067,
+          1068,
+          1069,
+          1070,
+          1071,
+          1072,
+          1073,
+          1074,
+          1075,
+          1076,
+          1077,
+          1078,
+          1079,
+          1080,
+          1081,
+          1082,
+          1083,
+          1084,
+          1085,
+          1086,
+          1087,
+          1088,
+          1089,
+          1090,
+          14229,
+          8062,
+          5193,
+          5516,
+          32484,
+          12763,
+          6970,
+          91939,
+          33613,
+          26039,
+          4286,
+          6758,
+          5010,
+          106550,
+          6292,
+          3905,
+          6003,
+          3313,
+          117778,
+          29970,
+          13339
+        ]
+      },
+      "prepared_suite": {
+        "suite": "H",
+        "rows": 1316,
+        "request_contains_gold": false,
+        "schema_and_information_checks_passed": 5,
+        "schema_and_information_checks_total": 5
+      },
+      "latest_revision_check_2026_10_10": {
+        "checked_at_utc": "2026-10-10T01:16:41.799103+00:00",
+        "revision_sha": "ac495d1c221297f0ae951941eff27bcf58b5ce52",
+        "last_modified": "2026-10-04T14:40:40.000Z",
+        "revision_changed": false
+      },
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "StandardThinking/StandardOne-8B",
+        "revision_sha": "ac495d1c221297f0ae951941eff27bcf58b5ce52",
+        "last_modified": "2026-10-04T14:40:40.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "ac495d1c221297f0ae951941eff27bcf58b5ce52"
+    },
+    {
+      "repo_id": "ConwayResearch/Underdog-Saluki-27B-1.0",
+      "version": "1.0",
+      "checked_date": "2026-10-09",
+      "source_url": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0",
+      "revision_sha": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "repository_created_at": "2026-10-08T01:47:26.000Z",
+      "repository_last_modified": "2026-10-08T02:01:58.000Z",
+      "public_release_announcement_date_verified": false,
+      "our_finetuning": false,
+      "publisher_training": "Qwen3.8 instruction release derivative; GGUF mixed 2-bit quantization; exact additional training recipe not disclosed in inspected card",
+      "base_model": [
+        "Qwen/Qwen3.8-27B",
+        "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF"
+      ],
+      "model_role": "text generation / tool calling, optional vision",
+      "language_parameters_nominal": 27000000000,
+      "language_parameters_exact": null,
+      "total_parameters_exact": null,
+      "active_parameters_exact": null,
+      "declared_languages": [
+        "en"
+      ],
+      "korean_travel_measured": true,
+      "weights_file": "Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "weights_bytes": 7898369152,
+      "weights_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+      "quantization": "IQ2-mix",
+      "license": "Apache-2.0",
+      "license_body_verified": true,
+      "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "license_notice_preserved": true,
+      "evidence": "program/scripts/plan_qa_bench/results/saluki_preflight_20261009",
+      "official_evidence_files": {
+        "model_metadata.json": {
+          "bytes": 11879,
+          "sha256": "50fca853aa1dbeade7a0d9366f5b063842cc1e7cd3a8571ecc36654093b145d6"
+        },
+        "README.md": {
+          "bytes": 3887,
+          "sha256": "48853e2001e0cc3b4220bf540eedbc582a575f7da54a1aeea379ca8bd13a0dfd"
+        },
+        "LICENSE": {
+          "bytes": 11358,
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        "NOTICE": {
+          "bytes": 590,
+          "sha256": "3c202e89a77d1540553cb12fb518220170227979974ad83e0563822fa969857b"
+        }
+      },
+      "publisher_benchmarks_not_project_measurements": {
+        "tool_calling": {
+          "correct": 88,
+          "total": 120,
+          "full_base_correct": 84
+        },
+        "parallel_tool_calling": {
+          "correct": 42,
+          "total": 100,
+          "full_base_correct": 35
+        },
+        "repeat_count_verified": null,
+        "publisher_notes_small_sample_variation": true
+      },
+      "status": "five_original_suites_completed; E_false_pick_and_MX3_MX4_failed; not_adopted",
+      "original_benchmark_completed": true,
+      "upper_tier": null,
+      "finetune_eligibility": "outside_current_approximately_8B_language_parameter_SLM_scope; compressed_file_does_not_change_parameter_count",
+      "weights_downloaded": true,
+      "gpu_runner_compatibility_verified": true,
+      "space_observation": {
+        "observed_at_kst": "2026-10-09T01:10:00+09:00",
+        "gpu_A_free_GiB_approx": 8.15,
+        "gpu_B_free_GiB_approx": 20.98,
+        "gpu_A_weight_download_blocked_by_3GiB_reserve": true,
+        "gpu_B_training_active": true,
+        "gpu_B_download_requires_recheck_of_training_outputs_and_quota": true,
+        "filesystem_free_space_is_not_quota_proof": true
+      },
+      "required_next_action": "Preserve completed original comparisons. Explicit user authorization allows separate Saluki27B training when identical trainable weights, CUDA backward, storage and reviewed-data gates pass. Do not substitute another model or block ready GPU jobs.",
+      "gguf_metadata_reported_parameters": 26895998464,
+      "gguf_architecture": "qwen35",
+      "gguf_context_tokens_reported": 262144,
+      "parameter_count_source": "Official Hugging Face GGUF metadata; weight header not independently loaded",
+      "whole_weights_sha256_verified": true,
+      "weight_verification_evidence": "program/scripts/plan_qa_bench/results/saluki_preflight_20261009/download_verified_A_20261009.json",
+      "queue_evidence": "program/scripts/plan_qa_bench/results/saluki_preflight_20261009/queue_registered_A_20261009.json",
+      "weight_storage": {
+        "type": "Verified GPU A RAM original plus whole-SHA verified copy on existing GPU B root disk",
+        "permanent_copy_status": "Existing GPU B root disk whole-SHA verified; prior failed transfer and partial file preserved; no off-machine durable weight copy",
+        "loss_on_restart_possible": true,
+        "preservation_progress_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/saluki_preservation_resume_hb0754_20261009/resume_verification.json"
+      },
+      "registered_jobs": [
+        "saluki_original_smoke12_a1",
+        "saluki_original_d3_a1",
+        "saluki_original_mx_a1",
+        "saluki_original_h_a1",
+        "saluki_original_d_a1",
+        "saluki_original_d2_a1"
+      ],
+      "main_expected_rows": 9425,
+      "main_completed_rows": 9425,
+      "smoke_expected_rows": 12,
+      "smoke_completed_rows": 12,
+      "korean_travel_measurement_scope": "Five frozen developer/regression suites, one run; not independent holdout or final ranking",
+      "smoke_correct_rows": 9,
+      "main_completed_suites": 5,
+      "snapshot_observed_at_utc": "2026-10-08T23:06:45.219102+00:00",
+      "runtime_verification": "program/scripts/plan_qa_bench/results/heartbeat_20261009_0754/parent_results_verification.json",
+      "runtime_report": "final_project_cs/wiki/records/reports/2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "failed_unparsed_missing_rows": 0,
+      "product_adoption": false,
+      "finetuning_authorized_by_user": true,
+      "finetuning_preparation_state": "program/research/daily_rag_slm/saluki_finetune_2026-10-09.json",
+      "finetuning_status": "preparation_blocked_not_started",
+      "latest_revision_check_2026_10_10": {
+        "checked_at_utc": "2026-10-10T01:16:41.799103+00:00",
+        "revision_sha": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+        "last_modified": "2026-10-08T02:01:58.000Z",
+        "revision_changed": false
+      },
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "ConwayResearch/Underdog-Saluki-27B-1.0",
+        "revision_sha": "4f60eba09f4b6db63c72915d328d97e1d93edb8c",
+        "last_modified": "2026-10-10T16:49:55.000Z",
+        "revision_changed": true,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json",
+        "changed_files": [
+          "README.md"
+        ],
+        "weights_changed": false,
+        "license_and_notice_changed": false,
+        "retest_identical_weights": false
+      },
+      "latest_repository_revision": "4f60eba09f4b6db63c72915d328d97e1d93edb8c",
+      "revision_sha_role": "tested original release revision; latest_repository_revision tracks card-only changes",
+      "tested_weights_revision_sha": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6"
+    },
+    {
+      "repo_id": "Valen-Team/Valen-2B",
+      "revision_sha": "8106f4c18f91a96a23a7d6dc420ac6a6ff66e8a6",
+      "checked_date": "2026-10-09",
+      "source_url": "https://huggingface.co/Valen-Team/Valen-2B",
+      "repository_created_at": "2026-10-05T20:39:03.000Z",
+      "repository_last_modified": "2026-10-08T07:03:01.000Z",
+      "total_parameters_exact": 2214825577,
+      "language_parameters_exact": null,
+      "active_parameters_exact": null,
+      "weights_bytes": 8859381820,
+      "weights_manifest": [
+        {
+          "name": "model-00001-of-00003.safetensors",
+          "bytes": 3999858328,
+          "lfs": {
+            "sha256": "cbac6fc9f9e1e155c09bd566ac79649d228db83d7ed0ac611184fc894a9baa21",
+            "size": 3999858328,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00002-of-00003.safetensors",
+          "bytes": 3997771424,
+          "lfs": {
+            "sha256": "280e098df96bd9acba5253d3ac4e38a178e795610fe77eabf4ca89dcdedc5a23",
+            "size": 3997771424,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00003-of-00003.safetensors",
+          "bytes": 861752068,
+          "lfs": {
+            "sha256": "62b8d1265250a1dc9389e86026f65cc1764975f99a07a320d8aa2aa43f7ec424",
+            "size": 861752068,
+            "pointerSize": 134
+          }
+        }
+      ],
+      "our_finetuning": false,
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "korean_travel_measured": false,
+      "declared_languages": [
+        "en",
+        "zh"
+      ],
+      "license": "apache-2.0",
+      "license_body_verified": true,
+      "license_sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+      "license_body_scope": "Full pinned LICENSE read; same Valen2/4 body hash verified",
+      "evidence": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/Valen-Team__Valen-2B",
+      "original_benchmark_state": "not started",
+      "product_adoption": false,
+      "publisher_benchmarks_are_not_project_measurements": true,
+      "publisher_reported_release_date": "2026-10-07",
+      "release_source": "https://github.com/Liuziyu77/Valen",
+      "model_role": "Qwen3.5 backbone plus Mixer Choice/Noul/Score decision head; text/images/video",
+      "publisher_training": "Millions of decision samples;0.8/2 native full SFT FP32;4B merged LoRA/Mixer/visual merger",
+      "language_parameters_nominal": 2000000000,
+      "runtime": "Custom audited local code for0.8B; Transformers>=official5.4.0; native shared_state/temperature1; no JSON generation speed equivalence",
+      "finetune_eligibility": "Only after matched original top3, small-language scope and real memory smoke; no ranking yet",
+      "status": "Public review complete; weight bytes exceed current disk free with3GiB reserve; preparation only",
+      "required_next_action": "Recheck actual space; pin local source+processor+weights SHA; original smoke12 then five matched suites; preserve all failures; only qualifying model proceeds to fresh adapter training",
+      "custom_code_review_files": 0,
+      "latest_revision_check_2026_10_10": {
+        "checked_at_utc": "2026-10-10T01:16:41.800287+00:00",
+        "revision_sha": "8106f4c18f91a96a23a7d6dc420ac6a6ff66e8a6",
+        "last_modified": "2026-10-08T07:03:01.000Z",
+        "revision_changed": false
+      },
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "Valen-Team/Valen-2B",
+        "revision_sha": "8106f4c18f91a96a23a7d6dc420ac6a6ff66e8a6",
+        "last_modified": "2026-10-08T07:03:01.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "8106f4c18f91a96a23a7d6dc420ac6a6ff66e8a6"
+    },
+    {
+      "repo_id": "Valen-Team/Valen-0.8B",
+      "revision_sha": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+      "checked_date": "2026-10-09",
+      "source_url": "https://huggingface.co/Valen-Team/Valen-0.8B",
+      "repository_created_at": "2026-10-05T20:40:35.000Z",
+      "repository_last_modified": "2026-10-08T07:02:59.000Z",
+      "total_parameters_exact": 854305641,
+      "language_parameters_exact": null,
+      "active_parameters_exact": null,
+      "weights_bytes": 3417285852,
+      "weights_manifest": [
+        {
+          "name": "model.safetensors",
+          "bytes": 3417285852,
+          "lfs": {
+            "sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+            "size": 3417285852,
+            "pointerSize": 135
+          }
+        }
+      ],
+      "our_finetuning": false,
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "korean_travel_measured": true,
+      "declared_languages": [
+        "en",
+        "zh"
+      ],
+      "license": "apache-2.0",
+      "license_body_verified": true,
+      "license_sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+      "license_body_scope": "Full pinned LICENSE read; same Valen2/4 body hash verified",
+      "evidence": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/Valen-Team__Valen-0.8B",
+      "original_benchmark_state": "Smoke1 attempt failed before load and preserved; repaired attempt complete12/12; full5 suites executing, not completed",
+      "product_adoption": false,
+      "publisher_benchmarks_are_not_project_measurements": true,
+      "publisher_reported_release_date": "2026-10-07",
+      "release_source": "https://github.com/Liuziyu77/Valen",
+      "model_role": "Qwen3.5 backbone plus Mixer Choice/Noul/Score decision head; text/images/video",
+      "publisher_training": "Millions of decision samples;0.8/2 native full SFT FP32;4B merged LoRA/Mixer/visual merger",
+      "language_parameters_nominal": 800000000,
+      "runtime": "Custom audited local code for0.8B; Transformers>=official5.4.0; native shared_state/temperature1; no JSON generation speed equivalence",
+      "finetune_eligibility": "Only after matched original top3, small-language scope and real memory smoke; no ranking yet",
+      "status": "Repaired a2 GPU load/API parsed12/12, errors0, diagnostic correct4/12; full five suites unblocked and running, no ranking",
+      "required_next_action": "Collect existing worker GPU smoke and conditional matched D3/E/H/D/D2; preserve failures; no duplicate launch; rank only after matched completion and repeat/holdout",
+      "custom_code_review_files": 9,
+      "weights_downloaded": true,
+      "weights_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+      "download_verified_files": 17,
+      "download_expected_files": 17,
+      "download_verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_download_verified_20261009.json",
+      "queue_registration": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_registration_20261009.json",
+      "CPU_preflight": {
+        "compiled": 12,
+        "expected": 12,
+        "max_tokens": 3816,
+        "weights_loaded": false,
+        "GPU_used": false
+      },
+      "GPU_smoke_registered": 1,
+      "main_conditionally_registered": 5,
+      "queue_registered_at_utc": "2026-10-09T01:21:45Z",
+      "failed_attempts": [
+        {
+          "attempt": "valen_08b_original_smoke12_a1",
+          "saved": 0,
+          "expected": 12,
+          "exit_code": 1,
+          "cause": "Resolved python symlink confused virtual environment selection; failed before weight load",
+          "logs_preserved": true,
+          "failures_not_removed": true
+        }
+      ],
+      "repaired_attempt": "valen_08b_original_smoke12_a2",
+      "repair_registered_at_utc": "2026-10-09T01:26:11Z",
+      "repair_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_registration_attempt2_20261009.json",
+      "runner_v2": "program/scripts/plan_qa_bench/server/queues/valen_native_eval_20261009_v2.py",
+      "GPU_smoke_completed": true,
+      "GPU_smoke_expected": 12,
+      "GPU_smoke_saved": 12,
+      "GPU_smoke_correct": 4,
+      "GPU_smoke_errors": 0,
+      "max_GPU_allocated_bytes": 4726889984,
+      "full_input_token_checked": 9425,
+      "full_input_token_expected": 9425,
+      "max_input_tokens": 3934,
+      "GPU_smoke_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_smoke12_a2/native_counts.json",
+      "latest_revision_check_2026_10_10": {
+        "checked_at_utc": "2026-10-10T01:16:41.801080+00:00",
+        "revision_sha": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+        "last_modified": "2026-10-08T07:02:59.000Z",
+        "revision_changed": false
+      },
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "Valen-Team/Valen-0.8B",
+        "revision_sha": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+        "last_modified": "2026-10-08T07:02:59.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1"
+    },
+    {
+      "repo_id": "Valen-Team/Valen-4B",
+      "revision_sha": "255ed2640730efdd5cbdb3d539165925f8f45e27",
+      "checked_date": "2026-10-09",
+      "source_url": "https://huggingface.co/Valen-Team/Valen-4B",
+      "repository_created_at": "2026-10-05T20:42:32.000Z",
+      "repository_last_modified": "2026-10-06T14:28:26.000Z",
+      "total_parameters_exact": 4540981545,
+      "language_parameters_exact": null,
+      "active_parameters_exact": null,
+      "weights_bytes": 9085489252,
+      "weights_manifest": [
+        {
+          "name": "model-00001-of-00003.safetensors",
+          "bytes": 3991299376,
+          "lfs": {
+            "sha256": "21fef5c5b93c2d9f1e54100f31709aaeb1651058784b9d38c47d9345fdba50d0",
+            "size": 3991299376,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00002-of-00003.safetensors",
+          "bytes": 3979833864,
+          "lfs": {
+            "sha256": "9ec6792a776db86b348b97ae3e9ff5feaa055dba2ea28035aac9f1d543623e9b",
+            "size": 3979833864,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00003-of-00003.safetensors",
+          "bytes": 1114356012,
+          "lfs": {
+            "sha256": "c7b96a0d85eb01475c0f775a51f88e4455aeae31143cc86c8457723d9019c13e",
+            "size": 1114356012,
+            "pointerSize": 135
+          }
+        }
+      ],
+      "our_finetuning": false,
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "korean_travel_measured": false,
+      "declared_languages": [],
+      "license": "apache-2.0",
+      "license_body_verified": true,
+      "license_sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+      "license_body_scope": "Full pinned LICENSE read; same Valen2/4 body hash verified",
+      "evidence": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/Valen-Team__Valen-4B",
+      "original_benchmark_state": "not started",
+      "product_adoption": false,
+      "publisher_benchmarks_are_not_project_measurements": true,
+      "publisher_reported_release_date": "2026-10-07",
+      "release_source": "https://github.com/Liuziyu77/Valen",
+      "model_role": "Qwen3.5 backbone plus Mixer Choice/Noul/Score decision head; text/images/video",
+      "publisher_training": "Millions of decision samples;0.8/2 native full SFT FP32;4B merged LoRA/Mixer/visual merger",
+      "language_parameters_nominal": 4000000000,
+      "runtime": "Custom audited local code for0.8B; Transformers>=official5.4.0; native shared_state/temperature1; no JSON generation speed equivalence",
+      "finetune_eligibility": "Only after matched original top3, small-language scope and real memory smoke; no ranking yet",
+      "status": "Public review complete; weight bytes exceed current disk free with3GiB reserve; preparation only",
+      "required_next_action": "Recheck actual space; pin local source+processor+weights SHA; original smoke12 then five matched suites; preserve all failures; only qualifying model proceeds to fresh adapter training",
+      "custom_code_review_files": 0,
+      "latest_revision_check_2026_10_10": {
+        "checked_at_utc": "2026-10-10T01:16:42.635499+00:00",
+        "revision_sha": "255ed2640730efdd5cbdb3d539165925f8f45e27",
+        "last_modified": "2026-10-06T14:28:26.000Z",
+        "revision_changed": false
+      },
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "Valen-Team/Valen-4B",
+        "revision_sha": "255ed2640730efdd5cbdb3d539165925f8f45e27",
+        "last_modified": "2026-10-06T14:28:26.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "255ed2640730efdd5cbdb3d539165925f8f45e27"
+    },
+    {
+      "repo_id": "CohereLabs/North-Micro-Vision-Instruct",
+      "revision_sha": "fa548d9aa62c1220bfd21fc6cfc465f1bd2a1a40",
+      "checked_date": "2026-10-09",
+      "source_url": "https://huggingface.co/CohereLabs/North-Micro-Vision-Instruct",
+      "repository_created_at": "2026-08-10T13:20:37.000Z",
+      "repository_last_modified": "2026-09-30T13:30:59.000Z",
+      "total_parameters_exact": 2484847856,
+      "language_parameters_exact": null,
+      "active_parameters_exact": null,
+      "weights_bytes": 4969765248,
+      "weights_manifest": [
+        {
+          "name": "model.safetensors",
+          "bytes": 4969765248,
+          "lfs": {
+            "sha256": "cd9a9ed867111bbc6b6e062bf0b3b9c88af183eb41003083501a76c84e912046",
+            "size": 4969765248,
+            "pointerSize": 135
+          }
+        }
+      ],
+      "our_finetuning": false,
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "korean_travel_measured": false,
+      "declared_languages": [
+        "en",
+        "de",
+        "fr",
+        "es",
+        "it",
+        "pt",
+        "hi",
+        "ja",
+        "ko",
+        "zh",
+        "ar"
+      ],
+      "license": "apache-2.0",
+      "license_body_verified": false,
+      "license_sha256": null,
+      "license_body_scope": "Card declared; repository siblings have no selected LICENSE filename, full model license provenance pending",
+      "evidence": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/CohereLabs__North-Micro-Vision-Instruct",
+      "original_benchmark_state": "not started",
+      "product_adoption": false,
+      "publisher_benchmarks_are_not_project_measurements": true,
+      "publisher_reported_release_date": "2026-08-12",
+      "release_source": "https://huggingface.co/blog/CohereLabs/meet-north-micro-vision-instruct",
+      "language_parameters_nominal": 2000000000,
+      "vision_parameters_nominal": 400000000,
+      "model_role": "Multilingual vision/text instruction generation; no supported agent/tool workflow",
+      "publisher_training": "Publisher instruction-trained multimodal release",
+      "runtime": "Official5.16.0 Transformers; text-only supported, system prompt not recommended",
+      "status": "reviewed; full license provenance and isolated runner/context checks pending; insufficient concurrent disk reserve after Valen0.8",
+      "required_next_action": "Finish license provenance; deterministic travel text-only contract; space/preflight before download",
+      "finetune_eligibility": "pending matched original comparison and actual fit",
+      "latest_revision_check_2026_10_10": {
+        "checked_at_utc": "2026-10-10T01:16:42.635499+00:00",
+        "revision_sha": "fa548d9aa62c1220bfd21fc6cfc465f1bd2a1a40",
+        "last_modified": "2026-09-30T13:30:59.000Z",
+        "revision_changed": false
+      },
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "CohereLabs/North-Micro-Vision-Instruct",
+        "revision_sha": "fa548d9aa62c1220bfd21fc6cfc465f1bd2a1a40",
+        "last_modified": "2026-09-30T13:30:59.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "fa548d9aa62c1220bfd21fc6cfc465f1bd2a1a40"
+    },
+    {
+      "repo_id": "Aleph-Alpha/Kolibri-1",
+      "revision_sha": "35bc4d3be745502227a67247de77d70e691614ee",
+      "checked_date": "2026-10-09",
+      "source_url": "https://huggingface.co/Aleph-Alpha/Kolibri-1",
+      "repository_created_at": "2026-10-02T05:54:02.000Z",
+      "repository_last_modified": "2026-10-03T08:43:53.000Z",
+      "total_parameters_exact": 78103074560,
+      "language_parameters_exact": null,
+      "active_parameters_exact": 3457573120,
+      "weights_bytes": 78841467208,
+      "weights_manifest": [
+        {
+          "name": "model-00001-of-00032.safetensors",
+          "bytes": 3156374416,
+          "lfs": {
+            "sha256": "a7a98d7a62ea98d5ea087803ce018f51a15e442bc9a621617c68df7582947542",
+            "size": 3156374416,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00002-of-00032.safetensors",
+          "bytes": 2501296272,
+          "lfs": {
+            "sha256": "53b50581240e08566e640c7b58c18ad6296ca5ca08faf352e4aef7aa9d27f618",
+            "size": 2501296272,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00003-of-00032.safetensors",
+          "bytes": 2501967864,
+          "lfs": {
+            "sha256": "317e19f78b64a7cea43a3608814b00deef3adeac94fab24c0bedb55a8bbfdac8",
+            "size": 2501967864,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00004-of-00032.safetensors",
+          "bytes": 2501967352,
+          "lfs": {
+            "sha256": "bb5d53ba193ad9dc41e968a44ad5d2715a4eed4cf109932575e7212ae6414aa2",
+            "size": 2501967352,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00005-of-00032.safetensors",
+          "bytes": 2501296936,
+          "lfs": {
+            "sha256": "506679891025274abe555dac9bf27f4cca89122256cd5e969bc07a5533874671",
+            "size": 2501296936,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00006-of-00032.safetensors",
+          "bytes": 2501967208,
+          "lfs": {
+            "sha256": "dcf896e80294c89b28bb76ef898a4220cacb5a9f0e12aca11d65f788246cb9ee",
+            "size": 2501967208,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00007-of-00032.safetensors",
+          "bytes": 2501297968,
+          "lfs": {
+            "sha256": "ce656d867973e90505986db8220d4ca738c6770824bb742ead8aa9ceb7eb06f7",
+            "size": 2501297968,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00008-of-00032.safetensors",
+          "bytes": 2501971880,
+          "lfs": {
+            "sha256": "91161bdbe0a1cc28174f86ec214bc980c5f62d153396fd4d8174a4562d93fa1c",
+            "size": 2501971880,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00009-of-00032.safetensors",
+          "bytes": 2501970968,
+          "lfs": {
+            "sha256": "b44480ecc6e590ed4d7e7867598f1d53e662e34ba72486b523a99680f5f37f5d",
+            "size": 2501970968,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00010-of-00032.safetensors",
+          "bytes": 2501300576,
+          "lfs": {
+            "sha256": "3a4ac7a25770d2249310b0fd7ae6f4a29ca688f7ddc05ae153364d1dec463589",
+            "size": 2501300576,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00011-of-00032.safetensors",
+          "bytes": 2501971240,
+          "lfs": {
+            "sha256": "d6e98a9bf220fb3a838e2758b6cdc014a6554d1f10a9aaf962bd9ceaf011909b",
+            "size": 2501971240,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00012-of-00032.safetensors",
+          "bytes": 2501299416,
+          "lfs": {
+            "sha256": "28b4aa1be1c20bd5e0ec32bf47e0dbcad211131bfc95615c18b3553013e8cf11",
+            "size": 2501299416,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00013-of-00032.safetensors",
+          "bytes": 2501972200,
+          "lfs": {
+            "sha256": "65a8381eb71d36742b40176fa151c694ae762b125430ecf75291d7c5558ad954",
+            "size": 2501972200,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00014-of-00032.safetensors",
+          "bytes": 2501970944,
+          "lfs": {
+            "sha256": "0abc95b53946fadd5bd50661380e19d32b6625511a20ecede01b5a60986eb4ab",
+            "size": 2501970944,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00015-of-00032.safetensors",
+          "bytes": 2501300168,
+          "lfs": {
+            "sha256": "82a2e70ce79dbc09822e158e8987a4b5a262f74cb35b09b559c87a0adae05569",
+            "size": 2501300168,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00016-of-00032.safetensors",
+          "bytes": 2501971536,
+          "lfs": {
+            "sha256": "15349270769eb1c94172d786f29c2125fa6cea80e9e9a4857eae4cb610eaa13a",
+            "size": 2501971536,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00017-of-00032.safetensors",
+          "bytes": 2495419496,
+          "lfs": {
+            "sha256": "840257b51a1af40c4cc66a2ad5e4c9687a366c30ff16ba53eab8b6d8fe613ec9",
+            "size": 2495419496,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00018-of-00032.safetensors",
+          "bytes": 2501295784,
+          "lfs": {
+            "sha256": "5cfe070e4238a3422581126dbc30afc05f3d933d7b6e69a69996a18acea9c904",
+            "size": 2501295784,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00019-of-00032.safetensors",
+          "bytes": 2501970944,
+          "lfs": {
+            "sha256": "70bdd122f2a5ad54e453f4f5a6b586d1addf85220adeecef2fc0b4816804dd75",
+            "size": 2501970944,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00020-of-00032.safetensors",
+          "bytes": 2501299872,
+          "lfs": {
+            "sha256": "7384816f58c8bb67c502e66b1cd45879ffb8efb98c7a07afb837a7c5a406ae65",
+            "size": 2501299872,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00021-of-00032.safetensors",
+          "bytes": 2501971736,
+          "lfs": {
+            "sha256": "2cef36b82a1eca0e642ea3079f8d505fe9e4b7d2c2aa6d0e73a6db496f2e2eae",
+            "size": 2501971736,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00022-of-00032.safetensors",
+          "bytes": 2501971040,
+          "lfs": {
+            "sha256": "f5f11113e7f55e9f51924644553ae8f70983c3c561f532c505212106fd39e26a",
+            "size": 2501971040,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00023-of-00032.safetensors",
+          "bytes": 2501300720,
+          "lfs": {
+            "sha256": "c59a78ba172979fdde4851e130de686561b662c6a4300df933e09bed1ac98dc1",
+            "size": 2501300720,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00024-of-00032.safetensors",
+          "bytes": 2501971024,
+          "lfs": {
+            "sha256": "e1410bdf2700631fa644db038b0d305f36222f2ef65ba10cb230c05b7d70b24e",
+            "size": 2501971024,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00025-of-00032.safetensors",
+          "bytes": 2501299560,
+          "lfs": {
+            "sha256": "0967938289a49a558dcd7cae86ff461948c1aba829a0969d135da9ba6def9828",
+            "size": 2501299560,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00026-of-00032.safetensors",
+          "bytes": 2501972056,
+          "lfs": {
+            "sha256": "6f4c2ea2af3962f05ffd2329d3227967905f70166846e2819a6382ac55977af8",
+            "size": 2501972056,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00027-of-00032.safetensors",
+          "bytes": 2501970944,
+          "lfs": {
+            "sha256": "acc778dd678f2edfd183a88af8690b1077f8403ab729ba28ec6afd3b59b4080f",
+            "size": 2501970944,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00028-of-00032.safetensors",
+          "bytes": 2501300336,
+          "lfs": {
+            "sha256": "534f96e7acf4075f6603a08ebce82dc3955cca832c6750777baa9d88d33f1bd5",
+            "size": 2501300336,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00029-of-00032.safetensors",
+          "bytes": 2501971448,
+          "lfs": {
+            "sha256": "4e8fa5779ce4884375285cb0cc14df9bd39bca3cf517d00ad1ae7fd02d4955f8",
+            "size": 2501971448,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00030-of-00032.safetensors",
+          "bytes": 2501299296,
+          "lfs": {
+            "sha256": "1b79183349e4a7155a9d0316dbcb03df5c03879e34706ec83b7393089cd67c67",
+            "size": 2501299296,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00031-of-00032.safetensors",
+          "bytes": 2501972368,
+          "lfs": {
+            "sha256": "399bd9a219592fc009d022cffaae1ea93aa6a455b9c69d0eeb6aeeb32c65b772",
+            "size": 2501972368,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "model-00032-of-00032.safetensors",
+          "bytes": 640583640,
+          "lfs": {
+            "sha256": "d336470ef702ca1ffc7b3b41a65fea16cd1d28ac1da925d22e457a57ca5811f8",
+            "size": 640583640,
+            "pointerSize": 134
+          }
+        }
+      ],
+      "our_finetuning": false,
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "korean_travel_measured": false,
+      "declared_languages": [
+        "de",
+        "en"
+      ],
+      "license": "apache-2.0",
+      "license_body_verified": true,
+      "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "license_body_scope": "Full pinned LICENSE read; card weights/config-only scope",
+      "evidence": "program/scripts/plan_qa_bench/results/release_watch_20261009_v1/Aleph-Alpha__Kolibri-1",
+      "original_benchmark_state": "not started",
+      "product_adoption": false,
+      "publisher_benchmarks_are_not_project_measurements": true,
+      "publisher_reported_release_date": "2026-10-03",
+      "announcement_date": "2026-10-05",
+      "release_source": "https://aleph-alpha.com/en/blog/kolibri-has-landed-a-sovereign-open-weight-model/",
+      "model_role": "German/English sparse MoE reasoning generation",
+      "publisher_training": "Publisher instruction SFT/RL",
+      "runtime": "kolibri1 vLLM plugin;78.84GB FP8 exported weights",
+      "status": "reviewed; existing disk/GPU capacity insufficient, no download",
+      "required_next_action": "Keep pinned metadata; re-evaluate only if existing approved capacity changes; no rental/payment/deletion",
+      "finetune_eligibility": "78.1B total is outside small language scope;3.46B active alone does not establish SLM",
+      "latest_revision_check_2026_10_10": {
+        "checked_at_utc": "2026-10-10T01:16:42.819374+00:00",
+        "revision_sha": "35bc4d3be745502227a67247de77d70e691614ee",
+        "last_modified": "2026-10-03T08:43:53.000Z",
+        "revision_changed": false
+      },
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "Aleph-Alpha/Kolibri-1",
+        "revision_sha": "35bc4d3be745502227a67247de77d70e691614ee",
+        "last_modified": "2026-10-03T08:43:53.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "35bc4d3be745502227a67247de77d70e691614ee"
+    },
+    {
+      "repo_id": "perplexity-ai/pplx-embed-v2-late-0.6b",
+      "revision_sha": "8fc2de24534aa3610d85fa59c463313a5f096455",
+      "checked_date": "2026-10-09",
+      "source_url": "https://huggingface.co/perplexity-ai/pplx-embed-v2-late-0.6b",
+      "repository_created_at": "2026-08-03T10:37:26.000Z",
+      "repository_last_modified": "2026-10-08T14:34:03.000Z",
+      "total_parameters_exact": 594321600,
+      "language_parameters_exact": null,
+      "active_parameters_exact": null,
+      "weights_bytes": 2377845560,
+      "weights_manifest": [
+        {
+          "name": "1_Dense/model.safetensors",
+          "bytes": 524376,
+          "lfs": {
+            "sha256": "ea18dae8901decaf9533aaeda9123a52770c8b65680f17e37d15ff6fce085172",
+            "size": 524376,
+            "pointerSize": 131
+          }
+        },
+        {
+          "name": "model.safetensors",
+          "bytes": 2377321184,
+          "lfs": {
+            "sha256": "107eaae48d026ea20458b30dd755a0f1475b34fcf5a1895123ad67a2385b9d6b",
+            "size": 2377321184,
+            "pointerSize": 135
+          }
+        }
+      ],
+      "our_finetuning": false,
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "korean_travel_measured": false,
+      "declared_languages": [
+        "multilingual"
+      ],
+      "license": "mit",
+      "license_body_verified": false,
+      "license_sha256": null,
+      "license_body_scope": "Card declared; repository siblings have no selected LICENSE filename, full model license provenance pending",
+      "evidence": "program/scripts/plan_qa_bench/results/release_watch_20261009_extra_v1/perplexity-ai__pplx-embed-v2-late-0.6b",
+      "original_benchmark_state": "not started",
+      "product_adoption": false,
+      "publisher_benchmarks_are_not_project_measurements": true,
+      "publisher_reported_release_date": "2026-10-07",
+      "release_source": "https://www.perplexity.ai/hub/blog/multimodal-embeddings-beyond-a-single-vector",
+      "model_role": "Multivector128D/token MaxSim retriever; not text-generation or item-selection SLM",
+      "active_parameters_publisher_reported": 340000000,
+      "publisher_training": "Internal18B ColBERT teacher distillation; full finetuning of0.6B release",
+      "status": "official card/revision screened; full MIT provenance, ST6 runtime and new multivector travel index pending",
+      "required_next_action": "Isolated ST>=6 compatibility+license; own travel-only130-doc index; same frozen retrieval development contract then new independent retrieval holdout; keep1024D DB index separate",
+      "finetune_eligibility": "Retrieval role has separate gates; do not rank with generative original comparison",
+      "latest_revision_check_2026_10_10": {
+        "checked_at_utc": "2026-10-10T01:16:43.081254+00:00",
+        "revision_sha": "8fc2de24534aa3610d85fa59c463313a5f096455",
+        "last_modified": "2026-10-08T14:34:03.000Z",
+        "revision_changed": false
+      },
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "perplexity-ai/pplx-embed-v2-late-0.6b",
+        "revision_sha": "8fc2de24534aa3610d85fa59c463313a5f096455",
+        "last_modified": "2026-10-08T14:34:03.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "8fc2de24534aa3610d85fa59c463313a5f096455"
+    },
+    {
+      "repo_id": "facebook/meta-encoder",
+      "checked_date": "2026-10-10",
+      "source_url": "https://huggingface.co/facebook/meta-encoder",
+      "revision_sha": "3d0df704aa5bf66d9c49da1393181f33e893e5f7",
+      "repository_last_modified": "2026-10-09T03:28:47.000Z",
+      "repository_created_at": "2026-09-30T18:00:19.000Z",
+      "release_date": "Not independently established; repository creation is not necessarily launch",
+      "weights_bytes": 59553433736,
+      "language_parameters_nominal": 30000000000,
+      "total_parameters": 29776626688,
+      "active_parameters_exact": null,
+      "vision_parameters_exact": null,
+      "role": "instruction-conditioned bi-encoder",
+      "korean_support": "Not verified in inspected official card",
+      "official_language_tags": null,
+      "our_finetuning": false,
+      "publisher_training": "contrastive decision/retrieval tuning from Muse-Glimmer-30B",
+      "license_declared": "apache-2.0",
+      "license_body_verified": true,
+      "license_files": [
+        {
+          "file": "LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "bytes": 11358
+        }
+      ],
+      "license_limit": "Apache text read; gated NOTICE access returned 401, full access conditions pending",
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "finetune_eligibility": "Outside nominal <=8B scope and current resource fit",
+      "status": "screened_not_downloaded",
+      "inference_possible": "Official implementation available; existing resource/access conditions not met",
+      "additional_training_possible": "Not smoke tested; no current eligibility",
+      "required_next_action": "Watch for smaller release; no new permissions/payments/model deletions",
+      "gated": "auto",
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "facebook/meta-encoder",
+        "revision_sha": "3d0df704aa5bf66d9c49da1393181f33e893e5f7",
+        "last_modified": "2026-10-09T03:28:47.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "3d0df704aa5bf66d9c49da1393181f33e893e5f7"
+    },
+    {
+      "repo_id": "FINAL-Bench/Darwin-27B-ZTC",
+      "checked_date": "2026-10-10",
+      "source_url": "https://huggingface.co/FINAL-Bench/Darwin-27B-ZTC",
+      "revision_sha": "2b4bb9e22687b89e3c5703696b575ea2d2774da8",
+      "repository_last_modified": "2026-10-08T10:12:49.000Z",
+      "repository_created_at": "2026-10-08T04:11:03.000Z",
+      "release_date": "Not independently established; repository creation is not necessarily launch",
+      "weights_bytes": 51251905248,
+      "language_parameters_nominal": 27000000000,
+      "total_parameters": 25624600064,
+      "active_parameters_exact": null,
+      "vision_parameters_exact": null,
+      "role": "zero-token typed decision classifier",
+      "korean_support": "Not verified in inspected official card",
+      "official_language_tags": [
+        "en"
+      ],
+      "our_finetuning": false,
+      "publisher_training": "Darwin full-weight decision training on public train/dev benchmarks; fitted readout and calibration",
+      "license_declared": "apache-2.0",
+      "license_body_verified": false,
+      "license_files": [
+        {
+          "file": "autojev/LICENSE",
+          "sha256": "bdb5d45a5736702104f43f47f0d7dd2fbdd52295e81d20951131b06a319c693b",
+          "bytes": 1069
+        }
+      ],
+      "license_limit": "Only bundled autojev code MIT text located/read; weight Apache declared in card but weight-specific license body provenance pending",
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "finetune_eligibility": "Outside nominal <=8B scope and current resource fit",
+      "status": "screened_not_downloaded",
+      "inference_possible": "Official implementation available; existing resource/access conditions not met",
+      "additional_training_possible": "Not smoke tested; no current eligibility",
+      "required_next_action": "Watch for smaller release; no new permissions/payments/model deletions",
+      "gated": false,
+      "latest_revision_check_2026_10_11": {
+        "repo_id": "FINAL-Bench/Darwin-27B-ZTC",
+        "revision_sha": "2b4bb9e22687b89e3c5703696b575ea2d2774da8",
+        "last_modified": "2026-10-08T10:12:49.000Z",
+        "revision_changed": false,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+      },
+      "latest_repository_revision": "2b4bb9e22687b89e3c5703696b575ea2d2774da8"
+    },
+    {
+      "repo_id": "Alibaba-NLP/WebSailor-3B",
+      "checked_date": "2026-10-11",
+      "source_url": "https://huggingface.co/Alibaba-NLP/WebSailor-3B",
+      "revision_sha": "b317a15261674d83d851f0a14761840583bb9dce",
+      "latest_repository_revision": "b317a15261674d83d851f0a14761840583bb9dce",
+      "repository_created_at": "2025-07-10T12:45:30.000Z",
+      "repository_last_modified": "2025-07-10T15:24:37.000Z",
+      "public_release_announcement_date_verified": false,
+      "not_new_release_in_current_window": true,
+      "version": "official pinned HF revision",
+      "total_parameters_exact": 3086200832,
+      "language_parameters_exact": 3086200832,
+      "active_parameters_exact": 3086200832,
+      "model_role": "Web navigation/tool agent; Qwen2ForCausalLM configuration; publisher RFT/DUPO",
+      "declared_languages": [],
+      "korean_support_verified": false,
+      "our_finetuning": false,
+      "publisher_training": "publisher web-agent reinforcement/post training",
+      "weights_bytes": 6172451296,
+      "weights_downloaded": false,
+      "license": "Apache-2.0 declared in card",
+      "license_body_verified": false,
+      "license_check": "Pinned LICENSE path HTTP404; underlying/weight terms need complete verification",
+      "runtime": "HF Qwen2ForCausalLM declared; actual GPU/ARM inference and backward not measured",
+      "original_benchmark_completed": false,
+      "upper_tier": null,
+      "finetune_eligibility": "pending_complete_license_original_travel_comparison_resource_fit",
+      "status": "screened_old_release_not_new; license_and_storage_pending",
+      "required_next_action": "Read complete upstream and weight license; reserve6172451296bytes plus3GiB margin on approved GPU; isolated original smoke then matched suites; no rent/delete/substitute",
+      "evidence": "program/scripts/plan_qa_bench/results/daily_20261011_1003/Alibaba-NLP__WebSailor-3B_metadata.json",
+      "publisher_benchmark_languages": [
+        "English",
+        "Chinese"
+      ],
+      "language_support_scope": "Card discusses EN/ZH web benchmarks; explicit supported-language list and Korean not verified",
+      "base_model": "not independently verified"
+    }
+  ],
+  "latest_check_scope": "11 existing official revisions plus1 screened WebSailor; not exhaustive; Saluki README-only change and no new model test",
+  "updated_at_kst": "2026-10-11T10:21:12.953812",
+  "revision_check_evidence_2026_10_10": "program/scripts/plan_qa_bench/results/daily_20261010_1003/model_revision_checks.json",
+  "revision_check_evidence_2026_10_11": "program/scripts/plan_qa_bench/results/daily_20261011_1003/model_revision_checks.json"
+}

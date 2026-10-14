@@ -1,0 +1,8 @@
+[
+  {
+    "tool_use_id": "toolu_01M2XR1cVcCq69DigoxZ1wY2",
+    "type": "tool_result",
+    "content": "FIXED_PYTEST_COMMAND=C:\\Users\\playdata2\\anaconda3\\python.exe -m pytest tests/unit/core/test_plugin_availability.py tests/unit/travel/test_dining_read_tool_availability.py tests/unit/test_project_composition.py tests/unit/test_plugin_composition_runtime.py tests/unit/travel/test_plugin_worker_availability.py tests/unit/travel/test_plugin_read_boundaries.py tests/integration/controller/test_unknown_route_availability.py tests/integration/controller/test_plugin_unavailable.py tests/integration/dining/test_catalog_state_plugin.py tests/unit/travel/test_trip_api_plugin_boundaries.py tests/unit/travel/test_intake_resolve_dining.py tests/unit/travel/test_itinerary_checks.py tests/unit/ports/test_team_ports.py tests/integration/a2a/test_travel_remote_round_trip.py tests/unit/travel/test_plugin_unavailable_propagation.py tests/unit/travel/test_scenario_services.py -q --tb=short\r\n........................................................................ [ 27%]\r\n........................................................................ [ 55%]\r\n........................................................................ [ 83%]\r\n...........................................                              [100%]\r\n259 passed in 32.35s\r\nPYTEST_EXIT=0",
+    "is_error": false
+  }
+]

@@ -1,0 +1,370 @@
+{
+  "created_at": "2026-10-09T03:02:24.525141+09:00",
+  "start": [
+    126.81659695671017,
+    37.56103677313472
+  ],
+  "end": [
+    126.81649055992263,
+    37.561935578472514
+  ],
+  "observations": [
+    {
+      "label": "before",
+      "snaps": {
+        "start": [
+          {
+            "edge": 230993,
+            "perpendicular_m": 2.3447165351706032e-11,
+            "point": [
+              126.81659695671017,
+              37.56103677313472
+            ],
+            "along_from_u_m": 21.173930580652815,
+            "allowed_directions": [
+              true,
+              false
+            ],
+            "u": 160577,
+            "v": 126485
+          },
+          {
+            "edge": 93556,
+            "perpendicular_m": 8.806116619670268,
+            "point": [
+              126.81668092135571,
+              37.56107982631504
+            ],
+            "along_from_u_m": 44.72472483422119,
+            "allowed_directions": [
+              true,
+              false
+            ],
+            "u": 29205,
+            "v": 126485
+          }
+        ],
+        "end": [
+          {
+            "edge": 93587,
+            "perpendicular_m": 1.4179474639894999e-09,
+            "point": [
+              126.81649055992264,
+              37.561935578472514
+            ],
+            "along_from_u_m": 87.3236073156686,
+            "allowed_directions": [
+              true,
+              false
+            ],
+            "u": 126485,
+            "v": 15166
+          },
+          {
+            "edge": 240480,
+            "perpendicular_m": 8.42357582726083,
+            "point": [
+              126.81639510156728,
+              37.5619352802755
+            ],
+            "along_from_u_m": 24.987881926848647,
+            "allowed_directions": [
+              true,
+              false
+            ],
+            "u": 160554,
+            "v": 160555
+          }
+        ]
+      },
+      "repeats": [
+        {
+          "distance_m": 101.44,
+          "model_seconds": 9.13,
+          "points": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                126.81659695671017,
+                37.56103677313472
+              ],
+              [
+                126.816614,
+                37.561163
+              ],
+              [
+                126.816611,
+                37.561319
+              ],
+              [
+                126.816485,
+                37.561706
+              ],
+              [
+                126.81649055992264,
+                37.561935578472514
+              ]
+            ]
+          },
+          "turns": null
+        },
+        {
+          "distance_m": 101.44,
+          "model_seconds": 9.13,
+          "points": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                126.81659695671017,
+                37.56103677313472
+              ],
+              [
+                126.816614,
+                37.561163
+              ],
+              [
+                126.816611,
+                37.561319
+              ],
+              [
+                126.816485,
+                37.561706
+              ],
+              [
+                126.81649055992264,
+                37.561935578472514
+              ]
+            ]
+          },
+          "turns": null
+        },
+        {
+          "distance_m": 101.44,
+          "model_seconds": 9.13,
+          "points": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                126.81659695671017,
+                37.56103677313472
+              ],
+              [
+                126.816614,
+                37.561163
+              ],
+              [
+                126.816611,
+                37.561319
+              ],
+              [
+                126.816485,
+                37.561706
+              ],
+              [
+                126.81649055992264,
+                37.561935578472514
+              ]
+            ]
+          },
+          "turns": null
+        }
+      ]
+    },
+    {
+      "label": "after",
+      "snaps": {
+        "start": [
+          {
+            "edge": 230993,
+            "perpendicular_m": 2.3447165351706032e-11,
+            "point": [
+              126.81659695671017,
+              37.56103677313472
+            ],
+            "along_from_u_m": 21.173930580652815,
+            "allowed_directions": [
+              true,
+              false
+            ],
+            "u": 160577,
+            "v": 126485
+          },
+          {
+            "edge": 93556,
+            "perpendicular_m": 8.806116619670268,
+            "point": [
+              126.81668092135571,
+              37.56107982631504
+            ],
+            "along_from_u_m": 44.72472483422119,
+            "allowed_directions": [
+              true,
+              false
+            ],
+            "u": 29205,
+            "v": 126485
+          }
+        ],
+        "end": [
+          {
+            "edge": 93587,
+            "perpendicular_m": 1.4179474639894999e-09,
+            "point": [
+              126.81649055992264,
+              37.561935578472514
+            ],
+            "along_from_u_m": 87.3236073156686,
+            "allowed_directions": [
+              true,
+              false
+            ],
+            "u": 126485,
+            "v": 15166
+          },
+          {
+            "edge": 240480,
+            "perpendicular_m": 8.42357582726083,
+            "point": [
+              126.81639510156728,
+              37.5619352802755
+            ],
+            "along_from_u_m": 24.987881926848647,
+            "allowed_directions": [
+              true,
+              false
+            ],
+            "u": 160554,
+            "v": 160555
+          }
+        ]
+      },
+      "repeats": [
+        {
+          "distance_m": 98.29,
+          "model_seconds": 9.175,
+          "points": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                126.81668092135571,
+                37.56107982631504
+              ],
+              [
+                126.816614,
+                37.561163
+              ],
+              [
+                126.816611,
+                37.561319
+              ],
+              [
+                126.816485,
+                37.561706
+              ],
+              [
+                126.81649055992264,
+                37.561935578472514
+              ]
+            ]
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [
+              187112,
+              187174
+            ],
+            "search_cost_seconds": 9.175276625678396
+          }
+        },
+        {
+          "distance_m": 98.29,
+          "model_seconds": 9.175,
+          "points": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                126.81668092135571,
+                37.56107982631504
+              ],
+              [
+                126.816614,
+                37.561163
+              ],
+              [
+                126.816611,
+                37.561319
+              ],
+              [
+                126.816485,
+                37.561706
+              ],
+              [
+                126.81649055992264,
+                37.561935578472514
+              ]
+            ]
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [
+              187112,
+              187174
+            ],
+            "search_cost_seconds": 9.175276625678396
+          }
+        },
+        {
+          "distance_m": 98.29,
+          "model_seconds": 9.175,
+          "points": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                126.81668092135571,
+                37.56107982631504
+              ],
+              [
+                126.816614,
+                37.561163
+              ],
+              [
+                126.816611,
+                37.561319
+              ],
+              [
+                126.816485,
+                37.561706
+              ],
+              [
+                126.81649055992264,
+                37.561935578472514
+              ]
+            ]
+          },
+          "turns": {
+            "status": "partial_static_motorcar",
+            "applied_relations": 2487,
+            "source_relations": 6258,
+            "excluded_candidate_relations": 6,
+            "complete_road_rules": false,
+            "arc_codes": [
+              187112,
+              187174
+            ],
+            "search_cost_seconds": 9.175276625678396
+          }
+        }
+      ]
+    }
+  ],
+  "api_calls": 0,
+  "scope": "same requested coordinates as web; road attachment and traffic conditions not aligned; development conflict diagnosis"
+}

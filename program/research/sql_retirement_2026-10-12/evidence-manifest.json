@@ -1,0 +1,141 @@
+{
+  "date": "2026-10-12",
+  "files": [
+    {
+      "file": "closing-backups.json",
+      "bytes": 613,
+      "sha256": "797ef4c9292f13175087c045293365af228b54c3a5fad6ac01721c9d1b0ef0d8"
+    },
+    {
+      "file": "deployed-backup-manifest.json",
+      "bytes": 465,
+      "sha256": "37493b09724dbc38e3765ea3368a68cf531f3a1dabccf0dc903eaf51412cecab"
+    },
+    {
+      "file": "deployed-before.json",
+      "bytes": 222016,
+      "sha256": "d7f10c9a247178563031a6897977f6cd5652427b97f683bff3cc1b13cb96fd4a"
+    },
+    {
+      "file": "deployed-precheck.json",
+      "bytes": 336309,
+      "sha256": "557d7cede82502b55a1e9d5e6940899d007aef9858f57d5daef29835be818578"
+    },
+    {
+      "file": "deployed-restore.json",
+      "bytes": 264,
+      "sha256": "ab1b8ccefe4296eee669e82de1a6382b1000795e3e9dfbf95a6ddb29342eb441"
+    },
+    {
+      "file": "deployed-verify.json",
+      "bytes": 319936,
+      "sha256": "2cb195246ebb16208593852043b72cf53c79bb2344ac511397b17d4dfc4a6aa0"
+    },
+    {
+      "file": "deployment-final.json",
+      "bytes": 1004,
+      "sha256": "a85c610cb2c761d3177bfab04a7e09e8a02679c955d7f61f5b5517558095ef75"
+    },
+    {
+      "file": "deployment-result.json",
+      "bytes": 996,
+      "sha256": "defa5ad762a4250f175f48f6166bf91efd7f00754df4f9073d2c64adb5296ffd"
+    },
+    {
+      "file": "document-backups.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "file": "final-wiki-fix-backups.json",
+      "bytes": 506,
+      "sha256": "51874d55dd5060d0e0358047d0edc38b54784fbb30ba1f14727cba1a87cc83dd"
+    },
+    {
+      "file": "focused-test-result.json",
+      "bytes": 423,
+      "sha256": "312a0ca934b6e21f2e9bde978a22df31260a7f1994fb669a135f6c6eb9308867"
+    },
+    {
+      "file": "index.html",
+      "bytes": 438864,
+      "sha256": "1660d39ebb529194304c38549fb898a91b0fd227808771447397961d5af13e86"
+    },
+    {
+      "file": "inventory-script-1.js",
+      "bytes": 1148,
+      "sha256": "bbd39f075d24fc7debb0b52c60c9f54eaac6e11c6cd0cf6df55250a5848ccf78"
+    },
+    {
+      "file": "javascript-validation.json",
+      "bytes": 104,
+      "sha256": "b2ae9c64e389766cb8c36159c0ded3c00857887ccb0bebd6b095b208a1d7ccc0"
+    },
+    {
+      "file": "local-audit-only.json",
+      "bytes": 332686,
+      "sha256": "148934b36e05b22c664ab93dfde189ca1ebba258781644091ca7dea7367e6638"
+    },
+    {
+      "file": "local-backup-manifest.json",
+      "bytes": 456,
+      "sha256": "f1cc4fc6acece23cec1e909a2dcdbac522666e985f8bc2cb4ad16590808e25ce"
+    },
+    {
+      "file": "local-precheck.json",
+      "bytes": 349063,
+      "sha256": "e536bb85b5d668ebee0f04378073194653ef788aa7ebd7ee79bd9ef53694e6f5"
+    },
+    {
+      "file": "local-restore.json",
+      "bytes": 261,
+      "sha256": "12c03cb279e37374778c2e8fdb37299c9ab843a29eed8449eaddcbae0cfe8126"
+    },
+    {
+      "file": "review-script-0.js",
+      "bytes": 2160,
+      "sha256": "292bcd28f5434a4fd0ef81a86b46f6e965d0f4c95c0e9cb6d8b537270c2c8204"
+    },
+    {
+      "file": "sql-status.png",
+      "bytes": 115342,
+      "sha256": "ccefb6f48d5987f93dde3c183a2cfae04aab4253ece3642031d5d416b84e2853"
+    },
+    {
+      "file": "summary.json",
+      "bytes": 3985,
+      "sha256": "1b2f2632c17bfc452a65022926bed27046cfd9d36b6e036bc7115bf40ba2f937"
+    },
+    {
+      "file": "temporary-database-cleanup.json",
+      "bytes": 204,
+      "sha256": "44ec5a45c1e9dd51102598e2bd4f6051a09ca20b1b6ed950289b66209585e826"
+    },
+    {
+      "file": "travel-schema.png",
+      "bytes": 101504,
+      "sha256": "469ff62ff452ca97ad85b02b59700e3bc24d5988e5ad299d7f917be1e6034cbb"
+    },
+    {
+      "file": "validation.json",
+      "bytes": 2738,
+      "sha256": "1e64985fc2744b162933994dae6ff1625d4c661efaddd5b05636a6d0437003ca"
+    },
+    {
+      "file": "wiki-backups.json",
+      "bytes": 4779,
+      "sha256": "1c8d291fca282ac3f01e11866f905e88d64ba12818bfd21f508f5fc434eac088"
+    },
+    {
+      "file": "wiki-check-final.json",
+      "bytes": 32682,
+      "sha256": "fac83d3ab9133c9c72d4ed290c8f9f4d818aa498a0d40a4192cde24dc12c722c"
+    },
+    {
+      "file": "wiki-check.json",
+      "bytes": 32832,
+      "sha256": "261e9aa224a0cf8194bc9659e1db954d53521ed0c89bd7f6b200c73e7fb0aa90"
+    }
+  ],
+  "scope": "public schema metadata, reports and images; table-data backups remain Git-ignored"
+}

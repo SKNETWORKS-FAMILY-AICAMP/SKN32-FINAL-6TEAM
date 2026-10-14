@@ -1,0 +1,27 @@
+[
+  {
+    "path": "src/features/map/use-my-location.ts",
+    "normalized_text_equal": true,
+    "sha256_normalized": "c3d3beba2719040fc32557c371e6c2cadc64e97ba3e83b229d929304a8a78145"
+  },
+  {
+    "path": "src/features/map/trip-map.tsx",
+    "normalized_text_equal": true,
+    "sha256_normalized": "a25d7a4a09520fc620c5d70788e8b6ba63e07b8f17b8ba2f9c3ee28ff3f687d0"
+  },
+  {
+    "path": "src/features/onboarding/terms.tsx",
+    "normalized_text_equal": true,
+    "sha256_normalized": "2afc51f3834d1fd6baf41ce67b6f012d78fa113099370bb8eb0220492626b0a3"
+  },
+  {
+    "path": "src/features/consent/consent-store.ts",
+    "normalized_text_equal": true,
+    "sha256_normalized": "62bb6964c18281f1e7d496cf6226487c144b2a7d41f96a28daf0c586c0095a49"
+  },
+  {
+    "path": "src/lib/location.ts",
+    "normalized_text_equal": true,
+    "sha256_normalized": "b9fad271afb5221ab4c9418a7998360ceb1606f9f42b02498da1e35ff9cf77ca"
+  }
+]

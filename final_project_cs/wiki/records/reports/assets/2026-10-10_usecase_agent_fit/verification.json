@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-10",
+  "existing_case_rows": 22,
+  "proposed_case_rows": 8,
+  "missing_local_links": [],
+  "diagrams": [
+    {
+      "nodes": 8,
+      "arrows": 9,
+      "accessible": true
+    },
+    {
+      "nodes": 7,
+      "arrows": 7,
+      "accessible": true
+    }
+  ],
+  "log_previous_content_preserved": true,
+  "diagram_skill_self_check": "passed after final text correction",
+  "product_tests_run": false,
+  "live_model_calls": 0,
+  "deployment_performed": false,
+  "browser_render": "not verified: Playwright driver initialization stalled; in-app browser initialization timed out"
+}

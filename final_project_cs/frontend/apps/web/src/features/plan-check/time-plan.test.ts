@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  ASSUMED_MINUTES, DAY_END, SNAP,
+  ASSUMED_MINUTES, DAY_END, PUSH_DAY_START, SNAP,
   formatHm, legMinutes, moveStop, occupancy, ownRange, parseHm, pushRange, settledAfter, slackAfter, snap,
   type TimedLeg, type TimedStop,
 } from "./time-plan";
@@ -135,6 +135,13 @@ describe("the times a stop can be dragged to", () => {
     expect(pushRange(DAY, DAY_LEGS, 0)).toEqual({ min: 0, max: 1210 });        // 1440 - (60 + 30 + 60 + 20 + 60)
     expect(pushRange(DAY, DAY_LEGS, 1)).toEqual({ min: 90, max: 1300 });
     expect(pushRange(DAY, DAY_LEGS, 2)).toEqual({ min: 170, max: 1380 });
+  });
+
+  it("`[2026-10-14]` with a day start (the editor's 06:00) does not push the stops before it earlier than that — unless the day already starts earlier", () => {
+    expect(pushRange(DAY, DAY_LEGS, 1).min).toBe(90);                                            // without it: a (09:00) pushed back to midnight — 「가능한 시각 01:30」
+    expect(pushRange(DAY, DAY_LEGS, 1, SNAP, PUSH_DAY_START).min).toBe(PUSH_DAY_START + 90);     // with it: a pushed back to 06:00 at most → b from 07:30
+    const early = DAY.map((stop) => ({ ...stop, start: stop.start - 240, end: stop.end === null ? null : stop.end - 240 }));                 // the same day four hours earlier: a at 05:00
+    expect(pushRange(early, DAY_LEGS, 1, SNAP, PUSH_DAY_START).min).toBe(300 + 90);              // a day that already starts before 06:00 keeps that start
   });
 
   it("is stopped by a booked stop before it and by a booked stop after it", () => {

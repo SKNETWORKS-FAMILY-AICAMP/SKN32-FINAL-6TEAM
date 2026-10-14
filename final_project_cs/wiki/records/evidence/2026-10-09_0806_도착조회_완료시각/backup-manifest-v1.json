@@ -1,0 +1,37 @@
+[
+  {
+    "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_bus.py",
+    "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_0806_도착조회_완료시각/seoul_bus.py",
+    "sha256": "1e6d2365efbc1729dc4b213f4f143330f0e2065c0f4c3492664c9a28c2c22a90"
+  },
+  {
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0806_도착조회_완료시각/departure_observer.py",
+    "sha256": "8ab2d3b7011dbdae78ba35832c77a0f2495ddf1a1eb8ce954315fbeaf4904101"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0806_도착조회_완료시각/mobility.md",
+    "sha256": "7a812f46c3d22431007f7761cfb6926e67cc48e4f45f1cf6f2615a842f853981"
+  },
+  {
+    "source": "final_project_cs/tests/unit/travel/mobility/test_arrival_query_clock_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0808_도착조회_시험시각표기/test_arrival_query_clock_v1.py",
+    "sha256": "4de3d3a12b5f707f45bfd9b386ef6c3a34397164f66312e2d9049650f6ec4871"
+  },
+  {
+    "source": ".tmp/mobility_complete_20261008/arrival-clock-work-v1.json",
+    "backup": ".tmp/mobility_complete_20261008/_backup/2026-10-09_0808_도착조회_시험시각표기/arrival-clock-work-v1.json",
+    "sha256": "4e043166c5d42619704ebd039912ffbd6a0dadb1cbcd913ef1c791ad8cf5e282"
+  },
+  {
+    "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0806_도착조회_완료시각_정상_신규응답을_미래시각으로_거절.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0815_도착조회_해결기록/2026-10-09_0806_도착조회_완료시각_정상_신규응답을_미래시각으로_거절.md",
+    "sha256": "48f811fc5a4ef96f6f6f2d1f07ef0e8dc11c2e97d532bae55f5785349b160266"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0815_도착조회_검증결과/mobility.md",
+    "sha256": "2fcab9bb45a11077b9c8289dd6dc11c35721b900b0193a5361f3e429a80fb757"
+  }
+]

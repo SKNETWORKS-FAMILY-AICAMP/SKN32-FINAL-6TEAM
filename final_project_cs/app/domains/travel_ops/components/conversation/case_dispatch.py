@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import json
-from typing import Any
+from typing import Any, Callable
 from uuid import UUID
 
 from app.core.contracts import StateConflict
@@ -58,6 +58,11 @@ def response(*, tenant: str, case_id: UUID, execution: dict[str, Any], decision:
     if decision is not None:
         result["decision"] = decision.record()
         result["reason"] = f"decision_{decision.action}"
+        named = (getattr(decision, "raw", None) or {}).get("named_destination")
+        if named and case["status"] not in ("escalated", "failed"):
+            # ★`[2026-10-13]` 말한 곳으로 바로 바꾸지 못했음을 먼저 밝힌다(`decision_unit.decide` — 바꾸지 않고 후보를 보여 준다)
+            result["answer"] = (f"말씀하신 「{named['text']}」(으)로 바로 바꾸는 기능은 아직 없어 일정은 바꾸지 않았어요. "
+                                f"아래에서 고르시면 그곳으로 바꿔 드릴게요.\n{result['answer']}")
     if case["status"] == "waiting_input":
         result["required_input_schema"] = state.get("required_input_schema")
         if execution.get("resume_token"):
@@ -99,11 +104,73 @@ def execute(conn, *, controller: Any, tenant: str, trip: dict[str, Any], case_id
     return response(tenant=tenant, case_id=case_id, execution=execution, decision=decision)
 
 
+def descriptor(*, trip: dict[str, Any], team: str, request: dict[str, Any], item: Any = None) -> dict[str, Any]:
+    """해석 시점의 실행 입력을 보존한다. 가용성 관문이나 일정 적용은 하지 않는다."""
+    ref = {"kind": "trip", "id": str(trip["trip_id"]), "base_version": trip["version"], "request": request}
+    if item is not None:
+        ref["part_id"] = str(item.item_id)
+    return {"team_id": team, "subject_ref": ref}
+
+
+def retry_initial(conn, *, controller: Any, tenant: str, trip: dict[str, Any], case_id: UUID,
+                  items: list[Any], actor_id: str, desk: Any = None) -> dict[str, Any] | None:
+    """초기 실행 실패의 같은 요청은 저장된 해석을 사용해 같은 업무만 이어간다."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM customer_cases WHERE tenant_id=%s AND case_id=%s FOR UPDATE", (tenant, case_id))
+    case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
+    if case["status"] in ("waiting_input", "waiting_approval", "waiting_external", "resolved", "escalated", "failed", "cancelled"):
+        return None
+    if case["status"] not in ("routing", "running"):
+        raise StateConflict("미완료 요청은 원래 실행 또는 답변 요청으로 재시도해 주세요")
+    state = case.get("state_json") or {}
+    if state.get("resume_requests") or state.get("customer_input_history"):
+        raise StateConflict("답변 처리 중인 업무는 원래 답변 요청으로 재시도해 주세요")
+    plan = state.get("conversation_dispatch")
+    if not isinstance(plan, dict) or not plan.get("team_id") or not isinstance(plan.get("subject_ref"), dict):
+        raise StateConflict("미완료 요청의 저장된 실행 계획이 없어 자동 재시도할 수 없습니다")
+    ref = plan["subject_ref"]
+    if (ref.get("kind") != "trip" or str(ref.get("id")) != str(trip["trip_id"])
+            or not isinstance(ref.get("request"), dict) or ref["request"].get("action") not in BUSINESS_ACTIONS):
+        raise StateConflict("저장된 실행 계획이 현재 여행 요청과 일치하지 않습니다")
+    if ref.get("base_version") != trip["version"]:
+        raise StateConflict("실패한 요청 이후 일정이 바뀌었습니다. 현재 일정으로 다시 요청해 주세요")
+    if controller is None:
+        raise RuntimeError("conversation Controller is not configured")
+    entry = controller.require_team(plan["team_id"], case_id=case_id)
+    capability = controller.registry.capability_for(entry, case.get("intent"), input_text=case.get("subject"),
+        state=controller._capability_state({**case, "state_json": {**state, "subject_ref": plan["subject_ref"]}}))
+    controller.require_team(plan["team_id"], capability, case_id=case_id)
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM agent_runs WHERE tenant_id=%s AND case_id=%s "
+                    "AND status IN ('active','running','resuming') LIMIT 1", (tenant, case_id))
+        if cur.fetchone() is not None:
+            raise StateConflict("같은 요청의 업무가 아직 실행 중입니다")
+    conn.commit()
+    from app.application.case_service import ActiveRunError
+
+    try:
+        if case["status"] == "routing":
+            item = next((i for i in items if str(i.item_id) == str(ref.get("part_id"))), None)
+            return execute(conn, controller=controller, tenant=tenant, trip=trip, case_id=case_id,
+                           team=plan["team_id"], request=ref["request"], item=item, actor_id=actor_id,
+                           desk=desk, plan=plan)
+        execution = _run(controller.run_case(tenant_id=tenant, case_id=case_id, actor_id=actor_id))
+    except ActiveRunError as exc:
+        # 사전 확인 뒤 다른 재시도가 먼저 실행권을 얻어도 500이나 성공으로 바꾸지 않는다.
+        raise StateConflict("같은 요청의 업무가 아직 실행 중입니다") from exc
+    return response(tenant=tenant, case_id=case_id, execution=execution)
+
 
 def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], request_id: str,
                    message: str, actor_id: str, case_id: UUID | None, token: str | None,
-                   expected_version: int | None, desk: Any = None, chat: Any = None) -> dict[str, Any] | None:
-    """같은 여행·고객의 입력 대기만 재개한다. 명시한 ID는 완료 뒤에도 소유권을 확인한다."""
+                   expected_version: int | None, desk: Any = None, chat: Any = None,
+                   fresh: Callable[[], Any] | None = None) -> dict[str, Any] | None:
+    """같은 여행·고객의 입력 대기만 재개한다. 명시한 ID는 완료 뒤에도 소유권을 확인한다.
+
+    `fresh` — ★`[2026-10-13]` 대기 건이 있어도 새 문장을 **새 요청으로 한 번 읽어 보는** 자리(해석 모델 한 번, `(결정, 실패)` 를 돌려준다).
+    문장이 저장된 질문 형식에 맞는 답(번호 · 선택지 글자 · 분 · 판 번호 · 네/아니요)이면 부르지 않는다. 맞지 않는데 새로 읽은 결과가
+    혼자서도 완결된 요청(`decision_unit.stands_alone`)이면 대기 건을 잇지 않고 `{"fresh_decision": (결정, 실패)}` 를 돌려준다 —
+    부르는 쪽이 그 해석으로 새 요청을 처리한다. 완결되지 않으면(「아직 몰라요」 같은 말) 지금처럼 대기 건의 답으로 넘긴다."""
     with conn.cursor() as cur:
         cur.execute("SELECT case_id, state_json->'resume_requests' @> %s::jsonb FROM customer_cases WHERE tenant_id=%s AND customer_id=%s "
                     "AND state_json->'trip_message'->>'trip_id'=%s AND "
@@ -142,6 +209,12 @@ def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], 
     if (case is None or str(case["customer_id"]) != str(trip["customer_id"])
             or (state.get("trip_message") or {}).get("trip_id") != str(trip["trip_id"])):
         raise LookupError("case not found")
+    if fresh is not None and not replayed and not _matches_implicit_reply(state, message):
+        from .decision_unit import stands_alone
+
+        decided = fresh()
+        if stands_alone(decided[0]):
+            return {"fresh_decision": decided}
     if controller is None:
         raise RuntimeError("conversation Controller is not configured")
     conn.commit()
@@ -172,6 +245,31 @@ def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], 
         # Controller가 WAIT_EXPIRED를 기록했다. 명시 연결이 없는 새 메시지는 버리지 않는다.
         return None
     return response(tenant=tenant, case_id=case_id, execution=execution)
+
+
+def _matches_implicit_reply(state: dict[str, Any], message: str) -> bool:
+    """저장한 질문 형식에 명확히 맞는 짧은 답만 자동 연결한다. 업무 해석은 Team이 한다."""
+    import re
+
+    schema = state.get("required_input_schema") or {}
+    request = (schema.get("x-conversation") or {}).get("request") or {}
+    choices = schema.get("choices") or request.get("choices") or []
+    text = message.strip()
+    if any(text and text in (choice.get("message"), choice.get("label"), choice.get("item_id")) for choice in choices):
+        return True
+    match = re.fullmatch(r"(\d+)\s*(?:번(?:이요|요)?|번째)?[.!]?", text)
+    if match and 1 <= int(match[1]) <= len(choices):
+        return True
+    required = schema.get("required") or []
+    if required == ["minutes"]:
+        return re.fullmatch(r"(?:약\s*)?\d+\s*(?:분(?:\s*정도)?(?:이요|이예요|이에요|요)?|이요|요)?[.!]?"
+                            r"|\d+\s*시간\s*(?:\d+\s*분)?(?:이요|이에요|요)?[.!]?", text) is not None
+    if required == ["to_version"]:
+        return re.fullmatch(r"(?:v|버전\s*)?\d+\s*(?:버전|판)?(?:이요|요)?[.!]?", text, re.IGNORECASE) is not None
+    if required == ["confirmed"]:
+        return re.fullmatch(r"(?:(?:네|예|응|맞아요)[,，]?\s*)?(?:그렇게\s*해\s*줘|되돌려(?:\s*(?:줘|주세요))?)"
+                            r"|네|예|응|맞아요|아니요|아니|취소|그대로|유지", text.rstrip(".!?")) is not None
+    return False
 
 
 def _interpret_reply(state: dict[str, Any], message: str, chat: Any) -> dict[str, Any]:
@@ -270,86 +368,3 @@ def _prepare_candidates(desk: Any, *, tenant: str, trip_id: UUID, request: dict[
         desk._widen_activities(trip_id, item.item_id)
     elif item.kind == "dining" and desk._use_ledger:
         desk._add_nearby(trip_id, item, places)
-
-
-def descriptor(*, trip: dict[str, Any], team: str, request: dict[str, Any], item: Any = None) -> dict[str, Any]:
-    """해석 시점의 실행 입력을 보존한다. 가용성 관문이나 일정 적용은 하지 않는다."""
-    ref = {"kind": "trip", "id": str(trip["trip_id"]), "base_version": trip["version"], "request": request}
-    if item is not None:
-        ref["part_id"] = str(item.item_id)
-    return {"team_id": team, "subject_ref": ref}
-
-
-def retry_initial(conn, *, controller: Any, tenant: str, trip: dict[str, Any], case_id: UUID,
-                  items: list[Any], actor_id: str, desk: Any = None) -> dict[str, Any] | None:
-    """초기 실행 실패의 같은 요청은 저장된 해석을 사용해 같은 업무만 이어간다."""
-    with conn.cursor() as cur:
-        cur.execute("SELECT 1 FROM customer_cases WHERE tenant_id=%s AND case_id=%s FOR UPDATE", (tenant, case_id))
-    case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
-    if case["status"] in ("waiting_input", "waiting_approval", "waiting_external", "resolved", "escalated", "failed", "cancelled"):
-        return None
-    if case["status"] not in ("routing", "running"):
-        raise StateConflict("미완료 요청은 원래 실행 또는 답변 요청으로 재시도해 주세요")
-    state = case.get("state_json") or {}
-    if state.get("resume_requests") or state.get("customer_input_history"):
-        raise StateConflict("답변 처리 중인 업무는 원래 답변 요청으로 재시도해 주세요")
-    plan = state.get("conversation_dispatch")
-    if not isinstance(plan, dict) or not plan.get("team_id") or not isinstance(plan.get("subject_ref"), dict):
-        raise StateConflict("미완료 요청의 저장된 실행 계획이 없어 자동 재시도할 수 없습니다")
-    ref = plan["subject_ref"]
-    if (ref.get("kind") != "trip" or str(ref.get("id")) != str(trip["trip_id"])
-            or not isinstance(ref.get("request"), dict) or ref["request"].get("action") not in BUSINESS_ACTIONS):
-        raise StateConflict("저장된 실행 계획이 현재 여행 요청과 일치하지 않습니다")
-    if ref.get("base_version") != trip["version"]:
-        raise StateConflict("실패한 요청 이후 일정이 바뀌었습니다. 현재 일정으로 다시 요청해 주세요")
-    if controller is None:
-        raise RuntimeError("conversation Controller is not configured")
-    entry = controller.require_team(plan["team_id"], case_id=case_id)
-    capability = controller.registry.capability_for(entry, case.get("intent"), input_text=case.get("subject"),
-        state=controller._capability_state({**case, "state_json": {**state, "subject_ref": plan["subject_ref"]}}))
-    controller.require_team(plan["team_id"], capability, case_id=case_id)
-    with conn.cursor() as cur:
-        cur.execute("SELECT 1 FROM agent_runs WHERE tenant_id=%s AND case_id=%s "
-                    "AND status IN ('active','running','resuming') LIMIT 1", (tenant, case_id))
-        if cur.fetchone() is not None:
-            raise StateConflict("같은 요청의 업무가 아직 실행 중입니다")
-    conn.commit()
-    from app.application.case_service import ActiveRunError
-
-    try:
-        if case["status"] == "routing":
-            item = next((i for i in items if str(i.item_id) == str(ref.get("part_id"))), None)
-            return execute(conn, controller=controller, tenant=tenant, trip=trip, case_id=case_id,
-                           team=plan["team_id"], request=ref["request"], item=item, actor_id=actor_id,
-                           desk=desk, plan=plan)
-        execution = _run(controller.run_case(tenant_id=tenant, case_id=case_id, actor_id=actor_id))
-    except ActiveRunError as exc:
-        # 사전 확인 뒤 다른 재시도가 먼저 실행권을 얻어도 500이나 성공으로 바꾸지 않는다.
-        raise StateConflict("같은 요청의 업무가 아직 실행 중입니다") from exc
-    return response(tenant=tenant, case_id=case_id, execution=execution)
-
-
-
-def _matches_implicit_reply(state: dict[str, Any], message: str) -> bool:
-    """저장한 질문 형식에 명확히 맞는 짧은 답만 자동 연결한다. 업무 해석은 Team이 한다."""
-    import re
-
-    schema = state.get("required_input_schema") or {}
-    request = (schema.get("x-conversation") or {}).get("request") or {}
-    choices = schema.get("choices") or request.get("choices") or []
-    text = message.strip()
-    if any(text and text in (choice.get("message"), choice.get("label"), choice.get("item_id")) for choice in choices):
-        return True
-    match = re.fullmatch(r"(\d+)\s*(?:번(?:이요|요)?|번째)?[.!]?", text)
-    if match and 1 <= int(match[1]) <= len(choices):
-        return True
-    required = schema.get("required") or []
-    if required == ["minutes"]:
-        return re.fullmatch(r"(?:약\s*)?\d+\s*(?:분(?:\s*정도)?(?:이요|이예요|이에요|요)?|이요|요)?[.!]?"
-                            r"|\d+\s*시간\s*(?:\d+\s*분)?(?:이요|이에요|요)?[.!]?", text) is not None
-    if required == ["to_version"]:
-        return re.fullmatch(r"(?:v|버전\s*)?\d+\s*(?:버전|판)?(?:이요|요)?[.!]?", text, re.IGNORECASE) is not None
-    if required == ["confirmed"]:
-        return re.fullmatch(r"(?:(?:네|예|응|맞아요)[,，]?\s*)?(?:그렇게\s*해\s*줘|되돌려(?:\s*(?:줘|주세요))?)"
-                            r"|네|예|응|맞아요|아니요|아니|취소|그대로|유지", text.rstrip(".!?")) is not None
-    return False

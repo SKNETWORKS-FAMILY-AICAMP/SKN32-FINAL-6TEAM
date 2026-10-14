@@ -66,11 +66,11 @@ GEOCODE_SOURCE = "vworld_geocoder"
 #: 이 적재가 지금까지 만든 가게 uid. 시트에서 주소 · 관리번호가 바뀌면 옛 가게가 남는데, 그것만 지우기 위해 적어 둔다 `[2026-10-08]`
 #: (원장에는 「누가 만든 가게인가」 칸이 없다. 기록이 없는 가게를 모두 지우면 다른 적재의 가게까지 지운다)
 MADE = os.path.join(DINING_DATA, "nopo", "노포_만든_가게.json")
-RAW = os.path.join(os.path.dirname(DINING_DATA), "raw")
+RAW = os.environ.get("DINING_RAW") or os.path.join(os.path.dirname(DINING_DATA), "raw")
 LOCALDATA = (("localdata_food", "서울시 일반음식점 인허가 정보.csv"),
              ("localdata_rest", "서울시 휴게음식점 인허가 정보.csv"))
 OUT = os.path.join(DINING_DATA, "_build")
-DSN = os.environ.get("DINING_DSN", "postgresql://postgres:postgres@127.0.0.1:5433/dining_rebuild")
+DSN = os.environ.get("DINING_DSN")
 
 NS = uuid.UUID("6f1c0d2e-0000-4000-8000-000000000005")
 SOURCE = "nopo_kakao_curation"
@@ -89,6 +89,17 @@ LOCALDATA_LABEL = {"localdata_food": "일반음식점", "localdata_rest": "휴�
 
 #: SQL 쪽 상호 정규화 — norm() 과 같은 규칙이다.
 _NORM_SQL = "regexp_replace(lower(p.name_ko), '[^가-힣a-z0-9]', '', 'g')"
+
+
+def _backup_output(path):
+    from pathlib import Path
+    import shutil
+    from datetime import datetime
+    original = Path(path)
+    if original.is_file():
+        folder = original.parent / "_backup" / (datetime.now().strftime("%Y-%m-%d_%H%M%S_%f") + "_nopo")
+        folder.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(original, folder / original.name)
 
 
 def norm(name: str | None) -> str:
@@ -217,22 +228,53 @@ def remember_made(uids: list[str]) -> tuple[str, ...]:
     seen = set(json.load(open(MADE, encoding="utf-8"))) if os.path.exists(MADE) else set()
     seen |= set(uids)
     os.makedirs(os.path.dirname(MADE), exist_ok=True)
+    _backup_output(MADE)
     json.dump(sorted(seen), open(MADE, "w", encoding="utf-8"), indent=1)
     return tuple(sorted(seen))
 
 
 # ── 검수 시트 → 새 가게 ───────────────────────────────────────────────
-def _licenses() -> dict[str, tuple[str, dict]]:
-    """인허가 관리번호 → (출처, 행). 원본이 없으면 빈 dict(데이터는 git 밖이다)."""
-    out: dict[str, tuple[str, dict]] = {}
+def _license_rows(*, require_all=False):
+    """날짜가 있는 최신 원본을 우선하고, 옛 CP949와 수집한 UTF-8을 모두 읽는다."""
+    from pathlib import Path
     for source, name in LOCALDATA:
-        path = os.path.join(RAW, name)
-        if not os.path.exists(path):
+        base = Path(RAW)
+        dated = sorted(path for path in base.glob(Path(name).stem + "_*.csv")
+                       if re.fullmatch(re.escape(Path(name).stem) + r"_\d{8}\.csv", path.name))
+        path = dated[-1] if dated else base / name
+        if not path.is_file():
+            if require_all:
+                raise ValueError(f"인허가 원본이 없어 SQL 생성을 중단합니다: {name}")
             continue
-        with open(path, encoding="cp949", errors="replace") as f:
-            for row in csv.DictReader(f):
-                out[row["관리번호"].strip()] = (source, row)
-    return out
+        import codecs
+        encoding, errors = "utf-8-sig", "strict"
+        decoder = codecs.getincrementaldecoder("utf-8-sig")()
+        try:
+            with path.open("rb") as raw:
+                while chunk := raw.read(65536):
+                    decoder.decode(chunk)
+                decoder.decode(b"", final=True)
+        except UnicodeDecodeError:
+            encoding, errors = "cp949", "replace"
+        row_count = 0
+        with path.open(encoding=encoding, errors=errors, newline="") as stream:
+            for row in csv.DictReader(stream):
+                row_count += 1
+                aliases = {"관리번호": "MGTNO", "사업장명": "BPLCNM", "영업상태명": "TRDSTATENM",
+                           "도로명주소": "RDNWHLADDR", "소재지전체주소": "SITEWHLADDR", "전화번호": "SITETEL",
+                           "좌표정보(X)": "X", "좌표정보(Y)": "Y", "인허가일자": "APVPERMYMD",
+                           "데이터갱신일자": "UPDATEDT"}
+                for korean, api in aliases.items():
+                    if korean not in row and api in row:
+                        row[korean] = row[api]
+                yield source, row
+        if require_all and row_count == 0:
+            raise ValueError(f"인허가 원본에 데이터가 없어 SQL 생성을 중단합니다: {path.name}")
+
+
+def _licenses(*, require_all=False) -> dict[str, tuple[str, dict]]:
+    """인허가 관리번호 → (출처, 최신 원본 행)."""
+    return {row["관리번호"].strip(): (source, row) for source, row in _license_rows(require_all=require_all)}
 
 
 def _vegan():
@@ -335,13 +377,15 @@ def _vworld(address: str, key: str) -> tuple[str, float | None, float | None, st
 
 def geocode(sheet_rows: list[dict]) -> None:
     """좌표가 없을 행을 브이월드로 찾아 GEOCODED 에 적는다. 이미 OK 인 행은 다시 부르지 않는다(--force 로만)."""
+    licenses = _licenses()
+    if not licenses:
+        raise ValueError("인허가 원본이 없어 좌표 수집을 중단합니다")
     sys.path.insert(0, os.path.dirname(os.path.dirname(HERE)))
     from app.core.settings import get_settings
 
     key = get_settings().vworld_api_key
     if not key:
         sys.exit("ACOP_VWORLD_API_KEY 가 없다(.env.apikeys)")
-    licenses = _licenses()
     done = {} if "--force" in sys.argv else {
         (r["상호(목록)"].strip(), r["주소"].strip()): r for r in csv.DictReader(open(GEOCODED, encoding="utf-8-sig"))
         if r.get("결과") == "OK"} if os.path.exists(GEOCODED) else {}
@@ -363,6 +407,7 @@ def geocode(sheet_rows: list[dict]) -> None:
         called += 1
         out.append({"상호(목록)": label, "주소": address, "위도": f"{lat:.7f}" if lat else "",
                     "경도": f"{lng:.7f}" if lng else "", "정제주소": refined, "결과": result})
+    _backup_output(GEOCODED)
     with open(GEOCODED, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["상호(목록)", "주소", "위도", "경도", "정제주소", "결과"])
         writer.writeheader()
@@ -379,6 +424,10 @@ def new_place_lines(sheet_rows: list[dict], licenses: dict[str, tuple[str, dict]
 
     좌표 — 인허가 좌표가 먼저, 없으면 `geocoded`(브이월드, (상호, 주소) → (위도, 경도)).
     """
+    labels = [row.get("상호(목록)", "").strip() for row in sheet_rows if row.get("번호") != "예시"]
+    duplicates = sorted(label for label, count in collections.Counter(labels).items() if label and count > 1)
+    if duplicates:
+        raise ValueError("같은 상호의 검수 행이 여럿입니다. 지점명을 구분해 주세요: " + ", ".join(duplicates))
     geocoded = geocoded or {}
     source_of: dict[str, str | None] = {}
     from tm5174 import to_wgs84
@@ -482,6 +531,8 @@ def new_place_lines(sheet_rows: list[dict], licenses: dict[str, tuple[str, dict]
         os.makedirs(OUT, exist_ok=True)
         filtered = os.path.join(OUT, "nopo_hours_sheet.csv")
 
+        _backup_output(filtered)
+
         def write(rows_: list[dict]) -> None:
             with open(filtered, "w", encoding="utf-8-sig", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=list(keep[0]))
@@ -547,7 +598,11 @@ def _match(row: dict, by_addr: dict, by_name: dict) -> tuple[str, list[dict]]:
 def _ledger_index():
     import psycopg
 
-    with psycopg.connect(DSN) as conn:
+    if HERE not in sys.path:
+        sys.path.insert(0, HERE)
+    from core_db import dsn
+
+    with psycopg.connect(DSN or dsn()) as conn:
         cols = ("place_uid", "name_ko", "area", "road_address", "record_status")
         places = [dict(zip(cols, r)) for r in conn.execute(
             "SELECT place_uid, name_ko, area, road_address, record_status FROM dining.dn_place "
@@ -574,6 +629,7 @@ def report(rows: list[dict]) -> None:
                         "place_uid": str(first["place_uid"]) if len(found) == 1 else ""})
     path = os.path.join(OUT, "nopo_match.csv")
     os.makedirs(OUT, exist_ok=True)
+    _backup_output(path)
     with open(path, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(results[0]))
         writer.writeheader()
@@ -617,12 +673,10 @@ def phone_text(raw: str | None) -> str:
 def _localdata() -> dict[tuple[str, str, str], list[tuple[str, dict]]]:
     """인허가 원본 — 도로명 주소 열쇠 → [(출처, 행)]. 원본은 CP949 이고 깨진 글자가 섞여 있어 바꿔 읽는다."""
     index: dict[tuple[str, str, str], list[tuple[str, dict]]] = collections.defaultdict(list)
-    for source, name in LOCALDATA:
-        with open(os.path.join(RAW, name), encoding="cp949", errors="replace") as f:
-            for row in csv.DictReader(f):
-                key = addr_key(row.get("도로명주소"))
-                if key:
-                    index[key].append((source, row))
+    for source, row in _license_rows():
+        key = addr_key(row.get("도로명주소"))
+        if key:
+            index[key].append((source, row))
     return index
 
 
@@ -648,12 +702,20 @@ def sheet(rows: list[dict]) -> None:
                 for r in old}
     _, by_addr, by_name = _ledger_index()
     index = _localdata()
+    if not index:
+        raise ValueError("인허가 원본 색인이 비어 검수 시트를 덮어쓰지 않습니다")
     out, dropped = [], []
     for row in rows:
-        if _match(row, by_addr, by_name)[0] in ("확정", "별칭"):
-            continue                                  # 이미 원장 가게에 붙었다
+        status, matches = _match(row, by_addr, by_name)
+        made = set(json.load(open(MADE, encoding="utf-8"))) if os.path.exists(MADE) else set()
+        previously_reviewed = (row["상호"], row["주소"]) in kept
+        own_place = any(str(place["place_uid"]) in made for place in matches)
+        if status in ("확정", "별칭") and not previously_reviewed and not own_place:
+            continue                                  # 원래 있던 가게만 제외, 수기 검수와 직접 만든 가게는 보존
         state, pick = _licensed(row, index)
         if state == "영업아님":
+            if previously_reviewed:
+                print(f"!! 기존 수기 검수 행을 영업 상태 때문에 제외합니다(원본은 백업): {row['상호']} {row['주소']}")
             dropped.append((row["상호"], pick[1].get("영업상태명")))
             continue
         source, lic = pick if pick else ("", {})
@@ -668,6 +730,7 @@ def sheet(rows: list[dict]) -> None:
     for number, row in enumerate(out, start=1):
         row["번호"] = str(number)
     os.makedirs(os.path.dirname(SHEET), exist_ok=True)
+    _backup_output(SHEET)
     with open(SHEET, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=SHEET_COLUMNS)
         writer.writeheader()
@@ -694,14 +757,18 @@ def main() -> None:
         geocode(list(csv.DictReader(open(SHEET, encoding="utf-8-sig"))))
         return
     extra, counts = [], {}
+    if not os.path.isfile(SHEET):
+        raise ValueError("노포 검수 시트가 없어 SQL 생성을 중단합니다")
     if os.path.exists(SHEET):
         sheet_rows = list(csv.DictReader(open(SHEET, encoding="utf-8-sig")))
-        licenses = _licenses()
-        if licenses:
-            extra, counts = new_place_lines(sheet_rows, licenses, read_geocoded())
-        else:
-            print(f"!! 인허가 원본이 없다({RAW}) — 검수 시트의 새 가게는 이번에 넣지 않는다")
-    made = remember_made(counts.get("uids", [])) if counts else ()
+        licenses = _licenses(require_all=True)
+        if not licenses:
+            raise ValueError("인허가 원본이 비어 SQL 생성을 중단합니다")
+        extra, counts = new_place_lines(sheet_rows, licenses, read_geocoded())
+    if "--dry" in sys.argv:
+        made = tuple(json.load(open(MADE, encoding="utf-8"))) if os.path.exists(MADE) else ()
+    else:
+        made = remember_made(counts.get("uids", [])) if counts else ()
     lines = sql_lines(rows, extra, tuple(counts.get("uids", ())), made)
     print(f"카카오맵 노포 지도 서울: {len(rows)}곳 (별칭 {len(ALIAS)}곳 — 기존 가게 연결은 SQL 에서 판정)")
     if counts:
@@ -720,6 +787,7 @@ def main() -> None:
         return
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "nopo.sql")
+    _backup_output(path)
     open(path, "w", encoding="utf-8").write("\n".join(lines))
     print(f"→ {path}")
 

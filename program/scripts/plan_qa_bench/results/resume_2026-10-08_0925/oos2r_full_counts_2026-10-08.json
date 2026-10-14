@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-08",
+  "counts": {
+    "d_test_lp_q4km_oos2r.jsonl": {
+      "saved": 2735,
+      "unique": 2735,
+      "errors": 0,
+      "unparsed": 0
+    },
+    "d_test_lp_d2_q4km_oos2r.jsonl": {
+      "saved": 1000,
+      "unique": 1000,
+      "errors": 0,
+      "unparsed": 0
+    },
+    "d_test_d3_q4km_oos2r.jsonl": {
+      "saved": 360,
+      "unique": 360,
+      "errors": 0,
+      "unparsed": 0
+    },
+    "d_test_lp_h_q4km_oos2r.jsonl": {
+      "saved": 1316,
+      "unique": 1316,
+      "errors": 0,
+      "unparsed": 0
+    },
+    "d_test_lp_mx_q4km_oos2r.jsonl": {
+      "saved": 4014,
+      "unique": 4014,
+      "errors": 0,
+      "unparsed": 0
+    }
+  },
+  "total_saved": 9425,
+  "mx": {
+    "request_correct": 936,
+    "requests": 1033,
+    "false_pick": 2,
+    "no_request": 974
+  },
+  "repeats": 1,
+  "scope": "추가 평가 D/D2/D3/H/MX; 원본 답안 보존"
+}

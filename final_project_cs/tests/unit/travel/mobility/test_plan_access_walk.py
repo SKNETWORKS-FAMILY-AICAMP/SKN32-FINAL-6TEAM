@@ -116,10 +116,10 @@ def test_stop_walk_is_remeasured_only_for_the_stop_it_is_given():
 
 def test_bus_candidates_are_filtered_by_straight_meters_then_walk_is_routed():
     """코덱스 지적 — 직선 400 · 길 900 · 상한 500 이면 환산값(692)과 비교해 후보가 탈락하면 안 된다. 거른 뒤에만 길로 잰다."""
-    r = SimpleNamespace(route_nm="종로01", route_type_nm="간선")
-    x = {"station_nm": "승", "lat": 37.5710, "lng": 126.9800}
-    y = {"station_nm": "하", "lat": 37.5800, "lng": 126.9900}
-    far = {"station_nm": "먼", "lat": 37.5900, "lng": 126.9900}
+    r = SimpleNamespace(route_id="100", route_nm="종로01", route_type_nm="간선")
+    x = {"station_nm": "승", "seq": 1, "station_id": "101", "lat": 37.5710, "lng": 126.9800}
+    y = {"station_nm": "하", "seq": 5, "station_id": "105", "lat": 37.5800, "lng": 126.9900}
+    far = {"station_nm": "먼", "seq": 6, "station_id": "106", "lat": 37.5900, "lng": 126.9900}
 
     class Bus:
         def routes_between(self, *a):
@@ -137,3 +137,5 @@ def test_bus_candidates_are_filtered_by_straight_meters_then_walk_is_routed():
                   __import__("datetime").date(2026, 10, 7), 720, 1, False, "c", 500, left)
     assert len(calls) == 1, "상한 안 후보(직선 400/300)는 판정까지 갔다 — 길 900 m 의 환산값 692 가 상한 500 을 넘어도 탈락 아님"
     assert len(p.v.bike_router.calls) == 2, "거른 뒤 통과한 후보의 두 걸음만 라우팅(탈락 후보는 안 부른다)"
+    assert calls[0]['legs'][0]['route_id'] == '100'
+    assert (calls[0]['legs'][0]['from_sequence'], calls[0]['legs'][0]['to_sequence']) == (1, 5)

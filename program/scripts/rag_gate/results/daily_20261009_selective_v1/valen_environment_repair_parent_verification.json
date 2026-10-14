@@ -1,0 +1,16 @@
+{
+  "verified_at_kst": "2026-10-09T10:27:24.597262+09:00",
+  "first_failure_preserved": true,
+  "saved": 0,
+  "expected": 12,
+  "new_attempt": "valen_08b_original_smoke12_a2",
+  "runner_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+  "registration_sha256": "d13c0dbf58e004b7a7a52913ec999cfda83bc92f4ed541468007df268eb61958",
+  "GPU_load_success_claimed": false,
+  "backups": [
+    "program/research/daily_rag_slm/_backup/2026-10-09_102724_valen_environment_repair/model_release_watchlist.json",
+    "program/research/daily_rag_slm/_backup/2026-10-09_102724_valen_environment_repair/2026-10-09.json",
+    "final_project_cs/wiki/records/reports/_backup/2026-10-09_102724_valen_environment_repair/2026-10-09_1015_daily-research-and-serving.md",
+    "program/research/daily_rag_slm/_backup/2026-10-09_102724_valen_environment_repair/2026-10-09.md"
+  ]
+}

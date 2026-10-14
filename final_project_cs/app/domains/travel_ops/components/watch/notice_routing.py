@@ -4,11 +4,11 @@
 ★왜. 지금까지 바깥함 일꾼은 알림을 **운영자 채널 하나**(전역 웹훅)로만 보냈다 — 고객이 저장한 디스코드 웹훅은 시험 발송만 되고 실제 알림이 가지 않았다(2026-10-05 확인).
 ★어떻게. 일꾼의 발행자 자리에 끼운다(`scripts/run_outbox_worker.py`). 알림의 `dedupe_key`(`{여행 번호}:…`)로 **여행 → 고객 → 알림 받는 곳**(`customer_profiles.notice_channel`)을 찾고,
   그 채널로 **한 곳에만** 보낸다(같은 알림이 두 곳으로 가지 않는다 · 여러 곳 동시 발송은 이번 범위가 아니다). 문구 · 번역 · `[재생]` 표시는 운영자 채널과 **같은 규칙**(`DiscordWebhook.text_for`)이다.
-★스위치 `travel.notice_per_customer_enabled`(**기본 꺼짐**) — 꺼져 있으면 옛 동작 그대로(운영자 채널). 켜는 것은 실제 고객에게 메시지가 나가는 일이라 사용자 승인 뒤에만 켠다.
+★스위치 `travel.notice_per_customer_enabled`(**기본 꺼짐**) — 꺼져 있으면 외부 발송만 건너뛰고 앱 알림은 유지한다. 고객 알림을 개발용 디스코드로 우회하지 않는다(`[2026-10-09 사용자 정정]`). 켜는 것은 실제 고객에게 메시지가 나가는 일이라 사용자 승인 뒤에만 켠다.
 ★규칙은 `DiscordWebhook` 과 같다: 전송 성공만 `delivered` · 시간 초과/연결 끊김은 `unknown`(자동 재전송 없음) · 한도(429)는 공급자가 말한 시각에 다시 · **설정이 없으면 실패로 올림**(조용한 성공 위장 금지) ·
   운영 테넌트만(`allowed_tenants` — 시험 알림이 고객에게 나간 2026-09-22 사고를 막는다).
-★**보낼 수 없는 것은 `skipped`**(`NoticeSuppressed`) 로 사유와 함께 남긴다 — `delivered` 로 찍지 않고 다시 집지도 않는다: 연결한 곳이 없음 · 알림 채널 동의가 없음(게이트가 켜져 있을 때) · 텔레그램 대화 막힘 ·
-  디스코드 웹훅이 지워졌거나 거부됨 · 저장값을 못 읽음 · 여행이 지워짐. 고객은 그래도 **여행계획서 링크**에서 최신 상태를 본다(상태의 정본은 링크).
+★**외부 발송을 건너뛰는 것은 `skipped`**(`NoticeSuppressed`) 로 사유와 함께 남긴다 — `delivered` 로 찍지 않고 다시 집지도 않는다: 외부 알림 꺼짐 · 연결한 곳이 없음 · 알림 채널 동의가 없음(게이트가 켜져 있을 때) · 텔레그램 대화 막힘 ·
+  디스코드 웹훅이 지워졌거나 거부됨 · 저장값을 못 읽음 · 여행이 지워짐. 앱 알림 API는 이 배달 상태로 목록을 거르지 않으며, 고객은 **여행계획서 링크**에서도 최신 상태를 본다(상태의 정본은 링크).
 ★막힘 · 거부를 알게 되면 그 상태를 프로필에 남긴다(`telegram_status='blocked'` · `discord_status='invalid'`) — 마이페이지가 「다시 연결」을 안내할 수 있게. 성공하면 `ok`.
 ★비밀: 웹훅 주소 · 대화 번호 · 봇 토큰 · 알림 본문은 로그 · 예외 문구에 싣지 않는다(예외는 상태 코드만).
 """
@@ -48,7 +48,7 @@ def trip_id_of(dedupe_key: Any) -> UUID | None:
 
 
 class CustomerNoticeRouter:
-    """일꾼의 발행자 — `trip.notice` 만 고객 채널로 보내고 나머지(와 스위치가 꺼졌을 때)는 `operator` 에 넘긴다."""
+    """일꾼의 발행자 — `trip.notice`는 고객 연결로만 보내며, 다른 주제만 `operator`에 넘긴다."""
 
     def __init__(self, *, operator: Callable[[dict[str, Any]], Any], connection_factory: Callable[[], Any],
                  enabled: Callable[[], bool], renderer: Any, allowed_tenants: set[str] | None = None,
@@ -62,8 +62,12 @@ class CustomerNoticeRouter:
         self._timeout = timeout
 
     def __call__(self, message: dict[str, Any]) -> None:
-        if message.get("topic") not in TOPICS or not self._enabled():
-            return self._operator(message)                  # 옛 동작 — 운영자 채널(스위치가 꺼졌을 때) · 다른 주제
+        if message.get("topic") not in TOPICS:
+            return self._operator(message)
+        if (message.get("payload") or {}).get("simulation"):
+            raise NoticeSuppressed("재난 시뮬레이션 알림 — 고객 앱에서만 확인한다")
+        if not self._enabled():
+            raise NoticeSuppressed("고객 외부 알림이 꺼져 있다 — 앱 알림에서 확인한다")
         tenant = str(message.get("tenant_id") or "")
         if self.allowed_tenants is not None and tenant not in self.allowed_tenants:
             raise NoticeSuppressed(f"보낼 대상이 아닌 테넌트({tenant or '이름 없음'}) — 바깥으로 보내지 않았다. 보내는 테넌트: {sorted(self.allowed_tenants)}")

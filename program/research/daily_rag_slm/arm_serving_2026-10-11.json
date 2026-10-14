@@ -1,0 +1,181 @@
+{
+  "report": "final_project_cs/wiki/records/reports/2026-10-11_2240_six-hour-gpu-arm-report.md",
+  "latest": {
+    "observed_at": "2026-10-11T13:37:18.936110+00:00",
+    "engine": "CPU llama.cpp",
+    "app_model": "Gemma-4-E4B-it publisher QAT Q4_0; no our additional training",
+    "resources": {
+      "window_s": 300.1735862760106,
+      "cpu_pct_two_cores": 38.09631933932059,
+      "host_cpu_busy_pct": 99.39891820960347,
+      "host_steal_pct": 0.33309005490355187,
+      "memory_current_bytes": 4736626688,
+      "above_20_contiguous_seconds": 3326.8289652980166,
+      "five_minute_target_verified": true
+    },
+    "disk": {
+      "total": 102888095744,
+      "used": 60414648320,
+      "available": 42456670208
+    },
+    "host_memory": {
+      "total_bytes": 12503744512,
+      "available_bytes": 2855591936,
+      "used_pct": 77.16210585349491
+    },
+    "memory_process_details": {
+      "tripilot-arm-app-model.service": [
+        {
+          "pid": 1353353,
+          "memory_kib": {
+            "Rss": 3504468,
+            "Pss": 3276006,
+            "Pss_Dirty": 3038824,
+            "Pss_Anon": 3038824,
+            "Pss_File": 237182,
+            "Pss_Shmem": 0,
+            "Shared_Clean": 453404,
+            "Shared_Dirty": 0,
+            "Private_Clean": 12240,
+            "Private_Dirty": 3038824,
+            "Referenced": 3480024,
+            "Anonymous": 3038824,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 3035136,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 403456,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      ],
+      "tripilot-arm-serving.service": [
+        {
+          "pid": 1265040,
+          "memory_kib": {
+            "Rss": 3787440,
+            "Pss": 3559272,
+            "Pss_Dirty": 3308064,
+            "Pss_Anon": 3308064,
+            "Pss_File": 251208,
+            "Pss_Shmem": 0,
+            "Shared_Clean": 453016,
+            "Shared_Dirty": 0,
+            "Private_Clean": 26360,
+            "Private_Dirty": 3308064,
+            "Referenced": 3752040,
+            "Anonymous": 3308064,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 3303424,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 403456,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        },
+        {
+          "pid": 171515,
+          "memory_kib": {
+            "Rss": 82952,
+            "Pss": 78709,
+            "Pss_Dirty": 77372,
+            "Pss_Anon": 77372,
+            "Pss_File": 1337,
+            "Pss_Shmem": 0,
+            "Shared_Clean": 5564,
+            "Shared_Dirty": 0,
+            "Private_Clean": 16,
+            "Private_Dirty": 77372,
+            "Referenced": 82748,
+            "Anonymous": 77372,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 57344,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 0,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      ]
+    },
+    "units": {
+      "tripilot-arm-app-model.service": "active",
+      "tripilot-arm-cd.timer": "active",
+      "tripilot-arm-refill.timer": "active",
+      "tripilot-arm-work-queue.service": "active",
+      "tripilot-arm-serving.service": "active"
+    },
+    "queue_counts": {
+      "failed": 11,
+      "completed": 67,
+      "pending": 53,
+      "running": 1
+    },
+    "ready_pending": 32,
+    "blocked_pending": 21,
+    "new_v4_http_checks": {
+      "passed": 33,
+      "total": 33,
+      "answers_passed": 12,
+      "answers_total": 12,
+      "repeated_same_fixture": true,
+      "independent_accuracy": false,
+      "latency_min_seconds": 76.76777345797746,
+      "latency_max_seconds": 87.29858503700234
+    },
+    "benchmark_progress": {
+      "at": "2026-10-11T13:32:51.648452+00:00",
+      "job_id": "e4b_qat_original_d3",
+      "engine_pid": 1265040,
+      "expected": 360,
+      "saved": 185
+    },
+    "completed_MX": {
+      "saved": 4014,
+      "expected": 4014,
+      "correct": 3637,
+      "unparsed": 0,
+      "archive_sha256": "39a5d49778c8259b70b2b27903deacc1ffcbb4083aa017e6873c31644f8a6370",
+      "verified_files": 4,
+      "audit": [
+        {
+          "name": "summary.json",
+          "sha256": "6dbd1f0500f179d3b567d2d3d5160809bee5d44ac2061ea33688038257623ccb",
+          "bytes": 371
+        },
+        {
+          "name": "attempt_1791660805262937323.json",
+          "sha256": "4ddc6836c973e6b69b306a7526ac3b182fb8333728bffcbb9a715d29a0450e15",
+          "bytes": 1349
+        },
+        {
+          "name": "engine.log",
+          "sha256": "9f1311ddc099234e266a266fa99b1de02e3840aed454ca4f7ab0f701475171d9",
+          "bytes": 3954715
+        },
+        {
+          "name": "answers.jsonl",
+          "sha256": "7c3cb33629e4e5b78cf591b05ddaff72f26d48ca2066ced4ada15279a705d5f3",
+          "bytes": 1984358
+        }
+      ],
+      "training_lineage": "existing merged e4bt; exact oos recipe unverified",
+      "not_application_accuracy": true,
+      "independent_holdout": false
+    }
+  },
+  "answer_repair_state": "oracle_answer_repair_2026-10-11_v1.json",
+  "previous_state_backup": "see six_hour_report_2026-10-11_2240_backups.json"
+}

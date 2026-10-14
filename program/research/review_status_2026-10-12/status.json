@@ -1,0 +1,635 @@
+{
+  "captured_at": "2026-10-12T03:32:02.364685+09:00",
+  "scope": "W01-W25 결정·문서 반영 현황과 기존 실행 증거 대조. 전체 제품 기능의 신규 인수 시험 아님.",
+  "source": "program\\research\\wiki_review_2026-10-11\\findings-v2.json",
+  "source_sha256": "b093dee984ebdca53c823dd6c69d73acff881976780ad06ddd29b916615bfd95",
+  "rows_checked": 25,
+  "warning": "원래 findings의 completion_evidence에는 이전 시점 설명도 남아 있습니다. 현재 SQL 상태는 2026-10-12 실측 자료를 우선합니다.",
+  "follow_up": {
+    "thread_id": "01a12c3a-2ab8-7d10-9c24-37a21a994c1d",
+    "title": "SQL 실행 원자성·배포 안전장치 개선",
+    "status": "새 세션 실제 작업 시작 확인. 수정·시험 완료 전.",
+    "issues": [
+      "명시적 COMMIT이 전체 SQL 롤백을 깨뜨릴 수 있음",
+      "배포 시 Compose 추가 설정 누락에 따른 과거 표 재생성 위험",
+      "이미지 식별값 사전 확인·배포 시간 초과 복구 개선"
+    ]
+  },
+  "items": [
+    {
+      "id": "W01",
+      "subject": "wiki를 현재 사양 정본으로 지정",
+      "status": "문서 반영 완료",
+      "reflected": "작업 규칙·문서 입구 정정",
+      "remaining": "추가 기능 작업 대상 아님",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/index.md",
+          "exists": true,
+          "sha256": "abb26e49c9c8aaf0f6f7ac6e8b0fd3cfbf23ff8a080ba6889580ef6ceb8ef84d"
+        },
+        {
+          "path": "AGENTS.md",
+          "exists": true,
+          "sha256": "658bb335a6e49ae761322390b85029eb048f9a8d2822728fe1f8d2b49d4a2939"
+        },
+        {
+          "path": "program/research/index.md",
+          "exists": true,
+          "sha256": "e112a9cb675480064ded667c104b4fe2e01a262bfaecd2ac98b9a3f4875d10cf"
+        },
+        {
+          "path": "final_project_cs/AGENTS.md",
+          "exists": true,
+          "sha256": "1fdb6017b2f87e2741fb7a5d4ffb238781fa72636c0ad9dda2964ebb81b22c7b"
+        },
+        {
+          "path": "final_project_cs/RULE.md",
+          "exists": true,
+          "sha256": "d556f44a61dfbd9dfcdc0dbd332216070bbbf8c7ec7181ae5bcf16146e4b5637"
+        }
+      ]
+    },
+    {
+      "id": "W02",
+      "subject": "고객 웹·개인 AI·공유 계획서 역할",
+      "status": "문서 반영 완료",
+      "reflected": "세 경로의 역할·권한 계약 정리",
+      "remaining": "각 경로의 구현·권한·연결 시험",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/product/scope.md",
+          "exists": true,
+          "sha256": "d5da084a4f552562efcf98f7fa422302623df3d71142fb9f30adc116d11fcabf"
+        },
+        {
+          "path": "wiki/product/positioning.md",
+          "exists": true,
+          "sha256": "82b84fb965eba130583b7fa5e448da0ef5c34b8ff25253d21071e308fff41c98"
+        },
+        {
+          "path": "wiki/architecture/system-context.md",
+          "exists": true,
+          "sha256": "8294785b2fbf440bc8f7eeb259a18462153780c0df740717eabbd053794e82a3"
+        },
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        }
+      ]
+    },
+    {
+      "id": "W03",
+      "subject": "항로 지킴이 자동 변경",
+      "status": "문서 반영 완료",
+      "reflected": "켜짐/꺼짐·고정 일정·재개 조건 정리",
+      "remaining": "자동 적용·알림·기존 설정 호환성 검증",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/product/positioning.md",
+          "exists": true,
+          "sha256": "82b84fb965eba130583b7fa5e448da0ef5c34b8ff25253d21071e308fff41c98"
+        },
+        {
+          "path": "wiki/product/scope.md",
+          "exists": true,
+          "sha256": "d5da084a4f552562efcf98f7fa422302623df3d71142fb9f30adc116d11fcabf"
+        },
+        {
+          "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+          "exists": true,
+          "sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d"
+        },
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        }
+      ]
+    },
+    {
+      "id": "W04",
+      "subject": "개인 AI OAuth 로그인·동의",
+      "status": "B안 확정",
+      "reflected": "이번 범위에 OAuth 구현 포함",
+      "remaining": "OAuth 구현·연결·권한 시험",
+      "selection": "B",
+      "evidence": [
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+          "exists": true,
+          "sha256": "770a20a7b8b7c0a9b73e7e197011096cb9f61fb7d33aa6f7e76a92a178928674"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-012-agent-auth-claude-style.md",
+          "exists": true,
+          "sha256": "2a00dfa9a1dd4d93f0fcf9be5518c15650161a9b391267669c135bd3957b4cb9"
+        },
+        {
+          "path": "final_project_cs/wiki/external/web-auth-transfer.md",
+          "exists": true,
+          "sha256": "8a661f85ccd8f0f56d4aa13bdd0fbdac503fa92d2913f15a3cc661ba9e917f8e"
+        },
+        {
+          "path": "wiki/architecture/system-context.md",
+          "exists": true,
+          "sha256": "8294785b2fbf440bc8f7eeb259a18462153780c0df740717eabbd053794e82a3"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/components/itinerary/plan_link.py",
+          "exists": true,
+          "sha256": "d9bd5d44d58ef79dd6b55a9eba3d5b6f17586a351bb7f797036ff9c979e17831"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/entry/trip_api.py",
+          "exists": true,
+          "sha256": "3df254dece0ba0d17c4776c687b67b0ae1abf9779ecbec0910ef01f655d94b8f"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/modules/web_account/web_cookie.py",
+          "exists": true,
+          "sha256": "a1c0c4508602ba259caca1f814705ea8129d098077404823260fa4aee0c1924a"
+        }
+      ]
+    },
+    {
+      "id": "W05",
+      "subject": "상주 상담원 없는 자동 운영",
+      "status": "문서 반영 완료",
+      "reflected": "고객 보완 입력·개발자/QA 사후 분석 정리",
+      "remaining": "고객 화면·오류 기록·복구 경로 구현 대조",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/delivery/dod.md",
+          "exists": true,
+          "sha256": "95f1aa23bf0b25b6f6c7ae42fe169188db524d5007d561161bf21d830b766411"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md",
+          "exists": true,
+          "sha256": "3c685d567031349b6bed52adfb49001fbf199276701ded371b37f245690a0f0f"
+        },
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        },
+        {
+          "path": "wiki/architecture/notifications.md",
+          "exists": true,
+          "sha256": "37d11f9da6c387673a0b7a343d194361cbfc38339d7dc28910505d9b76432861"
+        },
+        {
+          "path": "final_project_cs/frontend/apps/web/src/features/support/support.tsx",
+          "exists": true,
+          "sha256": "57801e41004543500169eac04a37f96fe2ad0fdc1a3a9fa269bcf3b94c954bc8"
+        },
+        {
+          "path": "final_project_cs/frontend/apps/web/src/features/support/client.ts",
+          "exists": true,
+          "sha256": "2153e8936b40ab08e9b0d5737e20f68ef4fc3c392c520b2198f61da2e760cecc"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/modules/web_account/admin_customer_api.py",
+          "exists": true,
+          "sha256": "18b901d523f3abc3d5d32700b5eb2349396ae4dab6fe55732d79ac317c883be9"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/modules/web_account/web_cookie.py",
+          "exists": true,
+          "sha256": "a1c0c4508602ba259caca1f814705ea8129d098077404823260fa4aee0c1924a"
+        }
+      ]
+    },
+    {
+      "id": "W06",
+      "subject": "실패한 조회에 의존하는 작업만 보류",
+      "status": "문서 반영 완료",
+      "reflected": "정상 기능 유지·복구 계약 정리",
+      "remaining": "장애 격리·자동 복구·고객 안내 인수 시험",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/decisions/D-018-decision15-stop-paths.md",
+          "exists": true,
+          "sha256": "03d833e902b6ecfd95028fb753f8f0da5aee2ca6b4927ae24a7ef5ee873440a3"
+        },
+        {
+          "path": "wiki/architecture/notifications.md",
+          "exists": true,
+          "sha256": "37d11f9da6c387673a0b7a343d194361cbfc38339d7dc28910505d9b76432861"
+        },
+        {
+          "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+          "exists": true,
+          "sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2"
+        }
+      ]
+    },
+    {
+      "id": "W07",
+      "subject": "모니터링 툴 간격과 자료 최신성",
+      "status": "용어·문서 수정 완료",
+      "reflected": "모니터링 툴로 명칭 통일·지연 구분",
+      "remaining": "자료별 실제 지연 측정",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+          "exists": true,
+          "sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2"
+        }
+      ]
+    },
+    {
+      "id": "W08",
+      "subject": "분류 에이전트의 팀·순서·우선순위 결정",
+      "status": "책임 문서 수정 완료",
+      "reflected": "Activity 조정 설명 철회·현재 코드 차이 확인",
+      "remaining": "분류 모델 기반 실행 계획·다중 팀 처리 구현",
+      "selection": "C",
+      "evidence": [
+        {
+          "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+          "exists": true,
+          "sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-013-domain-folder-layout.md",
+          "exists": true,
+          "sha256": "77bed7f0a9fa28966612e7f8ead75ea0dcdb56d613259877414a8e0306fe7eb3"
+        },
+        {
+          "path": "final_project_cs/wiki/teams/composition.md",
+          "exists": true,
+          "sha256": "7c7da8617a96b3677fcad664b447c86cdc936a852eb13a0f0b9c7fe060abb1ba"
+        }
+      ]
+    },
+    {
+      "id": "W09",
+      "subject": "무료 자료 우선·검증 불가 표시·설정",
+      "status": "요구사항 반영 완료",
+      "reflected": "무료 우선 정책과 운영자 웹앱 설정 요구 기록",
+      "remaining": "설정 저장·자료 조회 정책 연결 구현",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+          "exists": true,
+          "sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md",
+          "exists": true,
+          "sha256": "2cfb7156ebf98ca6f3a8290ab20a8487fbaf3b948017571e75646219cbce9e42"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-010-google-calls-in-dawn-batch-only.md",
+          "exists": true,
+          "sha256": "ed5d96bc5d47c68469ed18a8f69c5431f3167ed3a6596fcd3d415c7aab325c78"
+        }
+      ]
+    },
+    {
+      "id": "W10",
+      "subject": "여행 평가 안내로 교체",
+      "status": "문서 반영 완료",
+      "reflected": "쇼핑몰 평가와 현재 여행 평가 분리",
+      "remaining": "추가 문서 작업 대상 아님",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/evaluation/index.md",
+          "exists": true,
+          "sha256": "4cd7947539cfd53d81adcce95f07d74dc9a2addb3ddcb167432e3e25a1a8d376"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        },
+        {
+          "path": "final_project_cs/wiki/quality/slm-model-evaluation.md",
+          "exists": true,
+          "sha256": "ae3257437228773a0bcf245b4489f50dcb424a097cc55ffce1b1fa083dc9d227"
+        }
+      ]
+    },
+    {
+      "id": "W11",
+      "subject": "v11 보존·wiki 기반 v12 신규 작성",
+      "status": "v11 보존 반영",
+      "reflected": "v11은 과거 기록으로 유지",
+      "remaining": "전체 정리 후 v12 안내서·최종 베이스라인 작성",
+      "selection": "v11 보존·v12 신규 작성 지시",
+      "evidence": [
+        {
+          "path": "wiki/delivery/release-gate.md",
+          "exists": true,
+          "sha256": "7f44675c1b46450f3f3ee11d7e455ee01bf484ce1805fb20534052d32f4ba84d"
+        },
+        {
+          "path": "wiki/delivery/dod.md",
+          "exists": true,
+          "sha256": "95f1aa23bf0b25b6f6c7ae42fe169188db524d5007d561161bf21d830b766411"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        }
+      ]
+    },
+    {
+      "id": "W12",
+      "subject": "에이전트 팀의 허용 도구 조회 범위",
+      "status": "문서 반영 완료",
+      "reflected": "권한·도구 목록·예산·근거·쓰기 경계 정리",
+      "remaining": "전체 도구 호출 경로 구현·권한 시험",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "final_project_cs/wiki/teams/team-boundary.md",
+          "exists": true,
+          "sha256": "8955c08a0eeb63aa580033107d074e1d38bccd16389e0e7c3cf6c0925812b6d6"
+        },
+        {
+          "path": "final_project_cs/wiki/quality/invariants.md",
+          "exists": true,
+          "sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e"
+        }
+      ]
+    },
+    {
+      "id": "W13",
+      "subject": "공통 시험과 여행 시험 분리",
+      "status": "C안 구현·부분 검증",
+      "reflected": "실행 목록·분리 실행기·여행 자료 반영",
+      "remaining": "공통/여행 전체 시험 각각 실행",
+      "selection": "C",
+      "evidence": [
+        {
+          "path": "final_project_cs/wiki/quality/invariants.md",
+          "exists": true,
+          "sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        }
+      ]
+    },
+    {
+      "id": "W14",
+      "subject": "DB 구조·옛 표 삭제·재생성 방지",
+      "status": "양쪽 DB 정리 완료",
+      "reflected": "백업·복원 시험·5표 삭제·이미지·wiki 갱신",
+      "remaining": "SQL 실행·향후 배포 안전 문제는 후속 세션",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "final_project_cs/wiki/data/index.md",
+          "exists": true,
+          "sha256": "ce5e126dfca7980abd264a7c73309f2f508960bd949f50e77519f511d7590f0c"
+        },
+        {
+          "path": "final_project_cs/wiki/data/schema/index.md",
+          "exists": true,
+          "sha256": "a0ee978168346f93a3e1d9a8060254ee08ac2eaf834f7f96aeeb63584b3d3a5f"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        }
+      ]
+    },
+    {
+      "id": "W15",
+      "subject": "모델 판본표와 독립 실험 보고서",
+      "status": "문서·목록 반영 완료",
+      "reflected": "현재 평가 절차·기존 보고서 52개 링크 연결",
+      "remaining": "실제 채택 모델·환경별 적용 증거 확인",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/evaluation/finetuning.md",
+          "exists": true,
+          "sha256": "0435066ae3703579102e1b879feb4714085d65af36fbf89a4829cafb6235d3b8"
+        },
+        {
+          "path": "final_project_cs/wiki/quality/slm-model-evaluation.md",
+          "exists": true,
+          "sha256": "ae3257437228773a0bcf245b4489f50dcb424a097cc55ffce1b1fa083dc9d227"
+        }
+      ]
+    },
+    {
+      "id": "W16",
+      "subject": "기능별 책임과 디렉토리 경계",
+      "status": "디렉토리 경계 반영·기능 책임 설계",
+      "reflected": "실제 배치 유지·기능 책임표는 설계안",
+      "remaining": "미확정 상시 담당자 배정·강제 검토는 미적용",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/delivery/roles.md",
+          "exists": true,
+          "sha256": "029aef302680c325e0bdaa289ade2b269880e056f1b8c6597d20bed675ac22fa"
+        },
+        {
+          "path": "final_project_cs/wiki/teams/code-layout.md",
+          "exists": true,
+          "sha256": "4195e6f146425c4519bc59104dc8210acd6c1dc8fe2037e71552881f3fad0efa"
+        }
+      ]
+    },
+    {
+      "id": "W17",
+      "subject": "현재 일정과 과거 주차표 분리",
+      "status": "문서 반영 완료",
+      "reflected": "현재 제출 일정과 과거 작업 이력 분리",
+      "remaining": "추가 문서 작업 대상 아님",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/delivery/timeline.md",
+          "exists": true,
+          "sha256": "4ff415d9cb37dfa030e34598e9192d13a491a763f0966cc8c7cef405a9e111c8"
+        }
+      ]
+    },
+    {
+      "id": "W18",
+      "subject": "환경별 앱·DB·모니터링·모델 구분",
+      "status": "문서 반영 완료",
+      "reflected": "대상 기계·앱·확인 시점을 구분",
+      "remaining": "모든 구성 요소의 현재 정상 동작 검증은 별도",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "final_project_cs/wiki/operations/always-on.md",
+          "exists": true,
+          "sha256": "2b52f6b2ab3e8048fbcb9131a54bee10092cc767c987af2ee0302cbcc05c39e8"
+        },
+        {
+          "path": "final_project_cs/wiki/log.md",
+          "exists": true,
+          "sha256": "129b9664a5d1a4f4efc104a7c6a812791c292c9c173bd870ce3775ab4717fbe1"
+        }
+      ]
+    },
+    {
+      "id": "W19",
+      "subject": "datasets 전체 Git 제외 안내",
+      "status": "문서 반영 완료",
+      "reflected": "기존 제외 규칙으로 안내 통일·DB 백업 제외 확인",
+      "remaining": "추가 문서 작업 대상 아님",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "datasets/wiki/index.md",
+          "exists": true,
+          "sha256": "6ca5081a63b428721714be170f39042d6e729b6599776a0005a48249c4188b8c"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        }
+      ]
+    },
+    {
+      "id": "W20",
+      "subject": "결정·구현·검증·배포 상태 분리",
+      "status": "기준·일부 적용",
+      "reflected": "OAuth·장애 대응 결정에 상태 예시 적용",
+      "remaining": "전체 wiki 적용은 미완료",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+          "exists": true,
+          "sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d"
+        },
+        {
+          "path": "wiki/decisions/D-018-decision15-stop-paths.md",
+          "exists": true,
+          "sha256": "03d833e902b6ecfd95028fb753f8f0da5aee2ca6b4927ae24a7ef5ee873440a3"
+        }
+      ]
+    },
+    {
+      "id": "W21",
+      "subject": "깨진 링크 3개 수정",
+      "status": "수정·검사 완료",
+      "reflected": "확인된 잘못된 링크 3개 교체",
+      "remaining": "추가 수정 대상 확인되지 않음",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+          "exists": true,
+          "sha256": "770a20a7b8b7c0a9b73e7e197011096cb9f61fb7d33aa6f7e76a92a178928674"
+        },
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        },
+        {
+          "path": "final_project_cs/wiki/teams/dining-agent-design.md",
+          "exists": true,
+          "sha256": "69c1b3cb59b6efd4f66c6e8fc34755e567838e30fc14863cb8a8acc8aaca9218"
+        }
+      ]
+    },
+    {
+      "id": "W22",
+      "subject": "wiki 검사 범위 구분",
+      "status": "검사기 구현·검증 완료",
+      "reflected": "현재·생성 문서 301개 검사: 위반 0개",
+      "remaining": "기록 본문·백업은 기본 검사 범위 밖",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "program/scripts/check_wiki.py",
+          "exists": true,
+          "sha256": "8a7f8c5e43e4b04b67fd1a198a6966208b738f5007caf13f347c5f7c08e2094a"
+        }
+      ]
+    },
+    {
+      "id": "W23",
+      "subject": "불변식 목록 수 자동 집계",
+      "status": "자동 집계·검사 반영",
+      "reflected": "현재 cs 생성 목록 70개 집계",
+      "remaining": "집계 수를 시험 통과 수로 해석하지 않음",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "final_project_cs/wiki/quality/invariants.md",
+          "exists": true,
+          "sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e"
+        },
+        {
+          "path": "final_project_cs/tests/architecture/test_state_diagram_matches_code.py",
+          "exists": true,
+          "sha256": "cc339abe8bb75f9d3b267406df4953a42527af4072e3d3bd0252d74e94c7b638"
+        }
+      ]
+    },
+    {
+      "id": "W24",
+      "subject": "ODsay 제품 미사용·별도 연구 구분",
+      "status": "문서 반영 완료",
+      "reflected": "제품 도입과 독립 연구 범위 구분",
+      "remaining": "연구의 실제 사용·저장·약관 적합성 확인은 별도",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-005-odsay-not-used.md",
+          "exists": true,
+          "sha256": "fcb02110b0429092922c82a8e160d0dc2c206720854fda75bd92b54aa415f412"
+        },
+        {
+          "path": "final_project_cs/wiki/external/api-key-issue-guide.md",
+          "exists": true,
+          "sha256": "b3c17dc4abcc03856e9342881ea7cb9e44f4baf045a6a902350e597e0f2e8ced"
+        }
+      ]
+    },
+    {
+      "id": "W25",
+      "subject": "현재 계약 먼저·과거 이력은 근거 링크",
+      "status": "기준·대상 문서 반영",
+      "reflected": "현재 본문과 과거 기록 분리·근거 링크 유지",
+      "remaining": "모든 wiki 본문의 의미 검토 완료를 뜻하지 않음",
+      "selection": "A",
+      "evidence": [
+        {
+          "path": "wiki/governance/document-standard.md",
+          "exists": true,
+          "sha256": "23711d2c3ab4e39bda8abac09e87bf66a81a5be2701ef4c78ab2ec899e0c00fc"
+        },
+        {
+          "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+          "exists": true,
+          "sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2"
+        }
+      ]
+    }
+  ]
+}

@@ -1,104 +1,45 @@
 ---
 type: guide
-title: Quality
-description: 무엇으로 보증하는가. 불변식 카탈로그·테스트 지도·평가 하네스·사각지대
+title: 현재 여행 제품 품질 안내
+description: 여행 시험·현재 불변식·모델 평가·결함 근거를 찾는 입구
 status: draft
-domain: neutral
+domain: travel
 ---
 
-# Quality
+# 현재 여행 제품 품질 안내
 
-**코드를 고치기 전에 [invariants.md](invariants.md)를 본다.**
+현재 품질 판단은 여행 자료와 실행 근거를 사용합니다. 등록된 규칙 수·자료 행 수·시험 실행 수·통과 수를 구분하고, 과거 쇼핑몰 실험을 현재 여행 제품의 합격 근거로 재사용하지 않습니다.
 
 ## 읽기 순서
 
-1. [invariants.md](invariants.md) — 깨면 안 되는 규칙 **61개**
-2. [test-map.md](test-map.md) — 무엇을 어디서 검사하는가
-3. [blind-spots.md](blind-spots.md) — 검사가 없는 지점
-   · [test-reliability.md](test-reliability.md) — 검사가 **있는데 못 믿는** 지점
-4. [dod-evidence-drift.md](dod-evidence-drift.md) — DoD evidence 가 지금도 유효한지 재검증
-5. [eval-harness.md](eval-harness.md) — 평가 실행
-6. [evidence.md](evidence.md) — **DoD 29항목의 실측 증거가 어디 있나**
+1. [현재 불변식 카탈로그](invariants.md) — 변경이 지켜야 할 규칙과 시험 연결
+2. [자동 등록 집계](invariant-summary.generated.md) — 정의 표에서 계산한 등록 수. 실행 통과 수가 아님
+3. [현재 시험 지도](test-map.md) — 공통·여행 묶음과 계약·보안·DB 실행 위치
+4. [현재 여행 평가](../../../wiki/evaluation/index.md) — 여행 자료·분류 도구·학습 비교 조건
 
-## 각 문서
+## 목적별 확인 자료
 
-| 문서 | 답하는 질문 |
-|---|---|
-| [slm-model-evaluation.md](slm-model-evaluation.md) | 새 모델 원본 비교·추가 학습·채택을 어떻게 구분하는가 |
-| [invariants.md](invariants.md) | 무엇을 깨면 안 되는가 |
-| [test-map.md](test-map.md) | 이 규칙은 어느 테스트가 지키는가 |
-| [blind-spots.md](blind-spots.md) | 어긴 걸 못 잡는 곳이 어딘가 |
-| [test-reliability.md](test-reliability.md) | 통과를 근거로 써도 되는가 — 흔들리는 테스트와 제품을 잘못 끈 테스트 |
-| [dod-evidence-drift.md](dod-evidence-drift.md) | 통과 판정 뒤에 근거가 삭제되거나 낡지 않았는가 |
-| [eval-harness.md](eval-harness.md) | 평가를 어떻게 돌리는가 |
-| **[evidence.md](evidence.md)** | **어느 DoD 가 무엇으로 증명됐고 어디가 낡았나** |
-| **[guardrails.md](guardrails.md)** | **가드레일 수치 단일 출처.** 코드 두 곳에 나타나면 결함이다 |
-
-## 테스트 현황
-
-`[실측]` 2026-09-01 기준 70개 파일
-
-| 분류 | 파일 | 무엇을 |
+| 확인할 것 | 자료 | 판단 범위 |
 |---|---|---|
-| `tests/unit` | 28 | 단위 |
-| `tests/integration` | 22 | 통합 |
-| `tests/contract` | 7 | 계약·격리·idempotency |
-| `tests/e2e` | 4 | 종단 |
-| `tests/security` | 4 | 인증·스코프·PII |
-| `tests/architecture` | 2 | **계층 경계** |
-| `tests/live` | — | 실 LLM 호출 |
+| 코드·계약 경계 | [불변식](invariants.md)·[시험 지도](test-map.md) | 정의·연결·실행 결과를 각각 확인 |
+| 시험의 신뢰성과 사각지대 | [시험 신뢰성](test-reliability.md)·[사각지대](blind-spots.md) | 날짜·대상 코드·검증 조건과 함께 읽음 |
+| 모델·학습 판본 비교 | [모델 평가 기준](slm-model-evaluation.md)·[판본별 보고서](model-version-reports.md) | 원본과 우리 자료 학습판을 구분. 별도 제품 정본이 아님 |
+| 선택 대상과 답변 근거 | [근거 답변 평가](selection-grounded-answer-evaluation.md) | 대상 선택·검색·답변 실패를 구분 |
+| 결함 보고서 상태 | [현재 확인 상태](debug-report-status.md) | 원문 보존·미확인·후속 실행 근거. 표기 검사 통과는 결함 해결이 아님 |
+| 가드레일 수치 | [가드레일 안내](guardrails.md) | 현재 설정과 실제 적용 환경을 대조 |
+| 출시 판단 | [현재 완료 기준](../../../wiki/delivery/dod.md)·[릴리스 관문](../../../wiki/delivery/release-gate.md) | 현재 계약·필수 실행·미실행 범위를 확인 |
 
-## 불변식 현황
+## 실행·근거 보고
 
-| 영역 | 총 | automated | 사람 판정 |
-|---|---|---|---|
-| 아키텍처 | 6 | 6 | 0 |
-| Team 계약 | 5 | 2 | **3** |
-| Action | 4 | 4 | 0 |
-| 보안 | 10 | 10 | 0 |
-| 도메인 검증 | 7 | 7 | 0 |
-| Runtime | 26 | 26 | 0 |
-| Context | 2 | 2 | 0 |
-| **합계** | **61** | **58** | **3** |
+현재 실행 명령은 [시험 지도](test-map.md)와 [여행 평가 안내](../../../wiki/evaluation/index.md)가 소유합니다. 과거 `eval.run`의 쇼핑몰 실험을 현재 실행 안내로 반복하지 않습니다. 공통·여행 시험의 결과는 명령·조건·소스 해시·실행 시각·성공/전체·실패·건너뜀을 함께 기록합니다. 카탈로그의 automated 표시는 이번 실행의 통과가 아닙니다.
 
-★`[정정 2026-09-10]` **51/48 로 적혀 있었다.** 고유 ID 를 세면 **52개**이고 코드 역방향 표식은 **49개**다(`check_wiki.py` 실행값). 2026-09-01 실측 뒤 불변식이 늘었는데 요약만 안 고쳤다.
+과거 DoD 실측·지표·평가 방법 문서는 작성 시점의 근거로 읽고 현재 관문을 대체하지 않습니다. 전체 시험 중 관련 소스가 바뀌면 변경 영향을 확인하고 최종 코드로 다시 검증합니다. 실제 환경에 적용하지 않았으면 운영 반영 완료라고 표시하지 않습니다.
 
-**남은 사람 판정은 Team 경계 3개뿐이다.** import 검사로 자동화 가능해 보인다.
+## 이전 안내와 관계
 
-`[실측 2026-09-10]` **코드 역방향 표식 49개**가 붙었다(2026-09-01 에는 48개였다). 양방향이 잠겼다.
+기존 소개의 9월 시험 파일 수·61개 요약·29항목 안내는 [수정 전 보존본](_backup/2026-10-12_0440_integration_status/index.md)에 보존했습니다. 현재 숫자는 위 정본·자동 집계·실행 기록에서 읽습니다.
 
-```
-코드에만 있는 ID  0개
-문서에만 있는 ID  3개  ← 판정이 review 라 테스트가 없다
-```
+- [문서 상태 표시](../../../wiki/governance/implementation-state.md) — 결정·구현·검증·환경 반영 구분
+- [팀 경계](../teams/team-boundary.md) — 업무 제안과 공통 실행의 책임
 
-## 이 영역의 특징
-
-**불변식이 문서에만 있는 게 아니라 테스트에 연결돼 있다.**
-
-```markdown
-| INV-CS-ARCH-001 | Core 계층은 도메인 어휘에 의존하지 않는다 | automated |
-  tests/architecture/test_basement_is_domain_free.py::test_basement_layers_do_not_know_the_business_domain
-```
-
-문서가 "지켜주세요"라고 부탁하는 게 아니라 **실행이 막는다.**
-
-## 자주 쓰는 명령
-
-```bash
-pytest tests/architecture
-```
-
-```bash
-pytest tests/contract tests/security
-```
-
-```bash
-python -m eval.run --arm Proposed
-```
-
-## 인접 영역
-
-- [../../../wiki/evaluation/index.md](../../../wiki/evaluation/index.md) — 평가 지표와 프로토콜
-- [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD
-- [../teams/team-boundary.md](../teams/team-boundary.md) — Team 불변식의 설명
+- [복수 일정 요청과 변경 안전성(E2)](itinerary-crud-e2-evaluation.md) — 요청 누락·변경 필드·실행 기록·정답 검수 경계.

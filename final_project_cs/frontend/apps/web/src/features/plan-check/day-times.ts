@@ -3,7 +3,8 @@ import { formatHm, occupancy, parseHm, type Retime, type TimedLeg, type TimedSto
 
 /**
  * `[2026-10-04 사용자 지시]` The screen's day as the time maths (`time-plan.ts`) wants it: the stops that have a start time, in time order, and the travel minutes between them.
- * A stop with no usable start time cannot be placed in time, so it is left out (it is neither moved nor in anyone's way). A stop that is locked or booked is `fixed`.
+ * A stop with no usable start time cannot be placed in time, so it is left out (it is neither moved nor in anyone's way). A stop that is locked or booked is `fixed` —
+ * `[2026-10-13]` and so is a stop that is over in the edit of a registered trip (`past`).
  */
 export interface DayTimes { stops: TimedStop[]; legs: TimedLeg[]; indexOf: ReadonlyMap<string, number> }
 
@@ -12,7 +13,7 @@ export function dayTimes(view: Pick<PlanCheckView, "items" | "moves">, day: numb
     const start = parseHm(item.startsAt);
     if (start === null) return [];
     const end = parseHm(item.endsAt);
-    return [{ id: item.id, start, end: end !== null && end > start ? end : null, fixed: item.locked || item.booked === true }];
+    return [{ id: item.id, start, end: end !== null && end > start ? end : null, fixed: item.locked || item.booked === true || item.past === true }];
   }).sort((a, b) => a.start - b.start);
   const ids = new Set(stops.map((stop) => stop.id));
   const legs = view.moves.filter((move) => ids.has(move.fromId) && ids.has(move.toId)).map((move) => ({ fromId: move.fromId, toId: move.toId, minutes: move.minutes ?? 0 }));

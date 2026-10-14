@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-11T23:53:43.156825+09:00",
+  "files": {
+    "app/domains/travel_ops/components/watch/trip_watch_cases.py": "60a9cd7f498b80123c588968a5da6379a97eddf298a1ad48146415b51101444d",
+    "scripts/run_sweepers.py": "4fe84f5b123a66b27f2a8e1b9a8d4d0d0bbd932006e374c8db4007a2cd515600",
+    "tests/e2e/test_watch_plugin_recovery.py": "e1dd7416d386857e287c4331d9d4ad34976accb6ee021c6505530812f0fb8f33",
+    "tests/unit/travel/test_watch_recovery_race.py": "244686187de0acdecd321b270c60fe7930ea41ecc1fdec78030dbce6b1c6306b",
+    "tests/unit/travel/test_plugin_worker_availability.py": "1f1e464ceb664842f791eea44872494a79a30f90019f52ecd13f0d599d3ca97f",
+    "tests/unit/core/test_run_sweepers_signals_errors.py": "69efc191a972f2a51bb0367c3948743920f098463f2821d8d109d79a2d1dbfb5",
+    "tests/integration/test_watch_cadence.py": "da04947a5327164397d2f65ca963daa85c777671811098589286874c7638a592",
+    "tests/e2e/test_trip_api.py": "483c73ccea271c00365a420ad6e30626894ad507379843f3c6d711d2808c1095",
+    "tests/helpers/plugin_bindings.py": "0b3decda08f412bb65282cdeb94812f3d67967e95eba0f8f8d3f6e3848617020",
+    "wiki/teams/team-contract/plugin-availability.md": "4cbc2aaac288bab1bc3baf81ec65a9fb91c4285a57a23703768030f536bd83a5"
+  }
+}

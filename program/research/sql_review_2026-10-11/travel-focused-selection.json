@@ -1,0 +1,28 @@
+{
+  "suite": "travel",
+  "common_nodeids": [],
+  "travel_nodeids": [
+    "tests/contract/test_team_layout.py::test_a_file_and_a_folder_with_the_same_name_do_not_coexist",
+    "tests/contract/test_team_layout.py::test_every_team_folder_has_an_init",
+    "tests/contract/test_team_layout.py::test_the_registered_class_is_reachable_the_same_way[activity]",
+    "tests/contract/test_team_layout.py::test_the_registered_class_is_reachable_the_same_way[booking_handoff]",
+    "tests/contract/test_team_layout.py::test_the_registered_class_is_reachable_the_same_way[mobility]",
+    "tests/contract/test_team_layout.py::test_the_registered_class_is_reachable_the_same_way[dining]",
+    "tests/contract/test_team_layout.py::test_the_registered_class_is_reachable_the_same_way[lodging]",
+    "tests/contract/test_team_layout.py::test_the_registered_class_is_reachable_the_same_way[flight]",
+    "tests/architecture/test_travel_ops_cells.py::test_the_cells_exist",
+    "tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse",
+    "tests/unit/eval/test_travel_classification_eval.py::test_the_shipped_datasets_pass_the_checker",
+    "tests/unit/eval/test_travel_classification_eval.py::test_the_checker_catches_a_commerce_sentence_an_unknown_label_and_a_broken_other_pair",
+    "tests/unit/eval/test_travel_classification_eval.py::test_the_checker_catches_overlap_and_thin_coverage",
+    "tests/unit/eval/test_travel_classification_eval.py::test_a_perfect_classifier_scores_everything",
+    "tests/unit/eval/test_travel_classification_eval.py::test_a_failure_counts_as_wrong_and_stays_in_the_denominator",
+    "tests/unit/eval/test_travel_classification_eval.py::test_wrong_team_and_unrouted_are_told_apart",
+    "tests/unit/eval/test_travel_classification_eval.py::test_repeats_multiply_the_denominator"
+  ],
+  "collected_total": 17,
+  "selected": 17,
+  "deselected": 0,
+  "overlap": 0,
+  "unassigned": 0
+}

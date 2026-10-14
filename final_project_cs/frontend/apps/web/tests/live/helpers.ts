@@ -153,7 +153,7 @@ export async function noHorizontalScroll(page: Page) {
  * `[2026-10-05]` Consent is per item: 서비스 이용약관 and 개인정보 수집·이용 are required. `[2026-10-05 사용자 지시]` A required item is ticked at once - no reading to the end first.
  * ★`[2026-10-06 사용자 지시]` The FIRST agreement goes straight on to the plan screen (the preference survey is not part of the first run any more). So that the many
  *   start-screen tests that continue with the preferences keep their steps, this helper then opens the preferences from the menu, as a customer would (`openPreferencesFromMenu`).
- *   A customer who had already agreed and only changes their boxes stays on /start with the preferences card open, as before.
+ * ★`[2026-10-12 사용자 지시]` A customer who had already agreed goes to My trips too (the press never opens the preferences card) — the helper then opens the preferences from the menu the same way.
  */
 export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel" | "service_improvement"> = []) {
   await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
@@ -165,42 +165,39 @@ export async function agreeTerms(page: Page, optional: Array<"sensitive" | "loca
   }
   for (const code of optional) await page.locator(`#consent-${code}`).evaluate((input: HTMLInputElement) => { if (!input.checked) input.click(); });
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
-  if (alreadyAgreed) return;
-  await expect(page).toHaveURL(/\/trips\/new$/);
+  await expect(page).toHaveURL(alreadyAgreed ? /\/trips$/ : /\/trips\/new$/);
   await openPreferencesFromMenu(page);
 }
 
-/** `[2026-10-06]` In the open menu, the 「여행 취향 설문」 row opens the start screen on its preferences card (the survey is done on its own, not in the first run). */
+/**
+ * `[2026-10-06]` In the menu, the preferences row opens the start screen on its preferences card (the survey is done on its own, not in the first run).
+ * `[2026-10-13 메뉴 = 마이페이지]` The row 「여행 취향 설문」 now has a note under it (what was chosen); the preferences line on My page is gone (My page is the settings screen now).
+ */
 export async function openPreferencesFromMenu(page: Page) {
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: "여행 취향 설문" }).click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: /^여행 취향 설문/ }).click();
   await expect(page).toHaveURL(/\/start$/);
   await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toHaveAttribute("aria-expanded", "true");
 }
 
-/** In the open menu, unfolds the language card and picks a language by its own name. */
-export async function pickMenuLanguage(page: Page, menu: "메뉴" | "Menu", language: "한국어" | "English") {
-  const dialog = page.getByRole("dialog", { name: menu });
-  await dialog.getByRole("button", { name: /LANGUAGE/ }).click();
-  await dialog.getByRole("button", { name: language, exact: true }).click();
+/**
+ * `[2026-10-13 메뉴 = 마이페이지]` The language card left the menu for the settings screen (menu › 설정): open it there, pick a language by its own name,
+ * and come back to the screen the test was on (in-app back). `menu` is the menu button's name in the language shown now.
+ */
+export async function pickLanguage(page: Page, menu: "메뉴" | "Menu", language: "한국어" | "English") {
+  await page.getByRole("button", { name: menu, exact: true }).click();
+  await page.getByRole("dialog", { name: menu }).getByRole("link", { name: menu === "메뉴" ? /^설정/ : /^Settings/ }).click();
+  await expect(page).toHaveURL(/\/mypage$/);
+  await page.getByRole("button", { name: /LANGUAGE/ }).click();
+  await page.getByRole("button", { name: language, exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", language === "English" ? "en" : "ko");
+  await page.goBack();
 }
 
 /** The start screen is asked once and kept in this browser. For a test that needs the first-time screen again: forget what it kept, then reload. */
 export async function forgetStartScreen(page: Page) {
   await page.evaluate(() => localStorage.removeItem("tripilot.web.onboarding.v1"));
   await page.reload();
-}
-
-/**
- * Open the start screen's preferences from My page (menu → My page → its 「여행 취향」 line — `[2026-10-13 마이페이지 A안]` it was the preferences card's 수정). Done inside
- * the app, so the page-only state (the active trip) stays. ★The intro button no longer leads here once the terms are agreed.
- */
-export async function openPreferencesFromMyPage(page: Page) {
-  await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ }).click();
-  await expect(page).toHaveURL(/\/mypage$/);
-  await page.getByRole("navigation", { name: "내 상태" }).getByRole("button", { name: /^여행 취향/ }).click();
-  await expect(page).toHaveURL(/\/start$/);
 }
 
 /**

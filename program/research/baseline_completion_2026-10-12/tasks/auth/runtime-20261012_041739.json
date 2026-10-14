@@ -1,0 +1,18 @@
+{
+  "scope": "task-owned loopback-only independent PostgreSQL",
+  "exit_code": 0,
+  "test_database_dropped": true,
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/security/test_personal_ai_oauth.py",
+    "tests/e2e/test_personal_ai_oauth_db.py",
+    "tests/e2e/test_mcp_server.py",
+    "tests/e2e/test_web_agent_keys.py",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\auth\\tmp-20261012_041739",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\auth\\isolated-20261012_041739.xml"
+  ]
+}

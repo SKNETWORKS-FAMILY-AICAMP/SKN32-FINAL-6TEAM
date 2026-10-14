@@ -1,0 +1,26 @@
+{
+  "source_hash_matches": 223,
+  "backup_hash_matches": 4,
+  "local_links": [
+    "final_project_cs/wiki/records/evidence/2026-10-09_0936_지하철_식별정보_보존",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0936_지하철_식별정보_보존/owned-source-diff-v1.patch",
+    "final_project_cs/tests/unit/travel/test_subway_identity_v1.py",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0936_지하철_식별정보_보존/controlled-replay-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0936_지하철_식별정보_보존/research-v1.json",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v34/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0936_지하철_식별정보_보존/backup-manifest-v1.json",
+    "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_0936_지하철_식별정보_보존/seoul_subway.py",
+    "final_project_cs/wiki/records/reports/2026-10-09_0940_지하철도착_식별정보보존과_입력오류_검증.md",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0936_지하철_식별정보_보존/controlled-replay-v1.json",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v34/readiness-catalog.json"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0940_지하철도착_식별정보보존과_입력오류_검증.md": "fb188caf203f51a2d3ed6935958054ac627a4423159103943ce04c18dd6e1aac",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v34/mobility-readiness.html": "bf60a48caf8c3cb8579954316fbcfe38db4eeaa57b6759e9db7f99a410bd9f95",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v34/readiness-catalog.json": "2059eb4ba03df266a1259d0aa45c01983b96f761b201357ee9aaf95157eb3857",
+    "final_project_cs/wiki/teams/mobility.md": "94d91bac7eb9da4f069957cb3fa8437c48788dd433de2652aeda3925693e8e8c",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0936_지하철_식별정보_보존/verification-proof-v1.json": "0cb3809fc6edd8c7dae81353fbc3d592924556c1e5a91dc1a8a39310ae8e40b1",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0936_지하철_식별정보_보존/backup-manifest-v1.json": "eebc871ca7ae860c87c69b6184a38d9134d52fb01ee036f1ef9fa5f48384691b"
+  },
+  "browser_render_verified": false
+}

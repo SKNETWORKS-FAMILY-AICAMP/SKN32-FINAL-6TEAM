@@ -492,15 +492,18 @@ def test_change_on_a_flight_item_holds_new_direct_flights_like_dining_and_activi
                              "2) 티웨이항공 TW727 18:30(1인 32,000원). 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다."), \
         "원래 12:00 편 — 앞뒤 3시간 안(13:10)이 더 싼 18:30 보다 먼저(사용자 결정 10-12)"
     (proposal,) = result.action_proposals
-    assert proposal.action_type == "itinerary.apply" and proposal.arguments["reason"] == "customer_request"
-    new = proposal.arguments["replacements"][0]["item"]
-    assert new["kind"] == "flight" and new["detail"]["origin"] == "TPE" and new["starts_at"] == f"{GO}T12:00:00+09:00", "편은 그대로"
-    options = new["detail"]["alternates"]
+    # `[2026-10-13]` 일정은 바꾸지 않는다 — 「선택이 필요해요」 보류 제안(식당 · 활동의 「다른 후보」와 같다). 일정 판 그대로
+    assert proposal.action_type == "itinerary.apply" and proposal.arguments["reason"] == "requested_options"
+    assert "replacements" not in proposal.arguments, "후보를 보여 줄 때 일정 판을 올리지 않는다"
+    ask = proposal.arguments["ask_options"]
+    assert ask["item_id"] == LEG_ID and ask["text"] == result.answer
+    assert ask["shown_key"] == f"flight:TPE-ICN:{GO}", "보여 준 편은 숙소 · 항공 원장에 적는다(적용기가)"
+    options = ask["options"]
     assert [(o["rank"], o["key"]) for o in options] == [(1, JEJU_KEY), (2, TW_KEY)]
     assert {"key", "name", "place_id", "starts_at", "ends_at", "walk_min"} <= set(options[0]), "식당 · 활동의 「다른 안」 칸"
     assert options[1]["starts_at"] == f"{GO}T18:30:00+09:00" and options[1]["per_person"] == 32000 and options[1]["best"] == 64000
     assert "피치항공" not in result.answer, "직항이 있으면 직항만(사용자 결정 10-10)"
-    assert new["detail"]["shown"] == [JEJU_KEY, TW_KEY]
+    assert proposal.arguments["summary"]["flight_options"] == [JEJU_KEY, TW_KEY]
     assert proposal.arguments["summary"]["near_original"] == 1
 
 
@@ -524,7 +527,7 @@ def test_a_source_that_timed_out_is_said_in_the_change_answer():
 def test_choosing_a_flight_moves_the_item_to_its_departure_and_keeps_the_old_one_as_an_option():
     plan = _plan()
     first, _, _ = _legrun(plan)
-    plan["items"][0]["detail"] = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
+    plan["items"][0]["detail"] = _held(first, plan)
     state = {**LEG_STATE, "subject_ref": {**LEG_STATE["subject_ref"], "request": {"type": "change", "choice": JEJU_KEY}}}
     result, _, tools = _run({"task": "unclear"}, {"read.itinerary": plan}, text="2번", capability="flight.itinerary", state=state)
     assert [name for name, _ in tools.calls] == ["read.itinerary", "read.booking_search_flights"], \
@@ -538,11 +541,17 @@ def test_choosing_a_flight_moves_the_item_to_its_departure_and_keeps_the_old_one
     assert [o["name"] for o in new["detail"]["alternates"]] == ["티웨이항공 TW727 18:30", "타이베이 → 인천"]
 
 
+def _held(first, plan):
+    """`[2026-10-13]` 후보는 이제 보류 제안(`ask_options`)에 있다 — Case 경로 고르기 시험은 그 안을 항목 「다른 안」에 얹어 흉내 낸다."""
+    options = first.action_proposals[0].arguments["ask_options"]["options"]
+    return {**plan["items"][0]["detail"], "alternates": options, "other_options": [o["name"] for o in options]}
+
+
 def _choose_jeju(search):
     """제주항공 13:10 을 보여 준 뒤, 고르는 순간 `search`(마이리얼트립 값)로 다시 찾는다."""
     plan = _plan()
     first, _, _ = _legrun(plan)
-    plan["items"][0]["detail"] = first.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
+    plan["items"][0]["detail"] = _held(first, plan)
     state = {**LEG_STATE, "subject_ref": {**LEG_STATE["subject_ref"], "request": {"type": "change", "choice": JEJU_KEY}}}
     return _run({"task": "unclear"}, {"read.itinerary": plan, "read.flight_search": search}, text="2번",
                 capability="flight.itinerary", state=state)[0]
@@ -585,7 +594,16 @@ def test_when_no_new_direct_flight_is_left_connecting_ones_are_held_and_said():
     assert result.answer == ("타이베이 → 인천 대신 탈 수 있는 편이에요 — 1) 피치항공 05:30(1인 75,000원). 새로 보여 드릴 직항이 없어 경유 편이에요. "
                              "원래 출발(12:00) 앞뒤 3시간 안에는 새 편이 없어 다른 시간대예요. 고르시면 바꿀게요. 고르지 않으시면 원래 일정을 그대로 둡니다.")
     assert result.action_proposals[0].arguments["summary"]["widened_to_connecting"] is True
-    assert result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]["shown"] == [TW_KEY, JEJU_KEY, VIA_KEY]
+    assert [o["key"] for o in result.action_proposals[0].arguments["ask_options"]["options"]] == [VIA_KEY]
+
+
+def test_change_again_skips_flights_the_ledger_says_were_shown():
+    """`[2026-10-13]` 보여 준 편은 숙소 · 항공 원장에 있다(`read.offers_shown`) — 항목 상세에 없어도 뺀다."""
+    shown = {"item_key": f"flight:TPE-ICN:{GO}", "offers": [{"key": TW_KEY, "name": "티웨이"}, {"key": JEJU_KEY, "name": "제주"}]}
+    result, _, tools = _run({"task": "unclear"}, {"read.itinerary": _plan(), "read.flight_search": WITH_VIA, "read.offers_shown": shown},
+                            text="이 비행기 다른 걸로 바꿔줘", capability="flight.itinerary", state=LEG_STATE)
+    assert [a["item_key"] for name, a in tools.calls if name == "read.offers_shown"] == [f"flight:TPE-ICN:{GO}"]
+    assert [o["key"] for o in result.action_proposals[0].arguments["ask_options"]["options"]] == [VIA_KEY]
 
 
 def test_new_flights_near_the_original_departure_come_first_then_the_rest_by_price():

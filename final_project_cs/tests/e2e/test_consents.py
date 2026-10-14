@@ -106,7 +106,7 @@ def test_the_gate_does_not_ask_for_optional_items(gate):
     _guest(gate)
     state = _agree_required(gate["client"])
     assert {item["code"]: item["agreed"] for item in state["items"]} == {"service_terms": True, "privacy": True, "sensitive": False,
-                                                                       "location": False, "alert_channel": False}
+                                                                       "location": False, "alert_channel": False, "service_improvement": False}
     assert gate["client"].get("/v1/web/trips").status_code == 200
 
 

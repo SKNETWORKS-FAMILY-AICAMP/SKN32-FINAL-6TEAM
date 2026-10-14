@@ -1,0 +1,2701 @@
+{
+  "date": "2026-10-08",
+  "timezone": "Asia/Seoul",
+  "research_done": true,
+  "review_done": true,
+  "implementation_done": true,
+  "model_measurement_done": false,
+  "automatic_schedule": {
+    "id": "rag",
+    "time": "10:00",
+    "recurrence": "daily"
+  },
+  "research_scope": "Selected primary papers; not exhaustive",
+  "primary_methods_reviewed": 4,
+  "background_abstracts": 1,
+  "papers": [
+    {
+      "id": "2609.10750",
+      "version": "v1",
+      "published": "2026-09-09",
+      "url": "https://arxiv.org/abs/2609.10750",
+      "status": "evaluation protocol applied; retrieval regularization pending"
+    },
+    {
+      "id": "2609.28395",
+      "version": "v1",
+      "published": "2026-09-23",
+      "url": "https://arxiv.org/abs/2609.28395",
+      "status": "separate prompt and task retention gates applied"
+    },
+    {
+      "id": "2605.20005",
+      "version": "v1",
+      "published": "2026-05-19",
+      "url": "https://arxiv.org/abs/2605.20005",
+      "status": "independent formula implementation and GPU smoke passed; full comparison queued"
+    },
+    {
+      "id": "2608.15964",
+      "version": "v1",
+      "published": "2026-08-16",
+      "url": "https://arxiv.org/abs/2608.15964",
+      "status": "targeted positives/paraphrases candidate; full generator method not reproduced"
+    }
+  ],
+  "validation": {
+    "cpu_unit_tests": {
+      "passed": 5,
+      "total": 5
+    },
+    "actual_optimizer_step": {
+      "passed": 1,
+      "total": 1
+    },
+    "gpu_smoke": {
+      "rows": 16,
+      "optimizer_steps": 4,
+      "status": "passed",
+      "initial_loss": 0.08810096067463746,
+      "learning_rates": [
+        5e-05,
+        5e-05,
+        5e-05,
+        5e-05
+      ]
+    }
+  },
+  "experiments": {
+    "queue": "B56_daily_20261008",
+    "machine": "GPU B",
+    "status": "waiting_for_existing_B54",
+    "pid_observed": 2790600,
+    "mode_order": [
+      "cosine",
+      "finch"
+    ],
+    "shared": {
+      "train": "train_oos2.jsonl",
+      "train_sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c",
+      "seed": 20261012,
+      "epochs": 2,
+      "rank": 16,
+      "accum": 8,
+      "max_lr": 5e-05
+    },
+    "finch": {
+      "base_rate": 2e-05,
+      "alpha": 0.9,
+      "epsilon": 1e-12,
+      "initial_loss": "training sequence mean",
+      "batch": "optimizer accumulation window"
+    },
+    "training_completed": 0,
+    "training_total": 2,
+    "promotion": "not applied"
+  },
+  "holdout": {
+    "status": "not_created",
+    "positive_target": 240,
+    "negative_target": 480,
+    "created": 0,
+    "requirements": [
+      "disjoint schedules and wording",
+      "gold review before evaluation",
+      "exact and near duplicate checks",
+      "freeze hash before outputs",
+      "no tuning on final holdout"
+    ],
+    "contract_draft": "program/research/daily_rag_slm/independent_holdout_contract_2026-10-08_v1.md",
+    "contract_status": "review_pending; no new data or human labels",
+    "parallel_preparation_report": "final_project_cs/wiki/records/reports/2026-10-08_174529_qat_completion_parallel_review.md"
+  },
+  "acceptance": {
+    "request_accuracy_min": 0.95,
+    "false_pick_max": 0.01,
+    "mixed_accuracy_loss_max_pp": 2,
+    "mixed_false_pick_increase_max_pp": 1,
+    "subtype_false_pick_max": 0.03,
+    "repeat_seeds_and_paired_intervals_required": true
+  },
+  "oos2r_completed": {
+    "additional_saved": 9425,
+    "errors": 0,
+    "unparsed": 0,
+    "mixed_requests_correct": 936,
+    "mixed_requests_total": 1033,
+    "mixed_false_pick": 2,
+    "mixed_no_request_total": 974,
+    "mixed_accuracy_loss_pp": 6.58,
+    "aggregate_gates_passed": 2,
+    "aggregate_gates_total": 4
+  },
+  "independent_cli_review": {
+    "status": "not_run_auto_review_rejected",
+    "reason": "specific internal metrics/path external transmission authorization not established",
+    "decision": "preserve existing queue and isolate new trial; no machine consensus claimed"
+  },
+  "resume": "Read dated Markdown and this record; inspect existing queue and retrieve completed adapters/results; never duplicate jobs.",
+  "release_watch": {
+    "added_date": "2026-10-08",
+    "schedule": "daily 10:00 Asia/Seoul",
+    "watchlist": "model_release_watchlist.json",
+    "protocol": "신모델_원본비교와_추가학습_절차.md",
+    "official_cards_reviewed": 2,
+    "original_benchmarks_completed": 0,
+    "original_benchmarks_pending": 2,
+    "finetune_trigger": "upper tier among matched untrained releases AND SLM AND training fits approved resources",
+    "our_model_accuracy_gain_verified": false
+  },
+  "gpu_queue": {
+    "record": "gpu_backlog_2026-10-08.json",
+    "registered_evaluations": 28,
+    "registered_full_training_variants": 7,
+    "refill_interval_minutes": 10,
+    "both_machines_running_verified": true
+  },
+  "release_preflight": {
+    "verified": 2,
+    "total": 2,
+    "tokenizer_boundaries_passed": 2,
+    "tokenizer_boundaries_total": 2,
+    "prepared_h_requests": 1316,
+    "cpu_contract_checks_passed": 5,
+    "cpu_contract_checks_total": 5,
+    "input_min_tokens": 4131,
+    "input_max_tokens": 4785,
+    "above_existing_4096_context": 1316,
+    "first_gpu_trial_context": 8192,
+    "weights_downloaded": false,
+    "original_model_accuracy_measured": false,
+    "resume": "Build isolated HF 4-bit label-score runner; reserve model space after existing B54/B56; smoke 8192-token context then run matched original suites; do not use existing 4096-token JSON worker"
+  },
+  "new_completed_evaluations": [
+    {
+      "model": "FrogNano-4B-2609",
+      "our_training": false,
+      "suite": "H",
+      "saved": 1316,
+      "expected": 1316,
+      "errors": 0,
+      "correct": 419,
+      "positive_total": 461,
+      "false_pick": 377,
+      "negative_total": 855,
+      "repetitions": 1,
+      "full_ranking": false,
+      "report": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/frog_h/frog_h_report.md"
+    },
+    {
+      "model": "FrogNano-4B-2609",
+      "our_training": false,
+      "publisher_training": "coding RL",
+      "suite": "MX",
+      "saved": 4014,
+      "expected": 4014,
+      "errors": 0,
+      "unparsed": 0,
+      "mixed_requests_correct": 898,
+      "mixed_requests_total": 1033,
+      "mixed_false_pick": 167,
+      "mixed_no_request_total": 974,
+      "request_loss_pp": 5.517909002904163,
+      "aggregate_gates_passed": 1,
+      "aggregate_gates_total": 4,
+      "repetitions": 1,
+      "full_ranking": false,
+      "report": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/frog_mx/mx_report.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "suite": "H",
+      "saved": 1316,
+      "expected": 1316,
+      "unparsed": 1,
+      "missing": 0,
+      "positive_correct": 433,
+      "positive_total": 461,
+      "negative_false_pick": 402,
+      "negative_total": 855,
+      "negative_failed_or_unparsed": 1,
+      "repetitions": 1,
+      "full_ranking": false,
+      "report": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bbase_h/h_report.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "suite": "MX",
+      "saved": 4014,
+      "expected": 4014,
+      "missing": 0,
+      "failed_or_unparsed": 1,
+      "mixed_requests_correct": 960,
+      "mixed_requests_total": 1033,
+      "mixed_false_pick": 154,
+      "mixed_no_request_total": 974,
+      "request_loss_pp": 2.323330106485963,
+      "aggregate_gates_passed": 1,
+      "aggregate_gates_total": 4,
+      "repetitions": 1,
+      "full_ranking": false,
+      "report": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bbase_mx/mx_report.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "suite": "D",
+      "saved": 2735,
+      "expected": 2735,
+      "missing": 0,
+      "failed_or_unparsed": 13,
+      "positive": {
+        "total": 883,
+        "correct": 738,
+        "false_pick": 0,
+        "failed_or_missing": 4,
+        "correct_wilson95": [
+          0.8099068362651665,
+          0.8587583395697125
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.004331618444859839
+        ]
+      },
+      "negative": {
+        "total": 1786,
+        "correct": 1709,
+        "false_pick": 75,
+        "failed_or_missing": 2,
+        "correct_wilson95": [
+          0.9464456456435748,
+          0.9653669576220272
+        ],
+        "false_pick_wilson95": [
+          0.033632306699337394,
+          0.05232025522313506
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_gemma-original-choice-completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "suite": "D2",
+      "saved": 1000,
+      "expected": 1000,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.0,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          1.0
+        ]
+      },
+      "negative": {
+        "total": 1000,
+        "correct": 931,
+        "false_pick": 69,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9135852797713628,
+          0.9451160544140889
+        ],
+        "false_pick_wilson95": [
+          0.054883945585911253,
+          0.08641472022863728
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_gemma-original-choice-completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "suite": "D3",
+      "saved": 360,
+      "expected": 360,
+      "missing": 0,
+      "failed_or_unparsed": 2,
+      "positive": {
+        "total": 120,
+        "correct": 103,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.7848050551014282,
+          0.9096312089651676
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.031019166418703486
+        ]
+      },
+      "negative": {
+        "total": 240,
+        "correct": 219,
+        "false_pick": 19,
+        "failed_or_missing": 2,
+        "correct_wilson95": [
+          0.8699448520048005,
+          0.9420581640434134
+        ],
+        "false_pick_wilson95": [
+          0.05126524186067317,
+          0.12032764075680552
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_gemma-original-choice-completion.md"
+    },
+    {
+      "model": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "saved": 1316,
+      "expected": 1316,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 461,
+        "correct": 453,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.966134620696279,
+          0.9911810222090848
+        ],
+        "false_pick_wilson95": [
+          8.673617379884035e-19,
+          0.008264019372196129
+        ]
+      },
+      "negative": {
+        "total": 855,
+        "correct": 481,
+        "false_pick": 374,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.5291152914772466,
+          0.5954711486637845
+        ],
+        "false_pick_wilson95": [
+          0.40452885133621574,
+          0.47088470852275355
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "suite": "H",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_gemma12b-original-h-completion.md"
+    },
+    {
+      "model": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "suite": "MX / user E",
+      "saved": 4014,
+      "expected": 4014,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "mixed_request_correct": 993,
+      "mixed_request_total": 1033,
+      "mixed_false_pick": 201,
+      "mixed_no_request_total": 974,
+      "request_loss_pp": 1.6456921587608906,
+      "aggregate_gates_passed": 3,
+      "aggregate_gates_total": 4,
+      "natural_request_correct": 92,
+      "natural_request_total": 93,
+      "natural_false_pick": 37,
+      "natural_no_request_total": 146,
+      "repetitions": 1,
+      "full_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_1218_gemma12b-original-mx-completion.md"
+    },
+    {
+      "model": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "suite": "D",
+      "saved": 2735,
+      "expected": 2735,
+      "missing": 0,
+      "failed_or_unparsed": 2,
+      "positive": {
+        "total": 883,
+        "correct": 779,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8592842415386456,
+          0.90184390970679
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.004331618444859839
+        ]
+      },
+      "negative": {
+        "total": 1786,
+        "correct": 1475,
+        "false_pick": 311,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8075860138646459,
+          0.8427509164056731
+        ],
+        "false_pick_wilson95": [
+          0.15724908359432682,
+          0.19241398613535404
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_124929_g12bbase_d-completion.md"
+    },
+    {
+      "model": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "suite": "D2",
+      "saved": 1000,
+      "expected": 1000,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.0,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          1.0
+        ]
+      },
+      "negative": {
+        "total": 1000,
+        "correct": 774,
+        "false_pick": 226,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.7470576210232625,
+          0.7988453153266535
+        ],
+        "false_pick_wilson95": [
+          0.2011546846733466,
+          0.25294237897673766
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_130924_g12bbase_d2-completion.md"
+    },
+    {
+      "model": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "publisher_training": "Instruct release",
+      "suite": "D3",
+      "saved": 360,
+      "expected": 360,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 120,
+        "correct": 106,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8136664838239611,
+          0.9292188219216995
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.031019166418703486
+        ]
+      },
+      "negative": {
+        "total": 240,
+        "correct": 185,
+        "false_pick": 55,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.7136410041976778,
+          0.8194922891673112
+        ],
+        "false_pick_wilson95": [
+          0.18050771083268888,
+          0.28635899580232216
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_132022_g12bbase_d3-completion.md"
+    },
+    {
+      "model": "Winnow-E4B publisher release Q8_0",
+      "our_training": false,
+      "publisher_training": "See publisher model card; exact training method not verified in this run",
+      "saved": 1316,
+      "expected": 1316,
+      "missing": 0,
+      "failed_or_unparsed": 19,
+      "positive": {
+        "total": 461,
+        "correct": 401,
+        "false_pick": 0,
+        "failed_or_missing": 2,
+        "correct_wilson95": [
+          0.836051997752942,
+          0.8975314499565615
+        ],
+        "false_pick_wilson95": [
+          8.673617379884035e-19,
+          0.008264019372196129
+        ]
+      },
+      "negative": {
+        "total": 855,
+        "correct": 435,
+        "false_pick": 403,
+        "failed_or_missing": 17,
+        "correct_wilson95": [
+          0.4752981778005411,
+          0.5421672110042763
+        ],
+        "false_pick_wilson95": [
+          0.438088272369726,
+          0.5048581242012039
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "suite": "H",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_133908_winnow_eval_queue.md"
+    },
+    {
+      "model": "Winnow-E4B our-travel oos adapter",
+      "our_training": true,
+      "B": [
+        826,
+        835
+      ],
+      "C": [
+        760,
+        835
+      ],
+      "single_correct": [
+        760,
+        769
+      ],
+      "compound_B": [
+        66,
+        66
+      ],
+      "compound_C": [
+        0,
+        66
+      ],
+      "missing": 0,
+      "errors": 0,
+      "repetitions": 1,
+      "final_ranking": false,
+      "sets": [
+        {
+          "set": "mix10",
+          "saved": 160,
+          "errors": 0,
+          "sha256": "17938be4036e556b11558b581024febd5f536b6a8182335521d30379e431924b"
+        },
+        {
+          "set": "mix11",
+          "saved": 163,
+          "errors": 0,
+          "sha256": "625de932d09897be682b2f8fa88061d4bf98b91a0fdb5937de47928126bffd3b"
+        },
+        {
+          "set": "mix12",
+          "saved": 176,
+          "errors": 0,
+          "sha256": "6ac3e18b6e777dc9bf6e638ee01838362f72af15605d50b8a2db2005b21ef1e2"
+        },
+        {
+          "set": "mix8",
+          "saved": 171,
+          "errors": 0,
+          "sha256": "0f531b44afb08eacc29b73d9840ea5e7ec5efc19ca2ca505a454c0bbc5740f93"
+        },
+        {
+          "set": "mix9",
+          "saved": 165,
+          "errors": 0,
+          "sha256": "18f7e8a6fe92beafb0c9a38f71622462d76457a6a632404ea7972e6ac796d554"
+        }
+      ],
+      "suite": "B/C",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_133908_winnow_eval_queue.md"
+    },
+    {
+      "model": "Winnow-E4B publisher release Q8_0",
+      "our_training": false,
+      "publisher_training": "See publisher model card",
+      "saved": 4014,
+      "expected": 4014,
+      "missing": 0,
+      "failed_or_unparsed": 42,
+      "repetitions": 1,
+      "suite": "MX / user E",
+      "mixed_request_correct": 945,
+      "mixed_request_total": 1033,
+      "mixed_false_pick": 176,
+      "mixed_no_request_total": 974,
+      "request_loss_pp": 2.032913843175218,
+      "aggregate_gates_passed": 1,
+      "aggregate_gates_total": 4,
+      "natural_mixed": {
+        "request": {
+          "total": 93,
+          "correct": 91,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9249453736530886,
+            0.9940825001915952
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 106,
+          "false_pick": 36,
+          "failed_or_missing": 4,
+          "correct_wilson95": [
+            0.6485875403723463,
+            0.7918780058085545
+          ],
+          "false_pick_wilson95": [
+            0.18375484505601197,
+            0.32238984558964473
+          ]
+        }
+      },
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_135441_winnow_original_mx_completion.md"
+    },
+    {
+      "model": "Winnow-E4B publisher release Q8_0",
+      "our_training": false,
+      "publisher_training": "See publisher model card; exact training method not verified in this run",
+      "suite": "D",
+      "saved": 2735,
+      "expected": 2735,
+      "missing": 0,
+      "failed_or_unparsed": 53,
+      "positive": {
+        "total": 883,
+        "correct": 709,
+        "false_pick": 0,
+        "failed_or_missing": 19,
+        "correct_wilson95": [
+          0.7754198527307461,
+          0.8278446819600807
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.004331618444859839
+        ]
+      },
+      "negative": {
+        "total": 1786,
+        "correct": 1670,
+        "false_pick": 90,
+        "failed_or_missing": 26,
+        "correct_wilson95": [
+          0.9226616856112798,
+          0.9455716388217751
+        ],
+        "false_pick_wilson95": [
+          0.041176778586015386,
+          0.061537044425898274
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_140520_winnow_original_d-completion.md"
+    },
+    {
+      "model": "Winnow-E4B publisher release Q8_0",
+      "our_training": false,
+      "publisher_training": "See publisher model card; exact training method not verified in this run",
+      "suite": "D2",
+      "saved": 1000,
+      "expected": 1000,
+      "missing": 0,
+      "failed_or_unparsed": 13,
+      "positive": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.0,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          1.0
+        ]
+      },
+      "negative": {
+        "total": 1000,
+        "correct": 910,
+        "false_pick": 77,
+        "failed_or_missing": 13,
+        "correct_wilson95": [
+          0.8906582073569279,
+          0.926203850684917
+        ],
+        "false_pick_wilson95": [
+          0.062047907060605895,
+          0.09518953061817373
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_140624_winnow_original_d2-completion.md"
+    },
+    {
+      "model": "Winnow-E4B publisher release Q8_0",
+      "our_training": false,
+      "publisher_training": "See publisher model card; exact training method not verified in this run",
+      "suite": "D3",
+      "saved": 360,
+      "expected": 360,
+      "missing": 0,
+      "failed_or_unparsed": 13,
+      "positive": {
+        "total": 120,
+        "correct": 95,
+        "false_pick": 0,
+        "failed_or_missing": 3,
+        "correct_wilson95": [
+          0.7105232156701865,
+          0.8547156039189031
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.031019166418703486
+        ]
+      },
+      "negative": {
+        "total": 240,
+        "correct": 203,
+        "false_pick": 27,
+        "failed_or_missing": 10,
+        "correct_wilson95": [
+          0.794734435251077,
+          0.8860357701226782
+        ],
+        "false_pick_wilson95": [
+          0.07847738239304883,
+          0.15873190556165928
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_140625_winnow_original_d3-completion.md"
+    },
+    {
+      "model": "Winnow-E4B our-travel oos adapter Q8_0 base",
+      "our_training": true,
+      "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+      "suite": "D3",
+      "saved": 360,
+      "expected": 360,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 120,
+        "correct": 109,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.843291530273291,
+          0.9480428171514347
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.031019166418703486
+        ]
+      },
+      "negative": {
+        "total": 240,
+        "correct": 240,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9842460800584412,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.015753919941558815
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_140836_winnow_oos_d3-completion.md"
+    },
+    {
+      "model": "Winnow-E4B our-travel oos adapter Q8_0 base",
+      "our_training": true,
+      "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+      "saved": 2735,
+      "expected": 2735,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 883,
+        "correct": 793,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8763635811570745,
+          0.9163372933992828
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.004331618444859839
+        ]
+      },
+      "negative": {
+        "total": 1786,
+        "correct": 1773,
+        "false_pick": 13,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9875860545806908,
+          0.9957412626665271
+        ],
+        "false_pick_wilson95": [
+          0.004258737333472927,
+          0.012413945419309168
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "suite": "D",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_145604_winnow_three_completion_refill.md"
+    },
+    {
+      "model": "Winnow-E4B our-travel oos adapter Q8_0 base",
+      "our_training": true,
+      "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+      "saved": 1000,
+      "expected": 1000,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.0,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          1.0
+        ]
+      },
+      "negative": {
+        "total": 1000,
+        "correct": 997,
+        "false_pick": 3,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9912169859464969,
+          0.9989792161188614
+        ],
+        "false_pick_wilson95": [
+          0.0010207838811386186,
+          0.008783014053503173
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "suite": "D2",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_145604_winnow_three_completion_refill.md"
+    },
+    {
+      "model": "Winnow-E4B our-travel oos adapter Q8_0 base",
+      "our_training": true,
+      "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+      "saved": 1316,
+      "expected": 1316,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 461,
+        "correct": 434,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9161279536504415,
+          0.9594393871641272
+        ],
+        "false_pick_wilson95": [
+          8.673617379884035e-19,
+          0.008264019372196129
+        ]
+      },
+      "negative": {
+        "total": 855,
+        "correct": 714,
+        "false_pick": 141,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8087247201356668,
+          0.8584531322083583
+        ],
+        "false_pick_wilson95": [
+          0.1415468677916418,
+          0.19127527986433338
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "suite": "H",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_145604_winnow_three_completion_refill.md"
+    },
+    {
+      "model": "Winnow-E4B our-travel oos adapter Q8_0 base",
+      "our_training": true,
+      "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+      "saved": 4014,
+      "expected": 4014,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "repetitions": 1,
+      "suite": "MX / user E",
+      "mixed_request_correct": 1000,
+      "mixed_request_total": 1033,
+      "mixed_false_pick": 20,
+      "mixed_no_request_total": 974,
+      "request_loss_pp": 0.5808325266214908,
+      "aggregate_gates_passed": 3,
+      "aggregate_gates_total": 4,
+      "natural_mixed": {
+        "request": {
+          "total": 93,
+          "correct": 92,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.94158082764513,
+            0.9980993579713445
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 138,
+          "false_pick": 8,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8956073281741972,
+            0.971976323394244
+          ],
+          "false_pick_wilson95": [
+            0.028023676605756095,
+            0.10439267182580285
+          ]
+        }
+      },
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_150227_winnow_oos_mx_completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 original",
+      "our_training": false,
+      "publisher_training": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+      "saved": 1000,
+      "expected": 1000,
+      "missing": 0,
+      "failed_or_unparsed": 1,
+      "positive": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.0,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          1.0
+        ]
+      },
+      "negative": {
+        "total": 1000,
+        "correct": 931,
+        "false_pick": 68,
+        "failed_or_missing": 1,
+        "correct_wilson95": [
+          0.9135852797713628,
+          0.9451160544140889
+        ],
+        "false_pick_wilson95": [
+          0.05399245780853015,
+          0.08531386152298948
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "suite": "D2",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_151129_qat_original_d2_h_completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 original",
+      "our_training": false,
+      "publisher_training": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+      "saved": 1316,
+      "expected": 1316,
+      "missing": 0,
+      "failed_or_unparsed": 1,
+      "positive": {
+        "total": 461,
+        "correct": 424,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8913296207129106,
+          0.9412122979486081
+        ],
+        "false_pick_wilson95": [
+          8.673617379884035e-19,
+          0.008264019372196129
+        ]
+      },
+      "negative": {
+        "total": 855,
+        "correct": 365,
+        "false_pick": 489,
+        "failed_or_missing": 1,
+        "correct_wilson95": [
+          0.39414559212026823,
+          0.46030950117292013
+        ],
+        "false_pick_wilson95": [
+          0.5385147257885741,
+          0.6047014624109286
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "suite": "H",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_151129_qat_original_d2_h_completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 original",
+      "our_training": false,
+      "publisher_training": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+      "saved": 360,
+      "expected": 360,
+      "missing": 0,
+      "failed_or_unparsed": 1,
+      "repetitions": 1,
+      "final_ranking": false,
+      "suite": "D3",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_153821_qat_three_completion_refill.md",
+      "positive": {
+        "total": 120,
+        "correct": 102,
+        "false_pick": 0,
+        "failed_or_missing": 1,
+        "correct_wilson95": [
+          0.775324706432755,
+          0.9029618770741527
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.031019166418703486
+        ]
+      },
+      "negative": {
+        "total": 240,
+        "correct": 218,
+        "false_pick": 22,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8651157819717392,
+          0.9386851834093211
+        ],
+        "false_pick_wilson95": [
+          0.06131481659067893,
+          0.13488421802826078
+        ]
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 original",
+      "our_training": false,
+      "publisher_training": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+      "saved": 4014,
+      "expected": 4014,
+      "missing": 0,
+      "failed_or_unparsed": 4,
+      "repetitions": 1,
+      "suite": "MX / user E",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_153821_qat_three_completion_refill.md",
+      "counts": {
+        "control": {
+          "request": {
+            "total": 1033,
+            "correct": 986,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9400215940036697,
+              0.9656134884013307
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0037049625938602128
+            ]
+          },
+          "no_request": {
+            "total": 974,
+            "correct": 665,
+            "false_pick": 305,
+            "failed_or_missing": 4,
+            "correct_wilson95": [
+              0.6528541915387797,
+              0.7112130064601133
+            ],
+            "false_pick_wilson95": [
+              0.2847983075643409,
+              0.3429532090884764
+            ]
+          }
+        },
+        "mixed": {
+          "request": {
+            "total": 1033,
+            "correct": 978,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9313358961625654,
+              0.9588677045401134
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0037049625938602128
+            ]
+          },
+          "no_request": {
+            "total": 974,
+            "correct": 767,
+            "false_pick": 207,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.7606789629456644,
+              0.8120110114346167
+            ],
+            "false_pick_wilson95": [
+              0.18798898856538332,
+              0.2393210370543356
+            ]
+          }
+        }
+      },
+      "aggregate_gates_passed": 2,
+      "sources": {
+        "code": {
+          "control": {
+            "request": {
+              "total": 940,
+              "correct": 894,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9353429214701113,
+                0.9631130555109745
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.004070025516249234
+              ]
+            },
+            "no_request": {
+              "total": 828,
+              "correct": 553,
+              "false_pick": 271,
+              "failed_or_missing": 4,
+              "correct_wilson95": [
+                0.6350841310178131,
+                0.6991141672902826
+              ],
+              "false_pick_wilson95": [
+                0.2961955591632366,
+                0.35998892531116833
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 940,
+              "correct": 887,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9269857902165597,
+                0.9566371871445554
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.004070025516249234
+              ]
+            },
+            "no_request": {
+              "total": 828,
+              "correct": 656,
+              "false_pick": 172,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.7633192703324583,
+                0.8185223713262411
+              ],
+              "false_pick_wilson95": [
+                0.181477628673759,
+                0.23668072966754172
+              ]
+            }
+          }
+        },
+        "llm": {
+          "control": {
+            "request": {
+              "total": 93,
+              "correct": 92,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.94158082764513,
+                0.9980993579713445
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.03966750261173514
+              ]
+            },
+            "no_request": {
+              "total": 146,
+              "correct": 112,
+              "false_pick": 34,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.6922545717859077,
+                0.8282956191551569
+              ],
+              "false_pick_wilson95": [
+                0.17170438084484305,
+                0.30774542821409234
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 93,
+              "correct": 91,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9249453736530886,
+                0.9940825001915952
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.03966750261173514
+              ]
+            },
+            "no_request": {
+              "total": 146,
+              "correct": 111,
+              "false_pick": 35,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.6849207692776874,
+                0.8222819808700167
+              ],
+              "false_pick_wilson95": [
+                0.1777180191299834,
+                0.3150792307223126
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel oos1 adapter recorded separately",
+      "saved": 1316,
+      "expected": 1316,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "repetitions": 1,
+      "final_ranking": false,
+      "suite": "H",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_153821_qat_three_completion_refill.md",
+      "positive": {
+        "total": 461,
+        "correct": 422,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8864387306815898,
+          0.9374981035493187
+        ],
+        "false_pick_wilson95": [
+          8.673617379884035e-19,
+          0.008264019372196129
+        ]
+      },
+      "negative": {
+        "total": 855,
+        "correct": 765,
+        "false_pick": 90,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8723707176601561,
+          0.9135717785566273
+        ],
+        "false_pick_wilson95": [
+          0.08642822144337281,
+          0.12762928233984397
+        ]
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel oos1 adapter recorded separately",
+      "saved": 4014,
+      "expected": 4014,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "repetitions": 1,
+      "suite": "MX / user E",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_155803_qat_two_trained_completion.md",
+      "final_ranking": false,
+      "counts": {
+        "control": {
+          "request": {
+            "total": 1033,
+            "correct": 996,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9510206789772844,
+              0.973903755555618
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0037049625938602128
+            ]
+          },
+          "no_request": {
+            "total": 974,
+            "correct": 934,
+            "false_pick": 40,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9445611083942818,
+              0.9696975292770955
+            ],
+            "false_pick_wilson95": [
+              0.030302470722904526,
+              0.055438891605718174
+            ]
+          }
+        },
+        "mixed": {
+          "request": {
+            "total": 1033,
+            "correct": 865,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8136199077237585,
+              0.8586140139336274
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0037049625938602128
+            ]
+          },
+          "no_request": {
+            "total": 974,
+            "correct": 946,
+            "false_pick": 28,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9587656766882093,
+              0.9800368170280371
+            ],
+            "false_pick_wilson95": [
+              0.019963182971962878,
+              0.041234323311790624
+            ]
+          }
+        }
+      },
+      "aggregate_gates_passed": 1,
+      "sources": {
+        "code": {
+          "control": {
+            "request": {
+              "total": 940,
+              "correct": 906,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9498816099052971,
+                0.97400236642431
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.004070025516249234
+              ]
+            },
+            "no_request": {
+              "total": 828,
+              "correct": 794,
+              "false_pick": 34,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9431674023631013,
+                0.9704682332993192
+              ],
+              "false_pick_wilson95": [
+                0.02953176670068077,
+                0.05683259763689882
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 940,
+              "correct": 775,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.7988419380565496,
+                0.8474530453850334
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.004070025516249234
+              ]
+            },
+            "no_request": {
+              "total": 828,
+              "correct": 800,
+              "false_pick": 28,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9515600186509388,
+                0.9765014428377303
+              ],
+              "false_pick_wilson95": [
+                0.023498557162269684,
+                0.04843998134906115
+              ]
+            }
+          }
+        },
+        "llm": {
+          "control": {
+            "request": {
+              "total": 93,
+              "correct": 90,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9094061748887851,
+                0.988969387184108
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.03966750261173514
+              ]
+            },
+            "no_request": {
+              "total": 146,
+              "correct": 140,
+              "false_pick": 6,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9132470514592993,
+                0.9810314816958631
+              ],
+              "false_pick_wilson95": [
+                0.01896851830413694,
+                0.08675294854070074
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 93,
+              "correct": 90,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9094061748887851,
+                0.988969387184108
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.03966750261173514
+              ]
+            },
+            "no_request": {
+              "total": 146,
+              "correct": 146,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9743631779153262,
+                1.0
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.025636822084673896
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "saved": 1316,
+      "expected": 1316,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "repetitions": 1,
+      "suite": "H",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_155803_qat_two_trained_completion.md",
+      "final_ranking": false,
+      "positive": {
+        "total": 461,
+        "correct": 433,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9136181498823405,
+          0.9576466487169232
+        ],
+        "false_pick_wilson95": [
+          8.673617379884035e-19,
+          0.008264019372196129
+        ]
+      },
+      "negative": {
+        "total": 855,
+        "correct": 669,
+        "false_pick": 186,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.7535711005805117,
+          0.8088144189346087
+        ],
+        "false_pick_wilson95": [
+          0.19118558106539127,
+          0.24642889941948834
+        ]
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "saved": 4014,
+      "expected": 4014,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "repetitions": 1,
+      "suite": "MX / user E",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_162050_qat_completion_and_choice_refill.md",
+      "final_ranking": false,
+      "counts": {
+        "control": {
+          "request": {
+            "total": 1033,
+            "correct": 990,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9443998954216649,
+              0.9689509278344962
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0037049625938602128
+            ]
+          },
+          "no_request": {
+            "total": 974,
+            "correct": 863,
+            "false_pick": 111,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8645458543226853,
+              0.9044949684165492
+            ],
+            "false_pick_wilson95": [
+              0.09550503158345072,
+              0.13545414567731467
+            ]
+          }
+        },
+        "mixed": {
+          "request": {
+            "total": 1033,
+            "correct": 939,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8899160453852245,
+              0.9250590820186363
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0037049625938602128
+            ]
+          },
+          "no_request": {
+            "total": 974,
+            "correct": 909,
+            "false_pick": 65,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9158284236889672,
+              0.9472971805555993
+            ],
+            "false_pick_wilson95": [
+              0.05270281944440075,
+              0.08417157631103278
+            ]
+          }
+        }
+      },
+      "aggregate_gates_passed": 1,
+      "sources": {
+        "code": {
+          "control": {
+            "request": {
+              "total": 940,
+              "correct": 899,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.94136381436682,
+                0.9676871623428164
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.004070025516249234
+              ]
+            },
+            "no_request": {
+              "total": 828,
+              "correct": 740,
+              "false_pick": 88,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.8708790663999698,
+                0.9129241368262119
+              ],
+              "false_pick_wilson95": [
+                0.08707586317378811,
+                0.12912093360003013
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 940,
+              "correct": 847,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.8803134780308874,
+                0.9185495015018235
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.004070025516249234
+              ]
+            },
+            "no_request": {
+              "total": 828,
+              "correct": 774,
+              "false_pick": 54,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9158761171549262,
+                0.9496734324199986
+              ],
+              "false_pick_wilson95": [
+                0.05032656758000151,
+                0.08412388284507388
+              ]
+            }
+          }
+        },
+        "llm": {
+          "control": {
+            "request": {
+              "total": 93,
+              "correct": 91,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9249453736530886,
+                0.9940825001915952
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.03966750261173514
+              ]
+            },
+            "no_request": {
+              "total": 146,
+              "correct": 123,
+              "false_pick": 23,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.7746984689092298,
+                0.8926735707588018
+              ],
+              "false_pick_wilson95": [
+                0.10732642924119823,
+                0.22530153109077017
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 93,
+              "correct": 92,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.94158082764513,
+                0.9980993579713445
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.03966750261173514
+              ]
+            },
+            "no_request": {
+              "total": 146,
+              "correct": 135,
+              "false_pick": 11,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.8701296491414375,
+                0.9574116800469218
+              ],
+              "false_pick_wilson95": [
+                0.04258831995307833,
+                0.12987035085856252
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos3 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "saved": 1316,
+      "expected": 1316,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "repetitions": 1,
+      "suite": "H",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_162050_qat_completion_and_choice_refill.md",
+      "final_ranking": false,
+      "positive": {
+        "total": 461,
+        "correct": 425,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8937826805146656,
+          0.9430617803621582
+        ],
+        "false_pick_wilson95": [
+          8.673617379884035e-19,
+          0.008264019372196129
+        ]
+      },
+      "negative": {
+        "total": 855,
+        "correct": 625,
+        "false_pick": 230,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.7002858114580474,
+          0.7596360937354777
+        ],
+        "false_pick_wilson95": [
+          0.2403639062645224,
+          0.29971418854195264
+        ]
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos3 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "saved": 4014,
+      "expected": 4014,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "repetitions": 1,
+      "suite": "MX / user E",
+      "mixed_request_correct": 980,
+      "mixed_request_total": 1033,
+      "mixed_false_pick": 80,
+      "mixed_no_request_total": 974,
+      "request_loss_pp": 0.968054211035818,
+      "aggregate_gates_passed": 2,
+      "aggregate_gates_total": 4,
+      "natural_mixed": {
+        "request": {
+          "total": 93,
+          "correct": 90,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9094061748887851,
+            0.988969387184108
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 130,
+          "false_pick": 16,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8293942129528306,
+            0.9314099122687255
+          ],
+          "false_pick_wilson95": [
+            0.06859008773127459,
+            0.17060578704716942
+          ]
+        }
+      },
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_163509_e4bqat_oos3_mx_completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2r adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "saved": 1316,
+      "expected": 1316,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "repetitions": 1,
+      "suite": "H",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_164532_qat_completion_verified.md",
+      "final_ranking": false,
+      "positive": {
+        "total": 461,
+        "correct": 458,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9810439402202722,
+          0.9977844137616168
+        ],
+        "false_pick_wilson95": [
+          8.673617379884035e-19,
+          0.008264019372196129
+        ]
+      },
+      "negative": {
+        "total": 855,
+        "correct": 852,
+        "false_pick": 3,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9897350075412281,
+          0.9988059988114371
+        ],
+        "false_pick_wilson95": [
+          0.0011940011885629206,
+          0.010264992458771926
+        ]
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2r adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "saved": 4014,
+      "expected": 4014,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "repetitions": 1,
+      "suite": "MX / user E",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_165415_qat_completion_verified.md",
+      "final_ranking": false,
+      "counts": {
+        "control": {
+          "request": {
+            "total": 1033,
+            "correct": 984,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9378418156549961,
+              0.9639353963244239
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0037049625938602128
+            ]
+          },
+          "no_request": {
+            "total": 974,
+            "correct": 965,
+            "false_pick": 9,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9825324367391355,
+              0.9951311623814874
+            ],
+            "false_pick_wilson95": [
+              0.0048688376185127055,
+              0.017467563260864585
+            ]
+          }
+        },
+        "mixed": {
+          "request": {
+            "total": 1033,
+            "correct": 926,
+            "false_pick": 0,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.8763437713494933,
+              0.913555198288095
+            ],
+            "false_pick_wilson95": [
+              0.0,
+              0.0037049625938602128
+            ]
+          },
+          "no_request": {
+            "total": 974,
+            "correct": 969,
+            "false_pick": 5,
+            "failed_or_missing": 0,
+            "correct_wilson95": [
+              0.9880395298392661,
+              0.9978053546296461
+            ],
+            "false_pick_wilson95": [
+              0.0021946453703537497,
+              0.01196047016073381
+            ]
+          }
+        }
+      },
+      "aggregate_gates_passed": 2,
+      "sources": {
+        "code": {
+          "control": {
+            "request": {
+              "total": 940,
+              "correct": 891,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9317517879861498,
+                0.9603471891578058
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.004070025516249234
+              ]
+            },
+            "no_request": {
+              "total": 828,
+              "correct": 819,
+              "false_pick": 9,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9794721299306328,
+                0.9942711133411573
+              ],
+              "false_pick_wilson95": [
+                0.005728886658842718,
+                0.020527870069367092
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 940,
+              "correct": 833,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.8642754925169581,
+                0.904921487775811
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.004070025516249234
+              ]
+            },
+            "no_request": {
+              "total": 828,
+              "correct": 823,
+              "false_pick": 5,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9859424864124652,
+                0.9974179740768242
+              ],
+              "false_pick_wilson95": [
+                0.0025820259231758604,
+                0.014057513587534792
+              ]
+            }
+          }
+        },
+        "llm": {
+          "control": {
+            "request": {
+              "total": 93,
+              "correct": 93,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.960332497388265,
+                1.0
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.03966750261173514
+              ]
+            },
+            "no_request": {
+              "total": 146,
+              "correct": 146,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9743631779153262,
+                1.0
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.025636822084673896
+              ]
+            }
+          },
+          "mixed": {
+            "request": {
+              "total": 93,
+              "correct": 93,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.960332497388265,
+                1.0
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.03966750261173514
+              ]
+            },
+            "no_request": {
+              "total": 146,
+              "correct": 146,
+              "false_pick": 0,
+              "failed_or_missing": 0,
+              "correct_wilson95": [
+                0.9743631779153262,
+                1.0
+              ],
+              "false_pick_wilson95": [
+                0.0,
+                0.025636822084673896
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 original",
+      "our_training": false,
+      "publisher_training": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+      "suite": "D",
+      "saved": 2735,
+      "expected": 2735,
+      "missing": 0,
+      "failed_or_unparsed": 17,
+      "positive": {
+        "total": 883,
+        "correct": 730,
+        "false_pick": 0,
+        "failed_or_missing": 12,
+        "correct_wilson95": [
+          0.8003617637619037,
+          0.8502618558953058
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.004331618444859839
+        ]
+      },
+      "negative": {
+        "total": 1786,
+        "correct": 1707,
+        "false_pick": 76,
+        "failed_or_missing": 3,
+        "correct_wilson95": [
+          0.9452132486221798,
+          0.964364519831497
+        ],
+        "false_pick_wilson95": [
+          0.03413245783585641,
+          0.05293752149257879
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_170613_e4bqat_original_d-completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "suite": "D3",
+      "saved": 360,
+      "expected": 360,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 120,
+        "correct": 108,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.833318258891048,
+          0.9418664079739892
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.031019166418703486
+        ]
+      },
+      "negative": {
+        "total": 240,
+        "correct": 240,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9842460800584412,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.015753919941558815
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_170616_e4bqat_oos1_d3-completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "suite": "D3",
+      "saved": 360,
+      "expected": 360,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 120,
+        "correct": 108,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.833318258891048,
+          0.9418664079739892
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.031019166418703486
+        ]
+      },
+      "negative": {
+        "total": 240,
+        "correct": 240,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9842460800584412,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.015753919941558815
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_170627_e4bqat_oos2_d3-completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos3 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "suite": "D3",
+      "saved": 360,
+      "expected": 360,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 120,
+        "correct": 109,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.843291530273291,
+          0.9480428171514347
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.031019166418703486
+        ]
+      },
+      "negative": {
+        "total": 240,
+        "correct": 237,
+        "false_pick": 3,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9638999953789512,
+          0.9957399326780291
+        ],
+        "false_pick_wilson95": [
+          0.004260067321970977,
+          0.03610000462104887
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_171441_e4bqat_oos3_d3-completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2r adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "suite": "D3",
+      "saved": 360,
+      "expected": 360,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 120,
+        "correct": 105,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8039705979199262,
+          0.9227650272660463
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.031019166418703486
+        ]
+      },
+      "negative": {
+        "total": 240,
+        "correct": 240,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9842460800584412,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.015753919941558815
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_171445_e4bqat_oos2r_d3-completion.md"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "suite": "D",
+      "saved": 2735,
+      "expected": 2735,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 883,
+        "correct": 798,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8824975826278134,
+          0.9214792645395873
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.004331618444859839
+        ]
+      },
+      "negative": {
+        "total": 1786,
+        "correct": 1773,
+        "false_pick": 13,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9875860545806908,
+          0.9957412626665271
+        ],
+        "false_pick_wilson95": [
+          0.004258737333472927,
+          0.012413945419309168
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_172547_e4bqat_oos1_d-completion.md",
+      "matched_original_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos1_d/matched_original.json"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "suite": "D2",
+      "saved": 1000,
+      "expected": 1000,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 0,
+        "correct": 0,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.0,
+          1.0
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          1.0
+        ]
+      },
+      "negative": {
+        "total": 1000,
+        "correct": 995,
+        "false_pick": 5,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9883490446266249,
+          0.9978624644726756
+        ],
+        "false_pick_wilson95": [
+          0.0021375355273244596,
+          0.011650955373375113
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_173726_e4bqat_oos1_d2-completion.md",
+      "matched_original_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos1_d2/matched_original.json"
+    },
+    {
+      "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos2 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "suite": "D",
+      "saved": 2735,
+      "expected": 2735,
+      "missing": 0,
+      "failed_or_unparsed": 0,
+      "positive": {
+        "total": 883,
+        "correct": 796,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8800416398725079,
+          0.9194248182504756
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.004331618444859839
+        ]
+      },
+      "negative": {
+        "total": 1786,
+        "correct": 1772,
+        "false_pick": 14,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9868850140295948,
+          0.9953248858116603
+        ],
+        "false_pick_wilson95": [
+          0.0046751141883397,
+          0.01311498597040514
+        ]
+      },
+      "repetitions": 1,
+      "final_ranking": false,
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_174041_e4bqat_oos2_d-completion.md",
+      "matched_original_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos2_d/matched_original.json"
+    }
+  ],
+  "bcde_results_snapshot": {
+    "report": "program/scripts/plan_qa_bench/results/bcde_results_2026-10-08_115323.md",
+    "structured": "program/scripts/plan_qa_bench/results/bcde_results_2026-10-08_115323.json",
+    "BC_variants": 16,
+    "DE_completed_variants": 9,
+    "E_alias": "MX",
+    "E_natural_items": 239,
+    "new_model_calls": 0,
+    "all_history_all_roles_complete": false
+  },
+  "new_completed_trainings": [
+    {
+      "variant": "winnow_e4b_oos",
+      "model": "Winnow-E4B (Jev family)",
+      "our_training": true,
+      "full_training_complete": true,
+      "conversion_complete": true,
+      "training_recipe": {
+        "seed": 20261012,
+        "rank": 16,
+        "epochs": 2,
+        "lr": 0.0002,
+        "accum": 8,
+        "training_minutes": 193.9,
+        "max_gpu_gb_log": 10.6
+      },
+      "hf_local": "datasets/travel/train_oos/winnow_e4b_oos_hf_adapter_2026-10-08_1308",
+      "gguf_local": "datasets/travel/train_oos/winnow_e4b_oos_lora_f16_2026-10-08_1308.gguf",
+      "hashes_verified": true,
+      "basic_evaluation": {
+        "saved_archived": 835,
+        "expected": 835,
+        "files_archived": 5,
+        "files_expected": 5,
+        "errors": 0,
+        "complete": true,
+        "scores": {
+          "model": "Winnow-E4B our-travel oos adapter",
+          "our_training": true,
+          "B": [
+            826,
+            835
+          ],
+          "C": [
+            760,
+            835
+          ],
+          "single_correct": [
+            760,
+            769
+          ],
+          "compound_B": [
+            66,
+            66
+          ],
+          "compound_C": [
+            0,
+            66
+          ],
+          "missing": 0,
+          "errors": 0,
+          "repetitions": 1,
+          "final_ranking": false,
+          "sets": [
+            {
+              "set": "mix10",
+              "saved": 160,
+              "errors": 0,
+              "sha256": "17938be4036e556b11558b581024febd5f536b6a8182335521d30379e431924b"
+            },
+            {
+              "set": "mix11",
+              "saved": 163,
+              "errors": 0,
+              "sha256": "625de932d09897be682b2f8fa88061d4bf98b91a0fdb5937de47928126bffd3b"
+            },
+            {
+              "set": "mix12",
+              "saved": 176,
+              "errors": 0,
+              "sha256": "6ac3e18b6e777dc9bf6e638ee01838362f72af15605d50b8a2db2005b21ef1e2"
+            },
+            {
+              "set": "mix8",
+              "saved": 171,
+              "errors": 0,
+              "sha256": "0f531b44afb08eacc29b73d9840ea5e7ec5efc19ca2ca505a454c0bbc5740f93"
+            },
+            {
+              "set": "mix9",
+              "saved": 165,
+              "errors": 0,
+              "sha256": "18f7e8a6fe92beafb0c9a38f71622462d76457a6a632404ea7972e6ac796d554"
+            }
+          ]
+        }
+      },
+      "additional_eval_queued": true,
+      "resume": "Collect GPU A winnow_oos_d3/d/d2/h/mx outputs; inspect first engine evaluation for adapter loading and errors; preserve fixed heldout before adoption.",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_131541_winnow_training_completion.md",
+      "additional_eval_registered": 5,
+      "engine_smoke_complete": false,
+      "latest_report": "final_project_cs/wiki/records/reports/2026-10-08_133908_winnow_eval_queue.md"
+    }
+  ],
+  "new_completed_comparisons": [
+    {
+      "model": "Winnow-E4B (Jev family)",
+      "suite": "D3",
+      "stats": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_vs_oos_d3_2026-10-08_141018.json",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_141018_winnow_d3_training_comparison.md",
+      "repetitions": 1,
+      "product_adoption": false
+    }
+  ],
+  "observer_fixes": [
+    {
+      "fixed": "active training log selected from current process",
+      "actual_check": [
+        1,
+        1
+      ],
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_1413.json",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_141257_active_training_log.md"
+    }
+  ],
+  "repeat_learning_rate_experiment": {
+    "status": "prepared_and_waiting_for_B56",
+    "seed": 20261013,
+    "reference_seed": 20261012,
+    "mode_order": [
+      "finch",
+      "cosine"
+    ],
+    "training_completed": 0,
+    "training_total": 2,
+    "preflight": {
+      "frozen_hashes": [
+        3,
+        3
+      ],
+      "shell_syntax": [
+        1,
+        1
+      ],
+      "existing_smoke_marker": true,
+      "available_bytes": 14483628032
+    },
+    "report": "final_project_cs/wiki/records/reports/2026-10-08_142120_B57_repeat_queue.md",
+    "product_adoption": false
+  },
+  "arm_serving": {
+    "state_record": "arm_serving_2026-10-08.json",
+    "status": "running",
+    "initial_profiles": 10,
+    "initial_questions": 7254,
+    "real_response_verified": true,
+    "complete_evaluation": false
+  },
+  "matched_qat_d3_summary": {
+    "report": "final_project_cs/wiki/records/reports/2026-10-08_171630_qat_d3_five_variants.md",
+    "variants": 5,
+    "our_travel_adapter_variants": 4,
+    "expected_per_variant": 360,
+    "all_saved": true,
+    "final_ranking": false,
+    "holdout_validation_complete": false
+  },
+  "parallel_work_hb1735": {
+    "assigned": 2,
+    "completed": 2,
+    "independent_read_only_review": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/review_hb1735.json",
+    "holdout_contract_draft": "program/research/daily_rag_slm/independent_holdout_contract_2026-10-08_v1.md",
+    "no_new_model_run": true,
+    "no_external_transmission": true,
+    "report": "final_project_cs/wiki/records/reports/2026-10-08_174529_qat_completion_parallel_review.md"
+  }
+}

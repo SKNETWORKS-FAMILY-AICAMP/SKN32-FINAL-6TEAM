@@ -1,0 +1,22 @@
+**실제 결함: 없습니다.** 새로 지적할 내용이 없어서 범위를 더 넓히지 않았습니다.
+
+**시험 실행**
+- 고정 runner를 한 번 실행했고 결과는 193 passed / 193, `PYTEST_EXIT=0`입니다. 실패·건너뜀·제외는 없습니다.
+- 9개 파일입니다. 범위는 167 묶음 8개 파일에 worker unit 1개 파일을 더한 것입니다.
+- 이 193건은 합성 unit 시험입니다.
+
+**delta 1 (`review.py:337-354`)**
+- `default_engine`은 `except TeamUnavailable: raise`를 먼저 두고 있습니다. 그래서 바인딩 없는 non-standalone의 `composition_unbound`는 None으로 바뀌지 않고 전파됩니다.
+- 일반 예외 정책은 확장되지 않았습니다. 일반 예외는 `current_bindings()`가 있으면 재발생하고, 없으면 None을 돌려줍니다. 이 분기는 기존 standalone 계약 그대로로 읽힙니다.
+- 이 확인은 코드 읽기와 통과한 unit 시험에 근거합니다. 제가 변환을 직접 재현하지는 않았습니다. 확신은 높음입니다.
+
+**delta 2~5**
+- 이번 지시에서 따로 열어 본 소스는 `review.py` 한 곳뿐입니다.
+- 2번(`trip_api`·`dining_ledger`)과 3번(`web_intake_route_shapes`), 4번(`run_sweepers`), 5번(`test_watch_batch`)은 소스를 직접 읽지 않았습니다. 통과한 시험(`test_trip_api_plugin_boundaries`, `test_plugin_read_boundaries`, `test_plugin_worker_availability` 등)이 간접 근거입니다.
+- 2번의 고정 제공자 알고리즘·인자 보존은 소스를 대조하지 못했습니다.
+- 4번에서 새 전역 캐시가 초기화를 오염시키는지는 직접 확인하지 못했습니다.
+
+**미실행·미확인 범위**
+- 실제 DB, 실서버, `scenario` 전체, `tests/contract`·`tests/security`, `ruff`는 실행하지 않았습니다.
+- `scenario-full-v3.log`(148/148)와 `watch-batch-notice-regression-v5.log`(9/9), `worker-feature-state-regression-v2.log`(38 pass)는 열어 보지 않았고 지시문의 수치를 그대로 인용만 합니다.
+- 이 결과로 완벽하거나 운영 배포가 끝났다고 말할 수 없습니다.

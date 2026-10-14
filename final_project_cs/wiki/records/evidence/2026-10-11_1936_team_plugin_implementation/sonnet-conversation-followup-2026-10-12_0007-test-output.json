@@ -1,0 +1,14 @@
+[
+  {
+    "type": "tool_result",
+    "content": "Permission to use Bash has been denied because Claude Code is running in don't ask mode. IMPORTANT: You *may* attempt to accomplish this action using other tools that might naturally be used to accomplish this goal, e.g. using head instead of cat. But you *should not* attempt to work around this denial in malicious ways, e.g. do not use your ability to run tests to execute non-test actions. You should only try to work around this restriction in reasonable ways that do not attempt to bypass the intent behind this denial. If you believe this capability is essential to complete the user's request, STOP and explain to the user what you were trying to do and why you need this permission. Let the user decide how to proceed.",
+    "is_error": true,
+    "tool_use_id": "toolu_01EccSLkuyZXuDK4nscxr1cz"
+  },
+  {
+    "tool_use_id": "toolu_011Q5QrQcrTbU5LSxbjmXWmQ",
+    "type": "tool_result",
+    "content": "FIXED_PYTEST_COMMAND=C:\\Users\\playdata2\\anaconda3\\python.exe -m pytest tests/unit/travel/test_initial_retry_boundaries.py tests/unit/core/test_controller_resume_recovery.py tests/unit/travel/test_watch_recovery_race.py -q --tb=short -o faulthandler_timeout=60\r\n.............................                                            [100%]\r\n29 passed in 1.80s\r\nPYTEST_EXIT=0",
+    "is_error": false
+  }
+]

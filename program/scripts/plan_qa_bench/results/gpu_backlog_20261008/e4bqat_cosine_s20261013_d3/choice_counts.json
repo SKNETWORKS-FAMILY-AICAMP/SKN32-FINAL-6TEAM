@@ -1,0 +1,225 @@
+{
+  "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261013 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+  "suite": "D3",
+  "saved": 360,
+  "expected": 360,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "single_choice_expected": 360,
+  "compound_diagnostic_total": 0,
+  "positive": {
+    "total": 120,
+    "correct": 107,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8234463978470834,
+      0.9355885884582658
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.031019166418703486
+    ]
+  },
+  "negative": {
+    "total": 240,
+    "correct": 238,
+    "false_pick": 2,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9701302620111081,
+      0.9977117167130258
+    ],
+    "false_pick_wilson95": [
+      0.0022882832869742294,
+      0.029869737988891934
+    ]
+  },
+  "subtypes": {
+    "change_request": {
+      "total": 7,
+      "correct": 7,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6456695649333126,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        5.551115123125783e-17,
+        0.35433043506668743
+      ]
+    },
+    "confusable_name": {
+      "total": 14,
+      "correct": 14,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7846891972623643,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.3877787807814457e-17,
+        0.2153108027376358
+      ]
+    },
+    "context_pronoun": {
+      "total": 6,
+      "correct": 6,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6096657120978346,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        2.7755575615628914e-17,
+        0.3903342879021653
+      ]
+    },
+    "duplicate_place": {
+      "total": 9,
+      "correct": 9,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7008549515804559,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.2991450484195441
+      ]
+    },
+    "nameless_description": {
+      "total": 16,
+      "correct": 14,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.639771727342413,
+        0.9650225122567595
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.1936076805344365
+      ]
+    },
+    "negation": {
+      "total": 6,
+      "correct": 6,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6096657120978346,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        2.7755575615628914e-17,
+        0.3903342879021653
+      ]
+    },
+    "ordinal_relative": {
+      "total": 12,
+      "correct": 11,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.646120088858883,
+        0.9851349055950829
+      ],
+      "false_pick_wilson95": [
+        2.7755575615628914e-17,
+        0.24249400665524085
+      ]
+    },
+    "synth_chat_A": {
+      "total": 120,
+      "correct": 120,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9689808335812966,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    },
+    "synth_chat_B": {
+      "total": 120,
+      "correct": 118,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.941264037027841,
+        0.9954174354340789
+      ],
+      "false_pick_wilson95": [
+        0.004582564565921141,
+        0.0587359629721589
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 41,
+      "correct": 31,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6065666377742431,
+        0.8617499726190967
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.08566757018443186
+      ]
+    },
+    "typo_slang": {
+      "total": 9,
+      "correct": 9,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7008549515804559,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.2991450484195441
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "e9db6db49c54912d729a426c3ecf4a56234aecab4993207d636d8120efc90873",
+  "gold_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+  "execution": {
+    "job": {
+      "id": "e4bqat_cosine_s20261013_d3",
+      "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261013 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+      "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "prompts": "/workspace/heavy/all_prompts_d3.json",
+      "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+      "script": "/workspace/heavy/d_test_llama.py",
+      "tag": "d3_backlog_e4bqat_cosine_s20261013",
+      "port": 8401,
+      "logprobs": "0",
+      "expected": 360,
+      "purpose": "Missing evaluation of completed cosine learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+      "lora": "/tmp/tripilot-trained-adapters-20261008/cosine_s20261013_lora_f16.gguf",
+      "lora_sha256": "9832e316c7df17aa41649ab0847f98c36f4281cc403bce180e1665413641517f"
+    },
+    "started": "2026-10-09T11:03:40.715697+00:00",
+    "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+    "script_sha256": "e84b538e2069a60563357d322ba32537bdb7896e99a9503589ba5b8498372ea8",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

@@ -3,7 +3,7 @@ type: decision
 title: 승인 대기를 실패로 셀 것인가
 description: 지금 채점식은 사람에게 넘긴 것을 벌점 처리한다. 제품이 주장하려는 것과 정반대다
 status: draft
-impl_scope: cs — 골든셋과 judge 채점은 cs 도메인 평가다. sample 은 계약 테스트로 검증한다
+impl_scope: cs — 여행 제품의 도메인 결정이다. sample의 참고 구현 계약을 바꾸지 않는다
 tags: [evaluation, governance]
 domain: neutral
 ---

@@ -1,0 +1,24 @@
+{
+  "verified_at_kst": "2026-10-09T10:24:05.798898+09:00",
+  "downloads": 17,
+  "downloads_expected": 17,
+  "CPU_compiled": 12,
+  "CPU_expected": 12,
+  "GPU_load_completed": false,
+  "registered_jobs": 6,
+  "registered_expected": 6,
+  "main_expected": 9425,
+  "queue_registered_at_utc": "2026-10-09T01:21:45Z",
+  "worker_and_current_job_preserved": true,
+  "backups": [
+    "program/research/daily_rag_slm/_backup/2026-10-09_102405_valen_registration_reconcile/model_release_watchlist.json",
+    "program/research/daily_rag_slm/_backup/2026-10-09_102405_valen_registration_reconcile/2026-10-09.json",
+    "final_project_cs/wiki/records/reports/_backup/2026-10-09_102405_valen_registration_reconcile/2026-10-09_1015_daily-research-and-serving.md",
+    "program/research/daily_rag_slm/_backup/2026-10-09_102405_valen_registration_reconcile/2026-10-09.md"
+  ],
+  "evidence_SHA256": {
+    "Valen_registration_20261009.json": "82ea379e800996cca7fd2c719b59b721fbb4418996d5a5678e18df77c9df7e69",
+    "Valen_download_verified_20261009.json": "0be0e2a1efd85bd724a8450647f1c7b735c534b77326095bfff74b950fe70182",
+    "Valen_cpu_preflight_20261009.txt": "19e9911996d2d91de32807a97972d28a9ddcc66f7b04b7a8d03118369f281860"
+  }
+}

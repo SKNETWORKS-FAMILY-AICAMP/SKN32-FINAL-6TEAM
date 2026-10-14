@@ -1,0 +1,22 @@
+{
+  "tag": "2026-10-09_0532_출발조건_저장경합",
+  "evidence": "wiki\\records\\evidence\\2026-10-09_0532_출발조건_저장경합",
+  "backups": [
+    {
+      "file": "app/domains/travel_ops/components/watch/trip_reminders.py",
+      "backup": "app\\domains\\travel_ops\\components\\watch\\_backup\\2026-10-09_0532_출발조건_저장경합\\trip_reminders.py",
+      "sha256": "e948bda8f45550b10ce4087aee090b52f8ad45a47b68d4db5c50fcacb863c444"
+    },
+    {
+      "file": "app/domains/travel_ops/components/itinerary/itinerary.py",
+      "backup": "app\\domains\\travel_ops\\components\\itinerary\\_backup\\2026-10-09_0532_출발조건_저장경합\\itinerary.py",
+      "sha256": "06003ab0dd8db6c34ae995ae776eef52363e5e2915a6743fe7bfc30821d91de2"
+    },
+    {
+      "file": "wiki/teams/mobility.md",
+      "backup": "wiki\\teams\\_backup\\2026-10-09_0532_출발조건_저장경합\\mobility.md",
+      "sha256": "844106af5ce545e44e91c6b8b9e766206a932c5449cbfae5b31483ebc6be0a62"
+    }
+  ],
+  "prior_hash_matches": 29
+}

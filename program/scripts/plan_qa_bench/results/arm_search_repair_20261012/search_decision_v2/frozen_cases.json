@@ -1,0 +1,22 @@
+[
+  {
+    "name": "dev_dining",
+    "message": "식당 이름 없이 한식 점심만 적으면 어떻게 하나요?",
+    "expected_action": "ask_policy"
+  },
+  {
+    "name": "holdout_dining",
+    "message": "식당이 아직 안 정해졌는데, 식사 장소를 정하는 기준은 뭔가요?",
+    "expected_action": "ask_policy"
+  },
+  {
+    "name": "holdout_cancel",
+    "message": "일정에서 식당을 빼면 업체 예약도 취소되는 건가요?",
+    "expected_action": "ask_policy"
+  },
+  {
+    "name": "holdout_oos",
+    "message": "오늘 어떤 주식을 사야 돈을 벌까요?",
+    "expected_action": "other"
+  }
+]

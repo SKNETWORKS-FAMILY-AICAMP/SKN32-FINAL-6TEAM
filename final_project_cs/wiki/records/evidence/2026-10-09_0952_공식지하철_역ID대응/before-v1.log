@@ -1,0 +1,57 @@
+FFF.......................                                               [100%]
+================================== FAILURES ===================================
+_ test_official_line_id_is_not_lost_by_named_filter[1081-\uacbd\uac15\uc120] __
+
+line_id = '1081', line = '경강선'
+
+    @pytest.mark.parametrize('line_id,line', [('1081', '경강선'), ('1093', '서해선'), ('1094', '신림선')])
+    def test_official_line_id_is_not_lost_by_named_filter(line_id, line):
+        def transport(url, params):
+            return httpx.Response(200, json={'realtimeArrivalList': [{'subwayId': line_id, 'barvlDt': '180'}]},
+                                  request=httpx.Request('GET', url))
+        got = SeoulSubwayArrival(service_key='controlled-test-key', transport=transport).arrivals('테스트역', line=line)
+>       assert len(got['trains']) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests\unit\travel\test_subway_line_identity_v1.py:14: AssertionError
+_ test_official_line_id_is_not_lost_by_named_filter[1093-\uc11c\ud574\uc120] __
+
+line_id = '1093', line = '서해선'
+
+    @pytest.mark.parametrize('line_id,line', [('1081', '경강선'), ('1093', '서해선'), ('1094', '신림선')])
+    def test_official_line_id_is_not_lost_by_named_filter(line_id, line):
+        def transport(url, params):
+            return httpx.Response(200, json={'realtimeArrivalList': [{'subwayId': line_id, 'barvlDt': '180'}]},
+                                  request=httpx.Request('GET', url))
+        got = SeoulSubwayArrival(service_key='controlled-test-key', transport=transport).arrivals('테스트역', line=line)
+>       assert len(got['trains']) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests\unit\travel\test_subway_line_identity_v1.py:14: AssertionError
+_ test_official_line_id_is_not_lost_by_named_filter[1094-\uc2e0\ub9bc\uc120] __
+
+line_id = '1094', line = '신림선'
+
+    @pytest.mark.parametrize('line_id,line', [('1081', '경강선'), ('1093', '서해선'), ('1094', '신림선')])
+    def test_official_line_id_is_not_lost_by_named_filter(line_id, line):
+        def transport(url, params):
+            return httpx.Response(200, json={'realtimeArrivalList': [{'subwayId': line_id, 'barvlDt': '180'}]},
+                                  request=httpx.Request('GET', url))
+        got = SeoulSubwayArrival(service_key='controlled-test-key', transport=transport).arrivals('테스트역', line=line)
+>       assert len(got['trains']) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests\unit\travel\test_subway_line_identity_v1.py:14: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_0952_공식지하철_역ID대응\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_subway_line_identity_v1.py::test_official_line_id_is_not_lost_by_named_filter[1081-\uacbd\uac15\uc120]
+FAILED tests/unit/travel/test_subway_line_identity_v1.py::test_official_line_id_is_not_lost_by_named_filter[1093-\uc11c\ud574\uc120]
+FAILED tests/unit/travel/test_subway_line_identity_v1.py::test_official_line_id_is_not_lost_by_named_filter[1094-\uc2e0\ub9bc\uc120]
+3 failed, 23 passed in 5.08s
+Exception ignored in: <function Console.__del__ at 0x000001BBA8101D00>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -70,3 +70,18 @@ label 53 / 60 177 초 46
 label 54 / 60 184 초 46
 label 55 / 60 188 초 46
 label 56 / 60 188 초 46
+label 57 / 60 195 초 46
+label 58 / 60 197 초 46
+label 59 / 60 199 초 46
+label 60 / 60 202 초 46
+2760 문장 중 합의 2534 / 이견 226
+N1 {'agree': 180, 'dispute': 120, 'nolabel': 0}
+N2 {'agree': 296, 'dispute': 4, 'nolabel': 0}
+N3 {'agree': 300, 'dispute': 0, 'nolabel': 0}
+N4 {'agree': 300, 'dispute': 0, 'nolabel': 0}
+N5 {'agree': 300, 'dispute': 0, 'nolabel': 0}
+N6 {'agree': 229, 'dispute': 71, 'nolabel': 0}
+P1 {'agree': 231, 'dispute': 9, 'nolabel': 0}
+P2 {'agree': 233, 'dispute': 7, 'nolabel': 0}
+P3 {'agree': 231, 'dispute': 9, 'nolabel': 0}
+P4 {'agree': 234, 'dispute': 6, 'nolabel': 0}

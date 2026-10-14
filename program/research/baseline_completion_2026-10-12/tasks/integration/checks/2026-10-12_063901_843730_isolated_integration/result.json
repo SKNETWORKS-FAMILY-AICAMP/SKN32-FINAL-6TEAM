@@ -1,0 +1,24 @@
+{
+  "at_kst": "2026-10-12T06:40:27.199265+09:00",
+  "exit": 0,
+  "args": [
+    "-m",
+    "not live",
+    "tests/integration/db/test_migrations_rerun.py",
+    "tests/integration/db/test_service_improvement.py",
+    "tests/integration/test_admin_policy_runtime.py",
+    "tests/security",
+    "tests/contract",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "-p",
+    "no:langsmith",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_063901_843730_isolated_integration\\tmp",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_063901_843730_isolated_integration\\junit.xml"
+  ],
+  "network_blocks": [],
+  "source_changed": [],
+  "scope": "new task-owned PostgreSQL; current safe SQL runner; external and business DB blocked"
+}

@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="7" time="54.729" timestamp="2026-10-11T23:24:55.451090+09:00" hostname="playdata"><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_pending_delay_does_not_capture_a_new_fact_question" time="5.599"><failure message="AssertionError: {'answer': '몇 분쯤 늦으세요? 예를 들어 ‘30분이요’라고 알려 주세요.', 'basis_sources': [], 'case_id': '2201de73-fbe8-4fae-97a2-35c2493e108f', 'case_status': 'waiting_input', ...}&#10;assert ('2201de73-fbe8-4fae-97a2-35c2493e108f' != '2201de73-fbe8-4fae-97a2-35c2493e108f')">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x0000025BED6B1460&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x0000025BFEAB02F0&gt;, 'key': 'acop_u_lMl9KGW-GO9DSLGzW1wyxxs3ANWVrYVvf4swA1iWJX0', ...}
+
+    def test_pending_delay_does_not_capture_a_new_fact_question(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-wait")
+        before = _saved(first["case_id"])
+        fact = _say(decided, "성수 점심 식당 알려줘", "isolation-fact")
+&gt;       assert fact["case_id"] != first["case_id"] and fact["status"] == "answered", fact
+E       AssertionError: {'answer': '몇 분쯤 늦으세요? 예를 들어 ‘30분이요’라고 알려 주세요.', 'basis_sources': [], 'case_id': '2201de73-fbe8-4fae-97a2-35c2493e108f', 'case_status': 'waiting_input', ...}
+E       assert ('2201de73-fbe8-4fae-97a2-35c2493e108f' != '2201de73-fbe8-4fae-97a2-35c2493e108f')
+
+tests\e2e\test_web_conversation_isolation.py:35: AssertionError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_pending_delay_does_not_capture_a_new_change_request" time="4.712"><failure message="AssertionError: {'answer': '몇 분쯤 늦으세요? 예를 들어 ‘30분이요’라고 알려 주세요.', 'basis_sources': [], 'case_id': '92a97a46-df30-4572-9d64-307587599545', 'case_status': 'waiting_input', ...}&#10;assert ('92a97a46-df30-4572-9d64-307587599545' != '92a97a46-df30-4572-9d64-307587599545')">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x0000025B801E7710&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x0000025BFF7F0260&gt;, 'key': 'acop_u_HFsYJm0i5kpPrNev5t-SRD-KrzRyxlnIl7lOA8lhwOs', ...}
+
+    def test_pending_delay_does_not_capture_a_new_change_request(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-change-wait")
+        before = _saved(first["case_id"])
+        changed = _say(decided, "점심 다른 데로 바꿔", "isolation-change")
+&gt;       assert changed["case_id"] != first["case_id"] and changed["status"] == "adjusted", changed
+E       AssertionError: {'answer': '몇 분쯤 늦으세요? 예를 들어 ‘30분이요’라고 알려 주세요.', 'basis_sources': [], 'case_id': '92a97a46-df30-4572-9d64-307587599545', 'case_status': 'waiting_input', ...}
+E       assert ('92a97a46-df30-4572-9d64-307587599545' != '92a97a46-df30-4572-9d64-307587599545')
+
+tests\e2e\test_web_conversation_isolation.py:47: AssertionError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_disabled_pending_owner_allows_independent_fact_but_preserves_reply" time="5.276"><failure message="TypeError: cannot pickle '_thread.lock' object">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x0000025B82560950&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x0000025B823961E0&gt;, 'key': 'acop_u_W1gURigv5xj6n83D0ApcdNmm1qpv-kvkBD0uU1gkNUg', ...}
+
+    def test_disabled_pending_owner_allows_independent_fact_but_preserves_reply(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-disabled-wait")
+        before = _saved(first["case_id"])
+&gt;       enable = _disable(decided, "dining")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\e2e\test_web_conversation_isolation.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\e2e\test_web_conversation_isolation.py:16: in _disable
+    controller.registry = copy.deepcopy(old.controller.registry)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:196: in _deepcopy_list
+    append(deepcopy(a, memo))
+           ^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+x = &lt;unlocked _thread.lock object at 0x0000025B8254CC40&gt;
+memo = {2592049618944: {'_proxy': None, '_timeout': 8.0}, 2592051047904: &lt;[AttributeError("'DbResponseCache' object has no at...051048432: &lt;app.domains.travel_ops.ports.data_sources.weather_chain.FallbackWeather object at 0x0000025B8267EE70&gt;, ...}
+_nil = []
+
+    def deepcopy(x, memo=None, _nil=[]):
+        """Deep copy operation on arbitrary Python objects.
+    
+        See the module's __doc__ string for more info.
+        """
+    
+        if memo is None:
+            memo = {}
+    
+        d = id(x)
+        y = memo.get(d, _nil)
+        if y is not _nil:
+            return y
+    
+        cls = type(x)
+    
+        copier = _deepcopy_dispatch.get(cls)
+        if copier is not None:
+            y = copier(x, memo)
+        else:
+            if issubclass(cls, type):
+                y = _deepcopy_atomic(x, memo)
+            else:
+                copier = getattr(x, "__deepcopy__", None)
+                if copier is not None:
+                    y = copier(memo)
+                else:
+                    reductor = dispatch_table.get(cls)
+                    if reductor:
+                        rv = reductor(x)
+                    else:
+                        reductor = getattr(x, "__reduce_ex__", None)
+                        if reductor is not None:
+&gt;                           rv = reductor(4)
+                                 ^^^^^^^^^^^
+E                           TypeError: cannot pickle '_thread.lock' object
+
+..\..\..\anaconda3\Lib\copy.py:151: TypeError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_expired_implicit_reply_becomes_a_new_message_without_discarding_it" time="7.488"><failure message="AssertionError: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_resume_token&quot;,&quot;message&quot;:&quot;resume token expired&quot;}}&#10;assert (401 == 200)&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x0000025BFF7DA180&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x0000025B801E72C0&gt;, 'key': 'acop_u_6sUKmKShQAzqBUdHb_kFSYwv9MnP7td13b8Ty7feZn0', ...}
+
+    def test_expired_implicit_reply_becomes_a_new_message_without_discarding_it(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-expired-wait")
+        _expire(first["case_id"])
+        reply = _post(decided, "30분이요", "isolation-expired-reply")
+&gt;       assert reply.status_code == 200 and reply.json()["case_id"] != first["case_id"], reply.text
+E       AssertionError: {"error":{"code":"invalid_resume_token","message":"resume token expired"}}
+E       assert (401 == 200)
+E        +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code
+
+tests\e2e\test_web_conversation_isolation.py:69: AssertionError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_expired_explicit_reply_retains_the_existing_token_error" time="7.141" /><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_two_pending_cases_allow_facts_and_reject_an_ambiguous_numeric_reply" time="6.168"><failure message="AssertionError: assert '480d4a2f-7660-473b-9d1c-70c10ecf4127' != '480d4a2f-7660-473b-9d1c-70c10ecf4127'">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x0000025B801C80B0&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x0000025BFF806D20&gt;, 'key': 'acop_u_tFwuh_lm1LzFlwTwwYdiK6_P67tRnBBZ6ZLKBtzFGjg', ...}
+
+    def test_two_pending_cases_allow_facts_and_reject_an_ambiguous_numeric_reply(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-multi-first")
+        second = _say(decided, "식당에 늦어요", "isolation-multi-second")
+&gt;       assert second["case_id"] != first["case_id"]
+E       AssertionError: assert '480d4a2f-7660-473b-9d1c-70c10ecf4127' != '480d4a2f-7660-473b-9d1c-70c10ecf4127'
+
+tests\e2e\test_web_conversation_isolation.py:88: AssertionError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_initial_disabled_request_retries_same_case_and_applies_once" time="1.790"><failure message="TypeError: cannot pickle '_thread.lock' object">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x0000025B82356CF0&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x0000025B82786360&gt;, 'key': 'acop_u_cx2DMCH0ixDDEpuTfvByn2APZE_qXqjSMPfZCCLSOi0', ...}
+
+    def test_initial_disabled_request_retries_same_case_and_applies_once(decided):
+&gt;       enable = _disable(decided, "dining")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\e2e\test_web_conversation_isolation.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\e2e\test_web_conversation_isolation.py:16: in _disable
+    controller.registry = copy.deepcopy(old.controller.registry)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:196: in _deepcopy_list
+    append(deepcopy(a, memo))
+           ^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:162: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:259: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:136: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\copy.py:221: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+x = &lt;unlocked _thread.lock object at 0x0000025BFF11C940&gt;
+memo = {2592013939200: {'contract_version': '1.0'}, 2592014648864: &lt;[AttributeError("'DbResponseCache' object has no attribut...92014660768: &lt;app.domains.travel_ops.ports.data_sources.open_meteo.OpenMeteoWeather object at 0x0000025B8245BD10&gt;, ...}
+_nil = []
+
+    def deepcopy(x, memo=None, _nil=[]):
+        """Deep copy operation on arbitrary Python objects.
+    
+        See the module's __doc__ string for more info.
+        """
+    
+        if memo is None:
+            memo = {}
+    
+        d = id(x)
+        y = memo.get(d, _nil)
+        if y is not _nil:
+            return y
+    
+        cls = type(x)
+    
+        copier = _deepcopy_dispatch.get(cls)
+        if copier is not None:
+            y = copier(x, memo)
+        else:
+            if issubclass(cls, type):
+                y = _deepcopy_atomic(x, memo)
+            else:
+                copier = getattr(x, "__deepcopy__", None)
+                if copier is not None:
+                    y = copier(memo)
+                else:
+                    reductor = dispatch_table.get(cls)
+                    if reductor:
+                        rv = reductor(x)
+                    else:
+                        reductor = getattr(x, "__reduce_ex__", None)
+                        if reductor is not None:
+&gt;                           rv = reductor(4)
+                                 ^^^^^^^^^^^
+E                           TypeError: cannot pickle '_thread.lock' object
+
+..\..\..\anaconda3\Lib\copy.py:151: TypeError</failure></testcase></testsuite></testsuites>

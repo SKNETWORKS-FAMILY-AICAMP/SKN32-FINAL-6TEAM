@@ -1,0 +1,31 @@
+[
+  {
+    "source": "app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "backup": "app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_193721_taxi_departure_notice\\plan.py",
+    "sha256": "1b32755f5ac505395567fbd58d05d72157523b9ee2342faf6dc43049c491d8ae",
+    "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\2026-10-11_193721_taxi_departure_notice\\plan.py"
+  },
+  {
+    "source": "app/domains/travel_ops/instances/mobility/engine/departure_context.py",
+    "backup": "app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_193721_taxi_departure_notice\\departure_context.py",
+    "sha256": "519c72188ae9e03f8ff8d05b4fa3b68071d3ce86d34e0bf014ba48090daac490",
+    "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\2026-10-11_193721_taxi_departure_notice\\departure_context.py"
+  },
+  {
+    "source": "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "backup": "app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_193721_taxi_departure_notice\\departure_observer.py",
+    "sha256": "1968f4cd26e37808cafbb814455cb86a1b828a6ba96225f11ef0261d24be3634",
+    "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\2026-10-11_193721_taxi_departure_notice\\departure_observer.py"
+  },
+  {
+    "source": "app/domains/travel_ops/components/watch/trip_reminders.py",
+    "backup": "app\\domains\\travel_ops\\components\\watch\\_backup\\2026-10-11_193721_taxi_departure_notice\\trip_reminders.py",
+    "sha256": "a8cbbf3d3866c194eae9b7e75bb8b31077e8c6049ff30c5bb0aa3693ca0c62b6",
+    "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\components\\watch\\2026-10-11_193721_taxi_departure_notice\\trip_reminders.py"
+  },
+  {
+    "source": "wiki/teams/mobility.md",
+    "backup": "wiki\\teams\\_backup\\2026-10-11_193721_taxi_departure_notice\\mobility.md",
+    "sha256": "9d35dbb070fdc65cc48ae60914c50f9b357d5d2d391c1e83b7eb2dc086116b1f"
+  }
+]

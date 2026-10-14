@@ -1,0 +1,15 @@
+{
+  "observed_at": "2026-10-12T12:11:43.947779+09:00",
+  "reserve_fraction": 0.2,
+  "limited_developer_api_calls_this_work": 0,
+  "provider_usage_before": null,
+  "provider_usage_after": null,
+  "remaining": null,
+  "reset_at": null,
+  "atomic_reservations": 0,
+  "reason": "누락 없는 공유 사용량·제한단위·갱신시간을 확인하지 못해 제한 API 호출하지 않음",
+  "public_consumer_ui_used": true,
+  "private_receipts_accessed_in_this_work": false,
+  "production_limits_changed": false,
+  "schedule_changed": false
+}

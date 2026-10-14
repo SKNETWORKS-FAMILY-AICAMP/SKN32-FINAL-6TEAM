@@ -1,0 +1,229 @@
+{
+  "model": "Underdog-Saluki-27B-1.0 IQ2-mix publisher original",
+  "our_training": false,
+  "publisher_training": "Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning",
+  "suite": "D3",
+  "saved": 360,
+  "expected": 360,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "single_choice_expected": 360,
+  "compound_diagnostic_total": 0,
+  "positive": {
+    "total": 120,
+    "correct": 107,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8234463978470834,
+      0.9355885884582658
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.031019166418703486
+    ]
+  },
+  "negative": {
+    "total": 240,
+    "correct": 223,
+    "false_pick": 17,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8895031557540064,
+      0.9553080629628224
+    ],
+    "false_pick_wilson95": [
+      0.04469193703717767,
+      0.11049684424599365
+    ]
+  },
+  "subtypes": {
+    "change_request": {
+      "total": 7,
+      "correct": 7,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6456695649333126,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        5.551115123125783e-17,
+        0.35433043506668743
+      ]
+    },
+    "confusable_name": {
+      "total": 14,
+      "correct": 14,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7846891972623643,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.3877787807814457e-17,
+        0.2153108027376358
+      ]
+    },
+    "context_pronoun": {
+      "total": 6,
+      "correct": 5,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.43649717781352987,
+        0.9699466302516935
+      ],
+      "false_pick_wilson95": [
+        2.7755575615628914e-17,
+        0.3903342879021653
+      ]
+    },
+    "duplicate_place": {
+      "total": 9,
+      "correct": 9,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7008549515804559,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.2991450484195441
+      ]
+    },
+    "nameless_description": {
+      "total": 16,
+      "correct": 13,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.5699111903802586,
+        0.9340840092857187
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.1936076805344365
+      ]
+    },
+    "negation": {
+      "total": 6,
+      "correct": 6,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6096657120978346,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        2.7755575615628914e-17,
+        0.3903342879021653
+      ]
+    },
+    "ordinal_relative": {
+      "total": 12,
+      "correct": 12,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7575059933447592,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        2.7755575615628914e-17,
+        0.24249400665524085
+      ]
+    },
+    "synth_chat_A": {
+      "total": 120,
+      "correct": 118,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.941264037027841,
+        0.9954174354340789
+      ],
+      "false_pick_wilson95": [
+        0.004582564565921141,
+        0.0587359629721589
+      ]
+    },
+    "synth_chat_B": {
+      "total": 120,
+      "correct": 105,
+      "false_pick": 15,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8039705979199262,
+        0.9227650272660463
+      ],
+      "false_pick_wilson95": [
+        0.07723497273395374,
+        0.1960294020800739
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 41,
+      "correct": 32,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6329499401177383,
+        0.8799682522178243
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.08566757018443186
+      ]
+    },
+    "typo_slang": {
+      "total": 9,
+      "correct": 9,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7008549515804559,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.2991450484195441
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "5b86af3ef778caff431196a0f9274be815f54e6ea405e1b1f77bebef4798335f",
+  "gold_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+  "execution": {
+    "job": {
+      "id": "saluki_original_d3_a1",
+      "suite": "d3",
+      "label": "Underdog-Saluki-27B-1.0 IQ2-mix publisher original",
+      "our_training": false,
+      "publisher_training": "Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning",
+      "model": "/tmp/tripilot-saluki-20261009/smoke_verified_model.gguf",
+      "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+      "model_revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "prompts": "/workspace/heavy/all_prompts_d3.json",
+      "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+      "expected": 360,
+      "script": "/tmp/tripilot-saluki-20261009/saluki_eval_20261009.py",
+      "runner_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+      "tag": "saluki_original_d3_a1",
+      "port": 8401,
+      "logprobs": "0",
+      "purpose": "Matched frozen developer/regression suite; not holdout or adoption",
+      "dependency": "/tmp/tripilot-saluki-20261009/SMOKE_PASS.json",
+      "ephemeral_ram_model": true,
+      "automatic_retry": false
+    },
+    "started": "2026-10-08T17:26:17.604041+00:00",
+    "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+    "script_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

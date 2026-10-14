@@ -1,0 +1,45 @@
+{
+  "created_at": "2026-10-12T03:10:08.332448+09:00",
+  "source": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/scripts/mobility/assets/field_recorder_v1.html",
+  "source_sha256": "4d2f15d6ef008e3539f1ee027028752927bcce0527fb65739bf86dd2d1e58010",
+  "core": {
+    "path": "core-tests-after-v2.json",
+    "passed": 22,
+    "total": 22
+  },
+  "browser": {
+    "path": "browser-tests-after-v3.json",
+    "passed": 13,
+    "total": 13,
+    "widths": [
+      375,
+      1280
+    ],
+    "file_url_verified": true,
+    "external_requests": 0,
+    "persistent_storage_api_usage": 0
+  },
+  "prediction_revision_fix": {
+    "before": "core-tests-before-v2.json",
+    "passed": 21,
+    "total": 22,
+    "after": "core-tests-after-v2.json",
+    "after_passed": 22
+  },
+  "real_phone_opening_verified": false,
+  "deployed": false,
+  "developer_api_calls": 0,
+  "private_data_access": 0,
+  "price": "free",
+  "storage": "in memory only; export JSON before closing or refreshing tab",
+  "compatibility": "mobility-field-recorder-v1 output is not automatically compatible with dedicated public-transit comparison schemas",
+  "backup": "final_project_cs/scripts/mobility/assets/_backup/2026-10-12_030704_recorder_input_and_visibility/",
+  "network_policy": "CSP connect-src none; browser offline plus request interception; external resources none",
+  "limits": [
+    "numeric comparison status is not feature completion",
+    "reference_kind separates actual field/payment from official_web/published_table/development_replay",
+    "timer uses device clock; clock going backwards is rejected",
+    "prediction JSON import only; previous observation export is not automatically reimported",
+    "pending observation is included in export but has no finalized measured result"
+  ]
+}

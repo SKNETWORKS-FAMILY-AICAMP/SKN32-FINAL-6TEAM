@@ -1,0 +1,56 @@
+
+[WebServer] (node:22140) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:5044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:11044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22396) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:18156) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:29784) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:3252) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:16720) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:21204) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[WebServer] (node:28648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:6188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:26956) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:30712) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 9 tests using 1 worker
+
+
+(node:17032) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/9] tests\live\prepared-test-plans-20261011.spec.ts:13:3 › 375px test1 직접 입력은 준비 원문을 표시하고 코드 한 번만 제출한다
+[2/9] tests\live\prepared-test-plans-20261011.spec.ts:42:3 › 375px 목록 선택은 입력을 바꾸고 다른 글을 입력하면 시험 선택을 해제한다
+[3/9] tests\live\prepared-test-plans-20261011.spec.ts:13:3 › 1280px test1 직접 입력은 준비 원문을 표시하고 코드 한 번만 제출한다
+[4/9] tests\live\prepared-test-plans-20261011.spec.ts:42:3 › 1280px 목록 선택은 입력을 바꾸고 다른 글을 입력하면 시험 선택을 해제한다
+[5/9] tests\live\prepared-test-plans-20261011.spec.ts:58:1 › 시험 목록 오류는 일반 글 입력·전송을 막지 않고 다시 불러올 수 있다
+[6/9] tests\live\prepared-test-plans-20261011.spec.ts:72:1 › 꺼진 시험 목록은 준비된 선택지를 표시하지 않는다
+[7/9] tests\live\test-plan-categories-20261011.spec.ts:8:3 › 375px 분류 색·기본안 우선·키보드 선택과 새 코드 제출
+[8/9] tests\live\test-plan-categories-20261011.spec.ts:8:3 › 1280px 분류 색·기본안 우선·키보드 선택과 새 코드 제출
+[9/9] tests\live\test-plan-categories-20261011.spec.ts:64:1 › 직접 입력 test14·test15와 구버전 분류 없는 응답도 선택된다
+  9 passed (58.7s)

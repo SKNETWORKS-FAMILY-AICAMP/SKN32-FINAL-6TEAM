@@ -1,0 +1,73 @@
+<div id="mobility-readiness-oct11">
+  <style>
+    #mobility-readiness-oct11 .allocation{display:flex;height:24px;gap:3px;margin:16px 0 12px}
+    #mobility-readiness-oct11 .allocation span{display:block}
+    #mobility-readiness-oct11 .legend{display:flex;flex-wrap:wrap;gap:10px 22px;margin-bottom:20px}
+    #mobility-readiness-oct11 .swatch{display:inline-block;width:12px;height:12px;margin-right:6px}
+    #mobility-readiness-oct11 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-top:12px}
+    #mobility-readiness-oct11 dl{display:grid;grid-template-columns:5em minmax(0,1fr);gap:8px 12px;margin:12px 0 0}
+    #mobility-readiness-oct11 dt{font-weight:500}
+    #mobility-readiness-oct11 dd{margin:0;overflow-wrap:anywhere}
+    #mobility-readiness-oct11 .summary-head{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline}
+    @media(max-width:400px){#mobility-readiness-oct11 dl{grid-template-columns:1fr;gap:4px}#mobility-readiness-oct11 dd{margin-bottom:8px}}
+  </style>
+  <h2>실사용 준비도 · 21개 기능</h2>
+  <div class="text-small">서울 이동 · 2026-10-11 · 마지막 실행 근거 03:24 KST · 이후 공통 코드 1개 변경</div>
+  <div class="allocation" role="img" aria-label="21개 기능 분류: 조건부 사용 3개, 개선 필요 9개, 추가 검증 9개. 완료율이 아닙니다.">
+    <span style="flex:3;background:var(--viz-series-1)" data-tooltip="조건부 사용: 3/21 = 14.3%"></span>
+    <span style="flex:9;background:var(--viz-series-2)" data-tooltip="개선 필요: 9/21 = 42.9%"></span>
+    <span style="flex:9;background:var(--viz-series-3)" data-tooltip="추가 검증: 9/21 = 42.9%"></span>
+  </div>
+  <div class="legend tabular-nums">
+    <span><i class="swatch" style="background:var(--viz-series-1)"></i>조건부 사용 3/21 · 14.3%</span>
+    <span><i class="swatch" style="background:var(--viz-series-2)"></i>개선 필요 9/21 · 42.9%</span>
+    <span><i class="swatch" style="background:var(--viz-series-3)"></i>추가 검증 9/21 · 42.9%</span>
+  </div>
+  <div class="text-small">기능 수의 분포 · 실사용 완료율 아님</div>
+  <div class="card" aria-live="polite">
+    <div class="summary-head"><strong data-name>실시간 지하철·버스 도착</strong><span data-status>추가 검증</span></div>
+    <dl>
+      <dt>되는 범위</dt><dd data-now>첫 승차 예측과 후속 환승 예상이 출발 안내에 연결됐습니다. 늦은 첫 안내도 현재 경로를 재검증합니다.</dd>
+      <dt>확인 근거</dt><dd data-evidence>최근 관련 시험 205/205, 보유 서울 응답 1구간 재생. 현재 운행·실탑승 오차 측정 아님.</dd>
+      <dt>남은 조건</dt><dd data-next>실제 도착 오차, 급행·순환선, 장애 시 대체 소스, 탑승 후 위치를 반영한 재탐색, 운영 배달 확인.</dd>
+    </dl>
+  </div>
+  <div class="tiles" aria-label="기능별 근거 선택"></div>
+  <script>
+    (() => {
+      const root=document.getElementById('mobility-readiness-oct11');
+      const rows=[
+        ['택시 미터 예상액','조건부 사용','서울 중형 택시의 예상액 안내.','기존 웹값 ±1,000원: 카카오 55/100, 네이버 9/12.','같은 경로·출발 시각 대조와 실제 미터 영수증. 대형·모범·호출료 범위 분리.'],
+        ['택시 예산 여유','조건부 사용','웹 예상액보다 여유 있는 예산 안내. 실제 결제 상한 약속은 제외.','기존 웹 예상액 이상: 카카오 96/100, 네이버 11/12.','새 날짜·교통 상태와 실제 결제 초과율·과다 여유 측정.'],
+        ['자동차 소요 시간','개선 필요','선택 도로의 교통 속도를 이용한 시간 예상.','기존 카카오 ±5분 88/100. 정적 단순 회전 제한 2,487관계 탐색 연결.','교통 상태를 경로 선택에도 반영. 복잡한 회전 예외·진입 도로·새 웹 대조.'],
+        ['자동차 경로 거리','개선 필요','도로망과 정적 단순 회전 제한으로 경로 산출.','기존 카카오 ±10% 53/100. 회전 자료 변경 감지 회귀 통과.','경로 형상·출입점·복잡한 유턴·시간/차종 예외. 기존 웹 수치는 수정 후 전량 재측정하지 않음.'],
+        ['대중교통 전체 소요','개선 필요','버스·지하철 구간과 대기·환승을 합산.','기존 카카오 대기 제외 ±5분: 추천안 68/100. 개발 네이버 8쌍은 수정 후 8/8.','같은 출발 시각·입구·경로의 새 표본, 실제 승차·환승 소요 측정.'],
+        ['지하철 경로 산출','조건부 사용','지원 자료 안의 지하철 전용 후보 산출.','수단을 엄격히 나눈 기존 96쌍 중 94/96 후보.','누락 경로·역 이름/ID 대응·급행/순환선·다른 날짜 검증. 경로 있음은 정확도와 다름.'],
+        ['버스 직행·환승 산출','개선 필요','버스 전용 후보와 승차 시각별 운행 조건 확인.','기존 100쌍 후보 100/100. 대기 제외 ±5분 70/100.','여러 번 환승·첫차/막차·새 날짜 표본·실제 탑승.'],
+        ['지하철 요금','개선 필요','거리·별도 노선 운임을 반영한 금액 또는 상단 안내.','기존 94경로 안내 94/94. 웹 금액 범위 일치 82/94. 상단 안내 12건 포함.','거리 경계·자료 충돌·별도 노선 검증. 상단 안내를 정확 요금으로 세지 않음.'],
+        ['버스·혼합 환승 요금','개선 필요','할인 전 예상액 상단을 안내. 일부 금액 누락 복구.','기존 안내 99/100. 웹 범위 일치 33/99. 새 정책으로 전량 재측정하지 않음.','실제 운임거리·환승 할인·하차 태그·동일 노선·조조를 제품 경로에 연결해 확인.'],
+        ['장소 사이 도보 거리','추가 검증','직선 1.2km 정책 안의 보행망 거리 산출.','새 요청 좌표 1쌍: 최단 웹 대비 +10.6%, ±10% 범위 0/1.','출입점·추천 형상·시각까지 정렬한 새 표본과 실제 보행. 기존 장거리 30쌍은 정책 밖.'],
+        ['도보 소요·역 접근 시간','개선 필요','보행망·계단 시간을 일정과 출발 재검증에 반영.','새 요청 좌표 1쌍: 최단 웹 대비 +1분, ±5분 범위 1/1.','역 접근·환승 걷기·신호/횡단·휴식·실제 이동 오차. 한 개발 표본은 독립 정확도가 아님.'],
+        ['자전거 경로','개선 필요','허용 도로와 자전거망으로 후보 산출.','기존 카카오 거리 ±10% 16/30.','강변 진입·교량·허용 도로·경로 형상과 안전성 확인.'],
+        ['자전거 소요','개선 필요','주행 시간 예상.','기존 카카오 ±5분 23/30. 네이버 12쌍 평균 절대 차이 12.73분.','경로 정렬 후 경사·정지·자전거 유형·대여 시간 분리.'],
+        ['첫차·막차·출발 역산','추가 검증','운행 시간표를 이용한 계산과 현재 출발 재검증.','웹 첫차/막차 확인 한 경로. 자정·조회 지연·늦은 안내의 통제 시험 통과.','노선·평일/주말/공휴일·자정·환승 막차를 실제 운행과 대조.'],
+        ['환승 횟수·역 출구·승차 칸','추가 검증','자료가 정확히 대응하는 경로의 안내.','기존 추천안 환승 횟수 일치 66/100. 출구·칸 정확도 분모 미확보.','같은 경로의 출구·개찰·승차 칸 직접 대조. 추천안 차이를 곧 오류로 세지 않음.'],
+        ['실시간 지하철·버스 도착','추가 검증','첫 승차 예측과 후속 환승 예상이 출발 안내에 연결. 늦은 첫 안내도 현재 경로 재검증.','마지막 실행 205/205, 보유 서울 응답 1구간 재생. 이후 공통 코드1개 변경의 영향 미재검증. 실제 도착 오차 측정 아님.','실제 도착 오차, 급행·순환선, 장애 시 대체 소스, 탑승 후 위치 재탐색, 운영 배달.'],
+        ['혼잡 안내','추가 검증','자료가 있는 노선·시간대의 혼잡 경고.','실제 차량 혼잡 대비 정확도 분모 미확보.','일반/급행 구분과 실제 경고 일치율·누락률 측정.'],
+        ['무정차·도로 사고 감시','추가 검증','연결된 공지·도로 사건 소스의 판정.','공지 역 이름 추출·도로 사건 대체 소스 구현. 실제 사건 회수율 미측정.','동명 역·여러 역 공지·두 소스 실패·공지 지연을 실제 자료로 검증.'],
+        ['따릉이 대여·반납·재고','추가 검증','대여소와 재고 조회.','지도 자전거 시간 대조는 재고·반납 성공률 검증이 아님.','재고 변동·만차·마감·대체 대여소·잠금/반납 포함 전체 소요 측정.'],
+        ['사건 후 일정 조정·자동 적용','추가 검증','계산기·여행 팀 연결, 재검증 실패 시 보류/재계산 처리.','통제 응답과 보유 자료 재생. 이번 변경의 운영 DB 저장·배달 확인 안 함.','여행 전체의 제약·동시 변경·대체 전환·알림·최신 계획 링크 확인.'],
+        ['지도 경로 표시','추가 검증','실제 경로선·정류장·환승·시간 카드 연결이 필요.','휴대폰 길 따라가기 과제와 표시 정확도 비교 미실시.','실제 형상의 지도와 화면/클릭 연동, 휴대폰에서 경로 따라가기 검증.']
+      ];
+      const grid=root.querySelector('.tiles');
+      rows.forEach((r,i)=>{const b=document.createElement('button');b.type='button';b.className='btn viz-tile';b.textContent=r[0];b.dataset.index=i;b.setAttribute('aria-label',r[0]+' · '+r[1]+' · 근거 보기');b.setAttribute('aria-pressed','false');grid.appendChild(b)});
+      const valid=n=>Number.isInteger(n)&&n>=0&&n<rows.length;
+      let selected=15;
+      function draw(i){if(!valid(i))return;selected=i;const r=rows[i];['name','status','now','evidence','next'].forEach((key,j)=>{root.querySelector('[data-'+key+']').textContent=r[j]});grid.querySelectorAll('button').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)))}
+      function restore(state){const i=state?.privateContent?.selected;if(valid(i))draw(i)}
+      draw(selected);restore(window.openai?.widgetState);
+      grid.addEventListener('click',e=>{const b=e.target.closest('button[data-index]');if(!b)return;const i=Number(b.dataset.index);draw(i);if(window.openai?.setWidgetState)window.openai.setWidgetState({modelContent:{feature:rows[i][0],status:rows[i][1]},privateContent:{selected:i}}).catch(()=>{})});
+      window.addEventListener('openai:set_globals',e=>restore(e.detail?.globals?.widgetState));
+    })();
+  </script>
+</div>

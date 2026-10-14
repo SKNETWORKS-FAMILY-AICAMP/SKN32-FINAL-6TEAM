@@ -30,14 +30,14 @@ def graph_case():
             customer_id = cur.fetchone()[0]
             cur.execute(
                 "INSERT INTO customer_cases (tenant_id, customer_id, status, subject, intent, issue_code, "
-                "owner_team_id, version) VALUES (%s,%s,'running',%s,'billing','post_cancel_charge',"
+                "owner_team_id, version) VALUES (%s,%s,'running',%s,'incident_report','activity_cancel_or_change',"
                 "'activity',1) RETURNING case_id", (tenant, customer_id, "graph v7 fixture"))
             case_id = cur.fetchone()[0]
             cur.execute("INSERT INTO knowledge_documents (tenant_id, title, source_uri, scope, version, pii_class) "
-                        "VALUES (%s,'환불 정책','seed://p','billing','1','none') RETURNING document_id", (tenant,))
+                        "VALUES (%s,'활동 취소 정책','seed://p','incident_report','1','none') RETURNING document_id", (tenant,))
             document_id = cur.fetchone()[0]
             cur.execute("INSERT INTO action_requests (tenant_id, case_id, action_type, arguments_json, "
-                        "idempotency_key, status) VALUES (%s,%s,'refund','{}',%s,'pending_approval') "
+                        "idempotency_key, status) VALUES (%s,%s,'activity.propose_change','{}',%s,'pending_approval') "
                         "RETURNING action_id", (tenant, case_id, "graphv7-" + uuid4().hex))
             action_id = cur.fetchone()[0]
         conn.commit()
@@ -61,17 +61,17 @@ def test_case_to_issue_to_policy(graph_case):
     hops = _neighbors(graph_case, str(graph_case["case_id"]),
                       ["has_issue", "governed_by"], depth=2)
     nodes = {h["node_id"] for h in hops}
-    assert "issue:post_cancel_charge" in nodes, "Case → Issue 가 없다"
+    assert "issue:activity_cancel_or_change" in nodes, "Case → Issue 가 없다"
     assert str(graph_case["document_id"]) in nodes, "Issue → Policy 가 없다"
     # 깊이가 실제로 2단계다
     depths = {h["node_id"]: h["depth"] for h in hops}
-    assert depths["issue:post_cancel_charge"] == 1
+    assert depths["issue:activity_cancel_or_change"] == 1
     assert depths[str(graph_case["document_id"])] == 2
 
 
 def test_issue_to_team(graph_case):
     """★축 2 — Issue → Team."""
-    hops = _neighbors(graph_case, "issue:post_cancel_charge", ["handled_by"])
+    hops = _neighbors(graph_case, "issue:activity_cancel_or_change", ["handled_by"])
     assert {h["node_id"] for h in hops} == {"team:activity"}
 
 

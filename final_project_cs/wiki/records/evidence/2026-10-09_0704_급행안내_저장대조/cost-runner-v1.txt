@@ -1,0 +1,40 @@
+from pathlib import Path
+import hashlib
+import json
+import statistics
+import sys
+import time
+
+W = Path(__file__).resolve().parents[2]
+CS = W / 'final_project_cs'
+sys.path.insert(0, str(CS))
+from app.domains.travel_ops.instances.mobility.engine import paths
+paths.load_cli_env()
+from app.domains.travel_ops.instances.mobility.engine import express as EX
+from app.domains.travel_ops.instances.mobility.engine.departure_context import express_version
+from app.domains.travel_ops.instances.mobility import wiring
+
+metadata = json.loads((Path(__file__).parent / 'express-notice-race-work-v1.json').read_text(encoding='utf8'))
+EV = CS / 'wiki/records/evidence' / metadata['tag']
+files = [p for p in EX.FILES.values() if p.exists()]
+assert len(files) == 2
+hashes = {p.relative_to(W).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+wiring._STATE.update(mode='enabled', kw={})
+basis = dict(timetable_built_at='cost-only', rules_version='cost-only',
+             express_version=express_version(EX.source_signatures()))
+assert wiring.validate_departure_basis(basis)
+measurements = []
+for _ in range(30):
+    started = time.perf_counter()
+    assert wiring.validate_departure_basis(basis) is True
+    assert wiring.validate_departure_basis(basis) is True
+    measurements.append((time.perf_counter()-started)*1000)
+assert all(hashlib.sha256((W/name).read_bytes()).hexdigest() == value for name, value in hashes.items())
+result = dict(repetitions=30, checks_per_repetition=2, bytes=sum(p.stat().st_size for p in files),
+              mean_ms=statistics.mean(measurements), sd_ms=statistics.stdev(measurements),
+              median_ms=statistics.median(measurements), max_ms=max(measurements), raw_ms=measurements,
+              files=hashes, scope='two consecutive content checks after file cache warm-up; no database or HTTP latency; no A/B claim')
+target = EV / 'two-check-cost-v1.json'
+assert not target.exists()
+target.write_text(json.dumps(result, indent=2), encoding='utf8')
+print(json.dumps({key: value for key, value in result.items() if key not in ('raw_ms', 'files')}))

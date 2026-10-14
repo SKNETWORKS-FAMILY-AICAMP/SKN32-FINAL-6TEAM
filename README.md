@@ -8,7 +8,7 @@ triPilot은 고객의 자연어 요청을 업무 **Case**로 접수하고, 현�
 
 ## 팀 소개
 
-`triPilot`은 `A-COPilot` 6인 팀이 개발합니다. 아래 역할은 발표 자료의 공식 Ownership 기준이며, 6인 전원이 데이터 전처리에 공통 참여합니다.
+`triPilot`은 `A-COPilot` 6인 팀이 개발합니다. 아래 표는 기존 발표 자료의 6인 소개이며, 현재 개발 책임과 코드 위치는 [개발 역할 정본](wiki/delivery/roles.md)을 따릅니다. 표의 과거 분담을 현재 담당 확정으로 재사용하지 않으며, 6인 전원이 데이터 전처리에 공통 참여합니다.
 
 | 팀원 | 담당 영역 | 주요 역할 |
 |---|---|---|
@@ -31,7 +31,7 @@ triPilot은 고객의 자연어 요청을 업무 **Case**로 접수하고, 현�
 | MVP 이후 | Booking Handoff |
 | 등록만 된 Team | Lodging · Flight — 잠긴 예약으로 취급하며 자체 로직은 제공하지 않음 |
 | 핵심 원칙 | 근거 없는 확답 금지, Team의 직접 실행 금지, 승인 없는 side effect 금지 |
-| 문서 기준선 | `program/plan/A-COP_구현계획서_v11.md` |
+| 현재 사양 정본 | [wiki](wiki/index.md)의 확정 결정·계약. v11은 2026-09-10 당시 계획 기록 |
 
 > MVP 범위 밖 기능을 현재 제공 기능처럼 설명하지 않습니다. 특히 Booking Handoff와 업체 예약 변경은 승인·연동 범위를 별도로 검증해야 합니다.
 
@@ -45,7 +45,7 @@ triPilot은 다음 순서로 이 문제를 분리합니다.
 2. `case_type`과 `intent`를 분리해 담당 Team을 선택합니다.
 3. 정책·예약·장소·날씨·이동 정보를 읽기 경로로 수집합니다.
 4. Team은 `TeamResult`와 `ActionProposal`만 반환합니다.
-5. 근거가 있는 제안만 운영자가 승인할 수 있습니다.
+5. 업체 예약·결제·환급처럼 고객 승인이 필요한 제안은 근거와 권한을 확인한 뒤 고객 승인을 받습니다. 항로 지킴이의 일정 변경은 해당 자동 적용 조건을 따릅니다.
 6. 승인·배달·실행 결과는 이벤트와 감사 기록으로 남깁니다.
 
 ## 주요 기능
@@ -57,8 +57,8 @@ triPilot은 다음 순서로 이 문제를 분리합니다.
 - **외부 데이터 어댑터**: Open-Meteo, 국가유산청, 관광정보·공휴일·교통·공항 등 외부 소스를 설정에 따라 연결
 - **승인 경계**: Team은 환불·예약 변경·알림 같은 side effect를 실행하지 않고 제안만 생성
 - **멱등성과 outbox**: 중복 요청·중복 메시지 발행을 DB 제약과 영속 outbox로 방어
-- **운영 UI**: Case, Trace, Approval, VOC, Outbox unknown 상태를 확인
-- **REST/MCP/A2A 접점**: 외부 에이전트·운영자·원격 Team이 동일한 Core 계약을 사용
+- **개발·QA 진단 UI**: Case, Trace, 결함·Outbox 상태를 확인. 상주 상담원이 고객 문제를 대신 수정하는 제품 운영 모델은 아님
+- **REST/MCP/A2A 접점**: 고객의 개인 AI·고객 웹·원격 에이전트 팀을 연결하며, 개발자용 관리 채널은 별도 권한으로 구분
 - **Composer 관리 채널**: 프로젝트 설정 검증·변경은 관리용 빌드에서만 별도 인증 경로로 제공
 
 ## 아키텍처
@@ -150,7 +150,7 @@ Team은 허용된 read tool만 사용하고, 외부 시스템에 직접 쓰지 �
 | LLM | OpenAI SDK 2.44.0, `openai`·`local_ft`·`mock` adapter, 모델·temperature·seed 설정 |
 | 오케스트레이션 | 자체 Core Controller·Registry·Port 구조 |
 | RAG/토큰 | OpenAI Embeddings, `tiktoken` 0.13.0, PostgreSQL/pgvector vector search |
-| 연동 프로토콜 | REST API, MCP 1.28.1(FastMCP read-only 3개 도구), A2A HTTP |
+| 연동 프로토콜 | REST API, [여행 MCP](final_project_cs/wiki/external/mcp-tools.md)(사용자 키·기본 읽기 전용), A2A HTTP |
 | 외부 연동 | `httpx` 0.28.1 기반 여행 데이터 어댑터, 소스별 rate limit |
 | Graph | PostgreSQL Recursive CTE 기반 `SqlGraphAdapter`(별도 Graph DB 없음) |
 | 운영 화면 | FastAPI server-rendered HTML/CSS/vanilla JavaScript, 별도 `final_project_ui` 개발 콘솔 |
@@ -277,13 +277,9 @@ npm run dev
 | `POST` | `/admin/reload` | `ops:reload` | 검증된 설정을 재기동 없이 반영 |
 | `GET` | `/health` | 없음 | 프로세스 상태 확인 |
 
-MCP 도구는 `mcp:read` 범위로 제공합니다.
+현재 MCP는 고객 API 앱의 `/mcp/`에서 사용자 키로 **본인 여행만** 조회합니다. 여행·계획·위험·이동 관련 도구의 정본은 [여행 MCP 계약](final_project_cs/wiki/external/mcp-tools.md)입니다. 일정 쓰기 도구는 `travel.mcp.write_enabled` 기본 꺼짐을 따릅니다. 과거 `get_my_cases`·`get_case_detail`·`open_support_case` 3종은 현재 도구가 아닙니다.
 
-- `get_my_cases`: 고객 Case 목록
-- `get_case_detail`: 고객 Case 상세
-- `open_support_case`: Case 생성과 분류 시작. 승인·결제·예약 변경은 수행하지 않음
-
-운영 UI는 다음 경로를 사용합니다.
+개발·QA 진단 UI의 경로는 다음과 같습니다.
 
 `/ui/admin` · `/ui/cases` · `/ui/cases/{case_id}` · `/ui/cases/{case_id}/trace` · `/ui/approvals` · `/ui/voc` · `/ui/ops/outbox`
 
@@ -419,3 +415,5 @@ git log --oneline -5
 ## 라이선스 및 데이터 주의
 
 본 저장소의 코드·문서·데이터셋은 각각의 원출처와 사용 조건을 따릅니다. 외부 공공데이터와 모델을 사용할 때는 제공기관의 이용약관·쿼터·재배포 조건을 확인합니다. 본 시스템의 응답은 여행 운영 지원을 위한 사전 확인이며, 항공·숙박·교통·업체의 최종 변경이나 계약을 자동 확정하지 않습니다.
+
+개정 전 소개·도구 목록은 [보존 기록](wiki/records/commerce_2026-10-11/README.md)에 남겼습니다.

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="11" skipped="0" tests="12" time="4.688" timestamp="2026-10-09T09:09:22.749682+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_routed_distance_controls_time_with_existing_straight_policy[150]" time="0.093"><failure message="assert {7} == {3}&#10;  &#10;  Extra items in the left set:&#10;  7&#10;  Extra items in the right set:&#10;  3&#10;  Use -v to get more diff">distance = 150
+
+    @pytest.mark.parametrize('distance', [150, 650, 1500])
+    def test_routed_distance_controls_time_with_existing_straight_policy(distance):
+        out, samples, calls = run_estimate({'distance_m': distance})
+        expected = max(1, math.ceil(distance / Planner(_rt(), modes=['walk']).speed / 60))
+&gt;       assert {x['eta'] for x in samples} == {expected}
+E       assert {7} == {3}
+E         
+E         Extra items in the left set:
+E         7
+E         Extra items in the right set:
+E         3
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:39: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_routed_distance_controls_time_with_existing_straight_policy[650]" time="0.001"><failure message="assert {7} == {11}&#10;  &#10;  Extra items in the left set:&#10;  7&#10;  Extra items in the right set:&#10;  11&#10;  Use -v to get more diff">distance = 650
+
+    @pytest.mark.parametrize('distance', [150, 650, 1500])
+    def test_routed_distance_controls_time_with_existing_straight_policy(distance):
+        out, samples, calls = run_estimate({'distance_m': distance})
+        expected = max(1, math.ceil(distance / Planner(_rt(), modes=['walk']).speed / 60))
+&gt;       assert {x['eta'] for x in samples} == {expected}
+E       assert {7} == {11}
+E         
+E         Extra items in the left set:
+E         7
+E         Extra items in the right set:
+E         11
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:39: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_routed_distance_controls_time_with_existing_straight_policy[1500]" time="0.001"><failure message="assert {7} == {25}&#10;  &#10;  Extra items in the left set:&#10;  7&#10;  Extra items in the right set:&#10;  25&#10;  Use -v to get more diff">distance = 1500
+
+    @pytest.mark.parametrize('distance', [150, 650, 1500])
+    def test_routed_distance_controls_time_with_existing_straight_policy(distance):
+        out, samples, calls = run_estimate({'distance_m': distance})
+        expected = max(1, math.ceil(distance / Planner(_rt(), modes=['walk']).speed / 60))
+&gt;       assert {x['eta'] for x in samples} == {expected}
+E       assert {7} == {25}
+E         
+E         Extra items in the left set:
+E         7
+E         Extra items in the right set:
+E         25
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:39: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_real_synthetic_stair_graph_has_same_time_as_schedule" time="0.003"><failure message="assert 7 == 9">def test_real_synthetic_stair_graph_has_same_time_as_schedule():
+        rt = _rt()
+        rt._v.bike_router = BikeRouter(stair_router())
+        out, samples, _ = run_estimate(runtime=rt)
+        p = Planner(rt, modes=['walk'])
+        target = datetime(2026, 10, 9, 12, tzinfo=timezone(timedelta(hours=9)))
+        (route, *_), _reason = p.leg(PLACES[0], PLACES[1], target, {}, False, 'estimate-stairs')
+        option = next(x for x in route['options'] if x['id'] == 'walk')
+&gt;       assert out['eta']['p50_min'] == option['eta_min']
+E       assert 7 == 9
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:53: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_missing_network_path_is_not_a_feasible_direct_walk" time="0.001"><failure message="AssertionError: assert 'feasible' == 'no_data'&#10;  &#10;  - no_data&#10;  + feasible">def test_missing_network_path_is_not_a_feasible_direct_walk():
+        out, samples, calls = run_estimate(error={'kind': 'no_path'})
+&gt;       assert out['verdict'] == 'no_data'
+E       AssertionError: assert 'feasible' == 'no_data'
+E         
+E         - no_data
+E         + feasible
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:61: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_route_failure_preserves_explicit_legacy_model_basis[router_down]" time="0.001"><failure message="KeyError: 'walk_basis'">error = 'router_down'
+
+    @pytest.mark.parametrize('error', ['router_down', 'bad_response', 'out_of_area'])
+    def test_route_failure_preserves_explicit_legacy_model_basis(error):
+        out, samples, calls = run_estimate(error={'kind': error})
+        assert out['verdict'] == 'feasible'
+&gt;       assert out['walk_basis']['source'] == 'straight_distance_model'
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_basis'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:71: KeyError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_route_failure_preserves_explicit_legacy_model_basis[bad_response]" time="0.002"><failure message="KeyError: 'walk_basis'">error = 'bad_response'
+
+    @pytest.mark.parametrize('error', ['router_down', 'bad_response', 'out_of_area'])
+    def test_route_failure_preserves_explicit_legacy_model_basis(error):
+        out, samples, calls = run_estimate(error={'kind': error})
+        assert out['verdict'] == 'feasible'
+&gt;       assert out['walk_basis']['source'] == 'straight_distance_model'
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_basis'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:71: KeyError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_route_failure_preserves_explicit_legacy_model_basis[out_of_area]" time="0.001"><failure message="KeyError: 'walk_basis'">error = 'out_of_area'
+
+    @pytest.mark.parametrize('error', ['router_down', 'bad_response', 'out_of_area'])
+    def test_route_failure_preserves_explicit_legacy_model_basis(error):
+        out, samples, calls = run_estimate(error={'kind': error})
+        assert out['verdict'] == 'feasible'
+&gt;       assert out['walk_basis']['source'] == 'straight_distance_model'
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_basis'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:71: KeyError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_optimistic_stairs_keep_time_and_extended_access_distance" time="0.001"><failure message="assert 7 == 8&#10; +  where 8 = &lt;built-in function ceil&gt;(7.8117991452923015)&#10; +    where &lt;built-in function ceil&gt; = math.ceil">def test_optimistic_stairs_keep_time_and_extended_access_distance():
+        result = {'distance_m': 100, 'optimistic': True,
+                  'foot_timing': {'flat_mps': FOOT_MPS, 'seconds': 100 / (FOOT_MPS * .6)}}
+        p = Planner(_rt(), modes=['walk'])
+        p.v.bike_router = SimpleNamespace(available=lambda: True, route=lambda *a: result)
+        from app.domains.travel_ops.instances.mobility.engine.geo import meters
+        dm = meters(PLACES[0]['lat'], PLACES[0]['lon'], PLACES[1]['lat'], PLACES[1]['lon'])
+        _distance, minutes, _ = p._walk_path(PLACES[0], PLACES[1], dm)
+        out, samples, _ = run_estimate(result)
+&gt;       assert out['eta']['p50_min'] == math.ceil(minutes)
+E       assert 7 == 8
+E        +  where 8 = &lt;built-in function ceil&gt;(7.8117991452923015)
+E        +    where &lt;built-in function ceil&gt; = math.ceil
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:86: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_disabled_walk_does_not_query_walking_network" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_public_estimate_function_carries_new_basis_and_version" time="0.001"><failure message="TypeError: estimate() got an unexpected keyword argument 'window'">def test_public_estimate_function_carries_new_basis_and_version():
+&gt;       out, _samples, calls = run_estimate({'distance_m': 650}, public=True)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+result = {'distance_m': 650}, error = None, modes = None, runtime = None
+public = True
+
+    def run_estimate(result=None, error=None, modes=None, runtime=None, public=False):
+        rt = runtime or _rt()
+        calls = []
+        if runtime is None:
+            def route(*args):
+                calls.append(args)
+                return result
+            rt._v.bike_router = SimpleNamespace(available=lambda: True, route=route,
+                                               last_error=error)
+        samples = []
+        kwargs = dict(modes=modes or ['walk'], window=(720, 740), step=5, samples=samples)
+        if public:
+&gt;           out = estimate(PLACES[0], PLACES[1], '2026-10-09', '오후', runtime=rt, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: estimate() got an unexpected keyword argument 'window'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:28: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_estimate_walk_network_v1" name="test_no_router_preserves_model_and_reports_degradation" time="0.001"><failure message="KeyError: 'walk_basis'">def test_no_router_preserves_model_and_reports_degradation():
+        rt = _rt()
+        rt._v.bike_router = None
+        out, _samples, _ = run_estimate(runtime=rt)
+        assert out['verdict'] == 'feasible'
+&gt;       assert out['walk_basis'] == {'source': 'straight_distance_model', 'degraded': True,
+               ^^^^^^^^^^^^^^^^^
+                                     'reason': 'walking_router_unavailable'}
+E       KeyError: 'walk_basis'
+
+tests\unit\travel\mobility\test_estimate_walk_network_v1.py:109: KeyError</failure></testcase></testsuite></testsuites>

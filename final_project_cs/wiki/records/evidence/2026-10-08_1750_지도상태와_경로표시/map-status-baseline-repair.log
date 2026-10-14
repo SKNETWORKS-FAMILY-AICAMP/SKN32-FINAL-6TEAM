@@ -1,0 +1,83 @@
+
+[WebServer] (node:17144) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:15896) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:15896) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:16492) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21144) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:21088) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:11240) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21864) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:8224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[WebServer] (node:24452) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:23232) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:2272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/1] tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다
+  1) tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다 ─────
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('button', { name: /^바뀐 일정 \d+곳$/ })
+    Expected: 0
+    Received: 1
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveCount" getByRole('button', { name: /^바뀐 일정 \d+곳$/ }) with timeout 12000ms
+      - waiting for getByRole('button', { name: /^바뀐 일정 \d+곳$/ })
+        27 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      76 |   await page.keyboard.press("Tab");
+      77 |   await page.keyboard.press("Enter");
+    > 78 |   await expect(changedBadge(page)).toHaveCount(0);
+         |                                    ^
+      79 |   await expect(needsBadge(page)).toBeFocused();
+      80 | });
+      81 |
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\web\tests\live\map-status-bar.spec.ts:78:36
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\trace.zip
+    Usage:
+
+        npx playwright show-trace .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다 ──────

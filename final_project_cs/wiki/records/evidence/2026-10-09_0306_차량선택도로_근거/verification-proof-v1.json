@@ -1,0 +1,282 @@
+{
+  "created_at": "2026-10-09T03:25:20.144168+09:00",
+  "report": "2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+  "target": {
+    "tests": 45,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "regression_passed": 691,
+  "regression_total": 691,
+  "regression": {
+    "tests": 691,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "parts": [
+    {
+      "tests": 266,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "tests": 227,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "tests": 193,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "post_probe": {
+    "created_at": "2026-10-09T03:14:37.106156+09:00",
+    "start": [
+      126.81659695671017,
+      37.56103677313472
+    ],
+    "end": [
+      126.81649055992263,
+      37.561935578472514
+    ],
+    "repeats": [
+      {
+        "distance_m": 98.29,
+        "model_seconds": 9.175,
+        "snap_m": [
+          8.8,
+          0.0
+        ],
+        "quality": {
+          "access_max_m": 8.8,
+          "arterial_pct": 0.0,
+          "optimistic": false
+        },
+        "turns": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 2487,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false,
+          "arc_codes": [
+            187112,
+            187174
+          ],
+          "search_cost_seconds": 9.175276625678396,
+          "snap_selection": {
+            "candidate_counts": [
+              2,
+              2
+            ],
+            "selected_candidate_ranks": [
+              1,
+              0
+            ],
+            "used_non_nearest": [
+              true,
+              false
+            ],
+            "nearest_snap_m": [
+              0.0,
+              0.0
+            ],
+            "physical_access_verified": false
+          }
+        }
+      },
+      {
+        "distance_m": 98.29,
+        "model_seconds": 9.175,
+        "snap_m": [
+          8.8,
+          0.0
+        ],
+        "quality": {
+          "access_max_m": 8.8,
+          "arterial_pct": 0.0,
+          "optimistic": false
+        },
+        "turns": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 2487,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false,
+          "arc_codes": [
+            187112,
+            187174
+          ],
+          "search_cost_seconds": 9.175276625678396,
+          "snap_selection": {
+            "candidate_counts": [
+              2,
+              2
+            ],
+            "selected_candidate_ranks": [
+              1,
+              0
+            ],
+            "used_non_nearest": [
+              true,
+              false
+            ],
+            "nearest_snap_m": [
+              0.0,
+              0.0
+            ],
+            "physical_access_verified": false
+          }
+        }
+      },
+      {
+        "distance_m": 98.29,
+        "model_seconds": 9.175,
+        "snap_m": [
+          8.8,
+          0.0
+        ],
+        "quality": {
+          "access_max_m": 8.8,
+          "arterial_pct": 0.0,
+          "optimistic": false
+        },
+        "turns": {
+          "status": "partial_static_motorcar",
+          "applied_relations": 2487,
+          "source_relations": 6258,
+          "excluded_candidate_relations": 6,
+          "complete_road_rules": false,
+          "arc_codes": [
+            187112,
+            187174
+          ],
+          "search_cost_seconds": 9.175276625678396,
+          "snap_selection": {
+            "candidate_counts": [
+              2,
+              2
+            ],
+            "selected_candidate_ranks": [
+              1,
+              0
+            ],
+            "used_non_nearest": [
+              true,
+              false
+            ],
+            "nearest_snap_m": [
+              0.0,
+              0.0
+            ],
+            "physical_access_verified": false
+          }
+        }
+      }
+    ],
+    "api_calls": 0,
+    "scope": "수정 후 실제 그래프 단독 적재; 동일 개발 좌표쌍 3회; 웹 도로·시각 정렬 안 됨"
+  },
+  "web_pairs": 1,
+  "provider_queries": 3,
+  "provider_routes": 2,
+  "aligned_accuracy_rows": 0,
+  "web_raw_integrity": [
+    {
+      "file": "C04_google_car.json",
+      "expected": "6c138b73332c31399fd006f45829fd6e878c8ced90798f850034c65a87540ec0",
+      "actual": "6c138b73332c31399fd006f45829fd6e878c8ced90798f850034c65a87540ec0"
+    },
+    {
+      "file": "C04_google_visible-excerpt.txt",
+      "expected": "3b342f22fc2f0b53aee9f4340acf9e0638245de7a8535c35edd268633bd0256c",
+      "actual": "3b342f22fc2f0b53aee9f4340acf9e0638245de7a8535c35edd268633bd0256c"
+    },
+    {
+      "file": "C04_kakao_car.json",
+      "expected": "8c9b5dee16b643e1b10acba9e91cbbdb4eb21c606aaa60973967c890cd779c05",
+      "actual": "8c9b5dee16b643e1b10acba9e91cbbdb4eb21c606aaa60973967c890cd779c05"
+    },
+    {
+      "file": "C04_kakao_visible-excerpt.txt",
+      "expected": "9634cc42b57c4f3983075dfbdbdc0ed9bf53d568a414aae8535daee32407b993",
+      "actual": "9634cc42b57c4f3983075dfbdbdc0ed9bf53d568a414aae8535daee32407b993"
+    },
+    {
+      "file": "C04_naver_car.json",
+      "expected": "09cb895bfa93de47cf010701a3b0370f6cf01a19a2e8600007458025f628236d",
+      "actual": "09cb895bfa93de47cf010701a3b0370f6cf01a19a2e8600007458025f628236d"
+    },
+    {
+      "file": "C04_naver_visible-excerpt.txt",
+      "expected": "6c18fa8592d15c3c2cc7bd74cfcbb152e67e4e71d531acb782020be0b4ad9c34",
+      "actual": "6c18fa8592d15c3c2cc7bd74cfcbb152e67e4e71d531acb782020be0b4ad9c34"
+    },
+    {
+      "file": "C04_osm_latest_observation.json",
+      "expected": "9a1a9a8ddc807a625cad233cd075b8f269ebc63c4bf317b81a4776ecfb52b0fc",
+      "actual": "9a1a9a8ddc807a625cad233cd075b8f269ebc63c4bf317b81a4776ecfb52b0fc"
+    }
+  ],
+  "source_hashes": [
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car.py",
+      "sha256": "c95f6088f56771fa94b61a60e0d1b1f90a8a64213b73d74247cb2dfd0ff0bf66"
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car_turn_search.py",
+      "sha256": "99cff4d7f59ee9625b5f03fef9555a8c61726373a795e3b892a4e2529940889e"
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py",
+      "sha256": "28a5c2c86f6bdc6bcd90a6896955bf59cc11d5bc8f724b20cbc71002cfd73e4e"
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\fold.py",
+      "sha256": "98938b3397328eb4a3c994d45846e9071a9f97aa3f9e4b1a92536d8a076c4156"
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\turn_restrictions.py",
+      "sha256": "5ed6abddfc65ef809ebff6d584ffc3dcd3aa49e5b29eb227b5f822626ede20e5"
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\mobility\\test_car_selected_snap_evidence_v1.py",
+      "sha256": "4c044793fb9177b01c5a3eca8d4decccb8c57a97b921bfb332cdc4c3f796ac2d"
+    },
+    {
+      "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v14.py",
+      "sha256": "66c7761ff3410f525f5c358ff48b8dd9ec9dc855c5a41b10ceef34a374262d32"
+    }
+  ],
+  "data_hashes": [
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+    }
+  ],
+  "api_calls": 0,
+  "independent_holdout": false
+}

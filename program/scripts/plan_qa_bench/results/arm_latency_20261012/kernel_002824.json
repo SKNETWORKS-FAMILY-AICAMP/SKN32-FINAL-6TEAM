@@ -1,0 +1,11 @@
+{
+  "kernel_matches": [
+    "python invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=0",
+    " oom_kill_process+0x298/0x348",
+    "[  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name",
+    "oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=docker-dd40baeaed93f17a6456dab00bf26ffa3d4a0632681fea166e770781ddd2b81c.scope,mems_allowed=0,oom_memcg=/system.slice/docker-dd40baeaed93f17a6456dab00bf26ffa3d4a0632681fea166e770781ddd2b81c.scope,task_memcg=/system.slice/docker-dd40baeaed93f17a6456dab00bf26ffa3d4a0632681fea166e770781ddd2b81c.scope,task=uvicorn,pid=1480003,uid=0",
+    "Memory cgroup out of memory: Killed process 1480003 (uvicorn) total-vm:1568004kB, anon-rss:985724kB, file-rss:23644kB, shmem-rss:0kB, UID:0 pgtables:2204kB oom_score_adj:0"
+  ],
+  "journal_returncode": 0,
+  "free": "               total        used        free      shared  buff/cache   available\nMem:     12503744512  9657749504   615710720    67293184  2528600064  2845995008\nSwap:              0           0           0\n"
+}

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""서버 없이 파이썬만으로 길을 찾는다 — `road_graph_v1`(OSM 서울+인접 도시 차도·자전거 그래프) 위 최단경로. 2026-10-04.
+"""파이썬만으로 길을 찾는다 — 실제 자료 폴더의 MANIFEST가 출처·버전을 정한다.
+
+`default()`는 보행망이 있는 `road_graph_v2`를 먼저 읽고, 없으면 차도·자전거망인 v1을 읽는다.
+OSM 기준일은 각 자료의 `osm_data_at`이며, 합성 시험처럼 메타가 없을 때만 아래 기본 식별자를 쓴다.
 
 왜 만들었나
   택시·자전거·장소 사이 도보는 GraphHopper 서버(Java · 메모리 1~3GB)를 따로 띄워야 돌았다. 이동 담당이 같은 자료(`road_graph_v1` ·
@@ -14,8 +17,9 @@
 프로파일
   car   `car=1` 간선, 일방통행(`ow`) 지킴. 경로 선택 비용 = 시간(도로급 기본속도 · 있으면 OSM maxspeed). 실제 소요는 받는 쪽이 TOPIS 로 다시 잰다.
   bike  `bike=1` 간선, 자전거 일방(`bow`) 지킴. 비용 = 거리 × 도로급 계수(자전거길 선호 · 간선도로 기피).
-  foot  자동차전용(motorway·trunk) 빼고 **양방향** 거리. ★이 그래프에는 보행자 전용 길(계단·샛길)이 자전거 허용일 때만 들어 있다 —
-        그 길만으로 이어진 곳은 실제보다 멀게 나올 수 있다(거리는 하한이 아니라 **추정**). 경로 없음은 「길 없음」의 근거가 아니다.
+  foot  v2는 OSM 보행 통행 태그로 보행자 전용 길·계단·샛길을 포함한다. v1은 차도·자전거 길만 있어 걸음 길이 빠질 수 있다.
+        양방향 거리 비용에 계단 비용을 더한다. 응답 시간도 계단 속도를 반영하지만 고도·오르내림·횡단 대기는 반영하지 않는다.
+        거리·시간은 추정이며, 경로 없음은 「길 없음」의 근거가 아니다. 플래너의 최종 도보 시간은 이 응답 시간을 아직 쓰지 않는다.
 
 못 찾았을 때
   좌표가 지도 범위 밖이거나(`out_of_area`) 이어진 길이 없으면(`no_path`) `RouterDown` 을 낸다 — 받는 쪽은 라우터가 없을 때와 같이 근거없음·
@@ -47,7 +51,7 @@ BIKE_FACTOR = {"cycleway": 0.9, "living_street": 1.0, "residential": 1.0, "uncla
                "primary_link": 1.25, "trunk": 1.6, "trunk_link": 1.6, "path": 1.2, "footway": 1.2, "pedestrian": 1.15,
                "track": 1.2}
 FOOT_BLOCK = {"motorway", "motorway_link", "trunk", "trunk_link"}
-FOOT_MPS = 1.39                                    # GraphHopper foot 기본(5 km/h) — 엔진은 foot 거리만 쓴다
+FOOT_MPS = 1.39                                    # 보행망 평지 속도(약 5 km/h) — 일정 속도로 정규화할 기준
 BIKE_MPS = 15 / 3.6
 STEPS_FACTOR = 1.5                                 # 계단은 같은 거리를 1.5배로 친다(느리고 힘들다)
 STEPS_MPS = FOOT_MPS * 0.6
@@ -125,10 +129,16 @@ class GraphRouter:
         got = getattr(self, "_source_id", None)
         if got is None:
             got = SOURCE_ID
+            self._graph_version = "road_graph_v1"
             try:
                 m = json.loads((self.dir / "MANIFEST.json").read_text(encoding="utf-8"))
+                self._graph_version = m.get("version") or "road_graph_v1"
                 day = str(m.get("osm_data_at") or "")[:10]
-                if day:
+                if str(m.get("version") or "").startswith("walk_graph_seoul"):
+                    # 서울시 도보 네트워크(원자료 갱신일) + 계단 표시에 쓴 OSM 기준일
+                    wd = (m.get("work_dates") or [""])[-1]
+                    got = f"seoul_walk_network@{wd}" + (f"+osm_steps@{day}" if day else "")
+                elif day:
                     got = f"osm_road_graph{'_v2' if m.get('version') == 'road_graph_v2' else ''}@{day}"
             except (OSError, ValueError, AttributeError, TypeError):
                 pass
@@ -142,6 +152,7 @@ class GraphRouter:
         self._loaded = False
         self.calls = 0
         self.load_seconds = None
+        self._turns_loaded, self._turn_signature, self._turn_tables = False, None, None
 
     @classmethod
     def default(cls):
@@ -151,6 +162,12 @@ class GraphRouter:
         base = Path(PROCESSED) / "mobility"
         # ☆`[2026-10-04]` v2(걸음 길 포함)가 있으면 그것, 없으면 v1(차도·자전거만 — 걸음은 차도 위로만 간다)
         d = (base / "road_graph_v2" if (base / "road_graph_v2" / "edges.jsonl.gz").exists() else base / "road_graph_v1").resolve()
+        return cls.shared(d)
+
+    @classmethod
+    def shared(cls, graph_dir):
+        """폴더마다 하나 — default() 와 같은 이유(읽기 전용 그래프를 판정기마다 새로 올리지 않는다). 서울시 도보 그래프도 이것으로 연다."""
+        d = Path(graph_dir).resolve()
         key = str(d)
         with _SHARED_LOCK:
             r = _SHARED.get(key)
@@ -165,7 +182,10 @@ class GraphRouter:
         return bool(self.dir and (self.dir / "nodes.jsonl.gz").exists() and (self.dir / "edges.jsonl.gz").exists())
 
     def info(self):
-        return {"version": "local:road_graph_v1", "source_id": SOURCE_ID} if self.available() else None
+        if not self.available():
+            return None
+        source = self.source_id
+        return {"version": f"local:{self._graph_version}", "source_id": source}
 
     def warm(self, profiles=("car", "foot", "bike")):
         """미리 올려 둔다 — 첫 길 묻기가 10초 가까이 멈추지 않게. 서버 기동 뒤 백그라운드 스레드에서 부른다. 실패는 호출한 쪽이 센다."""
@@ -184,6 +204,9 @@ class GraphRouter:
             t0 = time.monotonic()
             if not self.available():
                 raise RouterDown(f"도로 그래프 자료가 없다({self.dir})")
+            if self._records is None:
+                from .turn_restrictions import graph_signature
+                self._graph_signature = graph_signature(self.dir)
             nodes = self._records["nodes"] if self._records is not None else _read_jsonl(self.dir / "nodes.jsonl.gz")
             edges = self._records["edges"] if self._records is not None else _read_jsonl(self.dir / "edges.jsonl.gz")
             self.nid, self.nlat, self.nlon = {}, array.array("d"), array.array("d")
@@ -384,8 +407,10 @@ class GraphRouter:
         return near[:6]
 
     # ── 길 찾기 ───────────────────────────────────────────────────────────────
-    def route(self, s, e, profile="car", via=None):
-        """s, e = (lng, lat). GraphHopper `/route` 응답 모양으로 돌려준다. 못 찾으면 RouterDown."""
+    def route(self, s, e, profile="car", via=None, car_cost=None):
+        """s, e = (lng, lat). GraphHopper `/route` 응답 모양으로 돌려준다. 못 찾으면 RouterDown.
+
+        car_cost(선택, 자동차만) — 출발 시각에 묶인 길 선택 비용(car_route_cost.BucketCost). 없으면 도로급 고정 속도로 고른다."""
         if via:
             raise RouterDown("via(경유지)는 이 라우터가 지원하지 않는다")
         if profile not in ("car", "bike", "foot"):
@@ -394,8 +419,36 @@ class GraphRouter:
         self.calls += 1
         deg, to, pe, w = self._adjacency(profile)
         Ss, Ts = self._snap_many(profile, s[0], s[1]), self._snap_many(profile, e[0], e[1])
-        S, T = Ss[0], Ts[0]                                  # 가장 가까운 붙임 — 응답의 snap_m 과 휴리스틱 목표
-        cost = lambda ed: self._cost(profile, ed)           # noqa: E731
+        S, T = Ss[0], Ts[0]                                  # 가장 가까운 붙임 — 응답의 초기 snap_m
+        def selection_evidence(selected_start, selected_end):
+            ranks = [Ss.index(selected_start), Ts.index(selected_end)]
+            return {'candidate_counts': [len(Ss), len(Ts)],
+                    'selected_candidate_ranks': ranks,
+                    'used_non_nearest': [rank > 0 for rank in ranks],
+                    'nearest_snap_m': [round(Ss[0].dist, 1), round(Ts[0].dist, 1)],
+                    'physical_access_verified': False}
+        turn_policy = None
+        if profile == 'car':
+            from .turn_restrictions import load
+            turn_policy = load(self)
+            if turn_policy is not None:
+                from .car_turn_search import pieces
+                parts, arcs, cost_seconds, selected_start, selected_end = pieces(self, Ss, Ts, turn_policy, car_cost=car_cost)
+                path = self._response(parts, profile, s, e)
+                path['snap_m'] = [round(selected_start.dist, 1), round(selected_end.dist, 1)]
+                path['quality'] = {'access_max_m': round(max(selected_start.dist, selected_end.dist), 1),
+                                   'arterial_pct': 0.0, 'optimistic': False}
+                path['turn_restrictions'] = dict(turn_policy[2], arc_codes=arcs,
+                                                search_cost_seconds=cost_seconds,
+                                                snap_selection=selection_evidence(selected_start, selected_end))
+                path['route_cost'] = car_cost.evidence() if car_cost is not None else {'kind': 'static_class_speed'}
+                return {'paths': [path]}
+        if profile == 'car' and car_cost is not None:
+            deg, to, pe, _w = self._adjacency(profile)
+            w = car_cost.weights()
+            cost = car_cost.cost
+        else:
+            cost = lambda ed: self._cost(profile, ed)       # noqa: E731
         L = lambda ed: self._geom(ed)[1][-1]                # noqa: E731  간선 형상 길이(m)
 
         # 시작: 간선 위 점에서 나갈 수 있는 끝점 / 도착: 들어와 닿을 수 있는 끝점. 값 = (비용, 어느 끝, 어느 붙임)
@@ -444,14 +497,17 @@ class GraphRouter:
                 if c is not None and (direct is None or c < direct):
                     direct, direct_pair = c, (a, b)
 
-        tx, ty = T.pt
         # 비용 단위 대비 직선거리의 하한 — A* 가 틀린 답을 내지 않으려면 실제 비용보다 작아야 한다.
-        #   car 는 초(최고 100 km/h = 27.8 m/s) · bike 는 거리×계수(최소 0.9) · foot 은 거리. 목표 점이 여럿(SNAP_TIE_M 안)이라 그만큼 뺀다
+        #   car 는 초(_maxspeed 상한 100 km/h < 28 m/s) · bike 는 거리×계수(최소 0.9) · foot 은 거리.
+        #   SNAP_TIE_M 은 요청 좌표에서 떨어진 거리의 차이이며, 후보끼리 떨어진 거리의 상한이 아니다.
+        #   실제 도착 후보의 그래프 끝점과 남은 간선 비용을 모두 비교한다.
+        #   끝점 1m 이내의 비용을 0으로 취급하는 위 규칙도 goals에 이미 반영돼 있다.
+        target_nodes = tuple(((self.nlon[n], self.nlat[n]), value[0]) for n, value in goals.items())
         hscale = {"car": 1.0 / 28.0, "bike": 0.9}.get(profile, 1.0)
         if self.force_dijkstra:                              # 시험용 - 휴리스틱을 끈 순수 다익스트라(A* 가 같은 답을 내는지 대조)
             h = lambda n: 0.0                                # noqa: E731
         else:
-            h = lambda n: max(hav((self.nlon[n], self.nlat[n]), (tx, ty)) - (SNAP_TIE_M if profile == "car" else 0.0), 0.0) * hscale  # noqa: E731
+            h = lambda n: min(hav((self.nlon[n], self.nlat[n]), point) * hscale + remaining for point, remaining in target_nodes)  # noqa: E731
 
         dist, parent, heap = {}, {}, []
         for n, (c0, _side, _sn) in starts.items():
@@ -487,6 +543,7 @@ class GraphRouter:
         # 되짚어 조각 만들기: [(edge, 좌표열)]
         pieces = []
         if best_node is None:                                # 같은 간선 위 직행
+            S, T = direct_pair
             pieces.append((direct_pair[0].e, self._cut(*direct_pair)))
         else:
             n, chain = best_node, []
@@ -502,9 +559,12 @@ class GraphRouter:
                 pieces.append((ed, list(reversed(pts)) if rev else list(pts)))
             _c1, side1, snap1 = goals[best_node]
             pieces.append((snap1.e, self._part(snap1, side1, entering=True)))
+            S, T = snap0, snap1
 
         path = self._response(pieces, profile, s, e)
         path["snap_m"] = [round(S.dist, 1), round(T.dist, 1)]
+        if profile == "car":
+            path["route_cost"] = car_cost.evidence() if car_cost is not None else {"kind": "static_class_speed"}
         # ☆`[2026-10-04]` 낙관 가능 표시 — GraphHopper 기록보다 크게 짧게 나온 두 쌍을 지도 태그와 코덱스 교차 판정으로 따져 봤더니
         #   「우리 로직이 더 나아서」가 아니라 ①길 밖 직선 접근 구간이 전체의 절반이 넘거나(고가 보행로 위 점이 85 m 밖 길에 붙음)
         #   ②보도·횡단 정보 없이 큰길 중앙선을 따라 걷는 경로여서였다. 거리 보정이 아니라 **불확실성을 드러낸다**(근거 문구 · 대체 비교).
@@ -521,6 +581,11 @@ class GraphRouter:
             acc = S.dist + T.dist
             path["distance"] = round(path["distance"] + acc, 2)
             path["time"] += int(round(acc / FOOT_MPS * 1000))
+            path["foot_timing"]["seconds"] += acc / FOOT_MPS
+        if profile == 'car':
+            path['turn_restrictions'] = {'status': 'unavailable', 'applied_relations': 0,
+                                         'complete_road_rules': False,
+                                         'snap_selection': selection_evidence(S, T)}
         return {"paths": [path]}
 
     def _cut(self, S, T):
@@ -543,7 +608,7 @@ class GraphRouter:
 
     def _response(self, pieces, profile, s, e):
         coords, det_way, det_cls = [], [], []
-        dist_m = secs = 0.0
+        dist_m = secs = stairs_m = 0.0
         for ed, pts in pieces:
             clean = [pts[0]]
             for p in pts[1:]:
@@ -571,8 +636,14 @@ class GraphRouter:
                 secs += length / BIKE_MPS
             else:
                 secs += length / (STEPS_MPS if self.eflag[ed] & F_STEPS else FOOT_MPS)
+                if self.eflag[ed] & F_STEPS:
+                    stairs_m += length
         if not coords:                                        # 같은 점 — 0 m 경로
             coords = [list(s), list(e)]
-        return {"distance": round(dist_m, 2), "time": int(round(secs * 1000)),
-                "points": {"type": "LineString", "coordinates": [list(c) for c in coords]},
-                "details": {"osm_way_id": det_way, "road_class": det_cls}}
+        result = {"distance": round(dist_m, 2), "time": int(round(secs * 1000)),
+                  "points": {"type": "LineString", "coordinates": [list(c) for c in coords]},
+                  "details": {"osm_way_id": det_way, "road_class": det_cls}}
+        if profile == "foot":
+            # 내부 시간 계약: 거리와 계단 시간은 별개다. 일정의 평지 속도로 정규화할 때도 계단 시간을 보존한다.
+            result["foot_timing"] = {"flat_mps": FOOT_MPS, "stairs_m": stairs_m, "seconds": secs}
+        return result

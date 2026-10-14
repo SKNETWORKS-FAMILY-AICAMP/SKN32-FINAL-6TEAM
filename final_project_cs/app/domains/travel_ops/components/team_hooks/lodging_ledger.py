@@ -5,7 +5,8 @@
     숙소 팀 "보여 준 후보 · 고른 숙소의 출처는 내 원장이 안다"          →  조립 때 `register()`
 
 ★미등록이면 지금 길 그대로다 — 기억은 안 하고(빈 목록 · 0), 들여놓기는 `None`(부르는 쪽은 `place_id` 를 비운 채로 간다).
-  값을 지어내지 않는다. 부르는 곳(대화 부품 · 고르기 처리)은 아직 없다 — `wiki/records/reports/2026-10-12_숙소항공_원장_연결안내.md`.
+  값을 지어내지 않는다. `[2026-10-13]` 부르는 곳: 보여 주기 — 일정 적용기의 「다른 후보」 제안(`actions/itinerary_actions._ask_options`), 고르기 — `planning/pending.choose`,
+  읽기 — `read.offers_shown`.
 """
 from __future__ import annotations
 
@@ -17,21 +18,24 @@ _remember: Callable[..., int] | None = None
 _shown: Callable[..., list[str]] | None = None
 _adopt: Callable[..., dict[str, Any] | None] | None = None
 _item_key: Callable[[str, dict[str, Any]], str | None] | None = None
+_offers: Callable[..., list[dict[str, Any]]] | None = None
 
 
 def register(*, remember: Callable[..., int], shown: Callable[..., list[str]],
-             adopt: Callable[..., dict[str, Any] | None], item_key: Callable[[str, dict[str, Any]], str | None]) -> None:
+             adopt: Callable[..., dict[str, Any] | None], item_key: Callable[[str, dict[str, Any]], str | None],
+             offers: Callable[..., list[dict[str, Any]]] | None = None) -> None:
     """조립 때 한 번. 넷을 다 줘야 한다 — 빠뜨리면 여기서 `TypeError` 로 바로 드러난다.
-    `[2026-10-12]` develop 의 조립 방식(요청마다 묶음 표 · `collect_services`)에 맞춘다 — 요식 · 활동 자리와 같다."""
+    `[2026-10-12]` develop 의 조립 방식(요청마다 묶음 표 · `collect_services`)에 맞춘다 — 요식 · 활동 자리와 같다.
+    `[2026-10-13]` `offers` — 보여 준 후보의 key · 이름(`read.offers_shown` 이 읽는다). 안 주면 빈 목록."""
     if collect_registration("lodging_ledger", locals()):
         return
-    global _remember, _shown, _adopt, _item_key
-    _remember, _shown, _adopt, _item_key = remember, shown, adopt, item_key
+    global _remember, _shown, _adopt, _item_key, _offers
+    _remember, _shown, _adopt, _item_key, _offers = remember, shown, adopt, item_key, offers
 
 
 def clear() -> None:
-    global _remember, _shown, _adopt, _item_key
-    _remember = _shown = _adopt = _item_key = None
+    global _remember, _shown, _adopt, _item_key, _offers
+    _remember = _shown = _adopt = _item_key = _offers = None
 
 
 def _bound(key: str, legacy: Any) -> Any:
@@ -57,6 +61,12 @@ def remember_shown(conn, tenant_id: str, trip_id: Any, key: str, options: list[d
 def shown_keys(conn, tenant_id: str, trip_id: Any, key: str) -> list[str]:
     """그 항목에 보여 준 후보 key. ★미등록이면 빈 목록(모름 — 부르는 쪽은 항목 상세의 `shown` 을 쓴다)."""
     selected = _bound("shown", globals()["_shown"])
+    return selected(conn, tenant_id, trip_id, key) if selected is not None else []
+
+
+def shown_offers(conn, tenant_id: str, trip_id: Any, key: str) -> list[dict[str, Any]]:
+    """그 항목에 보여 준 후보의 key · 이름. ★미등록이면 빈 목록. `[2026-10-13]`"""
+    selected = _bound("offers", globals()["_offers"])
     return selected(conn, tenant_id, trip_id, key) if selected is not None else []
 
 

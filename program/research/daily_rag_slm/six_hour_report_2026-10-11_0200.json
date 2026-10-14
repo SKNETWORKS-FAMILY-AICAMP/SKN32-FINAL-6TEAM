@@ -1,0 +1,172 @@
+{
+  "recorded_at_utc": "2026-10-10T17:09:48.318855+00:00",
+  "observed_at_utc": "2026-10-10T17:05:01.567468+00:00",
+  "report": "final_project_cs\\wiki\\records\\reports\\2026-10-11_0200_six-hour-gpu-arm-report.md",
+  "previous_report": "final_project_cs/wiki/records/reports/2026-10-10_2000_six-hour-gpu-arm-report.md",
+  "new_answers_collected": 34284,
+  "new_main_answers": 34272,
+  "new_connectivity_answers": 12,
+  "new_errors": 0,
+  "new_unparsed": 0,
+  "compressed_archive_files_verified": 160,
+  "baseline_local_input_and_answer_files_verified": 16,
+  "collection": {
+    "observed_at_utc": "2026-10-10T17:01:03.955431+00:00",
+    "verified_files": 124,
+    "gpu_rows": 34284,
+    "arm_new_batches": 18,
+    "arm_passed": 198,
+    "arm_total": 198
+  },
+  "order_comparisons_completed": 14,
+  "order_comparisons_all_limits_passed": 0,
+  "order_same_development_items": true,
+  "independent_validation": false,
+  "adoption": false,
+  "A": {
+    "observed_at_utc": "2026-10-10T17:05:01.567468+00:00",
+    "gpu": "3068 MiB, 88 %",
+    "registered": 184,
+    "status_counts": {
+      "completed": 140,
+      "completed_with_errors": 28,
+      "failed": 2,
+      "running": 1
+    },
+    "pids": {
+      "queue": {
+        "pid": 342497,
+        "alive": true,
+        "lock_held": true
+      },
+      "dispatcher": {
+        "pid": null,
+        "alive": false,
+        "lock_held": false
+      }
+    },
+    "initial_idle_observed": true,
+    "added_conditions": 14,
+    "added_rows": 30618,
+    "ready_pending": 13,
+    "current": "e4bqat_original_d3_orderreverse_a1",
+    "saved": 179,
+    "expected": 360,
+    "free_bytes": 3734601728
+  },
+  "B": {
+    "observed_at_utc": "2026-10-10T17:05:01.562559+00:00",
+    "gpu": "10003 MiB, 100 %",
+    "status_counts": {
+      "completed": 1,
+      "running": 1
+    },
+    "pids": {
+      "queue": {
+        "pid": 2811255,
+        "alive": true,
+        "lock_held": true
+      },
+      "dispatcher": {
+        "pid": 2811254,
+        "alive": true,
+        "lock_held": true
+      }
+    },
+    "initial_idle_observed": true,
+    "prior_queues_all_finished": true,
+    "added_main_conditions": 8,
+    "added_main_rows": 17496,
+    "added_connectivity_rows": 12,
+    "ready_pending": 7,
+    "current": "oos1_d3_orderreverse",
+    "saved": 45,
+    "expected": 360,
+    "free_bytes": 5560442880
+  },
+  "ARM": {
+    "observed_at_utc": "2026-10-10T17:04:59.033943+00:00",
+    "resource_summary": {
+      "window_s": 300.0718497929629,
+      "cpu_pct_two_cores": 84.14012449824976,
+      "host_cpu_busy_pct": 93.21142742501935,
+      "host_steal_pct": 0.1879500327341441,
+      "memory_current_bytes": 7589908480,
+      "above_20_contiguous_seconds": 84491.847848295,
+      "five_minute_target_verified": true
+    },
+    "active": {
+      "at": "2026-10-10T17:00:19.910822+00:00",
+      "job_id": "e4bt_q4_d3_nocache",
+      "engine_pid": 266244,
+      "expected": 360,
+      "saved": 324
+    },
+    "service": "ActiveState=active\nMainPID=171515\nNRestarts=0\nMemoryCurrent=7589646336\nCPUQuotaPerSecUSec=1.800000s\nAllowedCPUs=0-1\nMemoryMax=10737418240\n",
+    "benchmark_registered": 14,
+    "benchmark_completed": 7,
+    "app_counts": {
+      "failed": 3,
+      "completed": 57,
+      "pending": 62,
+      "running": 1
+    },
+    "app_ready_pending": 17,
+    "app_blocked_pending": 45,
+    "app_estimates": {
+      "language_style": 1325.664898646659
+    },
+    "app_new_delta": {
+      "new_batches": 18,
+      "passed": 198,
+      "total": 198,
+      "median_seconds": 1117.0691812495352,
+      "max_seconds": 1410.1719340670388,
+      "not_independent_accuracy": true
+    },
+    "host_memory_total_bytes": 12503744512,
+    "host_memory_available_bytes": 5910446080,
+    "host_memory_used_pct": 52.73059142941004,
+    "disk": {
+      "total": 102888095744,
+      "used": 58123489280,
+      "available": 44747829248
+    },
+    "units": {
+      "tripilot-arm-cd.timer": "active",
+      "tripilot-arm-refill.timer": "active",
+      "tripilot-arm-work-queue.service": "active",
+      "tripilot-arm-serving.service": "active"
+    },
+    "current_app_revision": "210b020067a1e42f2622262adeb60d1f3d371668",
+    "controller_sha256": "1926cfea24c0e1cb6fccb80018b96fca1d01a3ec9a1c9d4e668df81a90945907",
+    "engine": {
+      "observed_at_utc": "2026-10-10T17:06:49.634040+00:00",
+      "pid": 266244,
+      "executable": "llama-server",
+      "arguments_count": 21,
+      "engine_resident": true
+    }
+  },
+  "E": {
+    "human_review_done": 0,
+    "human_review_total": 158,
+    "independent_holdout_frozen": false
+  },
+  "Saluki": {
+    "our_finetune_completed": 0,
+    "our_finetune_total": 1,
+    "latest_training_evidence": "program/research/daily_rag_slm/saluki_finetune_2026-10-09.json",
+    "blocking_conditions": "Same checkpoint trainable weights, CUDA backward and 16GB training memory/space not demonstrated; do not substitute base weights"
+  },
+  "local": {
+    "observed_at_utc": "2026-10-10T17:09:48.318855+00:00",
+    "free_bytes": 525144064,
+    "archive_strategy": "Compressed tar only; deduplicate frozen inputs within archive; recount in memory, no model deletion"
+  },
+  "daily_research": {
+    "date": "2026-10-11",
+    "research_completed": false,
+    "reason": "02h maintenance only; keep existing daily 10h research without duplicate/early execution"
+  }
+}

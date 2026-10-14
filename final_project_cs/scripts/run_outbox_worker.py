@@ -23,8 +23,8 @@ def main() -> int:
                         help="이 테넌트의 통지도 **바깥으로** 보낸다(기본은 운영 테넌트 하나만)")
     args = parser.parse_args()
 
-    # ★`trip.notice`(일정 변경 통지)는 디스코드 웹훅으로 나간다(v11 §6-A). 웹훅이
-    #   비어 있으면 **실패로 남긴다** — 보낸 적 없는 알림을 `delivered` 로 찍지 않는다.
+    # ★고객 알림은 아래 CustomerNoticeRouter가 고객 연결 여부에 따라 보낸다.
+    #   공용 DiscordWebhook은 문구 생성에 재사용하며 고객 알림의 우회 발송에는 쓰지 않는다.
     from app.core.settings import REPO_ROOT, get_settings
     from app.infrastructure.notify import DiscordWebhook, PhraseCache
     from app.infrastructure.notify.translate import make_translator
@@ -45,7 +45,7 @@ def main() -> int:
                                translator=make_translator(chat) if chat else None,
                                phrases=phrases)
     # ★`[2026-10-05]` 고객별 발송 — 스위치(`travel.notice_per_customer_enabled`, 기본 꺼짐)가 켜져 있으면 여행 알림을 **고객이 연결한 곳 한 곳**(디스코드 웹훅 · 텔레그램)으로 보낸다.
-    #   꺼져 있으면 아래 래퍼가 그대로 위의 운영자 채널 발행자에 넘긴다(옛 동작). 보내면 안 되는 테넌트 · 연결 없음 · 막힘은 `skipped`(`app/domains/travel_ops/components/watch/notice_routing.py`).
+    #   꺼져 있으면 외부 발송만 `skipped` 로 남기고 앱 알림은 유지한다. 고객 알림을 위의 운영자 채널로 우회하지 않는다. 보내면 안 되는 테넌트 · 연결 없음 · 막힘도 `skipped`(`app/domains/travel_ops/components/watch/notice_routing.py`).
     from app.core.settings import get_guardrails
     from app.domains.travel_ops.components.watch.notice_routing import CustomerNoticeRouter
 
@@ -65,4 +65,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

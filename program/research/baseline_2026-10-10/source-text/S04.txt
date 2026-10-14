@@ -1,0 +1,374 @@
+SCM Patterns publisher page
+https://www.informit.com/store/software-configuration-management-patterns-effective-9780201741179
+
+if(isEnableGA){
+			if(currentEnvironment == 'QA'){
+}else{
+}
+			}
+Home
+>
+Store
+View Larger Image
+Register your product
+to gain access to bonus material or receive a coupon.
+Software Configuration Management Patterns: Effective Teamwork, Practical Integration
+By
+Steve Berczuk
+,
+Brad Appleton
+Published Nov 4, 2002
+ by
+Addison-Wesley Professional
+.
+Book
+Sorry, this book is no longer in print.
+Not for Sale
+eBook
+Your Price: $28.79
+List Price: $35.99
+Includes EPUB and PDF
+About eBook Formats
+This eBook includes the following formats, accessible from your
+Account
+page after purchase:
+EPUB
+The open industry format known for its reflowable content and usability on supported mobile devices.
+PDF
+The popular standard, used most often with the free
+Acrobat® Reader®
+software.
+This eBook requires no passwords or activation to read. We customize your eBook by discreetly watermarking it with your name, making it uniquely yours.
+Watermarked eBook FAQ
+eBook Download Instructions
+
+Add to cart
+Description
+Extras
+Sample Content
+Updates
+More Information
+Description
+Copyright 2003
+Dimensions: 7-3/8" x 9-1/4"
+Pages: 256
+Edition: 1st
+Book
+ISBN-10: 0-201-74117-2
+ISBN-13: 978-0-201-74117-9
+Effective software configuration management (SCM) strategies promote a healthy, team-oriented culture that produces better software.
+Software Configuration Management Patterns
+alleviates software engineers' most common concerns about software configuration managementperceived rigidity and an overemphasis on process.
+Through the use of patterns, the authors show that a properly managed workflow can avert delays, morale problems, and cost overruns. The patterns approach illustrates how SCM can be easily and successfully applied in small- to mid-size organizations. By learning how these patterns relate to each other, readers can avoid common mistakes that too often result in frustrated developers and reduced productivity.
+Key coverage includes instruction on how to:
+Develop the next version of a product while fixing problems with the current one.
+Develop code in parallel with other developers and join up with the current state of codeline.
+Identify what versions of code went into a particular component.
+Analyze where a change happened in the history of a component's development.
+Use current tools more effectively, and decide when to use a manual process.
+Incrementally introduce good practices into individual workspaces and throughout the organization.
+Identify crucial aspects of the software process so that team projects can run smoothly.
+Build and foster a development environment focused on producing optimal teamwork and quality products.
+Software Configuration Management Patterns
+also includes a detailed list of SCM tools and thorough explanations of how they can be used to implement the patterns discussed in the book. These proven techniques will assist readers to improve their processes and motivate their workforce to collaborate in the production of higher quality software.
+0201741172B09202002
+
+Extras
+Web Resources
+Click below for Web Resources related to this title:
+Support Site
+
+Sample Content
+Downloadable Sample Chapter
+Click below for Sample Chapter(s) related to this title:
+Sample Chapter 
+  6
+Table of Contents
+List of Figures.
+Foreword.
+Preface.
+Contributor's Preface.
+Acknowledgments.
+Introduction.
+I. BACKGROUND.
+1. Putting a System Together.
+Balancing Stability and Progress.
+The Role of SCM in Agile Software Development.
+SCM in Context.
+SCM as a Team Support Discipline.
+What Software Configuration Management Is.
+The Role of Tools.
+The Larger Whole.
+This Book's Approach.
+Unresolved Issues.
+Further Reading.
+2. The Software Environment.
+General Principles.
+What Software Is About.
+The Development Workspace.
+Architecture.
+The Organization.
+The Big Picture.
+Further Reading.
+3. Patterns.
+About Patterns and Pattern Languages.
+Patterns in Software.
+Configuration Management Patterns.
+Structure of Patterns in This Book.
+The Pattern Language.
+Overview of the Language.
+Unresolved Issues.
+Further Reading.
+II THE PATTERNS.
+4. Mainline.
+Simplify Your Branching Model.
+Unresolved Issues.
+Further Reading.
+5. Active Development Line.
+Define Your Goals.
+Unresolved Issues.
+Further Reading.
+6. Private Workspace.
+Isolate Your Work to Control Change.
+Unresolved Issues.
+Further Reading.
+7. Repository.
+One Stop Shopping.
+Unresolved Issues.
+Further Reading.
+8. Private System Build.
+Think Globally by Building Locally.
+Unresolved Issues.
+Further Reading.
+9. Integration Build.
+Good configuration management practice is the not the silver bullet to building systems on time, just as patterns, extreme programming, the Unified Process, or anything else that you might hear about. It is however, a part of the toolkit that most people ignore because they fear "process," often because of bad experiences in the past. (Weigers 2002)
+This book describes some common software configuration management practices. The book will be particularly interesting to software developers working in small teams who suspect that they are not using software configuration management as effectively as they can. The techniques that we describe are not tool specific. Like any set of patterns or best practices, the ease with which you can apply the patterns may depend on whether or not your tool provides explicit support for it.
+Why I wrote this book
+I started my software development career with a small R&D group that was based in the Boston area. Aside from the many interesting technical problems we had encountered as part of our jobs, we had the added twist of having joint development projects with a group in our parent company's home base in Rochester, New York. This experience helped me recognize early in my career that software development wasn't just about good design and good coding practices, but also about coordination among people in the same group, and even teams in different cities. Our group took the lead in setting up the mechanics of how we would share code and other artifacts of the development process. We did the usual things to make working together easier such as meetings, teleconferences and e-mail lists. The way that we set up our (and the remote team's) software configuration management system to share code played a very large part in making our collaboration easier.
+The people who set up the SCM process for out Boston group used techniques that seemed to have been tried throughout their careers. As I move on to other organizations, I was amazed to find how may places were struggling with the same common problems— problems that I knew had good solutions. This was particularly true because I have been with a number of startups that were only one or two years old when I joined. One to two years is often the stage in a startup where you are hiring enough people that coordination and shared vision are difficult goals to attain.
+A few years into my career, I discovered patterns. Eric Gamma, Richard Helm, Ralph Johnson, and John Vlissides were just finishing the book
+Design Patterns
+(Gamma et al. 1995), and the Hillside group was organizing the first Pattern Languages of Program (PLoP) conference. There is a lot of power in the idea of patterns since they are about using the right solution at the right time, and also because patterns are interdisciplinary; they are not just about domain or language specific coding techniques, but about how to build software from all perspectives, from the code to the team. I workshopped a number of papers at the various PLoP conferences that dealt with patterns at the intersection of design, coding, and configuration management (Steve Berczuk 1996b; Stephen P Berczuk 1996a, 1995; Appleton et al. 1998; Cabrera et al. 1999; Steve Berczuk and Appleton 2000).
+At one Pattern Languages of Programming (PLoP) conference I met Brad Appleton, who is more of an SCM person than I am. We co-authored a paper about branching patterns (Appleton et al. 1998),just one aspect of SCM. After much encouragement from our peers, I started working on this book.
+I hope that this book helps you avoid some common mistakes, either by making you aware of these approaches, or by providing you with documentation you can use to explain methods that you already know about to others in your organization.
+Who should read this book
+I hope that anyone who builds software and uses a configuration management system can learn from this book. The details of the configuration management problem change depending on the types of systems that you are building, the size of the teams, and the environment that you work in. Since it's probably impossible to write a book that will address everyone's needs and also keep everyone's interest, I had to limit what I was talking about. This book will be most valuable to someone who is building software, or managing a software project, in a small to medium size organization where there is not a lot of defined process. If you are in small company, a startup, or in a small project team in a larger organization, you will benefit most from the lessons in this book. Having said that, even if your organization has a very well defined, heavy, process, that seems to be impeding progress, you'll be able to use the patterns in this book to better focus on the key tasks of SCM.How to read this book.
+The introduction explains some basic concepts for software configuration management (SCM) and also the notation that the diagrams use. Chapter 1 introduces the software configuration management concepts that I use in this book. Chapter 2 talks about some of the forces that influence decisions that you make about what sort of SCM environment that you have. Chapter 3 introduces the concept of patterns and the patterns in this book and how they relate to each other. The rest of the book con-sists of patterns that illustrate problems and solutions to common SCM problems.
+Chapters 1 and 2 define the general problems that this book addresses. To understand the how the patterns fit together, you should read chapter 3 to get an overview of the language. After you have read the first 3 chapters, you can browse the patterns in the rest of the book, starting with an interesting one, and following the ones that relate to your problem. Another approach is to read the patterns in order and form a mental picture of the connections between them.The references to the other patterns in the book appear in the introductory paragraph for each section, and in the "Unresolved Issues" section at the end of each chapter, using a presentation like this: PatternRefparatext(). The number in parantheses is the chapter number that contains the patterns.
+Since this is a large field to cover, some of the context and unresolved issues sections don't refer to other patterns, either in the book, or elsewhere, since they haven't been documented. In this case you will see a description about what a pattern might cover.
+Origins of this material
+Much of the material in this book has its origins in papers that were written for various Pattern Languages of Programs conferences by myself, Brad Appleton, Ralph Cabrera, and Robert Orenstein. The patterns here have been greatly revised from the original material, but it's appropriate to mention these papers here to acknowledge the roles of others to this work: "Streamed Lines: Branching Patterns for Parallel Software Development" (Appleton et al. 1998) , "Software Reconstruction: Patterns for Reproducing the Build" (Cabrera et al. 1999), "Configuration Management Patterns" (Steve Berczuk 1996b).
+About the photos
+The photos that start each chapter are from the the Library Of Congress. All of the photos are from the first half of the twentieth century. With the exception of one photo (the photo for PatternRefparatext), they are from the collection: Depression Era to World War II ~ FSA/OWI ~ Photographs ~ 1935-1945: America from the Great Depression to World War II: Photographs from the FSA and OWI, ca. 1935-1945. I chose these pictures because I wanted to provide a visual metaphor for the patterns. Software is an abstract concept, but many of the problems that we solve, particularly the ones about teams, are similar to real world problems. I also have always had an interest in photography and history.
+— Steve Berczuk
+Why I co-wrote this book with Steve
+I began my software development career in 1987 as a part-time software tools devel-oper to pay for my last year of college. Somehow it "stuck" because I've been doing some form of tool development ever since (particularly SCM tools), even when it wasn't my primary job. I even worked (briefly) for a commercial SCM tool vendor, and part of my job was to stay "current" on the competition. So I amassed as much knowledge as I could about other SCM tools on the market. Even after I changed jobs, I continued my SCM pursuits, and frequented various tool user groups on the Internet.
+At one time, I longed to advance the "state of the art" in SCM environments, and kept up with all the latest research. I soon became frustrated with the vast gap between the "state of the art" and the "state of the practice." I concluded I could do more good by helping advance the state of the practice to better utilize available tools. Not long after that, I discovered software patterns and the patterns community. It was clear these guys were "onto" something important in their combination of analysis and storytelling for disseminating recurring best practices of software design.
+At the time, there weren't many people in the design patterns community that were trying to write-up SCM patterns. SCM is, after all, the "plumbing of software development" to a lot of programmers: everyone acknowledge that they need it, but no one wants to have to dive into it too deeply and get their hands entrenched in it. They just want it to work, and to not have to bother with it all that much.
+It didn't take long for me to "hook up" with Steve Berczuk. We wrote several SCM patterns papers together (with Ralph Cabrera) as part of my ACME project at acme.bradapp.net, and later decided to work on this book. We hope this small but cohesive set of core patterns about integration and teamwork helps the unsuspecting developer-cum-project-lead to survive and thrive in successfully leading and coordinating their team's collaborative efforts and integrating the results into working software.
+Thank you to my wife Maria for her unending love and support (and our daughter Kaeley), and to my parents for their encouragement. Thanks also to my former manager Arbela for her encouragement, support and friendship.
+—  Brad Appleton
+.
+0201741172P07012002
+Foreword
+Untitled Document
+Those of you familiar with my work may be asking yourselves why an expert on J2EE 
+software architecture would be writing a preface for a book on software configuration 
+management (SCM). After all, the two disciplines couldn't be farther apart, could 
+they? J2EE architecture seems lofty and exalted, while SCM might appear to be 
+something that is down in the muck of the trenches of software development. In 
+fact, nothing could be further from the truth. Over the years, I've often found 
+that customers that I work with who have problems with J2EE application architecture 
+usually have serious problems with SCM as well.
+The reasons for this curious coincidence are twofold. First, many people have 
+  a hard time dealing with change in general-be it moving from a set of architectural 
+  practices that no longer apply in a new environment like J2EE, or moving from 
+  a software development process that worked in one environment but may not work 
+  in all environments as well. Thus they feel that if their SCM processes worked 
+  in their last project, they must work in their current project-regardless of 
+  the fact that the technologies, timescales, and methods employed in designing 
+  and building the two projects may be radically different.
+Second, people often want a small set of simple rules to govern all their activities.
+However, taking a too simple approach usually leads to problems at the edge 
+  where abstractions meet reality. Whether the issue is understanding why a particular 
+  J2EE construct, such as an Entity EJB, may work in one circumstance but not 
+  another, or understanding why it is important for developers to have their own 
+  private workspaces in which to do development and integration when, after all, 
+  you have to integrate the code from your developers at the end of the day anyway, 
+  the problems are the same. In both cases, a simple rule (use Entity beans, use 
+  a build script) is perfectly good advice, but it must be tempered in the forge 
+  of experience because in its raw form it is too brittle to use.
+What mathematicians and scientists have begun to discover in the last two decades 
+  of research into chaos and complexity theory is that, although systems built 
+  with rules that are too few and too simple are usually stagnant and predictable, 
+  adding just a few more rules can often lead to systems of startling complexity 
+  and beauty. These are systems that can be seriously perturbed by outside forces 
+  and yet can reconstitute themselves so that the overall scheme remains whole. 
+  The book you hold in your hand provides a set of rules for SCM that have that 
+  kind of flexibility.
+Steve and Brad have developed their advice on dealing with SCM as a system 
+  of patterns. As they tellingly reveal early on, the strength of a system of 
+  patterns lies not in the individual patterns themselves but in the web of relationships 
+  between the patterns. The authors have developed an interlocking mesh of patterns 
+  that individually cover the most common practices in SCM. However, they more 
+  importantly show how the forces that lead to each solution are not completely 
+  resolved in each pattern-that you need to carefully consider how each SCM practice 
+  is tied to others, to keep from locking yourself into a prison of your own making.
+For example, you may want to look ahead to the wonderful advice given in their 
+  first pattern, Mainline (4). This seemingly prosaic advice (that developers 
+  should work on a single, stable code base) is something that I have found many 
+  groups, including those in large, successful corporations that have spent millions 
+  of dollars on implementing processes, have somehow failed to grasp. This is 
+  common sense, well applied, and that is what makes it uncommon.
+Likewise, the advice given in Private Workspace (6) and Private System Build 
+  (8) is nothing less than two of the key ideas that have made modern Java IDEs 
+  such as VisualAge for Java and IBM WebSphere Studio so useful and popular. When 
+  I am asked (as I am nearly daily) why developers should choose one of these 
+  IDEs over development at the command line with traditional code editors and 
+  compilers, the fact that these tools not only allow but actively encourage this 
+  style of development is a key factor in how I phrase my recommendations.
+So, I trust that you find this book as helpful and enlightening as I do. I've 
+  been introducing people to a number of the patterns from this book since their 
+  first publication in the Pattern Languages of Programs (PLoP) Conference proceedings 
+  several years ago, and I've found them to be invaluable in setting the stage 
+  for frank and constructive discussions about how to perform SCM the right way. 
+  These patterns have been my sword for cutting through the Gordian knot of complex 
+  SCM issues in tricky customer engagements-I hope that you will soon begin to 
+  wield this weapon as well.
+-Kyle Brown
+Author of Enterprise Java Programming with IBM WebSphere
+Index
+Click below to download the Index file related to this title:
+Index
+
+Updates
+Submit Errata
+
+More Information
+
+InformIT Promotional Mailings & Special Offers
+⚠
+I would like to receive exclusive offers and hear about products from InformIT and its family of brands. I can unsubscribe at any time.
+Email Address
+Corporate, Academic, and Employee Purchases
+International Buying Options
+Other Things You Might Like
+Building Safer Technology: A Field Guide to Failing Well
+By
+Yonatan Zunger
+,
+Lea Kissner
+,
+Neil Coles
+,
+Juan Pablo Hernandez
+,
+Harmony Mabrey
+,
+Phillip Misner
+eBook 
+                        $35.19
+Building Safer Technology: A Field Guide to Failing Well
+By
+Yonatan Zunger
+,
+Lea Kissner
+,
+Neil Coles
+,
+Juan Pablo Hernandez
+,
+Harmony Mabrey
+,
+Phillip Misner
+Book 
+                        $43.99
+Building Platforms That Scale: A Practical Guide to Composable Platform Engineering with Fractal Architecture
+By
+Angelo Agatino Nicolosi
+eBook 
+                        $31.99
+books, eBooks, and digital learning
+
+
+View
+Your Cart
+Join
+|
+Sign In
+Search
+Search
+
+View Your Cart
+👤
+Sign In
+Join
+Store
+Business & Management
+Certification
+Cloud Computing & Virtualization
+Data
+Digital Photography
+Engineering
+Graphics & Web Design
+Home & Office Computing
+Information Technology
+Mobile Application Development & Programming
+Networking
+Open Source
+Operating Systems, Server
+Programming
+Security
+Software Development & Management
+Web Development
+Web Services
+Formats
+Books
+eBooks
+Practice Tests
+Software
+Video
+Web Editions
+Deals & Promotions
+Video Training
+Imprints
+Addison-Wesley Professional
+Adobe Press
+Cisco Press
+FT Press
+IBM Press
+Microsoft Press Store
+Oracle Press Books
+Peachpit
+Pearson IT Certification
+Que Publishing
+Sams Publishing
+Explore
+About
+Affiliate Program
+Authors
+Chapters & Articles
+Deals & Promotions
+Popular Topics
+Product Registration
+Special Offers & Newsletter
+Support
+Video Training
+Community
+Press and Media Relations
+Product Review Team
+User Groups
+About
+Affiliates
+Cookies
+FAQ
+Legal Notice
+Ordering Information
+Pearson+
+Privacy
+Do Not Sell My Personal Information
+Press
+Promotions
+Support
+Write for Us
+©  2026 Pearson. All rights reserved, including those for text and data mining and training of artificial intelligence and similar technologies.

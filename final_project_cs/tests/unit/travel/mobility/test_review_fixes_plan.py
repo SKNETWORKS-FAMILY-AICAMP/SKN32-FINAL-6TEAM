@@ -46,14 +46,14 @@ def test_45_service_day_boundary_is_04_00_sharp():
     ☆앞서 「도착 마감 1분 전」 기준으로 바꿨다가 이 결정과 반대라 물렸다 — 새벽 04:00 정각 시작 항목 앞 이동은 만들지 않는다."""
     items = [_item("저녁", "P1", "2026-10-05T22:00:00+09:00", "2026-10-05T23:00:00+09:00"),
              _item("새벽", "P2", "2026-10-06T03:59:59+09:00", "2026-10-06T05:00:00+09:00")]
-    out = P.plan(PLACES, items, 2, {}, runtime=_rt())
+    out = P.plan(PLACES, items, 2, {}, runtime=_rt_with_walk())
     assert not out["not_linked"], out["not_linked"]
     assert [it for it in out["items"] if it["kind"] == "mobility"], "03:59:59 는 같은 운행일 — 두 장소가 300 m 라 도보 이동이 만들어진다"
     items[1] = _item("새벽", "P2", "2026-10-06T04:00:00+09:00", "2026-10-06T05:00:00+09:00")
-    out = P.plan(PLACES, items, 2, {}, runtime=_rt())
+    out = P.plan(PLACES, items, 2, {}, runtime=_rt_with_walk())
     assert [n["code"] for n in out["not_linked"]] == ["day_boundary"], out["not_linked"]
     items[1] = _item("아침", "P2", "2026-10-06T09:00:00+09:00", "2026-10-06T10:00:00+09:00")
-    assert P.plan(PLACES, items, 2, {}, runtime=_rt())["not_linked"][0]["code"] == "day_boundary"
+    assert P.plan(PLACES, items, 2, {}, runtime=_rt_with_walk())["not_linked"][0]["code"] == "day_boundary"
 
 
 def test_45_same_day_move_is_made_and_keeps_input_detail():
@@ -61,11 +61,17 @@ def test_45_same_day_move_is_made_and_keeps_input_detail():
              _item("이동", None, "2026-10-05T11:05:00+09:00", "2026-10-05T11:20:00+09:00", kind="mobility",
                    item_id="it-7", detail={"note": "원래 이동"}),
              _item("B", "P2", "2026-10-05T12:00:00+09:00", "2026-10-05T13:00:00+09:00")]
-    out = P.plan(PLACES, items, 2, {}, runtime=_rt())
+    out = P.plan(PLACES, items, 2, {}, runtime=_rt_with_walk())
     moves = [it for it in out["items"] if it["kind"] == "mobility"]
     assert len(moves) == 1 and moves[0]["route"] in out["routes"], out
-    assert moves[0].get("item_id") == "it-7" and moves[0].get("detail") == {"note": "원래 이동"}, \
+    assert moves[0].get("item_id") == "it-7" and moves[0]["detail"]["note"] == "원래 이동", \
         "우리 값으로 바꿔도 입력 이동의 다른 칸을 잃지 않는다"
+    assert set(moves[0]["detail"]) == {"note", "departure_context"}
+    context = moves[0]["detail"]["departure_context"]
+    route = out["routes"][moves[0]["route"]]
+    assert context["schema_version"] == 1
+    assert context["options"][route["planned"]]["eta_min"] == next(o["eta_min"] for o in route["options"]
+                                                                   if o["id"] == route["planned"])
     assert moves[0]["title"] == "첫 장소 → 둘째 장소", "시각·경로·제목은 우리 값"
 
 
@@ -178,10 +184,16 @@ def test_13_no_walk_path_drops_walk_with_reason():
     assert "no_walk_path" in [e["code"] for e in why.get("left_out", [])], why
 
 
-def test_13_router_down_falls_back_to_straight_line_estimate():
-    from app.domains.travel_ops.instances.mobility.engine.geo import meters
+def test_13_router_down_does_not_generate_a_walk_estimate():
     got, why = _walk_leg(_FootRouter(None, {"kind": "router_down", "error": "x"}))
-    walk = next(o for o in got[0]["options"] if o["id"] == "walk")
-    straight = meters(PLACES[0]["lat"], PLACES[0]["lon"], PLACES[1]["lat"], PLACES[1]["lon"])
-    detour = RULES["transfer"]["stop_station_walk"]["detour_factor"]["value"]
-    assert walk["walk_m"] == int(round(straight * detour)), "라우터가 못 닿은 것은 길이 없다는 근거가 아니다"
+    assert got is None
+    excluded = next(x for x in why['left_out'] if x['code'] == 'walk_source_unavailable')
+    assert excluded['walk_basis']['status'] == 'unavailable'
+    assert excluded['walk_basis']['reason'] == 'router_down'
+
+
+def _rt_with_walk():
+    """날짜·입력 보존 시험에 명시적인 합성 보행망 응답을 공급한다."""
+    rt = _rt()
+    rt._v.bike_router = _FootRouter({"distance_m": 300})
+    return rt

@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-10-11T03:23:51.995199+09:00",
+  "limited_api_calls": 0,
+  "before": {
+    "shared_usage": "unconfirmed",
+    "remaining": "unconfirmed",
+    "reset_at": "unconfirmed"
+  },
+  "after": {
+    "shared_usage": "unconfirmed",
+    "remaining": "unconfirmed",
+    "reset_at": "unconfirmed"
+  },
+  "reservation": "not_acquired_no_limited_API_called",
+  "reserve_fraction": 0.2,
+  "network_connection_attempts_replay": 0,
+  "public_document": "https://gtfs.org/documentation/realtime/feed-entities/trip-updates/",
+  "application": "실시간 갱신 누락을 정시/실제 도착으로 단정하지 않는 원칙만 확인. GTFS 변환/지연 전파 구현 아님.",
+  "overlap_check": "Python 명령 이름 필터 읽기 전용 조회에서 일치 행 미검출. 다른 이름 작업은 범위 밖.",
+  "deployed": false,
+  "full_completion": false
+}

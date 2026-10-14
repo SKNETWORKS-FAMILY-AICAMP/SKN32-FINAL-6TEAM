@@ -1,0 +1,11 @@
+.box { margin: 12px 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 13px; }
+.box summary { cursor: pointer; line-height: 1.6; font-weight: 600; }
+.box summary span { display: block; margin-left: 16px; font-size: 12px; font-weight: 400; }
+.box form { display: grid; gap: 8px; padding-top: 12px; }
+.box label { font-weight: 600; }
+.box select { width: 100%; min-height: 44px; border: 1px solid var(--color-border-strong); border-radius: 6px; padding: 8px; background: var(--color-surface); color: inherit; font: inherit; }
+.box p { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
+.box button { min-height: 44px; padding: 8px 12px; border-radius: 6px; border: 1px solid currentColor; background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.box button:disabled { cursor: default; opacity: .6; }
+.box :is(select, button, summary):focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+.error { color: var(--color-error); }

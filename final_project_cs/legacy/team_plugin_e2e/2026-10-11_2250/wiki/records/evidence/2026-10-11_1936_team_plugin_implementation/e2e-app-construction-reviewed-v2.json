@@ -1,0 +1,490 @@
+{
+  "app_constructions": 28,
+  "reviewed": 28,
+  "shared_api_direct_consumer_files": 47,
+  "rows": [
+    {
+      "file": "tests/e2e/test_booking_change_link.py",
+      "line": 100,
+      "scope": "world",
+      "classification": "read_only_booking_link",
+      "evidence": "DB 직접 시드한 예약 변경 링크 조회·가격·공급자 원장 불변; 경로 계산 없음"
+    },
+    {
+      "file": "tests/e2e/test_case_version_rest.py",
+      "line": 44,
+      "scope": "rest",
+      "classification": "explicit_fixed_mobility",
+      "evidence": "운영 Controller 조립에 명시 합성 BindingTable"
+    },
+    {
+      "file": "tests/e2e/test_composer_write_channel.py",
+      "line": 47,
+      "scope": "_client",
+      "classification": "management_only",
+      "evidence": "Composer 설정 읽기·검증·발행; 여행 이동 계산 없음"
+    },
+    {
+      "file": "tests/e2e/test_decision_unit_web.py",
+      "line": 87,
+      "scope": "decided",
+      "classification": "explicit_fixed_mobility",
+      "evidence": "모델 해석 대역 + 합성 이동; engine 부재 시험은 명시 None 제공"
+    },
+    {
+      "file": "tests/e2e/test_intake_review.py",
+      "line": 140,
+      "scope": "_client",
+      "classification": "explicit_review_doubles",
+      "evidence": "rv가 review/candidates/autofix 엔진 부재를 명시하고 Tour/Kakao 대역; 고객 검토·잠금·장소 선택 범위. 운영 경로 정확도 아님"
+    },
+    {
+      "file": "tests/e2e/test_introspection_endpoint.py",
+      "line": 20,
+      "scope": "test_introspection_requires_scope_and_returns_snapshot",
+      "classification": "management_only",
+      "evidence": "인증·scope·snapshot 조회"
+    },
+    {
+      "file": "tests/e2e/test_introspection_endpoint.py",
+      "line": 30,
+      "scope": "test_introspection_denies_other_scope",
+      "classification": "management_only",
+      "evidence": "인증·scope·snapshot 조회"
+    },
+    {
+      "file": "tests/e2e/test_legal_retention.py",
+      "line": 45,
+      "scope": "_client",
+      "classification": "retention_only",
+      "evidence": "보유·파기 정책·운영 제한 라우터만"
+    },
+    {
+      "file": "tests/e2e/test_mcp_read_tools.py",
+      "line": 62,
+      "scope": "_client",
+      "classification": "explicit_fixed_or_none",
+      "evidence": "기본 None, 등록 시험만 명시 합성 제공; 부재503 유지"
+    },
+    {
+      "file": "tests/e2e/test_mobility_engine_flow.py",
+      "line": 67,
+      "scope": "flow",
+      "classification": "real_local_graph",
+      "evidence": "mobility_data_dir 실제 그래프 엔진을 운영 조립; 합성 고정 계산으로 대체하지 않음"
+    },
+    {
+      "file": "tests/e2e/test_operations_ui.py",
+      "line": 20,
+      "scope": "module",
+      "classification": "management_only",
+      "evidence": "운영 화면 렌더링·접근"
+    },
+    {
+      "file": "tests/e2e/test_reload_endpoint.py",
+      "line": 29,
+      "scope": "client",
+      "classification": "management_only",
+      "evidence": "관리 reload/snapshot 및 고객 빌드 endpoint 부재"
+    },
+    {
+      "file": "tests/e2e/test_reload_endpoint.py",
+      "line": 126,
+      "scope": "test_the_customer_release_build_has_no_reload_route",
+      "classification": "management_only",
+      "evidence": "관리 reload/snapshot 및 고객 빌드 endpoint 부재"
+    },
+    {
+      "file": "tests/e2e/test_trip_api.py",
+      "line": 134,
+      "scope": "api",
+      "classification": "explicit_fixed_mobility",
+      "evidence": "공유 api 47개 직접 소비 파일의 CRUD·권한·버전·멱등 baseline"
+    },
+    {
+      "file": "tests/e2e/test_trip_dining_ledger.py",
+      "line": 76,
+      "scope": "api",
+      "classification": "explicit_mobility_real_dining",
+      "evidence": "Mobility만 합성 표; Dining 원장 선택·영업 판정 구현 그대로. 격리 DB 5/5 별도 통과"
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 60,
+      "scope": "_client",
+      "classification": "explicit_fixed_mobility",
+      "evidence": "등록 가능한 두 factory에 명시 합성 제공"
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 256,
+      "scope": "test_unread_lines_are_pointed_at_by_the_model_and_places_are_looked_up",
+      "classification": "source_reading_only",
+      "evidence": "독립 2개 app은 읽기 줄·장소해석·모델 장애만; 등록하지 않음"
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 290,
+      "scope": "test_a_model_outage_only_skips_the_pointing_step",
+      "classification": "source_reading_only",
+      "evidence": "독립 2개 app은 읽기 줄·장소해석·모델 장애만; 등록하지 않음"
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 304,
+      "scope": "_full_client",
+      "classification": "explicit_fixed_mobility",
+      "evidence": "등록 가능한 두 factory에 명시 합성 제공"
+    },
+    {
+      "file": "tests/e2e/test_trip_planner.py",
+      "line": 147,
+      "scope": "build",
+      "classification": "explicit_fixed_mobility",
+      "evidence": "MOVE_BUFFER_MIN 반영 명시 표; planner recovery/SSE 파생 fixture도 공유"
+    },
+    {
+      "file": "tests/e2e/test_web_api.py",
+      "line": 273,
+      "scope": "_chat_client",
+      "classification": "explicit_fixed_mobility",
+      "evidence": "채팅 정책·업무 처리 합성 계산 표; Team 지연/되묻기/재개 강화"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 56,
+      "scope": "cookies",
+      "classification": "authentication_only",
+      "evidence": "세션·쿠키·CSRF·여행목록 조회; 경로 변경 없음"
+    },
+    {
+      "file": "tests/e2e/test_web_guard.py",
+      "line": 36,
+      "scope": "_client",
+      "classification": "usage_auth_only",
+      "evidence": "사용량·키발급·운영 제한·사람확인·CORS; 일정 변경/계획 생성 호출 없음"
+    },
+    {
+      "file": "tests/e2e/test_web_guard.py",
+      "line": 360,
+      "scope": "test_an_unhandled_error_still_carries_the_allowed_origin_so_the_browser_can_read_it",
+      "classification": "usage_auth_only",
+      "evidence": "사용량·키발급·운영 제한·사람확인·CORS; 일정 변경/계획 생성 호출 없음"
+    },
+    {
+      "file": "tests/e2e/test_web_profile.py",
+      "line": 322,
+      "scope": "test_the_browser_may_send_put_with_the_user_key_from_the_web_origin",
+      "classification": "cors_only",
+      "evidence": "독립 app은 PUT 사전 요청 허용만"
+    },
+    {
+      "file": "tests/e2e/test_web_social_login.py",
+      "line": 67,
+      "scope": "social",
+      "classification": "authentication_only",
+      "evidence": "OAuth 교환 대역·계정 연결·삭제·세션·CORS; 경로 변경 없음"
+    },
+    {
+      "file": "tests/e2e/test_web_social_login.py",
+      "line": 301,
+      "scope": "test_a_login_without_a_key_needs_a_human_check_when_one_is_required_and_a_login_with_a_key_does_not",
+      "classification": "authentication_only",
+      "evidence": "OAuth 교환 대역·계정 연결·삭제·세션·CORS; 경로 변경 없음"
+    },
+    {
+      "file": "tests/e2e/test_web_social_login.py",
+      "line": 359,
+      "scope": "test_a_browser_on_another_origin_may_call_delete",
+      "classification": "authentication_only",
+      "evidence": "OAuth 교환 대역·계정 연결·삭제·세션·CORS; 경로 변경 없음"
+    }
+  ],
+  "testclient_calls": [
+    {
+      "file": "tests/e2e/test_booking_change_link.py",
+      "line": 100,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router()])"
+    },
+    {
+      "file": "tests/e2e/test_case_version_rest.py",
+      "line": 44,
+      "argument": "create_app(controller=controller, classifier=_classifier, domain_routers=[])"
+    },
+    {
+      "file": "tests/e2e/test_composer_write_channel.py",
+      "line": 56,
+      "argument": "app"
+    },
+    {
+      "file": "tests/e2e/test_decision_unit_web.py",
+      "line": 87,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(classifier_factory=lambda: lambda m: {'intent"
+    },
+    {
+      "file": "tests/e2e/test_guest_and_trip_delete.py",
+      "line": 122,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_guest_and_trip_delete.py",
+      "line": 233,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_guest_and_trip_delete.py",
+      "line": 317,
+      "argument": "env['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_intake_review.py",
+      "line": 140,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(place_factory=lambda: tour, kakao_factory=lam"
+    },
+    {
+      "file": "tests/e2e/test_introspection_endpoint.py",
+      "line": 20,
+      "argument": "create_app(classifier=lambda _: {'intent': 'x', 'issue_code': 'x', 'sentiment': 'neutral'})"
+    },
+    {
+      "file": "tests/e2e/test_introspection_endpoint.py",
+      "line": 30,
+      "argument": "create_app(classifier=lambda _: {'intent': 'x', 'issue_code': 'x', 'sentiment': 'neutral'})"
+    },
+    {
+      "file": "tests/e2e/test_legal_retention.py",
+      "line": 45,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_public_retention_router(), build_retention_ops_router(), "
+    },
+    {
+      "file": "tests/e2e/test_mcp_read_tools.py",
+      "line": 62,
+      "argument": "create_app(classifier=lambda m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[router])"
+    },
+    {
+      "file": "tests/e2e/test_mobility_engine_flow.py",
+      "line": 67,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(check_factory=lambda: lambda **_k: {'verdict'"
+    },
+    {
+      "file": "tests/e2e/test_ops_app_two_processes.py",
+      "line": 84,
+      "argument": "create_ops_app(routers=[])"
+    },
+    {
+      "file": "tests/e2e/test_reload_endpoint.py",
+      "line": 29,
+      "argument": "create_app(classifier=_CLASSIFIER, management=True)"
+    },
+    {
+      "file": "tests/e2e/test_reload_endpoint.py",
+      "line": 126,
+      "argument": "create_app(classifier=_CLASSIFIER)"
+    },
+    {
+      "file": "tests/e2e/test_root_landing.py",
+      "line": 27,
+      "argument": "app"
+    },
+    {
+      "file": "tests/e2e/test_safety_pause.py",
+      "line": 436,
+      "argument": "client.app"
+    },
+    {
+      "file": "tests/e2e/test_safety_pause.py",
+      "line": 438,
+      "argument": "client.app"
+    },
+    {
+      "file": "tests/e2e/test_safety_recovery.py",
+      "line": 186,
+      "argument": "client.app"
+    },
+    {
+      "file": "tests/e2e/test_safety_recovery.py",
+      "line": 185,
+      "argument": "client.app"
+    },
+    {
+      "file": "tests/e2e/test_trip_api.py",
+      "line": 134,
+      "argument": "create_app(classifier=classifier, domain_routers=[build_trip_router(check_factory=lambda: check, classifier_factory=lambda: trip_classifier, chat_factory=ScenarioChat)])"
+    },
+    {
+      "file": "tests/e2e/test_trip_dining_ledger.py",
+      "line": 76,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(check_factory=lambda: lambda **_k: {'verdict'"
+    },
+    {
+      "file": "tests/e2e/test_trip_guardian.py",
+      "line": 124,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_trip_guardian.py",
+      "line": 139,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 60,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(chat_factory=(lambda: vision) if vision else "
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 256,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(chat_factory=Labeler, place_factory=lambda: t"
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 290,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(chat_factory=Down)])"
+    },
+    {
+      "file": "tests/e2e/test_trip_intake_api.py",
+      "line": 304,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(chat_factory=Labeler, place_factory=lambda: t"
+    },
+    {
+      "file": "tests/e2e/test_trip_planner.py",
+      "line": 147,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(check_factory=lambda: lambda **_k: {'verdict'"
+    },
+    {
+      "file": "tests/e2e/test_web_agent_keys.py",
+      "line": 48,
+      "argument": "env['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_agent_keys.py",
+      "line": 114,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_agent_keys.py",
+      "line": 179,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_api.py",
+      "line": 273,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(classifier_factory=lambda: classify, chat_fac"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 56,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(), build_auth_router(exchange=FakeGoogle())])"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 130,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 150,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 191,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 253,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 269,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 281,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 314,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 325,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 342,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 361,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 156,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 274,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_cookie_session.py",
+      "line": 290,
+      "argument": "cookies['client'].app"
+    },
+    {
+      "file": "tests/e2e/test_web_guard.py",
+      "line": 36,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(human_verify=verify, chat_factory=(lambda: ch"
+    },
+    {
+      "file": "tests/e2e/test_web_guard.py",
+      "line": 360,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[broken])"
+    },
+    {
+      "file": "tests/e2e/test_web_profile.py",
+      "line": 322,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[])"
+    },
+    {
+      "file": "tests/e2e/test_web_social_login.py",
+      "line": 67,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(), build_auth_router(exchange=google)])"
+    },
+    {
+      "file": "tests/e2e/test_web_social_login.py",
+      "line": 301,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(human_verify=verify), build_auth_router(excha"
+    },
+    {
+      "file": "tests/e2e/test_web_social_login.py",
+      "line": 359,
+      "argument": "create_app(classifier=lambda _m: {'intent': 'other', 'issue_code': 'other', 'sentiment': 'neutral'}, domain_routers=[build_trip_router(), build_auth_router(exchange=social['google'"
+    }
+  ],
+  "categories": {
+    "read_only_booking_link": 1,
+    "explicit_fixed_mobility": 7,
+    "management_only": 6,
+    "explicit_review_doubles": 1,
+    "retention_only": 1,
+    "explicit_fixed_or_none": 1,
+    "real_local_graph": 1,
+    "explicit_mobility_real_dining": 1,
+    "source_reading_only": 2,
+    "authentication_only": 4,
+    "usage_auth_only": 2,
+    "cors_only": 1
+  },
+  "scope": "tests/e2e/test_*.py only; backup directories excluded. Reused TestClient(app) retains prior assembly. root landing and create_ops_app are separate non-travel entrypoints."
+}

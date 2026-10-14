@@ -1,0 +1,35 @@
+{
+  "created_at": "2026-10-09T02:47:19.711295+09:00",
+  "relation_id": 4677532,
+  "starts": [
+    461986
+  ],
+  "goal_arcs": [
+    187174
+  ],
+  "reachable_states": 1,
+  "reachable_nodes": 1,
+  "goal_node_states": [
+    [
+      126485,
+      461986
+    ]
+  ],
+  "permitted_goal_entries": [],
+  "blocked_transitions": [
+    {
+      "incoming": 461986,
+      "outgoing": 187174,
+      "occurrences": 1,
+      "rules": [
+        {
+          "relation_id": 4677532,
+          "incoming": 461986,
+          "outgoing": 187174,
+          "value": "no_left_turn"
+        }
+      ]
+    }
+  ],
+  "scope": "independent unweighted state reachability using current graph and sidecar only; real road topology not confirmed"
+}

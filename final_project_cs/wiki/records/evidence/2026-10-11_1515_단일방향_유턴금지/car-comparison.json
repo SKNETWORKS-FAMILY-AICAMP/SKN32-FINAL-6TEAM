@@ -1,0 +1,66 @@
+{
+  "total": 100,
+  "before_success": 100,
+  "after_success": 100,
+  "before_routes_with_new_uturn": 2,
+  "after_routes_with_new_uturn": 0,
+  "changed": [
+    {
+      "before": {
+        "id": "N091",
+        "a": "회현역",
+        "b": "광장시장",
+        "distance_m": 3289.9,
+        "model_seconds": 239.141,
+        "new_uturn_occurrences": [
+          [
+            1085929,
+            1085928
+          ]
+        ],
+        "applied_relations": 2487,
+        "elapsed_seconds": 0.02316320000682026
+      },
+      "after": {
+        "id": "N091",
+        "a": "회현역",
+        "b": "광장시장",
+        "distance_m": 3385.83,
+        "model_seconds": 247.026,
+        "new_uturn_occurrences": [],
+        "applied_relations": 4706,
+        "elapsed_seconds": 0.0254053000244312
+      }
+    },
+    {
+      "before": {
+        "id": "N094",
+        "a": "화곡역",
+        "b": "구로디지털단지역",
+        "distance_m": 10534.77,
+        "model_seconds": 918.666,
+        "new_uturn_occurrences": [
+          [
+            344454,
+            344455
+          ]
+        ],
+        "applied_relations": 2487,
+        "elapsed_seconds": 0.20123340000282042
+      },
+      "after": {
+        "id": "N094",
+        "a": "화곡역",
+        "b": "구로디지털단지역",
+        "distance_m": 10558.78,
+        "model_seconds": 920.827,
+        "new_uturn_occurrences": [],
+        "applied_relations": 4706,
+        "elapsed_seconds": 0.23988590002409182
+      }
+    }
+  ],
+  "network_attempts": 0,
+  "limited_api_calls": 0,
+  "actual_driving": 0
+}

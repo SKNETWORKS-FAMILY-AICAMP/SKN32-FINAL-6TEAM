@@ -1,0 +1,22 @@
+
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]
+Loading weights:   1%|1         | 5/391 [00:00<00:21, 18.28it/s]
+Loading weights:  68%|######8   | 267/391 [00:00<00:00, 885.97it/s]
+Loading weights: 100%|##########| 391/391 [00:00<00:00, 835.31it/s]
+encoded 1 / 157
+encoded 11 / 157
+encoded 21 / 157
+encoded 31 / 157
+encoded 41 / 157
+encoded 51 / 157
+encoded 61 / 157
+encoded 71 / 157
+encoded 81 / 157
+encoded 91 / 157
+encoded 101 / 157
+encoded 111 / 157
+encoded 121 / 157
+encoded 131 / 157
+encoded 141 / 157
+encoded 151 / 157
+saved datasets\travel\baseline_completion_20261012\embeddings-2026-10-12_095012.json 157

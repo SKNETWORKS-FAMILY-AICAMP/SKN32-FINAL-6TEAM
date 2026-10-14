@@ -1,0 +1,129 @@
+........................................................................ [ 13%]
+........................................................................ [ 26%]
+........................................................................ [ 40%]
+.................FF..............F..F................................... [ 53%]
+....................................................F................... [ 67%]
+........................................................................ [ 80%]
+........................................................................ [ 93%]
+.................................                                        [100%]
+================================== FAILURES ===================================
+_________________________________ test_golden _________________________________
+
+    def test_golden():
+        _skip_if_no_data()
+        _, got = _run()
+        got.pop("basis")
+        want = json.loads(GOLD.read_text(encoding="utf-8"))
+>       assert got == want, "\uc608\uc2dc \ucd9c\ub825\uc774 \uace8\ub4e0\uacfc \ub2e4\ub974\ub2e4 \u2014 \uc2dc\uac04\ud45c\xb7\uaddc\uce59\uc774 \ubc14\ub00c\uc5c8\uc73c\uba74 \uace8\ub4e0\uc744 \ub2e4\uc2dc \ubf51\uace0 \uc774\uc720\ub97c \uc801\ub294\ub2e4"
+E       AssertionError: \uc608\uc2dc \ucd9c\ub825\uc774 \uace8\ub4e0\uacfc \ub2e4\ub974\ub2e4 \u2014 \uc2dc\uac04\ud45c\xb7\uaddc\uce59\uc774 \ubc14\ub00c\uc5c8\uc73c\uba74 \uace8\ub4e0\uc744 \ub2e4\uc2dc \ubf51\uace0 \uc774\uc720\ub97c \uc801\ub294\ub2e4
+E       assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Differing items:
+E         {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'detail': {'d...�� ��� �Ÿ�'}, ...}}, 'ends_at': '2026-09-29T17:50:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', ...}, ...]} != {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:50:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]}
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_plan_v1.py:144: AssertionError
+_____________________________ test_contract_keys ______________________________
+
+    def test_contract_keys():
+        _skip_if_no_data()
+        _, got = _run()
+        for it in got["items"]:
+            assert set(it) <= ITEM_KEYS, f"ItemIn �� ���� Ű: {set(it) - ITEM_KEYS}"
+        for key, r in got["routes"].items():
+            assert set(r) == ROUTE_KEYS, f"{key}: {set(r) ^ ROUTE_KEYS}"
+            assert r["planned"] in {o["id"] for o in r["options"]}
+            for o in r["options"]:
+                assert OPTION_KEYS <= set(o) <= OPTION_KEYS | OPTION_OPT, f"{key}/{o.get('id')}: {set(o) ^ OPTION_KEYS}"
+                assert isinstance(o["eta_min"], int) and o["eta_min"] > 0
+        bad = [(k, p) for k, p in _walk_keys({"items": got["items"], "routes": got["routes"]}) if k in FORBIDDEN]
+>       assert not bad, f"�ھ�� ������ �� �Ǵ� Ű: {bad}"
+E       AssertionError: �ھ�� ������ �� �Ǵ� Ű: [('basis', '.items.detail.departure_context'), ('start_min', '.items.detail.departure_context'), ('start_min', '.items.detail.departure_context.options.subway_1'), ('legs', '.items.detail.departure_context.options.subway_1'), ('legs', '.items.detail.departure_context.options.subway_1.check'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ('basis', '.items.detail.departure_context'), ('start_min', '.items.detail.departure_context'), ('start_min', '.items.detail.departure_context.options.subway_1'), ('legs', '.items.detail.departure_context.options.subway_1'), ('legs', '.items.detail.departure_context.options.subway_1.check'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ('start_min', '.items.detail.departure_context.options.subway_2'), ('legs', '.items.detail.departure_context.options.subway_2'), ('legs', '.items.detail.departure_context.options.subway_2.check'), ('verdict', '.items.detail.departure_context.options.subway_2.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_2.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_2.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_2.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_2.leg_results'), ('basis', '.items.detail.departure_context'), ('start_min', '.items.detail.departure_context'), ('start_min', '.items.detail.departure_context.options.subway_1'), ('legs', '.items.detail.departure_context.options.subway_1'), ('legs', '.items.detail.departure_context.options.subway_1.check'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ('basis', '.items.detail.departure_context'), ('start_min', '.items.detail.departure_context'), ('start_min', '.items.detail.departure_context.options.walk'), ('legs', '.items.detail.departure_context.options.walk')]
+E       assert not [('basis', '.items.detail.departure_context'), ('start_min', '.items.detail.departure_context'), ('start_min', '.items...ure_context.options.subway_1.check'), ('verdict', '.items.detail.departure_context.options.subway_1.leg_results'), ...]
+
+tests\unit\travel\mobility\test_plan_v1.py:159: AssertionError
+___________________________ test_cli_passes_routes ____________________________
+
+    def test_cli_passes_routes():
+        """GPT 2\ucc28 #1 \u2014 CLI(plan_doc)\ub3c4 \uc785\ub825\uc758 \uae30\uc874 routes \ud0a4\ub97c \uc0c8 \ud0a4\ub85c \uc548 \uc4f4\ub2e4 \xb7 \ud568\uc218 \ud638\ucd9c\uacfc \uacb0\uacfc\uac00 \uac19\ub2e4."""
+        _skip_if_no_data()
+        from app.domains.travel_ops.instances.mobility.engine.plan import plan_doc
+        doc = {"places": _GS, "items": _two("2026-09-29T10:00:00+09:00", "2026-09-29T11:00:00+09:00",
+                                            "2026-09-29T13:00:00+09:00"),
+               "party_size": 1, "constraints": {}, "routes": {"g_to_s": {"from": "��", "to": "��", "planned": "x",
+                                                                          "options": []}}}
+        by_cli = plan_doc(doc, runtime=_runtime(), modes=MODES)
+        by_fn = plan(doc["places"], doc["items"], 1, {}, runtime=_runtime(), modes=MODES, routes=doc["routes"])
+        assert "g_to_s" not in by_cli["routes"] and list(by_cli["routes"]) == ["g_to_s_2"], list(by_cli["routes"])
+        for r in (by_cli, by_fn):
+            r.pop("basis")
+>       assert by_cli == by_fn
+E       AssertionError: assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Differing items:
+E         {'items': [{'ends_at': '2026-09-29T11:00:00+09:00', 'kind': 'activity', 'place': 'g', 'seq': 1, ...}, {'detail': {'dep...route': 'g_to_s_2', ...}, {'kind': 'activity', 'place': 's', 'seq': 3, 'starts_at': '2026-09-29T13:00:00+09:00', ...}]} != {'items': [{'ends_at': '2026-09-29T11:00:00+09:00', 'kind': 'activity', 'place': 'g', 'seq': 1, ...}, {'detail': {'dep...route': 'g_to_s_2', ...}, {'kind': 'activity', 'place': 's', 'seq': 3, 'starts_at': '2026-09-29T13:00:00+09:00', ...}]}
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_plan_v1.py:494: AssertionError
+____________________________ test_golden_all_modes ____________________________
+
+    def test_golden_all_modes():
+        """\ubc84\uc2a4 \ud3ec\ud568 \uc608\uc2dc(27 \uc190\uc77c \u300c\ubc84\uc2a4 \ud3ec\ud568 \uc608\uc2dc \uc7ac\ucd94\ucd9c\u300d) \u2014 \uc790\uc804\uac70\ub294 \uc2e4\uc2dc\uac04 \uc870\ud68c\ub77c \ube80\ub2e4."""
+        _skip_if_no_data()
+        doc = json.loads(IN.read_text(encoding="utf-8"))
+        got = plan(doc["places"], doc["items"], doc.get("party_size"), doc.get("constraints"),
+                   runtime=_runtime(), modes=MODES_ALL)
+        got.pop("basis")
+        want = json.loads(GOLD_ALL.read_text(encoding="utf-8"))
+>       assert got == want, "\ubc84\uc2a4 \ud3ec\ud568 \uc608\uc2dc\uac00 \uace8\ub4e0\uacfc \ub2e4\ub974\ub2e4 \u2014 \uc2dc\uac04\ud45c\xb7\ubc84\uc2a4 \ud504\ub85c\ud30c\uc77c\xb7\uaddc\uce59\uc774 \ubc14\ub00c\uc5c8\uc73c\uba74 \ub2e4\uc2dc \ubf51\uace0 \uc774\uc720\ub97c \uc801\ub294\ub2e4"
+E       AssertionError: \ubc84\uc2a4 \ud3ec\ud568 \uc608\uc2dc\uac00 \uace8\ub4e0\uacfc \ub2e4\ub974\ub2e4 \u2014 \uc2dc\uac04\ud45c\xb7\ubc84\uc2a4 \ud504\ub85c\ud30c\uc77c\xb7\uaddc\uce59\uc774 \ubc14\ub00c\uc5c8\uc73c\uba74 \ub2e4\uc2dc \ubf51\uace0 \uc774\uc720\ub97c \uc801\ub294\ub2e4
+E       assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Differing items:
+E         {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'detail': {'d...�� ��� �Ÿ�'}, ...}}, 'ends_at': '2026-09-29T17:50:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', ...}, ...]} != {'items': [{'ends_at': '2026-09-29T09:15:00+09:00', 'kind': 'dining', 'place': 'hotel', 'seq': 1, ...}, {'ends_at': '2... ...}, {'ends_at': '2026-09-29T17:50:00+09:00', 'kind': 'mobility', 'route': 'seongsu_to_dinner', 'seq': 6, ...}, ...]}
+E         Use -v to get more diff
+
+tests\unit\travel\mobility\test_plan_v1.py:546: AssertionError
+____________ test_45_same_day_move_is_made_and_keeps_input_detail _____________
+
+    def test_45_same_day_move_is_made_and_keeps_input_detail():
+        items = [_item("A", "P1", "2026-10-05T10:00:00+09:00", "2026-10-05T11:00:00+09:00"),
+                 _item("�̵�", None, "2026-10-05T11:05:00+09:00", "2026-10-05T11:20:00+09:00", kind="mobility",
+                       item_id="it-7", detail={"note": "���� �̵�"}),
+                 _item("B", "P2", "2026-10-05T12:00:00+09:00", "2026-10-05T13:00:00+09:00")]
+        out = P.plan(PLACES, items, 2, {}, runtime=_rt())
+        moves = [it for it in out["items"] if it["kind"] == "mobility"]
+        assert len(moves) == 1 and moves[0]["route"] in out["routes"], out
+>       assert moves[0].get("item_id") == "it-7" and moves[0].get("detail") == {"note": "���� �̵�"}, \
+            "�츮 ������ �ٲ㵵 �Է� �̵��� �ٸ� ĭ�� ���� �ʴ´�"
+E       AssertionError: �츮 ������ �ٲ㵵 �Է� �̵��� �ٸ� ĭ�� ���� �ʴ´�
+E       assert ('it-7' == 'it-7'
+E         
+E           it-7 and {'departure_c...ote': '���� �̵�'} == {'note': '���� �̵�'}
+E         
+E         Omitting 1 identical items, use -vv to show
+E         Left contains 1 more item:
+E         {'departure_context': {'basis': {'rules_version': 'v',
+E                                          'timetable_built_at': 'built:t'},
+E                                'captured_at': '2026-10-08T15:43:37.187245+00:00',
+E                                'first_visit': True,...
+E         
+E         ...Full output truncated (21 lines hidden), use '-vv' to show)
+
+tests\unit\travel\mobility\test_review_fixes_plan.py:67: AssertionError
+============================== warnings summary ===============================
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\mobility-default-v8.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_golden - AssertionErr...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_contract_keys - Asser...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_cli_passes_routes - A...
+FAILED tests/unit/travel/mobility/test_plan_v1.py::test_golden_all_modes - As...
+FAILED tests/unit/travel/mobility/test_review_fixes_plan.py::test_45_same_day_move_is_made_and_keeps_input_detail
+5 failed, 532 passed, 220 deselected, 1 warning in 227.28s (0:03:47)

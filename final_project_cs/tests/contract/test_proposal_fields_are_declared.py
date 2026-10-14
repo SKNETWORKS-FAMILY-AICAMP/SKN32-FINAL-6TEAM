@@ -139,3 +139,18 @@ def test_at_least_one_proposal_was_actually_produced():
         "등록된 어느 Team 도 제안을 만들지 않았다. `_TOOL_VALUES` 가 Team 이 "
         "제안까지 가는 데 필요한 값을 다 갖고 있는지 확인한다.")
     print("제안을 낸 조합:", produced)
+
+
+def test_itinerary_argument_builders_only_use_declared_fields():
+    """`[2026-10-13]` ☆숙소 · 항공 「다른 후보」(`options_arguments`)가 새 칸 `ask_options` 를 실었는데 검증 정책에 없어,
+    x600 서버에서 제안이 전부 「선언되지 않은 필드」로 막혔다(팀 시험 · 적용기 통합 시험은 둘 다 초록이었다 — 위 머리말과 같은 구멍).
+    팀이 부르는 인자 생성기 셋이 내는 칸이 전부 선언돼 있어야 한다."""
+    from app.domains.travel_ops.components.actions.itinerary_actions import consent_arguments, options_arguments
+
+    built = {
+        "options_arguments": options_arguments(trip_id=uuid4(), base_version=1, item_id=uuid4(),
+                                               options=[{"key": "k", "name": "n"}], text="t", causes=[], shown_key="s"),
+        "consent_arguments": consent_arguments(trip_id=uuid4(), base_version=1, item_id=uuid4(), causes=[]),
+    }
+    for name, arguments in built.items():
+        assert set(arguments) <= DECLARED, f"{name}: 선언 안 된 칸 {sorted(set(arguments) - DECLARED)}"

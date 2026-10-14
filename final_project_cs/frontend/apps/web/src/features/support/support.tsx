@@ -54,7 +54,7 @@ export function SupportPage({ sent = false }: { sent?: boolean }) {
   const current = Math.min(page, pages);                                   // a refresh may leave fewer pages than the one open
   const shown = all.slice((current - 1) * INQUIRIES_PER_PAGE, current * INQUIRIES_PER_PAGE);
   return <div className={styles.page}>
-    <div className={styles.row}><h1>{t("문의함", "Inquiries")}</h1><ButtonLink href="/mypage" variant="quiet">{t("마이페이지", "My page")}</ButtonLink></div>
+    <div className={styles.row}><h1>{t("문의함", "Inquiries")}</h1></div>
     {/* `[2026-10-12 사용자 지시]` 안내 문장은 뺐다. 왼쪽 「여행에서 다시 요청」, 오른쪽 「문의 작성」 — 한 줄(좁으면 왼쪽 글자가 줄바꿈된다). */}
     <div className={styles.actions}>
       <ButtonLink href="/trips">{t("여행에서 다시 요청 · 장소 정보 보완", "Open your trip to retry or correct a place")}</ButtonLink>

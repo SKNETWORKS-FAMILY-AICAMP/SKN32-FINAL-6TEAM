@@ -99,3 +99,4 @@ for(const width of [375,1280]) {
     expect(await api.received('POST','/edits')).toHaveLength(0); await noHorizontalScroll(page);
   });
 }
+

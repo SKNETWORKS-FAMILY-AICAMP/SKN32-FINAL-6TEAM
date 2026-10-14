@@ -26,7 +26,9 @@ from app.presentation.api.app import app
 
 # 설계 계약 문서 §1 의 표 — 이것은 **최소 집합**이지 상한이 아니다.
 CONTRACT_V1_PATHS = {
-    # Public prepared input catalog: wiki/external/test-scenarios.md.
+    # 실제 계약: personal-ai-oauth.md, test-scenarios.md, rest-endpoints/web-intakes.md.
+    "/v1/web/agent-connections",
+    "/v1/web/agent-connections/{connection_id}",
     "/v1/web/test-scenarios",
     "/v1/web/trip-intakes/{intake_id}/restore",
     # 운영자 웹앱 연동 계약의 고객 문의·공개 공지. 문의 쓰기는 고객 인증과 CSRF를 거친다.
@@ -88,6 +90,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/chat",
     "/v1/web/map-load",
     "/v1/web/trips/{trip_id}/rollback",
+    # ★2026-10-13 「일정 수정」 — 등록한 여행을 확인 화면 접수로 다시 연다. `wiki/external/rest-endpoints.md` 「등록한 여행 고치기」
+    "/v1/web/trips/{trip_id}/reopen",
+    "/v1/web/trip-intakes/{intake_id}/cancel",
     # ★2026-10-02 웹(사용자 키)용 신고 · 다른 안으로 — 에이전트 입구(`/v1/trips/{id}/reports` · `…/alternate`)와 같은 처리, 본인 여행만. 개인 AI(MCP)가 쓴다
     "/v1/web/trips/{trip_id}/reports",
     "/v1/web/trips/{trip_id}/items/{item_id}/alternate",
@@ -166,7 +171,8 @@ OPEN_WRITE_PATHS = {"/v1/web/session", "/v1/web/auth/session", "/v1/web/auth/{pr
                     "/v1/telegram/webhook"}
 
 # 인증으로 치는 의존성 — scope 키(`require_scope`) 또는 웹 사용자 키(`_web_customer`)
-AUTH_DEPENDENCIES = ("require_scope.", "._web_customer", "require_identity")
+AUTH_DEPENDENCIES = ("require_scope.", "._web_customer", "require_identity",
+                     "build_personal_ai_router.<locals>.require_member")
 
 WRITE_METHODS = {"post", "put", "patch", "delete"}
 

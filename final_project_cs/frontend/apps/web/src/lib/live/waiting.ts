@@ -11,8 +11,17 @@ import { useEffect, useState, useSyncExternalStore } from "react";
  * The reading stream of an intake and the other change streams are NOT counted (they stay open on purpose); the reading screen watches its own silence.
  */
 export type WaitSteps = readonly [first: number, second: number, third: number];
-/** A plain call (`api`). */
-export const CALL_STEPS: WaitSteps = [8_000, 30_000, 60_000];
+/**
+ * A plain call (`api`). `[2026-10-13 사용자 지시 · Codex 1회차 합의]` 첫 알림 8 s → 10 s — 화면에 아무 표시 없이 기다릴 때 사용자의 주의가 흐트러지는 한계
+ * (Nielsen Norman Group 「응답 시간의 세 한계」 ≈10 s). 기록: 이 세션 스크래치 consensus/20261013_0240_wait_banner.
+ */
+export const CALL_STEPS: WaitSteps = [10_000, 30_000, 60_000];
+/**
+ * `[2026-10-13 사용자 지시 · Codex 1회차 합의]` A plain call whose screen already shows its own loading line (「다른 후보를 찾는 중…」 · 「찾는 중…」 ·
+ * 「이동 경로 찾는 중…」): the customer knows it is working, so the global notice waits until the wait is abnormal. Such calls take ~15 s normally (candidates,
+ * observed 2026-10-12) — a 20 s first notice would still fire on normal waits, so it starts at 30 s like a streamed task.
+ */
+export const SHOWN_STEPS: WaitSteps = [30_000, 60_000, 120_000];
 /** A streamed task (`streamApi`). */
 export const TASK_STEPS: WaitSteps = [30_000, 60_000, 120_000];
 

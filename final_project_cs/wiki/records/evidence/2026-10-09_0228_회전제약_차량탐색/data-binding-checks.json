@@ -1,0 +1,23 @@
+{
+  "checks": [
+    {
+      "file": "nodes.jsonl.gz",
+      "actual": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38",
+      "expected": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+    },
+    {
+      "file": "edges.jsonl.gz",
+      "actual": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb",
+      "expected": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\turn_restrictions_20261008_v1\\static-motorcar-candidates.jsonl",
+      "actual": "f07339d0d3e21df6bc7c1340ae185e750499abc472a5b31f7671f1430c9f91f2",
+      "expected": "f07339d0d3e21df6bc7c1340ae185e750499abc472a5b31f7671f1430c9f91f2"
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "sidecar_sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c",
+  "applied_relations": 2487
+}

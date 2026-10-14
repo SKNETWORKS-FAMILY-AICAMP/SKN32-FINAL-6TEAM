@@ -1,0 +1,48 @@
+{
+  "walk": {
+    "web_shortest_m": 672,
+    "product_before_m": 742.65,
+    "product_after_m": 742.65,
+    "relative_error_pct": 10.513392857142852,
+    "network_geometry_m": 693.2041318845716,
+    "access_m": 49.44545772299378,
+    "same_astar_dijkstra": true,
+    "same_postfix_distance": true,
+    "same_postfix_geometry": true,
+    "tolerance_changed": false,
+    "resolved": false
+  },
+  "car_general_fix": {
+    "synthetic_before_seconds": 14.462,
+    "synthetic_after_seconds": 11.593,
+    "synthetic_dijkstra_seconds": 11.593,
+    "regression_passed": 58,
+    "regression_total": 58,
+    "runs": [
+      {
+        "log": "graph-router-final-v3.xml",
+        "passed": 57,
+        "not_passed": 0,
+        "total": 57
+      },
+      {
+        "log": "goal-boundary-final-v4.xml",
+        "passed": 2,
+        "not_passed": 0,
+        "total": 2
+      }
+    ],
+    "not_actual_trip": true
+  },
+  "old_pbf_same_snapshot": true,
+  "new_targeted_way_matched": 261,
+  "new_targeted_way_total": 261,
+  "new_changed_way_count": 30,
+  "new_changed_existing_node_coordinates": 0,
+  "source_before_sha256": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8",
+  "source_after_sha256": "9c1ebf89d3b71a5eb292b50de4d9260a0726662e7e8adf9ce1be0def5e8d5bb2",
+  "test_sha256": "919b6a95b91d23ce8e652a94f992eff1fcdab3e87035bd534ab39dee15a83343",
+  "developer_api_calls": 0,
+  "private_data_access": 0,
+  "official_reference": "https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.shortest_paths.astar.astar_path.html"
+}

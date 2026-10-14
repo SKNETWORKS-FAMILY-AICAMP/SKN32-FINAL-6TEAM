@@ -1,0 +1,175 @@
+{
+  "model": "Valen-0.8B original native choice head",
+  "our_training": false,
+  "publisher_training": "Developer decision SFT",
+  "expected": 12,
+  "saved": 12,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "full": {
+    "total": 12,
+    "correct": 4,
+    "false_pick": 8,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.13812009109121315,
+      0.6093779111272004
+    ],
+    "false_pick_wilson95": [
+      0.39062208887279953,
+      0.8618799089087867
+    ]
+  },
+  "positive": {
+    "total": 4,
+    "correct": 4,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.5101091635454027,
+      1.0
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.4898908364545973
+    ]
+  },
+  "negative": {
+    "total": 8,
+    "correct": 0,
+    "false_pick": 8,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.0,
+      0.32440756488388023
+    ],
+    "false_pick_wilson95": [
+      0.6755924351161198,
+      1.0
+    ]
+  },
+  "single_expected": 12,
+  "compound_diagnostic_only": 0,
+  "subtypes": {
+    "duplicate_place": {
+      "total": 2,
+      "correct": 2,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.34238022750665303,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.6576197724933469
+      ]
+    },
+    "hard_N1": {
+      "total": 1,
+      "correct": 0,
+      "false_pick": 1,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "false_pick_wilson95": [
+        0.20654931437723745,
+        1.0
+      ]
+    },
+    "hard_N3": {
+      "total": 2,
+      "correct": 0,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.6576197724933469
+      ],
+      "false_pick_wilson95": [
+        0.34238022750665303,
+        1.0
+      ]
+    },
+    "hard_N6": {
+      "total": 1,
+      "correct": 0,
+      "false_pick": 1,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "false_pick_wilson95": [
+        0.20654931437723745,
+        1.0
+      ]
+    },
+    "synth_chat_A": {
+      "total": 4,
+      "correct": 0,
+      "false_pick": 4,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.4898908364545973
+      ],
+      "false_pick_wilson95": [
+        0.5101091635454027,
+        1.0
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 2,
+      "correct": 2,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.34238022750665303,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.6576197724933469
+      ]
+    }
+  },
+  "prompt_sha256": "caaf89b901eaec61477786c5a6dbb9ea6ff508cb7ed969c8769db2eacf233c85",
+  "answer_sha256": "338c465872da11e903bc10bfef114741b75821637e6119ce859d95f0a75bfd6f",
+  "probability_kind": "Native choice head normalized candidate probability; not next token, verbal certainty or JSON output",
+  "original_content_contract_checked": true,
+  "execution": {
+    "job": {
+      "id": "valen_08b_original_smoke12_a2",
+      "tag": "valen_08b_original_smoke12_a2",
+      "suite": "smoke12",
+      "label": "Valen-0.8B native decision head publisher original",
+      "our_training": false,
+      "publisher_training": "Developer full decision SFT on Qwen3.5-0.8B",
+      "model": "/tmp/tripilot-valen-20261009/model/model.safetensors",
+      "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+      "model_revision": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+      "prompts": "/tmp/tripilot-valen-20261009/prompts/smoke12.json",
+      "prompt_sha256": "caaf89b901eaec61477786c5a6dbb9ea6ff508cb7ed969c8769db2eacf233c85",
+      "expected": 12,
+      "script": "/tmp/tripilot-valen-20261009/valen_native_eval_20261009_v2.py",
+      "runner_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+      "port": 8401,
+      "logprobs": "0",
+      "output_contract": "Native choice-head distribution; parsed validates API, content holds native response",
+      "dependency": null,
+      "automatic_retry": false,
+      "purpose": "Connection gate",
+      "repair_of": "valen_08b_original_smoke12_a1",
+      "repair": "Use sys.prefix; executable symlink resolution cannot detect virtual environment"
+    },
+    "started": "2026-10-09T01:27:19.309457+00:00",
+    "prompt_sha256": "caaf89b901eaec61477786c5a6dbb9ea6ff508cb7ed969c8769db2eacf233c85",
+    "script_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

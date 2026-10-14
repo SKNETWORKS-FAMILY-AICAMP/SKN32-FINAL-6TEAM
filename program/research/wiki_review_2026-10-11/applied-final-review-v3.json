@@ -1,0 +1,58 @@
+{
+  "changes": [
+    {
+      "path": "wiki/records/reports/2026-10-11_golden-set.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "aa1481ad7e4abc91d72482c17ee8daa6cb8d64d5487635fc12eb6a7b9eb98820"
+    },
+    {
+      "path": "wiki/evaluation/golden-set.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_205819_wiki-final-review/golden-set.md",
+      "before_sha256": "b0d91af730a87b4007598532934679ae81e1ac507011e9a136e3a1f41472b838",
+      "after_sha256": "cdd2be78a6bd62963b0340bb9a5e2de837518e2d2b129dbfe6252a31bc117ce3"
+    },
+    {
+      "path": "wiki/records/reports/2026-10-11_protocol.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "a36e844c3d0684a8a2a0482e1348bc460edddb3609aec9721c7228fcd3d9b5c0"
+    },
+    {
+      "path": "wiki/evaluation/protocol.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_205819_wiki-final-review/protocol.md",
+      "before_sha256": "b693c766c049bc421fd8baa21ed8b949f31aecfb1366b311173407aedcd8d3ea",
+      "after_sha256": "9b0532f0ae24fc2ca5224e8681003e99d214af522b42dbd0e356438bc70b5b74"
+    },
+    {
+      "path": "wiki/records/reports/2026-10-11_D-017-history.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "f562aa4e844ca8b3fe2443cabaf5e4e90da79982e11c2ebf5c44bf6829e76bc4"
+    },
+    {
+      "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_205819_wiki-final-review/D-017-watch-cadence-golden-time.md",
+      "before_sha256": "bfa80c495e1d3dd9c89d83d3daa7839464c0e1c8012b79b7f50704fbc39a489e",
+      "after_sha256": "7118404cb9f5642183d657855ffc2bb3030c2ee7ff3a2ce9834d002b3f4c5106"
+    },
+    {
+      "path": "wiki/records/reports/2026-10-11_cutover.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "0ad7b26e334d0bedf826333e7e96e266b920049f812aba4dfe932fc3aa5505ba"
+    },
+    {
+      "path": "wiki/governance/cutover.md",
+      "backup": "wiki/governance/_backup/2026-10-11_205819_wiki-final-review/cutover.md",
+      "before_sha256": "4890126f33c31014511b45a035e2e157afb14f92642397497b9e27534e19a9b3",
+      "after_sha256": "e97004f62c0081863349d505928ef8b1817ea4dd29b4ed146cbd4bdf590ffb2a"
+    },
+    {
+      "path": "program/scripts/check_wiki.py",
+      "backup": "program/scripts/_backup/2026-10-11_205819_wiki-final-review/check_wiki.py",
+      "before_sha256": "84d177a9bcbff47ddcbdd1daeb82b828f3d6e0568a7c41c0f2fb5c0d975ca03e",
+      "after_sha256": null
+    }
+  ]
+}

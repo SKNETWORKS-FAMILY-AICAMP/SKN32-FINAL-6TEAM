@@ -82,6 +82,9 @@ TRAVEL_OPS_POLICY = VerificationPolicy(
         # ★`[2026-10-03]` 같은 여행의 문제 묶음(`trip_watch_batch`) 제안이 더하는 값 — `batch`(항목별 원인 · 「바꿀까요?」 항목) · `guidance`(판이 안 바뀔 때의 알림 문구).
         #   둘 다 **설명**이다 — 어느 항목을 어떻게 바꾸는지의 대조(기준 버전 · 항목 실재 · 장소 실재 · 판정)는 적용기가 적용 순간에 한다
         "batch", "guidance",
+        # ★`[2026-10-13]` 「다른 후보」를 일정을 바꾸지 않고 묻는 제안(`itinerary_actions.options_arguments` — 숙소 · 항공 팀).
+        #   항목 id · 고를 안 · 문구 · 원장 이름. 적용기가 그 항목이 지금 일정에 있는지 · 안마다 key · 이름이 있는지 보고 제안 자리만 연다(판 그대로)
+        "ask_options",
     }),
 )
 

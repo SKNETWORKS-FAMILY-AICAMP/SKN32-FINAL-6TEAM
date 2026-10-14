@@ -1,0 +1,1 @@
+document.querySelector('#filter').addEventListener('change',e=>{document.querySelectorAll('article').forEach(a=>{a.hidden=e.target.value!=='all'&&a.dataset.status!==e.target.value;});});

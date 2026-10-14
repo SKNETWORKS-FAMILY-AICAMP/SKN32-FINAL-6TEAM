@@ -1,0 +1,80 @@
+{
+  "rows": [
+    {
+      "job": "e4bbase_finch_s20261012_d",
+      "metadata_matches": 2735,
+      "expected": 2735,
+      "prompt_sha_match": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0
+    },
+    {
+      "job": "e4bqat_finch_s20261012_d",
+      "metadata_matches": 2735,
+      "expected": 2735,
+      "prompt_sha_match": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0
+    },
+    {
+      "job": "e4bbase_finch_s20261012_d2",
+      "metadata_matches": 1000,
+      "expected": 1000,
+      "prompt_sha_match": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0
+    },
+    {
+      "job": "e4bqat_finch_s20261012_d2",
+      "metadata_matches": 1000,
+      "expected": 1000,
+      "prompt_sha_match": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0
+    },
+    {
+      "job": "e4bbase_finch_s20261012_h",
+      "metadata_matches": 1316,
+      "expected": 1316,
+      "prompt_sha_match": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0
+    },
+    {
+      "job": "e4bqat_finch_s20261012_h",
+      "metadata_matches": 1316,
+      "expected": 1316,
+      "prompt_sha_match": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0
+    },
+    {
+      "job": "e4bbase_finch_s20261012_mx",
+      "metadata_matches": 4014,
+      "expected": 4014,
+      "prompt_sha_match": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0
+    },
+    {
+      "job": "e4bqat_finch_s20261012_mx",
+      "metadata_matches": 4014,
+      "expected": 4014,
+      "prompt_sha_match": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0
+    }
+  ],
+  "metadata_matches": [
+    18130,
+    18130
+  ]
+}

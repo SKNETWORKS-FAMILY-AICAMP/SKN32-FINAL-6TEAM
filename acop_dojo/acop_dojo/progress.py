@@ -52,10 +52,10 @@ def _park_commerce(data: dict[str, Any]) -> None:
     parked = {d.defect_id for d in PARKED}
     archived = data.setdefault("archived", {})
     stage4 = data["stages"].get("4")
-    if stage4 and stage4.get("defect") in parked:
+    if stage4 and (stage4.get("defect") in parked or stage4.get("policy_revision") != "engine-travel-policy-v2"):
         archived.setdefault("stages", {})["4"] = data["stages"].pop("4")
     for name, ability in list(data["abilities"].items()):
-        if any(defect_id in str(ability.get("evidence", "")) for defect_id in parked):
+        if any(defect_id in str(ability.get("evidence", "")) for defect_id in parked) or (name == "안 배운 코드로 전이" and "engine-travel-policy-v2" not in str(ability.get("evidence", ""))):
             archived.setdefault("abilities", {})[name] = data["abilities"].pop(name)
     gone = [s for s in data["discovered"] if _COMMERCE_CODE in s]
     if gone:

@@ -1,0 +1,1082 @@
+[
+  {
+    "day_type": "weekday",
+    "dir": "U",
+    "stored": 209,
+    "official": 183,
+    "missing": [],
+    "duplicate": [],
+    "unsupported": [
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "05:58:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "06:42:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "07:12:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "07:47:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "08:52:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "09:40:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "10:12:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "10:52:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "11:32:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "12:12:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "12:52:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "13:27:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "14:02:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "14:42:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "15:22:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "16:02:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "16:42:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "17:22:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "18:02:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "18:52:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "19:17:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "19:57:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "20:47:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "21:37:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "22:32:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "23:22:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      }
+    ]
+  },
+  {
+    "day_type": "weekday",
+    "dir": "D",
+    "stored": 208,
+    "official": 182,
+    "missing": [],
+    "duplicate": [],
+    "unsupported": [
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "06:08:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "06:53:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "07:28:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "08:14:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "09:03:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "09:53:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "10:28:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "11:04:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "11:43:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "12:18:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "12:58:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "13:38:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "14:18:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "14:58:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "15:38:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "16:18:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "16:58:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "17:33:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "18:08:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "19:03:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "19:44:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "20:18:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "20:53:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "21:38:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "22:28:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dep_time": "23:08:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      }
+    ]
+  },
+  {
+    "day_type": "holiday",
+    "dir": "U",
+    "stored": 185,
+    "official": 159,
+    "missing": [],
+    "duplicate": [],
+    "unsupported": [
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "05:58:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "06:42:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "07:12:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "07:47:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "08:52:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "09:40:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "10:12:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "10:52:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "11:32:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "12:12:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "12:52:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "13:27:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "14:02:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "14:42:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "15:22:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "16:02:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "16:42:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "17:22:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "18:02:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "18:52:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "19:17:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "19:57:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "20:47:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "21:37:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "22:32:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "23:22:40",
+        "dir": "U",
+        "dest_nm": "서울역",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      }
+    ]
+  },
+  {
+    "day_type": "holiday",
+    "dir": "D",
+    "stored": 184,
+    "official": 158,
+    "missing": [],
+    "duplicate": [],
+    "unsupported": [
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "06:08:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "06:53:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "07:28:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "08:14:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "09:03:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "09:53:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "10:28:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "11:04:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "11:43:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "12:18:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "12:58:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "13:38:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "14:18:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "14:58:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "15:38:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "16:18:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "16:58:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "17:33:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "18:08:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "19:03:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "19:44:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "20:18:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "20:53:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "21:38:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "22:28:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dep_time": "23:08:30",
+        "dir": "D",
+        "dest_nm": "인천공항2터미널",
+        "dest_inferred": null,
+        "fetched_at": "2026-10-01"
+      }
+    ]
+  }
+]

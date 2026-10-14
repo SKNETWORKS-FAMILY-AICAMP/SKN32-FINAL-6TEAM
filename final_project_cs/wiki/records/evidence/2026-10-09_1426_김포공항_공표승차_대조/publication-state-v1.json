@@ -1,0 +1,8 @@
+{
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_2113_김포공항_공식승차시간_재개검증.md",
+  "assets": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v50",
+  "tests": 97,
+  "replays": 16,
+  "full_feature_completion": false,
+  "mutated_product_files": 0
+}

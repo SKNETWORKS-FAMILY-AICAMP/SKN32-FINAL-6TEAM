@@ -1,0 +1,76 @@
+{
+  "created_at": "2026-10-12T01:38:25.370032+09:00",
+  "candidate": "legacy/deployment_candidates/2026-10-12_012943_plugin_v10",
+  "candidate_manifest_sha256": "c76d1da09d57b6d509d92157b1a978bd2c8ccec2960c8b43d46e59b32528211f",
+  "log": "wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/candidate-v10-full-linux-v1.log",
+  "log_sha256": "ac2e299098d0e07b6757713a86192e061926b54c42a4e66bbc9fc8a9abff3960",
+  "passed": 414,
+  "failed": 0,
+  "skipped": 0,
+  "prior_suite": 388,
+  "new_context_http": 6,
+  "new_context_unit": 20,
+  "begin": {
+    "python": "3.12.15",
+    "platform": "linux",
+    "verified_files": 462,
+    "selected_tests": [
+      "tests/unit/core/test_plugin_availability.py",
+      "tests/unit/test_plugin_composition_runtime.py",
+      "tests/unit/travel/test_plugin_read_boundaries.py",
+      "tests/unit/travel/test_plugin_worker_availability.py",
+      "tests/integration/controller/test_plugin_unavailable.py",
+      "tests/integration/controller/test_conversation_resume.py",
+      "tests/integration/controller/test_unknown_route_availability.py",
+      "tests/contract/test_case_state_table.py",
+      "tests/unit/test_candidate_packaging.py",
+      "tests/e2e/test_web_conversation_resume.py",
+      "tests/unit/travel/test_conversation_work.py",
+      "tests/unit/travel/test_trip_api_plugin_boundaries.py",
+      "tests/unit/travel/test_intake_resolve_dining.py",
+      "tests/unit/travel/test_plugin_unavailable_propagation.py",
+      "tests/unit/travel/test_dining_read_tool_availability.py",
+      "tests/integration/dining/test_catalog_state_plugin.py",
+      "tests/security/test_query_scope.py",
+      "tests/unit/core/test_controller_resume_recovery.py",
+      "tests/integration/controller/test_generic_dependency_retry.py",
+      "tests/e2e/test_web_conversation_isolation.py",
+      "tests/e2e/test_web_initial_retry.py",
+      "tests/e2e/test_web_initial_concurrency.py",
+      "tests/e2e/test_web_resume_commit_recovery.py",
+      "tests/e2e/test_watch_plugin_recovery.py",
+      "tests/unit/travel/test_watch_recovery_race.py",
+      "tests/unit/travel/test_initial_retry_boundaries.py",
+      "tests/e2e/test_intake_restore.py::test_restore_place_retiming_add_delete_and_title_as_one_exact_historical_revision",
+      "tests/e2e/test_intake_restore.py::test_stale_restore_preserves_all_current_values",
+      "tests/e2e/test_chat_context.py",
+      "tests/unit/travel/test_fact_context.py"
+    ],
+    "database": "ephemeral-synthetic-only",
+    "inherited_environment_cleared": true
+  },
+  "end": {
+    "exit_code": 0,
+    "seconds": 47.366
+  },
+  "orchestration": {
+    "operating_database_connected": false,
+    "operating_volumes_connected": false,
+    "operating_environment_forwarded": false,
+    "image_pull": false,
+    "images": [
+      "sha256:a7c6414e5d7ab15fe26ca7d358b754cff73de6c31d31484e2155b3e9d52989b1",
+      "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+    ],
+    "network_internal": true,
+    "database_tmpfs_destinations": [
+      "/tmp",
+      "/var/lib/postgresql/data"
+    ],
+    "database_mounts": [],
+    "pytest_process_exit_code": 0,
+    "remaining_temporary_containers": [],
+    "remaining_temporary_network": false,
+    "cleanup_errors": []
+  }
+}

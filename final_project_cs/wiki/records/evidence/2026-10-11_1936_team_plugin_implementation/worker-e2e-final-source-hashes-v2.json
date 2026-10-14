@@ -1,0 +1,12 @@
+{
+  "scripts/run_sweepers.py": "66ea951a6a7f86f9576723edbb1d4e71048056b46bf657fa6798cddbc85f8eb0",
+  "tests/unit/travel/test_plugin_worker_availability.py": "28339e75d5586ff34804505598dbe07ff7184f8eafe6f298243d88d887df33ad",
+  "tests/helpers/plugin_bindings.py": "f06077d9701a7d5c634f069e97d2552e5866e5505e548685792a9f1588e2a750",
+  "tests/e2e/test_trip_api.py": "483c73ccea271c00365a420ad6e30626894ad507379843f3c6d711d2808c1095",
+  "tests/e2e/test_case_version_rest.py": "f91cebe94b9ab8e6aef37c2455f477ff3299bcaac410f53531b736edb2daf621",
+  "tests/e2e/test_decision_unit_web.py": "34bd0851742cb681fffc4b96bb5d96f6bf8e7a0c26b511b1045bfc87b82a50eb",
+  "tests/e2e/test_desk_gate.py": "c6243fe26a09fee6589603ae4e6b35e9dc041fc8e4ec859d66c87ce2af2e6a73",
+  "tests/e2e/test_mcp_read_tools.py": "4c717a4ed6f23204dd2efe35ba0fb0c9f1a24f5a6269fdba1d80a45733539f29",
+  "tests/e2e/test_intake_transcription_differs_db.py": "ee5a858789a648e79c9ae87680e4e888537d0e4c3342c0b30c49d37a1f513236",
+  "wiki/teams/team-contract/plugin-availability.md": "9424db7c0ad66fbf487e381b4b44664094de96759aa438a24f20b1eb97ed61ac"
+}

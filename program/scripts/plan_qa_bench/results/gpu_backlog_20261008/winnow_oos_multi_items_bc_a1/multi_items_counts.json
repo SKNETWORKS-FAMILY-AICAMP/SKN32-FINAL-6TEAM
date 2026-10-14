@@ -1,0 +1,105 @@
+{
+  "model": "Winnow-E4B our-travel oos adapter Q8_0 base",
+  "our_training": true,
+  "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+  "saved": 835,
+  "expected": 835,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "metadata_matches": 835,
+  "counts": {
+    "all": {
+      "total": 835,
+      "B": 826,
+      "C": 793,
+      "first_item_diagnostic": 817,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9327080169065352,
+        0.9625743896829195
+      ]
+    },
+    "single": {
+      "total": 583,
+      "B": 576,
+      "C": 553,
+      "first_item_diagnostic": 568,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9274914814262291,
+        0.9637202626298423
+      ]
+    },
+    "compound": {
+      "total": 66,
+      "B": 66,
+      "C": 56,
+      "first_item_diagnostic": 65,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.7430709513021234,
+        0.9155636301732872
+      ]
+    },
+    "no_request": {
+      "total": 186,
+      "B": 184,
+      "C": 184,
+      "first_item_diagnostic": 184,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9616484427064622,
+        0.9970462551250561
+      ]
+    }
+  },
+  "answer_sha256": "15905eb9767d538a1082ca3c45b0476f52419da050c35cb97765d14f3ab8a7a0",
+  "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+  "execution": {
+    "job": {
+      "id": "winnow_oos_multi_items_bc_a1",
+      "label": "Winnow-E4B our-travel oos adapter Q8_0 base",
+      "our_training": true,
+      "model": "/workspace/deciders/winnow_e4b/gguf/Winnow-E4B-Q8_0.gguf",
+      "prompts": "/tmp/tripilot-multi-items-20261009/prompts.json",
+      "script": "/tmp/tripilot-multi-items-20261009/multi_items_eval_20261009.py",
+      "tag": "winnow_oos_multi_items_bc_a1",
+      "port": 8401,
+      "logprobs": "0",
+      "expected": 835,
+      "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+      "lora": "/tmp/tripilot-trained-adapters-20261008/winnow_e4b_oos_f16.gguf",
+      "training_base_revision": "aabbd52f5dfce0f7d9d22ca9e53e75259d865239",
+      "base_revision": "1b257e8fa80b270a62338362a8b35e37f7890273",
+      "base_same_blob_across_revisions": true,
+      "adapter_sha256": "3a4f2646ed55ce3758bc0c6e66b6ee005840886c499da4189e2503b2301ef963",
+      "suite": "multi_items_bc",
+      "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+      "runner_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+      "model_sha256": "840e3f50e5a9c218727f44e121d1b37cc9e2c3b318c8eb422ba6ef2e27b618a2",
+      "output_contract": "Strict items array; same itinerary/question/information; max_tokens64; fixed single/no-request/compound denominators",
+      "role": "Previously missing multi-item B/C role; not a rerun of completed single-item D/E and not independent holdout",
+      "automatic_retry": false,
+      "comparison_runs": 1,
+      "lora_sha256": "3a4f2646ed55ce3758bc0c6e66b6ee005840886c499da4189e2503b2301ef963"
+    },
+    "started": "2026-10-09T02:37:24.583976+00:00",
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "failed_records": [],
+  "repetitions": 1,
+  "independent_holdout": false,
+  "final_ranking": false,
+  "limits": [
+    "Changed output contract; compare only models with this exact contract",
+    "Existing development fixture; not new independent holdout",
+    "No output grammar enforcement; exact JSON and allowed IDs required",
+    "Failure and missing count as wrong; observed false picks separately reported"
+  ]
+}

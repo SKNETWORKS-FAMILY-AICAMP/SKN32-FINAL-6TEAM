@@ -1,0 +1,56 @@
+--- before/final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py
++++ after/final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py
+@@ -18,13 +18,14 @@
+ from __future__ import annotations
+ 
+ import urllib.parse
+-from datetime import datetime
++from datetime import datetime, timedelta
+ from typing import Any
+ from zoneinfo import ZoneInfo
+ 
+ import httpx
+ 
+ from .base import TravelSource
++from .subway_boarding import select_boardable_arrival, selection_input_error
+ 
+ BASE = "http://swopenapi.seoul.go.kr/api/subway"
+ KST = ZoneInfo("Asia/Seoul")
+@@ -106,6 +107,31 @@
+             return "malformed_realtimeArrivalList"
+         return None
+ 
++    def boardable_arrival(self, station: str, *, line_id: str, station_id: str, target_station_id: str,
++                         allowed_services: list, now: datetime, ready_at: datetime,
++                         max_age_seconds: float, max_provider_age_seconds: float,
++                         max_provider_clock_ahead_seconds: float) -> dict[str, Any]:
++        """조회 완료 시각의 접근 시간을 보존해 일반열차를 고른다. 제품 시간 대체는 별도 연결이다."""
++        policy = dict(line_id=line_id, station_id=station_id, target_station_id=target_station_id,
++                      allowed_services=allowed_services, now=now, ready_at=ready_at,
++                      max_age_seconds=max_age_seconds, max_provider_age_seconds=max_provider_age_seconds,
++                      max_provider_clock_ahead_seconds=max_provider_clock_ahead_seconds)
++        error = selection_input_error(**policy)
++        if error:
++            return {'status': 'unavailable', 'reason': error, 'source': self.name,
++                    'line_id': line_id, 'station_id': station_id, 'target_station_id': target_station_id}
++        snapshot = self.arrivals(station)
++        evaluated = self._now()
++        if not isinstance(evaluated, datetime) or evaluated.utcoffset() is None or evaluated < now:
++            return {'status': 'unavailable', 'reason': 'invalid_evaluation_clock', 'source': self.name,
++                    'evaluated_at': str(evaluated)}
++        def departure_minute(at):
++            floor = at.replace(second=0, microsecond=0)
++            return floor + timedelta(minutes=1) if at > floor else floor
++        ready = ready_at + (departure_minute(evaluated) - departure_minute(now))
++        result = select_boardable_arrival(snapshot, **dict(policy, now=evaluated, ready_at=ready))
++        return {**result, 'evaluated_at': evaluated.isoformat(), 'ready_at': ready.isoformat()}
++
+     def arrivals(self, station: str, *, line: str | None = None) -> dict[str, Any] | None:
+         """그 역의 **지금 도착 예정 열차**(상·하행). 못 읽으면 `None`, 열차가 없으면 `trains: []`(실패가 아니라 빈 결과).
+ 
+@@ -167,4 +193,4 @@
+                           source=self.name)
+ 
+ 
+-__all__ = ["SUBWAY_ID", "SeoulSubwayArrival", "clean_station"]
++__all__ = ["SUBWAY_ID", "SeoulSubwayArrival", "clean_station", "select_boardable_arrival"]

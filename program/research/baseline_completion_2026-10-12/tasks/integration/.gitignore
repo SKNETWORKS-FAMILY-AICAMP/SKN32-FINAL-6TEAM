@@ -1,0 +1,4 @@
+checks/**/pgdata/
+checks/**/postgres.log
+checks/**/private-spool/
+checks/**/tmp/

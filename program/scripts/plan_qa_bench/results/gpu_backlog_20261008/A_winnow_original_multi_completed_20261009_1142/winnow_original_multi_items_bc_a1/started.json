@@ -1,0 +1,26 @@
+{
+  "job": {
+    "id": "winnow_original_multi_items_bc_a1",
+    "label": "Winnow-E4B publisher release Q8_0",
+    "our_training": false,
+    "model": "/workspace/deciders/winnow_e4b/gguf/Winnow-E4B-Q8_0.gguf",
+    "prompts": "/tmp/tripilot-multi-items-20261009/prompts.json",
+    "script": "/tmp/tripilot-multi-items-20261009/multi_items_eval_20261009.py",
+    "tag": "winnow_original_multi_items_bc_a1",
+    "port": 8401,
+    "logprobs": "0",
+    "expected": 835,
+    "suite": "multi_items_bc",
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "runner_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "model_sha256": "840e3f50e5a9c218727f44e121d1b37cc9e2c3b318c8eb422ba6ef2e27b618a2",
+    "output_contract": "Strict items array; same itinerary/question/information; max_tokens64; fixed single/no-request/compound denominators",
+    "role": "Previously missing multi-item B/C role; not a rerun of completed single-item D/E and not independent holdout",
+    "automatic_retry": false,
+    "comparison_runs": 1
+  },
+  "started": "2026-10-09T02:32:37.625471+00:00",
+  "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+  "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Protocol
+from typing import Any, Callable, Protocol
 from uuid import UUID
 
 from app.core.transition import transition_case
@@ -47,7 +47,9 @@ class Classifier(Protocol):
 
 def classify_case(conn: Any, *, tenant_id: str, case_id: UUID, text: str,
                   classifier: Classifier | None, actor_id: str,
-                  expected_version: int = 1, state_patch: dict[str, Any] | None = None) -> EventType:
+                  expected_version: int = 1, state_patch: dict[str, Any] | None = None,
+                  diagnostic_recorder: Callable[[dict], dict] | None = None,
+                  customer_id: UUID | None = None) -> EventType:
     """분류를 수행하고 그 결과를 **한 문으로** 기록한다.
 
     ★반드시 Case 생성 트랜잭션 **밖에서** 부른다. 안에서 부르면 외부 provider 를
@@ -91,6 +93,14 @@ def classify_case(conn: Any, *, tenant_id: str, case_id: UUID, text: str,
         transition_case(conn, tenant_id=tenant_id, case_id=case_id,
                         expected_version=expected_version, event_type=event,
                         payload=payload, actor_type="api", actor_id=actor_id)
+    if event is EventType.CLASSIFICATION_FAILED and diagnostic_recorder is not None:
+        try:
+            collected = diagnostic_recorder({"tenant_id": tenant_id, "case_id": case_id,
+                                              "customer_id": customer_id, "code": FAILURE_CODE})
+        except Exception:
+            collected = {"status": "collection_degraded"}
+        if collected.get("status") == "collection_degraded":
+            logger.error("classification_diagnostic status=collection_degraded code=CLASSIFICATION_FAILED")
     return event
 
 

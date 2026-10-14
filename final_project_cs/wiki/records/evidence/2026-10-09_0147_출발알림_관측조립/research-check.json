@@ -1,0 +1,8 @@
+{
+  "checked_at": "2026-10-09T01:59:05.765513+09:00",
+  "url": "https://gtfs.org/documentation/realtime/realtime-best-practices/",
+  "read_scope": "Feed Publishing & General Practices의 응답 갱신30초와 내부 자료 나이90초 구별 원문",
+  "application": "90초는 잠정 정책 참고이며 서울 API SLA·실제 예측 오차 보장이 아님. 미래2초는 우리가 정한 시계 허용 정책",
+  "related_paper": "https://arxiv.org/html/2505.14193v1",
+  "paper_read_scope": "직전 등록부v5의 §2.1/2.2 성립 조건; 이번에 새 알고리즘·논문 성능 이식 없음"
+}
