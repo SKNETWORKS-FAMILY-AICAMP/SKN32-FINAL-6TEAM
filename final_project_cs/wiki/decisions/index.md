@@ -24,6 +24,7 @@ domain: neutral
 
 | ID | 결정 | 상태 | 영향 |
 |---|---|---|---|
+| [D-CS-016](D-CS-016-llm-failover-server-key.md) | **모델 서버가 모두 안 되면 서버용 OpenAI 키로 자동 전환한다** `[2026-10-07 사용자]` — 서버키 하나만(개인 키 금지) · 스위치 기본 꺼짐 · 이미지는 기본 제외 · 호출 상한 · 기본 모델은 재생 실측으로 `gpt-4.1`(운영은 환경 파일이 정함) | draft | 모델 호출 · 보안 · 비용 |
 | [D-CS-015](D-CS-015-local-embedding-bge-m3.md) | **임베딩은 로컬 bge-m3 로 쓴다 — 품질 비교 없이 운영 사정으로 정했다** `[2026-10-12]` — OpenAI 크레딧 소진으로 2026-09-22 전환. 다른 모델과 같은 조건 비교는 없었다. 교체 여부는 여행 규정 질의 세트 비교 뒤 | draft | RAG · 임베딩 |
 | [D-CS-001](D-CS-001-composer-ui-removal.md) | `/ui/composer` 폐기 | draft | 인증 경계 |
 | [D-CS-002](D-CS-002-finetuned-model-not-adopted.md) | **파인튜닝 모델 채택 안 함** | draft | 평가·자체호스팅 |
