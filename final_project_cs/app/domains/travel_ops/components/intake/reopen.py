@@ -37,6 +37,9 @@ def _end(item: Item) -> datetime:
 def _editable(item: Item, now: datetime) -> bool:
     place = item.place
     return (item.kind in EDITABLE_KINDS and item.booking_id is None and _end(item) > now
+            # `[2026-10-14]` 자정을 넘는 일정(23:00 → 다음 날 01:00)은 고정으로 둔다 — 접수는 끝을 「시작 날짜 + HH:MM」으로만 담아(`ends_at` 값 줄에 끝 날짜가 없다)
+            # 다시 열면 끝이 시작보다 앞서 「완료」가 time_order 로 막혔다. 끝 날짜를 접수에 담는 근본 수정은 따로 의논한다
+            and _end(item).astimezone(KST).date() == item.starts_at.astimezone(KST).date()
             # 좌표 없는 장소는 확인 화면의 검사(운영시간 · 이동)를 못 한다 — 「장소를 정하지 못했다」로 막히니 고정으로 둔다
             and (place is None or (place.get("latitude") is not None and place.get("longitude") is not None)))
 
@@ -70,9 +73,13 @@ def _claims_for(index: int, item: Item, evidence: dict[str, Any]) -> list[tuple[
         out.append(("place", _place_value(item.place, item.kind), evidence))
     else:
         out.append(("place", None, {**evidence, "none": True}))        # 「장소 없음」으로 등록한 일정
-    booking_no = ((item.detail or {}).get("booking") or {}).get("booking_no")
-    if booking_no:
-        out.append(("booking_no", str(booking_no), evidence))
+    booking = (item.detail or {}).get("booking") or {}
+    if booking.get("booking_no"):
+        out.append(("booking_no", str(booking["booking_no"]), evidence))
+    elif booking:
+        # `[2026-10-14]` 「예약 완료」라고만 적어 등록한 일정(`declared_by: customer_plan`, 예약번호 없음)도 예약한 것으로 싣는다 — 안 그러면 확인 화면의 예약 줄 ·
+        # 자동 추천 제외가 빠지고, 시각만 고쳐도 새 항목에서 예약 표시가 사라졌다(`itinerary_delay._fixed`)
+        out.append(("booked", True, evidence))
     if item.locked or (item.detail or {}).get("customer_pinned"):
         out.append(("locked", True, evidence))
     return [(f"items[{index}].{name}", value, why) for name, value, why in out]
@@ -243,11 +250,13 @@ def _same(origin: Item, row: dict[str, Any], starts: datetime, ends: datetime | 
     same_place = (place is None and origin.place_id is None) or \
         (place is not None and origin.place_id is not None and str(place.get("place_id")) == str(origin.place_id))
     booking = ((origin.detail or {}).get("booking") or {}).get("booking_no")
+    # 예약번호는 없어도 「예약 있음」으로 등록한 일정이 있다 — 그 표시가 달라졌으면 고친 것이다
+    same_booked = (bool(row["booking_no"]) or row["booked"] is True) == bool((origin.detail or {}).get("booking"))
     pinned = bool(origin.locked or (origin.detail or {}).get("customer_pinned"))
     # 끝 시각 없이 등록한 일정은 확인 화면이 규칙으로 끝을 채운다(`assemble._fill_times`) — 끝 칸 값 줄이 없으면 고친 것이 아니다
     same_end = ends == origin.ends_at or (origin.ends_at is None and "ends_at" not in row["claims"])
     return ((row["title"] or "") == origin.title and row["kind"] == origin.kind and starts == origin.starts_at
-            and same_end and same_place and (row["booking_no"] or None) == (booking or None)
+            and same_end and same_place and (row["booking_no"] or None) == (booking or None) and same_booked
             and row["locked"] == pinned)
 
 
@@ -275,8 +284,8 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
             plan.keys[origin.item_id] = (str(row["source_id"]), row["index"])
             continue
         detail: dict[str, Any] = {"provenance": row["provenance"], "intake": {"intake_id": intake_id, "revision": revision}}
-        if row["booking_no"]:
-            detail["booking"] = {"booking_no": row["booking_no"], "declared_by": "customer_plan"}
+        if row["booking_no"] or row["booked"] is True:
+            detail["booking"] = {"declared_by": "customer_plan", **({"booking_no": row["booking_no"]} if row["booking_no"] else {})}
         if row["locked"]:
             detail["customer_pinned"] = True
         title = row["title"] or "(제목 없음)"
