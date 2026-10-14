@@ -432,7 +432,7 @@ test("일정 카드의 시간 · 원 · 이름은 한 줄에 놓인다(이름만
 test("시간 편집기에 시각을 적으면 밀리는 일정이 미리 보이고, 적용하면 모든 일정이 요청 하나로 간다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   const form = await openTime(page, "광장시장");
-  await expect(form.getByText("가능한 시각 02:55 ~ 23:00")).toBeVisible();                              // 앞 일정들을 하루 맨 앞까지 밀 수 있는 만큼
+  await expect(form.getByText("가능한 시각 08:55 ~ 23:00")).toBeVisible();                              // 앞 일정들을 하루 맨 앞까지 밀 수 있는 만큼
   await form.getByLabel("시작", { exact: true }).fill("11:30");                                                          // 앞 올리브영(12:00 끝)과 겹치니 앞 일정들이 밀린다
   await expect(form.getByRole("status")).toContainText("함께 바뀌는 일정 2개");
   await expect(form.getByRole("status")).toContainText("올리브영");
