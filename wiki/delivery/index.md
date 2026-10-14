@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 프로젝트 진행 기준
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 사양은 wiki의 확정 결정·계약, 구현·배포 상태는 코드와 해당 환경 실행 기록으로 확인합니다
 status: draft
 domain: travel
 ---

@@ -7,7 +7,7 @@
     CREATED → (분류) CLASSIFIED → ROUTED(여행 창구) → COMPLETED(= resolved)
   분류 실패는 `classify_case` 가 escalated 로 보낸다. 신고 내용을 못 뽑았거나 창구가
   받지 않는 문장이면 ROUTING_FAILED, 창구가 처리하지 못하면 GUARDRAIL_ESCALATED —
-  **추측으로 일정을 바꾸지 않고 사람에게 넘긴다.**
+  **추측으로 일정을 바꾸지 않고 처리 불가로 닫는다**(고객에게는 처리하지 못했다고 답한다. 상담원 대기는 없다 — D-018 · D-CS-014).
 ★같은 `request_id` 는 Case 를 새로 만들지 않는다.
 ★재요청(「다른 안으로 바꿔 줘」, v11 §1) — 가장 최근에 바뀐 항목을 우리가 들고 있던
   「다른 안」으로 바꾼다. 무엇으로 바꿀지 모델이 지어내게 두지 않는다.
@@ -345,9 +345,16 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         try:
             resumed = resume_pending(conn, controller=controller, tenant=tenant, trip=trip,
                                      request_id=request_id, message=message, actor_id=actor_id,
-                                     case_id=resume_case_id, token=resume_token, expected_version=expected_version, desk=desk, chat=chat)
+                                     case_id=resume_case_id, token=resume_token, expected_version=expected_version, desk=desk, chat=chat,
+                                     fresh=(lambda: _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
+                                                                message=message, selected=selected_item_id, chat=chat, now=at))
+                                     if summary_day is None and _decision_mode(chat, tenant) == "on" else None)
         except LookupError:
             raise TripNotFound(str(resume_case_id)) from None
+        # ★`[2026-10-13]` 대기 건이 있어도 새 문장이 혼자서 완결된 요청이면 새 요청으로 처리한다(같은 해석을 다시 부르지 않는다)
+        fresh_decision = None
+        if resumed is not None and "fresh_decision" in resumed:
+            fresh_decision, resumed = resumed["fresh_decision"], None
         if resumed is not None:
             return resumed
         # ★`[2026-09-29]` **사실 질문의 답은 분류 전에 규칙으로 만든다**(모델을 안 쓴다) — 그리고 Case 기록에 **처음부터**
@@ -361,9 +368,11 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             _clear_model_path()
             if summary_decision is not None:
                 decision, failure = summary_decision, None
+            elif fresh_decision is not None:
+                decision, failure = fresh_decision
             else:
                 decision, failure = _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
-                                                message=message, selected=selected_item_id, chat=chat)
+                                                message=message, selected=selected_item_id, chat=chat, now=at)
             record = decision.record() if decision is not None else {"failed": failure}
             record = {**record, **_model_path()}               # ★`[2026-10-07]` 어느 경로(로컬 · API)로 답했나 — 넘김 장치가 켜져 있을 때만 들어간다
             if mode == "on" or summary_decision is not None:
@@ -554,7 +563,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             outcome = desk.fresh_alternate(trip_id=trip_id, item_id=target.item_id, base_version=current["version"],
                                            message=message, request_id=request_id)
     else:
-        # ★모르는 종류는 어떤 처리로도 떨어뜨리지 않는다 — 사람에게
+        # ★모르는 종류는 어떤 처리로도 떨어뜨리지 않는다 — 처리하지 못한 것으로 남긴다
         outcome = {"status": f"unhandled_{report['type']}"}
     with get_connection() as conn:
         def move2(event_type, payload):
@@ -629,7 +638,7 @@ def _model_path() -> dict[str, Any]:
 
 
 def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: list[Any], message: str,
-                selected: UUID | None, chat: Any):
+                selected: UUID | None, chat: Any, now: datetime | None = None):
     from app.core.settings import get_guardrails
 
     from app.domains.travel_ops.components.conversation import chat_log
@@ -639,7 +648,7 @@ def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: li
         decision = decision_unit.decide(
             chat, stops=decision_unit.stops_of(items), changes=decision_unit.changes_of(store, conn, trip_id, items),
             history=chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id), selected_item_id=selected,
-            message=message, num_predict=int(get_guardrails().get("travel.decision_unit.num_predict") or 160))
+            message=message, num_predict=int(get_guardrails().get("travel.decision_unit.num_predict") or 160), now=now)
         return decision, None
     except decision_unit.DecisionFailed as exc:
         return None, str(exc)
@@ -786,6 +795,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     team = {"dining": "dining", "activity": "activity", "mobility": "mobility"}.get(getattr(item, "kind", None),
                                                                                     "trip_desk")
     # 읽기 재시도(fact_read_retry.retry_read)가 쓰는 스냅샷 — Case 를 열 때와 같은 이름으로 남긴다
+    # ★`[2026-10-14]` 문맥으로 바로잡은 대상(`fact_context.resolve`)을 스냅샷에도 같이 적는다 — 전에는 해석 기록은 바로잡은 대상,
+    #   스냅샷은 모델이 처음 고른 대상이라 중단 뒤 재전송이 엉뚱한 일정을 읽을 수 있었다(`test_context_corrected_target_and_snapshot_are_committed_together`)
+    if read_snapshot and not decision.reads:
+        read_snapshot = {**read_snapshot, "item_id": str(decision.item.item_id) if decision.item else None}
     read_patch = {"fact_read_snapshot": read_snapshot} if read_snapshot else {}
     if not safe_read or read_case["status"] != "running":
         move(EventType.ROUTED, {"owner_team_id": team, "capability": f"trip_desk.{action}", "routed_by": "decision_unit",
@@ -831,9 +844,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     elif action == "answer_service":
         from app.domains.travel_ops.components.conversation import service_help
 
+        # ★`[2026-10-14]` 기능 안내는 규정 답과 다른 문턱을 쓴다(`travel.service_help.min_score` — 근거는 설정 파일 주석)
         status, text, basis = service_help.reply(
             message=message, tenant_id=tenant, policy_search=policy_search,
-            min_score=float(get_guardrails().get("travel.question.min_policy_score")), now=at)
+            min_score=float(get_guardrails().get("travel.service_help.min_score")), now=at)
         outcome = {"status": status, "text": text}
     elif action == "answer_fact" and decision.fact in ("schedule", "changeability"):
         from app.domains.travel_ops.components.conversation import schedule_query

@@ -336,13 +336,17 @@ class FailoverChat:
 
     def __init__(self, backends: list[_Backend], *, total_seconds: float = 15.0, vision: bool = False,
                  sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic,
-                 backoff_seconds: float = 0.4) -> None:
+                 backoff_seconds: float = 0.4, warm_chat: Any = None) -> None:
         if not backends:
             raise ValueError("경로가 하나는 있어야 한다")
         self._backends, self.total_seconds, self.vision = backends, float(total_seconds), bool(vision)
         self._sleep, self._clock, self._backoff = sleep, clock, float(backoff_seconds)
         first = next((b.chat for b in backends if not b.is_api), backends[0].chat)
         self._primary = first
+        #: ★`[2026-10-13]` 예열에 쓸 Ollama — 고객 응답을 기다리는 짧은 시간(`llm_failover_primary_timeout_seconds`)이 아니라
+        #:  모델을 올리는 데 드는 시간(`ollama_timeout_seconds`)으로 기다린다. 짧은 시간으로 예열하면 식은 모델(x600 서버 실측: 첫 로딩 28초)이
+        #:  올라가는 도중 끊겨 끝내 못 올라가고, 모든 호출이 유료 API 로 넘어갔다(2026-10-13 아침 웹 채팅 시험).
+        self._warm_chat = warm_chat or first
         self.model = getattr(first, "model", None)
 
     def __getattr__(self, name: str) -> Any:                   # 예열 · 진단이 쓰는 나머지 속성은 첫 Ollama 의 것
@@ -425,7 +429,7 @@ class FailoverChat:
         return self._primary.loaded(timeout=timeout)
 
     def warm(self) -> None:
-        self._primary.warm()
+        self._warm_chat.warm()
 
 
 # ─────────────────────────── 조립 ───────────────────────────
@@ -456,6 +460,7 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
     urls = [primary.base_url] + [u.strip().rstrip("/") for u in (getattr(settings, "ollama_fallback_base_urls", "") or "").split(",") if u.strip()]
     for number, url in enumerate(dict.fromkeys(urls)):
         chat = OllamaChat(base_url=url, model=primary.model, timeout=primary_timeout, keep_alive=primary.keep_alive,
+                          num_ctx=getattr(primary, "num_ctx", 0),
                           transport=primary._post if (number == 0 and primary._injected) else None)
         name = "ollama" if number == 0 else f"ollama{number + 1}"
         backends.append(_Backend(name, chat, breaker_for(f"{name}@{url}", threshold=threshold, open_seconds=open_seconds, clock=clock),
@@ -469,7 +474,7 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
                              breaker_for("openai", threshold=threshold, open_seconds=open_seconds, clock=clock), is_api=True, timeout=api_timeout,
                              budget=gate))
     return FailoverChat(backends, total_seconds=float(settings.llm_failover_total_seconds), vision=bool(settings.llm_failover_vision),
-                        sleep=sleep, clock=clock)
+                        sleep=sleep, clock=clock, warm_chat=primary)
 
 
 # ─────────────────────────── 규정 검색의 질문 임베딩 ───────────────────────────

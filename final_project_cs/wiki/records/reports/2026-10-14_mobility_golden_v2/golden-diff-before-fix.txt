@@ -1,0 +1,65 @@
+﻿=== subway_walk: 20 칸 다름 (골든 → 지금)
+   items/len | 9 → 8
+   items/3/ends_at | "2026-09-29T13:12:00+09:00" → "2026-09-29T13:18:00+09:00"
+   items/3/starts_at | "2026-09-29T12:34:00+09:00" → "2026-09-29T12:41:00+09:00"
+   items/5/ends_at | "2026-09-29T17:48:00+09:00" → "2026-09-29T17:50:00+09:00"
+   items/5/starts_at | "2026-09-29T17:22:00+09:00" → "2026-09-29T17:25:00+09:00"
+   items/7/ends_at | "2026-09-29T19:20:00+09:00" → "2026-09-29T20:30:00+09:00"
+   items/7/kind | "mobility" → "activity"
+   items/7/place | "<없음>" → "lotte_mart"
+   items/7/route | "dinner_to_lotte_mart" → "<없음>"
+   items/7/starts_at | "2026-09-29T19:14:00+09:00" → "2026-09-29T19:30:00+09:00"
+   items/7/title | "서울역 저녁 식당(시나리오) → 롯데마트 서울역점" → "롯데마트 서울역점 식료품 쇼핑"
+   left_out/dinner_to_lotte_mart | [{"label": "경의중앙선 서울역→디지털미디어시티 → 6호선 디지털미디어시티→연신내 → GTX-A 연신내→서울", "code": "no_last_departure", "reason": "마지막 성립 출발을 역산하지 못했다 — 디지털미디어시티 출발 열차의 행선지를 확인할 수 없어 연 → "<없음>"
+   left_out/gyeongbokgung_to_seongsu | "<없음>" → [{"label": "3호선 경복궁→충무로 → 4호선 충무로→동대문역사문화공원 → 2호선 동대문역사문화공원→성수", "code": "earlier_departure", "reason": "이동 출발 12:41 출발은 재판정에서 불성립 · 12:34 출발은 성립 확인(역산 · 그 사이 마
+   routes/dinner_to_lotte_mart | {"from": "서울역 저녁 식당(시나리오)", "to": "롯데마트 서울역점", "planned": "walk", "options": [{"id": "walk", "label": "도보", "eta_min": 6, "walk_m": 330, "fare_krw": 0, "uses":  → "<없음>"
+   routes/gyeongbokgung_to_seongsu/options/len | 2 → 1
+   routes/gyeongbokgung_to_seongsu/options/0/eta_min | 38 → 37
+   routes/gyeongbokgung_to_seongsu/options/0/label | "3호선 경복궁→을지로3가 → 2호선 을지로3가→성수 — 소요 가장 짧음 · 환승 가장 적음(1회)" → "3호선 경복궁→을지로3가 → 2호선 을지로3가→성수"
+   routes/seongsu_to_dinner/options/0/eta_min | 26 → 25
+   routes/seongsu_to_dinner/options/0/walk_m | 214 → 199
+   skipped/len | 0 → 1
+=== all: 43 칸 다름 (골든 → 지금)
+   items/len | 9 → 8
+   items/3/ends_at | "2026-09-29T13:12:00+09:00" → "2026-09-29T13:18:00+09:00"
+   items/3/starts_at | "2026-09-29T12:34:00+09:00" → "2026-09-29T12:41:00+09:00"
+   items/5/ends_at | "2026-09-29T17:48:00+09:00" → "2026-09-29T17:50:00+09:00"
+   items/5/starts_at | "2026-09-29T17:22:00+09:00" → "2026-09-29T17:25:00+09:00"
+   items/7/ends_at | "2026-09-29T19:20:00+09:00" → "2026-09-29T20:30:00+09:00"
+   items/7/kind | "mobility" → "activity"
+   items/7/place | "<없음>" → "lotte_mart"
+   items/7/route | "dinner_to_lotte_mart" → "<없음>"
+   items/7/starts_at | "2026-09-29T19:14:00+09:00" → "2026-09-29T19:30:00+09:00"
+   items/7/title | "서울역 저녁 식당(시나리오) → 롯데마트 서울역점" → "롯데마트 서울역점 식료품 쇼핑"
+   left_out/dinner_to_lotte_mart | [{"label": "경의중앙선 서울역→디지털미디어시티 → 6호선 디지털미디어시티→연신내 → GTX-A 연신내→서울", "code": "no_last_departure", "reason": "마지막 성립 출발을 역산하지 못했다 — 디지털미디어시티 출발 열차의 행선지를 확인할 수 없어 연 → "<없음>"
+   left_out/gyeongbokgung_to_seongsu/len | 6 → 7
+   left_out/gyeongbokgung_to_seongsu/0/reason | "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 50분 vs 38 · 환승 1 vs 1 · 도보 17분 vs 14.1)" → "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 50분 vs 37 · 환승 1 vs 1 · 도보 17분 vs 14.1)"
+   left_out/gyeongbokgung_to_seongsu/1/reason | "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 51분 vs 38 · 환승 1 vs 1 · 도보 15분 vs 14.1)" → "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 49분 vs 37 · 환승 1 vs 1 · 도보 15분 vs 14.1)"
+   left_out/gyeongbokgung_to_seongsu/5/label | "버스 종로11 국립민속박물관→시청역 → 2호선 시청→성수" → "3호선 경복궁→충무로 → 4호선 충무로→동대문역사문화공원 → 2호선 동대문역사문화공원→성수"
+   left_out/gyeongbokgung_to_seongsu/5/reason | "이동 출발 12:34 출발은 재판정에서 불성립 · 12:28 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 44분" → "이동 출발 12:41 출발은 재판정에서 불성립 · 12:34 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 2회 · 소요 44분"
+   left_out/hotel_to_gyeongbokgung/0/reason | "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 36분 vs 30 · 환승 1 vs 0 · 도보 16분 vs 14)" → "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 36분 vs 30 · 환승 1 vs 0 · 도보 16분 vs 13)"
+   left_out/hotel_to_gyeongbokgung/1/reason | "혼합 C — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 39분 vs 30 · 환승 1 vs 0 · 도보 15분 vs 14)" → "혼합 C — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 39분 vs 30 · 환승 1 vs 0 · 도보 15분 vs 13)"
+   left_out/hotel_to_gyeongbokgung/2/reason | "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 32분 vs 30 · 환승 1 vs 0 · 도보 16분 vs 14)" → "혼합 A — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 32분 vs 30 · 환승 1 vs 0 · 도보 16분 vs 13)"
+   left_out/hotel_to_gyeongbokgung/6/reason | "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:05 출발은 성립 확인(역산) · 환승 0회 · 소요 36분" → "앞 일정이 09:15에 끝나고, 이동 출발 09:18 출발은 재판정에서 불성립 · 09:06 출발은 성립 확인(역산) · 환승 0회 · 소요 35분"
+   left_out/seongsu_to_dinner/1/label | "2호선 성수→시청 → 버스 7016 시청역8번출구→서울역버스환승센터" → "2호선 성수→시청 → 버스 1711 시청앞.덕수궁→서울역버스환승센터"
+   left_out/seongsu_to_dinner/1/reason | "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 36분 vs 26 · 환승 1 vs 1 · 도보 6분 vs 4.8)" → "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 (소요 34분 vs 25 · 환승 1 vs 1 · 도보 4분 vs 3.8)"
+   left_out/seongsu_to_dinner/2/label | "2호선 성수→을지로입구 → 버스 504 을지로입구.시청입구→서울역버스환승센터" → "2호선 성수→시청 → 버스 7016 시청역8번출구→서울역버스환승센터"
+   left_out/seongsu_to_dinner/2/reason | "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 38분 vs 26 · 환승 1 vs 1 · 도보 5분 vs 4.8)" → "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 36분 vs 25 · 환승 1 vs 1 · 도보 6분 vs 3.8)"
+   left_out/seongsu_to_dinner/3/code | "mix_skipped" → "mix_dominated"
+   left_out/seongsu_to_dinner/3/label | "그 밖 혼합 후보 30개" → "2호선 성수→을지로입구 → 버스 504 을지로입구.시청입구→서울역버스환승센터"
+   left_out/seongsu_to_dinner/3/reason | "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)" → "혼합 B — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: 소요 38분 vs 25 · 환승 1 vs 1 · 도보 5분 vs 3.8)"
+   left_out/seongsu_to_dinner/4/label | "그 밖 혼합 후보 12개" → "그 밖 혼합 후보 30개"
+   left_out/seongsu_to_dinner/4/reason | "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)" → "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+   left_out/seongsu_to_dinner/5/code | "mix_cap" → "mix_skipped"
+   left_out/seongsu_to_dinner/5/label | "그 밖 혼합 후보 185개" → "그 밖 혼합 후보 12개"
+   left_out/seongsu_to_dinner/5/reason | "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)" → "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+   left_out/seongsu_to_dinner/6/code | "earlier_departure" → "mix_cap"
+   left_out/seongsu_to_dinner/6/label | "2호선 성수→시청 → 버스 1711 시청앞.덕수궁→서울역버스환승센터" → "그 밖 혼합 후보 185개"
+   left_out/seongsu_to_dinner/6/reason | "이동 출발 17:22 출발은 재판정에서 불성립 · 17:07 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 35분" → "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+   routes/dinner_to_lotte_mart | {"from": "서울역 저녁 식당(시나리오)", "to": "롯데마트 서울역점", "planned": "walk", "options": [{"id": "walk", "label": "도보", "eta_min": 6, "walk_m": 330, "fare_krw": 0, "uses":  → "<없음>"
+   routes/gyeongbokgung_to_seongsu/options/len | 2 → 1
+   routes/gyeongbokgung_to_seongsu/options/0/eta_min | 38 → 37
+   routes/gyeongbokgung_to_seongsu/options/0/label | "3호선 경복궁→을지로3가 → 2호선 을지로3가→성수 — 소요 가장 짧음 · 환승 가장 적음(1회)" → "3호선 경복궁→을지로3가 → 2호선 을지로3가→성수"
+   routes/seongsu_to_dinner/options/0/eta_min | 26 → 25
+   routes/seongsu_to_dinner/options/0/walk_m | 214 → 199
+   skipped/len | 0 → 1

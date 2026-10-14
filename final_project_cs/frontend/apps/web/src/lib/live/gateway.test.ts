@@ -404,7 +404,7 @@ describe("live trip gateway", () => {
   it("sends a failed message again with the same request id, so the server does not act on it twice", async () => {
     const gateway = createLiveGateway();
     const ids = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)).request_id as string);
-    replies.push(new Response("{}", { status: 502 }));
+    replies.push(new Response("{}", { status: 500 }));  // a failed send (a gateway 502 is now sent again by itself — stream.ts)
     await expect(gateway.sendMessage(TRIP.trip_id, "점심 바꿔 줘", "ko", "b")).rejects.toBeInstanceOf(LiveError);
     replies.push({ status: "adjusted", answer: "바꿨어요." });
     await gateway.sendMessage(TRIP.trip_id, "점심 바꿔 줘", "ko", "b");
@@ -418,7 +418,7 @@ describe("live trip gateway", () => {
   it("does not reuse a failed message's request id for different words or a different stop", async () => {
     const gateway = createLiveGateway();
     const ids = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)).request_id as string);
-    replies.push(new Response("{}", { status: 502 }));
+    replies.push(new Response("{}", { status: 500 }));  // a failed send (a gateway 502 is now sent again by itself — stream.ts)
     await expect(gateway.sendMessage(TRIP.trip_id, "저녁 바꿔 줘", "ko", "a")).rejects.toBeInstanceOf(LiveError);
     replies.push({ status: "answered", answer: "네." });
     await gateway.sendMessage(TRIP.trip_id, "저녁 바꿔 줘", "ko", "b");
@@ -498,7 +498,7 @@ describe("live trip gateway", () => {
       const gateway = createLiveGateway();
       replies.push(wait);
       await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko");
-      replies.push(new Response("{}", { status: 502 }));
+      replies.push(new Response("{}", { status: 500 }));  // a failed send (a gateway 502 is now sent again by itself — stream.ts)
       await expect(gateway.sendMessage(TRIP.trip_id, "30분이요", "ko")).rejects.toBeInstanceOf(LiveError);
       replies.push({ case_status: "completed", answer: "반영했어요." });
       await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko");
@@ -535,7 +535,7 @@ describe("live trip gateway", () => {
 
     it("accepts explicit correlation and never reuses a failed reply id for a different Case", async () => {
       const gateway = createLiveGateway();
-      replies.push(new Response("{}", { status: 502 }));
+      replies.push(new Response("{}", { status: 500 }));  // a failed send (a gateway 502 is now sent again by itself — stream.ts)
       await expect(gateway.sendMessage(TRIP.trip_id, "30분이요", "ko", null, null, undefined, resume)).rejects.toBeInstanceOf(LiveError);
       const other = { ...resume, case_id: "another-case", resume_token: "another-private" };
       replies.push({ case_status: "completed", answer: "반영했어요." });

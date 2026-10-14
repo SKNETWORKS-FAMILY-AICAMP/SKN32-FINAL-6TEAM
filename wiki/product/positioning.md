@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 검증과 지속 관리의 가치
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 고객 웹 앱, 개인 AI 연동(API/MCP), 공유 여행계획서 링크가 같은 여행 상태를 사용합니다
 status: draft
 domain: travel
 ---

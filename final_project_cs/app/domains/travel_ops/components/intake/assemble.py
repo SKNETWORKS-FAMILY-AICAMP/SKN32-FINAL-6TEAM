@@ -28,6 +28,9 @@ from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.planning import planner
 
+from .rules import meal_mention
+from .span_segments import split_segments
+
 KST = ZoneInfo("Asia/Seoul")
 MAX_PARTY = 4                      #: 상품 범위 — 서울 · 최대 7일 · 4인
 _HHMM = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)$")
@@ -93,10 +96,13 @@ def collect(*, sources: list[dict[str, Any]], claims: list[dict[str, Any]]) -> C
 
     각 줄(`rows[]`)은 `index`(원본 안 항목 번호 — 고치는 칸 이름 `items[n]` 의 n) · `source_id` · `title` · `date` · `start` · `end` · `kind` ·
     `place`(좌표를 아는 장소 값 또는 None) · `claims`(그 항목의 칸별 값 줄 — 근거·확인 필요·메모) · `locked`(고객이 「꼭 넣을 일정」으로 고정) 을 든다."""
+    original_titles = {(c["source_id"], c["field"]): c.get("evidence") or {} for c in claims
+                       if c["field"].endswith(".title") and isinstance((c.get("evidence") or {}).get("start"), int)}
     claims = effective(claims)
     trip = {c["field"][5:]: c for c in claims if c["field"].startswith("trip.")}
     problems: list[Problem] = []
     rows: list[dict[str, Any]] = []
+    all_rows: list[tuple[dict[str, Any], bool]] = []
     first_day = _date_value(trip.get("first_day"))
     for source in sources:
         mine = [c for c in claims if c["source_id"] == source["source_id"]]
@@ -108,9 +114,12 @@ def collect(*, sources: list[dict[str, Any]], claims: list[dict[str, Any]]) -> C
                 by_index.setdefault(index, {})[claim["field"][claim["field"].index("]") + 2:]] = claim
         for index in sorted(by_index):
             fields = by_index[index]
-            if (fields.get("removed") or {}).get("value") is True:
-                continue
-            rows.append(_row(source, index, fields, marks, first_day, problems))
+            removed = (fields.get("removed") or {}).get("value") is True
+            # 삭제한 항목도 원문 경계를 정할 때는 남긴다. 그 항목의 수식어가
+            # 살아 있는 앞 항목으로 다시 들어오면 안 된다.
+            all_rows.append((_row(source, index, fields, marks, first_day, [] if removed else problems), removed))
+    _split_shared_lines([row for row, _ in all_rows], original_titles)
+    rows = [row for row, removed in all_rows if not removed]
     # ★시각이 없는 것은 **원문 순서** 안에서 규칙으로 배치한다 — 시각순으로 먼저 세우면 시각 없는 「점심」이
     #   그날 마지막 항목 뒤로 밀려 저녁이 된다. 채운 뒤에 날짜·시각 순으로 세운다.
     rows.sort(key=lambda r: (r["date"] or "9999", r["order"]))       # order = (원본, 원문 줄, 번호)
@@ -302,11 +311,39 @@ def _fill_times(rows, filled, problems) -> None:
         previous_end[row["date"]] = row["end"] or row["start"]
 
 
+def _split_shared_lines(rows, original_titles=None) -> None:
+    """저장된 항목 구간을 재사용한다. 옛 근거는 삭제 전 항목들로 같은 경계를 계산한다."""
+    shared: dict[tuple[str, int], list[tuple[int, int, dict[str, Any], str, dict[str, Any]]]] = {}
+    for row in rows:
+        evidence = (row["claims"].get("title") or {}).get("evidence") or {}
+        if not isinstance(evidence.get("start"), int):
+            evidence = (original_titles or {}).get((row["source_id"], f"{row['where']}.title"), evidence)
+        if isinstance(evidence.get("start"), int) and isinstance(evidence.get("end"), int) and row["text"]:
+            row["_title_start"] = evidence["start"]
+            shared.setdefault((row["source_id"], row["order"][1]), []).append(
+                (evidence["start"], evidence["end"], row, row["text"], evidence))
+    for group in shared.values():
+        group.sort(key=lambda g: g[0])
+        bounds = split_segments(group[0][3], [(start, end) for start, end, *_ in group])
+        for (start, end, row, text, evidence), (left, right) in zip(group, bounds):
+            segment = evidence.get("segment") or {}
+            saved_left, saved_right = segment.get("start"), segment.get("end")
+            if isinstance(saved_left, int) and isinstance(saved_right, int) and \
+                    0 <= saved_left <= start < end <= saved_right <= len(text) and \
+                    segment.get("text") == text[saved_left:saved_right]:
+                left, right = saved_left, saved_right
+            row["text"] = text[left:right]
+            row["_segment_start"] = left
+
+
 def _placed(row, previous: str | None) -> tuple[str, str]:
-    """(시각, 그렇게 정한 이유)."""
-    for word, at in _MEAL_TIMES:
-        if word in row["text"]:
-            return at, f"시각이 없어 원문의 「{word}」로 {at} 에 두었다"
+    """(시각, 그렇게 정한 이유). ★끼니 말은 그 항목 몫에서, 「먹고 나서」는 빼고 본다(`rules.meal_mention`)."""
+    title_start = row.get("_title_start", row["text"].find(row["title"] or ""))
+    offset = title_start - row.get("_segment_start", 0)
+    mention = meal_mention(row["text"], place_start=offset if offset >= 0 else None)
+    at = dict(_MEAL_TIMES).get(mention[0]) if mention else None
+    if at:
+        return at, f"시각이 없어 원문의 「{mention[0]}」로 {at} 에 두었다"
     if row["kind"] == "dining":
         at = "12:00" if not previous or previous <= "12:00" else "18:00"
         return at, f"시각이 없어 식사 시간({at})에 두었다"

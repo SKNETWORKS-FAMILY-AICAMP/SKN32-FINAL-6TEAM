@@ -3,10 +3,14 @@
 
 ★역할 나눔:
   - 코드: 대체 후보를 찾고(같은 분류 · 반경 1→10km) 휴무 · 운영시간 · 재난을 다시 확인한다(`rank_alternatives` · `_recheck_disaster`).
-  - LLM: 그 후보 가운데 **어느 곳을 먼저 보여 줄지**와 그 이유 한 줄만 정한다. 후보를 새로 만들지 않는다.
+    **화면에 보일 3곳(`SHOW`)도 코드가 정한다.**
+  - LLM: 그 3곳의 **보여 줄 순서**(1순위)와 그 이유 한 줄만 정한다. 후보를 새로 만들지도, 고르지도 않는다.
+    `[2026-10-13 사용자 결정 A안]` 전에는 더보기까지 8곳을 넘겨 LLM 이 더보기 후보를 상위 3곳으로 올릴 수 있었다 — 어떤 3곳이 보이는지가
+    모델 판단으로 흔들려 3곳 → 3곳 순서만으로 좁혔다. 더보기(7곳)는 코드 순서 그대로다.
 ★지키는 것:
   - LLM 이 목록에 없는 장소를 내면 버린다. 빠진 후보는 코드 순서대로 뒤에 붙인다 — 검증된 후보는 하나도 잃지 않는다.
   - 취향 단서(설문 · 고객 문장)가 없으면 부르지 않는다. 실패 · 시간 초과 · 예산 초과면 코드 순서 그대로다.
+  - 순서를 바꿨는데 이유가 없으면(`used_preference=false` 이거나 `reason` 이 비었으면) 그 답을 쓰지 않고 코드 순서로 둔다.
   - 이유는 고객에게 그대로 보이므로 길이를 자르고, 모델이 「취향을 쓰지 않았다」고 하면 싣지 않는다.
 ★취향은 설문(`trips.constraints.survey` — 테마 · 동행 · 우선순위 · 실내외 · 세부 테마 · 직접 쓴 선호)과 고객 문장에서 온다.
   `[2026-10-14]` 예약 성립 판정은 예약이 속한 여행의 설문을 도구로 읽어 넘긴다(`replacement._survey` — 전달 8번 회신).
@@ -20,11 +24,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from .alternatives import SHOW
+
 #: 판정 종류 · 프롬프트 키 — `kind_modes.alternative_order` 로 켜고 끈다(표에 없으면 `rule` = 부르지 않음)
 KIND = "alternative_order"
 PROMPT_KEY = f"activity_judge.{KIND}"
-#: 한 번에 넘기는 후보 수 — 안내 3곳 + 더보기 5곳(지금 화면이 보여 주는 만큼)
-MAX_CANDIDATES = 8
+#: 한 번에 넘기는 후보 수 — 화면에 보이는 3곳뿐이다(`SHOW`). 더보기는 넘기지 않는다.
+MAX_CANDIDATES = SHOW
 #: 고객에게 보이는 이유의 최대 길이
 REASON_MAX = 120
 #: 설문에서 넘기는 칸 — 취향과 관계없는 칸(이동 수단 · 내국인 여부 · 일정 밀도 등)은 넘기지 않는다
@@ -93,6 +99,10 @@ def apply(candidates: list[dict[str, Any]], output: Any) -> tuple[list[dict[str,
     if not chosen:
         return None
     rest = [str(c.get("contentid")) for c in pool if str(c.get("contentid")) not in chosen]
-    ordered = [by_id[k] for k in [*chosen, *rest]] + candidates[MAX_CANDIDATES:]
+    ids = [*chosen, *rest]
     reason = str(output.get("reason") or "").strip()[:REASON_MAX] if output.get("used_preference") else ""
-    return ordered, {"by": "llm", "ids": [*chosen, *rest], "reason": reason or None, "dropped": dropped}
+    # ★`[2026-10-13]` 순서를 바꿨으면 이유가 있어야 한다 — 근거 없이 순서만 바뀌는 것을 받지 않는다(코드 순서 그대로)
+    if ids != [str(c.get("contentid")) for c in pool] and not reason:
+        return None
+    ordered = [by_id[k] for k in ids] + candidates[MAX_CANDIDATES:]
+    return ordered, {"by": "llm", "ids": ids, "reason": reason or None, "dropped": dropped}

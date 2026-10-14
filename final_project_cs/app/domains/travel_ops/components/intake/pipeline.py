@@ -213,6 +213,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("UPDATE trip_intakes SET status='review', stage='review', updated_at=now() "
                         "WHERE tenant_id=%s AND intake_id=%s AND status='reading'", (tenant_id, intake_id))
+        _dining_shadow(connect, tenant_id, intake_id, sources)
         return "review"
     except _Abandoned:                               # 읽는 사이 실패로 확정됐다(`reap_stalled`) — 값도 상태도 더 건드리지 않는다
         return "fatal"
@@ -227,6 +228,26 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         if "beat" in locals():
             beat.__exit__()
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
+
+
+def _dining_shadow(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]]) -> None:
+    """요식 판정 에이전트 **그림자** — 확인 화면으로 넘긴 **뒤에** 규칙 검사와 나란히 판정해 요식 표에만 기록한다. `[2026-10-13 · 설계 §10 단계 5]`
+    ★가드레일 `travel.dining.agent_shadow.enabled` 를 켜야 돈다(기본 꺼짐 — 꽂히지 않으면 아무것도 안 한다). 고객 결과 · 상태는 바꾸지 않고,
+      실패해도 접수에 영향이 없다(경고만 남긴다)."""
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+    runner = dining_ledger.agent_shadow_runner()
+    if runner is None:
+        return
+    try:
+        with connect() as conn:
+            payload = review_module.load(conn, tenant_id, intake_id, 1)
+        if not payload:
+            return
+        notes = "\n".join(s.get("transcript") or "" for s in sources)
+        runner(connect, tenant_id=tenant_id, intake_id=intake_id, revision=1, review=payload, notes=notes)
+    except Exception:                                  # noqa: BLE001 — 그림자 장애가 접수를 건드리지 않는다
+        log.warning("dining agent shadow failed intake=%s", intake_id, exc_info=True)
 
 
 def reap_stalled(conn, *, tenant_id: str, intake_id: UUID) -> None:
@@ -966,20 +987,20 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     # 남은 줄 — 모델은 가리키기만. 실패하면 이 단계만 건너뛴다(그 줄은 남은 줄로 보인다)
     if chat is not None and read.unread_lines:
         try:
-            span_claims, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now)
+            _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now)
         except Exception as exc:                      # noqa: BLE001 — 모델 장애는 기록하고 넘어간다
-            span_claims, span_items, report = [], [], {"error": f"{type(exc).__name__}: {exc}"[:200]}
+            span_items, report = [], {"error": f"{type(exc).__name__}: {exc}"[:200]}
         rows.append({"field": "reading.llm", "value": report, "method": "llm_span",
                      "evidence": {"source": "model", "lines": read.unread_lines}, "needs_review": False,
                      "note": "남은 줄에 모델이 가리킨 결과(원문에 없는 인용은 버렸다)"})
-        by_line = {c.span.line: c for c in span_claims}
         for span_item in span_items:
             index = len(items)
             day, date_mark = _mark_for(span_item.line, marks)
             rows.append({"field": f"items[{index}].title", "value": span_item.title.text, "method": "llm_span",
-                         "evidence": {"source": "text", **span_item.title.as_dict()}, "needs_review": True,
+                         "evidence": {"source": "text", **span_item.title.as_dict(),
+                                      "segment": span_item.segment.as_dict()}, "needs_review": True,
                          "note": "모델이 가리킨 원문 조각"})
-            time_claim = by_line.get(span_item.line)
+            time_claim = span_item.time_claim          # ★한 줄에 장소가 여럿이면 시각도 장소마다 다르다(`llm_spans`)
             if time_claim is not None:
                 rows.append({**time_claim.as_dict(), "field": f"items[{index}].starts_at"})
             if span_item.meal:
@@ -987,7 +1008,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                              "evidence": {"source": "text", "line": span_item.line}, "needs_review": False,
                              "note": f"끼니 말({span_item.meal})"})
             items.append({"line": span_item.line, "day": day, "date": span_item.date or date_mark,
-                          "title": span_item.title.text, "meal": bool(span_item.meal), "booked": None})
+                          "title": span_item.title.text, "meal": bool(span_item.meal), "booked": None,
+                          "segment": span_item.segment.as_dict()})
         if report.get("plan_request"):
             rows.append({"field": "trip.plan_request", "value": True, "method": "llm_span",
                          "evidence": {"source": "text"}, "needs_review": False,

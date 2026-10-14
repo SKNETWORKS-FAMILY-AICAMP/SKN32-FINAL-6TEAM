@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 현재 여행 시험 지도
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 불변식·계약과 그것을 지키는 시험의 연결 지도
 status: draft
 domain: travel
 ---

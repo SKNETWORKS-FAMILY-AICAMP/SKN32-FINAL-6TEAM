@@ -79,3 +79,20 @@ def taxi_call_product_enabled(tenant_id: str) -> bool:
     from app.core.settings import taxi_call_product_enabled as guardrail_default
 
     return guardrail_default()
+
+
+ACTIVITY_LIVE_CHECK = "travel.activity_judge.live_status_batch_enabled"
+
+
+def activity_live_check_enabled(tenant_id: str) -> bool:
+    """활동 장소 임시휴무 · 폐업 새벽 웹 확인을 돌리나. `[2026-10-14 사용자 지시]` 유료 웹 검색이라 관리 콘솔에서 켤 때만.
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.activity_live_check_enabled`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다 — 켜는 것은 명시한 경우뿐이다.
+    """
+    value = operator_setting(tenant_id, ACTIVITY_LIVE_CHECK)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import activity_live_check_enabled as guardrail_default
+
+    return guardrail_default()

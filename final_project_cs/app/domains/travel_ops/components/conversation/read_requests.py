@@ -1,9 +1,10 @@
 """모든 읽기 질문의 대상·범위를 각각 검증하고 실제 자료만 답한다."""
 from __future__ import annotations
 
-from dataclasses import replace
+from copy import copy
+from dataclasses import is_dataclass, replace
 
-from . import fact_context, schedule_query, trip_facts
+from . import fact_context, schedule_query, time_anchor, trip_facts
 
 
 def _origin_matches(items, phrase):
@@ -12,6 +13,21 @@ def _origin_matches(items, phrase):
         return []
     return [i for i in items if i.kind != "mobility" and any(fragment in fact_context._compact(name)
             for name in (i.title, (i.place or {}).get("name") or ""))]
+
+
+def _names_differ(title, place_name):
+    """제목과 장소 이름이 서로 다른 곳을 가리키나 — 한쪽이 다른 쪽을 품으면(「경복궁 관람」 · 「경복궁」) 같은 곳으로 본다."""
+    a, b = fact_context._compact(title), fact_context._compact(place_name)
+    return bool(a and b) and a not in b and b not in a
+
+
+def _renamed(item, title):
+    """답에 쓸 이름만 바꾼 사본 — 원래 일정 항목은 건드리지 않는다."""
+    if is_dataclass(item):
+        return replace(item, title=title)
+    clone = copy(item)
+    clone.title = title
+    return clone
 
 
 def _route(origin, destination, mode):
@@ -40,6 +56,23 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
     for request in decision.reads:
         fact = request["fact"]
         item = by_alias.get(request["target_item"])
+        # ★`[2026-10-14]` 앞뒤 · 시각 질문은 모델이 적은 **기준**(일정 · 끼니 · 시각 · 지금 · 앞 답)으로 서버가 답할 일정을 계산한다
+        #   (`time_anchor.py`, Codex 와 합의한 D안) — 모델이 고른 일정보다 앞선다. 「다음」 사실은 그 자체로 「기준 바로 뒤」다.
+        clause = request.get("text") or ""
+        clause = clause if clause and clause in message else message
+        anchor_read = request
+        if (fact == "next" and request.get("relation", "at") == "at"
+                and (request.get("anchor_kind", "none") != "none" or request.get("target_item", "none") == "none")):
+            anchor_read = {**request, "relation": "after"}
+        anchored, anchor_basis = time_anchor.resolve(
+            anchor_read, items=items, anchor=by_alias.get(request.get("anchor_item") or "none"),
+            previous=time_anchor.previous_item(turns, items, version=version, now=context_now, ttl_seconds=ttl_seconds),
+            named=fact_context.named_items(items, clause), now=now, target=item)
+        anchor_conflict = bool(anchor_basis and anchor_basis.get("time_anchor") == "anchor_conflict")
+        if anchored is not None:
+            item, fact = anchored, ("time" if fact == "next" else fact)
+            request = {**request, "fact": fact, "reference": "explicit",
+                       "target_item": next((a for a, i in by_alias.items() if i.item_id == anchored.item_id), "none")}
         sub = replace(decision, item=item, fact=fact, query=request.get("query"), reads=[request])
         fragment = request.get("text") or ""
         scoped_message = fragment if fragment and fragment in message else message
@@ -48,16 +81,24 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
             now=context_now, ttl_seconds=ttl_seconds)
         item = sub.item
         basis = {"kind": fact, "item_id": str(item.item_id) if item else None, "version": version}
+        if anchor_basis:
+            basis["time_anchor"] = anchor_basis
         place = (item.place or {}) if item else {}
         provenance = (item.detail.get("provenance") or {}).get("place") or {} if item else {}
-        conflict = (item is not None and provenance.get("method") == "customer" and place.get("name")
-                    and fact not in ("time", "duration", "next")
-                    and fact_context._compact(item.title) != fact_context._compact(place["name"]))
-        if conflict:
-            text = (f"일정 제목은 「{item.title}」이지만 등록할 때 선택된 실제 장소는 「{place['name']}」이에요. "
-                    "서로 다른 장소일 수 있어 선택된 장소의 정보를 일정 제목의 장소 정보로 답할 수 없어요. 어느 장소를 물으시는지 확인해 주세요.")
-            basis["unresolved"] = "place_identity"
-            focus = resolved
+        note = ""
+        if (item is not None and provenance.get("method") == "customer" and place.get("name")
+                and fact not in ("time", "duration", "next") and _names_differ(item.title, place["name"])):
+            # ★`[2026-10-14]` 고객이 등록 때 **직접 고른** 장소다 — 되묻기만 하지 않고 그 장소로 답하되, 제목과 다른 곳이라는 것을 먼저 밝힌다.
+            #   전에는 「어느 장소인지 확인해 주세요」로만 끝나 고른 장소의 정보도 받지 못했다(「서울역 도착」에 고른 「광화문」,
+            #   x600 서버 웹 채팅 재시험 2026-10-14). 답의 이름도 고른 장소로 바꿔 제목 장소의 정보처럼 읽히지 않게 한다.
+            note = (f"「{item.title}」 일정에 연결된 장소는 등록 때 고르신 「{place['name']}」이라 「{place['name']}」 기준으로 답할게요. "
+                    f"제목의 「{item.title}」 자체 정보는 아니에요.")
+            basis["place_identity"] = {"title": item.title, "place": place["name"], "method": "customer"}
+            item = _renamed(item, place["name"])
+        if anchor_conflict:
+            # 문장 속 일정 이름과 모델이 적은 기준 일정이 다르다 — 어느 쪽인지 추측하지 않고 되묻는다
+            text = "어느 일정을 기준으로 물으셨는지 하나로 확인하지 못했어요. 기준이 되는 일정 이름을 알려 주세요."
+            basis["unresolved"] = "anchor"
         elif stale:
             text = "가리키는 일정을 현재 여행에서 하나로 확인하지 못했어요. 일정 이름이나 날짜를 알려 주세요."
             basis["unresolved"] = "target"
@@ -92,10 +133,14 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
             elif origin is None or item is None or origin.item_id == item.item_id:
                 text = "이동할 출발지와 도착지를 서로 다른 일정으로 알려 주세요."
                 basis["unresolved"] = "endpoints"
-            elif ((origin.detail.get("provenance") or {}).get("place") or {}).get("method") == "customer" and origin.place and fact_context._compact(origin.title) != fact_context._compact(origin.place.get("name") or ""):
-                text = f"출발지의 일정 제목 「{origin.title}」과 선택된 장소 「{origin.place['name']}」가 달라요. 어느 장소에서 출발하는지 확인해 주세요."
-                basis["unresolved"] = "origin_identity"
             else:
+                if (((origin.detail.get("provenance") or {}).get("place") or {}).get("method") == "customer" and origin.place
+                        and _names_differ(origin.title, origin.place.get("name") or "")):
+                    # ★`[2026-10-14]` 위 도착지와 같다 — 고객이 고른 출발 장소로 계산하고 그 사실을 먼저 밝힌다
+                    note = (f"출발 일정 「{origin.title}」에 연결된 장소는 등록 때 고르신 「{origin.place['name']}」이라 "
+                            f"그곳에서 출발하는 것으로 계산했어요.") + (f"\n{note}" if note else "")
+                    basis["origin_identity"] = {"title": origin.title, "place": origin.place["name"], "method": "customer"}
+                    origin = _renamed(origin, origin.place["name"])
                 mode = request.get("transport_mode", "any")
                 text, problem = _route(origin, item, mode)
                 if problem:
@@ -149,9 +194,12 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
                     text += "\n일정은 바꾸지 않았어요."
                     basis["unresolved"] = "verified_menu"
         else:
+            # ★`[2026-10-13]` 대상은 결정 단위 · 위의 확인(`fact_context.resolve`)이 정했다 — 문장을 다시 읽어 덮지 않는다
             text, fact_basis = trip_facts.fact_reply(fact, message=message, items=items, now=now,
-                                                    item=item, place_source=place_source)
+                                                    item=item, place_source=place_source, retarget=False)
             basis.update(fact_basis)
+        if note and not basis.get("unresolved"):
+            text = f"{note}\n{text}"
         core, _, more = text.partition(trip_facts.MORE_MARK)
         if core not in answers:
             answers.append(core)

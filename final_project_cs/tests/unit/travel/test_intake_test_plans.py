@@ -7,7 +7,7 @@ from app.domains.travel_ops.components.intake import test_plans as plans
 from app.domains.travel_ops.components.intake.rules import read_plan
 
 
-@pytest.mark.parametrize("number,count", enumerate((6, 3, 2, 2, 3, 3, 3, 3, 3, 3, 7, 4, 2, 2, 2), start=1))
+@pytest.mark.parametrize("number,count", enumerate((6, 3, 2, 2, 3, 3, 3, 3, 3, 3, 7, 4, 2, 2, 2, 3), start=1))
 def test_every_prepared_code_has_dated_readable_stops(monkeypatch, number, count):
     monkeypatch.setattr(plans, "operator_setting", lambda *_: True)
     text, meta = plans.expand(f"  TeSt{number} \n", tenant_id="unit", has_files=False, today=date(2026, 10, 11))
@@ -31,7 +31,7 @@ def test_ordinary_text_is_not_replaced_or_reads_settings(monkeypatch, text):
 
 
 @pytest.mark.parametrize("text,files,enabled,code", (
-    ("test16", False, True, "unknown_test_scenario"),
+    ("test17", False, True, "unknown_test_scenario"),
     ("test999999999999999999999", False, True, "unknown_test_scenario"),
     ("test1", True, True, "test_scenario_with_files"),
     ("test1", False, False, "test_scenarios_disabled"),
@@ -49,7 +49,7 @@ def test_disabled_catalog_is_empty_and_operator_override_wins(monkeypatch):
     assert plans.catalog("unit")["scenarios"] == []
     assert plans.catalog("unit")["enabled"] is False
     monkeypatch.setattr(plans, "operator_setting", lambda *_: None)
-    assert len(plans.catalog("unit")["scenarios"]) == 15
+    assert len(plans.catalog("unit")["scenarios"]) == 16
 
 
 def test_normal_plans_have_known_places_end_times_and_generous_gaps(monkeypatch):
@@ -57,7 +57,7 @@ def test_normal_plans_have_known_places_end_times_and_generous_gaps(monkeypatch)
     entries = plans.catalog("unit", today=date(2026, 10, 11))["scenarios"]
     assert {entry["category"] for entry in entries} == {"normal", "time", "hours", "place", "mobility", "input", "general"}
     assert [entry["code"] for entry in entries if entry["category"] == "normal"] == ["test13", "test14", "test15"]
-    for entry in entries[12:]:
+    for entry in entries[12:15]:
         read = read_plan(entry["text"])
         assert all(item.end and item.title and "호텔" not in item.title.text for item in read.items)
         for before, after in zip(read.items, read.items[1:]):
@@ -67,3 +67,12 @@ def test_normal_plans_have_known_places_end_times_and_generous_gaps(monkeypatch)
                     return hour * 60 + minute
                 assert minutes(after.start) - minutes(before.end) >= 180
         assert "실제 조회" in entry["expected"]
+
+
+def test_the_lodging_plan_has_a_named_hotel_the_catalog_knows(monkeypatch):
+    """test16 — 이름 있는 호텔 체크인이 든 일정. 호텔 이름은 장소 목록(관광공사 숙박)에 있는 그대로여야 숙소 항목으로 이어진다."""
+    monkeypatch.setattr(plans, "operator_setting", lambda *_: True)
+    entry = next(e for e in plans.catalog("unit", today=date(2026, 10, 11))["scenarios"] if e["code"] == "test16")
+    assert entry["category"] == "general" and "숙소" in entry["name"]
+    read = read_plan(entry["text"])
+    assert [item.title.text for item in read.items if "호텔" in item.title.text] == ["더 플라자 호텔 서울 체크인"]

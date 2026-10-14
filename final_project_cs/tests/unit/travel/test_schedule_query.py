@@ -89,10 +89,17 @@ def test_identical_read_choice_is_canonicalized_without_losing_raw_evidence():
     {'query':{'day':'all','period':'afternoon','kind':'all','execute':True}},
     {'action':'apply_change'},{'target_item':'i1'},
     {'choices':None},{'choices':''},{'choices':0},
-    {'fact':'time'},{'choices':[{'action':'apply_change','target_item':'i1'}]},
+    {'choices':[{'action':'apply_change','target_item':'i1'}]},
 ])
 def test_invalid_or_write_query_fails_closed(extra):
     with pytest.raises(du.DecisionFailed):decide(raw(**extra))
+
+
+def test_an_item_fact_ignores_a_stray_list_scope_instead_of_failing():
+    # ★`[2026-10-14]` 한 일정을 묻는 사실(시각)에 붙은 조회 범위는 쓰지 않는 칸이라 버린다 — 일정을 바꾸지 않는 읽기라 안전하다.
+    #   전에는 해석 전체를 버렸다(학습 E4B 재생 434건 중 30건). 바꾸는 할 일에 붙은 범위는 위 시험대로 계속 막는다.
+    d=decide(raw(fact='time'))
+    assert d.action=='answer_fact' and d.fact=='time' and d.query is None and 'query' in d.raw['ignored_for_action']
 
 
 def test_read_scope_rejects_a_valid_but_unrequested_change_target():
