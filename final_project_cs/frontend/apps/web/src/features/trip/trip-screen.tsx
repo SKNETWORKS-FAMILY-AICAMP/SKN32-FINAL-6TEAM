@@ -41,6 +41,8 @@ import { DetailHeader, TripDetail } from "./trip-detail";
 import { TripEdit } from "./trip-edit";
 import { TitleMenu, TripShare, TripTitle } from "./trip-title";
 import { SafetyPanel, shelterMeta } from "./trip-safety";
+import { creditFacts, tripEnded } from "./ending-credits";
+import { EndCard, TripCredits } from "./trip-credits";
 import { tripKey, useTrip } from "./use-trip";
 import { useRouteShapes } from "./use-route-shapes";
 import { useTripEvents } from "./use-trip-events";
@@ -118,6 +120,9 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   // On entering: today's day while the trip is on (else the first day).
   const [day, setDay] = useState(() => days.includes(now.date) ? now.date : days[0] ?? "");
   const [all, setAll] = useState(false);
+  // `[2026-10-15 사용자 결정 — ST4F-496]` Once the trip is over: the end card at the top of 「전체」 and the ending credits over the screen.
+  const [creditsOpen, setCreditsOpen] = useState(false);
+  const creditsButton = useRef<HTMLButtonElement>(null);
   const listZoom = useListZoom();
   const mapDay = days.includes(day) ? day : days[0] ?? "";
   const dayAt = days.indexOf(mapDay);
@@ -535,6 +540,9 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     ? Object.fromEntries(mapStops.map((stop, at) => [stop.id, { label: String(at + 1), tone: stop.id === detailStop.id ? "current" : "muted" }]))
     : undefined;
   const plan = pane === "plan";
+  const ended = tripEnded(trip, now);
+  const facts = ended ? creditFacts(trip, tripTitle, shapes, routeDetail.routes?.attribution ?? null, (date, index) => `${dayName(index, t)} · ${dayLabel(date, language)}`) : null;
+  const closeCredits = () => { setCreditsOpen(false); requestAnimationFrame(() => creditsButton.current?.focus({ preventScroll: true })); };
 
   return <DeviceFrame floating menuTools={guardian.tool}
     headerExtra={<button type="button" id="trip-bell" className={styles.bell} onClick={() => openCenter()} aria-haspopup="dialog" aria-expanded={centerOpen}
@@ -604,7 +612,9 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                   <div ref={dayTrack} className={pc.dayTrack} style={listZoom === 1 ? undefined : { zoom: listZoom }}>
                     {near && <div className={pc.peek} data-side={peek.side} style={{ top: peek.top }} aria-hidden="true" inert>{dayList(near)}</div>}
                     {peek.side !== 0 && peek.edge && <p className={pc.edgeNote} data-side={peek.side} style={{ top: peek.top + 28 }} aria-hidden="true">{peek.side === 1 ? t("마지막 날이에요", "Last day") : t("첫날이에요", "First day")}</p>}
-                    <div key={all ? "all" : mapDay} className={pc.page} data-slide={slide ?? undefined}>{listDays.map(dayList)}</div>
+                    <div key={all ? "all" : mapDay} className={pc.page} data-slide={slide ?? undefined}>
+                      {all && facts && <EndCard facts={facts} onOpen={() => setCreditsOpen(true)} buttonRef={creditsButton} />}
+                      {listDays.map(dayList)}</div>
                   </div>
                   {trip.stops.length === 0 && <p className={pc.empty}>{t("등록한 일정이 없어요.", "There are no stops.")}</p>}
                   {/* `[2026-10-14 사용자 결정 — ST4F-493]` 예약 안내는 가운데 한 줄로 늘 보이고, 그 아래 출처는 계획 확인 화면처럼 접힌 한 줄(누르면 장소 정보 출처 · 경로선 출처 · 경로 안내). */}
@@ -630,6 +640,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
       {titleOpen && !titleEditing && !detailStop && <TitleMenu planUrl={trip.planUrl ?? null} onShare={() => setShareOpen(true)} onDone={closeTitle} explain={explain} />}
       {shareOpen && trip.planUrl && <TripShare trip={trip} title={tripTitle} planUrl={trip.planUrl} onClose={closeShare} notify={showToast} />}
       {mapTarget && <MapAppsSheet target={mapTarget} onClose={closeMapApps} />}
+      {creditsOpen && facts && <TripCredits facts={facts} skipAnimation={skipAnimation} onClose={closeCredits} />}
       {!detailStop && <ChatBar chat={chat} open={barOpen} inChat={!plan} subject={selected ? (selected.place ?? selected.title) : null} onOpen={() => setBarOpen(true)} onClose={() => setBarOpen(false)} onEnterChat={() => goPane("chat")} onLeaveChat={() => goPane("plan")} />}
       {/* `[2026-10-07 목업 C안 ① 알림 센터]` 할 일(재난 정지 → 재난 뒤 이어가기 → 선택 요청 → 자동 변경) 아래 탭 셋(살펴볼 점 · 받은 알림 · 변경 이력). 여행계획서 링크는 제목을 펼친 줄에 있다. */}
       {centerOpen && <NoticeCenter onClose={closeCenter}>
