@@ -10,6 +10,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.application.feedback_job import is_surge, run_daily_feedback
 from app.infrastructure.db.session import get_connection
 from app.domains.travel_ops.components.core_hooks.feedback import ClassificationFailed, classify
@@ -77,6 +78,7 @@ def test_batch_is_tenant_scoped_and_idempotent():
                 with conn.cursor() as cur:
                     cur.execute("DELETE FROM outbox WHERE tenant_id IN (%s,%s)", (tenant, other_tenant))
                     cur.execute("DELETE FROM feedback_analytics_reports WHERE tenant_id IN (%s,%s)", (tenant, other_tenant))
+                    allow_case_events_purge(cur)
                     cur.execute("DELETE FROM case_events WHERE tenant_id IN (%s,%s)", (tenant, other_tenant))
                     cur.execute("DELETE FROM customer_cases WHERE tenant_id IN (%s,%s)", (tenant, other_tenant))
                     cur.execute("DELETE FROM customers WHERE tenant_id IN (%s,%s)", (tenant, other_tenant))

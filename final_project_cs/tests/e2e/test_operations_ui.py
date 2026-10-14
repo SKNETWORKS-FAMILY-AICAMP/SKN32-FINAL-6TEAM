@@ -8,6 +8,7 @@ import pytest
 from psycopg.types.json import Json
 
 import app.core.settings as settings_module
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.infrastructure.db.session import get_connection
 from app.presentation import security
 from app.presentation.api.app import create_app
@@ -54,6 +55,7 @@ def ui_fixture(monkeypatch):
         with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("DELETE FROM action_approvals WHERE action_id IN (SELECT action_id FROM action_requests WHERE tenant_id=%s)", (tenant,))
             cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+            allow_case_events_purge(cur)
             cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
             cur.execute("DELETE FROM feedback_analytics_reports WHERE tenant_id=%s", (tenant,))
             cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
