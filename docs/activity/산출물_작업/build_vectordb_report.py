@@ -22,6 +22,7 @@ HERE = Path(__file__).resolve().parent
 RESULTS = json.loads((HERE / "retrieval_results_2026-10-13.json").read_text(encoding="utf-8"))
 Q20 = json.loads((HERE / "retrieval_results_20q_2026-10-14.json").read_text(encoding="utf-8"))
 Q10 = json.loads((HERE / "retrieval_results_10q_after_colloquial_2026-10-14.json").read_text(encoding="utf-8"))
+R2 = json.loads((HERE / "retrieval_results_10q_round2_2026-10-14.json").read_text(encoding="utf-8"))
 EXT = json.loads((HERE / "retrieval_results_ext_2026-10-14.json").read_text(encoding="utf-8"))
 
 # ── DB 에서 실측 ─────────────────────────────────────────────
@@ -41,6 +42,8 @@ with get_connection() as conn, conn.cursor() as cur:
 
 N10 = sum(1 for o in Q10 if o["rank"])
 M1 = sum(1 for o in Q10 if o["rank"] == 1)
+NR2 = sum(1 for o in R2 if o["rank"])
+MR2 = sum(1 for o in R2 if o["rank"] == 1)
 N20 = sum(1 for o in Q20 if o["rank"])
 N1 = sum(1 for o in Q20 if o["rank"] == 1)
 def _doc_hit(o):
@@ -181,7 +184,7 @@ set_p(K[34], "Long-term (Persisted): 판정 결과·근거(Evidence)·변경 이
 # ── 검색 성능 및 정확도 검증 ─────────────────────────────────
 hits = sum(1 for r in RESULTS if r["id"] != "R-07")
 fill_table(K[38], None, [
-    ["검색 적중률", "정답 절이 상위 3 안에 있는 질문 비율(Hit@3)", f"20문항 시험(공식 자료 추가 후): 절 단위 Hit@3 {N20}/20 ({N20/20:.0%}), Hit@1 {N1}/20 ({N1/20:.0%}), 문서 단위 Hit@3 {ND}/20 ({ND/20:.0%}). 레저·공연 문서에 구어체 표현을 반영한 뒤 새 질문 10문항: Hit@3 {N10}/10, Hit@1 {M1}/10. 기본 코퍼스 7문항 시험은 5/6", "기준 미설정(결과 보고)", "질문 20건 + 개선 후 새 질문 10건 수동 시험(정답 절을 결과 확인 전에 지정, 아래 4장 표). 표본이 작아 방향성만 본다"],
+    ["검색 적중률", "정답 절이 상위 3 안에 있는 질문 비율(Hit@3)", f"20문항 시험(공식 자료 추가 후): 절 단위 Hit@3 {N20}/20 ({N20/20:.0%}), Hit@1 {N1}/20 ({N1/20:.0%}), 문서 단위 Hit@3 {ND}/20 ({ND/20:.0%}). 레저·공연 문서에 구어체 표현을 반영한 뒤 새 질문 10문항: Hit@3 {N10}/10, Hit@1 {M1}/10. 실패 절(고객 표현 불일치)을 보강하고 재적재한 뒤 다시 새 질문 10문항: Hit@3 {NR2}/10, Hit@1 {MR2}/10. 기본 코퍼스 7문항 시험은 5/6", "기준 미설정(결과 보고)", "질문 20건 + 개선 후 새 질문 10건 수동 시험(정답 절을 결과 확인 전에 지정, 아래 4장 표). 표본이 작아 방향성만 본다"],
     ["유사도 점수 분리", "범위 안 질문 1위 점수 대 범위 밖 질문 최고 점수", "기본: 범위 안 0.495~0.758 / 범위 밖 0.333. 추가 후 범위 안 1위 0.461~0.696(범위 밖은 재측정하지 않음)", "제안 임계치 0.4 안팎", "7문항 + 5문항, 코사인 유사도"],
     ["응답 속도", "질문 임베딩 + 검색 소요 시간", "0.21~0.43초 (첫 호출 1.1~1.6초)", "2.0초 이내", "호출 시간 직접 측정"],
     ["적재 정합성", "청크 수 대비 벡터 채움률, 차원", f"{sum(v[2] for v in SCOPES.values())}/{sum(v[1] for v in SCOPES.values())} (100%), {DIM:,}차원", "100%", "DB 직접 조회 + 적재 시 차원 검사"],
@@ -274,6 +277,12 @@ fill_table(tbl_n, ["ID", "질문", "1위 문서 · 절", "1위 점수", "판정"
 cap_n = plain(K[64], f"개선 후 새 질문 10문항 — 레저·공연 문서(travel_ext 03)에 일상 표현(리프트, 수강권, 콘서트 등)을 반영하고 6청크를 재적재한 뒤, 이전 20문항과 겹치지 않는 새 질문으로 측정(2026-10-14). 절 단위 {N10}/10, 1위 {M1}/10. N01·N08은 정답이 3위, N03·N07은 미적중이다. 질문 구성이 달라(레저·공연 8, 대조 2) 20문항 결과와 직접 비교할 수 없다.")
 tbl_q.addnext(cap_n)
 cap_n.addnext(tbl_n)
+tbl_r = copy.deepcopy(K[38])
+fill_table(tbl_r, ["ID", "질문", "1위 문서 · 절", "1위 점수", "판정"], [
+    [o["id"], o["query"], f'{o["top3"][0]["document"]} · {o["top3"][0]["section"]}', f'{o["top3"][0]["score"]:.3f}', _verdict(o)] for o in R2])
+cap_r = plain(K[64], f"2차 보강 후 새 질문 10문항 — 앞선 실패 유형(광고와 다름, 정원 초과, 가족 사망)의 3개 절에 고객 표현을 보강하고 3청크를 재적재한 뒤 새 질문으로 측정(2026-10-14). 절 단위 {NR2}/10, 1위 {MR2}/10. 보강이 질병·가족 사망 질문(M05~M07)과 체험 광고 질문(M01)에서는 뚜렷한 개선으로 이어지지 않았고, 질문 수가 적어 효과를 단정할 수 없다. 표현 보강만으로는 한계가 있으며 질문을 문서 용어로 바꿔 검색하는 방식이 다음 후보다.")
+tbl_n.addnext(cap_r)
+cap_r.addnext(tbl_r)
 
 anchor = K[67]            # 「화면 캡처 또는 실행 결과」
 lines = ["$ python retrieval_test.py   # 활동 scope 4개, top-3", ""]
@@ -294,6 +303,10 @@ lines += ["", "$ python retrieval_test_10q.py   # 구어체 반영 후 새 질�
 for o in Q10:
     lines.append(f'{o["id"]} {"적중" if o["rank"] else "미적중"} rank={o["rank"]} [{o["ms"]}ms] {o["query"]}')
 lines += [f"Hit@3 {N10}/10 · Hit@1 {M1}/10"]
+lines += ["", "$ python retrieval_test_10q_round2.py   # 3개 절 보강 후 새 질문 10문항", ""]
+for o in R2:
+    lines.append(f'{o["id"]} {"적중" if o["rank"] else "미적중"} rank={o["rank"]} [{o["ms"]}ms] {o["query"]}')
+lines += [f"Hit@3 {NR2}/10 · Hit@1 {MR2}/10"]
 lines += ["", "-- scope 별 적재 현황 (documents, chunks, embedded)"]
 for s, v in SCOPES.items():
     lines.append(f"   {s:<20} {v[0]:>3} {v[1]:>4} {v[2]:>4}")
