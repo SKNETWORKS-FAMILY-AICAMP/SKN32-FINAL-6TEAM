@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 현재 제품 용어
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 제품 용어집 — 「사람」「코어」「감시 묶음」처럼 뭉뚱그리기 쉬운 말을 대상별로 정의
 status: draft
 domain: travel
 ---

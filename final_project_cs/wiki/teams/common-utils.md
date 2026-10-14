@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 Team 공통 구현
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 여행 에이전트 팀의 공통 기반(TravelTeamBase)과 팀들이 함께 쓰는 구현
 status: draft
 domain: travel
 ---

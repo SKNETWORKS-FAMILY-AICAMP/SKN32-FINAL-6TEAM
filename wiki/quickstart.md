@@ -1,7 +1,7 @@
 ---
 type: guide
 title: wiki 빠른 시작
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 사양을 찾는 읽기 순서 — 결정·계약·구현 wiki 를 어떤 차례로 여는지
 status: draft
 domain: travel
 ---

@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 도메인 조립과 정책 주입
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 여행 도메인을 공통 엔진에 조립하고 여행 정책을 주입하는 방식
 status: draft
 domain: travel
 ---

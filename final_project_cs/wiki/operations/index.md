@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 제품 개발·배포·운영 안내
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 환경별 실제 상태와 운영 절차 문서의 목차
 status: draft
 domain: travel
 ---

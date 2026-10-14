@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 제안 근거 대조
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 제안이 실제로 확인한 사실·정책과 맞는지 실행 전에 대조합니다
 status: draft
 domain: travel
 ---

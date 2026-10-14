@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 현재 여행 평가 도구
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 여행 자료만 쓰는 평가 실행 도구의 구성과 사용법
 status: draft
 domain: travel
 ---

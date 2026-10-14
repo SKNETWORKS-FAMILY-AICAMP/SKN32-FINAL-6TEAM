@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 고객과 시스템 이용 주체
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 고객은 여행 일정을 등록하고 진행 중 문제의 해결을 요청하는 여행자입니다
 status: draft
 domain: travel
 ---

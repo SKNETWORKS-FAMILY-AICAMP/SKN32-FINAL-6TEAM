@@ -1,3 +1,11 @@
+---
+type: plan
+title: 액티비티 LLM 연동 계획서
+description: 활동 팀의 규칙 판정을 LLM + 웹 실시간 검색 판정으로 바꾸는 실험 계획과 날짜별 업데이트 기록(role-activity-test 브랜치)
+status: draft
+domain: travel
+---
+
 # 액티비티 LLM 연동 계획서
 
 > 브랜치 `role-activity-test` — 활동팀(Activity Team)의 규칙 판정 코드를 **GPT-5.4 nano + 웹 실시간 검색** 판정으로 바꾸는 실험.
