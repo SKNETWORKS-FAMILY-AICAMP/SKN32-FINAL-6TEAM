@@ -219,3 +219,22 @@ def test_a_person_may_give_a_value_without_a_url_but_must_say_how():
                               _row("3", "12", tel="02-000-0000", field_sources=_sources(tel=claude))])
     assert any(e.startswith("2 ") and "note" in e for e in errors)
     assert any(e.startswith("3 ") and "url" in e for e in errors)
+
+
+def test_a_value_taken_from_the_rows_own_overview_needs_no_url_but_its_quote_must_be_in_that_overview():
+    # `[2026-10-14 사용자]` 소개글에서 뽑은 값 — url 대신 quote 를 그 행 overview 와 글자 그대로 대조한다(<br> · 공백만 맞춘다)
+    overview = "입장 가능 연령은 6세부터 가능하며,<br>6~7세는 보호자와 함께 입장한다."
+    from_ov = {"by": "claude", "from": "overview", "checked": "2026-10-14", "quote": "6세부터 가능하며, 6~7세는 보호자와"}
+    assert f.source_errors([_row("1", "28", overview=overview, age_limit="6세 이상",
+                                 field_sources=_sources(age_limit=from_ov))]) == []
+    errors = f.source_errors([
+        _row("2", "28", overview=overview, age_limit="7세 이상",
+             field_sources=_sources(age_limit={**from_ov, "quote": "7세 이상만 입장"})),        # 소개글에 없는 문구
+        _row("3", "28", overview=overview, age_limit="6세 이상",
+             field_sources=_sources(age_limit={**from_ov, "from": "blog"})),                  # 모르는 출처
+        _row("4", "28", overview=overview, age_limit="6세 이상",
+             field_sources=_sources(age_limit={k: v for k, v in from_ov.items() if k != "quote"})),
+    ])
+    assert any(e.startswith("2 ") and "overview" in e for e in errors)
+    assert any(e.startswith("3 ") and "from" in e for e in errors)
+    assert any(e.startswith("4 ") and "quote" in e for e in errors)
