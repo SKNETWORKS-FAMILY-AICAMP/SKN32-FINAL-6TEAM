@@ -15,7 +15,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from .base import TravelSource
@@ -50,9 +50,13 @@ def _int(value: Any) -> int | None:
 def _stamp(value: Any) -> datetime | None:
     """공급자 시각 → datetime. `YYYYMMDDHHMM`(숫자 · 문자) 그대로, 초가 붙은 14자리(☆10-14 탐침 — 열차 · 시외는 12자리가 아니었다)는 앞 12자리만."""
     digits = "".join(ch for ch in str(value or "") if ch.isdigit())
+    if len(digits) in (8, 10):                             # 날짜만 · 시까지만 온 값(00시대 — 팀장 점검 LB-10 후보 원인, 10-15) → 00분으로
+        digits = digits.ljust(12, "0")
     if len(digits) < 12:
         return None
     try:
+        if digits[8:10] == "24":                           # ★고속버스 자정 출발은 「2400」(10-16 심야우등, 팀장 점검 LB-10 · 실호출 10-15 08:43) → 다음 날 00시
+            return datetime.strptime(digits[:8], "%Y%m%d") + timedelta(days=1, minutes=int(digits[10:12] or 0))
         return datetime.strptime(digits[:12], "%Y%m%d%H%M")
     except ValueError:
         return None
@@ -202,6 +206,8 @@ class TagoTransit(TravelSource):
                 "date": day, "depart": depart, "arrive": arrive,
                 "minutes": _minutes(row.get("depplandtime"), row.get("arrplandtime")),
                 "price": _int(row.get("charge")),
+                # 시각을 못 읽은 줄은 받은 값의 모양을 남긴다(숫자 자릿수 · 형) — 00시대 1건(LB-10) 원인 찾기용. 값 자체는 시각이라 민감하지 않다
+                **({"depart_raw": f"{type(row.get('depplandtime')).__name__}:{str(row.get('depplandtime'))[:16]}"} if depart is None else {}),
             }, source=self.name))
         return found
 

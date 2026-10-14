@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 import time
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.booking.offers.transit_links import run_links
 
@@ -91,6 +92,30 @@ def _terminals(adapter: Any, kind: str, said: str, calls: list[str]) -> list[dic
     return (exact + starts + rest)[:TERMINALS_EACH]
 
 
+#: 버스 운행은 공급자(TAGO)가 가까운 날만 준다 — 10-14 저녁 관찰: 10-16 까지 있고 10-17 부터 0편(팀장 점검 LB-03). 이 날 수 밖인데 0편이면
+#: 「운행 없음」이 아니라 「아직 안 줌」일 수 있어, 오늘 같은 구간에 운행이 있는지 한 번 더 물어 가른다(호출 1회).
+BUS_WINDOW_DAYS = 1
+
+
+def _beyond_window(depart_date: str) -> bool:
+    try:
+        wanted = datetime.strptime(depart_date, "%Y-%m-%d").date()
+    except ValueError:
+        return False
+    return (wanted - datetime.now(ZoneInfo("Asia/Seoul")).date()).days > BUS_WINDOW_DAYS
+
+
+def _runs_today(adapter: Any, kinds: list[str], pair: tuple[str, dict[str, Any], dict[str, Any]] | None, calls: list[str]) -> bool:
+    """같은 터미널 쌍을 오늘 날짜로 한 번 — 오늘은 있는데 그날은 없으면 공급자가 아직 안 준 것이다."""
+    if pair is None:
+        return False
+    bus_kind, dep, arr = pair
+    today = datetime.now(ZoneInfo("Asia/Seoul")).date().isoformat()
+    calls.append(f"bus_schedules:{bus_kind}:{dep['name']}→{arr['name']}:today")
+    rows = adapter.bus_schedules(bus_kind, dep_id=dep["id"], arr_id=arr["id"], date=today)
+    return bool(rows)
+
+
 def _sort_key(option: dict[str, Any]) -> tuple[str, str]:
     return (option.get("date") or "", option.get("depart") or "99:99")
 
@@ -133,6 +158,7 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
     else:
         kinds = [kind] if kind in ("express", "suburbs") else ["express", "suburbs"]
         used: list[str] = []
+        first_pair: tuple[str, dict[str, Any], dict[str, Any]] | None = None
         broken = paired = False
         for bus_kind in kinds:
             deps, arrs = _terminals(adapter, bus_kind, origin, calls), _terminals(adapter, bus_kind, destination, calls)
@@ -144,6 +170,7 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
                     unresolved = [name for name, found in ((origin, deps), (destination, arrs)) if not found]
                 continue
             paired = True
+            first_pair = first_pair or (bus_kind, deps[0], arrs[0])
             got_any = False
             for dep in deps:
                 for arr in arrs:
@@ -170,6 +197,8 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
             status = "failed"
         elif unresolved and not paired:
             status = "unresolved"                        # 터미널을 한 쌍도 못 찾았을 때만 「못 찾음」
+        elif _beyond_window(depart_date) and _runs_today(adapter, kinds, first_pair, calls):
+            status, unresolved = "not_yet", []           # 공급자가 그 날짜를 아직 안 준다(팀장 점검 LB-03) — 「운행 없음」과 가른다
         else:
             status, unresolved = "ok", []                 # 터미널은 찾았는데 그날 운행이 없다
         result["elsewhere"] = [site for bus_kind in (used or kinds) for site in BOOKING_SITES[bus_kind]]

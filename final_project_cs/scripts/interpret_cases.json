@@ -1776,6 +1776,45 @@
         ],
         "needs": []
       }
+    },
+    {
+      "id": "T16",
+      "text": "기차 제외하고 버스로 11월 6일 서울에서 부산 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "kind": null,
+        "origin": "서울",
+        "destination": "부산",
+        "depart_date": "2026-11-06",
+        "adults": 2,
+        "needs": []
+      },
+      "note": "팀장 점검 LB-06(10-15) — 「제외」도 빼는 말"
+    },
+    {
+      "id": "T17",
+      "text": "11월 6일 서울에서 부산 KTX 2명 오전 출발하고 11월 9일 오후 귀국",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "서울",
+        "destination": "부산",
+        "depart_date": "2026-11-06",
+        "return_date": "2026-11-09",
+        "adults": 2,
+        "grade": "KTX",
+        "depart_times": [
+          "morning"
+        ],
+        "return_times": [
+          "afternoon"
+        ],
+        "needs": []
+      },
+      "note": "팀장 점검 LB-07(10-15) — 「출발」 절은 가는 편"
     }
   ]
 }

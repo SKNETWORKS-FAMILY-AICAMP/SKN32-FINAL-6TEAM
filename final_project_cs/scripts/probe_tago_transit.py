@@ -55,7 +55,8 @@ def main() -> None:
             for option in got["options"][:6]:
                 print(f"  {option.get('grade')} {option.get('number') or ''} {option.get('origin')} {option.get('depart')} → "
                       f"{option.get('destination')} {option.get('arrive')} · {option.get('minutes')}분 · 어른 {option.get('price')}원"
-                      f" · 링크 {[link['site'] for link in option.get('links') or []] or '없음(첫 화면)'}")
+                      f" · 링크 {[link['site'] for link in option.get('links') or []] or '없음(첫 화면)'}"
+                      f"{' · 시각 원값 ' + option['depart_raw'] if option.get('depart_raw') else ''}")   # LB-10 — 못 읽은 줄의 값 모양
             for link in (got["options"][0].get("links") if got["options"] else None) or []:   # 첫 운행의 조건 채운 주소 — 열어 볼 것
                 print(f"  → {link['name']}: {link['url']}")
             if source.get("unresolved"):

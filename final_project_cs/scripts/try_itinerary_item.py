@@ -115,8 +115,14 @@ def main():
     result = run(team, args.kind, view, item_id, None, "이거 말고 다른 데로 바꿔 줘", source, offers, google)
     if not args.choose or not result.action_proposals:
         return
-    held = result.action_proposals[0].arguments["replacements"][0]["item"]["detail"]
-    options = held.get("alternates") or []
+    arguments = result.action_proposals[0].arguments
+    asked = arguments.get("ask_options")
+    if asked:                                             # `[2026-10-15]` 팀장 판 — 후보는 `ask_options` 보류 제안(일정 판 그대로). 팀장 점검 LB-14
+        options = asked.get("options") or []
+        held = {**view["items"][0].get("detail", {}), "alternates": options, "other_options": [o.get("name") for o in options]}
+    else:                                                 # 옛 모양 — 제안이 항목 상세를 바꿔 싣던 때
+        held = arguments["replacements"][0]["item"]["detail"]
+        options = held.get("alternates") or []
     if not 1 <= args.choose <= len(options):
         print(f"--choose {args.choose}: 후보가 {len(options)}개다")
         return

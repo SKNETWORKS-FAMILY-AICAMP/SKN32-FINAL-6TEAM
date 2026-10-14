@@ -743,6 +743,10 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                 lines.append(f"[{name}] 「{places}」을(를) {'역' if found.mode == 'train' else '터미널'} 이름으로 찾지 못했습니다. "
                              f"{'역' if found.mode == 'train' else '터미널'} 이름을 정확히 알려 주세요.")
                 continue
+            if state == "not_yet":                       # 팀장 점검 LB-03 — 공급자가 먼 날짜 버스 운행을 아직 안 준다
+                lines.append(f"[{name}] 그날 버스 운행은 아직 확인할 수 없습니다 — 공급자가 가까운 날(보통 출발 1~2일 전)부터 운행표를 줍니다. "
+                             "출발이 가까워지면 다시 물어봐 주세요.")
+                continue
             options = (got or {}).get("options") or []
             resolved = (got or {}).get("resolved") or {}
             where = (f"{resolved.get('origin')} → {resolved.get('destination')}"
@@ -987,6 +991,11 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         state = ((got.get("sources") or {}).get("tago") or {}).get("status", "failed")
         if not got or state == "failed":
             return self._unknown(task, f"{label} 운행 검색 결과", ctx["evidence"])
+        if state == "not_yet":                           # 팀장 점검 LB-03 — 「없음」이 아니라 「아직」
+            return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"], next_action=NextAction.RESPOND,
+                                decisions=[{"path": "transit_change", "sources": {"tago": state}, "reason": "not_yet"}],
+                                answer=f"{item.title}의 다른 {label} 운행은 아직 확인할 수 없어요 — 공급자가 가까운 날(보통 출발 1~2일 전)부터 "
+                                       "운행표를 줘요. 출발이 가까워지면 다시 말씀해 주세요. 일정은 그대로 두었어요.")
         shown_key = f"{item.kind}:{query['origin']}-{query['destination']}:{query['depart_date']}"
         ledger = self._read(task, "read.offers_shown", {"trip_id": trip["trip_id"], "item_key": shown_key}, ctx["seen"])
         shown = [str(key) for key in item.detail.get("shown") or []] \

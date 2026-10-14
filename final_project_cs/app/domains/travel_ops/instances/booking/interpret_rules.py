@@ -15,7 +15,7 @@ LLM 판단이 아니라 채우기다 → 「예약 모듈」(규칙 기반). 숙
 - 인원: 「N명」 「N인」 「성인 · 어른 N」 「혼자 · 1인」 「아이 · 어린이 · 애 N」 「유아 N」 「for N」. 「A명 아니 B명」은 B.
 - 좌석: 비즈니스 · 퍼스트(일등석) · 이코노미 — 빼는 말(말고 · 싫 · 힘들)이 붙은 것은 제외.
 - 직항: 「직항」 → True, 「경유도 괜찮 · 경유 가능」 → False.
-- 시간대: 절(쉼표 · 마침표 · 「~고」)마다 새벽 · 오전(아침) · 오후(점심 · 낮) · 저녁(밤) · 「N시」. 「오는 날 · 올 때 · 귀국」 절은 오는 편.
+- 시간대: 절(쉼표 · 마침표 · 「~고」)마다 새벽 · 오전(아침) · 오후(점심 · 낮) · 저녁(밤) · 「N시」. 「오는 날 · 올 때 · 귀국」 절은 오는 편, 「가는 날 · 출발」 절은 가는 편.
   빼는 말이 있으면 나머지 시간대, 「~도 괜찮 · 상관없」이면 제한 없음. 「갈 때랑 똑같이」면 가는 편과 같게.
 - 가격: 「N만 원」 「N만원 이하 · 까지」 「왕복으로 N」(만 원 단위) — 「왕복」이 붙으면 round_trip, 「편도」면 one_way.
 - `[2026-10-14]` 교통수단(`mode`): 기차 · 열차 · KTX · SRT · ITX · 무궁화 · 새마을 → train, 고속버스 · 시외버스 · 버스 → bus, 없으면 flight.
@@ -188,6 +188,8 @@ _MODE_WORDS = {"train": ("기차", "열차", "ktx", "srt", "itx", "무궁화", "
                "bus": ("고속버스", "시외버스", "고속 버스", "시외 버스", "버스", "bus"),
                "flight": ("비행기", "항공권", "항공편", "항공", "flight", "플라이트")}
 _NOT_BUS = ("공항버스", "공항 버스", "리무진", "시내버스", "셔틀")
+#: 교통수단 뒤에 붙는 빼는 말 — 「기차 말고 · 빼고 · 제외하고 · 아니고 · 안 타고 · 타지 말고」 (팀장 점검 LB-06 「제외」 추가, 10-15)
+_MODE_NEG = ("말고", "빼고", "말구", "아니고", "아니라", "제외", "빼구", "안 타", "안타", "타지 말", "타지 않", "싫", "피해")
 _GRADES = ("KTX", "SRT", "ITX", "무궁화", "새마을", "프리미엄", "우등", "일반")
 
 
@@ -205,8 +207,8 @@ def _mode(text: str) -> str | None:
                 if word.isascii() and (_ascii_letter(low[index - 1:index]) or _ascii_letter(low[start:start + 1])):
                     continue                                 # 「ktx로」 「srt를」 — 한글 조사는 단어 경계(검토 10-14)
                 tail = low[start:start + 8]
-                if any(no in tail for no in ("말고", "빼고", "말구", "아니고", "아니라")):
-                    continue                                 # 「기차 말고 비행기」 — 기차는 뺀다
+                if any(no in tail for no in _MODE_NEG):
+                    continue                                 # 「기차 말고 비행기」 「기차 제외하고 버스」 — 기차는 뺀다
                 said.append((index, mode))
     if not said:
         return None
@@ -333,15 +335,31 @@ def _bands_in(clause: str) -> tuple[list[str], list[str]]:
 _DEPART_WORDS = ("가는날", "가는 날", "갈때", "갈 때", "가는 편", "가는편", "출국")
 
 
+def _split_depart_return(clauses: list[str]) -> list[str]:
+    """한 절에 「출발」과 오는 말(귀국 · 돌아 …)이 같이 있으면 「출발」 **뒤**에서 두 절로 가른다 — 「오전 출발하고 오후 귀국」 「오후에 출발하는 걸로
+    저녁에 돌아올게」(팀장 점검 LB-07, 10-15). 「출발」 앞의 시간대는 가는 편, 뒤는 오는 편. 쉼표 · 「그리고」로는 이미 갈라져 있다."""
+    out: list[str] = []
+    for clause in clauses:
+        at = clause.find("출발")
+        if at >= 0 and any(word in clause for word in _RETURN_WORDS) and not any(word in clause for word in _DEPART_WORDS):
+            head, tail = clause[:at + 2], clause[at + 2:]
+            out += [part for part in (head, tail) if part.strip()]
+        else:
+            out.append(clause)
+    return out
+
+
 def _times(text: str) -> tuple[list[str] | None, str | None, list[str] | None, str | None]:
     """절마다: 「가는 날 · 갈 때」가 있으면 가는 편, 「오는 날 · 올 때 · 귀국」이 있으면 오는 편, 둘 다 없으면 아직 비어 있는 가는 편.
     「갈 때랑 똑같이」는 오는 편 = 가는 편. 「오는 날은 상관없어」는 오는 편 제한 없음."""
     depart: tuple[list[str] | None, str | None] = (None, None)
     back: tuple[list[str] | None, str | None] = (None, None)
-    for clause in [c.strip() for c in _CLAUSE.split(text) if c and c.strip()]:
+    for clause in _split_depart_return([c.strip() for c in _CLAUSE.split(text) if c and c.strip()]):
         bands, negated = _bands_in(clause)
-        is_depart = any(word in clause for word in _DEPART_WORDS)
-        is_return = any(word in clause for word in _RETURN_WORDS) and not is_depart
+        is_return = any(word in clause for word in _RETURN_WORDS)
+        # 「출발」은 오는 말(귀국 · 돌아)이 같은 절에 없을 때만 가는 편 표지 — 「오전 출발하고 오후 귀국」(팀장 점검 LB-07, 10-15)
+        is_depart = any(word in clause for word in _DEPART_WORDS) or ("출발" in clause and not is_return)
+        is_return = is_return and not is_depart
         if not bands:
             if ("똑같이" in clause or "같게" in clause or "동일" in clause) and depart[1] is not None and back == (None, None):
                 back = (depart[0], clause)

@@ -42,6 +42,8 @@ def _rules(text):
     ("대구에서 광주 가는 열차 11월 6일 2명", "train", "대구", "광주", None, None),   # 말한 이름 그대로 — 동대구 · 광주송정으로 옮기는 것은 booking 모듈
     ("서울에서 부산 KTX로 2명 내일", "train", "서울", "부산", "KTX", None),               # 검토 10-14: 영문 뒤 한글 조사는 단어 경계
     ("SRT를 타고 수서에서 부산 내일 1명", "train", "수서", "부산", "SRT", None),
+    ("기차 제외하고 버스로 서울에서 부산 내일 2명", "bus", "서울", "부산", None, None),       # 팀장 점검 LB-06(10-15): 「제외」도 빼는 말
+    ("KTX 안 타고 고속버스로 서울 부산 내일 1명", "bus", "서울", "부산", None, "express"),
 ])
 
 
@@ -61,6 +63,14 @@ def test_the_rules_read_the_transport_mode_and_station_names(text, mode, origin,
 def test_hours_with_evening_words_and_minutes_are_read_right(text, adults, bands):
     found, _ = _rules(text)
     assert (found.adults, found.depart_times) == (adults, bands)
+
+
+def test_depart_word_marks_the_outbound_leg_unless_the_clause_is_about_coming_back():
+    """팀장 점검 LB-07(10-15): 「오전 출발하고 오후 귀국」 — 「출발」 절은 가는 편, 「귀국」 절은 오는 편."""
+    found, _ = _rules(f"{GO.month}월 {GO.day}일 김포에서 제주 2명 오전 출발하고 {BACK.month}월 {BACK.day}일 오후 귀국")
+    assert (found.depart_times, found.return_times) == (["morning"], ["afternoon"])
+    found, _ = _rules(f"{GO.month}월 {GO.day}일 서울에서 부산 KTX 1명 오후에 출발하는 걸로 {BACK.month}월 {BACK.day}일 저녁에 돌아올게")
+    assert (found.depart_times, found.return_times) == (["afternoon"], ["evening"]), "「돌아」가 있는 절의 「출발」은 가는 편 표지가 아니다"
 
 
 def test_a_train_sentence_without_a_station_is_asked_back_not_guessed():
@@ -158,6 +168,17 @@ def test_the_adapter_uses_the_2026_03_addresses_and_normalises_rows():
     assert all(params["serviceKey"] == "k" and params["_type"] == "json" for _, params in urls)
     sent = [params for url, params in urls if url.endswith("GetStrtpntAlocFndTrainInfo")][0]
     assert sent["depPlandTime"] == STAMP and sent["depPlaceId"] == "NAT010000"
+
+
+def test_a_time_stamp_with_only_a_date_or_an_hour_is_read_as_midnight_or_on_the_hour():
+    """팀장 점검 LB-10(10-15): 00시대 출발 1건이 안 읽혔다 — 원인은 「2400」(실호출 08:43 `depart_raw`). 8 · 10자리 값도 받는다."""
+    from app.domains.travel_ops.ports.data_sources.tago_transit import _stamp, _when
+    assert _when("20261016") == ("2026-10-16", "00:00") and _when(2026101600) == ("2026-10-16", "00:00")
+    assert _when("202610160030") == ("2026-10-16", "00:30") and _when("20261016003000") == ("2026-10-16", "00:30")
+    assert _when(202610162400) == ("2026-10-17", "00:00"), "실호출 10-15: 고속버스 자정 출발은 「2400」으로 온다 → 다음 날 00:00"
+    from app.domains.travel_ops.ports.data_sources.tago_transit import _minutes
+    assert _minutes(202610162400, 202610170400) == 240
+    assert _stamp("2026") is None and _stamp(None) is None
 
 
 def test_a_failed_city_list_is_not_cached_as_empty():
@@ -362,6 +383,36 @@ def test_an_unknown_station_or_no_schedule_is_said_plainly_and_a_dead_source_is_
     assert "그날 운행이 없습니다(공급자 결과 기준)" in result.answer
     result, _ = _run(f"{GO.month}월 {GO.day}일 서울에서 부산 가는 기차 2명", None)
     assert result.outcome != "completed" or "모름" in (result.answer or ""), "소스가 없으면 모름(지어내지 않음)"
+
+
+class DatedTago(FakeTago):
+    """버스 운행을 날짜별로 — 공급자가 가까운 날만 주는 것(팀장 점검 LB-03)을 흉내 낸다."""
+
+    def __init__(self, by_date, **kwargs):
+        super().__init__(express={}, suburbs={}, **kwargs)
+        self.by_date = by_date
+
+    def bus_schedules(self, kind, *, dep_id, arr_id, date):
+        self.calls.append(("bus_schedules", kind, dep_id, arr_id, date))
+        return list(self.by_date.get((kind, dep_id, arr_id, date), []))
+
+
+def test_a_far_bus_date_with_no_runs_is_not_yet_available_not_no_service():
+    """팀장 점검 LB-03(10-15): 먼 날짜 버스 0편 — 오늘은 같은 구간에 운행이 있으면 「아직 안 줌」, 오늘도 없으면 「운행 없음」."""
+    today = TODAY.isoformat()
+    far = (TODAY + timedelta(days=5)).isoformat()
+    tago = DatedTago({("express", "T1", "T7", today): [_bus("express", "서울경부", "부산", "06:00", 26600)]})
+    got = search_transit(SimpleNamespace(transit_schedule=tago), mode="bus", origin="서울", destination="부산", depart_date=far, adults=1)
+    assert got["sources"]["tago"]["status"] == "not_yet" and got["options"] == []
+    assert got["sources"]["tago"]["calls"][-1] == "bus_schedules:express:서울경부→부산:today", "오늘 날짜로 한 번 더 물어 가른다"
+    result, _ = _run(f"{far[5:7].lstrip('0')}월 {far[8:10].lstrip('0')}일 서울에서 부산 가는 고속버스 1명", tago)
+    assert "그날 버스 운행은 아직 확인할 수 없습니다 — 공급자가 가까운 날(보통 출발 1~2일 전)부터 운행표를 줍니다." in result.answer
+    nothing = DatedTago({})
+    got = search_transit(SimpleNamespace(transit_schedule=nothing), mode="bus", origin="서울", destination="부산", depart_date=far, adults=1)
+    assert got["sources"]["tago"]["status"] == "ok" and got["options"] == [], "오늘도 없으면 그 구간 운행이 없는 것"
+    soon = DatedTago({})
+    got = search_transit(SimpleNamespace(transit_schedule=soon), mode="bus", origin="서울", destination="부산", depart_date=today, adults=1)
+    assert not any(call.endswith(":today") for call in got["sources"]["tago"]["calls"]), "가까운 날은 되묻지 않는다(호출 아끼기)"
 
 
 def test_a_bus_sentence_shows_the_terminal_used_and_the_bus_links():
