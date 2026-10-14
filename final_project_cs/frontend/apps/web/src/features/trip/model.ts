@@ -20,6 +20,8 @@ export interface TripStop {
   badges?: { code: string; label: string; source: string }[];
   /** Opens this place in the customer's own map app (Google Maps link from the server; no API key, no billing). */
   mapUrl?: string;
+  /** `[2026-10-14]` The place's name from the server (`items[].place`) when it sent one — what Naver Map and KakaoMap search for (`map-apps.tsx`). */
+  place?: string;
   /** What the server knows about the place (address, phone, hours, badges). Missing fields are not shown. */
   placeInfo?: PlaceInfo | null;
   /** `[2026-10-06]` The trip is paused for a disaster and this stop falls in the pause (a day's pause pauses only that day's stops). The plan itself is not changed. */

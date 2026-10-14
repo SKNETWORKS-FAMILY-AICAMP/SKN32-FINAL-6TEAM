@@ -30,6 +30,7 @@ import type { Notice, Proposal } from "@/lib/live/extras";
 import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
+import { MapAppsSheet, type MapTarget } from "./map-apps";
 import { LegRow, legSummary, PastLegRow, PastStopRow, StayRow, StopRow } from "./trip-rows";
 import { dayTimeline, entryTimes, seoulKey, tripDays, type TripLeg } from "./trip-timeline";
 import { useSeoulNow } from "./use-seoul-now";
@@ -133,6 +134,9 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const [titleOpen, setTitleOpen] = useState(false);
   const [titleEditing, setTitleEditing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  // `[2026-10-14 ST4F-492]` The 「지도 앱으로 열기 · 지도 앱에서 길찾기」 sheet, and the button that opened it (the focus goes back there).
+  const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
+  const mapOpener = useRef<HTMLElement | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [slide, setSlide] = useState<"next" | "prev" | null>(null);
   const [peek, setPeek] = useState<{ side: -1 | 0 | 1; top: number; edge: boolean }>({ side: 0, top: 0, edge: false });
@@ -415,6 +419,14 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     if (finished) setTitleOpen(false);
     requestAnimationFrame(() => document.getElementById(finished ? "trip-title-button" : "trip-title-share")?.focus({ preventScroll: true }));
   }
+  function openMapApps(target: MapTarget) {
+    mapOpener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setMapTarget(target);
+  }
+  function closeMapApps() {
+    setMapTarget(null);
+    requestAnimationFrame(() => mapOpener.current?.focus({ preventScroll: true }));
+  }
   useEffect(() => {
     if (!titleOpen || shareOpen) return;
     const away = (event: Event) => { if (!(event.target instanceof Element && event.target.closest("[data-trip-title]"))) setTitleOpen(false); };
@@ -504,12 +516,11 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
           return past && openId !== entry.stop.id
             ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
             : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
-                past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)}
-                onAsk={() => { setSelectedId(entry.stop.id); chat.askAbout(entry.stop); }} askBusy={chat.message.isPending} />;
+                past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)} onMapApps={openMapApps} />;
         }
         return past
           ? <PastLegRow key={entry.leg.id} id={entry.leg.id} />
-          : <LegRow key={entry.leg.id} leg={entry.leg} open={openId === entry.leg.id}
+          : <LegRow key={entry.leg.id} leg={entry.leg} open={openId === entry.leg.id} onMapApps={openMapApps}
               onToggle={() => { setOpenId((current) => current === entry.leg.id ? null : entry.leg.id); setSelectedLine((current) => entry.leg.shape && current !== entry.leg.shape.itemId ? entry.leg.shape.itemId : null); setSelectedId(null); }} />;
       })}</RailList>
     </section>;
@@ -605,6 +616,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
       </div>
       {titleOpen && !titleEditing && !detailStop && <TitleMenu planUrl={trip.planUrl ?? null} onShare={() => setShareOpen(true)} onDone={closeTitle} explain={explain} />}
       {shareOpen && trip.planUrl && <TripShare trip={trip} title={tripTitle} planUrl={trip.planUrl} onClose={closeShare} notify={showToast} />}
+      {mapTarget && <MapAppsSheet target={mapTarget} onClose={closeMapApps} />}
       {!detailStop && <ChatBar chat={chat} open={barOpen} inChat={!plan} onOpen={() => setBarOpen(true)} onClose={() => setBarOpen(false)} onEnterChat={() => goPane("chat")} />}
       {/* `[2026-10-07 목업 C안 ① 알림 센터]` 할 일(재난 정지 → 재난 뒤 이어가기 → 선택 요청 → 자동 변경) 아래 탭 셋(살펴볼 점 · 받은 알림 · 변경 이력). 여행계획서 링크는 제목을 펼친 줄에 있다. */}
       {centerOpen && <NoticeCenter onClose={closeCenter}>
