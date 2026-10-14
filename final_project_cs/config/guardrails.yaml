@@ -467,6 +467,14 @@ travel:
   #   콘솔에서 바꾼 값이 먼저고, 이 값은 콘솔 값이 없을 때의 기본이다. 실제로 읽는 곳: `settings_hook.google_price_enabled(tenant)`.
   dining:
     google_price_enabled: false
+    # -- 요식 판정 에이전트 그림자 운행 (2026-10-13 · 설계 §10 단계 5) --
+    # 접수 확인의 규칙 검사와 나란히 에이전트(LLM 이 체크를 고르고 규칙 도구를 인용)가 판정하고 `dining.dn_agent_shadow`(232)에 남긴다.
+    # ★고객 결과는 바뀌지 않는다(기록만) · 새벽 확인에는 쓰지 않는다. ★기본 꺼짐 — 모델 호출 비용이 들어 켜는 것은 사람이 정한다.
+    # model = openai:<모델>(키 ACOP_OPENAI_API_KEY) · ollama:<모델>(주소 ACOP_OLLAMA_BASE_URL). 읽는 곳: `app.core.settings.dining_agent_shadow()`.
+    agent_shadow:
+      enabled: false
+      model: "openai:gpt-4o-mini"
+      deadline_s: 120
   # -- 카카오 호출 예산 (2026-09-27) --
   # 키워드 검색 무료 한도는 하루 100,000건이지만 처음 켠 앱 하나에만 준다 — 한도 초과 사용 자체가 약관 위반이라
   # 설정의 하루 상한(ACOP_RATE_KAKAO_PER_DAY=1000)과 같은 값으로 DB 예산을 건다(모든 프로세스가 같이 센다).

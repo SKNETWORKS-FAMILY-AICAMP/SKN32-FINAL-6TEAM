@@ -23,12 +23,17 @@ from typing import Any, Callable
 from . import candidates as cand_module
 from .hours import facts_for
 from .moves import leg_between
+from .places import distance_m, normalize_full
 from .review import KST, _Budgeted, _dt, default_engine, public_place
 
 MIN_STAY_MIN = 30           #: 머무는 시간이 이보다 짧아지면 못 맞춘 것 — 목업의 「최소 30분」
 #: 맞는 곳을 찾으려고 차례로 시간표로 맞춰 보는 후보 수의 상한 — 화면에 보이는 셋(`candidates.LIMIT`)보다 넓다: 순위는 싼 판정(어림 이동)이라 앞 셋이 시간표로는
 #: 안 맞고 넷째가 맞을 수 있다. ★우리가 고른 값 — 후보 하나를 맞추는 데 계산기 3~5번이 든다(상한 `ENGINE_BUDGET_S` 가 총량을 막는다)
 CANDIDATES_TRIED = 8
+#: ★`[2026-10-13 사용자 지시]` 일정상 무리한 식사 — 앞 · 뒤 일정에서 이 반경 안의 식당을 찾는다(원장 `DISH_RADIUS_M` · 접수 `MEAL_NEAR_RADIUS_M` 과 같다)
+MEAL_ROUTE_RADIUS_M = 800
+#: 카카오 근처 찾기에 넣는 말 — 음식점 분류만 받는다(`candidates._kakao_places` 가 음식점 · 카페를 식사로 표시)
+MEAL_QUERY = "음식점"
 ROUND_MIN = 5
 ENGINE_BUDGET_S = 20.0
 
@@ -175,6 +180,10 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
                 continue
             done = (place, fit)
             break
+        note = None
+        if done is None and item["kind"] == "dining":
+            # ★`[2026-10-13 사용자 지시]` 식사는 「맞출 수 없음」으로 두지 않는다 — 앞뒤 일정 근처 식당, 그래도 안 되면 다음 일정을 민다(`_meal_on_route`)
+            done, note = _meal_on_route(conn, tenant_id, item, places, prev, nxt, start, duration, budget, kakao)
         if done is None:
             # 후보 자체가 없었던 것 · 운영시간(쉬는 날 · 닫는 시간 · 운영시간 미확인)에 안 맞은 것 · 앞뒤 이동에 못 맞춘 것을 **실제 실패 원인으로** 구별해 말한다.
             # 이동이 한 번이라도 원인이면 `no_fitting_time`(시각을 바꾸면 될 수 있다), 운영시간만이면 `no_fitting_place`
@@ -203,12 +212,72 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
                         "from": before, "to": after,
                         "reason": ("place_and_time" if changed_place and len(edits) > 1 else "place" if changed_place else "time"),
                         # 운영시간을 확인했나 — 모르는 곳은 장소 문제(이름 모호함 · 늦음)를 푸는 추천에는 쓰이지만 「열려 있다」고 하지 않는다(결과 줄에 `unknown`)
-                        "hours_known": hours_known, "edits": edits})
+                        "hours_known": hours_known, "edits": edits, **({"note": note} if note else {})})
         last_changed = i
         # 다음 일정을 맞출 기준을 갱신한다
         items[i] = {**item, "place": after["place"], "starts_at": after["starts_at"], "ends_at": after["ends_at"],
                     "place_state": "customer", "status": "adjusted"}
     return {"changes": changes, "kept": kept}
+
+
+def _route_restaurants(conn, tenant_id: str, item: dict[str, Any], tried: list[dict[str, Any]], prev: dict[str, Any] | None,
+                       nxt: dict[str, Any] | None, kakao: Any) -> list[dict[str, Any]]:
+    """앞 · 뒤 일정 근처(`MEAL_ROUTE_RADIUS_M`)의 식당 — 요식 원장 먼저, 카카오 근처 음식점으로 채운다. 돌아가는 거리(앞 → 식당 → 뒤)가 짧은 순.
+    이미 맞춰 본 곳(`tried` — 지금 곳 · 원래 둘레의 대체 후보)은 뺀다."""
+    points = [x["place"] for x in (prev, nxt) if x and x.get("place")]
+    seen = {(normalize_full(p["name"]), round(float(p["latitude"]), 4), round(float(p["longitude"]), 4)) for p in tried
+            if p.get("name") and p.get("latitude") is not None}
+    pool: list[dict[str, Any]] = []
+    for point in points:
+        ref = (float(point["latitude"]), float(point["longitude"]))
+        found = cand_module._ledger_places(conn, tenant_id, ref, radius_m=MEAL_ROUTE_RADIUS_M)
+        found += [p for p in cand_module._kakao_places(kakao, MEAL_QUERY, ref, "dining", []) if p.get("kind") == "dining"]
+        for place in found:
+            key = (normalize_full(place["name"]), round(float(place["latitude"]), 4), round(float(place["longitude"]), 4))
+            if key in seen or min(_metres(place, pt) for pt in points) > MEAL_ROUTE_RADIUS_M:
+                continue
+            seen.add(key)
+            pool.append({**place, "kind": "dining"})
+    return sorted(pool, key=lambda p: sum(_metres(p, pt) for pt in points))
+
+
+def _metres(a: dict[str, Any], b: dict[str, Any]) -> float:
+    return distance_m(float(a["latitude"]), float(a["longitude"]), float(b["latitude"]), float(b["longitude"]))
+
+
+def _meal_on_route(conn, tenant_id: str, item: dict[str, Any], tried: list[dict[str, Any]], prev: dict[str, Any] | None,
+                   nxt: dict[str, Any] | None, start: datetime, duration: timedelta, engine: Any,
+                   kakao: Any) -> tuple[tuple[dict[str, Any], tuple[datetime, datetime, bool]] | None, str | None]:
+    """일정상 무리한 식사 — **「맞출 수 없음」으로 두지 않는다**. `[2026-10-13 사용자 지시]` ((고른 곳, (시작, 끝, 운영시간 확인)), 이유) 또는 (None, None).
+
+    ① 앞 · 뒤 일정 근처 식당을 돌아가는 거리가 짧은 순으로 맞춰 본다(`_fit_window` — 운영시간 · 앞뒤 이동 · 머무는 30분)
+    ② 하나도 안 맞으면 **다음 일정에 묶지 않고** 머무는 시간을 지킨다 — 가장 가까운 근처 식당(없으면 지금 곳). 다음 일정은 이 뒤의 늦음 검사로 다시 맞춰진다
+    ③ 운영시간까지 안 맞으면 앞 일정 뒤 닿는 시각부터 원래 머무는 시간만큼(운영시간 확인 안 됨)
+    ☆전에는 원래 식당 둘레의 대체 후보만 보고 안 되면 그대로 두었다 — 「박물관(용산) → 광장시장 점심 → 전쟁기념관(용산)」에서 용산 식당을 권하지 않았다.
+    ★계산만 한다(모델 없음). 고른 곳은 늘 고객이 확인하는 추천이다(적용 뒤 되돌리기는 `edits` 그대로).
+    """
+    pool = _route_restaurants(conn, tenant_id, item, tried, prev, nxt, kakao)
+    near = next((x["place"]["name"] for x in (prev, nxt) if x and x.get("place")), None)
+    for place in pool[:CANDIDATES_TRIED]:
+        fit = _fit_window(conn, tenant_id, item, place, prev, nxt, start, duration, engine)
+        if not isinstance(fit, str):
+            return (place, fit), f"원래 곳까지 오가면 식사 시간이 모자라 「{near}」 근처 식당으로 바꿨어요"
+    fallback = pool[:1] + ([item["place"]] if item.get("place") else [])
+    for place in fallback:
+        fit = _fit_window(conn, tenant_id, item, place, prev, None, start, duration, engine)
+        if not isinstance(fit, str):
+            where = "근처 식당으로 바꾸고 " if pool and place is pool[0] else ""
+            return (place, fit), f"식사 시간을 지키려고 {where}다음 일정을 뒤로 미뤘어요"
+    place = fallback[0] if fallback else None
+    if place is None:
+        return None, None
+    begin = start
+    if prev and prev.get("place"):
+        prev_end = _dt(prev["date"], prev["ends_at"] or prev["starts_at"])
+        arrive = earliest_start(engine, prev["place"], place, prev_end) if prev_end is not None else None
+        if arrive is not None:
+            begin = max(start, arrive)
+    return (place, (begin, begin + duration, False)), "식사 시간을 지키려고 다음 일정을 뒤로 미뤘어요 — 운영시간은 확인하지 못했어요"
 
 
 def _pick(place: dict[str, Any], item: dict[str, Any]) -> dict[str, Any]:
