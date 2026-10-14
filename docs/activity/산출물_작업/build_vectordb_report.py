@@ -244,6 +244,7 @@ fill_table(K[63], None, rows)
 set_p(K[64], f"총 {N_DOC}개 문서를 {N_CHUNK}개 청크로 적재했고 모든 청크에 1,536차원 벡터가 채워진 것을 확인했다({sum(v[2] for v in SCOPES.values())}/{N_CHUNK}). 활동 에이전트가 사용하는 범위는 "
               f"4개 scope {A_DOC}문서·{A_CHUNK}청크이다. 이 중 3문서·20청크는 공정거래위원회 국내여행 표준약관(제10020호)과 소비자분쟁해결기준(고시 제2025-14호)을 판단 단위로 풀어 쓴 것이며(knowledge/travel_ext/), 원문과 대조해 문장 6곳을 고친 뒤 재적재했다. 장소별·업체별 약관은 담지 않았다. 그래프 DB 는 구축하지 않았다. 측정: 2026-10-13~14, 로컬 개발 DB(PostgreSQL + pgvector, Docker), OpenAI 임베딩 호출 기본 코퍼스 3회(입력 43,287 토큰) + 공식 자료 적재 2회(재적재 포함, 각 약 5,000 토큰).")
 
+K[64].addnext(plain(K[64], "재현 조건: 본 결과는 2026-10-14 로컬 개발 환경(PostgreSQL 16.15 + pgvector 0.8.6, 브랜치 role-activity-b)에서 측정했다. 다른 환경에서는 문서 적재 여부와 적재 모델, 마이그레이션 적용 여부, API 키 설정에 따라 청크 수와 검색 결과가 달라질 수 있다."))
 anchor = K[65]            # 「주요 예시 데이터」
 title, scope, uri, no, meta, content = EX
 ex = [

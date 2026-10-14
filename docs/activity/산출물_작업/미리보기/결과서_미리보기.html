@@ -48,6 +48,7 @@
 <p>적재 결과 요약</p>
 <table><tr><td>문서 유형</td><td>원천 문서 수</td><td>chunk 수</td></tr><tr><td>동행·접근 조건 (travel_access)</td><td>2</td><td>12</td></tr><tr><td>활동 운영 기준 (travel_activity)</td><td>5</td><td>38</td></tr><tr><td>취소·환급 공통 (travel_cancellation)</td><td>4</td><td>28</td></tr><tr><td>식당 (travel_dining)</td><td>2</td><td>21</td></tr><tr><td>이동 (travel_mobility)</td><td>3</td><td>31</td></tr><tr><td>날씨·재난 기준 (travel_weather)</td><td>3</td><td>24</td></tr><tr><td>합계</td><td>19</td><td>154</td></tr></table>
 <p>총 19개 문서를 154개 청크로 적재했고 모든 청크에 1,536차원 벡터가 채워진 것을 확인했다(154/154). 활동 에이전트가 사용하는 범위는 4개 scope 14문서·102청크이다. 이 중 3문서·20청크는 공정거래위원회 국내여행 표준약관(제10020호)과 소비자분쟁해결기준(고시 제2025-14호)을 판단 단위로 풀어 쓴 것이며(knowledge/travel_ext/), 원문과 대조해 문장 6곳을 고친 뒤 재적재했다. 장소별·업체별 약관은 담지 않았다. 그래프 DB 는 구축하지 않았다. 측정: 2026-10-13~14, 로컬 개발 DB(PostgreSQL + pgvector, Docker), OpenAI 임베딩 호출 기본 코퍼스 3회(입력 43,287 토큰) + 공식 자료 적재 2회(재적재 포함, 각 약 5,000 토큰).</p>
+<p>재현 조건: 본 결과는 2026-10-14 로컬 개발 환경(PostgreSQL 16.15 + pgvector 0.8.6, 브랜치 role-activity-b)에서 측정했다. 다른 환경에서는 문서 적재 여부와 적재 모델, 마이그레이션 적용 여부, API 키 설정에 따라 청크 수와 검색 결과가 달라질 수 있다.</p>
 <p>주요 예시 데이터</p>
 <p>문서: 관람·자연 갈래의 운영 중단과 통제 · scope travel_activity · 출처 internal://a-cop/travel-policy/activity/operation-control</p>
 <p>절 제목(청크 1): 휴관일은 규정이 아니라 사실이다 · 버전 1.0 · 개인정보 등급 none</p>
