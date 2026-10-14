@@ -10,7 +10,7 @@ domain: travel
 
 ## 2026-10-14 21:40 — 도커 이미지 정리 규칙 · 월별 복원용 보존 · WSL 디스크 압축
 
-배포마다 쌓이던 도커 이미지를 성공한 배포 직후 지우고(앱 이미지 최근 3개 + 달마다 하나, 복구용 최신 2세트) x600 서버 193 → 28개, 오라클 서버 29 → 14개로 정리했습니다. WSL 가상 디스크는 226.3 → 149.7GiB, E 드라이브 여유 1.45 → 79.8GiB. 복원 시험 도구를 추가했고, 새 설정 이름이 옛 판 복원을 막는다는 처음 보고는 도구 재현 확인이 실패해 정정했습니다. 운영 컨테이너 교체 시험은 미시험. 새 문서 [image-retention.md](operations/image-retention.md), 목차 [operations/index.md](operations/index.md), 오라클 배포 문서 [arm-develop-cd.md](operations/arm-develop-cd.md) 한 문장 수정. [기록](records/reports/2026-10-14_도커이미지_정리규칙과_월별보존.md)
+배포마다 쌓이던 도커 이미지를 성공한 배포 직후 지우고(앱 이미지 최근 3개 + 달마다 하나, 복구용 최신 2세트) x600 서버 193 → 28개, 오라클 서버 29 → 14개로 정리했습니다. WSL 가상 디스크는 226.3 → 149.7GiB, E 드라이브 여유 1.45 → 79.8GiB. 복원 시험 도구를 추가했고, 새 설정 이름이 옛 판 복원을 막는다는 처음 보고는 도구 재현 확인이 실패해 정정했습니다. 운영 컨테이너 교체·복귀 시험은 21:33~21:41 에 x600 서버에서 통과(직전 판 · `keep-2026-10` · 오래된 판 · 현재 복귀, 각 전환의 이미지 ID·`/health`·재시작 0 확인). 새 문서 [image-retention.md](operations/image-retention.md), 목차 [operations/index.md](operations/index.md), 오라클 배포 문서 [arm-develop-cd.md](operations/arm-develop-cd.md) 한 문장 수정. [기록](records/reports/2026-10-14_도커이미지_정리규칙과_월별보존.md)
 
 ## 2026-10-14 15:00 — 10-12 점검 후속: 시험 마무리 시도 · 구조 시험 · 키 견본
 

@@ -86,8 +86,8 @@
    TRIPILOT_TAG=keep-YYYY-MM         python3 repo/final_project_cs/deploy/migration_safe_deploy.py rollout  --state-dir $D --timeout 240 --settle 30
    ```
    `rollout` 은 새로 띄운 것이 건강하지 않거나 재시작하면 스스로 직전 이미지(이미지 ID 고정)로 복구한다. DB 는 되돌리지 않는다 — 마이그레이션이 앞으로만 가므로(위 자동 반영 표) 옛 이미지가 새 표 구조를 견디는지가 2번이 확인하는 핵심이다.
-   - ★**3번은 운영에서 시험하지 않았다(2026-10-14 기준).** 1·2번만 시험했다.
-4. **최신 판으로 돌아오기**: 같은 절차를 `TRIPILOT_TAG=<state/current_tag 의 값>` 으로 한 번 더 하고 `systemctl start tripilot-autodeploy.timer`. 배포 버전 표시(`ACOP_DEPLOYMENT_VERSION`)가 `keep-…` 로 남으면 다음 자동 반영의 사전 검사(실행 중 구성 일치)에 걸릴 수 있다 — 이것도 운영에서 확인하지 않았다.
+   - **3번은 2026-10-14 에 운영(x600 서버)에서 시험했다**: 현재 → 직전 판 → `keep-2026-10` → 오래된 판 → 현재 복귀를 위 절차로 네 번 전환해 모두 통과했다(전환마다 1~3분 끊김, 환경 파일은 건드리지 않았다).
+4. **최신 판으로 돌아오기**: 같은 절차를 `TRIPILOT_TAG=<state/current_tag 의 값>` 으로 한 번 더 하고 `systemctl start tripilot-autodeploy.timer`. 배포 버전 표시(`ACOP_DEPLOYMENT_VERSION`)가 `keep-…` 로 남으면 다음 자동 반영의 사전 검사(실행 중 구성 일치)에 걸릴 수 있다고 보고 복귀시킨다 — 이 걸림 자체는 확인하지 않았고, 시험에서는 복귀 뒤 사전 검사가 통과했다.
 
 ## 알아둘 것
 - **DB 는 서버에 하나가 정본이다.** 개발 PC 의 DB 와 합치지 않는다 — 서버에는 사용자 데이터를 안 가져갔고, 거기 쌓이는 것은 서버 것이다.
