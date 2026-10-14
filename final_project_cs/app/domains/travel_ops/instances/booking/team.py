@@ -6,7 +6,8 @@
 항목 `kind:"flight"` · case type `flight`)는 그대로다 — `booking.*` 은 `booking_handoff` 팀 능력 이름이라 겹친다(팀장 결정 대기).
 옛 이름 `FlightTeam` 은 별칭으로 남긴다.
 `[2026-10-14 저녁]` **기차 · 버스**(`mode` train · bus): 같은 규칙 해석 → 같은 서버 검증 → `read.booking_search_transit`(TAGO 열차 · 고속 · 시외버스) 한 번(오는 날이 있으면 두 번) →
-운행을 출발 시각순 · 시간대별로 보여 주고 예매 사이트 링크를 준다(`_search_transit`).
+운행을 출발 시각순 · 시간대별로 보여 주고 예매 링크를 준다(`_search_transit`) — 조건을 채워 여는 주소(SRT · 트립닷컴 · 버스타고,
+`offers/transit_links.py`)가 있으면 그것을, 없으면 사이트 첫 화면을.
 `[2026-10-14 2차]` 일정 항목 `kind` train · bus 도 이 모듈이 맡는다(`ITEM_KINDS`) — 「바꿔 줘」는 같은 날 같은 구간의 다른 운행을 보류 제안으로
 (원래 출발 앞뒤 3시간 · 같은 등급 먼저), 고르면 그 운행으로(출발 · 도착 시각 둘 다 — 국내라 시간대가 같다), 고를 때 운행 재확인(같음 · 요금 바뀜 · 없음).
 ★코어 라우팅(`trip_messages.ITEM_TEAMS` · `owner_team`)은 항목 kind == 팀 id 로 보므로 train · bus 항목이 이 팀으로 오려면 코어가 kind → 팀 표를
@@ -141,7 +142,8 @@ def _transit_option(rank: int, option: dict[str, Any], item: Any, people: int | 
             return None
     price = option.get("price") if isinstance(option.get("price"), int) else None
     number = f" {option['number']}" if option.get("mode") == "train" and option.get("number") else ""
-    site = sites[0] if sites else {}
+    deep = (option.get("links") or [None])[0]                     # 조건을 채워 여는 주소(SRT · 트립닷컴 · 버스타고) — 없으면 첫 화면
+    site = deep or (sites[0] if sites else {})
     return {"key": _transit_key(option), "rank": rank,
             "name": f"{option.get('grade') or KIND_LABEL.get(option.get('mode'), '')}{number} {option.get('depart') or '?'}→{option.get('arrive') or '?'}",
             "place_id": None, "option": None, "option_label": None,
@@ -150,7 +152,8 @@ def _transit_option(rank: int, option: dict[str, Any], item: Any, people: int | 
             "date": option.get("date"), "depart": option.get("depart"), "arrive": option.get("arrive"), "minutes": option.get("minutes"),
             "origin": option.get("origin"), "destination": option.get("destination"), "band": _band_of(option.get("depart")),
             "per_person": price, "best": price * people if price is not None and people else price,
-            "seller": site.get("name"), "link": site.get("url"), "link_seller": site.get("name"), "link_price": None, "link_kind": "site",
+            "seller": site.get("name"), "link": site.get("url"), "link_seller": site.get("name"), "link_price": None,
+            "link_kind": "route_search" if deep else "site",
             "sources": ["tago"]}
 
 
@@ -729,6 +732,7 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
             head += " 요금은 어른 기준이라 아동 · 유아 요금은 예매 화면에서 확인해 주세요."
         lines: list[str] = [head]
         shown_all: list[dict[str, Any]] = []
+        deep: dict[str, str] = {}                           # 조건을 채워 여는 예매 주소 — 다리 · 사이트마다 하나(보여 준 첫 운행 기준)
         for (name, got, times), state in zip(results, states):
             source = (got or {}).get("sources", {}).get("tago") or {}
             if state == "failed":
@@ -771,15 +775,24 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                 lines.append(f"  받은 결과에 {' · '.join(BAND_LABEL[b] for b in bands_empty)} 출발은 없었습니다.")
             shown_all += [{"leg": name, "grade": option.get("grade"), "depart": option.get("depart"), "price": option.get("price")}
                           for option in picked]
-        sites = {site["name"]: site["url"] for _, got, _ in results for site in ((got or {}).get("elsewhere") or [])}
+            for option in picked:
+                for link in option.get("links") or []:
+                    deep.setdefault(f"{name}:{link.get('site')}", f"{name} {link['name']}: {link['url']}")
+        deep_sites = {key.split(":", 1)[1] for key in deep}
+        if deep:
+            lines.append("예매는 아래 주소로 — 출발 · 도착 · 날짜를 채워 엽니다(운행은 그 화면에서 고르세요):")
+            lines += [f"   · {label}" for label in deep.values()]
+        sites = {site["name"]: site["url"] for _, got, _ in results for site in ((got or {}).get("elsewhere") or [])
+                 if not ("srail" in site["url"] and "srt" in deep_sites) and not ("bustago" in site["url"] and "bustago" in deep_sites)}
         if sites:
-            lines.append("예매는 아래 사이트에서 직접(조건을 채워 주지는 않습니다 — 날짜 · 역 · 터미널을 다시 고르셔야 합니다):")
+            lines.append("그 밖의 예매 사이트(조건을 채워 주지는 않습니다 — 날짜 · 역 · 터미널을 다시 고르셔야 합니다):"
+                         if deep else "예매는 아래 사이트에서 직접(조건을 채워 주지는 않습니다 — 날짜 · 역 · 터미널을 다시 고르셔야 합니다):")
             lines += [f"   · {name}: {url}" for name, url in sites.items()]
         lines.append("요금은 공급자가 준 어른 1인 기준 조회 시점 참고값이며 좌석 등급 · 할인에 따라 예매 화면에서 달라질 수 있습니다. "
                      "좌석이 남았는지는 예매 화면에서 확인해 주세요.")
         calls = sum(len(((got or {}).get("sources", {}).get("tago") or {}).get("calls") or []) for _, got, _ in results)
         return self._respond(task, evidence, {**decision, "mode": found.mode, "legs": len(results), "shown": shown_all,
-                                              "tago_calls": calls, "states": states},
+                                              "tago_calls": calls, "states": states, "booking_links": sorted(deep_sites)},
                              "\n".join(lines))
 
     # ── 일정 항공편 항목 (`flight.itinerary`, 2026-10-11) ─────────────

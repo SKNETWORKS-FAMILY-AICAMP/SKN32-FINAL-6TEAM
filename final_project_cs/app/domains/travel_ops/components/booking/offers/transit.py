@@ -8,7 +8,8 @@
   앞의 몇 곳(`TERMINALS_EACH`)을 다 물어 합친다 — 어느 터미널인지는 결과 줄에 그대로 적는다.
 - 버스는 고속을 먼저 보고, 고객이 「시외」라고 했거나 고속에 결과가 없을 때 시외를 본다(호출 수를 아끼려고 — 하루 한도 `rate_tago_per_day`).
 - 돌려주는 모양은 항공과 같은 골격 — `options`(운행 하나씩, 출발 시각순) · `sources`(`tago` 의 status · count · seconds · 부른 횟수) ·
-  `resolved`(출발 · 도착으로 쓴 역 · 터미널 이름) · `elsewhere`(예매 사이트 링크 — 주소만, 조건을 채워 주지는 않는다 · 확인 안 함) · `confirmed_at`.
+  `resolved`(출발 · 도착으로 쓴 역 · 터미널 이름) · `elsewhere`(예매 사이트 첫 화면 링크) · `confirmed_at`. 운행마다 `links` — 조건을 채워
+  여는 예매 주소(SRT · 트립닷컴 · 버스타고, `transit_links.py`) — 가 붙고, 없으면 빈 목록이다.
 - 예매 · 결제는 하지 않는다. 요금은 공급자의 어른 1인 값 그대로(조회 시점 참고값).
 """
 from __future__ import annotations
@@ -16,6 +17,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 import time
 from typing import Any
+
+from app.domains.travel_ops.components.booking.offers.transit_links import run_links
 
 #: 고객이 말하는 이름 → (열차 역 이름, 시 · 도). 역 목록에서 「역 이름으로 시작」하는 것을 고른다(「울산(통도사)」 · 「김천(구미)」).
 #: 도시 이름은 그 도시의 고속철 역으로 — 대구 → 동대구 · 광주 → 광주송정 · 창원 → 창원중앙 · 여수 → 여수엑스포 · 청주 → 오송(우리가 고른 값).
@@ -43,12 +46,13 @@ TERMINALS_EACH = 3
 #: 한 검색에서 운행 조회를 부를 최대 수(열차 1 + 버스 고속 ≤ 6 + 시외 ≤ 6 보다 작게)
 MAX_SCHEDULE_CALLS = 8
 
-#: 예매 사이트 — 주소만(조건을 채워 여는 주소는 확인 안 함). 가격 · 좌석은 그 사이트에서
+#: 예매 사이트 **첫 화면** — 조건을 채워 여는 주소는 `transit_links`(SRT · 트립닷컴 · 버스타고)에 있고, 여기는 그것이 없을 때의 대비.
+#: `[2026-10-14 저녁]` 코레일은 `letskorail.com` 이 `korail.com` 으로 넘어가고(302), 버스타고 루트는 404 라 주소를 바꿨다(직접 열어 봄).
 BOOKING_SITES = {
-    "train": [{"name": "코레일 승차권 예매(KTX · ITX · 무궁화)", "url": "https://www.letskorail.com/"},
+    "train": [{"name": "코레일 승차권 예매(KTX · ITX · 무궁화)", "url": "https://www.korail.com/ticket/main"},
               {"name": "SRT 예매", "url": "https://etk.srail.kr/"}],
     "express": [{"name": "코버스 고속버스 예매", "url": "https://www.kobus.co.kr/"}],
-    "suburbs": [{"name": "버스타고 시외버스 예매", "url": "https://www.bustago.or.kr/"},
+    "suburbs": [{"name": "버스타고 시외버스 예매", "url": "https://www.bustago.or.kr/newweb/kr/index.do"},
                 {"name": "티머니 시외버스 예매", "url": "https://txbus.t-money.co.kr/"}],
 }
 
@@ -170,6 +174,8 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
             status, unresolved = "ok", []                 # 터미널은 찾았는데 그날 운행이 없다
         result["elsewhere"] = [site for bus_kind in (used or kinds) for site in BOOKING_SITES[bus_kind]]
     options.sort(key=_sort_key)
+    for option in options:                                 # 운행마다 조건을 채워 여는 예매 링크(없으면 빈 목록 → 첫 화면 링크)
+        option["links"] = run_links(option, adults=adults)
     result["options"] = options
     result["sources"]["tago"] = {"status": status, "count": len(options), "calls": calls,
                                  "seconds": round(time.perf_counter() - started, 1),

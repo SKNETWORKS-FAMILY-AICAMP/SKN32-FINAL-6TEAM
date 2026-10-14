@@ -13,6 +13,7 @@ import pytest
 from app.core.contracts import ContextPack, TeamTask, ToolNotAllowed
 from app.domains.travel_ops.components.booking.offers import search_transit
 from app.domains.travel_ops.components.booking.offers.transit import STATIONS
+from app.domains.travel_ops.components.booking.offers.transit_links import RAIL_CODES, bustago_link, run_links, srt_link, trip_link
 from app.domains.travel_ops.instances.booking import BookingTeam
 from app.domains.travel_ops.instances.booking.interpret import needs, parse
 from app.domains.travel_ops.instances.booking.interpret_rules import interpret
@@ -70,6 +71,32 @@ def test_a_train_sentence_without_a_station_is_asked_back_not_guessed():
 def test_every_station_in_the_dictionary_maps_to_a_name_and_a_region():
     assert all(isinstance(name, str) and isinstance(city, str) and name and city for name, city in STATIONS.values())
     assert STATIONS["대구"] == ("동대구", "대구") and STATIONS["광주"] == ("광주송정", "광주") and STATIONS["청주"] == ("오송", "충북")
+
+
+def test_rail_codes_cover_the_station_dictionary_and_booking_links_fill_the_conditions():
+    """`[2026-10-14 저녁]` 조건을 채워 여는 예매 주소 — 코레일 역 코드(= SRT · 트립닷컴) · 버스타고 터미널 id. 사전에 없으면 주소를 안 만든다."""
+    from app.domains.travel_ops.components.booking.offers.transit_links import _rail_code
+    missing = sorted({name for name, _ in STATIONS.values() if _rail_code(name) is None})
+    assert missing == ["검암", "인천공항T1"], "트립닷컴 · SRT 역 검색에 없는 두 곳만(10-14)"
+    assert _rail_code("울산(통도사)") == RAIL_CODES["울산"] == "0509" and _rail_code("김천(구미)") == "0507" and _rail_code("진부(오대산)") == "0519"
+    assert all(len(code) == 4 and code.isdigit() for code in RAIL_CODES.values())
+    assert srt_link("수서", "부산", "2026-10-16", hour="09", adults=1) == (
+        "https://etk.srail.kr/hpg/hra/01/selectScheduleList.do?pageId=TK0101010000&dptRsStnCd=0551&arvRsStnCd=0020"
+        "&dptDt=20261016&dptTm=090000&psgNum=1&psgInfoPerPrnb1=1")
+    assert trip_link("동대구", "부산", "2026-10-16", adults=3).endswith("&departurecitycode=KR0015&arrivalcitycode=KR0020")
+    assert "hidadultnum=3" in trip_link("동대구", "부산", "2026-10-16", adults=3)
+    assert srt_link("인천공항T1", "부산", "2026-10-16") is None and trip_link("서울", "부산", "20261016") is None, "모르는 역 · 날짜 모양"
+    bus = bustago_link("동서울", "부산동부(노포)", "2026-10-16", hour="09", adults=2)
+    assert bus.startswith("https://www.bustago.or.kr/newweb/kr/ticket/ticket.do?startType=I&start=%EB%8F%99%EC%84%9C%EC%9A%B8&startId=0001&finish=")
+    assert "&finishId=9001&goDateField=2026-10-16&goTimeField=09&adultCnt=2&universityCnt=0&studentCnt=0&childrenCnt=0" in bus
+    assert bustago_link("동서울종합터미널", "강릉시외버스터미널", "2026-10-16") is not None, "「터미널 · 종합 · 시외버스」를 뗀 이름으로 맞춤"
+    assert bustago_link("부산", "동서울", "2026-10-16") is None, "「부산」은 버스타고에 동부 · 서부 · 해운대가 있어 애매 → 안 만든다"
+    assert bustago_link("동서울", "없는곳", "2026-10-16") is None
+    assert run_links(_train("SRT", "19:00", "21:20", 52600))[0]["site"] == "srt"
+    assert run_links(_train("KTX", "07:00", "09:40", 59800), adults=2)[0]["site"] == "trip"
+    assert run_links(_bus("express", "서울경부", "부산", "06:00", 26600)) == [], "고속버스(코버스)는 없다"
+    assert run_links(_bus("suburbs", "동서울", "강릉시외터미널", "07:00", 15000))[0]["site"] == "bustago"
+    assert run_links(_bus("suburbs", "동서울", "부산", "07:00", 15000)) == []
 
 
 # ── 어댑터 ─────────────────────────────────────────────
@@ -297,8 +324,17 @@ def test_a_train_sentence_is_answered_from_tago_by_time_band_with_booking_links(
     assert "[오전] KTX 101 — 서울 07:00 → 부산 09:40 (2시간 40분) · 어른 59,800원 (성인 2명 119,600원)" in answer
     assert "KTX 103" in answer and "KTX 105" not in answer, "시간대마다 앞 2편"
     assert "[오후] 무궁화호 1205" in answer and "[저녁] SRT 381" in answer
-    assert "코레일 승차권 예매(KTX · ITX · 무궁화): https://www.letskorail.com/" in answer
+    assert "예매는 아래 주소로 — 출발 · 도착 · 날짜를 채워 엽니다(운행은 그 화면에서 고르세요):" in answer
+    assert ("   · 가는 편 트립닷컴 코레일 열차(출발 · 도착 · 날짜 채움): https://kr.trip.com/trains/asia/list?tripTab=train&scheduleType=single"
+            f"&hidadultnum=2&hidchildnum=0&biztype=SouthKorea&departurecountrycode=KR&arrivalcountrycode=KR&departdate={GO.isoformat()}"
+            "&departhouript=07&departminuteipt=00&departurecitycode=KR0001&arrivalcitycode=KR0020") in answer, "보여 준 첫 KTX 운행(07시) 기준"
+    assert ("   · 가는 편 SRT 예매(출발 · 도착 · 날짜 · 시각 채움): https://etk.srail.kr/hpg/hra/01/selectScheduleList.do?pageId=TK0101010000"
+            f"&dptRsStnCd=0001&arvRsStnCd=0020&dptDt={GO.isoformat().replace('-', '')}&dptTm=190000&psgNum=2&psgInfoPerPrnb1=2") in answer
+    assert "그 밖의 예매 사이트(조건을 채워 주지는 않습니다" in answer
+    assert "코레일 승차권 예매(KTX · ITX · 무궁화): https://www.korail.com/ticket/main" in answer
+    assert "SRT 예매: https://etk.srail.kr/" not in answer, "조건을 채운 SRT 주소가 있으면 첫 화면은 안 보여 준다"
     assert "어른 1인 기준 조회 시점 참고값" in answer
+    assert result.decisions[0]["booking_links"] == ["srt", "trip"]
     assert result.decisions[0]["mode"] == "train" and result.decisions[0]["tago_calls"] == 3
 
 
@@ -332,7 +368,9 @@ def test_a_bus_sentence_shows_the_terminal_used_and_the_bus_links():
     assert tools.calls[0][1]["kind"] == "express"
     assert "[가는 편] 서울경부 → 부산 · 전체 1편 중 새벽 출발 1편 보여 드립니다." in result.answer
     assert "[새벽] 고속우등 — 서울경부 06:00 → 부산 ? (소요 모름) · 어른 26,600원 (성인 3명 79,800원)" in result.answer
+    assert "예매는 아래 사이트에서 직접(조건을 채워 주지는 않습니다" in result.answer, "고속버스는 조건을 채워 여는 주소가 없다(코버스 POST 전용)"
     assert "코버스 고속버스 예매: https://www.kobus.co.kr/" in result.answer
+    assert result.decisions[0]["booking_links"] == []
 
 
 # ── 일정 기차 · 버스 항목 — `flight.itinerary` (`[2026-10-14 2차]`, 항공 항목과 같은 모양) ─────────
@@ -376,7 +414,9 @@ def test_change_on_a_train_item_offers_same_grade_runs_near_the_original_departu
     first = ask["options"][0]
     assert {"key", "name", "place_id", "starts_at", "ends_at", "walk_min"} <= set(first), "식당 · 활동의 「다른 안」 칸"
     assert first["starts_at"] == f"{GO.isoformat()}T08:30:00+09:00" and first["ends_at"] == f"{GO.isoformat()}T11:10:00+09:00", "국내 — 도착 시각도"
-    assert first["per_person"] == 59800 and first["best"] == 119600 and first["link"] == "https://www.letskorail.com/"
+    assert first["per_person"] == 59800 and first["best"] == 119600
+    assert first["link"].startswith("https://kr.trip.com/trains/asia/list?") and "departhouript=08" in first["link"], "운행 시각이 채워진 주소"
+    assert first["link_kind"] == "route_search" and first["link_seller"] == "트립닷컴 코레일 열차(출발 · 도착 · 날짜 채움)"
     assert proposal.arguments["summary"]["train_options"] == [o["key"] for o in ask["options"]]
     assert proposal.arguments["summary"]["near_original"] == 3
 
@@ -424,8 +464,9 @@ def test_choosing_a_train_run_moves_both_times_and_rechecks_the_fare():
     state = {**RUN_STATE, "subject_ref": {**RUN_STATE["subject_ref"], "request": {"type": "change", "choice": key}}}
     result, tools = _runchange(plan, text="1번", state=state)
     assert [name for name, _ in tools.calls] == ["read.itinerary", "read.booking_search_transit"], "고르면 운행 재확인 한 번"
-    assert result.answer == ("요청하신 대로 서울 → 부산 KTX 대신 KTX 107 08:30→11:10(으)로 바꿨습니다. 아직 예약 전이에요 — 예약은 이 링크에서 해 주세요: "
-                             "https://www.letskorail.com/. 지금 가격도 1인 59,800원 그대로예요.")
+    assert result.answer.startswith("요청하신 대로 서울 → 부산 KTX 대신 KTX 107 08:30→11:10(으)로 바꿨습니다. 아직 예약 전이에요 — 이 편은 검색 결과 페이지만 "
+                                    "있어요. 그 화면에서 KTX 107 08:30→11:10 편을 골라 예약해 주세요: https://kr.trip.com/trains/asia/list?")
+    assert "departhouript=08&departminuteipt=00&departurecitycode=KR0001&arrivalcitycode=KR0020. 지금 가격도 1인 59,800원 그대로예요." in result.answer
     new = result.action_proposals[0].arguments["replacements"][0]["item"]
     assert new["starts_at"] == f"{GO.isoformat()}T08:30:00+09:00" and new["ends_at"] == f"{GO.isoformat()}T11:10:00+09:00"
     assert new["detail"]["chosen"]["key"] == key and new["detail"]["booked"] is False

@@ -46,7 +46,7 @@ def main() -> None:
         from app.domains.travel_ops.components.booking.offers import search_transit
 
         travel = SimpleNamespace(transit_schedule=tago)
-        for mode, kind in (("train", None), ("bus", None)):
+        for mode, kind in (("train", None), ("bus", "suburbs" if "--suburbs" in sys.argv else None)):
             started = time.perf_counter()
             got = search_transit(travel, mode=mode, origin=origin, destination=destination, depart_date=day, adults=2, kind=kind)
             source = got["sources"]["tago"]
@@ -54,7 +54,10 @@ def main() -> None:
                   f"호출 {len(source['calls'])}회 · 옮긴 곳 {got['resolved']}")
             for option in got["options"][:6]:
                 print(f"  {option.get('grade')} {option.get('number') or ''} {option.get('origin')} {option.get('depart')} → "
-                      f"{option.get('destination')} {option.get('arrive')} · {option.get('minutes')}분 · 어른 {option.get('price')}원")
+                      f"{option.get('destination')} {option.get('arrive')} · {option.get('minutes')}분 · 어른 {option.get('price')}원"
+                      f" · 링크 {[link['site'] for link in option.get('links') or []] or '없음(첫 화면)'}")
+            for link in (got["options"][0].get("links") if got["options"] else None) or []:   # 첫 운행의 조건 채운 주소 — 열어 볼 것
+                print(f"  → {link['name']}: {link['url']}")
             if source.get("unresolved"):
                 print(f"  못 찾은 곳: {source['unresolved']}")
         print(f"\n-- 미스 {dict(tago.misses)}")
