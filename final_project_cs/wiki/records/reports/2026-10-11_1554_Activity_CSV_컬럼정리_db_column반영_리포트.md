@@ -207,6 +207,40 @@ python -m app.domains.travel_ops.instances.activity.data_processing.fill_tourapi
   백업 대조: 바뀐 칸 휴무일 5 · 연락처 1 · 영업시간 2 · `field_sources` 8 · 덮어쓴 것 0. 할 일 42 → **34칸**.
 - ★롯데월드 아쿠아리움 **영업시간**(사용자 「월·화·수·목 10:00~20:00 금·토·일 10:00~22:00」)은 넣지 않았다 — 칸에 TourAPI 값(「10:00~20:00 (입장마감 19:00)」)이 있고, 사람은 TourAPI 칸을 고치지 않는다는 규칙이다.
 
+## 본 수집 쇼핑(38) 1회차 (2026-10-14 09:06~09:15, `--max-calls 800`)
+
+- 시작 전 확인(`--dry-run`): 쇼핑 외(12 · 14 · 28 · 15) **남은 호출 0** — 다 받았다. 남은 7,521건은 모두 쇼핑(38).
+- **800건 호출, 끝까지**. 중간에 `detailIntro2` 네트워크 오류(`[WinError 10060]`) 1번 → 10초 뒤 다시 불러 이어 감 — **다시 부르기가 실제로 돈 첫 기록**이다.
+- 시작 직전 백업(세션 스크래치 `activity_total_data.before_fetch_1014.csv` · `tourapi_details_cache.before_1014.jsonl`)과 대조: 6,334행 · 헤더 30개 · 순서 같음 · **기존 값이 바뀐 칸 0**.
+- 새로 채워진 칸: `overview` 398 · `modifiedtime` 398 · `lDongSignguCd` 397 · `business_hours` 397 · `tel` 395 · `closed_days` 282 · `homepage` 186.
+- 캐시 4,587줄. **남은 호출 6,721건(쇼핑만, 800건씩 ≈ 9일).**
+
+### 브랜드 행 `homepage` — 브랜드 대표 주소 (2026-10-14, 사용자 「①번 브랜드 대표 주소로 채워줘」)
+
+- 브랜드 행(contentid 가 숫자가 아님) 687곳은 `homepage` 가 모두 빈칸이었다. 매장별 페이지가 아니라 **브랜드 대표 주소**로 채운다(사용자 결정).
+  TourAPI 쪽 같은 브랜드 매장도 대표 주소를 쓴다(다이소 매장 `www.daiso.co.kr/` · 아트박스 매장 `www.poom.co.kr`).
+- 공식 페이지 본문을 열어 확인(`by=claude` · `checked` 2026-10-14 · `quote`):
+
+| 브랜드 | 행 | 값 | 확인한 페이지 · 근거 |
+|---|---|---|---|
+| 올리브영 | 368 | `https://www.oliveyoung.co.kr/` | 쇼핑몰은 봇 차단(403)이라 기업 사이트 `corp.oliveyoung.com` — 사이트맵 「online store」 → www.oliveyoung.co.kr |
+| 다이소 | 233 | `https://www.daiso.co.kr/` | 그 페이지 — 「Copyright (c) 2020 ASUNGDAISO. All Rights Reserved.」 |
+| 무신사 | 42 | `https://www.musinsa.com/` | 메인은 본문이 스크립트로 떠 비어 있어 같은 도메인의 제휴 문의 페이지 — 「무신사 스토어는 자체 제작한 정품을 …」 |
+| 아트박스 | 36 | `https://www.poom.co.kr/` | `www.artbox.co.kr` 가 307 로 넘어가는 곳 — 「POOM : 아트박스가 만든 디자인 쇼핑몰」 |
+
+- 반영 전 백업(세션 스크래치 `activity_total_data.before_brand_homepage.csv`)과 대조: 6,334행 · 헤더 30개 · 순서 같음 · 바뀐 칸 `homepage` 679 · `field_sources` 679 · **값이 있던 칸을 덮어쓴 것 0**.
+  `--max-calls 0` 재실행 — 형식 검사 통과 · 호출 0. 테스트 `test_fill_tourapi_details.py` · `test_activity_data_quality.py` **42 passed**.
+- ★**이구(29CM 오프라인 매장 — 이구홈 · 이구키즈 · 이구어퍼스트로피) 8곳은 비워 뒀다.** `www.29cm.co.kr` 은 열렸지만(「모든 취향 곁에, 29CM」) 이구 매장이 29CM 것이라는 문구를 공식 페이지에서 못 찾았다(29CM 본문 · 무신사 기업 사이트 · 채용 · 안전거래센터 확인). Chrome 확장은 연결되지 않아 못 썼다.
+- ★`by=claude` 값은 사람 검토 전이다. `homepage` 는 DB 적재(`enrich_place_catalog_from_csv.py`)가 옮기지 않는 칸이다.
+
+### 시장·상가·거리 연락처 「해당 없음」 (2026-10-14, 사용자 「2번 채워줘」)
+
+- 할 일 목록(`manual_fill_todo_2026-10-13.csv`)의 연락처 빈칸 중 점포마다 번호가 따로이거나 원래 대표 전화가 없는 **11곳**에 `na` 를 붙였다(`by=human` · `checked` 2026-10-14 · 칸은 빈 채).
+  - 거리(5): 견지동 불교용품거리 · 논현 가구거리 · 중곡동 가구거리 · 퇴계로 오토바이상가 · 정동길
+  - 시장·상가(6): 길동복조리시장 · 디타워 광화문 · 밀리오레 명동점 · 영등포청과시장 · 청계 조명기구상가 · 청자 수입상가
+- 백업(세션 스크래치 `*.before_na_1014.csv`)과 대조: 6,334행 · 순서 같음 · 바뀐 칸 `field_sources` 11뿐. `--max-calls 0` 형식 검사 통과 · 호출 0. 테스트 42 passed.
+- 할 일 목록 145 → **134칸**.
+
 ## 남은 일 · 주의
 
 1. **DB 재적재 전까지** `place_catalog.raw_json` 에는 옛 `sigungucode` 만 있어 `catalog_class["sigungu"]` · 후보의 `lDongSignguCd` 가 비어 온다(판정에는 안 쓰인다). 재적재: `scripts/load_place_catalog_csv.py`.
@@ -215,7 +249,7 @@ python -m app.domains.travel_ops.instances.activity.data_processing.fill_tourapi
    - `merge_tourapi_new.py` — 새 행의 시군구를 `lDongSignguCd` 에 쓴다. 목록 행에 값이 있으면 그대로, 없으면 현재 CSV 의 같은 구 코드(한 구에 코드가 여럿이면 비움). 목록의 옛 `sigungucode` 는 쓰지 않는다. 옛 헤더 CSV 면 `KeyError` 대신 이유를 말하고 멈춘다. 독스트링 「21개 컬럼」 → 현재 헤더(29개).
    - `fetch_tourapi_list.py` — 목록 CSV 에 `lDongSignguCd` 칸 추가(`areaBasedList2` 응답의 같은 이름 필드. 응답에 없으면 빈칸 → 위 같은 구 규칙 · `fill_tourapi_details.py` 가 채운다).
    - 확인: 3행짜리 시험 목록으로 시험 실행(실제 CSV md5 그대로) · 스크래치 복사본에 `--write` → 6,340행 · 헤더 29개 그대로 · 양천구 행 `470`(같은 구 규칙, 목록의 옛 코드 `19` 무시) · 강남구 행 `680`(목록 값).
-4. 본 수집: 쇼핑 외 3,316건(약 4일) → 쇼핑. **2일차 뒤 남은 호출 9,502건(쇼핑 외 1,518건 ≈ 2일 → 쇼핑 ≈ 10일).** 다음은 문화시설(14) 125번째부터. 하루 한도 1,000건(`ACOP_RATE_TOUR_API_PER_DAY`). 앱이 같은 키를 쓰면 `--max-calls 800` 정도로 여유를 둔다.
+4. ~~본 수집: 쇼핑 외 3,316건(약 4일) → 쇼핑. **2일차 뒤 남은 호출 9,502건(쇼핑 외 1,518건 ≈ 2일 → 쇼핑 ≈ 10일).** 다음은 문화시설(14) 125번째부터. 하루 한도 1,000건(`ACOP_RATE_TOUR_API_PER_DAY`). 앱이 같은 키를 쓰면 `--max-calls 800` 정도로 여유를 둔다.~~ → **쇼핑 외 끝(2026-10-14 확인)**. 쇼핑 남은 호출 **6,721건**(2026-10-14 1회차 뒤). 같은 명령(`--max-calls 800`)을 하루 한 번.
 5. 캐시 `tourapi_details_cache.jsonl` 은 수집이 끝나면 따로 백업한다(db_column.md).
 
 ## 참조
