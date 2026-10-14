@@ -678,10 +678,11 @@ def test_a_chosen_google_hotel_is_not_rechecked_and_says_so():
     assert result.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_recheck_tool"
 
 
-def _choose_google(detail_now, *, listed=120000.0):
-    """구글 후보(token 있음)를 보여 준 뒤 고른다. 고를 때 상세(`read.stay_google_details`)는 `detail_now` 를 돌려준다."""
+def _choose_google(detail_now, *, listed=120000.0, shown=None):
+    """구글 후보(token 있음)를 보여 준 뒤 고른다. 고를 때 상세(`read.stay_google_details`)는 `detail_now` 를 돌려준다.
+    `shown` — 보여 줄 때 상세(없으면 판매처 `listed - 5000` · `listed`)."""
     google = {**NEAR_GOOGLE, "stays": [{**row, "property_token": f"tok-{i}", "image": None} for i, row in enumerate(NEAR_GOOGLE["stays"])]}
-    shown = {"address": None, "image": None, "sellers": [
+    shown = shown or {"address": None, "image": None, "sellers": [
         {"seller": "Agoda", "price_per_night": listed - 5000, "link": None, "official": False},
         {"seller": "Trip.com", "price_per_night": listed, "link": "https://kr.trip.com/x", "official": False}]}
     calls = {"n": 0}
@@ -720,6 +721,19 @@ def test_a_chosen_google_hotel_is_rechecked_by_its_seller_prices():
     assert empty.action_proposals and empty.action_proposals[0].arguments["summary"]["price_check"]["reason"] == "no_price", \
         "판매처가 없으면 「없어졌다」가 아니라 확인 못 함 — 매진인지 표시만 안 된 건지 가를 수 없다"
     assert "지금 가격은 다시 확인하지 못했어요(보여 드릴 때 1박 115,000원)" in empty.answer
+
+
+def test_google_recheck_compares_seller_lows_even_when_the_list_price_was_lower():
+    """`[2026-10-13]` ☆x600(팀장 확인) — 보여 줄 때 「1박 ○원~」이 구글 **목록가**(173,845원)였고 판매처 최저는 176,766원이었는데, 재확인이
+    목록가(`price_from`)와 판매처 최저가를 비교해 「바뀜」이라고 했다. 기준은 보여 준 판매처의 최저가 — 판매처가 그대로면 「그대로」."""
+    sellers = [{"seller": "Agoda", "price_per_night": 115000.0, "link": None, "official": False},
+               {"seller": "Trip.com", "price_per_night": 120000.0, "link": "https://kr.trip.com/x", "official": False}]
+    shown = {"address": None, "image": None, "sellers": sellers}
+    # 보여 줄 때: 목록가 100,000 → price_from = 100,000(목록가가 더 쌈) · 판매처 최저 115,000. 다시 봐도 판매처 115,000
+    result, _, _ = _choose_google({"address": None, "image": None, "sellers": list(sellers)}, listed=100000.0, shown=shown)
+    assert result.action_proposals[0].arguments["summary"]["price_check"] == \
+        {"status": "same", "before": 115000.0, "now": 115000.0, "basis": "sellers"}, "목록가 100,000 ↔ 판매처 115,000 을 「바뀜」이라 하면 안 된다"
+    assert result.answer.endswith(" 지금도 판매처 최저가 1박 115,000원~ 그대로예요.")
 
 
 def test_the_same_stay_from_both_sources_is_shown_once_as_myrealtrip():
