@@ -1,7 +1,7 @@
 export type ViewState = 'normal' | 'loading' | 'empty' | 'error';
 export type InquiryStatus = '접수' | '처리 중' | '답변 완료';
 export interface UsersListState { query: string; status: string; quick: string; order: string }
-export interface InquiriesListState { query: string; status: InquiryStatus | '전체'; owner: string }
+export interface InquiriesListState { query: string; status: Inquiry['status'] | '전체'; owner: string }
 export const INITIAL_USERS_LIST: UsersListState = { query: '', status: '전체', quick: '전체', order: '마지막 사용순' };
 export const INITIAL_INQUIRIES_LIST: InquiriesListState = { query: '', status: '전체', owner: 'all' };
 export interface User {
@@ -20,7 +20,7 @@ export interface ApiUsage {
 export interface WatchRule { id: string; threshold: number; multiplier: number }
 export interface Inquiry {
   id: string; userId: string; title: string; body: string; language: string;
-  receivedAt: string; status: InquiryStatus; assignee: string;
+  receivedAt: string; status: InquiryStatus | '기록 완료'; assignee: string;
   replies: { body: string; operator: string; at: string }[];
   history: { text: string; at: string }[];
 }
