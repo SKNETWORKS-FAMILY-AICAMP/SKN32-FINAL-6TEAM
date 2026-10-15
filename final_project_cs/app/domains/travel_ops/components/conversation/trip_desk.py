@@ -39,6 +39,8 @@ from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleIti
 from app.domains.travel_ops.components.itinerary.itinerary_changes import (DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
                                 plan_delay, plan_fresh_alternate, plan_nearby_store, plan_rollback, plan_swap)
 from app.domains.travel_ops.components.planning.pending import PendingStore, decide, options_from, proposal_notice
+# 요식 끼움 자리 — 생성자 인자 `dining_ledger`(원장을 쓰나)와 이름이 겹치지 않게 별칭으로 둔다
+from app.domains.travel_ops.components.team_hooks import dining_ledger as dining_hook
 
 
 class TripDesk:
@@ -127,7 +129,8 @@ class TripDesk:
 
         def plan(candidates):
             return plan_delay(trip=trip, items=items, places=candidates, at=at, minutes=minutes,
-                              message=message, request_id=request_id, state_lookup=self._state_lookup())
+                              message=message, request_id=request_id, state_lookup=self._state_lookup(),
+                              meal_picker=dining_hook.meal_picker())
         meal = next((i for i in items if i.kind == "dining" and i.starts_at >= at), None)   # plan_delay 와 같은 식사
         return self._outcome(trip_id, trip["version"], items,
                              self._with_nearby(trip_id, meal, places, plan), gate=True)
@@ -140,7 +143,8 @@ class TripDesk:
 
         def plan(candidates):
             return plan_closed(trip=trip, items=items, places=candidates, at=at, message=message,
-                               request_id=request_id, state_lookup=self._state_lookup())
+                               request_id=request_id, state_lookup=self._state_lookup(),
+                               meal_picker=dining_hook.meal_picker())
         meal = next((i for i in items if i.kind == "dining"                                # plan_closed 와 같은 식사
                      and i.starts_at <= at < (i.ends_at or i.starts_at + timedelta(hours=1))), None)
         return self._outcome(trip_id, trip["version"], items,

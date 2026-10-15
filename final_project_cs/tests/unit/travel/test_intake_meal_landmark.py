@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+import pytest
+
 from app.domains.travel_ops.components.intake.places import resolve
 
 MARKET = (37.5700, 126.9996)            # 광장시장
@@ -91,6 +93,43 @@ def test_without_a_ledger_shop_kakao_restaurants_near_the_market_are_used():
     found = resolve("광장시장", kind_hint="dining", our_places=[], dining=Ledger(None), kakao=kakao)
     assert (found.method, found.name, found.kind, found.needs_review) == ("kakao", "순희네빈대떡", "dining", True)
     assert kakao.near_asked and kakao.near_asked[0][1] == MARKET and kakao.near_asked[0][2] == "FD6"
+
+
+def test_a_snack_shop_is_not_the_meal_even_when_it_is_the_nearest_restaurant():
+    """★`[2026-10-14 테스트 서버 접수 cbd50b1d]` 「점심은 통인시장 근처에서」가 카카오 근처 음식점 중 가장 가까운 「도깨비한과강정」(한과)이 됐다 —
+    카카오는 간식 · 제과 · 카페도 음식점으로 묶는다. 원장 길(`ledger.find_meal_near`)처럼 끼니가 아닌 가게는 거른다."""
+    kakao = Kakao({"광장시장": [_hit("광장시장", MARKET, "", "쇼핑 > 전통시장")]},
+                  around={"광장시장": [_hit("도깨비한과강정", (37.57005, 126.99962), "FD6", "음식점 > 간식 > 떡,한과"),
+                                      _hit("시장제과", (37.5701, 126.9996), "FD6", "음식점 > 간식 > 제과,베이커리"),
+                                      _hit("순희네빈대떡", (37.5702, 126.9994), "FD6", "음식점 > 한식")]})
+    found = resolve("광장시장", kind_hint="dining", our_places=[], dining=Ledger(None), kakao=kakao)
+    assert (found.method, found.name, found.kind) == ("kakao", "순희네빈대떡", "dining")
+
+
+def test_tteokbokki_is_a_meal_even_though_it_starts_with_tteok():
+    """★`[2026-10-14 리뷰]` 「떡」을 부분 문자열로 거르니 「음식점 > 분식 > 떡볶이」도 빠져 시장 자체가 식사 자리가 됐다 — 분류 항목 단위로 본다."""
+    kakao = Kakao({"광장시장": [_hit("광장시장", MARKET, "", "쇼핑 > 전통시장")]},
+                  around={"광장시장": [_hit("한과집", (37.57005, 126.99962), "FD6", "음식점 > 간식 > 떡,한과"),
+                                      _hit("마약떡볶이", (37.5701, 126.9996), "FD6", "음식점 > 분식 > 떡볶이")]})
+    found = resolve("광장시장", kind_hint="dining", our_places=[], dining=Ledger(None), kakao=kakao)
+    assert (found.method, found.name) == ("kakao", "마약떡볶이")
+
+
+@pytest.mark.parametrize("category", ["음식점 > 떡, 한과", "음식점 > 제과, 베이커리",
+                                     "음식점 > 카페 > 커피전문점", "음식점 > 아이스크림"])
+def test_snack_category_components_are_excluded_without_a_snack_parent(category):
+    kakao = Kakao({"광장시장": [_hit("광장시장", MARKET, "", "쇼핑 > 전통시장")]},
+                  around={"광장시장": [_hit("가까운간식가게", (37.57005, 126.99962), "FD6", category),
+                                      _hit("시장떡볶이", (37.5701, 126.9996), "FD6", "음식점 > 분식 > 떡볶이")]})
+    found = resolve("광장시장", kind_hint="dining", our_places=[], dining=Ledger(None), kakao=kakao)
+    assert (found.method, found.name) == ("kakao", "시장떡볶이")
+
+
+def test_when_only_snack_shops_are_around_the_market_itself_is_the_meal_place():
+    kakao = Kakao({"광장시장": [_hit("광장시장", MARKET, "", "쇼핑 > 전통시장")]},
+                  around={"광장시장": [_hit("도깨비한과강정", (37.57005, 126.99962), "FD6", "음식점 > 간식 > 떡,한과")]})
+    found = resolve("광장시장", kind_hint="dining", our_places=[], dining=Ledger(None), kakao=kakao)
+    assert found.name == "광장시장" and found.item_kind == "dining"
 
 
 def test_with_no_restaurant_around_the_market_itself_is_the_meal_place():

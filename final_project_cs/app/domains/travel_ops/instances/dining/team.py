@@ -18,6 +18,7 @@ from app.tools.read_tools import ToolBudgetExceeded, ToolLoopExceeded
 
 from app.domains.travel_ops.instances._shared._base import TravelTeamBase
 from app.domains.travel_ops.components.itinerary.itinerary_changes import NoChange, plan_closed, plan_delay, plan_dining_disrupted
+from app.domains.travel_ops.components.team_hooks import dining_ledger
 from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TOOLS, ItineraryWork
 from .ledger import merge_state
 
@@ -124,11 +125,11 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
                 return self._unknown(task, "늦는 시간", ctx["evidence"])
             plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
                               minutes=int(minutes), message=task.input_text, request_id=request_id,
-                              price_lookup=prices, state_lookup=states)
+                              price_lookup=prices, state_lookup=states, meal_picker=dining_ledger.meal_picker())
         else:
             plan = plan_closed(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
                                message=task.input_text, request_id=request_id, price_lookup=prices,
-                               state_lookup=states)
+                               state_lookup=states, meal_picker=dining_ledger.meal_picker())
         return self.settle(task, ctx, plan)
 
     def _state_lookup(self, task: TeamTask, ctx: dict[str, Any]):

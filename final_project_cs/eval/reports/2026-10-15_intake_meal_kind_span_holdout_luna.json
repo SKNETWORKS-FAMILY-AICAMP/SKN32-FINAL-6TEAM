@@ -1,0 +1,1326 @@
+{
+ "dataset": "intake_meal_kind_holdout_v1.jsonl",
+ "shape": "span",
+ "model": "gpt-6-luna",
+ "repeats": 3,
+ "places": 14,
+ "failures": 0,
+ "usage": {
+  "prompt_tokens": 10482,
+  "completion_tokens": 1605,
+  "calls": 36
+ },
+ "seconds": {
+  "mean": 1.53,
+  "p95": 2.52
+ },
+ "summary_by_repeat": [
+  {
+   "span_rule": {
+    "accuracy": "13/14",
+    "pct": 92.9,
+    "false_dining": 0,
+    "missed_dining": 1,
+    "place_missed": 0,
+    "by_group": {
+     "after_meal": "1/1",
+     "eat_verb": "3/3",
+     "meal_word": "1/1",
+     "multi": "4/4",
+     "shop_name": "1/2",
+     "time_of_day": "1/1",
+     "visit_only": "2/2"
+    }
+   },
+   "span_rule_llm": {
+    "accuracy": "13/14",
+    "pct": 92.9,
+    "false_dining": 0,
+    "missed_dining": 1,
+    "place_missed": 0,
+    "by_group": {
+     "after_meal": "1/1",
+     "eat_verb": "3/3",
+     "meal_word": "1/1",
+     "multi": "4/4",
+     "shop_name": "1/2",
+     "time_of_day": "1/1",
+     "visit_only": "2/2"
+    }
+   }
+  },
+  {
+   "span_rule": {
+    "accuracy": "13/14",
+    "pct": 92.9,
+    "false_dining": 0,
+    "missed_dining": 1,
+    "place_missed": 0,
+    "by_group": {
+     "after_meal": "1/1",
+     "eat_verb": "3/3",
+     "meal_word": "1/1",
+     "multi": "4/4",
+     "shop_name": "1/2",
+     "time_of_day": "1/1",
+     "visit_only": "2/2"
+    }
+   },
+   "span_rule_llm": {
+    "accuracy": "13/14",
+    "pct": 92.9,
+    "false_dining": 0,
+    "missed_dining": 1,
+    "place_missed": 0,
+    "by_group": {
+     "after_meal": "1/1",
+     "eat_verb": "3/3",
+     "meal_word": "1/1",
+     "multi": "4/4",
+     "shop_name": "1/2",
+     "time_of_day": "1/1",
+     "visit_only": "2/2"
+    }
+   }
+  },
+  {
+   "span_rule": {
+    "accuracy": "13/14",
+    "pct": 92.9,
+    "false_dining": 0,
+    "missed_dining": 1,
+    "place_missed": 0,
+    "by_group": {
+     "after_meal": "1/1",
+     "eat_verb": "3/3",
+     "meal_word": "1/1",
+     "multi": "4/4",
+     "shop_name": "1/2",
+     "time_of_day": "1/1",
+     "visit_only": "2/2"
+    }
+   },
+   "span_rule_llm": {
+    "accuracy": "13/14",
+    "pct": 92.9,
+    "false_dining": 0,
+    "missed_dining": 1,
+    "place_missed": 0,
+    "by_group": {
+     "after_meal": "1/1",
+     "eat_verb": "3/3",
+     "meal_word": "1/1",
+     "multi": "4/4",
+     "shop_name": "1/2",
+     "time_of_day": "1/1",
+     "visit_only": "2/2"
+    }
+   }
+  }
+ ],
+ "env": {
+  "at": "2026-10-15T02:03:35+00:00"
+ },
+ "runs": [
+  {
+   "repeat": 0,
+   "summary": {
+    "span_rule": {
+     "accuracy": "13/14",
+     "pct": 92.9,
+     "false_dining": 0,
+     "missed_dining": 1,
+     "place_missed": 0,
+     "by_group": {
+      "after_meal": "1/1",
+      "eat_verb": "3/3",
+      "meal_word": "1/1",
+      "multi": "4/4",
+      "shop_name": "1/2",
+      "time_of_day": "1/1",
+      "visit_only": "2/2"
+     }
+    },
+    "span_rule_llm": {
+     "accuracy": "13/14",
+     "pct": 92.9,
+     "false_dining": 0,
+     "missed_dining": 1,
+     "place_missed": 0,
+     "by_group": {
+      "after_meal": "1/1",
+      "eat_verb": "3/3",
+      "meal_word": "1/1",
+      "multi": "4/4",
+      "shop_name": "1/2",
+      "time_of_day": "1/1",
+      "visit_only": "2/2"
+     }
+    }
+   },
+   "rows": [
+    {
+     "id": "MH-001",
+     "group": "meal_word",
+     "place": "마포",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "저녁",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "마포 고깃집",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-002",
+     "group": "eat_verb",
+     "place": "망원시장",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "망원시장",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "요기하고",
+        "role": "eat"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-003",
+     "group": "eat_verb",
+     "place": "을지로",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "을지로",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "맥주 한 잔",
+        "role": "eat"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-004",
+     "group": "eat_verb",
+     "place": "이태원",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "이태원",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "브런치",
+        "role": "eat"
+       },
+       {
+        "line": 1,
+        "quote": "먹고",
+        "role": "eat"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-005",
+     "group": "visit_only",
+     "place": "삼청동",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "삼청동",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-006",
+     "group": "visit_only",
+     "place": "성수동",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "오후에",
+        "role": "time"
+       },
+       {
+        "line": 1,
+        "quote": "성수동",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-007",
+     "group": "time_of_day",
+     "place": "반포한강공원",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "저녁쯤",
+        "role": "time"
+       },
+       {
+        "line": 1,
+        "quote": "반포한강공원 무지개분수",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-008",
+     "group": "after_meal",
+     "place": "덕수궁",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "점심",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "덕수궁 돌담길",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-009",
+     "group": "multi",
+     "place": "인사동",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "인사동",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "저녁",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "종로 빈대떡집",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-009",
+     "group": "multi",
+     "place": "종로",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "인사동",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "저녁",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "종로 빈대떡집",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-010",
+     "group": "multi",
+     "place": "통인시장",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "통인시장",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "기름떡볶이 먹고",
+        "role": "eat"
+       },
+       {
+        "line": 1,
+        "quote": "서촌",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-010",
+     "group": "multi",
+     "place": "서촌",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "통인시장",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "기름떡볶이 먹고",
+        "role": "eat"
+       },
+       {
+        "line": 1,
+        "quote": "서촌",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-011",
+     "group": "shop_name",
+     "place": "하동관",
+     "gold": "dining",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "하동관",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-012",
+     "group": "shop_name",
+     "place": "롯데월드타워",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "롯데월드타워 전망대",
+        "role": "place"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "repeat": 1,
+   "summary": {
+    "span_rule": {
+     "accuracy": "13/14",
+     "pct": 92.9,
+     "false_dining": 0,
+     "missed_dining": 1,
+     "place_missed": 0,
+     "by_group": {
+      "after_meal": "1/1",
+      "eat_verb": "3/3",
+      "meal_word": "1/1",
+      "multi": "4/4",
+      "shop_name": "1/2",
+      "time_of_day": "1/1",
+      "visit_only": "2/2"
+     }
+    },
+    "span_rule_llm": {
+     "accuracy": "13/14",
+     "pct": 92.9,
+     "false_dining": 0,
+     "missed_dining": 1,
+     "place_missed": 0,
+     "by_group": {
+      "after_meal": "1/1",
+      "eat_verb": "3/3",
+      "meal_word": "1/1",
+      "multi": "4/4",
+      "shop_name": "1/2",
+      "time_of_day": "1/1",
+      "visit_only": "2/2"
+     }
+    }
+   },
+   "rows": [
+    {
+     "id": "MH-001",
+     "group": "meal_word",
+     "place": "마포",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "저녁",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "마포 고깃집",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-002",
+     "group": "eat_verb",
+     "place": "망원시장",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "망원시장",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "요기하고",
+        "role": "eat"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-003",
+     "group": "eat_verb",
+     "place": "을지로",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "을지로",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "맥주 한 잔",
+        "role": "eat"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-004",
+     "group": "eat_verb",
+     "place": "이태원",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "이태원",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "브런치",
+        "role": "eat"
+       },
+       {
+        "line": 1,
+        "quote": "먹고",
+        "role": "eat"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-005",
+     "group": "visit_only",
+     "place": "삼청동",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "삼청동",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-006",
+     "group": "visit_only",
+     "place": "성수동",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "오후에",
+        "role": "time"
+       },
+       {
+        "line": 1,
+        "quote": "성수동",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "팝업",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-007",
+     "group": "time_of_day",
+     "place": "반포한강공원",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "저녁쯤",
+        "role": "time"
+       },
+       {
+        "line": 1,
+        "quote": "반포한강공원",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "무지개분수",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-008",
+     "group": "after_meal",
+     "place": "덕수궁",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "점심",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "덕수궁 돌담길",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-009",
+     "group": "multi",
+     "place": "인사동",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "인사동",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "구경하고",
+        "role": "ignore"
+       },
+       {
+        "line": 1,
+        "quote": "저녁",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "종로",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "빈대떡집",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-009",
+     "group": "multi",
+     "place": "종로",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "인사동",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "구경하고",
+        "role": "ignore"
+       },
+       {
+        "line": 1,
+        "quote": "저녁",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "종로",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "빈대떡집",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-010",
+     "group": "multi",
+     "place": "통인시장",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "통인시장",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "기름떡볶이 먹고",
+        "role": "eat"
+       },
+       {
+        "line": 1,
+        "quote": "서촌",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-010",
+     "group": "multi",
+     "place": "서촌",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "통인시장",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "기름떡볶이 먹고",
+        "role": "eat"
+       },
+       {
+        "line": 1,
+        "quote": "서촌",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-011",
+     "group": "shop_name",
+     "place": "하동관",
+     "gold": "dining",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "하동관",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-012",
+     "group": "shop_name",
+     "place": "롯데월드타워",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "롯데월드타워 전망대",
+        "role": "place"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "repeat": 2,
+   "summary": {
+    "span_rule": {
+     "accuracy": "13/14",
+     "pct": 92.9,
+     "false_dining": 0,
+     "missed_dining": 1,
+     "place_missed": 0,
+     "by_group": {
+      "after_meal": "1/1",
+      "eat_verb": "3/3",
+      "meal_word": "1/1",
+      "multi": "4/4",
+      "shop_name": "1/2",
+      "time_of_day": "1/1",
+      "visit_only": "2/2"
+     }
+    },
+    "span_rule_llm": {
+     "accuracy": "13/14",
+     "pct": 92.9,
+     "false_dining": 0,
+     "missed_dining": 1,
+     "place_missed": 0,
+     "by_group": {
+      "after_meal": "1/1",
+      "eat_verb": "3/3",
+      "meal_word": "1/1",
+      "multi": "4/4",
+      "shop_name": "1/2",
+      "time_of_day": "1/1",
+      "visit_only": "2/2"
+     }
+    }
+   },
+   "rows": [
+    {
+     "id": "MH-001",
+     "group": "meal_word",
+     "place": "마포",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "저녁",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "마포 고깃집",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-002",
+     "group": "eat_verb",
+     "place": "망원시장",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "망원시장",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "요기하고",
+        "role": "eat"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-003",
+     "group": "eat_verb",
+     "place": "을지로",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "을지로",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "맥주 한 잔 하고 싶어요",
+        "role": "eat"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-004",
+     "group": "eat_verb",
+     "place": "이태원",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "이태원",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "브런치",
+        "role": "eat"
+       },
+       {
+        "line": 1,
+        "quote": "먹고",
+        "role": "eat"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-005",
+     "group": "visit_only",
+     "place": "삼청동",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "삼청동",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-006",
+     "group": "visit_only",
+     "place": "성수동",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "오후에",
+        "role": "time"
+       },
+       {
+        "line": 1,
+        "quote": "성수동",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "팝업",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-007",
+     "group": "time_of_day",
+     "place": "반포한강공원",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "저녁쯤",
+        "role": "time"
+       },
+       {
+        "line": 1,
+        "quote": "반포한강공원 무지개분수",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-008",
+     "group": "after_meal",
+     "place": "덕수궁",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "점심",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "덕수궁 돌담길",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-009",
+     "group": "multi",
+     "place": "인사동",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "인사동",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "구경하고",
+        "role": "ignore"
+       },
+       {
+        "line": 1,
+        "quote": "저녁",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "종로 빈대떡집",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-009",
+     "group": "multi",
+     "place": "종로",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "인사동",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "구경하고",
+        "role": "ignore"
+       },
+       {
+        "line": 1,
+        "quote": "저녁",
+        "role": "meal"
+       },
+       {
+        "line": 1,
+        "quote": "종로 빈대떡집",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-010",
+     "group": "multi",
+     "place": "통인시장",
+     "gold": "dining",
+     "got": {
+      "span_rule": "dining",
+      "span_rule_llm": "dining"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "통인시장",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "기름떡볶이 먹고",
+        "role": "eat"
+       },
+       {
+        "line": 1,
+        "quote": "서촌",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-010",
+     "group": "multi",
+     "place": "서촌",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "통인시장",
+        "role": "place"
+       },
+       {
+        "line": 1,
+        "quote": "기름떡볶이 먹고",
+        "role": "eat"
+       },
+       {
+        "line": 1,
+        "quote": "서촌",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-011",
+     "group": "shop_name",
+     "place": "하동관",
+     "gold": "dining",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "하동관",
+        "role": "place"
+       }
+      ]
+     }
+    },
+    {
+     "id": "MH-012",
+     "group": "shop_name",
+     "place": "롯데월드타워",
+     "gold": "activity",
+     "got": {
+      "span_rule": "activity",
+      "span_rule_llm": "activity"
+     },
+     "raw": {
+      "spans": [
+       {
+        "line": 1,
+        "quote": "롯데월드타워 전망대",
+        "role": "place"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
