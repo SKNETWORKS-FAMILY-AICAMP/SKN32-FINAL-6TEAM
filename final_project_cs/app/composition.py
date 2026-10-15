@@ -616,6 +616,17 @@ def build_reroute():
     return _call
 
 
+def wire_trip_scope() -> None:
+    """감시 · 안내 대상 좁히기만 꽂는다 — 게스트(로그인 안 한 웹 사용자)의 여행은 안내 · 감시 대상이 아니다(D-CS-011 §2).
+
+    ★`[2026-10-16]` 운영 앱(`ops_entrypoint`)도 부른다. 전에는 감시 프로그램만 꽂아서, 관리자 「재난 6종 시뮬레이션」 목록에 감시가 보지 않는
+      게스트 여행까지 나왔고 거기에 시험을 걸면 저장만 되고 알림이 영영 안 생겼다(사용자 보고: 「실제 알림으로 안 가고 적용이 안 된다」)."""
+    from app.domains.travel_ops.components.itinerary import trip_scope
+    from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
+
+    trip_scope.register("web_account.guest", not_guest_sql)
+
+
 def wire_optional_features() -> list[str]:
     """끌 수 있는 기능이 **자기 규칙을 끼움 자리에 꽂는 곳**. `[2026-10-06]` D-CS-013
 
@@ -626,10 +637,8 @@ def wire_optional_features() -> list[str]:
     꽂지 않으면 부품은 기본값으로 돈다(감시 대상 좁히기 없음 = 전부 감시).
     """
     from app.domains.travel_ops.components.itinerary import trip_scope
-    from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
 
-    # 게스트(로그인 안 한 웹 사용자)의 여행은 안내·감시 대상이 아니다 — D-CS-011 §2.
-    trip_scope.register("web_account.guest", not_guest_sql)
+    wire_trip_scope()
 
     # 운영자가 관리 화면에서 바꾼 값(채팅 해석 방식 등)을 읽는 자리. 표는 웹 제한값 기능이 들고 있다.
     from app.domains.travel_ops.components import settings_hook
@@ -637,12 +646,12 @@ def wire_optional_features() -> list[str]:
 
     settings_hook.register(lambda tenant_id, name: web_guard.values(tenant_id).get(name))
 
-    # ★`[2026-10-15 사용자 지시]` 관리 콘솔 「모델 경로」(local · ssh · api) — 채팅 해석 · 계획 읽기 · 번역은 부를 때마다,
+    # ★`[2026-10-15 · 10-16 사용자 지시]` 관리 콘솔 「모델 경로」 — 상황마다(채팅 · 일정 짚기 · 공지 확인) off(환경 파일 따름) · local · ssh · api. 채팅은 부를 때마다,
     #  일정 짚기 · 공지 확인은 주소를 부를 때마다 읽는다(재기동 없이 반영, 운영 설정 캐시만큼 늦을 수 있다). SSH 터널은 앱 밖 프로그램이 연다.
     from app.infrastructure import ollama_chat
 
     route_tenant = get_settings().tenant_id
-    ollama_chat.register_route_provider(lambda: settings_hook.model_route(route_tenant))
+    ollama_chat.register_route_provider(lambda purpose: settings_hook.model_route_choice(route_tenant, purpose))
 
     # 접수 읽기의 진행 알림을 화면이 읽는 모양(SSE)으로 포장하는 자리.
     from app.domains.travel_ops.components import progress_hook
@@ -660,13 +669,13 @@ def wire_optional_features() -> list[str]:
     from app.domains.travel_ops.components.conversation import item_pointer
 
     route_settings = get_settings()
-    pointer = item_pointer.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings))
+    pointer = item_pointer.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings, "pointer"))
 
     # ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 2차 확인 — 규칙이 「끝남」이라 한 공지를 가르친 모델이 한 번 더 본다. `.env` 에
     #  `ACOP_OLLAMA_NOTICE_MODEL` 이 있을 때만 꽂는다(없으면 규칙만). 켜고 끄기: 가드레일 `travel.notice_end.mode`(off · shadow · on).
     from app.domains.travel_ops.ports.data_sources import notice_end_model
 
-    notice_judge = notice_end_model.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings))
+    notice_judge = notice_end_model.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings, "notice"))
     # `[2026-10-13 사용자 결정]` 여행 영향이 없다고 보고 보내지 않은 「기타」 재난 문자를 DB 에 남긴다(관리자 웹앱 「걸러진 재난 문자」)
     from app.domains.travel_ops.components.watch import notice_exclusions
 

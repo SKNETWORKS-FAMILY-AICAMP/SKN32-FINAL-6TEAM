@@ -211,3 +211,52 @@ def test_case_team_reads_the_same_trial_input_and_tags_its_result(world,monkeypa
     assert len(result.opened) == 1 and len(result.ran) == 1 and not result.failed
     notices = w.conn.execute("SELECT payload_json FROM outbox WHERE tenant_id=%s AND dedupe_key LIKE %s",(w.tenant,f'{w.trip_id}:%')).fetchall()
     assert notices and all(notice[0].get('simulation') for notice in notices)
+
+
+# ── `[2026-10-16]` 사용자 보고 「관리자 웹앱에서 조정한 모니터링 옵션이 실제 알림으로 안 가고 적용이 안 된다」 ──
+def test_guest_trip_is_refused_because_the_watch_never_looks_at_it(world, monkeypatch):
+    from app.domains.travel_ops.components.itinerary import trip_scope
+    from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
+
+    w = world
+    monkeypatch.setattr(trip_scope, "_narrowers", [("web_account.guest", not_guest_sql)])
+    w.conn.execute("UPDATE customers SET external_id=%s WHERE customer_id=%s", ('web:guest-' + uuid4().hex, w.customer))
+    with pytest.raises(AdminServiceError) as error:
+        set_inputs(w, ['earthquake'])
+    assert error.value.status_code == 422 and '게스트' in error.value.detail
+    monkeypatch.setattr(trip_scope, "_narrowers", [])
+    assert set_inputs(w, ['earthquake'])['active']                 # 같은 여행이라도 감시 대상이면 저장된다
+
+
+def test_paused_trip_is_refused_and_marked_in_the_list(world):
+    w = world
+    w.conn.execute("INSERT INTO trip_safety_pauses(tenant_id,trip_id,level,event_key,event_json,from_at) VALUES(%s,%s,'trip','test-pause','{}',now())",
+                   (w.tenant, w.trip_id))
+    with pytest.raises(AdminServiceError) as error:
+        set_inputs(w, ['forecast'])
+    assert error.value.status_code == 409 and '다시 시작' in error.value.detail
+    assert set_inputs(w, [])['active'] is False                    # 끄기는 언제나 된다
+
+
+def test_an_unselected_source_failure_does_not_mask_the_trial_result(world, monkeypatch):
+    w = world
+    monkeypatch.setattr(w.checker, '_traffic', lambda *a: {'category': 'traffic_control', 'status': 'failed', 'reason': 'timeout'})
+    set_inputs(w, ['earthquake'])
+    _, [item, other] = w.store.latest(w.conn, w.trip_id)
+    report = w.checker.check(place=item.place, starts_at=w.now)
+    assert report['verdict'] == 'disrupted' and report['failed_categories'] == []
+    assert report['simulation_ignored_failures'] == ['traffic_control']
+    plain = w.checker.check(place=other.place, starts_at=w.now)   # 시험 없는 일정은 그대로 「조회 실패」
+    assert plain['verdict'] == 'fatal' and plain['failed_categories'] == ['traffic_control']
+
+
+def test_a_forecast_trial_still_reaches_the_app_when_another_source_fails(world, monkeypatch):
+    w = world
+    monkeypatch.setattr(w.checker, '_air', lambda *a: {'category': 'air_quality', 'status': 'failed', 'reason': 'timeout'})
+    state = set_inputs(w, ['forecast'])
+    opener = TripWatchCaseOpener(store=w.store, check=w.checker.check, connection_factory=w.connect,
+                                 clock=lambda: w.now, repository=repository, run_case=None)
+    assert len(opener.tick().notified) == 1
+    texts = [row[0]['text'] for row in w.conn.execute("SELECT payload_json FROM outbox WHERE tenant_id=%s AND payload_json->>'simulation_id'=%s",
+                                                      (w.tenant, state['run_id'])).fetchall()]
+    assert texts and all(text.startswith('[시뮬레이션]') for text in texts)
