@@ -491,6 +491,11 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                                      "\n".join([f"{found.keyword} · {dates['check_in']}~{dates['check_out']} 조건으로 마이리얼트립 검색은 {why}.",
                                                 *self._center_line(center), *extra]))
             return self._unknown(task, "숙소 검색 결과", evidence)
+        if not listing["stays"] and google and google.get("stays"):
+            # `[2026-10-15 검수 · GPT 검토 #10]` 마이리얼트립이 비었어도 구글 호텔에 후보가 있으면 「없습니다」라고 하지 않는다
+            return self._respond(task, evidence, {**decision, "found": 0, "google": len(google["stays"])},
+                                 "\n".join([f"{found.keyword} · {dates['check_in']}~{dates['check_out']} 조건으로 마이리얼트립에서는 숙소를 찾지 못했습니다.",
+                                            *self._center_line(center), *extra]))
         if not listing["stays"]:
             return self._respond(task, evidence, {**decision, "found": 0},
                                  f"{found.keyword} · {dates['check_in']}~{dates['check_out']} 조건으로 찾은 숙소가 없습니다. "

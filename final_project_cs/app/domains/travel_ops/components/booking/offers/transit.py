@@ -152,15 +152,15 @@ def _beyond_window(depart_date: str) -> bool:
     return (wanted - datetime.now(ZoneInfo("Asia/Seoul")).date()).days > BUS_WINDOW_DAYS
 
 
-def _runs_today(adapter: Any, kinds: list[str], pair: tuple[str, dict[str, Any], dict[str, Any]] | None, calls: list[str]) -> bool:
-    """같은 터미널 쌍을 오늘 날짜로 한 번 — 오늘은 있는데 그날은 없으면 공급자가 아직 안 준 것이다."""
+def _runs_today(adapter: Any, kinds: list[str], pair: tuple[str, dict[str, Any], dict[str, Any]] | None, calls: list[str]) -> bool | None:
+    """같은 터미널 쌍을 오늘 날짜로 한 번 — 오늘은 있는데 그날은 없으면 공급자가 아직 안 준 것이다. 못 불렀으면 None(모름)."""
     if pair is None:
-        return False
+        return None
     bus_kind, dep, arr = pair
     today = datetime.now(ZoneInfo("Asia/Seoul")).date().isoformat()
     calls.append(f"bus_schedules:{bus_kind}:{dep['name']}→{arr['name']}:today")
     rows = adapter.bus_schedules(bus_kind, dep_id=dep["id"], arr_id=arr["id"], date=today)
-    return bool(rows)
+    return None if rows is None else bool(rows)
 
 
 def _sort_key(option: dict[str, Any]) -> tuple[str, str]:
@@ -249,8 +249,11 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
             status = "failed"
         elif unresolved and not paired:
             status = "unresolved"                        # 터미널을 한 쌍도 못 찾았을 때만 「못 찾음」
-        elif _beyond_window(depart_date) and _runs_today(adapter, kinds, first_pair, calls):
-            status, unresolved = "not_yet", []           # 공급자가 그 날짜를 아직 안 준다(팀장 점검 LB-03) — 「운행 없음」과 가른다
+        elif _beyond_window(depart_date):
+            # 공급자가 그 날짜를 아직 안 준다(팀장 점검 LB-03) — 「운행 없음」과 가른다. `[2026-10-15 검수 · GPT 검토 #10]` 오늘 첫 쌍이 비거나
+            #   못 불렀어도 먼 날짜의 0편은 「운행 없음」의 근거가 아니다(다른 쌍엔 있을 수 있다) → 오늘 있으면 not_yet, 아니면 unconfirmed(모름)
+            today = _runs_today(adapter, kinds, first_pair, calls)
+            status, unresolved = ("not_yet" if today else "unconfirmed"), []
         else:
             status, unresolved = "ok", []                 # 터미널은 찾았는데 그날 운행이 없다
         result["elsewhere"] = [site for bus_kind in (used or kinds) for site in BOOKING_SITES[bus_kind]]

@@ -47,7 +47,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -134,11 +134,30 @@ def _is_own_run(option: dict[str, Any], item: Any, clock: str) -> bool:
     return not mine or not theirs or mine.startswith(theirs) or theirs.startswith(mine)
 
 
+def _arrive_date(option: dict[str, Any]) -> str | None:
+    """도착 날짜(ISO). `[2026-10-15 검수 · GPT 검토 #5]` 공급자 도착 날짜가 있으면 그것, 없으면 출발 날짜 + 소요 분으로 셈한 날,
+    그것도 없으면 도착이 출발보다 늦을 때만 출발 날짜(같은 날이 분명할 때). 모르면 None — 근거 없이 당일로 채우지 않는다."""
+    if option.get("arrive_date"):
+        return str(option["arrive_date"])
+    day, depart, arrive = option.get("date"), option.get("depart"), option.get("arrive")
+    if not day or not depart:
+        return None
+    try:
+        start = datetime.fromisoformat(f"{day}T{depart}")
+    except (TypeError, ValueError):
+        return None
+    if isinstance(option.get("minutes"), int):
+        return (start + timedelta(minutes=option["minutes"])).date().isoformat()
+    if arrive and str(arrive) > str(depart):
+        return str(day)
+    return None
+
+
 def _transit_option(rank: int, option: dict[str, Any], item: Any, people: int | None, sites: list[dict[str, Any]]) -> dict[str, Any]:
     """운행 하나 → 식당 · 활동의 「다른 안」 기록 모양 + 기차 · 버스 칸. 출발 · 도착은 국내 같은 시간대(항목 시각의 시간대)."""
-    def at(clock: Any) -> str | None:
+    def at(clock: Any, day: Any = None) -> str | None:
         try:
-            return datetime.fromisoformat(f"{option.get('date')}T{clock}").replace(tzinfo=item.starts_at.tzinfo).isoformat()
+            return datetime.fromisoformat(f"{day or option.get('date')}T{clock}").replace(tzinfo=item.starts_at.tzinfo).isoformat()
         except (TypeError, ValueError):
             return None
     price = option.get("price") if isinstance(option.get("price"), int) else None
@@ -148,9 +167,11 @@ def _transit_option(rank: int, option: dict[str, Any], item: Any, people: int | 
     return {"key": _transit_key(option), "rank": rank,
             "name": f"{option.get('grade') or KIND_LABEL.get(option.get('mode'), '')}{number} {option.get('depart') or '?'}→{option.get('arrive') or '?'}",
             "place_id": None, "option": None, "option_label": None,
-            "starts_at": at(option.get("depart")) or item.starts_at.isoformat(), "ends_at": at(option.get("arrive")), "walk_min": None,
+            "starts_at": at(option.get("depart")) or item.starts_at.isoformat(),
+            "ends_at": at(option.get("arrive"), arrive_day) if (arrive_day := _arrive_date(option)) else None, "walk_min": None,
             "mode": option.get("mode"), "kind": option.get("kind"), "grade": option.get("grade"), "number": option.get("number"),
             "date": option.get("date"), "depart": option.get("depart"), "arrive": option.get("arrive"), "minutes": option.get("minutes"),
+            "arrive_date": _arrive_date(option),
             "origin": option.get("origin"), "destination": option.get("destination"), "band": _band_of(option.get("depart")),
             "per_person": price, "best": price * people if price is not None and people else price,
             "seller": site.get("name"), "link": site.get("url"), "link_seller": site.get("name"), "link_price": None,
@@ -219,12 +240,16 @@ def _transit_line(option: dict[str, Any], adults: int | None) -> str:
     grade = option.get("grade") or ("열차" if option.get("mode") == "train" else "버스")
     number = f" {option['number']}" if option.get("mode") == "train" and option.get("number") else ""
     kind = {"express": "고속", "suburbs": "시외"}.get(option.get("kind") or "", "")
+    if kind and str(grade).startswith(kind):
+        kind = ""                                       # 공급자 등급이 이미 「고속우등」 「고속」 — 「고속고속」으로 겹치지 않게(GPT 검토 #18)
+    arrive_day = _arrive_date(option)
+    next_day = "(다음 날) " if arrive_day and option.get("date") and arrive_day > str(option["date"]) else ""
     price = option.get("price")
     fare = _won(price, "KRW") if isinstance(price, int) else "요금 모름"
     total = f"(성인 {adults}명 {price * adults:,}원)" if isinstance(price, int) and isinstance(adults, int) and adults > 1 else ""
     band = BAND_LABEL.get(_band_of(option.get("depart")) or "", "")
     return (f"[{band or '시각 모름'}] {kind}{grade}{number} — {option.get('origin') or '?'} {option.get('depart') or '?'} → "
-            f"{option.get('destination') or '?'} {option.get('arrive') or '?'} ({took}) · 어른 {fare} {total}").rstrip()
+            f"{option.get('destination') or '?'} {next_day}{option.get('arrive') or '?'} ({took}) · 어른 {fare} {total}").rstrip()
 
 
 def _carriers(option: dict[str, Any]) -> list[str]:
@@ -609,8 +634,32 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         route = f"{found.origin} → {found.destination}"
         options = booked.get("options") or []
         if not options:
-            return self._respond(task, evidence, {**decision, "found": 0},
-                                 f"{route} · {when} 조건으로 찾은 항공편이 없습니다. 날짜나 공항을 바꿔 다시 말씀해 주세요.")
+            # `[2026-10-15 검수 · GPT 검토 #10]` 「없음」은 편 목록을 준 소스가 있고 그 목록이 비었을 때만. 목록을 준 소스가 없으면(쉼 · 실패 · 늦음 ·
+            #   왕복 참고가만) 「받지 못함」이고, 일부만 답했으면 「받은 결과에는 없음」 — ☆10-15 14:58 F01: 마이리얼트립이 쉬는 중인데 「없습니다」라고 답했다
+            sources = booked.get("sources") or {}
+            listed = [name for name, state in states.items() if state == "ok"]
+            missing = [name for name, state in states.items() if state not in ("ok", "skipped")]
+            label = {"myrealtrip": "마이리얼트립", "ignav": "항공사·여행사 판매처", "google": "구글 항공권"}
+            why = {"resting": "요청 한도로 쉬는 중", "timeout": "응답이 늦음", "reference": "왕복 최저가 참고만", "failed": "조회 실패"}
+            missed = " · ".join(f"{label[name]} {why.get(states[name], '조회 실패')}" for name in missing)
+            lines = []
+            if not listed:
+                lines.append(f"{route} · {when} 조건으로 항공편 목록을 받지 못했습니다({missed}). 항공편이 없다는 뜻은 아닙니다.")
+            elif missing:
+                lines.append(f"{route} · {when} 조건으로 받은 결과에는 항공편이 없었습니다({missed} — 그 소스는 확인하지 못했습니다).")
+            else:
+                lines.append(f"{route} · {when} 조건으로 찾은 항공편이 없습니다. 날짜나 공항을 바꿔 다시 말씀해 주세요.")
+            google = sources.get("google") or {}
+            if states.get("google") == "reference" and google.get("page"):
+                lowest = google.get("round_trip_lowest")
+                lines.append(f"구글 항공권 왕복 최저 참고 {_won(lowest, 'KRW') if lowest is not None else '가격 모름'}"
+                             f"(가는 편 · 오는 편 합, 편별 비교 안 함): {google['page']}")
+            if booked.get("elsewhere"):
+                lines.append("같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):")
+                lines += [f"   · {link['name']}" + (f"({link['note']})" if link.get("note") else "") + f": {link['url']}"
+                          for link in booked["elsewhere"]]
+            return self._respond(task, evidence, {**decision, "found": 0 if listed else None, "states": states},
+                                 "\n".join(lines))
         party = f"성인 {found.adults}명" + (f" · 아동 {found.children}명" if found.children else "") \
             + (f" · 유아 {found.infants}명" if found.infants else "")
         wanted = list(found.depart_times or [])
@@ -783,6 +832,10 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                 places = " · ".join(source.get("unresolved") or [])
                 lines.append(f"[{name}] 「{places}」을(를) {'역' if found.mode == 'train' else '터미널'} 이름으로 찾지 못했습니다. "
                              f"{'역' if found.mode == 'train' else '터미널'} 이름을 정확히 알려 주세요.")
+                continue
+            if state == "unconfirmed":                   # `[2026-10-15 검수 · GPT 검토 #10]` 먼 날짜 0편 + 오늘 조회로도 못 가름 — 「없음」이라 하지 않는다
+                lines.append(f"[{name}] 그날 버스 운행은 확인할 수 없습니다 — 공급자가 먼 날짜 운행표를 아직 주지 않았을 수 있고, "
+                             "같은 구간 오늘 운행으로도 가르지 못했습니다. 출발 1~2일 전에 다시 물어봐 주시거나 예매 사이트에서 확인해 주세요.")
                 continue
             if state == "not_yet":                       # 팀장 점검 LB-03 — 공급자가 먼 날짜 버스 운행을 아직 안 준다
                 lines.append(f"[{name}] 그날 버스 운행은 아직 확인할 수 없습니다 — 공급자가 가까운 날(보통 출발 1~2일 전)부터 운행표를 줍니다. "
@@ -1055,9 +1108,9 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         state = ((got.get("sources") or {}).get("tago") or {}).get("status", "failed")
         if not got or state == "failed":
             return self._unknown(task, f"{label} 운행 검색 결과", ctx["evidence"])
-        if state == "not_yet":                           # 팀장 점검 LB-03 — 「없음」이 아니라 「아직」
+        if state in ("not_yet", "unconfirmed"):          # 팀장 점검 LB-03 — 「없음」이 아니라 「아직 · 모름」(GPT 검토 #10)
             return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"], next_action=NextAction.RESPOND,
-                                decisions=[{"path": "transit_change", "sources": {"tago": state}, "reason": "not_yet"}],
+                                decisions=[{"path": "transit_change", "sources": {"tago": state}, "reason": state}],
                                 answer=f"{item.title}의 다른 {label} 운행은 아직 확인할 수 없어요 — 공급자가 가까운 날(보통 출발 1~2일 전)부터 "
                                        "운행표를 줘요. 출발이 가까워지면 다시 말씀해 주세요. 일정은 그대로 두었어요.")
         shown_key = f"{item.kind}:{query['origin']}-{query['destination']}:{query['depart_date']}"

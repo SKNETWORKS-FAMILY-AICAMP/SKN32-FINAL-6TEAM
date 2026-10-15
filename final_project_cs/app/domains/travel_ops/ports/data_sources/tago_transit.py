@@ -164,12 +164,12 @@ class TagoTransit(TravelSource):
         found = []
         for row in rows:
             day, depart = _when(row.get("depplandtime"))
-            _, arrive = _when(row.get("arrplandtime"))
+            arrive_day, arrive = _when(row.get("arrplandtime"))   # `[2026-10-15 검수 · GPT 검토 #5]` 도착 날짜도 — 자정을 넘기면 다음 날
             found.append(self.stamp({
                 "mode": "train", "kind": None, "grade": _text(row.get("traingradename")),
                 "number": (_text(row.get("trainno")) or "").lstrip("0") or _text(row.get("trainno")),   # 「00001」 → 「1」
                 "origin": _text(row.get("depplacename")), "destination": _text(row.get("arrplacename")),
-                "date": day, "depart": depart, "arrive": arrive,
+                "date": day, "depart": depart, "arrive": arrive, "arrive_date": arrive_day,
                 "minutes": _minutes(row.get("depplandtime"), row.get("arrplandtime")),
                 "price": _int(row.get("adultcharge")),
             }, source=self.name))
@@ -200,11 +200,11 @@ class TagoTransit(TravelSource):
         found = []
         for row in rows:
             day, depart = _when(row.get("depplandtime"))
-            _, arrive = _when(row.get("arrplandtime"))
+            arrive_day, arrive = _when(row.get("arrplandtime"))
             found.append(self.stamp({
                 "mode": "bus", "kind": kind, "grade": _text(row.get("gradenm")), "number": _text(row.get("routeid")),
                 "origin": _text(row.get("depplacenm")), "destination": _text(row.get("arrplacenm")),
-                "date": day, "depart": depart, "arrive": arrive,
+                "date": day, "depart": depart, "arrive": arrive, "arrive_date": arrive_day,
                 "minutes": _minutes(row.get("depplandtime"), row.get("arrplandtime")),
                 "price": _int(row.get("charge")),
                 # 시각을 못 읽은 줄은 받은 값의 모양을 남긴다(숫자 자릿수 · 형) — 00시대 1건(LB-10) 원인 찾기용. 값 자체는 시각이라 민감하지 않다

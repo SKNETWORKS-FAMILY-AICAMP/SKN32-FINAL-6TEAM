@@ -23,7 +23,10 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import UTC, datetime
+import logging
 from typing import Any
+
+logger = logging.getLogger(__name__)
 from urllib.parse import quote
 
 
@@ -77,9 +80,16 @@ def search_stays(travel: Any, *, keyword: str, check_in: str, check_out: str, ad
     sources: dict[str, dict[str, Any]] = {}
     for name, (slot, arguments) in wanted.items():
         adapter = getattr(travel, slot, None) if travel is not None else None
-        got = adapter.stay_search(**{key: value for key, value in arguments.items() if value is not None}) \
-            if adapter is not None else None
+        error = None
+        try:
+            got = adapter.stay_search(**{key: value for key, value in arguments.items() if value is not None}) \
+                if adapter is not None else None
+        except Exception as exc:                       # `[2026-10-15 검수 · GPT 검토 #14]` 한 소스 예외가 다른 소스 결과까지 버리지 않게
+            got, error = None, type(exc).__name__
+            logger.warning("booking stay source raised source=%s error=%s", name, error)
         sources[name] = _status(got, absent=adapter is None)
+        if error:
+            sources[name] = {"status": "failed", "error": error}
         results[name] = got if sources[name]["status"] == "ok" else None
     return {"query": query, **results, "sources": sources,
             "elsewhere": elsewhere(keyword=keyword, check_in=check_in, check_out=check_out, adults=adults, children=children,
@@ -109,7 +119,8 @@ def google_details(travel: Any, *, tokens: list[str], keyword: str, check_in: st
                                   check_out=check_out, adults=adults, children=children) for token in tokens}
     done, _ = wait(list(futures.values()), timeout=DETAIL_WAIT_SECONDS)
     pool.shutdown(wait=False, cancel_futures=True)
-    details = {token: (future.result() if future in done else None) for token, future in futures.items()}
+    details = {token: (future.result() if future in done and future.exception() is None else None)
+               for token, future in futures.items()}               # 예외 · 늦음은 그 숙소만 「모름」(GPT 검토 #14)
     return {"details": details, "elapsed": round(time.perf_counter() - started, 1)}
 
 

@@ -926,3 +926,10 @@ def test_an_item_of_another_kind_is_not_lodging_work():
     result, _, tools = _itinerary(_plan(stay_kind="activity"))
     assert result.outcome == "escalated" and result.failure_code == "target_kind_mismatch"
     assert [name for name, _ in tools.calls] == ["read.itinerary"]
+
+
+def test_an_empty_myrealtrip_list_with_google_hotels_is_not_said_as_no_stays():
+    """`[2026-10-15 검수 · GPT 검토 #10]` 마이리얼트립 목록이 비어도 구글 호텔에 후보가 있으면 「숙소가 없습니다」라고 하지 않는다."""
+    result, _, _ = _run(SEARCH, {"read.stay_search": {**STAYS, "stays": [], "total": 0}, "read.stay_google": GOOGLE})
+    assert "찾은 숙소가 없습니다" not in result.answer and "마이리얼트립에서는 숙소를 찾지 못했습니다" in result.answer
+    assert "구글 호텔에서 본 같은 조건 숙소" in result.answer and result.decisions[0]["google"] == 3

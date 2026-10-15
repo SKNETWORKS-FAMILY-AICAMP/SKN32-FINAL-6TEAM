@@ -322,7 +322,7 @@ def test_a_broken_adapter_is_failed_not_blamed_on_the_customer():
     got = search_transit(SimpleNamespace(transit_schedule=_Down()), mode="bus", origin="서울", destination="부산", depart_date=GO.isoformat())
     assert got["sources"]["tago"]["status"] == "failed"
     # 터미널은 찾았는데 그날 운행이 없다 — 「못 찾음」이 아니라 ok · 0편
-    got = search_transit(SimpleNamespace(transit_schedule=FakeTago(express={}, suburbs={})), mode="bus", origin="서울", destination="부산", depart_date=GO.isoformat())
+    got = search_transit(SimpleNamespace(transit_schedule=FakeTago(express={}, suburbs={})), mode="bus", origin="서울", destination="부산", depart_date=TODAY.isoformat())
     assert got["sources"]["tago"]["status"] == "ok" and got["options"] == [] and "unresolved" not in got["sources"]["tago"]
 
 
@@ -426,7 +426,8 @@ class DatedTago(FakeTago):
 
 
 def test_a_far_bus_date_with_no_runs_is_not_yet_available_not_no_service():
-    """팀장 점검 LB-03(10-15): 먼 날짜 버스 0편 — 오늘은 같은 구간에 운행이 있으면 「아직 안 줌」, 오늘도 없으면 「운행 없음」."""
+    """팀장 점검 LB-03(10-15): 먼 날짜 버스 0편 — 오늘은 같은 구간에 운행이 있으면 「아직 안 줌」.
+    `[10-15 검수 · GPT 검토 #10]` 오늘 첫 쌍도 없거나 못 불렀으면 「운행 없음」이 아니라 「확인할 수 없음」(unconfirmed) — 먼 날짜 0편은 근거가 아니다."""
     today = TODAY.isoformat()
     far = (TODAY + timedelta(days=5)).isoformat()
     tago = DatedTago({("express", "T1", "T7", today): [_bus("express", "서울경부", "부산", "06:00", 26600)]})
@@ -437,7 +438,16 @@ def test_a_far_bus_date_with_no_runs_is_not_yet_available_not_no_service():
     assert "그날 버스 운행은 아직 확인할 수 없습니다 — 공급자가 가까운 날(보통 출발 1~2일 전)부터 운행표를 줍니다." in result.answer
     nothing = DatedTago({})
     got = search_transit(SimpleNamespace(transit_schedule=nothing), mode="bus", origin="서울", destination="부산", depart_date=far, adults=1)
-    assert got["sources"]["tago"]["status"] == "ok" and got["options"] == [], "오늘도 없으면 그 구간 운행이 없는 것"
+    assert got["sources"]["tago"]["status"] == "unconfirmed" and got["options"] == [], "오늘 첫 쌍이 비어도 먼 날짜는 모름"
+    result, _ = _run(f"{far[5:7].lstrip('0')}월 {far[8:10].lstrip('0')}일 서울에서 부산 가는 고속버스 1명", DatedTago({}))
+    assert "그날 버스 운행은 확인할 수 없습니다" in result.answer and "운행이 없습니다" not in result.answer
+
+    class Down(DatedTago):
+        def bus_schedules(self, kind, *, dep_id, arr_id, date):
+            self.calls.append(("bus_schedules", kind, dep_id, arr_id, date))
+            return [] if date == far else None              # 그날은 0편, 오늘 조회는 실패
+    got = search_transit(SimpleNamespace(transit_schedule=Down({})), mode="bus", origin="서울", destination="부산", depart_date=far, adults=1)
+    assert got["sources"]["tago"]["status"] == "unconfirmed"
     soon = DatedTago({})
     got = search_transit(SimpleNamespace(transit_schedule=soon), mode="bus", origin="서울", destination="부산", depart_date=today, adults=1)
     assert not any(call.endswith(":today") for call in got["sources"]["tago"]["calls"]), "가까운 날은 되묻지 않는다(호출 아끼기)"
@@ -679,3 +689,30 @@ def test_a_clock_limit_filters_the_going_runs_and_says_so_when_nothing_fits():
 def test_the_question_uses_the_right_particle():
     result, _ = _run("내일 동서울에서 버스 2명", FakeTago())
     assert result.answer == "도착지를 알려 주시면 이어서 찾아 드리겠습니다."
+
+
+
+# ── 검수 10-15 고침 묶음 B (GPT 검토 #5 · #18 일부) ─────────────
+def test_an_overnight_run_keeps_its_next_day_arrival():
+    late = {**_train("KTX", "23:00", "02:00", 59800, "999"), "minutes": 180, "arrive_date": (GO + timedelta(days=1)).isoformat()}
+    result, _ = _run(f"{GO.month}월 {GO.day}일 서울에서 부산 기차 1명", FakeTago(trains=[late]))
+    assert "부산 (다음 날) 02:00 (3시간 0분)" in result.answer
+    from app.domains.travel_ops.instances.booking.team import _arrive_date
+    no_date = {k: v for k, v in late.items() if k != "arrive_date"}
+    assert _arrive_date(no_date) == (GO + timedelta(days=1)).isoformat(), "공급자 날짜가 없으면 출발 + 소요 분으로"
+    assert _arrive_date({**no_date, "minutes": None}) is None, "근거가 없으면 당일로 채우지 않는다"
+    assert _arrive_date({**no_date, "minutes": None, "arrive": "23:40"}) == GO.isoformat(), "도착이 출발보다 늦으면 같은 날"
+
+
+def test_an_overnight_run_chosen_on_an_itinerary_item_ends_the_next_day():
+    from app.domains.travel_ops.instances.booking.team import _transit_option
+    late = {**_train("KTX", "23:00", "02:00", 59800, "999"), "minutes": 180, "arrive_date": (GO + timedelta(days=1)).isoformat()}
+    item = SimpleNamespace(starts_at=datetime.fromisoformat(f"{GO.isoformat()}T09:00:00+09:00"), detail={})
+    option = _transit_option(1, late, item, 1, [])
+    assert option["ends_at"].startswith((GO + timedelta(days=1)).isoformat() + "T02:00") and option["ends_at"] > option["starts_at"]
+
+
+def test_the_bus_grade_is_not_doubled_with_the_kind():
+    express = {("T1", "T7"): [_bus("express", "서울경부", "부산", "06:00", 26600, grade="고속")]}
+    result, _ = _run(f"{TODAY.month}월 {TODAY.day}일 서울에서 부산 가는 고속버스 1명", FakeTago(express=express, suburbs={}))
+    assert "고속고속" not in result.answer and "] 고속 — 서울경부 06:00" in result.answer

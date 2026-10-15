@@ -385,7 +385,12 @@ def test_the_server_recounts_what_is_missing():
 
 def test_no_flights_and_unreadable_search_are_different():
     result, _, _ = _run(SEARCH, {"read.flight_search": {**FLIGHTS, "flights": [], "total": 0}})
-    assert result.outcome == "completed" and "찾은 항공편이 없습니다" in result.answer
+    # `[10-15 검수 · GPT 검토 #10]` 다른 소스를 확인하지 못했으면 「없습니다」가 아니라 「받은 결과에는 없었다」
+    assert result.outcome == "completed" and "받은 결과에는 항공편이 없었습니다" in result.answer and "확인하지 못했습니다" in result.answer
+    empty = {"flights": [], "source": "x"}
+    result, _, _ = _run(SEARCH, {"read.flight_search": {**FLIGHTS, "flights": [], "total": 0},
+                                 "read.flight_offers": empty, "read.flight_google": empty})
+    assert "찾은 항공편이 없습니다" in result.answer and result.decisions[0]["found"] == 0
     result, _, _ = _run(SEARCH, {"read.flight_search": None})
     assert (result.outcome, result.failure_code) == ("escalated", "unknown_항공편 검색 결과")
 
@@ -755,3 +760,32 @@ def test_a_clock_limit_keeps_only_flights_leaving_after_it():
     assert result.decisions[0]["clock_limit"] == ["15:00", None]
     assert all(option["band"] in ("afternoon", "evening") for option in result.decisions[0]["shown"])
     assert "출발 15:00 이후 편만 골랐습니다." in result.answer or "받은 결과에 출발 15:00 이후 편이 없어" in result.answer
+
+
+# ── 검수 10-15 고침 묶음 B (GPT 검토 #10 · #14) ─────────────
+def test_a_resting_source_and_a_round_trip_reference_are_not_said_as_no_flights():
+    """☆10-15 14:58 F01 — 마이리얼트립이 쉬는 중이고 구글은 왕복 참고가만 줬는데 「찾은 항공편이 없습니다」라고 답했다."""
+    google = {"flights": [], "note": "왕복은 편별 대신 최저가 참고", "round_trip_lowest": 326400.0,
+              "page": "https://www.google.com/travel/flights?hl=ko&tfs=rt", "source": "serpapi_flights"}
+    result, _, _ = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"},
+                        {"read.flight_search": {"cooldown_seconds": 540, "source": "myrealtrip"}, "read.flight_google": google})
+    answer = result.answer
+    assert "찾은 항공편이 없습니다" not in answer and "항공편 목록을 받지 못했습니다" in answer and "항공편이 없다는 뜻은 아닙니다" in answer
+    assert "마이리얼트립 요청 한도로 쉬는 중" in answer and "구글 항공권 왕복 최저가 참고만" in answer
+    assert "구글 항공권 왕복 최저 참고 326,400원" in answer and result.decisions[0]["found"] is None
+
+
+def test_one_source_raising_keeps_the_other_sources():
+    class Boom:
+        misses: dict = {}
+
+        def flight_search(self, **_):
+            raise ValueError("bad nested shape")
+
+    from types import SimpleNamespace as _NS
+    from app.domains.travel_ops.components.booking.offers.flights import search_flights as _search
+    ok = StubSource("read.flight_search", FLIGHTS, [])
+    got = _search(_NS(travel_search=ok, flight_offers=Boom(), flight_google=None), origin="TPE", destination="ICN",
+                  depart_date=GO, domestic=False, adults=2)
+    assert got["sources"]["ignav"] == {"status": "failed", "error": "ValueError"}
+    assert got["sources"]["myrealtrip"]["status"] == "ok" and got["options"], "정상 소스 결과는 남는다"
