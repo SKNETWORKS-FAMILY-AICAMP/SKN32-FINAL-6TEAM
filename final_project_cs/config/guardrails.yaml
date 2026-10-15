@@ -282,6 +282,7 @@ travel:
     #   ★따옴표 필수 — YAML 은 맨 off/on 을 불리언으로 읽는다. ★기본 off: 켤지는 사용자 결정 대기(보고서 2026-10-15_규정검색_재순위_제품연결.md)
     #   first_stage  operating: 지금 색인(직원용 본문)에서 후보 · customer_text: 「문서 제목 / 절 제목: 고객용 문장」 색인에서 후보(DB 를 안 바꾸고 프로세스 안에서 만든다)
     #   min_score  고른 줄을 보이는 점수 문턱 — 후보를 뽑은 색인의 점수. 지금 방식으로 돌아간 답에는 위 min_policy_score 를 쓴다
+    #   backend  local: 로컬 모델 · api: 유료 모델(서버용 키 · 질문 글은 개인정보 가림 `masked` 를 거쳐 나간다 · 호출마다 하루·한 달 상한을 센다). 루나급 실측 B 상위3 83%, 약 $0.13/902건
     #   model  비면 요청 해석과 같은 모델(ollama_model) — 12GB GPU 에서 모델을 번갈아 올리지 않는다
     #   timeout_seconds / min_remaining_seconds / total_seconds  total_seconds(고객 응답 15초에서 답 조립 몫 1초를 뺀 값)에서 해석이 쓴 시간을 빼고 남은 시간이 min_remaining_seconds 보다 적으면 재순위를 건너뛴다. 모델 호출 제한 = min(timeout_seconds, 남은 시간)
     #   failures / open_seconds  재순위 호출이 연속 실패하면 그 시간 동안 건너뛴다(고객이 시간 초과를 매번 기다리지 않게)
@@ -299,6 +300,9 @@ travel:
       failures: 3
       open_seconds: 60.0
       embed_timeout_seconds: 30.0
+      backend: "local"            # local: 요청 해석과 같은 로컬 모델 · api: 서버용 OpenAI 키(gpt-6-luna 급) — 호출 상한 `external_call_budget` 안에서만, 상한 장치가 없으면 안 부른다
+      api_model: ""               # 비면 `ACOP_LLM_FAILOVER_MODEL`
+      api_timeout_seconds: 6.0    # 루나 호출 902건 실측: 중앙 1.7초 · p95 5.2초 · 최대 9.3초(이 PC → API, 2026-10-15)
   # -- 채팅 기능 안내 (2026-10-14 사용자 지시 「추천대로」, `service_help.reply`) --
   # ★기능 안내 지식(`travel_service`)에서 이 점수 이상인 조각만 답에 싣는다. 규정 답(위 0.55)과 따로 둔다.
   # ★출처: **우리가 고른 값**, 실측 근거 — x600 서버(bge-m3)에서 기능 안내 질문 14개의 1위 점수 0.502~0.656,
