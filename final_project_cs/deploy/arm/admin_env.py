@@ -2,7 +2,7 @@
 
 관리자웹앱 컨테이너 안에서 돌린다 — 직접 부르지 말고 `admin_env.sh` 로 부른다.
 
-    keys               고객 API 를 부를 열쇠 3개를 이 기계의 비밀값으로 만들어 넣는다(화면에 찍지 않는다)
+    keys               고객 API 를 부를 열쇠 5개를 이 기계의 비밀값으로 만들어 넣는다(화면에 찍지 않는다)
     operator --id ID   운영자 계정을 넣거나 비밀번호를 바꾼다(비밀번호는 직접 입력, 두 번, 12자 이상)
                        권한은 기본으로 관리자웹앱 화면 전체(CONSOLE_SCOPES) — 좁히려면 --scopes
     scopes --id ID     비밀번호는 그대로 두고 권한만 바꾼다(기본: 화면 전체)
@@ -22,8 +22,10 @@ from pathlib import Path
 import sys
 
 ENV = Path(os.environ.get("ADMIN_ENV_FILE", "/control/.env.admin"))
-# 운영 앱이 고객 API 를 부를 때 쓰는 scope(app/presentation/admin_api.py · ui/routes.py 의 _call_api)
-OPS_SCOPES = ("action:approve", "delegation:read", "delegation:write")
+# 운영 앱이 고객 API 를 부를 때 쓰는 scope(app/presentation/admin_api.py · ui/routes.py 의 _call_api) —
+# `[2026-10-15]` limits:read · limits:write 를 더했다. 관리자웹앱 「웹 제한값」 · 「보관 기간」 화면이 운영 앱의 `/admin/limits` ·
+# `/admin/retention` 을 이 열쇠로 부른다(admin_api.existing_settings). 빠져 있어 두 화면이 503 「운영용 제한 설정 키가 설정되지 않았습니다」였다.
+OPS_SCOPES = ("action:approve", "delegation:read", "delegation:write", "limits:read", "limits:write")
 # 관리자웹앱 화면 전체를 쓰는 운영자 scope(app/presentation/admin_api.py 의 require) —
 # 첫 화면(snapshot)이 ops:introspect, 접수 목록이 case:read, 한도 화면이 limits:read/write 를 본다.
 CONSOLE_SCOPES = ("action:approve", "case:read", "delegation:read", "delegation:write",

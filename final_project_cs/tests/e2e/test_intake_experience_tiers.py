@@ -250,3 +250,13 @@ def test_when_fewer_than_three_places_fit_the_time_the_experience_group_is_added
     got = _alternatives(early_world, review, item)
     assert "similar_experience" in got["notes"], got["notes"]
     assert {"광화문 어린이공원", "북악 둘레길"} & {c["place"]["name"] for c in got["candidates"]}, got
+
+
+def test_an_original_place_without_a_tour_number_is_linked_to_the_same_named_catalog_row_for_the_team_engine(park_world):
+    """★x600 실서버 확인(2026-10-15): 우리 장소 목록에서 찾은 「경복궁」은 관광공사 번호가 비어 팀 엔진을 못 불렀다 — 같은 이름 목록 항목(한 곳일 때만)으로 잇는다."""
+    _row(park_world, "960006", "12", "창덕궁", 37.5794, 126.9910, "HS", "HS01", "HS010100")
+    review, item = _palace_review()
+    item["place"] = {**item["place"], "content_id": None}
+    got = _alternatives(park_world, review, item)
+    assert "team_ranked" in got["notes"], got["notes"]
+    assert any(c["place"]["name"] == "창덕궁" for c in got["candidates"]), got

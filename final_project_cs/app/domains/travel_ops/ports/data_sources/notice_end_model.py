@@ -81,11 +81,24 @@ class NoticeEndModel:
                  mode: Callable[[], str] | str = "on", post: Callable[[str, dict, float], Any] | None = None,
                  cache_size: int = 2048) -> None:
         self.base_url, self.model, self.timeout, self.keep_alive = base_url.rstrip("/"), model, timeout, keep_alive
+        #: ★`[2026-10-15]` 관리 콘솔 「모델 경로」를 따를 때 조립이 꽂는 주소 함수(부를 때마다 읽는다). 비면 `base_url` 고정
+        self.base_url_for: Callable[[], str] | None = None
         self._mode = mode if callable(mode) else (lambda: str(mode))
         self._post = post or self._http
         self._cache: OrderedDict[str, bool] = OrderedDict()
         self._cache_size = cache_size
         self._lock = threading.Lock()
+
+    def current_base_url(self) -> str:
+        """이번 호출이 부를 Ollama 주소 — 꽂힌 주소 함수가 있으면 그 값(비면 고정 주소), 없으면 고정 주소."""
+        if self.base_url_for is not None:
+            try:
+                chosen = (self.base_url_for() or "").strip().rstrip("/")
+            except Exception:                    # noqa: BLE001 — 경로를 못 읽으면 고정 주소로 부른다
+                chosen = ""
+            if chosen:
+                return chosen
+        return self.base_url
 
     @staticmethod
     def _http(url: str, payload: dict, timeout: float) -> Any:
@@ -101,7 +114,7 @@ class NoticeEndModel:
                                                 {"role": "user", "content": "재난 문자:\n" + text}]}
         if self.keep_alive:
             payload["keep_alive"] = self.keep_alive
-        response = self._post(f"{self.base_url}/api/chat", payload, self.timeout)
+        response = self._post(f"{self.current_base_url()}/api/chat", payload, self.timeout)
         if response.status_code != 200:
             raise RuntimeError(f"HTTP {response.status_code}: {response.text[:120]}")
         answer = json.loads(response.json()["message"]["content"])
@@ -201,11 +214,24 @@ class NoticeImpactModel:
                  mode: Callable[[], str] | str = "on", post: Callable[[str, dict, float], Any] | None = None,
                  cache_size: int = 2048) -> None:
         self.base_url, self.model, self.timeout, self.keep_alive = base_url.rstrip("/"), model, timeout, keep_alive
+        #: ★`[2026-10-15]` 관리 콘솔 「모델 경로」를 따를 때 조립이 꽂는 주소 함수(부를 때마다 읽는다). 비면 `base_url` 고정
+        self.base_url_for: Callable[[], str] | None = None
         self._mode = mode if callable(mode) else (lambda: str(mode))
         self._post = post or NoticeEndModel._http
         self._cache: OrderedDict[str, str] = OrderedDict()
         self._cache_size = cache_size
         self._lock = threading.Lock()
+
+    def current_base_url(self) -> str:
+        """이번 호출이 부를 Ollama 주소 — 꽂힌 주소 함수가 있으면 그 값(비면 고정 주소), 없으면 고정 주소."""
+        if self.base_url_for is not None:
+            try:
+                chosen = (self.base_url_for() or "").strip().rstrip("/")
+            except Exception:                    # noqa: BLE001 — 경로를 못 읽으면 고정 주소로 부른다
+                chosen = ""
+            if chosen:
+                return chosen
+        return self.base_url
 
     def _ask(self, text: str) -> str:
         payload: dict[str, Any] = {"model": self.model, "stream": False, "think": False, "format": "json",
@@ -214,7 +240,7 @@ class NoticeImpactModel:
                                                 {"role": "user", "content": "재난 문자:\n" + text}]}
         if self.keep_alive:
             payload["keep_alive"] = self.keep_alive
-        response = self._post(f"{self.base_url}/api/chat", payload, self.timeout)
+        response = self._post(f"{self.current_base_url()}/api/chat", payload, self.timeout)
         if response.status_code != 200:
             raise RuntimeError(f"HTTP {response.status_code}: {response.text[:120]}")
         answer = json.loads(response.json()["message"]["content"])
@@ -258,8 +284,9 @@ class NoticeImpactModel:
         return verdict if mode == "on" else None
 
 
-def register_from_settings(settings: Any) -> NoticeEndModel | None:
-    """조립 때 한 번. 설정에 모델 이름과 Ollama 주소가 있을 때만 꽂는다(없으면 규칙만 — 지금까지와 같다)."""
+def register_from_settings(settings: Any, *, base_url_for: Callable[[], str] | None = None) -> NoticeEndModel | None:
+    """조립 때 한 번. 설정에 모델 이름과 Ollama 주소가 있을 때만 꽂는다(없으면 규칙만 — 지금까지와 같다).
+    `base_url_for` — 관리 콘솔 「모델 경로」를 따르는 주소 함수(`[2026-10-15]`, 조립이 넘긴다). 비면 `ollama_base_url` 고정."""
     from app.core.settings import get_guardrails
     from app.domains.travel_ops.ports.data_sources import notice_status
 
@@ -279,6 +306,7 @@ def register_from_settings(settings: Any) -> NoticeEndModel | None:
 
     judge = NoticeEndModel(base_url=base, model=model, timeout=float(getattr(settings, "ollama_notice_timeout_seconds", 90.0)),
                            keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""), mode=mode)
+    judge.base_url_for = base_url_for
     notice_status.set_second_opinion(judge)
     logger.info("공지 끝남 2차 확인 모델 연결: %s (mode=%s · %s · 지시문 %s)", model, mode(), PROMPT_VERSION, PROMPT_SHA)
 
@@ -290,8 +318,10 @@ def register_from_settings(settings: Any) -> NoticeEndModel | None:
         value = {True: "on", False: "off"}.get(raw, str(raw or "off")) if isinstance(raw, bool) else str(raw or "off")
         return value if value in ("off", "shadow", "on") else "off"
 
-    notice_impact.set_second_opinion(NoticeImpactModel(base_url=base, model=model, timeout=float(getattr(settings, "ollama_notice_timeout_seconds", 90.0)),
-                                                       keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""), mode=impact_mode))
+    impact = NoticeImpactModel(base_url=base, model=model, timeout=float(getattr(settings, "ollama_notice_timeout_seconds", 90.0)),
+                               keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""), mode=impact_mode)
+    impact.base_url_for = base_url_for
+    notice_impact.set_second_opinion(impact)
     logger.info("공지 여행 영향 2차 확인 모델 연결: %s (mode=%s · %s · 지시문 %s)", model, impact_mode(), IMPACT_PROMPT_VERSION, IMPACT_PROMPT_SHA)
     return judge
 

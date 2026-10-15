@@ -246,3 +246,15 @@ def test_the_party_size_registered_with_the_trip_is_used_and_never_asked(hotel_c
     got = _say(known, "숙소 다른 곳으로 보여 줘", "lodgp-l")
     assert "몇 분" not in got["answer"], got
     assert _adults(chat) and set(_adults(chat)) == {4}, chat["searches"]
+
+
+def test_several_waiting_questions_do_not_block_a_short_answer_it_goes_to_the_latest_one(hotel_chat_unknown_party):
+    """`[2026-10-15 사용자 지시 — 코어]` 고객이 질문을 넘기고 같은 요청을 되풀이하면 답을 기다리는 질문이 쌓인다 — 번호 없는 짧은 답이 409 로 거절되지 않고
+    **가장 나중에 보인 질문**의 답으로 이어진다."""
+    chat = hotel_chat_unknown_party
+    first = _say(chat, "숙소 다른 곳으로 보여 줘", "lodgp-m")
+    second = _say(chat, "숙소 다른 곳으로 한 번 더 보여 줘", "lodgp-n")
+    assert first["case_id"] != second["case_id"] and second["case_status"] == "waiting_input", (first, second)
+    got = _say(chat, "2명이요", "lodgp-o")                                   # 대기 건 번호 없이 — 전에는 409
+    assert got["case_id"] == second["case_id"], got
+    assert _adults(chat) and set(_adults(chat)) == {2}, chat["searches"]
