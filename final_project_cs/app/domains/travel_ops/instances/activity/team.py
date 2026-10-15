@@ -940,7 +940,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         ★후보를 못 찾거나 확인하지 못하면 그렇다고 말한다(`status` unknown · ranked 0곳) — 변경 제안은 그대로 만든다.
         """
         alternatives, evidence, note, warnings = self._recommend_alternatives(
-            task, place, booking.get("starts_at"), seen, evidence, decisions)
+            task, place, booking.get("starts_at"), seen, evidence, decisions, trip_id=booking.get("trip_id"))
         return self._propose_change(task, booking, evidence, reason=reason,
                                     answer=f"{answer}\n{note}" if note else answer,
                                     decisions={**decisions, "alternatives": alternatives}, warnings=warnings)

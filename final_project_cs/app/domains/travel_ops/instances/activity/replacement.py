@@ -61,8 +61,39 @@ class ReplacementMixin:
             return raw, []
         return None, [f"알 수 없는 선호도 값({raw!r})이라 선호도를 반영하지 않았다"]
 
+    def _itinerary_places(self, task: TeamTask, seen: set[str],
+                          trip_id: Any = None) -> tuple[set[str], set[str], bool]:
+        """이 Case 의 여행 일정에 이미 들어 있는 장소 — (관광공사 contentid 들, 이름들, 읽었나).
+
+        여행은 예약 결과의 `trip_id`(`read.booking` — 코어가 올리면) → Case 상태의 `subject_ref`(`kind: trip`) → 상태의
+        `trip_id` 순으로 안다. 여행을 모르거나 일정을 못 읽으면
+        세 번째 값이 `False` 다 — 부르는 쪽이 「확인 못 함」을 경고로 남긴다.
+        """
+        state = task.context.current_state or {}
+        ref = state.get("subject_ref") or {}
+        trip_id = trip_id or (ref.get("id") if ref.get("kind") == "trip" else None) or state.get("trip_id")
+        if not trip_id:
+            return set(), set(), False
+        view = self._read(task, "read.itinerary", {"trip_id": str(trip_id)}, seen)
+        if not isinstance(view, dict):
+            return set(), set(), False
+        ids: set[str] = set()
+        names: set[str] = set()
+        for item in view.get("items") or []:
+            if item.get("kind") == "mobility":
+                continue
+            placed = item.get("place") or {}
+            attributes = placed.get("attributes") or {}
+            content_id = placed.get("source_content_id") or attributes.get("source_content_id")
+            if content_id:
+                ids.add(str(content_id))
+            name = str(placed.get("name") or item.get("title") or "").strip()
+            if name:
+                names.add(name)
+        return ids, names, True
+
     def _recommend_alternatives(self, task: TeamTask, place: Any, starts_at: Any, seen: set[str],
-                                evidence: list, decisions: dict[str, Any],
+                                evidence: list, decisions: dict[str, Any], *, trip_id: Any = None,
                                 ) -> tuple[dict[str, Any], list, str, list[str]]:
         """원래 장소 기준 대체 후보를 `read.place_candidates` 로 읽어 `rank_alternatives` 로 줄 세운다.
 
@@ -95,7 +126,17 @@ class ReplacementMixin:
                                          "confirmed_at": pool.get("confirmed_at")},
                                   base=evidence)
         preference, warnings = self._preference(task)
-        ranked = rank_alternatives(pool["origin"], candidates, starts_at, preference=preference)
+        # ★`[2026-10-15 피드백]` 이미 일정에 있는 곳은 대체 후보가 아니다 — `rank_alternatives(exclude_ids=)` 는 있었지만
+        #   부르는 쪽이 한 번도 넘기지 않아 같은 여행의 다른 일정 장소가 후보로 나갔다. 같은 곳이 다른 contentid 로
+        #   들어 있을 수 있어 이름으로도 가린다(`itinerary_changes.unused_places` 와 같은 기준).
+        in_plan_ids, in_plan_names, plan_known = self._itinerary_places(task, seen, trip_id)
+        if not plan_known:
+            # ★일정을 못 읽었다 — 「겹침 없음」으로 읽지 않고 알린다(조용한 스킵 금지)
+            warnings.append("여행 일정을 읽지 못해 후보가 이미 일정에 있는 곳인지 확인하지 못했다")
+        if in_plan_names:
+            candidates = [c for c in candidates if str(c.get("title") or "").strip() not in in_plan_names]
+        ranked = rank_alternatives(pool["origin"], candidates, starts_at, preference=preference,
+                                   exclude_ids=in_plan_ids)
         if ranked["reason"] == "origin_no_coordinates":
             # ★근처를 잴 기준이 없다 — 「근처에 없음」으로 읽지 않는다.
             self._record_failure(task, fc.ALTERNATIVES_NO_COORDINATES)

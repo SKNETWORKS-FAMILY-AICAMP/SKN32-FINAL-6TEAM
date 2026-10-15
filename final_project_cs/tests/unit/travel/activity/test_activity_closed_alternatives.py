@@ -121,3 +121,50 @@ def test_a_safety_stop_does_not_look_for_alternatives():
     result, called = _run(report=report)
 
     assert result.decisions[0]["reason"] == "safety_event" and "read.place_candidates" not in called
+
+
+# ── 이미 일정에 있는 곳은 대체 후보가 아니다 — `[2026-10-15 피드백]` ─────────────────────
+def _run_with_trip(itinerary_items):
+    values = {"read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": TUESDAY,
+                               "party_size": 2, "capacity": 4},
+              "read.policy": [], "read.place": PLACE, "read.disruptions": CLEAR, "read.disaster": disaster_from(CLEAR),
+              "read.place_hours": _hours({**WEEK, "tue": "closed"}),
+              "read.place_candidates": POOL,
+              "read.itinerary": {"trip": {"trip_id": "t1", "version": 1}, "items": itinerary_items}}
+    tools = FakeTools(values)
+    state = {"subject_ref": {"kind": "trip", "id": "t1"}}
+    return asyncio.run(ActivityTeam(tools).execute(
+        task("activity", "activity.check_feasible", pack("activity", scope=["activity"], state=state), ALLOWED)))
+
+
+def _titles(result):
+    alternatives = result.decisions[0]["alternatives"]
+    return [a["title"] for a in alternatives.get("alternatives", []) + alternatives.get("more_alternatives", [])]
+
+
+def test_places_already_in_the_itinerary_are_not_offered():
+    in_plan = [{"item_id": "i1", "kind": "activity", "title": "창덕궁",
+                "place": {"place_id": "px", "name": "창덕궁", "source_content_id": "a"}}]
+    titles = _titles(_run_with_trip(in_plan))
+    assert "창덕궁" not in titles
+    assert "덕수궁" in titles
+
+
+def test_same_place_under_another_id_is_excluded_by_name():
+    in_plan = [{"item_id": "i1", "kind": "activity", "title": "덕수궁 관람",
+                "place": {"place_id": "py", "name": "덕수궁"}}]
+    assert "덕수궁" not in _titles(_run_with_trip(in_plan))
+
+
+def test_trip_id_on_the_booking_finds_the_itinerary():
+    """코어가 `read.booking` 에 `trip_id` 를 올리면 `subject_ref` 없이도 일정 장소를 뺀다."""
+    values = {"read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": TUESDAY, "party_size": 2,
+                               "capacity": 4, "trip_id": "t1"},
+              "read.policy": [], "read.place": PLACE, "read.disruptions": CLEAR, "read.disaster": disaster_from(CLEAR),
+              "read.place_hours": _hours({**WEEK, "tue": "closed"}), "read.place_candidates": POOL,
+              "read.itinerary": {"trip": {"trip_id": "t1", "version": 1},
+                                 "items": [{"item_id": "i1", "kind": "activity", "title": "창덕궁",
+                                            "place": {"place_id": "px", "name": "창덕궁", "source_content_id": "a"}}]}}
+    result = asyncio.run(ActivityTeam(FakeTools(values)).execute(
+        task("activity", "activity.check_feasible", pack("activity", scope=["activity"]), ALLOWED)))
+    assert "창덕궁" not in _titles(result)
