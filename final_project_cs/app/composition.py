@@ -780,7 +780,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     Outside collection this remains the explicit standalone/unit-test assembly seam.
     Production stores the returned registrations in a per-controller BindingTable.
     """
-    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_alternatives, lodging_ledger, mobility_shapes, similarity, watch_planners
 
     if active_ids is not None:
         pass
@@ -876,6 +876,18 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                 adopt=lodging_ledger_impl.adopt_option,
                                 item_key=lodging_ledger_impl.item_key,
                                 offers=lodging_ledger_impl.shown_offers)
+        # ★`[2026-10-16 사용자 결정]` 확인 화면의 「다른 숙소」 후보도 숙소 팀이 고른다 — 팀의 「바꿔 줘」 고르기(`team._fresh_picks`)를 그대로 쓴다.
+        #   숙소 비교는 바깥 소스 하루 한도를 쓰므로 낮은 우선순위 몫(`travel.candidates.lodging_source_share`)으로 **부를 때** 소스를 만든다(만드는 것은 I/O 없음)
+        from app.domains.travel_ops.instances.lodging import review_alternatives as lodging_review_alternatives
+
+        def _lodging_rank(**query):
+            from app.core.settings import get_guardrails, get_settings
+            from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+
+            share = float(get_guardrails().get("travel.candidates.lodging_source_share"))
+            return lodging_review_alternatives.rank(travel=build_travel_sources(get_settings(), low_priority_share=share), **query)
+
+        lodging_alternatives.register(rank=_lodging_rank)
     # 팀 정기 작업 — 활성 팀이 `instances/<팀>/jobs.py` 에 `JOBS` 를 두면 등록한다. 작업 실행기가 시간대 안에서 부른다.
     #   `[2026-10-13]` 활동 → 코어 전달 사항 2번: 전에는 실행기에 작업이 고정돼 있어 팀 배치마다 코어를 고쳐야 했다.
     from app.domains.travel_ops.components.team_hooks import scheduled_jobs
@@ -902,7 +914,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
 
     names = {"mobility": ("legs",), "dining": ("dining_ledger", "dining_alternatives"), "activity": ("similarity", "activity_ledger", "activity_alternatives")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
-    hook_names = {**names, "lodging": ("lodging_ledger",)}
+    hook_names = {**names, "lodging": ("lodging_ledger", "lodging_alternatives")}
     connected = [name for owner, hooks in hook_names.items() if owner in active_ids for name in hooks]
     connected += [f"watch:{kind}" for kind in sorted(active_ids & names.keys())]
     for declaration in (config.teams if config else []):

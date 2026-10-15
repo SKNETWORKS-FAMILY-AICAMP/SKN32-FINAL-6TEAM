@@ -676,6 +676,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     return {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
             "engine": ("timetable" if engines == {"timetable"} else "estimate" if engines == {"estimate"}
                        else "mixed" if engines else None),
+            "party_size": party,          # `[2026-10-16]` 숙소 후보(숙소 팀 숙소 비교)가 인원을 읽는다 — 모르면 `None`
             "items": items, "moves": moves, "taxi_pricing": (pricing if pricing is not None else taxi_pricing.default()) if taxi_pick_on else None,
             "needs": {"items": needs_items, "moves": needs_moves, "total": needs_items + needs_moves},
             "ready": bool(items) and not got.problems and needs_items + needs_moves == 0}
