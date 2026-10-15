@@ -221,6 +221,53 @@ _clients: dict[tuple[str, float], Any] = {}
 _clients_lock = threading.Lock()
 
 
+#: OpenAI 엄격 스키마가 받지 않는 말 — 떼고 보낸다. 범위 · 개수 검사는 부르는 쪽 검증(`decide` 등)이 한다
+_STRICT_UNSUPPORTED = ("maxItems", "minItems", "minLength", "maxLength", "pattern", "format", "minimum", "maximum", "default")
+
+
+def strict_schema(schema: Any) -> Any:
+    """우리 스키마 → OpenAI 엄격 모드(`strict: True`) 스키마. `[2026-10-15]`
+    엄격 모드는 객체마다 모든 키가 `required` 이고 `additionalProperties: false` 여야 한다 — 원래 선택 키는 null 을 허용해 필수로 둔다.
+    ☆느슨한 모드에서 gpt-4o-mini 가 채팅 해석 스키마를 지키지 않았다(12/12 실패 — 스키마째 답하거나 사실 칸 값을 할 일 칸에 넣었다)."""
+    if isinstance(schema, list):
+        return [strict_schema(s) for s in schema]
+    if not isinstance(schema, dict):
+        return schema
+    out = {k: strict_schema(v) for k, v in schema.items() if k not in _STRICT_UNSUPPORTED}
+    props = schema.get("properties")
+    if schema.get("type") == "object" and isinstance(props, dict):
+        required = set(schema.get("required") or [])
+        out["properties"] = {k: (strict_schema(v) if k in required else _nullable(strict_schema(v)))
+                             for k, v in props.items()}
+        out["required"] = list(props)
+        out["additionalProperties"] = False
+    return out
+
+
+def _nullable(schema: dict[str, Any]) -> dict[str, Any]:
+    options = schema.get("anyOf")
+    if isinstance(options, list):
+        return schema if any(o.get("type") == "null" for o in options) else {**schema, "anyOf": [*options, {"type": "null"}]}
+    return {"anyOf": [schema, {"type": "null"}]}
+
+
+def _drop_optional_nulls(value: Any, schema: Any) -> Any:
+    """엄격 모드 답 → 원래 모양. 원래 선택 키가 null 이면 뺀다(부르는 쪽은 「없음」을 키가 없는 것으로 읽어 왔다)."""
+    if not isinstance(schema, dict):
+        return value
+    if isinstance(value, list):
+        return [_drop_optional_nulls(v, schema.get("items")) for v in value]
+    if isinstance(value, dict):
+        sub = schema
+        if "properties" not in sub and isinstance(sub.get("anyOf"), list):
+            sub = next((o for o in sub["anyOf"] if isinstance(o, dict) and o.get("type") == "object"), sub)
+        props = sub.get("properties") or {}
+        required = set(sub.get("required") or [])
+        return {k: _drop_optional_nulls(v, props.get(k)) for k, v in value.items()
+                if not (v is None and k not in required)}
+    return value
+
+
 class OpenAIChat:
     """`OllamaChat` 과 같은 메서드를 가진 OpenAI 쪽 — 서버용 키로 부른다. 클라이언트는 첫 호출 때 만든다(만드는 것 자체는 I/O 가 없다)."""
 
@@ -271,7 +318,8 @@ class OpenAIChat:
     @staticmethod
     def _object(text: str) -> dict[str, Any]:
         try:
-            value = json.loads(text)
+            # ★`[2026-10-15]` 문자열 안의 줄바꿈 · 탭(제어 문자)을 받는다 — gpt-4o-mini 엄격 모드가 「text」 칸에 넣어 「JSON 이 아니다」로 실패했다
+            value = json.loads(text, strict=False)
         except ValueError:
             raise OllamaContentError(f"JSON 이 아니다: {text[:80]}") from None
         if not isinstance(value, dict):
@@ -289,13 +337,19 @@ class OpenAIChat:
         return self._complete([{"role": "system", "content": system}, {"role": "user", "content": user}], max_tokens=800)
 
     def structured(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160) -> dict[str, Any]:
-        """스키마를 `response_format` 으로 준다(엄격하지 않게 — 우리 스키마는 키가 모두 필수가 아닌 곳이 있다). 검증은 부르는 쪽(`decide`)이 한다."""
+        """스키마를 `response_format` 으로 준다 — ★`[2026-10-15]` 엄격 모드(`strict_schema`)로 보내고 선택 키의 null 은 지워 돌려준다.
+        ☆전에는 `strict: False` 였다 — 모델이 스키마를 지키지 않았다(위 `strict_schema`). 검증은 여전히 부르는 쪽(`decide`)이 한다."""
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
         budget = max(300, int(num_predict) * 4)
+        strict = {"type": "json_schema", "json_schema": {"name": "answer", "schema": strict_schema(schema), "strict": True}}
         try:
-            text = self._complete(messages, response_format={"type": "json_schema",
-                                                             "json_schema": {"name": "answer", "schema": schema, "strict": False}},
-                                  max_tokens=budget)
+            text = self._complete(messages, response_format=strict, max_tokens=budget)
+            try:
+                return _drop_optional_nulls(self._object(text), schema)
+            except OllamaContentError:
+                # ★`[2026-10-15]` 엄격 모드에서도 가끔(5번 중 1번 실측) 깨진 문자가 섞인 JSON 을 낸다 — 같은 요청을 **한 번만** 다시 보낸다
+                text = self._complete(messages, response_format=strict, max_tokens=budget)
+                return _drop_optional_nulls(self._object(text), schema)
         except ModelCallError as exc:
             if exc.reason != "bad_request":
                 raise

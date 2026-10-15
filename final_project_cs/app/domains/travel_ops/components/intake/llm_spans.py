@@ -15,10 +15,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable
 
-from .rules import TIME, Claim, Span, _date_in, _hhmm, _narrow, meal_mention
+from .rules import _EAT, _EAT_BEFORE, TIME, Claim, Span, _date_in, _hhmm, _narrow, eat_mention, meal_mention
 from .span_segments import split_segments
 
-ROLES = ("place", "time", "date", "meal", "booking_no", "party", "plan_request", "ignore")
+ROLES = ("place", "time", "date", "meal", "eat", "booking_no", "party", "plan_request", "ignore")
 
 SYSTEM = (
     "You label parts of a traveller's itinerary lines (usually Korean). You get numbered lines. "
@@ -26,7 +26,10 @@ SYSTEM = (
     "(never fix typos, never translate, never add words), and its role.\n"
     "Roles: place (a place/shop/sight the traveller will visit), time (a clock time or time of day), "
     "date (a date or relative day such as 내일), time also includes relative-now expressions such as 지금/당장/현재, "
-    "meal (breakfast/lunch/dinner word), booking_no (reservation number), "
+    "meal (breakfast/lunch/dinner word), "
+    "eat (words saying the traveller will eat or drink AT that place, e.g. 먹고, 맛집, 한잔, 브런치, 카페, 커피 — not a meal word "
+    "that only tells the time such as 저녁 무렵 or 점심쯤, and not eating before leaving for the place such as 아침 먹고 나와서), "
+    "booking_no (reservation number), "
     "party (number of people), plan_request (they ask us to make a plan, e.g. '일정 짜 줘'), ignore.\n"
     'Return JSON only: {"spans": [{"line": 1, "quote": "...", "role": "place"}]}. '
     "If nothing is useful, return {\"spans\": []}.")
@@ -109,21 +112,34 @@ def label_lines(lines: list[str], unread: list[int], chat: Any, *, now: datetime
 def _line_items(number: int, text: str, spans: list[tuple[int, int, str, str]]) -> list[SpanItem]:
     """줄의 장소 조각마다 항목 하나 — 겹치지 않는 원문 구간을 보존한다."""
     places: list[tuple[int, int]] = []
+    eaten: set[tuple[int, int]] = set()
     for start, end, _, role in sorted(spans):
         if role != "place":
             continue
         s, e = _narrow(text, start, end)
+        # ★`[2026-10-15]` 모델이 「성수동 맛집」 · 「연남동 카페」처럼 「먹는다」 말까지 장소로 가리키면 그 앞까지가 이름이고 식사다(규칙 읽기와 같다)
+        inner = _EAT.search(text, s + 1, e) if e > s else None
+        if inner is not None and not _EAT_BEFORE.match(text, inner.end()):
+            s, e = _narrow(text, s, inner.start())
+            eaten.add((s, e))
         if e > s and not any(s < pe and ps < e for ps, pe in places):    # 겹치는 조각은 앞 것만
             places.append((s, e))
     # 모델이 끼니 말을 **시각**(숫자 없는 때)으로 짚었으면 그 판단을 따른다 — 「저녁엔 광장시장 가 보고 싶어」는 저녁에 가는 것이다.
     # 짚지 않았거나 끼니로 짚었으면 규칙이 정한다(「점심은 통인시장 근처에서」 — 모델이 아무것도 안 짚었다).
     as_time = [(start, end) for start, end, quote, role in spans if role == "time" and not TIME.search(quote)]
+    eats = [(start, end) for start, end, _, role in spans if role == "eat"]
     items: list[SpanItem] = []
     for (s, e), (left, right) in zip(places, split_segments(text, places)):
         mention = meal_mention(text[left:right], place_start=s - left)
         meal = mention[1] if mention and mention[2] else None
         if meal and any(left <= start < right and mention[0] in text[start:end] for start, end in as_time):
             meal = None
+        if meal is None and ((s, e) in eaten or eat_mention(text[left:right], place_end=e - left)):
+            meal = "meal"                 # ★`[2026-10-15]` 끼니 말 없이 「먹고」 · 「맛집」 · 「한잔」 — 끼니는 모르고 식사인 것만 안다
+        if meal is None and any(s <= start < right and not _EAT_BEFORE.match(text, end) for start, end in eats):
+            # ★`[2026-10-15]` 모델이 그 장소 **이름 뒤** 구간의 「먹는다」 조각을 원문 그대로 가리켰다 — 규칙 낱말 목록 밖의 말(「요기」 · 「칼국수」 …).
+            #   ☆이름 앞 조각은 받지 않는다 — 「밥 먹고 나서 창덕궁」의 「밥 먹고」를 모델이 eat 로 짚었다(실제 접수 모양 측정)
+            meal = "meal"
         items.append(SpanItem(number, Span(number, s, e, text[s:e]), None, meal, None,
                               segment=Span(number, left, right, text[left:right])))
     return items

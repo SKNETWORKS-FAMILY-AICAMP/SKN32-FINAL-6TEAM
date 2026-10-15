@@ -1,0 +1,12 @@
+{"id": "MH-001", "group": "meal_word", "text": "저녁은 마포 고깃집에서", "places": [{"name": "마포", "label": "dining"}], "why": "끼니 말"}
+{"id": "MH-002", "group": "eat_verb", "text": "망원시장에서 간단히 요기하고", "places": [{"name": "망원시장", "label": "dining"}], "why": "요기"}
+{"id": "MH-003", "group": "eat_verb", "text": "을지로에서 맥주 한 잔 하고 싶어요", "places": [{"name": "을지로", "label": "dining"}], "why": "마신다"}
+{"id": "MH-004", "group": "eat_verb", "text": "이태원 가서 브런치 먹고", "places": [{"name": "이태원", "label": "dining"}], "why": "브런치 먹고"}
+{"id": "MH-005", "group": "visit_only", "text": "삼청동 좀 돌아다니다가", "places": [{"name": "삼청동", "label": "activity"}], "why": "들르기만"}
+{"id": "MH-006", "group": "visit_only", "text": "오후에 성수동 들러서 팝업 구경", "places": [{"name": "성수동", "label": "activity"}], "why": "구경"}
+{"id": "MH-007", "group": "time_of_day", "text": "저녁쯤 반포한강공원 무지개분수 보러", "places": [{"name": "반포한강공원", "label": "activity"}], "why": "저녁쯤 = 때"}
+{"id": "MH-008", "group": "after_meal", "text": "점심 먹고 덕수궁 돌담길 산책", "places": [{"name": "덕수궁", "label": "activity"}], "why": "먹은 뒤"}
+{"id": "MH-009", "group": "multi", "text": "인사동 구경하고 저녁은 종로 빈대떡집에서", "places": [{"name": "인사동", "label": "activity"}, {"name": "종로", "label": "dining"}], "why": "뒤 장소의 저녁"}
+{"id": "MH-010", "group": "multi", "text": "통인시장에서 기름떡볶이 먹고 서촌 산책", "places": [{"name": "통인시장", "label": "dining"}, {"name": "서촌", "label": "activity"}], "why": "앞이 식사"}
+{"id": "MH-011", "group": "shop_name", "text": "하동관 가 보고 싶어요", "places": [{"name": "하동관", "label": "dining"}], "why": "가게 이름만"}
+{"id": "MH-012", "group": "shop_name", "text": "롯데월드타워 전망대", "places": [{"name": "롯데월드타워", "label": "activity"}], "why": "관광지"}
