@@ -8,7 +8,7 @@
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 import re
 from typing import Any, Literal
 
@@ -150,4 +150,48 @@ def settle_years(found: Interpretation, *, today: date, text: str = "") -> tuple
     return found, fixed
 
 
-__all__ = ["CALENDAR_DAYS", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]
+#: `[2026-10-15 사용자 판정 L02]` 모델이 날짜를 비웠을 때만 쓰는 규칙 — 「11월 14일부터 2박」
+_RULE_MONTH_DAY = re.compile(r"(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일")
+_RULE_NIGHTS = re.compile(r"(?<!\d)(\d{1,2})\s*박(?!\s*에?\s*(?:최대\s*)?\d+\s*만)(?!\s*\d+\s*만)")
+_RULE_UNTIL = re.compile(r"(?<!\d)(\d{1,2})\s*일\s*까지")
+
+
+def rule_dates(found: Interpretation, text: str, *, today: date) -> tuple[Interpretation, bool]:
+    """모델이 체크인을 **비웠을 때만** 문장 규칙으로 채운다. (해석, 채웠나)
+
+    ☆2026-10-15 17:49 playdata 검수 L02 — 「11월 14일부터 2박 어른 2명 아이 2명 …」에서 모델이 날짜를 비워 되물었다(17:32 에는 읽음).
+    문장에 「N월 N일」이 **하나**이고 박 수(가격 말 「1박 20만 원」은 뺀다)가 한 값이거나 「N일까지」가 있을 때만 — 애매하면 그대로 둔다.
+    연도는 오늘 뒤로 가장 가까운 해. 근거 조각(`check_in_text` · `check_out_text`)도 문장 글자 그대로 남긴다."""
+    if found.check_in is not None or found.task not in ("search", "my_stay"):
+        return found, False
+    days = list(_RULE_MONTH_DAY.finditer(text or ""))
+    if len(days) != 1:
+        return found, False
+    month, day = int(days[0].group(1)), int(days[0].group(2))
+    try:
+        start = date(today.year, month, day)
+        if start < today:
+            start = date(today.year + 1, month, day)
+    except ValueError:
+        return found, False
+    nights = {int(match.group(1)) for match in _RULE_NIGHTS.finditer(text)}
+    until = list(_RULE_UNTIL.finditer(text))
+    end, end_text = None, None
+    if len(nights) == 1 and not until:
+        count = nights.pop()
+        if 1 <= count <= 30:
+            end, end_text = start + timedelta(days=count), f"{count}박"
+    elif not nights and len(until) == 1:
+        try:
+            end = date(start.year, start.month, int(until[0].group(1)))
+        except ValueError:
+            end = None
+        end_text = until[0].group(0) if end and end > start else None
+        end = end if end_text else None
+    update = {"check_in": start, "check_in_text": days[0].group(0)}
+    if end is not None and found.check_out is None:
+        update.update(check_out=end, check_out_text=end_text)
+    return found.model_copy(update=update), True
+
+
+__all__ = ["CALENDAR_DAYS", "rule_dates", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]

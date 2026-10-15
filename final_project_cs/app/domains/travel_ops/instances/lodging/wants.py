@@ -31,6 +31,8 @@ NOT_HOTEL = frozenset({"게스트하우스", "호스텔", "모텔", "한옥", "�
 _AVOID = re.compile(r"(한옥|게스트하우스|게하|호스텔|모텔|펜션|리조트)\s*(?:은|는|이나|나)?\s*(?:말고|빼고|제외|싫|아니)")
 _STARS = re.compile(r"(?<![\d.])([1-5](?:\.5)?)\s*성(?!인)(?:급|짜리)?")
 _NO_DORM = re.compile(r"여자\s*친구|남자\s*친구|여친|남친|커플|연인|기념일|분위기|신혼|허니문|프러포즈|프로포즈|고급|럭셔리")
+#: 「반영 못 함」에서 지울 동행 말(호스텔 · 게스트하우스를 빼는 것으로 반영) — 「분위기 좋은」 「고급」은 숙소 성격이라 남긴다(☆10-15 17:32 검수 L01)
+_COMPANION = re.compile(r"여자\s*친구|남자\s*친구|여친|남친|커플|연인|신혼|허니문")
 _CHEAP = re.compile(r"(?<!비)싼|(?<!비)싸게|저렴|가성비|최저가")
 _WALK = re.compile(r"도보|걸어서|걸어\s*갈|걸어\s*다닐|걸을\s*수|역세권")
 _NEAR = re.compile(r"근처|가까운|가까이|가깝|인근|주변|바로\s*앞")
@@ -68,6 +70,7 @@ def read_wants(text: str | None) -> Wants:
     if star:
         words.append(star.group(0))
     no_dorm = bool(_NO_DORM.search(text)) or (stars is not None and stars >= 4)
+    words += [match.group(0) for match in _COMPANION.finditer(text)]
     cheap = _CHEAP.search(text)
     if cheap:
         words.append(cheap.group(0))
@@ -132,7 +135,38 @@ def kind_reason(wants: Wants, kinds: frozenset[str], *, strict: bool = True) -> 
         return "kind" if kinds and kinds & NOT_HOTEL and "호텔" not in kinds else None
     if wants.kind in kinds:
         return None
-    return "kind" if strict or kinds else None
+    # `[2026-10-15 사용자 판정 L06]` 한옥은 이름에 「한옥 · hanok」이 확실히 있을 때만(구글 칸도) — 「나인트리 인사동」이 한옥처럼 섞였다
+    return "kind" if strict or kinds or wants.kind == "한옥" else None
+
+
+#: `[2026-10-15 사용자 판정 L05]` 이용 조건이 붙은 숙소 이름(「YAB-GuestHouse, FemaleOnly, ForeignOnly」) — 성별 · 국적 · 나이를 모르면 바로 주지 않는다
+_RESTRICTED = (("여성 전용", re.compile(r"female\s*only|women\s*only|ladies\s*only|여성\s*전용|여성만|여자\s*전용", re.I)),
+               ("남성 전용", re.compile(r"male\s*only|men\s*only|남성\s*전용|남성만|남자\s*전용", re.I)),
+               ("외국인 전용", re.compile(r"foreign(?:er)?s?\s*only|외국인\s*전용|외국인만", re.I)),
+               ("내국인 전용", re.compile(r"korean\s*only|내국인\s*전용|내국인만", re.I)),
+               ("성인 전용", re.compile(r"adults?\s*only|성인\s*전용|노\s*키즈|no\s*kids", re.I)))
+
+
+def restriction(name: str | None) -> str | None:
+    """숙소 이름에 보이는 이용 조건(「여성 전용」 · 「외국인 전용」 …). 여럿이면 「 · 」로 잇는다. 없으면 `None`.
+    ★「female only」 안에 「male only」가 들어 있어 남성 쪽은 앞 글자가 없을 때만 본다."""
+    text = str(name or "")
+    found = []
+    for label, pattern in _RESTRICTED:
+        for match in pattern.finditer(text):
+            if label == "남성 전용" and match.start() > 0 and text[match.start() - 2:match.start()].lower().endswith("fe"):
+                continue
+            found.append(label)
+            break
+    return " · ".join(found) or None
+
+
+#: `[2026-10-15 사용자 판정 L10]` 반려동물 말
+_PET = re.compile(r"반려\s*(?:견|동물|묘)|강아지|애견|댕댕|고양이|(?<![가-힣])펫(?!트)")
+
+
+def wants_pet(text: str | None) -> bool:
+    return bool(_PET.search(str(text or "")))
 
 
 def stars_reason(wants: Wants, stars: float | None) -> str | None:
@@ -169,5 +203,5 @@ def summary(wants: Wants) -> list[str]:
     return out
 
 
-__all__ = ["DORMS", "NOT_HOTEL", "Wants", "kind_reason", "read_wants", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
+__all__ = ["DORMS", "NOT_HOTEL", "Wants", "kind_reason", "read_wants", "restriction", "wants_pet", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
            "strip_handled", "summary"]
