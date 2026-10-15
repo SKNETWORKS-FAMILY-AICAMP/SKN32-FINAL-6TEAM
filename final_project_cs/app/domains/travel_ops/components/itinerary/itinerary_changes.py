@@ -541,6 +541,31 @@ def route_targets(route: dict[str, Any]) -> list[str]:
     return sorted({target for option in route["options"] for target in option.get("uses", [])})
 
 
+def option_hits(option: dict[str, Any], events: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """경로 후보 **하나**가 실제로 걸린 사건만 — `{대상: 사건}`. `events` 는 모든 후보 대상을 한꺼번에 물은 결과다(`route_targets`).
+
+    ★`[2026-10-13]` 그 후보가 도로 구간 번호(`링크:`)를 실었으면 도로명만 맞는 사건은 **구간 번호로 다시 거른다**:
+      사건의 구간 번호와 겹치면 → 그 `링크:` 결과로 이미 잡힌다(구간 · 방향 확인 `link_overlap`).
+      안 겹치는데 원문이 양방향 통제면 → 남긴다(반대 방향 구간 번호를 몰라 `unverified` 그대로).
+      안 겹치고 한 방향 통제면 → **뺀다** — 다른 방향 · 다른 구간의 사건이다(반대 방향 오탐 방지).
+      사건 쪽 구간 번호를 모르면(다른 소스 · 원문에 없음) → 남긴다(모르는 것을 「안 걸림」으로 바꾸지 않는다).
+    ★구간 번호가 없는 후보는 예전과 같다 — 도로명 후보는 `road_name_only` 로 남아 자동 변경을 시작하지 않는다(`plan_route_adjustment`)."""
+    uses = list(option.get("uses") or [])
+    links = {target.partition(":")[2] for target in uses if target.startswith("링크:")}
+    hits: dict[str, dict[str, Any]] = {}
+    for target in uses:
+        event = events.get(target)
+        if event is None:
+            continue
+        if links and target.startswith("도로:") and event.get("incident_links"):
+            if set(event["incident_links"]) & links:
+                continue                                   # 같은 사건을 `링크:` 결과가 이미 구간 근거와 함께 잡았다
+            if not event.get("both_directions"):
+                continue                                   # 이 후보의 구간에 그 사건의 구간이 없다
+        hits[target] = event
+    return hits
+
+
 def planned_option(item: Item, route: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     options = {option["id"]: option for option in route["options"]}
     chosen = str(item.detail.get("option") or route["planned"])
@@ -555,7 +580,7 @@ def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str
       장소를 알 때 **사고를 반영해 새 경로를 찾는다**(사건 → 계산기 사고 조건 변환은 뜻이 같은 것만 — wiring).
       출발은 지금·앞 일정 끝 중 늦은 쪽 이후. 옮기지 못한 사건(도로 통제)은 결과에 이름으로 남긴다."""
     chosen, planned = planned_option(item, route)
-    hit = {target: events[target] for target in planned.get("uses", []) if target in events}
+    hit = option_hits(planned, events)
     if not hit:
         return NoChange("clear")
     causes = [{"category": "route_event", "target": target, **event}
@@ -1434,5 +1459,5 @@ def plan_rollback(*, trip_version: int, base_version: int, current_items: list[I
 __all__ = ["DINING_RADIUS_M", "ItineraryChange", "NoChange", "Plan", "applied_record",
            "minutes_between", "next_after", "object_particle", "plan_activity_adjustment",
            "plan_closed", "plan_closed_on_day", "plan_delay", "plan_nearby_store", "plan_rollback",
-           "plan_route_adjustment", "plan_swap", "planned_option", "route_of", "route_targets",
+           "option_hits", "plan_route_adjustment", "plan_swap", "planned_option", "route_of", "route_targets",
            "title_for", "with_request"]

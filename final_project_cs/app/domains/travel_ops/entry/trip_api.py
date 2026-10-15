@@ -2314,6 +2314,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         from app.domains.travel_ops.modules.live_progress import model_warmup
 
         tenant, customer = who
+        # ★`[2026-10-13]` 규정 검색의 임베딩 모델도 함께 깨운다(`retriever.warm_embedding` — 식은 채로 두면 규정·날씨 질문이 모두 오류였다)
+        from app.infrastructure.rag.retriever import warm_embedding
+
+        background.add_task(warm_embedding)
         return model_warmup.warmup(
             _lazy("chat", chat_factory), count=lambda: _count("warmup", tenant, customer, http),
             defer=background.add_task,

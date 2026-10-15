@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 제품 안내
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 현재 제품의 목적·범위·이용 주체 문서 목차
 status: draft
 domain: travel
 ---

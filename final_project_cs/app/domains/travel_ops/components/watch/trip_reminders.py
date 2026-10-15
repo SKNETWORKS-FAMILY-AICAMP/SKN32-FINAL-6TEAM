@@ -52,7 +52,7 @@ from zoneinfo import ZoneInfo
 from app.infrastructure.notify.phrase import Phrase
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleDeparture, TripStore
-from app.domains.travel_ops.components.itinerary.itinerary_changes import planned_option, route_of, route_targets
+from app.domains.travel_ops.components.itinerary.itinerary_changes import option_hits, planned_option, route_of, route_targets
 from app.domains.travel_ops.components.planning.pending import PendingStore
 from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS
 
@@ -472,7 +472,7 @@ def build_departure(move: Item, items: list[Item], *, route_events: Any, routes:
         if events is None:
             # ★결정 15 — 경로를 못 읽었는데 「그럴듯한 경로 문장」을 보내지 않는다.
             return "fatal", None
-        if any(target in events for target in planned.get("uses", [])):
+        if option_hits(planned, events):
             return "held", None
         unsupported_of = getattr(route_events, "unsupported", None)
         blind = unsupported_of(list(planned.get("uses", []))) if callable(unsupported_of) else []

@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 제품 코드 읽기
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: cs 구현 wiki 를 처음 읽는 순서 — 개발 역할과 코드·시험 안내부터
 status: draft
 domain: travel
 ---

@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 도구 권한과 호출 예산
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 도구 호출은 ReadToolbox를 거치며 allowed_tools 밖의 호출·예산 초과를 드러냅니다
 status: draft
 domain: travel
 ---

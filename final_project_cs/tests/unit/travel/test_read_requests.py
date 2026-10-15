@@ -74,13 +74,25 @@ def test_ambiguous_departure_never_uses_the_destination_next_leg():
 
 
 def test_customer_selected_place_conflict_is_exposed_and_keeps_target_for_followup():
+    """★`[2026-10-14]` 고객이 고른 장소로 답하되 제목과 다른 곳임을 먼저 밝힌다 — 전에는 되묻기만 하고 아무 정보도 주지 않았다."""
     a=item("솔빛전시관",1)
     a.place["name"]="바람축제"
     a.detail={"provenance":{"place":{"method":"customer"}}}
     result,basis,focus=render([a],[read("hours")],"솔빛전시관 운영시간")
-    assert a.title in result["text"] and "바람축제" in result["text"]
-    assert basis["questions"][0]["unresolved"] == "place_identity"
-    assert focus["item_id"] == str(a.item_id)
+    assert result["text"].startswith("「솔빛전시관」 일정에 연결된 장소는 등록 때 고르신 「바람축제」이라 「바람축제」 기준으로 답할게요.")
+    assert "제목의 「솔빛전시관」 자체 정보는 아니에요." in result["text"]
+    question = basis["questions"][0]
+    assert "unresolved" not in question and question["place_identity"]["place"] == "바람축제"
+    assert question["item_id"] == str(a.item_id) and focus["item_id"] == str(a.item_id)
+    assert a.title == "솔빛전시관"                                   # 원래 일정 항목은 그대로다
+
+
+def test_a_title_that_contains_the_place_name_is_not_a_conflict():
+    a=item("경복궁 관람",1)
+    a.place["name"]="경복궁"
+    a.detail={"provenance":{"place":{"method":"customer"}}}
+    result,basis,_=render([a],[read("hours")],"경복궁 운영시간")
+    assert "등록 때 고르신" not in result["text"] and "place_identity" not in basis["questions"][0]
 
 
 def test_absent_booking_requirement_does_not_become_no_reservation_needed():

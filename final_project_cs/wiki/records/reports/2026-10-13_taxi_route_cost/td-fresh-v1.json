@@ -1,0 +1,264 @@
+{
+ "summary": {
+  "static": {
+   "n": 12,
+   "mae": 1583,
+   "med_err": -1150.0,
+   "under": 10,
+   "within_1000": 6,
+   "km_ratio_med": 0.923,
+   "min_ratio_med": 1.021
+  },
+  "td": {
+   "n": 12,
+   "mae": 767,
+   "med_err": -100.0,
+   "under": 6,
+   "within_1000": 10,
+   "km_ratio_med": 1.007,
+   "min_ratio_med": 0.85
+  }
+ },
+ "rows": [
+  {
+   "id": "T01",
+   "kakao_km": 15.9,
+   "kakao_min": 17,
+   "kakao_taxi": 19400,
+   "static": {
+    "km": 15.3,
+    "min": 18.6,
+    "meter": 18800,
+    "slow_s": 81,
+    "err": -600
+   },
+   "td": {
+    "km": 15.87,
+    "min": 16.2,
+    "meter": 19200,
+    "slow_s": 81,
+    "err": -200
+   }
+  },
+  {
+   "id": "T02",
+   "kakao_km": 6.2,
+   "kakao_min": 14,
+   "kakao_taxi": 11100,
+   "static": {
+    "km": 6.92,
+    "min": 14.8,
+    "meter": 11100,
+    "slow_s": 71,
+    "err": 0
+   },
+   "td": {
+    "km": 6.92,
+    "min": 13.4,
+    "meter": 11100,
+    "slow_s": 71,
+    "err": 0
+   }
+  },
+  {
+   "id": "T03",
+   "kakao_km": 10.6,
+   "kakao_min": 19,
+   "kakao_taxi": 14100,
+   "static": {
+    "km": 10.65,
+    "min": 19.3,
+    "meter": 14400,
+    "slow_s": 41,
+    "err": 300
+   },
+   "td": {
+    "km": 10.64,
+    "min": 19.0,
+    "meter": 14400,
+    "slow_s": 41,
+    "err": 300
+   }
+  },
+  {
+   "id": "T04",
+   "kakao_km": 5.7,
+   "kakao_min": 14,
+   "kakao_taxi": 10900,
+   "static": {
+    "km": 5.41,
+    "min": 10.3,
+    "meter": 10000,
+    "slow_s": 139,
+    "err": -900
+   },
+   "td": {
+    "km": 5.22,
+    "min": 9.9,
+    "meter": 10000,
+    "slow_s": 187,
+    "err": -900
+   }
+  },
+  {
+   "id": "T05",
+   "kakao_km": 10.8,
+   "kakao_min": 19,
+   "kakao_taxi": 14800,
+   "static": {
+    "km": 9.44,
+    "min": 19.0,
+    "meter": 13400,
+    "slow_s": 75,
+    "err": -1400
+   },
+   "td": {
+    "km": 14.99,
+    "min": 17.4,
+    "meter": 18400,
+    "slow_s": 34,
+    "err": 3600
+   }
+  },
+  {
+   "id": "T06",
+   "kakao_km": 17.7,
+   "kakao_min": 24,
+   "kakao_taxi": 21200,
+   "static": {
+    "km": 12.99,
+    "min": 29.2,
+    "meter": 16400,
+    "slow_s": 30,
+    "err": -4800
+   },
+   "td": {
+    "km": 18.25,
+    "min": 19.4,
+    "meter": 21200,
+    "slow_s": 0,
+    "err": 0
+   }
+  },
+  {
+   "id": "T07",
+   "kakao_km": 14.8,
+   "kakao_min": 23,
+   "kakao_taxi": 19300,
+   "static": {
+    "km": 13.26,
+    "min": 23.6,
+    "meter": 17200,
+    "slow_s": 137,
+    "err": -2100
+   },
+   "td": {
+    "km": 13.94,
+    "min": 19.8,
+    "meter": 17800,
+    "slow_s": 143,
+    "err": -1500
+   }
+  },
+  {
+   "id": "T08",
+   "kakao_km": 24.3,
+   "kakao_min": 30,
+   "kakao_taxi": 27400,
+   "static": {
+    "km": 21.33,
+    "min": 31.1,
+    "meter": 24000,
+    "slow_s": 11,
+    "err": -3400
+   },
+   "td": {
+    "km": 24.57,
+    "min": 27.7,
+    "meter": 27000,
+    "slow_s": 11,
+    "err": -400
+   }
+  },
+  {
+   "id": "T09",
+   "kakao_km": 11.0,
+   "kakao_min": 18,
+   "kakao_taxi": 15500,
+   "static": {
+    "km": 10.63,
+    "min": 16.1,
+    "meter": 14800,
+    "slow_s": 161,
+    "err": -700
+   },
+   "td": {
+    "km": 12.66,
+    "min": 15.1,
+    "meter": 16200,
+    "slow_s": 55,
+    "err": 700
+   }
+  },
+  {
+   "id": "T10",
+   "kakao_km": 15.2,
+   "kakao_min": 21,
+   "kakao_taxi": 18800,
+   "static": {
+    "km": 11.55,
+    "min": 27.1,
+    "meter": 15800,
+    "slow_s": 186,
+    "err": -3000
+   },
+   "td": {
+    "km": 14.39,
+    "min": 17.4,
+    "meter": 18000,
+    "slow_s": 118,
+    "err": -800
+   }
+  },
+  {
+   "id": "T11",
+   "kakao_km": 2.6,
+   "kakao_min": 9,
+   "kakao_taxi": 7800,
+   "static": {
+    "km": 2.25,
+    "min": 5.7,
+    "meter": 6400,
+    "slow_s": 0,
+    "err": -1400
+   },
+   "td": {
+    "km": 4.19,
+    "min": 5.3,
+    "meter": 8200,
+    "slow_s": 0,
+    "err": 400
+   }
+  },
+  {
+   "id": "T12",
+   "kakao_km": 6.6,
+   "kakao_min": 11,
+   "kakao_taxi": 10900,
+   "static": {
+    "km": 6.4,
+    "min": 9.0,
+    "meter": 10500,
+    "slow_s": 31,
+    "err": -400
+   },
+   "td": {
+    "km": 6.4,
+    "min": 9.0,
+    "meter": 10500,
+    "slow_s": 31,
+    "err": -400
+   }
+  }
+ ]
+}

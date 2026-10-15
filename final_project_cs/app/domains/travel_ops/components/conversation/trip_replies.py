@@ -98,6 +98,10 @@ def question_reply(*, message: str, items: list[Any], tenant_id: str,
     try:
         chunks = policy_search(tenant_id=tenant_id, query=query, allowed_scopes=scopes, top_k=3) or []
     except Exception as exc:                          # noqa: BLE001 — 검색 실패도 답에 그대로 말한다
+        # ★`[2026-10-13]` 이유를 로그에도 남긴다 — 전에는 처리 기록에 `RuntimeError` 이름만 남아 원인을 x600 서버에서 다시 재현해야 했다
+        import logging
+
+        logging.getLogger(__name__).warning("policy search failed: %s: %s", type(exc).__name__, str(exc)[:300])
         lines = [fact] if fact else []
         lines.append("여행 규정을 찾다가 오류가 나서 규정에 관한 답은 드리지 못했어요. "
                      "잠시 뒤 다시 물어봐 주세요. 일정은 바꾸지 않았어요.")

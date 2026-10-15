@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 발표 일정과 현재 준비
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 중간·최종 발표 일정 문서의 목차 — 과거 카운트다운·비용 수치는 오늘 값으로 쓰지 않는다
 status: draft
 domain: travel
 ---

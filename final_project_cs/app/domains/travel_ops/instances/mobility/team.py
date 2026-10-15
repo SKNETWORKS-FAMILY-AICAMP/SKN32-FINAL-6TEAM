@@ -138,7 +138,8 @@ class MobilityTeam(ItineraryWork, TravelTeamBase):
                 claim = e.get("claim", "")
             except ValueError:
                 at, claim = decided, f"{e.get('claim', '')} (자료 시각 표기: {raw or '없음'})"
-            evidence.append(Evidence(evidence_id=e["evidence_id"], source_type=e["source_type"],
+            source_type, claim = _contract_source_type(e.get("source_type"), claim)
+            evidence.append(Evidence(evidence_id=e["evidence_id"], source_type=source_type,
                                      source_id=e["source_id"], claim=claim, value=e.get("value"),
                                      confidence=e.get("confidence", 0.2), observed_at=at))
         return self._result(task, outcome=out["outcome"], confidence=out.get("confidence", 0.0),
@@ -183,3 +184,18 @@ def plan_mobility_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, An
     return plan_route_adjustment(item=item, following=next_after(ctx["items"], item), route=route,
                                  events=view["events"], now=ctx["at"],
                                  previous=place_before(ctx["items"], item))   # #38·#39 계산기 재탐색의 출발지
+
+#: ★`[2026-10-14]` 계산기 · 자료가 쓰는 출처 종류 → 공통 계약(`Evidence.source_type`)의 종류. 계약 밖 값이면 계약 검사에서 판정 전체가 죽었다
+#:  (사람이 공식 누리집에서 확인해 우리 DB 에 둔 운영시간 `official_web` — `tests/e2e/test_mobility_engine_flow.py`). 원래 종류는 근거 문장에 남긴다.
+_SOURCE_TYPE = {"official_web": "db", "tour_api": "db", "api": "tool_result"}
+_CONTRACT_SOURCE_TYPES = frozenset({"customer_message", "db", "policy", "tool_result", "case_event", "remote_agent"})
+
+
+def _contract_source_type(raw: Any, claim: str) -> tuple[str, str]:
+    """(계약의 출처 종류, 근거 문장). 계약에 있는 값은 그대로, 아는 값은 바꾸고 원래 값을 문장 끝에 적는다. 모르는 값은 숨기지 않고 실패한다."""
+    value = str(raw or "db")
+    if value in _CONTRACT_SOURCE_TYPES:
+        return value, claim
+    if value not in _SOURCE_TYPE:
+        raise ValueError(f"이동 계산기의 근거 출처 종류를 계약으로 옮길 수 없다: {value!r}")
+    return _SOURCE_TYPE[value], f"{claim} (원 출처 종류: {value})"

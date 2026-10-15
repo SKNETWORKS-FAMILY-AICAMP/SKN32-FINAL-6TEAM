@@ -107,3 +107,10 @@ def test_the_runner_accepts_a_team_job_name(monkeypatch):
     monkeypatch.setattr(run_sweepers, "_round_result", lambda tenant, only: seen.append(only) or {})
     monkeypatch.setattr("sys.argv", ["run_sweepers", "--only", "team:fake_live_status"])
     assert run_sweepers.main() == 0 and seen == ["team:fake_live_status"]
+
+def test_running_one_team_job_by_hand_goes_through_the_assembly(monkeypatch):
+    """`--only team:<이름>` 도 조립 판 안에서 돈다 — 작업 목록이 거기에만 있다. `[2026-10-14]` 전에는 조립 없이 돌아 빈 결과로 끝났다."""
+    seen = []
+    monkeypatch.setattr(run_sweepers, "_run_bound_once", lambda tenant_id, only: seen.append(only) or {"bound": {}})
+    assert run_sweepers._run_once("demo", "team:activity_live_status") == {"bound": {}}
+    assert seen == ["team:activity_live_status"]

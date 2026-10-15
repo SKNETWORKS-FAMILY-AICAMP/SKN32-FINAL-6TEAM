@@ -51,7 +51,10 @@ def test_missing_minutes_waits_and_reply_reaches_same_real_team(decided):
     after = _saved(first["case_id"])
     assert after[2] == "dining" and after[3]["customer_input"] == "30분이요"
     assert after[3]["customer_input_history"] == ["아직 몰라요", "30분이요"]
-    assert len(decided["decider"].prompts) == 1
+    # ★`[2026-10-13]` 형식에 안 맞는 답(「아직 몰라요」)은 새 요청인지 해석 모델이 한 번 읽어 본다 — 완결된 요청이 아니라서 대기 건의 답으로 넘긴다.
+    #   형식에 맞는 답(「30분이요」)은 모델을 다시 부르지 않는다.
+    assert len(decided["decider"].prompts) == 2
+    assert decided["decider"].prompts[1].rsplit("고객 문장:", 1)[1].strip() == "아직 몰라요"
 
 
 def test_initial_request_retry_does_not_consume_waiting_token(decided):
@@ -158,3 +161,25 @@ def test_delayed_protected_meal_keeps_itinerary_and_answers_with_actual_question
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT count(*) FROM itinerary_versions WHERE trip_id=%s", (decided["trip"]["trip_id"],))
         assert cur.fetchone()[0] == 1
+
+
+def test_a_complete_new_request_while_a_question_waits_is_handled_as_a_new_request(decided):
+    """되묻기를 기다리는 중에 웹이 대기 건 번호를 붙여 보내도, 새 문장이 혼자서 완결된 요청이면 새로 처리한다.
+    전에는 무엇을 말해도 같은 되묻기만 돌아왔다(x600 서버 웹 채팅 시험 2026-10-13: 20건)."""
+    first = _say(decided, "바꿔", "resume-new-start")
+    assert first["case_status"] == "waiting_input"
+    asked = _saved(first["case_id"])
+    question = _say(decided, "성수 점심 식당 알려줘", "resume-new-question", case_id=first["case_id"],
+                    resume_token=first.get("resume_token"), expected_version=first["version"])
+    assert question["case_id"] != first["case_id"] and question["status"] == "answered", question
+    assert "성수 점심" in question["answer"]
+    assert _saved(first["case_id"])[:2] == asked[:2]            # 앞의 대기 건은 건드리지 않았다
+    change = _say(decided, "점심 다른 데로 바꿔", "resume-new-change", case_id=first["case_id"])
+    assert change["case_id"] != first["case_id"] and change["status"] == "adjusted", change
+
+
+def test_an_incomplete_reply_still_answers_the_waiting_question(decided):
+    """혼자서는 뜻이 안 서는 말은 지금처럼 대기 중인 질문의 답으로 넘긴다."""
+    first = _say(decided, "바꿔", "resume-incomplete-start")
+    reply = _say(decided, "음 글쎄", "resume-incomplete-reply", case_id=first["case_id"])
+    assert reply["case_id"] == first["case_id"], reply

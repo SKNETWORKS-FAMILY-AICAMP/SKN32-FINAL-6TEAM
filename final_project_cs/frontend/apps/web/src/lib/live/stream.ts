@@ -37,7 +37,10 @@ export interface StreamTiming {
   reconnectMs: readonly number[];
 }
 
-export const STREAM_TIMING: StreamTiming = { watchdogMs: 7_000, reconnectMs: [1_000, 2_000, 4_000] };
+// ★`[2026-10-14]` The reconnects now span about 30 s (they were 7 s): the automatic deploy on x600 swaps the API container
+//   several times a day and an answer in flight is cut while the new one starts — two of the first 22 chat turns of the
+//   2026-10-14 live re-run were lost exactly at a deploy (10:11 · 10:19). Sending again is safe: the request carries its own id.
+export const STREAM_TIMING: StreamTiming = { watchdogMs: 7_000, reconnectMs: [1_000, 2_000, 4_000, 8_000, 15_000] };
 
 type Body = Record<string, unknown>;
 
@@ -79,6 +82,14 @@ async function attempt<T>(path: string, language: Language, init: RequestInit, t
     return { kind: "lost" };
   }
   clearTimeout(headerLimit);
+  // ★`[2026-10-14]` The gateway in front of the API (Cloudflare · Caddy) answers 502/504 when it cannot reach the API for a moment —
+  //   e.g. while the automatic deploy swaps the API container (x600: several deploys a day, no retry in the gateway). The API itself
+  //   never sends these on the customer routes, and the request carries its own id, so this is a dropped line, not a refusal:
+  //   send the very same request again (the server answers `duplicate` if it did get it). Before, the first try showed an error.
+  if (response.status === 502 || response.status === 504) {
+    void response.body?.cancel().catch(() => undefined);
+    return { kind: "lost" };
+  }
   if (!response.ok) throw sessionChecked(await refusal(response, language), language);
   if (!(response.headers.get("content-type") ?? "").includes("text/event-stream") || !response.body) {
     return { kind: "done", value: await response.json() as T };

@@ -1,7 +1,7 @@
 ---
 type: runbook
 title: 여행 서비스 상시 운영 점검·복구
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 고객용 여행 웹·API와 일정 감시·알림 배달이 개발용 터미널 창과 무관하게 지속 실행되는지 확인하는 절차입니다
 status: draft
 domain: travel
 ---

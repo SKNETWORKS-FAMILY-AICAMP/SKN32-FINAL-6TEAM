@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 프로젝트 조사 자료
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: 조사는 확인한 근거를, 결정은 채택한 정책을 기록합니다
 status: draft
 domain: travel
 ---

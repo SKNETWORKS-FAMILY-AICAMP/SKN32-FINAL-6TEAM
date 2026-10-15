@@ -1,0 +1,74 @@
+[
+ {
+  "id": "T01",
+  "km": 15.28,
+  "links": 22,
+  "topis_pct": 88.2
+ },
+ {
+  "id": "T02",
+  "km": 7.01,
+  "links": 17,
+  "topis_pct": 85.6
+ },
+ {
+  "id": "T03",
+  "km": 10.8,
+  "links": 20,
+  "topis_pct": 92.4
+ },
+ {
+  "id": "T04",
+  "km": 5.22,
+  "links": 9,
+  "topis_pct": 88.0
+ },
+ {
+  "id": "T05",
+  "km": 10.13,
+  "links": 18,
+  "topis_pct": 91.9
+ },
+ {
+  "id": "T06",
+  "km": 18.2,
+  "links": 24,
+  "topis_pct": 78.9
+ },
+ {
+  "id": "T07",
+  "km": 14.13,
+  "links": 21,
+  "topis_pct": 85.5
+ },
+ {
+  "id": "T08",
+  "km": 25.18,
+  "links": 24,
+  "topis_pct": 67.3
+ },
+ {
+  "id": "T09",
+  "km": 12.47,
+  "links": 18,
+  "topis_pct": 69.5
+ },
+ {
+  "id": "T10",
+  "km": 14.39,
+  "links": 23,
+  "topis_pct": 90.2
+ },
+ {
+  "id": "T11",
+  "km": 2.18,
+  "links": 5,
+  "topis_pct": 77.9
+ },
+ {
+  "id": "T12",
+  "km": 6.41,
+  "links": 12,
+  "topis_pct": 89.2
+ }
+]

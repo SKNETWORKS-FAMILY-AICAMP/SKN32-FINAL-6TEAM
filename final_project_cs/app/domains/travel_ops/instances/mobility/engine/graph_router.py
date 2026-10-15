@@ -62,6 +62,7 @@ SNAP_TIE_M = 12.0                                  # 가장 가까운 간선보�
 CELL_LAT, CELL_LON = 0.004, 0.005                  # 격자 한 칸 ≈ 440 m
 F_CAR, F_BIKE, F_MAIN, F_BMAIN = 1, 2, 4, 8
 F_FOOT, F_FMAIN, F_STEPS = 16, 32, 64                # road_graph_v2 — 걸음 통행 · 걸음 최대 연결 성분 · 계단
+F_INDOOR = 128                                       # walk_graph_seoul_v3 — 역·지하상가 안 통로(도로명주소 내부도로 전자지도)
 
 
 def decode_polyline(s, precision=1e6):
@@ -135,9 +136,11 @@ class GraphRouter:
                 self._graph_version = m.get("version") or "road_graph_v1"
                 day = str(m.get("osm_data_at") or "")[:10]
                 if str(m.get("version") or "").startswith("walk_graph_seoul"):
-                    # 서울시 도보 네트워크(원자료 갱신일) + 계단 표시에 쓴 OSM 기준일
+                    # 서울시 도보 네트워크(원자료 갱신일) + 계단 표시에 쓴 OSM 기준일 (+ v3: 역·지하상가 안 통로 원자료 판)
                     wd = (m.get("work_dates") or [""])[-1]
                     got = f"seoul_walk_network@{wd}" + (f"+osm_steps@{day}" if day else "")
+                    if m.get("juso_internal_at"):
+                        got += f"+juso_internal@{m['juso_internal_at']}"
                 elif day:
                     got = f"osm_road_graph{'_v2' if m.get('version') == 'road_graph_v2' else ''}@{day}"
             except (OSError, ValueError, AttributeError, TypeError):
@@ -246,7 +249,8 @@ class GraphRouter:
                 self.eflag.append((F_CAR if r.get("car") else 0) | (F_BIKE if r.get("bike") else 0)
                                   | (F_MAIN if r.get("main") else 0) | (F_BMAIN if r.get("bmain") else 0)
                                   | (F_FOOT if r.get("foot") else 0) | (F_FMAIN if r.get("fmain") else 0)
-                                  | (F_STEPS if r.get("st") else 0))
+                                  | (F_STEPS if r.get("st") else 0)
+                                  | (F_INDOOR if str(r.get("src") or "").startswith("juso_internal") else 0))
                 self.eow.append(int(r.get("ow") or 0))
                 self.ebow.append(int(r.get("bow") or 0))
                 g = r["g"]
@@ -407,8 +411,10 @@ class GraphRouter:
         return near[:6]
 
     # ── 길 찾기 ───────────────────────────────────────────────────────────────
-    def route(self, s, e, profile="car", via=None):
-        """s, e = (lng, lat). GraphHopper `/route` 응답 모양으로 돌려준다. 못 찾으면 RouterDown."""
+    def route(self, s, e, profile="car", via=None, car_cost=None):
+        """s, e = (lng, lat). GraphHopper `/route` 응답 모양으로 돌려준다. 못 찾으면 RouterDown.
+
+        car_cost(선택, 자동차만) — 출발 시각에 묶인 길 선택 비용(car_route_cost.BucketCost). 없으면 도로급 고정 속도로 고른다."""
         if via:
             raise RouterDown("via(경유지)는 이 라우터가 지원하지 않는다")
         if profile not in ("car", "bike", "foot"):
@@ -431,7 +437,7 @@ class GraphRouter:
             turn_policy = load(self)
             if turn_policy is not None:
                 from .car_turn_search import pieces
-                parts, arcs, cost_seconds, selected_start, selected_end = pieces(self, Ss, Ts, turn_policy)
+                parts, arcs, cost_seconds, selected_start, selected_end = pieces(self, Ss, Ts, turn_policy, car_cost=car_cost)
                 path = self._response(parts, profile, s, e)
                 path['snap_m'] = [round(selected_start.dist, 1), round(selected_end.dist, 1)]
                 path['quality'] = {'access_max_m': round(max(selected_start.dist, selected_end.dist), 1),
@@ -439,8 +445,14 @@ class GraphRouter:
                 path['turn_restrictions'] = dict(turn_policy[2], arc_codes=arcs,
                                                 search_cost_seconds=cost_seconds,
                                                 snap_selection=selection_evidence(selected_start, selected_end))
+                path['route_cost'] = car_cost.evidence() if car_cost is not None else {'kind': 'static_class_speed'}
                 return {'paths': [path]}
-        cost = lambda ed: self._cost(profile, ed)           # noqa: E731
+        if profile == 'car' and car_cost is not None:
+            deg, to, pe, _w = self._adjacency(profile)
+            w = car_cost.weights()
+            cost = car_cost.cost
+        else:
+            cost = lambda ed: self._cost(profile, ed)       # noqa: E731
         L = lambda ed: self._geom(ed)[1][-1]                # noqa: E731  간선 형상 길이(m)
 
         # 시작: 간선 위 점에서 나갈 수 있는 끝점 / 도착: 들어와 닿을 수 있는 끝점. 값 = (비용, 어느 끝, 어느 붙임)
@@ -555,6 +567,8 @@ class GraphRouter:
 
         path = self._response(pieces, profile, s, e)
         path["snap_m"] = [round(S.dist, 1), round(T.dist, 1)]
+        if profile == "car":
+            path["route_cost"] = car_cost.evidence() if car_cost is not None else {"kind": "static_class_speed"}
         # ☆`[2026-10-04]` 낙관 가능 표시 — GraphHopper 기록보다 크게 짧게 나온 두 쌍을 지도 태그와 코덱스 교차 판정으로 따져 봤더니
         #   「우리 로직이 더 나아서」가 아니라 ①길 밖 직선 접근 구간이 전체의 절반이 넘거나(고가 보행로 위 점이 85 m 밖 길에 붙음)
         #   ②보도·횡단 정보 없이 큰길 중앙선을 따라 걷는 경로여서였다. 거리 보정이 아니라 **불확실성을 드러낸다**(근거 문구 · 대체 비교).
@@ -598,7 +612,7 @@ class GraphRouter:
 
     def _response(self, pieces, profile, s, e):
         coords, det_way, det_cls = [], [], []
-        dist_m = secs = stairs_m = 0.0
+        dist_m = secs = stairs_m = indoor_m = 0.0
         for ed, pts in pieces:
             clean = [pts[0]]
             for p in pts[1:]:
@@ -628,6 +642,8 @@ class GraphRouter:
                 secs += length / (STEPS_MPS if self.eflag[ed] & F_STEPS else FOOT_MPS)
                 if self.eflag[ed] & F_STEPS:
                     stairs_m += length
+                if self.eflag[ed] & F_INDOOR:
+                    indoor_m += length
         if not coords:                                        # 같은 점 — 0 m 경로
             coords = [list(s), list(e)]
         result = {"distance": round(dist_m, 2), "time": int(round(secs * 1000)),
@@ -636,4 +652,6 @@ class GraphRouter:
         if profile == "foot":
             # 내부 시간 계약: 거리와 계단 시간은 별개다. 일정의 평지 속도로 정규화할 때도 계단 시간을 보존한다.
             result["foot_timing"] = {"flat_mps": FOOT_MPS, "stairs_m": stairs_m, "seconds": secs}
+            if indoor_m > 0:
+                result["indoor"] = {"m": round(indoor_m, 1)}          # 역·지하상가 안 통로를 지난 거리
         return result

@@ -50,6 +50,8 @@ class LimitSpec:
     max: int | None = None
     #: ★`[2026-09-29]` `choice` 의 고를 수 있는 값 — 목록 밖 글자는 받지 않는다
     choices: tuple[str, ...] | None = None
+    #: ★`[2026-10-14]` 관리 콘솔이 이름 아래에 보여 주는 설명(무엇이 켜지나 · 비용 · 끄면 어떻게 되나). 비면 싣지 않는다
+    help: str = ""
 
     def check(self, value: Any) -> str | None:
         """맞으면 None, 아니면 거절 이유 코드."""
@@ -68,7 +70,8 @@ class LimitSpec:
     def as_dict(self) -> dict[str, Any]:
         return {"name": self.name, "label": self.label, "unit": self.unit, "type": self.type,
                 "default": self.default, "min": self.min, "max": self.max,
-                **({"choices": list(self.choices)} if self.choices else {})}
+                **({"choices": list(self.choices)} if self.choices else {}),
+                **({"text_ko": self.help} if self.help else {})}
 
 
 def _mode_text(raw: Any) -> str:
@@ -126,7 +129,39 @@ def specs() -> dict[str, LimitSpec]:
     out["travel.dining.google_price_enabled"] = LimitSpec(
         "travel.dining.google_price_enabled", "식당 대체 후보 구글 가격 비교(유료 호출 — 결제 뒤 켜기)", "", "bool",
         guard.get("travel.dining.google_price_enabled") is True)
+    # ★`[2026-10-14 사용자 지시 · 핫픽스]` 확인 화면의 「택시 호출 상품」 고르기 — 택시 요금 계산이 믿을 만해질 때까지 기본 꺼짐.
+    #   읽는 곳은 `settings_hook.taxi_call_product_enabled` 하나다(검사 응답 · 고르기 요청 · 계산 입력)
+    out["travel.mobility.taxi_call_product_enabled"] = LimitSpec(
+        "travel.mobility.taxi_call_product_enabled", "확인 화면의 택시 호출 상품 고르기(택시 요금 계산 확인 뒤 켜기)", "", "bool",
+        guard.get("travel.mobility.taxi_call_product_enabled") is True)
+    # ★`[2026-10-14 사용자 지시]` 활동 장소 임시휴무 · 폐업 새벽 웹 확인 — 유료라 기본 꺼짐. 읽는 곳은 `settings_hook.activity_live_check_enabled` 하나다
+    #   (정기 작업 `activity_live_status`). 설명에 **지금 이 서버에서 켜면 실제로 도는지**를 함께 싣는다(값은 싣지 않는다).
+    out["travel.activity_judge.live_status_batch_enabled"] = LimitSpec(
+        "travel.activity_judge.live_status_batch_enabled", "활동 장소 임시휴무 · 폐업 웹 확인(유료 — 하루 최대 약 1.6달러)", "", "bool",
+        guard.get("travel.activity_judge.live_status_batch_enabled") is True, help=_activity_live_check_help(guard))
     return out
+
+
+def _activity_live_check_help(guard: Any) -> str:
+    """활동 웹 확인 스위치 설명 — 운영자가 한 번 읽고 무엇이 켜지고 얼마가 드는지 알게. 상한 숫자는 가드레일에서 읽는다."""
+    from app.core.settings import get_settings
+
+    web = guard.get("travel.activity_judge.budget.web") or {}
+    day, month = int(web.get("day") or 0), int(web.get("month") or 0)
+    hours = int(guard.get("travel.activity_judge.live_status_within_hours") or 0)
+    settings = get_settings()
+    ready = (getattr(settings, "activity_judge_mode", "rule") != "rule"
+             and bool((getattr(settings, "openai_api_key", "") or "").strip()))
+    state = ("지금 상태: 판정 모델이 준비돼 있어 켜면 바로 돕니다." if ready else
+             "지금 상태: 켜도 돌지 않습니다 — 서버 환경 파일에 OpenAI 키와 활동 판정 모드(shadow)가 없습니다.")
+    # ★줄마다 한 가지 — 관리 콘솔이 줄바꿈을 그대로 보여 준다(`white-space: pre-line`)
+    return "\n".join([
+        f"하는 일: 매일 새벽 3시부터, 앞으로 {hours}시간 안에 일정에 든 활동 장소(관광지 · 체험 등)가 그날 임시휴무 · 폐업인지 "
+        "웹 공지를 검색해 확인하고 저장합니다. 정기 휴무(매주 화요일 등)는 이 스위치와 상관없이 늘 확인합니다.",
+        "고객에게: 지금은 기록만 남기고 고객 답과 일정은 바꾸지 않습니다.",
+        f"비용: 검색 1번에 약 0.032달러. 하루 {day}번(약 {day * 0.032:.1f}달러) · 한 달 {month:,}번(약 {month * 0.032:.0f}달러)에서 멈춥니다.",
+        "끄면: 새 검색만 멈추고, 이미 저장한 기록은 그대로 둡니다.",
+        state])
 
 
 _cache: dict[str, tuple[float, dict[str, Any]]] = {}

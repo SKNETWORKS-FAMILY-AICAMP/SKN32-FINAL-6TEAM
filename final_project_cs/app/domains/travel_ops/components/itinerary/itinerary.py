@@ -126,6 +126,13 @@ WEATHER_BY_MIDDLE_CLASS = {"VE01": True, "VE03": True, "VE04": True, "LS03": Tru
                            "SH01": False, "SH02": False, "SH04": False, "EX02": False, "EX05": False}
 
 
+def _item_of(row: tuple) -> Item:
+    """항목 줄(항목 11칸 + 장소 칸) → `Item`. `TripStore.items` · `_items_of_trips` 가 같이 쓴다."""
+    item = Item(*row[:11])
+    item.place = _place(row[11:]) if row[11] is not None else None
+    return item
+
+
 def weather_case_sql() -> str:
     """분류 → 실내·야외 CASE 식(모르면 NULL). 값은 이 모듈의 상수뿐이다 — 바깥 입력을 끼우지 않는다."""
     large = " ".join(f"WHEN pc.raw_json->>'lclsSystm1' = '{code}' THEN {str(value).lower()}"
@@ -326,14 +333,35 @@ class TripStore:
                 "WHERE i.tenant_id=%s AND i.trip_id=%s AND i.version=%s ORDER BY i.seq",
                 (self.tenant_id, trip_id, version))
             rows = cur.fetchall()
-        out = []
-        for row in rows:
-            item = Item(*row[:11])
-            item.place = _place(row[11:]) if row[11] is not None else None
-            out.append(item)
+        out = [_item_of(row) for row in rows]
         from app.domains.travel_ops.components.watch.simulation import attach
         attach(conn, self.tenant_id, trip_id, version, out)
         return out
+
+    def _items_of_trips(self, conn, trips: list[tuple[UUID, int]]) -> dict[UUID, list[Item]]:
+        """여러 여행의 지정 판 항목을 **한 번에** 읽는다 — `items` 를 여행마다 부르는 것과 같은 결과다.
+
+        ★`[2026-10-14 사용자 지시]` 감시 · 출발 안내 되잡기가 여행마다 항목 조회 + 시험 상태 조회를 따로 해서 진행 중인 여행 수만큼 DB 조회가 늘었다.
+          이제 여행이 몇 개든 항목 조회 1번 + 시험 상태 조회 1번이다."""
+        grouped: dict[UUID, list[Item]] = {trip_id: [] for trip_id, _ in trips}
+        if not trips:
+            return grouped
+        select = ", ".join(f"p.{c}" for c in PLACE_COLUMNS)
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT i.trip_id, i.item_id, i.seq, i.kind, i.title, i.place_id, i.starts_at, i.ends_at, "
+                "i.locked, i.booking_id, i.replaces_item_id, i.detail, " + select + " "
+                "FROM itinerary_items i "
+                "JOIN unnest(%s::uuid[], %s::int[]) AS w(trip_id, version) ON w.trip_id = i.trip_id AND w.version = i.version "
+                "LEFT JOIN places p ON p.place_id = i.place_id AND p.tenant_id = i.tenant_id "
+                "WHERE i.tenant_id=%s ORDER BY i.trip_id, i.seq",
+                ([trip_id for trip_id, _ in trips], [version for _, version in trips], self.tenant_id))
+            rows = cur.fetchall()
+        for row in rows:
+            grouped.setdefault(row[0], []).append(_item_of(row[1:]))
+        from app.domains.travel_ops.components.watch.simulation import attach_many
+        attach_many(conn, self.tenant_id, dict(trips), grouped)
+        return grouped
 
     def _open_trips(self, conn, columns: str, now: datetime | None, order: str = "") -> list[tuple]:
         """진행 중(`active`)이고 **재난으로 정지되지 않은** 여행. 감시 · 안내 반복이 모두 여기를 지난다.
@@ -364,9 +392,10 @@ class TripStore:
     def due(self, conn, *, start: datetime, end: datetime) -> list[tuple[UUID, Item]]:
         """최신 버전에서 `[start, end)` 에 시작하는 항목. 감시 루프가 읽는다. 재난 정지 중인 여행은 빠진다(`_open_trips` — 시계는 `start`)."""
         trips = self._open_trips(conn, "t.trip_id, t.latest_version", start)
+        by_trip = self._items_of_trips(conn, [(trip_id, version) for trip_id, version in trips])
         found = []
-        for trip_id, version in trips:
-            for item in self.items(conn, trip_id, version):
+        for trip_id, _ in trips:
+            for item in by_trip.get(trip_id, []):
                 simulated = (item.place or {}).get("_watch_simulation")
                 if start <= item.starts_at < end or (simulated and (item.ends_at or item.starts_at) > start):
                     found.append((trip_id, item))
@@ -378,19 +407,23 @@ class TripStore:
         바깥함 행은 탑승 증거가 아니다. 이미 안내한 이동의 재출발을 추정하지 않는 제외 조건이다.
         여행 범위·재난 정지는 active_trip_ids의 기존 조건을 따른다.
         """
-        found = []
-        for trip_id in self.active_trip_ids(conn, now):
-            _, items = self.latest(conn, trip_id)
-            ordered = sorted(items, key=lambda item: item.seq)
+        trips = [(trip_id, version) for trip_id, version in
+                 self._open_trips(conn, "t.trip_id, t.latest_version", now, " ORDER BY t.trip_id")]
+        by_trip = self._items_of_trips(conn, trips)
+        candidates = []
+        for trip_id, _ in trips:
+            ordered = sorted(by_trip.get(trip_id, []), key=lambda item: item.seq)
             for item in ordered:
                 if item.kind != "mobility" or item.starts_at > now:
                     continue
                 following = next((i for i in ordered if i.seq > item.seq and i.kind != "mobility"), None)
                 if following is None or now >= following.starts_at:
                     continue
-                if not self.message_exists(conn, trip_id=trip_id, key=f"departure:{item.item_id}"):
-                    found.append((trip_id, item))
-        return found
+                candidates.append((trip_id, item))
+        # ★`[2026-10-14]` 「이미 안내했나」도 후보 전체를 한 번에 묻는다(전에는 이동 항목마다 한 번)
+        sent = self.sent_messages(conn, [(trip_id, f"departure:{item.item_id}") for trip_id, item in candidates])
+        return [(trip_id, item) for trip_id, item in candidates
+                if (str(trip_id), f"departure:{item.item_id}") not in sent]
 
     def versions(self, conn, trip_id: UUID) -> list[dict[str, Any]]:
         """버전 이력 — 무엇이 왜 바뀌었나. 계획서 링크와 되돌림이 읽는다."""
@@ -556,6 +589,16 @@ class TripStore:
                         "AND topic=%s AND dedupe_key=%s)",
                         (self.tenant_id, "trip.notice", f"{trip_id}:{key}"))
             return bool(cur.fetchone()[0])
+
+    def sent_messages(self, conn, keys: list[tuple[UUID, str]]) -> set[tuple[str, str]]:
+        """`message_exists` 의 여러 건 판 — 이미 바깥함에 있는 `(여행, 열쇠)` 묶음. 한 번만 묻는다."""
+        if not keys:
+            return set()
+        wanted = {f"{trip_id}:{key}": (str(trip_id), key) for trip_id, key in keys}
+        with conn.cursor() as cur:
+            cur.execute("SELECT dedupe_key FROM outbox WHERE tenant_id=%s AND topic=%s AND dedupe_key = ANY(%s)",
+                        (self.tenant_id, "trip.notice", list(wanted)))
+            return {wanted[row[0]] for row in cur.fetchall() if row[0] in wanted}
 
     def enqueue_message(self, conn, *, trip_id: UUID, key: str,
                         payload: dict[str, Any],

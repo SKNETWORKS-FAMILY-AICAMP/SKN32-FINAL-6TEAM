@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 여행 에이전트 팀
-description: 현재 여행 기준과 사용 종료된 기록을 구분한다
+description: Team은 업무 요청을 판정하고 제안을 반환하는 에이전트 팀입니다
 status: draft
 domain: travel
 ---

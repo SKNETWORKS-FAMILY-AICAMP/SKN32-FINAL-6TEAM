@@ -1,7 +1,16 @@
 """손상된 저장 조건을 일반호출 기본값으로 낮추지 않는 경계."""
 import pytest
 
+from app.domains.travel_ops.components import settings_hook
 from app.domains.travel_ops.components.intake import assemble, review, taxi_pricing
+
+
+@pytest.fixture(autouse=True)
+def _taxi_call_product_on():
+    """이 파일은 택시 호출 상품 고르기가 **켜진** 때의 동작을 본다 — 꺼짐은 test_taxi_call_product_switch.py."""
+    settings_hook.register(lambda tenant, name: True if name == settings_hook.TAXI_CALL_PRODUCT else None)
+    yield
+    settings_hook.clear()
 
 
 @pytest.mark.parametrize("value", [None, {}, [], "km_blue_immediate", {"product": "km_blue_immediate"},

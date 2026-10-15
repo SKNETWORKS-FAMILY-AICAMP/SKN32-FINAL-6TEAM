@@ -1,10 +1,12 @@
 """develop SHA별 ARM64 빌드·상태 검사·실패 복구. 호스트 환경 파일은 별도 보관한다."""
+from datetime import datetime, timezone
 import fcntl
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import time
 import urllib.request
 
@@ -70,6 +72,24 @@ def healthy(tag):
         except Exception:
             time.sleep(5)
     raise RuntimeError("상태 검사 실패")
+
+
+def prune_old_releases(state):
+    """배포가 성공한 뒤에만 부른다: 오래된 이미지·소스 폴더를 지운다(최근 3개 + 달마다 하나, 규칙은 deploy/image_retention.py).
+    정리가 실패해도 배포 결과는 그대로여야 하므로 모든 오류를 삼키고 한 줄만 남긴다."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import image_retention as ir
+        current, previous = state["current"], state.get("previous")
+        good = {row["sha"]: datetime.fromtimestamp(row["at"], timezone.utc) for row in state.get("history", [])}
+        protected = [sha for sha in (current, previous) if sha]
+        result = ir.run_retention(ir.Docker(), app_repos=["tripilot-arm-api", "tripilot-arm-web"],
+                                  protected_tags=[sha[:12] for sha in protected], good=good, apply=True,
+                                  say=lambda line: print(line, flush=True))
+        ir.prune_release_dirs(BASE / "releases", set(result["apps"]["keep"]), protected, True,
+                              lambda line: print(line, flush=True))
+    except Exception as exc:  # 정리는 덤이다 — 배포를 되돌리지 않는다
+        print("경고: 이미지 정리 실패 -", type(exc).__name__, flush=True)
 
 
 def main():
@@ -139,6 +159,7 @@ def main():
             images = json.loads(subprocess.check_output(["docker", "image", "inspect",
                                 f"tripilot-arm-api:{tag}", f"tripilot-arm-web:{tag}"], text=True))
             save({"current": sha, "previous": previous, "deployed_at": time.time(),
+                  "history": [*state.get("history", []), {"sha": sha, "at": time.time()}][-400:],
                   "image_ids": [row["Id"] for row in images],
                   "image_architectures": [row["Architecture"] for row in images],
                   "branch": "develop", "scope": "isolated_internal_serving_test"})
@@ -148,6 +169,7 @@ def main():
             if previous:
                 start_app(previous[:12])
             raise
+        prune_old_releases(json.loads(STATE.read_text()))
 
 
 if __name__ == "__main__":
