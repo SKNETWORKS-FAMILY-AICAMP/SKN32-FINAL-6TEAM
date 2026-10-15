@@ -38,7 +38,8 @@ domain: travel
 | 컨테이너 상태 · 메모리 | admin healthy · 134MiB / 1GiB |
 | 바깥에서 | 서버 주소 `:3300` 연결 시간 초과 · 공개 주소 `/admin/api/session` 404(관리자 경로 없음) |
 | Tailscale 로그인 · `serve` 연결(사용자 로그인 뒤) | `tripilot-admin` 연결됨, `tailscale serve --bg --http=3300 http://127.0.0.1:3300` — tailscaled 가 Tailscale 망 주소에서만 3300 을 받는다 |
-| Tailscale 망 기기 이름으로 `/` · `/admin/api/session` | 200 · 200 (숫자 주소로는 404 — 이름으로 온 요청만 받는다). 공개 주소 :3300 은 여전히 시간 초과 |
+| Tailscale 망 기기 이름으로 `/` · `/admin/api/session` | 200 · 200 ((HTTP 방식일 때) 숫자 주소로는 404 — 그래서 TCP 전달로 바꿨다). 공개 주소 :3300 은 여전히 시간 초과 |
+| `serve` 를 TCP 전달로 바꿈(같은 날, 숫자 주소로도 열리게) | `tailscale serve --bg --tcp=3300 tcp://127.0.0.1:3300` — 숫자 주소 · 기기 이름 둘 다 200, 공개 :3300 시간 초과 |
 
 ## 안 한 것 · 남은 것
 

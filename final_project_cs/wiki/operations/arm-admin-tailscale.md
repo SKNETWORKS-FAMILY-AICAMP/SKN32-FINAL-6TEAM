@@ -37,7 +37,7 @@ flowchart TD
 | 순서 | 어디서 | 무엇을 | 끝나면 보이는 것 |
 |---|---|---|---|
 | 1 | 오라클 서버에서 `sudo tailscale up --hostname=tripilot-admin --accept-dns=false` 가 보여 준 `https://login.tailscale.com/a/…` 주소 | 브라우저로 열고 Google · Microsoft · GitHub 중 하나로 로그인 → **Connect** | [기기 목록](https://login.tailscale.com/admin/machines)에 `tripilot-admin` 이 **Connected** |
-| 2 | 오라클 서버 | `sudo tailscale serve --bg --http=3300 http://127.0.0.1:3300` | `tailscale serve status` 에 `http://tripilot-admin.<내 망 이름>.ts.net:3300` → `127.0.0.1:3300` |
+| 2 | 오라클 서버 | `sudo tailscale serve --bg --tcp=3300 tcp://127.0.0.1:3300` | `tailscale serve status` 에 `tcp://tripilot-admin.<내 망 이름>.ts.net:3300` → `tcp://127.0.0.1:3300` |
 
 2 는 서버 설정이라 Claude 가 대신해도 된다. 한 번 하면 재부팅 뒤에도 남는다.
 
@@ -92,7 +92,7 @@ sudo ~/tripilot-serving/control/admin_env.sh operator --id <아이디>
 | 화면 · 오류 | 원인 | 고치는 법 |
 |---|---|---|
 | 주소가 아예 안 열린다 | 팀원 앱이 꺼졌거나 공유를 안 받았다 | 앱을 켜고 ②의 링크를 다시 연다 |
-| 화면에 `404 page not found` 한 줄만 나온다 | 기기 이름이 아니라 `100.x.x.x` 숫자 주소로 열었다 — 이 연결은 기기 이름으로 온 요청만 받는다 | `http://tripilot-admin.<망 이름>.ts.net:3300` 처럼 이름으로 연다 |
+| `DNS_PROBE_FINISHED_NXDOMAIN` · 「주소를 찾을 수 없음」 | 그 기기에 Tailscale 앱이 없거나 꺼져 있다(`ts.net` 이름은 앱이 켜진 기기에서만 찾아진다) | 앱을 깔고 켠다. 이름이 안 찾아지면 앱 기기 목록의 `tripilot-admin` 숫자 주소(100.…)에 `:3300` 을 붙여 연다 |
 | 「운영자 계정이 설정되지 않아 접근이 닫혀 있습니다」 | 운영자 계정이 0개다 | ①을 한다 |
 | 로그인이 안 되고 15분 동안 막힌다 | 5번 틀려 잠겼다 | 15분 기다리거나 ①로 비밀번호를 다시 정한다 |
 | 「운영 API에 연결하지 못했습니다」 | 관리자웹앱 안의 운영 API 가 내려갔다 | 오라클 서버에서 `sudo docker ps` 로 `tripilot-arm-admin-1` 이 healthy 인지 본다. 자동 배포 로그는 `journalctl -u tripilot-arm-cd.service` |
