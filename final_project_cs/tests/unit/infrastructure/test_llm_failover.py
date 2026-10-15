@@ -16,6 +16,15 @@ import pytest
 from app.infrastructure import llm_failover as lf
 from app.infrastructure.ollama_chat import OllamaChat, OllamaError, from_settings
 
+
+@pytest.fixture(autouse=True)
+def _no_model_route(monkeypatch):
+    """★`[2026-10-15]` 앞서 같은 프로세스에서 돈 조립(앱을 띄운 e2e 등)이 「모델 경로」 읽는 함수를 꽂아 두면 `from_settings` 가 `RoutedChat` 을 돌려준다 —
+    이 파일은 경로 고르기 없는 기본 조립을 본다. 비우지 않으면 시험 순서에 따라 갈린다(develop CI 6b1d4b46 에서 8개 실패)."""
+    from app.infrastructure import ollama_chat
+
+    monkeypatch.setattr(ollama_chat, "_route_provider", None)
+
 KEY = "sk-test-NOT-A-REAL-KEY-0123456789"
 URL = "http://ollama.test:11434"
 
