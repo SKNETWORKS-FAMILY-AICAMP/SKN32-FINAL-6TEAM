@@ -34,9 +34,8 @@ def valid_query(query: Any, stops: list[Any]) -> bool:
             and query["kind"] in KINDS and query.get("position", "all") in ("all", "first", "last"))
 
 
-def reply(fact: str, query: dict[str, str], *, items: list[Any], now: Any) -> tuple[str, dict[str, Any]]:
-    from app.domains.travel_ops.components.planning.pending import protected_reason
-
+def matching(query: dict[str, str], *, items: list[Any], now: Any) -> tuple[list[Any], Any]:
+    """조회 범위(`query`)에 드는 일정들과 그 날(날을 말하지 않았으면 None). 조회 답(`reply`)과 채팅의 「한꺼번에 옮기기」(`chat_edit`)가 같은 범위를 쓴다."""
     stops = sorted((i for i in items if i.kind != "mobility"), key=lambda i: (i.starts_at, i.seq))
     day = query["day"]
     wanted = None
@@ -54,6 +53,13 @@ def reply(fact: str, query: dict[str, str], *, items: list[Any], now: Any) -> tu
         matches = matches[:1]
     elif position == "last":
         matches = matches[-1:]
+    return matches, wanted
+
+
+def reply(fact: str, query: dict[str, str], *, items: list[Any], now: Any) -> tuple[str, dict[str, Any]]:
+    from app.domains.travel_ops.components.planning.pending import protected_reason
+
+    matches, wanted = matching(query, items=items, now=now)
     head = f"{_day_label(wanted) if wanted else '전체 여행 날짜'} {PERIOD_LABELS[query['period']]}"
     basis = {"kind": fact, "query": dict(query), "writer": "template",
              "source": "latest_itinerary", "item_ids": [str(i.item_id) for i in matches], "checks": []}

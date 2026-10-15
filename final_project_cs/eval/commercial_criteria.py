@@ -114,7 +114,7 @@ def judge(criterion: Criterion, m: Measurement | None) -> dict:
     return {**out, "verdict": verdict, "why": why}
 
 
-#: 측정 한 줄 = (기준 키, 측정). 전부 **기존 저장 결과를 다시 읽고 다시 센 값**이다 — 이번 회차에 모델을 새로 돌려 잰 것은 없다.
+#: 측정 한 줄 = (기준 키, 측정). 대부분 **기존 저장 결과를 다시 읽고 다시 센 값**이고, `reran_on_current_product=True` 인 줄만 2026-10-15 에 오늘 제품 모델로 새로 잰 값이다.
 #: 날짜 · 분모 · 조건은 각 근거 파일에서 열어 확인한 값. `reran_on_current_product` 가 False 면 오늘 제품으로 다시 잰 값이 아니다.
 MEASUREMENTS: list[Measurement] = [
     # 규정 검색 — 두 구성은 같은 세트(H 68)에서 짝으로 비교한다. 제품 방식은 오늘 제품 코드와 같다(재순위는 연결 안 됨).
@@ -128,6 +128,22 @@ MEASUREMENTS: list[Measurement] = [
                 "172사례(Claude 계열 작성 · 정답 표기) · 3회 · 제품 지시문이 이 사례로 다듬어져 12B 에 유리할 수 있다",
                 "final_project_cs/wiki/records/reports/2026-10-07_오응답_실제경로와_Luna_Sol_비교_x600_반영.md:92",
                 note="pass^3 91.3%(문서 구간 86.6~95.3) = 3번 모두 맞은 157/172 (환산). 오늘 해석 자리는 학습 E4B 로 바뀌어(2026-10-14) 이 값은 오늘 제품이 아니다"),
+    # ── 2026-10-15 새로 잰 값 — 오늘 해석 모델(x600 서버 학습 E4B, 같은 Ollama 판 · 문맥 8,192)로 같은 172사례를 3회 재생 ──
+    Measurement("decision_unit", "학습 E4B(tripilot-pointer:e4b-ft) · 결정 단위 재생 172사례×3 · 3번 모두 맞은 사례", 141, 172, "2026-10-15",
+                "172사례(Claude 계열 작성 · 정답 표기 · 제품 지시문이 이 사례로 다듬어져 12B 에 유리했을 수 있음) · 온도 0 이라 3회가 완전히 같았다(회차마다 141/172) · "
+                "SSH 터널로 x600 서버 Ollama 직접 호출 · 순차 1건씩 · 안전장치(guard_target) 포함 decide() 경로",
+                "final_project_cs/eval/decision_unit/report_cases_*_e4bft_20261015_rep{1,2,3}.json (도구 eval/decision_unit/replay.py)",
+                reran_on_current_product=True,
+                note="온도 0 이라 3회는 독립 반복이 아니다 — pass^3 = 1회 정확도. 같은 172사례를 학습 없는 12B 로 잰 값(157/172)보다 낮다"),
+    Measurement("wrong_target_change", "엉뚱한 대상 변경 · 학습 E4B · 결정 단위 재생 172사례", 3, 172, "2026-10-15",
+                "같은 재생 · 3개 사례(실제 대화 2 · 화면 조작 1)가 3회 모두 다른 대상을 바꿈(9건/516) — 「첫식당 바꿔」→둘째 식당 · 「그 다음식당 바꿔」→둘째 식당 · 「둘째 날 두 번째 활동」→한 칸 앞",
+                "같은 재생 결과 파일(eval/decision_unit/report_cases_*_e4bft_20261015_rep*.json)",
+                reran_on_current_product=True,
+                note="서수(첫째 · 다음 · 둘째 날 두 번째)로 부른 대상을 한 칸 어긋나게 고른다. 안전장치(근거 없는 대상 되묻기)는 근거가 있어 보이는 틀린 대상은 못 막는다"),
+    Measurement("response_15s", "요청 해석 한 번이 15초 초과한 비율 · 학습 E4B 직접 호출(유료 대체 경로 없음)", 0, 516, "2026-10-15",
+                "재생 516건(172×3) · 중앙 5.88초 · p95 8.41초 · p99 9.36초 · 최대 12.86초 · 9초 초과 10건 · 같은 시각 x600 서버를 다른 작업이 함께 쓸 수 있음",
+                "같은 재생 결과 파일(eval/decision_unit/report_cases_*_e4bft_20261015_rep*.json)", reran_on_current_product=True, partial_scope=True,
+                note="해석 단계만 — 규정 검색 · 일정 조회 · 답 작성을 합친 전체 응답은 아니다. 제품은 9초를 넘으면 유료 대체로 넘기므로 실제 고객 응답은 더 길 수 있다"),
     Measurement("wrong_target_change", "엉뚱한 대상 변경 · 결정 단위 재생 172사례(안전장치 뒤)", 0, 172, "2026-10-07",
                 "172사례 1회 · gemma4:12b · 안전장치(guard_target) 후", "final_project_cs/wiki/records/reports/2026-10-07_엉뚱한_대상_변경과_값_변조_재측정.md",
                 note="합성 · 같은 일정 틀이 많음 · 독립 고객 자료 아님. 같은 문서가 쓰는 3회 반복(12B)에서는 1 · 0 · 1 건이었다"),
@@ -141,6 +157,10 @@ MEASUREMENTS: list[Measurement] = [
                 "datasets/chat_probe/2026-10-14_x600_web_chat_rerun/raw/trip_{a,b}_cases.csv 의 state_json.decision.seconds (이번에 다시 셈)",
                 partial_scope=True,
                 note="해석 단계만이다 — 규정 검색 · 일정 조회 · 답 작성을 합친 전체 응답 시간은 기록에 없다. 같은 날 Oracle ARM(무료 CPU 시험 기계)은 59.8~68.5초(4건)"),
+    Measurement("response_15s", "전체 채팅 응답이 15초 초과한 비율 · x600 서버 공개 배포 실서버 6단계 시험(새 게스트 · 학습 E4B · 유료 대체 포함 제품 경로)", 3, 4, "2026-10-15",
+                "실서버 6단계 중 채팅 4건: 9.19 · 17.89 · 26.09 · 29.61초(질문 · 질문 · 대안 · 변경) · 1회 · 접수 뒤 첫 질문이 26.09초(모델 식은 상태일 수 있음 — 확인 안 함)",
+                "이 세션 실서버 시험 결과(보고서 3번 절 · 스크립트는 저장소에 두지 않음)", reran_on_current_product=True,
+                note="표본 4건이라 구간이 넓다(위 끝 100%에 가깝다). 규정 검색 · 조회 · 답 작성까지 합친 고객이 보는 전체 응답 시간이다"),
     Measurement("response_15s", "전체 채팅 응답이 15초 초과한 비율 · Oracle ARM 무료 CPU 시험 기계(학습 없는 Gemma E4B)", 4, 4, "2026-10-12",
                 "실제 HTTP 채팅 4건(59.80 · 65.11 · 67.51 · 68.53초) · 1회씩 · 같은 기계에서 평가 작업과 CPU 를 나눔",
                 "final_project_cs/wiki/records/reports/2026-10-12_0454_arm-search-model-repair.md:36-39",

@@ -919,11 +919,18 @@ def build_domain_routers() -> list:
 
     kakao_factory = build_kakao_local
 
+    def policy_search_factory():
+        # ★`[2026-10-15]` 채팅 규정 질문의 검색 — 가드레일 `travel.question.rerank.mode` 가 `off`(기본)면 `search_policy` 와 똑같이 움직이고,
+        #   `on`/`shadow` 일 때만 후보를 모델이 다시 고른다(`components/conversation/policy_rerank.py`). 규정 질문이 아닌 곳은 `__call__` 로 지금과 같다
+        from app.domains.travel_ops.components.conversation.policy_rerank import build_policy_search
+
+        return build_policy_search()
+
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
                               chat_factory=chat_factory, place_factory=place_factory,
                               kakao_factory=kakao_factory,
                               # ★채팅의 질문 — 여행 규정 검색(RAG). 문턱은 `travel.question.min_policy_score`
-                              policy_search_factory=lambda: search_policy,
+                              policy_search_factory=policy_search_factory,
                               # ★`[2026-10-06]` MCP 읽기 도구 「일정 위험 점검」 — 캐시만 읽는 점검기(기본) · 낮은 우선순위로 새로 부르는 점검기(fresh)
                               cached_check_factory=cached_check_factory, fresh_check_factory=fresh_check_factory),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).

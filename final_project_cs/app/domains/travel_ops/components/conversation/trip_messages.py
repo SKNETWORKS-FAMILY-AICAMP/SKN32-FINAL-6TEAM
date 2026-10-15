@@ -89,6 +89,10 @@ def _asked_day(message: str, stops: list[Any]):
     return days[0] + timedelta(days=n)
 
 
+#: 자기 팀이 있는 일정 종류(식사 · 활동이 아닌 것) → 문장이 그 종류를 말하는 낱말. 규칙 경로 대상 고르기가 쓴다
+_OWN_TEAM_WORDS = {"lodging": r"숙소|숙박|호텔", "flight": r"항공|비행기"}
+
+
 def _change_target(items: list[Any], message: str, selected: UUID | None, at: datetime):
     """「바꿔 줘」가 가리키는 식사·활동.
 
@@ -137,16 +141,17 @@ def _change_target(items: list[Any], message: str, selected: UUID | None, at: da
             found = (today or upcoming or meals or [None])[0]
             if found is not None:
                 return found
-    if kind in (None, "lodging") and re.search(r"숙소|숙박|호텔", text):
-        # ★`[2026-10-15 숙박예약 점검 LB-02]` 숙소는 번호 · 서수 · 끼니로 세는 목록(식사 · 활동)에 넣지 않는다(「2번」 같은 번호가 밀리지 않게). 문장이 **숙소라고 말했을 때**만 대상이다 —
-        #   이름이 있는 식사 · 활동(「호텔 조식」)은 위에서 이미 골랐다. 숙소가 여럿이면 이름의 단어가 겹친 것, 못 가리면 None(부르는 쪽이 되묻는다)
-        stays = [i for i in items if i.kind == "lodging"]
-        pick = stays[0] if len(stays) == 1 else _rule_stay(stays, text)
+    # ★`[2026-10-15 숙박예약 점검 LB-02]` 숙소 · 항공편은 번호 · 서수 · 끼니로 세는 목록(식사 · 활동)에 넣지 않는다(「2번」 같은 번호가 밀리지 않게). 문장이 **그 종류를 말했을 때**만 대상이다 —
+    #   이름이 있는 식사 · 활동(「호텔 조식」)은 위에서 이미 골랐다. 같은 종류가 여럿이면 이름의 단어가 겹친 것, 못 가리면 None(부르는 쪽이 되묻는다). 두 종류를 함께 말했으면 가리지 않는다
+    said = [own for own, words in _OWN_TEAM_WORDS.items() if re.search(words, text)]
+    if kind is None and len(said) == 1:
+        own_items = [i for i in items if i.kind == said[0]]
+        pick = own_items[0] if len(own_items) == 1 else _rule_named(own_items, text)
         if pick is not None:
             return pick
     if selected is not None:
-        # 화면에서 고른 일정이 숙소면 그것이 대상이다(문장이 다른 종류를 말하지 않았을 때)
-        chosen = next((i for i in [*stops, *(x for x in items if x.kind == "lodging")] if i.item_id == selected), None)
+        # 화면에서 고른 일정이 숙소 · 항공편이면 그것이 대상이다(문장이 다른 종류를 말하지 않았을 때)
+        chosen = next((i for i in [*stops, *(x for x in items if x.kind in _OWN_TEAM_WORDS)] if i.item_id == selected), None)
         if chosen is not None and (kind is None or chosen.kind == kind) and (
                 day is None or chosen.starts_at.astimezone(KST).date() == day):   # 문장이 말한 종류 · 날과 맞을 때만
             return chosen
@@ -155,8 +160,8 @@ def _change_target(items: list[Any], message: str, selected: UUID | None, at: da
     return None
 
 
-def _rule_stay(stays: list[Any], text: str):
-    """숙소가 여럿일 때 문장의 단어가 가장 많이 겹친 하나 — 동점이거나 겹침이 없으면 None(지어내지 않는다)."""
+def _rule_named(stays: list[Any], text: str):
+    """같은 종류가 여럿일 때 문장의 단어가 가장 많이 겹친 하나 — 동점이거나 겹침이 없으면 None(지어내지 않는다)."""
     import re
 
     scored = []
@@ -214,7 +219,7 @@ def _latest_changed_item(store: TripStore, trip_id: UUID):
 
 
 #: 일정 항목의 종류이자 그 종류를 맡는 팀 id — 둘이 같은 말이다(`config/project.yaml`)
-ITEM_TEAMS = frozenset({"activity", "dining", "mobility", "lodging"})
+ITEM_TEAMS = frozenset({"activity", "dining", "mobility", "lodging", "flight"})
 
 
 def owner_team(team: str, *, items: list[Any], message: str, selected: UUID | None,
@@ -708,6 +713,7 @@ def _open_message_case(conn, *, tenant: str, trip: dict[str, Any], message: str,
 #: 처리한 것(답이 나간 것) — 사람 대기가 아니다. 바꾸지 않고 물은 것 · 되물은 것도 여기다
 #: ★`[2026-10-05]` `needs_check`(영업 여부를 못 알아 바꾸지 않고 알린 것)도 답이다 — 사람 대기로 떨어지지 않게
 _DONE = ("adjusted", "answered", "still_fits", "needs_check", "asked", "rolled_back", "not_today", "no_meal", "clear", "gone",
+         "edit_refused",
          "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale", "knock_on", "rechecked")
 #: 바꾼 뒤 이 시간 안에 되돌리면 오변경 의심으로 표시한다 — ★우리가 고른 값(2026-09-29, Codex 합의의 「오변경 감지」)
 SUSPECT_UNDO_SECONDS = 15 * 60
@@ -729,7 +735,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     from app.domains.travel_ops.components.conversation import trip_facts
     from app.domains.travel_ops.components.conversation import trip_replies
-    from app.domains.travel_ops.components.conversation.decision_unit import LOCATION_FACTS, fact_first, labels, maybe_meant
+    from app.domains.travel_ops.components.conversation.decision_unit import EDIT_ACTIONS, LOCATION_FACTS, fact_first, labels, maybe_meant
 
     def move(event_type, payload):
         case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
@@ -776,6 +782,23 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         turns=turns,
         version=current_context["version"], now=context_now,
         ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
+    if decision.action == "replace_named":
+        # ★`[2026-10-15]` 말한 곳을 **먼저 찾는다**(웹 「일정 수정」과 같은 이름 찾기). 한 곳으로 찾으면 그곳으로 바꾸고(`TripDesk.edit`),
+        #   못 찾으면 — 「다른 식당」 같은 설명이거나 모르는 이름이다 — 바꾸지 않고 다른 안을 보여 고르게 한다(찾지 못했다고 먼저 밝힌다, `case_dispatch.response`)
+        named = dict((decision.raw or {}).get("named_destination") or {})
+        # ★`[2026-10-15 x600 실서버 확인]` 종류 힌트 없이 **이름으로 먼저** 찾는다 — 식사 일정에 「덕수궁」이라고 말하면 식당에서만 찾아 「탁사발두부공방 덕수궁점」으로 바뀌었다.
+        #   못 찾았고 바꿀 일정이 식사면 식사 힌트로 한 번 더 찾는다(식당 이름만 말한 경우)
+        text = str(named.get("text") or "")
+        found = desk.find_place(text)
+        if found is None and getattr(decision.item, "kind", None) == "dining":
+            found = desk.find_place(text, kind_hint="dining")
+        if found is None:
+            from dataclasses import replace as _replace
+
+            decision = _replace(decision, action="propose_alternatives",
+                                raw={**decision.raw, "named_destination": {**named, "found": False}})
+        else:
+            decision.raw["named_destination"] = {**named, "found": True, "name": found.name}
     # 복합 읽기는 각 질문의 대상·범위를 따로 검증한다.
     if decision.reads:
         focus, stale_selection = None, False
@@ -966,6 +989,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         else:
             outcome = desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
                                     request_id=request_id)
+    elif action in EDIT_ACTIONS:
+        # ★`[2026-10-15 사용자 지시]` 시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳 · 순서 · 고정 — 웹 「일정 수정」과 같은 길로 실행한다(`TripDesk.edit`)
+        outcome = desk.edit(trip_id=trip_id, base_version=base, decision=decision, now=at, message=message,
+                            request_id=request_id)
     elif action == "report_delay":
         outcome = ({"status": "clarify", "text": "몇 분쯤 늦으세요? 「30분 늦어요」처럼 알려 주시면 식사가 아직 괜찮은지, 뒤 일정에 걸리는 곳이 없는지 확인해 드릴게요."}
                    if decision.minutes is None else
