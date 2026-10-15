@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { beforeTheTrip, mockServer, openTitle, start, TRIP_ID, tripScreen, chatButton } from "./helpers";
+import { beforeTheTrip, mockServer, openTitle, start, TRIP_ID, tripScreen } from "./helpers";
 
 /**
  * `[2026-10-07 사용자 결정 — 목업 C안 3단계]` 제목 펼침(B안) · 여행계획서 공유 · 일정 「상세 보기」. mock 서버 시험이다 — 화면 반응만 본다.

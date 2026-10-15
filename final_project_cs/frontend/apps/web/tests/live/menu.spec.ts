@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { agree, mockServer, registerStubTrip, start, TRIP_ID, useKorean, chatButton } from "./helpers";
+import { agree, mockServer, registerStubTrip, start, TRIP_ID, useKorean } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 

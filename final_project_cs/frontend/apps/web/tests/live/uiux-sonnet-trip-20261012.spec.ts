@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { beforeTheTrip, mockServer, openTitle, start, TRIP_ID, tripScreen, openPane, chatButton } from "./helpers";
+import { beforeTheTrip, mockServer, openTitle, start, TRIP_ID, tripScreen, openPane } from "./helpers";
 
 async function openTrip(page: Page) {
   await page.goto(`/trips/${TRIP_ID}`);

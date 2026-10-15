@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { beforeTheTrip, agree, mockServer, noHorizontalScroll, registerStubTrip, tripScreen, useKorean, chatButton, openPane } from "./helpers";
+import { beforeTheTrip, agree, mockServer, noHorizontalScroll, registerStubTrip, tripScreen, useKorean, openPane } from "./helpers";
 
 // The trip screen's data and chat are in `trip.spec.ts`; this keeps the layout checks.
 // `[2026-10-07 사용자 결정 — 목업 C안]` The trip is the plan check's screen: the map with the sheet over it, 「일정 | 채팅」 in the sheet's head, the chat bar at the bottom.
