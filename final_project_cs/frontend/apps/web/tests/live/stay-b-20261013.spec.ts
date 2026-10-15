@@ -48,8 +48,8 @@ test.describe("숙소 항목 B안 — 여행 화면", () => {
     const last = await openDay(page, 4, "2026-10-04");
     await expect(last.getByText("마지막 날", { exact: true })).toBeVisible();
     const checkout = last.locator('[data-entry-id="s4:checkout"]');
-    await expect(checkout.locator("strong")).toHaveText("롯데호텔 서울");                       // the name, and 「체크아웃」 at the right
-    await expect(checkout.getByText("체크아웃", { exact: true })).toBeVisible();
+    await expect(checkout.locator("strong")).toHaveText("롯데호텔 서울");                       // the name, and under it 「체크아웃 · n박 · 날짜」 as on the check-in card
+    await expect(checkout.getByText("체크아웃 · 3박 · 10/1~10/4", { exact: true })).toBeVisible();
     const lastOrder = await last.locator("[data-entry-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-entry-id")));
     expect(lastOrder.indexOf("s4:checkout")).toBeGreaterThan(lastOrder.indexOf("s10"));    // 09:30 광장시장 뒤, 13:00 창덕궁 앞
     expect(lastOrder.indexOf("s4:checkout")).toBeLessThan(lastOrder.indexOf("s11"));

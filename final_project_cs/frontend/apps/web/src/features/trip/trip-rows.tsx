@@ -213,9 +213,9 @@ export function StayRow({ stay, onShow }: { stay: StayMark; onShow: () => void }
           <span className={styles.stopName}>
             <span className={styles.stopKind} data-stay aria-hidden="true"><BedDouble size={18} strokeWidth={1.8} /></span>
             <strong className={pc.cardTitle}>{stop.title}</strong>
-            {/* `[2026-10-15 사용자 결정]` The name, and what happens at the right (was 「○○ 체크아웃」 · 「퇴실 마감」 — a long name cut the word off; the time column has the time). */}
-            <span className={styles.stayNote}>{t("체크아웃", "Check-out")}</span>
           </span>
+          {/* `[2026-10-15 사용자 결정]` As the check-in card: the name, and under it 「체크아웃 · n박 · 날짜」 (was 「○○ 체크아웃」 · 「퇴실 마감」 — a long name cut the word off; the time column has the time). */}
+          <span className={styles.stopFact} data-stay-nights><Moon size={14} strokeWidth={1.8} aria-hidden="true" /><span><b className={pc.stayWord}>{t("체크아웃", "Check-out")}</b> · {stayPill(stop, t)}</span></span>
         </button>
       </div>
     </article>
