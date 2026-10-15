@@ -3,6 +3,7 @@ from uuid import uuid4
 import pytest
 from psycopg.types.json import Json
 
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.infrastructure.db.repository import create_case
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.graphstore.sql_adapter import SqlGraphAdapter
@@ -68,6 +69,7 @@ def graph_fixture():
             conn.rollback()
             with conn.transaction():
                 with conn.cursor() as cur:
+                    allow_case_events_purge(cur)
                     cur.execute("DELETE FROM case_events WHERE tenant_id = ANY(%s)", (tenants,))
                     cur.execute(
                         "DELETE FROM knowledge_chunks WHERE document_id IN "

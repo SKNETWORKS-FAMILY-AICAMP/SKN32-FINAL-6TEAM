@@ -28,6 +28,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
 from app.presentation import security
@@ -78,6 +79,7 @@ def live_api_fixture(monkeypatch):
                         (tenant,),
                     )
                     cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+                    allow_case_events_purge(cur)
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))

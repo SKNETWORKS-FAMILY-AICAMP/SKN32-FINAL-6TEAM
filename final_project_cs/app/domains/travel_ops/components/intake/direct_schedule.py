@@ -5,9 +5,12 @@
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from .moves import leg_between
+
+log = logging.getLogger(__name__)
 
 
 class ScheduleConflict(ValueError):
@@ -46,11 +49,16 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
         return {"key": f"{row['source_id']}:{row['index']}", "name": p["name"],
                 "lat": float(p["latitude"]), "lon": float(p["longitude"])}
 
-    def engine_for(a, b):
+    fell_back: set[str] = set()                    # 고른 수단이 안 닿아 추천 계산기로 돌아온 구간
+
+    def pair_of(a, b):
         def item_id(r):
             return f"{r.get('order', (0,))[0]}-{r['index']}"
-        mode = (mode_picks or {}).get(f"{item_id(a)}~{item_id(b)}") if defaulted else None
-        if not mode:
+        return f"{item_id(a)}~{item_id(b)}"
+
+    def engine_for(a, b):
+        mode = (mode_picks or {}).get(pair_of(a, b)) if defaulted else None
+        if not mode or pair_of(a, b) in fell_back:
             return budget
         if mode not in by_mode:
             eng = review.default_engine(party_size, [mode])
@@ -64,9 +72,19 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
             return None
         eng = engine_for(a, b)
         got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
+        if eng is not budget and budget is not None and got.basis == "estimate":
+            # ★`[2026-10-15 x600 실서버 확인]` 다시 연 여행에 저장된 구간 수단(도보)이 **바뀐 장소 사이에서는 닿지 않으면** 고른 수단 안의 후보가 없다며 저장을 막았다
+            #   (「토속촌 대신 덕수궁」). 확인 화면과 같이 안 닿으면 **추천 수단으로 돌아가** 계산한다(`review` 의 `mode_choice.dropped`)
+            fell_back.add(pair_of(a, b))
+            eng = budget
+            got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
         if eng is not None and (got.basis == "estimate" or eng.exhausted):
-            raise ScheduleConflict("이동 계산을 끝내지 못해 변경을 저장하지 않았어요. 잠시 뒤 다시 시도해 주세요.",
-                                   code="schedule_check_failed")
+            # ★`[2026-10-15]` 이유를 남긴다 — x600 서버 채팅 「토속촌 대신 덕수궁」이 이유 없이 「끝내지 못해」로만 막혀 원인을 가리지 못했다
+            why = (got.why or "").strip() or ("이동 계산 시간 상한을 넘겼어요" if eng.exhausted else "계산기가 이 구간을 못 채웠어요")
+            log.warning("schedule leg not computed: %s -> %s (%s) exhausted=%s", a["place"].get("name"), b["place"].get("name"), why,
+                        eng.exhausted)
+            raise ScheduleConflict(f"이동 계산을 끝내지 못해 변경을 저장하지 않았어요({a['place'].get('name')} → {b['place'].get('name')}: {why}). "
+                                   "잠시 뒤 다시 시도해 주세요.", code="schedule_check_failed")
         return got
 
     def protected(row):
