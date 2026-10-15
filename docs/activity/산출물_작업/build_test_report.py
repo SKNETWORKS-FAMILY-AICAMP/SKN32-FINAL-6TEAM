@@ -253,7 +253,7 @@ rows.append(["RAG 검색 시험(수동, 6묶음 {}문항)".format(tot_n), str(to
              f"Hit@3, 질문 변환 켠 때(끈 때 {tot_off}/{tot_n}). 학습 질문 포함 — 일반화 미입증"])
 llm_obs = sum(kinds[k]["observations"] for k in LABELED)
 llm_ok = sum(kinds[k]["llm_accuracy"]["num"] for k in LABELED)
-rows.append([f"LLM 판정 평가(휴무·운영시간·실내외·재난)", str(llm_obs), str(llm_ok), str(llm_obs - llm_ok), pct(llm_ok, llm_obs),
+rows.append(["LLM 판정 평가(휴무·운영시간·실내외·재난)", str(llm_obs), str(llm_ok), str(llm_obs - llm_ok), pct(llm_ok, llm_obs),
              "관측 단위(사례×3회). 규칙이 주 경로이고 LLM 은 보조·섀도"])
 fill_table(K[63], None, rows)
 clone_after(K[27], K[63], "재현 조건: 본 결과는 2026-10-14 로컬 개발 환경(PostgreSQL 16.15 + pgvector 0.8.6, 마이그레이션 전체 적용, 브랜치 role-activity-b)에서 측정했다. 다른 환경에서는 DB 적재 상태(문서 적재 여부), 마이그레이션 적용 여부, 설치 패키지, API 키와 모드 설정에 따라 시험 건수와 검색·판정 결과가 달라질 수 있다.")
