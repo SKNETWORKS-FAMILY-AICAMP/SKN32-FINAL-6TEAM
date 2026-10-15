@@ -13,6 +13,7 @@ import pytest
 from app.core.contracts import ContextPack, TeamTask, ToolNotAllowed
 from app.domains.travel_ops.components.booking.offers import search_stays
 from app.domains.travel_ops.instances.lodging import LodgingTeam
+from app.domains.travel_ops.instances.lodging.team import google_ts
 from app.domains.travel_ops.instances.lodging.interpret import InterpretationInvalid, needs, parse
 from app.tools.read_tools import ALLOWED_PROMPT_KEYS
 
@@ -134,7 +135,7 @@ def test_google_hotels_are_a_separate_block_without_shown_names_and_rentals():
     assert "구글 호텔에서 본 같은 조건 숙소(구글 순서, 숙박 공유 제외):" in answer
     assert ("   · 밀리오레호텔 명동 — 4성급 · 1박 191,878원 · 전체 575,634원 · 평점 3.3/5(후기 1,076): "
             "구글 호텔 https://www.google.com/travel/search?q=%EB%B0%80%EB%A6%AC%EC%98%A4%EB%A0%88%ED%98%B8%ED%85%94%20%EB%AA%85%EB%8F%99&hl=ko&gl=kr"
-            " · 숙소 사이트 https://migliorehotel.co.kr") in answer, "링크는 구글 호텔 화면 먼저, 숙소 사이트 뒤(2026-10-15 검수 L01)"
+            f"&ts={google_ts(IN, OUT, 2)} · 숙소 사이트 https://migliorehotel.co.kr") in answer, "링크는 구글 호텔 화면 먼저, 숙소 사이트 뒤(2026-10-15 검수 L01)"
     assert "Namsan Ville" not in answer, "숙박 공유는 뺀다"
     priceless = {**GOOGLE, "stays": [{**GOOGLE["stays"][2], "name": "지요크 명동", "price_per_night": None, "link": ""}]}
     other, _, _ = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL, "read.stay_google": priceless})
@@ -1170,7 +1171,7 @@ def test_pets_get_their_own_guidance_and_google_says_dates_do_not_carry_over():
                          "read.stay_google": _google([("구글 호텔", 90000.0, 3, None, None)])},
                         text="반려견 데리고 다음 달 6일부터 3박 서울 숙소")
     assert "반려동물 동반은 숙소마다 달라요" in result.answer, "사용자 판정 L10"
-    assert "구글 호텔 화면에는 날짜 · 인원이 넘어가지 않아요" in result.answer, "사용자 판정 L01 · L12"
+    assert "구글 호텔 링크는 날짜 · 인원을 채워 엽니다" in result.answer and "&ts=" in result.answer, "사용자 판정 L01 · L12"
 
 
 def test_wide_places_and_seoul_neighbours():
@@ -1213,3 +1214,14 @@ def test_a_seoul_search_without_an_anchor_still_drops_places_outside_seoul():
                          "read.stay_detail": lambda a: None, "read.stay_google": google},
                         text="다음 달 6일부터 3박 한강 5성급 호텔")
     assert "김해" not in result.answer and "용산 5성 호텔" in result.answer
+
+
+def test_google_hotel_links_carry_dates_and_adults():
+    """사용자 질문(10-15) 「안내 대신 날짜 · 인원을 넣어 링크를 보낼 수 없냐」 — ☆18시대 playdata 내장 브라우저에서 화면이 만든 `ts` 와 같은 값."""
+    from app.domains.travel_ops.instances.lodging.team import _google_page, google_ts
+
+    assert google_ts("2026-11-28", "2026-11-30", 3) == "CAESDgoCCAMKAggDCgIIAxABGh4KAhoAEhgSEgoHCOoPEAsYHBIHCOoPEAsYHjICCAIqCQoFOgNLUlcaAA"
+    assert google_ts("2026-11-07", "2026-11-08", 4) == "CAESEgoCCAMKAggDCgIIAwoCCAMQARoeCgIaABIYEhIKBwjqDxALGAcSBwjqDxALGAgyAggCKgkKBToDS1JXGgA"
+    assert _google_page("호텔 리베라", {"check_in": "2026-11-28", "check_out": "2026-11-30"}, 3).endswith(
+        "&ts=CAESDgoCCAMKAggDCgIIAxABGh4KAhoAEhgSEgoHCOoPEAsYHBIHCOoPEAsYHjICCAIqCQoFOgNLUlcaAA")
+    assert "&ts=" not in _google_page("호텔 리베라"), "날짜를 모르면 이름만"

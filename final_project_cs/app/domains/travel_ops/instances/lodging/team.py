@@ -43,6 +43,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import date, datetime, time as dtime, timedelta
+import base64
 import logging
 from math import asin, cos, radians, sin, sqrt
 import re
@@ -449,10 +450,47 @@ def _google_keyword(keyword: str | None, wants: Wants, anchor: dict[str, Any] | 
     return joined if joined != word else None
 
 
-def _google_page(name: str) -> str:
-    """구글 호텔에서 그 숙소 이름으로 찾은 화면(날짜 없음). `[2026-10-15 검수 D]` ☆사용자 판정 L01 — 목록 `link`(숙소 자체 사이트)
-    「호텔케이월드」가 열리지 않았다(서비스 종료). 이 주소가 그 숙소 화면으로 바로 열리는지는 **확인 안 함**."""
-    return f"https://www.google.com/travel/search?q={quote(str(name))}&hl=ko&gl=kr"
+def _varint(value: int) -> bytes:
+    out = b""
+    while True:
+        low, value = value & 0x7F, value >> 7
+        if not value:
+            return out + bytes([low])
+        out += bytes([low | 0x80])
+
+
+def _proto(number: int, payload: int | bytes) -> bytes:
+    """프로토콜 버퍼 칸 하나 — 정수(varint)거나 길이가 붙은 바이트."""
+    if isinstance(payload, int):
+        return _varint(number << 3) + _varint(payload)
+    return _varint((number << 3) | 2) + _varint(len(payload)) + payload
+
+
+def google_ts(check_in: str, check_out: str, adults: int) -> str:
+    """구글 호텔 주소의 `ts` 칸 — 체크인 · 체크아웃 · 성인 수. `[2026-10-15 사용자 질문 「안내 대신 넣어서 링크를 보낼 수 없냐」]`
+
+    ☆18시대 playdata 내장 브라우저: 구글 호텔 화면에서 날짜 · 인원을 바꾸면 주소의 `ts` 가 바뀐다(base64url 프로토콜 버퍼).
+      화면이 만든 `ts`(11/28~30 · 3명)와 이 함수가 만든 값이 글자까지 같았고, 이 함수로 만든 다른 값(호텔케이월드 11/7~8 · 4명)을
+      새로 열었더니 화면에 11월 7일 · 11월 8일 · 여행자 4명이 들어 있었다. 아이(나이)는 넣지 않는다 — 숙소 팀은 아이 나이를 몰라 어른 + 아이 인원으로 찾는다.
+    ★구글이 공개한 주소 규칙이 아니다 — 구글이 바꾸면 날짜 · 인원 없이 열린다(그래도 숙소 검색은 된다)."""
+    def day(text: str) -> bytes:
+        y, m, d = (int(part) for part in text.split("-"))
+        return _proto(1, y) + _proto(2, m) + _proto(3, d)
+    people = b"".join(_proto(1, _proto(1, 3)) for _ in range(max(1, int(adults)))) + _proto(2, 1)
+    dates = _proto(1, day(check_in)) + _proto(2, day(check_out))
+    body = (_proto(1, 1) + _proto(2, people)
+            + _proto(3, _proto(1, _proto(3, b"")) + _proto(2, _proto(2, dates) + _proto(6, _proto(1, 2))))
+            + _proto(5, _proto(1, _proto(7, b"KRW")) + _proto(3, b"")))
+    return base64.urlsafe_b64encode(body).decode().rstrip("=")
+
+
+def _google_page(name: str, dates: dict[str, str] | None = None, adults: int | None = None) -> str:
+    """구글 호텔에서 그 이름으로 찾은 화면 — 날짜 · 인원을 알면 `ts` 로 채운다(`google_ts`). `[2026-10-15 검수 D]` ☆사용자 판정 L01 —
+    목록 `link`(숙소 자체 사이트) 「호텔케이월드」가 열리지 않았다(서비스 종료). 이름이 하나로 정해지지 않으면 목록 화면으로 열린다(☆호텔케이월드)."""
+    url = f"https://www.google.com/travel/search?q={quote(str(name))}&hl=ko&gl=kr"
+    if dates and dates.get("check_in") and dates.get("check_out") and adults:
+        url += "&ts=" + google_ts(dates["check_in"], dates["check_out"], adults)
+    return url
 
 
 class LodgingTeam(ItineraryWork, TravelTeamBase):
@@ -603,9 +641,10 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         listing, google = booked.get("myrealtrip"), booked.get("google")
         resting = states["myrealtrip"] == "resting"
         block = {"wants": wants, "anchor": anchor, "max_price": found.max_price_per_night, "limit": limit, "base": base,
-                 "label": label, "query": google_keyword, "walker": walker, "seoul": seoul}
+                 "label": label, "query": google_keyword, "walker": walker, "seoul": seoul, "dates": dates,
+                 "adults": party.get("adults")}
         notes = self._wants_lines(found, wants, anchor, limit, children, party, text=task.input_text, walker=walker is not None)
-        place_lines = self._anchor_line(anchor) if base is anchor and anchor else self._center_line(center)
+        place_lines = self._anchor_line(anchor, walking=walker is not None) if base is anchor and anchor else self._center_line(center)
         extra = self._google_block(google, [], booked.get("elsewhere") or [], center, **block)
         who = f"성인 {found.adults}명" + (f" · 아이 {children}명" if children else "")
         if listing is None:
@@ -811,9 +850,12 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         return minutes
 
     @staticmethod
-    def _anchor_line(anchor: dict[str, Any] | None) -> list[str]:
+    def _anchor_line(anchor: dict[str, Any] | None, *, walking: bool = False) -> list[str]:
         if not anchor:
             return []
+        if walking:
+            # `[2026-10-15]` ☆19:29 검수 L03 — 「걸어서 13분」 옆에 「이동 시간 아님」이 함께 나와 어긋났다
+            return [f"km 는 카카오맵의 「{anchor['name']}」 위치에서 잰 직선거리이고, 「걸어서 N분」은 이동 계산기(도보)로 잰 시간입니다."]
         return [f"거리는 카카오맵의 「{anchor['name']}」 위치에서 잰 직선거리입니다(이동 시간 아님)."]
 
     def _my_stay(self, task: TeamTask, found: Interpretation, seen: set[str], evidence: list[Evidence],
@@ -1249,7 +1291,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
     def _google_block(google: dict[str, Any] | None, shown_names: list[str], links: list[dict[str, str]],
                       center: dict[str, Any] | None = None, *, wants: Wants | None = None, anchor: dict[str, Any] | None = None,
                       max_price: int | None = None, limit: float | None = None, base: dict[str, Any] | None = None,
-                      label: str = "일정 가운데에서", query: str | None = None, walker: Any = None, seoul: bool = False) -> list[str]:
+                      label: str = "일정 가운데에서", query: str | None = None, walker: Any = None, seoul: bool = False,
+                      dates: dict[str, str] | None = None, adults: int | None = None) -> list[str]:
         """구글 호텔 쪽 줄 + 다른 곳에서 보기 링크. 이미 보인 이름(이름 핵심 `_core` — 공백 · 「호텔」 · 「서울」 무시)과 숙박 공유(vacation rental)는 뺀다.
 
         ★숙박 공유를 빼는 까닭 — ☆2026-10-10 14:21 playdata 「서울 명동」 앞의 셋이 숙박 공유(Bluepillow · Vio)였고 평점 · 후기가 없었다.
@@ -1327,17 +1370,21 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     where = ((f" · {label} 걸어서 {minutes}분({far}km)" if minutes is not None and far is not None
                               else f" · {label} {far}km" if far is not None else " · 거리 모름") if base is not None else "")
                     lines.append(f"   · {stay['name']} — {star}1박 {_won(stay.get('price_per_night'))} · 전체 {_won(stay.get('total_price'))} · "
-                                 f"{rating}{where}: 구글 호텔 {_google_page(stay['name'])} · 숙소 사이트 {stay.get('link')}")
+                                 f"{rating}{where}: 구글 호텔 {_google_page(stay['name'], dates, adults)} · 숙소 사이트 {stay.get('link')}")
                 # `[2026-10-15 사용자 판정 L01 · L12]` 구글 호텔 화면 주소에는 날짜 · 인원이 넘어가지 않는다 —
                 #   ☆18시대 playdata 내장 브라우저: `checkin` · `checkout` · `adults` 를 붙여도 그 화면은 다른 날짜 · 2명으로 열렸다
-                lines.append("   (구글 호텔 화면에는 날짜 · 인원이 넘어가지 않아요 — 그 화면에서 날짜 · 인원을 다시 고르고, "
-                             "최소 숙박 일수 같은 조건도 확인해 주세요.)")
+                # `[2026-10-15]` 안내 대신 링크에 날짜 · 인원을 싣는다(`google_ts`) — 최소 숙박 일수는 링크로 못 거른다
+                lines.append("   (구글 호텔 링크는 날짜 · 인원을 채워 엽니다 — 최소 숙박 일수 같은 조건은 그 화면에서 확인해 주세요.)")
             elif dropped:
                 lines.append(f"구글 호텔 목록 {len(rows)}곳은 다른 지역이거나 말씀하신 조건(가격 · 유형 · 성급 · 거리)에 맞지 않아 싣지 않았습니다.")
             if restricted:
                 lines.append(f"구글 호텔에서 여성 · 외국인 전용처럼 이용 조건이 붙은 {restricted}곳은 뺐어요(성별 · 국적 · 나이를 알려 주시면 다시 볼게요).")
             if google.get("page"):
-                lines.append(f"구글 호텔 검색 결과 페이지(날짜는 그 화면에서 다시 고르셔야 할 수 있습니다): {google['page']}")
+                searched = query or google.get("keyword")
+                if dates and adults and searched:
+                    lines.append(f"구글 호텔 검색 결과 페이지(날짜 · 인원 채움): {_google_page(searched, dates, adults)}")
+                else:
+                    lines.append(f"구글 호텔 검색 결과 페이지(날짜는 그 화면에서 다시 고르셔야 할 수 있습니다): {google['page']}")
         if links:
             lines += ["같은 조건으로 다른 곳에서 보기(가격은 그 사이트에서 확인):",
                       *[f"   · {link['name']}" + (f"({link['note']})" if link.get("note") else "") + f": {link['url']}" for link in links]]
