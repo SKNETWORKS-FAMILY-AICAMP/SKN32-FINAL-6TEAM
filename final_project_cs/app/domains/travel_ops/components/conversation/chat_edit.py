@@ -181,12 +181,46 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             elif op.kind in ("lock", "unlock"):
                 # 고정은 따로 보낸다(`pipeline.edit` — 고정 요청에 다른 고치기를 섞지 않는다)
                 locks.append({"source_id": source_id, "field": f"{prefix}.locked", "value": op.kind == "lock"})
+        relock: list[dict[str, Any]] = []
         for batch in (edits, locks):
             if not batch:
                 continue
-            with connect() as conn:
-                revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
-                                         revision=revision, edits=batch, tour=tour, kakao=kakao, dining=dining)
+            try:
+                with connect() as conn:
+                    revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
+                                             revision=revision, edits=batch, tour=tour, kakao=kakao, dining=dining)
+            except pipeline.IntakeConflict as exc:
+                add_days = {o.date for o in ops if o.kind == "add" and o.date}
+                if batch is not edits or exc.code != "schedule_conflict" or not add_days:
+                    raise
+                # ★`[2026-10-15 사용자 결정]` 넣기가 앞뒤 고정 일정에 막히면 **B: 그날 고정 표시를 이 요청 동안만 풀고 뒤 일정을 밀어 자리를 만든 뒤 다시 고정한다.
+                #   그래도 안 되면 C: 빈 시간을 찾아 「이 시각에 넣을까요」로 안내한다**
+                with connect() as conn:
+                    pinned_now = {pipeline._item_no(c["field"]) for c in pipeline.effective(pipeline._claims(conn, tenant, intake_id, revision))
+                                  if c["field"].endswith(".locked") and c["value"] is True}
+                release = [f"items[{index}]" for item_id, index in where.items()
+                           if index in pinned_now and by_id[item_id].starts_at.astimezone(KST).date().isoformat() in add_days
+                           and not by_id[item_id].booking_id]
+                retry = [{"source_id": source_id, "field": f"{p}.locked", "value": False} for p in release] + edits
+                try:
+                    if not release:
+                        raise exc
+                    with connect() as conn:
+                        revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
+                                                 revision=revision, edits=retry, tour=tour, kakao=kakao, dining=dining)
+                    relock = [{"source_id": source_id, "field": f"{p}.locked", "value": True} for p in release]
+                    log.info("chat edit add: pushed past pinned stops trip=%s released=%d", trip_id, len(release))
+                except pipeline.IntakeConflict as again:
+                    if again.code != "schedule_conflict":
+                        raise
+                    raise EditRefused("no_room", _no_room_text(ops, items, now)) from None
+        for lock in relock:
+            try:
+                with connect() as conn:
+                    revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
+                                             revision=revision, edits=[lock], tour=tour, kakao=kakao, dining=dining)
+            except (pipeline.IntakeConflict, pipeline.IntakeRejected):
+                log.warning("chat edit relock skipped field=%s", lock["field"])        # 다시 고정하지 못해도 넣기는 이미 됐다
         with connect() as conn:
             pipeline.view(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id)   # 그 판의 검사(이동 · 운영시간)
             status, _, built = pipeline.draft(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
@@ -217,6 +251,33 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             except Exception:                                    # noqa: BLE001
                 log.warning("chat edit intake close failed intake=%s", intake_id, exc_info=True)
     return {"version": version, "changed": changed, "plan": plan, "intake_id": str(intake_id)}
+
+
+def _no_room_text(ops: list[EditOp], items: list[Any], now: datetime) -> str:
+    """넣기가 앞뒤 일정에 막혔을 때 — 그날의 **빈 시간**을 찾아 「이 시각에 넣을까요」로 안내한다(C). 이동 여유 15분 · 머무는 시간 60분을 두고 찾는다."""
+    op = next(o for o in ops if o.kind == "add")
+    name = op.place_name or op.title or "그곳"
+    stay = timedelta(minutes=60)
+    gap = timedelta(minutes=15)
+    stops = sorted((i for i in items if i.kind != "mobility" and i.starts_at.astimezone(KST).date().isoformat() == op.date),
+                   key=lambda i: i.starts_at)
+    wanted = datetime.fromisoformat(f"{op.date}T{op.starts_at}").replace(tzinfo=KST)
+    best = None
+    cursor = None
+    for stop in stops:
+        end = (stop.ends_at or stop.starts_at + stay).astimezone(KST)
+        if cursor is not None:
+            start = _round5(cursor + gap)
+            if stop.starts_at.astimezone(KST) - gap - start >= stay and start >= wanted - timedelta(minutes=1) and best is None:
+                best = start
+        cursor = end if cursor is None or end > cursor else cursor
+    if best is None and cursor is not None and _round5(cursor + gap) + stay <= datetime.fromisoformat(f"{op.date}T22:00").replace(tzinfo=KST):
+        best = _round5(cursor + gap)
+    if best is None:
+        return f"그 날은 앞뒤 일정 때문에 「{name}」을(를) 넣을 빈 시간이 없어 넣지 못했어요. 넣고 싶은 시각을 바꾸거나 다른 일정을 빼 주세요."
+    hhmm = best.strftime("%H:%M")
+    return (f"그 자리에는 앞뒤 일정 때문에 「{name}」을(를) 넣지 못했어요. 대신 {hhmm}에는 넣을 수 있어요 — "
+            f"「{hhmm}에 {name} 넣어줘」라고 말씀해 주세요.")
 
 
 def _revision(conn, tenant: str, intake_id: UUID) -> int:
@@ -263,6 +324,28 @@ def _day_of(token: str | None, stops: list[Any], now: datetime) -> str | None:
         first = min(s.starts_at.astimezone(KST).date() for s in stops)
         return (first + timedelta(days=int(token[1:]) - 1)).isoformat()
     return None
+
+
+#: 「오늘 저녁으로」 · 「점심으로」 처럼 **끼니 말로 옮길 곳**을 말했을 때의 시각 — 문장에 시각이 없을 때만 쓰는 서버의 약속값(고객이 말한 끼니 → 그 끼니의 보통 시각)
+_MEAL_AT = {"아침": "08:00", "점심": "12:00", "저녁": "18:00", "밤": "20:00"}
+_TO_MEAL = __import__("re").compile(r"(?:(오늘|내일|모레)\s*)?(아침|점심|저녁|밤)\s*(?:으로|로|에)(?![가-힣])")
+
+
+def spoken_meal_target(message: str, now: datetime) -> tuple[str | None, str] | None:
+    """「내일 점심을 오늘 저녁으로 옮겨줘」 → (오늘 날짜, 18:00). 옮길 곳을 **끼니 말**(+ 오늘 · 내일 · 모레)로 말했을 때만 — 문장의 **마지막** 「…(으)로 · 에」 끼니 말이다
+    (앞의 「점심을」은 옮길 대상이라 조사가 달라 걸리지 않는다). 없으면 None."""
+    found = list(_TO_MEAL.finditer(message or ""))
+    if not found:
+        return None
+    day_word, meal = found[-1].group(1), found[-1].group(2)
+    today = now.astimezone(KST).date()
+    day = {"오늘": today, "내일": today + timedelta(days=1), "모레": today + timedelta(days=2)}.get(day_word or "")
+    return (day.isoformat() if day else None), _MEAL_AT[meal]
+
+
+def _inside_trip(day: str, stops: list[Any]) -> bool:
+    dates = [s.starts_at.astimezone(KST).date() for s in stops]
+    return bool(dates) and min(dates).isoformat() <= day <= max(dates).isoformat()
 
 
 def _round5(moment: datetime) -> datetime:
@@ -328,6 +411,12 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
         if not targets:
             raise EditRefused("need_target", "어느 일정을 옮길지 알려 주세요. 일정 이름이나 「점심」처럼 말씀해 주시면 옮길게요.")
         ops = []
+        meal = None
+        if not anchor_time and not decision.minutes and raw.get("anchor_kind") in (None, "none", "time"):
+            meal = spoken_meal_target(message, now)
+            if meal is not None:
+                anchor_time = meal[1]
+                day = meal[0] or day
         for target in targets:
             if raw.get("anchor_kind") == "now" and len(targets) == 1 and not decision.minutes:
                 # 「지금 경복궁 갈래」 — 지금(5분 올림)으로 옮긴다. 머무는 시간은 그대로
@@ -341,6 +430,12 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
                 new_day, start, end = moved_to(target, day=day, start=None)
             else:
                 raise EditRefused("need_time", f"「{target.title}」을(를) 몇 시로(또는 몇 분) 옮길지 알려 주세요.")
+            if not _inside_trip(new_day, stops):
+                # ★`[2026-10-15 x600 실서버 확인]` 「내일 점심을 오늘 저녁으로」 — 오늘이 여행 날이 아닌데 「이미 되어 있어요」가 나왔다. 여행 밖의 날로는 옮기지 않고 그렇게 알린다
+                first = min(s.starts_at.astimezone(KST).date() for s in stops)
+                last = max(s.starts_at.astimezone(KST).date() for s in stops)
+                span = first.strftime("%m월 %d일") if first == last else f"{first.strftime('%m월 %d일')}~{last.strftime('%m월 %d일')}"
+                raise EditRefused("day_outside_trip", f"{new_day[5:7]}월 {new_day[8:10]}일은 이 여행에 없는 날이라 「{target.title}」은(는) 옮기지 않았어요. 여행은 {span}이에요.")
             _same_day(new_day, start, end, target.title)
             ops.append(EditOp("time", item_id=target.item_id, date=new_day, starts_at=start, ends_at=end))
         what = (f"{targets[0].title} 시각 옮기기" if len(targets) == 1 else f"일정 {len(targets)}개 시각 옮기기")

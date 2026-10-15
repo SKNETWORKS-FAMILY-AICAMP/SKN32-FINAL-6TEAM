@@ -282,3 +282,54 @@ def test_a_lodging_change_on_a_trip_without_lodging_does_not_change_another_stop
     after, items = _latest(chat)
     assert after == before and set(items) == set(items_before), body
     assert "숙소가 들어 있지 않아" in body["answer"], body
+
+
+def test_a_stop_moves_to_the_meal_time_said_even_without_a_clock_time(chat):
+    """★x600 실서버 확인(2026-10-15): 「내일 점심을 오늘 저녁으로 옮겨줘」 — 끼니 말만 있으면 시각을 못 읽어 「이미 되어 있어요」가 나왔다."""
+    _answer(chat, "change_time", target="N서울타워", anchor_kind="none", at_day="none")
+    body = _say(chat, "N서울타워를 내일 저녁으로 옮겨줘", "meal-evening")
+    _, items = _latest(chat)
+    tower = items["N서울타워"]
+    assert body["status"] == "adjusted" and _hm(tower.starts_at) == "18:00", body
+
+
+def test_a_stop_is_not_moved_to_a_day_outside_the_trip_and_the_trip_days_are_told(chat):
+    before, _ = _latest(chat)
+    _answer(chat, "change_time", target="N서울타워", anchor_kind="none", at_day="none")
+    body = _say(chat, "N서울타워를 모레 저녁으로 옮겨줘", "meal-outside")
+    after, _ = _latest(chat)
+    assert after == before and "없는 날" in body["answer"] and "여행은" in body["answer"], body
+
+
+def test_an_add_pushes_the_pinned_later_stops_instead_of_refusing(chat):
+    """★`[2026-10-15 사용자 결정]` 넣기가 앞뒤 고정 일정에 막히면(B) 그날 고정 표시를 이 요청 동안만 풀고 뒤 일정을 밀어 자리를 만든 뒤 다시 고정한다."""
+    for name, rid in (("북촌한옥마을", "push-lock-a"), ("인사동", "push-lock-b")):
+        _answer(chat, "lock_item", target=name)
+        assert _say(chat, f"{name} 고정해줘", rid)["status"] == "adjusted"
+    before, _ = _latest(chat)
+    _answer(chat, "add_item", destination_text="덕수궁", anchor_kind="item", anchor="북촌한옥마을", relation="after")
+    body = _say(chat, "북촌한옥마을 다음에 덕수궁 넣어줘", "push-add")
+    after, items = _latest(chat)
+    assert body["status"] == "adjusted" and after == before + 1, body
+    assert _hm(items["덕수궁"].starts_at) == "11:40", body
+    assert _hm(items["인사동"].starts_at) > "12:00", body                       # 뒤 일정이 밀렸다
+    for name in ("북촌한옥마을", "인사동"):                                      # 고정은 그대로
+        assert items[name].locked or (items[name].detail or {}).get("customer_pinned"), (name, body)
+
+
+def test_the_open_slot_text_is_found_when_nothing_can_make_room():
+    """C: 자리를 못 만들면 빈 시간을 찾아 「이 시각에 넣을까요」로 안내한다 — 빈 시간이 아예 없으면 그렇게 말한다."""
+    from types import SimpleNamespace
+
+    from app.domains.travel_ops.components.conversation.chat_edit import EditOp, _no_room_text
+
+    def stop(title, start, end):
+        return SimpleNamespace(kind="activity", title=title, starts_at=datetime.fromisoformat(f"2026-10-16T{start}").replace(tzinfo=KST),
+                               ends_at=datetime.fromisoformat(f"2026-10-16T{end}").replace(tzinfo=KST))
+    now = datetime.fromisoformat("2026-10-15T14:00").replace(tzinfo=KST)
+    op = EditOp("add", date="2026-10-16", starts_at="11:40", ends_at="12:40", place_name="덕수궁", title="덕수궁")
+    gappy = [stop("가", "10:00", "11:30"), stop("나", "12:00", "13:30"), stop("다", "16:30", "18:00")]
+    text = _no_room_text([op], gappy, now)
+    assert "「덕수궁」" in text and "13:45" in text and "덕수궁 넣어줘" in text, text           # 13:30 끝 + 이동 15분
+    packed = [stop("가", "08:00", "11:30"), stop("나", "12:00", "21:30")]
+    assert "빈 시간이 없어" in _no_room_text([op], packed, now)

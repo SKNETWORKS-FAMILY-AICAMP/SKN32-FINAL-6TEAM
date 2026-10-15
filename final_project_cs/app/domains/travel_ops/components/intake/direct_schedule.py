@@ -5,9 +5,12 @@
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from .moves import leg_between
+
+log = logging.getLogger(__name__)
 
 
 class ScheduleConflict(ValueError):
@@ -65,8 +68,12 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
         eng = engine_for(a, b)
         got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
         if eng is not None and (got.basis == "estimate" or eng.exhausted):
-            raise ScheduleConflict("이동 계산을 끝내지 못해 변경을 저장하지 않았어요. 잠시 뒤 다시 시도해 주세요.",
-                                   code="schedule_check_failed")
+            # ★`[2026-10-15]` 이유를 남긴다 — x600 서버 채팅 「토속촌 대신 덕수궁」이 이유 없이 「끝내지 못해」로만 막혀 원인을 가리지 못했다
+            why = (got.why or "").strip() or ("이동 계산 시간 상한을 넘겼어요" if eng.exhausted else "계산기가 이 구간을 못 채웠어요")
+            log.warning("schedule leg not computed: %s -> %s (%s) exhausted=%s", a["place"].get("name"), b["place"].get("name"), why,
+                        eng.exhausted)
+            raise ScheduleConflict(f"이동 계산을 끝내지 못해 변경을 저장하지 않았어요({a['place'].get('name')} → {b['place'].get('name')}: {why}). "
+                                   "잠시 뒤 다시 시도해 주세요.", code="schedule_check_failed")
         return got
 
     def protected(row):
