@@ -1,0 +1,32 @@
+{
+  "departure-observer-v1": {
+    "tests": 28,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "departure-observer-v2": {
+    "tests": 49,
+    "failures": 0,
+    "errors": 16,
+    "skipped": 0
+  },
+  "departure-observer-v3": {
+    "tests": 49,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "departure-source-notice-v1": {
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "departure-regression-v1": {
+    "tests": 607,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

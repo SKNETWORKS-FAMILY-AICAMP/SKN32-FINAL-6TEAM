@@ -1,0 +1,11 @@
+[Unit]
+Description=Check triPilot develop every five minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitInactiveSec=5min
+Persistent=true
+Unit=tripilot-arm-cd.service
+
+[Install]
+WantedBy=timers.target

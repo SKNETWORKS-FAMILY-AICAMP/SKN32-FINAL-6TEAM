@@ -1,0 +1,300 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "map-reveal-continuity-20261012.spec.ts",
+      "--config",
+      "playwright.location.config.ts",
+      "--output",
+      "C:/Users/playdata2/Documents/final_workspace/.tmp/map-reveal-release",
+      "--reporter=list,json"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\playwright.location.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/map-reveal-release",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "map-reveal-continuity-20261012.spec.ts",
+      "file": "map-reveal-continuity-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "375px 순서대로 지도 표시 · 동작 줄이기 false",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11336,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T15:48:14.024Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIxMTkwLDI2OSIsIjExMTMsMjU2IiwiMTAyMiwyNDIiLCI5MTMsMjI0IiwiODI4LDIxMSIsIjc1MSwxOTgiLCI2ODAsMTg3IiwiNjI1LDE3OCIsIjU3OSwxNzEiLCI1MzQsMTYzIiwiNDk3LDE1NyIsIjQ2MSwxNTIiLCI0MzEsMTQ3IiwiNDA1LDE0MyIsIjM4MCwxMzgiLCIzNTgsMTM1IiwiMzQwLDEzMiIsIjMyNiwxMzAiLCIzMDYsMTI3IiwiMjk3LDEyNSIsIjI4NiwxMjMiLCIyNzYsMTIyIiwiMjY2LDEyMSIsIjI1NCwxMTgiLCIyNTAsMTE3IiwiMjQzLDExNyIsIjIzNiwxMTUiLCIyMzAsMTE1IiwiMjI0LDExMyIsIjIyMCwxMTMiLCIyMTUsMTEyIiwiMjExLDExMSIsIjIwNiwxMTEiLCIyMDMsMTEwIiwiMjAwLDEwOSIsIjE5NiwxMDgiLCIxOTIsMTA4IiwiMTkxLDEwOCIsIjE4OSwxMDgiLCIxODcsMTA4IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE5MiwxMDYiLCIxOTUsMTA2IiwiMjA0LDEwNCIsIjIxMywxMDEiLCIyMjIsOTkiLCIyMzIsOTYiLCIyNDIsOTQiLCIyNTAsOTEiLCIyNjAsODkiLCIyNjksODciLCIyODAsODQiLCIyOTEsODIiLCIzMDEsNzgiLCIzMTIsNzYiLCIzMjUsNzIiLCIzMzgsNzAiLCIzNDgsNjciLCIzNjIsNjMiLCIzNzQsNjAiLCIzODgsNTYiLCI0MDIsNTQiLCI0MTYsNTAiLCI0MzEsNDYiLCI0NDYsNDIiLCI0NjAsMzkiLCI0NzcsMzQiLCI0OTMsMzEiLCI1MDgsMjYiLCI1MjUsMjEiLCI1NDAsMTgiLCI1NTUsMTUiLCI1NzAsMTAiLCI1ODUsNyIsIjYwMCwzIiwiNjE0LC0xIiwiNjI3LC00IiwiNjM5LC03IiwiNjQ5LC0xMCIsIjY1NywtMTIiLCI2NjIsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2OTcsMTEiLCI3MTksMjIiLCI3MzksNDMiLCI0NTAsMTI3IiwiNDQ3LDEzNSIsIjQ0MiwxNDEiLCI0MzUsMTQ2IiwiNDMyLDE1MyIsIjQyOSwxNTYiLCI0MjUsMTU4IiwiNDIyLDE2MCIsIjQxOCwxNjIiLCI0MTQsMTY0IiwiNDEwLDE2NiIsIjQwNywxNjciLCI0MDUsMTY4IiwiNDAyLDE2OSIsIjM5OSwxNzAiLCIzOTYsMTcxIiwiMzkzLDE3MiIsIjM4OCwxNzMiLCIzODcsMTczIiwiMzg0LDE3NCIsIjM4MCwxNzUiLCIzNzcsMTc2IiwiMzczLDE3NiIsIjM3MSwxNzgiLCIzNjcsMTc4IiwiMzY0LDE3OSIsIjM2MSwxODAiLCIzNTgsMTgxIiwiMzU2LDE4MSIsIjM1MywxODIiLCIzNTEsMTgyIiwiMzQ4LDE4MyIsIjM0NiwxODQiLCIzNDQsMTg1IiwiMzQxLDE4NSIsIjMzOSwxODYiLCIzMzcsMTg3IiwiMzM2LDE4NyIsIjMzNCwxODgiLCIzMzIsMTg5IiwiMzMwLDE4OSIsIjMyOSwxOTAiLCIzMjYsMTkxIiwiMzI1LDE5MSIsIjMyNCwxOTEiLCIzMjMsMTkxIiwiMzIyLDE5MiIsIjMyMCwxOTIiLCIzMTksMTkzIiwiMzE4LDE5MyIsIjMxNywxOTQiLCIzMTYsMTk0IiwiMzE1LDE5NCIsIjMxNCwxOTQiLCIzMTQsMTk0IiwiMzE0LDE5NSIsIjMxMiwxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiXSwiYW5pbWF0aW9ucyI6WzMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDkwMCw5MDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDBdLCJzdG9wIjp0cnVlfQ=="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-reveal-release\\map-reveal-continuity-2026-7c8e4-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-109d3099443eaf843eb3",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "375px 순서대로 지도 표시 · 동작 줄이기 true",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9495,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T15:48:25.690Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjE4OCwxMDciLCIxODgsMTA3IiwiMTg4LDEwNyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI2NjMsLTEzIiwiNjYzLC0xMyIsIjY2MywtMTMiLCI0MTk1LDI2NyIsIjQxOTUsMjY3IiwiNDE5NSwyNjciLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1IiwiMzEzLDE5NSIsIjMxMywxOTUiLCIzMTMsMTk1Il0sImFuaW1hdGlvbnMiOltdLCJzdG9wIjp0cnVlfQ=="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-reveal-release\\map-reveal-continuity-2026-c6a76-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-f5bf04c95f0c9f68a6b7",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "1280px 순서대로 지도 표시 · 동작 줄이기 false",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11699,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T15:48:35.201Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIxMjAyLDI2MyIsIjExMDAsMjQ3IiwiMTA1OSwyNDEiLCI5NTAsMjIzIiwiODY1LDIwOSIsIjc4MywxOTUiLCI3MjMsMTg2IiwiNjYzLDE3NiIsIjYxMywxNjgiLCI1NjcsMTYwIiwiNTI2LDE1NCIsIjQ5MiwxNDkiLCI0NTgsMTQzIiwiNDMxLDEzOCIsIjQwOCwxMzUiLCIzODUsMTMyIiwiMzY3LDEyOCIsIjM0NywxMjUiLCIzMzUsMTIzIiwiMzE2LDEyMSIsIjMwMywxMTgiLCIyOTgsMTE4IiwiMjg2LDExNiIsIjI3NSwxMTMiLCIyNjksMTEzIiwiMjYyLDExMSIsIjI1MiwxMTAiLCIyNDYsMTA5IiwiMjQyLDEwOCIsIjIzNSwxMDgiLCIyMzEsMTA3IiwiMjI2LDEwNiIsIjIyMSwxMDUiLCIyMTcsMTA1IiwiMjEzLDEwNCIsIjIxMSwxMDMiLCIyMDcsMTAzIiwiMjA1LDEwMiIsIjIwMiwxMDIiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwOCwxMDAiLCIyMTMsOTgiLCIyMjcsOTUiLCIyMzIsOTQiLCIyNDEsOTEiLCIyNTEsODgiLCIyNjAsODYiLCIyNzEsODQiLCIyODAsODIiLCIyOTEsNzgiLCIzMDIsNzYiLCIzMTIsNzMiLCIzMjQsNzAiLCIzMzUsNjgiLCIzNDcsNjQiLCIzNTksNjEiLCIzNzIsNTgiLCIzODUsNTQiLCIzOTksNTEiLCI0MTMsNDciLCI0MjYsNDQiLCI0NDEsNDEiLCI0NTUsMzciLCI0NzAsMzMiLCI0OTQsMjciLCI1MDUsMjQiLCI1MTgsMjEiLCI1MzMsMTciLCI1NDgsMTMiLCI1NjMsOSIsIjU3OCw2IiwiNTkxLDIiLCI2MDcsLTIiLCI2MjEsLTUiLCI2MzYsLTkiLCI2NDgsLTEyIiwiNjU3LC0xNCIsIjY2NiwtMTciLCI2NzIsLTE4IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNzA2LDEiLCI3NDEsMTYiLCI3NzMsMzkiLCI3OTksNjUiLCI3NDUsODAiLCI3MTYsOTAiLCI3MDAsOTYiLCI2ODQsMTAyIiwiNjczLDEwOCIsIjY1NCwxMTIiLCI2NDIsMTE1IiwiNjI4LDEyMCIsIjYxNCwxMjIiLCI2MDQsMTI0IiwiNTk3LDEyNiIsIjU4MiwxMjgiLCI1NzUsMTMwIiwiNTYxLDEzMiIsIjU0OSwxMzUiLCI1MzksMTM2IiwiNTMyLDEzNyIsIjUyMSwxMzgiLCI1MTUsMTM5IiwiNTA4LDE0MCIsIjUwMCwxNDEiLCI0OTIsMTQyIiwiNDg0LDE0MyIsIjQ3MywxNDQiLCI0NjUsMTQ2IiwiNDU1LDE0OCIsIjQ0OCwxNDkiLCI0NDAsMTQ5IiwiNDMzLDE1MCIsIjQyNSwxNTIiLCI0MTksMTUzIiwiNDEyLDE1NCIsIjQwNywxNTUiLCI0MDEsMTU2IiwiMzk2LDE1NyIsIjM5MCwxNTciLCIzODUsMTU4IiwiMzgwLDE1OSIsIjM3NiwxNjAiLCIzNzIsMTYwIiwiMzY3LDE2MSIsIjM2MywxNjMiLCIzNjAsMTYzIiwiMzUyLDE2NSIsIjM1MSwxNjQiLCIzNDcsMTY1IiwiMzQ0LDE2NiIsIjM0MiwxNjYiLCIzMzksMTY3IiwiMzM3LDE2OCIsIjMzNSwxNjgiLCIzMzMsMTY5IiwiMzMyLDE2OSIsIjMyOSwxNzAiLCIzMjgsMTcwIiwiMzI3LDE3MCIsIjMyNiwxNzAiLCIzMjYsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCJdLCJhbmltYXRpb25zIjpbOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsOTAwLDkwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDMwMCwzMDAsMzAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwLDkwMCw5MDAsOTAwXSwic3RvcCI6dHJ1ZX0="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-reveal-release\\map-reveal-continuity-2026-53e1a-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-d2e9801dd61538e6b103",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "1280px 순서대로 지도 표시 · 동작 줄이기 true",
+          "file": "map-reveal-continuity-20261012.spec.ts",
+          "line": 15,
+          "column": 8,
+          "specs": [
+            {
+              "title": "먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9752,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T15:48:46.922Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "reveal-frame-evidence",
+                          "contentType": "application/json",
+                          "body": "eyJmYWlsdXJlcyI6W10sInBvc2l0aW9ucyI6WyIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCIyMDAsMTAxIiwiMjAwLDEwMSIsIjIwMCwxMDEiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI2NzYsLTE5IiwiNjc2LC0xOSIsIjY3NiwtMTkiLCI0MjA4LDI2MSIsIjQyMDgsMjYxIiwiNDIwOCwyNjEiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIiwiMzI1LDE3MCIsIjMyNSwxNzAiLCIzMjUsMTcwIl0sImFuaW1hdGlvbnMiOltdLCJzdG9wIjp0cnVlfQ=="
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\map-reveal-release\\map-reveal-continuity-2026-aa6f1-커는-거리-표시로-남고-새-마커와-합쳐지지-않는다\\video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a3a9edb7798c8870ead6-c71b620788ee559ebb86",
+              "file": "map-reveal-continuity-20261012.spec.ts",
+              "line": 17,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T15:47:49.932Z",
+    "duration": 67816.79,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

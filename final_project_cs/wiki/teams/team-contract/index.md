@@ -1,5 +1,5 @@
 ---
-type: contract
+type: guide
 title: Team 계약
 description: TeamTask 입력과 TeamResult 출력의 모양. contract_version 1.0
 status: draft
@@ -200,4 +200,3 @@ resolved · escalated · failed · cancelled
 → **[fields.md](fields.md)**
 
 **여기는 개념이고 거기는 명세다.** 구현할 때는 그쪽을 본다.
-

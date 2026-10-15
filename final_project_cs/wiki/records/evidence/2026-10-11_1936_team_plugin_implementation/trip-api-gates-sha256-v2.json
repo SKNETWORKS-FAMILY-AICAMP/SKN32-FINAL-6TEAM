@@ -1,0 +1,12 @@
+{
+  "app/tools/read_tools.py": "3f8d2260a3d92df71b9801581d07c43b828ef515c1423343338c290998c5ff99",
+  "tests/unit/travel/test_dining_read_tool_availability.py": "2acd55455a6a294aec5f20f13d55c7148fa4d87dc7e46cfd9416caaaabe73fed",
+  "app/composition.py": "c443eaf2d379cd1ccc02e28f37639fb4d1abaeb483fb8b5114e1943303679995",
+  "app/domains/travel_ops/entry/trip_api.py": "f1dd262a2781ccc100dc24e6a09f058f7112aa757dfd70a778e42742b46978be",
+  "app/domains/travel_ops/components/team_hooks/dining_ledger.py": "762cd8afa54674a213c1f7d4d27e4ca5689a16d79b6b83a312521b4e80e77bd5",
+  "app/domains/travel_ops/components/team_hooks/mobility_shapes.py": "6fb09caa4daa255464a8ab89f3f9d6bba208e1b448c682f4c28a9bd3b94a4699",
+  "app/domains/travel_ops/components/itinerary/itinerary_checks.py": "01aa6ac3a5087266eb85e55a450a43a80984987757655c2d5d093b3231f23af4",
+  "tests/unit/travel/test_trip_api_plugin_boundaries.py": "f0e356289f6af1beb5f2106055fd5c5cc96c193a64c87ee37ddbccd727cdb560",
+  "tests/unit/travel/test_intake_resolve_dining.py": "3d908633cb1d060c099281977cb66143182a5a16d5785ef55f2afb530f1044a0",
+  "wiki/teams/team-contract/plugin-availability.md": "f94b55fad94aaaf82cafcda38797330c80bb7ebc0ffdf41fe37062a17d097b16"
+}

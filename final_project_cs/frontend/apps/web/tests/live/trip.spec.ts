@@ -57,21 +57,29 @@ test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안
 
   // 고정한 일정 표시와 서버가 남겨 둔 다른 안
   await expect(page.locator("#stop-button-i-b").getByText("고정한 일정")).toBeVisible();
+  // `[2026-10-13 카드 A안]` 접힌 카드 아래 줄은 분류 · 방문일 영업시간 · 주소이고(서버가 안 보냈으면 「… 정보 없음」), 펼치면 단추만 — 다른 안 · 장소 사실은 「상세 보기」 화면에 있다.
+  await expect(page.locator("#stop-button-i-b")).toContainText("주소 정보 없음");
   await page.locator("#stop-button-i-b").click();
-  await expect(page.locator("#stop-detail-i-b")).toContainText("다른 안");
-  await expect(page.locator("#stop-detail-i-b")).toContainText("창덕궁");
-  await expect(page.locator("#stop-detail-i-b")).not.toContainText("주소");           // 서버가 장소 사실을 안 보냈으면 줄 자체가 없다
+  await expect(page.locator("#stop-detail-i-b")).not.toContainText("다른 안");
   await expect(page.locator("#stop-detail-i-b").getByRole("button", { name: "이 일정 질문하기" })).toBeVisible();   // 상세가 열려 있는데
   await expect(page.locator("#stop-detail-i-b").getByRole("link", { name: "지도 앱으로 열기" })).toHaveCount(0);  // 지도 링크가 없으면 단추도 없다
+  await page.getByRole("button", { name: "경복궁 관람 상세 보기" }).click();
+  await expect(page.locator('[data-card-id="i-b"]')).toContainText("다른 안");
+  await expect(page.locator('[data-card-id="i-b"]')).toContainText("창덕궁");
+  await page.keyboard.press("Escape");
 
-  // 서버가 보낸 장소 사실(요식 원장) — 주소·전화·분류·영업시간·미쉐린·편의
+  // 서버가 보낸 장소 사실(요식 원장) — 접힌 카드에 분류 · 주소, 상세 보기 화면에 전화 · 영업시간 · 미쉐린 · 편의
+  for (const text of ["한식", "서울특별시 종로구 율곡로1길 7"]) await expect(page.locator("#stop-button-i-a")).toContainText(text);
   await page.locator("#stop-button-i-a").click();
   const detail = page.locator("#stop-detail-i-a");
-  for (const text of ["서울특별시 종로구 율곡로1길 7", "02-000-0000", "한식", "월 08:00–21:00", "셀렉티드 (2026)", "카드 결제"]) await expect(detail).toContainText(text);
-  await expect(detail).not.toContainText("michelin_selected");
   // 지도 앱으로 열기 — 서버가 준 구글 지도 링크를 새 창으로(서버가 링크를 안 준 일정에는 단추가 없다)
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("href", "https://www.google.com/maps/search/?api=1&query=%EC%95%84%EC%B9%A8");
   await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("target", "_blank");
+  await page.getByRole("button", { name: "아침 식당 상세 보기" }).click();
+  const facts = page.locator('[data-card-id="i-a"]');
+  for (const text of ["서울특별시 종로구 율곡로1길 7", "02-000-0000", "한식", "월 08:00–21:00", "셀렉티드 (2026)", "카드 결제"]) await expect(facts).toContainText(text);
+  await expect(facts).not.toContainText("michelin_selected");
+  await page.keyboard.press("Escape");
 
   // 종 — 알림 센터: 할 일 · 탭 셋(서버가 찾은 것 · 보낸 것 · 바꾼 것)
   const notices = await openNotices(page);
@@ -500,3 +508,4 @@ test("「공유하기」의 「파일로 내려받기」는 계획서 링크와 
   expect(answer.headers()["content-disposition"]).toMatch(/^attachment; filename\*=UTF-8''triPilot-/);
   expect((await request.get(openHref.toString())).headers()["content-disposition"]).toBeUndefined();
 });
+

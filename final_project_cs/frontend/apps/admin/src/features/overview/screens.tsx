@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { chatLimitFor, formatNumber, watchState, type AdminCommand, type AdminSnapshot, type ApiUsage, type ScreenProps, type User, type UsersListState, type WatchRule } from '../../lib/model';
 import styles from './screens.module.css';
+import { ApiEnvironmentLimits } from '../operations/api-limits';
 
 const NEAR_CAP_PERCENT = 80; // 화면 검토용 제안값. 실제 운영 기준은 팀 합의 전이다.
 const MAX_QUOTA = 100_000_000; // AdminGateway의 시연 명령 입력 범위.
@@ -268,6 +269,7 @@ export function UsageScreen({ data, onCommand, navigate }: ScreenProps) {
   const edited = data.apis.find(api => api.id === editingApi);
   const externalLlm = data.llm.filter(llm => !llm.local);
   return <div className={styles.screen}><Heading eyebrow="USAGE / SERVICE" title="사용량">외부 API는 서비스 전체로 집계합니다. 공급자 무료 제공량 · 운영 상한 · 유료 사용을 구분합니다.</Heading>
+    {data.live && <ApiEnvironmentLimits />}
     <div className={styles.chips} role="group" aria-label="사용량 기간">{PERIODS.map(item => <button key={item.id} aria-pressed={period === item.id} className={period === item.id ? styles.selected : ''} onClick={() => setPeriod(item.id)}>{item.label}</button>)}<span className="muted">외부 호출 그래프 기간 · 한국 시각</span></div>
     <div className={styles.metrics}><Metric label="선택 기간 외부 API 호출" value={selectedDays.some(row => row.watch === null) ? '미계측' : number(sum(selectedDays, row => (row.watch ?? 0) + row.chat))} detail={`감시 ${selectedDays.some(row => row.watch === null) ? '미계측' : number(sum(selectedDays, row => row.watch ?? 0))} / 채팅 조회 ${number(sum(selectedDays, row => row.chat))}`} /><Metric label="현재 운영 상한 근접" value={`${data.apis.filter(api => (capPercent(api) ?? 0) >= NEAR_CAP_PERCENT).length}개`} detail={`${NEAR_CAP_PERCENT}% 이상 · 제안 기준`} onClick={() => navigate('/limits')} /><Metric label="오늘 유료 사용 예상 비용" value={data.apis.some(api => api.cost !== null) ? money(sum(data.apis, api => api.cost ?? 0)) : '미계측'} detail="미계측 제외 · 단가 출처 미정" /><Metric label="오늘 외부 LLM 토큰" value={number(sum(externalLlm, llm => (llm.input ?? 0) + (llm.output ?? 0)))} detail={`입력 ${number(sum(externalLlm, llm => llm.input))} / 출력 ${number(sum(externalLlm, llm => llm.output))}`} /></div>
     <UsageChart data={data} period={period} />

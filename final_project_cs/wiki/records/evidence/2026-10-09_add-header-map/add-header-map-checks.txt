@@ -8,3 +8,4 @@ ESLint: PASS
       Tests  40 passed (40)
    Start at  21:59:46
    Duration  695ms (transform 68%, import 25%, tests 4%, worker 3%)
+

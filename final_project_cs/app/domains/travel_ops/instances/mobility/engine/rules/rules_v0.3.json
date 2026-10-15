@@ -1050,12 +1050,19 @@
  "taxi": {
   "planning_budget": {
    "reserve_rate_by_kind": {
-    "value": {"중형": 0.37, "대형_모범": 0.10},
+    "value": {
+     "중형": 0.37,
+     "대형_모범": 0.1
+    },
     "근거": "서울 중형: 조회 시각을 복원한 비교 자료의 계산군 153쌍에서 기준/미터 추정 비의 P95(1.360189)를 퍼센트점 단위로 올림. 별도 40쌍 중 38쌍에서 기준 이상 확인. 기존 자료의 내부 검증이며 실제 미터 결제 보장 아님. 대형·모범은 검증 자료 밖이라 기존 10% 가정 유지.",
     "calibration_id": "taxi-budget-20261008"
    },
-   "minimum_reserve_won": {"value": 1000},
-   "round_unit_won": {"value": 100},
+   "minimum_reserve_won": {
+    "value": 1000
+   },
+   "round_unit_won": {
+    "value": 100
+   },
    "scope": "서울 중형의 예산 가정. 심야 할증은 미터 산식에서 별도 적용하며 통행료에는 이 여유율을 곱하지 않는다."
   },
   "설명": "택시 요금 산식(서울). **산식은 확정(서울시 고시 기록), 요금 값은 추정** — 요금은 주행 거리·저속 시간이 있어야 나오고 그 둘은 18번 방(도로망 그래프) 뒤에 온다. 이 절이 있어도 판정기는 아직 택시 소요·요금을 내지 않는다(alternatives.택시 = 근거없음 유지). 15번 방(2026-09-19).",
@@ -1380,7 +1387,7 @@
     "근거": "인터내셔널택시(관광택시)는 외국인 승객 탑승 시 20% 할증 가능. **일반 택시가 아니라 우리 산식에 넣지 않는다** — 기록만. 중형 복합 상한 60% 는 이 20% 를 포함한 상한이다."
    },
    "산식": {
-    "value": "fare = round_nearest(step, (base + ceil(max(0, dist_m - base_dist_m)/dist_unit_m)*dist_unit_won + ceil(slow_s/time_unit_s)*time_unit_won) × (1 + night + out_of_city, 상한 max_combined)) + 통행료; 호출료 별도",
+      "value": "fare = round_nearest(step, declared_night_base_or_base + base × (combined_rate - night) + (ceil(max(0, dist_m - base_dist_m)/dist_unit_m)*dist_unit_won + ceil(slow_s/time_unit_s)*time_unit_won) × (1 + combined_rate)) + 통행료; combined_rate=min(night+out_of_city,max_combined); 호출료 별도",
     "grade": "추정",
     "근거": "서울 중형택시는 15.72km/h 미만에서 시간·거리 동시병산, 대형·모범은 상호병산이다(서울시 물가정보, 2026-10-08 확인). 중형은 전 구간 거리와 저속 시간을 합산하고 대형·모범은 저속 거리를 뺀다. 여기에 여행 예산용 10%(최소 1,000원) 여유를 더해 예상액으로 안내한다. 예산 여유는 법정 요율이나 실제 결제 상한이 아니다. 실제 결제액은 교통·대기·호출료·시계외 할증에 따라 달라진다.",
     "입력": {
@@ -1427,8 +1434,8 @@
       "dist_m": 5000,
       "slow_s": 0,
       "time": "23:30",
-      "expect_won": 10400,
-      "풀이": "7,400 × 1.4 = 10,360 → 10,400"
+       "expect_won": 10300,
+       "풀이": "서울시 고시 심야 기본 6,700 + ceil(3400/131)=26 × 심야 거리 140 = 10,340 → 10,300. 고시 기본요금 대신 4,800×1.4를 쓰지 않는다. 2026-10-12 공식 표 재확인; 미터 추정이며 실제 결제 보증 아님."
      },
      {
       "name": "중형 03:00 시계외 5.0km",
@@ -1542,8 +1549,23 @@
    },
    "distance_estimate": {
     "value": {
-     "lines": ["01호선", "02호선", "03호선", "04호선", "05호선", "06호선", "07호선", "08호선", "09호선", "경의선", "수인분당선", "경춘선", "서해선", "경강선"],
-     "tolerance": 0.30,
+     "lines": [
+      "01호선",
+      "02호선",
+      "03호선",
+      "04호선",
+      "05호선",
+      "06호선",
+      "07호선",
+      "08호선",
+      "09호선",
+      "경의선",
+      "수인분당선",
+      "경춘선",
+      "서해선",
+      "경강선"
+     ],
+     "tolerance": 0.3,
      "tolerance_rule": "추정 간선 n 개를 지난 경로의 상대 오차 = tolerance / sqrt(n)",
      "unknown_edge_floor": 0.75,
      "source_file": "rail_edge_track_v1.jsonl.gz"
@@ -1596,10 +1618,11 @@
      "간선",
      "지선",
      "순환",
-     "마을"
+     "마을",
+     "광역"
     ],
-    "grade": "추정",
-    "근거": "공식 페이지 문구는 유형을 나누지 않는다. 적용 유형(간선·지선·순환·마을 · 심야 제외)은 2023-08-12 요금 안내문 전재(2차 출처 pat.im/1586)만 봤다. 광역은 목록에 없어 조조 없이 3,000 — 광역 조조가 있으면 과대(값이 조금 비싸게 나옴)."
+    "grade": "확정",
+    "근거": "서울시 버스정책과 요금표 https://news.seoul.go.kr/traffic/archives/1706 (수정 2026-03-09, 시행 2023-08-12), https://mediahub.seoul.go.kr/archives/2008762 광역 성인 카드 조조 2,400원. 조회 2026-10-12; 심야는 조조 없음."
    }
   },
   "transfer": {
@@ -1611,6 +1634,9 @@
    "distance_steps": {
     "value": {
      "base_m": 10000,
+     "base_m_by_type": {
+      "광역": 30000
+     },
      "steps": [
       {
        "upto_m": null,
@@ -1620,7 +1646,7 @@
      ]
     },
     "grade": "확정",
-    "근거": "물가정보 지하철 페이지 환승 「추가요금: 10km초과시 매5km 까지 마다 100원 가산」 · 버스 페이지 「기본요금(10km)까지 + 추가 5km마다 100원씩」 — 지하철 단독의 50km 넘는 8km 단계가 아니다(GPT 54 #3). 광역·경기좌석 등은 30km 초과시(이 절의 types 밖)."
+    "근거": "서울시 통합환승 할인제 안내(2026-02-02 수정, 2026-10-11 조회) 기본구간 10km, 광역버스 30km, 초과 매5km 100원. 지하철 단독의 50km 넘는 8km 단계가 아니다. 서울 광역만 추가하며 경기좌석 등 별도 유형은 이 절의 types 밖이다. https://news.seoul.go.kr/traffic/transfer_discount"
    },
    "cap": {
     "value": "sum_of_single",
@@ -1648,15 +1674,25 @@
      "간선",
      "지선",
      "순환",
-     "마을"
+     "마을",
+     "광역"
     ],
     "grade": "확정",
-    "근거": "이 절의 규칙으로 매기는 탈것. 광역·심야가 섞인 환승은 기본운임 기준 거리(광역 30km 등)를 공식 페이지에서 확인 못 해 값을 뺀다."
+    "근거": "서울시 통합환승 할인제 안내의 적용 대상 서울버스 간선·지선·순환·광역·마을. 서울 광역의 기본구간 30km를 2026-10-11 공식 안내로 확인하여 연결했다. 심야와 경기/인천 별도 유형은 이번 적용 밖이다. https://news.seoul.go.kr/traffic/transfer_discount"
    },
    "bus_distance": {
-    "value": null,
-    "grade": "근거없음",
-    "근거": "버스 구간의 운임거리 근거가 없다 — `bus_stops_v1.sect_dist_m` 은 41 이 이상 셀을 보고한 값이라 요금에 안 쓴다((53) 정정 방 뒤). 그래서 **버스가 섞인 환승(버스→지하철 · 버스→버스)은 지금 값을 안 낸다**. 규칙은 합성 시험으로만 잠근다."
+    "value": "selected_contiguous_sections",
+    "grade": "추정",
+    "근거": "2026-10-11 제품 연결: 서울시 노선정보조회 getStaionByRoute의 fullSectDist(구간거리)를 보존한 sect_dist_m을 선택 노선 ID·승하차 순번·정류소 ID가 맞고 중간 순번/거리가 완전한 경우만 합산한다. 이 거리가 교통카드 청구 운임거리와 같다고 확정하지 않는다. 성인 1인 1카드·승하차 태그 조건부 할인 예상액으로 표시하고 조조는 미적용한다. 같은 버스 노선 재승차/환승시간 초과/유형 밖/거리 누락이면 개별 요금 합 예상액 상단으로 대체한다. 출처 https://www.data.go.kr/data/15000193/openapi.do · https://news.seoul.go.kr/traffic/transfer_discount · 조회 2026-10-11."
+   },
+   "max_ride_min": {
+    "value": {
+     "subway": 300,
+     "bus": 300,
+     "마을": 60
+    },
+    "grade": "확정",
+    "근거": "서울시 통합환승 할인제도 안내(2026-02-02 수정, 2026-10-11 조회)의 최대 이용시간 지하철/시내버스 5시간, 마을버스 1시간. 초과 시 기본요금 재부과이므로 할인 모델 적용에서 제외한다. https://news.seoul.go.kr/traffic/transfer_discount"
    }
   }
  },
@@ -2093,7 +2129,7 @@
   "MOB_W_BIKE_OVERTIME": {
    "class": "cost",
    "to_answer": true,
-   "text": "자전거 소요 {ride_min}분이 1시간권 기준 {warn_min}분을 넘는다 — 초과 5분당 200원. 중간 반납 후 재대여하면 초과요금이 없다",
+   "text": "자전거 소요 {ride_min}분이 선택한 이용권 기준 {warn_min}분을 넘는다 — 반납 지연 시 초과요금이 생길 수 있다",
    "params": [
     "ride_min",
     "warn_min"
@@ -2495,38 +2531,57 @@
     }
    },
    "fare": {
-    "설명": "외국인 이용권(비회원 · 해외 발급 카드 또는 Discover Seoul Pass). 기본대여 1시간, 반납 후 재대여 무제한.",
+    "설명": "외국인 메뉴의 확인된 1/2시간권 대여조건으로 이용권+초과요금 합계가 최소인 권종을 선택합니다. 일반 비회원 3시간권은 별도 구매 경로입니다. 보존된 24시간권은 1회 대여조건 미확인으로 계산에서 제외합니다. 재대여·이미 구매한 이용권은 가정하지 않습니다.",
     "passes": {
      "value": [
       {
        "name": "1h",
        "minutes": 60,
-       "won": 1000
+       "won": 1000,
+       "purchase_channels": [
+        "foreigner",
+        "standard"
+       ],
+       "ride_limit_min": 60
       },
       {
        "name": "2h",
        "minutes": 120,
-       "won": 2000
+       "won": 2000,
+       "purchase_channels": [
+        "foreigner",
+        "standard"
+       ],
+       "ride_limit_min": 120
       },
       {
        "name": "3h",
        "minutes": 180,
-       "won": 3000
+       "won": 3000,
+       "purchase_channels": [
+        "standard"
+       ],
+       "ride_limit_min": 180
       },
       {
        "name": "24h",
        "minutes": 1440,
-       "won": 5000
+       "won": 5000,
+       "purchase_channels": [
+        "foreigner"
+       ],
+       "ride_limit_min": null,
+       "rental_condition_status": "unverified_excluded_from_estimate"
       }
      ],
-     "grade": "확정",
-     "근거": "외국인 이용권 구매 페이지 원문(2026-09-19 21:40 KST). 요금 계산은 「소요를 덮는 가장 싼 이용권」으로 한다 — 이용권마다 기본대여는 1시간이고 초과는 아래 overtime."
+     "grade": "추정",
+     "근거": "1/2/3시간 각 1,000/2,000/3,000원, 기본 대여 60/120/180분: https://news.seoul.go.kr/traffic/archives/33719 (수정 2026-03-10), https://sisul.or.kr/open_content/traffic/bikeseoul.jsp. 외국인 1/2/24시간 1,000/2,000/5,000원: https://english.visitseoul.net/tours/Explore-Seoul-on-a-Seoul-Bike/18469 (수정 2026-06-19). 조회 2026-10-12. 24시간권의 현재 판매·반납 조건은 구매 화면 재확인 필요; 기존 권종 보존. 3시간권 해외결제 제공 여부는 확인하지 않았습니다."
     },
     "base_ride_min": {
      "value": 60,
      "unit": "min",
      "grade": "확정",
-     "근거": "이용권 종류와 무관하게 1회 대여 기본시간 1시간. 반납 후 재대여하면 초과요금이 안 붙는다 — 판정기는 재대여를 가정하지 않는다(안내만 한다)."
+     "근거": "권종에 1회 대여시간(minutes 또는 ride_limit_min)이 없을 때만 쓰는 기본값. 1/2/3시간권은 각각 60/120/180분이며 모든 권종에 60분을 적용하지 않습니다. 공식 서울시/서울시설공단 요금표 조회 2026-10-12."
     },
     "overtime": {
      "value": {
@@ -2541,6 +2596,11 @@
      "unit": "min",
      "grade": "추정",
      "근거": "17번 §4. 승차 소요(대여~반납)가 이 값을 넘으면 MOB_W_BIKE_OVERTIME — 1시간권 기준으로 10분 여유. 반납 지연·길찾기를 흡수하는 여유이고 실측 없음."
+    },
+    "purchase_channel": {
+     "value": "foreigner",
+     "grade": "확정",
+     "근거": "기존 외국인 메뉴·해외 발급 카드 안내의 구매 경로를 유지합니다. 일반 비회원 3시간권을 외국인 메뉴에서 판매한다고 추정하지 않습니다."
     }
    },
    "rent_return_min": {

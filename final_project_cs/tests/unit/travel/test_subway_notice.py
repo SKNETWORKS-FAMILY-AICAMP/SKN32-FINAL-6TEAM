@@ -85,9 +85,9 @@ def test_station_matching_needs_the_full_name_and_the_right_line():
     assert events.affecting(["3호선:이대"]) == {}, "호선이 다르면 같은 역 이름이어도 아니다"
 
 
-def test_a_station_list_title_only_catches_the_last_station_a_documented_limit():
+def test_a_station_list_title_catches_each_station_sharing_the_station_suffix():
     events = _events(_row("4호선 시위로 혜화, 한성대입구역(하선) 무정차 통과", line="4호선"))
-    assert list(events.affecting(["4호선:한성대입구", "4호선:혜화"])) == ["4호선:한성대입구"]
+    assert list(events.affecting(["4호선:한성대입구", "4호선:혜화"])) == ["4호선:한성대입구", "4호선:혜화"]
 
 
 def test_unsupported_targets_are_reported_not_answered_as_no_event():

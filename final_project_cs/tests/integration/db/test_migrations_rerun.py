@@ -20,7 +20,7 @@ from app.infrastructure.db.migrate import apply_all
 
 #: 가장 넓은 최종 목록 — 마이그레이션이 이유를 더하면 여기에도 더한다(빠지면 시험이 알려 준다)
 FINAL_REASONS = {"ask_first", "protected", "safety_alert", "indoor_unknown", "indoor_unknown_options",
-                 "relaxed", "requested_options", "other_options"}
+                 "relaxed", "requested_options", "other_options", "forecast_advisory", "forecast_advisory_options"}
 
 
 def _dsn_for(db_name: str) -> str:

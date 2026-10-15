@@ -1,0 +1,52 @@
+{
+  "date_kst": "2026-10-11",
+  "observed_at_kst": "2026-10-11T03:36:29+09:00",
+  "scope": "Oracle ARM app model connection and actual travel answers",
+  "model_connection_verified": true,
+  "model_engine": "llama.cpp",
+  "model_variant": "existing e4bt Q4_K_M merged adapter, exact oos lineage unverified",
+  "db_connection_verified": true,
+  "completed_soak_audit": {
+    "batches": 61,
+    "profile": "language_style",
+    "messages": 244,
+    "answer_success": 134,
+    "decision_failed": 110,
+    "old_http_checks_must_not_be_read_as_answer_success": true,
+    "independent_accuracy": false
+  },
+  "actual_first_question": {
+    "completed": true,
+    "valid_decision": true,
+    "seconds": 247.06030261301203,
+    "input_processing_seconds": 13.908297,
+    "generation_seconds": 48.282149,
+    "remainder_includes_queue_transport_and_overhead": true
+  },
+  "checks_patch": {
+    "validation_version": "travel-answer-v2",
+    "local_files_updated": true,
+    "remote_regression_passed": 13,
+    "remote_regression_total": 13,
+    "remote_apply_state": "applied_and_hash_verified",
+    "apply_unit": "tripilot-arm-apply-answer-checks-20261011.service",
+    "stage_relative_to_deploy_base": "incoming/answer-checks-20261011-0332",
+    "next_check": "Read applied.json and confirm installed checks hash; do not start duplicate apply job",
+    "active_model_or_app_work_interrupted": false,
+    "applied_at_utc": "2026-10-10T18:34:29.803007+00:00",
+    "checks_sha256": "d76480d852f91fc0dd555570100f20df8ac66b77e8d60960fdf69d2d41689909",
+    "full_new_batch_completed": false
+  },
+  "root_output_failure": "Reproduced: six-turn history and Chinese travel question exhaust 400 output tokens with empty assistant content. Adapter returns HTTP 200. Exact reasoning/parser/generation cause and model-output repair unresolved.",
+  "source_report": "../../../final_project_cs/wiki/records/reports/2026-10-11_0323_arm-llm-response-failure.md",
+  "private_evidence": "../../scripts/plan_qa_bench/results/oracle_llm_diagnosis_20261011_032310/",
+  "daily_paper_research_completion": "unchanged",
+  "history_replay": {
+    "completed": true,
+    "http": 200,
+    "seconds": 396.5316533439909,
+    "completion_tokens": 400,
+    "content_empty": true,
+    "parse_error": "JSONDecodeError"
+  }
+}

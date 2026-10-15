@@ -1,0 +1,13 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/architecture/test_travel_ops_cells.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\train-identity-architecture-v1",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1228_지하철_문자열열차번호_선택연결\\architecture-v1.xml"
+  ],
+  "cwd": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs",
+  "exit_code": 0
+}

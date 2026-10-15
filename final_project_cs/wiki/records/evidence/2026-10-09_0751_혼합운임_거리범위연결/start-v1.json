@@ -1,0 +1,24 @@
+{
+  "tag": "2026-10-09_0751_혼합운임_거리범위연결",
+  "created_at": "2026-10-09T07:51:12.275731+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0751_혼합운임_거리범위연결/options.py",
+      "sha256": "993238427a30ff6a7122032b87f746e5b8c6dc13fa36da3b208a7b6bdfd3d558"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0751_혼합운임_거리범위연결/plan.py",
+      "sha256": "03411bb15f564384edb83a24948cca7ff8027a59556f1722c0c9fa2d5628feb9"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0751_혼합운임_거리범위연결/mobility.md",
+      "sha256": "3e0dd2d00dfb751cac8c1fde5720b31185bcb4f58b2f25a6ef26a2fa919563d8"
+    }
+  ],
+  "debug": "wiki/records/reports/debugs/2026-10-09_0751_혼합운임_거리범위연결_상단계산을_혼합후보에서_누락.md",
+  "prior_source_hashes": 209,
+  "prior_artifacts": 6
+}

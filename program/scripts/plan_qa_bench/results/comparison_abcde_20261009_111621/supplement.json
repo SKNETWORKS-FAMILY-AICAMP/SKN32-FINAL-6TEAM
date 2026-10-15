@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-10-09T11:16:21.817693+09:00",
+  "saluki_vs_gemma12b_E_request": {
+    "a_only": 26,
+    "b_only": 22,
+    "p": 0.6654658120766188
+  },
+  "source_sha256": {
+    "program/research/daily_rag_slm/arm_serving_2026-10-09.json": "169bee48c18348f689f76e1dba7877448aa08188475e590f30964c4a645aa826",
+    "program/scripts/plan_qa_bench/results/_pull/bench/conc_bench_A_gpu_taught.json": "9ddf11998340ce177dc92fb9780361218dc9cf89ef26c1db1ba2d7dd405eee1a"
+  },
+  "repeats": 1,
+  "independent_holdout_complete": false
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="9.242" timestamp="2026-10-14T17:27:04.807856+09:00" hostname="DESKTOP-A5H6T7G"><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_rechecking_a_kakao_activity_name_does_not_take_a_restaurant[tour]" time="2.149"><failure message="AssertionError: assert 'dining' != 'dining'&#10; +  where 'dining' = Resolved(status='resolved', method='tour_api', name='서촌 골목 밥집', query='서촌', kind='dining', latitude=37.579, longitude=...ces:서촌', 'tour_api:서촌', 'kakao:서촌', 'tour_api:서촌 골목'], blocked=[], candidates=[], chain_deferred=False, item_kind=None).kind">source = 'tour'
+
+    @pytest.mark.parametrize("source", ["tour", "dining"])
+    def test_rechecking_a_kakao_activity_name_does_not_take_a_restaurant(source):
+        hit = _hit("서촌 골목", group="")
+        hit["category"] = "여행 &gt; 관광,명소"
+        found = resolve("서촌", kind_hint="activity", our_places=[],
+                        kakao=Kakao({"서촌": [hit]}),
+                        **{source: NamedSource({"서촌 골목": _source_place("서촌 골목 밥집")})})
+    
+&gt;       assert found.kind != "dining"
+E       AssertionError: assert 'dining' != 'dining'
+E        +  where 'dining' = Resolved(status='resolved', method='tour_api', name='서촌 골목 밥집', query='서촌', kind='dining', latitude=37.579, longitude=...ces:서촌', 'tour_api:서촌', 'kakao:서촌', 'tour_api:서촌 골목'], blocked=[], candidates=[], chain_deferred=False, item_kind=None).kind
+
+tests\unit\travel\test_intake_activity_kind_guard.py:101: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_rechecking_a_kakao_activity_name_does_not_take_a_restaurant[dining]" time="0.006"><failure message="AssertionError: assert 'dining' != 'dining'&#10; +  where 'dining' = Resolved(status='resolved', method='dining_ledger', name='서촌 골목 밥집', query='서촌', kind='dining', latitude=37.579, longi...dining_ledger:서촌', 'kakao:서촌', 'dining_ledger:서촌 골목'], blocked=[], candidates=[], chain_deferred=False, item_kind=None).kind">source = 'dining'
+
+    @pytest.mark.parametrize("source", ["tour", "dining"])
+    def test_rechecking_a_kakao_activity_name_does_not_take_a_restaurant(source):
+        hit = _hit("서촌 골목", group="")
+        hit["category"] = "여행 &gt; 관광,명소"
+        found = resolve("서촌", kind_hint="activity", our_places=[],
+                        kakao=Kakao({"서촌": [hit]}),
+                        **{source: NamedSource({"서촌 골목": _source_place("서촌 골목 밥집")})})
+    
+&gt;       assert found.kind != "dining"
+E       AssertionError: assert 'dining' != 'dining'
+E        +  where 'dining' = Resolved(status='resolved', method='dining_ledger', name='서촌 골목 밥집', query='서촌', kind='dining', latitude=37.579, longi...dining_ledger:서촌', 'kakao:서촌', 'dining_ledger:서촌 골목'], blocked=[], candidates=[], chain_deferred=False, item_kind=None).kind
+
+tests\unit\travel\test_intake_activity_kind_guard.py:101: AssertionError</failure></testcase></testsuite></testsuites>

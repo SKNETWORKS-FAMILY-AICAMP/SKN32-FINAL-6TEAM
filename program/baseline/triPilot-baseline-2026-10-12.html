@@ -1,0 +1,273 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>triPilot 제품 전체 기준선 — 2026-10-12 · 검토본</title><style>*{box-sizing:border-box}body{margin:0;background:#fbfcfd;color:#161c28;font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif;font-size:16px;line-height:1.8}main{max-width:1080px;margin:auto;padding:40px 32px}h1{font-family:"Instrument Serif","Noto Serif KR","Malgun Gothic",serif;font-size:30px;line-height:1.4}h2{font-size:23px;margin-top:44px}a{color:#2f5bd8;overflow-wrap:anywhere}code{font-size:.88em;overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;font-size:14px;margin:24px 0}th,td{border:1px solid #dbe0ea;padding:10px;vertical-align:top;text-align:left;overflow-wrap:anywhere}th{background:#f1f4f8}.table-scroll{overflow:auto}figure{margin:32px 0;overflow:auto}svg{display:block;width:100%;min-width:740px;height:auto}img{max-width:100%}figcaption,.meta{font-size:13px;color:#6b7488;overflow-wrap:anywhere}.notice{border-left:4px solid #a8720c;padding:12px 20px;background:rgba(168,114,12,.1)}@media(max-width:600px){main{padding:24px 16px}h1{font-size:26px}h2{font-size:21px}table{min-width:650px}td,th{padding:8px}}@media print{main{padding:0;max-width:none}svg{min-width:0}table{min-width:0;font-size:10px}tr,figure{break-inside:avoid}a{color:inherit}}</style></head><body><main><p class="notice">최종 인수 전 검토본 — 제품 완료·출시 승인이 아닙니다.</p><p class="meta">Markdown SHA-256: bc91d30fd5e88b5f18a98d771f232515b9c1bc21926e5684fc24b56544ae891f</p><h1 id="tripilot-2026-10-12">triPilot 제품 전체 기준선 — 2026-10-12</h1>
+<p>이 문서는 제품 전체의 사양·구성·시험·환경 증거를 하나로 연결하는 <strong>최종 인수 전 검토본</strong>입니다. 기준선 ID는 <code>TRP-BL-2026-10-12</code>이며 아직 확정하지 않았습니다. 최신 전체 실행을 마쳤으나 필수 자료·외부 연결 조건이 남아 있으므로 제품 완료·출시 승인을 표시하지 않습니다.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>할 일</th>
+<th>상태</th>
+<th>진행</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>현재 요구 추적</td>
+<td>근거 수집</td>
+<td>25/25 = 100%</td>
+</tr>
+<tr>
+<td>최신 공통 전체 시험</td>
+<td>통과·건너뜀</td>
+<td>892/904 = 99%</td>
+</tr>
+<tr>
+<td>최신 여행 전체 원본</td>
+<td>종료·후속 검증</td>
+<td>6,892/6,946 = 99%</td>
+</tr>
+<tr>
+<td>식당·이동 자료 후속 (09:28)</td>
+<td>통과</td>
+<td>12/12 = 100%</td>
+</tr>
+<tr>
+<td>자료·도로 수정 후속 회귀 (20:22)</td>
+<td>이동 단위 실패18</td>
+<td>2,119/2,137 = 99.2%</td>
+</tr>
+<tr>
+<td>여행 규정 검색 시험 (21:33)</td>
+<td>통과</td>
+<td>17/17 = 100%</td>
+</tr>
+</tbody>
+</table></div>
+<p>기준 날짜는 2026-10-12이고, 이 판의 구성 관측은 <strong>2026-10-12 07:06:52 KST</strong>입니다. 실행 결과는 <strong>21:40 KST</strong> 후속 관측까지 반영했습니다(<a href="../../final_project_cs/wiki/records/reports/2026-10-12_2130_followup-data-regression.md">후속 기록</a>). 07:06:52의 구성 목록은 이후 다른 담당이 바꾼 코드(특히 이동 계산)를 담지 않습니다. 날짜가 넘어도 파일명은 기준 날짜를 유지하고 실제 확정 시각을 추가합니다. 현재 사양의 정본은 <a href="../../wiki/index.md">wiki</a>와 <a href="../../final_project_cs/wiki/index.md">cs 구현 계약</a>입니다. <a href="../plan/triPilot_구현계획서_v12.md">v12</a>는 안내서이며 <a href="../plan/A-COP_구현계획서_v11.md">v11</a>은 보존 기록입니다.</p>
+<h2 id="_1">구성 식별과 변경 책임</h2>
+<p><a href="../research/baseline_completion_2026-10-12/tasks/integration/current-review-manifest-2026-10-12_070652.json">현재 구성 목록</a>은 현재 wiki·앱·시험·평가·설정·SQL·배포 정의·지식/문구틀·고객 웹 소스/시험·문서 검사 도구의 <strong>2,170파일 SHA-256</strong>을 기록합니다. 백업·과거 records·legacy·node_modules·실제 datasets·비밀 환경 파일·모델 가중치는 이 목록에서 제외했습니다. 파일을 순차 읽은 관측이며 저장소 잠금·최종 동결·배포 증거가 아닙니다. 목록 밖 자료는 아래 별도 근거의 판본으로 확인합니다.</p>
+<p>v11 SHA-256은 <code>f4ad43d9154d723d13c816d42a8bf54b78491d3f706d76a08dade79795e9dca9</code>이며 시작 관측과 같습니다. 이번 작업은 commit·push·실제 업무 DB 적용·배포를 하지 않았으므로 작업 트리 해시와 원격 커밋을 같은 판본으로 표시하지 않습니다.</p>
+<p>변경은 wiki 확정 결정·계약을 먼저 확인한 뒤 구현·영향 시험·원문 해시·환경 적용 증거를 갱신합니다. 다른 담당의 작성분과 실행 시점은 원 보고서로 남깁니다. 담당자별 문서가 있다는 이유로 제품 기준선을 나누지 않습니다. 사양·구현·검증·배포 중 어느 축이 바뀌었는지 따로 기록합니다.</p>
+<h2 id="_2">요구와 인터페이스 추적</h2>
+<p>추적 별칭 <code>TRP-REQ-W01</code>~<code>TRP-REQ-W25</code>는 이번 25개 개정 요구를 가리키며 새로운 제품 요구를 추가하지 않습니다. <a href="../research/baseline_completion_2026-10-12/tasks/integration/integration-table.md">통합표</a>와 <a href="../research/baseline_completion_2026-10-12/tasks/integration/integration-table.json">원문 경로·해시·담당·판정 JSON</a>에 각 결정과 근거를 연결했습니다. 근거 수집25/25는 인수 통과25/25가 아닙니다.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>경계</th>
+<th>현재 계약</th>
+<th>구현·검증 근거</th>
+<th>남은 조건</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>고객 웹·개인 AI·공유 링크</td>
+<td><a href="../../wiki/product/scope.md">제품 범위</a>·<a href="../../final_project_cs/wiki/external/rest-endpoints.md">REST</a></td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/auth/report.md">인증 담당</a></td>
+<td>실제 개인 AI 등록·종단 연결</td>
+</tr>
+<tr>
+<td>OAuth·MCP</td>
+<td><a href="../../final_project_cs/wiki/external/personal-ai-oauth.md">OAuth</a>·<a href="../../final_project_cs/wiki/external/mcp-tools.md">MCP</a></td>
+<td>코드/refresh 재사용·권한·CSRF·소유권 격리 시험</td>
+<td>공개 HTTPS·쿠키·정확한 callback·실제 클라이언트</td>
+</tr>
+<tr>
+<td>분류→Team 실행</td>
+<td><a href="../../final_project_cs/wiki/teams/classification-execution-plan.md">실행 계획</a></td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/orchestration/report.md">단위179·격리 DB129</a></td>
+<td>실제 모델·원격 A2A·검색 자료 전제</td>
+</tr>
+<tr>
+<td>변경 제안→적용</td>
+<td><a href="../../final_project_cs/wiki/teams/team-boundary.md">Team 경계</a>·<a href="../../wiki/decisions/D-020-trip-survey-and-ask-first.md">D-020</a></td>
+<td>동시 제안·최신 설정·고정·CAS·멱등·outbox 시험</td>
+<td>실제 운영 적용 인수</td>
+</tr>
+<tr>
+<td>자료 실패→독립 작업 유지</td>
+<td><a href="../../wiki/decisions/D-018-decision15-stop-paths.md">D-018</a></td>
+<td><a href="../../final_project_cs/wiki/records/reports/2026-10-12_0520_diagnostic-delete-integration.md">오류 콜백·삭제·경쟁</a></td>
+<td>검색·실자료 전제</td>
+</tr>
+<tr>
+<td>조회→무료 우선·예산</td>
+<td><a href="../../final_project_cs/wiki/operations/unattended-operations.md">무인 운영</a></td>
+<td><a href="../../final_project_cs/wiki/records/reports/2026-10-12_0546_place-status-integration.md">장소 정책20</a>·실제 PostgreSQL 경쟁8</td>
+<td>무료 관측 충족률·가격 예외 경계</td>
+</tr>
+<tr>
+<td>진단→개발자·QA</td>
+<td><a href="../../final_project_cs/wiki/operations/unattended-operations.md">무인 운영</a></td>
+<td><a href="../../final_project_cs/wiki/records/reports/2026-10-12_0603_initial-diagnostics-integration.md">초기 진단268</a>·<a href="../../final_project_cs/wiki/records/reports/2026-10-12_0552_privacy-regression-integration.md">개인정보 파기</a></td>
+<td>비공개 영속 볼륨·실제 재시작 인수</td>
+</tr>
+</tbody>
+</table></div>
+<p>고객 설정 미응답은 자동 변경 꺼짐입니다. 고객이 고정한 항목·재난 정지·업체 거래 승인·고객 및 tenant 격리를 우회하지 않습니다. 조회 실패를 빈 정상 결과로 표시하지 않습니다. 상세 조건은 표의 정본에 있으며 이 문서가 별도 계약 사본을 소유하지 않습니다.</p>
+<h2 id="db">DB·자료·모델 식별</h2>
+<p>현재 SQL 목록·보류 파일·적용 순서는 <a href="../../final_project_cs/wiki/data/migration-inventory.generated.md">자동 SQL 목록</a>과 안전 실행기가 관리합니다. 신규 OAuth901·무인 운영902 후보는 격리 DB에서 검증했습니다. 902의 여행 참조 삭제 연쇄와 진단 참조 해제를 후속 접합했습니다. 기존 업무 DB 적용 여부는 이번 범위에서 확인·변경하지 않았습니다. 실제 열·외래키·인덱스는 <a href="../../final_project_cs/wiki/data/schema/index.md">구조 명세</a>를 따릅니다.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>자료·판본</th>
+<th>이번 식별·검증</th>
+<th>한계</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>여행 분류·holdout</td>
+<td><a href="../../final_project_cs/wiki/quality/eval-harness.md">현재 평가 안내</a>와 자료 검사기</td>
+<td>스키마 통과와 실제 모델 정확도는 별개</td>
+</tr>
+<tr>
+<td>여행 규정12문서·130청크</td>
+<td>현재 manifest와 검색 시험의 입력 전제. 학습 없는 원본 BGE-M3 실제 벡터 173개 로컬 계산(21:32)·검색 시험17/17 통과(21:33)</td>
+<td>로컬 계산 벡터와 x600 서버 운영 임베딩의 일치는 미확인; 오래된 운영 규칙의 현재 적합성도 확인 필요</td>
+</tr>
+<tr>
+<td>무료 식당 관측</td>
+<td>방문 구간·TTL·운영 허용 출처·tenant 읽기 접합</td>
+<td>실제 대상 장소 최신 자료 충족률 미확보</td>
+</tr>
+<tr>
+<td>Oracle ARM 안내 검색</td>
+<td>안내11청크·장소 임베딩 적격2,041개·질의6/6</td>
+<td>위 여행 규정130청크 시험을 대신하지 않음</td>
+</tr>
+<tr>
+<td>실제 데이터 폴더</td>
+<td>전체 ignore 규칙 및 대표4경로 확인</td>
+<td>기존 추적57개·인덱스 검토 별도, 삭제하지 않음</td>
+</tr>
+<tr>
+<td>모델 실험</td>
+<td><a href="../../final_project_cs/wiki/quality/model-version-reports.md">판본·독립 보고서</a></td>
+<td>학습·후보 선정·채택·배포를 분리</td>
+</tr>
+</tbody>
+</table></div>
+<p>Jev 계열 모델 중 학습 없는 Winnow-E4B와 우리 여행 자료로 가르친 Winnow-E4B는 다른 판본입니다. 모델 이름만으로 학습 상태·어댑터·양자화·실행 엔진·자료 해시를 대신하지 않습니다. Oracle ARM 관측 모델은 추가 학습 없는 배포 원본 Gemma-4-E4B QAT Q4_0이며, <a href="../../final_project_cs/wiki/records/reports/2026-10-12_0454_arm-search-model-repair.md">실측</a>의 실제 채팅4/4·59.80~68.53초는 독립 제품 평가가 아닙니다. 하위 에이전트 구축·파인튜닝 보고서는 이 제품 기준선의 근거로 연결합니다.</p>
+<h2 id="_3">실행 증거와 판정 범위</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>실행</th>
+<th>결과</th>
+<th>전후 소스·정리</th>
+<th>원본</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>최신 공통 전체</td>
+<td>892통과·12건너뜀·실패0 / 총904</td>
+<td>변경0·전용 PostgreSQL 종료</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_055926_851705_isolated_integration/junit.xml">JUnit</a></td>
+</tr>
+<tr>
+<td>초기 분류·라우팅·Controller·구조</td>
+<td>268/268 통과</td>
+<td>변경0·전용 PostgreSQL 종료</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_055733_173846_isolated_integration/junit.xml">JUnit</a></td>
+</tr>
+<tr>
+<td>개인정보·여행·정책 선택 회귀</td>
+<td>218통과·11건너뜀 / 총229</td>
+<td>변경0·전용 PostgreSQL 종료</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_054657_390668_isolated_integration/junit.xml">JUnit</a></td>
+</tr>
+<tr>
+<td>과거 실패22개 대응</td>
+<td>위 선택 실행에서22/22 통과</td>
+<td>과거 실패 원본 보존</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/verification/current-results.md">독립 담당 대조</a></td>
+</tr>
+<tr>
+<td>최신 여행 전체 원본</td>
+<td>6,892통과·2실패·37오류·15건너뜀 / 총6,946</td>
+<td>변경0·전용 PostgreSQL 종료</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_060205_589376_isolated_integration/">실행 폴더</a></td>
+</tr>
+<tr>
+<td>식당·이동 자료 부족7개 후속 (09:28)</td>
+<td>12/12 통과</td>
+<td>변경0</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_092645_945781_isolated_integration/junit.xml">JUnit</a></td>
+</tr>
+<tr>
+<td>자료·도로 수정 후속 회귀 (20:22)</td>
+<td>2,119통과·18실패 / 총2,137</td>
+<td>변경0·전용 PostgreSQL 종료</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_202211_388862_isolated_integration/junit.xml">JUnit</a></td>
+</tr>
+<tr>
+<td>여행 규정 검색 (21:33)</td>
+<td>17/17 통과</td>
+<td>변경0·전용 PostgreSQL 종료</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_213215_423735_isolated_integration/junit.xml">JUnit</a></td>
+</tr>
+<tr>
+<td>이동 실패 파일5개 재확인 (21:33)</td>
+<td>106통과·18실패 / 총124</td>
+<td>다른 담당이 무관한 1파일 변경</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_213331_654488_isolated_integration/junit.xml">JUnit</a></td>
+</tr>
+<tr>
+<td>wiki 기본</td>
+<td>현재307개 위반0</td>
+<td>records1339개 규칙 제외</td>
+<td><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_0645_wiki.json">검사 JSON</a></td>
+</tr>
+<tr>
+<td>자동 생성물</td>
+<td>생성 후 일치</td>
+<td>이전 파일 자동 백업</td>
+<td><a href="../scripts/build_wiki_catalogs.py">생성기</a></td>
+</tr>
+</tbody>
+</table></div>
+<p><a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/suite-review-2026-10-12_064405.json">고유 시험별 후속 대조</a>는 <strong>7,827/7,850 = 99.71% 통과</strong>, 검색 자료 전제16개와 요식·이동 자료 건너뜀7개를 남깁니다. 수집 때 생성한 UUID를 쓰는 OAuth 고객 불일치 사례 하나만 사례 종류로 정규화했습니다. 단일 전체 실행의 통과 수가 아닙니다. 여행 전체의 DB 차단12회·외부 또는 기존 로컬 서비스 연결 차단4회도 원본으로 보존합니다.</p>
+<p>06:44 대조 이후 식당·이동 자료 부족7개는 09:28 격리 실행에서 해소됐습니다. 20:22 후속 회귀의 실패18개는 모두 이동 단위 시험이며, 09:28 이후 이동 담당이 바꾼 계산 코드와 시험·기대값이 어긋난 것으로 보입니다(시험용 객체에 새 속성 없음·없어진 함수 호출·골든 불일치). 이동 담당이 판정할 범위로 남기고 해결로 표시하지 않습니다. 21:33 재확인에서도18개가 그대로 실패했습니다. develop에 합쳐진 이동 관련 수정(풀 리퀘스트 #41)은 다른 e2e·A2A 시험52건을 고친 것이며 이 작업 폴더에는 아직 없습니다. 검색 자료 전제16개는 21:33 실제 벡터로17/17 통과했습니다(파일에 시험1개 추가). 이 새 결과들을 06:44의7,827/7,850에 더해 새 전체 수로 만들지 않습니다. 시험 식별자별 재집계는 검색 시험16개 실행 뒤 합니다.</p>
+<p>선택 실행끼리 중복이 있으므로 통과 수를 합쳐 제품 전체 통과 수로 만들지 않습니다. 공통의 건너뜀12개와 선택 회귀의 건너뜀11개는 PGlite 패키지 전제입니다. 이후 기존 패키지를 지정한 <a href="../../final_project_cs/wiki/records/reports/2026-10-12_0626_review-support-db-integration.md">추가 실행</a>에서는 PGlite12개·실제 PostgreSQL8개를20/20 통과했습니다. 기본 실행의 건너뜀을 소급 삭제하지 않습니다. 실제 PostgreSQL 경쟁·복구8개는 별도 opt-in으로 실행했습니다. <a href="../research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/followup-summary.json">독립 검증</a>의 보안·정책210/210과 관문 연결150/150은 별도 원본입니다. 작은 선택22개 중4개는 시험 초기화 문제로 실패했으며 확장 선택에서는 통과했습니다. 실제 조립의 설정 키를 준비하도록 시험 초기화를 보완한 뒤 단독4/4를 확인했습니다. <a href="../../final_project_cs/wiki/records/reports/2026-10-12_0644_whole-suite-integration-review.md">최신 후속 검토</a>에서 DB·보안·계약404/404, OAuth 실제 PostgreSQL8/8, 이력 분류14/14와 원본을 연결합니다. 앞선 Windows 비정상 종료2회, 변경 중 실행, 수집0개 준비 실패를 원본으로 보존하며 원인을 확정하지 않습니다.</p>
+<p>기존 여행 재개분6,746개는 6,662통과·49실패·20준비 오류·15건너뜀이었습니다. 앞선167개 재검증·후속 실패22개 통과를 하나의 안정된 전체 실행으로 합치지 않습니다. 최신 전체와 후속 실행을 고유 시험별로 대조했으며 단일 전체 통과 실행으로 합치지 않습니다. <a href="../research/baseline_completion_2026-10-12/tasks/verification/report.md">검증 담당 원본</a>.</p>
+<p>독립 검증 담당의 마지막 재시험은 <strong>이전 실패22/22·로그인/권한156/156·이력 분류14/14</strong>를 통과했습니다. 세 실행 각각 시작·종료의 소스1,410파일이 같고 이번 대조에서도 변경0개입니다. <a href="../../program/research/baseline_completion_2026-10-12/tasks/verification/final-handoff-2026-10-12.md">최종 독립 검증 인계</a>에서 JUnit 원문·SHA-256·전체 원본7/7회 대조와 자료 조건23개를 확인합니다. 통합 전체 실행기의 소스1,237파일 범위에는 eval173개가 없었으며 독립 실행은 이를 포함했습니다. 이 범위 차이를 전체 실행 당시의 동결 증거로 확대하지 않습니다.</p>
+<p>규칙 등록은70개(automated67·review3)이고 문서 인용 고유ID는84개입니다. 두 수는 집계 범위가 다르며 시험 통과 수가 아닙니다. <a href="../../final_project_cs/wiki/quality/invariant-summary.generated.md">불변식 자동 집계</a>. 전체 원본의 보안92/92·계약283/283·구조156/156·평가16/16 및 v11 당시 관문 연결26/26을 대조했습니다. 고정 파일 변경 검사는 통과했고 이력 분류 누락3개도 보완했습니다. <a href="../research/baseline_completion_2026-10-12/tasks/integration/checks/final-gate-2026-10-12_064132/summary.json">관문 대조</a>는 현재 wiki의 실자료·외부 종단·운영 인수 통과를 뜻하지 않습니다.</p>
+<h2 id="_4">환경별 적용과 남은 위험</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>환경·구성</th>
+<th>기록 시점·관측</th>
+<th>이번 기준선의 범위</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>로컬 전용 시험 DB</td>
+<td>현재 SQL·문구틀·합성 여행, 매 실행 새 클러스터</td>
+<td>업무 DB와 외부 연결 차단, 종료 원본 보존</td>
+</tr>
+<tr>
+<td>x600 서버의 cs 프로젝트 서버</td>
+<td>다른 담당의 <a href="../../final_project_cs/wiki/records/reports/2026-10-12_실서비스_채팅_45질문_최종검증.md">45질문·86응답 관측</a>, 매니저d5708569·배포 후3/3</td>
+<td>해당 채팅9파일 해시 관측, 이번 신규 기능 전체 배포 증거 아님</td>
+</tr>
+<tr>
+<td>Oracle ARM 앱·모델</td>
+<td>다른 담당의 2026-10-12 04:53 KST 검색/채팅 기록</td>
+<td>검색 복구 확인·지연 미해결·전체 제품 인수 아님</td>
+</tr>
+<tr>
+<td>GPU 서버</td>
+<td>모델별 독립 연구 기록</td>
+<td>공개 고객용 앱 정상 가동과 별개</td>
+</tr>
+</tbody>
+</table></div>
+<p><a href="../../final_project_cs/wiki/records/reports/2026-10-12_서울28건_도로구간과방향_추가대조.md">실경보의 방향 판정 실패18건</a>, <a href="../../final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/REPORT.md">실제 택시 미터 오차 표본의2/4 기준 충족·평균 과소1,125원</a>은 별도 미해결 검토 대상입니다. 택시 계산 예시1개를 바로잡은 것과 실사용 정확도를 같은 결과로 쓰지 않습니다. 고객 장소 자료 충돌·최초502의 근본 원인·Oracle ARM 지연도 다른 담당의 남은 범위로 보존합니다.</p>
+<p>mock 서버 시험(화면 반응): 고객 UI·인증·운영 화면의 각 원본 범위로 확인하며 실제 제공처 정확도에 합산하지 않습니다.</p>
+<p>실서버 확인(서버 응답): 이번 통합은 외부 제공처·운영 cs 프로젝트 서버를 새로 호출하지 않았습니다. 날짜가 있는 기존 관측만 재사용합니다. <a href="../../final_project_cs/wiki/operations/current-state.md">환경 현황 정본</a>.</p>
+<h2 id="_5">확정 조건과 후속 작업</h2>
+<p>전체 원본과 후속 재시험을 정확한 시험별로 대조했습니다. 추가 변경이 생기면 영향 시험을 다시 실행합니다. HTML 내용·링크·용어·비밀값·생성물·v11 보존·최종 해시를 확인한 뒤 이 검토본의 확정 여부를 판정합니다.</p>
+<p>실제 개인 AI 종단 연결에는 클라이언트 ID·정확한 callback 사전 등록과 공개 HTTPS·쿠키 환경 확인이 필요합니다. 여행 검색 시험은 실제1024차원 벡터로17/17 통과했습니다. 문서 내용의 현재 적합성 검토와 운영 임베딩과의 일치 확인은 남습니다. 이동 단위 실패18개는 이동 담당 판정이 남습니다. 무료 관측 충족률·요식·택시 실제 자료와 운영 영속 볼륨 인수도 구분합니다. 필요한 자격·승인이 없으면 해당 조건을 남기고 완료로 표시하지 않습니다.</p>
+<p>이번 작업은 업무 DB 변경·배포·원격 재시작·고객 알림·유료 호출·commit·push·다른 세션 메시지를 수행하지 않습니다. 최종 산출물과 검사 증거가 완성되기 전에는 후속 확인을 종료하지 않습니다. 최종 수정 전 판본은 각 산출물 옆 <code>_backup/</code>에 보존합니다.</p></main></body></html>

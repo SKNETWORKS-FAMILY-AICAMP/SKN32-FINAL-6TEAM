@@ -157,9 +157,9 @@ def test_same_place_under_another_id_is_excluded_by_name():
 
 
 def test_trip_id_on_the_booking_finds_the_itinerary():
-    """코어가 `read.booking` 에 `trip_id` 를 올리면 `subject_ref` 없이도 일정 장소를 뺀다."""
+    """코어가 `read.booking` 의 `trip.trip_id` 가 있으면 `subject_ref` 없이도 일정 장소를 뺀다."""
     values = {"read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": TUESDAY, "party_size": 2,
-                               "capacity": 4, "trip_id": "t1"},
+                               "capacity": 4, "trip": {"trip_id": "t1", "matched_by": "itinerary_item", "why_unknown": None}},
               "read.policy": [], "read.place": PLACE, "read.disruptions": CLEAR, "read.disaster": disaster_from(CLEAR),
               "read.place_hours": _hours({**WEEK, "tue": "closed"}), "read.place_candidates": POOL,
               "read.itinerary": {"trip": {"trip_id": "t1", "version": 1},

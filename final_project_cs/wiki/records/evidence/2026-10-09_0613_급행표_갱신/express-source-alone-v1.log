@@ -1,0 +1,24 @@
+F........                                                                [100%]
+================================== FAILURES ===================================
+________ test_changed_file_is_reloaded_without_clearing_process_cache _________
+
+source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-alone-v1/test_changed_file_is_reloaded_0/express.json.gz')
+
+    def test_changed_file_is_reloaded_without_clearing_process_cache(source):
+        write_runs(source)
+        first = EX.load_line('01호선')
+        assert first['weekday'][0][1] == 600
+        write_runs(source, 300)
+        second = EX.load_line('01호선')
+>       assert second['weekday'][0][1] == 605
+E       assert 600 == 605
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:41: AssertionError
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\express-source-alone-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_express_source_reload_v1.py::test_changed_file_is_reloaded_without_clearing_process_cache
+1 failed, 8 passed in 5.07s
+Exception ignored in: <function Console.__del__ at 0x0000024277025BC0>
+Traceback (most recent call last):
+  File "<python-runtime>\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

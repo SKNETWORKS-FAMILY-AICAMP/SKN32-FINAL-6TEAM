@@ -1,95 +1,38 @@
 ---
 type: guide
-title: Data
-description: 스키마·마이그레이션·tenant 격리. DDL 전문은 문서에 옮겨 적지 않는다
+title: 여행 데이터 안내
+description: 여행 일정·장소·예약·감시·요식 데이터와 SQL 적용 문서의 입구
 status: draft
-domain: commerce
-domain_note: [2026-09-10] 여행 표가 작업 트리에 생겼다(010_domain_travel·011_place_catalog, git 미추적). 커머스 표를 지우는 011_drop_commerce_domain 은 pending 이다. 그 전 서술 — 여행 전환 층 5(DB 도메인 표 19표 중 여행 표 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
+tags: [data, documentation]
+domain: travel
 ---
 
-# Data
+# 여행 데이터 안내
 
-`app/infrastructure/db/`
+여행 업무 데이터의 기준은 현재 SQL 파일과 실행 중인 DB의 조회 결과를 구분해서 확인합니다.
 
-**PostgreSQL이 업무 상태와 Action Transaction의 단일 원천이다.**
-
-## 각 문서
-
-| 문서 | 답하는 질문 |
+| 알고 싶은 것 | 정본 |
 |---|---|
-| [schema.md](schema/index.md) | 테이블 관계와 의미 |
-| [migrations.md](migrations.md) | 마이그레이션과 순서 — 작업 트리 13개 · git 9개 (6개로 적혀 있었다) |
-| [tenancy.md](tenancy.md) | tenant 격리를 어떻게 보장하는가 |
+| 여행 데이터의 역할과 관계 | [스키마 안내](schema/index.md) |
+| SQL 파일 목록·실행 순서·적용 주의 | [SQL 적용 안내](migrations.md) |
+| 고객별 데이터 격리 | [테넌트 격리](tenancy.md) |
+| 실제 SQL | [SQL 폴더](../../app/infrastructure/db/migrations/) |
+| 현재 여행 안내 검색 자료 | [적재 명세](../../knowledge/current-travel/manifest.json) · [Oracle ARM 적용 범위](../records/reports/2026-10-12_0454_arm-search-model-repair.md) |
 
-**DDL 전문은 여기 옮겨 적지 않는다.** 실제 파일을 가리킨다.
+주요 데이터는 여행·일정 판본·일정 항목, 장소 목록, 예약, 접수·대화, 사용자 인증, 항로 지킴이 관측·변경 기록, 요식 데이터입니다. Case·Action·Outbox는 공통 업무 상태와 실행 기록을 담당합니다.
 
-## 마이그레이션
+2026-10-11 디스크에서 SQL 실행 대상 파일 **89개**, `pending/` 파일 **1개**를 확인했습니다. 이것은 적용 완료 수나 운영 DB 테이블 수가 아닙니다. 이번 문서 정정에서는 로컬 개발 DB와 x600 서버의 cs 프로젝트 DB를 조회하거나 변경하지 않았습니다.
 
-`[실측]` `app/infrastructure/db/migrations/`
+쇼핑몰 데이터는 현재 여행 시험·평가·시연에 쓰지 않습니다. [D-023](../../../wiki/decisions/D-023-no-commerce-assets-in-use.md)의 2026-10-06 작업은 로컬 개발 DB에 한정됐으며, 그때 x600 서버의 cs 프로젝트 DB는 변경하지 않았습니다. 이후 상태는 해당 환경에서 다시 확인해야 합니다.
 
-| 파일 | 무엇 |
-|---|---|
-| `001_schema.sql` | Core 테이블 14종 |
-| `002_domain_commerce.sql` | orders, order_items, shipments, returns |
-| `003_outbox_tenant_scoped_dedupe.sql` | outbox 중복 제거 범위 |
-| `004_agent_runs_active_uniqueness.sql` | 실행 중복 방지 |
-| `005_outbox_resolution.sql` | outbox 해소 |
-| `006_products_catalog.sql` | products |
+## 이전 문서
 
-## 테이블 지도
+2026-10-11 정정 전 본문은 [보존본](_backup/2026-10-11_193844_current-facts/index.md)에 있습니다. 이전 측정·실험 결과를 현재 제품의 완료 증거로 사용하지 않습니다.
 
-**Core (도메인 무관)**
+## 관계
 
-```
-tenants → customers → customer_cases → case_events
-                    ↘ agent_runs → team_tasks
-                    ↘ action_requests → action_approvals
-knowledge_documents → knowledge_chunks
-outbox · prompts · llm_calls · feedback_analytics_reports
-```
+- [문서 작성 표준](../../../wiki/governance/document-standard.md) — 정본·근거·이력 분리 규칙
 
-**도메인 (커머스)**
+## 확인 범위
 
-```
-orders → order_items
-      ↘ shipments
-      ↘ returns
-products
-```
-
-## ★ 결제 테이블이 없다
-
-`[실측 2026-09-10]` **마이그레이션은 작업 트리 13개 · git 9개**이고 `pending/` 에 미추적 `011_drop_commerce_domain.sql` 이 하나 있다. 여행 표는 `010_domain_travel.sql`(`places`·`bookings`·`supplier_bookings`)·`011_place_catalog.sql` 에 있다. `[실측]` 그중 어디에도 `payments` 테이블이 없다. 결제 상태는 `orders.status`에 섞여 있다.
-
-```sql
--- 002_domain_commerce.sql:19
-status text NOT NULL,  -- placed / paid / shipped / delivered / cancelled
-```
-
-**주문 진행 상태와 결제 상태가 한 칸에 있다.** 의도된 것이고 결정 근거는 [D-001](../../../wiki/decisions/D-001-payment-ownership.md).
-
-### 금액 칸이 하나뿐이다
-
-```sql
--- 002_domain_commerce.sql:17
-total_cents int NOT NULL,
-```
-
-**정가인지 실결제액인지 구분이 없다.** 할인·포인트·쿠폰이 들어갈 자리가 없다.
-
-이게 [../teams/return-refund.md](../records/legacy/teams/return-refund.md)의 환불 계산이 할인에 취약한 근본 원인이다.
-
-## 이 영역의 불변식
-
-| ID | 불변식 | 판정 |
-|---|---|---|
-| `INV-CS-SEC-005` | 같은 tenant 안에서도 customer 간 누출이 없다 | automated |
-| `INV-CS-SEC-006` | customer 미지정 조회도 tenant를 벗어나지 않는다 | automated |
-
-**모든 조회에 `tenant_id`가 들어간다.** 빠뜨리면 위 테스트가 실패한다.
-
-## 인접 영역
-
-- [../runtime/shared-state.md](../runtime/shared-state.md) — 상태가 저장되는 방식
-- [../context/index.md](../context/index.md) — 여기서 읽어 간다
-- [../actions/outbox.md](../actions/outbox.md) — outbox 테이블
+[실측 2026-10-11 작업 트리] 파일 수·입력 행 수·현재 경로는 [변경·계수 기록](../../../program/research/wiki_review_2026-10-11/applied-current-facts-v3.json)에 남겼습니다. 배포 상태나 DB 적용 완료 수가 아닙니다.

@@ -67,7 +67,7 @@ export function PlaceChange({ item, session, search, onIndex, onApply, onApplyNa
       ? <SearchResults search={search} onPick={onPick} onApplyName={onApplyName} applyWhy={applyWhy} explain={explain} />
       : <div className={styles.changeBody}>
         <Carousel session={session} onIndex={onIndex}>
-          <CurrentCard item={item} session={session} candidatesSupported={candidatesSupported} />
+          <CurrentCard item={item} session={session} candidatesSupported={candidatesSupported} applyWhy={applyWhy} explain={explain} onApply={onApply} />
           {session.list.map((candidate, at) =>
             <CandidateCard key={candidate.id} candidate={candidate} current={item} index={at + 1} active={session.index === at + 1} applyWhy={applyWhy} explain={explain} onApply={() => onApply(candidate)} />)}
         </Carousel>
@@ -109,10 +109,14 @@ function Carousel({ session, onIndex, children }: { session: ChangeSession; onIn
   return <div ref={box} className={styles.carousel} onScroll={settle}>{children}</div>;
 }
 
-function CurrentCard({ item, session, candidatesSupported }: { item: PlanItem; session: ChangeSession; candidatesSupported: boolean }) {
+function CurrentCard({ item, session, candidatesSupported, applyWhy, explain, onApply }: {
+  item: PlanItem; session: ChangeSession; candidatesSupported: boolean; applyWhy: string | null; explain: (why: string) => void; onApply: (candidate: PlanCandidate) => void;
+}) {
   const t = useT();
   const time = [item.startsAt, item.endsAt].filter(Boolean).join("–");
   const others = session.list.length;
+  // ★`[2026-10-12 사용자 지시]` 검색으로 찾은 곳이 있으면 「수정하기」 화면의 지금 일정 카드에서 바로 선택한다 — 카드를 한 번 더 넘겨 「이 장소로 바꾸기」를 누를 필요가 없다.
+  const found = session.list.find((entry) => entry.source === "search") ?? null;
   const next = others ? t(`옆으로 넘기면 다른 후보 ${others}곳 →`, `Swipe for ${others} other place${others > 1 ? "s" : ""} →`)
     : session.state === "loading" ? t("다른 후보를 찾는 중…", "Finding other places…")
       : session.state === "failed" ? session.message ?? t("다른 후보를 불러오지 못했어요.", "Could not load other places.")
@@ -125,6 +129,10 @@ function CurrentCard({ item, session, candidatesSupported }: { item: PlanItem; s
     <p className={styles.changeSub}>{t(`${item.day}일차`, `Day ${item.day}`)} {time}{` · ${placeMeta(item.info, t) || (item.coordinates ? t("장소 정보 없음", "no place details") : t("지점 미정", "branch not set"))}`}</p>
     {item.checks.length > 0 && <Checks rows={item.checks} />}
     <p className={styles.changeNext} role={session.state === "failed" ? "alert" : undefined}>{next}</p>
+    {found && <>
+      <p className={styles.changeSub}>{t(`찾은 장소 「${found.name}」`, `Found: ${found.name}`)}</p>
+      <Act className={styles.action} data-primary why={applyWhy} explain={explain} onPress={() => onApply(found)}>{t("이 장소로 선택하기", "Choose this place")}</Act>
+    </>}
   </article>;
 }
 
@@ -169,7 +177,8 @@ function CandidateCard({ candidate, current, index, active, applyWhy, explain, o
     {candidate.checks.length
       ? <Checks rows={candidate.checks} />
       : <p className={styles.changeSub}>{t("바꾸면 서버가 이 장소로 일정을 다시 확인해요.", "Once changed, the server checks the plan with this place.")}</p>}
-    <Act className={styles.action} data-primary why={applyWhy} explain={explain} onPress={onApply}>{t("이 장소로 바꾸기", "Change to this place")}</Act>
+    {/* ★`[2026-10-12 사용자 지시]` 검색으로 고른 곳은 카드에서 「이 장소로 선택하기」 — 직접 검색했을 때와 같은 문구. */}
+    <Act className={styles.action} data-primary why={applyWhy} explain={explain} onPress={onApply}>{candidate.source === "search" ? t("이 장소로 선택하기", "Choose this place") : t("이 장소로 바꾸기", "Change to this place")}</Act>
   </article>;
 }
 

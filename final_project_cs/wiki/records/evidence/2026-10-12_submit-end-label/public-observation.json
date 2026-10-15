@@ -1,0 +1,19 @@
+{
+  "Scope": "공개 브라우저의 DOM 표시만 읽음",
+  "WritingRequests": "없음",
+  "Footer": {
+    "opacity": "1",
+    "quiet": null
+  },
+  "Body": {
+    "scrollTop": 269.6000061035156,
+    "scrollHeight": 698,
+    "clientHeight": 429
+  },
+  "Observed": "2026-10-12",
+  "Tooltip": {
+    "text": "여행 등록",
+    "opacity": "0",
+    "visibility": "hidden"
+  }
+}

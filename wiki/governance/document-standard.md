@@ -9,6 +9,8 @@ domain: neutral
 
 # 문서 작성 표준
 
+현재 사양은 wiki의 후속 확정 결정·계약을 따릅니다. 문서 검토, 결정 채택, 구현, 실행 검증, 환경 반영은 [상태 표시 안내](implementation-state.md)처럼 구분합니다. 현재 규칙·적용 범위를 먼저 쓰고 과거 시점의 원문은 기록 링크로 연결합니다. v11은 당시 기록이며 이후 wiki 결정을 뒤집는 기준이 아닙니다.
+
 ## 하면 안 되는 것
 
 **1. 코드를 문장으로 옮겨 적지 않는다.**
@@ -57,7 +59,7 @@ automation:
 
 한쪽이 소유하고 다른 쪽은 링크한다. 값을 복사하면 한쪽만 갱신됐을 때 어느 쪽이 맞는지 알 수 없다.
 
-여러 문서에 반복되는 값은 루트 `CLAUDE.md`의 기준 사실 표가 단일 출처다.
+제품 사양은 해당 wiki 결정·계약이 소유합니다. 루트 작업 규칙의 기준 사실 표는 읽을 곳을 안내하며, 날짜가 지난 구현·배포 상태를 현재 사실로 다시 쓰지 않습니다.
 
 **5. `CLAUDE.md`에 지식을 넣지 않는다.**
 
@@ -196,7 +198,7 @@ business/unit-economics/
 |---|---|
 | `glossary.md` | 용어를 찾을 때 한 파일에서 검색하는 게 빠르다 |
 | `quality/invariants.md` | 불변식 카탈로그. 전체를 훑어야 의미가 있다 |
-| `delivery/dod.md` | DoD **26항목**(v11 §12). 체크리스트는 통으로 본다. `[정정 2026-09-10]` 29항목(v8 쇼핑몰)으로 적혀 있었다 |
+| `delivery/dod.md` | 완료 기준 체크리스트는 통으로 본다. 현재 적용 범위·항목 수는 그 문서가 소유하며 여기서 복사하지 않는다 |
 | 자동 생성물 | 사람이 유지하지 않는다 |
 
 예외는 front matter에 표시한다.
@@ -261,4 +263,5 @@ size_exempt 있는데 이유 없음    → 실패
 - [front-matter.md](front-matter.md) — 메타데이터 필드 규격
 - [evidence-grades.md](evidence-grades.md) — 근거 등급 상세
 - [review-policy.md](review-policy.md) — draft → stable 승격 조건
+- [implementation-state.md](implementation-state.md) — 결정·구현·검증과 환경별 시각·근거
 - [migration.md](migration.md) — 기존 문서 이관 계획

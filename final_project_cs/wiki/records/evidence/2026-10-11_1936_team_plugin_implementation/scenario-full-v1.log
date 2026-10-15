@@ -1,0 +1,150 @@
+...........................F.F.......................................... [ 48%]
+...........................................FFF.....................FFFFF [ 97%]
+FF.F                                                                     [100%]
+================================== FAILURES ===================================
+____ test_a_disaster_message_at_the_lunch_place_swaps_it_for_a_nearby_one _____
+tests\scenario\test_case_watch_dining.py:97: in test_a_disaster_message_at_the_lunch_place_swaps_it_for_a_nearby_one
+    assert [r["status"] for r in outcome.ran] == ["resolved"], outcome.ran
+E   AssertionError: []
+E   assert [] == ['resolved']
+E     
+E     Right contains one more item: 'resolved'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+____ test_when_every_nearby_place_is_in_the_fire_it_does_not_swap_blindly _____
+tests\scenario\test_case_watch_dining.py:125: in test_when_every_nearby_place_is_in_the_fire_it_does_not_swap_blindly
+    assert view["case_status"] == "escalated"
+E   AssertionError: assert 'running' == 'escalated'
+E     
+E     - escalated
+E     + running
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+_ test_a_pinned_activity_is_checked_and_the_customer_is_told_but_the_itinerary_is_not_changed _
+tests\scenario\test_pinned_items_are_watched.py:86: in test_a_pinned_activity_is_checked_and_the_customer_is_told_but_the_itinerary_is_not_changed
+    assert result.ran and result.ran[0]["status"] in ("resolved", "waiting_approval", "escalated")
+E   AssertionError: assert ([])
+E    +  where [] = CaseTickResult(checked=1, unavailable=[{'case_id': 'e3a29b6e-aecd-4c39-8b79-8b065683da60', 'kind': 'mobility', 'reason...eb-ce75f2cea375', 'item': '��� ��ī��Ÿ�� ���� ����'}], unchecked=[], expired=[], failed=[], retried=[], notified=[], relaxed=[]).ran
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+_ test_a_pinned_item_with_a_safety_event_gets_a_safety_alert_and_is_still_not_changed _
+tests\scenario\test_pinned_items_are_watched.py:109: in test_a_pinned_item_with_a_safety_event_gets_a_safety_alert_and_is_still_not_changed
+    assert alerts and all("����" in n["text"] for n in alerts)
+E   assert ([])
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+__ test_an_unpinned_activity_with_the_same_event_is_still_changed_right_away __
+tests\scenario\test_pinned_items_are_watched.py:121: in test_an_unpinned_activity_with_the_same_event_is_still_changed_right_away
+    assert result.opened and _items(world)[0]["version"] > version_before
+E   AssertionError: assert ([{'case_id': '9b02a9d6-770e-4259-8c00-22e5e46365d5', 'issue_code': 'activity_other', 'item': '��� ��ī��Ÿ�� ���� ����', 'trip_id': '86e26cff-cb4e-4970-9731-c30a52c8fc7f'}] and 1 > 1)
+E    +  where [{'case_id': '9b02a9d6-770e-4259-8c00-22e5e46365d5', 'issue_code': 'activity_other', 'item': '��� ��ī��Ÿ�� ���� ����', 'trip_id': '86e26cff-cb4e-4970-9731-c30a52c8fc7f'}] = CaseTickResult(checked=1, unavailable=[{'case_id': '9b02a9d6-770e-4259-8c00-22e5e46365d5', 'kind': 'mobility', 'reason...gine_unavailable'}], unhandled=[], pinned=[], unchecked=[], expired=[], failed=[], retried=[], notified=[], relaxed=[]).opened
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+_ test_two_broken_items_of_one_trip_become_one_case_one_version_and_one_notice _
+tests\scenario\test_watch_batch.py:108: in test_two_broken_items_of_one_trip_become_one_case_one_version_and_one_notice
+    assert [v[0] for v in _versions(world)] == [1, 2]                   # �� �ϳ��� �� �����(������ v3 ����)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert [1] == [1, 2]
+E     
+E     Right contains one more item: 2
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+___ test_with_batching_off_each_item_keeps_its_own_case_version_and_notice ____
+tests\scenario\test_watch_batch.py:131: in test_with_batching_off_each_item_keeps_its_own_case_version_and_notice
+    assert [v[0] for v in _versions(world)] == [1, 2, 3]
+E   assert [1] == [1, 2, 3]
+E     
+E     Right contains 2 more items, first extra item: 2
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+_ test_one_that_cannot_be_solved_does_not_block_the_rest_and_is_told_in_the_same_notice _
+tests\scenario\test_watch_batch.py:143: in test_one_that_cannot_be_solved_does_not_block_the_rest_and_is_told_in_the_same_notice
+    assert len(opened["items"]) == 3 and [v[0] for v in _versions(world)] == [1, 2]
+E   AssertionError: assert (3 == 3 and [1] == [1, 2]
+E    +  where 3 = len(['��� ��ī��Ÿ�� ���� ����', '������ �˾�������� ���', '�溹�� �Ѻ� Ž��'])
+E     
+E     Right contains one more item: 2
+E     Use -v to get more diff)
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+_ test_a_pinned_item_is_asked_while_the_rest_is_applied_and_the_question_is_against_the_new_version _
+tests\scenario\test_watch_batch.py:170: in test_a_pinned_item_is_asked_while_the_rest_is_applied_and_the_question_is_against_the_new_version
+    assert after == [*before, before[-1] + 1]                            # \ud310\uc740 \ud65c\ub3d9 \ud558\ub098\ub9cc \u2014 \uc2dd\ub2f9\uc740 \uc548 \ubc14\ub00c\uc5c8\ub2e4
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert [1, 2] == [1, 2, 3]
+E     
+E     Right contains one more item: 3
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+_ test_when_every_item_is_protected_no_version_is_written_and_each_question_is_against_the_current_version _
+tests\scenario\test_watch_batch.py:196: in test_when_every_item_is_protected_no_version_is_written_and_each_question_is_against_the_current_version
+    assert _status(world, __import__("uuid").UUID(opened["case_id"])) == "resolved"
+E   AssertionError: assert 'running' == 'resolved'
+E     
+E     - resolved
+E     + running
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+_ test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set _
+tests\scenario\test_watch_batch.py:216: in test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set
+    assert _status(world, __import__("uuid").UUID(opened["case_id"])) == "escalated"
+E   AssertionError: assert 'running' == 'escalated'
+E     
+E     - escalated
+E     + running
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:249 watch_batch_team_unavailable kind=dining team_id=mobility reason=engine_unavailable composition_revision=c65a6cbd5dd55f57b080cbb9b1919c9bb41bc91ad1c3be17128d2656f1d4e2da
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+______ test_the_safety_line_comes_first_and_the_notice_is_a_safety_alert ______
+tests\scenario\test_watch_batch.py:233: in test_the_safety_line_comes_first_and_the_notice_is_a_safety_alert
+    [(_, payload)] = _outbox(world)
+    ^^^^^^^^^^^^^^
+E   ValueError: not enough values to unpack (expected 1, got 0)
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+_ test_a_source_failure_inside_a_completed_batch_is_reopened_alone_on_the_next_tick _
+tests\scenario\test_watch_batch.py:270: in test_a_source_failure_inside_a_completed_batch_is_reopened_alone_on_the_next_tick
+    assert opened["issue_code"] == "batch" and _status(world, __import__("uuid").UUID(opened["case_id"])) == "resolved"
+E   AssertionError: assert ('batch' == 'batch'
+E     
+E       batch and 'running' == 'resolved'
+E     
+E     - resolved
+E     + running)
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:195 watch_case_team_unavailable team_id=mobility reason=engine_unavailable composition_revision=None
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\scenario-full-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_case_watch_dining.py::test_a_disaster_message_at_the_lunch_place_swaps_it_for_a_nearby_one
+FAILED tests/scenario/test_case_watch_dining.py::test_when_every_nearby_place_is_in_the_fire_it_does_not_swap_blindly
+FAILED tests/scenario/test_pinned_items_are_watched.py::test_a_pinned_activity_is_checked_and_the_customer_is_told_but_the_itinerary_is_not_changed
+FAILED tests/scenario/test_pinned_items_are_watched.py::test_a_pinned_item_with_a_safety_event_gets_a_safety_alert_and_is_still_not_changed
+FAILED tests/scenario/test_pinned_items_are_watched.py::test_an_unpinned_activity_with_the_same_event_is_still_changed_right_away
+FAILED tests/scenario/test_watch_batch.py::test_two_broken_items_of_one_trip_become_one_case_one_version_and_one_notice
+FAILED tests/scenario/test_watch_batch.py::test_with_batching_off_each_item_keeps_its_own_case_version_and_notice
+FAILED tests/scenario/test_watch_batch.py::test_one_that_cannot_be_solved_does_not_block_the_rest_and_is_told_in_the_same_notice
+FAILED tests/scenario/test_watch_batch.py::test_a_pinned_item_is_asked_while_the_rest_is_applied_and_the_question_is_against_the_new_version
+FAILED tests/scenario/test_watch_batch.py::test_when_every_item_is_protected_no_version_is_written_and_each_question_is_against_the_current_version
+FAILED tests/scenario/test_watch_batch.py::test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set
+FAILED tests/scenario/test_watch_batch.py::test_the_safety_line_comes_first_and_the_notice_is_a_safety_alert
+FAILED tests/scenario/test_watch_batch.py::test_a_source_failure_inside_a_completed_batch_is_reopened_alone_on_the_next_tick
+13 failed, 135 passed in 174.24s (0:02:54)

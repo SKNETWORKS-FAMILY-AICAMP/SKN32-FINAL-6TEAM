@@ -1,0 +1,23 @@
+{
+  "registry": {
+    "dining": {
+      "available": false,
+      "reason": "disabled",
+      "capabilities": []
+    }
+  },
+  "results": [
+    {
+      "tool": "read.dining_state",
+      "rejected_unavailable": true,
+      "reason": "disabled",
+      "connection_sql_events": 0
+    },
+    {
+      "tool": "read.dining_states",
+      "rejected_unavailable": true,
+      "reason": "disabled",
+      "connection_sql_events": 0
+    }
+  ]
+}

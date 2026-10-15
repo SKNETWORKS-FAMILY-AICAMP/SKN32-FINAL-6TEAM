@@ -1,0 +1,22 @@
+{
+  "command": [
+    "C:/Users/playdata2/anaconda3/python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/test_subway_train_identity_v1.py",
+    "tests/unit/travel/test_subway_boardable_v1.py",
+    "tests/unit/travel/test_subway_completeness_v1.py",
+    "tests/unit/travel/mobility/test_subway_departure_v1.py",
+    "tests/unit/travel/mobility/test_subway_binding_v1.py",
+    "tests/unit/travel/mobility/test_subway_primary_name_v1.py",
+    "tests/unit/travel/test_seoul_subway_arrival.py",
+    "tests/unit/travel/test_subway_arrival_identity_v1.py",
+    "tests/unit/travel/test_subway_arrival_body_v1.py",
+    "tests/unit/travel/test_departure_observer_notice_v1.py",
+    "-q",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1228_지하철_문자열열차번호_선택연결\\after-v1.xml"
+  ],
+  "cwd": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs",
+  "exit_code": 4,
+  "test_description_backup": "final_project_cs/tests/unit/travel/_backup/2026-10-09_122950_신규시험_설명정정전/test_subway_train_identity_v1.py"
+}

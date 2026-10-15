@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>변경 상태를 기록하는 순서</title>
+<style>body{margin:0;background:#fbfcfd;color:#161c28;font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif}main{max-width:960px;margin:auto;padding:32px}h1{font:400 28px "Instrument Serif","Noto Serif KR",serif}p{line-height:1.6}svg{display:block;width:100%;height:auto}text{font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif;font-size:16px}footer{border-top:1px solid #dbe0ea;padding-top:16px;color:#6b7488}@media print{main{padding:0}}</style>
+<main><h1>완료 표시는 실행 근거의 범위까지만</h1>
+<p>문서 검토·결정 채택과 구현·검증·환경 반영을 따로 적습니다. 아래는 한 번의 문서 갱신 흐름입니다.</p>
+<svg viewBox="0 0 960 600" role="img" aria-labelledby="state-recording-title state-recording-desc">
+<title id="state-recording-title">변경 상태 기록 절차</title>
+<desc id="state-recording-desc">현재 계약과 실행 근거를 읽고, 해당 변경의 증거가 있으면 그 범위와 시각을 적고 없으면 미확인으로 남긴 뒤 통합 검토 대기로 끝납니다. 문서 승인과 운영 반영을 자동 선언하지 않습니다.</desc>
+<defs>
+<marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6b7488"/></marker>
+<marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#a8720c"/></marker>
+<marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2f5bd8"/></marker>
+</defs>
+<rect width="960" height="600" fill="#fbfcfd"/>
+<g fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)">
+<path d="M480 88V120"/><path d="M480 184V216"/>
+<path d="M360 280H248Q240 280 240 288V360"/>
+<path d="M600 280H712Q720 280 720 288V360"/>
+<path d="M240 424V448Q240 456 248 456H440Q448 456 448 464V488"/>
+<path d="M720 424V448Q720 456 712 456H520Q512 456 512 464V488"/>
+</g>
+<g fill="#fbfcfd"><rect x="280" y="244" width="64" height="24"/><rect x="616" y="244" width="64" height="24"/></g>
+<g text-anchor="middle" fill="#161c28"><text x="312" y="260">있음</text><text x="648" y="260">미확보</text></g>
+<g fill="#fff" stroke="#161c28" stroke-width="1.2">
+<ellipse cx="480" cy="64" rx="140" ry="24"/>
+<rect x="304" y="120" width="352" height="64" rx="6"/>
+<path d="M480 216L600 280L480 344L360 280Z"/>
+<rect x="80" y="360" width="320" height="64" rx="6"/>
+<rect x="560" y="360" width="320" height="64" rx="6"/>
+<ellipse cx="480" cy="512" rx="160" ry="24"/>
+</g>
+<g text-anchor="middle" fill="#161c28" font-weight="600">
+<text x="480" y="68">문서 갱신 시작</text><text x="480" y="156">현재 계약·해당 변경의 근거 읽기</text>
+<text x="480" y="276">해당 변경의</text><text x="480" y="300">실행 증거가 있나?</text>
+<text x="240" y="388">증거 범위·환경·시각 기록</text><text x="240" y="412" font-weight="400">독립 검토·운영 반영은 별도</text>
+<text x="720" y="388">unverified로 표시</text><text x="720" y="412" font-weight="400">필요한 검증·담당 결과 연결</text>
+<text x="480" y="516">갱신 종료 · 통합 검토 대기</text>
+</g>
+<path d="M40 552H920" stroke="#dbe0ea"/>
+<text x="40" y="576" fill="#6b7488">타원: 시작·종료　사각형: 기록 작업　마름모: 근거 확인</text>
+</svg>
+<footer>기준: wiki/governance/implementation-state.md · 문서용 960×600 · acop 프로필 · 정적 그림. 기능별 시험 목록·접속 정보는 이 그림에 넣지 않았습니다. 글꼴은 로컬 한글 대체 글꼴을 사용합니다.</footer>
+</main></html>

@@ -1,0 +1,22 @@
+{
+  "changes": [
+    {
+      "path": "program/research/wiki_review_2026-10-11/w16-review-v4.html",
+      "backup": null,
+      "before_sha256": null,
+      "sha256": "8515eb5521ba3510795024080cecff18ca543260aeae508eea102d129ba219ff"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v1.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_211926_w16-review-html/wiki-review-v1.html",
+      "before_sha256": "d1fedacca73b95335a4eac90b3f96b215bc177074239a6bd60d3ed8cd05120a2",
+      "sha256": "7067ffb705f9e5318e9e0a11ae4c93af1fb098cf489689d451d4372a977f25e3"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/wiki-review-v3.html",
+      "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_211926_w16-review-html/wiki-review-v3.html",
+      "before_sha256": "8faa0ee47e42b1a58b459eb65adc714abc46e7065b2fdacfdb4ca4a91ec87deb",
+      "sha256": "9e3d0f8206c8b929bc6e1a56e8b75b2af85d0e5793315498ffc07651ae140b41"
+    }
+  ]
+}

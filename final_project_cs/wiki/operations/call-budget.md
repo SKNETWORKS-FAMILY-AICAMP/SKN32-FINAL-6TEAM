@@ -3,12 +3,14 @@ type: runbook
 title: 외부 API 호출 한도 — 어떻게 막고 어떻게 보나
 description: 키마다 하루·월 호출 상한을 DB 로 세어 한도가 차면 호출을 멈추는 층, 여유율 보고, 개발 PC와 서버가 같은 키를 쓸 때의 주의
 status: draft
-tags: [operations, budget]
+tags: [release, cost]
 owners: [human:미배정]
 domain: neutral
 ---
 
 # 외부 API 호출 한도 — 어떻게 막고 어떻게 보나
+
+2026-10-09: 관리자웹앱의 **사용량 → API 환경설정 한도**에서 현재 읽은 ENV 상한·기본값·DB 마지막 기록 상한을 비교할 수 있다. 조회만으로 외부 API를 호출하지 않는다. [계약](../external/api-environment-limits.md) · [구현·검증 리포트](../records/reports/2026-10-09_2256_API환경설정_한도조회.md).
 
 `[2026-10-05 사용자 지시 — 이동 세션 인계]`
 
@@ -42,5 +44,9 @@ domain: neutral
 **실패 수의 뜻.** 부른 뒤 **응답이 오지 않았거나 와도 읽을 수 없었던** 경우만 센다(시간 초과 · 연결 오류 · http 오류 · JSON/XML 아님 · 응답 모양 이상 · 본문이 오류 — `base._CALL_FAILURE_REASONS`). 한도 때문에 안 부른 것은 실패가 아니라 거절이고, **답은 잘 왔는데 찾는 것이 없는 것**(`not_found` · `ambiguous` 등)과 **부르기 전에 막힌 것**(키 없음)은 정상 호출이라 안 센다. `[2026-10-05 정정]` 처음 판은 한도 때문에 안 부른 것만 빼고 전부 실패로 세어, x600 서버에서 `tour_api` 가 사용 15 · 실패 15 로 보였다 — 정상 응답의 「찾는 장소 없음」까지 실패로 센 것이다(허용 목록으로 뒤집음, 이미 쌓인 값은 소급해 고치지 않는다). 안쪽(프로세스 안) 제한기가 거절한 것은 DB 에 안 센다(프로세스 안 `refusals` 에만 있다).
 
 **따릉이.** 서울 열린데이터광장 일반 키로 부르는 따릉이 거치 대수의 하루 상한은 `ACOP_RATE_SEOUL_BIKE_PER_DAY`(기본 1,000 — 공식 하루 한도를 못 찾아 **우리가 고른 보수적 값** `[미확인]`). 이동 모듈이 `bike.py` 에서 위 문을 쓰도록 잇는 일은 이동 세션 몫이다.
+
+**감시 반복의 조회 묶기(2026-10-14).** 「곧 시작할 항목」·「안내 안 한 출발」 읽기를 여행마다 하던 DB 조회에서 여행 수와 상관없는 3~4번으로 묶었고(로컬 실측 107→3 · 213→3), 날씨(Open-Meteo)는 좌표를 약 1km 단위로 반올림해 가까운 장소끼리 답을 나눠 쓴다(서로 다른 좌표 51→32). 실서버 확인 안 함 — [보고](../records/reports/2026-10-14_감시_조회_묶기.md).
+
+**일일 정기점검(2026-10-14).** 매일 03:00 시작 · 가능하면 03:30 까지 끝냄(한 번에 하는 양을 늘림) · 08:00 에 모두 멈춤(`travel.daily_check`). 관광공사는 **고객이 일정에 넣은 장소만** 하루 한 번 다시 읽는다 — 서울 전체 목록은 매일 받지 않는다. 03:30 이 지나도 남은 일이 있으면 관리자 웹앱 「운영 진단」에 `DAILY_CHECK_OVERDUE` 를 하루 한 건 남긴다 — [보고](../records/reports/2026-10-14_감시_조회_묶기.md).
 
 관련: [rest-endpoints](../external/rest-endpoints.md)(외부 소스는 REST 가 아니라 여기) · 코드 `app/domains/travel_ops/ports/data_sources/call_budget.py` · `source_budget.py` · 보고 `scripts/report_source_budget.py` · 시험 `tests/unit/travel/test_source_budget.py` · `tests/integration/db/test_source_budget_db.py`.

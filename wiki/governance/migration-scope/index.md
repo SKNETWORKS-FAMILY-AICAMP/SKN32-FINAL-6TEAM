@@ -1,5 +1,5 @@
 ---
-type: plan
+type: guide
 title: 이관 범위 목록
 description: 전체 중 무엇을 옮기고 무엇을 두는가. 숫자는 스크립트가 다시 뽑는다 — 문서에 박힌 값은 그날의 스냅샷이다
 status: draft

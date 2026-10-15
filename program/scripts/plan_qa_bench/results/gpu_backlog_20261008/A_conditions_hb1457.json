@@ -1,0 +1,33 @@
+{
+  "root_space": {
+    "path": "/root",
+    "available_bytes": 8793440256,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "temp_space": {
+    "path": "/tmp",
+    "available_bytes": 8793440256,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "ready": [
+    {
+      "id": "e4bqat_original_h",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    },
+    {
+      "id": "e4bqat_original_mx",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    }
+  ],
+  "blocked": [],
+  "worker_pid": 342497,
+  "observed_at_utc": "2026-10-08T05:57:53.158156+00:00"
+}

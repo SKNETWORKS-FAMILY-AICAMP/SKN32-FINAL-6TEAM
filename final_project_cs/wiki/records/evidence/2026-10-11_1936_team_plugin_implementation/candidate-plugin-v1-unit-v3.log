@@ -1,0 +1,1932 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2204_plugin_v1
+configfile: pytest.ini
+plugins: anyio-4.14.1, langsmith-0.10.0, asyncio-0.25.2
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 106 items
+
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[disabled] PASSED [  0%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[not_installed] PASSED [  1%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[load_failed] PASSED [  2%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[remote_unavailable] PASSED [  3%]
+tests/unit/core/test_plugin_availability.py::test_unknown_team_execution_is_not_installed_and_metadata_remains_registry_error PASSED [  4%]
+tests/unit/core/test_plugin_availability.py::test_inactive_metadata_remains_readable_but_never_runnable PASSED [  5%]
+tests/unit/core/test_plugin_availability.py::test_unavailable_metadata_registration_does_not_require_implementation PASSED [  6%]
+tests/unit/core/test_plugin_availability.py::test_disabled_declaration_without_capabilities_blocks_matching_business PASSED [  7%]
+tests/unit/core/test_plugin_availability.py::test_loaded_plugin_hook_failure_can_be_marked_unavailable_and_diagnostics_are_detached PASSED [  8%]
+tests/unit/core/test_plugin_availability.py::test_removed_team_is_unavailable_and_duplicate_capabilities_are_configuration_failures PASSED [  9%]
+tests/unit/core/test_plugin_availability.py::test_unavailable_capability_also_claims_unique_ownership PASSED [ 10%]
+tests/unit/core/test_plugin_availability.py::test_registry_rejects_incompatible_contract_and_undeclared_capability PASSED [ 11%]
+tests/unit/core/test_plugin_availability.py::test_static_config_never_imports_implementation PASSED [ 12%]
+tests/unit/core/test_plugin_availability.py::test_config_required_defaults_and_legacy_inactive_placeholder PASSED [ 13%]
+tests/unit/core/test_plugin_availability.py::test_static_config_rejects_invalid_declarations[teams0] PASSED [ 14%]
+tests/unit/core/test_plugin_availability.py::test_static_config_rejects_invalid_declarations[teams1] PASSED [ 15%]
+tests/unit/core/test_plugin_availability.py::test_static_config_rejects_invalid_declarations[teams2] PASSED [ 16%]
+tests/unit/core/test_plugin_availability.py::test_static_config_rejects_invalid_declarations[teams3] PASSED [ 16%]
+tests/unit/core/test_plugin_availability.py::test_local_disabled_team_execute_is_never_called PASSED [ 17%]
+tests/unit/core/test_plugin_availability.py::test_local_capability_and_scope_checked_before_business PASSED [ 18%]
+tests/unit/core/test_plugin_availability.py::test_a2a_disabled_and_missing_registry_never_resolve_or_send FAILED [ 19%]
+tests/unit/core/test_plugin_availability.py::test_a2a_endpoint_mismatch_is_rejected_before_submit FAILED [ 20%]
+tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[team_id] FAILED [ 21%]
+tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[task_id] FAILED [ 22%]
+tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[run_id] FAILED [ 23%]
+tests/unit/core/test_plugin_availability.py::test_a2a_missing_identifiers_are_not_filled_from_request FAILED [ 24%]
+tests/unit/core/test_plugin_availability.py::test_a2a_valid_result_and_remote_unavailable_are_distinct FAILED [ 25%]
+tests/unit/core/test_plugin_availability.py::test_resolver_implementation_errors_are_not_turned_into_unavailability FAILED [ 26%]
+tests/unit/core/test_plugin_availability.py::test_a2a_unknown_status_cannot_accept_completed_artifact FAILED [ 27%]
+tests/unit/core/test_plugin_availability.py::test_a2a_resolver_timeout_is_deadline_failure_without_submit FAILED [ 28%]
+tests/unit/core/test_plugin_availability.py::test_a2a_waiting_artifact_identity_is_checked_before_wait_mapping FAILED [ 29%]
+tests/unit/core/test_plugin_availability.py::test_a2a_hanging_cancel_is_bounded_and_recorded PASSED [ 30%]
+tests/unit/core/test_plugin_availability.py::test_sync_resolver_timeout_keeps_loop_responsive_and_never_submits_late FAILED [ 31%]
+tests/unit/core/test_plugin_availability.py::test_sync_resolver_copies_context_and_supports_awaitable_result[False] FAILED [ 32%]
+tests/unit/core/test_plugin_availability.py::test_sync_resolver_copies_context_and_supports_awaitable_result[True] FAILED [ 33%]
+tests/unit/core/test_plugin_availability.py::test_sync_transport_is_rejected_before_any_call[submit] FAILED [ 33%]
+tests/unit/core/test_plugin_availability.py::test_sync_transport_is_rejected_before_any_call[poll] FAILED [ 34%]
+tests/unit/core/test_plugin_availability.py::test_sync_transport_is_rejected_before_any_call[cancel] FAILED [ 35%]
+tests/unit/core/test_plugin_availability.py::test_sync_resolver_late_coroutine_is_closed_without_running FAILED [ 36%]
+tests/unit/core/test_plugin_availability.py::test_unknown_case_type_remains_routing_error[other] PASSED [ 37%]
+tests/unit/core/test_plugin_availability.py::test_unknown_case_type_remains_routing_error[general] PASSED [ 38%]
+tests/unit/core/test_plugin_availability.py::test_unknown_case_type_remains_routing_error[unclassified] PASSED [ 39%]
+tests/unit/core/test_plugin_availability.py::test_unknown_case_type_remains_routing_error[] PASSED [ 40%]
+tests/unit/core/test_plugin_availability.py::test_missing_known_owner_may_have_a_different_id_than_case_type PASSED [ 41%]
+tests/unit/core/test_plugin_availability.py::test_ambiguous_known_owners_remain_routing_error PASSED [ 42%]
+tests/unit/test_plugin_composition_runtime.py::test_disabled_package_not_imported_and_other_team_loaded PASSED [ 43%]
+tests/unit/test_plugin_composition_runtime.py::test_import_failure_optional_vs_required[False] PASSED [ 44%]
+tests/unit/test_plugin_composition_runtime.py::test_import_failure_optional_vs_required[True] PASSED [ 45%]
+tests/unit/test_plugin_composition_runtime.py::test_all_disabled_provider_collection_has_no_import_or_legacy_change PASSED [ 46%]
+tests/unit/test_plugin_composition_runtime.py::test_failed_optional_hook_discards_partial_registrations[ImportError] PASSED [ 47%]
+tests/unit/test_plugin_composition_runtime.py::test_failed_optional_hook_discards_partial_registrations[AttributeError] PASSED [ 48%]
+tests/unit/test_plugin_composition_runtime.py::test_failed_optional_hook_discards_partial_registrations[RuntimeError] PASSED [ 49%]
+tests/unit/test_plugin_composition_runtime.py::test_optional_hook_contract_error_still_rejects_candidate PASSED [ 50%]
+tests/unit/test_plugin_composition_runtime.py::test_required_hook_failure_keeps_published_generation PASSED [ 50%]
+tests/unit/test_plugin_composition_runtime.py::test_request_two_hook_reads_keep_old_generation_across_disable PASSED [ 51%]
+tests/unit/test_plugin_composition_runtime.py::test_repeated_enabled_reload_never_changes_pinned_callbacks PASSED [ 52%]
+tests/unit/test_plugin_composition_runtime.py::test_binding_table_is_immutable_and_copied PASSED [ 53%]
+tests/unit/test_plugin_composition_runtime.py::test_publication_rejects_mixed_registry_or_revision PASSED [ 54%]
+tests/unit/test_plugin_composition_runtime.py::test_missing_request_context_never_uses_legacy_callback PASSED [ 55%]
+tests/unit/test_plugin_composition_runtime.py::test_enabled_engine_off_never_returns_estimate PASSED [ 56%]
+tests/unit/test_plugin_composition_runtime.py::test_review_does_not_swallow_disabled_required_calculation FAILED [ 57%]
+tests/unit/test_plugin_composition_runtime.py::test_optional_similarity_emits_omission_reason PASSED [ 58%]
+tests/unit/test_plugin_composition_runtime.py::test_mobility_setting_reload_rejected_before_live_engine_mutation PASSED [ 59%]
+tests/unit/test_plugin_composition_runtime.py::test_first_engine_configuration_failure_can_retry_without_live_generation PASSED [ 60%]
+tests/unit/test_plugin_composition_runtime.py::test_asgi_pin_survives_sse_send_and_reload PASSED [ 61%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_worker_and_deferred_work_keep_request_generation PASSED [ 62%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[disabled-False] PASSED [ 63%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[not_installed-False] PASSED [ 64%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[load_failed-False] PASSED [ 65%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[remote_unavailable-True] PASSED [ 66%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[engine_unavailable-False] PASSED [ 66%]
+tests/unit/test_plugin_composition_runtime.py::test_json_and_mcp_keep_disabled_reason_while_independent_reads_work PASSED [ 67%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_clean_process_imports_no_disabled_team_implementation PASSED [ 68%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_move_judge_preserves_disabled_reason_without_estimate PASSED [ 69%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_bound_engine_failure_never_becomes_straight_line_success[factory] PASSED [ 70%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_bound_engine_failure_never_becomes_straight_line_success[execute] PASSED [ 71%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_bound_engine_failure_never_becomes_straight_line_success[shape] PASSED [ 72%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_bound_engine_failure_never_becomes_straight_line_success[missing] PASSED [ 73%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_dining_intake_disabled_before_any_database_read[False] PASSED [ 74%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_dining_intake_disabled_before_any_database_read[True] PASSED [ 75%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_dining_intake_uses_frozen_provider_for_both_place_kinds[False] PASSED [ 76%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_dining_intake_uses_frozen_provider_for_both_place_kinds[True] PASSED [ 77%]
+tests/unit/travel/test_plugin_worker_availability.py::test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch_cases-TripWatchCaseOpener] FAILED [ 78%]
+tests/unit/travel/test_plugin_worker_availability.py::test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch-TripWatcher] FAILED [ 79%]
+tests/unit/travel/test_plugin_worker_availability.py::test_all_watch_kinds_off_do_not_call_data_or_open_cases FAILED [ 80%]
+tests/unit/travel/test_plugin_worker_availability.py::test_batch_does_not_use_legacy_disabled_planner PASSED [ 81%]
+tests/unit/travel/test_plugin_worker_availability.py::test_batch_continues_independent_kind_and_cannot_clear_all_unavailable PASSED [ 82%]
+tests/unit/travel/test_plugin_worker_availability.py::test_disabled_activity_coordinator_does_not_block_dining_mobility_cases FAILED [ 83%]
+tests/unit/travel/test_plugin_worker_availability.py::test_nested_jobs_hold_one_controller_and_new_round_sees_new_generation PASSED [ 83%]
+tests/unit/travel/test_plugin_worker_availability.py::test_independent_only_job_does_not_require_team_assembly PASSED [ 84%]
+tests/unit/travel/test_plugin_worker_availability.py::test_unavailable_job_reports_skip_and_independent_following_job_can_run PASSED [ 85%]
+tests/unit/travel/test_plugin_worker_availability.py::test_active_engine_failure_remains_fatal PASSED [ 86%]
+tests/unit/travel/test_plugin_worker_availability.py::test_watch_does_not_close_controller_preserved_case_on_unavailable FAILED [ 87%]
+tests/unit/travel/test_plugin_worker_availability.py::test_all_teams_off_default_round_keeps_independent_cleanup PASSED [ 88%]
+tests/unit/travel/test_plugin_worker_availability.py::test_watch_without_explicit_composition_refuses_legacy_globals PASSED [ 89%]
+tests/unit/travel/test_plugin_worker_availability.py::test_failed_composition_skips_team_jobs_but_keeps_independent_work[failure0] PASSED [ 90%]
+tests/unit/travel/test_plugin_worker_availability.py::test_failed_composition_skips_team_jobs_but_keeps_independent_work[failure1] PASSED [ 91%]
+tests/unit/travel/test_plugin_worker_availability.py::test_one_job_exception_keeps_the_same_round_and_runs_later_jobs PASSED [ 92%]
+tests/unit/travel/test_plugin_worker_availability.py::test_composition_failure_keeps_safety_inside_the_existing_watch_gate[False] FAILED [ 93%]
+tests/unit/travel/test_plugin_worker_availability.py::test_composition_failure_keeps_safety_inside_the_existing_watch_gate[True] FAILED [ 94%]
+tests/unit/travel/test_plugin_worker_availability.py::test_resident_round_exception_is_reported_and_next_round_runs PASSED [ 95%]
+tests/unit/travel/test_plugin_worker_availability.py::test_once_round_exception_returns_a_failed_exit PASSED [ 96%]
+tests/unit/travel/test_plugin_worker_availability.py::test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[features] PASSED [ 97%]
+tests/unit/travel/test_plugin_worker_availability.py::test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[composition_and_features] PASSED [ 98%]
+tests/unit/travel/test_plugin_worker_availability.py::test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[independent_only] PASSED [ 99%]
+tests/unit/travel/test_plugin_worker_availability.py::test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope[independent_safety] PASSED [100%]
+
+================================== FAILURES ===================================
+________ test_a2a_disabled_and_missing_registry_never_resolve_or_send _________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:198: in test_a2a_disabled_and_missing_registry_never_resolve_or_send
+    await A2ATeamExecutor(transport, resolver, registry=registry).execute(task())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+____________ test_a2a_endpoint_mismatch_is_rejected_before_submit _____________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:206: in test_a2a_endpoint_mismatch_is_rejected_before_submit
+    await A2ATeamExecutor(transport, lambda _: {"team_id": "dining"}, registry=TeamRegistry([Team()])).execute(task())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+______________ test_a2a_wrong_result_identity_rejected[team_id] _______________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:218: in test_a2a_wrong_result_identity_rejected
+    await A2ATeamExecutor(Transport({"status": "completed", "artifact": result}), lambda _: "endpoint", registry=TeamRegistry([Team()])).execute(value)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+______________ test_a2a_wrong_result_identity_rejected[task_id] _______________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:218: in test_a2a_wrong_result_identity_rejected
+    await A2ATeamExecutor(Transport({"status": "completed", "artifact": result}), lambda _: "endpoint", registry=TeamRegistry([Team()])).execute(value)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+_______________ test_a2a_wrong_result_identity_rejected[run_id] _______________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:218: in test_a2a_wrong_result_identity_rejected
+    await A2ATeamExecutor(Transport({"status": "completed", "artifact": result}), lambda _: "endpoint", registry=TeamRegistry([Team()])).execute(value)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+__________ test_a2a_missing_identifiers_are_not_filled_from_request ___________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:224: in test_a2a_missing_identifiers_are_not_filled_from_request
+    await A2ATeamExecutor(Transport({"status": "completed", "artifact": {"confidence": 1}}), lambda _: "endpoint", registry=TeamRegistry([Team()])).execute(task())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+__________ test_a2a_valid_result_and_remote_unavailable_are_distinct __________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:232: in test_a2a_valid_result_and_remote_unavailable_are_distinct
+    executor = A2ATeamExecutor(Transport({"status": "completed", "artifact": result}), lambda _: "endpoint", registry=TeamRegistry([Team()]))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+___ test_resolver_implementation_errors_are_not_turned_into_unavailability ____
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:244: in test_resolver_implementation_errors_are_not_turned_into_unavailability
+    await A2ATeamExecutor(Transport({}), broken, registry=TeamRegistry([Team()])).execute(task())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+__________ test_a2a_unknown_status_cannot_accept_completed_artifact ___________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:253: in test_a2a_unknown_status_cannot_accept_completed_artifact
+    await A2ATeamExecutor(Transport({"status": "unexpected", "artifact": result}), lambda _: "endpoint", registry=TeamRegistry([Team()])).execute(value)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+________ test_a2a_resolver_timeout_is_deadline_failure_without_submit _________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:263: in test_a2a_resolver_timeout_is_deadline_failure_without_submit
+    result = await A2ATeamExecutor(transport, resolver, registry=TeamRegistry([Team()])).execute(value)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+______ test_a2a_waiting_artifact_identity_is_checked_before_wait_mapping ______
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:271: in test_a2a_waiting_artifact_identity_is_checked_before_wait_mapping
+    await A2ATeamExecutor(Transport({"status": "input_required", "artifact": {"team_id": "dining"}}), lambda _: "endpoint", registry=TeamRegistry([Team()])).execute(task())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+___ test_sync_resolver_timeout_keeps_loop_responsive_and_never_submits_late ___
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:311: in test_sync_resolver_timeout_keeps_loop_responsive_and_never_submits_late
+    executor = A2ATeamExecutor(transport, resolver, registry=TeamRegistry([Team()]))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+___ test_sync_resolver_copies_context_and_supports_awaitable_result[False] ____
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:351: in test_sync_resolver_copies_context_and_supports_awaitable_result
+    executor = A2ATeamExecutor(Transport({"status": "failed", "failure_code": "contract-test-only"}), resolver, registry=TeamRegistry([Team()]))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+____ test_sync_resolver_copies_context_and_supports_awaitable_result[True] ____
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:351: in test_sync_resolver_copies_context_and_supports_awaitable_result
+    executor = A2ATeamExecutor(Transport({"status": "failed", "failure_code": "contract-test-only"}), resolver, registry=TeamRegistry([Team()]))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+___________ test_sync_transport_is_rejected_before_any_call[submit] ___________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:372: in test_sync_transport_is_rejected_before_any_call
+    await A2ATeamExecutor(transport, lambda _: "endpoint", registry=TeamRegistry([Team()])).execute(task())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+____________ test_sync_transport_is_rejected_before_any_call[poll] ____________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:372: in test_sync_transport_is_rejected_before_any_call
+    await A2ATeamExecutor(transport, lambda _: "endpoint", registry=TeamRegistry([Team()])).execute(task())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+___________ test_sync_transport_is_rejected_before_any_call[cancel] ___________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:372: in test_sync_transport_is_rejected_before_any_call
+    await A2ATeamExecutor(transport, lambda _: "endpoint", registry=TeamRegistry([Team()])).execute(task())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+_________ test_sync_resolver_late_coroutine_is_closed_without_running _________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\core\test_plugin_availability.py:398: in test_sync_resolver_late_coroutine_is_closed_without_running
+    result = await A2ATeamExecutor(transport, resolver, registry=TeamRegistry([Team()])).execute(value)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\remote_team\a2a_executor.py:26: in __init__
+    get_guardrails().get("reliability.a2a_cancel_timeout_seconds")
+    ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+_________ test_review_does_not_swallow_disabled_required_calculation __________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\test_plugin_composition_runtime.py:161: in test_review_does_not_swallow_disabled_required_calculation
+    from app.domains.travel_ops.components.intake.review import default_engine
+app\domains\travel_ops\components\intake\review.py:30: in <module>
+    from .assemble import collect
+app\domains\travel_ops\components\intake\assemble.py:29: in <module>
+    from app.domains.travel_ops.components.planning import planner
+app\domains\travel_ops\components\planning\planner.py:77: in <module>
+    DAY_START, DAY_END = _day_window()   #: 하루 첫 활동 · 마지막 일정이 끝나야 하는 시각
+                         ^^^^^^^^^^^^^
+app\domains\travel_ops\components\planning\planner.py:64: in _day_window
+    guard = get_guardrails()
+            ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+_ test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch_cases-TripWatchCaseOpener] _
+tests\unit\travel\test_plugin_worker_availability.py:60: in test_disabled_kind_not_checked_while_independent_kind_continues
+    monkeypatch.setattr(watcher_module, "forecast_attention", lambda *a, **k: None)
+E   AttributeError: <module 'app.domains.travel_ops.components.watch.trip_watch_cases' from 'C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_2204_plugin_v1\\app\\domains\\travel_ops\\components\\watch\\trip_watch_cases.py'> has no attribute 'forecast_attention'
+_ test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch-TripWatcher] _
+tests\unit\travel\test_plugin_worker_availability.py:60: in test_disabled_kind_not_checked_while_independent_kind_continues
+    monkeypatch.setattr(watcher_module, "forecast_attention", lambda *a, **k: None)
+E   AttributeError: <module 'app.domains.travel_ops.components.watch.trip_watch' from 'C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_2204_plugin_v1\\app\\domains\\travel_ops\\components\\watch\\trip_watch.py'> has no attribute 'forecast_attention'
+___________ test_all_watch_kinds_off_do_not_call_data_or_open_cases ___________
+app\core\settings.py:471: in get_settings
+    return Settings()  # type: ignore[call-arg]
+           ^^^^^^^^^^
+..\..\..\..\..\..\anaconda3\Lib\site-packages\pydantic_settings\main.py:188: in __init__
+    super().__init__(
+E   pydantic_core._pydantic_core.ValidationError: 7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+The above exception was the direct cause of the following exception:
+tests\unit\travel\test_plugin_worker_availability.py:85: in test_all_watch_kinds_off_do_not_call_data_or_open_cases
+    result = watcher.tick()
+             ^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\trip_watch_cases.py:169: in tick
+    self._open_issues(issues, now, result, opened)
+app\domains\travel_ops\components\watch\trip_watch_cases.py:283: in _open_issues
+    guard = get_guardrails()
+            ^^^^^^^^^^^^^^^^
+app\core\settings.py:481: in get_guardrails
+    path = (REPO_ROOT / get_settings().guardrails_path).resolve()
+                        ^^^^^^^^^^^^^^
+app\core\settings.py:473: in get_settings
+    raise ConfigError(
+E   app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+E   7 validation errors for Settings
+E   openai_api_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   llm_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   embedding_model
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   tenant_id
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   secret_key
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_jwt_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composer_issuer_secret
+E     Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=disabled composition_revision=old
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=disabled composition_revision=old
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=old
+___ test_disabled_activity_coordinator_does_not_block_dining_mobility_cases ___
+tests\unit\travel\test_plugin_worker_availability.py:126: in test_disabled_activity_coordinator_does_not_block_dining_mobility_cases
+    watcher._open_issues(issues, datetime.now(timezone.utc), trip_watch_cases.CaseTickResult(), [])
+app\domains\travel_ops\components\watch\trip_watch_cases.py:304: in _open_issues
+    self._open_batch(trip_id, chunk, now, result, opened)
+tests\unit\travel\test_plugin_worker_availability.py:122: in <lambda>
+    monkeypatch.setattr(watcher, "_open_batch", lambda *a: pytest.fail("disabled Activity coordinator used"))
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: disabled Activity coordinator used
+_____ test_watch_does_not_close_controller_preserved_case_on_unavailable ______
+tests\unit\travel\test_plugin_worker_availability.py:193: in <lambda>
+    run_case=lambda **kw: (_ for _ in ()).throw(TeamUnavailable("mobility", "disabled")))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\travel\test_plugin_worker_availability.py:193: in <genexpr>
+    run_case=lambda **kw: (_ for _ in ()).throw(TeamUnavailable("mobility", "disabled")))
+E   app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: disabled
+
+During handling of the above exception, another exception occurred:
+tests\unit\travel\test_plugin_worker_availability.py:198: in test_watch_does_not_close_controller_preserved_case_on_unavailable
+    result = watcher.tick()
+             ^^^^^^^^^^^^^^
+app\domains\travel_ops\components\watch\trip_watch_cases.py:178: in tick
+    self._close_failed(case_id, exc)
+tests\unit\travel\test_plugin_worker_availability.py:196: in <lambda>
+    monkeypatch.setattr(watcher, "_close_failed", lambda *a: pytest.fail("unavailable Case was closed"))
+                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: unavailable Case was closed
+------------------------------ Captured log call ------------------------------
+ERROR    app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:176 watch: run_case failed case=7fde8149-d4ac-4b8d-9862-8e2da4e7f24d
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2204_plugin_v1\app\domains\travel_ops\components\watch\trip_watch_cases.py", line 174, in tick
+    outcome = self.run_case(tenant_id=self.store.tenant_id, case_id=case_id, actor_id=ACTOR)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2204_plugin_v1\tests\unit\travel\test_plugin_worker_availability.py", line 193, in <lambda>
+    run_case=lambda **kw: (_ for _ in ()).throw(TeamUnavailable("mobility", "disabled")))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2204_plugin_v1\tests\unit\travel\test_plugin_worker_availability.py", line 193, in <genexpr>
+    run_case=lambda **kw: (_ for _ in ()).throw(TeamUnavailable("mobility", "disabled")))
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: disabled
+_ test_composition_failure_keeps_safety_inside_the_existing_watch_gate[False] _
+tests\unit\travel\test_plugin_worker_availability.py:285: in test_composition_failure_keeps_safety_inside_the_existing_watch_gate
+    from app.domains.travel_ops.components.watch import monitoring
+E   ImportError: cannot import name 'monitoring' from 'app.domains.travel_ops.components.watch' (C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2204_plugin_v1\app\domains\travel_ops\components\watch\__init__.py)
+_ test_composition_failure_keeps_safety_inside_the_existing_watch_gate[True] __
+tests\unit\travel\test_plugin_worker_availability.py:285: in test_composition_failure_keeps_safety_inside_the_existing_watch_gate
+    from app.domains.travel_ops.components.watch import monitoring
+E   ImportError: cannot import name 'monitoring' from 'app.domains.travel_ops.components.watch' (C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2204_plugin_v1\app\domains\travel_ops\components\watch\__init__.py)
+=========================== short test summary info ===========================
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_disabled_and_missing_registry_never_resolve_or_send - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_endpoint_mismatch_is_rejected_before_submit - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[team_id] - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[task_id] - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[run_id] - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_missing_identifiers_are_not_filled_from_request - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_valid_result_and_remote_unavailable_are_distinct - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_resolver_implementation_errors_are_not_turned_into_unavailability - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_unknown_status_cannot_accept_completed_artifact - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_resolver_timeout_is_deadline_failure_without_submit - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_a2a_waiting_artifact_identity_is_checked_before_wait_mapping - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_sync_resolver_timeout_keeps_loop_responsive_and_never_submits_late - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_sync_resolver_copies_context_and_supports_awaitable_result[False] - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_sync_resolver_copies_context_and_supports_awaitable_result[True] - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_sync_transport_is_rejected_before_any_call[submit] - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_sync_transport_is_rejected_before_any_call[poll] - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_sync_transport_is_rejected_before_any_call[cancel] - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/core/test_plugin_availability.py::test_sync_resolver_late_coroutine_is_closed_without_running - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/test_plugin_composition_runtime.py::test_review_does_not_swallow_disabled_required_calculation - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch_cases-TripWatchCaseOpener] - AttributeError: <module 'app.domains.travel_ops.components.watch.trip_watch_cases' from 'C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_2204_plugin_v1\\app\\domains\\travel_ops\\components\\watch\\trip_watch_cases.py'> has no attribute 'forecast_attention'
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch-TripWatcher] - AttributeError: <module 'app.domains.travel_ops.components.watch.trip_watch' from 'C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\legacy\\deployment_candidates\\2026-10-11_2204_plugin_v1\\app\\domains\\travel_ops\\components\\watch\\trip_watch.py'> has no attribute 'forecast_attention'
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_all_watch_kinds_off_do_not_call_data_or_open_cases - app.core.settings.ConfigError: 필수 환경변수가 없거나 잘못됐다. .env.example 를 .env 로 복사해서 채운다.
+7 validation errors for Settings
+openai_api_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+llm_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+embedding_model
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+tenant_id
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+secret_key
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_jwt_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+composer_issuer_secret
+  Field required [type=missing, input_value={'database_url': 'postgre...'mobility_data_dir': ''}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_disabled_activity_coordinator_does_not_block_dining_mobility_cases - Failed: disabled Activity coordinator used
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_watch_does_not_close_controller_preserved_case_on_unavailable - Failed: unavailable Case was closed
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_composition_failure_keeps_safety_inside_the_existing_watch_gate[False] - ImportError: cannot import name 'monitoring' from 'app.domains.travel_ops.components.watch' (C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2204_plugin_v1\app\domains\travel_ops\components\watch\__init__.py)
+FAILED tests/unit/travel/test_plugin_worker_availability.py::test_composition_failure_keeps_safety_inside_the_existing_watch_gate[True] - ImportError: cannot import name 'monitoring' from 'app.domains.travel_ops.components.watch' (C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\deployment_candidates\2026-10-11_2204_plugin_v1\app\domains\travel_ops\components\watch\__init__.py)
+======================== 26 failed, 80 passed in 8.55s ========================

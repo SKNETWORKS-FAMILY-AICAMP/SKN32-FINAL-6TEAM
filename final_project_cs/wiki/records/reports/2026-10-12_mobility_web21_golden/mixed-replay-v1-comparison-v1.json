@@ -1,0 +1,2246 @@
+{
+  "observed_at": "2026-10-12T02:46:48.773Z",
+  "scope": "같은 공개OD의 선택경로3종(고유OD1개). 성인카드 소비자웹 운임·환승정답, 실결제아님. 상세미관측은별도표시.",
+  "rows": [
+    {
+      "id": "M01",
+      "golden": {
+        "id": "M01",
+        "legs": [
+          {
+            "mode": "subway",
+            "line": "02호선",
+            "from": "강남",
+            "to": "교대"
+          },
+          {
+            "mode": "subway",
+            "line": "03호선",
+            "from": "교대",
+            "to": "동대입구"
+          },
+          {
+            "mode": "bus",
+            "route": "01A",
+            "from": "동대입구역.장충동",
+            "from_ars": "02222",
+            "to": "남산서울타워"
+          }
+        ],
+        "fare_won": 1650,
+        "total_min": 39,
+        "walk_min": 13,
+        "distance_display": "14.4km",
+        "web_detail_collected": true,
+        "exit": "동대입구6번",
+        "boarding_car": "강남1-1"
+      },
+      "case": {
+        "id": "M01",
+        "date": "2026-10-12",
+        "depart_at": "11:46",
+        "first_visit": false,
+        "no_alternatives": true,
+        "stage": "planning",
+        "legs": [
+          {
+            "mode": "subway",
+            "line": "02호선",
+            "from": "강남",
+            "to": "교대"
+          },
+          {
+            "mode": "subway",
+            "line": "03호선",
+            "from": "교대",
+            "to": "동대입구"
+          },
+          {
+            "mode": "bus",
+            "route": "01A",
+            "from": "동대입구역.장충동",
+            "to": "남산서울타워",
+            "route_id": "100100001",
+            "from_sequence": 6,
+            "to_sequence": 9,
+            "from_stop_id": "101000117",
+            "to_stop_id": "102000226"
+          }
+        ]
+      },
+      "bus_mappings": [
+        {
+          "raw": {
+            "mode": "bus",
+            "route": "01A",
+            "from": "동대입구역.장충동",
+            "from_ars": "02222",
+            "to": "남산서울타워"
+          },
+          "board": {
+            "route_id": "100100001",
+            "route_nm": "01A",
+            "seq": 6,
+            "station_id": "101000117",
+            "ars_id": "02222",
+            "station_nm": "동대입구역.장충동",
+            "lat": 37.558362,
+            "lng": 127.005445,
+            "direction": "예장주차장",
+            "sect_dist_m": 436,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "alight": {
+            "route_id": "100100001",
+            "route_nm": "01A",
+            "seq": 9,
+            "station_id": "102000226",
+            "ars_id": "03320",
+            "station_nm": "남산서울타워",
+            "lat": 37.551016,
+            "lng": 126.991197,
+            "direction": "예장주차장",
+            "sect_dist_m": 1834,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "direction": "예장주차장",
+          "distance_m": 3007,
+          "alternative_same_named_alights": []
+        }
+      ],
+      "result": {
+        "id": "M01",
+        "verdict": "feasible",
+        "reason": "예정 12:27 +@14분(최악 12:31 + 버퍼 10분)",
+        "grade": "추정",
+        "legs": [
+          {
+            "idx": 0,
+            "label": "02호선 강남→교대",
+            "verdict": "feasible",
+            "reason": "11:48 성수행 승차 (대기 2분)",
+            "grade": "추정",
+            "depart_min": 708,
+            "arrive_min": 710,
+            "wait_min": 2,
+            "ride_min": 1.5,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {
+              "운행종료후_한바퀴": 6,
+              "단축운행": 1
+            },
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "timetable_v1@2026-10-01",
+                "grade": "확정",
+                "observed_at": "2026-10-01",
+                "claim": "02호선 강남 weekday: 11:48 출발 성수행 (그 방향 472편 중, 11:47~ 안에서 도착이 가장 이른 편)"
+              },
+              {
+                "source_type": "official_web",
+                "source_id": "published_train_precision_v1",
+                "source_url": "https://www.data.go.kr/data/15098251/fileData.do",
+                "observed_at": "2026-10-12T02:29:39.501334+00:00",
+                "grade": "확정",
+                "claim": "공식 열차 2202의 예정 도착초 42570; 실제 도착 측정 아님"
+              },
+              {
+                "source_type": "db",
+                "source_id": "line_station_order_v1",
+                "grade": "추정",
+                "observed_at": "2026-10-01T10:49:35+09:00",
+                "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강남 에서 1정거장 뒤 교대 을 지난다"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "last_train.행선지_확인"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null,
+            "arrival_sec": 42570
+          },
+          {
+            "idx": 1,
+            "label": "환승 교대",
+            "verdict": "feasible",
+            "reason": "도보 1.3분(75m) (초행 아님) = +2분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "03호선 교대→동대입구",
+            "verdict": "feasible",
+            "reason": "11:55 지축행 승차 (대기 4분)",
+            "grade": "확정",
+            "depart_min": 715,
+            "arrive_min": 731,
+            "wait_min": 4,
+            "ride_min": 16.0,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {
+              "단축운행": 191
+            },
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "timetable_v1@2026-10-01",
+                "grade": "확정",
+                "observed_at": "2026-10-01",
+                "claim": "03호선 교대 weekday: 11:55 출발 지축행 (그 방향 188편 중, 11:55~ 안에서 도착이 가장 이른 편)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "line_station_order_v1",
+                "grade": "확정",
+                "observed_at": "2026-10-01T10:49:35+09:00",
+                "claim": "지축행 열차는 교대 에서 8정거장 뒤 동대입구 을 지난다"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "last_train.행선지_확인"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 2,
+            "label": "환승 정류장 동대입구역.장충동 ↔ 03호선 동대입구",
+            "verdict": "feasible",
+            "reason": "도보 1.6분(68m 직선×1.4 = 95m) (초행 아님) = +2분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 2,
+            "label": "버스 01A 동대입구역.장충동→남산서울타워",
+            "verdict": "feasible",
+            "reason": "12:18 승차 예상 (대기 5분 — 배차의 절반) · 동대입구역.장충동(seq 6) → 남산서울타워(seq 9)",
+            "grade": "추정",
+            "depart_min": 738,
+            "arrive_min": 747,
+            "wait_min": 5,
+            "ride_min": 8.2,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.wait_model"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.ride_model"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 동대입구역.장충동→남산서울타워 (3정거장)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_OA-21217",
+                "grade": "추정",
+                "observed_at": "2026-09-13",
+                "claim": "01A 동대입구역.장충동→남산서울타워 구간 3개 p50 누적(진입 시각대 · 12:18 승차)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.구간_프로파일"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": "profile",
+            "arrival_sec": null
+          }
+        ],
+        "arrive_min": 747,
+        "slack_min": null,
+        "relief": null,
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "02호선 강남 weekday: 11:48 출발 성수행 (그 방향 472편 중, 11:47~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "official_web",
+            "source_id": "published_train_precision_v1",
+            "source_url": "https://www.data.go.kr/data/15098251/fileData.do",
+            "observed_at": "2026-10-12T02:29:39.501334+00:00",
+            "grade": "확정",
+            "claim": "공식 열차 2202의 예정 도착초 42570; 실제 도착 측정 아님"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "추정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강남 에서 1정거장 뒤 교대 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          },
+          {
+            "source_type": "db",
+            "source_id": "transfer_walk_v1",
+            "grade": "추정",
+            "observed_at": "2026-09-10T12:30:26+09:00",
+            "claim": "교대 02호선↔03호선 75m ÷ 1.04 m/s"
+          },
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "03호선 교대 weekday: 11:55 출발 지축행 (그 방향 188편 중, 11:55~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "지축행 열차는 교대 에서 8정거장 뒤 동대입구 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          },
+          {
+            "source_type": "db",
+            "source_id": "osm_subway_entrance@2026-09-16",
+            "grade": "추정",
+            "observed_at": "2026-09-27T14:06:46+09:00",
+            "claim": "정류장 동대입구역.장충동 ↔ 동대입구역 6번 출구 직선 68m (출구 귀속 name_match)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "transfer.stop_station_walk"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "grade": "확정",
+            "observed_at": "2026-09-10",
+            "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.wait_model"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.ride_model"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "grade": "확정",
+            "observed_at": "2026-09-10",
+            "claim": "01A(순환): 동대입구역.장충동→남산서울타워 (3정거장)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_OA-21217",
+            "grade": "추정",
+            "observed_at": "2026-09-13",
+            "claim": "01A 동대입구역.장충동→남산서울타워 구간 3개 p50 누적(진입 시각대 · 12:18 승차)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.구간_프로파일"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.worst_case"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_OA-21217",
+            "grade": "추정",
+            "observed_at": "2026-09-13",
+            "claim": "01A 동대입구역.장충동→남산서울타워 구간 3개 p90 누적(진입 시각대 · 12:22 승차)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst.bus_ride_spread"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "buffer.by_stage.planning"
+          }
+        ],
+        "day_type": "weekday",
+        "alternatives": [],
+        "alt_tried": [],
+        "taxi": null,
+        "candidates": null,
+        "ties": null,
+        "dropped_candidates": null,
+        "bus_rejected": null,
+        "axis_best": null,
+        "code": null,
+        "verdict_best": "feasible",
+        "legs_worst": [
+          {
+            "idx": 0,
+            "label": "02호선 강남→교대",
+            "verdict": "feasible",
+            "reason": "11:48 성수행 승차 (대기 2분) [최악]",
+            "grade": "추정",
+            "depart_min": 708,
+            "arrive_min": 710,
+            "wait_min": 2,
+            "ride_min": 1.5,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {
+              "운행종료후_한바퀴": 6,
+              "단축운행": 1
+            },
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "timetable_v1@2026-10-01",
+                "grade": "확정",
+                "observed_at": "2026-10-01",
+                "claim": "02호선 강남 weekday: 11:48 출발 성수행 (그 방향 472편 중, 11:47~ 안에서 도착이 가장 이른 편)"
+              },
+              {
+                "source_type": "official_web",
+                "source_id": "published_train_precision_v1",
+                "source_url": "https://www.data.go.kr/data/15098251/fileData.do",
+                "observed_at": "2026-10-12T02:29:39.501334+00:00",
+                "grade": "확정",
+                "claim": "공식 열차 2202의 예정 도착초 42570; 실제 도착 측정 아님"
+              },
+              {
+                "source_type": "db",
+                "source_id": "line_station_order_v1",
+                "grade": "추정",
+                "observed_at": "2026-10-01T10:49:35+09:00",
+                "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강남 에서 1정거장 뒤 교대 을 지난다"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "last_train.행선지_확인"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null,
+            "arrival_sec": 42570
+          },
+          {
+            "idx": 1,
+            "label": "환승 교대",
+            "verdict": "feasible",
+            "reason": "도보 1.3분(75m) (초행 아님) = +2분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "03호선 교대→동대입구",
+            "verdict": "feasible",
+            "reason": "11:55 지축행 승차 (대기 4분) [최악]",
+            "grade": "확정",
+            "depart_min": 715,
+            "arrive_min": 731,
+            "wait_min": 4,
+            "ride_min": 16.0,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {
+              "단축운행": 191
+            },
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "timetable_v1@2026-10-01",
+                "grade": "확정",
+                "observed_at": "2026-10-01",
+                "claim": "03호선 교대 weekday: 11:55 출발 지축행 (그 방향 188편 중, 11:55~ 안에서 도착이 가장 이른 편)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "line_station_order_v1",
+                "grade": "확정",
+                "observed_at": "2026-10-01T10:49:35+09:00",
+                "claim": "지축행 열차는 교대 에서 8정거장 뒤 동대입구 을 지난다"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "last_train.행선지_확인"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 2,
+            "label": "환승 정류장 동대입구역.장충동 ↔ 03호선 동대입구",
+            "verdict": "feasible",
+            "reason": "도보 1.6분(68m 직선×1.4 = 95m) (초행 아님) = +2분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 2,
+            "label": "버스 01A 동대입구역.장충동→남산서울타워",
+            "verdict": "feasible",
+            "reason": "12:22 승차 예상 (대기 9분 — 배차 전부(최악)) · 동대입구역.장충동(seq 6) → 남산서울타워(seq 9)",
+            "grade": "추정",
+            "depart_min": 742,
+            "arrive_min": 751,
+            "wait_min": 9,
+            "ride_min": 8.9,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.worst_case"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.ride_model"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 동대입구역.장충동→남산서울타워 (3정거장)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_OA-21217",
+                "grade": "추정",
+                "observed_at": "2026-09-13",
+                "claim": "01A 동대입구역.장충동→남산서울타워 구간 3개 p90 누적(진입 시각대 · 12:22 승차)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.구간_프로파일"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "judgment.worst.bus_ride_spread"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": "profile",
+            "arrival_sec": null
+          }
+        ],
+        "arrive_worst_min": 751,
+        "buffer_min": 10,
+        "margin_min": 14,
+        "eta_min": 41,
+        "eta_worst_min": 45,
+        "p90_eta_min": null,
+        "last_feasible_depart_min": null,
+        "out": {
+          "verdict": "feasible",
+          "depart_min": 706,
+          "arrive_min": 747,
+          "arrive_worst_min": 751,
+          "margin_min": 14,
+          "eta_min": 41,
+          "eta_worst_min": 45,
+          "buffer_min": 10
+        }
+      },
+      "mixed_fare_estimate_won": 1650,
+      "fare_upper_won": 2950,
+      "fare_match": true,
+      "rail_distance_models": [
+        {
+          "ridden_m": 10800,
+          "upper_m": 8300,
+          "lower_m": 3200
+        },
+        {
+          "ridden_m": 10800,
+          "upper_m": 8300,
+          "lower_m": 8300
+        }
+      ],
+      "transfer_cars": [
+        {
+          "station": "교대",
+          "from_line": "2호선",
+          "to_line": "3호선",
+          "car_door": "1-1"
+        }
+      ],
+      "nearest_exit_to_selected_bus": [
+        67.52191991245343,
+        {
+          "osm_id": 3403549595,
+          "lat": 37.5588658,
+          "lng": 127.0050189,
+          "ref": "6",
+          "desc": "동대입구역 6번출구",
+          "desc_en": "Dongdae Entrance Station gate 6",
+          "wheelchair": "limited",
+          "attrib": "name_match",
+          "dist_to_station_m": 31
+        }
+      ],
+      "time_scope": "product_first_boarding_to_last_alighting_with_transfer_walk_not_full_OD",
+      "time_comparable": false,
+      "time_note": "웹은 OD접근도보 포함, 제품 case는 첫승차역/정류장 시작. 정확 승차편시각 원문 미수집."
+    },
+    {
+      "id": "M02",
+      "golden": {
+        "id": "M02",
+        "legs": [
+          {
+            "mode": "subway",
+            "line": "신분당선",
+            "from": "강남",
+            "to": "신사"
+          },
+          {
+            "mode": "subway",
+            "line": "03호선",
+            "from": "신사",
+            "to": "동대입구"
+          },
+          {
+            "mode": "bus",
+            "route": "01A",
+            "from": "동대입구역.장충동",
+            "from_ars": "02222",
+            "to": "남산서울타워"
+          }
+        ],
+        "fare_won": 2350,
+        "total_min": 34,
+        "walk_min": 11,
+        "distance_display": "11.8km",
+        "web_detail_collected": false
+      },
+      "case": {
+        "id": "M02",
+        "date": "2026-10-12",
+        "depart_at": "11:46",
+        "first_visit": false,
+        "no_alternatives": true,
+        "stage": "planning",
+        "legs": [
+          {
+            "mode": "subway",
+            "line": "신분당선",
+            "from": "강남",
+            "to": "신사"
+          },
+          {
+            "mode": "subway",
+            "line": "03호선",
+            "from": "신사",
+            "to": "동대입구"
+          },
+          {
+            "mode": "bus",
+            "route": "01A",
+            "from": "동대입구역.장충동",
+            "to": "남산서울타워",
+            "route_id": "100100001",
+            "from_sequence": 6,
+            "to_sequence": 9,
+            "from_stop_id": "101000117",
+            "to_stop_id": "102000226"
+          }
+        ]
+      },
+      "bus_mappings": [
+        {
+          "raw": {
+            "mode": "bus",
+            "route": "01A",
+            "from": "동대입구역.장충동",
+            "from_ars": "02222",
+            "to": "남산서울타워"
+          },
+          "board": {
+            "route_id": "100100001",
+            "route_nm": "01A",
+            "seq": 6,
+            "station_id": "101000117",
+            "ars_id": "02222",
+            "station_nm": "동대입구역.장충동",
+            "lat": 37.558362,
+            "lng": 127.005445,
+            "direction": "예장주차장",
+            "sect_dist_m": 436,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "alight": {
+            "route_id": "100100001",
+            "route_nm": "01A",
+            "seq": 9,
+            "station_id": "102000226",
+            "ars_id": "03320",
+            "station_nm": "남산서울타워",
+            "lat": 37.551016,
+            "lng": 126.991197,
+            "direction": "예장주차장",
+            "sect_dist_m": 1834,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "direction": "예장주차장",
+          "distance_m": 3007,
+          "alternative_same_named_alights": []
+        }
+      ],
+      "result": {
+        "id": "M02",
+        "verdict": "feasible",
+        "reason": "예정 12:27 +@14분(최악 12:31 + 버퍼 10분)",
+        "grade": "추정",
+        "legs": [
+          {
+            "idx": 0,
+            "label": "신분당선 강남→신사",
+            "verdict": "feasible",
+            "reason": "11:48 신사행 승차 (대기 2분)",
+            "grade": "추정",
+            "depart_min": 708,
+            "arrive_min": 713,
+            "wait_min": 2,
+            "ride_min": 4.5,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {
+              "단축운행": 163
+            },
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "timetable_v1@2026-10-01",
+                "grade": "확정",
+                "observed_at": "2026-10-01",
+                "claim": "신분당선 강남 weekday: 11:48 출발 신사행 (그 방향 163편 중, 11:48~ 안에서 도착이 가장 이른 편)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "line_station_order_v1",
+                "grade": "추정",
+                "observed_at": "2026-10-01T10:49:35+09:00",
+                "claim": "신사행 열차는 강남 에서 3정거장 뒤 신사 을 지난다"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "last_train.행선지_확인"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "환승 신사",
+            "verdict": "feasible",
+            "reason": "도보 1.3분(77m) (초행 아님) = +2분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "03호선 신사→동대입구",
+            "verdict": "feasible",
+            "reason": "12:01 지축행 승차 (대기 6분)",
+            "grade": "확정",
+            "depart_min": 721,
+            "arrive_min": 731,
+            "wait_min": 6,
+            "ride_min": 9.5,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {
+              "단축운행": 191
+            },
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "timetable_v1@2026-10-01",
+                "grade": "확정",
+                "observed_at": "2026-10-01",
+                "claim": "03호선 신사 weekday: 12:01 출발 지축행 (그 방향 189편 중, 12:01~ 안에서 도착이 가장 이른 편)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "line_station_order_v1",
+                "grade": "확정",
+                "observed_at": "2026-10-01T10:49:35+09:00",
+                "claim": "지축행 열차는 신사 에서 5정거장 뒤 동대입구 을 지난다"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "last_train.행선지_확인"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 2,
+            "label": "환승 정류장 동대입구역.장충동 ↔ 03호선 동대입구",
+            "verdict": "feasible",
+            "reason": "도보 1.6분(68m 직선×1.4 = 95m) (초행 아님) = +2분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 2,
+            "label": "버스 01A 동대입구역.장충동→남산서울타워",
+            "verdict": "feasible",
+            "reason": "12:18 승차 예상 (대기 5분 — 배차의 절반) · 동대입구역.장충동(seq 6) → 남산서울타워(seq 9)",
+            "grade": "추정",
+            "depart_min": 738,
+            "arrive_min": 747,
+            "wait_min": 5,
+            "ride_min": 8.2,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.wait_model"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.ride_model"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 동대입구역.장충동→남산서울타워 (3정거장)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_OA-21217",
+                "grade": "추정",
+                "observed_at": "2026-09-13",
+                "claim": "01A 동대입구역.장충동→남산서울타워 구간 3개 p50 누적(진입 시각대 · 12:18 승차)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.구간_프로파일"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": "profile",
+            "arrival_sec": null
+          }
+        ],
+        "arrive_min": 747,
+        "slack_min": null,
+        "relief": null,
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "신분당선 강남 weekday: 11:48 출발 신사행 (그 방향 163편 중, 11:48~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "추정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "신사행 열차는 강남 에서 3정거장 뒤 신사 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          },
+          {
+            "source_type": "db",
+            "source_id": "transfer_walk_v1",
+            "grade": "추정",
+            "observed_at": "2026-09-10T12:30:26+09:00",
+            "claim": "신사 신분당선↔03호선 77m ÷ 1.04 m/s"
+          },
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "03호선 신사 weekday: 12:01 출발 지축행 (그 방향 189편 중, 12:01~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "지축행 열차는 신사 에서 5정거장 뒤 동대입구 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          },
+          {
+            "source_type": "db",
+            "source_id": "osm_subway_entrance@2026-09-16",
+            "grade": "추정",
+            "observed_at": "2026-09-27T14:06:46+09:00",
+            "claim": "정류장 동대입구역.장충동 ↔ 동대입구역 6번 출구 직선 68m (출구 귀속 name_match)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "transfer.stop_station_walk"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "grade": "확정",
+            "observed_at": "2026-09-10",
+            "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.wait_model"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.ride_model"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "grade": "확정",
+            "observed_at": "2026-09-10",
+            "claim": "01A(순환): 동대입구역.장충동→남산서울타워 (3정거장)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_OA-21217",
+            "grade": "추정",
+            "observed_at": "2026-09-13",
+            "claim": "01A 동대입구역.장충동→남산서울타워 구간 3개 p50 누적(진입 시각대 · 12:18 승차)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.구간_프로파일"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.worst_case"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_OA-21217",
+            "grade": "추정",
+            "observed_at": "2026-09-13",
+            "claim": "01A 동대입구역.장충동→남산서울타워 구간 3개 p90 누적(진입 시각대 · 12:22 승차)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst.bus_ride_spread"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "buffer.by_stage.planning"
+          }
+        ],
+        "day_type": "weekday",
+        "alternatives": [],
+        "alt_tried": [],
+        "taxi": null,
+        "candidates": null,
+        "ties": null,
+        "dropped_candidates": null,
+        "bus_rejected": null,
+        "axis_best": null,
+        "code": null,
+        "verdict_best": "feasible",
+        "legs_worst": [
+          {
+            "idx": 0,
+            "label": "신분당선 강남→신사",
+            "verdict": "feasible",
+            "reason": "11:48 신사행 승차 (대기 2분) [최악]",
+            "grade": "추정",
+            "depart_min": 708,
+            "arrive_min": 713,
+            "wait_min": 2,
+            "ride_min": 4.5,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {
+              "단축운행": 163
+            },
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "timetable_v1@2026-10-01",
+                "grade": "확정",
+                "observed_at": "2026-10-01",
+                "claim": "신분당선 강남 weekday: 11:48 출발 신사행 (그 방향 163편 중, 11:48~ 안에서 도착이 가장 이른 편)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "line_station_order_v1",
+                "grade": "추정",
+                "observed_at": "2026-10-01T10:49:35+09:00",
+                "claim": "신사행 열차는 강남 에서 3정거장 뒤 신사 을 지난다"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "last_train.행선지_확인"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "환승 신사",
+            "verdict": "feasible",
+            "reason": "도보 1.3분(77m) (초행 아님) = +2분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "03호선 신사→동대입구",
+            "verdict": "feasible",
+            "reason": "12:01 지축행 승차 (대기 6분) [최악]",
+            "grade": "확정",
+            "depart_min": 721,
+            "arrive_min": 731,
+            "wait_min": 6,
+            "ride_min": 9.5,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {
+              "단축운행": 191
+            },
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "timetable_v1@2026-10-01",
+                "grade": "확정",
+                "observed_at": "2026-10-01",
+                "claim": "03호선 신사 weekday: 12:01 출발 지축행 (그 방향 189편 중, 12:01~ 안에서 도착이 가장 이른 편)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "line_station_order_v1",
+                "grade": "확정",
+                "observed_at": "2026-10-01T10:49:35+09:00",
+                "claim": "지축행 열차는 신사 에서 5정거장 뒤 동대입구 을 지난다"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "확정",
+                "observed_at": "2026-09-29",
+                "claim": "last_train.행선지_확인"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 2,
+            "label": "환승 정류장 동대입구역.장충동 ↔ 03호선 동대입구",
+            "verdict": "feasible",
+            "reason": "도보 1.6분(68m 직선×1.4 = 95m) (초행 아님) = +2분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 2,
+            "label": "버스 01A 동대입구역.장충동→남산서울타워",
+            "verdict": "feasible",
+            "reason": "12:22 승차 예상 (대기 9분 — 배차 전부(최악)) · 동대입구역.장충동(seq 6) → 남산서울타워(seq 9)",
+            "grade": "추정",
+            "depart_min": 742,
+            "arrive_min": 751,
+            "wait_min": 9,
+            "ride_min": 8.9,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.worst_case"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.ride_model"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 동대입구역.장충동→남산서울타워 (3정거장)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_OA-21217",
+                "grade": "추정",
+                "observed_at": "2026-09-13",
+                "claim": "01A 동대입구역.장충동→남산서울타워 구간 3개 p90 누적(진입 시각대 · 12:22 승차)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.구간_프로파일"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "judgment.worst.bus_ride_spread"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": "profile",
+            "arrival_sec": null
+          }
+        ],
+        "arrive_worst_min": 751,
+        "buffer_min": 10,
+        "margin_min": 14,
+        "eta_min": 41,
+        "eta_worst_min": 45,
+        "p90_eta_min": null,
+        "last_feasible_depart_min": null,
+        "out": {
+          "verdict": "feasible",
+          "depart_min": 706,
+          "arrive_min": 747,
+          "arrive_worst_min": 751,
+          "margin_min": 14,
+          "eta_min": 41,
+          "eta_worst_min": 45,
+          "buffer_min": 10
+        }
+      },
+      "mixed_fare_estimate_won": 2350,
+      "fare_upper_won": 3650,
+      "fare_match": true,
+      "rail_distance_models": [
+        {
+          "ridden_m": 8300,
+          "upper_m": 8300,
+          "lower_m": 3200
+        },
+        {
+          "ridden_m": 8300,
+          "upper_m": 8300,
+          "lower_m": 8300
+        }
+      ],
+      "transfer_cars": null,
+      "nearest_exit_to_selected_bus": [
+        67.52191991245343,
+        {
+          "osm_id": 3403549595,
+          "lat": 37.5588658,
+          "lng": 127.0050189,
+          "ref": "6",
+          "desc": "동대입구역 6번출구",
+          "desc_en": "Dongdae Entrance Station gate 6",
+          "wheelchair": "limited",
+          "attrib": "name_match",
+          "dist_to_station_m": 31
+        }
+      ],
+      "time_scope": "product_first_boarding_to_last_alighting_with_transfer_walk_not_full_OD",
+      "time_comparable": false,
+      "time_note": "웹은 OD접근도보 포함, 제품 case는 첫승차역/정류장 시작. 정확 승차편시각 원문 미수집."
+    },
+    {
+      "id": "M03",
+      "golden": {
+        "id": "M03",
+        "legs": [
+          {
+            "mode": "bus",
+            "route": "420",
+            "from": "지하철2호선강남역",
+            "from_ars": "22012",
+            "to": "국립극장.반얀트리호텔"
+          },
+          {
+            "mode": "bus",
+            "route": "01A",
+            "from": "국립극장.반얀트리호텔",
+            "from_ars": "02210",
+            "to": "남산서울타워"
+          }
+        ],
+        "fare_won": 1500,
+        "total_min": 40,
+        "walk_min": 13,
+        "distance_display": "9.3km",
+        "web_detail_collected": false
+      },
+      "case": {
+        "id": "M03",
+        "date": "2026-10-12",
+        "depart_at": "11:46",
+        "first_visit": false,
+        "no_alternatives": true,
+        "stage": "planning",
+        "legs": [
+          {
+            "mode": "bus",
+            "route": "420",
+            "from": "지하철2호선강남역",
+            "to": "국립극장.반얀트리호텔",
+            "route_id": "100100068",
+            "from_sequence": 18,
+            "to_sequence": 25,
+            "from_stop_id": "121000012",
+            "to_stop_id": "101000105"
+          },
+          {
+            "mode": "bus",
+            "route": "01A",
+            "from": "국립극장.반얀트리호텔",
+            "to": "남산서울타워",
+            "route_id": "100100001",
+            "from_sequence": 7,
+            "to_sequence": 9,
+            "from_stop_id": "101000106",
+            "to_stop_id": "102000226"
+          }
+        ]
+      },
+      "bus_mappings": [
+        {
+          "raw": {
+            "mode": "bus",
+            "route": "420",
+            "from": "지하철2호선강남역",
+            "from_ars": "22012",
+            "to": "국립극장.반얀트리호텔"
+          },
+          "board": {
+            "route_id": "100100068",
+            "route_nm": "420",
+            "seq": 18,
+            "station_id": "121000012",
+            "ars_id": "22012",
+            "station_nm": "지하철2호선강남역",
+            "lat": 37.500785,
+            "lng": 127.02637,
+            "direction": "청량리",
+            "sect_dist_m": 687,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "alight": {
+            "route_id": "100100068",
+            "route_nm": "420",
+            "seq": 25,
+            "station_id": "101000105",
+            "ars_id": "02209",
+            "station_nm": "국립극장.반얀트리호텔",
+            "lat": 37.551481823,
+            "lng": 127.001094708,
+            "direction": "청량리",
+            "sect_dist_m": 1364,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "direction": "청량리",
+          "distance_m": 6660,
+          "alternative_same_named_alights": [
+            {
+              "route_id": "100100068",
+              "route_nm": "420",
+              "seq": 64,
+              "station_id": "101000106",
+              "ars_id": "02210",
+              "station_nm": "국립극장.반얀트리호텔",
+              "lat": 37.551535,
+              "lng": 127.000752,
+              "direction": "개포동",
+              "sect_dist_m": 1149,
+              "transfer_yn": "N",
+              "source": "seoul_bus_route",
+              "source_id": "seoul_bus_route@2026-09-10",
+              "fetched_at": "2026-09-10",
+              "fetched_at_precision": "day"
+            }
+          ]
+        },
+        {
+          "raw": {
+            "mode": "bus",
+            "route": "01A",
+            "from": "국립극장.반얀트리호텔",
+            "from_ars": "02210",
+            "to": "남산서울타워"
+          },
+          "board": {
+            "route_id": "100100001",
+            "route_nm": "01A",
+            "seq": 7,
+            "station_id": "101000106",
+            "ars_id": "02210",
+            "station_nm": "국립극장.반얀트리호텔",
+            "lat": 37.551535,
+            "lng": 127.000752,
+            "direction": "예장주차장",
+            "sect_dist_m": 883,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "alight": {
+            "route_id": "100100001",
+            "route_nm": "01A",
+            "seq": 9,
+            "station_id": "102000226",
+            "ars_id": "03320",
+            "station_nm": "남산서울타워",
+            "lat": 37.551016,
+            "lng": 126.991197,
+            "direction": "예장주차장",
+            "sect_dist_m": 1834,
+            "transfer_yn": "N",
+            "source": "seoul_bus_route",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "fetched_at": "2026-09-10",
+            "fetched_at_precision": "day"
+          },
+          "direction": "예장주차장",
+          "distance_m": 2124,
+          "alternative_same_named_alights": []
+        }
+      ],
+      "result": {
+        "id": "M03",
+        "verdict": "feasible",
+        "reason": "예정 12:23 +@22분(최악 12:35 + 버퍼 10분)",
+        "grade": "추정",
+        "legs": [
+          {
+            "idx": 0,
+            "label": "버스 420 지하철2호선강남역→국립극장.반얀트리호텔",
+            "verdict": "feasible",
+            "reason": "11:51 승차 예상 (대기 5분 — 배차의 절반) · 지하철2호선강남역(seq 18) → 국립극장.반얀트리호텔(seq 25)",
+            "grade": "추정",
+            "depart_min": 711,
+            "arrive_min": 731,
+            "wait_min": 5,
+            "ride_min": 19.4,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "420(간선): 운행 04:00~22:50 · 배차 9분"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.wait_model"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.ride_model"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "420(간선): 지하철2호선강남역→국립극장.반얀트리호텔 (7정거장)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_OA-21217",
+                "grade": "추정",
+                "observed_at": "2026-09-13",
+                "claim": "420 지하철2호선강남역→국립극장.반얀트리호텔 구간 7개 p50 누적(진입 시각대 · 11:51 승차)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.구간_프로파일"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": "profile",
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "환승 정류장 국립극장.반얀트리호텔(버스420) ↔ 국립극장.반얀트리호텔(버스01A)",
+            "verdict": "feasible",
+            "reason": "도보 0.7분(31m 직선×1.4 = 43m) (초행 아님) = +1분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "버스 01A 국립극장.반얀트리호텔→남산서울타워",
+            "verdict": "feasible",
+            "reason": "12:17 승차 예상 (대기 5분 — 배차의 절반) · 국립극장.반얀트리호텔(seq 7) → 남산서울타워(seq 9)",
+            "grade": "추정",
+            "depart_min": 737,
+            "arrive_min": 743,
+            "wait_min": 5,
+            "ride_min": 5.6,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.wait_model"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.ride_model"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 국립극장.반얀트리호텔→남산서울타워 (2정거장)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_OA-21217",
+                "grade": "추정",
+                "observed_at": "2026-09-13",
+                "claim": "01A 국립극장.반얀트리호텔→남산서울타워 구간 2개 p50 누적(진입 시각대 · 12:17 승차)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.구간_프로파일"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": false,
+            "ride_src": "profile",
+            "arrival_sec": null
+          }
+        ],
+        "arrive_min": 743,
+        "slack_min": null,
+        "relief": null,
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "grade": "확정",
+            "observed_at": "2026-09-10",
+            "claim": "420(간선): 운행 04:00~22:50 · 배차 9분"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.wait_model"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.ride_model"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "grade": "확정",
+            "observed_at": "2026-09-10",
+            "claim": "420(간선): 지하철2호선강남역→국립극장.반얀트리호텔 (7정거장)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_OA-21217",
+            "grade": "추정",
+            "observed_at": "2026-09-13",
+            "claim": "420 지하철2호선강남역→국립극장.반얀트리호텔 구간 7개 p50 누적(진입 시각대 · 11:51 승차)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.구간_프로파일"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "grade": "추정",
+            "observed_at": "2026-09-10",
+            "claim": "정류장 국립극장.반얀트리호텔(ID 101000105 · 청량리 방향) ↔ 국립극장.반얀트리호텔(ID 101000106 · 예장주차장 방향) 직선 31m"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "transfer.bus_bus_walk"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "grade": "확정",
+            "observed_at": "2026-09-10",
+            "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.wait_model"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.ride_model"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_bus_route@2026-09-10",
+            "grade": "확정",
+            "observed_at": "2026-09-10",
+            "claim": "01A(순환): 국립극장.반얀트리호텔→남산서울타워 (2정거장)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_OA-21217",
+            "grade": "추정",
+            "observed_at": "2026-09-13",
+            "claim": "01A 국립극장.반얀트리호텔→남산서울타워 구간 2개 p50 누적(진입 시각대 · 12:17 승차)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.구간_프로파일"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.worst_case"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_OA-21217",
+            "grade": "추정",
+            "observed_at": "2026-09-13",
+            "claim": "420 지하철2호선강남역→국립극장.반얀트리호텔 구간 7개 p90 누적(진입 시각대 · 11:55 승차)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst.bus_ride_spread"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "bus.worst_case"
+          },
+          {
+            "source_type": "db",
+            "source_id": "seoul_OA-21217",
+            "grade": "추정",
+            "observed_at": "2026-09-13",
+            "claim": "01A 국립극장.반얀트리호텔→남산서울타워 구간 2개 p90 누적(진입 시각대 · 12:28 승차)"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst.bus_ride_spread"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "judgment.worst"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "추정",
+            "observed_at": "2026-09-29",
+            "claim": "buffer.by_stage.planning"
+          }
+        ],
+        "day_type": "weekday",
+        "alternatives": [],
+        "alt_tried": [],
+        "taxi": null,
+        "candidates": null,
+        "ties": null,
+        "dropped_candidates": null,
+        "bus_rejected": null,
+        "axis_best": null,
+        "code": null,
+        "verdict_best": "feasible",
+        "legs_worst": [
+          {
+            "idx": 0,
+            "label": "버스 420 지하철2호선강남역→국립극장.반얀트리호텔",
+            "verdict": "feasible",
+            "reason": "11:55 승차 예상 (대기 9분 — 배차 전부(최악)) · 지하철2호선강남역(seq 18) → 국립극장.반얀트리호텔(seq 25)",
+            "grade": "추정",
+            "depart_min": 715,
+            "arrive_min": 738,
+            "wait_min": 9,
+            "ride_min": 22.7,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "420(간선): 운행 04:00~22:50 · 배차 9분"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.worst_case"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.ride_model"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "420(간선): 지하철2호선강남역→국립극장.반얀트리호텔 (7정거장)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_OA-21217",
+                "grade": "추정",
+                "observed_at": "2026-09-13",
+                "claim": "420 지하철2호선강남역→국립극장.반얀트리호텔 구간 7개 p90 누적(진입 시각대 · 11:55 승차)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.구간_프로파일"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "judgment.worst.bus_ride_spread"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": "profile",
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "환승 정류장 국립극장.반얀트리호텔(버스420) ↔ 국립극장.반얀트리호텔(버스01A)",
+            "verdict": "feasible",
+            "reason": "도보 0.7분(31m 직선×1.4 = 43m) (초행 아님) = +1분",
+            "grade": "추정",
+            "depart_min": null,
+            "arrive_min": null,
+            "wait_min": 0,
+            "ride_min": null,
+            "ride_grade": "확정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": null,
+            "arrival_sec": null
+          },
+          {
+            "idx": 1,
+            "label": "버스 01A 국립극장.반얀트리호텔→남산서울타워",
+            "verdict": "feasible",
+            "reason": "12:28 승차 예상 (대기 9분 — 배차 전부(최악)) · 국립극장.반얀트리호텔(seq 7) → 남산서울타워(seq 9)",
+            "grade": "추정",
+            "depart_min": 748,
+            "arrive_min": 755,
+            "wait_min": 9,
+            "ride_min": 6.1,
+            "ride_grade": "추정",
+            "relief": null,
+            "dropped": {},
+            "warnings": [],
+            "evidence": [
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.worst_case"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.ride_model"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_bus_route@2026-09-10",
+                "grade": "확정",
+                "observed_at": "2026-09-10",
+                "claim": "01A(순환): 국립극장.반얀트리호텔→남산서울타워 (2정거장)"
+              },
+              {
+                "source_type": "db",
+                "source_id": "seoul_OA-21217",
+                "grade": "추정",
+                "observed_at": "2026-09-13",
+                "claim": "01A 국립극장.반얀트리호텔→남산서울타워 구간 2개 p90 누적(진입 시각대 · 12:28 승차)"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "bus.구간_프로파일"
+              },
+              {
+                "source_type": "policy",
+                "source_id": "mobility_rules@v0.9.2",
+                "grade": "추정",
+                "observed_at": "2026-09-29",
+                "claim": "judgment.worst.bus_ride_spread"
+              }
+            ],
+            "car": null,
+            "walk_min": null,
+            "code": null,
+            "worst": true,
+            "ride_src": "profile",
+            "arrival_sec": null
+          }
+        ],
+        "arrive_worst_min": 755,
+        "buffer_min": 10,
+        "margin_min": 22,
+        "eta_min": 37,
+        "eta_worst_min": 49,
+        "p90_eta_min": null,
+        "last_feasible_depart_min": null,
+        "out": {
+          "verdict": "feasible",
+          "depart_min": 706,
+          "arrive_min": 743,
+          "arrive_worst_min": 755,
+          "margin_min": 22,
+          "eta_min": 37,
+          "eta_worst_min": 49,
+          "buffer_min": 10
+        }
+      },
+      "mixed_fare_estimate_won": 1500,
+      "fare_upper_won": 2900,
+      "fare_match": true,
+      "rail_distance_models": [
+        null,
+        null
+      ],
+      "transfer_cars": null,
+      "nearest_exit_to_selected_bus": null,
+      "time_scope": "product_first_boarding_to_last_alighting_with_transfer_walk_not_full_OD",
+      "time_comparable": false,
+      "time_note": "웹은 OD접근도보 포함, 제품 case는 첫승차역/정류장 시작. 정확 승차편시각 원문 미수집."
+    }
+  ],
+  "hashes": {
+    "datasets\\mobility\\raw\\mobility_web21_20261012_v1\\kakao-mixed-aligned-01.json": "f2136b03afd1e5ce37b836b7417b5f77ae29e592ba5f96451da30f92e9ffd804",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+    "datasets\\mobility\\processed\\mobility\\line_station_order_v1.json": "693c616fa1a538d564b84c12cae1f8c744140da87f91574cfbb795394448d3e8",
+    "datasets\\mobility\\processed\\mobility\\transfer_walk_v1.json": "03a13259fc182df08eff16eccdc2add597b6012d7aaf160b38596f0708fc3f43",
+    "datasets\\mobility\\processed\\mobility\\bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "datasets\\mobility\\processed\\mobility\\bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+    "datasets\\mobility\\processed\\mobility\\station_coords.json": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d",
+    "datasets\\mobility\\processed\\mobility\\subway_realtime_stations_20260902_v1.json": "12ddcf1b102fcaea22236aad3fa3c5219c4fb12c2abefd279d49eb3acdbd7f5a",
+    "datasets\\mobility\\processed\\mobility\\published_boarding_timetable_v1.json": "7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+    "datasets\\mobility\\processed\\mobility\\published_train_precision_v1.json.gz": "4cb51c534f049e0d78687429e9dc7fc97aefee7327f1a9c7ff59b35732f25454",
+    "datasets\\mobility\\processed\\mobility\\station_exits_v1.json": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+    "datasets\\mobility\\processed\\mobility\\bike_stations_v1.jsonl": "8752290317c8700ad1d2a99cfe4f21fca9dea4e01ecab717972aad21603af6d7",
+    "datasets\\mobility\\processed\\mobility\\bus_seg_profile_v1.jsonl.gz": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1_meta.json": "6cc106e94be7b76ce921c884818617f8bb4473a3419d9ce64c33acb9d5045836",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\rules_v0.3.json": "8ba8f8cd4df02ab9a3a424b060e6e4a07f6e6531180ff084048375c21ab94311",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\holidays_2026_2027.json": "b2539a7e6835bd6dd2ac3fef654d1c7f063305bbcdb9a17a7b2d4254ee67d8f4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\special_rail_fares_v1.json": "88ceee74a9c6e796be2b29501bc0e9f60296314b8770a123fc7611fc5a7b124e",
+    "datasets\\mobility\\processed\\mobility\\rail_edge_track_v2.jsonl.gz": "dd2d0eda1aaa956ba5d09d5410539ee863f8c4b023773b7c66a31caf3eb9e096",
+    "datasets\\mobility\\processed\\mobility\\rail_distance_overlay_v1.json": "78cbe18455c12bf1d25c795427559c1b86049997cca2c1b26498739caff44c82",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\options.py": "c6c365e9acf2beda523685842c8d8b174265b0d1a4e4a974925bef68ce892c7a",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\runtime.py": "38cd5785d0c99146a8849bdf2eb7a9b9e445bb6f52ce1bb8d0e8e866b8ca4cfd",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time.py": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus.py": "bc3c969ea49456efb27aa5ba85a9bfc63a382fa9eb6f72a5217248fb459b28ea",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus_identity.py": "c5ec2c9044609d768068dc91399289a36f28ebae34b94c8b3ab563e088d13fb9"
+  },
+  "limited_api_calls": 0,
+  "private_access": 0
+}

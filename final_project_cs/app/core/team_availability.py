@@ -22,3 +22,4 @@ def unavailable_payload(exc: TeamUnavailable) -> dict:
         "team_id": exc.team_id, "reason": exc.reason,
         "retryable": exc.reason == "remote_unavailable",
     }}
+

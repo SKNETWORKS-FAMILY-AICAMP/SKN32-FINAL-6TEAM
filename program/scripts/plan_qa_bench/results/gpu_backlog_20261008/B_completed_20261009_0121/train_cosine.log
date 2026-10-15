@@ -1,0 +1,72 @@
+학습 문제 2613/2613 · 평균 길이 2068 토큰 · 정답 토큰 평균 7.0
+Loading weights:   0%|          | 0/2076 [00:00<?, ?it/s]Loading weights:   4%|▍         | 93/2076 [00:00<00:02, 929.91it/s]Loading weights:  18%|█▊        | 380/2076 [00:00<00:00, 2064.64it/s]Loading weights:  35%|███▌      | 736/2076 [00:00<00:00, 2738.76it/s]Loading weights:  49%|████▊     | 1010/2076 [00:01<00:02, 389.23it/s]Loading weights:  57%|█████▋    | 1183/2076 [00:02<00:02, 409.23it/s]Loading weights:  63%|██████▎   | 1311/2076 [00:02<00:01, 423.00it/s]Loading weights:  68%|██████▊   | 1412/2076 [00:02<00:01, 429.97it/s]Loading weights:  85%|████████▌ | 1770/2076 [00:02<00:00, 766.17it/s]Loading weights: 100%|██████████| 2076/2076 [00:02<00:00, 699.83it/s]
+모델 올림 Gemma4ForConditionalGeneration · GPU 메모리 8.7GB
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+trainable params: 34,881,536 || all params: 7,975,982,368 || trainable%: 0.4373
+ep 1 step 10/654 loss 0.2882 lr 1.56e-05 4.5분 · 남은 약 293분 · 최대 GPU 10.6GB
+ep 1 step 20/654 loss 0.0840 lr 3.13e-05 9.1분 · 남은 약 288분 · 최대 GPU 10.6GB
+ep 1 step 30/654 loss 0.0886 lr 4.69e-05 13.7분 · 남은 약 284분 · 최대 GPU 10.6GB
+ep 1 step 40/654 loss 0.0714 lr 5.00e-05 18.2분 · 남은 약 280분 · 최대 GPU 10.6GB
+ep 1 step 50/654 loss 0.0899 lr 4.99e-05 22.8분 · 남은 약 276분 · 최대 GPU 10.6GB
+ep 1 step 60/654 loss 0.0451 lr 4.98e-05 27.3분 · 남은 약 271분 · 최대 GPU 10.6GB
+ep 1 step 70/654 loss 0.0820 lr 4.96e-05 31.9분 · 남은 약 266분 · 최대 GPU 10.6GB
+ep 1 step 80/654 loss 0.0440 lr 4.94e-05 36.5분 · 남은 약 262분 · 최대 GPU 10.6GB
+ep 1 step 90/654 loss 0.0395 lr 4.91e-05 41.1분 · 남은 약 257분 · 최대 GPU 10.6GB
+ep 1 step 100/654 loss 0.0423 lr 4.87e-05 45.7분 · 남은 약 253분 · 최대 GPU 10.6GB
+ep 1 step 110/654 loss 0.0153 lr 4.83e-05 50.3분 · 남은 약 249분 · 최대 GPU 10.6GB
+ep 1 step 120/654 loss 0.0232 lr 4.79e-05 54.8분 · 남은 약 244분 · 최대 GPU 10.6GB
+ep 1 step 130/654 loss 0.0221 lr 4.74e-05 59.4분 · 남은 약 239분 · 최대 GPU 10.6GB
+ep 1 step 140/654 loss 0.0305 lr 4.68e-05 63.9분 · 남은 약 235분 · 최대 GPU 10.6GB
+ep 1 step 150/654 loss 0.0101 lr 4.62e-05 68.5분 · 남은 약 230분 · 최대 GPU 10.6GB
+ep 1 step 160/654 loss 0.0434 lr 4.55e-05 73.1분 · 남은 약 226분 · 최대 GPU 10.6GB
+ep 1 step 170/654 loss 0.0450 lr 4.48e-05 77.7분 · 남은 약 221분 · 최대 GPU 10.6GB
+ep 1 step 180/654 loss 0.0294 lr 4.41e-05 82.2분 · 남은 약 217분 · 최대 GPU 10.6GB
+ep 1 step 190/654 loss 0.0126 lr 4.33e-05 86.8분 · 남은 약 212분 · 최대 GPU 10.6GB
+ep 1 step 200/654 loss 0.0330 lr 4.25e-05 91.3분 · 남은 약 207분 · 최대 GPU 10.6GB
+ep 1 step 210/654 loss 0.0416 lr 4.16e-05 95.9분 · 남은 약 203분 · 최대 GPU 10.6GB
+ep 1 step 220/654 loss 0.0204 lr 4.07e-05 100.4분 · 남은 약 198분 · 최대 GPU 10.6GB
+ep 1 step 230/654 loss 0.0290 lr 3.98e-05 105.0분 · 남은 약 194분 · 최대 GPU 10.6GB
+ep 1 step 240/654 loss 0.0341 lr 3.88e-05 109.6분 · 남은 약 189분 · 최대 GPU 10.6GB
+ep 1 step 250/654 loss 0.0214 lr 3.78e-05 114.1분 · 남은 약 184분 · 최대 GPU 10.6GB
+ep 1 step 260/654 loss 0.0124 lr 3.68e-05 118.7분 · 남은 약 180분 · 최대 GPU 10.6GB
+ep 1 step 270/654 loss 0.0487 lr 3.57e-05 123.2분 · 남은 약 175분 · 최대 GPU 10.6GB
+ep 1 step 280/654 loss 0.0048 lr 3.46e-05 127.8분 · 남은 약 171분 · 최대 GPU 10.6GB
+ep 1 step 290/654 loss 0.0036 lr 3.36e-05 132.3분 · 남은 약 166분 · 최대 GPU 10.6GB
+ep 1 step 300/654 loss 0.0129 lr 3.25e-05 136.9분 · 남은 약 162분 · 최대 GPU 10.6GB
+ep 1 step 310/654 loss 0.0152 lr 3.13e-05 141.5분 · 남은 약 157분 · 최대 GPU 10.6GB
+ep 1 step 320/654 loss 0.0195 lr 3.02e-05 146.1분 · 남은 약 152분 · 최대 GPU 10.6GB
+ep 2 step 330/654 loss 0.0272 lr 2.91e-05 150.4분 · 남은 약 148분 · 최대 GPU 10.6GB
+ep 2 step 340/654 loss 0.0082 lr 2.80e-05 155.0분 · 남은 약 143분 · 최대 GPU 10.6GB
+ep 2 step 350/654 loss 0.0073 lr 2.68e-05 159.5분 · 남은 약 139분 · 최대 GPU 10.6GB
+ep 2 step 360/654 loss 0.0113 lr 2.57e-05 164.1분 · 남은 약 134분 · 최대 GPU 10.6GB
+ep 2 step 370/654 loss 0.0006 lr 2.46e-05 168.7분 · 남은 약 129분 · 최대 GPU 10.6GB
+ep 2 step 380/654 loss 0.0007 lr 2.34e-05 173.2분 · 남은 약 125분 · 최대 GPU 10.6GB
+ep 2 step 390/654 loss 0.0047 lr 2.23e-05 177.8분 · 남은 약 120분 · 최대 GPU 10.6GB
+ep 2 step 400/654 loss 0.0180 lr 2.12e-05 182.4분 · 남은 약 116분 · 최대 GPU 10.6GB
+ep 2 step 410/654 loss 0.0011 lr 2.01e-05 186.9분 · 남은 약 111분 · 최대 GPU 10.6GB
+ep 2 step 420/654 loss 0.0190 lr 1.91e-05 191.5분 · 남은 약 107분 · 최대 GPU 10.6GB
+ep 2 step 430/654 loss 0.0130 lr 1.80e-05 196.0분 · 남은 약 102분 · 최대 GPU 10.6GB
+ep 2 step 440/654 loss 0.0007 lr 1.70e-05 200.6분 · 남은 약 98분 · 최대 GPU 10.6GB
+ep 2 step 450/654 loss 0.0128 lr 1.60e-05 205.2분 · 남은 약 93분 · 최대 GPU 10.6GB
+ep 2 step 460/654 loss 0.0108 lr 1.51e-05 209.8분 · 남은 약 88분 · 최대 GPU 10.6GB
+ep 2 step 470/654 loss 0.0031 lr 1.41e-05 214.3분 · 남은 약 84분 · 최대 GPU 10.6GB
+ep 2 step 480/654 loss 0.0101 lr 1.32e-05 218.9분 · 남은 약 79분 · 최대 GPU 10.6GB
+ep 2 step 490/654 loss 0.0062 lr 1.24e-05 223.4분 · 남은 약 75분 · 최대 GPU 10.6GB
+ep 2 step 500/654 loss 0.0007 lr 1.15e-05 228.0분 · 남은 약 70분 · 최대 GPU 10.6GB
+ep 2 step 510/654 loss 0.0232 lr 1.08e-05 232.5분 · 남은 약 66분 · 최대 GPU 10.6GB
+ep 2 step 520/654 loss 0.0068 lr 1.00e-05 237.1분 · 남은 약 61분 · 최대 GPU 10.6GB
+ep 2 step 530/654 loss 0.0006 lr 9.34e-06 241.6분 · 남은 약 57분 · 최대 GPU 10.6GB
+ep 2 step 540/654 loss 0.0005 lr 8.69e-06 246.2분 · 남은 약 52분 · 최대 GPU 10.6GB
+ep 2 step 550/654 loss 0.0019 lr 8.09e-06 250.8분 · 남은 약 47분 · 최대 GPU 10.6GB
+ep 2 step 560/654 loss 0.0020 lr 7.54e-06 255.4분 · 남은 약 43분 · 최대 GPU 10.6GB
+ep 2 step 570/654 loss 0.0038 lr 7.04e-06 260.0분 · 남은 약 38분 · 최대 GPU 10.6GB
+ep 2 step 580/654 loss 0.0004 lr 6.60e-06 264.6분 · 남은 약 34분 · 최대 GPU 10.6GB
+ep 2 step 590/654 loss 0.0003 lr 6.20e-06 269.2분 · 남은 약 29분 · 최대 GPU 10.6GB
+ep 2 step 600/654 loss 0.0002 lr 5.86e-06 273.7분 · 남은 약 25분 · 최대 GPU 10.6GB
+ep 2 step 610/654 loss 0.0085 lr 5.58e-06 278.3분 · 남은 약 20분 · 최대 GPU 10.6GB
+ep 2 step 620/654 loss 0.0012 lr 5.35e-06 282.9분 · 남은 약 16분 · 최대 GPU 10.6GB
+ep 2 step 630/654 loss 0.0053 lr 5.18e-06 287.5분 · 남은 약 11분 · 최대 GPU 10.6GB
+ep 2 step 640/654 loss 0.0056 lr 5.06e-06 292.0분 · 남은 약 6분 · 최대 GPU 10.6GB
+ep 2 step 650/654 loss 0.0005 lr 5.01e-06 296.6분 · 남은 약 2분 · 최대 GPU 10.6GB
+ep 2 step 654/654 loss 0.0099 lr 5.00e-06 298.2분 · 남은 약 0분 · 최대 GPU 10.6GB
+저장 /root/adapters/oos2r_cosine_5e5_20261008 총 298.2분

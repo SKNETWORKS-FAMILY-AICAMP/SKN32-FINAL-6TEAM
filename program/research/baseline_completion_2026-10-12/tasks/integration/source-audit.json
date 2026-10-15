@@ -1,0 +1,270 @@
+{
+  "captured_at_kst": "2026-10-12T04:06:11.180543+09:00",
+  "phase": "preparation_snapshot",
+  "source_scope": [
+    "wiki",
+    "final_project_cs/wiki",
+    "final_project_cs/app",
+    "final_project_cs/config",
+    "final_project_cs/tests",
+    "final_project_cs/migrations",
+    "final_project_cs/scripts",
+    "final_project_cs/deploy",
+    "final_project_cs/frontend/apps/web/src",
+    "program/scripts"
+  ],
+  "excluded_directory_names": [
+    ".git",
+    ".pytest_cache",
+    "__pycache__",
+    "_backup",
+    "inputs",
+    "legacy",
+    "node_modules",
+    "outputs",
+    "records",
+    "renders",
+    "results",
+    "screens",
+    "source-text",
+    "sources"
+  ],
+  "program_scripts_scope": "Python 검사·생성 코드만. 연구 입력·출력은 담당 실측 근거를 별도로 연결",
+  "source_manifest_sha256": "7077c9e98a74be45e1b072e36afeb5de9385b38840622e642ff4ff41ffc0856b",
+  "warning": "파일 존재·해시 확인은 기능·시험·배포 완료 판정이 아닙니다.",
+  "sources": [
+    {
+      "id": "S01",
+      "title": "IEEE Computer Society SWEBOK",
+      "url": "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf",
+      "scope": "공개 PDF 전문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/swebok-v4.pdf",
+        "exists": true,
+        "bytes": 6015672,
+        "sha256": "0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S01.txt",
+        "exists": true,
+        "bytes": 12053,
+        "sha256": "732ee8b8528d55640e08b6e1dcc7c25bbb801f785702f706404e0a6d6632e03b"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "pending"
+    },
+    {
+      "id": "S02",
+      "title": "SEI Configuration Management Models in Commercial Environments",
+      "url": "https://www.sei.cmu.edu/documents/1022/1991_005_001_645586.pdf",
+      "scope": "공개 PDF 전문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/sei-1991-cm-models.pdf",
+        "exists": true,
+        "bytes": 321114,
+        "sha256": "8f2e5d5de99a610c94a5498a80ffd9c9a431fbc6260652112aa5c3bb9ffe96d0"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S02.txt",
+        "exists": true,
+        "bytes": 2721,
+        "sha256": "91c6315a65ac166c32ce21bb1b5a481fb8ba53175574f5b1c52b9df63b0c846b"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "pending"
+    },
+    {
+      "id": "S03",
+      "title": "US Air Force Culture of Innovation 1945–1965",
+      "url": "https://www.govinfo.gov/content/pkg/GOVPUB-D301-PURL-LPS48767/pdf/GOVPUB-D301-PURL-LPS48767.pdf",
+      "scope": "공개 PDF 전문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/usaf-history-2002.pdf",
+        "exists": true,
+        "bytes": 34414226,
+        "sha256": "655d58c2c3fbcc659be3a2e95a3067d39b6870ada7e574ed0fb49104dd38a2a7"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S03.txt",
+        "exists": true,
+        "bytes": 11195,
+        "sha256": "bce494521fc1690c145904d908f6934bdf283443c34bb960d8673b66e8f8c048"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "pending"
+    },
+    {
+      "id": "S04",
+      "title": "SCM Patterns publisher page",
+      "url": "https://www.informit.com/store/software-configuration-management-patterns-effective-9780201741179",
+      "scope": "공개 소개·목차·서문 페이지. 유료 책 전문 아님",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/scm-patterns-publisher.html",
+        "exists": true,
+        "bytes": 139486,
+        "sha256": "29b76a1addb09a03b4ecb9229d3ab0d68b17e30816f8b88ba36af80a084bf4bf"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S04.txt",
+        "exists": true,
+        "bytes": 22583,
+        "sha256": "9f8b9d0022c6be92fd2835157e8b36a59dffa47b445c3dbf10ed5f6ab7dc7209"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "pending"
+    },
+    {
+      "id": "S05",
+      "title": "GitHub flow",
+      "url": "https://docs.github.com/en/get-started/using-github/github-flow",
+      "scope": "공개 웹 본문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/github-flow.html",
+        "exists": true,
+        "bytes": 199180,
+        "sha256": "95e175f4835407e3f4915e785ec5c42567a1aa49c22743ae513a62e20bf22bb0"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S05.txt",
+        "exists": true,
+        "bytes": 6603,
+        "sha256": "58d390924e157cd867e9fdf5f807e35a4f1e32dca6311ed37298f216ea773bc3"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "pending"
+    },
+    {
+      "id": "S06",
+      "title": "DORA Version control",
+      "url": "https://dora.dev/capabilities/version-control/",
+      "scope": "공개 웹 본문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/dora-version-control.html",
+        "exists": true,
+        "bytes": 23387,
+        "sha256": "90ee04c8e4a9afdd14241e5d8b4cd962bffbc24157a2a7877276b3839b4ee947"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S06.txt",
+        "exists": true,
+        "bytes": 13318,
+        "sha256": "e7b99a66d2ea978927443a8b851535da4ef3ce3efe027d1574290e09ab6af7fb"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "reviewed_local_primary_source_section",
+      "review_scope": "S06 본문 / S10 §6.5: 식별·변경 통제·상태 기록·구성 검증. 제품 사양 정본으로 사용하지 않음"
+    },
+    {
+      "id": "S07",
+      "title": "DORA Continuous integration",
+      "url": "https://dora.dev/capabilities/continuous-integration/",
+      "scope": "공개 웹 본문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/dora-continuous-integration.html",
+        "exists": true,
+        "bytes": 20576,
+        "sha256": "59dfdbb7780ba64e91f2186a7ac57bc5a7414a821f338559e653ff93946c1822"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S07.txt",
+        "exists": true,
+        "bytes": 10138,
+        "sha256": "3b105e470d8af93c71370451d6635007f732ece25666ce5c56b6609482d98207"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "pending"
+    },
+    {
+      "id": "S08",
+      "title": "Google Rules of Machine Learning",
+      "url": "https://developers.google.com/machine-learning/guides/rules-of-ml",
+      "scope": "공개 웹 본문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/google-rules-of-ml.html",
+        "exists": true,
+        "bytes": 152618,
+        "sha256": "94b0b0f8d9bf3a0a89ffc1f0dea40dd48ced8771d533122a98ea61d80ad2919e"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S08.txt",
+        "exists": true,
+        "bytes": 60445,
+        "sha256": "d74d1b1e8b4c14ea5231e12d9f8ee65db9be60a067d921578a8358ae29687518"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "pending"
+    },
+    {
+      "id": "S09",
+      "title": "Pro Git Tagging",
+      "url": "https://git-scm.com/book/en/v2/Git-Basics-Tagging",
+      "scope": "공개 웹 본문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/git-tagging.html",
+        "exists": true,
+        "bytes": 133263,
+        "sha256": "ed9c9cfe95f385543be25e8ddcfe1ee0a285525438f2074f938c741d3b082139"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S09.txt",
+        "exists": true,
+        "bytes": 11663,
+        "sha256": "ec10d84f8c89720157cff8ab7199068f6cd82b13e685324f4ae91c025d7d37a2"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "pending"
+    },
+    {
+      "id": "S10",
+      "title": "NASA Crosscutting Technical Management",
+      "url": "https://www.nasa.gov/reference/6-0-crosscutting-technical-management/",
+      "scope": "공개 웹 본문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/nasa-technical-management.html",
+        "exists": true,
+        "bytes": 490842,
+        "sha256": "a8cb8cd575d559532e68c63db92edbcf2fd4e9261903c1315c5df22399e34b38"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S10.txt",
+        "exists": true,
+        "bytes": 146206,
+        "sha256": "cc3c0fad5df665d0e312a151d52747ec250ea38b0d992de65f5b4ba81991ccea"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "reviewed_local_primary_source_section",
+      "review_scope": "S06 본문 / S10 §6.5: 식별·변경 통제·상태 기록·구성 검증. 제품 사양 정본으로 사용하지 않음"
+    },
+    {
+      "id": "S11",
+      "title": "Martin Fowler Continuous Integration",
+      "url": "https://martinfowler.com/articles/continuousIntegration.html",
+      "scope": "추가 참고 공개 웹 본문",
+      "download": {
+        "path": "program/research/baseline_2026-10-10/sources/fowler-continuous-integration.html",
+        "exists": true,
+        "bytes": 138101,
+        "sha256": "3ad2de243def62892458a058b4e8b0a9b98a76b3507bdf0ecc835da551e9787d"
+      },
+      "matches_download_manifest": true,
+      "extracted_text": {
+        "path": "program/research/baseline_2026-10-10/source-text/S11.txt",
+        "exists": true,
+        "bytes": 95821,
+        "sha256": "ebeecd18b94e965e1540117f8add124afe629446ebf6678c76369ace73b65297"
+      },
+      "current_web_recheck": "not_performed",
+      "content_claim_review": "pending"
+    }
+  ]
+}

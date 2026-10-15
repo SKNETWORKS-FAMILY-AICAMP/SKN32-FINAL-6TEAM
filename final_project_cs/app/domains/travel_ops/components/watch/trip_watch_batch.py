@@ -1,33 +1,12 @@
 # -*- coding: utf-8 -*-
-"""같은 여행의 문제를 **한 초안 위에서 차례로** 고쳐 판 하나 · 알림 하나로 낸다. `[2026-10-03 사용자 지시 · v11 §6-C-1]`
+"""분류 에이전트의 검증된 계획으로 같은 여행의 문제를 최신 초안 위에서 처리한다.
 
-☆왜: 같은 회차에 한 여행의 항목 셋이 깨지면(예: 재난문자 하나가 활동 · 식당 · 이동을 다 걸었다) 전에는 Case 가 셋 열려 **판 셋 · 알림 셋**이 나갔다. 계획서(§6-C-1)는
-「여행당 사건 1건 → 활동 → 식당 → 이동 순으로 앞 초안을 다음에 넘긴다 → 전체 재검증 → **새 버전 1번 + 알림 1번**」이었다.
-
-★자리(적대 검토의 결론): **코어(Controller)를 고치지 않는다.** 코어는 일정(`itinerary`) 어휘를 모른다(INV-CS-ARCH-001) — 「초안을 다음 Team 에 넘긴다」는 일정 초안이 무엇인지 알아야 한다.
-도메인 어휘를 넣지 않고 코어에서 하려면 Controller 의 Team 연쇄 실행 · 제안 병합을 새로 만들어야 하는데, 그건 Controller 불변식(INV-CS-RT-* 26개)을 건드리는 큰 변경이다.
-그래서 **Case 하나(= 여행 하나)**를 만들고(`trip_watch_cases`) 사용 가능한 구성원 Team이 이 모듈로 항목별 소유 Team의 계산을 한 초안 위에서 연결한다 — 계산은 세 Team 이 이미 하던 함수
-(`plan_activity_trigger` · `plan_dining_trigger` · `plan_mobility_trigger`)를 각 소유 Team의 도구·예산으로 부르고, **적용은 코어가 Case 완료와 한 트랜잭션으로 한다**(제안 하나 — `itinerary.apply`).
-Case 하나가 곧 한 단위라 **크래시 · 재시도 · 멱등이 전과 같다**(적용 전에 죽으면 Case 가 안 닫혀 다시 돈다 — 중간 초안을 DB 에 두지 않는다).
-
-★순서는 활동 → 식당 → 이동(같은 종류는 시작 시각 순). 뒤 항목은 **앞에서 고친 초안 기준**으로 계산한다 — 앞이 고른 곳을 뒤가 또 고르지 않고(`unused_places`), 앞이 이동 항목을 새로 만들었으면 그
-이동은 이미 바뀐 것이다(`nothing`). 항목마다 도구 예산을 따로 쓴다(`seen` 을 새로) — 앞 항목이 예산을 다 써서 뒤 항목이 「못 봤다」가 되지 않게. ★그래서 한 Case 의 호출 합이 `max_steps` 를 넘을 수 있다 —
-상한은 **시간**이다: Team 코드는 동기라 `asyncio.wait_for` 가 도중에 끊지 못하므로 시작 뒤 `travel.watch.batch_time_ratio`(Team 제한의 몇 %)가 지나면 **새 항목을 시작하지 않고** 남은 것은 `retry` 로 넘긴다.
-
-★항목마다 결과가 갈린다 — **하나를 못 풀어도 나머지는 진행한다**(사용자 결정):
-    applied        일정 전체 재판정까지 통과해 이번 판에 넣는다
-    asked          「변경 안 할 일정」 · 「먼저 물어봐」 — 바꾸지 않고 안 1·2·3 을 묻는다(**새 판 기준**으로 연다 — 같은 판에 열면 이 판이 곧 낡아 못 고른다). D-020 — 묻기는 묶지 않고 항목마다 따로.
-                   묻는 안도 단일 Case 처럼 **일정 전체 재판정을 통과한 안**만 싣는다(`fit_change`) — 겹치는 안을 고르게 두지 않는다
-    consent        활동에 날씨 사건만 — 「바꿀까요?」만 묻는다(대체안을 아직 계산하지 않는다)
-    no_alternate   대신 갈 곳이 없다 · recheck_failed  찾았지만 일정 전체와 안 맞는다 — **그대로 두고** 알림에 한 줄로 적는다
-    source_failed  점검 소스가 대체까지 실패(결정 15) · error  그 항목의 계산이 예외로 터졌다 · retry  이번에 계산하지 못했다(시간 · 마지막 재판정 뒤에도 그대로 남은 이동) —
-                   **고객에게 알리지 않고**(바뀐 것이 있는지 모른다) **다시 열 항목**으로 남긴다(`batch.retry` → 적용 요약 · 닫힘 표지 `retry:`). 감시가 그 항목만 다음 회차에 다시 연다
-★「이번 판에 넣는 것」은 항목마다 **누적 재판정**(`fit_change` — 앞에서 고친 초안 위에서)을 통과했고, 마지막에 합친 결과를 **한 번 더** 판정한다. 합친 결과가 걸리면 가장 나중 변경부터 하나씩 빼며 통과할 때까지 —
-빠진 것은 `recheck_failed` 다(통째로 거절하지 않는다). 적용기의 같은 판정은 마지막 안전망이다.
-★알림 하나에 **안전 사건이 앞**이다 — 머리가 「안전 알림」이고 안전 줄이 맨 위다(묻히지 않게). 묻는 것은 따로 간다(제안 id 가 항목마다 있다).
-
-★알려진 한계(적대 검토 2026-10-03): ①활동을 바꾸면 그 옆 이동은 **새로 만들어지는데**(`refresh_moves_around`) 그 새 이동은 구간 사건을 모르고 경로를 고른다 — 새 이동의 사건은 **다음 회차**가
-새 항목으로 다시 본다(단일 Case 때부터 같았다). ②묻는 항목이 둘 이상일 때 하나를 고르면 판이 올라가 나머지 제안은 `superseded` 로 닫히고 다시 묻지 않는다(전부터 있던 한계 — 단일 Case 도 같다).
+로컬 TeamExecutorPort가 여행 묶음을 받고, 각 항목은 등록된 소유 Team의 도구·예산으로 계산한다.
+Activity를 조정자로 두지 않으며 실행 순서·우선순위·의존관계는 모델 계획에 남긴다.
+계획 실패는 고정 순서로 대신하지 않는다. 실패 항목과 그 의존 작업은 기존 일정을 유지하며
+고객에게 확인 시각·오류 코드를 알리고 다음 회차에 다시 확인한다. 독립 항목은 계속 처리한다.
+누적·최종 전체 재검증 후 적용 제안 하나를 내며 실제 저장은 코어의 기존 트랜잭션을 쓴다.
+항로 지킴이 직접 켜짐만 자동 변경하고 고정·재난 정지·업체 거래 승인은 별도 경계를 따른다.
 """
 from __future__ import annotations
 
@@ -37,8 +16,8 @@ import logging
 import time
 from time import perf_counter       # 항목별 소요 시간 — 위 `time`(마감 시계)과 따로 둔다(시험이 마감 시계만 바꿔 끼울 수 있게)
 from dataclasses import dataclass, field
-from types import SimpleNamespace
 from copy import copy
+from datetime import UTC, datetime
 from typing import Any
 
 from app.core.contracts import ActionProposal, NextAction, TeamResult, TeamTask
@@ -54,11 +33,12 @@ from app.domains.travel_ops.components.itinerary.itinerary_fit import fit_change
 from app.domains.travel_ops.instances._shared.itinerary_team import Consent
 from app.domains.travel_ops.components.team_hooks import watch_planners
 from app.domains.travel_ops.components.planning.pending import Decision, _cause_text as cause_text, cause_fingerprint, decide, is_safety
+from app.domains.travel_ops.components.planning.execution_plan import PlanFailed, classify_plan
 
 logger = logging.getLogger(__name__)
 
-#: 같은 종류 안에서는 시작 시각 순. 활동 → 식당 → 이동 — 앞이 고친 곳 · 새로 만든 이동을 뒤가 기준으로 삼는다(계획서 §6-C-1)
-ORDER = {"activity": 0, "dining": 1, "mobility": 2}
+#: 감시 대상 종류. 실행 순서는 검증된 분류 에이전트 계획만 정한다.
+WATCH_KINDS = frozenset({"activity", "dining", "mobility"})
 _COUNT_WORD = {2: "두", 3: "세", 4: "네", 5: "다섯", 6: "여섯", 7: "일곱", 8: "여덟", 9: "아홉"}
 
 
@@ -74,6 +54,7 @@ class Outcome:
     #: ★`[2026-10-03]` 이 항목 계산에 쓴 시간(초)과 도구 호출 수 — 병목을 **재서** 찾으려고 Case 결정 기록(`decisions[].timing`)에 남긴다
     seconds: float = 0.0
     calls: int = 0
+    checked_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     @property
     def safety(self) -> bool:
@@ -91,7 +72,7 @@ def _planner(kind: str):
 def unavailable_reason(kind: str) -> str | None:
     """고정된 조립 판에서 감시 종류의 소유자와 계산 연결을 함께 확인한다."""
     table = current_bindings()
-    if kind not in ORDER:
+    if kind not in WATCH_KINDS:
         return None
     if table is None:
         read_binding("watch_planners", kind, True, required_team=kind)
@@ -125,6 +106,15 @@ def _head(count: int) -> str:
 def _line(outcome: Outcome) -> str:
     """항목 하나의 한 줄 — 원인에 있는 말만(`cause_text`). 지어낸 대안 · 약속 없음, 사람 대기 약속도 안 한다."""
     title, why = outcome.item.title, cause_text(outcome.causes)
+    if outcome.kind in ("source_failed", "error", "retry"):
+        code = outcome.reasons[0] if outcome.reasons else outcome.kind
+        return (f"{title} — 이번 회차에 확인을 끝내지 못해 기존 일정을 유지했어요. "
+                f"자료와 조건을 다시 확인할게요. 확인 시각: {outcome.checked_at}, 오류 코드: {code}.")
+    if outcome.kind == "unhandled":
+        # ★`[2026-10-14]` 다시 시도하지 않는 실패(적용기 거절 · 모름 · 제안 검증 실패 · 시간 초과) — 다시 확인하겠다고 약속하지 않는다. 내부 문구는 싣지 않고 코드만
+        code = outcome.reasons[0] if outcome.reasons else outcome.kind
+        return (f"{title} — {why}. 자동으로 처리하지 못해 **일정은 그대로 두었어요.** "
+                f"확인 시각: {outcome.checked_at}, 오류 코드: {code}.")
     if outcome.kind == "applied":
         change = outcome.change
         text = str(change.notice["text"])
@@ -145,16 +135,16 @@ def _line(outcome: Outcome) -> str:
 
 
 #: 고객에게 말할 결과 — 안 바꿨거나 못 푼 것까지(바꾸지 않는 것과 알림을 끄는 것은 별개다)
-_TELL = ("applied", "asked", "consent", "no_alternate", "recheck_failed")
-_UNCHANGED = ("no_alternate", "recheck_failed")
-#: 고객에게 알리지 않고 **다시 열 항목** — 바뀐 것이 있는지 모르거나 이번에 계산하지 못했다
+_TELL = ("applied", "asked", "consent", "no_alternate", "recheck_failed", "unhandled", "source_failed", "error", "retry")
+_UNCHANGED = ("no_alternate", "recheck_failed", "unhandled")
+#: 기존 일정 유지·고객 안내와 함께 다음 회차에 다시 확인할 항목.
 _RETRY = ("source_failed", "error", "retry")
 
 
 def digest(outcomes: list[Outcome], *, kind: str) -> dict[str, Any]:
     """묶음의 알림 하나. `kind` — `change_notice`(판이 바뀜) · `guidance`(안 바꿨다). ★안전 사건 줄이 **앞**이고 하나라도 있으면 머리가 안전 알림이다."""
     # ★판이 바뀌면 묻는 항목도 한 줄씩 적는다(한 이야기로 읽히게). 안 바뀌면(`guidance`) 안 바꾼 것만 — 묻는 것은 제안마다 알림이 따로 있다
-    told = [o for o in outcomes if o.kind in (_UNCHANGED if kind == "guidance" else _TELL)]
+    told = [o for o in outcomes if o.kind in ((*_UNCHANGED, *_RETRY) if kind == "guidance" else _TELL)]
     told.sort(key=lambda o: (not o.safety,))                  # 안전 줄 먼저(나머지 순서는 그대로 — 안정 정렬)
     safety = any(o.safety for o in told)
     lines = [_line(o) for o in told]
@@ -173,6 +163,11 @@ def digest(outcomes: list[Outcome], *, kind: str) -> dict[str, Any]:
         "items": [str(o.item.item_id) for o in told],
         # ★알림 키는 「항목 + 원인 지문」 한 규칙이다 — 같은 항목에 **다른 원인**(나중에 걸린 안전 사건)이 오면 다른 알림이다
         "keys": [f"{o.item.item_id}:{cause_fingerprint(o.causes)}" for o in told]}
+    payload["deferred"] = [{"item_id": str(o.item.item_id), "code": o.reasons[0] if o.reasons else o.kind,
+                            "checked_at": o.checked_at} for o in told if o.kind in _RETRY]
+    # 다시 확인하지 않는 실패 — 같은 모양으로 따로 둔다(`deferred` 는 다음 회차에 다시 보는 것만)
+    payload["unhandled"] = [{"item_id": str(o.item.item_id), "code": o.reasons[0] if o.reasons else o.kind,
+                             "checked_at": o.checked_at} for o in told if o.kind == "unhandled"]
     if kind == "guidance":
         payload["kind"] = (next(iter(kinds)) if len(kinds) == 1 else "mixed") if kinds else "guidance"
         payload["reason"] = payload["kind"]
@@ -191,37 +186,75 @@ def guidance_key(payload: dict[str, Any]) -> str:
 class WatchBatch:
     """한 여행의 감시 묶음 Case 를 푼다 — `ItineraryWork.run_itinerary` 가 트리거에 `batch` 가 있으면 부른다."""
 
-    def __init__(self, work: Any, task: TeamTask, ctx: dict[str, Any]) -> None:
+    def __init__(self, work: Any, task: TeamTask, ctx: dict[str, Any], *, registry=None, planner=None,
+                 diagnostic_recorder=None) -> None:
         self.work, self.task, self.ctx = work, task, ctx
+        table = current_bindings()
+        self.registry = registry or (table.registry if table is not None else None)
+        self.planner = planner or classify_plan
+        self.diagnostic_recorder = diagnostic_recorder
+        self.plan = None
+        self.step = None
+
+    def _teams(self):
+        manifests = self.registry.manifests() if self.registry else [self.work.manifest]
+        return {m.team_id: {"tools": list(m.allowed_tools), "max_calls": m.max_steps}
+                for m in manifests if m.active and f"{m.team_id}.itinerary" in m.capabilities
+                and watch_planners.planner(m.team_id) is not None}
 
     def _scoped_work(self, step):
-        """항목 소유 Team의 도구·예산으로 계산한다. 단독 부품 시험은 명시된 연결을 쓴다."""
-        table = current_bindings()
-        if table is None:
+        """항목 소유 Team 의 모듈로, **실행 계획이 그 단계에 준** 도구·호출 예산으로 계산한다.
+
+        ★`[2026-10-13]` 병합(2b5ad163)에서 이 함수가 두 벌 남아 뒤의 것(develop 판 — Team 기본 도구 전부, 계획 예산 무시)이
+          앞의 것을 덮었다. 그래서 식사 항목도 활동 팀 설정으로 돌았고 계획의 호출 예산이 걸리지 않았다
+          (test_classification_execution_plan 3건 실패). 계획 판을 남기고, develop 판이 하던 「연결 없는 단독 부품 시험은
+          받은 그대로」를 합쳤다.
+        """
+        registry = self.registry
+        if registry is None:
             return self.work, self.task
-        entry = table.registry.require_runnable(step.team_id, f"{step.team_id}.itinerary")
-        source = entry.module
+        source = registry.require_runnable(step.team_id, f"{step.team_id}.itinerary").module
+        if source.manifest.team_id != step.team_id:
+            raise PlanFailed("plan_team_unbound")
         work = copy(source)
+        work.manifest = source.manifest.model_copy(update={"max_steps": step.max_calls})
         context = self.task.context.model_copy(update={"team_id": step.team_id,
-            "knowledge_scope": list(entry.manifest.knowledge_scope)})
-        task = TeamTask.model_validate({**self.task.model_dump(), "team_id": step.team_id,
-            "capability": f"{step.team_id}.itinerary", "context": context,
-            "allowed_tools": list(entry.manifest.allowed_tools)})
-        return work, task
+                                                       "knowledge_scope": list(source.manifest.knowledge_scope)})
+        scoped = TeamTask.model_validate({**self.task.model_dump(), "team_id": step.team_id,
+                                         "capability": f"{step.team_id}.itinerary", "context": context,
+                                         "allowed_tools": list(step.tools)})
+        return work, scoped
 
     # ── 진입 ────────────────────────────────────────────────────
     def run(self) -> TeamResult:
-        task, ctx = self.task, self.ctx
+        work, task, ctx = self.work, self.task, self.ctx
         trip, current = ctx["trip"], list(ctx["items"])
         constraints = trip.get("constraints") or {}
         entries = (task.context.current_state.get("trigger") or {}).get("batch") or []
-        wanted = self._ordered(entries, current)
+        started_at = time.monotonic()
+        try:
+            self.plan = self.planner(query=task.input_text, trip=trip, items=current, issues=entries, teams=self._teams())
+            # 주입한 모델도 동일 검증을 통과해야 한다. 검증된 모델 객체를 믿고 우회하지 않는다.
+            from app.domains.travel_ops.components.planning.execution_plan import validate_plan
+            by_id = {str(i.item_id): i for i in current}
+            self.plan = validate_plan(self.plan.model_dump(), version=trip["version"],
+                issues=[{**e, "kind": by_id[str(e["item_id"])].kind} for e in entries], teams=self._teams())
+        except Exception as exc:  # 계획·제공자 실패는 성공으로 대체하지 않는다.
+            self._diagnostic("classification_failed", error_code=str(exc) if isinstance(exc, PlanFailed) else "plan_invalid")
+            return work._escalate(task, "classification_failed", ctx["evidence"],
+                                  warnings=[f"retry:{e['item_id']}" for e in entries])
+        wanted = [by_id[step.item_id] for step in self.plan.steps]
         guard = get_guardrails()
         # ★Team 코드는 동기라 `asyncio.wait_for` 가 도중에 끊지 못한다 — 새 항목을 시작하기 전에 스스로 시간을 본다
-        stop_at = time.monotonic() + float(guard.get("reliability.team_timeout_seconds")) * float(guard.get("travel.watch.batch_time_ratio"))
+        stop_at = started_at + float(guard.get("reliability.team_timeout_seconds")) * float(guard.get("travel.watch.batch_time_ratio"))
+        stop_at = min(stop_at, started_at + max(0, (task.deadline_at - datetime.now(UTC)).total_seconds()))
 
         draft, outcomes = list(current), []
-        for original in wanted:
+        for self.step, original in zip(self.plan.steps, wanted):
+            failed_dependencies = {str(o.item.item_id) for o in outcomes if o.kind not in ("applied", "nothing")}
+            if set(self.step.depends_on) & failed_dependencies:
+                outcomes.append(Outcome(original, "retry", reasons=["dependency_deferred"]))
+                continue
             item = next((i for i in draft if i.item_id == original.item_id), None)
             if item is None:
                 # 앞 항목을 고치며 이 항목(이동)이 새로 만들어졌다 — 이미 바뀐 것이다(마지막 재판정에서 그 변경이 빠지면 아래에서 `retry` 로 바뀐다)
@@ -240,13 +273,34 @@ class WatchBatch:
         ctx["items"] = current
 
         outcomes = self._final_recheck(trip, current, outcomes)
-        return self._result(trip, current, outcomes)
+        for outcome in outcomes:
+            if outcome.kind in _RETRY:
+                self._diagnostic(outcome.kind, item_id=str(outcome.item.item_id), error_code=outcome.reasons[0] if outcome.reasons else outcome.kind)
+            elif any(str(e["item_id"]) == str(outcome.item.item_id) and e.get("attempt", 0) for e in entries):
+                self._diagnostic("retry_recovered", item_id=str(outcome.item.item_id), result=outcome.kind)
+        result = self._result(trip, current, outcomes)
+        if not any("execution_plan" in d for d in result.decisions):
+            result = result.model_copy(update={"decisions": [*result.decisions, {"execution_plan": self.plan.evidence()}]})
+        return result
 
-    @staticmethod
-    def _ordered(entries: list[dict[str, Any]], items: list[Item]) -> list[Item]:
-        by_id = {str(i.item_id): i for i in items}
-        found = [by_id[str(e["item_id"])] for e in entries if str(e.get("item_id")) in by_id]
-        return sorted(found, key=lambda i: (ORDER.get(i.kind, 9), i.starts_at, i.seq))
+    def _diagnostic(self, code, **fields):
+        from datetime import UTC, datetime
+        diagnostic = {
+            "event": "travel_execution_diagnostic", "tenant_id": self.task.context.tenant_id,
+            "customer_id": str(self.task.context.current_state.get("customer_id") or ""),
+            "case_id": str(self.task.case_id), "trip_id": str(self.ctx["trip"]["trip_id"]),
+            "code": code, "checked_at": datetime.now(UTC).isoformat(),
+            "plan_sha256": self.plan.evidence()["plan_sha256"] if self.plan else None, **fields}
+        collection = None
+        if self.diagnostic_recorder is not None:
+            try:
+                collection = self.diagnostic_recorder(diagnostic)
+            except Exception:
+                collection = {"status": "collection_degraded"}
+            if collection.get("status") == "collection_degraded":
+                logger.error("travel_diagnostic status=collection_degraded code=%s", code)
+        logger.warning("travel_execution_diagnostic", extra={"diagnostic": diagnostic, "collection": collection})
+        return collection
 
     # ── 항목 하나 ───────────────────────────────────────────────
     def _one(self, item: Item, trip: dict[str, Any], constraints: dict[str, Any]) -> Outcome:
@@ -258,8 +312,8 @@ class WatchBatch:
         if planner is None:
             return Outcome(item, "nothing", reasons=["unhandled_kind"])
         try:
-            selected_work, selected_task = self._scoped_work(SimpleNamespace(team_id=item.kind))
-            blocked = selected_work._guard(selected_task) if selected_work is not None else None
+            selected_work, selected_task = self._scoped_work(self.step)
+            blocked = selected_work._guard(selected_task)
             plan = blocked if blocked is not None else planner(selected_work, selected_task, self.ctx, item)
         except TeamUnavailable as exc:
             logger.warning("watch_batch_team_unavailable kind=%s team_id=%s reason=%s composition_revision=%s",
@@ -299,10 +353,29 @@ class WatchBatch:
         """합친 결과를 **적용기와 같은 방식으로**(한 번에 합쳐) 다시 판정한다. 걸리면 가장 나중 변경부터 하나씩 빼며 통과할 때까지 — 빠진 것은 `recheck_failed`.
         ★끝나면 「이미 바뀌었다」(`gone`)던 항목 가운데 **새 판에도 그대로 남은 것**을 `retry` 로 돌린다 — 그 항목을 바꾼다고 믿었던 변경이 빠졌다면 아무도 그 항목을 계산한 적이 없다."""
         while True:
+            # 마지막 재검증에서 선행 변경이 빠지면 그 변경에 의존한 결과도 쓰지 않는다.
+            failed = {str(o.item.item_id) for o in outcomes if o.kind not in ("applied", "nothing")}
+            dependencies = {step.item_id: set(step.depends_on) for step in self.plan.steps} if self.plan else {}
+            changed = False
+            for outcome in outcomes:
+                if outcome.kind in ("applied", "asked", "consent", "nothing") and dependencies.get(str(outcome.item.item_id), set()) & failed:
+                    outcome.kind, outcome.reasons = "retry", ["dependency_deferred"]
+                    failed.add(str(outcome.item.item_id))
+                    changed = True
+            if changed:
+                continue
             applied = [o for o in outcomes if o.kind == "applied"]
             if not applied:
                 break
-            introduced = introduced_violations(trip, current, self._merged(current, applied)[0])
+            merged = self._merged(current, applied)[0]
+            merged_ids = {i.item_id for i in merged}
+            held = [o for o in outcomes if o.kind in (*_RETRY, "unavailable")]
+            if any(o.item.item_id not in merged_ids for o in held):
+                # 자동으로 새로 만든 이동이 조회 실패 항목을 덮으면 독립 변경이 아니다.
+                dropped = applied[-1]
+                dropped.kind, dropped.reasons = "recheck_failed", ["dependent_item_unverified"]
+                continue
+            introduced = introduced_violations(trip, current, merged)
             if not introduced:
                 break
             dropped = applied[-1]
@@ -339,7 +412,8 @@ class WatchBatch:
                 #   다시 열 항목이 있으면 **다시 열 수 있는 사유**(`fatal_source_failure`)로 닫는다 — 그 항목이 영원히 막히지 않게
                 code = ("fatal_source_failure" if retry or unavailable else
                         "itinerary_recheck_failed" if all(o.kind == "recheck_failed" for o in stuck) else "itinerary_unresolved")
-                tokens = [*(f"outcome:{o.item.item_id}:{o.kind}" for o in stuck), *(f"retry:{o.item.item_id}" for o in [*retry, *unavailable])]
+                tokens = [*(f"outcome:{o.item.item_id}:{o.kind}" for o in [*stuck, *retry]),
+                          *(f"retry:{o.item.item_id}" for o in [*retry, *unavailable])]
                 return work._escalate(task, code, evidence, warnings=[*tokens, f"묶음 결과: {summary}"])
             return work.settle(task, ctx, NoChange("clear"))
 
@@ -354,6 +428,7 @@ class WatchBatch:
         return work._result(task, outcome="completed", confidence=0.9, evidence=evidence, answer=answer,
                             next_action=NextAction.RESPOND, action_proposals=[proposal], warnings=warnings,
                             decisions=[{"itinerary": "batch", "items": len(outcomes), **summary,
+                                        "execution_plan": self.plan.evidence(),
                                         "timing": {"total_seconds": round(sum(o.seconds for o in outcomes), 3),
                                                    "total_calls": sum(o.calls for o in outcomes),
                                                    "items": [{"item": o.item.title, "kind": o.kind, "seconds": o.seconds, "calls": o.calls}
@@ -368,7 +443,8 @@ class WatchBatch:
         version_causes = [cause for o in applied for cause in o.causes]
         change = ItineraryChange(
             reason="auto_adjusted", causes=version_causes, notice=digest(outcomes, kind="change_notice") if applied else {"text": ""},
-            replacements=replacements, summary={"batch": True, "applied": [o.item.title for o in applied]})
+            replacements=replacements, summary={"batch": True, "applied": [o.item.title for o in applied],
+                                                "execution_plan": self.plan.evidence()})
         arguments = change_arguments(trip_id=trip["trip_id"], base_version=base, change=change)
         arguments["batch"] = {
             "causes": {str(o.item.item_id): o.causes for o in outcomes if o.kind in ("applied", "asked", "consent")},
@@ -377,11 +453,11 @@ class WatchBatch:
             # ★다시 열 항목 — 적용기가 요약에 옮기고(`applied_actions[].summary.batch.retry`) 감시가 그 항목의 덮음을 풀어 준다
             "retry": [str(o.item.item_id) for o in retry]}
         if not applied:
-            arguments["guidance"] = digest(outcomes, kind="guidance") if stuck else None
+            arguments["guidance"] = digest(outcomes, kind="guidance") if stuck or retry else None
         # 판이 안 바뀌고 안 바꾼 것도 없으면(묻기만 했다) 묻는 줄을 그대로 답으로 — 따로 여쭤본 것이 무엇인지 Case 에 남는다
         answer = (arguments["notice"]["text"] if applied
                   else (arguments["guidance"]["text"] if arguments.get("guidance") else digest(outcomes, kind="change_notice")["text"]))
         return arguments, answer
 
 
-__all__ = ["ORDER", "Outcome", "WatchBatch", "digest", "guidance_key"]
+__all__ = ["WATCH_KINDS", "Outcome", "WatchBatch", "digest", "guidance_key"]

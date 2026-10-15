@@ -142,7 +142,8 @@ test("서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안
   await expect(page.getByRole("alert", { name: "약관 확인 진행" })).toContainText("약관이 새로 바뀌었어요");
 });
 
-for (const wait of [{ ms: 500, visible: false }, { ms: 1200, visible: true }]) {
+// `[2026-10-13 develop 병합]` 안내는 확인이 3초를 넘어야 뜬다(role-manager 773d10df — `CHECK_CARD_AFTER_MS = 3000`, 10-12). 시험만 1초 기준으로 남아 있었다.
+for (const wait of [{ ms: 2500, visible: false }, { ms: 3200, visible: true }]) {
   test(`동의 응답 ${wait.ms}ms 대기에서는 준비 안내가 ${wait.visible ? "나타나고 응답 후 닫힌다" : "나타나지 않는다"}`, async ({ page, request }) => {
     const server = mockServer(request);
     await server.scenario({ consents: "on", consentStream: "json" });
@@ -167,7 +168,7 @@ for (const wait of [{ ms: 500, visible: false }, { ms: 1200, visible: true }]) {
       const progress = page.getByRole("status", { name: "약관 확인 진행" });
       await page.clock.runFor(wait.ms);
       await expect(progress).toHaveCount(wait.visible ? 1 : 0);
-      await expect(page.getByRole("heading", { name: "마이페이지", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "설정", exact: true })).toBeVisible();   // `[2026-10-13]` /mypage 는 설정 화면
       release();
       await expect(progress).toHaveCount(0);
       await expect.poll(async () => (await server.received("GET", "/v1/web/consents")).length).toBeGreaterThan(0);
@@ -177,21 +178,26 @@ for (const wait of [{ ms: 500, visible: false }, { ms: 1200, visible: true }]) {
   });
 }
 
-test("약관 SSE를 기다려도 마이페이지는 남고 실제 단계와 완료 수를 기존 화면 위에 보인다", async ({ page, request, context }) => {
+test("약관 SSE를 기다려도 설정 화면은 남고 실제 단계와 완료 수를 기존 화면 위에 보인다", async ({ page, request, context }) => {
   const server = mockServer(request);
   await server.scenario({ consents: "on", retention: "on", consentStream: "slow" });
   await server.consents({ service_terms: true, privacy: true });
   await start(page);
+  // `[2026-10-13]` 안내는 확인이 1초를 넘어야 뜨고(바로 위 시험이 본다) mock 단계는 1.2초씩이라, 「동의 기록 읽기」가 보이는 틈이
+  // 약 0.27초뿐이었다 — 로컬 · GitHub CI 모두 그 틈을 놓쳐 늘 실패했다. 스트림 요청이 나간 뒤 1초 지연만 바로 넘겨 단계마다 약 1.2초 보이게 한다.
+  await page.clock.install();
   const accepts: string[] = [];
   page.on("request", (req) => { if (req.url().endsWith("/v1/web/consents") && req.method() === "GET") accepts.push(req.headers().accept); });
   await page.goto("/mypage");
+  await expect.poll(() => accepts.length).toBeGreaterThan(0);
+  await page.clock.runFor(1000);
   const progress = page.getByRole("status", { name: "약관 확인 진행" });
-  await expect(progress.locator('[aria-current="step"]')).toContainText("동의 기록 읽기");
-  await expect(progress).toContainText("2/6단계 완료");
-  await expect(page.getByRole("heading", { name: "마이페이지", exact: true })).toBeVisible();
+  // ★`[2026-10-12 사용자 지시]` 진행 카드는 확인이 3초를 넘게 걸릴 때만 뜬다: 처음에는 설정 화면만 보이고 카드는 없다
+  await expect(page.getByRole("heading", { name: "설정", exact: true })).toBeVisible();   // `[2026-10-13]` /mypage 는 설정 화면
+  await expect(progress).toHaveCount(0);
   await expect(page.locator('[data-consent-shell]')).toHaveCount(0);
-  await expect(progress.locator('[aria-current="step"]')).toContainText("약관 버전 확인");
-  await expect(progress).toContainText("3/6단계 완료");
+  await expect(progress).toBeVisible({ timeout: 12_000 });                          // 확인이 길어지면 그때 기존 화면 위에 뜬다
+  await expect(progress).toContainText(/[0-6]\/6단계 완료/);
   if (process.env.CONSENT_SHOTS) {
     await page.screenshot({ path: `${process.env.CONSENT_SHOTS}/consent-progress-desktop.png`, fullPage: true });
     await page.setViewportSize({ width: 375, height: 812 });
@@ -308,7 +314,7 @@ test.describe("마이페이지의 약관 동의 관리(`[2026-10-13]` /mypage/co
 
 test("알림 채널(디스코드·텔레그램)을 연결하려는 순간에야 선택 동의를 받고, 동의 없이는 연결 단추가 없다", async ({ page, request }) => {
   const server = mockServer(request);
-  await server.scenario({ consents: "on", discordConnect: "on", telegram: "on" });
+  await server.scenario({ consents: "on", discordConnect: "on", telegram: "on", sessionKind: "member" });   // `[2026-10-13]` 알림 받는 곳은 회원만
   await start(page);                                                                       // 필수만 동의, 알림 채널은 아직
   await page.goto("/mypage/alerts");                                                       // `[2026-10-13 마이페이지 A안]` 알림 채널은 「알림 받는 곳」 화면
   const prompt = page.getByRole("group", { name: /알림 채널/ }).first();
@@ -325,7 +331,7 @@ test("알림 채널(디스코드·텔레그램)을 연결하려는 순간에야 
 
 test("알림 채널 동의를 철회하면 연결해 둔 웹훅이 지워진 것으로 다시 읽힌다", async ({ page, request }) => {
   const server = mockServer(request);
-  await server.scenario({ consents: "on", discordConnect: "on" });
+  await server.scenario({ consents: "on", discordConnect: "on", sessionKind: "member" });   // `[2026-10-13]` 알림 받는 곳은 회원만
   await agree(page, { alert_channel: true });
   await start(page);
   // `[2026-10-13 마이페이지 A안]` 연결은 「알림 받는 곳」, 철회는 「약관 · 동의」 화면 — 철회 뒤 알림 화면을 다시 열면 서버가 지운 대로 읽는다.

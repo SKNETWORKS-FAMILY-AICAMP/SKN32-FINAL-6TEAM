@@ -1,0 +1,101 @@
+{
+  "groups": {
+    "mixed_item": {
+      "n": 1033,
+      "strata": {
+        "correct": 928,
+        "accuracy": 0.8983543078412392,
+        "missing_or_failed": 0,
+        "wrong_item_selections": 32,
+        "latency_valid_n": 1033,
+        "latency_median_ms": 288
+      },
+      "baseline": {
+        "correct": 882,
+        "accuracy": 0.8538238141335914,
+        "missing_or_failed": 0,
+        "wrong_item_selections": 38,
+        "latency_valid_n": 1033,
+        "latency_median_ms": 287
+      },
+      "paired": {
+        "strata_only_correct": 59,
+        "baseline_only_correct": 13
+      }
+    },
+    "mixed_none": {
+      "n": 974,
+      "strata": {
+        "correct": 928,
+        "accuracy": 0.9527720739219713,
+        "missing_or_failed": 0,
+        "wrong_item_selections": 46,
+        "latency_valid_n": 974,
+        "latency_median_ms": 242.0
+      },
+      "baseline": {
+        "correct": 954,
+        "accuracy": 0.9794661190965093,
+        "missing_or_failed": 0,
+        "wrong_item_selections": 20,
+        "latency_valid_n": 974,
+        "latency_median_ms": 241.0
+      },
+      "paired": {
+        "strata_only_correct": 3,
+        "baseline_only_correct": 29
+      }
+    },
+    "control_item": {
+      "n": 1033,
+      "strata": {
+        "correct": 998,
+        "accuracy": 0.9661181026137464,
+        "missing_or_failed": 0,
+        "wrong_item_selections": 34,
+        "latency_valid_n": 1033,
+        "latency_median_ms": 279
+      },
+      "baseline": {
+        "correct": 998,
+        "accuracy": 0.9661181026137464,
+        "missing_or_failed": 0,
+        "wrong_item_selections": 35,
+        "latency_valid_n": 1033,
+        "latency_median_ms": 278
+      },
+      "paired": {
+        "strata_only_correct": 11,
+        "baseline_only_correct": 11
+      }
+    },
+    "control_none": {
+      "n": 974,
+      "strata": {
+        "correct": 878,
+        "accuracy": 0.9014373716632443,
+        "missing_or_failed": 0,
+        "wrong_item_selections": 96,
+        "latency_valid_n": 974,
+        "latency_median_ms": 235.0
+      },
+      "baseline": {
+        "correct": 930,
+        "accuracy": 0.9548254620123203,
+        "missing_or_failed": 0,
+        "wrong_item_selections": 44,
+        "latency_valid_n": 974,
+        "latency_median_ms": 234.0
+      },
+      "paired": {
+        "strata_only_correct": 0,
+        "baseline_only_correct": 52
+      }
+    }
+  },
+  "limitations": [
+    "Synthetic input; one pass per model.",
+    "Different models and engines: no engine-only speedup claim.",
+    "Failures and missing answers remain in the full denominator."
+  ]
+}

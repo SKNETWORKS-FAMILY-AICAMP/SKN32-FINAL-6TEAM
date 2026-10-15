@@ -1,8 +1,10 @@
 # datasets/mobility/scripts/tago_subway_collect.py — TAGO 지하철정보: 전 노선 역별 시간표 수집 (체크포인트·이어받기)
 # 실행: 저장소 루트에서  python datasets/mobility/scripts/tago_subway_collect.py
 # 호출량: 역명 검색 ≈ 650 + 역ID × 요일3 × 방향2 ≈ 5,000  → 일 10,000 안. 중간에 끊기면 다시 실행하면 이어감.
-import os, json, time, requests
+import os, json, time
+from datetime import datetime, timezone, timedelta
 from _paths import RAW_MOBILITY, ensure_dirs
+from _tago_checked import backup_existing, fetch_body, write_json
 ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KEY = os.environ["DATA_GO_KR_KEY"]
@@ -13,24 +15,12 @@ STATIONS_SRC = RAW_MOBILITY / "stations_all.json"        # 어제 받은 열린�
 ID_MAP = RAW_MOBILITY / "tago_station_ids.json"           # 역명 → TAGO 역 목록 (체크포인트 1)
 TIMETABLE = RAW_MOBILITY / "tago_timetable.jsonl"         # 열차 1건 = 1줄 (체크포인트 2)
 DONE = RAW_MOBILITY / "tago_timetable_done.json"          # 완료한 (역ID, 요일, 방향)
+backup_existing((ID_MAP, TIMETABLE, DONE))
 
 
 def call(op, **p):
-    for attempt in range(5):
-        r = requests.get(f"{BASE}/{op}", params={**COMMON, **p}, timeout=30)
-        if r.status_code == 200:
-            try:
-                return r.json()["response"]["body"]
-            except (KeyError, ValueError):
-                print("  응답 형식 이상:", r.text[:200])
-                return {}
-        txt = r.text
-        if "PER_SECOND" in txt or "SERVICETIMEOUT" in txt or r.status_code >= 500:
-            time.sleep(2 + attempt * 2)
-            continue
-        print("  HTTP", r.status_code, txt[:200])
-        return {}
-    return {}
+    # 2026-10-09: 오류를 {}로 돌려주면 아래 done에 들어가 영구 빈 자료가 됐다.
+    return fetch_body(BASE, KEY, op, p)
 
 
 def load_json(p, default):
@@ -71,6 +61,7 @@ with TIMETABLE.open("a", encoding="utf-8") as f:
         items = body.get("items", {}).get("item", []) if isinstance(body.get("items"), dict) else []
         if isinstance(items, dict):
             items = [items]
+        fetched_at = datetime.now(timezone(timedelta(hours=9))).isoformat(timespec="seconds")
         for it in items:
             f.write(json.dumps({
                 "station_id": it.get("subwayStationId"), "station_nm": it.get("subwayStationNm"),
@@ -78,13 +69,16 @@ with TIMETABLE.open("a", encoding="utf-8") as f:
                 "end_station_id": it.get("endSubwayStationId"), "end_station_nm": it.get("endSubwayStationNm"),
                 "dep_time": it.get("depTime"), "arr_time": it.get("arrTime"),   # 'HHMMSS' 또는 '0'(시·종착)
                 "daily_type": it.get("dailyTypeCode", d), "updown": it.get("upDownTypeCode", u),
+                "fetched_at": fetched_at, "source": "data.go.kr/1613000/SubwayInfo",
+                "raw_item": it,
             }, ensure_ascii=False) + "\n")
+        f.flush()
+        os.fsync(f.fileno())
         done.add("|".join((sid, d, u)))
+        write_json(DONE, sorted(done))
         if n % 50 == 0:
-            f.flush()
-            DONE.write_text(json.dumps(sorted(done)), encoding="utf-8")
             print(f"  … {n}/{len(todo)}  (역 {sid} {d}/{u}: {len(items)}건)")
         time.sleep(0.12)
 
-DONE.write_text(json.dumps(sorted(done)), encoding="utf-8")
+write_json(DONE, sorted(done))
 print("완료. 시간표 파일:", TIMETABLE, f"({TIMETABLE.stat().st_size // 1024} KB)")

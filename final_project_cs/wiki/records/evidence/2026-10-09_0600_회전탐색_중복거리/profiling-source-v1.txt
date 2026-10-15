@@ -1,0 +1,40 @@
+from pathlib import Path
+import cProfile
+import hashlib
+import json
+import pstats
+import sys
+from time import perf_counter
+
+w=Path(__file__).resolve().parents[2]
+cs=w/'final_project_cs'
+sys.path.insert(0,str(cs))
+from tests.unit.travel.mobility import test_taxi_fallback as T
+
+folder=Path(__file__).parent
+record={}
+for phase,run in [('runtime',T._runtime_with_car),('plan',lambda:T._run('05:00'))]:
+    prof=cProfile.Profile()
+    before=perf_counter()
+    prof.enable()
+    value=run()
+    prof.disable()
+    seconds=perf_counter()-before
+    stats=pstats.Stats(prof)
+    rows=[]
+    for (file,line,name),(primitive,calls,own,cumulative,_) in stats.stats.items():
+        p=Path(file)
+        label=p.relative_to(cs).as_posix() if p.is_relative_to(cs) else p.name
+        rows.append(dict(file=label,line=line,name=name,primitive_calls=primitive,calls=calls,
+                         own_seconds=own,cumulative_seconds=cumulative))
+    record[phase]=dict(seconds=seconds,top_own=sorted(rows,key=lambda r:r['own_seconds'],reverse=True)[:25],
+        targeted=[r for r in rows if r['name'] in ('pieces','heuristic','hav','_load','_adjacency','leg','verify_case')])
+    prof.dump_stats(str(folder/f'taxi-turn-before-{phase}-v1.pstats'))
+    if phase=='plan':
+        content=json.dumps(value,sort_keys=True,default=str,ensure_ascii=False)
+        record['output_sha256']=hashlib.sha256(content.encode()).hexdigest()
+        (folder/'taxi-turn-before-output-v1.json').write_text(content,encoding='utf8')
+    print(json.dumps(dict(phase=phase,seconds=seconds)),flush=True)
+target=folder/'taxi-turn-before-profile-v1.json'
+assert not target.exists()
+target.write_text(json.dumps(record,ensure_ascii=False,indent=2),encoding='utf8')

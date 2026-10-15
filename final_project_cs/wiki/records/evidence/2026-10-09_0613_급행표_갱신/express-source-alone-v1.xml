@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="9" time="5.059" timestamp="2026-10-09T06:25:54.262523+09:00"><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_changed_file_is_reloaded_without_clearing_process_cache" time="0.079"><failure message="assert 600 == 605">source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-source-alone-v1/test_changed_file_is_reloaded_0/express.json.gz')
+
+    def test_changed_file_is_reloaded_without_clearing_process_cache(source):
+        write_runs(source)
+        first = EX.load_line('01호선')
+        assert first['weekday'][0][1] == 600
+        write_runs(source, 300)
+        second = EX.load_line('01호선')
+&gt;       assert second['weekday'][0][1] == 605
+E       assert 600 == 605
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:41: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_runtime_rebuilds_when_only_express_table_changes" time="0.192" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_missing_table_created_later_is_not_a_permanent_empty_cache" time="0.021" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_file_removal_does_not_return_old_runs" time="0.016" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_same_line_at_new_path_is_not_old_cached_source" time="0.031" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_runtime_detects_a_previously_missing_table" time="0.113" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_source_changed_during_read_does_not_publish_mixed_cache" time="0.023" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_source_changed_during_rebuild_keeps_previous_runtime" time="0.179" /><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_corrupt_source_is_not_cached_as_permanent_missing" time="0.031" /></testsuite></testsuites>

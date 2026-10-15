@@ -1,0 +1,17 @@
+
+[WebServer] (node:26528) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19292) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:30500) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/3] tests\live\changed-item-undo-20261011.spec.ts:28:3 › 375px 변경한 일정은 추천 대신 되돌리기를 표시하고 그 일정만 복원한다
+[2/3] tests\live\changed-item-undo-20261011.spec.ts:28:3 › 1280px 변경한 일정은 추천 대신 되돌리기를 표시하고 그 일정만 복원한다
+[3/3] tests\live\changed-item-undo-20261011.spec.ts:55:1 › 복원 실패는 변경과 되돌리기를 유지하며 다시 누르면 복원한다
+  3 passed (10.5s)

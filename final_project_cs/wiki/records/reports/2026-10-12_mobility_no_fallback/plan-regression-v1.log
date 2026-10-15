@@ -1,0 +1,57 @@
+.....F..................F...F.F................................F........ [ 57%]
+......................................................                   [100%]
+================================== FAILURES ===================================
+_________________________________ test_golden _________________________________
+final_project_cs\tests\unit\travel\mobility\test_plan_v1.py:162: in test_golden
+    assert _customer_values(got) == want, "예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다"
+E   AssertionError: 예시 고객 값이 골든과 다르다 — 시간표·규칙 변경을 확인한다
+E   assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'skipped': [{'code': 'arrive_late', 'from': '서울역 저녁 식당(시나리오)', 'kept_input_moves': 0, 'reason': '앞 항목이 끝난 뒤(19:00) 떠나서는 19:30 도착에 맞는 후보가 없다', ...}]} != {'skipped': []}
+E     {'routes': {'gyeongbokgung_to_seongsu': {'from': '경복궁', 'options': [{'eta_min': 37, 'fare_krw': 1550, 'id': 'subway_1'...: 'subway_1', 'label': '2호선 성수→동대문역사문화공원 → 4호선 동대문역사문화공원→서울역', ...}], 'planned': 'subway_1', 'to': '서울역 저녁 식당(시나리오)'}}} != {'routes': {'dinner_to_lotte_mart': {'from': '서울역 저녁 식당(시나리오)', 'options': [{'eta_min': 6, 'fare_krw': 0,...
+E     
+E     ...Full output truncated (4 lines hidden), use '-vv' to show
+____________________________ test_golden_all_modes ____________________________
+final_project_cs\tests\unit\travel\mobility\test_plan_v1.py:585: in test_golden_all_modes
+    assert _customer_values(got) == want, "버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다"
+E   AssertionError: 버스 포함 고객 값이 골든과 다르다 — 시간표·프로파일·규칙 변경을 확인한다
+E   assert {'items': [{'...ked': [], ...} == {'items': [{'...ked': [], ...}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'skipped': [{'code': 'arrive_late', 'from': '서울역 저녁 식당(시나리오)', 'kept_input_moves': 0, 'reason': '앞 항목이 끝난 뒤(19:00) 떠나서는 19:30 도착에 맞는 후보가 없다', ...}]} != {'skipped': []}
+E     {'routes': {'gyeongbokgung_to_seongsu': {'from': '경복궁', 'options': [{'eta_min': 37, 'fare_krw': 1550, 'id': 'subway_1'...: 'subway_1', 'label': '2호선 성수→동대문역사문화공원 → 4호선 동대문역사문화공원→서울역', ...}], 'planned': 'subway_1', 'to': '서울역 저녁 식당(시나리오)'}}} != {'routes': {'dinner_to_lotte_mart': {'from': '서울역 저녁 식당(시나리오)', 'options': [{'eta_min': 6, 'fare_krw': 0,...
+E     
+E     ...Full output truncated (4 lines hidden), use '-vv' to show
+______________________________ test_reasons_axis ______________________________
+final_project_cs\tests\unit\travel\mobility\test_plan_v1.py:647: in test_reasons_axis
+    assert "소요 가장 짧음" in r[0]["label"] and "환승 가장 적음(1회)" in r[0]["label"], r[0]["label"]
+E   AssertionError: 3호선 경복궁→을지로3가 → 2호선 을지로3가→성수
+E   assert ('소요 가장 짧음' in '3호선 경복궁→을지로3가 → 2호선 을지로3가→성수')
+____________________________ test_walk_m_and_fare _____________________________
+final_project_cs\tests\unit\travel\mobility\test_plan_v1.py:679: in test_walk_m_and_fare
+    w = got["routes"]["dinner_to_lotte_mart"]["options"][0]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'dinner_to_lotte_mart'
+___________________________ test_g4_dir_same_minute ___________________________
+final_project_cs\tests\unit\travel\mobility\test_plan_estimate_v1.py:344: in test_g4_dir_same_minute
+    assert e._dir_of("02호선", "a", "b", "weekday", 600, 605) == "D", "선택 편성(도착 10:05)은 D"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+final_project_cs\app\domains\travel_ops\instances\mobility\engine\plan_estimate.py:263: in _dir_of
+    ride = self.v.ride_of(line, dep, pv, frm, to)
+           ^^^^^^^^^^^^^^
+E   AttributeError: 'V' object has no attribute 'ride_of'
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_web_improve_20261012_v1\plan-regression-v1.xml -
+=========================== short test summary info ===========================
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_v1.py::test_golden
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_v1.py::test_golden_all_modes
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_v1.py::test_reasons_axis
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_v1.py::test_walk_m_and_fare
+FAILED final_project_cs\tests\unit\travel\mobility\test_plan_estimate_v1.py::test_g4_dir_same_minute
+5 failed, 121 passed, 20 deselected in 320.97s (0:05:20)
+Exception ignored in: <function Console.__del__ at 0x0000024D78BE1A80>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

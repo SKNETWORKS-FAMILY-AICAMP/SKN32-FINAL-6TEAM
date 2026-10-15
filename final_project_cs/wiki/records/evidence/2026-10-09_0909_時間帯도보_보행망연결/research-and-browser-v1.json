@@ -1,0 +1,30 @@
+{
+  "checked_at": "2026-10-09T09:13:51.324947+09:00",
+  "browser": {
+    "inventory": "Naver tab12, Google tab13 and portal tabs visible in tool inventory",
+    "attempt": "cua.getTab12 browser2",
+    "result": "Timed out CDP Emulation.setFocusEmulationEnabled",
+    "elapsed_seconds": 35.866,
+    "successful_new_route_reads": 0
+  },
+  "sources": [
+    {
+      "url": "https://arxiv.org/abs/2603.11729",
+      "scope": "abstract and metadata; transfer buffers and trip sequences",
+      "applied": false
+    },
+    {
+      "url": "https://arxiv.org/html/2603.12592v4",
+      "scope": "abstract, introduction and section3 network/algorithm model, revised2026-05-26; pruning needs ordered durations and monotone criteria",
+      "applied": false
+    },
+    {
+      "url": "https://arxiv.org/abs/1906.08971",
+      "scope": "abstract and metadata; footpaths included in multicriteria journeys",
+      "applied": false
+    }
+  ],
+  "interpretation": "Routing research supports keeping walking connectivity and time in the network; no RAPTOR/TAD/pruning implementation or claimed paper speedup.",
+  "new_independent_samples": 0,
+  "map_developer_api_calls": 0
+}

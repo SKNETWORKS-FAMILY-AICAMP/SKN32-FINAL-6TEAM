@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="5.540" timestamp="2026-10-10T21:25:58.680945+09:00" hostname="playdata"><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_first_boarding_keeps_provider_seconds_instead_of_ceil_model_minute[1]" time="0.101"><failure message="AssertionError: assert '2026-10-09T10:09:00+09:00' == '2026-10-09T10:08:01+09:00'&#10;  &#10;  - 2026-10-09T10:08:01+09:00&#10;  ?                ^  ^&#10;  + 2026-10-09T10:09:00+09:00&#10;  ?                ^  ^">seconds = 1
+
+    @pytest.mark.parametrize('seconds',[1,26,59])
+    def test_first_boarding_keeps_provider_seconds_instead_of_ceil_model_minute(seconds):
+        rt,context=scene()
+        expected=NOW+timedelta(minutes=8,seconds=seconds)
+        def current(*a,**kw):
+            return dict(source(*a,**kw),arrival_at=expected.isoformat())
+        got=call(rt,context,subway_arrival=current)
+        assert got['leg_results'][0]['depart_min']==609
+&gt;       assert got['boarding_steps'][0]['board_at']==expected.isoformat()
+E       AssertionError: assert '2026-10-09T10:09:00+09:00' == '2026-10-09T10:08:01+09:00'
+E         
+E         - 2026-10-09T10:08:01+09:00
+E         ?                ^  ^
+E         + 2026-10-09T10:09:00+09:00
+E         ?                ^  ^
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:155: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_first_boarding_keeps_provider_seconds_instead_of_ceil_model_minute[26]" time="0.006"><failure message="AssertionError: assert '2026-10-09T10:09:00+09:00' == '2026-10-09T10:08:26+09:00'&#10;  &#10;  - 2026-10-09T10:08:26+09:00&#10;  ?                ^ ^^&#10;  + 2026-10-09T10:09:00+09:00&#10;  ?                ^ ^^">seconds = 26
+
+    @pytest.mark.parametrize('seconds',[1,26,59])
+    def test_first_boarding_keeps_provider_seconds_instead_of_ceil_model_minute(seconds):
+        rt,context=scene()
+        expected=NOW+timedelta(minutes=8,seconds=seconds)
+        def current(*a,**kw):
+            return dict(source(*a,**kw),arrival_at=expected.isoformat())
+        got=call(rt,context,subway_arrival=current)
+        assert got['leg_results'][0]['depart_min']==609
+&gt;       assert got['boarding_steps'][0]['board_at']==expected.isoformat()
+E       AssertionError: assert '2026-10-09T10:09:00+09:00' == '2026-10-09T10:08:26+09:00'
+E         
+E         - 2026-10-09T10:08:26+09:00
+E         ?                ^ ^^
+E         + 2026-10-09T10:09:00+09:00
+E         ?                ^ ^^
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:155: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_departure_boarding_guidance_v1" name="test_first_boarding_keeps_provider_seconds_instead_of_ceil_model_minute[59]" time="0.005"><failure message="AssertionError: assert '2026-10-09T10:09:00+09:00' == '2026-10-09T10:08:59+09:00'&#10;  &#10;  - 2026-10-09T10:08:59+09:00&#10;  ?                ^ ^^&#10;  + 2026-10-09T10:09:00+09:00&#10;  ?                ^ ^^">seconds = 59
+
+    @pytest.mark.parametrize('seconds',[1,26,59])
+    def test_first_boarding_keeps_provider_seconds_instead_of_ceil_model_minute(seconds):
+        rt,context=scene()
+        expected=NOW+timedelta(minutes=8,seconds=seconds)
+        def current(*a,**kw):
+            return dict(source(*a,**kw),arrival_at=expected.isoformat())
+        got=call(rt,context,subway_arrival=current)
+        assert got['leg_results'][0]['depart_min']==609
+&gt;       assert got['boarding_steps'][0]['board_at']==expected.isoformat()
+E       AssertionError: assert '2026-10-09T10:09:00+09:00' == '2026-10-09T10:08:59+09:00'
+E         
+E         - 2026-10-09T10:08:59+09:00
+E         ?                ^ ^^
+E         + 2026-10-09T10:09:00+09:00
+E         ?                ^ ^^
+
+tests\unit\travel\test_departure_boarding_guidance_v1.py:155: AssertionError</failure></testcase></testsuite></testsuites>

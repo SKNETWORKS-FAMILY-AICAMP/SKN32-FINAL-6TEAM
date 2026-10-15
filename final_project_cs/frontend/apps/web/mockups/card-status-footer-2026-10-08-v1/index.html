@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>카드와 출처 안내 — 수정 후 실제 화면</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:32px 20px;background:#f4f7f5;color:#21382d;font:16px/1.6 system-ui,sans-serif}main{max-width:1160px;margin:auto}h1{margin:0 0 8px;font-size:26px}p{margin:0 0 24px;color:#52675b}nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 28px}a{color:inherit}nav a{padding:8px 12px;border:1px solid #ccd9d0;border-radius:8px;background:white;text-decoration:none}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}figure{margin:0;padding:16px;border:1px solid #d5dfd9;border-radius:12px;background:white}figcaption{font-weight:600;margin-bottom:12px}img{display:block;max-width:100%;height:auto;margin:auto;border-radius:8px}small{display:block;margin-top:8px;color:#52675b}section{margin-top:24px}h2{font-size:20px;margin:0 0 12px}.wide img{width:100%}
+</style>
+<main>
+<h1>카드와 출처 안내를 정리한 화면</h1>
+<p>실제 프론트엔드를 Chrome에서 촬영했습니다. 데이터는 mock 서버 응답이며 붉은 지도 배경은 시험용 타일입니다. 공개 서비스 배포 전 화면입니다.</p>
+<nav><a href="#cards">카드 배치</a><a href="#sources">출처 안내</a><a href="#desktop">PC 화면</a></nav>
+<section id="cards"><h2>카드 배치</h2><div class="grid">
+<figure><figcaption>확인 필요 · 카드 오른쪽 아래</figcaption><img src="01-review-bottom-right-mobile.png" alt="올리브영 카드의 확인 필요 표시가 맨 아래 오른쪽에 놓인 휴대폰 화면"></figure>
+<figure><figcaption>변경 체크 · 제목 옆, 되돌리기 · 오른쪽 아래</figcaption><img src="02-time-undo-bottom-right-mobile.png" alt="경복궁 제목 옆 체크 표시와 카드 하단 오른쪽의 시간 되돌리기 버튼"></figure>
+</div></section>
+<section id="sources"><h2>출처 안내</h2><div class="grid">
+<figure><figcaption>평소에는 작은 한 줄</figcaption><img src="03-compact-source-no-preference.png" alt="관광공사와 OpenStreetMap 출처가 목록 끝의 한 줄로 접혀 있는 화면"><small>일차·수정안 전환 중에는 잠깐 숨고, 전환 후 다시 나타납니다.</small></figure>
+<figure><figcaption>누르면 정책·경로 설명 펼치기</figcaption><img src="05-expanded-source-no-preference.png" alt="출처를 펼쳐 저작권 정책 링크와 경로 데이터 설명을 확인하는 화면"></figure>
+</div></section>
+<section id="desktop"><h2>긴 제목도 유지되는 PC 화면</h2><figure class="wide"><img src="04-long-title-1280.png" alt="1280픽셀 화면의 휴대폰 틀에서 긴 일정 제목이 두 줄로 보이는 실제 화면"></figure></section>
+</main>
+</html>

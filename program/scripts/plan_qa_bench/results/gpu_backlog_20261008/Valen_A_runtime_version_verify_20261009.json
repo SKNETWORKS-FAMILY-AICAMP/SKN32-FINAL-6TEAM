@@ -1,0 +1,21 @@
+{
+  "packages": {
+    "torch": "2.8.0+cu128",
+    "transformers": "5.17.0",
+    "accelerate": "1.15.0",
+    "safetensors": "0.8.0",
+    "huggingface-hub": "1.33.0",
+    "tokenizers": "0.23.2",
+    "einops": "0.8.2"
+  },
+  "cgroup_v1": {
+    "/sys/fs/cgroup/memory/memory.limit_in_bytes": "30999998464",
+    "/sys/fs/cgroup/memory/memory.usage_in_bytes": "22327046144",
+    "/sys/fs/cgroup/memory/memory.max_usage_in_bytes": "31000014848"
+  },
+  "meminfo": [
+    "MemTotal:       263965424 kB",
+    "MemAvailable:   219363928 kB",
+    "Shmem:           8024052 kB"
+  ]
+}

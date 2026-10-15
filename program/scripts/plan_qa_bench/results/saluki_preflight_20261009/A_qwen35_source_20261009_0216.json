@@ -1,0 +1,39 @@
+{
+  "commit": "4ebdf2c74acce30883d8e34b7c70b3eb8146f2fe",
+  "git_remotes": "origin\thttps://github.com/ggml-org/llama.cpp (fetch)\norigin\thttps://github.com/ggml-org/llama.cpp (push)",
+  "qwen_files": [
+    "src/models/rwkv6qwen2.cpp",
+    "src/models/qwen4exp.cpp",
+    "src/models/qwen3vlmoe.cpp",
+    "src/models/qwen3vl.cpp",
+    "src/models/qwen3tts.cpp",
+    "src/models/qwen3next.cpp",
+    "src/models/qwen3moe.cpp",
+    "src/models/qwen35moe.cpp",
+    "src/models/qwen35.cpp",
+    "src/models/qwen3.cpp",
+    "src/models/qwen2vl.cpp",
+    "src/models/qwen2moe.cpp",
+    "src/models/qwen2.cpp",
+    "src/models/qwen.cpp"
+  ],
+  "qwen35_arch_mentions": [
+    "    { LLM_ARCH_QWEN35,           \"qwen35\"           },",
+    "    { LLM_ARCH_QWEN35MOE,        \"qwen35moe\"        },",
+    "        case LLM_ARCH_QWEN35:",
+    "        case LLM_ARCH_QWEN35MOE:",
+    "        case LLM_ARCH_QWEN35:",
+    "        case LLM_ARCH_QWEN35MOE:"
+  ],
+  "tools": {
+    "cmake": "/usr/bin/cmake",
+    "nvcc": "",
+    "ninja": "",
+    "g++": "/usr/bin/g++",
+    "curl": "/usr/bin/curl",
+    "wget": "/usr/bin/wget",
+    "python3": "/usr/bin/python3"
+  },
+  "cuda_dirs": "/usr/local/cuda\n/usr/local/cuda-12\n/usr/local/cuda-12.8",
+  "binary_cpu": "llama-quantize\nllama-server\nlibmtmd.so.0.5.0\nlibllama.so.0.5.0\nlibllama-server-impl.so\nlibllama-common.so.0.5.0\nlibggml.so.0.25.3\nlibggml-cuda.so.0.25.3\nlibggml-cpu.so.0.25.3\nlibggml-base.so.0.25.3"
+}

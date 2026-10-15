@@ -1,0 +1,997 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                           [100%]
+================================== FAILURES ===================================
+_____________ test_card_discount_reaches_both_mixed_orders[False] _____________
+
+reverse = False
+
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_card_discount_reaches_both_mixed_orders(reverse):
+        v, legs, lr = scenario()
+        if reverse:
+            legs.reverse()
+            lr = [LegResult(i + 1, leg_txt(leg), 'feasible', '', depart_min=720 + i * 20,
+                            arrive_min=730 + i * 20, wait_min=5) for i, leg in enumerate(legs)]
+>       assert O.mixed_fare_estimate(v, legs, lr) == 1550
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:39: AttributeError
+_____________ test_card_discount_reaches_both_mixed_orders[True] ______________
+
+reverse = True
+
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_card_discount_reaches_both_mixed_orders(reverse):
+        v, legs, lr = scenario()
+        if reverse:
+            legs.reverse()
+            lr = [LegResult(i + 1, leg_txt(leg), 'feasible', '', depart_min=720 + i * 20,
+                            arrive_min=730 + i * 20, wait_min=5) for i, leg in enumerate(legs)]
+>       assert O.mixed_fare_estimate(v, legs, lr) == 1550
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:39: AttributeError
+_________ test_combined_distance_steps_use_transfer_rule[10000-1550] __________
+
+meters = 10000, expected = 1550
+
+    @pytest.mark.parametrize('meters,expected', [(10000, 1550), (10001, 1650), (15000, 1650),
+                                                 (15001, 1750), (60000, 2550)])
+    def test_combined_distance_steps_use_transfer_rule(meters, expected):
+        v, legs, lr = scenario(bus_m=meters, rail_m=0)
+        # 명시된 0m 간선도 거리 누락과 구분한다.
+>       assert O.mixed_fare_estimate(v, legs, lr) == expected
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:48: AttributeError
+_________ test_combined_distance_steps_use_transfer_rule[10001-1650] __________
+
+meters = 10001, expected = 1650
+
+    @pytest.mark.parametrize('meters,expected', [(10000, 1550), (10001, 1650), (15000, 1650),
+                                                 (15001, 1750), (60000, 2550)])
+    def test_combined_distance_steps_use_transfer_rule(meters, expected):
+        v, legs, lr = scenario(bus_m=meters, rail_m=0)
+        # 명시된 0m 간선도 거리 누락과 구분한다.
+>       assert O.mixed_fare_estimate(v, legs, lr) == expected
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:48: AttributeError
+_________ test_combined_distance_steps_use_transfer_rule[15000-1650] __________
+
+meters = 15000, expected = 1650
+
+    @pytest.mark.parametrize('meters,expected', [(10000, 1550), (10001, 1650), (15000, 1650),
+                                                 (15001, 1750), (60000, 2550)])
+    def test_combined_distance_steps_use_transfer_rule(meters, expected):
+        v, legs, lr = scenario(bus_m=meters, rail_m=0)
+        # 명시된 0m 간선도 거리 누락과 구분한다.
+>       assert O.mixed_fare_estimate(v, legs, lr) == expected
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:48: AttributeError
+_________ test_combined_distance_steps_use_transfer_rule[15001-1750] __________
+
+meters = 15001, expected = 1750
+
+    @pytest.mark.parametrize('meters,expected', [(10000, 1550), (10001, 1650), (15000, 1650),
+                                                 (15001, 1750), (60000, 2550)])
+    def test_combined_distance_steps_use_transfer_rule(meters, expected):
+        v, legs, lr = scenario(bus_m=meters, rail_m=0)
+        # 명시된 0m 간선도 거리 누락과 구분한다.
+>       assert O.mixed_fare_estimate(v, legs, lr) == expected
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:48: AttributeError
+_________ test_combined_distance_steps_use_transfer_rule[60000-2550] __________
+
+meters = 60000, expected = 2550
+
+    @pytest.mark.parametrize('meters,expected', [(10000, 1550), (10001, 1650), (15000, 1650),
+                                                 (15001, 1750), (60000, 2550)])
+    def test_combined_distance_steps_use_transfer_rule(meters, expected):
+        v, legs, lr = scenario(bus_m=meters, rail_m=0)
+        # 명시된 0m 간선도 거리 누락과 구분한다.
+>       assert O.mixed_fare_estimate(v, legs, lr) == expected
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:48: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[missing_distance] _
+
+break_kind = 'missing_distance'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[negative] __
+
+break_kind = 'negative'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[infinite] __
+
+break_kind = 'infinite'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[bool_distance] _
+
+break_kind = 'bool_distance'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[missing_identity] _
+
+break_kind = 'missing_identity'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[wrong_stop_id] _
+
+break_kind = 'wrong_stop_id'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[wrong_sequence] _
+
+break_kind = 'wrong_sequence'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[unknown_type] _
+
+break_kind = 'unknown_type'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[unknown_rail] _
+
+break_kind = 'unknown_rail'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[misaligned] _
+
+break_kind = 'misaligned'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[infeasible] _
+
+break_kind = 'infeasible'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[missing_clock] _
+
+break_kind = 'missing_clock'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+__ test_unsupported_discount_inputs_preserve_separate_fare_fallback[overlap] __
+
+break_kind = 'overlap'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+__ test_unsupported_discount_inputs_preserve_separate_fare_fallback[expired] __
+
+break_kind = 'expired'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[disabled] __
+
+break_kind = 'disabled'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_ test_unsupported_discount_inputs_preserve_separate_fare_fallback[too_long] __
+
+break_kind = 'too_long'
+
+    @pytest.mark.parametrize('break_kind', [
+        'missing_distance', 'negative', 'infinite', 'bool_distance', 'missing_identity',
+        'wrong_stop_id', 'wrong_sequence', 'unknown_type', 'unknown_rail', 'misaligned',
+        'infeasible', 'missing_clock', 'overlap', 'expired', 'disabled', 'too_long',
+    ])
+    def test_unsupported_discount_inputs_preserve_separate_fare_fallback(break_kind):
+        v, legs, lr = scenario()
+        if break_kind == 'missing_distance':
+            v.bus.stops['r1'][1].pop('sect_dist_m')
+        elif break_kind in ('negative', 'infinite', 'bool_distance'):
+            v.bus.stops['r1'][1]['sect_dist_m'] = {'negative': -1, 'infinite': float('inf'),
+                                                 'bool_distance': True}[break_kind]
+        elif break_kind == 'missing_identity':
+            legs[0] = {k: legs[0][k] for k in ('mode', 'route', 'from', 'to')}
+        elif break_kind == 'wrong_stop_id':
+            legs[0]['to_stop_id'] = 'other'
+        elif break_kind == 'wrong_sequence':
+            legs[0]['to_sequence'] = 3
+        elif break_kind == 'unknown_type':
+            v.bus.route('101').route_type_nm = '공항'
+        elif break_kind == 'unknown_rail':
+            legs[1]['line'] = '모르는철도'
+            lr[1].label = leg_txt(legs[1])
+        elif break_kind == 'misaligned':
+            lr.reverse()
+        elif break_kind == 'infeasible':
+            lr[0].verdict = 'infeasible'
+        elif break_kind == 'missing_clock':
+            lr[0].arrive_min = None
+        elif break_kind == 'overlap':
+            lr[1].depart_min = 729
+        elif break_kind == 'expired':
+            lr[1].depart_min = 761
+            lr[1].arrive_min = 771
+        elif break_kind == 'disabled':
+            v.R['fare']['transfer']['bus_distance']['value'] = None
+        elif break_kind == 'too_long':
+            lr[0].depart_min = 400
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:89: AttributeError
+_________ test_reboarding_same_bus_is_not_discounted_even_after_rail __________
+
+    def test_reboarding_same_bus_is_not_discounted_even_after_rail():
+        v, legs, lr = scenario()
+        legs.append(deepcopy(legs[0]))
+        lr.append(LegResult(3, leg_txt(legs[2]), 'feasible', '', depart_min=760, arrive_min=770))
+>       assert O.mixed_fare_estimate(v, legs, lr) is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:96: AttributeError
+___________ test_consecutive_subway_transfers_count_as_one_boarding ___________
+
+    def test_consecutive_subway_transfers_count_as_one_boarding():
+        v, legs, lr = scenario()
+        legs[1]['to'] = 'B'
+        legs.append(dict(mode='subway', line='09호선', **{'from': 'B', 'to': 'C'}))
+        lr[1].label = leg_txt(legs[1])
+        lr.append(LegResult(3, leg_txt(legs[2]), 'feasible', '', depart_min=755, arrive_min=765))
+>       assert O.mixed_fare_estimate(v, legs, lr) == 1550
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:105: AttributeError
+____ test_product_transfer_window_uses_following_board_time[1200-30-True] _____
+
+start = 1200, gap = 30, discounted = True
+
+    @pytest.mark.parametrize('start,gap,discounted', [(1200, 30, True), (1200, 31, False),
+                                                   (1250, 60, True), (1250, 61, False)])
+    def test_product_transfer_window_uses_following_board_time(start, gap, discounted):
+        v, legs, lr = scenario()
+        lr[0].depart_min, lr[0].arrive_min = start - 10, start
+        lr[1].depart_min, lr[1].arrive_min = start + gap, start + gap + 10
+>       assert O.mixed_fare_estimate(v, legs, lr) == (1550 if discounted else None)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:114: AttributeError
+____ test_product_transfer_window_uses_following_board_time[1200-31-False] ____
+
+start = 1200, gap = 31, discounted = False
+
+    @pytest.mark.parametrize('start,gap,discounted', [(1200, 30, True), (1200, 31, False),
+                                                   (1250, 60, True), (1250, 61, False)])
+    def test_product_transfer_window_uses_following_board_time(start, gap, discounted):
+        v, legs, lr = scenario()
+        lr[0].depart_min, lr[0].arrive_min = start - 10, start
+        lr[1].depart_min, lr[1].arrive_min = start + gap, start + gap + 10
+>       assert O.mixed_fare_estimate(v, legs, lr) == (1550 if discounted else None)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:114: AttributeError
+____ test_product_transfer_window_uses_following_board_time[1250-60-True] _____
+
+start = 1250, gap = 60, discounted = True
+
+    @pytest.mark.parametrize('start,gap,discounted', [(1200, 30, True), (1200, 31, False),
+                                                   (1250, 60, True), (1250, 61, False)])
+    def test_product_transfer_window_uses_following_board_time(start, gap, discounted):
+        v, legs, lr = scenario()
+        lr[0].depart_min, lr[0].arrive_min = start - 10, start
+        lr[1].depart_min, lr[1].arrive_min = start + gap, start + gap + 10
+>       assert O.mixed_fare_estimate(v, legs, lr) == (1550 if discounted else None)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:114: AttributeError
+____ test_product_transfer_window_uses_following_board_time[1250-61-False] ____
+
+start = 1250, gap = 61, discounted = False
+
+    @pytest.mark.parametrize('start,gap,discounted', [(1200, 30, True), (1200, 31, False),
+                                                   (1250, 60, True), (1250, 61, False)])
+    def test_product_transfer_window_uses_following_board_time(start, gap, discounted):
+        v, legs, lr = scenario()
+        lr[0].depart_min, lr[0].arrive_min = start - 10, start
+        lr[1].depart_min, lr[1].arrive_min = start + gap, start + gap + 10
+>       assert O.mixed_fare_estimate(v, legs, lr) == (1550 if discounted else None)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'app.domains.travel_ops.instances.mobility.engine.options' has no attribute 'mixed_fare_estimate'
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:114: AttributeError
+___ test_public_planner_uses_discount_estimate_with_card_and_tag_condition ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002357E79ED20>
+
+    def test_public_planner_uses_discount_estimate_with_card_and_tag_condition(monkeypatch):
+        v, legs, results = scenario()
+        planner = P.Planner(Runtime(v, timetable_built_at='controlled', rules_version='controlled', stats={}),
+                            modes=['bus', 'subway'])
+        option = {'eta_min': 40, 'uses': P.uses_of(legs), '_legs': legs, '_route': P.label_of(legs),
+                  '_start': 720, '_transfers': 1, '_n': 1, '_key': ('mixed', 0, 1), '_mixed': True,
+                  '_margin': 0, '_slack': 0, '_walk_min': 0, '_walk_m': 0, '_fare': None,
+                  '_severe': [], '_covered': False, '_lr': results, '_day_type': '평일'}
+        monkeypatch.setattr(planner, '_station_pairs', lambda *args: ([], [], []))
+        monkeypatch.setattr(planner, '_bus_direct', lambda *args: [])
+        monkeypatch.setattr(planner, '_bike_direct', lambda *args: ([], None))
+        monkeypatch.setattr(planner, '_mixed', lambda *args: [option])
+        got, why = planner.leg(PLACES[0], PLACES[1], datetime.fromisoformat('2026-10-05T12:30:00+09:00'),
+                               {}, True, 'controlled-discount')
+        assert why is None
+        public = got[0]['options'][0]
+>       assert public['fare_krw'] == 1550
+E       assert 3050 == 1550
+
+tests\unit\travel\mobility\test_transfer_fare_product_v1.py:133: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_0421_혼합환승_제품운임_연결\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_card_discount_reaches_both_mixed_orders[False]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_card_discount_reaches_both_mixed_orders[True]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_combined_distance_steps_use_transfer_rule[10000-1550]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_combined_distance_steps_use_transfer_rule[10001-1650]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_combined_distance_steps_use_transfer_rule[15000-1650]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_combined_distance_steps_use_transfer_rule[15001-1750]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_combined_distance_steps_use_transfer_rule[60000-2550]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[missing_distance]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[negative]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[infinite]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[bool_distance]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[missing_identity]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[wrong_stop_id]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[wrong_sequence]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[unknown_type]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[unknown_rail]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[misaligned]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[infeasible]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[missing_clock]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[overlap]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[expired]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[disabled]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_unsupported_discount_inputs_preserve_separate_fare_fallback[too_long]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_reboarding_same_bus_is_not_discounted_even_after_rail
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_consecutive_subway_transfers_count_as_one_boarding
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_product_transfer_window_uses_following_board_time[1200-30-True]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_product_transfer_window_uses_following_board_time[1200-31-False]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_product_transfer_window_uses_following_board_time[1250-60-True]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_product_transfer_window_uses_following_board_time[1250-61-False]
+FAILED tests/unit/travel/mobility/test_transfer_fare_product_v1.py::test_public_planner_uses_discount_estimate_with_card_and_tag_condition
+30 failed in 7.81s

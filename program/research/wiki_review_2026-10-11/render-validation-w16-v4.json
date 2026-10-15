@@ -1,0 +1,42 @@
+{
+  "passed": 8,
+  "total": 8,
+  "checks": [
+    {
+      "name": "w16-review-v4.html 최신 W16 반영",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v1.html 최신 W16 반영",
+      "pass": true
+    },
+    {
+      "name": "wiki-review-v3.html 최신 W16 반영",
+      "pass": true
+    },
+    {
+      "name": "1280px 가로 넘침 없음",
+      "pass": true
+    },
+    {
+      "name": "375px 가로 넘침 없음",
+      "pass": true
+    },
+    {
+      "name": "검토 결과의 로컬 링크",
+      "pass": true,
+      "detail": {
+        "checked": 10,
+        "broken": []
+      }
+    },
+    {
+      "name": "전체 검토 항목 보존",
+      "pass": true
+    },
+    {
+      "name": "완료 필터 보존",
+      "pass": true
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+[
+  {
+    "day_type": "weekday",
+    "direction": "U",
+    "result": {
+      "idx": 0,
+      "label": "공항철도 디지털미디어시티→홍대입구",
+      "verdict": "feasible",
+      "reason": "13:27 서울역행 승차 (대기 1분)",
+      "grade": "확정",
+      "depart_min": 807,
+      "arrive_min": 811,
+      "wait_min": 1,
+      "ride_min": 4.0,
+      "ride_grade": "추정",
+      "relief": null,
+      "dropped": {
+        "단축운행": 208
+      },
+      "warnings": [],
+      "evidence": [
+        {
+          "source_type": "db",
+          "source_id": "timetable_v1@2026-10-01",
+          "grade": "확정",
+          "observed_at": "2026-10-01",
+          "claim": "공항철도 디지털미디어시티 weekday: 13:27 출발 서울역행 (그 방향 209편 중, 13:27~ 안에서 도착이 가장 이른 편)"
+        },
+        {
+          "source_type": "db",
+          "source_id": "line_station_order_v1",
+          "grade": "확정",
+          "observed_at": "2026-10-01T10:49:35+09:00",
+          "claim": "서울역행 열차는 디지털미디어시티 에서 1정거장 뒤 홍대입구 을 지난다"
+        },
+        {
+          "source_type": "policy",
+          "source_id": "mobility_rules@v0.9.2",
+          "grade": "확정",
+          "observed_at": "2026-09-29",
+          "claim": "last_train.행선지_확인"
+        }
+      ],
+      "car": null,
+      "walk_min": null,
+      "code": null,
+      "worst": false,
+      "ride_src": null
+    }
+  },
+  {
+    "day_type": "weekday",
+    "direction": "D",
+    "result": {
+      "idx": 0,
+      "label": "공항철도 디지털미디어시티→마곡나루",
+      "verdict": "feasible",
+      "reason": "13:38 인천공항2터미널행 승차 (대기 1분)",
+      "grade": "확정",
+      "depart_min": 818,
+      "arrive_min": 826,
+      "wait_min": 1,
+      "ride_min": 7.5,
+      "ride_grade": "추정",
+      "relief": null,
+      "dropped": {
+        "단축운행": 209
+      },
+      "warnings": [],
+      "evidence": [
+        {
+          "source_type": "db",
+          "source_id": "timetable_v1@2026-10-01",
+          "grade": "확정",
+          "observed_at": "2026-10-01",
+          "claim": "공항철도 디지털미디어시티 weekday: 13:38 출발 인천공항2터미널행 (그 방향 208편 중, 13:38~ 안에서 도착이 가장 이른 편)"
+        },
+        {
+          "source_type": "db",
+          "source_id": "line_station_order_v1",
+          "grade": "확정",
+          "observed_at": "2026-10-01T10:49:35+09:00",
+          "claim": "인천공항2터미널행 열차는 디지털미디어시티 에서 1정거장 뒤 마곡나루 을 지난다"
+        },
+        {
+          "source_type": "policy",
+          "source_id": "mobility_rules@v0.9.2",
+          "grade": "확정",
+          "observed_at": "2026-09-29",
+          "claim": "last_train.행선지_확인"
+        }
+      ],
+      "car": null,
+      "walk_min": null,
+      "code": null,
+      "worst": false,
+      "ride_src": null
+    }
+  },
+  {
+    "day_type": "holiday",
+    "direction": "U",
+    "result": {
+      "idx": 0,
+      "label": "공항철도 디지털미디어시티→홍대입구",
+      "verdict": "feasible",
+      "reason": "13:27 서울역행 승차 (대기 1분)",
+      "grade": "확정",
+      "depart_min": 807,
+      "arrive_min": 811,
+      "wait_min": 1,
+      "ride_min": 4.0,
+      "ride_grade": "추정",
+      "relief": null,
+      "dropped": {
+        "단축운행": 184
+      },
+      "warnings": [],
+      "evidence": [
+        {
+          "source_type": "db",
+          "source_id": "timetable_v1@2026-10-01",
+          "grade": "확정",
+          "observed_at": "2026-10-01",
+          "claim": "공항철도 디지털미디어시티 holiday: 13:27 출발 서울역행 (그 방향 185편 중, 13:27~ 안에서 도착이 가장 이른 편)"
+        },
+        {
+          "source_type": "db",
+          "source_id": "line_station_order_v1",
+          "grade": "확정",
+          "observed_at": "2026-10-01T10:49:35+09:00",
+          "claim": "서울역행 열차는 디지털미디어시티 에서 1정거장 뒤 홍대입구 을 지난다"
+        },
+        {
+          "source_type": "policy",
+          "source_id": "mobility_rules@v0.9.2",
+          "grade": "확정",
+          "observed_at": "2026-09-29",
+          "claim": "last_train.행선지_확인"
+        }
+      ],
+      "car": null,
+      "walk_min": null,
+      "code": null,
+      "worst": false,
+      "ride_src": null
+    }
+  },
+  {
+    "day_type": "holiday",
+    "direction": "D",
+    "result": {
+      "idx": 0,
+      "label": "공항철도 디지털미디어시티→마곡나루",
+      "verdict": "feasible",
+      "reason": "13:38 인천공항2터미널행 승차 (대기 1분)",
+      "grade": "확정",
+      "depart_min": 818,
+      "arrive_min": 826,
+      "wait_min": 1,
+      "ride_min": 7.5,
+      "ride_grade": "추정",
+      "relief": null,
+      "dropped": {
+        "단축운행": 185
+      },
+      "warnings": [],
+      "evidence": [
+        {
+          "source_type": "db",
+          "source_id": "timetable_v1@2026-10-01",
+          "grade": "확정",
+          "observed_at": "2026-10-01",
+          "claim": "공항철도 디지털미디어시티 holiday: 13:38 출발 인천공항2터미널행 (그 방향 184편 중, 13:38~ 안에서 도착이 가장 이른 편)"
+        },
+        {
+          "source_type": "db",
+          "source_id": "line_station_order_v1",
+          "grade": "확정",
+          "observed_at": "2026-10-01T10:49:35+09:00",
+          "claim": "인천공항2터미널행 열차는 디지털미디어시티 에서 1정거장 뒤 마곡나루 을 지난다"
+        },
+        {
+          "source_type": "policy",
+          "source_id": "mobility_rules@v0.9.2",
+          "grade": "확정",
+          "observed_at": "2026-09-29",
+          "claim": "last_train.행선지_확인"
+        }
+      ],
+      "car": null,
+      "walk_min": null,
+      "code": null,
+      "worst": false,
+      "ride_src": null
+    }
+  }
+]

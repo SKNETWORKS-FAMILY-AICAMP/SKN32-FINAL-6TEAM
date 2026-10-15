@@ -1,0 +1,46 @@
+{
+  "D2": {
+    "positive": {
+      "total": 0,
+      "qat_only_correct": 0,
+      "q4km_only_correct": 0,
+      "qat_correct": 0,
+      "q4km_correct": 0,
+      "qat_false_pick": 0,
+      "q4km_false_pick": 0,
+      "exact_p": 1
+    },
+    "negative": {
+      "total": 1000,
+      "qat_only_correct": 10,
+      "q4km_only_correct": 10,
+      "qat_correct": 931,
+      "q4km_correct": 931,
+      "qat_false_pick": 68,
+      "q4km_false_pick": 69,
+      "exact_p": 1.0
+    }
+  },
+  "H": {
+    "positive": {
+      "total": 461,
+      "qat_only_correct": 5,
+      "q4km_only_correct": 14,
+      "qat_correct": 424,
+      "q4km_correct": 433,
+      "qat_false_pick": 0,
+      "q4km_false_pick": 0,
+      "exact_p": 0.063568115234375
+    },
+    "negative": {
+      "total": 855,
+      "qat_only_correct": 16,
+      "q4km_only_correct": 103,
+      "qat_correct": 365,
+      "q4km_correct": 452,
+      "qat_false_pick": 489,
+      "q4km_false_pick": 402,
+      "exact_p": 9.54663360744815e-17
+    }
+  }
+}

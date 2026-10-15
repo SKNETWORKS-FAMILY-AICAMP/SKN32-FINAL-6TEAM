@@ -1,0 +1,49 @@
+{
+  "root_space": {
+    "path": "/root",
+    "available_bytes": 4311199744,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "temp_space": {
+    "path": "/tmp",
+    "available_bytes": 4311199744,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "ready": [
+    {
+      "id": "valen_08b_original_mx_a1",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    },
+    {
+      "id": "valen_08b_original_h_a1",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    },
+    {
+      "id": "valen_08b_original_d_a1",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    },
+    {
+      "id": "valen_08b_original_d2_a1",
+      "input_checks": {
+        "model": true,
+        "prompts": true,
+        "script": true
+      }
+    }
+  ],
+  "blocked": [],
+  "worker_pid": 342497,
+  "observed_at_utc": "2026-10-09T01:29:45.388669+00:00"
+}

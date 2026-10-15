@@ -1,0 +1,627 @@
+{
+  "created_at": "2026-10-09T02:38:26.478107+09:00",
+  "scope": "development queries at mapped restriction approaches; not independent web or real driving validation",
+  "queries": 12,
+  "repeats_per_pair": 3,
+  "applied_relations": 2487,
+  "source_relations": 6258,
+  "load_seconds": 28.653532800002722,
+  "developer_api_calls": 0,
+  "observations": [
+    {
+      "relation_id": 3448146,
+      "start": [
+        126.9973976,
+        37.4948708
+      ],
+      "end": [
+        126.997418,
+        37.4953676
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 55.2,
+            "model_seconds": 13.247,
+            "query_seconds": 0.0021118000004207715
+          },
+          "after": {
+            "distance_m": 55.2,
+            "model_seconds": 13.247,
+            "query_seconds": 0.005292300003929995
+          }
+        },
+        {
+          "before": {
+            "distance_m": 55.2,
+            "model_seconds": 13.247,
+            "query_seconds": 0.0014119999977992848
+          },
+          "after": {
+            "distance_m": 55.2,
+            "model_seconds": 13.247,
+            "query_seconds": 0.0022871999972267076
+          }
+        },
+        {
+          "before": {
+            "distance_m": 55.2,
+            "model_seconds": 13.247,
+            "query_seconds": 0.001327199992374517
+          },
+          "after": {
+            "distance_m": 55.2,
+            "model_seconds": 13.247,
+            "query_seconds": 0.0020533000060822815
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 3598859,
+      "start": [
+        126.9038664,
+        37.5630048
+      ],
+      "end": [
+        126.90383600000001,
+        37.562961200000004
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.0035386999952606857
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.004242299997713417
+          }
+        },
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.0028728000033879653
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.0036615999997593462
+          }
+        },
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.0031817000126466155
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.004254400002537295
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 3725931,
+      "start": [
+        127.03717040000001,
+        37.559164
+      ],
+      "end": [
+        127.03713000000002,
+        37.5591456
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.0036254000006010756
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.005008199994335882
+          }
+        },
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.003208099995390512
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.003998200001660734
+          }
+        },
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.003088400000706315
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.005432000005384907
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 3725932,
+      "start": [
+        127.03717040000001,
+        37.559164
+      ],
+      "end": [
+        127.03705680000002,
+        37.559158
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.0032913000031840056
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.005430700010037981
+          }
+        },
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.003236699994886294
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.0040126999956555665
+          }
+        },
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.003068000005441718
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.006157700001494959
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 4207546,
+      "start": [
+        126.8817672,
+        37.4801626
+      ],
+      "end": [
+        126.8817024,
+        37.480117400000005
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.002274099999340251
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.0029885999974794686
+          }
+        },
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.002388799999607727
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.002814599996781908
+          }
+        },
+        {
+          "before": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.001857499999459833
+          },
+          "after": {
+            "distance_m": 0.0,
+            "model_seconds": 0.0,
+            "query_seconds": 0.002642600011313334
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 4627267,
+      "start": [
+        126.73521680000002,
+        37.576729199999996
+      ],
+      "end": [
+        126.7352156,
+        37.576646399999994
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 3.3,
+            "model_seconds": 0.396,
+            "query_seconds": 0.0009151999984169379
+          },
+          "after": {
+            "distance_m": 3.3,
+            "model_seconds": 0.396,
+            "query_seconds": 0.0016209000023081899
+          }
+        },
+        {
+          "before": {
+            "distance_m": 3.3,
+            "model_seconds": 0.396,
+            "query_seconds": 0.0007520000071963295
+          },
+          "after": {
+            "distance_m": 3.3,
+            "model_seconds": 0.396,
+            "query_seconds": 0.0015786000003572553
+          }
+        },
+        {
+          "before": {
+            "distance_m": 3.3,
+            "model_seconds": 0.396,
+            "query_seconds": 0.0008476000075461343
+          },
+          "after": {
+            "distance_m": 3.3,
+            "model_seconds": 0.396,
+            "query_seconds": 0.0016140000079758465
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 4666941,
+      "start": [
+        126.91387660000001,
+        37.548831199999995
+      ],
+      "end": [
+        126.9139826,
+        37.548875599999995
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 6.06,
+            "model_seconds": 0.624,
+            "query_seconds": 0.003132099998765625
+          },
+          "after": {
+            "distance_m": 6.06,
+            "model_seconds": 0.624,
+            "query_seconds": 0.003907899998011999
+          }
+        },
+        {
+          "before": {
+            "distance_m": 6.06,
+            "model_seconds": 0.624,
+            "query_seconds": 0.0038674999959766865
+          },
+          "after": {
+            "distance_m": 6.06,
+            "model_seconds": 0.624,
+            "query_seconds": 0.004082699990249239
+          }
+        },
+        {
+          "before": {
+            "distance_m": 6.06,
+            "model_seconds": 0.624,
+            "query_seconds": 0.0029980999970575795
+          },
+          "after": {
+            "distance_m": 6.06,
+            "model_seconds": 0.624,
+            "query_seconds": 0.003795299999183044
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 4674491,
+      "start": [
+        127.0456758,
+        37.4632072
+      ],
+      "end": [
+        127.0459334,
+        37.463165200000006
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 19.93,
+            "model_seconds": 1.794,
+            "query_seconds": 0.0013000000035390258
+          },
+          "after": {
+            "distance_m": 19.93,
+            "model_seconds": 1.794,
+            "query_seconds": 0.0028929000109201297
+          }
+        },
+        {
+          "before": {
+            "distance_m": 19.93,
+            "model_seconds": 1.794,
+            "query_seconds": 0.0009902000019792467
+          },
+          "after": {
+            "distance_m": 19.93,
+            "model_seconds": 1.794,
+            "query_seconds": 0.0016365000046789646
+          }
+        },
+        {
+          "before": {
+            "distance_m": 19.93,
+            "model_seconds": 1.794,
+            "query_seconds": 0.0008958999969763681
+          },
+          "after": {
+            "distance_m": 19.93,
+            "model_seconds": 1.794,
+            "query_seconds": 0.001589500010595657
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 4674492,
+      "start": [
+        127.04553179999999,
+        37.46337200000001
+      ],
+      "end": [
+        127.0459334,
+        37.463165200000006
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 41.37,
+            "model_seconds": 3.723,
+            "query_seconds": 0.0014708999951835722
+          },
+          "after": {
+            "distance_m": 41.37,
+            "model_seconds": 3.723,
+            "query_seconds": 0.0017950000037671998
+          }
+        },
+        {
+          "before": {
+            "distance_m": 41.37,
+            "model_seconds": 3.723,
+            "query_seconds": 0.000945399995543994
+          },
+          "after": {
+            "distance_m": 41.37,
+            "model_seconds": 3.723,
+            "query_seconds": 0.0016086999967228621
+          }
+        },
+        {
+          "before": {
+            "distance_m": 41.37,
+            "model_seconds": 3.723,
+            "query_seconds": 0.0008985000022221357
+          },
+          "after": {
+            "distance_m": 41.37,
+            "model_seconds": 3.723,
+            "query_seconds": 0.0015503000031458214
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 4674494,
+      "start": [
+        127.0456758,
+        37.4632072
+      ],
+      "end": [
+        127.0458418,
+        37.463054400000004
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 20.77,
+            "model_seconds": 1.869,
+            "query_seconds": 0.0009680999937700108
+          },
+          "after": {
+            "distance_m": 20.77,
+            "model_seconds": 1.869,
+            "query_seconds": 0.0015921000012895092
+          }
+        },
+        {
+          "before": {
+            "distance_m": 20.77,
+            "model_seconds": 1.869,
+            "query_seconds": 0.000920400008908473
+          },
+          "after": {
+            "distance_m": 20.77,
+            "model_seconds": 1.869,
+            "query_seconds": 0.002237100008642301
+          }
+        },
+        {
+          "before": {
+            "distance_m": 20.77,
+            "model_seconds": 1.869,
+            "query_seconds": 0.0010787999926833436
+          },
+          "after": {
+            "distance_m": 20.77,
+            "model_seconds": 1.869,
+            "query_seconds": 0.0022520999918924645
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 4674495,
+      "start": [
+        127.04553179999999,
+        37.46337200000001
+      ],
+      "end": [
+        127.0458418,
+        37.463054400000004
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 41.2,
+            "model_seconds": 3.708,
+            "query_seconds": 0.000994000001810491
+          },
+          "after": {
+            "distance_m": 41.2,
+            "model_seconds": 3.708,
+            "query_seconds": 0.0015644999948563054
+          }
+        },
+        {
+          "before": {
+            "distance_m": 41.2,
+            "model_seconds": 3.708,
+            "query_seconds": 0.0009497999999439344
+          },
+          "after": {
+            "distance_m": 41.2,
+            "model_seconds": 3.708,
+            "query_seconds": 0.0015673000016249716
+          }
+        },
+        {
+          "before": {
+            "distance_m": 41.2,
+            "model_seconds": 3.708,
+            "query_seconds": 0.0008814000029815361
+          },
+          "after": {
+            "distance_m": 41.2,
+            "model_seconds": 3.708,
+            "query_seconds": 0.001542500001960434
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    },
+    {
+      "relation_id": 4674502,
+      "start": [
+        127.0506462,
+        37.461216
+      ],
+      "end": [
+        127.0500866,
+        37.4613516
+      ],
+      "repeats": [
+        {
+          "before": {
+            "distance_m": 50.7,
+            "model_seconds": 4.563,
+            "query_seconds": 0.0008174999966286123
+          },
+          "after": {
+            "distance_m": 50.7,
+            "model_seconds": 4.563,
+            "query_seconds": 0.0013948999985586852
+          }
+        },
+        {
+          "before": {
+            "distance_m": 50.7,
+            "model_seconds": 4.563,
+            "query_seconds": 0.0006327000010060146
+          },
+          "after": {
+            "distance_m": 50.7,
+            "model_seconds": 4.563,
+            "query_seconds": 0.0012946999922860414
+          }
+        },
+        {
+          "before": {
+            "distance_m": 50.7,
+            "model_seconds": 4.563,
+            "query_seconds": 0.0006245999975362793
+          },
+          "after": {
+            "distance_m": 50.7,
+            "model_seconds": 4.563,
+            "query_seconds": 0.0012273999891476706
+          }
+        }
+      ],
+      "astar_dijkstra_equal": true,
+      "applied_rule_violations": 0
+    }
+  ],
+  "median_before_query_seconds": 0.0013695999950869009,
+  "median_after_query_seconds": 0.002269649994559586,
+  "changed_distance_queries": 0
+}

@@ -1,0 +1,749 @@
+{
+  "sourceCopy": "completion-results.json",
+  "limits": [
+    "Mock API responses; not actual cs project API verification.",
+    "Actual image viewing completed by root reviewer; evidence exporter did not repeat it.",
+    "Completion 52 run predates concurrent support copy changes; separate support follow-up evidence is required.",
+    "Ordinary route rendering does not prove every state, action, provider, device or language."
+  ],
+  "scope": "Completion Chrome build: 13 entry routes at 375px and 1280px, ordinary scenes; not every product state",
+  "sourceSha256": "9FD48D3428C3F696D26A418CB5378D7AE3B6E689B19C3E3EE61CC76B7F747675",
+  "counts": {
+    "passed": 26,
+    "screenshotsCopied": 26,
+    "zeroByteScreenshots": 0,
+    "screenshotsVisuallyReviewed": 26,
+    "planned": 26
+  },
+  "entries": [
+    {
+      "testTitle": "전체 경로 · intro · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 78936,
+      "width": 375,
+      "screen": "intro",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--153e0-o-·-375px-화면-표시·가로-넘침·실행-오류/intro-375.png",
+      "durationMs": 2448,
+      "screenshotWidth": 375,
+      "screenshotSha256": "8F26FFD0E1CB9C6DE4AFA942D511AF10A9F67F632D39171EE81A069A8967252F",
+      "startTime": "2026-10-11T19:10:50.588Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/",
+        "landed": "http://127.0.0.1:3187/",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/intro-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · terms-preferences · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 110741,
+      "width": 375,
+      "screen": "terms-preferences",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--f562c-s-·-375px-화면-표시·가로-넘침·실행-오류/terms-preferences-375.png",
+      "durationMs": 1918,
+      "screenshotWidth": 375,
+      "screenshotSha256": "6E36FC7042C9097F9DB1D25D50576C82CEDF45BF604E4A63330AC3A738926BE1",
+      "startTime": "2026-10-11T19:10:53.067Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/start",
+        "landed": "http://127.0.0.1:3187/start",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/terms-preferences-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · registration · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 35859,
+      "width": 375,
+      "screen": "registration",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--93e14-n-·-375px-화면-표시·가로-넘침·실행-오류/registration-375.png",
+      "durationMs": 1564,
+      "screenshotWidth": 375,
+      "screenshotSha256": "EA89FA892BB71A8A3EE00D424BFC7F99A6ACC9E62C0EC84A7DFD901611FD2B8D",
+      "startTime": "2026-10-11T19:10:55.008Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips/new",
+        "landed": "http://127.0.0.1:3187/trips/new",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/registration-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · trips · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 19535,
+      "width": 375,
+      "screen": "trips",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--f0aaf-s-·-375px-화면-표시·가로-넘침·실행-오류/trips-375.png",
+      "durationMs": 1366,
+      "screenshotWidth": 375,
+      "screenshotSha256": "C5C76890D8C1C4CBF204A3F6B0FC81329370AF3EC214682B85C640015DFFA0D8",
+      "startTime": "2026-10-11T19:10:56.599Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips",
+        "landed": "http://127.0.0.1:3187/trips",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/trips-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · registered-trip · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 320251,
+      "width": 375,
+      "screen": "registered-trip",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--16368-p-·-375px-화면-표시·가로-넘침·실행-오류/registered-trip-375.png",
+      "durationMs": 2207,
+      "screenshotWidth": 375,
+      "screenshotSha256": "C5D10F22A548CC4E95FB08BB212CA170E2CB6CEC05692A41945C3D50704842B3",
+      "startTime": "2026-10-11T19:10:57.986Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/registered-trip-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · verification-redirect · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 320252,
+      "width": 375,
+      "screen": "verification-redirect",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--d9802-t-·-375px-화면-표시·가로-넘침·실행-오류/verification-redirect-375.png",
+      "durationMs": 2298,
+      "screenshotWidth": 375,
+      "screenshotSha256": "12CB448789E812822B33CC005010B7E1C72CA5694EC50639089DFDD4F724B018",
+      "startTime": "2026-10-11T19:11:00.225Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555/verification",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/verification-redirect-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · results-redirect · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 320272,
+      "width": 375,
+      "screen": "results-redirect",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--b2dab-t-·-375px-화면-표시·가로-넘침·실행-오류/results-redirect-375.png",
+      "durationMs": 2312,
+      "screenshotWidth": 375,
+      "screenshotSha256": "12695EFCD005B83110766B1FF3AF007B3500F559588EC8D89AA34881DE501048",
+      "startTime": "2026-10-11T19:11:02.545Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555/results",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/results-redirect-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 283111,
+      "width": 375,
+      "screen": "intake",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--f4aa1-e-·-375px-화면-표시·가로-넘침·실행-오류/intake-375.png",
+      "durationMs": 3638,
+      "screenshotWidth": 375,
+      "screenshotSha256": "9060F533BECAF54AB2503F85FBB905B712B3DAD0B1D1CE8D6DED77C3B4BA9D1A",
+      "startTime": "2026-10-11T19:11:04.876Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "landed": "http://127.0.0.1:3187/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/intake-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · starting-revisit · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 35859,
+      "width": 375,
+      "screen": "starting-revisit",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--c2b47-t-·-375px-화면-표시·가로-넘침·실행-오류/starting-revisit-375.png",
+      "durationMs": 2050,
+      "screenshotWidth": 375,
+      "screenshotSha256": "EA89FA892BB71A8A3EE00D424BFC7F99A6ACC9E62C0EC84A7DFD901611FD2B8D",
+      "startTime": "2026-10-11T19:11:08.549Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/intakes/starting",
+        "landed": "http://127.0.0.1:3187/trips/new",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/starting-revisit-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · account · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 32104,
+      "width": 375,
+      "screen": "account",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--e25da-t-·-375px-화면-표시·가로-넘침·실행-오류/account-375.png",
+      "durationMs": 1775,
+      "screenshotWidth": 375,
+      "screenshotSha256": "79B3949C82036640B0A6039FB408AC4FFF03643271943A5D5DC63CF14EE898AF",
+      "startTime": "2026-10-11T19:11:10.621Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/mypage",
+        "landed": "http://127.0.0.1:3187/mypage",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/account-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · profile · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 34163,
+      "width": 375,
+      "screen": "profile",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--37cfd-e-·-375px-화면-표시·가로-넘침·실행-오류/profile-375.png",
+      "durationMs": 1650,
+      "screenshotWidth": 375,
+      "screenshotSha256": "5904F0B992C3501697AC24F095A012F30EF976F8D0C9966EA63D5A4503507A1E",
+      "startTime": "2026-10-11T19:11:12.425Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/mypage/edit",
+        "landed": "http://127.0.0.1:3187/mypage/edit",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/profile-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · support · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 23974,
+      "width": 375,
+      "screen": "support",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--ebd94-t-·-375px-화면-표시·가로-넘침·실행-오류/support-375.png",
+      "durationMs": 1616,
+      "screenshotWidth": 375,
+      "screenshotSha256": "7A80169EA7B43CD0F209D5DAA062943D1829EF435879DACA34F111049FA7140D",
+      "startTime": "2026-10-11T19:11:14.093Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/support",
+        "landed": "http://127.0.0.1:3187/support",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/support-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · social-cancelled · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 16195,
+      "width": 375,
+      "screen": "social-cancelled",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--d4fe8-d-·-375px-화면-표시·가로-넘침·실행-오류/social-cancelled-375.png",
+      "durationMs": 1471,
+      "screenshotWidth": 375,
+      "screenshotSha256": "4A22E435F381819459AA3088625AA79B0A0C565E03048EDCB97400020770D50B",
+      "startTime": "2026-10-11T19:11:15.729Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/auth/done?error=cancelled",
+        "landed": "http://127.0.0.1:3187/auth/done",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/social-cancelled-375.png"
+    },
+    {
+      "testTitle": "전체 경로 · intro · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 104581,
+      "width": 1280,
+      "screen": "intro",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--7ed21--·-1280px-화면-표시·가로-넘침·실행-오류/intro-1280.png",
+      "durationMs": 1563,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "14D86D2E2AF8E44BA60DCCC0946536CBAFDC125E37B2FDC5C8F112AA547D1B4F",
+      "startTime": "2026-10-11T19:11:17.22Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/",
+        "landed": "http://127.0.0.1:3187/",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/intro-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · terms-preferences · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 138280,
+      "width": 1280,
+      "screen": "terms-preferences",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--2b1d2--·-1280px-화면-표시·가로-넘침·실행-오류/terms-preferences-1280.png",
+      "durationMs": 1837,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "013B1EA749748F75B87D8DC4D8B36B294BA3DBBF9BF391E9775344E8C2A5BDD5",
+      "startTime": "2026-10-11T19:11:18.803Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/start",
+        "landed": "http://127.0.0.1:3187/start",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/terms-preferences-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · registration · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 49570,
+      "width": 1280,
+      "screen": "registration",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--0bff6--·-1280px-화면-표시·가로-넘침·실행-오류/registration-1280.png",
+      "durationMs": 1868,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "B29A461EE971F45745D9F68F2A4A421383C4671AF211D202EA7DD5A3F0C89672",
+      "startTime": "2026-10-11T19:11:20.66Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips/new",
+        "landed": "http://127.0.0.1:3187/trips/new",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/registration-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · trips · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 33425,
+      "width": 1280,
+      "screen": "trips",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--93007--·-1280px-화면-표시·가로-넘침·실행-오류/trips-1280.png",
+      "durationMs": 1777,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "3875F0BA2ED773463729517F1B9BF755625E16B89AA659929FB4B93BD195A8FD",
+      "startTime": "2026-10-11T19:11:22.549Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips",
+        "landed": "http://127.0.0.1:3187/trips",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/trips-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · registered-trip · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 339601,
+      "width": 1280,
+      "screen": "registered-trip",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--2c972--·-1280px-화면-표시·가로-넘침·실행-오류/registered-trip-1280.png",
+      "durationMs": 2318,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "C15B0D309E60729648E594EF58858BD9520A0D070E28D43A1F9F5095E219D6BB",
+      "startTime": "2026-10-11T19:11:24.341Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/registered-trip-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · verification-redirect · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 339662,
+      "width": 1280,
+      "screen": "verification-redirect",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--ec347--·-1280px-화면-표시·가로-넘침·실행-오류/verification-redirect-1280.png",
+      "durationMs": 2582,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "FF4B5F0AEB7E4BC1F604AD9AEB85B639B2F980513DAA2AF136457E0740FBD0AA",
+      "startTime": "2026-10-11T19:11:26.679Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555/verification",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/verification-redirect-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · results-redirect · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 339714,
+      "width": 1280,
+      "screen": "results-redirect",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--c9058--·-1280px-화면-표시·가로-넘침·실행-오류/results-redirect-1280.png",
+      "durationMs": 3307,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "8BD6FFB01C75EEFE94B9EE3A73D423B83ABEF34C2CF2E59ACA0D7C7DDE082B87",
+      "startTime": "2026-10-11T19:11:29.283Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555/results",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/results-redirect-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · intake · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 294696,
+      "width": 1280,
+      "screen": "intake",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--3a59a--·-1280px-화면-표시·가로-넘침·실행-오류/intake-1280.png",
+      "durationMs": 2716,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "CB755AF3C6B558DDED2A5128E4903D8A7872547CAC3DA14E3FF05D149942492F",
+      "startTime": "2026-10-11T19:11:32.606Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "landed": "http://127.0.0.1:3187/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/intake-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · starting-revisit · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 49570,
+      "width": 1280,
+      "screen": "starting-revisit",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--a273c--·-1280px-화면-표시·가로-넘침·실행-오류/starting-revisit-1280.png",
+      "durationMs": 2214,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "B29A461EE971F45745D9F68F2A4A421383C4671AF211D202EA7DD5A3F0C89672",
+      "startTime": "2026-10-11T19:11:35.341Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/intakes/starting",
+        "landed": "http://127.0.0.1:3187/trips/new",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/starting-revisit-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · account · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 47861,
+      "width": 1280,
+      "screen": "account",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--b651c--·-1280px-화면-표시·가로-넘침·실행-오류/account-1280.png",
+      "durationMs": 1965,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "5F59FA71DCF3032C7807E8F490528AEC75D91591C16B5D663ED1706E70E21F5F",
+      "startTime": "2026-10-11T19:11:37.573Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/mypage",
+        "landed": "http://127.0.0.1:3187/mypage",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/account-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · profile · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 49376,
+      "width": 1280,
+      "screen": "profile",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--a244c--·-1280px-화면-표시·가로-넘침·실행-오류/profile-1280.png",
+      "durationMs": 1924,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "91CEFB4743C2622A642B43E02B48174C65CB016AC13AC8AEA34B8F9534A0B4D7",
+      "startTime": "2026-10-11T19:11:39.557Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/mypage/edit",
+        "landed": "http://127.0.0.1:3187/mypage/edit",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/profile-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · support · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 38507,
+      "width": 1280,
+      "screen": "support",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--19225--·-1280px-화면-표시·가로-넘침·실행-오류/support-1280.png",
+      "durationMs": 1990,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "0F3C74CB365FD3D2BB3996CC85D0F79D55EF31B4DC65E90DDF99C256D6A113C3",
+      "startTime": "2026-10-11T19:11:41.501Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/support",
+        "landed": "http://127.0.0.1:3187/support",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/support-1280.png"
+    },
+    {
+      "testTitle": "전체 경로 · social-cancelled · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 completion images viewed; delegated confirmation 2026-10-12",
+      "screenshotBytes": 29200,
+      "width": 1280,
+      "screen": "social-cancelled",
+      "status": "passed",
+      "screenshotHeight": 900,
+      "screenshotOriginal": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--818e1--·-1280px-화면-표시·가로-넘침·실행-오류/social-cancelled-1280.png",
+      "durationMs": 1779,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "CEE4C7AC1F3D146371A36A1DB2AA3D1C45F45437990E61C3B6E7B8892454BAE6",
+      "startTime": "2026-10-11T19:11:43.509Z",
+      "screenshotVisuallyReviewed": true,
+      "observation": {
+        "route": "/auth/done?error=cancelled",
+        "landed": "http://127.0.0.1:3187/auth/done",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      },
+      "screenshot": "routes-completion/social-cancelled-1280.png"
+    }
+  ],
+  "source": ".tmp/uiux-resume-20261012-v1/completion-results.json"
+}

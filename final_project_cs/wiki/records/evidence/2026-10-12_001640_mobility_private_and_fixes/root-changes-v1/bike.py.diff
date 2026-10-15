@@ -1,0 +1,80 @@
+--- backup/bike.py
++++ current/bike.py
+@@ -120,8 +120,19 @@
+         except (ValueError, UnicodeDecodeError) as ex:   # JSON 이 아니다
+             self.last_error = {"kind": "bad_response", "error": type(ex).__name__}
+             return None
+-        result = (doc.get("rentBikeStatus") or {}).get("RESULT") or doc.get("RESULT") or {}
+-        rows = ((doc.get("rentBikeStatus") or {}).get("row")) or []
++        if not isinstance(doc, dict):
++            self.last_error = {"kind": "bad_response", "error": "document"}
++            return None
++        status = doc.get("rentBikeStatus", {})
++        if not isinstance(status, dict):
++            self.last_error = {"kind": "bad_response", "error": "rentBikeStatus"}
++            return None
++        result = status.get("RESULT") or doc.get("RESULT") or {}
++        rows = status.get("row", [])
++        if (not isinstance(result, dict) or not isinstance(rows, list)
++                or any(not isinstance(row, dict) for row in rows)):
++            self.last_error = {"kind": "bad_response", "error": "RESULT/row"}
++            return None
+         row = next((r for r in rows if r.get("stationId") == station_id), None)
+         if row is None:
+             # 인증 오류(INFO-100 등)와 「그 대여소 없음」을 가른다 — 응답의 결과 코드만 남긴다
+@@ -131,9 +142,19 @@
+             return None
+         at = _dt.datetime.now().astimezone().isoformat(timespec="minutes")
+         # ★ 원 응답(doc·row)은 여기서 버린다. 남기는 것은 개수와 시각뿐.
+-        try:
+-            n = int(row.get("parkingBikeTotCnt"))
+-        except (TypeError, ValueError):
++        count = row.get("parkingBikeTotCnt")
++        # 재고는 0 이상 정수입니다. bool·분수를 int로 조용히 바꾸지 않습니다.
++        if isinstance(count, str):
++            count = count.strip()
++            valid_count = bool(count) and count.isascii() and count.isdigit()
++        else:
++            valid_count = type(count) is int and count >= 0
++        if not valid_count:
++            self.last_error = {"kind": "bad_response", "error": "parkingBikeTotCnt"}
++            return None
++        try:
++            n = int(count)
++        except ValueError:
+             self.last_error = {"kind": "bad_response", "error": "parkingBikeTotCnt"}
+             return None
+         return {"available": n, "checked_at": at, "source_id": f"seoul_bikeList@{at}"}
+@@ -199,7 +220,13 @@
+         except (OSError, ValueError) as ex:    # 통신·응답 해석 실패. 그 밖의 예외(코드 결함)는 삼키지 않는다(#28)
+             self.last_error = {"kind": "router_error", "error": type(ex).__name__}
+             return None
+-        paths = (doc or {}).get("paths") or []
++        if doc is not None and not isinstance(doc, dict):
++            self.last_error = {"kind": "bad_response", "error": "document"}
++            return None
++        paths = (doc or {}).get("paths", [])
++        if not isinstance(paths, list) or (paths and not isinstance(paths[0], dict)):
++            self.last_error = {"kind": "bad_response", "error": "paths"}
++            return None
+         if not paths:
+             self.last_error = {"kind": "no_path"}
+             return None
+@@ -207,12 +234,14 @@
+         # ☆`[2026-09-29 문제목록 #10]` 거리·시간이 빠진 응답을 0 으로 채우지 않는다 — 앞 판은 {"paths":[{}]} 를
+         #   「0 m · 0 초 경로」로 만들었다. 빠졌으면 근거없음이다.
+         try:
++            if isinstance(p["distance"], bool) or isinstance(p["time"], bool):
++                raise ValueError("bool metric")
+             dist, tms = float(p["distance"]), float(p["time"])
+-        except (KeyError, TypeError, ValueError):
++        except (KeyError, TypeError, ValueError, OverflowError):
+             self.last_error = {"kind": "bad_response", "error": "distance/time 없음"}
+             return None
+-        if dist < 0 or tms < 0:
+-            self.last_error = {"kind": "bad_response", "error": "음수 거리·시간"}
++        if not math.isfinite(dist) or not math.isfinite(tms) or dist < 0 or tms < 0:
++            self.last_error = {"kind": "bad_response", "error": "비유한값·음수 거리·시간"}
+             return None
+         out = {"distance_m": round(dist, 1),
+                "time_s": int(round(tms / 1000)), "basis": getattr(self.router, "basis", "graphhopper"),

@@ -1,0 +1,230 @@
+.F.FFFFFFFFFFFFF..F.                                                     [100%]
+================================== FAILURES ===================================
+______ test_missing_stop_is_not_replaced_by_a_false_adjacent_segment[3] _______
+
+sequence = 3
+
+    @pytest.mark.parametrize('sequence', [1, 3, 5])
+    def test_missing_stop_is_not_replaced_by_a_false_adjacent_segment(sequence):
+>       assert evaluate([s for s in STOPS if s['seq'] != sequence]).minutes is None
+E       AssertionError: assert 9.0 is None
+E        +  where 9.0 = Walk(minutes=9.0, used=0, half=0, fb=3, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=9.0, used=0, half=0, fb=3, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:17: AssertionError
+______________ test_duplicate_stop_is_not_a_complete_segment[1] _______________
+
+sequence = 1
+
+    @pytest.mark.parametrize('sequence', [1, 3, 5])
+    def test_duplicate_stop_is_not_a_complete_segment(sequence):
+        stops = deepcopy(STOPS)
+        stops.insert(sequence, deepcopy(stops[sequence - 1]))
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 15.0 is None
+E        +  where 15.0 = Walk(minutes=15.0, used=0, half=0, fb=5, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=15.0, used=0, half=0, fb=5, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:24: AssertionError
+______________ test_duplicate_stop_is_not_a_complete_segment[3] _______________
+
+sequence = 3
+
+    @pytest.mark.parametrize('sequence', [1, 3, 5])
+    def test_duplicate_stop_is_not_a_complete_segment(sequence):
+        stops = deepcopy(STOPS)
+        stops.insert(sequence, deepcopy(stops[sequence - 1]))
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 15.0 is None
+E        +  where 15.0 = Walk(minutes=15.0, used=0, half=0, fb=5, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=15.0, used=0, half=0, fb=5, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:24: AssertionError
+______________ test_duplicate_stop_is_not_a_complete_segment[5] _______________
+
+sequence = 5
+
+    @pytest.mark.parametrize('sequence', [1, 3, 5])
+    def test_duplicate_stop_is_not_a_complete_segment(sequence):
+        stops = deepcopy(STOPS)
+        stops.insert(sequence, deepcopy(stops[sequence - 1]))
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:24: AssertionError
+____________ test_invalid_sequence_cannot_enter_the_profile[True] _____________
+
+sequence = True
+
+    @pytest.mark.parametrize('sequence', [True, 3.0, 0])
+    def test_invalid_sequence_cannot_enter_the_profile(sequence):
+        stops = deepcopy(STOPS)
+        stops[2]['seq'] = sequence
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:31: AssertionError
+_____________ test_invalid_sequence_cannot_enter_the_profile[3.0] _____________
+
+sequence = 3.0
+
+    @pytest.mark.parametrize('sequence', [True, 3.0, 0])
+    def test_invalid_sequence_cannot_enter_the_profile(sequence):
+        stops = deepcopy(STOPS)
+        stops[2]['seq'] = sequence
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:31: AssertionError
+______________ test_invalid_sequence_cannot_enter_the_profile[0] ______________
+
+sequence = 0
+
+    @pytest.mark.parametrize('sequence', [True, 3.0, 0])
+    def test_invalid_sequence_cannot_enter_the_profile(sequence):
+        stops = deepcopy(STOPS)
+        stops[2]['seq'] = sequence
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 9.0 is None
+E        +  where 9.0 = Walk(minutes=9.0, used=0, half=0, fb=3, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=9.0, used=0, half=0, fb=3, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:31: AssertionError
+___________ test_explicit_different_route_cannot_enter_the_profile ____________
+
+    def test_explicit_different_route_cannot_enter_the_profile():
+        stops = deepcopy(STOPS)
+        stops[2]['route_id'] = 'other'
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'route_id': ...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:37: AssertionError
+____ test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[-1] _____
+
+distance = -1
+
+    @pytest.mark.parametrize('distance', [-1, float('nan'), float('inf'), True, '600', None])
+    def test_invalid_distance_cannot_be_used_even_by_a_constant_fallback(distance):
+        stops = deepcopy(STOPS)
+        stops[2]['sect_dist_m'] = distance
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:44: AssertionError
+____ test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[nan] ____
+
+distance = nan
+
+    @pytest.mark.parametrize('distance', [-1, float('nan'), float('inf'), True, '600', None])
+    def test_invalid_distance_cannot_be_used_even_by_a_constant_fallback(distance):
+        stops = deepcopy(STOPS)
+        stops[2]['sect_dist_m'] = distance
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:44: AssertionError
+____ test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[inf] ____
+
+distance = inf
+
+    @pytest.mark.parametrize('distance', [-1, float('nan'), float('inf'), True, '600', None])
+    def test_invalid_distance_cannot_be_used_even_by_a_constant_fallback(distance):
+        stops = deepcopy(STOPS)
+        stops[2]['sect_dist_m'] = distance
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:44: AssertionError
+___ test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[True] ____
+
+distance = True
+
+    @pytest.mark.parametrize('distance', [-1, float('nan'), float('inf'), True, '600', None])
+    def test_invalid_distance_cannot_be_used_even_by_a_constant_fallback(distance):
+        stops = deepcopy(STOPS)
+        stops[2]['sect_dist_m'] = distance
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:44: AssertionError
+____ test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[600] ____
+
+distance = '600'
+
+    @pytest.mark.parametrize('distance', [-1, float('nan'), float('inf'), True, '600', None])
+    def test_invalid_distance_cannot_be_used_even_by_a_constant_fallback(distance):
+        stops = deepcopy(STOPS)
+        stops[2]['sect_dist_m'] = distance
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:44: AssertionError
+___ test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[None] ____
+
+distance = None
+
+    @pytest.mark.parametrize('distance', [-1, float('nan'), float('inf'), True, '600', None])
+    def test_invalid_distance_cannot_be_used_even_by_a_constant_fallback(distance):
+        stops = deepcopy(STOPS)
+        stops[2]['sect_dist_m'] = distance
+>       assert evaluate(stops).minutes is None
+E       AssertionError: assert 12.0 is None
+E        +  where 12.0 = Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False).minutes
+E        +    where Walk(minutes=12.0, used=0, half=0, fb=4, edge=0, mismatch=0, fail_seq=None, out_of_range=False) = evaluate([{'sect_dist_m': 600, 'seq': 1, 'station_id': 'S1'}, {'sect_dist_m': 600, 'seq': 2, 'station_id': 'S2'}, {'sect_dist_m...ion_id': 'S3'}, {'sect_dist_m': 600, 'seq': 4, 'station_id': 'S4'}, {'sect_dist_m': 600, 'seq': 5, 'station_id': 'S5'}])
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:44: AssertionError
+__ test_current_departure_with_real_profile_does_not_shorten_a_missing_chain __
+
+    def test_current_departure_with_real_profile_does_not_shorten_a_missing_chain():
+        runtime, context = scene()
+        runtime._v.bus_prof = build([])
+        runtime._v.bus.stops['100'] = [r for r in runtime._v.bus.stops['100'] if r['seq'] != 6]
+        got = call(runtime, context, bus_arrival=prediction)
+>       assert got['status'] == 'fatal', got
+E       AssertionError: {'arrival_at': '2026-10-09T10:11:00+09:00', 'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'fixture-a'}, 'checked_at': '2026-10-09T10:00:00+09:00', 'departure_at': '2026-10-09T10:00:00+09:00', ...}
+E       assert 'realtime' == 'fatal'
+E         
+E         - fatal
+E         + realtime
+
+tests\unit\travel\mobility\test_bus_profile_completeness_v1.py:67: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_0836_버스거리_완전구간\profile-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_missing_stop_is_not_replaced_by_a_false_adjacent_segment[3]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_duplicate_stop_is_not_a_complete_segment[1]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_duplicate_stop_is_not_a_complete_segment[3]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_duplicate_stop_is_not_a_complete_segment[5]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_invalid_sequence_cannot_enter_the_profile[True]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_invalid_sequence_cannot_enter_the_profile[3.0]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_invalid_sequence_cannot_enter_the_profile[0]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_explicit_different_route_cannot_enter_the_profile
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[-1]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[nan]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[inf]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[True]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[600]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_invalid_distance_cannot_be_used_even_by_a_constant_fallback[None]
+FAILED tests/unit/travel/mobility/test_bus_profile_completeness_v1.py::test_current_departure_with_real_profile_does_not_shorten_a_missing_chain
+15 failed, 5 passed in 5.89s
+Exception ignored in: <function Console.__del__ at 0x000001E4AD6B5BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

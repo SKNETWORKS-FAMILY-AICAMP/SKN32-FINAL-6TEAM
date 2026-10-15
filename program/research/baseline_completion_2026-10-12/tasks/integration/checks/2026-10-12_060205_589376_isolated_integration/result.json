@@ -1,0 +1,38 @@
+{
+  "at_kst": "2026-10-12T06:38:09.985576+09:00",
+  "exit": 1,
+  "args": [
+    "-m",
+    "not live",
+    "-m",
+    "not live",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "-p",
+    "no:langsmith",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_060205_589376_isolated_integration\\tmp",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_060205_589376_isolated_integration\\junit.xml"
+  ],
+  "network_blocks": [
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "non_isolated_database",
+    "external_or_existing_service",
+    "external_or_existing_service",
+    "external_or_existing_service",
+    "external_or_existing_service"
+  ],
+  "source_changed": [],
+  "scope": "new task-owned PostgreSQL; current safe SQL runner; external and business DB blocked"
+}

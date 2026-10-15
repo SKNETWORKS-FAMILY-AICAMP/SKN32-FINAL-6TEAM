@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="5.854" timestamp="2026-10-11T03:24:06.064864+09:00" hostname="playdata"><testcase classname="tests.scenario.test_trip_reminders" name="test_windows_follow_the_first_item_and_each_move" time="1.011" /></testsuite></testsuites>

@@ -1,0 +1,296 @@
+{
+  "passed": 57,
+  "total": 57,
+  "checks": [
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/app/infrastructure/db/migrate.py",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/app/infrastructure/db/migration_sql.py",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/deploy/Dockerfile.api",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/deploy/migration_safe_deploy.py",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/deploy/auto_deploy.sh",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/deploy/server_up.sh",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "focused-results-v3.xml",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "summary.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "validation.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "wiki-check-final.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "db-runtime-result.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "db-results-v2.xml",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "cluster-stop.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/tests/unit/core/test_migration_safe_deploy.py",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../sql_retirement_2026-10-12/deployment-result.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../sql_retirement_2026-10-12/deployment-final.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/requirements.txt",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "prepare_postgres.py",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "run_isolated_db.py",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "runtime-downloads.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/deploy/Dockerfile.migration-safety",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "backups.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "../../../final_project_cs/tests/integration/db/_backup/2026-10-12_migration_safety/",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "_backup/",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "sql-before.json",
+      "passed": true
+    },
+    {
+      "document": "program\\research\\migration_safety_2026-10-12\\README.md",
+      "target": "source-validation.json",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "migration-inventory.generated.md",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../../program/research/migration_safety_2026-10-12/README.md",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../app/infrastructure/db/migrations/migration-plan.json",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../app/infrastructure/db/migration_plan.py",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../app/infrastructure/db/migrate.py",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../app/infrastructure/db/migration_sql.py",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../app/infrastructure/db/migrations/pending/015_drop_commerce_domain.sql",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../../wiki/decisions/D-023-no-commerce-assets-in-use.md",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../records/reports/2026-10-12_migration-transaction-and-deploy-safety.md",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../../program/research/sql_retirement_2026-10-12/index.html",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../../program/research/sql_review_2026-10-11/index.html",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../records/commerce_2026-10-11/wiki--data--migrations.md",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "target": "../../../wiki/index.md",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\data\\migrations.md",
+      "check": "frontmatter",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-12_migration-transaction-and-deploy-safety.md",
+      "target": "../../../../program/research/migration_safety_2026-10-12/README.md",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-12_migration-transaction-and-deploy-safety.md",
+      "target": "../../../../program/research/migration_safety_2026-10-12/summary.json",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-12_migration-transaction-and-deploy-safety.md",
+      "target": "../../../../program/research/migration_safety_2026-10-12/source-validation.json",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-12_migration-transaction-and-deploy-safety.md",
+      "target": "../../../../program/research/migration_safety_2026-10-12/backups.json",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-12_migration-transaction-and-deploy-safety.md",
+      "target": "../../../../program/research/migration_safety_2026-10-12/deployment-flow.html",
+      "passed": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-12_migration-transaction-and-deploy-safety.md",
+      "check": "frontmatter",
+      "passed": true
+    },
+    {
+      "file": "app/infrastructure/db/migrate.py",
+      "check": "python syntax",
+      "passed": true
+    },
+    {
+      "file": "app/infrastructure/db/migration_sql.py",
+      "check": "python syntax",
+      "passed": true
+    },
+    {
+      "file": "deploy/migration_safe_deploy.py",
+      "check": "python syntax",
+      "passed": true
+    },
+    {
+      "file": "tests/unit/core/test_migration_atomic_sql.py",
+      "check": "python syntax",
+      "passed": true
+    },
+    {
+      "file": "tests/unit/core/test_migration_safe_deploy.py",
+      "check": "python syntax",
+      "passed": true
+    },
+    {
+      "file": "tests/integration/db/test_migrations_rerun.py",
+      "check": "python syntax",
+      "passed": true
+    },
+    {
+      "file": "002_domain_commerce.sql",
+      "check": "historical bytes preserved",
+      "passed": true
+    },
+    {
+      "file": "006_products_catalog.sql",
+      "check": "historical bytes preserved",
+      "passed": true
+    },
+    {
+      "file": "007_returns_order_item.sql",
+      "check": "historical bytes preserved",
+      "passed": true
+    },
+    {
+      "file": "008_products_return_restriction.sql",
+      "check": "historical bytes preserved",
+      "passed": true
+    },
+    {
+      "check": "no whole-wiki violations attributed to owned documents",
+      "passed": true
+    }
+  ],
+  "whole_wiki_violations": 4,
+  "owned_document_violations": [],
+  "whole_wiki_note": "Four violations in concurrent work outside this task were preserved.",
+  "shell_syntax": "auto_deploy.sh and server_up.sh: bash -n passed",
+  "diagram": "skill self_check passed; independent headless Chrome render visually inspected",
+  "scope": "artifact and static validation, not customer workflow or real Docker deployment"
+}

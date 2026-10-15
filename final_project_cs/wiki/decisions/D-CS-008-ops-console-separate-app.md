@@ -2,10 +2,11 @@
 type: decision
 title: 운영자 콘솔은 고객 API 앱과 다른 프로세스 — 이 기계 안에서만(1단계)
 description: 운영 화면·관리 API·시나리오 모드를 고객 API 앱(8042)에서 빼고 별도 운영 앱(127.0.0.1:8070)으로 조립한다. 운영 화면은 고객 API 를 실제 HTTP 로 부르고 scope 키는 운영 앱 설정에만 둔다
-status: accepted
-tags: [security, ops, ui]
+status: draft
+tags: [security, release, ui]
 owners: [human:미배정]
 domain: travel
+decision_status: accepted
 ---
 
 # D-CS-008 운영자 콘솔을 별도 앱으로 뗀다 (1단계)

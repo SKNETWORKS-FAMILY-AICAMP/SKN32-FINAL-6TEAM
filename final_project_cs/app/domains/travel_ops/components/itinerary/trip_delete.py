@@ -36,6 +36,10 @@ _PURGE: tuple[tuple[str, str], ...] = (
     ("user_activity_events", "trip_id"),             # ★`[2026-10-06]` 채팅 기록과 같은 기본값 — 비식별로 남길지는 사용자 결정 대기
     ("place_open_checks", "trip_id"),
     ("dining.dn_notice", "trip_id"),
+    ("ops_lookup_usage", "trip_id"),
+    ("ops_lookup_checks", "trip_id"),
+    ("lg_offer_shown", "trip_id"),                   # ★`[2026-10-13]` 숙소 · 항공 원장(240) — 보여 준 후보. trips 외래키가 없어 이름을 대어 지운다
+    ("lg_core_place_link", "trip_id"),               #   고른 숙소와 여행 전용 장소의 연결(장소 자체는 아래 places 삭제)
 )
 
 
@@ -114,8 +118,9 @@ def delete_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID) -> di
         for table, column in _PURGE:
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s AND {column}=%s", (tenant_id, trip_id))
             counts[table] = cur.rowcount
-        # 접수 — 이 여행으로 만든 것만(자식 `intake_sources` · `intake_claims` · `intake_reviews` 는 CASCADE)
-        cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s AND trip_id=%s AND customer_id=%s", (tenant_id, trip_id, customer_id))
+        # 접수 — 이 여행으로 만든 것 · ★`[2026-10-13]` 이 여행을 다시 연 수정 접수(`intake/reopen.py`)만(자식 `intake_sources` · `intake_claims` · `intake_reviews` 는 CASCADE)
+        cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s AND (trip_id=%s OR reopen_trip_id=%s) AND customer_id=%s",
+                    (tenant_id, trip_id, trip_id, customer_id))
         counts["trip_intakes"] = cur.rowcount
         cur.execute("DELETE FROM trips WHERE tenant_id=%s AND trip_id=%s", (tenant_id, trip_id))
         counts["trips"] = cur.rowcount

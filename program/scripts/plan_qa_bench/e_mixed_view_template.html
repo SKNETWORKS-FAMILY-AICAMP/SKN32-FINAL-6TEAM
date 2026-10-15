@@ -1,0 +1,60 @@
+<div id="e-mixed-reader">
+  <div class="viz-controls">
+    <button class="btn" type="button" id="e-prev">이전 문장</button>
+    <label class="form-label" for="e-number">문장 번호 <input class="form-control" id="e-number" type="number" min="1" max="2007" value="1"></label>
+    <button class="btn" type="button" id="e-next">다음 문장</button>
+  </div>
+  <div id="e-position" class="text-small tabular-nums" aria-live="polite"></div>
+  <h3>시험에 넣은 문장</h3>
+  <p id="e-question"></p>
+  <h3>저장된 정답</h3>
+  <p id="e-answer"></p>
+  <h3>잡담을 뺀 비교 문장</h3>
+  <p id="e-request"></p>
+  <p id="e-origin" class="text-small"></p>
+  <details><summary>이 문장과 함께 보여 준 여행 일정</summary><div id="e-itinerary"></div></details>
+</div>
+<style>
+#e-mixed-reader { color: var(--foreground); overflow-wrap: anywhere; }
+#e-mixed-reader #e-itinerary { white-space: pre-wrap; margin-top: 12px; }
+</style>
+<script type="application/json" id="e-mixed-data">__E_DATA__</script>
+<script>
+(() => {
+  const root = document.getElementById('e-mixed-reader');
+  const data = JSON.parse(document.getElementById('e-mixed-data').textContent);
+  const rows = data.rows;
+  const number = root.querySelector('#e-number');
+  const prev = root.querySelector('#e-prev');
+  const next = root.querySelector('#e-next');
+  const saved = window.openai?.widgetState?.privateContent;
+  let index = Number.isInteger(saved?.index) ? Math.max(0, Math.min(rows.length - 1, saved.index)) : data.initialIndex;
+  function render() {
+    const [id, question, request, gold, cat, src, itin] = rows[index];
+    const schedule = data.itineraries[String(itin)];
+    const line = gold === null ? null : schedule.split('\n').find(x => x.startsWith(String(gold) + '. '));
+    number.value = String(index + 1);
+    root.querySelector('#e-position').textContent = `${index + 1} / ${rows.length} · 원본 문항 ID ${id}`;
+    root.querySelector('#e-question').textContent = question;
+    root.querySelector('#e-answer').textContent = gold === null ? '일정 항목 선택 없음 (null)' : `일정 항목 ${gold}번 — ${line || '해당 항목은 아래 일정에서 확인'} `;
+    root.querySelector('#e-request').textContent = request;
+    root.querySelector('#e-origin').textContent = (src === 'llm' ? '모델이 자연스럽게 작성한 혼합 문장' : '코드로 잡담과 요청을 이어 붙인 문장') + ` · 유형 ${data.categories[cat]} · 저장된 정답: 모델 간 합의, 사람 검수 전`;
+    root.querySelector('#e-itinerary').textContent = schedule;
+    prev.disabled = index === 0;
+    next.disabled = index === rows.length - 1;
+  }
+  function select(value) {
+    index = Math.max(0, Math.min(rows.length - 1, value));
+    render();
+    if (window.openai?.setWidgetState) window.openai.setWidgetState({ modelContent: { question_id: rows[index][0], question: rows[index][1] }, privateContent: { index } }).catch(() => {});
+  }
+  prev.addEventListener('click', () => select(index - 1));
+  next.addEventListener('click', () => select(index + 1));
+  number.addEventListener('change', () => { const n = Number(number.value); if (Number.isInteger(n) && n >= 1 && n <= rows.length) select(n - 1); else number.value = String(index + 1); });
+  window.addEventListener('openai:set_globals', event => {
+    const s = event.detail?.globals?.widgetState?.privateContent;
+    if (Number.isInteger(s?.index)) { index = Math.max(0, Math.min(rows.length - 1, s.index)); render(); }
+  });
+  render();
+})();
+</script>

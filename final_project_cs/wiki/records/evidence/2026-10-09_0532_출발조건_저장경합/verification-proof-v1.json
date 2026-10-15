@@ -1,0 +1,193 @@
+{
+  "created_at": "2026-10-09T05:51:43.200778+09:00",
+  "report": "2026-10-09_0551_출발조건_저장경합과_JSON형식_대조_검증.md",
+  "regression": {
+    "passed": 823,
+    "total": 823,
+    "parts": [
+      {
+        "part": 1,
+        "passed": 302,
+        "total": 302,
+        "failed": 0,
+        "skipped": 0,
+        "deselected": 19
+      },
+      {
+        "part": 2,
+        "passed": 272,
+        "total": 272,
+        "failed": 0,
+        "skipped": 0,
+        "deselected": 11
+      },
+      {
+        "part": 3,
+        "passed": 244,
+        "total": 244,
+        "failed": 0,
+        "skipped": 0,
+        "deselected": 179
+      },
+      {
+        "part": 4,
+        "passed": 5,
+        "total": 5,
+        "failed": 0,
+        "skipped": 0,
+        "deselected": 0
+      }
+    ],
+    "deselected": 209
+  },
+  "related_passed": 30,
+  "related_total": 30,
+  "local_db_new_conditions": 8,
+  "concurrent_connections_conditions": 2,
+  "before_unsafe_conditions": 2,
+  "intermediate_type_failure_conditions": 1,
+  "prior_hash_matches": 29,
+  "final_start_hash_matches": 6,
+  "source_hashes": [
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/actions/itinerary_actions.py",
+      "sha256": "05db2ac83722aeca63aa134c7c30b51aa844dd21b89697c567968fc16e5167d9"
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary.py",
+      "sha256": "634d14cb37f8714c08b3a768438421160ad5c15a3bd59b0892a6cb0c0f76b2a3"
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+      "sha256": "e8ebb982a96cdb2e72fc98b050cf9318159d2e00587f5d6ca83a3076680db51a"
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/watch/departure_revalidation.py",
+      "sha256": "f023b1e9974994851693da8e12d146bd82887bcb8b8fd51619b1d8a7fae2863f"
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_reminders.py",
+      "sha256": "2ce55016b35d05ca61d24c4fa31639caf177f017a6be5feb33554b30390772e4"
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "sha256": "9113baf14d7ad3d0dc033e713ecdd557388ac280c261eb8bc81ebd4a817ef044"
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "sha256": "5eb3e55e212955c40f6e1d73cfdcc502268a2e5ff9394d22d83ba126fba7dcc9"
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/instances/mobility/team.py",
+      "sha256": "bb4f52559af260f80cc18eb0c5f146f799a761286da220f72d892848435d686c"
+    },
+    {
+      "file": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+      "sha256": "d0ed6dca374ad2e2d0c4fbc242a77e822fbaca4138976f468ba13ded763c0d67"
+    },
+    {
+      "file": "final_project_cs/scripts/mobility/build_readiness_visual_v17.py",
+      "sha256": "00660f48ea73e845d67c32c7dbce259506a06d49e5078b8a29dc210985412c52"
+    },
+    {
+      "file": "final_project_cs/scripts/mobility/build_readiness_visual_v18.py",
+      "sha256": "1ef94ed54585b88eec239167adb108695b14809784ddff6ff77c4547eb0ececd"
+    },
+    {
+      "file": "final_project_cs/scripts/mobility/build_readiness_visual_v19.py",
+      "sha256": "3b201907031e4192fec7555aec4b15df789a638bac28e149d57fe102390eb90e"
+    },
+    {
+      "file": "final_project_cs/scripts/mobility/build_readiness_visual_v20.py",
+      "sha256": "03b41a0afd6e66e16fa772d9786246e118f6e3c62ebafbeb4dcdacca84f0da65"
+    },
+    {
+      "file": "final_project_cs/scripts/run_sweepers.py",
+      "sha256": "40bf018c8e66eb2539a1f113f85d83ed4168f825de8814116953b4b0cf0ba592"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_assembly_db_v1.py",
+      "sha256": "47bbbd27b49c121f87cad8afad1246edb6d9144e33c96009cfff1f4c2d89099d"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_atomic_choice_db_v1.py",
+      "sha256": "cde6addb720be0a12fddd8450a688dddd9f7a69bc7a5e257b1794877598de0f1"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_atomic_db_v1.py",
+      "sha256": "63ce43c0aeb8893b4cf38ff9f8de8bbac538272119415753cecbdd29593ec817"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_input_lock_db_v1.py",
+      "sha256": "f8e3445d4dfc7b61d715a0169f3f9d66263a2a398aafc0737d2791071c197e28"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_input_race_db_v1.py",
+      "sha256": "eb66c26424c887739234b2b0450f995a19b6589264a1ca356500576b163ca646"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_input_types_db_v1.py",
+      "sha256": "5927265be16d990a40b63c3f6055db0fbc2230d3b6971c8270053ebca40c1f22"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_observer_reminders_v1.py",
+      "sha256": "1a68631e4ce4321c3b0f272dc8566284646c5a0a7f15fe76f9c6254d8fabada2"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_party_db_v1.py",
+      "sha256": "137ebf768f1120027d74eaef466ada4a2464623e3553ac3a3d60202e782400a1"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_walk_db_v1.py",
+      "sha256": "dbf5e95af5c932cf0b86fdac47cae050f151b6e4b4c3273a8db1e7e349d7a65c"
+    },
+    {
+      "file": "final_project_cs/tests/scenario/test_departure_watch_db_v1.py",
+      "sha256": "c959813ee2861e2e9e7a24b280aa987432e13d01f6fe1ec6838e4c75b4206dc8"
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_assembly_v1.py",
+      "sha256": "5ab54fa53d8d065758c3c5b0aa70fcec3700c7b18bef47de17e2c805edf462e0"
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_party_v1.py",
+      "sha256": "14c5b1e34ab860cbdfcecb18f53b47e3e142ddf839380c1a0782f72ded18d99d"
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_replan_v1.py",
+      "sha256": "fcbf3a0bf991d4af5e7ae5549ef203e644319aff69b89a34ad619f7c123e3c95"
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_watch_assembly_v1.py",
+      "sha256": "4c00806e57858e6c42a6086ea047ac58ef741aac6e2f57e91e93e2736a129a23"
+    },
+    {
+      "file": "final_project_cs/tests/unit/travel/test_departure_watch_v1.py",
+      "sha256": "f9db26e154c4ba2d74cbc054f468614f28e2f1256ac8fcbd539aff709c57a229"
+    }
+  ],
+  "data_hashes": [
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+    }
+  ],
+  "new_web_route_observations": 0,
+  "actual_trip_payment_measurements": 0,
+  "operational_settings_api_tested": false,
+  "html_browser_render_checked": false,
+  "external_cli_review": "not_retried_previous_automatic_approval_block",
+  "git_head": "38f9e08cb08cafba6ce2f66ff7b08c19788cf1d1"
+}

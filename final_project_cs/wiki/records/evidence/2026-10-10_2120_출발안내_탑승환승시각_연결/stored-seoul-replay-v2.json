@@ -1,0 +1,389 @@
+{
+  "replay_clock": "2026-10-09T12:55:19.253761+09:00",
+  "original_fetched_at": "2026-10-09T12:55:19.344356+09:00",
+  "scope": "보유 서울 도로/시간표와 이전 공개 응답의 고정 구간 개발 재생. 계획기가 고른 새 경로·현재 실시간 조회·실탑승 검증 아님.",
+  "input_context": {
+    "schema_version": 1,
+    "timing_unit": "model_minutes",
+    "from_place": {
+      "lat": 37.544005,
+      "lon": 126.951058
+    },
+    "to_place": {
+      "lat": 37.576562,
+      "lon": 126.98547
+    },
+    "basis": {
+      "timetable_built_at": "built:2026-10-01T10:38:34+09:00|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+      "rules_version": "v0.9.2",
+      "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+      "subway_station_version": "12ddcf1b102fcaea22236aad3fa3c5219c4fb12c2abefd279d49eb3acdbd7f5a"
+    },
+    "party": {},
+    "first_visit": false,
+    "options": {
+      "p": {
+        "option_id": "p",
+        "legs": [
+          {
+            "mode": "subway",
+            "line": "05호선",
+            "from": "공덕",
+            "to": "종로3가"
+          },
+          {
+            "mode": "subway",
+            "line": "03호선",
+            "from": "종로3가",
+            "to": "안국"
+          }
+        ],
+        "subway_identity": {
+          "status": "matched",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "target_station_id": "1005000534",
+          "query_station": "공덕",
+          "target_station": "종로3가",
+          "line": "5호선"
+        },
+        "check": {
+          "legs": [
+            {
+              "mode": "subway",
+              "line": "05호선",
+              "from": "공덕",
+              "to": "종로3가"
+            },
+            {
+              "mode": "subway",
+              "line": "03호선",
+              "from": "종로3가",
+              "to": "안국"
+            }
+          ],
+          "walk_place_in": 1,
+          "walk_stop_in": 1,
+          "walk_stop_out": 1,
+          "walk_place_out": 1
+        }
+      }
+    }
+  },
+  "observation": {
+    "option_id": "p",
+    "observations": [
+      {
+        "source": "seoul_subway_arrival",
+        "line_id": "1005",
+        "station_id": "1005000529",
+        "target_station_id": "1005000534",
+        "confirmed_at": "2026-10-09T12:55:19.344356+09:00",
+        "observation_age_seconds": 0.0,
+        "ready_at": "2026-10-09T12:58:00+09:00",
+        "excluded": [
+          {
+            "train_number": "A2113",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1021",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5056",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5072",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "6104",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5562",
+            "reason": "service_path_mismatch"
+          },
+          {
+            "train_number": "5058",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6106",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2112",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5061",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1022",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6103",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A2110",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "5063",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "6105",
+            "reason": "boarding_identity_mismatch"
+          },
+          {
+            "train_number": "A1024",
+            "reason": "boarding_identity_mismatch"
+          }
+        ],
+        "direction_basis": "route_label_and_neighbor_ids",
+        "provider_next_station_id": "1005000530",
+        "provider_previous_station_id": "1005000528",
+        "route_label": "하남검단산행 - 애오개방면",
+        "status": "predicted",
+        "train_number": "5071",
+        "next_station_id": "1005000530",
+        "terminal_station_id": "1005000558",
+        "train_status": "일반",
+        "path_station_ids": [
+          "1005000529",
+          "1005000530",
+          "1005000531",
+          "1005000532",
+          "1005000533",
+          "1005000534",
+          "1005000535",
+          "1005000536",
+          "1005000537",
+          "1005000538",
+          "1005000539",
+          "1005000540",
+          "1005000541",
+          "1005000542",
+          "1005000543",
+          "1005000544",
+          "1005000545",
+          "1005000546",
+          "1005000547",
+          "1005000548",
+          "1005000549",
+          "1005000550",
+          "1005000551",
+          "1005000552",
+          "1005000553",
+          "1005000554",
+          "1005000555",
+          "1005000556",
+          "1005000557",
+          "1005000558"
+        ],
+        "arrival_at": "2026-10-09T12:59:26+09:00",
+        "remaining_seconds": 246.655644,
+        "wait_after_access_seconds": 86.0,
+        "provider_received_at": "2026-10-09 12:54:26",
+        "provider_received_at_normalized": "2026-10-09T12:54:26+09:00",
+        "provider_age_seconds": 53.344356,
+        "eta_basis": "provider_generation_time",
+        "claim": "접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님",
+        "evaluated_at": "2026-10-09T12:55:19.344356+09:00"
+      }
+    ],
+    "timing_unit": "model_minutes",
+    "party_check": "current_trip_not_supplied",
+    "basis": {
+      "timetable_built_at": "built:2026-10-01T10:38:34+09:00|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+      "rules_version": "v0.9.2",
+      "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+      "subway_station_version": "12ddcf1b102fcaea22236aad3fa3c5219c4fb12c2abefd279d49eb3acdbd7f5a"
+    },
+    "checked_at": "2026-10-09T12:55:19.344356+09:00",
+    "verdict": "feasible",
+    "reason": "예정 13:17 +@10분(최악 13:17 + 버퍼 10분) · 여유 26분",
+    "leg_results": [
+      {
+        "idx": 0,
+        "verdict": "feasible",
+        "depart_min": 780,
+        "arrive_min": 790,
+        "wait_min": 2,
+        "ride_min": 9.3,
+        "ride_src": "subway_path_model"
+      },
+      {
+        "idx": 1,
+        "verdict": "feasible",
+        "depart_min": null,
+        "arrive_min": null,
+        "wait_min": 0,
+        "ride_min": null,
+        "ride_src": null
+      },
+      {
+        "idx": 1,
+        "verdict": "feasible",
+        "depart_min": 795,
+        "arrive_min": 797,
+        "wait_min": 3,
+        "ride_min": 2.0,
+        "ride_src": null
+      }
+    ],
+    "realtime_mode": "subway",
+    "boarding_steps": [
+      {
+        "idx": 0,
+        "mode": "subway",
+        "service": "05호선",
+        "from": "공덕",
+        "to": "종로3가",
+        "board_at": "2026-10-09T13:00:00+09:00",
+        "alight_at": "2026-10-09T13:10:00+09:00",
+        "boarding_basis": "realtime_arrival_prediction",
+        "ride_basis": "model",
+        "train_number": "5071",
+        "towards": "하남검단산"
+      },
+      {
+        "idx": 1,
+        "mode": "subway",
+        "service": "03호선",
+        "from": "종로3가",
+        "to": "안국",
+        "board_at": "2026-10-09T13:15:00+09:00",
+        "alight_at": "2026-10-09T13:17:00+09:00",
+        "boarding_basis": "timetable_model",
+        "ride_basis": "model"
+      }
+    ],
+    "status": "realtime",
+    "departure_at": "2026-10-09T12:56:00+09:00",
+    "arrival_at": "2026-10-09T13:19:00+09:00",
+    "worst_arrival_at": "2026-10-09T13:19:00+09:00",
+    "eta_min": 24
+  },
+  "model_control": {
+    "option_id": "p",
+    "observations": [
+      {
+        "status": "unavailable",
+        "reason": "offline_failure_control"
+      }
+    ],
+    "timing_unit": "model_minutes",
+    "party_check": "current_trip_not_supplied",
+    "basis": {
+      "timetable_built_at": "built:2026-10-01T10:38:34+09:00|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+      "rules_version": "v0.9.2",
+      "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+      "subway_station_version": "12ddcf1b102fcaea22236aad3fa3c5219c4fb12c2abefd279d49eb3acdbd7f5a"
+    },
+    "checked_at": "2026-10-09T12:55:19.253761+09:00",
+    "verdict": "feasible",
+    "reason": "예정 13:23 +@10분(최악 13:23 + 버퍼 10분) · 여유 20분",
+    "leg_results": [
+      {
+        "idx": 0,
+        "verdict": "feasible",
+        "depart_min": 784,
+        "arrive_min": 794,
+        "wait_min": 6,
+        "ride_min": 9.3,
+        "ride_src": null
+      },
+      {
+        "idx": 1,
+        "verdict": "feasible",
+        "depart_min": null,
+        "arrive_min": null,
+        "wait_min": 0,
+        "ride_min": null,
+        "ride_src": null
+      },
+      {
+        "idx": 1,
+        "verdict": "feasible",
+        "depart_min": 801,
+        "arrive_min": 803,
+        "wait_min": 5,
+        "ride_min": 2.0,
+        "ride_src": null
+      }
+    ],
+    "boarding_steps": [
+      {
+        "idx": 0,
+        "mode": "subway",
+        "service": "05호선",
+        "from": "공덕",
+        "to": "종로3가",
+        "board_at": "2026-10-09T13:04:00+09:00",
+        "alight_at": "2026-10-09T13:14:00+09:00",
+        "boarding_basis": "timetable_model",
+        "ride_basis": "model"
+      },
+      {
+        "idx": 1,
+        "mode": "subway",
+        "service": "03호선",
+        "from": "종로3가",
+        "to": "안국",
+        "board_at": "2026-10-09T13:21:00+09:00",
+        "alight_at": "2026-10-09T13:23:00+09:00",
+        "boarding_basis": "timetable_model",
+        "ride_basis": "model"
+      }
+    ],
+    "status": "model_revalidated",
+    "departure_at": "2026-10-09T12:56:00+09:00",
+    "arrival_at": "2026-10-09T13:25:00+09:00",
+    "worst_arrival_at": "2026-10-09T13:25:00+09:00",
+    "eta_min": 30
+  },
+  "notice_status": "ok",
+  "notice": {
+    "text": "12:56 출발 — 공덕 → 안국 (12:56–13:19).\n다음 일정: 13:55 안국 방문.\n가는 방법: 05호선 → 03호선 · 현재 지하철 대기 반영 · 약 24분 (경로 확인 12:55)\n구간별 승차 안내 (하차·환승 시각은 예상):\n05호선: 13:00 공덕 승차 → 13:10 종로3가 하차 (현재 도착 예측 반영 · 하차 시각 예상) · 하남검단산 방면 · 열차 5071\n03호선: 13:15 종로3가 환승 → 13:17 안국 하차 (시간표·이동 모델 예상)",
+    "template": "{leave} 출발 — {title} ({leave}–{ends}).\n다음 일정: {next_at} {next_title}.\n가는 방법: {how} · 약 {eta_min}분 (경로 확인 {checked})\n구간별 승차 안내 (하차·환승 시각은 예상):\n{boarding_0_service}: {boarding_0_board} {boarding_0_from} 승차 → {boarding_0_alight} {boarding_0_to} 하차 (현재 도착 예측 반영 · 하차 시각 예상) · {boarding_0_towards} 방면 · 열차 {boarding_0_train}\n{boarding_1_service}: {boarding_1_board} {boarding_1_from} 환승 → {boarding_1_alight} {boarding_1_to} 하차 (시간표·이동 모델 예상)",
+    "values": {
+      "leave": "12:56",
+      "title": "공덕 → 안국",
+      "ends": "13:19",
+      "next_at": "13:55",
+      "next_title": "안국 방문",
+      "how": "05호선 → 03호선 · 현재 지하철 대기 반영",
+      "eta_min": 24,
+      "checked": "12:55",
+      "boarding_0_service": "05호선",
+      "boarding_0_board": "13:00",
+      "boarding_0_alight": "13:10",
+      "boarding_0_from": "공덕",
+      "boarding_0_to": "종로3가",
+      "boarding_0_towards": "하남검단산",
+      "boarding_0_train": "5071",
+      "boarding_1_service": "03호선",
+      "boarding_1_board": "13:15",
+      "boarding_1_alight": "13:17",
+      "boarding_1_from": "종로3가",
+      "boarding_1_to": "안국"
+    }
+  },
+  "queried_stations": [
+    "공덕"
+  ],
+  "blocked_connections": 0,
+  "limited_api_calls": 0,
+  "source_hashes": {
+    "datasets/mobility/raw/2026-10-09_1248_지하철_방면과_인접역ID_대조/response-1-v1.json": "5b129dd1180ceca7123e2bee821503467b313d8cfb878ce99746f28b3a84075e",
+    "datasets/mobility/raw/2026-10-09_1248_지하철_방면과_인접역ID_대조/acquisition-v1.json": "e13f37b74f942a669e63fd06faa76769b78e032220ca0ceaf7fc04cf21db8cbb"
+  }
+}

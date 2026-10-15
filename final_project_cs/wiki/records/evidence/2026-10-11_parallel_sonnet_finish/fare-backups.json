@@ -1,0 +1,20 @@
+{
+  "backups": [
+    {
+      "source": "app/domains/travel_ops/instances/mobility/engine/options.py",
+      "backup": "app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-11_192837_transfer_boarding_interval\\options.py",
+      "sha256": "1fab9a664de14c6c3f254b8c9e1edc1ef8638918605165ec7424b819247c4eb2"
+    },
+    {
+      "source": "tests/unit/travel/mobility/test_transfer_fare_product_v1.py",
+      "backup": "tests\\unit\\travel\\mobility\\_backup\\2026-10-11_192837_transfer_boarding_interval\\test_transfer_fare_product_v1.py",
+      "sha256": "60fbb50a648fc458eaec4b799bd4a14486cd8bec4bb2d2f690a7a6bce8b2ee62"
+    },
+    {
+      "source": "wiki/teams/mobility.md",
+      "backup": "wiki\\teams\\_backup\\2026-10-11_192837_transfer_boarding_interval\\mobility.md",
+      "sha256": "272e246e69e46ae906bf465d53c270519df8672ddf6843cca2a876be7d2b6cd2"
+    }
+  ],
+  "legacy": "legacy\\final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\2026-10-11_192837_transfer_boarding_interval\\options.py"
+}

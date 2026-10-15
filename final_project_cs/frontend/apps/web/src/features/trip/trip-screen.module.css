@@ -19,6 +19,8 @@
 .chatButton { display: inline-flex; flex: none; align-items: center; gap: 5px; min-height: 34px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 750; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 12%, transparent); }
 .chatButton[aria-pressed="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-on-primary); }
 .chatButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* `[2026-10-13 사용자 결정 — 수정 모드 · 후보 1]` 「일정 수정」 · 채팅은 34px 둥근 아이콘 단추. 수정 모드의 「취소」(plan check 의 시트 머리)는 이 단추 모양 그대로. */
+.chatButton[data-icon] { justify-content: center; width: 34px; padding: 0; }
 /* In the chat pane no day chip is shown chosen (the chat button is). */
 .sharedHead [data-chat] [data-lit] { border-color: var(--color-border-strong); color: var(--color-muted); }
 .sharedHead [data-chat] > :first-child { opacity: 0; }
@@ -51,12 +53,31 @@
 .stopTags [data-booked], .detailChips [data-booked] { border-color: transparent; background: var(--color-success-soft); color: var(--color-success); }
 .toggleMark { flex: none; width: 18px; color: var(--color-muted); font-size: 17px; line-height: 1; text-align: center; }
 .toggleEnd { display: grid; flex: none; place-items: center; width: 30px; min-height: 48px; padding: 0; border: 0; background: none; cursor: pointer; }
+/* `[2026-10-13 사용자 결정 — 목업 Tripilot_personal/travel-careops/mockups/2026-10-13_타임라인_일정간격_접힌카드_목업_v2.html (A)]` 접힌 카드 100px(첫 화면 = 시트 440px − 칩 줄 자리 88px 에 일정 2개).
+   업종 아이콘 + 이름(알약은 이름 옆) 줄, 그 아래 분류 · 영업시간 · 주소 줄은 카드 왼쪽부터 — 작은 아이콘이 업종 아이콘 밑에 서고 글자는 이름과 같은 자리에서 시작한다(2026-10-13 사용자 지시).
+   계획 확인의 `.cardTop .cardHead` · `.cardTop .cardTitle` 보다 앞서게 카드부터 적는다. */
+.tripTimeline { --rail-card-min: 100px; }
+.stopCard .stopHead { align-items: flex-start; padding: 0 8px 0 4px; }
+.stopCard .stopHead .stopToggle { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 4px; min-height: 0; padding: 9px 4px 7px 8px; }
+.stopCard .stopName { display: grid; grid-template-columns: 18px minmax(3em, auto) auto; justify-content: start; align-items: center; column-gap: 8px; }
+.stopCard .stopName strong { -webkit-line-clamp: 1; line-height: 20px; word-break: break-all; }
+.stopKind { display: grid; place-items: center; width: 18px; height: 20px; color: var(--color-muted); }
+.stopCard .stopTags { flex-wrap: nowrap; gap: 4px; }
+.stopCard .stopTags > * { padding: 0 7px; font-size: 11px; line-height: 18px; }
+.stopFact { display: grid; grid-template-columns: 18px minmax(0, 1fr); align-items: center; column-gap: 8px; min-width: 0; font-size: 12.5px; line-height: 16px; color: var(--color-text-secondary); }
+.stopFact > svg { justify-self: center; color: var(--color-faint); }
+.stopFact > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.stopFact[data-missing] > span { color: var(--color-faint); }
+.stopCard .stopHead .toggleEnd { min-height: 38px; }
+.stopPast { flex: none; margin-top: 8px; }
 .stopBody { padding: 10px 13px 13px; border-top: 1px solid var(--color-divider); }
 .details { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 14px; margin: 0; font-size: 12.5px; line-height: 1.7; }
 .details dt { color: var(--color-muted); white-space: nowrap; }
 .details dd { margin: 0; text-align: right; word-break: keep-all; overflow-wrap: anywhere; }
 .details a { color: var(--color-primary); font-weight: 650; }
 .detailActions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
+/* `[2026-10-13 사용자 결정 — 목업 A]` 펼친 카드는 접힌 내용 + 단추만 — 정보 줄 목록이 빠져 단추 줄이 구분선 바로 아래에 온다(상세 보기 화면의 단추 줄은 그대로). */
+.stopBody > .detailActions:first-child { margin-top: 0; }
 .action { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 0 9px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-primary); font: inherit; font-size: 12px; font-weight: 650; text-decoration: none; white-space: nowrap; cursor: pointer; }
 .action:disabled { opacity: .45; cursor: not-allowed; }
 
@@ -184,3 +205,13 @@
 .prompts { position: relative; }
 .prompts .chatLatest { bottom: calc(100% + 8px); right: 14px; }
 .chatLog:focus-visible { outline: 2px solid var(--color-selected); outline-offset: -2px; }
+
+/* `[2026-10-13 사용자 결정 — 숙소 항목 B안]` A stay: the check-in card and the check-out row in the stay's soft green, and on the days between a band 「○○에서 출발」 at the top. */
+.stopCard[data-stay] { border-color: var(--color-selected-soft); background: var(--color-paper); }
+.stopCard[data-stay] .stopToggle > svg { color: var(--color-primary); }
+.stopDot[data-stay] { border-color: var(--color-primary); background: var(--color-soft); }
+.stayNote { font-size: 12px; font-weight: 500; color: var(--color-muted); }
+.stayBand { list-style: none; margin: 2px 0 6px; }
+.stayBandButton { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border: 1px dashed var(--color-success); border-radius: 10px; background: var(--color-paper); color: var(--color-primary); font: inherit; font-size: 12.5px; font-weight: 600; text-align: left; cursor: pointer; }
+.stayBandButton small { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--color-muted); }
+.stayBandButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }

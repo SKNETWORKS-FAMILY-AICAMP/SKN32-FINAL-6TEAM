@@ -1,0 +1,2151 @@
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.FF........              [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_generated_taxi_context_is_revalidated_at_current_departure _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_current_taxi_duration_and_fare_reach_notice_without_changing_stored_plan _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_______ ERROR at setup of test_current_taxi_must_meet_operating_margin ________
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_legacy_empty_vehicle_is_never_inferred_to_be_taxi[None] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_legacy_empty_vehicle_is_never_inferred_to_be_taxi[vehicle] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_legacy_empty_vehicle_is_never_inferred_to_be_taxi[unknown] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_______ ERROR at setup of test_inconsistent_taxi_context_is_held[check] _______
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_______ ERROR at setup of test_inconsistent_taxi_context_is_held[legs] ________
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_unavailable_current_taxi_source_never_publishes_saved_estimate[missing] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_unavailable_current_taxi_source_never_publishes_saved_estimate[router] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_invalid_current_taxi_model_is_not_published[seconds--1] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_invalid_current_taxi_model_is_not_published[seconds-nan] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_invalid_current_taxi_model_is_not_published[seconds-inf] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_invalid_current_taxi_model_is_not_published[seconds-True] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_invalid_current_taxi_model_is_not_published[fare-None] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_invalid_current_taxi_model_is_not_published[fare--1] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_invalid_current_taxi_model_is_not_published[fare-True] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_invalid_current_taxi_model_is_not_published[fare-1.5] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_invalid_current_taxi_model_is_not_published[distance-nan] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_changed_party_is_replanned_before_querying_taxi_model _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_generated_context_identifies_walk_and_real_stairs_are_rechecked _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_current_graph_duration_replaces_saved_route_duration _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_seconds_are_rounded_up_and_eta_includes_departure_rounding _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[None] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[vehicle] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[unknown] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_______ ERROR at setup of test_inconsistent_walk_context_is_held[check] _______
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_______ ERROR at setup of test_inconsistent_walk_context_is_held[legs] ________
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_explicit_no_path_is_held_and_not_replaced_by_straight_formula _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_missing_router_uses_explicit_existing_model_evidence[None] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_missing_router_uses_explicit_existing_model_evidence[router1] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_operating_margin_is_required_even_when_walk_arrives_before_deadline _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+__________ ERROR at setup of test_party_walk_policy_is_checked_again __________
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+___ ERROR at setup of test_invalid_current_distance_is_never_published[-1] ____
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+___ ERROR at setup of test_invalid_current_distance_is_never_published[nan] ___
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+___ ERROR at setup of test_invalid_current_distance_is_never_published[inf] ___
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_hour_boundary_never_uses_previous_query_time_for_departure _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_constant_profile_preserves_exact_departure_fare_and_ceiling[1800] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_constant_profile_preserves_exact_departure_fare_and_ceiling[1801] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_constant_profile_preserves_exact_departure_fare_and_ceiling[600] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_constant_profile_preserves_exact_departure_fare_and_ceiling[2460] _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+___ ERROR at setup of test_midnight_candidate_uses_the_actual_calendar_date ___
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_unbounded_duration_growth_does_not_publish_unverified_candidate _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+________ ERROR at setup of test_query_failure_during_refit_is_explicit ________
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+______ ERROR at setup of test_taxi_is_a_known_mode_but_not_a_default_one ______
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_______ ERROR at setup of test_taxi_option_shape_and_backward_time_fit ________
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_taxi_option_refits_when_the_departure_hour_changes_the_speed _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+_ ERROR at setup of test_no_car_service_or_no_route_leaves_a_reason_instead_of_inventing_a_taxi _
+
+    @pytest.fixture(autouse=True)
+    def _wire_domain_teams():
+        """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.
+    
+        ★`[2026-10-06]` D-CS-013. 부품은 팀 내부를 직접 부르지 않고 `components/team_hooks/` 를 본다.
+          운영은 조립(`app/composition.py` `wire_domain_teams()`)이 꽂지만, 단위 시험은 조립을 거치지
+          않고 부품을 바로 부른다 — 꽂지 않으면 이동 계산기도 요식 판정도 없는 상태가 되어 시험이
+          운영과 다른 것을 재게 된다. 그래서 여기서 매번 꽂는다.
+          팀이 **없는** 상태를 재는 시험은 그 자리의 `clear()` 를 직접 부른다.
+        """
+>       from app.composition import wire_domain_teams
+
+tests\conftest.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\composition.py:13: in <module>
+    from app.application.controller import Controller
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """Case execution loop: route, build context, execute a Team, then transition."""
+    from __future__ import annotations
+    
+    import asyncio
+    import logging
+    import time
+    from datetime import UTC, datetime, timedelta
+    from typing import Any, Callable
+    from uuid import UUID, uuid4
+    
+    from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
+    from app.core.context import ContextBroker, ContextInputs
+    from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+    from app.core.idempotency import idempotency_key, request_id_for_case
+    from app.core.registry import TeamRegistry, RegistryError
+    from app.core.team_availability import TeamUnavailable
+>   from app.core.service_bindings import use_instance_bindings
+E   ModuleNotFoundError: No module named 'app.core.service_bindings'
+
+app\application\controller.py:17: ModuleNotFoundError
+================================== FAILURES ===================================
+_______ test_real_data_taxi_mode_lists_a_taxi_option_with_time_and_fare _______
+
+real_rt = <app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000002F555EE1400>
+
+    def test_real_data_taxi_mode_lists_a_taxi_option_with_time_and_fare(real_rt):
+>       out = P.plan(PLACES, _items(), 2, {}, runtime=real_rt, modes=["taxi", "walk"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_plan_taxi.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\plan.py:1892: in plan
+    got, why = P.leg(pa, pb, _parse_dt(b["starts_at"]), party, first_visit,
+app\domains\travel_ops\instances\mobility\engine\plan.py:1533: in leg
+    tx = self._taxi_option(a_place, b_place, sdate, arrive_by, buf, left)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:976: in _taxi_option
+    c = car.leg(s, e, datetime.fromisoformat(iso_of(sdate, guess)), taxi=True)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\runtime.py:178: in leg
+    return self._service().leg(s, e, depart, taxi=taxi, kind=kind)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\car.py:315: in leg
+    route = self.router.route(s, e)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:406: in route
+    self._load()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.graph_router.GraphRouter object at 0x000002F539AB0B90>
+
+    def _load(self):
+        if self._loaded:
+            return
+        with self._lock:
+            if self._loaded:
+                return
+            import time
+            t0 = time.monotonic()
+            if not self.available():
+                raise RouterDown(f"도로 그래프 자료가 없다({self.dir})")
+            if self._records is None:
+                from .turn_restrictions import graph_signature
+                self._graph_signature = graph_signature(self.dir)
+            nodes = self._records["nodes"] if self._records is not None else _read_jsonl(self.dir / "nodes.jsonl.gz")
+            edges = self._records["edges"] if self._records is not None else _read_jsonl(self.dir / "edges.jsonl.gz")
+            self.nid, self.nlat, self.nlon = {}, array.array("d"), array.array("d")
+            for r in nodes:
+                self.nid[r["id"]] = len(self.nlat)
+                self.nlat.append(r["lat"])
+                self.nlon.append(r["lon"])
+            self.hw_code, self.hw_name = {}, []
+            A = array.array
+            self.eu, self.ev, self.elen, self.eway = A("i"), A("i"), A("f"), A("q")
+            self.ehw, self.ems, self.eflag, self.eow, self.ebow = A("H"), A("f"), A("B"), A("b"), A("b")
+            self.has_foot = False
+            self.eg = []
+            self.bb = [A("d"), A("d"), A("d"), A("d")]          # 간선 경계 상자(minlat, minlon, maxlat, maxlon)
+            self.grid = {}
+            self.skipped = 0
+            for r in edges:
+                u, v = self.nid.get(r["u"]), self.nid.get(r["v"])
+                if u is None or v is None:
+                    self.skipped += 1
+                    continue
+                e = len(self.eu)
+                self.eu.append(u)
+                self.ev.append(v)
+                self.elen.append(float(r["len"]))
+>               self.eway.append(int(r["way"]))
+E               MemoryError
+
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:225: MemoryError
+_______________ test_real_data_default_modes_never_list_a_taxi ________________
+
+real_rt = <app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x000002F555EE1400>
+
+    def test_real_data_default_modes_never_list_a_taxi(real_rt):
+>       out = P.plan(PLACES, _items(), 2, {}, runtime=real_rt)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_plan_taxi.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\instances\mobility\engine\plan.py:1892: in plan
+    got, why = P.leg(pa, pb, _parse_dt(b["starts_at"]), party, first_visit,
+app\domains\travel_ops\instances\mobility\engine\plan.py:1541: in leg
+    sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:1175: in _station_pairs
+    sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:509: in _near_stations
+    d = self._eff(place["lat"], place["lon"], tlat, tlon, d)     # #13 — 출구(없으면 역)까지 길로
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\plan.py:351: in _eff
+    r = br.route(prof, lat1, lng1, lat2, lng2)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\bike.py:195: in route
+    doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:406: in route
+    self._load()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.domains.travel_ops.instances.mobility.engine.graph_router.GraphRouter object at 0x000002F539AB0B90>
+
+    def _load(self):
+        if self._loaded:
+            return
+        with self._lock:
+            if self._loaded:
+                return
+            import time
+            t0 = time.monotonic()
+            if not self.available():
+                raise RouterDown(f"도로 그래프 자료가 없다({self.dir})")
+            if self._records is None:
+                from .turn_restrictions import graph_signature
+                self._graph_signature = graph_signature(self.dir)
+            nodes = self._records["nodes"] if self._records is not None else _read_jsonl(self.dir / "nodes.jsonl.gz")
+            edges = self._records["edges"] if self._records is not None else _read_jsonl(self.dir / "edges.jsonl.gz")
+            self.nid, self.nlat, self.nlon = {}, array.array("d"), array.array("d")
+            for r in nodes:
+                self.nid[r["id"]] = len(self.nlat)
+                self.nlat.append(r["lat"])
+                self.nlon.append(r["lon"])
+            self.hw_code, self.hw_name = {}, []
+            A = array.array
+            self.eu, self.ev, self.elen, self.eway = A("i"), A("i"), A("f"), A("q")
+            self.ehw, self.ems, self.eflag, self.eow, self.ebow = A("H"), A("f"), A("B"), A("b"), A("b")
+            self.has_foot = False
+            self.eg = []
+            self.bb = [A("d"), A("d"), A("d"), A("d")]          # 간선 경계 상자(minlat, minlon, maxlat, maxlon)
+            self.grid = {}
+            self.skipped = 0
+            for r in edges:
+                u, v = self.nid.get(r["u"]), self.nid.get(r["v"])
+                if u is None or v is None:
+                    self.skipped += 1
+                    continue
+                e = len(self.eu)
+                self.eu.append(u)
+                self.ev.append(v)
+                self.elen.append(float(r["len"]))
+                self.eway.append(int(r["way"]))
+                hw = r.get("hw") or ""
+                c = self.hw_code.get(hw)
+                if c is None:
+                    c = self.hw_code[hw] = len(self.hw_name)
+                    self.hw_name.append(hw)
+                self.ehw.append(c)
+                ms = _maxspeed(r.get("ms"))
+                self.ems.append(ms or 0.0)
+                if "foot" in r:
+                    self.has_foot = True
+                self.eflag.append((F_CAR if r.get("car") else 0) | (F_BIKE if r.get("bike") else 0)
+                                  | (F_MAIN if r.get("main") else 0) | (F_BMAIN if r.get("bmain") else 0)
+                                  | (F_FOOT if r.get("foot") else 0) | (F_FMAIN if r.get("fmain") else 0)
+                                  | (F_STEPS if r.get("st") else 0))
+                self.eow.append(int(r.get("ow") or 0))
+                self.ebow.append(int(r.get("bow") or 0))
+                g = r["g"]
+>               self.eg.append(g)
+E               MemoryError
+
+app\domains\travel_ops\instances\mobility\engine\graph_router.py:243: MemoryError
+============================== warnings summary ===============================
+..\..\..\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290
+  C:\Users\playdata2\anaconda3\Lib\site-packages\_pytest\config\__init__.py:1290: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_parallel_sonnet_finish\taxi-notice-after.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_plan_taxi.py::test_real_data_taxi_mode_lists_a_taxi_option_with_time_and_fare
+FAILED tests/unit/travel/mobility/test_plan_taxi.py::test_real_data_default_modes_never_list_a_taxi
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_generated_taxi_context_is_revalidated_at_current_departure
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_current_taxi_duration_and_fare_reach_notice_without_changing_stored_plan
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_current_taxi_must_meet_operating_margin
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_legacy_empty_vehicle_is_never_inferred_to_be_taxi[None]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_legacy_empty_vehicle_is_never_inferred_to_be_taxi[vehicle]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_legacy_empty_vehicle_is_never_inferred_to_be_taxi[unknown]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_inconsistent_taxi_context_is_held[check]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_inconsistent_taxi_context_is_held[legs]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_unavailable_current_taxi_source_never_publishes_saved_estimate[missing]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_unavailable_current_taxi_source_never_publishes_saved_estimate[router]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_invalid_current_taxi_model_is_not_published[seconds--1]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_invalid_current_taxi_model_is_not_published[seconds-nan]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_invalid_current_taxi_model_is_not_published[seconds-inf]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_invalid_current_taxi_model_is_not_published[seconds-True]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_invalid_current_taxi_model_is_not_published[fare-None]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_invalid_current_taxi_model_is_not_published[fare--1]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_invalid_current_taxi_model_is_not_published[fare-True]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_invalid_current_taxi_model_is_not_published[fare-1.5]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_invalid_current_taxi_model_is_not_published[distance-nan]
+ERROR tests/unit/travel/mobility/test_departure_taxi_v1.py::test_changed_party_is_replanned_before_querying_taxi_model
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_generated_context_identifies_walk_and_real_stairs_are_rechecked
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_current_graph_duration_replaces_saved_route_duration
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_seconds_are_rounded_up_and_eta_includes_departure_rounding
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[None]
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[vehicle]
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[unknown]
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_inconsistent_walk_context_is_held[check]
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_inconsistent_walk_context_is_held[legs]
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_explicit_no_path_is_held_and_not_replaced_by_straight_formula
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_missing_router_uses_explicit_existing_model_evidence[None]
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_missing_router_uses_explicit_existing_model_evidence[router1]
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_operating_margin_is_required_even_when_walk_arrives_before_deadline
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_party_walk_policy_is_checked_again
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_invalid_current_distance_is_never_published[-1]
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_invalid_current_distance_is_never_published[nan]
+ERROR tests/unit/travel/mobility/test_departure_walk_v1.py::test_invalid_current_distance_is_never_published[inf]
+ERROR tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py::test_hour_boundary_never_uses_previous_query_time_for_departure
+ERROR tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py::test_constant_profile_preserves_exact_departure_fare_and_ceiling[1800]
+ERROR tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py::test_constant_profile_preserves_exact_departure_fare_and_ceiling[1801]
+ERROR tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py::test_constant_profile_preserves_exact_departure_fare_and_ceiling[600]
+ERROR tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py::test_constant_profile_preserves_exact_departure_fare_and_ceiling[2460]
+ERROR tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py::test_midnight_candidate_uses_the_actual_calendar_date
+ERROR tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py::test_unbounded_duration_growth_does_not_publish_unverified_candidate
+ERROR tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py::test_query_failure_during_refit_is_explicit
+ERROR tests/unit/travel/mobility/test_plan_taxi.py::test_taxi_is_a_known_mode_but_not_a_default_one
+ERROR tests/unit/travel/mobility/test_plan_taxi.py::test_taxi_option_shape_and_backward_time_fit
+ERROR tests/unit/travel/mobility/test_plan_taxi.py::test_taxi_option_refits_when_the_departure_hour_changes_the_speed
+ERROR tests/unit/travel/mobility/test_plan_taxi.py::test_no_car_service_or_no_route_leaves_a_reason_instead_of_inventing_a_taxi
+2 failed, 9 passed, 1 warning, 48 errors in 83.31s (0:01:23)
+Exception ignored in: <function Console.__del__ at 0x000002F53969BBA0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

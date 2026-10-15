@@ -1,0 +1,208 @@
+{
+  "model": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261013 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+  "saved": 1316,
+  "expected": 1316,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "positive": {
+    "total": 461,
+    "correct": 445,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9443698489016755,
+      0.9785254562812481
+    ],
+    "false_pick_wilson95": [
+      8.673617379884035e-19,
+      0.008264019372196129
+    ]
+  },
+  "negative": {
+    "total": 855,
+    "correct": 853,
+    "false_pick": 2,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9915114473003831,
+      0.999358277559591
+    ],
+    "false_pick_wilson95": [
+      0.000641722440409079,
+      0.008488552699616781
+    ]
+  },
+  "subtypes": {
+    "hard_N1": {
+      "total": 118,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9684716609775057,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_N2": {
+      "total": 150,
+      "correct": 150,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9750297556319235,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ]
+    },
+    "hard_N3": {
+      "total": 150,
+      "correct": 150,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9750297556319235,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ]
+    },
+    "hard_N4": {
+      "total": 150,
+      "correct": 148,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9526930912996325,
+        0.9963358708487731
+      ],
+      "false_pick_wilson95": [
+        0.0036641291512270503,
+        0.04730690870036751
+      ]
+    },
+    "hard_N5": {
+      "total": 150,
+      "correct": 150,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9750297556319235,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ]
+    },
+    "hard_N6": {
+      "total": 137,
+      "correct": 137,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9727249429758839,
+        0.9999999999999999
+      ],
+      "false_pick_wilson95": [
+        1.734723475976807e-18,
+        0.027275057024116055
+      ]
+    },
+    "hard_P1": {
+      "total": 118,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9684716609775057,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_P2": {
+      "total": 110,
+      "correct": 108,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9361198354061878,
+        0.994999645124672
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.033743935298164184
+      ]
+    },
+    "hard_P3": {
+      "total": 113,
+      "correct": 101,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8235144111649058,
+        0.9382015148282823
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03287753216595198
+      ]
+    },
+    "hard_P4": {
+      "total": 120,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.941264037027841,
+        0.9954174354340789
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "6b4fb014744ae75d45deb222eb3f60ada6ef933fc36e50f600740a735b654ca9",
+  "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "execution": {
+    "job": {
+      "id": "e4bbase_finch_s20261013_h",
+      "label": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261013 adapter",
+      "our_training": true,
+      "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "prompts": "/workspace/heavy/all_prompts_h.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "h_backlog_e4bbase_finch_s20261013",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1316,
+      "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+      "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261013_lora_f16.gguf",
+      "lora_sha256": "efbfc01207517ace92b4bde9b880b006ee5b4fc84c488e3844d809367ec60429",
+      "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+      "purpose": "Previously unevaluated second independent training seed FINCH comparator; frozen same developer/regression data, two quantizations; estimate seed variation, not independent holdout or adoption"
+    },
+    "started": "2026-10-09T05:39:20.169413+00:00",
+    "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

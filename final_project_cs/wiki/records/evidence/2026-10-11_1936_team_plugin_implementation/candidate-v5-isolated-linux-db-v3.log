@@ -1,0 +1,435 @@
+ISOLATED_LINUX_BEGIN {"python": "3.12.15", "platform": "linux", "verified_files": 433, "selected_tests": ["tests/integration/controller/test_conversation_resume.py::test_latest_reply_original_request_and_masked_history_reach_team", "tests/integration/controller/test_conversation_resume.py::test_same_request_same_reply_executes_once_different_reply_conflicts", "tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs", "tests/integration/controller/test_plugin_unavailable.py::test_reactivation_same_reply_changes_real_itinerary_only_once", "tests/integration/controller/test_plugin_unavailable.py::test_inflight_disable_keeps_old_team_and_applies_real_itinerary_once", "tests/e2e/test_web_conversation_resume.py::test_missing_minutes_waits_and_reply_reaches_same_real_team", "tests/e2e/test_web_conversation_resume.py::test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice"], "database": "ephemeral-synthetic-only", "inherited_environment_cleared": true}
+SYNTHETIC_DATABASE_READY {"baseline_migrations": 85, "database": "synthetic", "user": "synthetic", "operating_data_copied": false}
+============================= test session starts ==============================
+platform linux -- Python 3.12.15, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /tmp/candidate-check
+configfile: pytest.ini
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 12 items
+
+tests/integration/controller/test_conversation_resume.py::test_latest_reply_original_request_and_masked_history_reach_team PASSED [  8%]
+tests/integration/controller/test_conversation_resume.py::test_same_request_same_reply_executes_once_different_reply_conflicts PASSED [ 16%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-disabled] PASSED [ 25%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-not_installed] PASSED [ 33%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-load_failed] PASSED [ 41%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-disabled] PASSED [ 50%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-not_installed] PASSED [ 58%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-load_failed] PASSED [ 66%]
+tests/integration/controller/test_plugin_unavailable.py::test_reactivation_same_reply_changes_real_itinerary_only_once PASSED [ 75%]
+tests/integration/controller/test_plugin_unavailable.py::test_inflight_disable_keeps_old_team_and_applies_real_itinerary_once PASSED [ 83%]
+tests/e2e/test_web_conversation_resume.py::test_missing_minutes_waits_and_reply_reaches_same_real_team FAILED [ 91%]
+tests/e2e/test_web_conversation_resume.py::test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice FAILED [100%]
+
+=================================== FAILURES ===================================
+_________ test_missing_minutes_waits_and_reply_reaches_same_real_team __________
+/usr/local/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+/usr/local/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/socket.py:978: in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:494: in _make_request
+    raise new_e
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+/usr/local/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/urllib3/connection.py:246: in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+E   urllib3.exceptions.NameResolutionError: HTTPSConnection(host='openaipublic.blob.core.windows.net', port=443): Failed to resolve 'openaipublic.blob.core.windows.net' ([Errno -3] Temporary failure in name resolution)
+
+The above exception was the direct cause of the following exception:
+/usr/local/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:847: in urlopen
+    retries = retries.increment(
+/usr/local/lib/python3.12/site-packages/urllib3/util/retry.py:555: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='openaipublic.blob.core.windows.net', port=443): Max retries exceeded with url: /encodings/cl100k_base.tiktoken (Caused by NameResolutionError("HTTPSConnection(host='openaipublic.blob.core.windows.net', port=443): Failed to resolve 'openaipublic.blob.core.windows.net' ([Errno -3] Temporary failure in name resolution)"))
+
+During handling of the above exception, another exception occurred:
+tests/e2e/test_web_conversation_resume.py:40: in test_missing_minutes_waits_and_reply_reaches_same_real_team
+    first = _say(decided, "식당에 늦어요", "resume-start")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/e2e/test_web_conversation_resume.py:10: in _say
+    return _decision_say(decided, text, request_id,
+tests/e2e/test_decision_unit_web.py:101: in _say
+    response = decided["client"].post(f"/v1/web/trips/{decided['trip']['trip_id']}/messages",
+/usr/local/lib/python3.12/site-packages/starlette/testclient.py:552: in post
+    return super().post(
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+/usr/local/lib/python3.12/site-packages/starlette/testclient.py:451: in request
+    return super().request(
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/starlette/testclient.py:354: in handle_request
+    raise exc
+/usr/local/lib/python3.12/site-packages/starlette/testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+/usr/local/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+/usr/local/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/fastapi/applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/applications.py:113: in __call__
+    await self.middleware_stack(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+app/core/service_bindings.py:134: in __call__
+    await self.app(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/middleware/cors.py:85: in __call__
+    await self.app(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:736: in app
+    await route.handle(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:290: in handle
+    await self.app(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:78: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:75: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/fastapi/routing.py:302: in app
+    raw_response = await run_endpoint_function(
+/usr/local/lib/python3.12/site-packages/fastapi/routing.py:215: in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/starlette/concurrency.py:38: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+/usr/local/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+app/domains/travel_ops/entry/trip_api.py:1949: in web_message
+    return _web_message_result(tenant, customer, store, trip_id, request, defer=background.add_task,
+app/domains/travel_ops/entry/trip_api.py:1961: in _web_message_result
+    result = handle_trip_message(
+app/domains/travel_ops/components/conversation/trip_messages.py:345: in handle_trip_message
+    return _run_decision(conn, tenant=tenant, trip_id=trip_id, case_id=case_id, message=message,
+app/domains/travel_ops/components/conversation/trip_messages.py:685: in _run_decision
+    return _dispatch_decision(conn, controller=controller, tenant=tenant, trip_id=trip_id, case_id=case_id,
+app/domains/travel_ops/components/conversation/trip_messages.py:882: in _dispatch_decision
+    return case_dispatch.execute(conn, controller=controller, tenant=tenant, trip=trip, case_id=case_id,
+app/domains/travel_ops/components/conversation/case_dispatch.py:98: in execute
+    execution = _run(controller.run_case(tenant_id=tenant, case_id=case_id, actor_id=actor_id))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/domains/travel_ops/components/conversation/case_dispatch.py:21: in _run
+    return asyncio.run(value) if inspect.isawaitable(value) else value
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/asyncio/runners.py:195: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/asyncio/base_events.py:691: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app/core/service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/application/controller.py:419: in run_case
+    task = self._task(case, entry, run_id, resume=resume, resume_node=resume_node, capability=rerouted_capability)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/application/controller.py:252: in _task
+    context = self.context_broker.build(inputs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/core/context.py:203: in build
+    system_tokens = count_tokens(inputs.system_instruction)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/core/context.py:50: in count_tokens
+    return len(_encoder().encode(text))
+               ^^^^^^^^^^
+app/core/context.py:45: in _encoder
+    return tiktoken.get_encoding(model)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+/usr/local/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPSConnectionPool(host='openaipublic.blob.core.windows.net', port=443): Max retries exceeded with url: /encodings/cl100k_base.tiktoken (Caused by NameResolutionError("HTTPSConnection(host='openaipublic.blob.core.windows.net', port=443): Failed to resolve 'openaipublic.blob.core.windows.net' ([Errno -3] Temporary failure in name resolution)"))
+_ test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice __
+/usr/local/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+/usr/local/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/socket.py:978: in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:494: in _make_request
+    raise new_e
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+/usr/local/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/urllib3/connection.py:246: in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+E   urllib3.exceptions.NameResolutionError: HTTPSConnection(host='openaipublic.blob.core.windows.net', port=443): Failed to resolve 'openaipublic.blob.core.windows.net' ([Errno -3] Temporary failure in name resolution)
+
+The above exception was the direct cause of the following exception:
+/usr/local/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:847: in urlopen
+    retries = retries.increment(
+/usr/local/lib/python3.12/site-packages/urllib3/util/retry.py:555: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='openaipublic.blob.core.windows.net', port=443): Max retries exceeded with url: /encodings/cl100k_base.tiktoken (Caused by NameResolutionError("HTTPSConnection(host='openaipublic.blob.core.windows.net', port=443): Failed to resolve 'openaipublic.blob.core.windows.net' ([Errno -3] Temporary failure in name resolution)"))
+
+During handling of the above exception, another exception occurred:
+tests/e2e/test_web_conversation_resume.py:86: in test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice
+    first = _say(decided, "점심 다른 데로 바꿔", "resume-single-change")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/e2e/test_web_conversation_resume.py:10: in _say
+    return _decision_say(decided, text, request_id,
+tests/e2e/test_decision_unit_web.py:101: in _say
+    response = decided["client"].post(f"/v1/web/trips/{decided['trip']['trip_id']}/messages",
+/usr/local/lib/python3.12/site-packages/starlette/testclient.py:552: in post
+    return super().post(
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+/usr/local/lib/python3.12/site-packages/starlette/testclient.py:451: in request
+    return super().request(
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/starlette/testclient.py:354: in handle_request
+    raise exc
+/usr/local/lib/python3.12/site-packages/starlette/testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+/usr/local/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+/usr/local/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/fastapi/applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/applications.py:113: in __call__
+    await self.middleware_stack(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+app/core/service_bindings.py:134: in __call__
+    await self.app(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/middleware/cors.py:85: in __call__
+    await self.app(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:736: in app
+    await route.handle(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:290: in handle
+    await self.app(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:78: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+/usr/local/lib/python3.12/site-packages/starlette/routing.py:75: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/fastapi/routing.py:302: in app
+    raw_response = await run_endpoint_function(
+/usr/local/lib/python3.12/site-packages/fastapi/routing.py:215: in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/starlette/concurrency.py:38: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+/usr/local/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+app/domains/travel_ops/entry/trip_api.py:1949: in web_message
+    return _web_message_result(tenant, customer, store, trip_id, request, defer=background.add_task,
+app/domains/travel_ops/entry/trip_api.py:1961: in _web_message_result
+    result = handle_trip_message(
+app/domains/travel_ops/components/conversation/trip_messages.py:345: in handle_trip_message
+    return _run_decision(conn, tenant=tenant, trip_id=trip_id, case_id=case_id, message=message,
+app/domains/travel_ops/components/conversation/trip_messages.py:685: in _run_decision
+    return _dispatch_decision(conn, controller=controller, tenant=tenant, trip_id=trip_id, case_id=case_id,
+app/domains/travel_ops/components/conversation/trip_messages.py:882: in _dispatch_decision
+    return case_dispatch.execute(conn, controller=controller, tenant=tenant, trip=trip, case_id=case_id,
+app/domains/travel_ops/components/conversation/case_dispatch.py:98: in execute
+    execution = _run(controller.run_case(tenant_id=tenant, case_id=case_id, actor_id=actor_id))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/domains/travel_ops/components/conversation/case_dispatch.py:21: in _run
+    return asyncio.run(value) if inspect.isawaitable(value) else value
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/asyncio/runners.py:195: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/asyncio/base_events.py:691: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app/core/service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/application/controller.py:419: in run_case
+    task = self._task(case, entry, run_id, resume=resume, resume_node=resume_node, capability=rerouted_capability)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/application/controller.py:252: in _task
+    context = self.context_broker.build(inputs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/core/context.py:203: in build
+    system_tokens = count_tokens(inputs.system_instruction)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/core/context.py:50: in count_tokens
+    return len(_encoder().encode(text))
+               ^^^^^^^^^^
+app/core/context.py:45: in _encoder
+    return tiktoken.get_encoding(model)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+/usr/local/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/requests/adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPSConnectionPool(host='openaipublic.blob.core.windows.net', port=443): Max retries exceeded with url: /encodings/cl100k_base.tiktoken (Caused by NameResolutionError("HTTPSConnection(host='openaipublic.blob.core.windows.net', port=443): Failed to resolve 'openaipublic.blob.core.windows.net' ([Errno -3] Temporary failure in name resolution)"))
+=============================== warnings summary ===============================
+../../usr/local/lib/python3.12/site-packages/starlette/testclient.py:51
+  /usr/local/lib/python3.12/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/e2e/test_web_conversation_resume.py::test_missing_minutes_waits_and_reply_reaches_same_real_team - requests.exceptions.ConnectionError: HTTPSConnectionPool(host='openaipublic.blob.core.windows.net', port=443): Max retries exceeded with url: /encodings/cl100k_base.tiktoken (Caused by NameResolutionError("HTTPSConnection(host='openaipublic.blob.core.windows.net', port=443): Failed to resolve 'openaipublic.blob.core.windows.net' ([Errno -3] Temporary failure in name resolution)"))
+FAILED tests/e2e/test_web_conversation_resume.py::test_change_uses_team_proposal_and_duplicate_does_not_apply_or_notify_twice - requests.exceptions.ConnectionError: HTTPSConnectionPool(host='openaipublic.blob.core.windows.net', port=443): Max retries exceeded with url: /encodings/cl100k_base.tiktoken (Caused by NameResolutionError("HTTPSConnection(host='openaipublic.blob.core.windows.net', port=443): Failed to resolve 'openaipublic.blob.core.windows.net' ([Errno -3] Temporary failure in name resolution)"))
+=================== 2 failed, 10 passed, 1 warning in 4.42s ====================
+ISOLATED_LINUX_END {"exit_code": 1, "seconds": 4.806}
+ISOLATED_DB_ORCHESTRATION {"operating_database_connected": false, "operating_volumes_connected": false, "operating_environment_forwarded": false, "image_pull": false, "images": ["sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294", "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"], "network_internal": true, "database_tmpfs_destinations": ["/tmp", "/var/lib/postgresql/data"], "database_mounts": [], "pytest_process_exit_code": 1, "remaining_temporary_containers": [], "remaining_temporary_network": false, "cleanup_errors": []}

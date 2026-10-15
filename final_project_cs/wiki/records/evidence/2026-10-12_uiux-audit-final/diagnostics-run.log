@@ -1,0 +1,121 @@
+[WebServer] (node:25392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:20924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:30108) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:18796) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+(node:28532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\live\uiux-sonnet-map-crowded-20261012.spec.ts:9:3 › 180px 지도에서 이전 4개 거리 단추의 번호 중심을 누를 수 있다 (3.9s)
+  x  2 tests\live\uiux-sonnet-map-crowded-20261012.spec.ts:9:3 › 180px 지도에서 이전 5개 거리 단추의 번호 중심을 누를 수 있다 (2.7s)
+(node:16440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  3 tests\live\uiux-sonnet-remaining-20261012.spec.ts:6:1 › scrollend 이벤트가 없는 브라우저에서도 소개 카드 드래그 뒤 스냅이 복원된다 (14.2s)
+(node:16232) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  4 tests\live\uiux-sonnet-remaining-20261012.spec.ts:31:1 › 여행 화면의 작은 목록에서는 채팅 내용 조각이 그려지지 않는다 (2.3s)
+(node:8972) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 5 tests\live\uiux-time-boundary-20261012.spec.ts:5:34 › 시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (375px) (3.4s)
+  ok 6 tests\live\uiux-time-boundary-20261012.spec.ts:5:34 › 시각 고정은 그림자 상자가 아닌 실제 날짜 버튼 아래 기준 (1280px) (2.7s)
+
+
+  1) tests\live\uiux-sonnet-map-crowded-20261012.spec.ts:9:3 › 180px 지도에서 이전 5개 거리 단추의 번호 중심을 누를 수 있다 
+
+    Error: [{"id":"1","button":{"x":25.109375,"y":267,"width":99.78125,"height":34,"top":267,"right":124.890625,"bottom":301,"left":25.109375},"number":{"x":77.890625,"y":273,"width":22,"height":22,"top":273,"right":99.890625,"bottom":295,"left":77.890625},"numberCentreHitsOwnButton":false},{"id":"2","button":{"x":77.609375,"y":267,"width":99.78125,"height":34,"top":267,"right":177.390625,"bottom":301,"left":77.609375},"number":{"x":130.390625,"y":273,"width":22,"height":22,"top":273,"right":152.390625,"bottom":295,"left":130.390625},"numberCentreHitsOwnButton":false},{"id":"3","button":{"x":130.109375,"y":267,"width":99.78125,"height":34,"top":267,"right":229.890625,"bottom":301,"left":130.109375},"number":{"x":155.109375,"y":273,"width":22,"height":22,"top":273,"right":177.109375,"bottom":295,"left":155.109375},"numberCentreHitsOwnButton":true},{"id":"4","button":{"x":182.609375,"y":267,"width":99.78125,"height":34,"top":267,"right":282.390625,"bottom":301,"left":182.609375},"number":{"x":207.609375,"y":273,"width":22,"height":22,"top":273,"right":229.609375,"bottom":295,"left":207.609375},"numberCentreHitsOwnButton":true},{"id":"5","button":{"x":235.109375,"y":267,"width":99.78125,"height":34,"top":267,"right":334.890625,"bottom":301,"left":235.109375},"number":{"x":260.109375,"y":273,"width":22,"height":22,"top":273,"right":282.109375,"bottom":295,"left":260.109375},"numberCentreHitsOwnButton":true}]
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      52 |     await test.info().attach("crowded-number-hit-evidence", { body: JSON.stringify(evidence), contentType: "application/json" });
+      53 |     await page.screenshot({ path: test.info().outputPath(`crowded-number-${count}.png`) });
+    > 54 |     expect(evidence.every(entry => entry.numberCentreHitsOwnButton), JSON.stringify(evidence)).toBe(true);
+         |                                                                                                ^
+      55 |   });
+      56 | }
+      57 |
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-map-crowded-20261012.spec.ts:54:96
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\diagnostics-evidence\uiux-sonnet-map-crowded-20-37110-이전-5개-거리-단추의-번호-중심을-누를-수-있다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\diagnostics-evidence\uiux-sonnet-map-crowded-20-37110-이전-5개-거리-단추의-번호-중심을-누를-수-있다\error-context.md
+
+  2) tests\live\uiux-sonnet-remaining-20261012.spec.ts:6:1 › scrollend 이벤트가 없는 브라우저에서도 소개 카드 드래그 뒤 스냅이 복원된다 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "x mandatory"
+    Received: "none"
+
+    Call Log:
+    - Timeout 12000ms exceeded while waiting on the predicate
+
+      26 |   await page.mouse.move(x - 150, y, { steps: 8 }); await page.mouse.up();
+      27 |   await expect(guide.getByText("2 / 4", { exact: true })).toBeVisible();
+    > 28 |   await expect.poll(() => track.evaluate(element => getComputedStyle(element).scrollSnapType)).toBe("x mandatory");
+         |                                                                                                ^
+      29 | });
+      30 |
+      31 | test("여행 화면의 작은 목록에서는 채팅 내용 조각이 그려지지 않는다", async ({ page }) => {
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-remaining-20261012.spec.ts:28:96
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\diagnostics-evidence\uiux-sonnet-remaining-2026-63f0e-라우저에서도-소개-카드-드래그-뒤-스냅이-복원된다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\diagnostics-evidence\uiux-sonnet-remaining-2026-63f0e-라우저에서도-소개-카드-드래그-뒤-스냅이-복원된다\error-context.md
+
+  3) tests\live\uiux-sonnet-remaining-20261012.spec.ts:31:1 › 여행 화면의 작은 목록에서는 채팅 내용 조각이 그려지지 않는다 ───
+
+    Error: {"sheet":{"x":0,"y":708,"width":375,"height":104,"top":708,"right":375,"bottom":812,"left":0},"chat":{"x":0,"y":730,"width":375,"height":212,"top":730,"right":375,"bottom":942,"left":0},"text":[{"text":"등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.","box":{"x":14,"y":783.140625,"width":305.359375,"height":87.171875,"top":783.140625,"right":319.359375,"bottom":870.3125,"left":14}}]}
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 15
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "box": Object {
+    +       "bottom": 870.3125,
+    +       "height": 87.171875,
+    +       "left": 14,
+    +       "right": 319.359375,
+    +       "top": 783.140625,
+    +       "width": 305.359375,
+    +       "x": 14,
+    +       "y": 783.140625,
+    +     },
+    +     "text": "등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.",
+    +   },
+    + ]
+
+      55 |   await test.info().attach("compact-trip-paint-evidence", { body: JSON.stringify(evidence), contentType: "application/json" });
+      56 |   await page.screenshot({ path: test.info().outputPath("compact-trip-chat.png") });
+    > 57 |   expect(evidence.text, JSON.stringify(evidence)).toEqual([]);
+         |                                                   ^
+      58 | });
+      59 |
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\uiux-visual-20261012-v1\tests\live\uiux-sonnet-remaining-20261012.spec.ts:57:51
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\uiux-resume-20261012-v1\diagnostics-evidence\uiux-sonnet-remaining-2026-7fff3-작은-목록에서는-채팅-내용-조각이-그려지지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\uiux-resume-20261012-v1\diagnostics-evidence\uiux-sonnet-remaining-2026-7fff3-작은-목록에서는-채팅-내용-조각이-그려지지-않는다\error-context.md
+
+  3 failed
+    tests\live\uiux-sonnet-map-crowded-20261012.spec.ts:9:3 › 180px 지도에서 이전 5개 거리 단추의 번호 중심을 누를 수 있다 
+    tests\live\uiux-sonnet-remaining-20261012.spec.ts:6:1 › scrollend 이벤트가 없는 브라우저에서도 소개 카드 드래그 뒤 스냅이 복원된다 
+    tests\live\uiux-sonnet-remaining-20261012.spec.ts:31:1 › 여행 화면의 작은 목록에서는 채팅 내용 조각이 그려지지 않는다 ────
+  3 passed (2.5m)

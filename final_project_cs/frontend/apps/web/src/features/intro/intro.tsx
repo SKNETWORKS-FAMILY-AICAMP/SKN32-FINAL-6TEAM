@@ -4,6 +4,7 @@ import Image, { getImageProps } from "next/image";
 import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { LanguageButton } from "@/components/ui/language-picker";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { RecentTrips } from "@/features/trip/trip-list";
 import type { Language } from "@/lib/i18n";
@@ -28,7 +29,7 @@ const copy: Record<Language, Record<string, string>> = {
     startDescription: "The places you dream of. The moments you love.\nTell us what your next trip looks like.",
     taste: "Your plan", trip: "Your trip", cta: "Start my itinerary",
     actionNote: "Review the terms, then add your plan.",
-    actionNoteDone: "You have already set up. Change your preferences any time on My page.",
+    actionNoteDone: "You have already set up. Change your preferences from the menu, and Discord alerts in Settings.",
     scrollHint: "Scroll down to explore", skip: "Skip intro", next: "Next screen",
     pages: "triPilot introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
     label0: "Introduction", label1: "How it works", label2: "Start your itinerary",
@@ -48,7 +49,7 @@ const copy: Record<Language, Record<string, string>> = {
     startDescription: "가고 싶은 곳, 좋아하는 순간.\n당신의 여행 이야기를 들려주세요.",
     taste: "나의 계획", trip: "나의 여행", cta: "내 일정 시작하기",
     actionNote: "약관 확인부터 함께할게요.",
-    actionNoteDone: "이미 설정을 마치셨어요. 취향과 디스코드 알림은 마이페이지에서 바꿀 수 있어요.",
+    actionNoteDone: "이미 설정을 마치셨어요. 취향은 메뉴에서, 디스코드 알림은 설정에서 바꿀 수 있어요.",
     scrollHint: "아래로 스크롤하며 만나보세요", skip: "소개 건너뛰기", next: "다음 화면",
     pages: "triPilot 서비스 소개. 아래로 스크롤하면 다음 화면으로 이동합니다.", navigation: "소개 화면 이동",
     label0: "서비스 소개", label1: "이용 방법", label2: "일정 시작",
@@ -220,7 +221,7 @@ export function Intro() {
   </div>;
   const page = (index: number) => `${styles.page} ${shown[index] && !(replaying && index === current) ? styles.in : ""}`;
 
-  return <DeviceFrame onBrand={backToStart}>
+  return <DeviceFrame onBrand={backToStart} headerExtra={<LanguageButton />}>
     <div className={styles.progress} style={{ "--fx-p": progress.toFixed(3) } as CSSProperties} aria-hidden="true" />
     <main ref={pages} id="main-content" className={styles.pages} tabIndex={0} aria-label={text.pages} onKeyDown={keys} style={{ "--intro-bg": background } as CSSProperties}>
       <section className={`${page(0)} ${styles.hero}`} aria-labelledby="intro-title">

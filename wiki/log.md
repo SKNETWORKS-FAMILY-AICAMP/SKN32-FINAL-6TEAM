@@ -9,6 +9,51 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 # 문서 변경 이력
 
+## 2026-10-14 21:40 — 도커 이미지 정리 규칙 · 월별 복원용 보존 인계
+
+x600 서버와 오라클 서버의 도커 이미지 정리 규칙·월별 복원 절차·WSL 디스크 압축을 문서화하고 인계 목차에 한 일 목록을 남겼습니다. [정본](../final_project_cs/wiki/operations/image-retention.md) · [기록](../final_project_cs/wiki/records/reports/2026-10-14_도커이미지_정리규칙과_월별보존.md)
+
+## 2026-10-14 15:00 — wiki 머리말·log 순서·검사기 정리
+
+상투 설명 문구 59 → 0(현재 문서 267), 통제 밖 태그 6 → 0, log 날짜 어긋남 9 → 0(위치만 옮김), 검사기 위반 9 → 1(링크 `%20` 해석 · 머리말 2 · 분야 1 · 이유 칸 1). 남은 1 은 활동 팀 계획서 543줄. 결정 번호 중복 D-CS-008 · D-CS-015 발견. [기록](../final_project_cs/wiki/records/reports/2026-10-14_1500_wiki-rule-and-test-followup.md)
+
+## 2026-10-12 22:00 — 진입 문서 정리 · 인계 목차 신설
+
+루트 `CLAUDE.md` 줄바꿈 복구, `AGENTS.md` 에만 있던 규칙 둘(그림 · 커밋·푸시 대상)을 옮기고 두 파일을 함께 고치는 규칙을 넣었습니다. 사실 표 위에 「바뀐 값」 5행(D-018 · D-020 · D-023 · D-CS-012). 허브에 영역 지도와 [인계 목차](handoff/index.md), 깨진 링크 3 · 고아 문서 6 연결. [통합 인계](handoff/2026-10-12_2200_claude-integrated-handoff.md)
+
+## 2026-10-12 — Codex→Claude 통합 인계 안내
+
+작업 규칙·현재 검증 범위·미완료 조건·모델 큐 인계를 한 시작 문서에 연결했습니다. 루트·cs Claude 작업 규칙과 위키 첫 화면에서 이 안내를 찾을 수 있습니다. 이 문서는 Claude의 열람이나 제품 전체 인수를 뜻하지 않습니다. [통합 인계 안내](handoff/2026-10-12_codex-to-claude.md).
+
+## 2026-10-11 — wiki 수정 계획 v2·선택지와 추천안
+
+추가: W13 여행 자료·SQL 입력·학습 도장과 W18 운영 절차를 개정했습니다. [검증·보존](../final_project_cs/wiki/records/reports/2026-10-11_commerce-cleanup-and-W18-v6.md) · [검토HTML](../program/research/wiki_review_2026-10-11/commerce-w18-review-v6.html).
+사용자 의견과 Claude Sonnet 5.5 두 차례 검토로 25개 항목에 선택지 3개·추천 기본안·수정 문장·완료 검사를 작성했다. [수정 계획과 검증 범위](records/reports/2026-10-11_1914_wiki-review-v2.md)에 산출물 검사 24/24와 제품 wiki·코드 반영 전 상태를 기록했다.
+
+## 2026-10-11 — wiki 우선 기준 정정·1차 검토
+
+현재 본문 284개 구조·도입부와 핵심 31개 본문을 검토해 25개 문제·미결 주제를 [보고했다](../final_project_cs/wiki/records/reports/2026-10-11_1539_wiki-baseline-first-review.md); 전체 본문 정독과 제품 합의·수정은 남아 있으며 v12와 최종 베이스라인은 아직 확정하지 않았다.
+
+## 2026-10-11 — 응답 완성 검증 일일 연구
+
+논문 조건을 현재 실패와 연결하고 연결기 로컬 보호·재생 결과 및 미적용 후보를 분리했습니다. [연구·실측 근거](../final_project_cs/wiki/records/reports/2026-10-11_1030_daily-response-completion-research.md).
+
+## 2026-10-11 — 현재 사실·작성 지침 정리 v3
+
+현재 안내와 과거 기록을 분리하고 데이터·평가·학습·경로·문서 형식을 정리했습니다. [적용·검증 보고서](../final_project_cs/wiki/records/reports/2026-10-11_wiki-current-and-governance-v3.md).
+
+## 2026-10-10 — triPilot 기준선 v2 현재 버전 반영·재검토
+
+[기준선 v2](../program/research/baseline_2026-10-10/triPilot-baseline-v2.html)와 [작성법 v2](../program/research/baseline_2026-10-10/baseline-writing-guide-v2.html)에 현재 동의·자료 사용 조건, 이동 경로 자료 갱신, 웹 검토·복원 동작을 반영했다. [재검토 보고](../final_project_cs/wiki/records/reports/2026-10-10_baseline-v2-refresh.md)에 문서 검사 38/38, 백엔드 선택 시험 317/319·실패 2, 웹 단위 시험 52/52와 검증 한계를 기록했다. v1과 v11은 보존했고 팀 채택 전 후보 지위를 유지했다.
+
+## 2026-10-10 — triPilot 통합 기준선 후보와 작성법
+
+프로젝트 공통 기준·Activity/Dining/Mobility 구현 기준·모델 학습 비교 기준을 [한 HTML 기준선 후보](../program/research/baseline_2026-10-10/triPilot-baseline-v1.html)에 연결했다. [작성법](../program/research/baseline_2026-10-10/baseline-writing-guide.html)과 [검수 보고서](../program/research/baseline_2026-10-10/review-report.html)에 출처 11개, 현재 상태 관측, 수정·재검사 범위를 기록했다. v11을 바꾸거나 팀 채택·제품 출시 완료로 선언한 것은 아니다.
+
+## 2026-10-08 — RAG 연구·모델 평가·GPU 운영의 wiki 정본 연결
+
+최근 연구 문서의 정본·색인·작업 리포트 연결 누락을 보완했다. [문서 점검과 검증](../final_project_cs/wiki/records/reports/2026-10-08_rag-wiki-document-audit.md).
+
 최신이 위다. "최근 뭐 바뀌었어"에 답하려고 전체 wiki를 뒤지지 않게 하는 파일이다.
 
 기록 단위는 **개념 문서**다. 오탈자 수정은 적지 않는다. 다음 중 하나면 적는다.

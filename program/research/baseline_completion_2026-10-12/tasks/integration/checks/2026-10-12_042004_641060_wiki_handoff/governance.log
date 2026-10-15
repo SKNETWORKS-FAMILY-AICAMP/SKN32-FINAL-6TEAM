@@ -1,0 +1,8 @@
+............                                                             [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\integration\checks\2026-10-12_042004_641060_wiki_handoff\governance.xml -
+12 passed in 1.37s
+
+Exception ignored in: <function Console.__del__ at 0x0000018DC4C2CD60>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

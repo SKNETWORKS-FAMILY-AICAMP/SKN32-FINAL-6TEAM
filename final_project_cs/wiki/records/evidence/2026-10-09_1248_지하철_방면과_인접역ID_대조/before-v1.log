@@ -1,0 +1,142 @@
+F............FF.FFFFFF                                                   [100%]
+================================== FAILURES ===================================
+__ test_swapped_source_neighbors_use_exact_route_names_and_preserve_raw_ids ___
+
+    def test_swapped_source_neighbors_use_exact_route_names_and_preserve_raw_ids():
+        data = snapshot([observed()]); original = deepcopy(data)
+        got = select(data, allowed_services=[service()])
+>       assert got['status'] == 'predicted', got
+E       AssertionError: {'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'service_path_mismatch', 'train_number': '5010'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}
+E       assert 'no_boardable_prediction' == 'predicted'
+E         
+E         - predicted
+E         + no_boardable_prediction
+
+tests\unit\travel\test_subway_direction_v1.py:27: AssertionError
+________ test_already_departed_is_not_boardable_after_route_correction ________
+
+    def test_already_departed_is_not_boardable_after_route_correction():
+        got = select(snapshot([observed(arrival_code='2', eta_seconds=0)]), allowed_services=[service()])
+        assert got['status'] == 'no_boardable_prediction'
+>       assert got['excluded'][0]['reason'] == 'departed_or_unknown_state'
+E       AssertionError: assert 'service_path_mismatch' == 'departed_or_unknown_state'
+E         
+E         - departed_or_unknown_state
+E         + service_path_mismatch
+
+tests\unit\travel\test_subway_direction_v1.py:54: AssertionError
+___________ test_old_generation_is_not_fresh_after_route_correction ___________
+
+    def test_old_generation_is_not_fresh_after_route_correction():
+        got = select(snapshot([observed(received_at='2026-10-09 09:50:00')]), allowed_services=[service()])
+>       assert got['excluded'][0]['reason'] == 'provider_refresh_required'
+E       AssertionError: assert 'service_path_mismatch' == 'provider_refresh_required'
+E         
+E         - provider_refresh_required
+E         + service_path_mismatch
+
+tests\unit\travel\test_subway_direction_v1.py:59: AssertionError
+_______ test_direct_neighbor_with_contradicting_route_label_is_excluded _______
+
+    def test_direct_neighbor_with_contradicting_route_label_is_excluded():
+        got = select(snapshot([observed(next_station_id=NEXT, previous_station_id=PREVIOUS,
+                                        route_label='마천행 - 당산방면')]), allowed_services=[service()])
+>       assert got['status'] == 'no_boardable_prediction'
+E       AssertionError: assert 'predicted' == 'no_boardable_prediction'
+E         
+E         - no_boardable_prediction
+E         + predicted
+
+tests\unit\travel\test_subway_direction_v1.py:70: AssertionError
+__ test_invalid_new_service_metadata_is_rejected[next_station_names-value0] ___
+
+field = 'next_station_names', value = []
+
+    @pytest.mark.parametrize('field,value', [('next_station_names', []),
+        ('terminal_station_names', '하남검단산'), ('boarding_neighbor_ids', [NEXT, NEXT]),
+        ('boarding_neighbor_ids', [STATION, NEXT])])
+    def test_invalid_new_service_metadata_is_rejected(field, value):
+        path = service();path[field] = value
+>       assert select(snapshot([observed()]), allowed_services=[path])['reason'] == 'service_path_invalid'
+E       AssertionError: assert 'no_vehicle_after_ready' == 'service_path_invalid'
+E         
+E         - service_path_invalid
+E         + no_vehicle_after_ready
+
+tests\unit\travel\test_subway_direction_v1.py:78: AssertionError
+_ test_invalid_new_service_metadata_is_rejected[terminal_station_names-\ud558\ub0a8\uac80\ub2e8\uc0b0] _
+
+field = 'terminal_station_names', value = '하남검단산'
+
+    @pytest.mark.parametrize('field,value', [('next_station_names', []),
+        ('terminal_station_names', '하남검단산'), ('boarding_neighbor_ids', [NEXT, NEXT]),
+        ('boarding_neighbor_ids', [STATION, NEXT])])
+    def test_invalid_new_service_metadata_is_rejected(field, value):
+        path = service();path[field] = value
+>       assert select(snapshot([observed()]), allowed_services=[path])['reason'] == 'service_path_invalid'
+E       AssertionError: assert 'no_vehicle_after_ready' == 'service_path_invalid'
+E         
+E         - service_path_invalid
+E         + no_vehicle_after_ready
+
+tests\unit\travel\test_subway_direction_v1.py:78: AssertionError
+_ test_invalid_new_service_metadata_is_rejected[boarding_neighbor_ids-value2] _
+
+field = 'boarding_neighbor_ids', value = ['1005000523', '1005000523']
+
+    @pytest.mark.parametrize('field,value', [('next_station_names', []),
+        ('terminal_station_names', '하남검단산'), ('boarding_neighbor_ids', [NEXT, NEXT]),
+        ('boarding_neighbor_ids', [STATION, NEXT])])
+    def test_invalid_new_service_metadata_is_rejected(field, value):
+        path = service();path[field] = value
+>       assert select(snapshot([observed()]), allowed_services=[path])['reason'] == 'service_path_invalid'
+E       AssertionError: assert 'no_vehicle_after_ready' == 'service_path_invalid'
+E         
+E         - service_path_invalid
+E         + no_vehicle_after_ready
+
+tests\unit\travel\test_subway_direction_v1.py:78: AssertionError
+_ test_invalid_new_service_metadata_is_rejected[boarding_neighbor_ids-value3] _
+
+field = 'boarding_neighbor_ids', value = ['1005000522', '1005000523']
+
+    @pytest.mark.parametrize('field,value', [('next_station_names', []),
+        ('terminal_station_names', '하남검단산'), ('boarding_neighbor_ids', [NEXT, NEXT]),
+        ('boarding_neighbor_ids', [STATION, NEXT])])
+    def test_invalid_new_service_metadata_is_rejected(field, value):
+        path = service();path[field] = value
+>       assert select(snapshot([observed()]), allowed_services=[path])['reason'] == 'service_path_invalid'
+E       AssertionError: assert 'no_vehicle_after_ready' == 'service_path_invalid'
+E         
+E         - service_path_invalid
+E         + no_vehicle_after_ready
+
+tests\unit\travel\test_subway_direction_v1.py:78: AssertionError
+________________ test_callback_rechecks_raw_direction_evidence ________________
+
+    def test_callback_rechecks_raw_direction_evidence():
+        from app.domains.travel_ops.instances.mobility.engine.subway_departure import matched_service
+        got = select(snapshot([observed()]), allowed_services=[service()])
+        identity = {k: got[k] for k in ('line_id', 'station_id', 'target_station_id')}
+>       assert matched_service(got, identity, [service()]) == service()
+E       AssertionError: assert None == {'boarding_neighbor_ids': ['1005000521', '1005000523'], 'next_station_names': ['영등포구청'], 'path_station_ids': ['1005000522', '1005000523', '1005000524', '1005000530'], 'terminal_station_names': ['하남검단산'], ...}
+E        +  where None = <function matched_service at 0x0000019773093880>({'confirmed_at': '2026-10-09T09:59:55+09:00', 'excluded': [{'reason': 'service_path_mismatch', 'train_number': '5010'}], 'line_id': '1005', 'observation_age_seconds': 5.0, ...}, {'line_id': '1005', 'station_id': '1005000522', 'target_station_id': '1005000524'}, [{'boarding_neighbor_ids': ['1005000521', '1005000523'], 'next_station_names': ['영등포구청'], 'path_station_ids': ['1005000522', '1005000523', '1005000524', '1005000530'], 'terminal_station_names': ['하남검단산'], ...}])
+E        +  and   {'boarding_neighbor_ids': ['1005000521', '1005000523'], 'next_station_names': ['영등포구청'], 'path_station_ids': ['1005000522', '1005000523', '1005000524', '1005000530'], 'terminal_station_names': ['하남검단산'], ...} = service()
+
+tests\unit\travel\test_subway_direction_v1.py:85: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1248_지하철_방면과_인접역ID_대조\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_swapped_source_neighbors_use_exact_route_names_and_preserve_raw_ids
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_already_departed_is_not_boardable_after_route_correction
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_old_generation_is_not_fresh_after_route_correction
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_direct_neighbor_with_contradicting_route_label_is_excluded
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_invalid_new_service_metadata_is_rejected[next_station_names-value0]
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_invalid_new_service_metadata_is_rejected[terminal_station_names-\ud558\ub0a8\uac80\ub2e8\uc0b0]
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_invalid_new_service_metadata_is_rejected[boarding_neighbor_ids-value2]
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_invalid_new_service_metadata_is_rejected[boarding_neighbor_ids-value3]
+FAILED tests/unit/travel/test_subway_direction_v1.py::test_callback_rechecks_raw_direction_evidence
+9 failed, 13 passed in 4.18s
+Exception ignored in: <function Console.__del__ at 0x0000019763875D00>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

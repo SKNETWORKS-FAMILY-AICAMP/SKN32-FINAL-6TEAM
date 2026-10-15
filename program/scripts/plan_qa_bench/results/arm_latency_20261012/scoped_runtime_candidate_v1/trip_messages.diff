@@ -1,0 +1,15 @@
+--- observed-runtime/trip_messages.py
++++ candidate/trip_messages.py
+@@ -664,6 +664,12 @@
+         outcome = _clarify_with_choices(decision, items, at=at, selected=selected)
+     elif action == "other":
+         outcome = {"status": "answered", "text": trip_replies.other_reply(items, at)}
++    elif action == "answer_fact" and decision.fact in ("schedule", "changeability"):
++        from app.domains.travel_ops.components.conversation import schedule_query
++
++        text, basis = schedule_query.reply(decision.fact, decision.query, items=now_items, now=at)
++        basis["version"] = base
++        outcome = {"status": "answered", "text": text}
+     elif action == "answer_fact" and decision.fact in LOCATION_FACTS:
+         # ★`[2026-09-30 사용자 지시]` 현재 위치가 필요한 질문 — 위치가 없으면 **일정을 바꾸지 않고** 위치를 부탁한다(`needs_location`)
+         outcome = _answer_here(conn, kind=decision.fact, fix=here, trip=current, items=items, item=item, at=at,

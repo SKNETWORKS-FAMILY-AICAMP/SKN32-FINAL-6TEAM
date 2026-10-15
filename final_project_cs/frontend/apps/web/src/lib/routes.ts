@@ -2,9 +2,10 @@ export const routes = {
   home: "/",
   start: "/start",
   trips: "/trips",
+  /** `[2026-10-13 회의 확정 — 메뉴 = 마이페이지]` The settings screen (the menu is My page now); the address is kept for the Discord callback and old links. */
   myPage: "/mypage",
   myPageEdit: "/mypage/edit",
-  /** `[2026-10-13 사용자 결정 — 마이페이지 A안]` My page shows only how things stand; each of these changes one of them. The account one is also where a guest signs in (`?returnTo=` brings them back). */
+  /** `[2026-10-13 사용자 결정 — 마이페이지 A안]` The settings screen shows only how things stand; each of these changes one of them. The account one is also where a guest signs in (`?returnTo=` brings them back). */
   myPageAccount: "/mypage/account",
   myPageAlerts: "/mypage/alerts",
   myPageConsents: "/mypage/consents",

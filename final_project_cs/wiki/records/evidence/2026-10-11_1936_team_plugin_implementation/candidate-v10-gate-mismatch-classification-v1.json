@@ -1,0 +1,13 @@
+{
+  "sources_identical_to_operating_baseline": {
+    "app/core/settings.py": true,
+    "app/presentation/api/mcp.py": true,
+    "app/presentation/security.py": true
+  },
+  "mcp_import_references": [],
+  "new_bus_key_references": [],
+  "scope_endpoint_references": [],
+  "scope_allowlist_effect": "Both retained scope names are accepted by _configured_keys; no literal endpoint uses were found in the frozen app AST.",
+  "mcp_scan_limitation": "Dynamic imports constructed without a literal module name are not proven absent by AST. Actual create_app entry imports are inspected separately.",
+  "guardrail_original_scope_values_preserved": true
+}

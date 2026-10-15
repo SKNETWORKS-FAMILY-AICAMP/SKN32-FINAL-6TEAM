@@ -1,84 +1,51 @@
 ---
 type: guide
-title: Operations
-description: 로컬에서 돌리는 법과 자주 막히는 곳
+title: 여행 제품 개발·배포·운영 안내
+description: 환경별 실제 상태와 운영 절차 문서의 목차
 status: draft
-domain: neutral
+domain: travel
 ---
 
-# Operations
+# 여행 제품 개발·배포·운영 안내
 
-## 각 문서
+환경별 실제 상태와 절차를 구분합니다. ‘콘솔’이라는 말로 터미널·고객 웹·개발자 진단 화면을 합쳐 부르지 않습니다.
 
-| 문서 | 답하는 질문 |
+| 필요한 정보 | 문서 |
 |---|---|
-| [gpu-work-queue.md](gpu-work-queue.md) | GPU 서버 A/B의 연구 일감을 어떻게 이어가는가 |
-| [local-setup.md](local-setup.md) | 처음 어떻게 셋업하는가 |
-| [run.md](run.md) | 무엇을 어떻게 실행하는가 |
-| [troubleshooting.md](troubleshooting.md) | 막히면 어디를 보는가 |
-| [unknown-state.md](unknown-state.md) | **돈이 나갔는지 모를 때** |
-| [always-on.md](always-on.md) | **무엇이 늘 돌아야 하고, 죽으면 무엇으로 아는가** |
-| [move-to-server.md](move-to-server.md) | 이 PC 에서 서비스로 · 항상 켜진 서버로 — 절차와 되돌리기 |
-| [google-login-setup.md](google-login-setup.md) | 구글 로그인 켜기 — 콘솔에서 사람이 할 일 · 서버 설정 · 확인 · 되돌리기 |
-| [call-budget.md](call-budget.md) | 외부 API 키마다 하루·월 호출 한도를 어떻게 DB 로 세어 막고, 여유를 어떻게 보나 |
-| [telegram-setup.md](telegram-setup.md) | 텔레그램 알림 연결을 서버에서 어떻게 켜고(환경 파일 · 웹훅 등록 · 스위치), 막히면 어디를 보고, 어떻게 되돌리나 |
+| 환경·구성·마지막 관측 | [운영 현황](current-state.md) |
+| 정상 판정·장애 대응 | [상시 운영 점검·복구](always-on.md) |
+| 로컬 실행·회귀 | [로컬 안내](local-setup.md)·[실행·검증](run.md) |
+| 공개 배포 정의·절차 | [Docker 배포 파일](../../deploy/README.md) |
+| 도커 이미지 정리·월별 복원·WSL 디스크 압축 | [이미지 정리와 월별 복원용 보존](image-retention.md) |
+| Oracle ARM 앱 실험 | [앱 배포·실제 요청 검사](arm-develop-cd.md) |
+| 모델·GPU 연구 | [ARM 모델 시험](arm-serving-queue.md)·[GPU 대기열](gpu-work-queue.md) |
+| 결과를 모르는 부수효과 | [unknown 상태 확인](unknown-state.md) |
+| 여행 자료·평가 | [현재 평가 도구](../quality/eval-harness.md)·[SQL 적용](../data/migrations.md) |
 
-## 자주 쓰는 명령
+과거 쇼핑몰 평가 명령·GPU 실패 실측은 보존 기록으로 분리합니다. 현재 자료 검사·모델 평가·릴리스 여부는 각 정본과 실행 결과로 확인합니다. 개발자·QA 진단 권한이 있다는 이유로 고객 문제를 수동 수정하는 상주 상담원 운영을 도입하지 않습니다.
 
-**테스트**
+## 과거 기록
 
-```bash
-pytest tests/architecture
-```
+[수정 전 문서](../records/commerce_2026-10-11/wiki--operations--index.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
-```bash
-pytest tests/contract tests/security
-```
+## 관계
 
-**평가**
+- [여행 사양 허브](../../../wiki/index.md) — 현재 정본을 찾는 입구
 
-```bash
-python -m eval.runners.proposed --dataset eval/datasets/golden.jsonl --repeats 3 --seed 7
-# [정정 2026-09-10] `eval.run --arm Proposed` 로 적혀 있었다 — eval/run.py 는 없다
-```
 
-## 환경
+## 2026-10-12 목차에 더한 문서
 
-**Docker는 로컬 개발 환경에 없다.** 컨테이너화는 실제 배포 단계(Phase 2)에서 한다.
+- [personal-manager-sync.md](personal-manager-sync.md) — 개인 role-manager 와 팀 수정사항을 합친 기록 안내(2026-10-11)
 
-## 알려진 함정
+## 이전 절 링크
 
-`[실측]` 실제로 팀을 막았던 것들.
-
-### Windows WDDM의 느린 실패
-
-GPU 메모리가 초과되면 Linux는 즉시 OOM으로 죽는데 **Windows는 shared GPU memory(시스템 RAM, PCIe 경유)로 넘겨 극도로 느리게 처리하다 죽는다.**
-
-`[실측]` 25분 걸려 실패한 사례가 있다.
-
-**빠른 실패가 아니라 느린 실패라 장애 판정이 늦어진다.** 자체호스팅을 제품으로 만들면 Linux를 전제해야 한다.
-
-### 12GB VRAM 한계
-
-`[실측]` 모델 서버 (RTX 4070 SUPER 12GB)에서 `Qwen2.5-3B` 학습이 3번 막혔다.
-
-| 시도 | max_length | 결과 |
-|---|---|---|
-| v4 | 11,264 | CUDA OOM (배치=1에서도) |
-| v5 | 2,560 | OOM, 25분 소요 |
-| v6 | 1,024 | 완주 |
-
-우회는 `device_map="auto"`와 4-bit 양자화를 **모두 버리고** bf16으로 CPU에 올린 뒤 `.to("cuda")`로 옮기는 것이다. 재현 스크립트 ~~`eval/finetune/diag_3b.py`~~ 는 **2026-09-10 에 삭제됐다**.
-
-상세는 [../../../wiki/business/infrastructure-cost.md](../../../wiki/business/infrastructure-cost.md).
-
-### Context Broker 우회
-
-데이터 수확 스크립트가 `ContextBroker.build()`를 안 거치면 evidence가 중복돼 토큰이 폭증한다.
-
-**Broker 우회 경로를 만들지 않는다.** → [../context/index.md](../context/index.md)
-
-## 인접 영역
-
-- [../quality/eval-harness.md](../quality/eval-harness.md) — 평가 실행
-- [../data/migrations.md](../data/migrations.md) — DB 준비
+<a id="operations"></a>
+<a id="각-문서"></a>
+<a id="자주-쓰는-명령"></a>
+<a id="정정-2026-09-10-evalrun---arm-proposed-로-적혀-있었다--evalrunpy-는-없다"></a>
+<a id="환경"></a>
+<a id="알려진-함정"></a>
+<a id="windows-wddm의-느린-실패"></a>
+<a id="12gb-vram-한계"></a>
+<a id="context-broker-우회"></a>
+<a id="인접-영역"></a>

@@ -88,6 +88,27 @@ def ledger_ready(conn) -> bool:
         return bool(cur.fetchone()[0])
 
 
+def closure_observation(conn, tenant_id: str, place_id, start: datetime, end: datetime, now: datetime):
+    """시간표와 구분한 방문 구간별 휴무 관측. 원문·고객 정보는 반환하지 않는다."""
+    if not ledger_ready(conn):
+        return None
+    with conn.cursor() as cur:
+        cur.execute("SELECT c.value_state,c.source_code,c.asked_at,"
+                    "c.asked_at+make_interval(secs=>c.ttl_seconds) "
+                    "FROM dining.dn_core_place_link l JOIN dining.dn_live_check c ON c.place_uid=l.place_uid "
+                    "JOIN dining.dn_source s ON s.source_code=c.source_code "
+                    "WHERE l.tenant_id=%s AND l.core_place_id=%s AND s.production_allowed "
+                    "AND c.topic='closure' AND c.outcome='ok' AND c.target_at=%s "
+                    "AND c.asked_at<=%s AND c.asked_at+make_interval(secs=>c.ttl_seconds)>%s "
+                    "AND c.asked_at+make_interval(secs=>c.ttl_seconds)>=%s "
+                    "ORDER BY c.asked_at DESC,c.check_id DESC LIMIT 1", (tenant_id, place_id, start, now, now, end))
+        row = cur.fetchone()
+    if not row or row[0] not in ('yes', 'no'):
+        return None
+    return dict(status='closed' if row[0] == 'yes' else 'open', source=row[1],
+                checked_at=row[2], valid_until=row[3])
+
+
 def _catalog_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | None:
     """읽은 장소 → 원장 가게 번호. 관광공사 번호(`tourapi_kor_food`)가 하나의 가게로 이어질 때만, 번호가 없으면 이름이 원장에서 하나로 정해질 때만.
     둘 이상이면 고르지 않는다(모름) — 다른 가게의 영업시간으로 판정하는 것이 가장 나쁘다(`ledger.slot_verdicts` · `find_place_by_name` 과 같은 규칙).
@@ -105,13 +126,20 @@ def _catalog_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | N
             row = cur.fetchone()
         return str(row[0]) if row else None
     if not content_id:
-        found = find_place_by_name(conn, str(place.get("name") or ""))
-        content_id = str(found["content_id"]) if found and found.get("content_id") else None
-        if (content_id is None and found and found.get("match") == "exact" and not found.get("needs_review")
-                and found.get("dining_place_uid")):
-            return str(found["dining_place_uid"])
-    if not content_id:
-        return None
+        # ★`[2026-10-14]` 이름으로 찾은 가게는 **그 장소 근처(`SAME_NAME_RADIUS_M`)일 때만** 잇는다. 전에는 좌표를 안 보고, 「확인 필요」로 찾은
+        #   가게(지점 · 앞부분 · 오타)도 그 가게의 관광공사 번호로 이었다 — 연결 정답셋에서 2km 떨어진 같은 이름 가게 · 체인 다른 지점과
+        #   dev 7/53 · holdout 2/19 를 이었다(`eval/reports/2026-10-14_dining_link.md`). 근처면 지점 표시가 달라도(「○○ 본점」) 같은 가게다.
+        #   좌표가 없으면 거리를 못 재니 예전처럼 **정확히 같은 이름 하나**만 받는다.
+        here = _coords(place)
+        found = find_place_by_name(conn, str(place.get("name") or ""), near=here)
+        if not found or not found.get("dining_place_uid"):
+            return None
+        if here is None:
+            exact = found.get("match") == "exact" and not found.get("needs_review")
+            return str(found["dining_place_uid"]) if exact else None
+        if _metres(here, (found["latitude"], found["longitude"])) > SAME_NAME_RADIUS_M:
+            return None
+        return str(found["dining_place_uid"])
     with conn.cursor() as cur:
         cur.execute("SELECT p.place_uid::text FROM dining.dn_place p WHERE p.record_status <> 'closed' AND p.place_uid IN "
                     "(SELECT r.place_uid FROM dining.dn_source_record r WHERE r.source_code = 'tourapi_kor_food' "
@@ -434,6 +462,10 @@ NAME_PREFIX_UNIQUE_MIN = 3          # ★`[2026-10-10 사용자 결정]` 이 글
 #:  좁혔을 때 「성수동」으로 시작하는 가게가 하나(「성수동 대림창고 갤러리」)라 그 가게가 골라졌다(장소 찾기 평가 PL-034)
 AREA_TAIL = re.compile(r"(동|구|역|로|길)$")
 DISH_RADIUS_M = 800                 # 「근처 칼국수집」 · 「통인시장 기름떡볶이」 — 기준 좌표에서 이 안의 원장 가게
+#: 이름이 같은 가게를 **같은 가게**로 보는 거리 — 원장 → 코어 승격(221 `promote_to_core`)이 같은 이름 공용 행을 다시 쓰는 거리와 같다 `[2026-10-14]`
+SAME_NAME_RADIUS_M = 150
+#: 시장 · 동네 이름의 식사(「광장시장 점심」)에서 고르지 않는 큰 종류 — 끼니가 아니라 카페 · 디저트다 `[2026-10-13]`
+NOT_A_MEAL = frozenset({"카페디저트"})
 _BRANCH_TAIL = re.compile(r"(본점|직영점|분점|별관|본관|신관|[가-힣a-z0-9]{1,8}점)")
 _NEAR_WORDS = ("근처", "주변", "가까운", "아무")
 
@@ -467,6 +499,13 @@ def _shops(conn) -> list[dict[str, Any]]:
              "address": address, "category": category, "content_id": str(cid) if cid else None,
              "key": _name_key(name), "base": _base_key(name)}
             for uid, name, lat, lng, address, category, cid in rows]
+
+
+def _coords(place: dict[str, Any]) -> tuple[float, float] | None:
+    try:
+        return float(place["latitude"]), float(place["longitude"])
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def _metres(a: tuple[float, float], b: tuple[float, float]) -> float:
@@ -590,6 +629,30 @@ def dish_words(text: str | None) -> list[str]:
         if out:
             break
     return out
+
+
+def find_meal_near(conn, near: tuple[float, float], *, radius_m: int = DISH_RADIUS_M,
+                   shops: list[dict[str, Any]] | None = None) -> dict[str, Any] | None:
+    """`near`(시장 · 동네 좌표)에서 가장 가까운 원장 식당(반경 안, 카페 · 디저트 제외). `[2026-10-13]`
+
+    「광장시장 점심」 — 원문은 가게를 말하지 않았다. 그 자리 **안이나 근처**의 식당 하나를 고르고 언제나 확인 필요로 둔다.
+    ☆테스트 서버에서 「광장시장 바베큐 용산점」(이름만 「광장시장」으로 시작하는 용산 가게)이 골라졌다 — 기준점이 시장이 아니었다.
+    ★영업 판정은 여기서 하지 않는다 — 등록 뒤 `dining_states` 가 방문 시각으로 하고, 닫혀 있으면 대체가 바꾼다.
+    """
+    if shops is None:
+        try:
+            shops = _shops(conn)
+        except Exception as exc:   # noqa: BLE001
+            logger.warning("dining find_meal_near not read reason=%s", type(exc).__name__)
+            return None
+    hits = sorted(((_metres(near, (s["latitude"], s["longitude"])), s) for s in shops
+                   if s.get("category") not in NOT_A_MEAL), key=lambda h: h[0])
+    hits = [h for h in hits if h[0] <= radius_m]
+    if not hits:
+        return None
+    metres, shop = hits[0]
+    return _found(shop, match="meal_near", review=True, others=len(hits) - 1,
+                  note=f"가장 가까운 식당 「{shop['name']}」({round(metres):,}m) — 다르면 고쳐 주세요")
 
 
 def find_dish_near(conn, text: str | None, near: tuple[float, float], *, radius_m: int = DISH_RADIUS_M,

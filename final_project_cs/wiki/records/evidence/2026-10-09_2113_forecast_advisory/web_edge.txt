@@ -1,0 +1,132 @@
+[WebServer] (node:10104) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22888) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] (node:17152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22376) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:7204) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\live\trip.spec.ts:122:1 › 실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘」가 key change 를 보내고, 서버가 채운 다른 곳을 다시 읽어 보인다 (14.0s)
+(node:1716) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 tests\live\trip.spec.ts:137:1 › 예보 주의 알림은 외부 발송을 건너뛰어도 변경 버튼을 보이고 누르면 대체안을 요청한다 (13.3s)
+(node:21824) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  3 tests\live\trip.spec.ts:154:1 › 「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔다고 알린다 (45.4s)
+
+
+  1) tests\live\trip.spec.ts:122:1 › 실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘」가 key change 를 보내고, 서버가 채운 다른 곳을 다시 읽어 보인다 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: /선택이 필요해요/ }).getByRole('button', { name: '바꿔 줘 — 다른 곳 보기' })
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('region', { name: /선택이 필요해요/ }).getByRole('button', { name: '바꿔 줘 — 다른 곳 보기' }) with timeout 12000ms
+      - waiting for getByRole('region', { name: /선택이 필요해요/ }).getByRole('button', { name: '바꿔 줘 — 다른 곳 보기' })
+
+
+      126 |   await openNotices(page);
+      127 |   const ask = page.getByRole("region", { name: /선택이 필요해요/ });
+    > 128 |   await expect(ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" })).toBeVisible();
+          |                                                                     ^
+      129 |   await ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
+      130 |   await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
+      131 |   expect((await server.received("POST", "/choose"))[0].body).toEqual({ key: "change" });
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\web\tests\live\trip.spec.ts:128:69
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-실내·야외를-모르는-일정의-「바꿀까요--19cdf--보내고-서버가-채운-다른-곳을-다시-읽어-보인다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-실내·야외를-모르는-일정의-「바꿀까요--19cdf--보내고-서버가-채운-다른-곳을-다시-읽어-보인다\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-실내·야외를-모르는-일정의-「바꿀까요--19cdf--보내고-서버가-채운-다른-곳을-다시-읽어-보인다\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-실내·야외를-모르는-일정의-「바꿀까요--19cdf--보내고-서버가-채운-다른-곳을-다시-읽어-보인다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\live\trip.spec.ts:137:1 › 예보 주의 알림은 외부 발송을 건너뛰어도 변경 버튼을 보이고 누르면 대체안을 요청한다 ───────────────
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: /선택이 필요해요/ })
+    Expected substring: "예보 주의사항이 있어요(강수확률 80% · 풍속 35km/h)"
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: /선택이 필요해요/ }) with timeout 12000ms
+      - waiting for getByRole('region', { name: /선택이 필요해요/ })
+
+
+      141 |   await openNotices(page);
+      142 |   const ask = page.getByRole("region", { name: /선택이 필요해요/ });
+    > 143 |   await expect(ask).toContainText("예보 주의사항이 있어요(강수확률 80% · 풍속 35km/h)");
+          |                     ^
+      144 |   await expect(ask).toContainText("답이 없으면 원래 일정을 그대로 둡니다.");
+      145 |   await ask.getByRole("button", { name: "예보에 맞게 일정 변경", exact: true }).click();
+      146 |   await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\web\tests\live\trip.spec.ts:143:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-예보-주의-알림은-외부-발송을-건너뛰어도-변경-버튼을-보이고-누르면-대체안을-요청한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-예보-주의-알림은-외부-발송을-건너뛰어도-변경-버튼을-보이고-누르면-대체안을-요청한다\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-예보-주의-알림은-외부-발송을-건너뛰어도-변경-버튼을-보이고-누르면-대체안을-요청한다\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-예보-주의-알림은-외부-발송을-건너뛰어도-변경-버튼을-보이고-누르면-대체안을-요청한다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests\live\trip.spec.ts:154:1 › 「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔다고 알린다 ──────────────────────────
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '바꿔 줘 — 다른 곳 보기' })
+
+
+      157 |   await openTrip(page);
+      158 |   await openNotices(page);
+    > 159 |   await page.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
+          |                                                              ^
+      160 |   await expect(page.getByText("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.")).toBeVisible();
+      161 | });
+      162 |
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\web\tests\live\trip.spec.ts:159:62
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-「바꿔-줘」에-다른-곳이-없으면-원래-일정을-그대로-둔다고-알린다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-「바꿔-줘」에-다른-곳이-없으면-원래-일정을-그대로-둔다고-알린다\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-「바꿔-줘」에-다른-곳이-없으면-원래-일정을-그대로-둔다고-알린다\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\..\wiki\records\evidence\2026-10-09_2113_forecast_advisory\browser-edge\trip-「바꿔-줘」에-다른-곳이-없으면-원래-일정을-그대로-둔다고-알린다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    tests\live\trip.spec.ts:122:1 › 실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘」가 key change 를 보내고, 서버가 채운 다른 곳을 다시 읽어 보인다 
+    tests\live\trip.spec.ts:137:1 › 예보 주의 알림은 외부 발송을 건너뛰어도 변경 버튼을 보이고 누르면 대체안을 요청한다 ────────────────
+    tests\live\trip.spec.ts:154:1 › 「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔다고 알린다 ───────────────────────────

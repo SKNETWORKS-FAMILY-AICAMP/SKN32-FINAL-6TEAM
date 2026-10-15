@@ -1,0 +1,17 @@
+{
+  "record": "program/research/daily_rag_slm/six_hour_report_2026-10-10_0800.json",
+  "report": "final_project_cs/wiki/records/reports/2026-10-10_0800_six-hour-gpu-arm-report.md",
+  "observations": "program/scripts/plan_qa_bench/results/heartbeat_20261010_0800",
+  "A_rows": 23860,
+  "A_verified_files": 70,
+  "new_automation_created": false,
+  "backups": [
+    "program/research/daily_rag_slm/_backup/2026-10-10_081409_six_hour_report/gpu_backlog_2026-10-10.json",
+    "program/research/daily_rag_slm/_backup/2026-10-10_081409_six_hour_report/2026-10-10.md",
+    "program/research/daily_rag_slm/_backup/2026-10-10_081409_six_hour_report/index.md",
+    "final_project_cs/wiki/operations/_backup/2026-10-10_081409_six_hour_report/gpu-work-queue.md",
+    "final_project_cs/wiki/operations/_backup/2026-10-10_081409_six_hour_report/arm-serving-queue.md",
+    "final_project_cs/wiki/_backup/2026-10-10_081409_six_hour_report/log.md",
+    "program/research/daily_rag_slm/_backup/2026-10-10_081409_six_hour_report/scheduled_instructions_2026-10-08.json"
+  ]
+}

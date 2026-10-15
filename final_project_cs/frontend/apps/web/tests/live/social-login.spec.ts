@@ -93,8 +93,8 @@ test("로그인: 세션이 없는 브라우저는 「구글 로그인」으로 �
   expect(exchanged.body).toMatchObject({ session: "cookie" });                // a cookie session is asked for, never a key
   expect(await storedKey(page)).toBeNull();
   expect(await cookie(page)).toMatch(/^member-session-/);
-  await page.getByRole("link", { name: "마이페이지" }).click();
-  // `[2026-10-13 마이페이지 A안]` 마이페이지는 상태 줄 — 「로그인 상태」 카드는 「로그인 · 계정」 화면에 있다.
+  await page.getByRole("link", { name: "설정", exact: true }).click();
+  // `[2026-10-13]` 설정 화면(/mypage)은 상태 줄 — 「로그인 상태」 카드는 「로그인 · 계정」 화면에 있다.
   await expect(page.getByRole("navigation", { name: "내 상태" }).getByRole("link", { name: /^로그인 · 계정/ })).toContainText("로그인됨");
   await page.goto("/mypage/account");
   await expect(page.getByRole("group", { name: "로그인 상태" })).toContainText("로그인한 계정으로 쓰고 있어요");
@@ -167,31 +167,30 @@ test("연결 풀기: 「풀기」 → 「연결 풀기」 두 번 눌러야 풀�
   expect((await server.received("DELETE", "/auth/google")).length).toBe(1);
 });
 
-// `[2026-10-13 사용자 결정 — 메뉴 로그인 입구 후보 1]` 전의 「계정 연결 · 로그인」 줄 대신, 게스트에게는 프로필 줄 아래 「계정으로 계속하기」가 있다.
-test("게스트의 메뉴에는 「계정으로 계속하기」가 있고, 누르면 돌아올 곳을 싣고 로그인 · 계정 화면으로 간다", async ({ page }) => {
+// `[2026-10-13 사용자 결정]` 전의 「계정 연결 · 로그인」 줄 대신, 게스트에게는 메뉴 프로필 칸의 단추가 「로그인 · 가입」이다(그 전 같은 날의 「계정으로 계속하기」를 바꿨다).
+test("게스트의 메뉴 프로필 칸에는 「로그인 · 가입」이 있고, 누르면 돌아올 곳을 싣고 로그인 · 계정 화면으로 간다", async ({ page }) => {
   await start(page);
   await page.goto("/trips");
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
   const menu = page.getByRole("dialog", { name: "메뉴" });
   await expect(menu.getByRole("button", { name: "로그아웃" })).toHaveCount(0);
-  await menu.getByRole("link", { name: "계정으로 계속하기" }).click();
+  await menu.getByRole("link", { name: "로그인 · 가입", exact: true }).click();
   await expect(page).toHaveURL(/\/mypage\/account\?returnTo=%2Ftrips$/);
   await expect(menu).toHaveCount(0);                                         // 메뉴는 닫힌다
   await expect(card(page)).toBeVisible();
 });
 
-test("회원의 메뉴에는 입구 대신 맨 아래 「로그아웃」이 있고, 누르면 서버에 알리고 첫 화면으로 간다", async ({ page, request }) => {
+test("회원의 메뉴 프로필 칸에는 입구 대신 「프로필 수정」이 있고, 로그아웃은 메뉴에 없다(설정 › 로그인 · 계정 화면에만)", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ sessionKind: "member" });
   await start(page);
   await page.goto("/trips");
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
   const menu = page.getByRole("dialog", { name: "메뉴" });
-  await expect(menu.getByRole("link", { name: "계정으로 계속하기" })).toHaveCount(0);
-  await menu.getByRole("button", { name: "로그아웃" }).click();
-  await expect(page).toHaveURL(/\/$/);
-  const [out] = await server.received("POST", "/v1/web/auth/logout");
-  expect(out.csrf).toBe("csrf-known");
+  await expect(menu.getByRole("link", { name: "로그인 · 가입", exact: true })).toHaveCount(0);
+  await expect(menu.getByRole("link", { name: "프로필 수정", exact: true })).toBeVisible();
+  await expect(menu.getByRole("button", { name: "로그아웃" })).toHaveCount(0);       // 로그아웃 자체는 session.spec 이 본다
+  expect(await server.received("POST", "/v1/web/auth/logout")).toHaveLength(0);
 });
 
 test("세션 없는 로그인에 서버가 사람 확인을 요구했는데 확인 화면이 꺼져 있으면 서버 문장을 그대로 보인다", async ({ page, request }) => {

@@ -1,0 +1,261 @@
+{
+  "feature_rows": 21,
+  "local_links": [
+    {
+      "from_file": "wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v14\\mobility-readiness.html",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v14\\selected-road-and-web-conflict.png",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v14\\mobility-readiness.html",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v14\\mobility-readiness.html",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v13\\mobility-readiness.html",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0306_차량선택도로_근거\\turn-web-public-probe-v3.json",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\mobility\\raw\\kakao_golden\\turn_conflict_web_20261009_0306\\source-index-v1.json",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0306_차량선택도로_근거\\web-source-index-v1.json",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0306_차량선택도로_근거\\verification-proof-v1.json",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0306_차량선택도로_근거\\car-snap-regression-v3-commands.json",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v14\\mobility-readiness.html",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0306_차량선택도로_근거\\before-backup.json",
+      "exists": true
+    },
+    {
+      "from_file": "wiki\\records\\reports\\2026-10-09_0325_차량_선택도로_근거보존과_웹경로_충돌검증.md",
+      "target": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0306_차량선택도로_근거\\publication-backups-v1.json",
+      "exists": true
+    }
+  ],
+  "hashes": [
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car_turn_search.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\fold.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\turn_restrictions.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\tests\\unit\\travel\\mobility\\test_car_selected_snap_evidence_v1.py",
+      "matches": true
+    },
+    {
+      "file": "final_project_cs\\scripts\\mobility\\build_readiness_visual_v14.py",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json",
+      "matches": true
+    },
+    {
+      "file": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+      "matches": true
+    }
+  ],
+  "initial_backups_verified": 5,
+  "evidence_manifest": [
+    {
+      "file": "before-backup.json",
+      "bytes": 1822,
+      "sha256": "0f8f4fbc732c3eef2569cdb085892b082aa0d40f48e61d87a236efe8387016b4"
+    },
+    {
+      "file": "car-snap-regression-command.json",
+      "bytes": 4518,
+      "sha256": "2092ae548b0280955c40b399319f7494732b399d236af628244a2d814d10da1a"
+    },
+    {
+      "file": "car-snap-regression-v1.log",
+      "bytes": 9616,
+      "sha256": "af437b312117b0578de8afae18c1e736cc13f6cd839f9a31dc6dc161f635891f"
+    },
+    {
+      "file": "car-snap-regression-v2-part1.log",
+      "bytes": 2965,
+      "sha256": "81472037a0f109c2f9a870b1e62caa81a6c0c6624a287d9593981aedd362b4d6"
+    },
+    {
+      "file": "car-snap-regression-v2-part1.xml",
+      "bytes": 35867,
+      "sha256": "572c5c27dc6549f24286ba04c58610b748e922e3d4e31531d745a4a154ade076"
+    },
+    {
+      "file": "car-snap-regression-v2-part2.log",
+      "bytes": 507,
+      "sha256": "b16f7c1cb266ec0cb094c1978bc5c87f67bf81ddf8af528c7c69f96759bc469a"
+    },
+    {
+      "file": "car-snap-regression-v2-part2.xml",
+      "bytes": 33822,
+      "sha256": "18b15403e684dfc836a4252a0e800b4861277be7172d75c21a2b09ef61948ae3"
+    },
+    {
+      "file": "car-snap-regression-v2-part3.log",
+      "bytes": 15202,
+      "sha256": "670ba644eae9dc584cdcae32c46b3c7d60e23c21f01dcc7e360447e278fffb74"
+    },
+    {
+      "file": "car-snap-regression-v2-part3.xml",
+      "bytes": 45992,
+      "sha256": "5258f5e5efbe057ecceef86f9453b4ced9239429929e279c5738d01ba948c628"
+    },
+    {
+      "file": "car-snap-regression-v3-commands.json",
+      "bytes": 10861,
+      "sha256": "a563b3d607115261ff6419b120c95a10d3630294defdf93b3b6bf001b70b763b"
+    },
+    {
+      "file": "car-snap-regression-v3-part1.log",
+      "bytes": 814,
+      "sha256": "1e853ca0cf3fe11bf471be09863bfb1bedb957f10e0b5eedbe6c660e1db8e2a6"
+    },
+    {
+      "file": "car-snap-regression-v3-part1.xml",
+      "bytes": 38548,
+      "sha256": "87a49d659a09828f359e7e434801094c0a0f452b28195988c44f53b33616a1ca"
+    },
+    {
+      "file": "car-snap-regression-v3-part2.log",
+      "bytes": 506,
+      "sha256": "d68f39d2cdec63d04a8f830ed348a700e15198c40ecd749479bf13b498252dee"
+    },
+    {
+      "file": "car-snap-regression-v3-part2.xml",
+      "bytes": 32530,
+      "sha256": "dba5f526c3d88c988281ff3c2013186d1434b158b9088145e55589fd412207fc"
+    },
+    {
+      "file": "car-snap-regression-v3-part3.log",
+      "bytes": 416,
+      "sha256": "69376f503f0c871af9ca39472b8748d795a8d73d2d41cefc466a6439ca26e87e"
+    },
+    {
+      "file": "car-snap-regression-v3-part3.xml",
+      "bytes": 28057,
+      "sha256": "44e7b0aede06a9cfa3e910cd13ad1f7494ec5625745a30c0807f214654d987a7"
+    },
+    {
+      "file": "car-snap-regression-v3-part4.log",
+      "bytes": 236,
+      "sha256": "1f3c846123531dab5483cafd76bfc7d67b85c74ef3f632b72a6051e6d03169bb"
+    },
+    {
+      "file": "car-snap-regression-v3-part4.xml",
+      "bytes": 847,
+      "sha256": "8cf3c13b43a2d594edfa8de7d1c6d63df92f52705aaa632b0d540daaa72e7f42"
+    },
+    {
+      "file": "car-snap-target-v1.log",
+      "bytes": 503,
+      "sha256": "4b4fbf5dc51edade995657cd308d782501eefc63eb1a92ab13d1aef84e3362ca"
+    },
+    {
+      "file": "car-snap-target-v1.xml",
+      "bytes": 7114,
+      "sha256": "cb2505a412a438b93a425d59b581840bde398a37346ea0f27078958bc895c2e6"
+    },
+    {
+      "file": "probe_turn_web_public_v3.py",
+      "bytes": 1324,
+      "sha256": "ba9ddfd362b4649505067d05cc6e33d86105ef0d80aeb5cdb2cc546ac3c1a117"
+    },
+    {
+      "file": "publication-backups-v1.json",
+      "bytes": 1033,
+      "sha256": "f152187c87bcc7c1db9c84ecb58cf17bfa9a13d9b34d233ffdb81dff4d491e06"
+    },
+    {
+      "file": "published-output-v1.json",
+      "bytes": 223,
+      "sha256": "3835f7338558ca4004c956d5b8521ade6ba8d7cea314d2d42169a0c140428cbd"
+    },
+    {
+      "file": "run_car_snap_regression_v3.py",
+      "bytes": 1500,
+      "sha256": "b9089e9d4bf5f1afc052f6539c03cf23c5548997e29e68ede82da7b994320137"
+    },
+    {
+      "file": "turn-web-public-probe-v1.json",
+      "bytes": 9413,
+      "sha256": "5ba33523dbb4d63aec928176c6269d0bac7a14e617316459c2270165e184f56b"
+    },
+    {
+      "file": "turn-web-public-probe-v2.log",
+      "bytes": 562,
+      "sha256": "0aa1bbd3bb95b511ab2171449111b2814f2dc9bbe4c8e693409590b435bd8ef4"
+    },
+    {
+      "file": "turn-web-public-probe-v3.json",
+      "bytes": 3395,
+      "sha256": "8e1e8111031a05cda889e083c3bce8425d8ecb2594dc86c5120d35d5537affce"
+    },
+    {
+      "file": "turn-web-public-probe-v3.log",
+      "bytes": 2094,
+      "sha256": "97f1a81c0605ecd9eb4a1c38b043200cee72c33162e4933a0a69f36016fa360a"
+    },
+    {
+      "file": "verification-proof-v1.json",
+      "bytes": 8533,
+      "sha256": "3ba652313e288814c9993480851be59cc2eeb858bc2a3153528f25b87e3caaed"
+    },
+    {
+      "file": "web-source-index-v1.json",
+      "bytes": 4954,
+      "sha256": "7df963ad2868abf57635be985386efe5db3b9545df038e36e180cc4eecdf70fd"
+    }
+  ],
+  "png_visually_checked": true,
+  "html_browser_render_checked": false
+}

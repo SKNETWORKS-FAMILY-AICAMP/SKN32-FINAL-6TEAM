@@ -1,0 +1,37 @@
+........................................................................ [ 17%]
+...............FF....................................................... [ 35%]
+........................................................................ [ 53%]
+........................................................................ [ 71%]
+........................................................................ [ 88%]
+.............................................                            [100%]
+================================== FAILURES ===================================
+___ test_each_allowed_key_has_exactly_one_active_version[response.generate] ___
+tests\contract\test_active_prompts_are_the_deployed_set.py:42: in test_each_allowed_key_has_exactly_one_active_version
+    assert cur.fetchone()[0] == 1, f"{key} �� active ������ ��Ȯ�� 1���� �ƴϴ�"
+E   AssertionError: response.generate �� active ������ ��Ȯ�� 1���� �ƴϴ�
+E   assert 0 == 1
+_ test_each_allowed_key_has_exactly_one_active_version[response.review_tone] __
+tests\contract\test_active_prompts_are_the_deployed_set.py:42: in test_each_allowed_key_has_exactly_one_active_version
+    assert cur.fetchone()[0] == 1, f"{key} �� active ������ ��Ȯ�� 1���� �ƴϴ�"
+E   AssertionError: response.review_tone �� active ������ ��Ȯ�� 1���� �ƴϴ�
+E   assert 0 == 1
+============================== warnings summary ===============================
+<unknown>:352
+tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly[devtools/judgment_log.py]
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+tests/contract/test_retired_domain_assets.py::test_current_runtime_and_business_fixtures_do_not_use_retired_assets
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\devtools\judgment_log.py:352: SyntaxWarning: invalid escape sequence '\d'
+    """�⺻ �α� �ڸ� `<PROCESSED>/mobility/logs`. ��`[73 �ļ� �� 3-5]` �ڷ� ������ �������� �ʾҰų�(unset �� �ڸ�ǥ�� /data)
+
+tests/e2e/test_personal_ai_oauth_db.py: 5 warnings
+tests/e2e/test_mcp_server.py: 13 warnings
+  C:\Users\playdata2\anaconda3\Lib\contextlib.py:105: DeprecationWarning: Use `streamable_http_client` instead.
+    self.gen = func(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\program\research\baseline_completion_2026-10-12\tasks\auth\isolated-20261012_042810.xml -
+=========================== short test summary info ===========================
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[response.generate]
+FAILED tests/contract/test_active_prompts_are_the_deployed_set.py::test_each_allowed_key_has_exactly_one_active_version[response.review_tone]
+2 failed, 403 passed, 21 warnings in 120.24s (0:02:00)

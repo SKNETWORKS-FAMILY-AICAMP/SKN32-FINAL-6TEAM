@@ -1,0 +1,29 @@
+{
+  "checked_at": "2026-10-09T05:51:43.200778+09:00",
+  "sources": [
+    {
+      "url": "https://www.microsoft.com/en-us/research/publication/a-critique-of-ansi-sql-isolation-levels/",
+      "published": "1995-06",
+      "read_scope": "공식 연구기관 페이지 초록",
+      "applied": "격리 수준 이름만으로 보장을 단정하지 않고 실제 교대 실행을 검증",
+      "limits": "논문 본문 전체 검토나 우리 구현의 형식적 증명으로 부르지 않는다"
+    },
+    {
+      "url": "https://www.postgresql.org/docs/16/transaction-iso.html",
+      "applied": "Read Committed의 재조회·잠금 대기 뒤 갱신된 행 확인"
+    },
+    {
+      "url": "https://www.postgresql.org/docs/16/explicit-locking.html",
+      "applied": "조건 UPDATE와 안내 저장을 같은 여행 행 잠금에서 직렬화"
+    },
+    {
+      "url": "https://www.postgresql.org/docs/16/functions-comparison.html",
+      "applied": "NULL을 포함해 IS NOT DISTINCT FROM으로 입력 일치를 판정"
+    },
+    {
+      "url": "https://www.postgresql.org/docs/16/functions-json.html",
+      "applied": "JSONB 비교로 키 순서보다 값/형식을 대조"
+    }
+  ],
+  "limits": "잠금·입력 일치의 근거이며 실제 운행/탑승/발송/지도 경로 정확도 근거가 아니다"
+}

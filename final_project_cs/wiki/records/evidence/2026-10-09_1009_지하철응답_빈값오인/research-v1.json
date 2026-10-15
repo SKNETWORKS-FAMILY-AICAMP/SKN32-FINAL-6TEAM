@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-10-09T10:14:05.587814+09:00",
+  "sources": [
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "scope": "Full official response fields, INFO-000/INFO-200 and paging/sample limit read this turn."
+    },
+    {
+      "url": "https://data.seoul.go.kr/dataList/OA-12764/A/1/datasetView.do",
+      "scope": "Official generation-time correction notice, file list and metadata read this turn."
+    }
+  ],
+  "new_map_web_route_samples": 0,
+  "map_developer_api_calls": 0,
+  "public_subway_sample_requests": 1,
+  "actual_provider_snapshots": 1,
+  "actual_boarding_or_payment_samples": 0,
+  "method": "Protocol/envelope and cache recovery fix, no new prediction algorithm. Research paper algorithm not needed to distinguish official result codes."
+}

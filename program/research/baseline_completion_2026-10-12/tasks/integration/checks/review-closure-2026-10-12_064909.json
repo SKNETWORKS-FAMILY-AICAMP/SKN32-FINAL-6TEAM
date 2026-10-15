@@ -1,0 +1,55 @@
+{
+  "at_kst": "2026-10-12T06:49:09.748274+09:00",
+  "review_checks_passed": true,
+  "product_complete": false,
+  "documents": [
+    {
+      "path": "program/plan/triPilot_구현계획서_v12.md",
+      "sha256": "9897e469e65554ec16c9a5793a03340d40467413d4e2cf173333562d3d7e195a",
+      "html_sha256": "0ccaff01af59792886ef71f177661a5f8baa4d81c76650076aac71d7b5452b92",
+      "status": "draft_unaccepted"
+    },
+    {
+      "path": "program/baseline/triPilot-baseline-2026-10-12.md",
+      "sha256": "b7d4e44a8e47e2a9d3fb57f247dba0e32df2dd894bd50246f5ec64b417db1f61",
+      "html_sha256": "12ef6df2ddf9093f0470eb661dc02308aa401529f79c6f1068c105dc22eb08f0",
+      "status": "draft_unaccepted"
+    }
+  ],
+  "source_files_checked": 2170,
+  "source_changed": [],
+  "evidence": [
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/current-review-manifest-2026-10-12_064751.json",
+      "sha256": "6fc131e5cc11feb5a32adeb7d7dedda6e684e4a2f8a4ab680022ebff2af10f9d"
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/review-audit-2026-10-12_064817.json",
+      "sha256": "9e35b399cac9b709e0f624599da0e1f20a119a89145093ff6a1ccaef4b29c3ac"
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/review-screens-2026-10-11T21-48-20-755Z/render-checks.json",
+      "sha256": "1c8921877e93a4f520cc9e8e2c106ccff951186e98eacde2e8bf1c3f93d79e15"
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_0645_wiki.json",
+      "sha256": "dec1db858cf18695aba1ac750f6b01c83e6f9ae14dd45c0bdef50bc1dfdce5c0"
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/final-gate-2026-10-12_064132/summary.json",
+      "sha256": "4e1a14db5c91ce3d3ae14b32ac4fc7303b25fb040dc75111f805602fa3de846e"
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/suite-review-2026-10-12_064405.json",
+      "sha256": "0bf2ead9c579ad40f16c003d3529988c52732ac458edabd7069d4603ee125951"
+    }
+  ],
+  "visual_review": "1440px 안내서 상단·375px 기준선 상단 실제 이미지 육안 확인. 앞선 두 흐름도 육안 확인 유지.",
+  "requirements_pending": [
+    "실제 개인 AI 등록·공개 HTTPS·쿠키·callback 종단",
+    "현재 정책 적합성이 확인된 여행 규정 자료와 실제1024차원 벡터16개 전제",
+    "요식 원장5개·이동 자료2개 및 실경보 방향·택시 미터 정확도",
+    "무료 관측 충족률·가격 예외 결정·운영 영속 볼륨 인수"
+  ],
+  "automation": "후속 확인 유지; 최종 인수 조건 충족 전 종료하지 않음"
+}

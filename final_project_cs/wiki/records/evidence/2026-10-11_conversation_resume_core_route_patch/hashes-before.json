@@ -1,0 +1,34 @@
+[
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\application\\controller.py",
+    "Hash": "6CFA506769E664621555E89B79257D61E7C1569E8AB33DDE75F37B4778F26F0F"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\application\\case_service.py",
+    "Hash": "C674B9364757BE713AC460C0AEE9C355B0B321CE4EB99569CD18F223B5B8B1BF"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\presentation\\api\\cases.py",
+    "Hash": "1FA5118802F0EF807C93835E2A01FE2AF2C3E566F8AA5CB1F51F3CC309792AA1"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\core\\actions.py",
+    "Hash": "7AB441E8E0193EC97547F6A55CD4FB1C7E2DA92D341453012D4A397F13123039"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\core\\case_lifecycle\\events.py",
+    "Hash": "061225D09CDDEA5CB5F0C54F8C34BB95DCDB2F8DBBE01EBE123FA65FB2672A4C"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\integration\\controller\\test_conversation_resume.py",
+    "Hash": "2055E19953963981D90DC0F3600420D246DBC587AF0444D8C75AA746FF62F2C9"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\integration\\controller\\test_travel_approval_proposal_reaches_waiting.py",
+    "Hash": "766505F4775C491C4D1578DB7F31AE86221E060B45D8A1679E840684ECE7F918"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\test_applied_action_answer.py",
+    "Hash": "1367751EFC17FE58CAA0446F592829E7A14BEE66D2E2B8894E7FD86C81AD951A"
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "checked_at": "2026-10-09T09:40:36.719037+09:00",
+  "sources": [
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "scope": "official output field table; station/previous/next/terminal IDs, train number, order, seconds ETA"
+    },
+    {
+      "url": "https://gtfs.org/documentation/realtime/reference/",
+      "scope": "TripDescriptor unique trip resolution and StopTimeUpdate stop identity/sequence sections; design reference only, Seoul feed is not GTFS"
+    },
+    {
+      "url": "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ESA.2026.9",
+      "scope": "publication metadata and abstract only; published 2026-08-25, dynamic timetable routing research; algorithm not applied"
+    },
+    {
+      "url": "https://arxiv.org/html/2603.12592v4",
+      "scope": "abstract/introduction/network model revisited; not the implementation basis for this parsing fix"
+    }
+  ],
+  "new_route_web_samples": 0,
+  "map_developer_api_calls": 0,
+  "actual_trips": 0
+}

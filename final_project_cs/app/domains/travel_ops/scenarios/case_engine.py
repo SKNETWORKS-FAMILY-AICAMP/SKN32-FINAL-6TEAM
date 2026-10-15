@@ -34,7 +34,7 @@ ACTOR = "case_engine"
 def _no_policy(*_: Any, **__: Any) -> list[Any]:
     """일정 관리(`*.itinerary`)는 규정을 면제받는다 — 불리면 안 되는 자리라 빈 값이 아니라 실패로.
     ★`[2026-09-25]` 규정 질문(`*.itinerary_question`)은 규정을 **읽는다** — 그 경로를 돌리려면
-      `policy_search` 를 넣는다. 안 넣으면 검색 실패 → degraded → 사람에게(지어내지 않는다)."""
+      `policy_search` 를 넣는다. 안 넣으면 검색 실패 → degraded → 처리 불가(지어내지 않는다)."""
     raise RuntimeError("policy search is not wired in the itinerary case engine")
 
 
@@ -44,7 +44,8 @@ class CaseEngine:
                  report_extractor: Callable[[str], dict[str, Any] | None] | None,
                  clock: Callable[[], datetime], routes: dict[str, Any] | None = None,
                  policy_search: Callable[..., list[Any]] = _no_policy,
-                 service_overrides: Mapping[tuple[str, str], Callable[..., Any]] | None = None) -> None:
+                 service_overrides: Mapping[tuple[str, str], Callable[..., Any]] | None = None,
+                 execution_planner: Callable | None = None) -> None:
         from app import composition
         from app.core.project_config import load_project_config
 
@@ -60,7 +61,7 @@ class CaseEngine:
         config = load_project_config()
         registry = composition.build_registry(tools=tools, llm=None, config=config)
         self.controller = composition.build_controller(registry=registry, llm=None, config=config,
-                                                       policy_search_fn=policy_search)
+                                                       policy_search_fn=policy_search, execution_planner=execution_planner)
         if service_overrides is not None:
             # 재생 harness만 명시적으로 주입한다. 제품 입구·팀 등록 상태는 바꾸지 않는다.
             from app.core.service_bindings import BindingTable

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="80.705" timestamp="2026-10-11T23:44:52.703674+09:00" hostname="playdata"><testcase classname="" name="tests.unit.travel.mobility.test_judgment_log" time="0.000"><error message="collection failure">tests\unit\travel\mobility\test_judgment_log.py:119: in &lt;module&gt;
+    lg = jl.JudgmentLogger(d, device="laptop", run_id="R1", stream=err).open()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\devtools\judgment_log.py:405: in open
+    self._check_device()
+app\domains\travel_ops\instances\mobility\devtools\judgment_log.py:391: in _check_device
+    with open(f, "x", encoding="utf-8") as fh:          # 없을 때만 만든다(같은 기기 두 프로세스 경합)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   PermissionError: [Errno 13] Permission denied: 'C:\\Users\\playdata2\\AppData\\Local\\Packages\\sandbox.{45d3a905-f47a-4a35-b40c-49a4892fe774}\\AC\\Temp\\tmpxui3cg7d\\DEVICE.txt'
+
+During handling of the above exception, another exception occurred:
+..\..\..\anaconda3\Lib\shutil.py:637: in _rmtree_unsafe
+    os.rmdir(path)
+E   PermissionError: [WinError 5] 액세스가 거부되었습니다: 'C:\\Users\\playdata2\\AppData\\Local\\Packages\\sandbox.{45d3a905-f47a-4a35-b40c-49a4892fe774}\\AC\\Temp\\tmpxui3cg7d'
+
+During handling of the above exception, another exception occurred:
+tests\unit\travel\mobility\test_judgment_log.py:117: in &lt;module&gt;
+    with tempfile.TemporaryDirectory() as d:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\tempfile.py:946: in __exit__
+    self.cleanup()
+..\..\..\anaconda3\Lib\tempfile.py:950: in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+..\..\..\anaconda3\Lib\tempfile.py:930: in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+..\..\..\anaconda3\Lib\shutil.py:781: in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\shutil.py:639: in _rmtree_unsafe
+    onexc(os.rmdir, path, err)
+..\..\..\anaconda3\Lib\tempfile.py:902: in onexc
+    _resetperms(path)
+..\..\..\anaconda3\Lib\tempfile.py:286: in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+..\..\..\anaconda3\Lib\tempfile.py:277: in _dont_follow_symlinks
+    func(path, *args)
+E   PermissionError: [WinError 5] 액세스가 거부되었습니다: 'C:\\Users\\playdata2\\AppData\\Local\\Packages\\sandbox.{45d3a905-f47a-4a35-b40c-49a4892fe774}\\AC\\Temp\\tmpxui3cg7d'</error></testcase></testsuite></testsuites>

@@ -1,10 +1,8 @@
 """위치 비의존 사실 읽기만 저장된 입력으로 복구한다. 변경 업무에는 관여하지 않는다."""
 from __future__ import annotations
 
-from copy import deepcopy
 import hashlib
 import json
-
 from datetime import datetime
 from uuid import UUID
 
@@ -17,17 +15,15 @@ from .decision_unit import Decision, FACTS, LOCATION_FACTS, fact_first
 NEW_REQUEST = "이전 읽기 요청의 실행 정보를 안전하게 복구할 수 없습니다. 새 요청 번호로 질문을 다시 보내 주세요."
 
 
-def _read_payload(value):
-    """기존의 검증된 해석을 대조한다. 질문 문장·모델 raw를 snapshot에 복사하지 않는다."""
-    if isinstance(value, dict):
-        return {"query": value.get("query"), "reads": value.get("reads") or [],
-                "social": value.get("social") or ""}
-    return {"query": value.query, "reads": value.reads or [], "social": value.social or ""}
+def _reads_without_text(reads):
+    return [{k: v for k, v in r.items() if k != "text"} for r in reads or []]
 
 
-def _read_signature(value):
-    return hashlib.sha256(json.dumps(_read_payload(value), sort_keys=True,
-                         ensure_ascii=False, separators=(",", ":")).encode()).hexdigest()
+def read_signature(reads, query, social):
+    """복수 질문·조회 범위·잡담 답을 묶은 해석 서명. 원문 대신 이것만 스냅샷에 남긴다."""
+    payload = {"reads": _reads_without_text(reads), "query": query or None, "social": social or ""}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
+                          .encode("utf-8")).hexdigest()
 
 
 def read_snapshot(decision, *, at, selected, trip, turns):
@@ -47,9 +43,9 @@ def read_snapshot(decision, *, at, selected, trip, turns):
             "choices": [{"action": c["action"], "fact": c["fact"],
                          "item_id": str(c["item"].item_id) if c.get("item") else None}
                         for c in effective.choices],
-            "focus": kept_focus, "read_signature": _read_signature(effective),
-            "recoverable": (effective.fact not in LOCATION_FACTS
-                            and all(r.get("fact") not in LOCATION_FACTS for r in effective.reads))}
+            "focus": kept_focus, "query": effective.query,
+            "read_signature": read_signature(effective.reads, effective.query, effective.social),
+            "recoverable": effective.fact not in LOCATION_FACTS and not any(r["fact"] in LOCATION_FACTS for r in effective.reads)}
 
 
 def is_read_record(record):
@@ -134,34 +130,15 @@ def restore(snapshot, *, state, trip, items):
             raise StateConflict(NEW_REQUEST)
         choices.append({"action": "answer_fact", "fact": choice["fact"],
                         "item": by_id.get(choice.get("item_id")), "change": None})
-    payload = _read_payload(record)
+    # 질문 목록은 Case 에 저장된 결정에서 꺼내고, 스냅샷의 서명과 맞을 때만 쓴다.
+    #   서명이 없는 옛 스냅샷은 복수 질문을 하나로 줄여 답할 수 있어 새 요청으로 돌린다.
+    reads, query, social = _reads_without_text(record.get("reads")), record.get("query"), record.get("social") or ""
     signature = snapshot.get("read_signature")
-    if signature is not None:
-        if signature != _read_signature(record):
-            raise StateConflict(NEW_REQUEST)
-    elif payload["query"] is not None or payload["reads"] or payload["social"]:
-        # 새 복수 조회를 옛 단일 조회로 조용히 축소하지 않는다.
+    if (not signature or signature != read_signature(reads, query, social)
+            or snapshot.get("query") != query):
         raise StateConflict(NEW_REQUEST)
-    from .decision_unit import stops_of
-    from .schedule_query import QUERY_FACTS, valid_query
-
-    stops = stops_of(items)
-    aliases = {s.alias for s in stops} | {"none"}
-    if payload["query"] is not None and not valid_query(payload["query"], stops):
-        raise StateConflict(NEW_REQUEST)
-    if not isinstance(payload["reads"], list) or not isinstance(payload["social"], str):
-        raise StateConflict(NEW_REQUEST)
-    for read in payload["reads"]:
-        if (not isinstance(read, dict) or read.get("fact") not in FACTS
-                or read.get("fact") in (*LOCATION_FACTS, "none")
-                or read.get("target_item") not in aliases or read.get("origin_item") not in aliases
-                or read.get("reference") not in {"explicit", "previous", "selection", "none"}):
-            raise StateConflict(NEW_REQUEST)
-        scoped = read["fact"] in (*QUERY_FACTS, "day", "outdoor")
-        if (scoped and not valid_query(read.get("query"), stops)) or (not scoped and read.get("query") is not None):
-            raise StateConflict(NEW_REQUEST)
     decision = Decision("answer_fact", by_id.get(item_id), None, snapshot["fact"], None, "", choices=choices,
-                        query=deepcopy(payload["query"]), reads=deepcopy(payload["reads"]), social=payload["social"])
+                        query=query, reads=reads, social=social)
     return decision, at, selected
 
 

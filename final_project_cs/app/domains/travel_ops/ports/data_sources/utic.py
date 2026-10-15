@@ -142,56 +142,90 @@ class UticIncidents(TravelSource):
                           source=self.name)
 
 
+def incident_links(record: dict[str, Any]) -> list[str]:
+    """사건 원문의 도로 구간 번호(`linkId` · `lineLinkId`, 쉼표로 여럿). ★구간 번호는 **진행 방향마다 다르다** — 반대 방향은 다른 번호다."""
+    return list(dict.fromkeys(part.strip() for value in (record.get("linkId"), record.get("lineLinkId"))
+                              for part in str(value or "").split(",") if part.strip() and part.strip() != "null"))
+
+
+def both_directions(record: dict[str, Any]) -> bool:
+    """원문(차로 칸 · 제목)이 **양방향** 통제라고 적었는가. 원문 구간 번호는 한 방향만 실어도 반대 방향도 막힌다."""
+    return "양방향" in str(record.get("lane") or "") or "양방향" in str(record.get("incidentTitle") or "")
+
+
 class UticRouteEvents:
     """감시 루프의 **경로 사건** 소스 — `ReplayRouteEvents.affecting()` 과 같은 모양.
 
-    ★답하는 대상은 **도로(`도로:이름`)뿐**이다. 지금 걸려 있는 사고·전체 차로 통제·집회·행사가
+    ★답하는 대상은 **도로(`도로:이름`)와 도로 구간(`링크:번호`)** 이다. 지금 걸려 있는 사고·전체 차로 통제·집회·행사가
       그 도로에 있으면 `road_control`. 부분 차로 공사(주의)는 경로를 끊지 않는다.
+    ★`[2026-10-13]` 도로명만 맞는 것은 **방향·구간을 증명하지 않는다**(서울 실경보 반대 방향 시험 2/20).
+      `링크:` 는 원문 구간 번호와 **같은 번호**일 때만 걸리고(`route_match.status = link_overlap`),
+      `도로:` 결과에는 원문 구간 번호(`incident_links`)와 양방향 여부(`both_directions`)를 싣는다 —
+      한 경로 안에서 둘을 맞추는 것은 `itinerary_changes.option_hits` 다(경로 후보마다 구간이 달라서).
     ★지하철 무정차(`N호선:역`)·버스·도보는 실시간 소스가 없다. 그 대상은 「사건 없음」으로
       답하지 않고 `unsupported()` 로 **확인 못 한 대상**이라고 드러낸다 — 감시 결과가 센다.
     ★UTIC 를 못 읽으면 `None` — 감시 루프가 그 이동 항목을 치명으로 남긴다(결정 15).
     """
 
     ROAD = "도로:"
+    LINK = "링크:"
 
     def __init__(self, incidents: UticIncidents) -> None:
         self.incidents = incidents
         self.name = "utic_route_events"
 
     def unsupported(self, targets: list[str]) -> list[str]:
-        return [target for target in targets if not target.startswith(self.ROAD)]
+        return [target for target in targets if not target.startswith((self.ROAD, self.LINK))]
+
+    def _event(self, record: dict[str, Any], reason: str, label: str, route_match: dict[str, Any]) -> dict[str, Any]:
+        end = _parse_time(record.get("endDate"))
+        # ★문구는 공급자 값으로만 만든다 — 없는 이유를 붙이지 않는다.
+        return self.incidents.stamp({
+            "effect": "road_control", "reason": reason,
+            # ☆처음엔 「{reason}이(가) 있습니다」였다 — 실측 통지가 「통제이(가)」로 어색했다
+            "summary": f"{label} {reason}(경찰청 UTIC 돌발정보)",
+            "title": record.get("incidentTitle"),
+            "incident_id": record.get("incidentId"),
+            "road": record.get("roadName"),
+            "incident_links": incident_links(record), "both_directions": both_directions(record),
+            "route_match": route_match,
+            "ends_at": end.isoformat() if end else None}, source="utic")
 
     def affecting(self, targets: list[str], at: datetime | None = None
                   ) -> dict[str, dict[str, Any]] | None:
         roads = [t for t in targets if t.startswith(self.ROAD)]
-        if not roads:
+        links = [t for t in targets if t.startswith(self.LINK)]
+        if not roads and not links:
             return {}
         records = self.incidents.records()
         if records is None:
             return None
         moment = at or self.incidents._now()
+        live = []
+        for record in records:
+            level, reason = classify(record)
+            if level == "disruption" and self.incidents.active_at(record, moment):
+                live.append((record, reason))
         found: dict[str, dict[str, Any]] = {}
         for target in roads:
             road = target[len(self.ROAD):]
-            for record in records:
-                if road not in (record.get("roadName") or "") and \
-                        road not in (record.get("incidentTitle") or ""):
-                    continue
-                level, reason = classify(record)
-                if level != "disruption" or not self.incidents.active_at(record, moment):
-                    continue
-                end = _parse_time(record.get("endDate"))
-                # ★문구는 공급자 값으로만 만든다 — 없는 이유를 붙이지 않는다.
-                found[target] = self.incidents.stamp({
-                    "effect": "road_control", "reason": reason,
-                    # ☆처음엔 「{reason}이(가) 있습니다」였다 — 실측 통지가 「통제이(가)」로 어색했다
-                    "summary": f"{road} {reason}(경찰청 UTIC 돌발정보)",
-                    "title": record.get("incidentTitle"),
-                    "incident_id": record.get("incidentId"),
-                    "ends_at": end.isoformat() if end else None}, source="utic")
-                break
+            named = [(record, reason) for record, reason in live
+                     if road in (record.get("roadName") or "") or road in (record.get("incidentTitle") or "")]
+            if not named:
+                continue
+            # 같은 도로에 사건이 여럿이면 양방향 통제를 앞에 둔다 — 한 방향 사건이 양방향 사건을 가리지 않게
+            record, reason = sorted(named, key=lambda pair: not both_directions(pair[0]))[0]
+            # 도로명 후보가 고객의 구간·진행 방향 중첩을 증명하지 않는다.
+            found[target] = self._event(record, reason, road, {"status": "unverified", "basis": "road_name_only"})
+        for target in links:
+            link = target[len(self.LINK):]
+            for record, reason in live:
+                if link in incident_links(record):
+                    found[target] = self._event(record, reason, record.get("roadName") or target,
+                                                {"status": "link_overlap", "basis": "provider_link_id", "link_id": link})
+                    break
         return found
 
 
-__all__ = ["ENDPOINT", "UticIncidents", "UticRouteEvents", "classify", "parse_records",
-           "title_tags"]
+__all__ = ["ENDPOINT", "UticIncidents", "UticRouteEvents", "both_directions", "classify", "incident_links",
+           "parse_records", "title_tags"]

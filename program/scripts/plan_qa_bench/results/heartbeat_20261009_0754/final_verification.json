@@ -1,0 +1,16 @@
+{
+  "reports_metadata_valid": 2,
+  "reports_links_valid": 28,
+  "parent_FINCH_D3_hash_verified": 8,
+  "parent_FINCH_D3_metadata_verified": 720,
+  "all_new_GPU_rows": 28275,
+  "source_D3_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+  "final_backups": [
+    "final_project_cs/wiki/records/reports/_backup/2026-10-09_0813_final_report_verification/2026-10-09_0800_six-hour-gpu-arm-report.md",
+    "final_project_cs/wiki/records/reports/_backup/2026-10-09_0813_final_report_verification/2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+    "program/research/daily_rag_slm/_backup/2026-10-09_0813_final_report_verification/2026-10-09.json",
+    "program/research/daily_rag_slm/_backup/2026-10-09_0813_final_report_verification/model_release_watchlist.json"
+  ],
+  "E_normal_percentage_rounded": 96.52,
+  "scope": "Scoped changed-document metadata/link and collected-answer checks; not a full repository wiki audit"
+}

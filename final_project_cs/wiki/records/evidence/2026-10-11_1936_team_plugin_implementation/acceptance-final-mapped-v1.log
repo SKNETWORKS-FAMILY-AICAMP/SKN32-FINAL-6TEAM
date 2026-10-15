@@ -1,0 +1,83 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs
+configfile: pytest.ini
+plugins: anyio-4.14.1, langsmith-0.10.0, asyncio-0.25.2
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 65 items
+
+tests/e2e/test_mcp_server.py::test_saved_trip_remains_readable_with_every_team_disabled PASSED [  1%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.06] PASSED [  3%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.08] PASSED [  4%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[False-0.1] PASSED [  6%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.06] PASSED [  7%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.08] PASSED [  9%]
+tests/integration/controller/test_plugin_unavailable.py::test_controller_remote_deadline_leaves_budget_for_cancel_and_original_failure[True-0.1] PASSED [ 10%]
+tests/integration/controller/test_plugin_unavailable.py::test_independent_candidate_sort_omits_similarity_without_replacing_activity_business PASSED [ 12%]
+tests/integration/controller/test_plugin_unavailable.py::test_inflight_disable_keeps_old_team_and_applies_real_itinerary_once PASSED [ 13%]
+tests/integration/controller/test_plugin_unavailable.py::test_invalid_candidate_keeps_published_controller_hooks_revision[duplicate_capability] PASSED [ 15%]
+tests/integration/controller/test_plugin_unavailable.py::test_invalid_candidate_keeps_published_controller_hooks_revision[incompatible_contract] PASSED [ 16%]
+tests/integration/controller/test_plugin_unavailable.py::test_message_http503_and_read_view_expose_unavailable_without_consuming_token PASSED [ 18%]
+tests/integration/controller/test_plugin_unavailable.py::test_optional_load_failure_keeps_independent_team_executable[constructor] PASSED [ 20%]
+tests/integration/controller/test_plugin_unavailable.py::test_optional_load_failure_keeps_independent_team_executable[import] PASSED [ 21%]
+tests/integration/controller/test_plugin_unavailable.py::test_reactivation_same_reply_changes_real_itinerary_only_once PASSED [ 23%]
+tests/integration/controller/test_plugin_unavailable.py::test_removed_team_rejects_only_its_business_and_independent_team_runs PASSED [ 24%]
+tests/integration/controller/test_plugin_unavailable.py::test_routing_disabled_owner_creates_no_run_and_never_reroutes PASSED [ 26%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_at_final_route_gate_leaves_no_owner_or_candidate_write PASSED [ 27%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-disabled] PASSED [ 29%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-load_failed] PASSED [ 30%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[False-not_installed] PASSED [ 32%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-disabled] PASSED [ 33%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-load_failed] PASSED [ 35%]
+tests/integration/controller/test_plugin_unavailable.py::test_unavailable_resume_preserves_case_token_input_events_and_runs[True-not_installed] PASSED [ 36%]
+tests/unit/core/test_plugin_availability.py::test_a2a_disabled_and_missing_registry_never_resolve_or_send PASSED [ 38%]
+tests/unit/core/test_plugin_availability.py::test_a2a_endpoint_mismatch_is_rejected_before_submit PASSED [ 40%]
+tests/unit/core/test_plugin_availability.py::test_a2a_unknown_status_cannot_accept_completed_artifact PASSED [ 41%]
+tests/unit/core/test_plugin_availability.py::test_a2a_valid_result_and_remote_unavailable_are_distinct PASSED [ 43%]
+tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[run_id] PASSED [ 44%]
+tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[task_id] PASSED [ 46%]
+tests/unit/core/test_plugin_availability.py::test_a2a_wrong_result_identity_rejected[team_id] PASSED [ 47%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[disabled] PASSED [ 49%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[load_failed] PASSED [ 50%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[not_installed] PASSED [ 52%]
+tests/unit/core/test_plugin_availability.py::test_declared_unavailable_is_operational[remote_unavailable] PASSED [ 53%]
+tests/unit/core/test_plugin_availability.py::test_local_disabled_team_execute_is_never_called PASSED [ 55%]
+tests/unit/core/test_plugin_availability.py::test_resolver_implementation_errors_are_not_turned_into_unavailability PASSED [ 56%]
+tests/unit/core/test_plugin_availability.py::test_sync_resolver_copies_context_and_supports_awaitable_result[False] PASSED [ 58%]
+tests/unit/core/test_plugin_availability.py::test_sync_resolver_copies_context_and_supports_awaitable_result[True] PASSED [ 60%]
+tests/unit/test_plugin_composition_runtime.py::test_disabled_package_not_imported_and_other_team_loaded PASSED [ 61%]
+tests/unit/test_plugin_composition_runtime.py::test_enabled_engine_off_never_returns_estimate PASSED [ 63%]
+tests/unit/test_plugin_composition_runtime.py::test_failed_optional_hook_discards_partial_registrations[AttributeError] PASSED [ 64%]
+tests/unit/test_plugin_composition_runtime.py::test_failed_optional_hook_discards_partial_registrations[ImportError] PASSED [ 66%]
+tests/unit/test_plugin_composition_runtime.py::test_failed_optional_hook_discards_partial_registrations[RuntimeError] PASSED [ 67%]
+tests/unit/test_plugin_composition_runtime.py::test_import_failure_optional_vs_required[False] PASSED [ 69%]
+tests/unit/test_plugin_composition_runtime.py::test_import_failure_optional_vs_required[True] PASSED [ 70%]
+tests/unit/test_plugin_composition_runtime.py::test_json_and_mcp_keep_disabled_reason_while_independent_reads_work PASSED [ 72%]
+tests/unit/test_plugin_composition_runtime.py::test_missing_request_context_never_uses_legacy_callback PASSED [ 73%]
+tests/unit/test_plugin_composition_runtime.py::test_publication_rejects_mixed_registry_or_revision PASSED [ 75%]
+tests/unit/test_plugin_composition_runtime.py::test_repeated_enabled_reload_never_changes_pinned_callbacks PASSED [ 76%]
+tests/unit/test_plugin_composition_runtime.py::test_request_two_hook_reads_keep_old_generation_across_disable PASSED [ 78%]
+tests/unit/test_plugin_composition_runtime.py::test_required_hook_failure_keeps_published_generation PASSED [ 80%]
+tests/unit/test_plugin_composition_runtime.py::test_review_does_not_swallow_disabled_required_calculation PASSED [ 81%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[disabled-False] PASSED [ 83%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[engine_unavailable-False] PASSED [ 84%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[load_failed-False] PASSED [ 86%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[not_installed-False] PASSED [ 87%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_error_preserves_reason[remote_unavailable-True] PASSED [ 89%]
+tests/unit/test_plugin_composition_runtime.py::test_stream_worker_and_deferred_work_keep_request_generation PASSED [ 90%]
+tests/unit/travel/test_plugin_read_boundaries.py::test_clean_process_imports_no_disabled_team_implementation PASSED [ 92%]
+tests/unit/travel/test_plugin_worker_availability.py::test_all_teams_off_default_round_keeps_independent_cleanup PASSED [ 93%]
+tests/unit/travel/test_plugin_worker_availability.py::test_batch_does_not_use_legacy_disabled_planner PASSED [ 95%]
+tests/unit/travel/test_plugin_worker_availability.py::test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch-TripWatcher] PASSED [ 96%]
+tests/unit/travel/test_plugin_worker_availability.py::test_disabled_kind_not_checked_while_independent_kind_continues[app.domains.travel_ops.components.watch.trip_watch_cases-TripWatchCaseOpener] PASSED [ 98%]
+tests/unit/travel/test_plugin_worker_availability.py::test_nested_jobs_hold_one_controller_and_new_round_sees_new_generation PASSED [100%]
+
+============================== warnings summary ===============================
+tests/e2e/test_mcp_server.py::test_saved_trip_remains_readable_with_every_team_disabled
+  C:\Users\playdata2\anaconda3\Lib\contextlib.py:105: DeprecationWarning: Use `streamable_http_client` instead.
+    self.gen = func(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_1936_team_plugin_implementation\acceptance-final-mapped-v1.xml -
+======================= 65 passed, 1 warning in 14.42s ========================

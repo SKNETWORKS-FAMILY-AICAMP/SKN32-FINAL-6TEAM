@@ -1,0 +1,12 @@
+{
+  "suite": "common",
+  "common_nodeids": [
+    "tests/unit/ml/test_local_sentiment.py::test_missing_model_is_announced_not_defaulted"
+  ],
+  "travel_nodeids": [],
+  "collected_total": 1,
+  "selected": 1,
+  "deselected": 0,
+  "overlap": 0,
+  "unassigned": 0
+}

@@ -1,0 +1,30 @@
+{
+  "checked_at": "2026-10-09T07:01:13.504960+09:00",
+  "features": 21,
+  "counts": {
+    "조건부 사용": 4,
+    "개선 필요": 9,
+    "추가 검증": 8
+  },
+  "local_links": 18,
+  "svg_boxes": 6,
+  "svg_connectors": 4,
+  "backup_hash_matches": 7,
+  "snapshot_hash_matches": 195,
+  "source_scope": {
+    "total": 195,
+    "backup_files": 8,
+    "note": "explicit snapshot file set; includes backups; not all loaded Python dependencies"
+  },
+  "public_files_scanned": 30,
+  "private_pattern_hits": 0,
+  "benign_source_date_matches": 3,
+  "browser_render_verified": false,
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0700_저장출발안내_급행판_재계산_검증.md": "f70f1842429a228123556b93deccf1347ff93893c8593e024dc75cb145fbb060",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v23/mobility-readiness.html": "d3063706f2ddaf49e4b8245220e0f7f0be8d535ecd0f94d1cb764ae35cdf413a",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v23/readiness-catalog.json": "5826ebc8349c0080a5c2c86f482d1280ffea0ba4ea6ea15114175f9badbd8409",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0648_저장안내_급행판/verification-proof-v1.json": "3b3c7639a10fe03775796c3399d6bd2fe2b91dc81293fca94f7431dfbe702af1",
+    "final_project_cs/scripts/mobility/build_readiness_visual_v23.py": "08968e041360ba89b30724667951165dca4e17875acbbb8c08df8be8e2a8031c"
+  }
+}

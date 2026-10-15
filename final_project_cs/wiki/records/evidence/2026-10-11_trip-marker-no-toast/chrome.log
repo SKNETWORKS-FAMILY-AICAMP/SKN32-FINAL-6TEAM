@@ -1,0 +1,225 @@
+[WebServer] (node:22012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:29812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:1084) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:16516) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:6340) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:14692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:18132) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[WebServer] (node:22884) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:23444) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:27708) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21908) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:17032) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:21900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 8 tests using 1 worker
+
+
+(node:14800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/8] tests\live\trip-center.spec.ts:17:1 › 종은 안 본 알림 수를 말하고, 받은 알림 탭을 보면 읽음이 되어 새로고침 뒤에도 수가 없다 — 이번에 처음 본 알림에는 점이 남는다
+[2/8] tests\live\trip-center.spec.ts:37:1 › 탭은 화살표 키로 옮겨 가고, 탭마다 서버가 준 수를 단다
+[3/8] tests\live\trip-center.spec.ts:49:1 › 화면이 열려 있는 동안 서버가 선택 요청을 보내면 그 일정의 번호 · 이름 · 「선택 요청」 막대가 뜨고, 「알림 보기」로 받은 알림 탭이 열린다
+[4/8] tests\live\trip-center.spec.ts:70:1 › 선택 요청의 「일정에서 보기」는 센터를 닫고 그 일정을 목록에서 펼친다
+[5/8] tests\live\trip-center.spec.ts:80:1 › 알림 문장 속 https 주소는 채팅처럼 누를 수 있는 링크이고, https 가 아닌 주소는 글자 그대로다
+[6/8] tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 375px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다
+  1) tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 375px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다 
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for locator('.leaflet-marker-icon[title^="1. 아침 식당"]')
+        - locator resolved to <div tabindex="0" role="button" aria-pressed="false" data-edge-hidden="false" title="1. 아침 식당 · 2026-10-01 08:00–09:00" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive">…</div>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <div tabindex="0" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">…</div> intercepts pointer events
+        - retrying click action
+        - waiting 20ms
+        - waiting for element to be visible, enabled and stable
+        - element is visible, enabled and stable
+        - scrolling into view if needed
+        - done scrolling
+        - <div tabindex="0" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">…</div> intercepts pointer events
+      - retrying click action
+        - waiting 100ms
+        - waiting for element to be visible, enabled and stable
+        - element is visible, enabled and stable
+        - scrolling into view if needed
+        - done scrolling
+        - <span>내 여행</span> from <header class="device-frame_header__SdvsC">…</header> subtree intercepts pointer events
+      - retrying click action
+        - waiting 100ms
+        19 × waiting for element to be visible, enabled and stable
+           - element is visible, enabled and stable
+           - scrolling into view if needed
+           - done scrolling
+           - <div tabindex="0" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">…</div> intercepts pointer events
+         - retrying click action
+           - waiting 500ms
+           - waiting for element to be visible, enabled and stable
+           - element is visible, enabled and stable
+           - scrolling into view if needed
+           - done scrolling
+           - <div tabindex="0" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">…</div> intercepts pointer events
+         - retrying click action
+           - waiting 500ms
+           - waiting for element to be visible, enabled and stable
+           - element is visible, enabled and stable
+           - scrolling into view if needed
+           - done scrolling
+           - <div tabindex="0" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">…</div> intercepts pointer events
+         - retrying click action
+           - waiting 500ms
+           - waiting for element to be visible, enabled and stable
+           - element is visible, enabled and stable
+           - scrolling into view if needed
+           - done scrolling
+           - <span>내 여행</span> from <header class="device-frame_header__SdvsC">…</header> subtree intercepts pointer events
+         - retrying click action
+           - waiting 500ms
+        - waiting for element to be visible, enabled and stable
+        - element is visible, enabled and stable
+        - scrolling into view if needed
+        - done scrolling
+
+
+      14 |     await mapSettled(page);
+      15 |     const first = pin(page, "1. 아침 식당");
+    > 16 |     await first.click();
+         |                 ^
+      17 |     await expect(page.locator('[data-entry-id="i-a"]')).toHaveAttribute("data-selected", "true");
+      18 |     await expect(page.locator("#stop-button-i-a")).toHaveAttribute("aria-expanded", "true");
+      19 |     await expect(page.getByRole("status")).toHaveCount(0);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\trip-marker-no-toast-20261011.spec.ts:16:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-trip-marker-no-toast\trip-marker-no-toast-20261-171ea--목록의-지도-보기는-안내-토스트를-띄우지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-trip-marker-no-toast\trip-marker-no-toast-20261-171ea--목록의-지도-보기는-안내-토스트를-띄우지-않는다\error-context.md
+
+
+
+(node:14976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[7/8] tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 1280px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다
+  2) tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 1280px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다 
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for locator('.leaflet-marker-icon[title^="1. 아침 식당"]')
+        - locator resolved to <div tabindex="0" role="button" aria-pressed="true" data-edge-hidden="false" title="1. 아침 식당 · 2026-10-01 08:00–09:00" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive">…</div>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <div tabindex="0" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">…</div> intercepts pointer events
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <div tabindex="0" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">…</div> intercepts pointer events
+        - retrying click action
+          - waiting 100ms
+        51 × waiting for element to be visible, enabled and stable
+           - element is visible, enabled and stable
+           - scrolling into view if needed
+           - done scrolling
+           - <div tabindex="0" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">…</div> intercepts pointer events
+         - retrying click action
+           - waiting 500ms
+
+
+      23 |     await page.mouse.move(0, 0);
+      24 |     await page.screenshot({ path: `mockups/trip-marker-no-toast-2026-10-11-v1/selected-${width}.png` });
+    > 25 |     await first.click();
+         |                 ^
+      26 |     await expect(page.locator("#stop-button-i-a")).toHaveAttribute("aria-expanded", "false");
+      27 |     await expect(page.getByRole("status")).toHaveCount(0);
+      28 |     await page.locator("#stop-button-i-b").click();
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\trip-marker-no-toast-20261011.spec.ts:25:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-trip-marker-no-toast\trip-marker-no-toast-20261-facad--목록의-지도-보기는-안내-토스트를-띄우지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-trip-marker-no-toast\trip-marker-no-toast-20261-facad--목록의-지도-보기는-안내-토스트를-띄우지-않는다\error-context.md
+
+
+
+(node:24212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[8/8] tests\live\trip-marker-no-toast-20261011.spec.ts:36:1 › 실제 선택 요청 알림은 마커를 선택·해제해도 유지한다
+  3) tests\live\trip-marker-no-toast-20261011.spec.ts:36:1 › 실제 선택 요청 알림은 마커를 선택·해제해도 유지한다 ─────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('status').filter({ hasText: '선택 요청' })
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('status').filter({ hasText: '선택 요청' }) with timeout 12000ms
+      - waiting for getByRole('status').filter({ hasText: '선택 요청' })
+
+
+      46 |   const first = pin(page, "1. 아침 식당");
+      47 |   await first.locator("[data-pin-body]").click();
+    > 48 |   await expect(notice).toBeVisible();
+         |                        ^
+      49 |   await mapSettled(page);
+      50 |   await first.locator("[data-pin-body]").click();
+      51 |   await expect(notice).toBeVisible();
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\trip-marker-no-toast-20261011.spec.ts:48:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-trip-marker-no-toast\trip-marker-no-toast-20261011-실제-선택-요청-알림은-마커를-선택·해제해도-유지한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-trip-marker-no-toast\trip-marker-no-toast-20261011-실제-선택-요청-알림은-마커를-선택·해제해도-유지한다\error-context.md
+
+
+  3 failed
+    tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 375px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다 
+    tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 1280px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다 
+    tests\live\trip-marker-no-toast-20261011.spec.ts:36:1 › 실제 선택 요청 알림은 마커를 선택·해제해도 유지한다 ──────────
+  5 passed (2.7m)

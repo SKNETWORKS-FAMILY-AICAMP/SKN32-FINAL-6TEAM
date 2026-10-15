@@ -1,0 +1,53 @@
+.....................................................F.................. [ 98%]
+.                                                                        [100%]
+================================== FAILURES ===================================
+__ test_planning_over_sse_streams_stages_and_ends_with_the_same_body_as_json __
+tests\e2e\test_op_stream.py:307: in test_planning_over_sse_streams_stages_and_ends_with_the_same_body_as_json
+    assert names[0] == "accepted" and names[-1] == "result"
+E   AssertionError: assert ('accepted' == 'accepted'
+E     
+E       accepted and 'error' == 'result'
+E     
+E     - result
+E     + error)
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.intake.pipeline:pipeline.py:317 intake review failed intake=0eae9393-269e-4403-b64c-51962693365e revision=1
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\pipeline.py", line 313, in _review_of
+    return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 666, in ensure
+    payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 395, in build
+    engine = default_engine(party)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\intake\review.py", line 344, in default_engine
+    return legs.leg_planner(party_size, {}, modes=modes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 71, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+ERROR    app.domains.travel_ops.modules.live_progress.op_stream:op_stream.py:205 op_stream: work failed op=plan
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\modules\live_progress\op_stream.py", line 202, in job
+    outcome: tuple[str, Any] = ("result", work(progress, state.defer))
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 1688, in <lambda>
+    work=lambda progress, defer: plan_and_register(progress.stage))
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\entry\trip_api.py", line 1658, in plan_and_register
+    outcome = planner_module.plan_trip(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\planning\planner.py", line 1288, in plan_trip
+    return _plan_trip(conn=conn, tenant_id=tenant_id, request=request, chat=chat, tour_api=tour_api,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\planning\planner.py", line 1492, in _plan_trip
+    engine=legs.leg_planner(request.party_size, dict(request.constraints)))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\components\team_hooks\legs.py", line 71, in leg_planner
+    raise TeamUnavailable("mobility", "engine_unavailable")
+app.core.team_availability.TeamUnavailable: team 'mobility' is unavailable: engine_unavailable
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_op_stream.py::test_planning_over_sse_streams_stages_and_ends_with_the_same_body_as_json
+1 failed, 72 passed in 23.12s

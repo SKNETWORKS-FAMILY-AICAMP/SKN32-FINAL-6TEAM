@@ -1,0 +1,7 @@
+[
+  {
+    "file": "tests\\scenario\\test_departure_input_race_db_v1.py",
+    "backup": "tests\\scenario\\_backup\\2026-10-09_0532_출발조건_저장경합\\test_departure_input_race_db_v1.py",
+    "sha256": "1fc373dc24cfb37c1c8044f2a78d4729edfbf4e49c8ccd8a5657a78546170f7a"
+  }
+]

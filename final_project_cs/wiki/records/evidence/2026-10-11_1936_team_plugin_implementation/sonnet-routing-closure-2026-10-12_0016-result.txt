@@ -1,0 +1,27 @@
+**결론: 직전에 지적하신 결함은 해결됐고, 추가 결함은 없습니다. 감사를 끝내셔도 됩니다.**
+
+**근거는 정적 읽기와 실행으로 나뉩니다.**
+- **정적 읽기:** `case_dispatch.py:88-90`은 `_prepare_candidates` 뒤에 `get_case`를 다시 읽고, 상태가 `routing`이 아니면 `StateConflict`(409)를 냅니다. 이 검사는 `ROUTED` 전이(`:92-96`) 앞에 있어서, 승자가 `running`이나 `resolved`로 바꾼 뒤에는 `InvalidTransition`에 닿지 않습니다.
+- **읽기→전이 사이 경합:** `transition.py:147`이 `expected_version`을 먼저 대조해 `StateConflict`를 냅니다. 이 구간은 정적 읽기로만 확인했습니다.
+- **`ActiveRunError` 매핑:** `retry_initial`의 `:146-155` 매핑은 그대로입니다. `InvalidTransition` 전체 catch나 승자 Case 닫기는 추가되지 않았습니다.
+- **시험:**
+  - unit `test_actual_execute_checks_latest_status_before_routing`(running/resolved 2건)은 실제 `execute`를 돌립니다. 승자 상태를 읽으면 `transition_case`를 부르지 않고 409를 내는지 보며, `commits == 1`도 확인합니다.
+  - e2e `test_routing_retry_loser_returns_conflict_after_winner_has_completed`(running/resolved)는 두 요청이 사전 점검을 같이 끝낸 뒤 승자가 `running`이나 `resolved`에 도달하게 만듭니다. 그다음 응답이 [200, 409]인지, Case가 1개이고 적용·`itinerary_versions`·outbox가 각각 1건인지 확인합니다. 시험 코드는 읽었지만 이번에 직접 돌리지는 않았습니다.
+- **로그:** `initial-routing-race-after-v1.log`는 38 passed, 20.63초입니다. 파일에는 이 두 줄만 있어서, HTTP 7+unit 20+Controller 10+watch 1 구성은 로그에서 확인하지 못했습니다.
+
+**직접 실행한 unit (고정 runner 1회):** 31/31 통과, 2.37초, `PYTEST_EXIT=0`입니다. 구성은 `test_initial_retry_boundaries` 20 + Controller 10 + watch 1입니다. 구성은 지시하신 수치와 파일 내용으로 확인했고, runner 출력에서 파일별로 나누어 세지는 않았습니다. 이 31건은 DB 없는 unit이라 HTTP 경합 자체는 재현하지 않습니다. 경합은 위 e2e와 사전 로그가 근거입니다.
+
+**직접 읽은 범위:**
+- `case_dispatch.py` 전체
+- `transition.py` 전체
+- `test_initial_retry_boundaries.py` 전체
+- `test_web_initial_concurrency.py` 전체
+- 직전 `result.txt`
+- 후 로그
+- runner
+
+**한계:**
+- DB 시험은 돌리지 않았습니다.
+- before 로그 두 개(`initial-routing-race-before-v1.log`, `initial-routing-running-race-before-v1.log`)는 읽지 않았습니다.
+- 재현은 TestClient 기반의 합성 경합이며 실제 운영 트래픽 근거가 아닙니다.
+- 이번 결함 외의 범위는 새로 감사하지 않았습니다.

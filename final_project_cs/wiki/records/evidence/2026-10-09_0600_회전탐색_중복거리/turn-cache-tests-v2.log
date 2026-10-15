@@ -1,0 +1,7 @@
+....................................................                     [100%]
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\turn-cache-tests-v2.xml -
+52 passed, 1 deselected in 33.96s
+Exception ignored in: <function Console.__del__ at 0x0000011414C75C60>
+Traceback (most recent call last):
+  File "<python-runtime>\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

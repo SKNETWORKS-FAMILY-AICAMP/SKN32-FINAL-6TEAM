@@ -1,0 +1,7 @@
+.....                                                                    [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\context-contract-v1.xml -
+5 passed in 21.58s
+Exception ignored in: <function Console.__del__ at 0x000002015E8E5D00>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -1,0 +1,15 @@
+Fsssss                                                                   [100%]
+================================== FAILURES ===================================
+___________ test_a_change_request_still_answers_with_what_happened ____________
+tests\e2e\test_web_api.py:397: in test_a_change_request_still_answers_with_what_happened
+    assert body["case_status"] == "resolved" and body["status"] == "adjusted", body
+E   AssertionError: {'answer': '���� ȣ���� 09:30 ���� �� ���� ���δ� Ȯ���� �ʿ��ؿ�. ���� ������ �ٲ��� �ʾҾ��.', 'case_id': '48f92101-aefb-4523-ba9b-895bce46b84b', 'case_status': 'resolved', 'classification': {'intent': 'incident_report', 'issue_code': 'dining_hours'}, ...}
+E   assert ('resolved' == 'resolved'
+E     
+E       resolved and 'needs_check' == 'adjusted'
+E     
+E     - adjusted
+E     + needs_check)
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_api.py::test_a_change_request_still_answers_with_what_happened
+1 failed, 5 skipped in 4.56s

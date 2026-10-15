@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Leaf } from "lucide-react";
 import { RegistrationSteps } from "@/components/ui";
+import { LanguageButton } from "@/components/ui/language-picker";
 import { useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { DeviceFrame } from "./device-frame";
@@ -23,7 +24,8 @@ export function JourneyShell({ view, title, children }: { view: JourneyView; tit
     <p>{t("서버에 연결된 화면이에요. 일정과 답은 서버가 낸 결과만 보여 드려요.", "Connected to the server. Itineraries and answers shown here come from the server only.")}</p>
   </footer>;
   // 모든 공통 화면은 휴대폰 크기 틀을 사용한다. 등록한 여행은 전용 지도 화면을 사용한다.
-  return <DeviceFrame scroll guardianIcon={view === "registration" || view === "checking"}>
+  // `[2026-10-13 사용자 결정]` 계획 담기(등록 첫 단계)까지는 메뉴 옆에 언어 지구본도 둔다(설정 화면에서도 바꾼다). 그 자리의 항로 지킴이 아이콘은 뺀다 — 「계획 확인하기」를 누르면 항로 지킴이 카드가 뜬다.
+  return <DeviceFrame scroll guardianIcon={view === "checking"} headerExtra={view === "registration" ? <LanguageButton /> : null}>
     <a href="#main-content" className={styles.skip}>{t("본문으로 이동", "Skip to content")}</a>
     <main id="main-content" className={styles.phoneMain} tabIndex={-1} data-view={view}>
       {step !== undefined && <RegistrationSteps current={step} />}

@@ -1,0 +1,8 @@
+........................................................................ [ 74%]
+.........................                                                [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1009_지하철응답_빈값오인\after-v1.xml -
+97 passed in 2.99s
+Exception ignored in: <function Console.__del__ at 0x000001DA730D5DA0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

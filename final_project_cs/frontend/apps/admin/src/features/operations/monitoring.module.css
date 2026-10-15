@@ -1,0 +1,16 @@
+.page{max-width:1100px;margin-inline:auto;min-width:0}
+.current{padding:20px;background:var(--surface);border:1px solid var(--line);border-radius:8px;margin:20px 0}
+.current>strong{font-size:20px}.current small{color:var(--muted);line-height:1.7}
+.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-block:24px}
+.filters label{display:flex;flex-direction:column;gap:6px;min-width:0}
+.filters input,.filters select{min-width:0;width:100%;box-sizing:border-box}
+.filters p{grid-column:1/-1}
+.table{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin-block:16px;max-width:100%}
+.table table{width:100%;min-width:650px;border-collapse:collapse}.table th,.table td{text-align:left;padding:12px;border-bottom:1px solid var(--line)}
+.counts{display:flex;flex-wrap:wrap;gap:8px 20px}.counts div{display:flex;gap:8px}.counts dt{color:var(--muted)}.counts dd{margin:0;font-weight:600}
+.detail{margin-top:32px;border-top:1px solid var(--line);padding-top:16px;min-width:0}
+.event{border:1px solid var(--line);border-radius:8px;padding:16px;margin-block:16px;overflow-wrap:anywhere}
+.event h3{font-size:16px}.event pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.6;margin-block:8px}
+.event details{margin-top:12px}.event summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));list-style:none;padding:0;gap:12px}.checks li{padding:12px;border:1px solid var(--line);border-radius:4px;min-width:0}.checks span{display:block;font-size:13px;color:var(--muted);margin-top:6px}
+@media(max-width:700px){.filters,.checks{grid-template-columns:minmax(0,1fr)}.current{padding:16px}.counts{gap:8px 12px}}

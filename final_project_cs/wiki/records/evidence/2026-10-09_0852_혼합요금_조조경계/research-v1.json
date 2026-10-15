@@ -1,0 +1,30 @@
+{
+  "checked_at": "2026-10-09T08:57:37.293772+09:00",
+  "sources": [
+    {
+      "url": "https://sftc.seoul.go.kr/seoul/mulga/main/contents.do?menuNo=200022",
+      "scope": "Full HTML fare table and rules: 6 ordinary adult type rates, flat single bus ride, early-bird discount."
+    },
+    {
+      "url": "https://news.seoul.go.kr/traffic/traffic_price",
+      "scope": "First boarding early-bird rule and ordinary fare difference on following transfers; body 239-258."
+    },
+    {
+      "url": "https://news.seoul.go.kr/traffic/transfer_discount",
+      "scope": "Fare overview, window, tag, same route/vehicle and maximum duration conditions; body 226-276."
+    },
+    {
+      "url": "https://arxiv.org/abs/2204.01326",
+      "scope": "Abstract and metadata of Price Optimal Routing in Public Transportation, version3 revised2024-02-08.",
+      "applied": false
+    },
+    {
+      "url": "https://drops.dagstuhl.de/entities/document/10.4230/OASIcs.ATMOS.2019.12",
+      "scope": "Publication metadata and ticket-state framework abstract; implementation not applied.",
+      "applied": false
+    }
+  ],
+  "interpretation": "Independent ordinary fare sum is an estimated upper amount, not integrated fare or optimal-fare routing.",
+  "new_web_routes": 0,
+  "map_developer_api_calls": 0
+}

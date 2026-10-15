@@ -1,0 +1,10 @@
+{
+  "saved": 360,
+  "remote_hash_match": true,
+  "fixed_prompt_hash_match": true,
+  "exact_id_gold_type_match": true,
+  "independent_direct_recount": true,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "model_repetitions": 1
+}

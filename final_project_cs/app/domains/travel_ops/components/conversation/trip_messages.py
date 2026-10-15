@@ -7,7 +7,7 @@
     CREATED → (분류) CLASSIFIED → ROUTED(여행 창구) → COMPLETED(= resolved)
   분류 실패는 `classify_case` 가 escalated 로 보낸다. 신고 내용을 못 뽑았거나 창구가
   받지 않는 문장이면 ROUTING_FAILED, 창구가 처리하지 못하면 GUARDRAIL_ESCALATED —
-  **추측으로 일정을 바꾸지 않고 사람에게 넘긴다.**
+  **추측으로 일정을 바꾸지 않고 처리 불가로 닫는다**(고객에게는 처리하지 못했다고 답한다. 상담원 대기는 없다 — D-018 · D-CS-014).
 ★같은 `request_id` 는 Case 를 새로 만들지 않는다.
 ★재요청(「다른 안으로 바꿔 줘」, v11 §1) — 가장 최근에 바뀐 항목을 우리가 들고 있던
   「다른 안」으로 바꾼다. 무엇으로 바꿀지 모델이 지어내게 두지 않는다.
@@ -222,7 +222,8 @@ def owner_team(team: str, *, items: list[Any], message: str, selected: UUID | No
 
 def _finish_fact_case(*, tenant: str, case_id: UUID, trip_id: UUID, message: str, classifier: Any,
                       actor_id: str, fact: str, answer: str, items: list[Any] | None = None,
-                      selected: UUID | None = None, at: datetime | None = None) -> bool:
+                      selected: UUID | None = None, at: datetime | None = None,
+                      diagnostic_recorder=None) -> bool:
     """사실 질문 Case 를 끝낸다 — 분류하고, 되면 담당을 적고 완료로. 분류가 실패하면 기록만 남기고(escalated —
     모델 장애를 운영이 본다) False. ★이 여행의 사실을 묻는 말(하루 요약 · 일정 상세 · 다음 일정 · 예약 · 주소 ·
     운영시간 · 이동)은 규정 검색이 아니라 여행 기록으로 답한다(`trip_facts.py`) — 답은 이미 나갔다. 여기는 기록이다."""
@@ -235,7 +236,8 @@ def _finish_fact_case(*, tenant: str, case_id: UUID, trip_id: UUID, message: str
     try:
         with get_connection() as conn:
             event = classify_case(conn, tenant_id=tenant, case_id=case_id, text=message, classifier=classifier,
-                                  actor_id=actor_id, state_patch={"answer": answer})
+                                  actor_id=actor_id, state_patch={"answer": answer},
+                                  diagnostic_recorder=diagnostic_recorder)
             if event is not EventType.CLASSIFIED:
                 return False
             case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
@@ -262,11 +264,13 @@ def _finish_fact_case(*, tenant: str, case_id: UUID, trip_id: UUID, message: str
 def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message: str,
                         at: datetime, classifier: Any, chat: Any, desk: TripDesk,
                         actor_id: str, policy_search: Any = None, place_source: Any = None,
+                        kakao_source: Any = None,
                         defer: Callable[[Callable[[], None]], None] | None = None,
                         selected_item_id: UUID | None = None, location: Any = None,
                         progress: Callable[[str], None] | None = None,
                         controller: Any = None, resume_case_id: UUID | None = None,
-                        resume_token: str | None = None, expected_version: int | None = None) -> dict[str, Any]:
+                        resume_token: str | None = None, expected_version: int | None = None,
+                        summary_day: Any = None) -> dict[str, Any]:
     """★`[2026-09-28]` **어떤 결과로 끝나든 `answer`(고객에게 보일 문장)를 싣는다** — `trip_replies.py` 머리.
     질문은 규정 근거로 답하고(`policy_search`, 없으면 못 찾았다고 답한다), 잡담·모호한 말은 할 수 있는 일과
     이 여행의 사실로 답한다. 답은 서버가 가진 사실로만 만든다.
@@ -299,6 +303,12 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             trip, items = store.latest(conn, trip_id)
         except KeyError:
             raise TripNotFound(str(trip_id)) from None
+        summary_decision = None
+        if summary_day is not None:
+            from .summary_request import decide_summary
+            if resume_case_id is not None or resume_token is not None or expected_version is not None:
+                raise ValueError("하루 요약과 업무 재개는 함께 요청할 수 없습니다")
+            summary_decision = decide_summary(summary_day, message=message, items=items)
         with conn.cursor() as cur:
             cur.execute("SELECT case_id FROM customer_cases WHERE tenant_id=%s "
                         "AND state_json @> %s::jsonb", (tenant, json.dumps(marker)))
@@ -327,18 +337,25 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                 return retried
             case = repository.get_case(conn, tenant_id=tenant, case_id=existing[0])
             before = (case.get("state_json") or {}).get("answer")
-            saved_reply = (case.get("state_json") or {}).get("chat_reply") or {}
-            return {**{k: saved_reply[k] for k in ("choices", "choices_title", "more", "answer_web") if k in saved_reply},
-                    "status": "duplicate", "case_id": str(existing[0]),
+            reply = (case.get("state_json") or {}).get("chat_reply") or {}
+            return {"status": "duplicate", "case_id": str(existing[0]),
                     "case_status": str(case["status"]),
+                    **{k: v for k, v in reply.items() if k in ("choices", "choices_title", "more", "answer_web")},
                     "answer": f"같은 요청을 이미 받았어요.{chr(10) + str(before) if before else ''}"}
         from app.domains.travel_ops.components.conversation.case_dispatch import resume_pending
         try:
             resumed = resume_pending(conn, controller=controller, tenant=tenant, trip=trip,
                                      request_id=request_id, message=message, actor_id=actor_id,
-                                     case_id=resume_case_id, token=resume_token, expected_version=expected_version, desk=desk, chat=chat)
+                                     case_id=resume_case_id, token=resume_token, expected_version=expected_version, desk=desk, chat=chat,
+                                     fresh=(lambda: _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
+                                                                message=message, selected=selected_item_id, chat=chat, now=at))
+                                     if summary_day is None and _decision_mode(chat, tenant) == "on" else None)
         except LookupError:
             raise TripNotFound(str(resume_case_id)) from None
+        # ★`[2026-10-13]` 대기 건이 있어도 새 문장이 혼자서 완결된 요청이면 새 요청으로 처리한다(같은 해석을 다시 부르지 않는다)
+        fresh_decision = None
+        if resumed is not None and "fresh_decision" in resumed:
+            fresh_decision, resumed = resumed["fresh_decision"], None
         if resumed is not None:
             return resumed
         # ★`[2026-09-29]` **사실 질문의 답은 분류 전에 규칙으로 만든다**(모델을 안 쓴다) — 그리고 Case 기록에 **처음부터**
@@ -347,14 +364,19 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         #   모델 한 번이 할 일과 대상을 고른다. 켜져 있으면(`travel.decision_unit.mode = on`) 아래 규칙 경로(사실 낱말 ·
         #   분류기 · 추출기 · 대상 규칙)를 타지 않는다 — 모델 실패에도 규칙 경로로 넘기지 않는다(옛 오처리를 되살린다).
         mode = _decision_mode(chat, tenant)
-        if mode != "off":
-            _stage(progress, "understanding")
+        if mode != "off" or summary_decision is not None:
+            _stage(progress, "reading" if summary_decision is not None else "understanding")
             _clear_model_path()
-            decision, failure = _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
-                                            message=message, selected=selected_item_id, chat=chat)
+            if summary_decision is not None:
+                decision, failure = summary_decision, None
+            elif fresh_decision is not None:
+                decision, failure = fresh_decision
+            else:
+                decision, failure = _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
+                                                message=message, selected=selected_item_id, chat=chat, now=at)
             record = decision.record() if decision is not None else {"failed": failure}
             record = {**record, **_model_path()}               # ★`[2026-10-07]` 어느 경로(로컬 · API)로 답했나 — 넘김 장치가 켜져 있을 때만 들어간다
-            if mode == "on":
+            if mode == "on" or summary_decision is not None:
                 _stage(progress, "applying")
                 from .fact_read_retry import read_snapshot
                 from . import chat_log
@@ -370,7 +392,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                                      decision=decision, failure=failure, actor_id=actor_id,
                                      policy_search=policy_search, place_source=place_source,
                                      selected=selected_item_id, here=_fix_of(location, at), controller=controller,
-                                     read_snapshot=snapshot)
+                                     read_snapshot=snapshot, kakao_source=kakao_source)
             marker = {**marker}                         # shadow — 결정만 기록하고 아래 경로로 답한다
             shadow = {"decision_shadow": record}
         else:
@@ -389,7 +411,8 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             finish = lambda: _finish_fact_case(tenant=tenant, case_id=case_id, trip_id=trip_id,  # noqa: E731
                                                message=message, classifier=classifier, actor_id=actor_id,
                                                fact=fact, answer=fact_answer[0], items=items,
-                                               selected=selected_item_id, at=at)
+                                               selected=selected_item_id, at=at,
+                                               diagnostic_recorder=getattr(controller, "diagnostic_recorder", None))
             if defer is not None:
                 defer(finish)
                 pending = True
@@ -424,7 +447,9 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
 
         _stage(progress, "classifying")
         event = classify_case(conn, tenant_id=tenant, case_id=case_id, text=message,
-                              classifier=classify_with_dispatch, actor_id=actor_id, state_patch=dispatch_state)
+                              classifier=classify_with_dispatch, actor_id=actor_id, state_patch=dispatch_state,
+                              customer_id=trip["customer_id"],
+                              diagnostic_recorder=getattr(controller, "diagnostic_recorder", None))
         conn.commit()
 
         def move(event_type, payload):
@@ -539,7 +564,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             outcome = desk.fresh_alternate(trip_id=trip_id, item_id=target.item_id, base_version=current["version"],
                                            message=message, request_id=request_id)
     else:
-        # ★모르는 종류는 어떤 처리로도 떨어뜨리지 않는다 — 사람에게
+        # ★모르는 종류는 어떤 처리로도 떨어뜨리지 않는다 — 처리하지 못한 것으로 남긴다
         outcome = {"status": f"unhandled_{report['type']}"}
     with get_connection() as conn:
         def move2(event_type, payload):
@@ -551,9 +576,6 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         # ★`asked` — 「먼저 물어봐줘」·「변경 안 할 일정」이라 바꾸지 않고 물었다(D-020). 처리한 것이다 —
         #   답은 묻는 문장이고, 고객은 계획서 링크·웹에서 고른다. 사람에게 넘길 일이 아니다.
         answer = trip_replies.outcome_reply(outcome.get("status"), outcome, message)
-        chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more") if k in outcome}
-        if outcome.get("text_web"):
-            chat_reply["answer_web"] = outcome["text_web"]
         # ★`[2026-09-28]` 「바꿀 것 없음」(오늘 일정 없음 · 그 뒤 식사 없음 · 영향 없음 · 이미 바뀜)도 **답**이다 —
         #   `ANSWERS` 머리 주석이 그렇게 말하는데 여기 목록에 없어 사람 대기로 떨어졌다(ui 세션 실서버 시험).
         #   「바꿀 다른 안이 없음」(`no_alternate`)도 오류가 아니라 답이다 — 사람 대기는 버그·오류 리포트에만(사용자 결정)
@@ -566,7 +588,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             # ★`[2026-09-29 ui 세션 지적]` 무엇을 봤고 왜 안 됐는지(반경 · 떨어진 후보와 이유)도 남긴다 — 「없어요」만 남아
             #   기록으로 원인을 알 수 없었다
             kept = {k: outcome[k] for k in ("status", "reason", "radius_m", "seen", "rejected", "version") if k in outcome}
-            move2(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer, "trip_outcome": kept, "chat_reply": chat_reply}})
+            move2(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer, "trip_outcome": kept}})
         else:
             # ★`[2026-09-28]` 답을 남긴다 — 전에는 완료 전이에만 남겨, 「바꿀 것 없음」(`no_meal` 등) 뒤 같은 요청이 오면
             #   「같은 요청을 이미 받았어요」만 나가고 앞의 답이 빠졌다(시험을 조여서 찾았다)
@@ -617,7 +639,7 @@ def _model_path() -> dict[str, Any]:
 
 
 def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: list[Any], message: str,
-                selected: UUID | None, chat: Any):
+                selected: UUID | None, chat: Any, now: datetime | None = None):
     from app.core.settings import get_guardrails
 
     from app.domains.travel_ops.components.conversation import chat_log
@@ -627,7 +649,7 @@ def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: li
         decision = decision_unit.decide(
             chat, stops=decision_unit.stops_of(items), changes=decision_unit.changes_of(store, conn, trip_id, items),
             history=chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id), selected_item_id=selected,
-            message=message, num_predict=int(get_guardrails().get("travel.decision_unit.num_predict") or 160))
+            message=message, num_predict=int(get_guardrails().get("travel.decision_unit.num_predict") or 160), now=now)
         return decision, None
     except decision_unit.DecisionFailed as exc:
         return None, str(exc)
@@ -675,7 +697,8 @@ _CLARIFY = "어느 일정을 말씀하시는지 알려 주세요 — 화면에�
 def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: str, request_id: str, at: datetime,
                   desk: TripDesk, store: TripStore, items: list[Any], decision: Any, failure: str | None,
                   actor_id: str, policy_search: Any, place_source: Any, selected: UUID | None,
-                  here: Any = None, controller: Any = None, read_snapshot: dict[str, Any] | None = None) -> dict[str, Any]:
+                  here: Any = None, controller: Any = None, read_snapshot: dict[str, Any] | None = None,
+                  kakao_source: Any = None) -> dict[str, Any]:
     """결정 단위가 고른 할 일을 **서버가 확인하고** 기존 실행 함수로 처리한다. 결과는 늘 「한 일」·「고를 안」·「되물음」이다."""
     import re
 
@@ -687,7 +710,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     from app.domains.travel_ops.components.conversation import trip_facts
     from app.domains.travel_ops.components.conversation import trip_replies
-    from app.domains.travel_ops.components.conversation.decision_unit import LOCATION_FACTS, fact_first, labels, maybe_meant
+    from app.domains.travel_ops.components.conversation.decision_unit import LOCATION_FACTS, PLACE_NEAR_FACTS, fact_first, labels, maybe_meant
 
     def move(event_type, payload):
         case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
@@ -704,7 +727,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         # ★모델 장애 · 스키마 밖 답 — **바꾸지 않는다.** 분류 실패로 기록한다(시스템 오류 리포트 — 사람 몫은 버그·오류뿐)
         def broken(_text):
             raise RuntimeError(f"결정 단위 실패: {failure}")
-        classify_case(conn, tenant_id=tenant, case_id=case_id, text=message, classifier=broken, actor_id=actor_id)
+        classify_case(conn, tenant_id=tenant, case_id=case_id, text=message, classifier=broken, actor_id=actor_id,
+                      diagnostic_recorder=getattr(controller, "diagnostic_recorder", None))
         answer = ("지금 요청을 해석하지 못했어요(해석 모델 응답 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요.")
         return view({"status": "escalated", "reason": "decision_failed", "failure": failure, "answer": answer})
 
@@ -712,7 +736,6 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     from app.domains.travel_ops.components.conversation import chat_log, fact_context
 
     safe_read = (decision.action == "answer_fact" and decision.fact not in LOCATION_FACTS
-                 and all(r.get("fact") not in LOCATION_FACTS for r in decision.reads)
                  and read_snapshot is not None and read_snapshot.get("recoverable") is True)
     read_case = None
     if safe_read:
@@ -722,27 +745,31 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         read_case = lock_read_case(conn, tenant=tenant, case_id=case_id)
         if read_case["status"] not in ("classifying", "routing", "running"):
             raise StateConflict("같은 읽기 요청이 이미 처리되었습니다. 같은 요청 번호로 결과를 확인해 주세요.")
-    turns = ([{"role": "assistant", "reply": {"focus": read_snapshot.get("focus") or {}}}]
-             if safe_read else chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id))
     current_context, context_items = store.latest(conn, trip_id)
     if safe_read and current_context["version"] != read_snapshot["base_version"]:
         from .fact_read_retry import NEW_REQUEST
         raise StateConflict(NEW_REQUEST)
     context_now = datetime.now(timezone.utc)  # 문맥 만료는 고객이 보낸 여행 시각으로 연장하지 않는다.
+    turns = ([{"role": "assistant", "reply": {"focus": read_snapshot.get("focus") or {}}}]
+             if safe_read else chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id))
     decision, focus, stale_selection = fact_context.resolve(
         decision, items=context_items, message=message, selected=selected,
         turns=turns,
         version=current_context["version"], now=context_now,
         ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
-    if decision.action == "answer_fact" and decision.reads:
+    # 복합 읽기는 각 질문의 대상·범위를 따로 검증한다.
+    if decision.reads:
         focus, stale_selection = None, False
-    read_patch = {}
     if safe_read:
+        # ★`[2026-10-13]` 문맥으로 **고친 대상**으로 읽기 기록을 다시 만든다 — 아래 ROUTED 가 결정과 함께 저장한다.
+        #   Case 를 열 때 만든 기록은 고치기 전 대상이라, 저장된 결정(고친 대상)과 기록이 어긋나
+        #   중단 뒤 재시도가 다른 일정을 답할 수 있었다. develop 의 복구 수정(07202a63 계열)이 병합(2b5ad163)에서 빠졌던 것을
+        #   되살렸다(tests/e2e/test_recovery_read_merge_web.py).
         from .fact_read_retry import read_snapshot as snapshot_read
 
-        read_patch["fact_read_snapshot"] = snapshot_read(
+        read_snapshot = snapshot_read(
             decision, at=at, selected=selected, trip={"trip_id": trip_id, "version": current_context["version"]},
-            turns=turns)
+            turns=turns) or read_snapshot
     from app.domains.travel_ops.components.conversation import case_dispatch
 
     plan = (_dispatch_decision(conn, controller=controller, tenant=tenant, trip_id=trip_id, case_id=case_id,
@@ -753,7 +780,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     if not safe_read or read_case["status"] == "classifying":
         event = classify_case(conn, tenant_id=tenant, case_id=case_id, text=message,
                               classifier=lambda _text: labels(decision), actor_id=actor_id,
-                              state_patch={"conversation_dispatch": plan} if plan is not None else None)
+                              state_patch={"conversation_dispatch": plan} if plan is not None else None,
+                              diagnostic_recorder=getattr(controller, "diagnostic_recorder", None))
     if not safe_read:
         conn.commit()
     if event is not EventType.CLASSIFIED:
@@ -768,6 +796,12 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
                                      actor_id=actor_id, decision=decision, desk=desk, plan=plan)
     team = {"dining": "dining", "activity": "activity", "mobility": "mobility"}.get(getattr(item, "kind", None),
                                                                                     "trip_desk")
+    # 읽기 재시도(fact_read_retry.retry_read)가 쓰는 스냅샷 — Case 를 열 때와 같은 이름으로 남긴다
+    # ★`[2026-10-14]` 문맥으로 바로잡은 대상(`fact_context.resolve`)을 스냅샷에도 같이 적는다 — 전에는 해석 기록은 바로잡은 대상,
+    #   스냅샷은 모델이 처음 고른 대상이라 중단 뒤 재전송이 엉뚱한 일정을 읽을 수 있었다(`test_context_corrected_target_and_snapshot_are_committed_together`)
+    if read_snapshot and not decision.reads:
+        read_snapshot = {**read_snapshot, "item_id": str(decision.item.item_id) if decision.item else None}
+    read_patch = {"fact_read_snapshot": read_snapshot} if read_snapshot else {}
     if not safe_read or read_case["status"] != "running":
         move(EventType.ROUTED, {"owner_team_id": team, "capability": f"trip_desk.{action}", "routed_by": "decision_unit",
                                 "decision": decision.record(),
@@ -796,26 +830,44 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     if action == "answer_fact" and decision.reads:
         from .read_requests import reply as read_reply
+
         outcome, basis, focus = read_reply(
-            decision, items=now_items, message=message, selected=selected, turns=turns,
+            decision, items=now_items, message=message, selected=selected,
+            turns=([{"role": "assistant", "reply": {"focus": read_snapshot.get("focus") or {}}}]
+                   if safe_read else chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id)),
             version=base, now=at, context_now=context_now,
             ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")), place_source=place_source)
     elif stale_selection:
-        outcome = {"status": "clarify", "text": "가리키는 일정을 최신 여행에서 확인하지 못했어요. 일정 이름을 알려 주시거나 다시 선택해 주세요."}
+        outcome = {"status": "clarify", "text": "가리키는 일정 하나를 현재 여행에서 확인하지 못했어요. 최신 일정에서 다시 선택해 주세요."}
     elif action == "clarify":
-        outcome = _clarify_with_choices(decision, now_items, at=at, selected=selected)
+        outcome = _clarify_with_choices(decision, items, at=at, selected=selected)
     elif action == "other":
-        outcome = {"status": "answered", "text": decision.social or trip_replies.other_reply(now_items, at)}
+        outcome = {"status": "answered", "text": decision.social or trip_replies.other_reply(items, at)}
+    elif action == "answer_service":
+        from app.domains.travel_ops.components.conversation import service_help
+
+        # ★`[2026-10-14]` 기능 안내는 규정 답과 다른 문턱을 쓴다(`travel.service_help.min_score` — 근거는 설정 파일 주석)
+        status, text, basis = service_help.reply(
+            message=message, tenant_id=tenant, policy_search=policy_search,
+            min_score=float(get_guardrails().get("travel.service_help.min_score")), now=at)
+        outcome = {"status": status, "text": text}
     elif action == "answer_fact" and decision.fact in ("schedule", "changeability"):
-        from . import schedule_query
+        from app.domains.travel_ops.components.conversation import schedule_query
+
         text, basis = schedule_query.reply(decision.fact, decision.query, items=now_items, now=at)
+        basis["version"] = base
         outcome = {"status": "answered", "text": text}
+    elif action == "answer_fact" and decision.fact in PLACE_NEAR_FACTS:
+        outcome = _answer_near_place(conn, decision=decision, message=message, trip=current, items=now_items, at=at,
+                                     store=store, desk=desk, trip_id=trip_id, place_source=place_source,
+                                     kakao_source=kakao_source)
     elif action == "answer_fact" and decision.fact in LOCATION_FACTS:
         # ★`[2026-09-30 사용자 지시]` 현재 위치가 필요한 질문 — 위치가 없으면 **일정을 바꾸지 않고** 위치를 부탁한다(`needs_location`)
         outcome = _answer_here(conn, kind=decision.fact, fix=here, trip=current, items=now_items, item=item, at=at,
                                store=store, desk=desk, trip_id=trip_id)
     elif action == "answer_fact":
         kind = decision.fact if decision.fact != "none" else "detail"
+        # 답변에서 이름으로 다시 찾은 대상도 선택지·다음 질문과 같은 객체로 연결한다.
         if item is None:
             _, item = trip_facts.target(now_items, message, at)
             if item is not None:
@@ -933,10 +985,11 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         kept["basis"] = json.loads(json.dumps(basis, ensure_ascii=False, default=str))
     if status in _DONE:
         ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version") else str(status))
-        move(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer, "trip_outcome": kept, "chat_reply": chat_reply}})
+        move(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer, "trip_outcome": kept,
+                                                                     "chat_reply": chat_reply}})
     else:
         move(EventType.GUARDRAIL_ESCALATED, {"guardrail": "trip_desk", "observed": str(status),
-                                             "state_patch": {"answer": answer, "trip_outcome": kept, "chat_reply": chat_reply}})
+                                             "state_patch": {"answer": answer, "trip_outcome": kept}})
     return view({"status": status, "reason": f"decision_{action}", "decision": decision.record(),
                  "outcome": outcome, "answer": answer, **({"choices": outcome["choices"]} if outcome.get("choices") else {}),
                  **({"more": outcome["more"]} if outcome.get("more") else {}),
@@ -1011,6 +1064,26 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
     return case_dispatch.execute(conn, controller=controller, tenant=tenant, trip=trip, case_id=case_id,
                                  team=owner, request=request, item=item, actor_id=actor_id,
                                  decision=decision, desk=desk, plan=plan)
+
+
+def _report_dispatch_plan(*, report: dict[str, Any], team: str, trip: dict[str, Any], store: TripStore,
+                          items: list[Any], message: str, selected: UUID | None, at: datetime):
+    """규칙 해석 모드도 기존 대상·되돌림 규칙으로 재사용 가능한 입력을 만든다."""
+    from app.domains.travel_ops.components.conversation import case_dispatch
+
+    action = {"delay": "report_delay", "closed": "report_closed", "change": "apply_change",
+              "rollback": "rollback", "stock_out": "stock_out"}[report["type"]]
+    request = {"type": "conversation", "action": action, "at": at.isoformat(),
+               **{k: report[k] for k in ("minutes", "to_version", "choice") if report.get(k) is not None}}
+    if action == "stock_out":
+        request.update(type="stock_out", products=report["products"])
+    target = _change_target(items, message, selected, at) if action in ("apply_change", "report_closed") else None
+    if action == "rollback" and request.get("to_version") is None:
+        target_version, question = _rollback_target(store, UUID(str(trip["trip_id"])), items, message, selected, at)
+        request.update(to_version=target_version, question=question, confirmed=question is None)
+    owner = target.kind if target is not None else ("activity" if action == "stock_out" else "dining" if action in ("report_delay", "report_closed")
+                                                   else team if team in ("dining", "activity") else "activity")
+    return case_dispatch.descriptor(trip=trip, team=owner, request=request, item=target), target
 
 
 def _confirmed_rollback(conn, tenant: str, trip_id: UUID, change: Any) -> bool:
@@ -1093,8 +1166,6 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
             text = trip_here.route_here(fix, dest, now=at,
                                         leg=legs.leg_planner(trip.get("party_size"), trip.get("constraints")))
     else:
-        from app.domains.travel_ops.components.itinerary.itinerary_changes import plan_nearby
-
         wanted = "dining" if kind == "nearby_dining" else "activity"
         if wanted == "activity":
             from app.domains.travel_ops.components.places.catalog_pool import widen_activity_pool
@@ -1104,26 +1175,87 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
             widen_activity_pool(conn, tenant_id=store.tenant_id, trip_id=trip_id, place=origin,
                                 known_names={str(p.get("name")) for p in store.places(conn, trip_id)},
                                 radius_m=RELAX_WIDE_M, now=at, memo=False)
-        places = store.places(conn, trip_id)
-        state_lookup = None
-        if wanted == "dining" and getattr(desk, "_use_ledger", True):
-            # ★`[2026-10-05]` 요식 원장이 식당의 정본이다(팀 방식). 현재 위치 둘레의 원장 가게를 **이 여행 전용 장소**로 들여놓고
-            #   (`dining.nearby.add_nearby`) 영업 판정은 원장(`dining_states`)에게 묻는다. 전에는 후보를 원장에서 직접 받았다(A 방식 · 걷어냄).
-            #   ★판정은 **이 연결**로 묻는다 — 방금 들여놓은 장소 · 연결이 아직 커밋 전이라 다른 연결에는 안 보인다.
-            #   ★반경은 1.5km 까지만 들여놓는다(3km 는 한 번에 수백~수천 곳이라 여행 전용 장소 표를 부풀린다 · 우리가 고른 값).
-            from types import SimpleNamespace
-
-            # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
-            from app.domains.travel_ops.components.team_hooks import dining_ledger
-
-            places = dining_ledger.add_nearby(conn, store, trip_id,
-                                              [SimpleNamespace(kind="dining", place=fix.as_origin())], places,
-                                              radius_m=NEARBY_HERE_RADIUS_M)
-            state_lookup = dining_ledger.state_lookup(conn, store.tenant_id)
-        found, radius, sought = plan_nearby(wanted, trip=trip, places=places, origin=fix.as_origin(), at=at,
-                                            state_lookup=state_lookup, items=items)
+        found, radius, sought = _nearby(conn, wanted, origin=fix.as_origin(), trip=trip, items=items, at=at,
+                                        store=store, desk=desk, trip_id=trip_id)
         text = trip_here.nearby(kind, fix, found=found, radius_m=radius, sought=sought)
     return {"status": "answered", "text": (note + " " if note else "") + text}
+
+
+def _nearby(conn, wanted: str, *, origin: dict[str, Any], trip: dict[str, Any], items: list[Any], at: datetime,
+            store: TripStore, desk: TripDesk, trip_id: UUID) -> tuple[list[Any], int | None, int]:
+    """기준점(`origin` — 현재 위치 · 일정의 곳 · 이름을 댄 곳) 둘레의 후보. 식당이면 원장 가게를 들여놓고 원장으로 영업을 판정한다."""
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import plan_nearby
+
+    places = store.places(conn, trip_id)
+    state_lookup = None
+    if wanted == "dining" and getattr(desk, "_use_ledger", True):
+        # ★`[2026-10-05]` 요식 원장이 식당의 정본이다(팀 방식). 기준점 둘레의 원장 가게를 **이 여행 전용 장소**로 들여놓고
+        #   (`dining.nearby.add_nearby`) 영업 판정은 원장(`dining_states`)에게 묻는다. 전에는 후보를 원장에서 직접 받았다(A 방식 · 걷어냄).
+        #   ★판정은 **이 연결**로 묻는다 — 방금 들여놓은 장소 · 연결이 아직 커밋 전이라 다른 연결에는 안 보인다.
+        #   ★반경은 1.5km 까지만 들여놓는다(3km 는 한 번에 수백~수천 곳이라 여행 전용 장소 표를 부풀린다 · 우리가 고른 값).
+        from types import SimpleNamespace
+
+        # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        places = dining_ledger.add_nearby(conn, store, trip_id, [SimpleNamespace(kind="dining", place=origin)], places,
+                                          radius_m=NEARBY_HERE_RADIUS_M)
+        state_lookup = dining_ledger.state_lookup(conn, store.tenant_id)
+    return plan_nearby(wanted, trip=trip, places=places, origin=origin, at=at, state_lookup=state_lookup, items=items)
+
+
+def _answer_near_place(conn, *, decision: Any, message: str, trip: dict[str, Any], items: list[Any], at: datetime,
+                       store: TripStore, desk: TripDesk, trip_id: UUID, place_source: Any,
+                       kakao_source: Any) -> dict[str, Any]:
+    """★`[2026-10-15]` 「서촌 근처 맛집 있어?」 — 일정의 곳이나 고객이 이름을 댄 곳 근처의 먹을 곳. **일정은 바꾸지 않는다.**
+    모델은 해석만 한다(무엇을 · 어디 근처). 가게는 요식 원장이 낸 것만, 영업은 원장으로 판정한다 — 모델 기억으로 가게 이름을 만들지 않는다.
+    ☆전에는 길이 없어 「현재 위치 근처」로 읽거나 · 대체 후보로 읽거나 · 모델이 일반 추천(「익선동 떡볶이가 유명합니다」)을 지어냈다(gpt-4o-mini 실측)."""
+    from app.domains.travel_ops.components.conversation import trip_here
+
+    anchor, when = _near_anchor(decision, message=message, items=items, at=at, store=store, conn=conn, trip_id=trip_id,
+                                place_source=place_source, kakao_source=kakao_source)
+    if anchor is None:
+        return {"status": "answered", "text": "어느 곳 근처의 식당을 찾을까요? 일정에 있는 곳이나 동네 이름을 말씀해 주세요."}
+    found, radius, sought = _nearby(conn, "dining", origin=anchor, trip=trip, items=items, at=when,
+                                    store=store, desk=desk, trip_id=trip_id)
+    return {"status": "answered", "text": trip_here.near_place(anchor["name"], at=when, now=at, found=found,
+                                                               radius_m=radius, sought=sought),
+            "near": {"name": anchor["name"], "source": anchor.get("source"), "at": when.isoformat(),
+                     "found": [(c.place or {}).get("name") or c.name for c in found[:trip_here.NEARBY_SHOWN]]}}
+
+
+def _near_anchor(decision: Any, *, message: str, items: list[Any], at: datetime, store: TripStore, conn, trip_id: UUID,
+                 place_source: Any, kakao_source: Any) -> tuple[dict[str, Any] | None, datetime]:
+    """(기준점, 볼 시각). 일정의 곳이면 그 좌표와 그 일정 시각(지났으면 지금), 이름만 댔으면 찾은 좌표와 지금. 못 찾으면 (None, 지금).
+    ★이름은 고객 문장에 **글자 그대로** 있어야 받는다 — 모델이 바꿔 적은 이름으로 찾지 않는다."""
+    item = decision.item
+    place = getattr(item, "place", None) or {}
+    if item is not None and place.get("latitude") is not None:
+        return ({"place_id": place.get("place_id"), "name": place.get("name") or item.title, "kind": item.kind,
+                 "latitude": place["latitude"], "longitude": place["longitude"], "attributes": {}, "source": "itinerary"},
+                max(item.starts_at, at))
+    text = str((decision.raw or {}).get("place_text") or "").strip()
+    if len(text) < 2 or text not in message:
+        return None, at
+    from app.domains.travel_ops.components.intake.places import normalize, resolve
+
+    known = [p for p in store.places(conn, trip_id) if p.get("latitude") is not None]
+    same = next((p for p in known if normalize(str(p.get("name") or "")) == normalize(text)), None)
+    if same is not None:
+        return {**same, "attributes": {}, "source": "trip_places"}, at
+    # 동네 · 명소 이름 — 장소 찾기(관광공사 · 카카오)로 좌표만 얻는다. ★활동으로 찾는다: 「서촌」이 「서촌닭갈비」가 되지 않게
+    found = resolve(text, our_places=[], tour=place_source, kakao=kakao_source, kind_hint="activity")
+    if found.status == "resolved" and found.latitude is not None:
+        return ({"place_id": None, "name": found.name, "kind": "activity", "latitude": found.latitude,
+                 "longitude": found.longitude, "attributes": {}, "source": found.method}, at)
+    pool = [c for c in (found.candidates or []) if c.get("latitude") is not None
+            and c.get("category_group") not in ("FD6", "CE7")]
+    exact = [c for c in pool if normalize(c["name"]) == normalize(text)]
+    pick = (exact or pool or [None])[0]
+    if pick is None:
+        return None, at
+    return ({"place_id": None, "name": pick["name"], "kind": "activity", "latitude": pick["latitude"],
+             "longitude": pick["longitude"], "attributes": {}, "source": "kakao"}, at)
 
 
 #: 「근처 식당」 — 현재 위치 둘레에서 원장 가게를 이 여행 전용 장소로 들여놓는 반경(m). ★우리가 고른 값(2026-10-05)
@@ -1156,23 +1288,3 @@ def _place_extras(conn, tenant: str, place: dict[str, Any]) -> str:
 
 
 __all__ = ["TripNotFound", "handle_trip_message"]
-
-
-def _report_dispatch_plan(*, report: dict[str, Any], team: str, trip: dict[str, Any], store: TripStore,
-                          items: list[Any], message: str, selected: UUID | None, at: datetime):
-    """규칙 해석 모드도 기존 대상·되돌림 규칙으로 재사용 가능한 입력을 만든다."""
-    from app.domains.travel_ops.components.conversation import case_dispatch
-
-    action = {"delay": "report_delay", "closed": "report_closed", "change": "apply_change",
-              "rollback": "rollback", "stock_out": "stock_out"}[report["type"]]
-    request = {"type": "conversation", "action": action, "at": at.isoformat(),
-               **{k: report[k] for k in ("minutes", "to_version", "choice") if report.get(k) is not None}}
-    if action == "stock_out":
-        request.update(type="stock_out", products=report["products"])
-    target = _change_target(items, message, selected, at) if action in ("apply_change", "report_closed") else None
-    if action == "rollback" and request.get("to_version") is None:
-        target_version, question = _rollback_target(store, UUID(str(trip["trip_id"])), items, message, selected, at)
-        request.update(to_version=target_version, question=question, confirmed=question is None)
-    owner = target.kind if target is not None else ("activity" if action == "stock_out" else "dining" if action in ("report_delay", "report_closed")
-                                                   else team if team in ("dining", "activity") else "activity")
-    return case_dispatch.descriptor(trip=trip, team=owner, request=request, item=target), target

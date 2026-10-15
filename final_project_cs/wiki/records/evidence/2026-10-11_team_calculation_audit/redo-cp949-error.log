@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_team_calculation_audit\reproduce_redo.py", line 44, in <module>
+    main()
+  File "C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-11_team_calculation_audit\reproduce_redo.py", line 33, in main
+    print(json.dumps({"team_answer": result.answer,
+UnicodeEncodeError: 'cp949' codec can't encode character '\u2014' in position 114: illegal multibyte sequence

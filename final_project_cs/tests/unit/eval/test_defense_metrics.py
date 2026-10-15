@@ -126,5 +126,5 @@ def test_parse_failures_are_not_counted_as_abstention():
 def test_fixture_file_covers_the_v7_attack_classes():
     """★v7 §9-E 가 지정한 공격 유형이 fixture 에 다 있어야 한다."""
     notes = " ".join(r.get("note", "") for r in load())
-    for required in ("order_id", "금액", "degraded", "인젝션"):
+    for required in ("booking_id", "금액", "degraded", "인젝션"):
         assert required in notes, f"공격 유형 누락: {required}"

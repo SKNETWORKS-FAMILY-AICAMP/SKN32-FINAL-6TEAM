@@ -1,0 +1,37 @@
+........................................................................ [ 33%]
+........................................................................ [ 66%]
+.......................................................................F [ 99%]
+.                                                                        [100%]
+================================== FAILURES ===================================
+_______________ test_new_place_rejudgment_replaces_old_context ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001572548ABD0>
+
+    def test_new_place_rejudgment_replaces_old_context(monkeypatch):
+        act, move, meal = scene()
+        move.detail["departure_context"] = {"old": True}
+        new_context = {"schema_version": 1, "to_place": {"name": "�� �Ĵ�"}, "options": {}}
+        def builder(*args, **kwargs):
+            def leg(a, b, arrival, floor):
+                return {"route": {"planned": "walk", "options": [{"id": "walk", "eta_min": 9, "uses": []}]},
+                        "starts_at": arrival - timedelta(minutes=19), "ends_at": arrival - timedelta(minutes=10),
+                        "eta_min": 9, "departure_context": new_context}, None
+            return leg
+        monkeypatch.setattr(wiring, "leg_planner", builder)
+        place = _place("�� �Ĵ�", 37.5755, 126.9855)
+        changed = meal.replaced_by(place=place, title="�� �Ĵ�")
+        changed.place = place
+        change = ItineraryChange(reason="test", causes=[], notice={}, replacements={meal.item_id: changed})
+        after = next(item for item in change.new_items([act, move, meal]) if item.kind == "mobility")
+>       assert after.detail["departure_context"] == new_context
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'departure_context'
+
+tests\unit\travel\test_departure_context_storage_v1.py:85: KeyError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_departure_context_storage_v1.py::test_new_place_rejudgment_replaces_old_context
+1 failed, 216 passed in 59.88s
+Exception ignored in: <function Console.__del__ at 0x0000015715739C60>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

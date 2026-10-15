@@ -1,0 +1,129 @@
+--- final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1156_지하철_부분응답_누락해소/seoul_subway.py
++++ final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py
+@@ -30,8 +30,10 @@
+ 
+ BASE = "http://swopenapi.seoul.go.kr/api/subway"
+ KST = ZoneInfo("Asia/Seoul")
+-#: 한 번에 받는 최대 건수(역 하나의 상·하행 도착 몇 대면 충분하다)
+-PAGE_SIZE = 20
++#: OA-12764 프로토콜 상한. 환승역에서20행을 넘으면 뒤쪽 호선/열차를 잘랐다.
++#: 한 응답으로 읽어 여러 페이지의 서로 다른 생성시각을 섞지 않는다.
++PAGE_SIZE = 1000
++SAMPLE_PAGE_SIZE = 5
+ #: 응답 `subwayId` → 호선 표기(우리 `uses` 의 「N호선」과 같은 이름만). 모르는 번호는 그대로 둔다
+ SUBWAY_ID = {"1001": "1호선", "1002": "2호선", "1003": "3호선", "1004": "4호선", "1005": "5호선", "1006": "6호선",
+              "1007": "7호선", "1008": "8호선", "1009": "9호선", "1063": "경의중앙선", "1065": "공항철도", "1067": "경춘선",
+@@ -69,6 +71,22 @@
+         except ValueError:  # Python의 정수 문자열 길이 제한도 명시된 잘못된 입력이다.
+             pass
+     return None, "invalid"
++
++
++def _arrival_total(payload: dict[str, Any]) -> tuple[int | None, str | None]:
++    """공식 JSON total 및 공통 명세 list_total_count의 일치 여부를 확인한다."""
++    info = payload.get('errorMessage') if isinstance(payload.get('errorMessage'), dict) else payload
++    values = [container[key] for container, key in ((info, 'total'), (payload, 'list_total_count'))
++              if key in container]
++    totals = []
++    for value in values:
++        total, status = _eta(value)
++        if status != 'valid':
++            return None, 'invalid_arrival_total'
++        totals.append(total)
++    if len(set(totals)) > 1:
++        return None, 'conflicting_arrival_total'
++    return (totals[0] if totals else None), None
+ 
+ 
+ class SeoulSubwayArrival(TravelSource):
+@@ -118,14 +136,20 @@
+         problem = TravelSource._body_error(payload)
+         if problem is not None:
+             return problem
++        total, problem = _arrival_total(payload)
++        if problem is not None:
++            return problem
+         rows = payload.get("realtimeArrivalList")
+         if code in EMPTY_CODES:
+             # 공식 데이터 없음 코드만 누락/null을 허용한다. 열차 목록과 동시에 오면 모순이다.
+-            return None if rows is None or rows == [] else "conflicting_empty_arrivals"
++            return (None if (rows is None or rows == []) and (total is None or total == 0)
++                    else "conflicting_empty_arrivals")
+         if rows is None:
+             return "missing_realtimeArrivalList"
+         if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+             return "malformed_realtimeArrivalList"
++        if total is not None and total < len(rows):
++            return 'arrival_total_below_rows'
+         return None
+ 
+     def boardable_arrival(self, station: str, *, line_id: str, station_id: str, target_station_id: str,
+@@ -164,7 +188,8 @@
+         if not name:
+             self._miss("empty_station")
+             return None
+-        url = f"{BASE}/{self._key}/json/realtimeStationArrival/0/{PAGE_SIZE}/{urllib.parse.quote(name)}"
++        page_size = SAMPLE_PAGE_SIZE if self._key == 'sample' else PAGE_SIZE
++        url = f"{BASE}/{self._key}/json/realtimeStationArrival/0/{page_size}/{urllib.parse.quote(name)}"
+         payload = self._fetch_json(url, {})
+         if payload is None:
+             return None
+@@ -176,6 +201,11 @@
+         rows = payload.get("realtimeArrivalList")
+         if rows is None:                              # INFO-200 — 빈 결과
+             rows = []
++        total, _ = _arrival_total(payload)
++        info = payload.get('errorMessage') if isinstance(payload.get('errorMessage'), dict) else payload
++        if total is None and info.get('code') in EMPTY_CODES:
++            total = 0  # 공식 빈 결과 코드 자체가 전체0의 근거다.
++        response_count = len(rows)  # 호선 필터 전 전체 응답 범위를 보존한다.
+         trains = []
+         checked = self._now()
+         if checked.tzinfo is None:
+@@ -210,7 +240,9 @@
+                 "source_clock_ahead": age < 0 if age is not None else None,
+                 "train_status": row.get("btrainSttus")})
+         return self.stamp({"station": name, "line": line, "trains": trains, "kind": "subway_arrival",
+-                           "schema_version": "1.1"},
++                           "schema_version": "1.1", 'provider_total': total,
++                           'response_row_count': response_count,
++                           'coverage_complete': response_count == total if total is not None else None},
+                           source=self.name)
+ 
+ 
+--- final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_1156_지하철_부분응답_누락해소/subway_boarding.py
++++ final_project_cs/app/domains/travel_ops/ports/data_sources/subway_boarding.py
+@@ -96,6 +96,10 @@
+     rows = snapshot.get('trains')
+     if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+         return fail('unavailable', 'invalid_trains')
++    if 'coverage_complete' in snapshot and snapshot['coverage_complete'] is not True:
++        # 부분 응답의 후보나 빈 목록은 전체에서 가장 이른 열차/무운행을 증명하지 않는다.
++        return fail('unavailable', 'incomplete_arrivals' if snapshot['coverage_complete'] is False
++                    else 'arrival_total_unknown')
+     counts = Counter(row.get('train_number') for row in rows
+                      if row.get('line_id') == line_id and row.get('station_id') == station_id
+                      and _id(row.get('train_number')))
+--- final_project_cs/tests/unit/travel/_backup/2026-10-09_1156_지하철_부분응답_누락해소/test_subway_boardable_v1.py
++++ final_project_cs/tests/unit/travel/test_subway_boardable_v1.py
+@@ -224,7 +224,8 @@
+         row = {'subwayId': LINE, 'statnId': STATION, 'statnTid': NEXT, 'bstatnId': TERMINAL,
+                'btrainSttus': '일반', 'btrainNo': '5010', 'barvlDt': '200', 'arvlCd': '99',
+                'recptnDt': received.isoformat()}
+-        return httpx.Response(200, json={'realtimeArrivalList': [row]}, request=httpx.Request('GET', url))
++        return httpx.Response(200, json={'errorMessage': {'code': 'INFO-000', 'total': 1},
++                                        'realtimeArrivalList': [row]}, request=httpx.Request('GET', url))
+     source = subway.SeoulSubwayArrival(service_key='controlled-test-key', transport=transport,
+                                         now=lambda: checked + timedelta(seconds=2))
+     got = source.boardable_arrival('양평', **policy(now=checked, ready_at=checked + timedelta(seconds=100)))
+--- final_project_cs/tests/unit/travel/_backup/2026-10-09_1156_지하철_부분응답_누락해소/test_seoul_subway_arrival.py
++++ final_project_cs/tests/unit/travel/test_seoul_subway_arrival.py
+@@ -39,7 +39,7 @@
+     t = got["trains"]
+     assert [(x["line"], x["direction"], x["eta_seconds"]) for x in t] == [("2호선", "내선", 180), ("7호선", "상행", 0)]
+     assert t[0]["message"] == "3분 후 (역삼)" and "raw" not in t[0]
+-    assert seen[0].startswith("http://swopenapi.seoul.go.kr/api/subway/" + KEY + "/json/realtimeStationArrival/0/20/")
++    assert seen[0].startswith("http://swopenapi.seoul.go.kr/api/subway/" + KEY + "/json/realtimeStationArrival/0/1000/")
+     assert "%EA%B0%95%EB%82%A8" in seen[0] and clean_station("강남역") == "강남" and clean_station("서울") == "서울"
+ 
+ 

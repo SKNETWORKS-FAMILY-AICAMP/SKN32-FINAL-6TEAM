@@ -1,0 +1,86 @@
+---
+type: guide
+title: Operations
+description: 로컬에서 돌리는 법과 자주 막히는 곳
+status: draft
+domain: neutral
+---
+
+# Operations
+
+## 각 문서
+
+| 문서 | 답하는 질문 |
+|---|---|
+| [arm-develop-cd.md](../../operations/arm-develop-cd.md) | Oracle ARM의 develop 코드를 Docker로 자동 갱신하고 실제 질의를 어떻게 검사하는가 |
+| [arm-serving-queue.md](../../operations/arm-serving-queue.md) | Oracle ARM 2코어 환경에서 여행 질의 서빙 시험을 어떻게 계속 돌리는가 |
+| [gpu-work-queue.md](../../operations/gpu-work-queue.md) | GPU 서버 A/B의 연구 일감을 어떻게 이어가는가 |
+| [local-setup.md](../../operations/local-setup.md) | 처음 어떻게 셋업하는가 |
+| [run.md](../../operations/run.md) | 무엇을 어떻게 실행하는가 |
+| [troubleshooting.md](../../operations/troubleshooting.md) | 막히면 어디를 보는가 |
+| [unknown-state.md](../../operations/unknown-state.md) | **돈이 나갔는지 모를 때** |
+| [always-on.md](../../operations/always-on.md) | **무엇이 늘 돌아야 하고, 죽으면 무엇으로 아는가** |
+| [move-to-server.md](../../operations/move-to-server.md) | 이 PC 에서 서비스로 · 항상 켜진 서버로 — 절차와 되돌리기 |
+| [google-login-setup.md](../../operations/google-login-setup.md) | 구글 로그인 켜기 — 콘솔에서 사람이 할 일 · 서버 설정 · 확인 · 되돌리기 |
+| [call-budget.md](../../operations/call-budget.md) | 외부 API 키마다 하루·월 호출 한도를 어떻게 DB 로 세어 막고, 여유를 어떻게 보나 |
+| [telegram-setup.md](../../operations/telegram-setup.md) | 텔레그램 알림 연결을 서버에서 어떻게 켜고(환경 파일 · 웹훅 등록 · 스위치), 막히면 어디를 보고, 어떻게 되돌리나 |
+
+## 자주 쓰는 명령
+
+**테스트**
+
+```bash
+pytest tests/architecture
+```
+
+```bash
+pytest tests/contract tests/security
+```
+
+**평가**
+
+```bash
+python -m eval.runners.proposed --dataset eval/datasets/golden.jsonl --repeats 3 --seed 7
+# [정정 2026-09-10] `eval.run --arm Proposed` 로 적혀 있었다 — eval/run.py 는 없다
+```
+
+## 환경
+
+**Docker는 로컬 개발 환경에 없다.** 컨테이너화는 실제 배포 단계(Phase 2)에서 한다.
+
+## 알려진 함정
+
+`[실측]` 실제로 팀을 막았던 것들.
+
+### Windows WDDM의 느린 실패
+
+GPU 메모리가 초과되면 Linux는 즉시 OOM으로 죽는데 **Windows는 shared GPU memory(시스템 RAM, PCIe 경유)로 넘겨 극도로 느리게 처리하다 죽는다.**
+
+`[실측]` 25분 걸려 실패한 사례가 있다.
+
+**빠른 실패가 아니라 느린 실패라 장애 판정이 늦어진다.** 자체호스팅을 제품으로 만들면 Linux를 전제해야 한다.
+
+### 12GB VRAM 한계
+
+`[실측]` 모델 서버 (RTX 4070 SUPER 12GB)에서 `Qwen2.5-3B` 학습이 3번 막혔다.
+
+| 시도 | max_length | 결과 |
+|---|---|---|
+| v4 | 11,264 | CUDA OOM (배치=1에서도) |
+| v5 | 2,560 | OOM, 25분 소요 |
+| v6 | 1,024 | 완주 |
+
+우회는 `device_map="auto"`와 4-bit 양자화를 **모두 버리고** bf16으로 CPU에 올린 뒤 `.to("cuda")`로 옮기는 것이다. 재현 스크립트 ~~`eval/finetune/diag_3b.py`~~ 는 **2026-09-10 에 삭제됐다**.
+
+상세는 [../../../wiki/business/infrastructure-cost.md](../../../../wiki/business/infrastructure-cost.md).
+
+### Context Broker 우회
+
+데이터 수확 스크립트가 `ContextBroker.build()`를 안 거치면 evidence가 중복돼 토큰이 폭증한다.
+
+**Broker 우회 경로를 만들지 않는다.** → [../context/index.md](../../context/index.md)
+
+## 인접 영역
+
+- [../quality/eval-harness.md](../../quality/eval-harness.md) — 평가 실행
+- [../data/migrations.md](../../data/migrations.md) — DB 준비

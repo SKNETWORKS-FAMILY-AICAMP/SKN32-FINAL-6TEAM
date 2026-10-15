@@ -1,0 +1,10 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___________ test_a_change_request_still_answers_with_what_happened ____________
+tests\e2e\test_web_api.py:390: in test_a_change_request_still_answers_with_what_happened
+    assert body["report"]["type"] == "delay" and body["report"]["minutes"] == 30
+           ^^^^^^^^^^^^^^
+E   KeyError: 'report'
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_web_api.py::test_a_change_request_still_answers_with_what_happened
+1 failed in 4.86s

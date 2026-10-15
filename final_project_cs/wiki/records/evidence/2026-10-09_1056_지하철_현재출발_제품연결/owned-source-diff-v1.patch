@@ -1,0 +1,577 @@
+--- before/app/composition.py
++++ after/app/composition.py
+@@ -255,9 +255,20 @@
+         if source is None:
+             return {'status': 'unavailable', 'reason': 'bus_arrival_source_unconfigured'}
+         return source.boardable_arrival(route_id, **policy, **kwargs)
++    subway_source = getattr(sources, 'subway_arrival', None)
++    subway_policy = dict(policy)
++    if subway_source is not None:
++        age = guardrails.get('travel.subway_arrival_cache_seconds')
++        if (isinstance(age, bool) or not isinstance(age, (int, float)) or not math.isfinite(age) or age <= 0):
++            raise ValueError('지하철 출발 관측 보관 정책 값이 올바르지 않다')
++        subway_policy['max_age_seconds'] = age
++    def subway_arrival(station, **kwargs):
++        if subway_source is None:
++            return {'status': 'unavailable', 'reason': 'subway_arrival_source_unconfigured'}
++        return subway_source.boardable_arrival(station, **subway_policy, **kwargs)
+     wire_domain_teams()
+     from app.domains.travel_ops.components.watch.departure_revalidation import build_observer
+-    return build_observer(bus_arrival=bus_arrival,
++    return build_observer(bus_arrival=bus_arrival, subway_arrival=subway_arrival,
+                           basis_validator=lambda basis: mobility_wiring.validate_departure_basis(basis))
+ 
+ 
+--- before/config/guardrails.yaml
++++ after/config/guardrails.yaml
+@@ -549,6 +549,8 @@
+   source_cache_seconds: 300
+   # 버스 도착정보 재사용 30초(설계값). 조회·제공 시각을 함께 내며 미래 시간표로 쓰지 않는다.
+   bus_arrival_cache_seconds: 30
++  # 현재 승차 관측용 지하철 보관 기간. 공급 생성 시각의 나이 상한은 별도로 검사한다.
++  subway_arrival_cache_seconds: 30
+   # ★`[2026-10-03 사용자]` 응답 캐시를 **프로세스를 건너 공유**한다(true) — DB 표 `source_response_cache`(마이그레이션 042). 일꾼이 회차마다 새 프로세스라 메모리 캐시는 틱 사이에 비어 있었고
+   #   고객 요청 경로와도 나누지 못했다. 공개 소스(기상 · 대기질 · 특보 · 지진 · 재난문자 · 교통 · 공휴일)만 담고, DB 가 안 되면 메모리 캐시로 계속한다. false 면 전처럼 메모리만.
+   # ★효과(계산 — 측정 아님): 위 유지 시간(300초)이 감시 주기(180초)보다 길어 **틱 둘에 한 번만** 새로 받는다 — 받아 쓰는 값은 늘 180초 이하다. 재난문자만 위 20분을 그대로 쓴다(설계값).
+--- before/app/domains/travel_ops/ports/data_sources/base.py
++++ after/app/domains/travel_ops/ports/data_sources/base.py
+@@ -599,7 +599,8 @@
+     metro_key = (getattr(settings, "seoul_metro_api_key", "") or "").strip()
+     if metro_key:
+         from .seoul_subway import SeoulSubwayArrival
+-        sources.subway_arrival = SeoulSubwayArrival(service_key=metro_key, limiter=limiter, cache=cache)
++        sources.subway_arrival = SeoulSubwayArrival(service_key=metro_key, limiter=limiter, cache=cache,
++            cache_ttl_seconds=guardrails.get('travel.subway_arrival_cache_seconds'))
+     else:
+         sources.unavailable["subway_arrival"] = (
+             "ACOP_SEOUL_METRO_API_KEY 가 비어 있다. 서울 열린데이터광장 「실시간 지하철 인증키」를 .env.apikeys 에 채운다. "
+--- before/app/domains/travel_ops/ports/data_sources/seoul_subway.py
++++ after/app/domains/travel_ops/ports/data_sources/seoul_subway.py
+@@ -9,16 +9,17 @@
+   등록 심사 뒤 해제 · 공식 안내 2026-10-04). 제공처가 **http 만** 받는다 — 키가 주소 경로에 들어가고 평문으로 나간다. 그래서 키를 오류 기록에
+   싣지 않는다(`_miss` 를 덮어 가린다 · `bike.py` 의 `BikeLive` 와 같은 이유).
+ ★이 소스가 주는 것은 **지금 값**이다 — 미래 시각의 도착은 모른다. 시간표(이동 계산기)를 대신하지 않는다: 지금 이 역에 어느 열차가 몇 분 뒤 오는가를
+-  **같이 놓고 보는** 용도다(시간표 오차 · 운행 이상의 단서). 판정에 넣지 않았다.
++  일반 비순환 첫 승차의 정확 ID 경로에서는 접근 이후 예측을 출발 안내에 적용한다. 승차 이후 소요와 미래 환승은 모델이다.
+ ★`INFO-200 「해당하는 데이터가 없습니다」` 는 **오류가 아니라 빈 결과**다 — 운행 시간 밖이거나 그 역에 열차가 없다(실측 2026-10-05 01시: 인증은
+   통과하고 이 코드가 왔다). 인증 실패 · 호출 한도 · 잘못된 요청(`INFO-100`·`ERROR-xxx`)만 못 읽음(`None`)이다.
+ ★역명은 **「역」 접미사 없이** 넣는다(공식 안내). 호선 필터는 응답의 `subwayId` 로 우리가 한다.
+-★`[미확인]` 응답 칸의 실제 값(메시지 모양 · barvlDt 단위)은 운행 시간대에 확인한다 — 아래 정규화는 공식 안내의 칸 이름만 믿는다.
++★`[2026-10-09]` 공식 초 단위 ETA·생성시각·식별 필드를 보존한다. 공개 부분응답 재생과 통제 연결 시험은 실제 ETA 오차·탑승 검증을 대신하지 않는다.
+ """
+ from __future__ import annotations
+ 
+ import urllib.parse
+-from datetime import datetime, timedelta
++from datetime import UTC, datetime, timedelta
++import math
+ from typing import Any
+ from zoneinfo import ZoneInfo
+ 
+@@ -73,10 +74,30 @@
+ class SeoulSubwayArrival(TravelSource):
+     name = "seoul_subway_arrival"
+ 
+-    def __init__(self, *, service_key: str, now=None, **kwargs: Any) -> None:
++    def __init__(self, *, service_key: str, now=None, cache_ttl_seconds=None, **kwargs: Any) -> None:
+         super().__init__(**kwargs)
+         self._key = service_key
+         self._now = now or (lambda: datetime.now(KST))
++        if cache_ttl_seconds is not None:
++            try:
++                valid_ttl = (not isinstance(cache_ttl_seconds, bool)
++                             and isinstance(cache_ttl_seconds, (int, float))
++                             and math.isfinite(cache_ttl_seconds) and cache_ttl_seconds > 0)
++            except OverflowError:
++                valid_ttl = False
++            if not valid_ttl:
++                raise ValueError('지하철 도착 보관 기간이 올바르지 않다')
++        self.cache_ttl_seconds = cache_ttl_seconds
++
++    def _from_cache(self, url: str, params: dict[str, Any]) -> Any | None:
++        value = super()._from_cache(url, params)
++        if value is not None and self.cache_ttl_seconds is not None:
++            age = (datetime.now(UTC) - self._fetch_state.fetched_at).total_seconds()
++            if age >= self.cache_ttl_seconds:
++                # 기존 공용 보관의 긴 TTL로 저장된 값도 현재 승차 정책에서는 재사용하지 않는다.
++                self._fetch_state.fetched_at, self._fetch_state.from_cache = None, False
++                return None
++        return value
+ 
+     def _miss(self, reason: str, detail: str = "") -> None:
+         """★키가 주소 경로에 들어간다 — 기록에 새지 않게 가린다."""
+--- before/app/domains/travel_ops/components/watch/departure_revalidation.py
++++ after/app/domains/travel_ops/components/watch/departure_revalidation.py
+@@ -24,7 +24,7 @@
+         return None
+ 
+ 
+-def build_observer(*, bus_arrival, basis_validator=None):
++def build_observer(*, bus_arrival, subway_arrival=None, basis_validator=None):
+     """TripReminders가 호출하는 공통 콜백을 만든다. 만들 때는 조회하지 않는다."""
+     def observed(move, items, *, planned, now, events, trip=None):
+         ordered = sorted(items, key=lambda item: item.seq)
+@@ -38,7 +38,7 @@
+         try:
+             result = legs.observe_departure(move.detail.get('departure_context'), planned.get('id'),
+                 now=now, deadline=after[0].starts_at, origin=origin, destination=destination,
+-                bus_arrival=bus_arrival, events=events, trip=trip)
++                bus_arrival=bus_arrival, subway_arrival=subway_arrival, events=events, trip=trip)
+         except Exception as exc:  # noqa: BLE001 — 치명 상태를 보고하고 낡은 안내는 발행하지 않는다
+             logging.getLogger(__name__).error('출발 재검증 실패: %s', type(exc).__name__)
+             return {'status': 'fatal', 'reason': 'departure_revalidation_failed',
+--- before/app/domains/travel_ops/components/watch/trip_reminders.py
++++ after/app/domains/travel_ops/components/watch/trip_reminders.py
+@@ -427,7 +427,9 @@
+             return 'fatal', None
+         move = replace(move, starts_at=depart, ends_at=arrival)
+         how['eta_min'] = eta
+-        how['label'] += (' · 현재 버스 대기 반영' if observation['status'] == 'realtime'
++        realtime_label = (' · 현재 지하철 대기 반영' if observation.get('realtime_mode') == 'subway'
++                          else ' · 현재 버스 대기 반영')
++        how['label'] += (realtime_label if observation['status'] == 'realtime'
+                          else ' · 현재 시각 기준 예상')
+     return ("unchecked" if blind else "ok"), departure_phrase(move, following, how)
+ 
+--- before/app/domains/travel_ops/instances/mobility/engine/runtime.py
++++ after/app/domains/travel_ops/instances/mobility/engine/runtime.py
+@@ -120,14 +120,15 @@
+                     out.append(key)
+         return list(dict.fromkeys(out))
+ 
+-    def verify_case(self, case, *, bus_departures=None):
++    def verify_case(self, case, *, bus_departures=None, subway_departures=None):
+         # 56 ① — 건마다 얕은 복사본에서 돈다. 판정기가 건마다 재할당하는 상태(_case_date · disr · _leg_cache ·
+         #   lfd_capped)를 여러 스레드가 같은 객체에서 섞지 않게(plan.Planner · plan_estimate 와 같은 방식).
+         verifier = copy.copy(self._v)
+         # 출발 관측의 정확 첫 승차 위치와 시각만 내부 인자로 받는다.
+         # 고객 case JSON에 관측을 넣지 않고, 현재 예측으로 출발 역산도 하지 않는다.
+         verifier._bus_departures = copy.deepcopy(bus_departures or {})
+-        if bus_departures:
++        verifier._subway_departures = copy.deepcopy(subway_departures or {})
++        if bus_departures or subway_departures:
+             verifier.lfd_enabled = False
+         return verifier.verify_case(case)
+ 
+--- before/app/domains/travel_ops/instances/mobility/engine/verify_time.py
++++ after/app/domains/travel_ops/instances/mobility/engine/verify_time.py
+@@ -91,7 +91,7 @@
+ from .congestion import Congestion                                       # noqa: E402, F401
+ from .bike import (BikeStations, BikeLive, BikeRouter,                  # noqa: E402, F401
+                    party_excluded as bike_party_excluded, fare as bike_fare)
+-from .timeutil import (to_min, to_service_min, fmt_min,                 # noqa: E402, F401
++from .timeutil import (to_min, to_service_min, fmt_min, SERVICE_DAY_MAX_MIN,  # noqa: E402, F401
+                        fmt_wall, day_type_of, MIN_DAY, HolidayCalendar)
+ 
+ from . import express as EX                                           # noqa: E402  급행 있는 노선(9호선)의 열차 단위 운행표
+@@ -583,6 +583,31 @@
+                              grade="확정", dropped=dict(drop), code="no_service",
+                              relief="노선 교체 또는 반대 방향 확인이 필요하다")
+ 
++        timetable_cands = cands
++        observed = getattr(self, '_subway_departures', {}).get((idx, line, a, b))
++        if observed is not None:
++            # 일반열차의 현재 도착을 다른 시간표 열차의 run 소요에 붙이면 안 된다.
++            # 정적 경로가 같은 일반 후보만 확인하고 승차 소요는 그 경로의 역간 모델로 낸다.
++            verdict = self.lo.passes(line, a, observed.get('terminal'), b)
++            observed_path = observed.get('path_stations')
++            segment = (observed_path[:observed_path.index(b) + 1]
++                       if isinstance(observed_path, list) and b in observed_path else None)
++            matching = [(d, v) for d, v, _full in cands
++                        if not d.inferred and not (d.run is not None and d.run.express)
++                        and segment and b in v.path and v.path[:v.path.index(b) + 1] == segment]
++            # 현재 응답의 단축 종착이 정적 시간표에 없어도 실제 타는 구간이 같으면
++            # 검증된 현재 경로의 역간 모델을 쓴다. 다른 열차의 run은 복사하지 않는다.
++            if verdict.value is not True or verdict.path != observed_path:
++                matching = []
++            minute = observed.get('depart_min')
++            if (self.lo.is_loop(line) or not matching or isinstance(minute, bool)
++                    or not isinstance(minute, int) or minute < now_min or minute > SERVICE_DAY_MAX_MIN):
++                return LegResult(idx, label, 'unknown', '현재 열차의 일반 경로/시각을 시간표와 대응시키지 못했다',
++                                 grade='근거없음', code='no_data')
++            prototype, _ = matching[0]
++            current = Dep(minute, prototype.dir, observed['terminal'])
++            cands = [(current, verdict, False)]
++
+         first, last = cands[0][0].min, cands[-1][0].min
+         gap_max = self.rv("service_window", "gap_max_min")
+         scan = self.rv("service_window", "candidate_scan_min")
+@@ -610,7 +635,7 @@
+                 grade="확정", dropped=dict(drop), code="after_last",
+                 relief=f"{fmt_min(last)} 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+                 evidence=[self._ev_tt(line, a, day_type, f"그 방향 마지막 출발 {fmt_min(last)}")])
+-        if now_min < first:
++        if now_min < first and observed is None:
+             return LegResult(
+                 idx, label, "infeasible",
+                 f"{fmt_min(now_min)} 은 {line} {a} 의 {day_type} 첫차({fmt_min(first)}) 이전이다",
+@@ -659,8 +684,10 @@
+                 # 다음 편 = **같은 경로(같은 방향·같은 편성 경로)** 로 가는 다음 열차 중 가장 이른 도착.
+                 #   출발 목록 전체에서 다음 출발을 집으면 순환선(02호선)에서 반대 방향 한 바퀴 편성이 잡혀
+                 #   서초→강남 08:33 이 @94(최악 10:02)로 튄다 — 2026-09-24 대조에서 확인.
+-                later = [(d, v) for d, v in after
+-                         if d.min > nxt.min and d.min <= nxt.min + scan and d.dir == nxt.dir and v.path == verd.path]
++                later_pool = ([(d, v) for d, v, _full in timetable_cands] if observed else after)
++                later = [(d, v) for d, v in later_pool
++                         if d.min > nxt.min and d.min <= nxt.min + scan and d.dir == nxt.dir
++                         and ((b in v.path and v.path[:v.path.index(b) + 1] == segment) if observed else v.path == verd.path)]
+                 nxt2 = None
+                 for d2, v2 in later:
+                     ride2 = self.ride_of(line, d2, v2, a, b)
+@@ -690,11 +717,14 @@
+             warn.append(self.warn_msg("MOB_W_SINJEONG_SAT"))
+             ev.append(self._ev_rule("last_train.신정지선_토요일_예외", "추정"))
+ 
+-        ev.append(self._ev_tt(line, a, day_type,
++        if observed:
++            ev.append(observed['evidence'])
++        else:
++            ev.append(self._ev_tt(line, a, day_type,
+                               f"{fmt_min(nxt.min)} 출발 {nxt.dest}행 (그 방향 {len(cands)}편 중, "
+                               f"{fmt_min(after[0][0].min)}~ 안에서 도착이 가장 이른 편)"
+                               + (f" · 행선지는 원천 빈칸을 열차 잇기로 채운 값({nxt.inferred})" if nxt.inferred else ""),
+-                              grade="추정" if nxt.inferred else "확정"))
++                                  grade="추정" if nxt.inferred else "확정"))
+         if nxt.inferred:
+             # ★ 28 — 채운 행선지는 추정이다. 「목적지를 지난다」가 그 값에 기대므로 구간 등급도 추정 이하로
+             grade = worst_grade(grade, "추정")
+@@ -708,7 +738,8 @@
+                          f"{fmt_min(nxt.min)} {nxt.dest}행 승차 (대기 {wait}분)" + (" [최악]" if worst else ""),
+                          grade=grade, depart_min=nxt.min, arrive_min=arrive,
+                          wait_min=wait, ride_min=ride, ride_grade=ride_grade,
+-                         dropped=dict(drop), warnings=warn, evidence=ev, worst=worst)
++                         dropped=dict(drop), warnings=warn, evidence=ev, worst=worst,
++                         ride_src='subway_path_model' if observed and nxt.run is None else None)
+ 
+     def _congestion_hit(self, line, station, dir, day_type, minute, party):
+         """혼잡도 조회 → (값, 등급명, 행, action) 또는 None. rules congestion.levels 의 조건(luggage·infant·elderly)까지 본다."""
+--- before/app/domains/travel_ops/instances/mobility/engine/departure_observer.py
++++ after/app/domains/travel_ops/instances/mobility/engine/departure_observer.py
+@@ -63,7 +63,7 @@
+ 
+ 
+ def observe(runtime, context, option_id, *, now, deadline, origin, destination,
+-            bus_arrival=None, disruptions=(), current_party=None, current_first_visit=None):
++            bus_arrival=None, subway_arrival=None, disruptions=(), current_party=None, current_first_visit=None):
+     """콜백의 실시간 예상과 모델 재검증을 구별한다. 일정·알림을 직접 쓰지 않는다."""
+     base = {'option_id': option_id, 'observations': [], 'timing_unit': 'model_minutes',
+             'party_check': 'current_trip_not_supplied'}
+@@ -130,14 +130,31 @@
+     if by_min < depart_min or by_min > SERVICE_DAY_MAX_MIN:
+         return fail('needs_replan', 'deadline_outside_service_horizon')
+     departures = {}
++    rail_departures = {}
+     evaluated = now
+     first = legs[0]
++    observation = None
++    did_observe = False
++    rail_identity, rail_services = None, []
+     if first.get('mode', 'subway') == 'bus' and bus_arrival is not None:
++        did_observe = True
+         required = ('route_id', 'from_stop_id', 'from_sequence', 'to_sequence')
+         if any(first.get(key) is None for key in required):
+             return fail('needs_replan', 'boarding_identity_missing')
+         observation = bus_arrival(first['route_id'], stop_id=first['from_stop_id'],
+                                   stop_sequence=first['from_sequence'], now=now, ready_at=ready)
++    elif first.get('mode', 'subway') == 'subway' and subway_arrival is not None:
++        did_observe = True
++        from .subway_departure import boarding_services
++        rail_identity, rail_services = boarding_services(runtime, first)
++        if rail_identity.get('status') == 'matched':
++            public_services = [{k: service[k] for k in ('train_status', 'path_station_ids')} for service in rail_services]
++            observation = subway_arrival(rail_identity['query_station'], line_id=rail_identity['line_id'],
++                station_id=rail_identity['station_id'], target_station_id=rail_identity['target_station_id'],
++                allowed_services=public_services, now=now, ready_at=ready)
++        else:
++            observation = rail_identity
++    if did_observe:
+         if not isinstance(observation, dict):
+             observation = {'status': 'unavailable', 'reason': 'invalid_observation'}
+         base['observations'].append(deepcopy(observation))
+@@ -165,10 +182,15 @@
+                 confirmed = datetime.fromisoformat(str(observation['confirmed_at']))
+                 valid = (at.utcoffset() is not None and confirmed.utcoffset() is not None
+                          and confirmed <= evaluated and at >= ready
+-                         and observation.get('source')
+-                         and str(observation.get('route_id')) == str(first['route_id'])
+-                         and str(observation.get('stop_id')) == str(first['from_stop_id'])
+-                         and observation.get('stop_sequence') == first['from_sequence'])
++                         and observation.get('source'))
++                if rail_identity is None:
++                    valid = (valid and str(observation.get('route_id')) == str(first['route_id'])
++                             and str(observation.get('stop_id')) == str(first['from_stop_id'])
++                             and observation.get('stop_sequence') == first['from_sequence'])
++                else:
++                    from .subway_departure import matched_service
++                    rail_service = matched_service(observation, rail_identity, rail_services)
++                    valid = valid and rail_service is not None
+             except (KeyError, ValueError, TypeError):
+                 valid = False
+             if not valid:
+@@ -176,7 +198,15 @@
+             predicted_min = math.ceil((at - midnight).total_seconds() / 60)
+             if predicted_min > by_min:
+                 return fail('needs_replan', 'boarding_after_deadline')
+-            departures[(0, str(first['route_id']), first['from_sequence'], first['to_sequence'])] = {
++            if rail_identity is not None:
++                rail_departures[(0, first['line'], first['from'], first['to'])] = {
++                    'depart_min': predicted_min, 'terminal': rail_service['terminal'],
++                    'path_stations': deepcopy(rail_service['path_stations']),
++                    'evidence': {'source_type': 'api', 'source_id': observation['source'], 'grade': '추정',
++                                 'observed_at': observation['confirmed_at'],
++                                 'claim': '정확한 역/다음역/종착역 일반열차 접근 이후 도착 예측; 승차 소요는 역간 모델'}}
++            else:
++                departures[(0, str(first['route_id']), first['from_sequence'], first['to_sequence'])] = {
+                 'depart_min': predicted_min,
+                 'evidence': {'source_type': 'api', 'source_id': observation['source'], 'grade': '추정',
+                              'observed_at': observation['confirmed_at'],
+@@ -185,7 +215,8 @@
+             'stage': 'pre_departure', 'depart_at': depart_min, 'arrive_by': by_min,
+             'legs': deepcopy(legs), 'party': deepcopy(party), 'first_visit': context['first_visit'],
+             'no_alternatives': True, 'disruptions': list(disruptions)}
+-    result = runtime.verify_case(case, bus_departures=departures)
++    result = runtime.verify_case(case, bus_departures=departures,
++                                 **({'subway_departures': rail_departures} if rail_departures else {}))
+     base.update(basis=basis, checked_at=evaluated.isoformat(), verdict=result.verdict,
+                 reason=result.code or result.reason,
+                 leg_results=[{'idx': leg.idx, 'verdict': leg.verdict, 'depart_min': leg.depart_min,
+@@ -200,7 +231,9 @@
+                                          + math.ceil(egress))
+     if arrival > deadline:
+         return fail('needs_replan', 'arrive_late')
+-    return {**base, 'status': 'realtime' if departures else 'model_revalidated',
++    if departures or rail_departures:
++        base['realtime_mode'] = 'subway' if rail_departures else 'bus'
++    return {**base, 'status': 'realtime' if departures or rail_departures else 'model_revalidated',
+             'departure_at': start.isoformat(), 'arrival_at': arrival.isoformat(),
+             'worst_arrival_at': worst_arrival.isoformat(),
+             'eta_min': math.ceil((arrival - evaluated).total_seconds() / 60)}
+--- before/app/domains/travel_ops/instances/mobility/engine/subway_departure.py
++++ after/app/domains/travel_ops/instances/mobility/engine/subway_departure.py
+@@ -0,0 +1,53 @@
++"""일반 비순환 첫 승차의 정적 경로를 공급자 ID와 연결한다. 넓은 역명 별칭은 추정하지 않는다."""
++from __future__ import annotations
++
++from .subway_identity import boarding_identity
++
++
++def boarding_services(runtime, leg):
++    identity = boarding_identity(runtime, [leg])
++    if not identity or identity.get('status') != 'matched':
++        return identity or {'status': 'unavailable', 'reason': 'station_identity_unmapped'}, []
++    lo = runtime._v.lo
++    line, origin, target = leg['line'], leg['from'], leg['to']
++    if lo is None or line not in lo.doc['lines']:
++        return {'status': 'unavailable', 'reason': 'line_order_missing'}, []
++    if lo.is_loop(line):
++        return {'status': 'unavailable', 'reason': 'loop_realtime_not_supported'}, []
++    services = {}
++    for terminal in lo.stations(line):
++        verdict = lo.passes(line, origin, terminal, target)
++        if verdict.value is not True or not verdict.path or len(verdict.path) < 2:
++            continue
++        rows = [runtime.subway_stations.lookup(line, station) for station in verdict.path]
++        if any(row is None for row in rows):
++            continue
++        ids = [row['station_id'] for row in rows]
++        if len(ids) != len(set(ids)):
++            continue
++        key = (ids[1], ids[-1], '일반')
++        candidate = {'train_status': '일반', 'path_station_ids': ids,
++                     'path_stations': list(verdict.path), 'terminal': terminal}
++        # 같은 ID 조합이 서로 다른 경로라면 방향을 결정하지 않는다.
++        if key in services and services[key] != candidate:
++            return {'status': 'unavailable', 'reason': 'service_path_ambiguous'}, []
++        services[key] = candidate
++    if not services:
++        return {'status': 'unavailable', 'reason': 'service_identity_unmapped'}, []
++    return identity, list(services.values())
++
++
++def matched_service(observation, identity, services):
++    """콜백의 ID·열차 종류·경로를 조회에 사용한 정적 조합과 다시 대조한다."""
++    if any(observation.get(k) != identity.get(k) for k in ('line_id', 'station_id', 'target_station_id')):
++        return None
++    train = observation.get('train_number')
++    if (not isinstance(train, str) or not train.isascii() or not train.isdigit()
++            or not any(c != '0' for c in train) or observation.get('train_status') != '일반'
++            or observation.get('eta_basis') != 'provider_generation_time'):
++        return None
++    matches = [s for s in services
++               if observation.get('next_station_id') == s['path_station_ids'][1]
++               and observation.get('terminal_station_id') == s['path_station_ids'][-1]
++               and observation.get('path_station_ids') == s['path_station_ids']]
++    return matches[0] if len(matches) == 1 else None
+--- before/tests/unit/travel/mobility/test_subway_departure_v1.py
++++ after/tests/unit/travel/mobility/test_subway_departure_v1.py
+@@ -1,10 +1,11 @@
+ """지하철 소스→현재 승차→후속 구간→안내의 통제 연결 시험. 실탑승 아님."""
+ from copy import deepcopy
+-from datetime import timedelta
++from datetime import UTC, datetime, timedelta
+ import json
+ from types import SimpleNamespace
+ 
+ import pytest
++import httpx
+ 
+ from app.domains.travel_ops.instances.mobility.engine.departure_context import input_basis
+ from app.domains.travel_ops.instances.mobility.engine.line_order import LineOrder
+@@ -14,6 +15,7 @@
+ from app.domains.travel_ops.instances.mobility.engine.departure_observer import observe
+ from app.domains.travel_ops.instances.mobility.engine.guardrails import resolve
+ from app.domains.travel_ops.instances.mobility.engine.paths import RULES_DIR
++from app.domains.travel_ops.instances.mobility.engine.transfer_walk import Walk
+ from app.domains.travel_ops.ports.data_sources.seoul_subway import select_boardable_arrival
+ from .test_departure_observer_v1 import NOW, ORIGIN, DESTINATION
+ 
+@@ -29,9 +31,10 @@
+     tt.fetched_at = 'controlled/timetable'
+     for station in names:
+         tt.stations.add(('05호선', station))
+-        tt.by_key[('05호선', station, 'holiday')] = [Dep(610, 'U', names[-1]), Dep(615, 'U', names[-1]), Dep(620, 'U', names[-1])]
++        tt.by_key[('05호선', station, 'holiday')] = [Dep(590, 'U', names[-1]), Dep(610, 'U', names[-1]), Dep(615, 'U', names[-1]), Dep(620, 'U', names[-1])]
+     rules = resolve(json.loads((RULES_DIR / 'rules_v0.3.json').read_text(encoding='utf8')))
+     verifier = Verifier(tt, lo, rules, {'2026-10-09'})
++    verifier.tw = SimpleNamespace(lookup=lambda *a: Walk(3, '추정', 'pair', '통제 환승 시간', checked_at='controlled'))
+     verifier.lfd_enabled = False
+     rt = Runtime(verifier, timetable_built_at=tt.fetched_at, rules_version=rules['rules_version'], stats={})
+     doc = {'schema_version': '1.0', 'station_count': 3, 'line_count': 1, 'stations': [
+@@ -85,7 +88,7 @@
+         return source(*args, **kw)
+     got = call(rt, context, subway_arrival=current)
+     assert got['status'] == 'realtime' and calls == ['양평'], got
+-    assert [x['depart_min'] for x in got['leg_results']] == [608, 615]
++    assert [x['depart_min'] for x in got['leg_results'] if x['depart_min'] is not None] == [608, 615]
+     assert got['eta_min'] == 20
+ 
+ 
+@@ -148,3 +151,128 @@
+         d.run = SimpleNamespace(express=False, serves=lambda *a: True, ride_min=lambda *a: 1)
+     got = call(rt, context, subway_arrival=source)
+     assert got['status'] == 'realtime' and got['leg_results'][0]['ride_min'] == 3
++
++
++def test_invalid_empty_callback_has_failure_evidence():
++    rt, context = scene()
++    got = call(rt, context, subway_arrival=lambda *a, **kw: None)
++    assert got['status'] == 'model_revalidated' and got['observations'][0]['reason'] == 'invalid_observation'
++
++
++def test_query_consuming_deadline_never_emits_departure():
++    rt, context = scene()
++    def delayed(*a, **kw):
++        return dict(source(*a, **kw), evaluated_at=(NOW+timedelta(hours=1)).isoformat())
++    got = call(rt, context, subway_arrival=delayed)
++    assert got['status'] == 'needs_replan' and got['reason'] == 'deadline_passed_during_query'
++
++
++def test_future_subway_after_bus_is_not_queried_as_current():
++    rt, context = scene()
++    bus = {'mode': 'bus', 'route': '통제 노선', 'from': '승차', 'to': '하차'}
++    context['options']['p']['legs'].insert(0, bus)
++    context['options']['p']['check']['legs'].insert(0, deepcopy(bus))
++    context['options']['p']['subway_identity'] = None
++    rt.verify_case = lambda *a, **kw: SimpleNamespace(verdict='feasible', code=None, reason='controlled', legs=[], arrive_min=615, arrive_worst_min=615)
++    got = call(rt, context, subway_arrival=lambda *a, **kw: pytest.fail('미래 지하철 조회 금지'))
++    assert got['status'] == 'model_revalidated' and got['observations'] == []
++
++
++def test_real_factory_hook_and_notice_display_subway_wait(monkeypatch):
++    from app import composition
++    from app.domains.travel_ops.instances.mobility import wiring
++    from app.domains.travel_ops.components.watch.trip_reminders import build_departure
++    from ..test_departure_assembly_v1 import setup, POLICY
++    from ..test_departure_observer_notice_v1 import NoEvents
++    rt, context = scene()
++    _, move, items, _, _ = setup(monkeypatch)
++    monkeypatch.setattr(wiring.engine_runtime, 'get_verifier', lambda **kw: rt)
++    move.detail['departure_context'] = context
++    move.detail['route_def']['options'][0].update(label='지하철', uses=['05호선'])
++    calls = []
++    class Arrival:
++        def boardable_arrival(self, station, **kwargs):
++            calls.append((station, deepcopy(kwargs)))
++            for key in ('max_age_seconds', 'max_provider_age_seconds', 'max_provider_clock_ahead_seconds'):
++                kwargs.pop(key)
++            return source(station, **kwargs)
++    policy = dict(POLICY, **{'travel.subway_arrival_cache_seconds': 30})
++    observer = composition.build_mobility_departure_observer(SimpleNamespace(mobility_data_dir='controlled'),
++        SimpleNamespace(bus_arrival=None, subway_arrival=Arrival()), guardrails=policy)
++    original = deepcopy(move)
++    status, phrase = build_departure(move, items, route_events=NoEvents(), routes=None, now=NOW, departure_observer=observer)
++    text = phrase.render()
++    assert status == 'ok' and '약 13분' in text and '현재 지하철 대기 반영' in text
++    assert '현재 버스 대기 반영' not in text and move == original
++    assert len(calls) == 1 and calls[0][1]['station_id'] == '1005000522'
++    assert calls[0][1]['max_age_seconds'] == 30
++
++
++@pytest.mark.parametrize('ttl', [0, -1, True, '30', float('inf'), 10**1000])
++def test_subway_cache_policy_is_validated(ttl):
++    from app.domains.travel_ops.ports.data_sources.seoul_subway import SeoulSubwayArrival
++    with pytest.raises(ValueError): SeoulSubwayArrival(service_key='controlled-key', cache_ttl_seconds=ttl)
++
++
++def test_existing_long_cache_entry_is_refreshed_under_short_policy():
++    from app.domains.travel_ops.ports.data_sources.cache import ResponseCache
++    from app.domains.travel_ops.ports.data_sources.seoul_subway import SeoulSubwayArrival, BASE, PAGE_SIZE
++    cache = ResponseCache(ttl_seconds=300, clock=lambda: 0)
++    calls = []
++    def transport(url, params):
++        calls.append(True)
++        return httpx.Response(200, json={'realtimeArrivalList': []}, request=httpx.Request('GET', url))
++    instance = SeoulSubwayArrival(service_key='controlled-key', cache=cache, cache_ttl_seconds=30, transport=transport)
++    url = f'{BASE}/controlled-key/json/realtimeStationArrival/0/{PAGE_SIZE}/%EC%96%91%ED%8F%89'
++    key = instance._cache_key(url, {})
++    old = datetime.now(UTC) - timedelta(seconds=31)
++    cache.put(key, {'realtimeArrivalList': []}, fetched_at=old, ttl_seconds=300)
++    first = instance.arrivals('양평')
++    second = instance.arrivals('양평')
++    assert len(calls) == 1 and first['confirmed_at'] == second['confirmed_at']
++    assert datetime.fromisoformat(first['confirmed_at']) > old
++
++
++def test_crowding_future_wait_remains_model_and_does_not_make_worst_before_best():
++    rt, context = scene()
++    rt._v._congestion_hit = lambda *a: (110, '매우혼잡', {'source_id': 'controlled/crowd', 'fetched_at': NOW.isoformat()}, 'board_wait_extra_headway')
++    got = call(rt, context, subway_arrival=source)
++    assert got['status'] == 'realtime' and got['arrival_at'].endswith('10:13:00+09:00')
++    assert datetime.fromisoformat(got['worst_arrival_at']) >= datetime.fromisoformat(got['arrival_at'])
++
++
++def test_rail_to_rail_transfer_is_recalculated_after_current_boarding():
++    rt, context = scene()
++    # 실제 노선망 성능이 아니라 내부 환승 시각 연결을 통제한다.
++    line = {'is_loop': False, 'stations': [{'station_nm': s} for s in ['영등포구청', '당산']],
++            'edges': [{'a': '영등포구청', 'b': '당산', 'grade': '확정', 'travel_min': 3,
++                       'travel_min_grade': '추정', 'dir_a_to_b': 'U', 'dir_b_to_a': 'D'}]}
++    rt._v.lo = LineOrder({'built_at': 'controlled/static', 'lines': {'05호선': rt._v.lo.doc['lines']['05호선'], '02호선': line}})
++    for name in ['영등포구청', '당산']:
++        rt._v.tt.stations.add(('02호선', name))
++        rt._v.tt.by_key[('02호선', name, 'holiday')] = [Dep(590, 'U', '당산'), Dep(620, 'U', '당산'), Dep(630, 'U', '당산')]
++    rt._v.tw = SimpleNamespace(lookup=lambda *a: Walk(3, '추정', 'pair', '통제 환승 시간', checked_at='controlled'))
++    leg = {'mode': 'subway', 'line': '02호선', 'from': '영등포구청', 'to': '당산'}
++    context['options']['p']['legs'].append(leg)
++    context['options']['p']['check']['legs'].append(deepcopy(leg))
++    got = call(rt, context, subway_arrival=source)
++    assert got['status'] == 'realtime', got
++    assert got['leg_results'][0]['depart_min'] == 608
++    assert got['leg_results'][-1]['depart_min'] == 620
++    assert got['eta_min'] == 25
++
++
++@pytest.mark.parametrize('crowded', [False, True])
++def test_live_short_turn_uses_matching_ridden_segment_without_static_terminal_record(crowded):
++    rt, context = scene()
++    if crowded:
++        rt._v._congestion_hit = lambda *a: (110, '매우혼잡', {'source_id': 'controlled/crowd', 'fetched_at': NOW.isoformat()}, 'board_wait_extra_headway')
++    def short_turn(station, **kw):
++        # 시간표에는 영등포시장행만 있지만 현재 응답은 목적지 영등포구청에서 종착한다.
++        kw['allowed_services'] = [s for s in kw['allowed_services'] if s['path_station_ids'][-1] == kw['target_station_id']]
++        return source(station, **kw)
++    got = call(rt, context, subway_arrival=short_turn)
++    assert got['status'] == 'realtime', got
++    assert got['eta_min'] == 13 and got['leg_results'][0]['ride_src'] == 'subway_path_model'
++    if crowded:
++        assert got['worst_arrival_at'].endswith('10:15:00+09:00')

@@ -1,0 +1,25 @@
+
+ RUN  v5.0.1 C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web
+
+ ❯ src/features/consent/consent-sync.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/consent/consent-sync.test.ts [ src/features/consent/consent-sync.test.ts ]
+Error: ENOENT: no such file or directory, open 'C:\Users\playdata2\AppData\Local\Packages\sandbox.{7560fbdc-0f9b-475e-8650-cdf834328a82}\AC\Temp\qmWFrXdP8GgW-nZKFkgGv\ssr\5b504c1572b31c7ca2322fe4b8cdab46d068bd0a'
+ ❯ src/features/consent/consent-sync.test.ts:4:1
+      2| import { resetSessionState } from "@/lib/live/client";
+      3| import { answeringSession } from "@/lib/live/session-kit";
+      4| import { noConsents, requiredAgreed } from "./consent-model";
+       | ^
+      5| import { consentsSynced, forgetConsents, readConsents, replaceConsents…
+      6| import { adoptServer, reconcileConsents, saveConsents, sendConsents, t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  9 passed (9)
+   Start at  02:33:11
+   Duration  830ms (transform 64%, import 14%, tests 14%, worker 8%)
+

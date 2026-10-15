@@ -13,6 +13,12 @@ tags: [evaluation, gpu, testing]
 
 이 페이지는 지속해서 따를 평가 절차의 정본이다. [후보 목록](../../../program/research/daily_rag_slm/model_release_watchlist.json)은 버전별 실제 실행 상태를 관리하고, [날짜별 기록](../../../program/research/daily_rag_slm/index.md)은 근거를 보관한다. 판정 규칙을 변경할 때 실행기의 조건과 함께 확인한다.
 
+`[실측 2026-10-09]` E는 혼합 평문과 대조 짝을 통한 참조 인식 진단을 고도화했지만, 사람 검수와 독립 최종 검증까지 완성된 상용화 관문은 아니다. [구성·검수 감사](../records/reports/2026-10-09_0214_e-testset-maturity-audit.md).
+
+## 판본표와 독립 보고서
+
+[사용자 결정 2026-10-11] [모델 판본·보고서 표](model-version-reports.md)에서 필요한 실험을 바로 엽니다. 상세 실험은 각각 독립 보고서로 보존합니다. 새 중앙 모델 등록 서비스를 도입하지 않습니다.
+
 ## 매일 확인할 것
 
 공식 개발사 발표·모델 카드·저자 저장소에서 마지막 확인 이후의 새 출시와 가중치 수정판을 확인합니다. 단순 파일·문서 수정 시각을 신모델 출시일로 삼지 않습니다. 이름·출시일·검증일·버전·커밋·전체/활성 매개변수·메모리·학습 가능 여부·라이선스·다운로드 크기·추론 방식·지원 언어를 기록합니다. 이전에 확인한 동일 커밋은 중복 다운로드·시험하지 않습니다. 기존 모델과 역할이 같은 유망 후보부터 자원을 배정합니다.
@@ -64,3 +70,101 @@ tags: [evaluation, gpu, testing]
 `[실측 2026-10-08]` Gemma12B 배포 원본 H를 회수했다. 정상 요청과 요청 없음 오지목을 함께 집계했고 전체 범위·반복·보류 검증 전 채택은 보류한다. [완료·한계 근거](../records/reports/2026-10-08_gemma12b-original-h-completion.md).
 
 `[사용자 명칭 대조 2026-10-08]` 사용자가 E라고 부른 평문 자유질의 속 여행 요청 시험은 실행 기록의MX 세트와 연결한다. B/C는 동일 질문의 서로 다른 채점, D/MX는 별도 입력이다. 자연 혼합 문장과 코드 이어 붙임을 분리하고 미완료 모델을 순위에 넣지 않는다. [명칭·재집계 근거](../records/reports/2026-10-08_bcde-results-and-e-alias.md).
+
+`[실측 2026-10-08]` Gemma12B 배포 원본의 E 혼합 문장 답안을 회수했다. 정상 요청 기준은 통과했으나 요청 없음 오지목 기준은 실패했으므로 제품 채택은 보류한다. [완료·유형별 실패·검증 근거](../records/reports/2026-10-08_1218_gemma12b-original-mx-completion.md).
+
+`[실측 2026-10-08]` Gemma-4-12B-it Q4_K_M의 D 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_124929_g12bbase_d-completion.md).
+
+`[실측 2026-10-08]` Gemma-4-12B-it Q4_K_M의 D2 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_130924_g12bbase_d2-completion.md).
+
+`[실측 2026-10-08]` Jev 계열 모델 중 Winnow-E4B의 우리 여행 자료 학습판을 보관했다. 기본·추가 평가와 독립 보류 검증 전 성능 향상이나 채택을 확정하지 않는다. [완료·조건·재개 근거](../records/reports/2026-10-08_131541_winnow_training_completion.md).
+
+`[실측 2026-10-08]` Gemma-4-12B-it Q4_K_M의 D3 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_132022_g12bbase_d3-completion.md).
+
+`[실측 2026-10-08]` Jev 계열 모델 중 Winnow-E4B의 우리 학습 없는 원본 H와 여행 학습판 기본 평가를 보관했다. 형식 실패를 분모에 남겼고 서로 다른 세트·원본/학습판을 구분했다. [집계·한계·추가 평가 근거](../records/reports/2026-10-08_133908_winnow_eval_queue.md).
+
+`[실측 2026-10-08]` Jev 계열 모델 중 Winnow-E4B publisher release Q8_0의 혼합 문장 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·기준·한계 근거](../records/reports/2026-10-08_135441_winnow_original_mx_completion.md).
+
+`[실측 2026-10-08]` Winnow-E4B publisher release Q8_0의 D 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_140520_winnow_original_d-completion.md).
+
+`[실측 2026-10-08]` Winnow-E4B publisher release Q8_0의 D2 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_140624_winnow_original_d2-completion.md).
+
+`[실측 2026-10-08]` Winnow-E4B publisher release Q8_0의 D3 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_140625_winnow_original_d3-completion.md).
+
+`[실측 2026-10-08]` Winnow-E4B our-travel oos adapter Q8_0 base의 D3 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_140836_winnow_oos_d3-completion.md).
+
+`[실측 2026-10-08]` Jev 계열 모델 중 Winnow-E4B 원본/우리 여행 학습판의 동일 D3 비교를 완료했다. 전체 평가와 독립 보류 검증은 계속한다. [비교 근거](../records/reports/2026-10-08_141018_winnow_d3_training_comparison.md).
+
+`[실측 2026-10-08]` 완료 답안 회수와 QAT 원본 누락 평가 예약을 확인했다. [근거](../records/reports/2026-10-08_145604_winnow_three_completion_refill.md).
+
+`[실측 2026-10-08]` Jev 계열 모델 중 Winnow-E4B our-travel oos adapter Q8_0 base의 혼합 문장 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·기준·한계 근거](../records/reports/2026-10-08_150227_winnow_oos_mx_completion.md).
+
+`[실측 2026-10-08]` 여행 학습판의 추가 시험을 회수하고 기존 QAT 기반의 누락 비교를 예약했다. [완료·재개 근거](../records/reports/2026-10-08_150608_qat_refill_five_suite.md).
+
+`[실측 2026-10-08]` QAT 배포 원본의 D2·H 답안과 형식 실패를 회수해 같은 문항의 다른 배포 원본과 대조했다. [근거](../records/reports/2026-10-08_151129_qat_original_d2_h_completion.md).
+
+`[실측 2026-10-08]` QAT 원본 누락 평가와 같은 기반의 여행 학습판 평가를 회수했다. 잡담 개선과 정상 요청 보존을 분리해 판단한다. [근거](../records/reports/2026-10-08_153821_qat_three_completion_refill.md).
+
+`[실측 2026-10-08]` QAT 기반 여행 학습판의 혼합 요청 손실과 어려운 잡담 오지목을 분리해 확인했다. [완료·채택 보류 근거](../records/reports/2026-10-08_155803_qat_two_trained_completion.md).
+
+`[실측 2026-10-08]` QAT 여행 학습판의 새 혼합·어려운 문장 결과를 원본과 대조하고 정상 요청 보존과 오지목을 함께 판정했다. [근거](../records/reports/2026-10-08_162050_qat_completion_and_choice_refill.md).
+
+`[실측 2026-10-08]` Gemma-4-E4B-it QAT Q4_0 with our-travel oos3 adapter의 혼합 문장 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·기준·한계 근거](../records/reports/2026-10-08_163509_e4bqat_oos3_mx_completion.md).
+
+`[실측 2026-10-08]` QAT 여행 학습판의 새 결과를 같은 기반 원본과 대조하고 정상 요청 보존과 오지목을 함께 판정했다. [근거](../records/reports/2026-10-08_164532_qat_completion_verified.md).
+
+`[실측 2026-10-08]` QAT 여행 학습판의 새 결과를 같은 기반 원본과 대조하고 정상 요청 보존과 오지목을 함께 판정했다. [근거](../records/reports/2026-10-08_165415_qat_completion_verified.md).
+
+`[실측 2026-10-08]` Gemma-4-E4B-it QAT Q4_0 original의 D 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_170613_e4bqat_original_d-completion.md).
+
+`[실측 2026-10-08]` Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter의 D3 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_170616_e4bqat_oos1_d3-completion.md).
+
+`[실측 2026-10-08]` Gemma-4-E4B-it QAT Q4_0 with our-travel oos2 adapter의 D3 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_170627_e4bqat_oos2_d3-completion.md).
+
+`[실측 2026-10-08]` 완료 선택 시험의 실패를 보존하고 누락된 일반 요청·요청 없음 비교를 기존 실행기에 예약했다. [근거](../records/reports/2026-10-08_170810_qat_choice_completion_and_regression_refill.md).
+
+`[실측 2026-10-08]` Gemma-4-E4B-it QAT Q4_0 with our-travel oos3 adapter의 D3 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_171441_e4bqat_oos3_d3-completion.md).
+
+`[실측 2026-10-08]` Gemma-4-E4B-it QAT Q4_0 with our-travel oos2r adapter의 D3 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_171445_e4bqat_oos2r_d3-completion.md).
+
+`[실측 2026-10-08]` QAT 원본과 여행 어댑터 네 판의 같은 직접 선택 시험을 대조했다. 혼합 문장·반복·독립 보류 검증 전 채택은 보류한다. [근거](../records/reports/2026-10-08_171630_qat_d3_five_variants.md).
+
+`[실측 2026-10-08]` Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter의 D 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_172547_e4bqat_oos1_d-completion.md).
+
+`[실측 2026-10-08]` Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter의 D2 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_173726_e4bqat_oos1_d2-completion.md).
+
+`[실측 2026-10-08]` Gemma-4-E4B-it QAT Q4_0 with our-travel oos2 adapter의 D 답안을 회수했고 형식 실패를 원문·분모에 보존했다. [완료·검증 근거](../records/reports/2026-10-08_174041_e4bqat_oos2_d-completion.md).
+
+`[검토 2026-10-09]` Saluki는 공식 원본을 확인한 조건부 비교 후보이며 압축 파일 크기와 소형 모델 학습 범위를 구분한다. 우리 여행 질의 측정과 채택은 대기한다. [근거](../records/reports/2026-10-09_0117_saluki-official-review.md).
+
+`[실측 2026-10-09]` Saluki 원본은 실제 연결검사를 통과해 같은 여행 문항의 본 비교가 시작됐다. 전체 비교·보류 검증 전 채택은 대기한다. [실행·조건·보관 근거](../records/reports/2026-10-09_023533_saluki-install-smoke-and-evaluation.md).
+
+`[실측 2026-10-09]` Saluki 원본의 고정 개발 시험은 완료했으나 E 요청 없음 오지목과 지정 부류 기준에 실패했다. 최종 순위·독립 검증·제품 채택은 확정하지 않는다. [원본·집계·실행 조건](../records/reports/2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md).
+
+`[설계·준비 2026-10-09]` 기존 D/E를 유지한 새 [대상 선택·근거·답변 계약](selection-grounded-answer-evaluation.md)을 초안으로 연결했습니다. Saluki의 별도 학습 승인은 반영됐으나 정확한 동일 모델 학습 경로·CUDA·공간 조건이 남았습니다. [검토·예시·학습 비교 근거](../records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md).
+
+`[독립 검토 후 수정 2026-10-09]` 초기 개발 예시의 ID·일정군·근거 상태 표시를 바로잡았고, 사람 검수·실측 전 현재v3로 연결했습니다. [현재 평가 준비 근거](../records/reports/2026-10-09_1158_pilot-independent-review-corrections.md).
+
+`[사용자 지시 반영 2026-10-09]` Saluki 첫 학습은 기존 AI 검토 여행 학습판을 그대로 적용하는 별도 실험으로 좁혔습니다. 새 대조쌍·답변 시험 완성은 첫 학습 전제가 아니며, 정상 요청 보존과 오지목을 함께 평가하고 독립 검증은 제품 채택 단계에서 유지합니다. 정확한 동일 모델의 학습 실행 조건은 계속 확인합니다. [자료·검토 범위·단계 분리 근거](../records/reports/2026-10-09_1208_saluki-reviewed-set-baseline.md).
+
+`[실측 2026-10-09 오후]` Valen 원본의 수정 native 선택 경로는 실행 완료와 성능 기준 실패를 구분한다. 새 FINCH 시드와 복수 선택 역할 결과도 기존 개발 진단으로 보관하며 독립 보류 통과로 승격하지 않는다. [최신 회수·원본 대조와 조건](../records/reports/2026-10-09_140358_gpu-finch-seed2-completion-valen-final-refill.md).
+
+`[실측 근거 추가 2026-10-09 저녁]` 두 번째 시드 FINCH의 추가 평가를 모두 보관했지만 사전 합산 기준 전체를 통과하지 못했다. 같은 모델 캐시의 개발 지연 진단 통과는 모델 정확도 향상·독립 검증·제품 채택과 분리한다. [유형별 분자/분모·반복·검수 상태](../records/reports/2026-10-09_2000_six-hour-gpu-arm-report.md).
+
+`[실측 2026-10-10 14시]` 학습 답안 재검토의 D3/E 전체 개발 시험은 기준에 실패해 채택하지 않았다. 후보 표시 순서·HF 누락 비교와 사람·독립 검증을 분리한다. [관측·회수·검증·백업](../records/reports/2026-10-10_1400_six-hour-gpu-arm-report.md).
+
+`[실측 2026-10-10 20시]` 질문·정답 ID를 유지한 후보 표시 역순에서 견고성 기준을 충족하지 못했다. 위치 효과 진단을 독립 검증·모델 채택과 분리하고 E 사람 검수를 남긴다. [완료·구간·원본](../records/reports/2026-10-10_2000_six-hour-gpu-arm-report.md).
+
+`[실측 2026-10-11 02시]` 추가 실행판에서도 같은 질문의 후보 표시 위치 견고성을 충족하지 못했으며, 오지목과 정상 요청 보존을 함께 판정합니다. [원본·구간·검증 경계](../records/reports/2026-10-11_0200_six-hour-gpu-arm-report.md).
+
+`[실측 2026-10-11 08시]` 추가 배포 표현에서도 후보 순서 견고성 기준을 충족하지 못해 채택을 보류한다. 소규모 앱 출력 계약 통과와 장시간 안정성·독립 정확도를 분리한다. [관측·회수·재개 조건](../records/reports/2026-10-11_0800_six-hour-gpu-arm-report.md).
+
+
+`[실측 2026-10-12]` 같은 배포 원본의 앱 해석 계약 보완과 입력 축약 실패를 분리 검증했습니다. 표적 보류 점검을 사람 검수·제품 독립 정확도나 추가 학습 효과로 승격하지 않습니다. [원본·조건·운영 경계](../records/reports/2026-10-12_0038_arm-latency-root-cause.md).
+
+`[감사 2026-10-12]` 과거 잡담 오지목·규정 질문 누락·OCR 잔여 변조와 제품 전체 검증은 모델 비교 완료와 구분하며 전체 개선 완료로 처리하지 않습니다. [여섯 범주 코드·검증 감사](../records/reports/2026-10-12_improvement-closure-audit.md).
+
+`[구현·로컬 검증 2026-10-12]` 기존 E를 보존한 [E2 복수 일정 평가 계약](itinerary-crud-e2-evaluation.md)을 추가했습니다. 개발 초안·채점기 검증과 사람 정답 검수·실제 모델 평가·제품 채택을 구분합니다. [제작 근거](../records/reports/2026-10-12_e2-crud-pilot-and-real-dialogue.md).
+
+
+`[등록·검증 대기 2026-10-12]` Winnow를 우선 후보로 보강 학습하고 Saluki는 원본 보존 학습 경로를 추가했습니다. 학습·정확도·전체 앱 로직 완료와 구분하며 기존 A4000 실행 뒤 단일 큐로 이어갑니다. [Winnow 기존/새 보강판과 Saluki 동일 조건 비교 등록](../records/reports/2026-10-12_winnow-saluki-queue-registration-and-handoff.md)。

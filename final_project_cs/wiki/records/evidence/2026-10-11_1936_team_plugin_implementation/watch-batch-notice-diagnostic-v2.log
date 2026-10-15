@@ -1,0 +1,27 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set _
+
+case_world = {'clock': <tests.scenario.test_case_version_day.Clock object at 0x000002459E573F20>, 'customer': UUID('2328860c-666f-4...CAB77D0>, 'store': <app.domains.travel_ops.components.itinerary.itinerary.TripStore object at 0x00000245ACA4E3F0>, ...}
+
+    def test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set(case_world):
+        world = case_world
+        everything = {SKY: ROAD, LUNCH: ROAD, "아쿠아리움": ROAD, "롯데월드 어드벤처": ROAD,
+                      "성수 브런치 식당(시나리오)": ROAD, "성수 국수 식당(시나리오)": ROAD}      # 원래 곳도 대체 후보도 다 막혔다
+        engine = _engine(world, everything)
+        first = _tick(engine)
+    
+        [opened] = first.opened
+        assert [v[0] for v in _versions(world)] == [1]                       # 판이 안 바뀌었다
+        assert _status(world, __import__("uuid").UUID(opened["case_id"])) == "escalated"
+        notices = _outbox(world)
+>       assert len(notices) == 1, [(k, p.get("type"), p.get("kind"), p.get("reason"), p.get("text")) for k, p in notices]
+E       AssertionError: [('e92050f7-d113-493c-a038-ea27b79d7a4e:proposal:00bc324b-2ec1-49c8-96e7-8dbcc21013de', 'proposal_request', None, 'rel... 'no_alternate', 'no_alternate', '성수 점심 식사(예약) — 도로가 통제돼요. 대신 갈 수 있는 곳을 찾지 못해 **일정은 그대로 두었어요.**
+E         가시기 전에 한 번 확인해 주세요.')]
+E       assert 2 == 1
+E        +  where 2 = len([('e92050f7-d113-493c-a038-ea27b79d7a4e:proposal:00bc324b-2ec1-49c8-96e7-8dbcc21013de', {'causes': [{'category': 'traf... 'traffic_control', 'kind': 'road_closed'}], 'changed': None, 'items': ['3ae2549b-cff3-4625-99f3-9d04f02d770e'], ...})])
+
+tests\scenario\test_watch_batch.py:221: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_watch_batch.py::test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set
+1 failed in 4.61s

@@ -3,9 +3,9 @@ type: runbook
 title: 구글 로그인 켜기 — 따라 하기
 description: 구글 사이트에서 로그인용 열쇠 한 벌을 만들어 우리 설정 파일에 넣는 방법. 무료, 하나만 만들고 주소 두 개를 적는다
 status: draft
-tags: [auth, operations]
+tags: [security, release]
 owners: [human:미배정]
-domain: neutral
+domain: travel
 ---
 
 # 구글 로그인 켜기 — 따라 하기

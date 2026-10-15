@@ -24,7 +24,7 @@ from importlib import import_module
 
 _TEAM_EXPORTS = {
     "ActivityTeam": "activity", "BookingHandoffTeam": "booking_handoff",
-    "DiningTeam": "dining", "FlightTeam": "locked", "LodgingTeam": "locked",
+    "DiningTeam": "dining", "FlightTeam": "flight", "LodgingTeam": "lodging",   # `[2026-10-07~08]` 숙소 · 항공 본체(옛 locked 는 등록에서 빠짐)
     "MobilityTeam": "mobility",
 }
 

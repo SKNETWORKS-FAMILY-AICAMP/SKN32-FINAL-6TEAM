@@ -1,0 +1,14 @@
+{
+  "files": [
+    {
+      "file": "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "sha256": "4f13fb826d484cddfbbcaa5028a4185f2fc89053790abb6ccbbccca588778729",
+      "functions": [
+        "_duration_minutes",
+        "observe"
+      ]
+    }
+  ],
+  "secret_files": 0,
+  "tools_enabled": false
+}

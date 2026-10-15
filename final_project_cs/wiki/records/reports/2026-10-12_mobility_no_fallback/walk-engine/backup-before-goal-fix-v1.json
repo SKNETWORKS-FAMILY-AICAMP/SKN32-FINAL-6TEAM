@@ -1,0 +1,12 @@
+{
+  "backup": ".tmp\\mobility_web_improve_20261012_v1\\walk-engine\\_backup\\2026-10-12_164345_goal_heuristic_fix",
+  "source_sha256": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8",
+  "files_before": {
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8",
+    "final_project_cs\\tests\\unit\\travel\\mobility\\test_graph_router_goal_heuristic_v1.py": "83b0695ff3f91890acd3b601f5619ac2006a60cfa2967d94847e5cbd0d11a1c3",
+    ".tmp\\mobility_web_improve_20261012_v1\\walk-engine\\local-topology-v1.py": "5f609e6cef50628760281a0d4b6b01e4d7b9cd3685b1023be3b364126d3637fa",
+    ".tmp\\mobility_web_improve_20261012_v1\\walk-engine\\local-topology-v1.json": "f89cec9687f5c32e8b1c1769279f97d708638354d986c3fa9b6c0082d0492491",
+    ".tmp\\mobility_web_improve_20261012_v1\\walk-engine\\new-pbf-targeted-v1.py": "81d771aba309f64a82ab6c252d732a0bc525fbd4fa499b7929ad4f7f43ea89f3",
+    ".tmp\\mobility_web_improve_20261012_v1\\walk-engine\\new-pbf-targeted-v1.json": "b12a34c3f9e265d03af01cea67f8b488b1c8f8fe731cb565809c5d5f108796b2"
+  }
+}

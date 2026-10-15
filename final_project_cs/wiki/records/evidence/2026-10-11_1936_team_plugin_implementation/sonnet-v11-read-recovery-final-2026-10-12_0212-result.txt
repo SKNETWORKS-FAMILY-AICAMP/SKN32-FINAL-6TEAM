@@ -1,0 +1,102 @@
+**v11 검토 결과: 이 범위에서 새로 확정한 결함은 없습니다.** 확정이라고 부를 수 있는 것은 정적 읽기와 고정 러너 1회뿐입니다. DB·HTTP 시험은 실행하지 않았습니다. 격리 Linux 전체 회귀는 아직 진행 중이라 통과 여부는 주장하지 않습니다.
+
+## 1. 직접 실행한 증거
+- 모델은 Sonnet 5.5(`claude-sonnet-5-5`)입니다.
+- 고정 러너를 수정 없이 한 번 실행했습니다.
+  - 명령: `anaconda3/python.exe wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/v11-read-recovery-final-unit.py`
+  - 결과: `91 passed in 8.69s`, `PYTEST_EXIT=0`
+  - 실패와 skip은 출력에 없었습니다.
+  - 수집 건수는 따로 출력되지 않았고, 점 91개와 passed 91이 일치합니다. 기대 수 91과 같습니다.
+  - 대상은 `test_fact_read_recovery.py`, `test_fact_context.py`, `test_initial_retry_boundaries.py`, `test_controller_resume_recovery.py`, `test_implicit_reply_recency.py`입니다.
+- 소스를 직접 세어 보니 단위 27건과 14건, HTTP 10건이 맞습니다.
+
+## 2. 확정 결함
+없습니다.
+
+## 3. 정적 읽기로 확인한 항목
+
+### A. 읽기 복구
+**잠금과 오류 변환**
+- `fact_read_retry.py:58-81`의 `lock_read_case`는 같은 Case에 `FOR UPDATE NOWAIT`를 겁니다.
+- 정확한 `LockNotAvailable`만 `rollback` 후 `StateConflict`(409)로 바꿉니다. 그 밖의 오류는 그대로 올라갑니다(단위 시험이 `OperationalError` 동일 객체 전파를 확인).
+- `trip_messages.py:714-720`에서 `safe_read`일 때만 잠금을 잡습니다. 이후 `classify_case`, `move`, `COMPLETED`는 중간 `commit` 없이(`:740`의 `if not safe_read`) 진행하고, 커밋은 `get_connection` 종료 시점입니다.
+- 잠금 안에서 `decide`(LLM)와 `controller.run_case`는 호출하지 않습니다. 복구는 `restore`로 만든 `Decision`을 `_run_decision`에 넘깁니다.
+- 중간에 예외가 나면 전체가 롤백되어 Case는 이전 상태로 돌아갑니다. 재시도가 가능한 이유입니다.
+
+**스냅숏 내용과 복원 검사**
+- 스냅숏(`:16-33`)은 `at`, `selected`, `base_version`, `trip_id`, 유효 `fact`, `item_id`, `choices`, 이전 `focus`만 담습니다. 좌표, 고객 문장, `raw`는 없습니다.
+- `restore`(`:84-119`)는 아래를 모두 검사하고 하나라도 어긋나면 409입니다.
+  - 스키마 값과 `trip_id`, `base_version`
+  - 원본 `decision` 기록과의 `fact` 및 `item_id` 일치
+  - `LOCATION_FACTS`와 `FACTS` 밖 값
+  - `recoverable`, 시각의 tz 포함 여부
+  - clarify 첫 후보의 항목 이름
+
+**fact_first와의 일치**
+- `read_snapshot`은 `fact_first(decision)` 결과가 `answer_fact`일 때만 만듭니다.
+- 순수 읽기 clarify는 `fact_first`와 같은 결과(첫 후보, `none`은 `detail`)로 복원됩니다.
+- 비읽기 후보가 하나라도 섞이면(`is_read_record`, `decision_unit.py:344`와 같은 조건) 스냅숏이 `None`이라 업무 경로로 갑니다.
+
+**업무 우회 차단**
+- `lock_read_case`는 `conversation_dispatch`, `subject_ref`, `resume_requests`, `customer_input_history`가 있거나 `agent_runs`가 active, running, resuming이면 409입니다.
+- `retry_read`는 상태가 `classifying`, `routing`, `running`이 아니면 `None`을 돌려줍니다. 그래서 완료나 중복 응답은 기존 `retry_initial`과 duplicate 경로로 갑니다.
+- 업무 `decision`이 있는데 스냅숏이 없으면 `:130-132`의 게이트에서 `None`이 되어 `retry_initial`로 갑니다.
+- 업무 `decision`이 있고 스냅숏까지 있는 변조 상태는 `:138`의 `NEW_REQUEST`(409)로 막힙니다.
+
+**옛 off/defer 캐시**
+- `_legacy_cached_fact`(`:46-55`)는 모든 조건을 만족해야 합니다.
+  - 상태가 `classifying`이고 `answer`가 비어 있지 않은 문자열일 것
+  - `decision`, `conversation_dispatch`, `subject_ref`, 재개 이력, 입력 이력이 없을 것
+  - `fact_question(message)`가 결정적으로 일치할 것
+- 메시지 해시와 subject 일치는 `handle_trip_message`(`trip_messages.py:312-315`)가 먼저 확인합니다.
+- 이 경로에는 새 계산이 없고 저장 문자열만 돌려줍니다.
+- 옛 스냅숏이 없고 답도 없는 읽기는 409입니다.
+
+**잠금 안 계산 범위**
+- 잠금 안에서 `trip_facts.fact_reply`와 `_place_extras`가 돕니다. 후보 구현상 LLM과 Team은 아닙니다.
+
+### B. 숫자 답 최신성
+- `case_dispatch.py:122-133`의 숫자 한정 필터는 `implicit`일 때만 돕니다.
+  - 정규식이 `\d+(번|번이요|번요|번째)?[.!]?`이라 이름 선택이나 "30분이요" 같은 입력은 해당하지 않습니다.
+- 최신 assistant 턴에 `case_id`가 있을 때만 후보를 그 Case 하나로 좁힙니다. 턴이 없거나 `case_id`가 없으면 옛 동작입니다.
+- 명시한 `case_id`나 token, 같은 `request_id`를 다시 보낸 경우(`replayed`)는 `implicit=False`라 필터를 타지 않습니다.
+- 대기 업무가 둘이고 최신 안내 Case가 둘 중 하나가 아니면 둘 다 걸러져 `None`이 됩니다.
+- 둘 다 대기이고 최신 안내가 그중 하나이면 409 없이 그 하나를 재개합니다. 이것이 "다중 대기는 여전히 409"와 어긋나는지는 설계 판단이 필요합니다. 시험이 확인하는 409는 최신 안내가 없는 경우뿐입니다(`test_ambiguous_legacy_number_still_requires_a_case`, `latest="none"`).
+
+## 4. 실행하지 않은 정적 우려 (확정 아님)
+1. **버전 재검사 시차** (`fact_read_retry.py:94`와 `trip_messages.py:721-728`)
+   - 전제: 재시도 중 `restore`의 `base_version` 검사 직후, `_run_decision`의 잠금 획득 전에 일정 버전이 올라간 경우입니다.
+   - 영향: 잠금 후 `current_context["version"]`을 스냅숏 `base_version`과 다시 비교하지 않습니다. 새 버전 데이터로 답할 수 있습니다.
+   - 재현 시도: 하지 않았습니다. 창은 밀리초 단위로 추정하고, 쓰기는 없습니다.
+2. **포커스 TTL**
+   - `context_now`는 재시도 시점의 현재 시각입니다. "거기 알려줘" 같은 대명사 질문은 재시도가 TTL을 넘기면 원래 답 대신 "확인하지 못했어요" 안내가 나갑니다.
+   - 안전한 쪽으로 실패하는 동작이며 변경은 없습니다.
+3. **복구 응답의 `decision.record()`**
+   - 복원된 `Decision`은 `raw`, `minutes`, `seconds`가 비어 있습니다. 재시도 응답의 `decision` 필드와 ROUTED 이벤트 payload의 `decision`이 첫 시도와 다릅니다(개발 모드 노출과 감사 기록만 해당).
+4. **외부 조회 시간**
+   - `fact_reply`의 `look_up_place(place_source)`가 잠금 구간 안에서 돕니다. 외부 지연이 있으면 같은 Case 재시도가 그동안 409를 받습니다.
+5. **채팅 턴 기록 경합**
+   - `_log_turn`이 응답 뒤에 기록되므로, 사실 질문 직후 즉시 "1번"을 보내면 방금 안내가 최신 assistant로 아직 보이지 않을 수 있습니다.
+6. **`fact_read_cached` 판정 방식**
+   - 사전 게이트(`:130`)는 truthy로 보고 사후는 `is True`로 봅니다. 현재 서버가 쓰는 값은 `True`뿐이라 실효 차이는 없습니다.
+
+## 5. 직접 읽은 파일
+- `fact_read_retry.py` 전체, `case_dispatch.py` 전체
+- `trip_messages.py` 1–971행(`handle_trip_message`, `_open_message_case`, `_run_decision`, `_dispatch_decision`의 시작부)
+- `decision_unit.py` 전체(`Decision.record`, `fact_first`), `fact_context.py` 전체, `chat_log.py` 전체, `classification.py` 전체
+- `events.py`의 `TRANSITIONS` 일부, `case.py`는 `apply_event` 주변만 확인, `session.py`의 `get_connection`
+- `trip_api.py`의 `_log_turn`, `trip_facts.py`의 `place_source` 사용 위치(Grep)
+- 시험: `test_fact_read_recovery.py`, `test_implicit_reply_recency.py`, `test_fact_read_recovery_web.py`, `test_reply_recency_web.py`(읽기만)
+- `review-notes/read-recovery-contract.md`
+
+## 6. 확인하지 못한 조건
+- 실제 PostgreSQL에서 savepoint와 잠금 동작, 커밋 시점, `NOWAIT` 경합은 확인하지 못했습니다. HTTP와 DB 시험은 실행하지 않았습니다.
+- 러너에 포함됐지만 내용을 읽지 않은 파일이 있습니다: `test_fact_context.py`, `test_initial_retry_boundaries.py`, `test_controller_resume_recovery.py`. 91건 통과 외에 이 파일들의 내용은 검토하지 않았습니다.
+- `plugin-availability.md`와 `case.py` 전체도 읽지 않았습니다.
+- 격리 Linux 전체 회귀 결과는 없습니다.
+- LLM 정확도, 이동 정확도, 운영 DB와 운영 동작에 대한 주장은 하지 않습니다.
+
+## 7. 권한과 범위
+- 권한 거부는 없었습니다. Bash는 고정 러너 1회만 썼고, 나머지는 Read, Glob, Grep으로 했습니다.
+- Glob 결과에 `_backup/`과 `merge-evidence/` 경로가 보였지만 열지 않았습니다.
+- `.env`, 자격 증명, 데이터셋은 읽지 않았습니다. 소스나 시험은 수정하지 않았습니다.

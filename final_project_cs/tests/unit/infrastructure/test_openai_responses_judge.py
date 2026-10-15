@@ -105,6 +105,15 @@ def test_web_search_off_sends_no_tools(monkeypatch):
     assert "tools" not in client.requests[0] and "include" not in client.requests[0]
 
 
+def test_model_argument_overrides_the_setting_for_one_call(monkeypatch):
+    """★`[2026-10-13]` 판정마다 모델을 고른다(활동 코어 전달 사항 11번) — 안 주면 설정 모델 그대로."""
+    adapter, client = _adapter(monkeypatch, _response())
+    call = _judge(adapter, model="gpt-6-luna")
+    _judge(adapter)
+    assert [r["model"] for r in client.requests] == ["gpt-6-luna", "gpt-5.4-nano"]
+    assert call.model == "gpt-6-luna"
+
+
 def test_web_search_default_follows_settings(monkeypatch):
     adapter, client = _adapter(monkeypatch, _response(), settings=_settings(activity_judge_web_search=False))
     _judge(adapter)

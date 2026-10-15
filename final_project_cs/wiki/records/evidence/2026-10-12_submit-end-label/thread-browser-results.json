@@ -1,0 +1,497 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.submit-threads.config.ts"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\playwright.submit-threads.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/submit-end-20261012-v1/runtime/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/submit-end-20261012-v1/thread-browser-evidence",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/submit-end-20261012-v1/runtime/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "submit-end-registration-20261012.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../thread-browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "submit-end-registration-20261012.spec.ts",
+      "file": "submit-end-registration-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12919,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:33:27.604Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-8cff631c78ffd1234cbb",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "375px 일반 recheck: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6741,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:33:41.278Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-bbdd6d6a0f7c182cf928",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "375px 동작 줄임 ready: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4280,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:33:48.046Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-92f29d60553cec2390c9",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "375px 동작 줄임 recheck: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4841,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:33:52.353Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-c94cc267c911bedf5de9",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "1280px 일반 ready: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6294,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:33:57.217Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-44758c7e797b56736184",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "1280px 일반 recheck: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7347,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:34:03.533Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-59931dba54b739b277f4",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "1280px 동작 줄임 ready: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5083,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:34:10.900Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-825f1ff2e0cf435da5fc",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "1280px 동작 줄임 recheck: 목록 끝에서 버튼 이름까지 즉시 표시",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5689,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:34:16.005Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-b59555f742d9697008d6",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 28,
+          "column": 3
+        },
+        {
+          "title": "등록 불가여도 끝에서는 안내를 표시하고 스크롤로는 전송하지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1328,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_INSUFFICIENT_RESOURCES at http://127.0.0.1:3199/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3199/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_INSUFFICIENT_RESOURCES at http://127.0.0.1:3199/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3199/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\", waiting until \"load\"\u001b[22m\n\n    at openResult (C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts:20:14)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts:64:15",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts",
+                      "column": 14,
+                      "line": 20
+                    },
+                    "snippet": "  18 |   });\n  19 |   await start(page);\n> 20 |   await page.goto(`/intakes/${INTAKE}`);\n     |              ^\n  21 |   await expect(page.locator(\"[data-stage=done]\")).toHaveCount(1);\n  22 |   await expect(page.locator('[data-verdict=\"checking\"]')).toHaveCount(0);\n  23 |   await mapSettled(page);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts",
+                        "column": 14,
+                        "line": 20
+                      },
+                      "message": "Error: page.goto: net::ERR_INSUFFICIENT_RESOURCES at http://127.0.0.1:3199/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3199/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\", waiting until \"load\"\u001b[22m\n\n\n  18 |   });\n  19 |   await start(page);\n> 20 |   await page.goto(`/intakes/${INTAKE}`);\n     |              ^\n  21 |   await expect(page.locator(\"[data-stage=done]\")).toHaveCount(1);\n  22 |   await expect(page.locator('[data-verdict=\"checking\"]')).toHaveCount(0);\n  23 |   await mapSettled(page);\n    at openResult (C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts:20:14)\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts:64:15"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:34:21.722Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\thread-browser-evidence\\submit-end-registration-20-f2a52-에서는-안내를-표시하고-스크롤로는-전송하지-않는다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\thread-browser-evidence\\submit-end-registration-20-f2a52-에서는-안내를-표시하고-스크롤로는-전송하지-않는다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts",
+                    "column": 14,
+                    "line": 20
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-0a3676c0988320b9cecc",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 61,
+          "column": 1
+        },
+        {
+          "title": "목록 끝에서도 최소 접힘 중에는 안내를 숨기고 펼치면 복귀한다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 17501,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('footer[class*=footer]').getByRole('tooltip')\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('footer[class*=footer]').getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('footer[class*=footer]').getByRole('tooltip')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('footer[class*=footer]').getByRole('tooltip')\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('footer[class*=footer]').getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('footer[class*=footer]').getByRole('tooltip')\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts:88:45",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts",
+                      "column": 45,
+                      "line": 88
+                    },
+                    "snippet": "  86 |   await expect(footer.getByRole(\"tooltip\")).toBeHidden();\n  87 |   await handle.click();\n> 88 |   await expect(footer.getByRole(\"tooltip\")).toBeVisible();\n     |                                             ^\n  89 | });\n  90 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts",
+                        "column": 45,
+                        "line": 88
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('footer[class*=footer]').getByRole('tooltip')\nExpected: visible\nTimeout: 12000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('footer[class*=footer]').getByRole('tooltip') with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for locator('footer[class*=footer]').getByRole('tooltip')\u001b[22m\n\n\n  86 |   await expect(footer.getByRole(\"tooltip\")).toBeHidden();\n  87 |   await handle.click();\n> 88 |   await expect(footer.getByRole(\"tooltip\")).toBeVisible();\n     |                                             ^\n  89 | });\n  90 |\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts:88:45"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T02:34:24.372Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\thread-browser-evidence\\submit-end-registration-20-5c54b--최소-접힘-중에는-안내를-숨기고-펼치면-복귀한다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\thread-browser-evidence\\submit-end-registration-20-5c54b--최소-접힘-중에는-안내를-숨기고-펼치면-복귀한다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\submit-end-20261012-v1\\runtime\\tests\\live\\submit-end-registration-20261012.spec.ts",
+                    "column": 45,
+                    "line": 88
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ddbfec76b837eea79886-52d5ecc92c4d81cf77f5",
+          "file": "submit-end-registration-20261012.spec.ts",
+          "line": 73,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-12T02:33:12.285Z",
+    "duration": 94501.826,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

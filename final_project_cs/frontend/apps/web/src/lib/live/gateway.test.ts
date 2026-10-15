@@ -223,17 +223,27 @@ describe("live trip gateway", () => {
     expect(trip.stops[1].badges).toEqual([]);
   });
 
+  it("carries the stop's kind and the server's name for it (2026-10-13 — the icon before the name)", async () => {
+    replies.push({ ...TRIP, items: [{ ...TRIP.items[0], kind: "dining", kind_label: "식사" }, TRIP.items[1]] });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect([trip.stops[0].kind, trip.stops[0].kindLabel]).toEqual(["dining", "식사"]);
+    // no `kind_label` from the server: the screen names the kind itself
+    expect([trip.stops[1].kind, trip.stops[1].kindLabel]).toEqual(["activity", undefined]);
+  });
+
   it("carries the place facts the server sent (dining ledger) and leaves out what it did not", async () => {
     replies.push({
       ...TRIP,
       items: [
-        { ...TRIP.items[0], place_info: { address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: [{ day: "월", open: "11:30", close: "21:00", last_order: "20:30" }, { day: "화" }],
+        { ...TRIP.items[0], place_info: { address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: [{ day: "월", weekday: 1, open: "11:30", close: "21:00", last_order: "20:30" }, { day: "화" }],
           tags: ["michelin_selected", "card_payment", 3], michelin: { level: "셀렉티드", year: 2026 }, source_note: "" } },
         { ...TRIP.items[1], place_info: { address: "", hours: null, tags: [] } },
       ],
     });
     const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
     expect(trip.stops[0].placeInfo).toEqual({ address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: ["월 11:30–21:00 (주문 마감 20:30)", "화"],
+      // `[2026-10-13]` the line kept with its day for the folded card; a rule the server sent no day for is left out
+      dayHours: [{ weekday: 1, line: "월 11:30–21:00 (주문 마감 20:30)" }],
       hoursNotes: [], tags: ["michelin_selected", "card_payment"], michelin: { level: "셀렉티드", year: 2026 }, sourceNote: undefined });
     // ★nothing real was sent — no block at all, not a row of "unknown"
     expect(trip.stops[1].placeInfo).toBeNull();
@@ -290,6 +300,23 @@ describe("live trip gateway", () => {
     const bodies = calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)));
     expect(bodies[0]).toMatchObject({ message: "다른 데로 바꿔 줘", item_id: "b" });
     expect(bodies[1]).not.toHaveProperty("item_id");
+  });
+
+  it("carries restaurant marks with their source and drops a mark it cannot credit", async () => {
+    replies.push({
+      ...TRIP,
+      items: [{ ...TRIP.items[0], badges: [
+        { code: "michelin", label: "미쉐린 빕 구르망 (2026)", source: "미쉐린 가이드 서울" },
+        { code: "nopo", label: "노포" },
+        { code: "nopo", label: "노포", source: "카카오맵 노포 지도", extra: 1 },
+      ] }, TRIP.items[1]],
+    });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops[0].badges).toEqual([
+      { code: "michelin", label: "미쉐린 빕 구르망 (2026)", source: "미쉐린 가이드 서울" },
+      { code: "nopo", label: "노포", source: "카카오맵 노포 지도" },
+    ]);
+    expect(trip.stops[1].badges).toEqual([]);
   });
 
   it("does not quietly become a new user when the session has ended", async () => {
@@ -377,7 +404,7 @@ describe("live trip gateway", () => {
   it("sends a failed message again with the same request id, so the server does not act on it twice", async () => {
     const gateway = createLiveGateway();
     const ids = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)).request_id as string);
-    replies.push(new Response("{}", { status: 502 }));
+    replies.push(new Response("{}", { status: 500 }));  // a failed send (a gateway 502 is now sent again by itself — stream.ts)
     await expect(gateway.sendMessage(TRIP.trip_id, "점심 바꿔 줘", "ko", "b")).rejects.toBeInstanceOf(LiveError);
     replies.push({ status: "adjusted", answer: "바꿨어요." });
     await gateway.sendMessage(TRIP.trip_id, "점심 바꿔 줘", "ko", "b");
@@ -391,7 +418,7 @@ describe("live trip gateway", () => {
   it("does not reuse a failed message's request id for different words or a different stop", async () => {
     const gateway = createLiveGateway();
     const ids = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)).request_id as string);
-    replies.push(new Response("{}", { status: 502 }));
+    replies.push(new Response("{}", { status: 500 }));  // a failed send (a gateway 502 is now sent again by itself — stream.ts)
     await expect(gateway.sendMessage(TRIP.trip_id, "저녁 바꿔 줘", "ko", "a")).rejects.toBeInstanceOf(LiveError);
     replies.push({ status: "answered", answer: "네." });
     await gateway.sendMessage(TRIP.trip_id, "저녁 바꿔 줘", "ko", "b");
@@ -404,6 +431,30 @@ describe("live trip gateway", () => {
       resume_token: "resume-private", answer: "몇 분쯤 늦으세요?", required_input_schema: { required: ["minutes"] } };
     const resume = { case_id: wait.case_id, resume_token: wait.resume_token, expected_version: wait.version };
     const bodies = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)) as Record<string, unknown>);
+
+    it("sends the explicit summary day without consuming a pending change reply", async () => {
+      const gateway = createLiveGateway();
+      replies.push(wait);
+      await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko");
+      replies.push({ status: "answered", answer: "하루 일정", case_status: "completed" });
+      await gateway.sendMessage(TRIP.trip_id, "2026-10-15 하루 일정을 요약해 주세요.", "ko", null, null, undefined, undefined, "2026-10-15");
+      expect(bodies()[1]).toMatchObject({ summary_day: "2026-10-15" });
+      expect(bodies()[1]).not.toHaveProperty("resume_token");
+      expect(bodies()[1]).not.toHaveProperty("case_id");
+      replies.push({ status: "answered", answer: "반영했어요" });
+      await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko");
+      expect(bodies()[2]).toMatchObject(resume);
+    });
+
+    it("retries a summary with its date and the same request id", async () => {
+      const gateway = createLiveGateway();
+      replies.push(new Response("{}", { status: 503 }));
+      await expect(gateway.sendMessage(TRIP.trip_id, "2026-10-15 하루 일정을 요약해 주세요.", "ko", null, null, undefined, undefined, "2026-10-15")).rejects.toBeInstanceOf(LiveError);
+      replies.push({ status: "answered", answer: "하루 일정" });
+      await gateway.sendMessage(TRIP.trip_id, "2026-10-15 하루 일정을 요약해 주세요.", "ko", null, null, undefined, undefined, "2026-10-15");
+      expect(bodies()[1].request_id).toBe(bodies()[0].request_id);
+      expect(bodies()[1].summary_day).toBe("2026-10-15");
+    });
 
     it("continues the same Case and clears it after completion without storing its token", async () => {
       const gateway = createLiveGateway();
@@ -447,7 +498,7 @@ describe("live trip gateway", () => {
       const gateway = createLiveGateway();
       replies.push(wait);
       await gateway.sendMessage(TRIP.trip_id, "늦어요", "ko");
-      replies.push(new Response("{}", { status: 502 }));
+      replies.push(new Response("{}", { status: 500 }));  // a failed send (a gateway 502 is now sent again by itself — stream.ts)
       await expect(gateway.sendMessage(TRIP.trip_id, "30분이요", "ko")).rejects.toBeInstanceOf(LiveError);
       replies.push({ case_status: "completed", answer: "반영했어요." });
       await gateway.sendMessage(TRIP.trip_id, "30분이요", "ko");
@@ -484,7 +535,7 @@ describe("live trip gateway", () => {
 
     it("accepts explicit correlation and never reuses a failed reply id for a different Case", async () => {
       const gateway = createLiveGateway();
-      replies.push(new Response("{}", { status: 502 }));
+      replies.push(new Response("{}", { status: 500 }));  // a failed send (a gateway 502 is now sent again by itself — stream.ts)
       await expect(gateway.sendMessage(TRIP.trip_id, "30분이요", "ko", null, null, undefined, resume)).rejects.toBeInstanceOf(LiveError);
       const other = { ...resume, case_id: "another-case", resume_token: "another-private" };
       replies.push({ case_status: "completed", answer: "반영했어요." });

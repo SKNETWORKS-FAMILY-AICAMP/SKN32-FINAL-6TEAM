@@ -1,0 +1,298 @@
+{
+  "recorded_at_utc": "2026-10-11T13:22:09.328490+00:00",
+  "task": "Oracle ARM actual answer repair",
+  "adapter_applied": true,
+  "adapter_checks": {
+    "passed": 18,
+    "total": 18
+  },
+  "original_actual_http": {
+    "setup_passed": 14,
+    "setup_total": 14,
+    "answers_passed": 0,
+    "answers_total": 8
+  },
+  "exaone_fixed_template": {
+    "passed": 1,
+    "total": 3,
+    "adopted": false
+  },
+  "e4b_first_trial": {
+    "passed": 1,
+    "total": 3,
+    "adopted": false
+  },
+  "e4b_reasoning_v2": {
+    "status": "passed",
+    "passed": 3,
+    "total": 3
+  },
+  "app_dedicated_route_applied": true,
+  "real_http_regression_after_route": {
+    "status": "passed",
+    "passed": 22,
+    "total": 22,
+    "answers_passed": 8,
+    "answers_total": 8,
+    "observed_at_utc": "2026-10-11T12:35:18+00:00"
+  },
+  "benchmark_interrupted": false,
+  "report": "final_project_cs/wiki/records/reports/2026-10-11_oracle_answer_repair.md",
+  "raw_evidence": "program/scripts/plan_qa_bench/results/oracle_repair_20261011",
+  "backups": [
+    "final_project_cs\\wiki\\records\\reports\\_backup\\2026-10-11_211904_answer_repair\\2026-10-11_oracle_answer_repair.md",
+    "final_project_cs\\wiki\\operations\\_backup\\2026-10-11_211904_answer_repair\\arm-serving-queue.md",
+    "final_project_cs\\wiki\\_backup\\2026-10-11_211904_answer_repair\\log.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-11_211904_answer_repair\\index.md",
+    "final_project_cs\\wiki\\records\\reports\\_backup\\2026-10-11_221001_answer_verified\\2026-10-11_oracle_answer_repair.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-11_221001_answer_verified\\oracle_answer_repair_2026-10-11_v1.json",
+    "final_project_cs\\wiki\\operations\\_backup\\2026-10-11_221001_answer_verified\\arm-serving-queue.md",
+    "final_project_cs\\wiki\\operations\\_backup\\2026-10-11_221001_answer_verified\\arm-develop-cd.md",
+    "final_project_cs\\wiki\\_backup\\2026-10-11_221001_answer_verified\\log.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-11_221001_answer_verified\\index.md",
+    "final_project_cs\\wiki\\records\\reports\\_backup\\2026-10-11_221131_fixture_contract\\2026-10-11_oracle_answer_repair.md",
+    "final_project_cs\\wiki\\operations\\_backup\\2026-10-11_221131_fixture_contract\\arm-develop-cd.md",
+    "final_project_cs\\wiki\\records\\reports\\_backup\\2026-10-11_222223_fixture_verified\\2026-10-11_oracle_answer_repair.md",
+    "program\\research\\daily_rag_slm\\_backup\\2026-10-11_222308_evidence_recovered\\oracle_answer_repair_2026-10-11_v1.json"
+  ],
+  "independent_model_validation_completed": false,
+  "product_model_adopted": false,
+  "adapter_readiness": {
+    "applied": true,
+    "samples_passed": 3,
+    "samples_total": 3
+  },
+  "first_route_actual_http": {
+    "passed": 18,
+    "total": 22,
+    "startup_connection_refused": 4
+  },
+  "public_https_sse": {
+    "status": "blocked_before_first_check",
+    "passed": 0,
+    "total": 5,
+    "attempted": 0,
+    "http_status": 403,
+    "edge_code": 1010
+  },
+  "benchmark_future_deferred": 4,
+  "public_browser": {
+    "passed": 4,
+    "total": 4,
+    "checks": [
+      "home_visible",
+      "free_text_itinerary_read",
+      "trip_registration",
+      "correct_start_time_answer"
+    ],
+    "other_observations": [
+      "greeting_returns_existing_trip_help",
+      "duplicate_chat_display"
+    ],
+    "independent_accuracy": false
+  },
+  "mixed_after_route": {
+    "passed": 2,
+    "total": 11,
+    "attempted": 4,
+    "failure": "session_setup_failed_429",
+    "unattempted_in_denominator": 7
+  },
+  "identity_reuse": {
+    "logic_passed": 22,
+    "logic_total": 22,
+    "applied": true,
+    "status": "completed",
+    "not_before_utc": "2026-10-11T13:00:05+00:00",
+    "actual_mixed": {
+      "sha": "180c56aeae1ff5d25f0e00d562c2f0ebf1660b2b",
+      "profile": "mixed_travel",
+      "observed_at": "2026-10-11T13:04:29.322653+00:00",
+      "passed": 9,
+      "total": 11,
+      "attempted": 11,
+      "seconds": 257.8968128039851,
+      "failure": null,
+      "scope": "real_http_contract_and_synthetic_answer_not_independent_accuracy",
+      "validation_version": "travel-answer-v3-identity-reuse",
+      "identity_mode": "issued_once_and_cached",
+      "repeated_soak_not_independent_accuracy": true,
+      "co_running_inference_benchmark": true
+    },
+    "answers_passed": 2,
+    "answers_total": 4,
+    "unblocked_profiles": [
+      "context_cache",
+      "language_style"
+    ],
+    "worker": "ActiveState=active\nMainPID=1384737\nResult=success\n",
+    "checks_sha256": "659311e515862f60837e444a8e2c006775f1a8f50097202ac0877087ea198d42",
+    "private_file_mode": "0o600",
+    "identity_issued_once_this_round": true,
+    "reuse_next_round_verified": false,
+    "reuse_auth_verified": true
+  },
+  "evidence_recovered": {
+    "files": 104,
+    "bytes": 397875,
+    "folder": "program\\scripts\\plan_qa_bench\\results\\oracle_repair_20261011\\recovered_222220",
+    "applied_code_integrity": {
+      "compose.yml": {
+        "local_matches_applied": true,
+        "applied_sha256": "82002fde8f7f0dd8960cadcb4545cd7cc919e5cc2137f00d6774ea4cb924e4b1"
+      },
+      "ollama_adapter.py": {
+        "local_matches_applied": true,
+        "applied_sha256": "894226b5d01af0b0370fe45482226d250b0db09ff0c3e86761cd5c9e5a2e43b1"
+      },
+      "serving_checks.py": {
+        "local_matches_applied": true,
+        "applied_sha256": "22e5798d0eb2e032f8f544b312e0e4191bb491d31e3ef8cc190f7b2c9c7e68a4"
+      }
+    }
+  },
+  "remaining": [
+    "mixed_request_final_acceptance",
+    "duplicate_chat_display",
+    "broader_local_conversation_bundle_validation",
+    "recommendation_end_to_end",
+    "independent_model_quality_and_latency"
+  ],
+  "mixed_after_identity_repair": {
+    "sha": "180c56aeae1ff5d25f0e00d562c2f0ebf1660b2b",
+    "profile": "mixed_travel",
+    "observed_at": "2026-10-11T13:04:29.322653+00:00",
+    "passed": 9,
+    "total": 11,
+    "attempted": 11,
+    "seconds": 257.8968128039851,
+    "failure": null,
+    "scope": "real_http_contract_and_synthetic_answer_not_independent_accuracy",
+    "validation_version": "travel-answer-v3-identity-reuse",
+    "identity_mode": "issued_once_and_cached",
+    "repeated_soak_not_independent_accuracy": true,
+    "co_running_inference_benchmark": true
+  },
+  "guest_repeat_failure": {
+    "profiles": 2,
+    "passed_per_round": 4,
+    "total_per_round": 11,
+    "attempted_per_round": 5,
+    "reason": "guest_trip_limit_403",
+    "preserved": true
+  },
+  "fixture_reuse": {
+    "applied": true,
+    "validation_version": "travel-answer-v4-session-soak",
+    "logic_passed": 27,
+    "logic_total": 27,
+    "status": "completed",
+    "observed_at_utc": "2026-10-11T13:10:14.270077+00:00",
+    "uses_same_trip_with_history": true,
+    "new_accounts": false,
+    "deletes_old_trips": false,
+    "actual_fixture_setup_passed": 7,
+    "actual_fixture_setup_total": 7,
+    "actual_answer_final_pending": false,
+    "actual_passed": 22,
+    "actual_total": 22,
+    "actual_answers_passed": 8,
+    "actual_answers_total": 8,
+    "actual_results": [
+      {
+        "sha": "180c56aeae1ff5d25f0e00d562c2f0ebf1660b2b",
+        "profile": "context_cache",
+        "observed_at": "2026-10-11T13:15:55.275210+00:00",
+        "passed": 11,
+        "total": 11,
+        "attempted": 11,
+        "seconds": 407.4399508900242,
+        "failure": null,
+        "scope": "real_http_contract_and_synthetic_answer_not_independent_accuracy",
+        "validation_version": "travel-answer-v4-session-soak",
+        "identity_mode": "reused_existing_probe_identity",
+        "fixture_mode": "reused_same_synthetic_trip_with_history",
+        "repeated_soak_not_independent_accuracy": true,
+        "co_running_inference_benchmark": true
+      },
+      {
+        "sha": "180c56aeae1ff5d25f0e00d562c2f0ebf1660b2b",
+        "profile": "language_style",
+        "observed_at": "2026-10-11T13:21:20.310622+00:00",
+        "passed": 11,
+        "total": 11,
+        "attempted": 11,
+        "seconds": 325.03166188299656,
+        "failure": null,
+        "scope": "real_http_contract_and_synthetic_answer_not_independent_accuracy",
+        "validation_version": "travel-answer-v4-session-soak",
+        "identity_mode": "reused_existing_probe_identity",
+        "fixture_mode": "reused_same_synthetic_trip_with_history",
+        "repeated_soak_not_independent_accuracy": true,
+        "co_running_inference_benchmark": true
+      }
+    ],
+    "worker": "ActiveState=active\nMainPID=1397419\nResult=success\n",
+    "unblocked_profiles": [
+      "context_cache",
+      "language_style"
+    ],
+    "checks_sha256": "22e5798d0eb2e032f8f544b312e0e4191bb491d31e3ef8cc190f7b2c9c7e68a4"
+  },
+  "semantic_failures": [
+    {
+      "question": "점심 시간만 알려 주세요.",
+      "expected": "12:00~13:00",
+      "actual": "점심 식사의 운영시간은 모르겠어요.",
+      "status": "unresolved",
+      "next": "time_vs_hours_regression_and_prompt_contract_review"
+    },
+    {
+      "question": "관람 시작 시간과 점심 시간을 함께 알려 주세요.",
+      "expected": [
+        "10:00",
+        "12:00"
+      ],
+      "actual": "경복궁 관람 — 10월 18일(일) 10:00~11:00.",
+      "status": "unresolved",
+      "next": "review_single_target_contract_for_compound_read_queries"
+    }
+  ],
+  "previous_evidence_recovered": {
+    "files": 66,
+    "bytes": 217854,
+    "folder": "program/scripts/plan_qa_bench/results/oracle_repair_20261011/recovered_214237"
+  },
+  "latest_runtime": {
+    "observed_at_utc": "2026-10-11T13:22:09.328490+00:00",
+    "app_source_sha": "180c56aeae1ff5d25f0e00d562c2f0ebf1660b2b",
+    "app_model": "ActiveState=active\nMainPID=1353353\nResult=success\nMemoryCurrent=3468886016\n",
+    "worker": "ActiveState=active\nMainPID=1397419\nResult=success\nMemoryCurrent=15826944\n",
+    "benchmark": {
+      "at": "2026-10-11T13:21:16.520818+00:00",
+      "job_id": "e4b_qat_original_d3",
+      "engine_pid": 1265040,
+      "expected": 360,
+      "saved": 182
+    },
+    "queue": {
+      "counts": {
+        "running": 1,
+        "completed": 65,
+        "failed": 11,
+        "pending": 55,
+        "interrupted": 0
+      },
+      "failed_profiles": {
+        "mixed_travel": "180c56aeae1ff5d25f0e00d562c2f0ebf1660b2b"
+      }
+    },
+    "meminfo": {
+      "MemTotal": 12210688,
+      "MemAvailable": 2983108
+    },
+    "disk_free_bytes": 42456924160,
+    "automatic_next_setup_passed": 7,
+    "automatic_next_setup_total": 7
+  }
+}

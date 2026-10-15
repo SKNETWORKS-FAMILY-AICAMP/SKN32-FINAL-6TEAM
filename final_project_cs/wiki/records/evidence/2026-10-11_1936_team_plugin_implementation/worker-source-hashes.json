@@ -1,0 +1,22 @@
+[
+  {
+    "Hash": "2A5DE91FE79993C986C7A7EE6A8E4D92C1C63EC292D133821A391819DBDB970D",
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\scripts\\run_sweepers.py"
+  },
+  {
+    "Hash": "5F8DEB741FF7E516B5DCBB69060C518E73537CB88A9AE78465D1BB2CDB6D2C98",
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_watch.py"
+  },
+  {
+    "Hash": "70D9107FA9CF8F29AA18A1509EF9A009B4EAD9777DED949136DA357C70E186E1",
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_watch_cases.py"
+  },
+  {
+    "Hash": "8FD65AA82ED3E25D1BB73C3A9854D6A72CCD3D20F0D4EEF5E2C8BE2EFF18831F",
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\watch\\trip_watch_batch.py"
+  },
+  {
+    "Hash": "20C23E4FC8C59B94B02CEBA62B37A653C9405923C30132F81F43CCA11FC459FA",
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\travel\\test_plugin_worker_availability.py"
+  }
+]

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>먼 일정의 실제 방향 유지 · 지도 순차 이동</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf2ef;color:#233e33;font-family:system-ui,sans-serif;line-height:1.7}main{max-width:1100px;margin:auto;padding:32px 24px}h1{font-size:28px;line-height:1.4;margin:0 0 16px}h2{font-size:22px;line-height:1.4;margin:32px 0 16px}p{max-width:70ch;margin:0 0 24px}.compare{display:grid;grid-template-columns:1fr 1.5fr;gap:24px}figure{margin:0;padding:16px;background:white;border:1px solid #cfdbd3;border-radius:16px}video,img{display:block;width:100%;height:auto;border-radius:8px}figcaption{font-weight:650;margin-bottom:16px}details{margin-top:24px}summary{cursor:pointer;padding:16px 0;font-weight:650}a{color:#2d6048}@media(max-width:767px){.compare{grid-template-columns:1fr}main{padding:24px 16px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+<main>
+<h1>1번은 왼쪽, 2번은 오른쪽에 남습니다</h1>
+<p>3번을 확인하는 동안 서쪽의 1번은 왼쪽에, 동쪽의 2번은 오른쪽에 각각 표시합니다. 화면이 좁아져도 반대쪽으로 보내거나 한 묶음으로 합치지 않습니다.</p>
+<div class="compare">
+<figure><figcaption>375px · 3번 확인 중</figcaption><a href="third-375.png"><img src="third-375.png" alt="3번 지도 마커를 가운데에 두고 서쪽의 1번 거리 버튼은 왼쪽, 동쪽의 2번 거리 버튼은 오른쪽에 표시한 실제 제품 화면"></a></figure>
+<figure><figcaption>1280px · 3번 확인 중</figcaption><a href="third-1280.png"><img src="third-1280.png" alt="넓은 화면에서도 1번은 왼쪽, 2번은 오른쪽에 개별 표시"></a></figure>
+</div>
+<h2>전체 이동 과정</h2>
+<p>재생 버튼으로 1번 → 2번 → 3번 이동과 이전 마커의 거리 표시를 확인하실 수 있습니다.</p>
+<div class="compare">
+<figure><figcaption>375px · 모바일 녹화</figcaption><video controls preload="metadata" poster="third-375.png" src="reveal-375.webm" aria-label="모바일 지도 순차 이동과 좌우 먼 일정 표시 녹화"></video></figure>
+<figure><figcaption>1280px · 넓은 화면 녹화</figcaption><video controls preload="metadata" poster="third-1280.png" src="reveal-1280.webm" aria-label="넓은 화면 지도 순차 이동과 좌우 먼 일정 표시 녹화"></video></figure>
+</div>
+<details><summary>둘 다 서쪽이면 왼쪽에 각각 남습니다</summary><p>공간을 나누기 위해 한 일정을 오른쪽으로 보내지 않습니다.</p><div class="compare">
+<figure><figcaption>375px · 두 이전 일정 모두 서쪽</figcaption><a href="same-west-375.png"><img src="same-west-375.png" alt="서쪽에 있는 1번과 2번이 왼쪽에서 각각 남은 화면"></a></figure>
+<figure><figcaption>1280px · 두 이전 일정 모두 서쪽</figcaption><a href="same-west-1280.png"><img src="same-west-1280.png" alt="넓은 화면에서도 두 서쪽 일정이 모두 왼쪽에 표시"></a></figure>
+</div></details>
+<details><summary>검증 전 일정도 처음부터 접힌 목록으로 보입니다</summary><div class="compare">
+<figure><figcaption>375px · 첫 마커 확인 중</figcaption><a href="first-375.png"><img src="first-375.png" alt="첫 일정 검증 중에도 나머지 일정 제목과 시간이 접힌 카드로 보이는 화면"></a></figure>
+<figure><figcaption>1280px · 첫 마커 확인 중</figcaption><a href="first-1280.png"><img src="first-1280.png" alt="넓은 화면의 전체 접힌 일정 목록"></a></figure>
+</div></details>
+<p style="margin-top:32px">방향 확인을 위해 좌표를 배치한 mock 서버 응답으로 실제 제품 화면을 촬영했습니다. 지도 배경은 보관된 OpenStreetMap 타일입니다. 공개 서비스 배포 전이며 실서버 응답 확인 결과는 아닙니다.</p>
+<p><a href="../map-reveal-continuity-2026-10-12-v3/index.html">이전 판 보기</a></p>
+</main>
+</html>

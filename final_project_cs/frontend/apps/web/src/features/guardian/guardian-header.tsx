@@ -8,7 +8,7 @@ import { GuardianToggle } from "./guardian-toggle";
 import { decideGuardian, useCriteria } from "./criteria-store";
 
 /**
- * `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 · 목업 v9 §3-3 · §3-4]` The Course Keeper icon at the top of the screens BEFORE the trip is registered (the plan screen, the reading, the plan check).
+ * `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 · 목업 v9 §3-3 · §3-4]` The Course Keeper icon at the top of the screens BEFORE the trip is registered (the reading, the plan check — `[2026-10-13 사용자 결정]` no longer the plan screen, which has the language globe there).
  * It is shown once the choice is made (the card, or 「켜진 상태가 기본」 - a customer who turned it on once starts every plan with it on). Pressing it while on turns it off AT ONCE and says so in the app's notice
  * bar (`useAppToast`: gone by itself after a few seconds, with 「되돌리기」); pressing it while off opens the card once more (the version for a notification: 「켜기」 / 「그대로 두기」).
  * ★Only the page's state: the choice is sent with the plan and again when it is confirmed. (On a registered trip the icon is the server's, `POST /v1/web/trips/{id}/guardian`.)

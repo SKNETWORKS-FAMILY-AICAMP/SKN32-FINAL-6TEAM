@@ -1,0 +1,31 @@
+{
+  "source_hash_matches": 229,
+  "backup_hash_matches": 7,
+  "local_links": [
+    "datasets/mobility/raw/subway_realtime_station_20261009_v1",
+    "datasets/mobility/processed/mobility/subway_realtime_stations_20260902_v1.json",
+    "final_project_cs/scripts/mobility/build_subway_realtime_stations.py",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0952_공식지하철_역ID대응/xlsx-row-verification-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0952_공식지하철_역ID대응/official-row-replay-and-join-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0952_공식지하철_역ID대응/owned-source-diff-v1.patch",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0952_공식지하철_역ID대응",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0952_공식지하철_역ID대응/research-and-acquisition-v1.json",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v35/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0952_공식지하철_역ID대응/backup-manifest-v1.json",
+    "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_0955_지하철누락호선/seoul_subway.py",
+    "final_project_cs/wiki/records/reports/2026-10-09_0959_공식지하철_역ID확보와_누락호선_검증.md",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0952_공식지하철_역ID대응/official-row-replay-and-join-v1.json",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v35/readiness-catalog.json"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0959_공식지하철_역ID확보와_누락호선_검증.md": "39763a368acc6a4fe33a23a9771277463c5b32b17ae2ad729b843fc261cf3416",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v35/mobility-readiness.html": "de1a7b3dada0eec1edabee795df028a1bb99fb3fd46ce81f480ec5f9a6c70d71",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v35/readiness-catalog.json": "f0cb9fdbc89574d0e2c8fd8d3bc0462a120890e91bab1a621f5e8fb036147e40",
+    "final_project_cs/wiki/teams/mobility.md": "915523405b271a370f412adf50817a3a98854dc346b5e8eef2859b78f6995ed9",
+    "datasets/mobility/REPORT.md": "167bc01b64d67c506c21f0926afc2d83ed155f0c3f280a65d2a4c107cd382f7d",
+    "datasets/mobility/README.md": "787b2bddd094d491ecf75c392b63d35b6ffdde1fde438741d45f67decdbb4344",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0952_공식지하철_역ID대응/verification-proof-v1.json": "7f7aae64d58ea0a728fc623ae76b26499013a3d2ccc9e1e64ae36d841f3db51e",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0952_공식지하철_역ID대응/backup-manifest-v1.json": "3c234c02504edb3e72b45b598693a7a9d4c47a510be7fa67ebde02d8845f230e"
+  },
+  "browser_render_verified": false
+}

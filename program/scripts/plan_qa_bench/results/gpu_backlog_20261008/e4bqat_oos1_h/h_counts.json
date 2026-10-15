@@ -1,0 +1,214 @@
+{
+  "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release and quantization-aware training; our-travel oos1 adapter recorded separately",
+  "saved": 1316,
+  "expected": 1316,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "positive": {
+    "total": 461,
+    "correct": 422,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8864387306815898,
+      0.9374981035493187
+    ],
+    "false_pick_wilson95": [
+      8.673617379884035e-19,
+      0.008264019372196129
+    ]
+  },
+  "negative": {
+    "total": 855,
+    "correct": 765,
+    "false_pick": 90,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8723707176601561,
+      0.9135717785566273
+    ],
+    "false_pick_wilson95": [
+      0.08642822144337281,
+      0.12762928233984397
+    ]
+  },
+  "subtypes": {
+    "hard_N1": {
+      "total": 118,
+      "correct": 110,
+      "false_pick": 8,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8719046446836871,
+        0.9652488249748348
+      ],
+      "false_pick_wilson95": [
+        0.0347511750251653,
+        0.12809535531631283
+      ]
+    },
+    "hard_N2": {
+      "total": 150,
+      "correct": 135,
+      "false_pick": 15,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8415651883318529,
+        0.9384586161736859
+      ],
+      "false_pick_wilson95": [
+        0.061541383826314106,
+        0.15843481166814719
+      ]
+    },
+    "hard_N3": {
+      "total": 150,
+      "correct": 150,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9750297556319235,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ]
+    },
+    "hard_N4": {
+      "total": 150,
+      "correct": 141,
+      "false_pick": 9,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8899102291652979,
+        0.9681159557907947
+      ],
+      "false_pick_wilson95": [
+        0.03188404420920533,
+        0.11008977083470209
+      ]
+    },
+    "hard_N5": {
+      "total": 150,
+      "correct": 150,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9750297556319235,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ]
+    },
+    "hard_N6": {
+      "total": 137,
+      "correct": 79,
+      "false_pick": 58,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.4929252056124144,
+        0.6561786177634509
+      ],
+      "false_pick_wilson95": [
+        0.343821382236549,
+        0.5070747943875855
+      ]
+    },
+    "hard_P1": {
+      "total": 118,
+      "correct": 117,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.953554427584598,
+        0.9985024594780347
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_P2": {
+      "total": 110,
+      "correct": 108,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9361198354061878,
+        0.994999645124672
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.033743935298164184
+      ]
+    },
+    "hard_P3": {
+      "total": 113,
+      "correct": 80,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6183975397243283,
+        0.7838569380473553
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03287753216595198
+      ]
+    },
+    "hard_P4": {
+      "total": 120,
+      "correct": 117,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9290699666721339,
+        0.9914618252300978
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "4fc2c0359be7c7e9bdb36f8bcd00ee674c681fe4c2a65fb5626939c573a15854",
+  "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "execution": {
+    "job": {
+      "id": "e4bqat_oos1_h",
+      "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+      "our_training": true,
+      "publisher_training": "Google Instruct release; publisher quantization-aware training; no our-travel additional training",
+      "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "prompts": "/workspace/heavy/all_prompts_h.json",
+      "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "h_backlog_e4bqat_oos1",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1316,
+      "purpose": "Missing H/MX coverage of known oos1 adapter on QAT base; deployment quantization robustness against matched QAT original and Q4_K_M oos1; no retraining or D repetition",
+      "lora": "/workspace/tripilot/oos1_lora_f16.gguf",
+      "lora_sha256": "6d3cf6786fb5e99511930e493776d38695adf6fd201fd16398df7ade01f767ba"
+    },
+    "started": "2026-10-08T06:22:42.695726+00:00",
+    "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false,
+  "role_metadata_correction": {
+    "job": "e4bqat_oos1_h",
+    "our_training": true,
+    "issue": "Publisher-only description was copied from original and said no our-travel additional training; adapter and our_training=True prove this is a trained variant.",
+    "resolution": "Normalize derived publisher description; preserve original execution metadata; future refill descriptions separate publisher training and our adapter."
+  }
+}

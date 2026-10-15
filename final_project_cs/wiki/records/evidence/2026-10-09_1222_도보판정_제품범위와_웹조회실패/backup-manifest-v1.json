@@ -1,0 +1,21 @@
+{
+  "created_at": "2026-10-09T12:22:46.595949+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/scripts/mobility/build_readiness_visual.py",
+      "backup": "final_project_cs/scripts/mobility/_backup/2026-10-09_122246_도보판정_정정전/build_readiness_visual.py",
+      "sha256": "1d0838345daef80a845ef73c92be4b0a15d7582ce141d54257414b0068f81a53"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_122246_도보판정_정정전/mobility.md",
+      "sha256": "911f669986d9d8e752b89dba24b72d8b813b7dfa3d55f1c26b8051c7c9cc2169"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_122246_도보판정_결과추가전/mobility.md",
+      "sha256": "04fa6f9cc6836d8ff837c7e44e7eb9a10739bd008991a231f3bec79dec6c6b27"
+    }
+  ],
+  "prior_manifest_backup": "final_project_cs/wiki/records/evidence/2026-10-09_1222_도보판정_제품범위와_웹조회실패/_backup/2026-10-09_122246_최종백업명세전/backup-manifest-v1.json"
+}

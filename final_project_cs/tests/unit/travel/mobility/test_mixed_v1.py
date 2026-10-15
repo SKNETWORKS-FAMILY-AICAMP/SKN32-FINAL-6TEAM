@@ -210,13 +210,14 @@ MIXL = [{"mode": "bus", "route": "1", "from": "x", "to": "y"}, {"line": "02호�
 def _planner_stub(results):
     """_mixed 만 보는 Planner — 생성기·판정은 가짜(results[i] = 판정 뒤 후보 dict 또는 None)."""
     pl = P.Planner.__new__(P.Planner)
+    pl.modes = {'bus', 'subway'}
     pl.v = SimpleNamespace(R=RULES, bus=SimpleNamespace(route=lambda nm: None))
     pl.speed, pl.detour, pl.disruptions = 1.04, 1.4, ()
     mcs = [SimpleNamespace(shape="A", est_min=10 + i, transfers=1, walk_in_m=0, walk_out_m=0, link_m=0, sub_walk_min=0,
                            route_nm=f"R{i}", cut_station="C", legs=MIXL) for i in range(len(results))]
     gen = SimpleNamespace(bus_to_subway=lambda *a, **k: mcs, subway_to_bus=lambda *a, **k: [], bus_to_bus=lambda *a, **k: [], skipped_airport=[],
-                          materialize=lambda c: True)
-    pl._mix_gen = lambda party, fv: gen
+                          materialize=lambda c: True, regular_alternative=lambda c: None)
+    pl._mix_gen = lambda party, fv, when=None: gen
     pl._phys_set = lambda st: set()
     pl._in_service = lambda mc, lo, hi: True
     pl._mixed_one = lambda mc, i, *a, **k: ((results[i], None) if results[i] is not None
@@ -375,12 +376,16 @@ def test_station_far_exit_found_via_all_records():
 def test_mixed_sources_keep_out_of_window_routes_for_waiting():
     """GPT 87 #4 — 가장 이른 도착 목표 생성은 운행 시간 추정 밖 노선을 **거르지 않고 뒤로** 둔다(막차 뒤 → 다음 운행일 첫차 대기)."""
     pl = P.Planner.__new__(P.Planner)
+    pl.modes = {'bus', 'subway'}
     night = SimpleNamespace(route_id="rn", route_nm="RN", first_min=300, last_min=360, est_min=20, transfers=1,
                             board=None, cut_station="C", legs=MIXL)
     bus = SimpleNamespace(by_id={"rn": SimpleNamespace(route_id="rn", first_min=300, last_min=360)}, stops={"rn": []})
+    bus.route = lambda name: bus.by_id['rn']
+    bus.segment = lambda *a: None
     pl.v = SimpleNamespace(bus=bus)
-    gen = SimpleNamespace(bus_to_subway=lambda *a, **k: [night], subway_to_bus=lambda *a, **k: [], materialize=lambda c: True)
-    pl._mix_gen = lambda party, fv: gen
+    gen = SimpleNamespace(bus_to_subway=lambda *a, **k: [night], subway_to_bus=lambda *a, **k: [],
+                          bus_to_bus=lambda *a, **k: [], materialize=lambda c: True, regular_alternative=lambda c: None)
+    pl._mix_gen = lambda party, fv, when=None: gen
     pl._phys_set = lambda st: set()
     got = pl._mixed_sources({"lat": 0, "lon": 0}, {"lat": 0, "lon": 0}, [("A", 1, None)], [("B", 1, None)], 1500, {}, True, 1200)
     assert got == [night]

@@ -1,0 +1,30 @@
+[
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\application\\controller.py",
+    "Hash": "3FE3053BC611017CC7890D26DCCFA94862AD9271A3A59A27CD03D4AD9E31C46C"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\application\\case_service.py",
+    "Hash": "C674B9364757BE713AC460C0AEE9C355B0B321CE4EB99569CD18F223B5B8B1BF"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\presentation\\api\\cases.py",
+    "Hash": "1FA5118802F0EF807C93835E2A01FE2AF2C3E566F8AA5CB1F51F3CC309792AA1"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\core\\actions.py",
+    "Hash": "7AB441E8E0193EC97547F6A55CD4FB1C7E2DA92D341453012D4A397F13123039"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\core\\case_lifecycle\\events.py",
+    "Hash": "061225D09CDDEA5CB5F0C54F8C34BB95DCDB2F8DBBE01EBE123FA65FB2672A4C"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\integration\\controller\\test_conversation_resume.py",
+    "Hash": "1DCA3223FE4C74D75DD1C0714E2725E3D906699EA09F7D696E774F9C15170995"
+  },
+  {
+    "Path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\test_applied_action_answer.py",
+    "Hash": "1367751EFC17FE58CAA0446F592829E7A14BEE66D2E2B8894E7FD86C81AD951A"
+  }
+]

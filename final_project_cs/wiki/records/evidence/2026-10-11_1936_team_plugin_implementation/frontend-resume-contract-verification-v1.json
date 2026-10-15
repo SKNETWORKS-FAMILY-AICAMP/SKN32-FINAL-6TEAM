@@ -1,0 +1,67 @@
+{
+  "failed": 0,
+  "source_sha256": [
+    {
+      "sha256": "672ddd09ae411676cd3a8de8da5dcd3daaa74c5b823e371ac97c60d70e15764e",
+      "path": "frontend/apps/web/src/lib/live/gateway.ts"
+    },
+    {
+      "sha256": "20166904381f8e54b2ec6752ed932f69baf090871ddf7b4247b343035800034b",
+      "path": "frontend/apps/web/src/lib/live/gateway.test.ts"
+    },
+    {
+      "sha256": "f5200674fc1349a2be8d48cae57634d30ad5840649106309bc8b6346b1ff3ccb",
+      "path": "frontend/apps/web/src/lib/live/stream.ts"
+    },
+    {
+      "sha256": "134f34d1efc6132f5eb0633a6fe5b6bbd4c7ae0425a7fde6651354a05075334b",
+      "path": "frontend/apps/web/src/lib/live/stream.test.ts"
+    },
+    {
+      "sha256": "cd63b4b25fc280b80d5517346254854768804a08fb669f26b898370b1b0a3fd8",
+      "path": "frontend/apps/web/src/lib/live/recovery.ts"
+    },
+    {
+      "sha256": "5837c600f809a7dd085f7f4f3e9386d2fa3c02f545b0a2089c3e0202d61dbb4f",
+      "path": "frontend/apps/web/src/lib/live/recovery.test.ts"
+    },
+    {
+      "sha256": "82245362675386704c8a2075247dc0db20d7026ce8d4cb50b8030fafb18ca7c4",
+      "path": "frontend/apps/web/src/lib/live/waiting.ts"
+    },
+    {
+      "sha256": "99b05164461a5911186e3003e792830897fcf6a40c2fab23602328053dc21b63",
+      "path": "frontend/apps/web/src/lib/live/waiting.test.ts"
+    },
+    {
+      "sha256": "3b9908002f556be5ab125cca71180de058fbf5227dda59f9c1dd04572659439c",
+      "path": "frontend/apps/web/src/features/trip/model.ts"
+    }
+  ],
+  "source_snapshot_scope": "after execution only",
+  "test_files_total": 4,
+  "operating_api_connected": false,
+  "logs": [
+    {
+      "sha256": "e65883a6c4ea68fa8c6ebeb615a3289d8cd8c449c79c5e1bd2676b0cc4c94f8e",
+      "path": "frontend-resume-contract-v1.log"
+    },
+    {
+      "sha256": "2962b5846c2fbf0a02ded9bd63ffb3c5b098cf374a61335396a7ab435b1effaa",
+      "path": "frontend-resume-contract-v2.log"
+    }
+  ],
+  "browser_render_checked": false,
+  "skipped": 0,
+  "created_at": "2026-10-11T22:51:08.6057757+09:00",
+  "exit_code": 0,
+  "passed": 53,
+  "first_run": {
+    "passed": 5,
+    "reason": "sandbox temporary transform file ENOENT",
+    "file_collection_failures": 3
+  },
+  "duration_seconds": 1.02,
+  "test_files_passed": 4,
+  "product_code_changed_by_this_check": false
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "file": "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/_backup/2026-10-09_0708_급행저장_오류검증/wiring.py",
+    "sha256": "1b98227651ffb9fadc3d3819a560f91b2101c57249ac30fef60b5db9d2b3c25b"
+  },
+  {
+    "file": "final_project_cs/tests/scenario/test_departure_express_race_db_v1.py",
+    "backup": "final_project_cs/tests/scenario/_backup/2026-10-09_0708_급행저장_오류검증/test_departure_express_race_db_v1.py",
+    "sha256": "201c284aa1ca0f657d911c4dcb57989ef6810ea5668dfecad058b761696fa51b"
+  }
+]

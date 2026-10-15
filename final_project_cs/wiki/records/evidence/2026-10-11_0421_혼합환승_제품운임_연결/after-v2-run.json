@@ -1,0 +1,12 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/mobility/test_transfer_fare_product_v1.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-transfer-product-after-v2",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_0421_\ud63c\ud569\ud658\uc2b9_\uc81c\ud488\uc6b4\uc784_\uc5f0\uacb0\\after-v2.xml"
+  ],
+  "exit_code": 0
+}

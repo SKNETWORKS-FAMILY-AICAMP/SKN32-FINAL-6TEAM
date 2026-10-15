@@ -1,0 +1,79 @@
+........................................................................ [ 66%]
+...................................FF                                    [100%]
+================================== FAILURES ===================================
+___________ test_the_tool_does_not_go_out_without_injected_sources ____________
+
+    def test_the_tool_does_not_go_out_without_injected_sources():
+>       assert ReadToolbox(lambda: None).disruptions(SCOPE, latitude=37.5, longitude=127.0,
+                                                     weather_sensitive=True) is None
+
+tests\unit\travel\test_disruption_check.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReadToolbox(connection_factory=<function test_the_tool_does_not_go_out_without_injected_sources.<locals>.<lambda> at 0... travel=None, check=None, route_events=None, report_extractor=None, dining_ledger=True, kakao=None, google_places=None)
+scope = ToolContext(tenant_id='t', customer_id=UUID('0b23ef4c-245c-42e6-9675-41d26fc2cd3d'), case_id=UUID('bb8fc757-4394-4498-a387-3afed51ba120'), knowledge_scope=['activity'])
+place_id = None, latitude = 37.5, longitude = 127.0, weather_sensitive = True
+region = '서울', district = None, starts_at = None, _ = {}
+
+    def disruptions(self, scope: ToolContext, *, place_id: Any = None,
+                    latitude: float | None = None, longitude: float | None = None,
+                    weather_sensitive: bool | None = None, region: str = "서울",
+                    district: str | None = None, starts_at: Any = None,
+                    **_: Any) -> dict[str, Any] | None:
+        """일정 항목 하나의 **성립 점검** — 바깥 소스를 한 번에 돌려 판정 하나로.
+    
+        ★Team 은 예보·특보를 따로 부르지 않고 이것 하나만 부른다(도구 1회).
+          감시 루프도 같은 판정을 쓴다 — 문의 때와 감시 때 기준이 갈리지 않게.
+        ★소스 묶음이 주입되지 않았으면 `None` — 바깥으로 나가지 않는다.
+        """
+        # ★`[2026-09-29]` 모름(`None`)을 「야외 아님」으로 바꾸지 않는다 — 점검이 모름을 따로 다룬다(`indoor_unknown`)
+        place = {"place_id": place_id, "latitude": latitude, "longitude": longitude,
+                 "weather_sensitive": None if weather_sensitive is None else bool(weather_sensitive),
+                 "district": district}
+        from app.domains.travel_ops.components.watch.simulation import case_place
+>       with self.connection_factory() as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: 'NoneType' object does not support the context manager protocol
+
+app\tools\read_tools.py:503: TypeError
+_____________ test_the_tool_runs_the_check_over_injected_sources ______________
+
+    def test_the_tool_runs_the_check_over_injected_sources():
+        toolbox = ReadToolbox(lambda: None, travel=TravelSources(
+            weather=_Weather(_fc()), warning=_Warning(_warn("태풍경보"))))
+>       report = toolbox.disruptions(SCOPE, place_id="p1", latitude=37.5, longitude=127.0,
+                                     weather_sensitive=True, starts_at="2026-09-15T14:00:00+09:00")
+
+tests\unit\travel\test_disruption_check.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ReadToolbox(connection_factory=<function test_the_tool_runs_the_check_over_injected_sources.<locals>.<lambda> at 0x000... cache=None), check=None, route_events=None, report_extractor=None, dining_ledger=True, kakao=None, google_places=None)
+scope = ToolContext(tenant_id='t', customer_id=UUID('0b23ef4c-245c-42e6-9675-41d26fc2cd3d'), case_id=UUID('bb8fc757-4394-4498-a387-3afed51ba120'), knowledge_scope=['activity'])
+place_id = 'p1', latitude = 37.5, longitude = 127.0, weather_sensitive = True
+region = '서울', district = None, starts_at = '2026-09-15T14:00:00+09:00', _ = {}
+
+    def disruptions(self, scope: ToolContext, *, place_id: Any = None,
+                    latitude: float | None = None, longitude: float | None = None,
+                    weather_sensitive: bool | None = None, region: str = "서울",
+                    district: str | None = None, starts_at: Any = None,
+                    **_: Any) -> dict[str, Any] | None:
+        """일정 항목 하나의 **성립 점검** — 바깥 소스를 한 번에 돌려 판정 하나로.
+    
+        ★Team 은 예보·특보를 따로 부르지 않고 이것 하나만 부른다(도구 1회).
+          감시 루프도 같은 판정을 쓴다 — 문의 때와 감시 때 기준이 갈리지 않게.
+        ★소스 묶음이 주입되지 않았으면 `None` — 바깥으로 나가지 않는다.
+        """
+        # ★`[2026-09-29]` 모름(`None`)을 「야외 아님」으로 바꾸지 않는다 — 점검이 모름을 따로 다룬다(`indoor_unknown`)
+        place = {"place_id": place_id, "latitude": latitude, "longitude": longitude,
+                 "weather_sensitive": None if weather_sensitive is None else bool(weather_sensitive),
+                 "district": district}
+        from app.domains.travel_ops.components.watch.simulation import case_place
+>       with self.connection_factory() as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: 'NoneType' object does not support the context manager protocol
+
+app\tools\read_tools.py:503: TypeError
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_disruption_check.py::test_the_tool_does_not_go_out_without_injected_sources
+FAILED tests/unit/travel/test_disruption_check.py::test_the_tool_runs_the_check_over_injected_sources
+2 failed, 107 passed in 32.18s

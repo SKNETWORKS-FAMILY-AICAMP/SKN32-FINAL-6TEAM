@@ -1,0 +1,24 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/mobility/test_graph_atomic_replacement_v1.py",
+    "tests/unit/travel/mobility/test_turn_policy_content_reload_v1.py",
+    "tests/unit/travel/mobility/test_car_turn_restrictions_v1.py",
+    "tests/unit/travel/mobility/test_graph_router.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\graph_identity_after_v1",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-10_0913_도로자료_원자교체_감지\\after-v1.xml"
+  ],
+  "files": [
+    "test_graph_atomic_replacement_v1.py",
+    "test_turn_policy_content_reload_v1.py",
+    "test_car_turn_restrictions_v1.py",
+    "test_graph_router.py"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-10-10T09:16:09.627405+09:00"
+}

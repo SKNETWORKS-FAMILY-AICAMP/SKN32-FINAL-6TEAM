@@ -1,0 +1,17 @@
+{
+  "run_id": "20261012_044335",
+  "verified_at": "2026-10-12T04:47:56+09:00",
+  "passed": 411,
+  "failed": 0,
+  "skipped": 0,
+  "groups": {
+    "security": 92,
+    "contract": 283,
+    "e2e": 36
+  },
+  "oauth_security": 49,
+  "oauth_postgres_integration": 8,
+  "source_files_unchanged": 12,
+  "database_dropped": true,
+  "postgres_stopped": true
+}

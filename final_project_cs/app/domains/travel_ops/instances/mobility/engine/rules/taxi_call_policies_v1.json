@@ -1,0 +1,125 @@
+{
+  "schema": "taxi-call-policies-v1",
+  "checked_on": "2026-10-12",
+  "timezone": "Asia/Seoul",
+  "scope": "서울 즉시호출 플랫폼 이용료만. 미터 운임·통행료·배차·최종 결제 보장이 아님.",
+  "time_axis_note": "약관의 시간대에 출발시각을 대응한 사전 예산 범위이며 호출시각/승차시각에 따른 실제 부과를 측정하지 않음. 경계에서 앱 이용료 재확인 필요.",
+  "products": {
+    "kakao_general": {
+      "source_url": "https://policy.kakaomobility.com/viewer/?pageCode=PAID_SERVICE&subPageCode=index&version=7",
+      "effective_on": null,
+      "verification_note": "공식 검색색인 확인; 현행판 시행일 미확인. 일반호출 별도 플랫폼 이용료 없음.",
+      "periods": [
+        {
+          "start_minute": 0,
+          "end_minute": 1440,
+          "minimum_won": 0,
+          "maximum_won": 0
+        }
+      ]
+    },
+    "km_blue_immediate": {
+      "source_url": "https://www.kmscorp.co.kr/terms",
+      "effective_on": "2024-06-21",
+      "verification_note": "원문 전체 확인. 검색색인2025-11-19판과 직접원문2024판은 즉시호출 범위 일치; 예약 규칙은 제외.",
+      "periods": [
+        {
+          "start_minute": 0,
+          "end_minute": 180,
+          "minimum_won": 0,
+          "maximum_won": 5000
+        },
+        {
+          "start_minute": 180,
+          "end_minute": 1320,
+          "minimum_won": 0,
+          "maximum_won": 3000
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1440,
+          "minimum_won": 0,
+          "maximum_won": 5000
+        }
+      ]
+    },
+    "turu_blue_immediate": {
+      "source_url": "https://turutaxi.com/service-policy/",
+      "effective_on": null,
+      "verification_note": "공식 약관 검색색인 본문 확인; 직접원문502·시행일 미확인. 서울 즉시호출 신고 범위이며 확정액 아님.",
+      "periods": [
+        {
+          "start_minute": 0,
+          "end_minute": 180,
+          "minimum_won": 0,
+          "maximum_won": 5000
+        },
+        {
+          "start_minute": 180,
+          "end_minute": 1320,
+          "minimum_won": 0,
+          "maximum_won": 3000
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1440,
+          "minimum_won": 0,
+          "maximum_won": 5000
+        }
+      ]
+    },
+    "capsi_immediate": {
+      "source_url": "https://cabsy.kr/legal/terms.pdf",
+      "effective_on": null,
+      "verification_note": "공식 현재 홈페이지 연결PDF8쪽 전체 시각확인. 제9조 서울 즉시호출 범위; 명시 시행날짜 없음. PDF SHA256 2ce423700c7f2f1f96308586af861c3fee73fc1986959b470c707a6db4fbe20c; 예약 제외.",
+      "periods": [
+        {
+          "start_minute": 0,
+          "end_minute": 180,
+          "minimum_won": 0,
+          "maximum_won": 5000
+        },
+        {
+          "start_minute": 180,
+          "end_minute": 1320,
+          "minimum_won": 0,
+          "maximum_won": 3000
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1440,
+          "minimum_won": 0,
+          "maximum_won": 5000
+        }
+      ]
+    },
+    "mycap_immediate": {
+      "source_url": "https://www.blackpin.co.kr/?mode=policy",
+      "effective_on": "2025-03-05",
+      "verification_note": "공식 사이트 약관 모달 제1~23조 및 부칙 전체 화면 확인(2026-10-12). 제9조 서울 즉시호출 시간대 범위, 부칙 시행2025-03-05. 현재 화면 관측이며 과거 이용일의 약관 판본을 독립 확인한 것은 아님.",
+      "periods": [
+        {
+          "start_minute": 0,
+          "end_minute": 180,
+          "minimum_won": 0,
+          "maximum_won": 5000
+        },
+        {
+          "start_minute": 180,
+          "end_minute": 1320,
+          "minimum_won": 0,
+          "maximum_won": 3000
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1440,
+          "minimum_won": 0,
+          "maximum_won": 5000
+        }
+      ]
+    }
+  },
+  "quote_only_products": [
+    "blue_partners_immediate"
+  ]
+}

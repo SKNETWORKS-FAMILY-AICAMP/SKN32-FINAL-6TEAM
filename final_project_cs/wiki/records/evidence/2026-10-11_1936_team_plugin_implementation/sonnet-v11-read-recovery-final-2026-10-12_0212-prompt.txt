@@ -1,0 +1,23 @@
+Perform a final independent READ-ONLY review of candidate v11 only:
+C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11
+This follows real Opus/Sonnet v10 three-way review. Candidate v11 fixes two existing gaps: A interrupted location-independent answer_fact recovery; B implicit numeric reply capturing an older waiting choice after a newer assistant fact answer. Candidate is frozen. The isolated Linux full regression is still running: do not claim it passed. Do not edit source or tests.
+
+Required direct reads (full relevant functions, not only snippets):
+- app/domains/travel_ops/components/conversation/fact_read_retry.py (entire file)
+- trip_messages.py: handle_trip_message, _open_message_case, _run_decision
+- case_dispatch.py: retry_initial, resume_pending, _matches_implicit_reply and new numeric recency helper
+- decision_unit.py: Decision.record, fact_first; fact_context.py: resolve; chat_log.py: recent
+- app/application/classification.py and core/case_lifecycle/case.py / events.py state transitions as needed
+- tests/unit/travel/test_fact_read_recovery.py (27 tests), test_implicit_reply_recency.py (14 tests)
+- tests/e2e/test_fact_read_recovery_web.py (10 HTTP tests), test_reply_recency_web.py (root-owned actual HTTP tests; read only, do NOT run DB tests)
+- review-notes/read-recovery-contract.md; shared wiki/teams/team-contract/plugin-availability.md is permitted for current constraints.
+
+Review A: classify/route/complete under same-Case NOWAIT read lock, exact LockNotAvailable mapping only, no LLM or Team.execute under lock, replay snapshot original at/selection/version/context but no GPS coordinates, LOCATION_FACTS excluded, current resolver and trip ownership/version constraints. Verify business descriptor/subject_ref/reply history/active agent runs cannot be laundered through a read snapshot or cached answer. Effective action must match fact_first, including pure read clarify choices; mixed/business choices must remain strict business. Legacy off/defer cached answer may return ONLY classifying+stored string answer+no decision/business/ref/reply history+matching original message already verified by handle+deterministic fact_question. No fresh calculation for old missing snapshots. Check normal read success and duplicate/complete choices remain intact and concurrent retry returns409 without effects.
+Review B: numeric-only implicit choice requires latest assistant Case match; explicit case/token and replayed resume event remain valid; legacy no assistant stays compatible; named choice and typed duration are not wrongly blocked; multiple pending work still409.
+This is an implementation audit, not a claim of LLM accuracy, mobility accuracy, real operating DB or production behavior.
+
+Execute exactly one fixed synthetic unit runner, unmodified:
+"C:/Users/playdata2/anaconda3/python.exe" wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/v11-read-recovery-final-unit.py
+A PreToolUse hook denies EVERY OTHER Bash command including ls/cd/cat/chains. Use Read/Glob/Grep for inspection. Do not try to bypass the hook or settings. No shell discovery. No DB/network/HTTP/API/deployment. Never read .env, credentials, keys, customer data, datasets or operating connection information. Allowed Bash only starts synthetic pure unit tests with placeholder settings, external IO0. It currently collects 91 tests; report the ACTUAL collected/pass/fail counts and output, don't force that expected count if source says otherwise.
+
+Report in Korean: confirmed defects first with exact candidate file/line, prerequisite and minimal repro; separate unexecuted static concerns from directly executed evidence. If no new confirmed defect is found in this scope, say that narrowly. List direct files reviewed and remaining unverified conditions, actual model name, exact test result and any permission denials/scope deviations. Do not suggest broad unrelated redesigns. No writes/source modifications.

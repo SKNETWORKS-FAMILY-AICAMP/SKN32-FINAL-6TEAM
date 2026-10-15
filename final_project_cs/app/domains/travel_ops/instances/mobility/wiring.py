@@ -198,7 +198,9 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
     from .engine.plan import Planner, iso_of, party_of
     rt = engine_runtime.get_verifier(**_STATE["kw"])
     c = dict(constraints or {})
-    planner = Planner(rt, stage="planning", modes=(list(modes) if modes else modes_from_survey(c)))
+    planner = Planner(rt, stage="planning", modes=(list(modes) if modes else modes_from_survey(c)),
+                      taxi_option_fees=c.get('taxi_option_fees'),
+                      taxi_call_product=c.get('taxi_call_product'),taxi_call_quotes=c.get('taxi_call_quotes'))
     if disruptions:
         planner.disruptions = tuple(dict(d) for d in disruptions)     # #38 — 사고를 모든 판정 호출에 싣는다
     party = party_of(party_size, c)
@@ -229,7 +231,7 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
         from datetime import datetime
         return {"route": route, "starts_at": datetime.fromisoformat(iso_of(sdate, start)),
                 "ends_at": datetime.fromisoformat(iso_of(sdate, end)), "eta_min": int(planned["eta_min"]),
-                "left_out": left}, None
+                "left_out": left, "departure_context": planner.departure_context}, None
     return leg
 
 
@@ -241,6 +243,82 @@ def basis() -> dict[str, Any]:
     built = rt.timetable_built_at
     return {"mode": "enabled", "timetable_built_at": built.isoformat() if hasattr(built, "isoformat") else str(built),
             "rules_version": rt.rules_version, "timetable_stale": bool(rt.timetable_stale)}
+
+
+def party_for_trip(trip) -> dict[str, Any]:
+    """생성과 같은 정규화로 현재 여행 조건을 만든다. 자유 문장의 접근성은 추정하지 않는다."""
+    from .engine.plan import party_of
+
+    if not isinstance(trip, dict):
+        raise ValueError('invalid_current_trip')
+    constraints = trip.get('constraints')
+    constraints = {} if constraints is None else constraints
+    if not isinstance(constraints, dict):
+        raise ValueError('invalid_current_constraints')
+    size = trip.get('party_size')
+    if size is not None and (isinstance(size, bool) or not isinstance(size, int) or size < 1):
+        raise ValueError('invalid_current_party_size')
+    survey = constraints.get('survey')
+    survey = {} if survey is None else survey
+    if not isinstance(survey, dict) or (survey.get('domestic') is not None
+                                      and not isinstance(survey['domestic'], bool)):
+        raise ValueError('invalid_current_party_survey')
+    if not isinstance(constraints.get('first_visit', True), bool):
+        raise ValueError('invalid_current_first_visit')
+    return party_of(size, constraints)
+
+
+def observe_departure(context, option_id, *, events=None, trip=None, **kwargs) -> dict[str, Any]:
+    """일정 안내가 끼움 자리로 부르는 현재 구간 재검증. 소스는 콜백 인자로만 받는다."""
+    if _STATE['mode'] != 'enabled':
+        return {'status': 'fatal', 'reason': 'mobility_not_enabled'}
+    disruptions, unmapped = disruptions_from_events(events or {})
+    if unmapped:
+        return {'status': 'needs_replan', 'reason': 'disruption_not_mapped', 'unmapped': unmapped}
+    from .engine.departure_observer import observe
+    rt = engine_runtime.get_verifier(**_STATE['kw'])
+    current = {}
+    if trip is not None:
+        saved_options=context.get('options') if isinstance(context,dict) else None
+        option=saved_options.get(option_id) if isinstance(saved_options,dict) else None
+        if isinstance(option,dict) and option.get('path_kind')=='direct_taxi':
+            from .engine.taxi_pricing import matches_current_pricing
+            from .engine.errors import CaseInputError
+            try:
+                matched=matches_current_pricing(option,trip.get('constraints') or {},
+                    context.get('from_place') or {},context.get('to_place') or {})
+            except (CaseInputError,TypeError,ValueError):
+                matched=False
+            if not matched:
+                return {'status':'needs_replan','reason':'taxi_call_pricing_changed'}
+        current = {'current_party': party_for_trip(trip),
+                   'current_first_visit': (trip.get('constraints') or {}).get('first_visit', True)}
+    return observe(rt, context, option_id, disruptions=disruptions, **current, **kwargs)
+
+
+def validate_departure_basis(basis) -> bool:
+    """안내 저장 직전 급행·공식 역ID 내용을 대조한다. 시간표 적재·API 조회는 하지 않는다."""
+    if _STATE['mode'] != 'enabled':
+        raise MobilityUnavailable('출발 안내의 급행 입력 판을 확인할 계산기가 켜지지 않았다')
+    if not isinstance(basis, dict) or not {'timetable_built_at', 'rules_version'} <= set(basis):
+        raise ValueError('출발 관측의 입력 판이 없다')
+    if 'express_version' in basis:
+        version = basis['express_version']
+        if (not isinstance(version, str) or len(version) != 64
+                or any(char not in '0123456789abcdef' for char in version)):
+            raise ValueError('출발 관측의 급행 내용 판이 잘못됐다')
+        from .engine.departure_context import express_version
+        from .engine.express import source_signatures
+        if version != express_version(source_signatures()):
+            return False
+    if 'subway_station_version' in basis:
+        from .engine.subway_identity import source_signature, valid_version
+        version = basis['subway_station_version']
+        if version is not None and not valid_version(version):
+            raise ValueError('출발 관측의 공식 지하철 역ID 내용 판이 잘못됐다')
+        if version != source_signature(engine_runtime.default_paths()['subway_stations'])[1]:
+            return False
+    return True
 
 
 def team_result(task: Any) -> dict[str, Any] | None:

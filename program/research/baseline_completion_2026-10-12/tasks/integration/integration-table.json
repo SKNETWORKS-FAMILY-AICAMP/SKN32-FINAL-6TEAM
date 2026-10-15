@@ -1,0 +1,1604 @@
+{
+  "captured_at_kst": "2026-10-12T07:06:52.655541+09:00",
+  "phase": "local_integration_reviewed_external_data_acceptance_pending",
+  "source_scope": [
+    "wiki",
+    "final_project_cs/wiki",
+    "final_project_cs/app",
+    "final_project_cs/config",
+    "final_project_cs/tests",
+    "final_project_cs/migrations",
+    "final_project_cs/scripts",
+    "final_project_cs/deploy",
+    "final_project_cs/frontend/apps/web/src",
+    "program/scripts"
+  ],
+  "excluded_directory_names": [
+    ".git",
+    ".pytest_cache",
+    "__pycache__",
+    "_backup",
+    "inputs",
+    "legacy",
+    "node_modules",
+    "outputs",
+    "records",
+    "renders",
+    "results",
+    "screens",
+    "source-text",
+    "sources"
+  ],
+  "program_scripts_scope": "Python 검사·생성 코드만. 연구 입력·출력은 담당 실측 근거를 별도로 연결",
+  "source_manifest_sha256": "7077c9e98a74be45e1b072e36afeb5de9385b38840622e642ff4ff41ffc0856b",
+  "warning": "문서·담당 범위 확인은 제품 인수 완료가 아님. 단일 전체 통과 실행으로 합산하지 않음.",
+  "dependencies": [
+    {
+      "key": "auth",
+      "thread_id": "01a12c50-ad3e-7741-8f1a-1ba3a10f0c00",
+      "phase": "status_not_written",
+      "status_file": {
+        "path": "program/research/baseline_completion_2026-10-12/tasks/auth/status.json",
+        "exists": false,
+        "sha256": null
+      }
+    },
+    {
+      "key": "orchestration",
+      "thread_id": "01a12c50-c607-7152-89a0-0ba560a8b214",
+      "phase": "running",
+      "status_file": {
+        "path": "program/research/baseline_completion_2026-10-12/tasks/orchestration/status.json",
+        "exists": true,
+        "bytes": 386,
+        "sha256": "bb828f2e76cdc4c6e87634bc3e5e67667635b8c217e839a84badf8cc29882014"
+      }
+    },
+    {
+      "key": "operations",
+      "thread_id": "01a12c50-dac2-7ee2-8b01-52141c0c4ae5",
+      "phase": "running",
+      "status_file": {
+        "path": "program/research/baseline_completion_2026-10-12/tasks/operations/status.json",
+        "exists": true,
+        "bytes": 799,
+        "sha256": "4ee76ee0c60592c5ccf9429e969d94c27b4a89ff3f6b312d9b4306a623fe12bc"
+      }
+    },
+    {
+      "key": "wiki",
+      "thread_id": "01a12c50-f1d3-7933-a806-26218a49824e",
+      "phase": "running",
+      "status_file": {
+        "path": "program/research/baseline_completion_2026-10-12/tasks/wiki/status.json",
+        "exists": true,
+        "bytes": 543,
+        "sha256": "c16bdede8bc1ef2e29b17e8c771518c96b4396d040e035cd7528fa6f1f09483f"
+      }
+    },
+    {
+      "key": "verification",
+      "thread_id": "01a12c51-0eee-7b63-9c03-8a640ebe12e2",
+      "phase": "running",
+      "status_file": {
+        "path": "program/research/baseline_completion_2026-10-12/tasks/verification/status.json",
+        "exists": true,
+        "bytes": 628,
+        "sha256": "418f55b7a85fc2c97d60c3787272d53d857c2cf0d72bf8483d889a7329e228d9"
+      }
+    }
+  ],
+  "rows": [
+    {
+      "id": "W01",
+      "requirement_id": "TRP-REQ-W01",
+      "subject": "wiki를 현재 사양 정본으로 지정",
+      "decision": "현재 사양은 wiki의 확정 결정·계약으로 통일합니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/index.md",
+          "exists": true,
+          "bytes": 2712,
+          "sha256": "abb26e49c9c8aaf0f6f7ac6e8b0fd3cfbf23ff8a080ba6889580ef6ceb8ef84d",
+          "input_sha256": "abb26e49c9c8aaf0f6f7ac6e8b0fd3cfbf23ff8a080ba6889580ef6ceb8ef84d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "abb26e49c9c8aaf0f6f7ac6e8b0fd3cfbf23ff8a080ba6889580ef6ceb8ef84d"
+        },
+        {
+          "path": "AGENTS.md",
+          "exists": true,
+          "bytes": 23129,
+          "sha256": "658bb335a6e49ae761322390b85029eb048f9a8d2822728fe1f8d2b49d4a2939",
+          "input_sha256": "658bb335a6e49ae761322390b85029eb048f9a8d2822728fe1f8d2b49d4a2939",
+          "changed_since_input": false,
+          "previous_observed_sha256": "658bb335a6e49ae761322390b85029eb048f9a8d2822728fe1f8d2b49d4a2939"
+        },
+        {
+          "path": "program/research/index.md",
+          "exists": true,
+          "bytes": 34987,
+          "sha256": "e112a9cb675480064ded667c104b4fe2e01a262bfaecd2ac98b9a3f4875d10cf",
+          "input_sha256": "e112a9cb675480064ded667c104b4fe2e01a262bfaecd2ac98b9a3f4875d10cf",
+          "changed_since_input": false,
+          "previous_observed_sha256": "e112a9cb675480064ded667c104b4fe2e01a262bfaecd2ac98b9a3f4875d10cf"
+        },
+        {
+          "path": "final_project_cs/AGENTS.md",
+          "exists": true,
+          "bytes": 4471,
+          "sha256": "1fdb6017b2f87e2741fb7a5d4ffb238781fa72636c0ad9dda2964ebb81b22c7b",
+          "input_sha256": "1fdb6017b2f87e2741fb7a5d4ffb238781fa72636c0ad9dda2964ebb81b22c7b",
+          "changed_since_input": false,
+          "previous_observed_sha256": "1fdb6017b2f87e2741fb7a5d4ffb238781fa72636c0ad9dda2964ebb81b22c7b"
+        },
+        {
+          "path": "final_project_cs/RULE.md",
+          "exists": true,
+          "bytes": 2974,
+          "sha256": "d556f44a61dfbd9dfcdc0dbd332216070bbbf8c7ec7181ae5bcf16146e4b5637",
+          "input_sha256": "d556f44a61dfbd9dfcdc0dbd332216070bbbf8c7ec7181ae5bcf16146e4b5637",
+          "changed_since_input": false,
+          "previous_observed_sha256": "d556f44a61dfbd9dfcdc0dbd332216070bbbf8c7ec7181ae5bcf16146e4b5637"
+        }
+      ],
+      "owners": [],
+      "owner_phases": {},
+      "retained_document_only": true,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "추가 기능 작업 대상 아님",
+      "acceptance": "document_scope_verified",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [],
+      "remaining_current": "담당 문서·검사 범위 확인; 제품 기능 인수와 구분"
+    },
+    {
+      "id": "W02",
+      "requirement_id": "TRP-REQ-W02",
+      "subject": "고객 웹·개인 AI·공유 계획서 역할",
+      "decision": "“별도 접점”을 지우고, 고객이 이용하는 화면과 API의 역할을 적습니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/product/scope.md",
+          "exists": true,
+          "bytes": 4789,
+          "sha256": "d5da084a4f552562efcf98f7fa422302623df3d71142fb9f30adc116d11fcabf",
+          "input_sha256": "d5da084a4f552562efcf98f7fa422302623df3d71142fb9f30adc116d11fcabf",
+          "changed_since_input": false,
+          "previous_observed_sha256": "d5da084a4f552562efcf98f7fa422302623df3d71142fb9f30adc116d11fcabf"
+        },
+        {
+          "path": "wiki/product/positioning.md",
+          "exists": true,
+          "bytes": 2518,
+          "sha256": "82b84fb965eba130583b7fa5e448da0ef5c34b8ff25253d21071e308fff41c98",
+          "input_sha256": "82b84fb965eba130583b7fa5e448da0ef5c34b8ff25253d21071e308fff41c98",
+          "changed_since_input": false,
+          "previous_observed_sha256": "82b84fb965eba130583b7fa5e448da0ef5c34b8ff25253d21071e308fff41c98"
+        },
+        {
+          "path": "wiki/architecture/system-context.md",
+          "exists": true,
+          "bytes": 2707,
+          "sha256": "8294785b2fbf440bc8f7eeb259a18462153780c0df740717eabbd053794e82a3",
+          "input_sha256": "8294785b2fbf440bc8f7eeb259a18462153780c0df740717eabbd053794e82a3",
+          "changed_since_input": false,
+          "previous_observed_sha256": "8294785b2fbf440bc8f7eeb259a18462153780c0df740717eabbd053794e82a3"
+        },
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "bytes": 8590,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "input_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        }
+      ],
+      "owners": [
+        "auth",
+        "verification"
+      ],
+      "owner_phases": {
+        "auth": "ready_for_integration",
+        "verification": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "각 경로의 구현·권한·연결 시험",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/auth/report.md",
+          "sha256": "fb3edecd820a0f1d7fc691f7f23a30909b36cf11d690c0d682b547c3d32b60ca"
+        },
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/verification/report.md",
+          "sha256": "0eb9b0616fe4c6864b5431ca56e5da548a63d2fb4a52f53bc6bb2f1b5b0b44e8"
+        }
+      ],
+      "remaining_current": "실제 개인 AI 종단 연결·실자료 화면/응답 인수"
+    },
+    {
+      "id": "W03",
+      "requirement_id": "TRP-REQ-W03",
+      "subject": "항로 지킴이 자동 변경",
+      "decision": "항로 지킴이를 켜면 변경 필요 여부를 판단하고, 검증한 대체안을 적용한 결과를 제시합니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/product/positioning.md",
+          "exists": true,
+          "bytes": 2518,
+          "sha256": "82b84fb965eba130583b7fa5e448da0ef5c34b8ff25253d21071e308fff41c98",
+          "input_sha256": "82b84fb965eba130583b7fa5e448da0ef5c34b8ff25253d21071e308fff41c98",
+          "changed_since_input": false,
+          "previous_observed_sha256": "82b84fb965eba130583b7fa5e448da0ef5c34b8ff25253d21071e308fff41c98"
+        },
+        {
+          "path": "wiki/product/scope.md",
+          "exists": true,
+          "bytes": 4789,
+          "sha256": "d5da084a4f552562efcf98f7fa422302623df3d71142fb9f30adc116d11fcabf",
+          "input_sha256": "d5da084a4f552562efcf98f7fa422302623df3d71142fb9f30adc116d11fcabf",
+          "changed_since_input": false,
+          "previous_observed_sha256": "d5da084a4f552562efcf98f7fa422302623df3d71142fb9f30adc116d11fcabf"
+        },
+        {
+          "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+          "exists": true,
+          "bytes": 20864,
+          "sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d",
+          "input_sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d"
+        },
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "bytes": 8590,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "input_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        }
+      ],
+      "owners": [
+        "orchestration"
+      ],
+      "owner_phases": {
+        "orchestration": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "자동 적용·알림·기존 설정 호환성 검증",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/orchestration/report.md",
+          "sha256": "d52a1c4389e124c80d76811da8c65f291833c3a77fe2ea00b50da84beb44de40"
+        }
+      ],
+      "remaining_current": "실제 분류 모델·원격 실행 품질; 검색·실자료 전제"
+    },
+    {
+      "id": "W04",
+      "requirement_id": "TRP-REQ-W04",
+      "subject": "개인 AI OAuth 로그인·동의",
+      "decision": "개인 AI의 triPilot 연결은 키 복사 대신 로그인·권한 동의 방식까지 이번 구현 범위에 포함합니다. 선택·wiki 반영은 완료했지만 OAuth 구현 완료로 표시하지 않습니다.",
+      "selection": "B",
+      "input_document_status": "B안 확정",
+      "document_evidence": [
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "bytes": 8590,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "input_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+          "exists": true,
+          "bytes": 16006,
+          "sha256": "770a20a7b8b7c0a9b73e7e197011096cb9f61fb7d33aa6f7e76a92a178928674",
+          "input_sha256": "770a20a7b8b7c0a9b73e7e197011096cb9f61fb7d33aa6f7e76a92a178928674",
+          "changed_since_input": false,
+          "previous_observed_sha256": "770a20a7b8b7c0a9b73e7e197011096cb9f61fb7d33aa6f7e76a92a178928674"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-012-agent-auth-claude-style.md",
+          "exists": true,
+          "bytes": 9532,
+          "sha256": "841c6ad1043d12986ab5ed07b84e21fc1e31cd674fe11c6683a97e633366ba96",
+          "input_sha256": "2a00dfa9a1dd4d93f0fcf9be5518c15650161a9b391267669c135bd3957b4cb9",
+          "changed_since_input": true,
+          "previous_observed_sha256": "841c6ad1043d12986ab5ed07b84e21fc1e31cd674fe11c6683a97e633366ba96"
+        },
+        {
+          "path": "final_project_cs/wiki/external/web-auth-transfer.md",
+          "exists": true,
+          "bytes": 2644,
+          "sha256": "8a661f85ccd8f0f56d4aa13bdd0fbdac503fa92d2913f15a3cc661ba9e917f8e",
+          "input_sha256": "8a661f85ccd8f0f56d4aa13bdd0fbdac503fa92d2913f15a3cc661ba9e917f8e",
+          "changed_since_input": false,
+          "previous_observed_sha256": "8a661f85ccd8f0f56d4aa13bdd0fbdac503fa92d2913f15a3cc661ba9e917f8e"
+        },
+        {
+          "path": "wiki/architecture/system-context.md",
+          "exists": true,
+          "bytes": 2707,
+          "sha256": "8294785b2fbf440bc8f7eeb259a18462153780c0df740717eabbd053794e82a3",
+          "input_sha256": "8294785b2fbf440bc8f7eeb259a18462153780c0df740717eabbd053794e82a3",
+          "changed_since_input": false,
+          "previous_observed_sha256": "8294785b2fbf440bc8f7eeb259a18462153780c0df740717eabbd053794e82a3"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/components/itinerary/plan_link.py",
+          "exists": true,
+          "bytes": 1291,
+          "sha256": "d9bd5d44d58ef79dd6b55a9eba3d5b6f17586a351bb7f797036ff9c979e17831",
+          "input_sha256": "d9bd5d44d58ef79dd6b55a9eba3d5b6f17586a351bb7f797036ff9c979e17831",
+          "changed_since_input": false,
+          "previous_observed_sha256": "d9bd5d44d58ef79dd6b55a9eba3d5b6f17586a351bb7f797036ff9c979e17831"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/entry/trip_api.py",
+          "exists": true,
+          "bytes": 168618,
+          "sha256": "14274e3b817f313a31a142f77655bf9e20c4ac2ff8a0459b3b6ae56709f1eb68",
+          "input_sha256": "3df254dece0ba0d17c4776c687b67b0ae1abf9779ecbec0910ef01f655d94b8f",
+          "changed_since_input": true,
+          "previous_observed_sha256": "14274e3b817f313a31a142f77655bf9e20c4ac2ff8a0459b3b6ae56709f1eb68"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/modules/web_account/web_cookie.py",
+          "exists": true,
+          "bytes": 18219,
+          "sha256": "55e830df7a6d9f4f9747484bde02fba2c6083869b868766c0e2a7d3916bcbaec",
+          "input_sha256": "a1c0c4508602ba259caca1f814705ea8129d098077404823260fa4aee0c1924a",
+          "changed_since_input": true,
+          "previous_observed_sha256": "55e830df7a6d9f4f9747484bde02fba2c6083869b868766c0e2a7d3916bcbaec"
+        }
+      ],
+      "owners": [
+        "auth"
+      ],
+      "owner_phases": {
+        "auth": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "OAuth 구현·연결·권한 시험",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/auth/report.md",
+          "sha256": "fb3edecd820a0f1d7fc691f7f23a30909b36cf11d690c0d682b547c3d32b60ca"
+        }
+      ],
+      "remaining_current": "실제 클라이언트 사전 등록·정확한 callback·공개 HTTPS/쿠키·종단 연결"
+    },
+    {
+      "id": "W05",
+      "requirement_id": "TRP-REQ-W05",
+      "subject": "상주 상담원 없는 자동 운영",
+      "decision": "실시간 상담원 인계를 없애고, 자동 복구와 고객의 직접 해결을 지원하면서 결함 자료를 축적합니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/delivery/dod.md",
+          "exists": true,
+          "bytes": 9915,
+          "sha256": "95f1aa23bf0b25b6f6c7ae42fe169188db524d5007d561161bf21d830b766411",
+          "input_sha256": "95f1aa23bf0b25b6f6c7ae42fe169188db524d5007d561161bf21d830b766411",
+          "changed_since_input": false,
+          "previous_observed_sha256": "95f1aa23bf0b25b6f6c7ae42fe169188db524d5007d561161bf21d830b766411"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md",
+          "exists": true,
+          "bytes": 8349,
+          "sha256": "3c685d567031349b6bed52adfb49001fbf199276701ded371b37f245690a0f0f",
+          "input_sha256": "3c685d567031349b6bed52adfb49001fbf199276701ded371b37f245690a0f0f",
+          "changed_since_input": false,
+          "previous_observed_sha256": "3c685d567031349b6bed52adfb49001fbf199276701ded371b37f245690a0f0f"
+        },
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "bytes": 8590,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "input_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        },
+        {
+          "path": "wiki/architecture/notifications.md",
+          "exists": true,
+          "bytes": 22541,
+          "sha256": "37d11f9da6c387673a0b7a343d194361cbfc38339d7dc28910505d9b76432861",
+          "input_sha256": "37d11f9da6c387673a0b7a343d194361cbfc38339d7dc28910505d9b76432861",
+          "changed_since_input": false,
+          "previous_observed_sha256": "37d11f9da6c387673a0b7a343d194361cbfc38339d7dc28910505d9b76432861"
+        },
+        {
+          "path": "final_project_cs/frontend/apps/web/src/features/support/support.tsx",
+          "exists": true,
+          "bytes": 6724,
+          "sha256": "a9f564b0c6293b98891a175e6a6dff201d4ef849b5e501f2539e36ec66be462a",
+          "input_sha256": "57801e41004543500169eac04a37f96fe2ad0fdc1a3a9fa269bcf3b94c954bc8",
+          "changed_since_input": true,
+          "previous_observed_sha256": "a9f564b0c6293b98891a175e6a6dff201d4ef849b5e501f2539e36ec66be462a"
+        },
+        {
+          "path": "final_project_cs/frontend/apps/web/src/features/support/client.ts",
+          "exists": true,
+          "bytes": 1927,
+          "sha256": "fcf9aeb5af61c1ae01d82c8cebedf8cf6aaec05b5fcdfd59574e03009730382d",
+          "input_sha256": "2153e8936b40ab08e9b0d5737e20f68ef4fc3c392c520b2198f61da2e760cecc",
+          "changed_since_input": true,
+          "previous_observed_sha256": "fcf9aeb5af61c1ae01d82c8cebedf8cf6aaec05b5fcdfd59574e03009730382d"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/modules/web_account/admin_customer_api.py",
+          "exists": true,
+          "bytes": 3664,
+          "sha256": "4b99a043ca6596a107834e087037b4146e47e52481aa319c470f71b7c479e583",
+          "input_sha256": "18b901d523f3abc3d5d32700b5eb2349396ae4dab6fe55732d79ac317c883be9",
+          "changed_since_input": true,
+          "previous_observed_sha256": "4b99a043ca6596a107834e087037b4146e47e52481aa319c470f71b7c479e583"
+        },
+        {
+          "path": "final_project_cs/app/domains/travel_ops/modules/web_account/web_cookie.py",
+          "exists": true,
+          "bytes": 18219,
+          "sha256": "55e830df7a6d9f4f9747484bde02fba2c6083869b868766c0e2a7d3916bcbaec",
+          "input_sha256": "a1c0c4508602ba259caca1f814705ea8129d098077404823260fa4aee0c1924a",
+          "changed_since_input": true,
+          "previous_observed_sha256": "55e830df7a6d9f4f9747484bde02fba2c6083869b868766c0e2a7d3916bcbaec"
+        }
+      ],
+      "owners": [
+        "operations"
+      ],
+      "owner_phases": {
+        "operations": "waiting_dependency"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "고객 화면·오류 기록·복구 경로 구현 대조",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/operations/report.md",
+          "sha256": "737824574e025aad21de6222a367aa93ed57628f5ca0cf49e18fc7a063ab1ad7"
+        }
+      ],
+      "remaining_current": "실제 운영 영속 볼륨·재시작 적용 인수"
+    },
+    {
+      "id": "W06",
+      "requirement_id": "TRP-REQ-W06",
+      "subject": "실패한 조회에 의존하는 작업만 보류",
+      "decision": "외부 자료 조회가 실패하면 그 자료가 필요한 작업만 보류합니다. 기존 일정과 독립적으로 검증할 수 있는 기능은 유지합니다. 상주 상담원 인계는 만들지 않습니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/decisions/D-018-decision15-stop-paths.md",
+          "exists": true,
+          "bytes": 4460,
+          "sha256": "03d833e902b6ecfd95028fb753f8f0da5aee2ca6b4927ae24a7ef5ee873440a3",
+          "input_sha256": "03d833e902b6ecfd95028fb753f8f0da5aee2ca6b4927ae24a7ef5ee873440a3",
+          "changed_since_input": false,
+          "previous_observed_sha256": "03d833e902b6ecfd95028fb753f8f0da5aee2ca6b4927ae24a7ef5ee873440a3"
+        },
+        {
+          "path": "wiki/architecture/notifications.md",
+          "exists": true,
+          "bytes": 22541,
+          "sha256": "37d11f9da6c387673a0b7a343d194361cbfc38339d7dc28910505d9b76432861",
+          "input_sha256": "37d11f9da6c387673a0b7a343d194361cbfc38339d7dc28910505d9b76432861",
+          "changed_since_input": false,
+          "previous_observed_sha256": "37d11f9da6c387673a0b7a343d194361cbfc38339d7dc28910505d9b76432861"
+        },
+        {
+          "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+          "exists": true,
+          "bytes": 6082,
+          "sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2",
+          "input_sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2",
+          "changed_since_input": false,
+          "previous_observed_sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2"
+        }
+      ],
+      "owners": [
+        "orchestration"
+      ],
+      "owner_phases": {
+        "orchestration": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "장애 격리·자동 복구·고객 안내 인수 시험",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/orchestration/report.md",
+          "sha256": "d52a1c4389e124c80d76811da8c65f291833c3a77fe2ea00b50da84beb44de40"
+        }
+      ],
+      "remaining_current": "격리 전체·후속 장애 회귀 확인; 실제 환경 적용 별도"
+    },
+    {
+      "id": "W07",
+      "requirement_id": "TRP-REQ-W07",
+      "subject": "모니터링 툴 간격과 자료 최신성",
+      "decision": "기능 이름은 모니터링 툴입니다. “3분 감시”를 기능 이름처럼 쓰지 않습니다. 실행 간격·원본 게시 지연·캐시 유지시간·실제 감지 지연을 구분합니다.",
+      "selection": "A",
+      "input_document_status": "용어·문서 수정 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+          "exists": true,
+          "bytes": 6082,
+          "sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2",
+          "input_sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2",
+          "changed_since_input": false,
+          "previous_observed_sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2"
+        }
+      ],
+      "owners": [
+        "verification"
+      ],
+      "owner_phases": {
+        "verification": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "자료별 실제 지연 측정",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/verification/report.md",
+          "sha256": "0eb9b0616fe4c6864b5431ca56e5da548a63d2fb4a52f53bc6bb2f1b5b0b44e8"
+        }
+      ],
+      "remaining_current": "원본 게시·감지 지연 실측; 실경보 방향 실패18건의 고객 경로·공식 링크 대응"
+    },
+    {
+      "id": "W08",
+      "requirement_id": "TRP-REQ-W08",
+      "subject": "분류 에이전트의 팀·순서·우선순위 결정",
+      "decision": "고객 질의·계획서·상황·사용자 성향을 바탕으로 분류 에이전트가 담당 팀과 처리 순서·우선순위를 정한다는 지시를 반영했습니다. Activity에 다른 팀의 조정을 맡긴 추천과 Controller를 새 판단 주체로 삼은 제안은 철회합니다.",
+      "selection": "C",
+      "input_document_status": "책임 문서 수정 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+          "exists": true,
+          "bytes": 6082,
+          "sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2",
+          "input_sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2",
+          "changed_since_input": false,
+          "previous_observed_sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-013-domain-folder-layout.md",
+          "exists": true,
+          "bytes": 14827,
+          "sha256": "77bed7f0a9fa28966612e7f8ead75ea0dcdb56d613259877414a8e0306fe7eb3",
+          "input_sha256": "77bed7f0a9fa28966612e7f8ead75ea0dcdb56d613259877414a8e0306fe7eb3",
+          "changed_since_input": false,
+          "previous_observed_sha256": "77bed7f0a9fa28966612e7f8ead75ea0dcdb56d613259877414a8e0306fe7eb3"
+        },
+        {
+          "path": "final_project_cs/wiki/teams/composition.md",
+          "exists": true,
+          "bytes": 7008,
+          "sha256": "7c7da8617a96b3677fcad664b447c86cdc936a852eb13a0f0b9c7fe060abb1ba",
+          "input_sha256": "7c7da8617a96b3677fcad664b447c86cdc936a852eb13a0f0b9c7fe060abb1ba",
+          "changed_since_input": false,
+          "previous_observed_sha256": "7c7da8617a96b3677fcad664b447c86cdc936a852eb13a0f0b9c7fe060abb1ba"
+        }
+      ],
+      "owners": [
+        "orchestration"
+      ],
+      "owner_phases": {
+        "orchestration": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "분류 모델 기반 실행 계획·다중 팀 처리 구현",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/orchestration/report.md",
+          "sha256": "d52a1c4389e124c80d76811da8c65f291833c3a77fe2ea00b50da84beb44de40"
+        }
+      ],
+      "remaining_current": "한 여행 감시 묶음의 실제 모델·원격 A2A; 일반 채팅 분해와 범위 구분"
+    },
+    {
+      "id": "W09",
+      "requirement_id": "TRP-REQ-W09",
+      "subject": "무료 자료 우선·검증 불가 표시·설정",
+      "decision": "무료 자료를 우선 사용하고 확인하지 못한 영업 상태는 검증 불가로 표시합니다. 운영자 웹 앱에서 자료 선택 정책·호출 예산·확인 주기를 바꿀 수 있게 하는 요구를 추가했습니다. 설정 화면·저장·실제 조회 연결은 아직 구현 완료가 아닙니다.",
+      "selection": "A",
+      "input_document_status": "요구사항 반영 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+          "exists": true,
+          "bytes": 20864,
+          "sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d",
+          "input_sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md",
+          "exists": true,
+          "bytes": 3604,
+          "sha256": "2cfb7156ebf98ca6f3a8290ab20a8487fbaf3b948017571e75646219cbce9e42",
+          "input_sha256": "2cfb7156ebf98ca6f3a8290ab20a8487fbaf3b948017571e75646219cbce9e42",
+          "changed_since_input": false,
+          "previous_observed_sha256": "2cfb7156ebf98ca6f3a8290ab20a8487fbaf3b948017571e75646219cbce9e42"
+        },
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-010-google-calls-in-dawn-batch-only.md",
+          "exists": true,
+          "bytes": 3336,
+          "sha256": "ed5d96bc5d47c68469ed18a8f69c5431f3167ed3a6596fcd3d415c7aab325c78",
+          "input_sha256": "ed5d96bc5d47c68469ed18a8f69c5431f3167ed3a6596fcd3d415c7aab325c78",
+          "changed_since_input": false,
+          "previous_observed_sha256": "ed5d96bc5d47c68469ed18a8f69c5431f3167ed3a6596fcd3d415c7aab325c78"
+        }
+      ],
+      "owners": [
+        "operations"
+      ],
+      "owner_phases": {
+        "operations": "waiting_dependency"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "설정 저장·자료 조회 정책 연결 구현",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/operations/report.md",
+          "sha256": "737824574e025aad21de6222a367aa93ed57628f5ca0cf49e18fc7a063ab1ad7"
+        }
+      ],
+      "remaining_current": "무료 관측 대상 충족률·가격 조회 별도 결정·환경 인수"
+    },
+    {
+      "id": "W10",
+      "requirement_id": "TRP-REQ-W10",
+      "subject": "여행 평가 안내로 교체",
+      "decision": "현재 여행 평가 자료와 도구로 안내하고 쇼핑몰 성과는 과거 기록으로 둡니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/evaluation/index.md",
+          "exists": true,
+          "bytes": 3712,
+          "sha256": "4cd7947539cfd53d81adcce95f07d74dc9a2addb3ddcb167432e3e25a1a8d376",
+          "input_sha256": "4cd7947539cfd53d81adcce95f07d74dc9a2addb3ddcb167432e3e25a1a8d376",
+          "changed_since_input": false,
+          "previous_observed_sha256": "4cd7947539cfd53d81adcce95f07d74dc9a2addb3ddcb167432e3e25a1a8d376"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "bytes": 8612,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "input_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "changed_since_input": false,
+          "previous_observed_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        },
+        {
+          "path": "final_project_cs/wiki/quality/slm-model-evaluation.md",
+          "exists": true,
+          "bytes": 22448,
+          "sha256": "ae3257437228773a0bcf245b4489f50dcb424a097cc55ffce1b1fa083dc9d227",
+          "input_sha256": "ae3257437228773a0bcf245b4489f50dcb424a097cc55ffce1b1fa083dc9d227",
+          "changed_since_input": false,
+          "previous_observed_sha256": "ae3257437228773a0bcf245b4489f50dcb424a097cc55ffce1b1fa083dc9d227"
+        }
+      ],
+      "owners": [],
+      "owner_phases": {},
+      "retained_document_only": true,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "추가 문서 작업 대상 아님",
+      "acceptance": "document_scope_verified",
+      "tests": [],
+      "integration_findings": [
+        {
+          "id": "INT-COMMON-001",
+          "scope": "공통 실패 19건의 검사·시험 접합 및 현재 품질 입구",
+          "result": "focused_pass_full_suite_pending",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_0446_common-integration-validation.md",
+          "unverified_defects": 18
+        }
+      ],
+      "current_owner_reports": [],
+      "remaining_current": "담당 문서·검사 범위 확인; 제품 기능 인수와 구분"
+    },
+    {
+      "id": "W11",
+      "requirement_id": "TRP-REQ-W11",
+      "subject": "v11 보존·wiki 기반 v12 신규 작성",
+      "decision": "W11은 계획서 v11 자체가 아니라 현재 출시 검증 문서의 문제를 가리켰습니다. v11은 현재 기준으로 사용하지 않고 과거 원문으로 보존합니다. wiki·구현 차이를 정리한 뒤 v12 안내서를 새로 작성하며 v12 완료로 표시하지 않습니다.",
+      "selection": null,
+      "input_document_status": "v11 보존 반영",
+      "document_evidence": [
+        {
+          "path": "wiki/delivery/release-gate.md",
+          "exists": true,
+          "bytes": 2758,
+          "sha256": "7f44675c1b46450f3f3ee11d7e455ee01bf484ce1805fb20534052d32f4ba84d",
+          "input_sha256": "7f44675c1b46450f3f3ee11d7e455ee01bf484ce1805fb20534052d32f4ba84d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "7f44675c1b46450f3f3ee11d7e455ee01bf484ce1805fb20534052d32f4ba84d"
+        },
+        {
+          "path": "wiki/delivery/dod.md",
+          "exists": true,
+          "bytes": 9915,
+          "sha256": "95f1aa23bf0b25b6f6c7ae42fe169188db524d5007d561161bf21d830b766411",
+          "input_sha256": "95f1aa23bf0b25b6f6c7ae42fe169188db524d5007d561161bf21d830b766411",
+          "changed_since_input": false,
+          "previous_observed_sha256": "95f1aa23bf0b25b6f6c7ae42fe169188db524d5007d561161bf21d830b766411"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "bytes": 8612,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "input_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "changed_since_input": false,
+          "previous_observed_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        }
+      ],
+      "owners": [],
+      "owner_phases": {},
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "전체 정리 후 v12 안내서·최종 베이스라인 작성",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [],
+      "remaining_current": "필수 자료·실자료·외부 종단·환경 인수 미충족; 검토본 유지"
+    },
+    {
+      "id": "W12",
+      "requirement_id": "TRP-REQ-W12",
+      "subject": "에이전트 팀의 허용 도구 조회 범위",
+      "decision": "에이전트 팀은 허용된 도구로 조회하고, 변경 제안은 Controller가 검증한 뒤 등록된 적용기로 실행합니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "final_project_cs/wiki/teams/team-boundary.md",
+          "exists": true,
+          "bytes": 3807,
+          "sha256": "8955c08a0eeb63aa580033107d074e1d38bccd16389e0e7c3cf6c0925812b6d6",
+          "input_sha256": "8955c08a0eeb63aa580033107d074e1d38bccd16389e0e7c3cf6c0925812b6d6",
+          "changed_since_input": false,
+          "previous_observed_sha256": "8955c08a0eeb63aa580033107d074e1d38bccd16389e0e7c3cf6c0925812b6d6"
+        },
+        {
+          "path": "final_project_cs/wiki/quality/invariants.md",
+          "exists": true,
+          "bytes": 28863,
+          "sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e",
+          "input_sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e",
+          "changed_since_input": false,
+          "previous_observed_sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e"
+        }
+      ],
+      "owners": [
+        "auth",
+        "orchestration"
+      ],
+      "owner_phases": {
+        "auth": "ready_for_integration",
+        "orchestration": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "전체 도구 호출 경로 구현·권한 시험",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/auth/report.md",
+          "sha256": "fb3edecd820a0f1d7fc691f7f23a30909b36cf11d690c0d682b547c3d32b60ca"
+        },
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/orchestration/report.md",
+          "sha256": "d52a1c4389e124c80d76811da8c65f291833c3a77fe2ea00b50da84beb44de40"
+        }
+      ],
+      "remaining_current": "보안92·계약283·후속404 확인; 실제 외부 종단은 별도"
+    },
+    {
+      "id": "W13",
+      "requirement_id": "TRP-REQ-W13",
+      "subject": "공통 시험과 여행 시험 분리",
+      "decision": "분리 실행기와 명시적 파일 목록을 만들었습니다. A는 공통 불변식을 여행 사례로 검증하는 방법, C는 시험 실행 묶음을 나누는 방법이므로 함께 할 수 있습니다. 대안처럼 제시한 설명을 정정하고 C를 적용했습니다. 새 파일의 미분류·중복은 실행 오류로 처리합니다.",
+      "selection": "C",
+      "input_document_status": "C안 구현·부분 검증",
+      "document_evidence": [
+        {
+          "path": "final_project_cs/wiki/quality/invariants.md",
+          "exists": true,
+          "bytes": 28863,
+          "sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e",
+          "input_sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e",
+          "changed_since_input": false,
+          "previous_observed_sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "bytes": 8612,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "input_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "changed_since_input": false,
+          "previous_observed_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        }
+      ],
+      "owners": [
+        "verification"
+      ],
+      "owner_phases": {
+        "verification": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "공통/여행 전체 시험 각각 실행",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [
+        {
+          "id": "INT-COMMON-001",
+          "scope": "공통 실패 19건의 검사·시험 접합 및 현재 품질 입구",
+          "result": "focused_pass_full_suite_pending",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_0446_common-integration-validation.md",
+          "unverified_defects": 18
+        }
+      ],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/verification/report.md",
+          "sha256": "0eb9b0616fe4c6864b5431ca56e5da548a63d2fb4a52f53bc6bb2f1b5b0b44e8"
+        }
+      ],
+      "remaining_current": "전체 고유7850 대조; 06:44 후속7827통과. 이후 식당·이동 자료7개 해소(09:28·12/12), 검색 전제16 해소(21:33 실제 벡터·17/17). 남은 것: 이동 단위 실패18(20:22·21:33 재확인, 이동 담당 판정 대기)"
+    },
+    {
+      "id": "W14",
+      "requirement_id": "TRP-REQ-W14",
+      "subject": "DB 구조·옛 표 삭제·재생성 방지",
+      "decision": "논리 구조는 여행·일정·장소를 어떤 표에 저장하고 어떻게 연결하는지 보여 줍니다. 환경별 적용표는 그 구조가 로컬 개발 DB와 x600 배포 DB에 실제 있는지 비교합니다. 전체 자동 목록은 모든 열·외래키·인덱스를 찾는 자료입니다. A의 설명·환경 비교와 B의 상세 명세 추출을 함께 제공합니다. C는 기능별로 문서를 나누는 탐색 방식이며 이 둘을 대체하지 않습니다. 아래 실제 현황·그림·검색 목록에서 모두 확인할 수 있습니다.",
+      "selection": "A",
+      "input_document_status": "양쪽 DB 정리 완료",
+      "document_evidence": [
+        {
+          "path": "final_project_cs/wiki/data/index.md",
+          "exists": true,
+          "bytes": 2308,
+          "sha256": "451d8efbd169befa9316ef04700e5c035619b668e088634f3573342276935c5c",
+          "input_sha256": "ce5e126dfca7980abd264a7c73309f2f508960bd949f50e77519f511d7590f0c",
+          "changed_since_input": true,
+          "previous_observed_sha256": "451d8efbd169befa9316ef04700e5c035619b668e088634f3573342276935c5c"
+        },
+        {
+          "path": "final_project_cs/wiki/data/schema/index.md",
+          "exists": true,
+          "bytes": 6130,
+          "sha256": "a0ee978168346f93a3e1d9a8060254ee08ac2eaf834f7f96aeeb63584b3d3a5f",
+          "input_sha256": "a0ee978168346f93a3e1d9a8060254ee08ac2eaf834f7f96aeeb63584b3d3a5f",
+          "changed_since_input": false,
+          "previous_observed_sha256": "a0ee978168346f93a3e1d9a8060254ee08ac2eaf834f7f96aeeb63584b3d3a5f"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "bytes": 8612,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "input_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "changed_since_input": false,
+          "previous_observed_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        }
+      ],
+      "owners": [],
+      "owner_phases": {},
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "SQL 실행·향후 배포 안전 문제는 후속 세션",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [],
+      "remaining_current": "현재 안전 SQL·DB 준비23 재시험 확인; 업무 DB 적용 미수행"
+    },
+    {
+      "id": "W15",
+      "requirement_id": "TRP-REQ-W15",
+      "subject": "모델 판본표와 독립 실험 보고서",
+      "decision": "현재 평가 절차 → 모델 판본·보고서 표 → 해당 실험 보고서 → 원본 답안·검증 파일 순서로 확인합니다. 기존 독립 보고서 52개를 연결했습니다. 상세 보고서를 따로 보관하는 것은 A와 B를 함께 쓰는 구조입니다. C의 새 중앙 모델 등록 서비스를 도입하는 것과 다릅니다.",
+      "selection": "A",
+      "input_document_status": "문서·목록 반영 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/evaluation/finetuning.md",
+          "exists": true,
+          "bytes": 2703,
+          "sha256": "0435066ae3703579102e1b879feb4714085d65af36fbf89a4829cafb6235d3b8",
+          "input_sha256": "0435066ae3703579102e1b879feb4714085d65af36fbf89a4829cafb6235d3b8",
+          "changed_since_input": false,
+          "previous_observed_sha256": "0435066ae3703579102e1b879feb4714085d65af36fbf89a4829cafb6235d3b8"
+        },
+        {
+          "path": "final_project_cs/wiki/quality/slm-model-evaluation.md",
+          "exists": true,
+          "bytes": 22448,
+          "sha256": "ae3257437228773a0bcf245b4489f50dcb424a097cc55ffce1b1fa083dc9d227",
+          "input_sha256": "ae3257437228773a0bcf245b4489f50dcb424a097cc55ffce1b1fa083dc9d227",
+          "changed_since_input": false,
+          "previous_observed_sha256": "ae3257437228773a0bcf245b4489f50dcb424a097cc55ffce1b1fa083dc9d227"
+        }
+      ],
+      "owners": [
+        "verification"
+      ],
+      "owner_phases": {
+        "verification": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "실제 채택 모델·환경별 적용 증거 확인",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/verification/report.md",
+          "sha256": "0eb9b0616fe4c6864b5431ca56e5da548a63d2fb4a52f53bc6bb2f1b5b0b44e8"
+        }
+      ],
+      "remaining_current": "학습 여부·자료/모델 판본 연결; 독립 제품 평가·채택 증거 별도"
+    },
+    {
+      "id": "W16",
+      "requirement_id": "TRP-REQ-W16",
+      "subject": "기능별 책임과 디렉토리 경계",
+      "decision": "실제 코드 폴더와 기존 README 배치를 기준으로 작업 경계를 유지합니다. 상시 인명 배정이 확정되지 않은 기능 책임표는 설계안으로 정정했습니다. NASA의 책임·권한 배정과 GitHub의 파일 경로별 검토 기능을 구분해 근거로 연결했습니다. 최초 발명자·산업 표준 인증 여부는 공식 자료에서 검증하지 못했으므로 주장하지 않습니다.",
+      "selection": "A",
+      "input_document_status": "디렉토리 경계 반영·기능 책임 설계",
+      "document_evidence": [
+        {
+          "path": "wiki/delivery/roles.md",
+          "exists": true,
+          "bytes": 9118,
+          "sha256": "d48675b15f04c3f942d7852e646ecb072004cdae683ba459b494c19a3193de3d",
+          "input_sha256": "029aef302680c325e0bdaa289ade2b269880e056f1b8c6597d20bed675ac22fa",
+          "changed_since_input": true,
+          "previous_observed_sha256": "d48675b15f04c3f942d7852e646ecb072004cdae683ba459b494c19a3193de3d"
+        },
+        {
+          "path": "final_project_cs/wiki/teams/code-layout.md",
+          "exists": true,
+          "bytes": 6564,
+          "sha256": "adb725a8f7f510bf7f94218fb4a3c0d9c34bd279438af70f5df36e1297a46fa4",
+          "input_sha256": "4195e6f146425c4519bc59104dc8210acd6c1dc8fe2037e71552881f3fad0efa",
+          "changed_since_input": true,
+          "previous_observed_sha256": "adb725a8f7f510bf7f94218fb4a3c0d9c34bd279438af70f5df36e1297a46fa4"
+        }
+      ],
+      "owners": [
+        "wiki"
+      ],
+      "owner_phases": {
+        "wiki": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "미확정 상시 담당자 배정·강제 검토는 미적용",
+      "acceptance": "scoped_review_only",
+      "tests": [
+        {
+          "scope": "위키 도구 회귀; 기능 인수 아님",
+          "passed": 12,
+          "failed": 0,
+          "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/governance.xml"
+        }
+      ],
+      "integration_findings": [],
+      "integration_review": {
+        "checked_at_kst": "2026-10-12T04:23:03.375549+09:00",
+        "scope": "검토 범위의 문서·경로·구조 근거 확인; 인명 추가 배정 없음",
+        "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/summary.json",
+        "final_product_acceptance": false
+      },
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/wiki/report.md",
+          "sha256": "e37b4331aa257dab8022717b4acb0d66864da2b67798f087e40f0a2eb000b8e6"
+        }
+      ],
+      "remaining_current": "담당 문서·검사 범위 확인; 제품 기능 인수와 구분"
+    },
+    {
+      "id": "W17",
+      "requirement_id": "TRP-REQ-W17",
+      "subject": "현재 일정과 과거 주차표 분리",
+      "decision": "확인된 발표 날짜는 유지하고, 남은 작업은 현재 여행 요구로 다시 연결합니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "wiki/delivery/timeline.md",
+          "exists": true,
+          "bytes": 2716,
+          "sha256": "4ff415d9cb37dfa030e34598e9192d13a491a763f0966cc8c7cef405a9e111c8",
+          "input_sha256": "4ff415d9cb37dfa030e34598e9192d13a491a763f0966cc8c7cef405a9e111c8",
+          "changed_since_input": false,
+          "previous_observed_sha256": "4ff415d9cb37dfa030e34598e9192d13a491a763f0966cc8c7cef405a9e111c8"
+        }
+      ],
+      "owners": [],
+      "owner_phases": {},
+      "retained_document_only": true,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "추가 문서 작업 대상 아님",
+      "acceptance": "document_scope_verified",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [],
+      "remaining_current": "담당 문서·검사 범위 확인; 제품 기능 인수와 구분"
+    },
+    {
+      "id": "W18",
+      "requirement_id": "TRP-REQ-W18",
+      "subject": "환경별 앱·DB·모니터링·모델 구분",
+      "decision": "추론 성공과 고객용 앱 정상 가동을 구분하고 확인 시각을 붙입니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "final_project_cs/wiki/operations/always-on.md",
+          "exists": true,
+          "bytes": 10190,
+          "sha256": "2b52f6b2ab3e8048fbcb9131a54bee10092cc767c987af2ee0302cbcc05c39e8",
+          "input_sha256": "2b52f6b2ab3e8048fbcb9131a54bee10092cc767c987af2ee0302cbcc05c39e8",
+          "changed_since_input": false,
+          "previous_observed_sha256": "2b52f6b2ab3e8048fbcb9131a54bee10092cc767c987af2ee0302cbcc05c39e8"
+        },
+        {
+          "path": "final_project_cs/wiki/log.md",
+          "exists": true,
+          "bytes": 6680,
+          "sha256": "4eb5e798fc736e89c2c2f43b0b6dff22b03696400849ec231edf2acd0d2ed70e",
+          "input_sha256": "129b9664a5d1a4f4efc104a7c6a812791c292c9c173bd870ce3775ab4717fbe1",
+          "changed_since_input": true,
+          "previous_observed_sha256": "4eb5e798fc736e89c2c2f43b0b6dff22b03696400849ec231edf2acd0d2ed70e"
+        }
+      ],
+      "owners": [
+        "verification"
+      ],
+      "owner_phases": {
+        "verification": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "모든 구성 요소의 현재 정상 동작 검증은 별도",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/verification/report.md",
+          "sha256": "0eb9b0616fe4c6864b5431ca56e5da548a63d2fb4a52f53bc6bb2f1b5b0b44e8"
+        }
+      ],
+      "remaining_current": "신규 기능의 환경별 SQL·정책·영속 볼륨 적용 인수 미확인"
+    },
+    {
+      "id": "W19",
+      "requirement_id": "TRP-REQ-W19",
+      "subject": "datasets 전체 Git 제외 안내",
+      "decision": "데이터 주변 파일도 공개하지 않는 현재 규칙을 그대로 반영합니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "datasets/wiki/index.md",
+          "exists": true,
+          "bytes": 2423,
+          "sha256": "6ca5081a63b428721714be170f39042d6e729b6599776a0005a48249c4188b8c",
+          "input_sha256": "6ca5081a63b428721714be170f39042d6e729b6599776a0005a48249c4188b8c",
+          "changed_since_input": false,
+          "previous_observed_sha256": "6ca5081a63b428721714be170f39042d6e729b6599776a0005a48249c4188b8c"
+        },
+        {
+          "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true,
+          "bytes": 8612,
+          "sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "input_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a",
+          "changed_since_input": false,
+          "previous_observed_sha256": "a5d689f87b8655ce159f5a187cfec08278877e4b6d8713147bf95ac35ff4de6a"
+        }
+      ],
+      "owners": [],
+      "owner_phases": {},
+      "retained_document_only": true,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "추가 문서 작업 대상 아님",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [
+        "INT-W19-001: 문서는 전체 제외, 실제 규칙은 세 팀 폴더 일부 허용. 기존 추적 57개. 원본·Git 상태는 수정하지 않음"
+      ],
+      "integration_evidence": [
+        "program/research/baseline_completion_2026-10-12/tasks/integration/w19-reconciliation.json"
+      ],
+      "current_owner_reports": [],
+      "remaining_current": "ignore 대표4/4; 기존 추적57개 인덱스 검토 별도"
+    },
+    {
+      "id": "W20",
+      "requirement_id": "TRP-REQ-W20",
+      "subject": "결정·구현·검증·배포 상태 분리",
+      "decision": "문서 머리의 status는 글의 검토 상태, decision_status는 결정 확정 여부, implementation_status는 이번 개정의 코드 반영 정도, validation_status는 실행 검증 상태입니다. 환경 반영은 본문 표로 표시합니다. 실제 OAuth 결정과 장애 격리 결정 2개에 표시했습니다. 고객 웹에 새 상태 화면을 추가한 것은 아닙니다.",
+      "selection": "A",
+      "input_document_status": "기준·일부 적용",
+      "document_evidence": [
+        {
+          "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+          "exists": true,
+          "bytes": 20864,
+          "sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d",
+          "input_sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "f26b22dab042cdd673104f8fb5a9f8904fc46df4748f6a0fde22973eff70e69d"
+        },
+        {
+          "path": "wiki/decisions/D-018-decision15-stop-paths.md",
+          "exists": true,
+          "bytes": 4460,
+          "sha256": "03d833e902b6ecfd95028fb753f8f0da5aee2ca6b4927ae24a7ef5ee873440a3",
+          "input_sha256": "03d833e902b6ecfd95028fb753f8f0da5aee2ca6b4927ae24a7ef5ee873440a3",
+          "changed_since_input": false,
+          "previous_observed_sha256": "03d833e902b6ecfd95028fb753f8f0da5aee2ca6b4927ae24a7ef5ee873440a3"
+        }
+      ],
+      "owners": [
+        "wiki"
+      ],
+      "owner_phases": {
+        "wiki": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "전체 wiki 적용은 미완료",
+      "acceptance": "scoped_review_only",
+      "tests": [
+        {
+          "scope": "위키 도구 회귀; 기능 인수 아님",
+          "passed": 12,
+          "failed": 0,
+          "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/governance.xml"
+        }
+      ],
+      "integration_findings": [
+        {
+          "id": "INT-COMMON-001",
+          "scope": "공통 실패 19건의 검사·시험 접합 및 현재 품질 입구",
+          "result": "focused_pass_full_suite_pending",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_0446_common-integration-validation.md",
+          "unverified_defects": 18
+        }
+      ],
+      "integration_review": {
+        "checked_at_kst": "2026-10-12T04:23:03.375549+09:00",
+        "scope": "도구 구현 확인; 기능별 90개 상태 적용은 담당 근거 수령 뒤 검토",
+        "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/summary.json",
+        "final_product_acceptance": false
+      },
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/wiki/report.md",
+          "sha256": "e37b4331aa257dab8022717b4acb0d66864da2b67798f087e40f0a2eb000b8e6"
+        }
+      ],
+      "remaining_current": "담당 문서·검사 범위 확인; 제품 기능 인수와 구분"
+    },
+    {
+      "id": "W21",
+      "requirement_id": "TRP-REQ-W21",
+      "subject": "깨진 링크 3개 수정",
+      "decision": "존재하는 목적지로 연결하고, 사라진 원본은 역사 자료라고 표시합니다.",
+      "selection": "A",
+      "input_document_status": "수정·검사 완료",
+      "document_evidence": [
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+          "exists": true,
+          "bytes": 16006,
+          "sha256": "770a20a7b8b7c0a9b73e7e197011096cb9f61fb7d33aa6f7e76a92a178928674",
+          "input_sha256": "770a20a7b8b7c0a9b73e7e197011096cb9f61fb7d33aa6f7e76a92a178928674",
+          "changed_since_input": false,
+          "previous_observed_sha256": "770a20a7b8b7c0a9b73e7e197011096cb9f61fb7d33aa6f7e76a92a178928674"
+        },
+        {
+          "path": "final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true,
+          "bytes": 8590,
+          "sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "input_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d",
+          "changed_since_input": false,
+          "previous_observed_sha256": "0a04491487a41fe70e5221d94e9f23a00f48c3bd66361c88ea71371f1241ec7d"
+        },
+        {
+          "path": "final_project_cs/wiki/teams/dining-agent-design.md",
+          "exists": true,
+          "bytes": 6228,
+          "sha256": "69c1b3cb59b6efd4f66c6e8fc34755e567838e30fc14863cb8a8acc8aaca9218",
+          "input_sha256": "69c1b3cb59b6efd4f66c6e8fc34755e567838e30fc14863cb8a8acc8aaca9218",
+          "changed_since_input": false,
+          "previous_observed_sha256": "69c1b3cb59b6efd4f66c6e8fc34755e567838e30fc14863cb8a8acc8aaca9218"
+        }
+      ],
+      "owners": [],
+      "owner_phases": {},
+      "retained_document_only": true,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "추가 수정 대상 확인되지 않음",
+      "acceptance": "document_scope_verified",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [],
+      "remaining_current": "담당 문서·검사 범위 확인; 제품 기능 인수와 구분"
+    },
+    {
+      "id": "W22",
+      "requirement_id": "TRP-REQ-W22",
+      "subject": "wiki 검사 범위 구분",
+      "decision": "본문 검사기는 wiki 글의 머리말·링크·길이 등을 검사하는 check_wiki.py입니다. A는 기존 프로그램 하나에서 현재 글·생성물·기록·백업의 검사 범위를 나누는 방식이며 이미 반영되어 있습니다. B는 새 프로그램을 하나 더 만드는 제안으로, 중복되므로 채택하지 않습니다. C의 고정 파일 목록은 새 문서 누락 가능성이 있어 기본으로 쓰지 않습니다.",
+      "selection": "A",
+      "input_document_status": "검사기 구현·검증 완료",
+      "document_evidence": [
+        {
+          "path": "program/scripts/check_wiki.py",
+          "exists": true,
+          "bytes": 30179,
+          "sha256": "e28c4a67ce454444bd626ee493393ef7e22644fa5d2d33608242c5d240cf2bc8",
+          "input_sha256": "8a7f8c5e43e4b04b67fd1a198a6966208b738f5007caf13f347c5f7c08e2094a",
+          "changed_since_input": true,
+          "previous_observed_sha256": "e28c4a67ce454444bd626ee493393ef7e22644fa5d2d33608242c5d240cf2bc8"
+        }
+      ],
+      "owners": [
+        "wiki"
+      ],
+      "owner_phases": {
+        "wiki": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "기록 본문·백업은 기본 검사 범위 밖",
+      "acceptance": "scoped_review_only",
+      "tests": [
+        {
+          "scope": "위키 도구 회귀; 기능 인수 아님",
+          "passed": 12,
+          "failed": 0,
+          "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/governance.xml"
+        }
+      ],
+      "integration_findings": [
+        {
+          "id": "INT-COMMON-001",
+          "scope": "공통 실패 19건의 검사·시험 접합 및 현재 품질 입구",
+          "result": "focused_pass_full_suite_pending",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_0446_common-integration-validation.md",
+          "unverified_defects": 18
+        }
+      ],
+      "integration_review": {
+        "checked_at_kst": "2026-10-12T04:23:03.375549+09:00",
+        "scope": "범위 구분·회귀 확인; 전체 wiki 위반은 미해결",
+        "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/summary.json",
+        "final_product_acceptance": false
+      },
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/wiki/report.md",
+          "sha256": "e37b4331aa257dab8022717b4acb0d66864da2b67798f087e40f0a2eb000b8e6"
+        }
+      ],
+      "remaining_current": "담당 문서·검사 범위 확인; 제품 기능 인수와 구분"
+    },
+    {
+      "id": "W23",
+      "requirement_id": "TRP-REQ-W23",
+      "subject": "불변식 목록 수 자동 집계",
+      "decision": "검증 규칙 개수와 시험 통과 수를 구분하고 코드 표식을 연결합니다.",
+      "selection": "A",
+      "input_document_status": "자동 집계·검사 반영",
+      "document_evidence": [
+        {
+          "path": "final_project_cs/wiki/quality/invariants.md",
+          "exists": true,
+          "bytes": 28863,
+          "sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e",
+          "input_sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e",
+          "changed_since_input": false,
+          "previous_observed_sha256": "e7b038030d267f0bfc65ed665a46b140b24706e27693f32569cfb20d1bd9e34e"
+        },
+        {
+          "path": "final_project_cs/tests/architecture/test_state_diagram_matches_code.py",
+          "exists": true,
+          "bytes": 1757,
+          "sha256": "cc339abe8bb75f9d3b267406df4953a42527af4072e3d3bd0252d74e94c7b638",
+          "input_sha256": "cc339abe8bb75f9d3b267406df4953a42527af4072e3d3bd0252d74e94c7b638",
+          "changed_since_input": false,
+          "previous_observed_sha256": "cc339abe8bb75f9d3b267406df4953a42527af4072e3d3bd0252d74e94c7b638"
+        }
+      ],
+      "owners": [
+        "wiki"
+      ],
+      "owner_phases": {
+        "wiki": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "집계 수를 시험 통과 수로 해석하지 않음",
+      "acceptance": "scoped_review_only",
+      "tests": [
+        {
+          "scope": "위키 도구 회귀; 기능 인수 아님",
+          "passed": 12,
+          "failed": 0,
+          "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/governance.xml"
+        }
+      ],
+      "integration_findings": [
+        {
+          "id": "INT-COMMON-001",
+          "scope": "공통 실패 19건의 검사·시험 접합 및 현재 품질 입구",
+          "result": "focused_pass_full_suite_pending",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_0446_common-integration-validation.md",
+          "unverified_defects": 18
+        }
+      ],
+      "integration_review": {
+        "checked_at_kst": "2026-10-12T04:23:03.375549+09:00",
+        "scope": "정의 행 집계·중복 거부·생성물 일치 확인; 등록 수는 통과 수 아님",
+        "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/summary.json",
+        "final_product_acceptance": false
+      },
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/wiki/report.md",
+          "sha256": "e37b4331aa257dab8022717b4acb0d66864da2b67798f087e40f0a2eb000b8e6"
+        }
+      ],
+      "remaining_current": "담당 문서·검사 범위 확인; 제품 기능 인수와 구분"
+    },
+    {
+      "id": "W24",
+      "requirement_id": "TRP-REQ-W24",
+      "subject": "ODsay 제품 미사용·별도 연구 구분",
+      "decision": "제품 미사용을 유지하고, 연구용 대조는 승인·조건 확인 뒤 별도로 기록합니다.",
+      "selection": "A",
+      "input_document_status": "문서 반영 완료",
+      "document_evidence": [
+        {
+          "path": "final_project_cs/wiki/decisions/D-CS-005-odsay-not-used.md",
+          "exists": true,
+          "bytes": 4823,
+          "sha256": "fcb02110b0429092922c82a8e160d0dc2c206720854fda75bd92b54aa415f412",
+          "input_sha256": "fcb02110b0429092922c82a8e160d0dc2c206720854fda75bd92b54aa415f412",
+          "changed_since_input": false,
+          "previous_observed_sha256": "fcb02110b0429092922c82a8e160d0dc2c206720854fda75bd92b54aa415f412"
+        },
+        {
+          "path": "final_project_cs/wiki/external/api-key-issue-guide.md",
+          "exists": true,
+          "bytes": 8124,
+          "sha256": "b3c17dc4abcc03856e9342881ea7cb9e44f4baf045a6a902350e597e0f2e8ced",
+          "input_sha256": "b3c17dc4abcc03856e9342881ea7cb9e44f4baf045a6a902350e597e0f2e8ced",
+          "changed_since_input": false,
+          "previous_observed_sha256": "b3c17dc4abcc03856e9342881ea7cb9e44f4baf045a6a902350e597e0f2e8ced"
+        }
+      ],
+      "owners": [
+        "verification"
+      ],
+      "owner_phases": {
+        "verification": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "연구의 실제 사용·저장·약관 적합성 확인은 별도",
+      "acceptance": "partial_pending_final_acceptance",
+      "tests": [],
+      "integration_findings": [],
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/verification/report.md",
+          "sha256": "0eb9b0616fe4c6864b5431ca56e5da548a63d2fb4a52f53bc6bb2f1b5b0b44e8"
+        }
+      ],
+      "remaining_current": "제품 미사용 유지; 별도 연구 조건·권한과 분리"
+    },
+    {
+      "id": "W25",
+      "requirement_id": "TRP-REQ-W25",
+      "subject": "현재 계약 먼저·과거 이력은 근거 링크",
+      "decision": "페이지를 끝까지 읽어야 현재 규칙을 알 수 있는 구조를 바꿉니다.",
+      "selection": "A",
+      "input_document_status": "기준·대상 문서 반영",
+      "document_evidence": [
+        {
+          "path": "wiki/governance/document-standard.md",
+          "exists": true,
+          "bytes": 10642,
+          "sha256": "bcd967b749eb72b9c247c50601814734376b51a77bc8b5458d15c4578a2c04e6",
+          "input_sha256": "23711d2c3ab4e39bda8abac09e87bf66a81a5be2701ef4c78ab2ec899e0c00fc",
+          "changed_since_input": true,
+          "previous_observed_sha256": "bcd967b749eb72b9c247c50601814734376b51a77bc8b5458d15c4578a2c04e6"
+        },
+        {
+          "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+          "exists": true,
+          "bytes": 6082,
+          "sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2",
+          "input_sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2",
+          "changed_since_input": false,
+          "previous_observed_sha256": "08ab6a1bc6efa62f36de29eb4122a5bb86c3338763752a3c46d5f072cb466fe2"
+        }
+      ],
+      "owners": [
+        "wiki"
+      ],
+      "owner_phases": {
+        "wiki": "ready_for_integration"
+      },
+      "retained_document_only": false,
+      "implementation_review": "current_source_and_handoff_linked",
+      "validation_review": "whole_original_and_scoped_reruns_reviewed",
+      "deployment": "not_deployed_by_this_task",
+      "remaining_from_input": "모든 wiki 본문의 의미 검토 완료를 뜻하지 않음",
+      "acceptance": "scoped_review_only",
+      "tests": [
+        {
+          "scope": "위키 도구 회귀; 기능 인수 아님",
+          "passed": 12,
+          "failed": 0,
+          "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/governance.xml"
+        }
+      ],
+      "integration_findings": [
+        {
+          "id": "INT-COMMON-001",
+          "scope": "공통 실패 19건의 검사·시험 접합 및 현재 품질 입구",
+          "result": "focused_pass_full_suite_pending",
+          "evidence": "final_project_cs/wiki/records/reports/2026-10-12_0446_common-integration-validation.md",
+          "unverified_defects": 18
+        }
+      ],
+      "integration_review": {
+        "checked_at_kst": "2026-10-12T04:23:03.375549+09:00",
+        "scope": "현재 규칙/보존 기록 분리 확인; 기능 계약 전체 의미 검토는 미완료",
+        "evidence": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/summary.json",
+        "final_product_acceptance": false
+      },
+      "current_owner_reports": [
+        {
+          "path": "program/research/baseline_completion_2026-10-12/tasks/wiki/report.md",
+          "sha256": "e37b4331aa257dab8022717b4acb0d66864da2b67798f087e40f0a2eb000b8e6"
+        }
+      ],
+      "remaining_current": "담당 문서·검사 범위 확인; 제품 기능 인수와 구분"
+    }
+  ],
+  "integration_review_updated_at_kst": "2026-10-12T04:15:04.688299+09:00",
+  "latest_dependency_phases": {
+    "auth": "ready_for_integration",
+    "integration": "waiting_dependency",
+    "operations": "waiting_dependency",
+    "orchestration": "ready_for_integration",
+    "verification": "ready_for_integration",
+    "wiki": "ready_for_integration"
+  },
+  "last_review_at_kst": "2026-10-12T04:46:44.149235+09:00",
+  "latest_manifest": "program/research/baseline_completion_2026-10-12/tasks/integration/current-review-manifest-2026-10-12_070652.json",
+  "latest_suite_review": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/suite-review-2026-10-12_064405.json"
+}

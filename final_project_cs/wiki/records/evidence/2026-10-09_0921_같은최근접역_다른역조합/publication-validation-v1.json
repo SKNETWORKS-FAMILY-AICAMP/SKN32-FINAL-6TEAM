@@ -1,0 +1,32 @@
+{
+  "source_hash_matches": 221,
+  "backup_hash_matches": 5,
+  "local_links": [
+    "final_project_cs/wiki/records/evidence/2026-10-09_0921_같은최근접역_다른역조합/owned-source-diff-v1.patch",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0921_같은최근접역_다른역조합",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0921_같은최근접역_다른역조합/native-path-replay-v1.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0921_같은최근접역_다른역조합/native-default-and-earliest-v2.json",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0921_같은최근접역_다른역조합/research-v1.json",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+    "final_project_cs/tests/unit/travel/mobility/test_shared_nearest_station_v1.py",
+    "final_project_cs/tests/unit/travel/mobility/test_station_fallback_v1.py",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v33/mobility-readiness.html",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0921_같은최근접역_다른역조합/backup-manifest-v1.json",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0921_같은최근접역_다른역조합/plan.py",
+    "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0921_같은최근접역_다른역조합/test_station_fallback_v1.py",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0921_같은최근접역_다른역조합/mobility.md",
+    "final_project_cs/wiki/teams/_backup/2026-10-09_0928_최근접역_경로검증결과/mobility.md",
+    "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0928_최근접역_결함종료/2026-10-09_0921_최근접역이_같을때_전체역조합_제외.md",
+    "final_project_cs/wiki/records/reports/2026-10-09_0928_같은최근접역의_다른역조합_경로복구_검증.md",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0921_같은최근접역_다른역조합/native-path-replay-v1.json"
+  ],
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0928_같은최근접역의_다른역조합_경로복구_검증.md": "227ffca8fcc9afad9fb6f1637ff054f26630c31c0ad35c20c487761ee5e0f27f",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v33/mobility-readiness.html": "186dc4a17e5f21ec2150fc4a539749c347428b5e44a583fef8c51d25cb8db643",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v33/readiness-catalog.json": "4def85095d1285fd73c5249b6089834244c8c73a7c4e469f9aea4ec1d44a9631",
+    "final_project_cs/wiki/teams/mobility.md": "a2f39ba2217ea00c398f284208b1de285fb098a5ce882265e815c8153a26a430",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0921_같은최근접역_다른역조합/verification-proof-v1.json": "5287d79d4cf52a4d7b6546f9a69ce4f33bdbc2d040b148e75f1ab55b657615da",
+    "final_project_cs/wiki/records/evidence/2026-10-09_0921_같은최근접역_다른역조합/backup-manifest-v1.json": "7a0b1fcd011e2543eef5856e9ff14d16d367a485cc63a712f85af9785e54b4a6"
+  },
+  "browser_render_verified": false
+}

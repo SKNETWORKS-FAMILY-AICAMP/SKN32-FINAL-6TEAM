@@ -1,0 +1,15 @@
+{
+  "saved": 12,
+  "expected": 12,
+  "parsed": 12,
+  "errors": 0,
+  "correct": 9,
+  "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+  "memory_after_requests": {
+    "limit": 30999998464,
+    "used": 27180982272,
+    "headroom": 3819016192
+  },
+  "max_prompt_tokens": 1953,
+  "smoke": true
+}

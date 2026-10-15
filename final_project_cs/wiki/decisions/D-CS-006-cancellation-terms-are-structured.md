@@ -3,7 +3,7 @@ type: decision
 title: 취소 기한·위약금율은 구조화된 표에서 읽는다 — RAG 는 문장 근거만 댄다
 description: RAG 청크에서 수치를 꺼내려던 경로가 구조상 언제나 None 이었다. 수치는 cancellation_terms, 문장 근거는 read.policy 로 몫을 가른다
 status: draft
-tags: [architecture, rag, travel]
+tags: [architecture, data]
 owners: [human:미배정]
 domain: travel
 ---

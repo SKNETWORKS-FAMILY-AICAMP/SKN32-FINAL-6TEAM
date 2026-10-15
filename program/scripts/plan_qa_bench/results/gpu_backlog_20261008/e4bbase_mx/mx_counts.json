@@ -1,0 +1,401 @@
+{
+  "model": "Gemma-4-E4B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "See publisher model card",
+  "saved": 4014,
+  "expected": 4014,
+  "missing": 0,
+  "failed_or_unparsed": 1,
+  "repetitions": 1,
+  "counts": {
+    "control": {
+      "request": {
+        "total": 1033,
+        "correct": 984,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9378418156549961,
+          0.9639353963244239
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 740,
+        "false_pick": 233,
+        "failed_or_missing": 1,
+        "correct_wilson95": [
+          0.7319356782349558,
+          0.7855306200443697
+        ],
+        "false_pick_wilson95": [
+          0.21348576748726988,
+          0.26700261289633226
+        ]
+      }
+    },
+    "mixed": {
+      "request": {
+        "total": 1033,
+        "correct": 960,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9120617820516536,
+          0.9434209848208014
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 820,
+        "false_pick": 154,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.8176389084278671,
+          0.863453096817253
+        ],
+        "false_pick_wilson95": [
+          0.13654690318274706,
+          0.18236109157213296
+        ]
+      }
+    }
+  },
+  "paired": {
+    "request": {
+      "pairs": 1033,
+      "itineraries": 59,
+      "correct_control": 984,
+      "correct_mixed": 960,
+      "loss_pp": 2.323330106485963,
+      "loss_cluster95_pp": [
+        1.2807566618827781,
+        3.300970873786413
+      ],
+      "mixed_accuracy_cluster95": [
+        0.9159989612842304,
+        0.9430741900102977
+      ],
+      "paired_exact": {
+        "a_only": 31,
+        "b_only": 7,
+        "p": 0.00011616700794547796
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    },
+    "no_request": {
+      "pairs": 974,
+      "itineraries": 59,
+      "correct_control": 740,
+      "correct_mixed": 820,
+      "loss_pp": -8.213552361396303,
+      "loss_cluster95_pp": [
+        -10.303290743634525,
+        -6.211037955807728
+      ],
+      "mixed_accuracy_cluster95": [
+        0.8155195397692133,
+        0.8671566579663244
+      ],
+      "paired_exact": {
+        "a_only": 14,
+        "b_only": 94,
+        "p": 1.0076928692422093e-15
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    }
+  },
+  "subtypes_mixed": {
+    "MX1": {
+      "total": 525,
+      "correct": 479,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8851024449953737,
+        0.9336684603069099
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0072639138944599795
+      ]
+    },
+    "MX2": {
+      "total": 474,
+      "correct": 448,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9208425779287676,
+        0.9622955261643557
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.008039191137108092
+      ]
+    },
+    "MX3": {
+      "total": 457,
+      "correct": 441,
+      "false_pick": 16,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9438895437989662,
+        0.9783365100104863
+      ],
+      "false_pick_wilson95": [
+        0.021663489989513788,
+        0.05611045620103382
+      ]
+    },
+    "MX4": {
+      "total": 121,
+      "correct": 18,
+      "false_pick": 103,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.09621740870464483,
+        0.22291903200226137
+      ],
+      "false_pick_wilson95": [
+        0.7770809679977386,
+        0.9037825912953552
+      ]
+    },
+    "MX5a": {
+      "total": 236,
+      "correct": 212,
+      "false_pick": 24,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8531458179644694,
+        0.9307053182169075
+      ],
+      "false_pick_wilson95": [
+        0.06929468178309249,
+        0.1468541820355307
+      ]
+    },
+    "MX5b": {
+      "total": 160,
+      "correct": 149,
+      "false_pick": 11,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8810970775754896,
+        0.9611805790890873
+      ],
+      "false_pick_wilson95": [
+        0.03881942091091279,
+        0.11890292242451045
+      ]
+    },
+    "MX6a": {
+      "total": 34,
+      "correct": 33,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8508442670731406,
+        0.9947890937237309
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.10151455415332376
+      ]
+    }
+  },
+  "sources": {
+    "code": {
+      "control": {
+        "request": {
+          "total": 940,
+          "correct": 892,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9329471725728238,
+            0.9612708045168419
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 628,
+          "false_pick": 199,
+          "failed_or_missing": 1,
+          "correct_wilson95": [
+            0.728149527294564,
+            0.7863715938416413
+          ],
+          "false_pick_wilson95": [
+            0.21247569911978484,
+            0.27059887543963523
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 940,
+          "correct": 868,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9046270214545886,
+            0.9387349569380343
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 707,
+          "false_pick": 121,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8281701236615245,
+            0.8762910375202891
+          ],
+          "false_pick_wilson95": [
+            0.12370896247971094,
+            0.1718298763384755
+          ]
+        }
+      }
+    },
+    "llm": {
+      "control": {
+        "request": {
+          "total": 93,
+          "correct": 92,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.94158082764513,
+            0.9980993579713445
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 112,
+          "false_pick": 34,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.6922545717859077,
+            0.8282956191551569
+          ],
+          "false_pick_wilson95": [
+            0.17170438084484305,
+            0.30774542821409234
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 93,
+          "correct": 92,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.94158082764513,
+            0.9980993579713445
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 113,
+          "false_pick": 33,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.699612243837985,
+            0.8342853878964402
+          ],
+          "false_pick_wilson95": [
+            0.1657146121035598,
+            0.3003877561620149
+          ]
+        }
+      }
+    }
+  },
+  "aggregate_gates": {
+    "request_accuracy": false,
+    "false_pick": false,
+    "request_loss": false,
+    "false_pick_increase": true
+  },
+  "aggregate_gates_passed": 1,
+  "aggregate_gates_total": 4,
+  "subtype_gates": {
+    "MX3": false,
+    "MX4": false,
+    "MX5a": false
+  },
+  "complete_valid": false,
+  "failed_records": [
+    {
+      "i": 1201490,
+      "set": "mx",
+      "qi": 1489,
+      "type": "mx_MX4_control",
+      "gold": null,
+      "content": "{\"item\": [9, 32]}",
+      "parsed": false,
+      "pick": null,
+      "ms": 293,
+      "p_null": 0.0,
+      "p_mass": 0.9993
+    }
+  ],
+  "false_pick_increase_pp": -8.110882956878848,
+  "answer_sha256": "541960a76220dd7a9a38863218718074c462f6182256c6b3f80babdbd72ee29f",
+  "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+  "execution": {
+    "job": {
+      "id": "e4bbase_mx",
+      "label": "Gemma-4-E4B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "prompts": "/workspace/heavy/all_prompts_mx.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "mx_backlog_e4bbase",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 4014
+    },
+    "started": "2026-10-08T01:32:19.039218+00:00",
+    "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "limits": [
+    "one run",
+    "existing developer/regression suite; not new independent final holdout",
+    "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+    "no complete matched original cohort ranking",
+    "token p_null is not verbal confidence or calibrated option probability"
+  ]
+}

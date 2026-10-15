@@ -1,0 +1,72 @@
+{
+  "stored_routes": 717,
+  "route_types": {
+    "공항": 38,
+    "마을": 247,
+    "간선": 152,
+    "지선": 243,
+    "순환": 4,
+    "광역": 13,
+    "투어": 5,
+    "심야": 15
+  },
+  "supported_routes": 674,
+  "unsupported_routes": 43,
+  "old_single_fare_defined": 182,
+  "new_bus_upper_defined": 674,
+  "boundary_new_upper_defined": 492,
+  "mismatches": [],
+  "controlled_mixed_cases": [
+    {
+      "first_board_min": 375,
+      "rail_first": false,
+      "before": 2540,
+      "after": 3150
+    },
+    {
+      "first_board_min": 375,
+      "rail_first": true,
+      "before": null,
+      "after": 3150
+    },
+    {
+      "first_board_min": 385,
+      "rail_first": false,
+      "before": null,
+      "after": 3150
+    },
+    {
+      "first_board_min": 385,
+      "rail_first": true,
+      "before": 2840,
+      "after": 3150
+    },
+    {
+      "first_board_min": 700,
+      "rail_first": false,
+      "before": 3150,
+      "after": 3150
+    },
+    {
+      "first_board_min": 700,
+      "rail_first": true,
+      "before": 3150,
+      "after": 3150
+    }
+  ],
+  "conditions": {
+    "board_min": 385,
+    "alight_min": 395,
+    "wait_min": 5,
+    "term_min": "stored route term",
+    "card_fare_scope": "adult ordinary type fare"
+  },
+  "scope": "stored route type lookup with synthetic clocks; not real routes, charging or independent validation",
+  "inputs": {
+    "datasets/mobility/processed/mobility/bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443"
+  },
+  "new_web_routes": 0,
+  "map_developer_api_calls": 0,
+  "actual_trips_or_payments": 0
+}

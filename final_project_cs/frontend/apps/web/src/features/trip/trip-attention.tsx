@@ -36,6 +36,18 @@ const FORECAST_REASON = "forecast_advisory";
 const CONSENT_KEY = "change";
 
 /**
+ * `[2026-10-14 실서버 확인]` The words for the reason the server wrote a version (`append_version(reason=…)`) — 「처음 등록」 was the only one; the others showed the code itself
+ * (`customer_request` …) to the customer. A reason not listed here still shows the server's code (the rule above: the screen does not write a line of its own about what it does not know).
+ */
+const VERSION_REASON: Record<string, [string, string]> = {
+  created: ["처음 등록", "Registered"],
+  customer_request: ["직접 고침", "Changed by you"],
+  customer_choice: ["고른 안 적용", "Your pick applied"],
+  auto_adjusted: ["자동으로 바꿈", "Changed automatically"],
+  rollback: ["되돌림", "Undone"],
+};
+
+/**
  * Live only: what the server is waiting for, found and sent about this trip — the body of the notice center the bell opens.
  * `[2026-10-07 사용자 결정 — 목업 C안 ① 알림 센터]` 「할 일」 first (the disaster pause → going on after it → a choice the server waits for → an automatic change that can be undone), then three tabs:
  * 「살펴볼 점」 (`warnings`) · 「받은 알림」 (`/notices`, a dot on those first seen now) · 「변경 이력」 (`history`).
@@ -187,7 +199,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
       </>)}
       {tab === "history" && (history.length === 0 ? <p className={styles.empty}>{t("변경 이력이 없어요.", "No changes yet.")}</p>
         : <ul className={styles.list}>{[...history].reverse().map((entry) => <li key={entry.version}>
-          <span className={styles.tag} data-type="version">v{entry.version}</span><time>{entry.at} · {entry.reason === "created" ? t("처음 등록", "Registered") : entry.reason}</time>
+          <span className={styles.tag} data-type="version">v{entry.version}</span><time>{entry.at} · {VERSION_REASON[entry.reason] ? t(...VERSION_REASON[entry.reason]) : entry.reason}</time>
           {entry.causes.map((cause) => <p key={cause} className={styles.remedy}>{cause}</p>)}
         </li>)}</ul>)}
     </div>

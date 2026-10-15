@@ -1,0 +1,65 @@
+........................................................................ [ 11%]
+.............F.......................................................... [ 22%]
+........................................................................ [ 33%]
+........................................................................ [ 45%]
+...................................................F.........F.......... [ 56%]
+........................................................................ [ 67%]
+........................................................................ [ 78%]
+...........................................................F............ [ 90%]
+..............................................F.................         [100%]
+================================== FAILURES ===================================
+___ test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404 ____
+tests\e2e\test_mcp_server.py:280: in test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404
+    assert _report(api, trip_id, "delay").status_code == 200           # 지연 → 점심에 다른 안이 마련된다(판 2) — 에이전트 입구로 준비
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: assert 503 == 200
+E    +  where 503 = <Response [503 Service Unavailable]>.status_code
+E    +    where <Response [503 Service Unavailable]> = _report({'auth': <function api.<locals>.auth at 0x000002B56358E7A0>, 'client': <starlette.testclient.TestClient object at 0x00...': UUID('3b12c76a-1df0-4e1f-ae83-2e7b1a2ca141'), 'notices': <function api.<locals>.notices at 0x000002B5613FF9C0>, ...}, '21d46b99-5dd9-4776-88f7-ae5bea7cd433', 'delay')
+_____________ test_every_declared_api_key_appears_in_the_template _____________
+tests\contract\test_api_key_file.py:89: in test_every_declared_api_key_appears_in_the_template
+    assert not missing, (
+E   AssertionError: Settings 에 선언됐는데 템플릿에 없는 키: ['ACOP_SEOUL_BUS_API_KEY']
+E       → `.env.apikeys.example` 에 발급처 링크와 함께 자리를 만든다.
+E   assert not ['ACOP_SEOUL_BUS_API_KEY']
+________________ test_allowed_next_statuses_match_v5[resuming] ________________
+tests\contract\test_case_state_table.py:51: in test_allowed_next_statuses_match_v5
+    assert set(allowed_next_statuses(status)) == V5_ALLOWED_NEXT[status], (
+E   AssertionError: resuming 의 허용 다음 상태가 v5 §5-1 과 다르다
+E   assert {<CaseStatus....G: 'running'>} == {<CaseStatus....G: 'running'>}
+E     
+E     Extra items in the left set:
+E     <CaseStatus.RESUMING: 'resuming'>
+E     Use -v to get more diff
+_ test_team_does_not_import_infrastructure_directly[2026-10-09_124839_\ubc29\uba74\ub300\uc870_\uc218\uc815\uc804/subway_departure.py] _
+tests\contract\test_team_tool_discipline.py:147: in test_team_does_not_import_infrastructure_directly
+    assert not violations, (
+E   AssertionError: Team 이 인프라를 직접 import 한다. tool 은 Registry 가 넘겨준 것만 쓴다:
+E       app\domains\travel_ops\instances\mobility\engine\_backup\2026-10-09_124839_방면대조_수정전\subway_departure.py:4 → app.domains.travel_ops.ports.subway_train_identity
+E   assert not ['app\\domains\\travel_ops\\instances\\mobility\\engine\\_backup\\2026-10-09_124839_방면대조_수정전\\subway_departure.py:4 → app.domains.travel_ops.ports.subway_train_identity']
+_ test_team_does_not_import_infrastructure_directly[engine/subway_departure.py] _
+tests\contract\test_team_tool_discipline.py:147: in test_team_does_not_import_infrastructure_directly
+    assert not violations, (
+E   AssertionError: Team 이 인프라를 직접 import 한다. tool 은 Registry 가 넘겨준 것만 쓴다:
+E       app\domains\travel_ops\instances\mobility\engine\subway_departure.py:4 → app.domains.travel_ops.ports.subway_train_identity
+E       app\domains\travel_ops\instances\mobility\engine\subway_departure.py:5 → app.domains.travel_ops.ports.subway_route_identity
+E   assert not ['app\\domains\\travel_ops\\instances\\mobility\\engine\\subway_departure.py:4 → app.domains.travel_ops.ports.subway_t...\\travel_ops\\instances\\mobility\\engine\\subway_departure.py:5 → app.domains.travel_ops.ports.subway_route_identity']
+============================== warnings summary ===============================
+<unknown>:352
+tests/architecture/test_basement_layers.py::test_layer_directions_do_not_get_worse
+tests/architecture/test_composer_stays_out_of_this_repo.py::test_only_the_management_seam_knows_the_package
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly[devtools/judgment_log.py]
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+tests/e2e/test_mcp_server.py: 10 warnings
+  C:\Users\playdata2\anaconda3\Lib\contextlib.py:105: DeprecationWarning: Use `streamable_http_client` instead.
+    self.gen = func(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_mcp_server.py::test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404
+FAILED tests/contract/test_api_key_file.py::test_every_declared_api_key_appears_in_the_template
+FAILED tests/contract/test_case_state_table.py::test_allowed_next_statuses_match_v5[resuming]
+FAILED tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly[2026-10-09_124839_\ubc29\uba74\ub300\uc870_\uc218\uc815\uc804/subway_departure.py]
+FAILED tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly[engine/subway_departure.py]
+5 failed, 635 passed, 15 warnings in 96.79s (0:01:36)

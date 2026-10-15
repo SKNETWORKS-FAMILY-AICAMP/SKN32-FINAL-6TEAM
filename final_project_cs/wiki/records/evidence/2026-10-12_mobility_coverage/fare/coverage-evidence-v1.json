@@ -1,0 +1,517 @@
+{
+  "created_at": "2026-10-11T17:56:04.783058+00:00",
+  "sources": {
+    "bus": {
+      "url": "https://sftc.seoul.go.kr/seoul/mulga/main/contents.do?menuNo=200022",
+      "effective": "2023-08-12",
+      "updated": null,
+      "claim": "성인 카드 6종 기본운임·단일요금·태그와 환승 조건",
+      "checked_on": "2026-10-12"
+    },
+    "rail": {
+      "url": "https://news.seoul.go.kr/traffic/archives/345",
+      "effective": "2025-06-28",
+      "updated": "2025-09-18",
+      "claim": "성인 지하철 기본1550·10~50km 5km단계·50km 이후8km단계",
+      "checked_on": "2026-10-12"
+    },
+    "transfer": {
+      "url": "https://news.seoul.go.kr/traffic/traffic_price",
+      "updated": "2025-07-11",
+      "claim": "첫 기본운임만 조조20%·후속 차액은 평소 운임·30/60분 환승창·5회 승차",
+      "checked_on": "2026-10-12"
+    },
+    "taxi": {
+      "url": "https://news.seoul.go.kr/traffic/archives/1659?listPage=1",
+      "effective": "2023-02-01T04:00:00+09:00",
+      "updated": "2026-04-03",
+      "claim": "서울 중형택시 거리·시간·심야·시계외 요율과 부분 동시병산",
+      "checked_on": "2026-10-12"
+    },
+    "traffic": {
+      "url": "https://news.seoul.go.kr/traffic/archives/6531",
+      "updated": "2026-03-13",
+      "claim": "TOPIS는 공개 소통·통제·CCTV·구간소요 자료를 제공하는 대체 확인 경로",
+      "checked_on": "2026-10-12"
+    },
+    "turn": {
+      "url": "https://wiki.openstreetmap.org/wiki/Relation:restriction",
+      "updated": null,
+      "claim": "from/via/to와 except의 의미; 실제 교통법규의 법적 정본은 아님",
+      "checked_on": "2026-10-12"
+    },
+    "walk": {
+      "url": "https://data.seoul.go.kr/dataList/OA-13290/F/1/datasetView.do",
+      "data_basis": "2025-03-31",
+      "updated": "2025-04-01",
+      "claim": "환승거리 공표·시간은 일반인1.2m/s 기준 계산; 개인 실보행 측정이 아님",
+      "checked_on": "2026-10-12"
+    },
+    "bike": {
+      "url": "https://news.seoul.go.kr/traffic/archives/33719",
+      "updated": "2026-03-10",
+      "claim": "일반 회원·비회원1/2/3시간권 요금·초과요금·안전수칙; 외국인 판매채널 구별",
+      "checked_on": "2026-10-12"
+    },
+    "bridge": {
+      "url": "https://news.seoul.go.kr/traffic/archives/507091",
+      "updated": "2026-03-12",
+      "claim": "소개된 한강 교량 자전거도로와 경사로·엘리베이터 접근; 목록 밖 전부 금지로 일반화하지 않음",
+      "checked_on": "2026-10-12"
+    }
+  },
+  "coverage": [
+    {
+      "feature_id": 1,
+      "name": "택시 예상 요금",
+      "without_field_claim": "공식 미터 요율·심야 경계·비용 항목 분리",
+      "official_sources": [
+        "https://news.seoul.go.kr/traffic/archives/1659?listPage=1"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_car_fare.py",
+        "final_project_cs/tests/unit/travel/mobility/test_taxi_billing_mode.py",
+        "final_project_cs/tests/unit/travel/mobility/test_taxi_cost_components_v1.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "경로별 저속시간·정체·호출 옵션료는 공식 요율표만으로 확정할 수 없습니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    },
+    {
+      "feature_id": 2,
+      "name": "택시 예산 여유",
+      "without_field_claim": "계산식·미터와 옵션료의 합산 관계·초과 판정",
+      "official_sources": [
+        "https://news.seoul.go.kr/traffic/archives/1659?listPage=1"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_taxi_cost_components_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_taxi_departure_consistency_v1.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "예산 초과율은 동일 요금 구성의 실제 결제 표본으로 별도 평가합니다. 이번 담당은 개인 자료를 읽지 않았습니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    },
+    {
+      "feature_id": 3,
+      "name": "자동차 소요 시간",
+      "without_field_claim": "보유 TOPIS 시간대·요일 프로파일 연결과 단위·방향",
+      "official_sources": [
+        "https://news.seoul.go.kr/traffic/archives/6531"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_car_turn_restrictions_v1.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "공개 현재 소통과 과거 프로파일은 동일하지 않으며 개별 실제 주행 오차는 별도입니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    },
+    {
+      "feature_id": 4,
+      "name": "자동차 경로 거리",
+      "without_field_claim": "공개 그래프 형상합·일방·회전·유턴 제약과 정책 재적재",
+      "official_sources": [
+        "https://wiki.openstreetmap.org/wiki/Relation:restriction",
+        "https://news.seoul.go.kr/traffic/archives/6531"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_car_turn_restrictions_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_same_way_uturn_policy_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_turn_policy_content_reload_v1.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "OSM 누락·임시 통제·차로별 진입은 해당 경로의 공식 공지·최근 지도 대조가 필요합니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    },
+    {
+      "feature_id": 8,
+      "name": "지하철 요금",
+      "without_field_claim": "공식 거리별 단계·조조 경계·별도운임 합산",
+      "official_sources": [
+        "https://news.seoul.go.kr/traffic/archives/345",
+        "https://news.seoul.go.kr/traffic/traffic_price"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_subway_fare_upper.py",
+        "final_project_cs/tests/unit/travel/mobility/test_special_rail_fare.py",
+        "final_project_cs/tests/unit/travel/mobility/test_fare_official_web_20261012.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "운임거리를 모르거나 특별 노선 자격이 다르면 식 통과만으로 그 경로 정확 요금을 확정하지 않습니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    },
+    {
+      "feature_id": 9,
+      "name": "버스·지하철 환승 요금",
+      "without_field_claim": "공식 유형 요금·30/60분·횟수·동일노선·첫 버스 조조",
+      "official_sources": [
+        "https://sftc.seoul.go.kr/seoul/mulga/main/contents.do?menuNo=200022",
+        "https://news.seoul.go.kr/traffic/traffic_price"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_transfer_fare_product_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_transfer_fare_clock_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_mixed_early_bird_product_v1.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "1인1카드·하차 태그·적격 승차시간은 입력 전제이며 실물 태그 확인과 구분합니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    },
+    {
+      "feature_id": 10,
+      "name": "장소 사이 도보 거리",
+      "without_field_claim": "선택 경로 형상·보행 허용·1.2km 제품 정책과 동일 좌표 웹 대조",
+      "official_sources": [
+        "https://data.seoul.go.kr/dataList/OA-13290/F/1/datasetView.do",
+        "https://news.seoul.go.kr/traffic/archives/6531"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_walk_routed_cap.py",
+        "final_project_cs/tests/unit/travel/mobility/test_walk_comparison_scope_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_walk_comparison_values_v1.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "공식 환승역 거리 표가 일반 장소 사이 도보 경로의 정답은 아닙니다. 신호·통제는 경로별 대조가 필요합니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    },
+    {
+      "feature_id": 11,
+      "name": "도보·역 접근 시간",
+      "without_field_claim": "공표 환승거리와 계산 속도·계단/접근 시간 합산·손상 문맥 차단",
+      "official_sources": [
+        "https://data.seoul.go.kr/dataList/OA-13290/F/1/datasetView.do"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_walk_duration_contract_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_departure_access_bounds_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_walk_timing_replay_v1.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "공식 시간도1.2m/s 계산이므로 개인 속도·계단·신호·휴식의 실측 정확도와 구분합니다. 보유판2025-12-31과 웹판2025-03-31 차이를 남깁니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    },
+    {
+      "feature_id": 12,
+      "name": "자전거 경로",
+      "without_field_claim": "공식 교량 자전거도로 접근과 허용 도로·선택 형상 연결",
+      "official_sources": [
+        "https://news.seoul.go.kr/traffic/archives/33719",
+        "https://news.seoul.go.kr/traffic/archives/507091"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_plan_bike_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_bike_response_validation_v1.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "교량 목록을 전체 허용·금지 목록으로 확대하지 않습니다. 공사·엘리베이터 운영·끌고 걷는 구간은 날짜별 공지가 필요합니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    },
+    {
+      "feature_id": 13,
+      "name": "자전거 소요 시간",
+      "without_field_claim": "주행·접근·대여·반납 시간 합산과 권종별 예상 비용",
+      "official_sources": [
+        "https://news.seoul.go.kr/traffic/archives/33719",
+        "https://news.seoul.go.kr/traffic/archives/507091"
+      ],
+      "existing_test_tools": [
+        "final_project_cs/tests/unit/travel/mobility/test_plan_bike_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_bike_official_pass_fare_v1.py",
+        "final_project_cs/tests/unit/travel/mobility/test_bike_selected_pass_warning_v1.py"
+      ],
+      "existing_tools_execution": "이번 회차에서는 도구 존재 확인만; 이전 통과율 재사용 안 함",
+      "remaining_limit": "정지·경사·혼잡·대여 실패시간은 모델만으로 개인 실주행 오차를 입증하지 못합니다.",
+      "real_use_completion": "이번 자료로 새 완료 판정 없음"
+    }
+  ],
+  "new_execution": {
+    "public_bus": {
+      "created_at": "2026-10-11T17:51:53.375950+00:00",
+      "scope": "公開 노선 자료 전체의 요금식·식별 연결; 실제 운행·결제·독립 표본 정확도 아님",
+      "official_source": "https://sftc.seoul.go.kr/seoul/mulga/main/contents.do?menuNo=200022",
+      "official_effective_date": "2023-08-12",
+      "early_source": "https://news.seoul.go.kr/traffic/traffic_price",
+      "source_checked_on": "2026-10-12",
+      "command": [
+        ".tmp/mobility_coverage_20261012/fare/audit_public_fare_v1.py",
+        "--workspace",
+        ".",
+        "--out",
+        ".tmp/mobility_coverage_20261012/fare/public-routes-v2"
+      ],
+      "developer_api_calls": 0,
+      "private_files_read": 0,
+      "route_count": 717,
+      "classification_counts": {
+        "excluded": 43,
+        "supported": 674
+      },
+      "types": {
+        "공항": 38,
+        "마을": 247,
+        "간선": 152,
+        "지선": 243,
+        "순환": 4,
+        "광역": 13,
+        "투어": 5,
+        "심야": 15
+      },
+      "segment_counts": {
+        "identity_valid": 717,
+        "distance_valid": 717
+      },
+      "checks": {
+        "tariff": {
+          "passed": 2012,
+          "total": 2012
+        },
+        "boundary": {
+          "passed": 1338,
+          "total": 1338
+        },
+        "exclusion": {
+          "passed": 91,
+          "total": 91
+        }
+      },
+      "failures": [],
+      "hashes_before": {
+        "routes": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+        "stops": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+        "rules": "29c6aa09ca3280dae08dd882f13fa6e688b57c42376c45cdf3d956dd23671d8c",
+        "options": "b449618be55b1fc5586c8f54e6831373fc98ef7e59f4c0a0ed855ed3b4a8d950",
+        "bus": "bc3c969ea49456efb27aa5ba85a9bfc63a382fa9eb6f72a5217248fb459b28ea",
+        "bus_identity": "c5ec2c9044609d768068dc91399289a36f28ebae34b94c8b3ab563e088d13fb9",
+        "verify_time": "f2bc0016de7efb2be7e9d2fc0615c3ae1080e7c1f573fda68391c88c602bb8a8",
+        "audit": "f4664cfd876fe02114a4dd261d6752aed7bd835c7e7dabca0f0a293bb0adfe6d"
+      },
+      "hashes_after": {
+        "routes": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+        "stops": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+        "rules": "29c6aa09ca3280dae08dd882f13fa6e688b57c42376c45cdf3d956dd23671d8c",
+        "options": "b449618be55b1fc5586c8f54e6831373fc98ef7e59f4c0a0ed855ed3b4a8d950",
+        "bus": "bc3c969ea49456efb27aa5ba85a9bfc63a382fa9eb6f72a5217248fb459b28ea",
+        "bus_identity": "c5ec2c9044609d768068dc91399289a36f28ebae34b94c8b3ab563e088d13fb9",
+        "verify_time": "f2bc0016de7efb2be7e9d2fc0615c3ae1080e7c1f573fda68391c88c602bb8a8",
+        "audit": "f4664cfd876fe02114a4dd261d6752aed7bd835c7e7dabca0f0a293bb0adfe6d"
+      },
+      "changed_inputs": [],
+      "limits": [
+        "성인·교통카드·버스 단독 기본운임만 대조",
+        "승차시각은 통제 입력이며 실제 배차·운행 검증 아님",
+        "정류장 전체거리 존재는 도착예상·환승 전 조각 거리의 완전성을 보장하지 않음",
+        "공항·투어는 알려진 제외이며 정확 요금 검증 분자에 넣지 않음"
+      ]
+    },
+    "rail_formula_boundary": {
+      "passed": 24,
+      "total": 24,
+      "cases": [
+        {
+          "fare_distance_m": 10000,
+          "first_gate_min": 389,
+          "expected": 1240,
+          "actual": 1240,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 10000,
+          "first_gate_min": 390,
+          "expected": 1550,
+          "actual": 1550,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 10000,
+          "first_gate_min": 720,
+          "expected": 1550,
+          "actual": 1550,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 10001,
+          "first_gate_min": 389,
+          "expected": 1340,
+          "actual": 1340,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 10001,
+          "first_gate_min": 390,
+          "expected": 1650,
+          "actual": 1650,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 10001,
+          "first_gate_min": 720,
+          "expected": 1650,
+          "actual": 1650,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 15000,
+          "first_gate_min": 389,
+          "expected": 1340,
+          "actual": 1340,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 15000,
+          "first_gate_min": 390,
+          "expected": 1650,
+          "actual": 1650,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 15000,
+          "first_gate_min": 720,
+          "expected": 1650,
+          "actual": 1650,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 15001,
+          "first_gate_min": 389,
+          "expected": 1440,
+          "actual": 1440,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 15001,
+          "first_gate_min": 390,
+          "expected": 1750,
+          "actual": 1750,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 15001,
+          "first_gate_min": 720,
+          "expected": 1750,
+          "actual": 1750,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 50000,
+          "first_gate_min": 389,
+          "expected": 2040,
+          "actual": 2040,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 50000,
+          "first_gate_min": 390,
+          "expected": 2350,
+          "actual": 2350,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 50000,
+          "first_gate_min": 720,
+          "expected": 2350,
+          "actual": 2350,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 50001,
+          "first_gate_min": 389,
+          "expected": 2140,
+          "actual": 2140,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 50001,
+          "first_gate_min": 390,
+          "expected": 2450,
+          "actual": 2450,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 50001,
+          "first_gate_min": 720,
+          "expected": 2450,
+          "actual": 2450,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 58000,
+          "first_gate_min": 389,
+          "expected": 2140,
+          "actual": 2140,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 58000,
+          "first_gate_min": 390,
+          "expected": 2450,
+          "actual": 2450,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 58000,
+          "first_gate_min": 720,
+          "expected": 2450,
+          "actual": 2450,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 58001,
+          "first_gate_min": 389,
+          "expected": 2240,
+          "actual": 2240,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 58001,
+          "first_gate_min": 390,
+          "expected": 2550,
+          "actual": 2550,
+          "pass": true
+        },
+        {
+          "fare_distance_m": 58001,
+          "first_gate_min": 720,
+          "expected": 2550,
+          "actual": 2550,
+          "pass": true
+        }
+      ],
+      "scope": "성인 단독 지하철 운임거리·알려진 첫 개찰시각의 공식 계산식; 실제 경로 선택·결제 아님",
+      "rules_sha256": "29c6aa09ca3280dae08dd882f13fa6e688b57c42376c45cdf3d956dd23671d8c"
+    },
+    "missing_headway_routes": [
+      {
+        "route_id": "100000024",
+        "route_name": "새벽A160",
+        "type": "간선"
+      },
+      {
+        "route_id": "101000010",
+        "route_name": "새벽A504",
+        "type": "간선"
+      },
+      {
+        "route_id": "101000009",
+        "route_name": "새벽A148",
+        "type": "간선"
+      },
+      {
+        "route_id": "100000028",
+        "route_name": "새벽A741",
+        "type": "간선"
+      },
+      {
+        "route_id": "100100525",
+        "route_name": "8772",
+        "type": "지선"
+      }
+    ]
+  },
+  "developer_api_calls": 0,
+  "private_data_access": 0,
+  "first_attempt": {
+    "command_flag": "-S",
+    "result": "pydantic 미적재로 수집 전 실패",
+    "fix": "표준 환경으로 실행; 제품 파일 수정 없음"
+  }
+}

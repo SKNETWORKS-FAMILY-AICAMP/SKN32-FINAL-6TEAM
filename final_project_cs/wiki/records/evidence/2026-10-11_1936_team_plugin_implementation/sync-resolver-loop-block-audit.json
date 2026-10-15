@@ -1,0 +1,8 @@
+{
+  "scope": "isolated resolver execution; no transport or business invoked",
+  "requested_timeout_seconds": 0.03,
+  "resolver_sleep_seconds": 0.15,
+  "elapsed_seconds": 0.15599999998812564,
+  "ticker_delay_seconds": 0.1879999999946449,
+  "returned_endpoint": "test-only-endpoint"
+}

@@ -17,16 +17,22 @@ export interface TripStop {
   pinned?: boolean;
   /** Other options the server kept for this stop (best one is already applied). Shown as information. */
   otherOptions?: TripOption[];
-  /** Restaurant marks from the dining ledger (Michelin, 노포). `[2026-10-08]` The screen shows only the label, not the source. */
-  badges?: TripBadge[];
+  badges?: { code: string; label: string; source: string }[];
   /** Opens this place in the customer's own map app (Google Maps link from the server; no API key, no billing). */
   mapUrl?: string;
   /** What the server knows about the place (address, phone, hours, badges). Missing fields are not shown. */
   placeInfo?: PlaceInfo | null;
   /** `[2026-10-06]` The trip is paused for a disaster and this stop falls in the pause (a day's pause pauses only that day's stops). The plan itself is not changed. */
   paused?: boolean;
+  /** `[2026-10-13]` The day the stop ends (Seoul) when the server sent an end — a stay ends on its check-out day. */
+  endDate?: string;
   /** `[2026-10-08]` The place's ref for its registered photos (「tour:<ID>」) — only when the server sends one (`place_ref`, asked of the backend). */
   placeRef?: string;
+  /** `[2026-10-13 사용자 결정 — 목업 A]` What kind of stop the server classes it (`items[].kind`: dining · activity · lodging · flight …) — the icon before its name.
+   *  `[2026-10-13 숙소 B안]` A lodging stop is one stay: `date` is the check-in day and `endDate` the check-out day. */
+  kind?: string;
+  /** The server's name for that kind (`kind_label`: 식사 · 활동 · 숙소 · 항공), said for the icon as it came. */
+  kindLabel?: string;
 }
 
 /**
@@ -55,15 +61,14 @@ export interface TripSafety {
 
 export interface TripOption { key: string; name: string }
 
-/** A mark on a restaurant, in the server's words: `label` is shown; `source` is kept but not shown (a brand name could read as an endorsement). */
-export interface TripBadge { code: string; label: string; source: string }
-
 export interface PlaceInfo {
   address?: string;
   phone?: string;
   category?: string;
   /** Opening hours in the server's words, one line per rule ("월 11:00–21:00"). */
   hours: string[];
+  /** `[2026-10-13]` The same lines with the day each is for (ISO weekday, 월 = 1 … 일 = 7) — the folded card shows only its visit day's. Rules the server sent no day for are left out. */
+  dayHours?: { weekday: number; line: string }[];
   /** Hours the source gave only as text, or conditions the weekly table cannot hold ("공휴일 휴무"). */
   hoursNotes: string[];
   /** Facility badges as the server named them ("card_payment", "parking", …). */
@@ -183,7 +188,7 @@ export interface TripGateway {
   /** `location`: where the customer is, from the browser, sent only after the server said the answer needs it. */
   /** `onProgress`: what the server is doing while it works on the message. */
   sendMessage(tripId: string, message: string, language: Language, itemId?: string | null, location?: LocationFix | null,
-    onProgress?: (progress: OpProgress) => void, resume?: TripMessageResume): Promise<Trip>;
+    onProgress?: (progress: OpProgress) => void, resume?: TripMessageResume, summaryDay?: string): Promise<Trip>;
   /**
    * Delete one trip on the server, or reject with why it was not deleted. A server that has no delete call yet
    * rejects with a `LiveError` whose code is `delete_unsupported` (backend request 2026-10-03).

@@ -1,0 +1,494 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                         [100%]
+================================== FAILURES ===================================
+_ test_documented_maximum_is_requested_once_not_extra_pages[controlled-test-key-1000] _
+
+key = 'controlled-test-key', end = 1000
+
+    @pytest.mark.parametrize('key,end', [('controlled-test-key', 1000), ('sample', 5)])
+    def test_documented_maximum_is_requested_once_not_extra_pages(key, end):
+        source, calls, _ = source_for(payload(), key=key)
+        assert source.arrivals('서울') is not None
+>       assert len(calls) == 1 and f'/0/{end}/' in calls[0]
+E       AssertionError: assert (1 == 1 and '/0/1000/' in 'http://swopenapi.seoul.go.kr/api/subway/controlled-test-key/json/realtimeStationArrival/0/20/%EC%84%9C%EC%9A%B8')
+E        +  where 1 = len(['http://swopenapi.seoul.go.kr/api/subway/controlled-test-key/json/realtimeStationArrival/0/20/%EC%84%9C%EC%9A%B8'])
+
+tests\unit\travel\test_subway_completeness_v1.py:31: AssertionError
+_____ test_documented_maximum_is_requested_once_not_extra_pages[sample-5] _____
+
+key = 'sample', end = 5
+
+    @pytest.mark.parametrize('key,end', [('controlled-test-key', 1000), ('sample', 5)])
+    def test_documented_maximum_is_requested_once_not_extra_pages(key, end):
+        source, calls, _ = source_for(payload(), key=key)
+        assert source.arrivals('서울') is not None
+>       assert len(calls) == 1 and f'/0/{end}/' in calls[0]
+E       AssertionError: assert (1 == 1 and '/0/5/' in 'http://swopenapi.seoul.go.kr/api/subway/sample/json/realtimeStationArrival/0/20/%EC%84%9C%EC%9A%B8')
+E        +  where 1 = len(['http://swopenapi.seoul.go.kr/api/subway/sample/json/realtimeStationArrival/0/20/%EC%84%9C%EC%9A%B8'])
+
+tests\unit\travel\test_subway_completeness_v1.py:31: AssertionError
+_________ test_full_response_preserves_count_before_line_filter[1_0] __________
+
+total = 1
+
+    @pytest.mark.parametrize('total', [1, '1', '0001'])
+    def test_full_response_preserves_count_before_line_filter(total):
+        source, _, _ = source_for(payload(total, [{'subwayId': '1001'}]))
+        got = source.arrivals('서울', line='5호선')
+        assert got['trains'] == []
+>       assert got['provider_total'] == 1 and got['response_row_count'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'provider_total'
+
+tests\unit\travel\test_subway_completeness_v1.py:39: KeyError
+_________ test_full_response_preserves_count_before_line_filter[1_1] __________
+
+total = '1'
+
+    @pytest.mark.parametrize('total', [1, '1', '0001'])
+    def test_full_response_preserves_count_before_line_filter(total):
+        source, _, _ = source_for(payload(total, [{'subwayId': '1001'}]))
+        got = source.arrivals('서울', line='5호선')
+        assert got['trains'] == []
+>       assert got['provider_total'] == 1 and got['response_row_count'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'provider_total'
+
+tests\unit\travel\test_subway_completeness_v1.py:39: KeyError
+_________ test_full_response_preserves_count_before_line_filter[0001] _________
+
+total = '0001'
+
+    @pytest.mark.parametrize('total', [1, '1', '0001'])
+    def test_full_response_preserves_count_before_line_filter(total):
+        source, _, _ = source_for(payload(total, [{'subwayId': '1001'}]))
+        got = source.arrivals('서울', line='5호선')
+        assert got['trains'] == []
+>       assert got['provider_total'] == 1 and got['response_row_count'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'provider_total'
+
+tests\unit\travel\test_subway_completeness_v1.py:39: KeyError
+________ test_partial_response_is_preserved_without_claiming_complete _________
+
+    def test_partial_response_is_preserved_without_claiming_complete():
+        source, _, _ = source_for(payload(22, [{}] * 20))
+        got = source.arrivals('서울')
+        assert len(got['trains']) == 20
+>       assert got['provider_total'] == 22 and got['response_row_count'] == 20
+               ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'provider_total'
+
+tests\unit\travel\test_subway_completeness_v1.py:47: KeyError
+__________ test_invalid_provider_total_is_not_cached_as_normal[True] __________
+
+value = True
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.196652+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.196652+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B1D940>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+_________ test_invalid_provider_total_is_not_cached_as_normal[False] __________
+
+value = False
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.212536+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.212536+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B1E9F0>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+__________ test_invalid_provider_total_is_not_cached_as_normal[-1_0] __________
+
+value = -1
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.212536+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.212536+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B50410>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+__________ test_invalid_provider_total_is_not_cached_as_normal[-1_1] __________
+
+value = '-1'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.228565+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.228565+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B51610>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+_________ test_invalid_provider_total_is_not_cached_as_normal[1.0_0] __________
+
+value = 1.0
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.228565+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.228565+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B52B10>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+_________ test_invalid_provider_total_is_not_cached_as_normal[1.0_1] __________
+
+value = '1.0'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.244691+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.244691+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B50590>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+____________ test_invalid_provider_total_is_not_cached_as_normal[] ____________
+
+value = ''
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.260792+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.260792+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B51490>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+__________ test_invalid_provider_total_is_not_cached_as_normal[None] __________
+
+value = None
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.260792+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.260792+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B1FCE0>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+_________ test_invalid_provider_total_is_not_cached_as_normal[value8] _________
+
+value = []
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.276956+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.276956+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B1FCB0>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+_________ test_invalid_provider_total_is_not_cached_as_normal[value9] _________
+
+value = {}
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.276956+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.276956+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B1FE30>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+__________ test_invalid_provider_total_is_not_cached_as_normal[\xb2] __________
+
+value = '²'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.292800+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.292800+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B1C8F0>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+_________ test_invalid_provider_total_is_not_cached_as_normal[\uff11] _________
+
+value = '１'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.292800+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.292800+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B1C410>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+_ test_invalid_provider_total_is_not_cached_as_normal[99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999] _
+
+value = '999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999...9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999'
+
+    @pytest.mark.parametrize('value', [True, False, -1, '-1', 1.0, '1.0', '', None,
+                                     [], {}, '²', '１', '9' * 5000])
+    def test_invalid_provider_total_is_not_cached_as_normal(value):
+        source, _, _ = source_for(payload(value))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.308925+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.308925+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696AC7F80>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:55: AssertionError
+___________ test_total_smaller_than_rows_is_provider_contradiction ____________
+
+    def test_total_smaller_than_rows_is_provider_contradiction():
+        source, _, _ = source_for(payload(0))
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.325085+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.325085+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B50950>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:61: AssertionError
+________________ test_compatible_root_and_nested_counts_agree _________________
+
+    def test_compatible_root_and_nested_counts_agree():
+        data = payload('1'); data['list_total_count'] = 1
+        source, _, _ = source_for(data)
+>       assert source.arrivals('서울')['coverage_complete'] is True
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'coverage_complete'
+
+tests\unit\travel\test_subway_completeness_v1.py:67: KeyError
+____________ test_conflicting_root_and_nested_counts_are_rejected _____________
+
+    def test_conflicting_root_and_nested_counts_are_rejected():
+        data = payload(1); data['list_total_count'] = 2
+        source, _, _ = source_for(data)
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.341282+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.341282+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B51AC0>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:73: AssertionError
+___________ test_official_or_declared_zero_is_complete_empty[data0] ___________
+
+data = {'code': 'INFO-200'}
+
+    @pytest.mark.parametrize('data', [
+        {'code': 'INFO-200'}, {'errorMessage': {'code': 'INFO-200'}},
+        payload(0, []), {'list_total_count': '0', 'realtimeArrivalList': []},
+    ])
+    def test_official_or_declared_zero_is_complete_empty(data):
+        source, _, _ = source_for(data)
+        got = source.arrivals('서울')
+>       assert got['trains'] == [] and got['provider_total'] == 0
+                                       ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'provider_total'
+
+tests\unit\travel\test_subway_completeness_v1.py:83: KeyError
+___________ test_official_or_declared_zero_is_complete_empty[data1] ___________
+
+data = {'errorMessage': {'code': 'INFO-200'}}
+
+    @pytest.mark.parametrize('data', [
+        {'code': 'INFO-200'}, {'errorMessage': {'code': 'INFO-200'}},
+        payload(0, []), {'list_total_count': '0', 'realtimeArrivalList': []},
+    ])
+    def test_official_or_declared_zero_is_complete_empty(data):
+        source, _, _ = source_for(data)
+        got = source.arrivals('서울')
+>       assert got['trains'] == [] and got['provider_total'] == 0
+                                       ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'provider_total'
+
+tests\unit\travel\test_subway_completeness_v1.py:83: KeyError
+___________ test_official_or_declared_zero_is_complete_empty[data2] ___________
+
+data = {'errorMessage': {'code': 'INFO-000', 'total': 0}, 'realtimeArrivalList': []}
+
+    @pytest.mark.parametrize('data', [
+        {'code': 'INFO-200'}, {'errorMessage': {'code': 'INFO-200'}},
+        payload(0, []), {'list_total_count': '0', 'realtimeArrivalList': []},
+    ])
+    def test_official_or_declared_zero_is_complete_empty(data):
+        source, _, _ = source_for(data)
+        got = source.arrivals('서울')
+>       assert got['trains'] == [] and got['provider_total'] == 0
+                                       ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'provider_total'
+
+tests\unit\travel\test_subway_completeness_v1.py:83: KeyError
+___________ test_official_or_declared_zero_is_complete_empty[data3] ___________
+
+data = {'list_total_count': '0', 'realtimeArrivalList': []}
+
+    @pytest.mark.parametrize('data', [
+        {'code': 'INFO-200'}, {'errorMessage': {'code': 'INFO-200'}},
+        payload(0, []), {'list_total_count': '0', 'realtimeArrivalList': []},
+    ])
+    def test_official_or_declared_zero_is_complete_empty(data):
+        source, _, _ = source_for(data)
+        got = source.arrivals('서울')
+>       assert got['trains'] == [] and got['provider_total'] == 0
+                                       ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'provider_total'
+
+tests\unit\travel\test_subway_completeness_v1.py:83: KeyError
+___________ test_empty_code_with_positive_total_is_not_normal_empty ___________
+
+    def test_empty_code_with_positive_total_is_not_normal_empty():
+        source, _, _ = source_for({'code': 'INFO-200', 'total': 1})
+>       assert source.arrivals('서울') is None
+E       AssertionError: assert {'confirmed_at': '2026-10-09T02:58:17.387461+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} is None
+E        +  where {'confirmed_at': '2026-10-09T02:58:17.387461+00:00', 'kind': 'subway_arrival', 'line': None, 'schema_version': '1.1', ...} = arrivals('서울')
+E        +    where arrivals = <app.domains.travel_ops.ports.data_sources.seoul_subway.SeoulSubwayArrival object at 0x000001F696B52990>.arrivals
+
+tests\unit\travel\test_subway_completeness_v1.py:89: AssertionError
+________ test_missing_count_is_explicit_unknown_not_invented_complete _________
+
+    def test_missing_count_is_explicit_unknown_not_invented_complete():
+        source, _, _ = source_for({'realtimeArrivalList': [{}]})
+        got = source.arrivals('서울')
+>       assert got['provider_total'] is None and got['coverage_complete'] is None
+               ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'provider_total'
+
+tests\unit\travel\test_subway_completeness_v1.py:95: KeyError
+_ test_partial_or_unknown_cannot_pick_even_an_otherwise_boardable_train[False-incomplete_arrivals] _
+
+complete = False, reason = 'incomplete_arrivals'
+
+    @pytest.mark.parametrize('complete,reason', [(False, 'incomplete_arrivals'),
+                                              (None, 'arrival_total_unknown')])
+    def test_partial_or_unknown_cannot_pick_even_an_otherwise_boardable_train(complete, reason):
+        from app.domains.travel_ops.ports.data_sources.seoul_subway import select_boardable_arrival
+        data = snapshot(); data['coverage_complete'] = complete
+        got = select_boardable_arrival(data, **policy())
+>       assert got['status'] == 'unavailable' and got['reason'] == reason
+E       AssertionError: assert ('predicted' == 'unavailable'
+E         
+E         - unavailable
+E         + predicted)
+
+tests\unit\travel\test_subway_completeness_v1.py:104: AssertionError
+_ test_partial_or_unknown_cannot_pick_even_an_otherwise_boardable_train[None-arrival_total_unknown] _
+
+complete = None, reason = 'arrival_total_unknown'
+
+    @pytest.mark.parametrize('complete,reason', [(False, 'incomplete_arrivals'),
+                                              (None, 'arrival_total_unknown')])
+    def test_partial_or_unknown_cannot_pick_even_an_otherwise_boardable_train(complete, reason):
+        from app.domains.travel_ops.ports.data_sources.seoul_subway import select_boardable_arrival
+        data = snapshot(); data['coverage_complete'] = complete
+        got = select_boardable_arrival(data, **policy())
+>       assert got['status'] == 'unavailable' and got['reason'] == reason
+E       AssertionError: assert ('predicted' == 'unavailable'
+E         
+E         - unavailable
+E         + predicted)
+
+tests\unit\travel\test_subway_completeness_v1.py:104: AssertionError
+___ test_train_after_old_twenty_row_boundary_is_selected_from_full_request ____
+
+    def test_train_after_old_twenty_row_boundary_is_selected_from_full_request():
+        from .test_subway_boardable_v1 import LINE, STATION, NEXT, TERMINAL
+        checked = datetime.now(NOW.tzinfo) + timedelta(seconds=2)
+        row = {'subwayId': LINE, 'statnId': STATION, 'statnTid': NEXT,
+               'bstatnId': TERMINAL, 'btrainSttus': '일반', 'btrainNo': '5010',
+               'barvlDt': 200, 'arvlCd': '99', 'recptnDt': checked.isoformat()}
+        calls = []
+        def transport(url, params):
+            calls.append(url)
+            end = int(url.split('/')[-2])
+            rows = [{}] * 20 + [row]
+            return httpx.Response(200, json=payload(21, rows[:end]), request=httpx.Request('GET', url))
+        source = SeoulSubwayArrival(service_key='controlled-test-key', transport=transport, now=lambda: checked)
+        got = source.boardable_arrival('서울', **policy(now=checked, ready_at=checked+timedelta(seconds=100)))
+>       assert got['status'] == 'predicted' and got['train_number'] == '5010'
+E       AssertionError: assert ('no_boardable_prediction' == 'predicted'
+E         
+E         - predicted
+E         + no_boardable_prediction)
+
+tests\unit\travel\test_subway_completeness_v1.py:121: AssertionError
+______ test_partial_source_result_reaches_model_revalidation_with_reason ______
+
+    def test_partial_source_result_reaches_model_revalidation_with_reason():
+        from .mobility.test_subway_departure_v1 import scene, call
+        from app.domains.travel_ops.ports.data_sources.seoul_subway import select_boardable_arrival
+        rt, context = scene()
+        def source(station, **kw):
+            data = snapshot(); data['confirmed_at'] = kw['now'].isoformat()
+            data['coverage_complete'] = False
+            return select_boardable_arrival(data, max_age_seconds=30,
+                max_provider_age_seconds=90, max_provider_clock_ahead_seconds=2, **kw)
+        got = call(rt, context, subway_arrival=source)
+        assert got['status'] == 'model_revalidated'
+>       assert got['observations'][0]['reason'] == 'incomplete_arrivals'
+E       AssertionError: assert 'no_vehicle_after_ready' == 'incomplete_arrivals'
+E         
+E         - incomplete_arrivals
+E         + no_vehicle_after_ready
+
+tests\unit\travel\test_subway_completeness_v1.py:136: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1156_지하철_부분응답_누락해소\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_documented_maximum_is_requested_once_not_extra_pages[controlled-test-key-1000]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_documented_maximum_is_requested_once_not_extra_pages[sample-5]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_full_response_preserves_count_before_line_filter[1_0]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_full_response_preserves_count_before_line_filter[1_1]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_full_response_preserves_count_before_line_filter[0001]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_partial_response_is_preserved_without_claiming_complete
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[True]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[False]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[-1_0]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[-1_1]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[1.0_0]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[1.0_1]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[None]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[value8]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[value9]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[\xb2]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[\uff11]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_invalid_provider_total_is_not_cached_as_normal[99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_total_smaller_than_rows_is_provider_contradiction
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_compatible_root_and_nested_counts_agree
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_conflicting_root_and_nested_counts_are_rejected
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_official_or_declared_zero_is_complete_empty[data0]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_official_or_declared_zero_is_complete_empty[data1]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_official_or_declared_zero_is_complete_empty[data2]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_official_or_declared_zero_is_complete_empty[data3]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_empty_code_with_positive_total_is_not_normal_empty
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_missing_count_is_explicit_unknown_not_invented_complete
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_partial_or_unknown_cannot_pick_even_an_otherwise_boardable_train[False-incomplete_arrivals]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_partial_or_unknown_cannot_pick_even_an_otherwise_boardable_train[None-arrival_total_unknown]
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_train_after_old_twenty_row_boundary_is_selected_from_full_request
+FAILED tests/unit/travel/test_subway_completeness_v1.py::test_partial_source_result_reaches_model_revalidation_with_reason
+32 failed in 4.87s
+Exception ignored in: <function Console.__del__ at 0x000001F6872F1C60>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

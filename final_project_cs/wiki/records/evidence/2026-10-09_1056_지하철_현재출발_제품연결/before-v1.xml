@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="18" skipped="0" tests="18" time="5.064" timestamp="2026-10-09T10:58:45.946462+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_selected_current_train_changes_first_boarding_and_eta_without_borrowing_run" time="0.123"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">def test_selected_current_train_changes_first_boarding_and_eta_without_borrowing_run():
+        rt, context = scene()
+        original = deepcopy(context)
+&gt;       got = call(rt, context, subway_arrival=source)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DD70D48C0&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function source at 0x0000015DE584CA40&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_later_segment_is_recalculated_from_current_arrival_not_old_total" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">def test_later_segment_is_recalculated_from_current_arrival_not_old_total():
+        rt, context = scene()
+        leg = {'mode': 'subway', 'line': '05호선', 'from': '영등포구청', 'to': '영등포시장'}
+        context['options']['p']['legs'].append(leg)
+        context['options']['p']['check']['legs'].append(deepcopy(leg))
+        calls = []
+        def current(*args, **kw):
+            calls.append(args[0])
+            return source(*args, **kw)
+&gt;       got = call(rt, context, subway_arrival=current)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:86: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE570F830&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_later_segment_is_recalculated_from_current_arrival_not_old_total.&lt;locals&gt;.current at 0x0000015DE5A3AD40&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_failure_explicitly_revalidates_model[unavailable]" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">status = 'unavailable'
+
+    @pytest.mark.parametrize('status', ['unavailable', 'stale', 'no_boardable_prediction'])
+    def test_failure_explicitly_revalidates_model(status):
+        rt, context = scene()
+&gt;       got = call(rt, context, subway_arrival=lambda *a, **kw: {'status': status})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE599CB30&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_failure_explicitly_revalidates_model.&lt;locals&gt;.&lt;lambda&gt; at 0x0000015DE5AA8AE0&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_failure_explicitly_revalidates_model[stale]" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">status = 'stale'
+
+    @pytest.mark.parametrize('status', ['unavailable', 'stale', 'no_boardable_prediction'])
+    def test_failure_explicitly_revalidates_model(status):
+        rt, context = scene()
+&gt;       got = call(rt, context, subway_arrival=lambda *a, **kw: {'status': status})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE599C350&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_failure_explicitly_revalidates_model.&lt;locals&gt;.&lt;lambda&gt; at 0x0000015DE5948AE0&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_failure_explicitly_revalidates_model[no_boardable_prediction]" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">status = 'no_boardable_prediction'
+
+    @pytest.mark.parametrize('status', ['unavailable', 'stale', 'no_boardable_prediction'])
+    def test_failure_explicitly_revalidates_model(status):
+        rt, context = scene()
+&gt;       got = call(rt, context, subway_arrival=lambda *a, **kw: {'status': status})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE5968B00&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_failure_explicitly_revalidates_model.&lt;locals&gt;.&lt;lambda&gt; at 0x0000015DE5AA8CC0&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[line_id-1002]" time="0.010"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">field = 'line_id', value = '1002'
+
+    @pytest.mark.parametrize('field,value', [('line_id', '1002'), ('station_id', 'other'), ('target_station_id', 'other'),
+        ('terminal_station_id', 'other'), ('path_station_ids', []), ('train_status', '급행'), ('train_number', None),
+        ('arrival_at', (NOW+timedelta(minutes=1)).isoformat())])
+    def test_changed_source_identity_never_reaches_verifier(field, value):
+        rt, context = scene()
+        def bad(*a, **kw):
+            return dict(source(*a, **kw), **{field: value})
+&gt;       assert call(rt, context, subway_arrival=bad)['status'] == 'fatal'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59D6C90&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_changed_source_identity_never_reaches_verifier.&lt;locals&gt;.bad at 0x0000015DE5AAACA0&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[station_id-other]" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">field = 'station_id', value = 'other'
+
+    @pytest.mark.parametrize('field,value', [('line_id', '1002'), ('station_id', 'other'), ('target_station_id', 'other'),
+        ('terminal_station_id', 'other'), ('path_station_ids', []), ('train_status', '급행'), ('train_number', None),
+        ('arrival_at', (NOW+timedelta(minutes=1)).isoformat())])
+    def test_changed_source_identity_never_reaches_verifier(field, value):
+        rt, context = scene()
+        def bad(*a, **kw):
+            return dict(source(*a, **kw), **{field: value})
+&gt;       assert call(rt, context, subway_arrival=bad)['status'] == 'fatal'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59E4320&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_changed_source_identity_never_reaches_verifier.&lt;locals&gt;.bad at 0x0000015DE5B48A40&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[target_station_id-other]" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">field = 'target_station_id', value = 'other'
+
+    @pytest.mark.parametrize('field,value', [('line_id', '1002'), ('station_id', 'other'), ('target_station_id', 'other'),
+        ('terminal_station_id', 'other'), ('path_station_ids', []), ('train_status', '급행'), ('train_number', None),
+        ('arrival_at', (NOW+timedelta(minutes=1)).isoformat())])
+    def test_changed_source_identity_never_reaches_verifier(field, value):
+        rt, context = scene()
+        def bad(*a, **kw):
+            return dict(source(*a, **kw), **{field: value})
+&gt;       assert call(rt, context, subway_arrival=bad)['status'] == 'fatal'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59A9430&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_changed_source_identity_never_reaches_verifier.&lt;locals&gt;.bad at 0x0000015DE5B4AA20&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[terminal_station_id-other]" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">field = 'terminal_station_id', value = 'other'
+
+    @pytest.mark.parametrize('field,value', [('line_id', '1002'), ('station_id', 'other'), ('target_station_id', 'other'),
+        ('terminal_station_id', 'other'), ('path_station_ids', []), ('train_status', '급행'), ('train_number', None),
+        ('arrival_at', (NOW+timedelta(minutes=1)).isoformat())])
+    def test_changed_source_identity_never_reaches_verifier(field, value):
+        rt, context = scene()
+        def bad(*a, **kw):
+            return dict(source(*a, **kw), **{field: value})
+&gt;       assert call(rt, context, subway_arrival=bad)['status'] == 'fatal'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59FDC10&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_changed_source_identity_never_reaches_verifier.&lt;locals&gt;.bad at 0x0000015DE5BD07C0&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[path_station_ids-value4]" time="0.005"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">field = 'path_station_ids', value = []
+
+    @pytest.mark.parametrize('field,value', [('line_id', '1002'), ('station_id', 'other'), ('target_station_id', 'other'),
+        ('terminal_station_id', 'other'), ('path_station_ids', []), ('train_status', '급행'), ('train_number', None),
+        ('arrival_at', (NOW+timedelta(minutes=1)).isoformat())])
+    def test_changed_source_identity_never_reaches_verifier(field, value):
+        rt, context = scene()
+        def bad(*a, **kw):
+            return dict(source(*a, **kw), **{field: value})
+&gt;       assert call(rt, context, subway_arrival=bad)['status'] == 'fatal'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59FD6A0&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_changed_source_identity_never_reaches_verifier.&lt;locals&gt;.bad at 0x0000015DE5B48220&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[train_status-\uae09\ud589]" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">field = 'train_status', value = '급행'
+
+    @pytest.mark.parametrize('field,value', [('line_id', '1002'), ('station_id', 'other'), ('target_station_id', 'other'),
+        ('terminal_station_id', 'other'), ('path_station_ids', []), ('train_status', '급행'), ('train_number', None),
+        ('arrival_at', (NOW+timedelta(minutes=1)).isoformat())])
+    def test_changed_source_identity_never_reaches_verifier(field, value):
+        rt, context = scene()
+        def bad(*a, **kw):
+            return dict(source(*a, **kw), **{field: value})
+&gt;       assert call(rt, context, subway_arrival=bad)['status'] == 'fatal'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59A8500&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_changed_source_identity_never_reaches_verifier.&lt;locals&gt;.bad at 0x0000015DE5AAA3E0&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[train_number-None]" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">field = 'train_number', value = None
+
+    @pytest.mark.parametrize('field,value', [('line_id', '1002'), ('station_id', 'other'), ('target_station_id', 'other'),
+        ('terminal_station_id', 'other'), ('path_station_ids', []), ('train_status', '급행'), ('train_number', None),
+        ('arrival_at', (NOW+timedelta(minutes=1)).isoformat())])
+    def test_changed_source_identity_never_reaches_verifier(field, value):
+        rt, context = scene()
+        def bad(*a, **kw):
+            return dict(source(*a, **kw), **{field: value})
+&gt;       assert call(rt, context, subway_arrival=bad)['status'] == 'fatal'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59E5F70&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_changed_source_identity_never_reaches_verifier.&lt;locals&gt;.bad at 0x0000015DE5917060&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_changed_source_identity_never_reaches_verifier[arrival_at-2026-10-09T10:01:00+09:00]" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">field = 'arrival_at', value = '2026-10-09T10:01:00+09:00'
+
+    @pytest.mark.parametrize('field,value', [('line_id', '1002'), ('station_id', 'other'), ('target_station_id', 'other'),
+        ('terminal_station_id', 'other'), ('path_station_ids', []), ('train_status', '급행'), ('train_number', None),
+        ('arrival_at', (NOW+timedelta(minutes=1)).isoformat())])
+    def test_changed_source_identity_never_reaches_verifier(field, value):
+        rt, context = scene()
+        def bad(*a, **kw):
+            return dict(source(*a, **kw), **{field: value})
+&gt;       assert call(rt, context, subway_arrival=bad)['status'] == 'fatal'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59D78F0&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_changed_source_identity_never_reaches_verifier.&lt;locals&gt;.bad at 0x0000015DE5A39620&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_query_completion_recomputes_access_before_applying_prediction" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">def test_query_completion_recomputes_access_before_applying_prediction():
+        rt, context = scene()
+        def delayed(*a, **kw):
+            result = source(*a, **kw)
+            result['evaluated_at'] = (NOW+timedelta(seconds=61)).isoformat()
+            return result
+&gt;       got = call(rt, context, subway_arrival=delayed)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE5968830&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_query_completion_recomputes_access_before_applying_prediction.&lt;locals&gt;.delayed at 0x0000015DE5BD16C0&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_station_mapping_failure_is_visible_and_does_not_query" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">def test_station_mapping_failure_is_visible_and_does_not_query():
+        rt, context = scene()
+        rt.subway_stations = None
+        context['options']['p']['subway_identity'] = {'status': 'unavailable', 'reason': 'station_identity_source_missing'}
+&gt;       got = call(rt, context, subway_arrival=lambda *a, **kw: pytest.fail('대응 불가 조회 금지'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59F35C0&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place...}], 'option_id': 'p', 'subway_identity': {'reason': 'station_identity_source_missing', 'status': 'unavailable'}}}, ...}
+kw = {'subway_arrival': &lt;function test_station_mapping_failure_is_visible_and_does_not_query.&lt;locals&gt;.&lt;lambda&gt; at 0x0000015DE5BD2160&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_loop_is_modelled_without_querying_current_ambiguous_direction" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">def test_loop_is_modelled_without_querying_current_ambiguous_direction():
+        rt, context = scene()
+        rt._v.lo.doc['lines']['05호선']['is_loop'] = True
+        # 시간표 모델은 따로 통제하여, 이 시험이 확인하는 것은 현재 소스 조회 생략과 상태 보존이다.
+        rt.verify_case = lambda *a, **kw: SimpleNamespace(verdict='feasible', code=None, reason='controlled', legs=[], arrive_min=615, arrive_worst_min=615)
+&gt;       got = call(rt, context, subway_arrival=lambda *a, **kw: pytest.fail('순환선 조회 금지'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DD64B25A0&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function test_loop_is_modelled_without_querying_current_ambiguous_direction.&lt;locals&gt;.&lt;lambda&gt; at 0x0000015DE5949260&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_observed_train_cannot_cross_disruption" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">def test_observed_train_cannot_cross_disruption():
+        rt, context = scene()
+&gt;       got = call(rt, context, subway_arrival=source, disruptions=[{'kind': 'edge_closed', 'line': '05호선',
+                  'between': ['양평', '영등포구청'], 'grade': '확정', 'source_id': 'controlled/closure'}])
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:140: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE5968200&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'disruptions': [{'between': ['양평', '영등포구청'], 'grade': '확정', 'kind': 'edge_closed', 'line': '05호선', ...}], 'subway_arrival': &lt;function source at 0x0000015DE584CA40&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_subway_departure_v1" name="test_unrelated_express_runtime_is_not_reused_as_current_regular_ride" time="0.004"><failure message="TypeError: observe() got an unexpected keyword argument 'subway_arrival'">def test_unrelated_express_runtime_is_not_reused_as_current_regular_ride():
+        rt, context = scene()
+        for d in rt._v.tt.by_key[('05호선', '양평', 'holiday')]:
+            d.run = SimpleNamespace(express=False, serves=lambda *a: True, ride_min=lambda *a: 1)
+&gt;       got = call(rt, context, subway_arrival=source)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rt = &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000015DE59D4C80&gt;
+context = {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'first_visit': False, 'from_place..., 'subway_identity': {'line': '5호선', 'line_id': '1005', 'query_station': '양평', 'station_id': '1005000522', ...}}}, ...}
+kw = {'subway_arrival': &lt;function source at 0x0000015DE584CA40&gt;}
+
+    def call(rt, context, **kw):
+&gt;       return observe(rt, context, 'p', now=NOW, deadline=NOW+timedelta(hours=1), origin=ORIGIN, destination=DESTINATION, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'subway_arrival'
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:64: TypeError</failure></testcase></testsuite></testsuites>

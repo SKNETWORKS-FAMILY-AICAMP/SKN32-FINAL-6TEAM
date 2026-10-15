@@ -1,0 +1,38 @@
+[
+  {
+    "name": "W03_kakao_walk_forward.json",
+    "bytes": 436,
+    "sha256": "62fb32cc0418939eb707e04bf0f5e838848b75af5b474b0bf7ae084cbe37b706",
+    "current_sha256": "62fb32cc0418939eb707e04bf0f5e838848b75af5b474b0bf7ae084cbe37b706"
+  },
+  {
+    "name": "W03_kakao_walk_forward.png",
+    "bytes": 56805,
+    "sha256": "aa0e983deea9b14aead4529268f55bec98f7b39595f1dd71bda3bb63f56e5dc8",
+    "current_sha256": "aa0e983deea9b14aead4529268f55bec98f7b39595f1dd71bda3bb63f56e5dc8"
+  },
+  {
+    "name": "W03_kakao_walk_forward.txt",
+    "bytes": 4746,
+    "sha256": "ddbaeb8441aa33a5ba647ef86e75170d4fb93484a25da7a3e646e91cb6ca5bff",
+    "current_sha256": "ddbaeb8441aa33a5ba647ef86e75170d4fb93484a25da7a3e646e91cb6ca5bff"
+  },
+  {
+    "name": "W03_naver_walk_forward.json",
+    "bytes": 548,
+    "sha256": "650a59b08542480f440b1fc03075f4ca88754e960be2fe15d7b2d4c271011591",
+    "current_sha256": "650a59b08542480f440b1fc03075f4ca88754e960be2fe15d7b2d4c271011591"
+  },
+  {
+    "name": "W03_naver_walk_forward.png",
+    "bytes": 41573,
+    "sha256": "bebfa433d72fa0e98b0f9369d9c9791da5e2c302947c833972512f223f5ead45",
+    "current_sha256": "bebfa433d72fa0e98b0f9369d9c9791da5e2c302947c833972512f223f5ead45"
+  },
+  {
+    "name": "W03_naver_walk_forward.txt",
+    "bytes": 5592,
+    "sha256": "5722022521618c875b51a9be66ddbe274843cf0e739c53a77ecd36becee13132",
+    "current_sha256": "5722022521618c875b51a9be66ddbe274843cf0e739c53a77ecd36becee13132"
+  }
+]

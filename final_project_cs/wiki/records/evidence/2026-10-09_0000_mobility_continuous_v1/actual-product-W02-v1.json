@@ -1,0 +1,280 @@
+{
+  "started_at": "2026-10-08T23:56:35.525192+09:00",
+  "finished_at": "2026-10-08T23:57:09.922784+09:00",
+  "arrive": "2026-10-08T10:30:00+09:00",
+  "codes": {
+    "seoul_station": "8Q98HX3C+J88",
+    "namdaemun_market": "8Q98HX5H+P38"
+  },
+  "decoded_cells": {
+    "seoul_station": {
+      "center_lnglat": [
+        126.970828125,
+        37.55403749999999
+      ],
+      "height_degrees": 2.5e-05,
+      "width_degrees": 3.125e-05,
+      "height_m": 2.783000000092386,
+      "width_m": 2.757879407500172,
+      "bounds_lnglat": [
+        126.9708125,
+        37.554024999999996,
+        126.97084375,
+        37.55404999999999
+      ]
+    },
+    "namdaemun_market": {
+      "center_lnglat": [
+        126.977703125,
+        37.559287499999996
+      ],
+      "height_degrees": 2.5e-05,
+      "width_degrees": 3.125e-05,
+      "height_m": 2.783000000092386,
+      "width_m": 2.757685110465104,
+      "bounds_lnglat": [
+        126.9776875,
+        37.559275,
+        126.97771875000001,
+        37.55929999999999
+      ]
+    }
+  },
+  "decoder_basis": "Previously verified OLC pair+grid algorithm; isolated function; no installation.",
+  "public_repetitions_per_direction": 2,
+  "same_process_repeat_match": true,
+  "independent_OD_n": 1,
+  "direction_n": 2,
+  "public_success_n": 2,
+  "network_attempts": [],
+  "same_engine_hashes_as_30_pair_run": true,
+  "graph_source": "osm_road_graph_v2@2026-10-03",
+  "source_hashes_at_start": {
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\adapter.py": "9b2b39c0c765c43a30527af38db718d642994615a50e51a716433b871fae6253",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bike.py": "ee97a0ffb7ef68ff74b19f8510363b77792909d7a7f18e0117848ce62d14d871",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus.py": "750a89399a5dfdcc84d9e8fb6468684932a4e3e68f3c22018329440ef49c28c4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus_profile.py": "18a4298ed54f0e64c1e6d3fb78bf47e2af1a70fe5a95f7ecdcba57ad34853d87",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\candidates.py": "1e49079b54d9ae8cbde6d7db643125bb27541c956668b7809a1f7962dd2aea0c",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car.py": "83e2021e25916e794624dffebe39986c175ad04fc96b06f07c2e865860cad00e",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car_fixtures.py": "bfcdce00518e8aec0a5dc63cf36cd7b8a236395de358c60461bf62d76b375af0",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\congestion.py": "9a059d6d93f905b995919538784f8313a206d5379e37f373989490fb18fbd314",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\connectors.py": "7ec5eeb90eb13edfa05a7e03ade78292c33881ad2d5107960a9a42ca947b986e",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\datacheck.py": "2729d4b4a5c2408cd863e444eaea5f2906032812f99960b17d0061d7230e78c6",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\errors.py": "bd7aa589e9417f6b2ea6cb9f6754c961f9c0f1b61a87d91303b746bc9fbe8a1a",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\exits.py": "cc2068c85b2b40cae263e2f59fa6c06978aa36e3e746ad617f9714b3963bb7b1",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\express.py": "6dbdbede71753f4a28fa8c766228092e6093a501ba76cbe436b06e65b90ec378",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\fold.py": "6818eafd4449445b5b75042d7aca79df46ff60011b52c19dab3d186c56b1f5eb",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\geo.py": "df940f8a21efd4487839e0a5cee5deacb56041027d30199d6f11d57df84dff51",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py": "93e46fc0cbb876fa205e636c66d14b6a944fdbb581b07c07d1ebca0c7a942a18",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\guardrails.py": "9c153447273208890906ea9e36b03ca6849298f62c9e666c9fabd689cbfddad8",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\line_order.py": "3c3819e9f0cddb542863fe2a32bc56d7514cd25b54f952650add9ca9b27e6abf",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\options.py": "d245e3536e087534e6f8efc6ade70044cb127bd5308c846be97d918fcc752ea3",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\paths.py": "c9256063c22fd9d9bbd54b7f5497f6d1a3f8fe3161afbd96e5df12498d282bdc",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan.py": "e79e8c81f428fcf478b8262ed6cd2323642518be6eceb9f5715a77d7c23c2d8d",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan_estimate.py": "31ab9342d737dad96b7d40ff3fe1d8dbb3b42bd31925feba28eb6ed057c5abf4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\runtime.py": "1fcafda8997df6711798632bcb16a187604f683c41d84355e3f8da36b2171bd5",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\special_rail.py": "61a8580f62b22d874db74768f251b9a8406fc2fce811dfd40072be7e30710ea0",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\timeutil.py": "f41e35926e55b393bfb084d762b4e5718c99855fdada148d38b0ba6b7aaba36f",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\transfer_walk.py": "60d0e945a8650cebd08dcf48d17c1fb9231b26679dab968e03bdfe74d76c90a2",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time.py": "b8428471f6a66b6ea6408611acd1a3daf9678d6c6dfbca1b8b39c2e40b763e50",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time_cli.py": "bc996c0360ac6a0733e3d52d4f3cd1d57881d41a71777ccbe6ddd1381fa3a3b5",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\__init__.py": "267fe36a5319a62ef3902a5664ef661cedfef9a69bcaaaca629c6587c825efc5"
+  },
+  "source_hashes_at_end": {
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\adapter.py": "9b2b39c0c765c43a30527af38db718d642994615a50e51a716433b871fae6253",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bike.py": "ee97a0ffb7ef68ff74b19f8510363b77792909d7a7f18e0117848ce62d14d871",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus.py": "750a89399a5dfdcc84d9e8fb6468684932a4e3e68f3c22018329440ef49c28c4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\bus_profile.py": "18a4298ed54f0e64c1e6d3fb78bf47e2af1a70fe5a95f7ecdcba57ad34853d87",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\candidates.py": "1e49079b54d9ae8cbde6d7db643125bb27541c956668b7809a1f7962dd2aea0c",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car.py": "83e2021e25916e794624dffebe39986c175ad04fc96b06f07c2e865860cad00e",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\car_fixtures.py": "bfcdce00518e8aec0a5dc63cf36cd7b8a236395de358c60461bf62d76b375af0",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\congestion.py": "9a059d6d93f905b995919538784f8313a206d5379e37f373989490fb18fbd314",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\connectors.py": "7ec5eeb90eb13edfa05a7e03ade78292c33881ad2d5107960a9a42ca947b986e",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\datacheck.py": "2729d4b4a5c2408cd863e444eaea5f2906032812f99960b17d0061d7230e78c6",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\errors.py": "bd7aa589e9417f6b2ea6cb9f6754c961f9c0f1b61a87d91303b746bc9fbe8a1a",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\exits.py": "cc2068c85b2b40cae263e2f59fa6c06978aa36e3e746ad617f9714b3963bb7b1",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\express.py": "6dbdbede71753f4a28fa8c766228092e6093a501ba76cbe436b06e65b90ec378",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\fold.py": "6818eafd4449445b5b75042d7aca79df46ff60011b52c19dab3d186c56b1f5eb",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\geo.py": "df940f8a21efd4487839e0a5cee5deacb56041027d30199d6f11d57df84dff51",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\graph_router.py": "93e46fc0cbb876fa205e636c66d14b6a944fdbb581b07c07d1ebca0c7a942a18",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\guardrails.py": "9c153447273208890906ea9e36b03ca6849298f62c9e666c9fabd689cbfddad8",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\line_order.py": "3c3819e9f0cddb542863fe2a32bc56d7514cd25b54f952650add9ca9b27e6abf",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\options.py": "d245e3536e087534e6f8efc6ade70044cb127bd5308c846be97d918fcc752ea3",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\paths.py": "c9256063c22fd9d9bbd54b7f5497f6d1a3f8fe3161afbd96e5df12498d282bdc",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan.py": "e79e8c81f428fcf478b8262ed6cd2323642518be6eceb9f5715a77d7c23c2d8d",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan_estimate.py": "31ab9342d737dad96b7d40ff3fe1d8dbb3b42bd31925feba28eb6ed057c5abf4",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\runtime.py": "1fcafda8997df6711798632bcb16a187604f683c41d84355e3f8da36b2171bd5",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\special_rail.py": "61a8580f62b22d874db74768f251b9a8406fc2fce811dfd40072be7e30710ea0",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\timeutil.py": "f41e35926e55b393bfb084d762b4e5718c99855fdada148d38b0ba6b7aaba36f",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\transfer_walk.py": "60d0e945a8650cebd08dcf48d17c1fb9231b26679dab968e03bdfe74d76c90a2",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time.py": "b8428471f6a66b6ea6408611acd1a3daf9678d6c6dfbca1b8b39c2e40b763e50",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time_cli.py": "bc996c0360ac6a0733e3d52d4f3cd1d57881d41a71777ccbe6ddd1381fa3a3b5",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\__init__.py": "267fe36a5319a62ef3902a5664ef661cedfef9a69bcaaaca629c6587c825efc5"
+  },
+  "input_hashes_at_start": {
+    "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-08_v1\\kakao-W02-walk.json": "3288c0c59e5263d91131f7ac716545050e8ae1371d72c048b586f5459d1c03f7",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\rules_v0.3.json": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+    ".tmp\\mobility_walk_diagnosis_20261008\\remeasure_product_W02_v1.py": "0aabfc38a9a62fd16b70d07d036fdec8e5b992542ebe82a589a770ec1bba5809",
+    "final_project_cs\\config\\guardrails.yaml": "64cff70262767224dda583a4485c9c4272c53834fcdc9c92af0c6bbccb92ce6d",
+    "datasets\\mobility\\processed\\mobility\\bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+    ".tmp\\mobility_walk_diagnosis_20261008\\diagnose.py": "22af5e6d795ffd33471092dcc162f64e0295b45da4e3e26d640758f23c14ceb4",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1_meta.json": "6cc106e94be7b76ce921c884818617f8bb4473a3419d9ce64c33acb9d5045836",
+    "datasets\\mobility\\processed\\mobility\\transfer_walk_v1.json": "03a13259fc182df08eff16eccdc2add597b6012d7aaf160b38596f0708fc3f43",
+    "datasets\\mobility\\processed\\mobility\\line_station_order_v1.json": "693c616fa1a538d564b84c12cae1f8c744140da87f91574cfbb795394448d3e8",
+    "datasets\\mobility\\processed\\mobility\\bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "datasets\\mobility\\processed\\mobility\\rail_distance_overlay_v1.json": "78cbe18455c12bf1d25c795427559c1b86049997cca2c1b26498739caff44c82",
+    "datasets\\mobility\\processed\\mobility\\station_coords.json": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\region_v1.geojson": "827a39de6d1cf23a8b910dc3edeca73534e3e8b8490228fdaf53abb3efc5c9b8",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\holidays_2026_2027.json": "b2539a7e6835bd6dd2ac3fef654d1c7f063305bbcdb9a17a7b2d4254ee67d8f4",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\build_report.json": "5f63b0009a7e9a958f162b4f756e4f60538772115e95c6f86eb7ed421e4b4399",
+    "datasets\\mobility\\processed\\mobility\\bus_seg_profile_v1.jsonl.gz": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+    "datasets\\mobility\\processed\\mobility\\rail_edge_track_v2.jsonl.gz": "dd2d0eda1aaa956ba5d09d5410539ee863f8c4b023773b7c66a31caf3eb9e096",
+    "datasets\\mobility\\processed\\mobility\\bike_stations_v1.jsonl": "8752290317c8700ad1d2a99cfe4f21fca9dea4e01ecab717972aad21603af6d7",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\special_rail_fares_v1.json": "5f487d3df34979ae54455f5dcc7f522e7eb1554e0800924d9b476a268480093d",
+    "datasets\\mobility\\processed\\mobility\\station_exits_v1.json": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+    "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-08_v1\\naver-W02-walk.json": "fded9e62d79db72dfa2f7e09767b145862309322215e61863d27ca093d569f87",
+    "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-08_v1\\google-W02-transit-address-v2.json": "d9ce56d0a7ee73cce847183ac36daceb12412b1616001261d53f5f3fc68f5735"
+  },
+  "input_hashes_at_end": {
+    "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-08_v1\\kakao-W02-walk.json": "3288c0c59e5263d91131f7ac716545050e8ae1371d72c048b586f5459d1c03f7",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\rules_v0.3.json": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+    ".tmp\\mobility_walk_diagnosis_20261008\\remeasure_product_W02_v1.py": "0aabfc38a9a62fd16b70d07d036fdec8e5b992542ebe82a589a770ec1bba5809",
+    "final_project_cs\\config\\guardrails.yaml": "64cff70262767224dda583a4485c9c4272c53834fcdc9c92af0c6bbccb92ce6d",
+    "datasets\\mobility\\processed\\mobility\\bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+    ".tmp\\mobility_walk_diagnosis_20261008\\diagnose.py": "22af5e6d795ffd33471092dcc162f64e0295b45da4e3e26d640758f23c14ceb4",
+    "datasets\\mobility\\processed\\mobility\\timetable_v1_meta.json": "6cc106e94be7b76ce921c884818617f8bb4473a3419d9ce64c33acb9d5045836",
+    "datasets\\mobility\\processed\\mobility\\transfer_walk_v1.json": "03a13259fc182df08eff16eccdc2add597b6012d7aaf160b38596f0708fc3f43",
+    "datasets\\mobility\\processed\\mobility\\line_station_order_v1.json": "693c616fa1a538d564b84c12cae1f8c744140da87f91574cfbb795394448d3e8",
+    "datasets\\mobility\\processed\\mobility\\bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "datasets\\mobility\\processed\\mobility\\rail_distance_overlay_v1.json": "78cbe18455c12bf1d25c795427559c1b86049997cca2c1b26498739caff44c82",
+    "datasets\\mobility\\processed\\mobility\\station_coords.json": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\region_v1.geojson": "827a39de6d1cf23a8b910dc3edeca73534e3e8b8490228fdaf53abb3efc5c9b8",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\holidays_2026_2027.json": "b2539a7e6835bd6dd2ac3fef654d1c7f063305bbcdb9a17a7b2d4254ee67d8f4",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\nodes.jsonl.gz": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\edges.jsonl.gz": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\MANIFEST.json": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd",
+    "datasets\\mobility\\processed\\mobility\\road_graph_v2\\build_report.json": "5f63b0009a7e9a958f162b4f756e4f60538772115e95c6f86eb7ed421e4b4399",
+    "datasets\\mobility\\processed\\mobility\\bus_seg_profile_v1.jsonl.gz": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+    "datasets\\mobility\\processed\\mobility\\rail_edge_track_v2.jsonl.gz": "dd2d0eda1aaa956ba5d09d5410539ee863f8c4b023773b7c66a31caf3eb9e096",
+    "datasets\\mobility\\processed\\mobility\\bike_stations_v1.jsonl": "8752290317c8700ad1d2a99cfe4f21fca9dea4e01ecab717972aad21603af6d7",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\rules\\special_rail_fares_v1.json": "5f487d3df34979ae54455f5dcc7f522e7eb1554e0800924d9b476a268480093d",
+    "datasets\\mobility\\processed\\mobility\\station_exits_v1.json": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+    "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-08_v1\\naver-W02-walk.json": "fded9e62d79db72dfa2f7e09767b145862309322215e61863d27ca093d569f87",
+    "datasets\\mobility\\raw\\kakao_golden\\additional_web_2026-10-08_v1\\google-W02-transit-address-v2.json": "d9ce56d0a7ee73cce847183ac36daceb12412b1616001261d53f5f3fc68f5735"
+  },
+  "source_changes_during_run": [],
+  "input_changes_during_run": [],
+  "comparison_note": "Product uses public Plus Code centers. Web endpoints/geometries not verified identical; diagnostic only,not accuracy or readiness gate.",
+  "rows": [
+    {
+      "direction": "forward",
+      "a_lnglat": [
+        126.970828125,
+        37.55403749999999
+      ],
+      "b_lnglat": [
+        126.977703125,
+        37.559287499999996
+      ],
+      "straight_m": 842.4120097323123,
+      "policy_walk_limit_m": 1200,
+      "raw_min": 19.169205006974725,
+      "raw_distance_m": 1179.3768136252372,
+      "public_eta_min": 20,
+      "public_distance_m": 1179,
+      "public_repeats": [
+        {
+          "id": "walk",
+          "label": "도보",
+          "eta_min": 20,
+          "walk_m": 1179,
+          "fare_krw": 0,
+          "uses": []
+        },
+        {
+          "id": "walk",
+          "label": "도보",
+          "eta_min": 20,
+          "walk_m": 1179,
+          "fare_krw": 0,
+          "uses": []
+        }
+      ],
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 25.223402495929488,
+        "seconds": 785.9579703668962
+      },
+      "quality": {
+        "access_max_m": 87.9,
+        "arterial_pct": 51.1,
+        "optimistic": true
+      },
+      "web_diagnostic_forward_only": [
+        {
+          "provider": "naver",
+          "distance_m": 738,
+          "min": 13
+        },
+        {
+          "provider": "kakao",
+          "distance_m": 972,
+          "min": 19
+        }
+      ],
+      "web_endpoint_route_identity_confirmed": false
+    },
+    {
+      "direction": "reverse",
+      "a_lnglat": [
+        126.977703125,
+        37.559287499999996
+      ],
+      "b_lnglat": [
+        126.970828125,
+        37.55403749999999
+      ],
+      "straight_m": 842.4120097323123,
+      "policy_walk_limit_m": 1200,
+      "raw_min": 19.169205006974725,
+      "raw_distance_m": 1179.3768136252372,
+      "public_eta_min": 20,
+      "public_distance_m": 1179,
+      "public_repeats": [
+        {
+          "id": "walk",
+          "label": "도보",
+          "eta_min": 20,
+          "walk_m": 1179,
+          "fare_krw": 0,
+          "uses": []
+        },
+        {
+          "id": "walk",
+          "label": "도보",
+          "eta_min": 20,
+          "walk_m": 1179,
+          "fare_krw": 0,
+          "uses": []
+        }
+      ],
+      "foot_timing": {
+        "flat_mps": 1.39,
+        "stairs_m": 25.223402495929488,
+        "seconds": 785.9579703668962
+      },
+      "quality": {
+        "access_max_m": 87.9,
+        "arterial_pct": 51.1,
+        "optimistic": true
+      },
+      "web_diagnostic_forward_only": null,
+      "web_endpoint_route_identity_confirmed": false
+    }
+  ]
+}

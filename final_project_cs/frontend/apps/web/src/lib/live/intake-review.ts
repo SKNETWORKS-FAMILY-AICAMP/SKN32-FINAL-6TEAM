@@ -1,6 +1,7 @@
 import type { Language } from "../i18n";
 import { api } from "./client";
 import type { IntakeView } from "./intake";
+import type { WebTaxiPricing } from "./taxi-pricing";
 
 /**
  * The plan-check screen's server data (`wiki/external/rest-endpoints.md` 「확인 화면 검사 · 대체 후보 …」).
@@ -48,6 +49,8 @@ export interface ReviewItem {
   date: string | null;
   starts_at: string | null;
   ends_at: string | null;
+  /** `[2026-10-13]` The day it ends when that is another day — a stay (kind lodging) ends on its check-out day. Missing or null otherwise. */
+  end_date?: string | null;
   locked: boolean;
   edited?: boolean;
   /** null while the check is still running (stream events before the check finished). */
@@ -92,12 +95,15 @@ export interface ReviewMove {
   /** `[2026-10-07]` The way the calculator chose (it stays when the customer picks another), and what became of the customer's choice after the stops around the leg changed. */
   recommended_mode?: string | null;
   mode_choice?: { mode?: string | null; state?: string | null; why?: string | null } | null;
+  /** `[2026-10-13]` A morning move 「숙소 → 그날 첫 일정」: it leaves from the stay, on the day of `to` (`day` · `date`), not right after `from`. */
+  from_stay?: boolean;
   rows: CheckLine<MoveRow>[];
 }
 
 export interface ReviewNeeds { items: number; moves: number; total: number }
 
 export interface Review {
+  taxi_pricing?: WebTaxiPricing;
   revision: number;
   built_at: string;
   engine: "timetable" | "estimate" | "mixed" | null;

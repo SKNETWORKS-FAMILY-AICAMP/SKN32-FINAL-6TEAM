@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="1.517" timestamp="2026-10-09T04:33:56.914453+09:00"><testcase classname="tests.unit.travel.test_departure_watch_assembly_v1" name="test_default_case_watch_assembles_current_departure_observer" time="0.268" /></testsuite></testsuites>

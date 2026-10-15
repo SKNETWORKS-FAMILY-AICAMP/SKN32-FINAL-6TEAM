@@ -1,0 +1,9 @@
+{
+  "checked_at": "2026-10-10T15:25:36.970423+09:00",
+  "report_local_links_checked": 10,
+  "missing": [],
+  "field_correction": "공개 코드의 실제 필드명 formTypeA로 정확화; 원판 백업 보존",
+  "pytest_exit_code": 0,
+  "pytest_shutdown_console_warning": "41통과 후 pyreadline3 소멸자 Windows 핸들 오류가 stderr에 기록됨; 시험 실패/오류0, 실행 종료코드0",
+  "browser_render_verified": false
+}

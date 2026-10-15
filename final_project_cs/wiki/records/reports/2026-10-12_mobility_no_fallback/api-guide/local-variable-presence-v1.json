@@ -1,0 +1,42 @@
+{
+  "checked_at": "2026-10-12T07:40:03.985414+00:00",
+  "scope": "로컬 작업폴더 루트와 final_project_cs 직하위 .env* 파일의 변수명 및 이 검사 프로세스의 환경 변수명만. 원격 기계·다른 작업 프로세스·계정 콘솔은 미조회.",
+  "files_checked": 6,
+  "file_results": [
+    {
+      "path": ".env.teamflow",
+      "git_ignored": true,
+      "tmap_variable_names": []
+    },
+    {
+      "path": ".env.teamflow.example",
+      "git_ignored": false,
+      "tmap_variable_names": []
+    },
+    {
+      "path": "final_project_cs/.env",
+      "git_ignored": true,
+      "tmap_variable_names": []
+    },
+    {
+      "path": "final_project_cs/.env.apikeys",
+      "git_ignored": true,
+      "tmap_variable_names": []
+    },
+    {
+      "path": "final_project_cs/.env.apikeys.example",
+      "git_ignored": false,
+      "tmap_variable_names": []
+    },
+    {
+      "path": "final_project_cs/.env.example",
+      "git_ignored": false,
+      "tmap_variable_names": []
+    }
+  ],
+  "process_tmap_variable_names": [],
+  "secret_values_printed": false,
+  "secret_values_transmitted": false,
+  "provider_api_calls": 0,
+  "source_code_modified": false
+}

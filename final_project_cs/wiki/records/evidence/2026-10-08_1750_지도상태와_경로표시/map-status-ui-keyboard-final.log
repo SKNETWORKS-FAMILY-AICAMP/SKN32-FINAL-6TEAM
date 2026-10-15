@@ -1,0 +1,95 @@
+
+[WebServer] (node:3284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:21496) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:21496) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:7464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:23692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:19184) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:17024) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:13336) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:15712) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:22148) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:24332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 4 tests using 1 worker
+
+
+(node:16732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/4] tests\live\map-status-bar.spec.ts:10:1 › 확인·변경·위치 표시가 하나의 막대에 나란히 붙고 시간 초기화는 변경 메뉴에서 동작한다
+[2/4] tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다
+  1) tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다 ─────
+
+    Error: expect(locator).toBeFocused() failed
+
+    Locator:  getByRole('button', { name: /^시간 조정.*모두 처음으로/ })
+    Expected: focused
+    Received: inactive
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toBeFocused" getByRole('button', { name: /^시간 조정.*모두 처음으로/ }) with timeout 12000ms
+      - waiting for getByRole('button', { name: /^시간 조정.*모두 처음으로/ })
+        2 × locator resolved to <button type="button" aria-label="시간 조정 1곳 모두 처음으로" class="plan-check-module__MjxneW__resetTimes">…</button>
+          - unexpected value "inactive"
+        2 × locator resolved to <button type="button" aria-label="시간 조정 2곳 모두 처음으로" class="plan-check-module__MjxneW__resetTimes">…</button>
+          - unexpected value "inactive"
+        20 × locator resolved to <button type="button" aria-label="시간 조정 3곳 모두 처음으로" class="plan-check-module__MjxneW__resetTimes">…</button>
+           - unexpected value "inactive"
+
+
+      66 |   await page.keyboard.press("Enter");
+      67 |   await page.keyboard.press("Tab");
+    > 68 |   await expect(page.getByRole("button", { name: /^시간 조정.*모두 처음으로/ })).toBeFocused();
+         |                                                                       ^
+      69 |   await page.keyboard.press("Escape");
+      70 |   await expect(page.getByRole("region", { name: "변경 관리" })).toHaveCount(0);
+      71 |   await expect(changedBadge(page)).toBeFocused();
+        at C:\Users\playdata2\Documents\final_workspace\final_project_cs\frontend\apps\web\tests\live\map-status-bar.spec.ts:68:71
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\trace.zip
+    Usage:
+
+        npx playwright show-trace .tmp\consent-progress-results\map-status-bar-변경-메뉴는-키보드로-e2034-scape를-누르면-변경-버튼으로-초점이-돌아온다\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:24448) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[3/4] tests\live\map-status-bar.spec.ts:79:1 › 확대한 경로선에 수단 이름이 붙고 지도 이동·축소에 따라 바뀌며 클릭은 선으로 통과한다
+[4/4] tests\live\map-status-bar.spec.ts:117:1 › 마커 선택은 일정만 열고 설명 알림을 띄우지 않는다
+  1 failed
+    tests\live\map-status-bar.spec.ts:58:1 › 변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다 ──────
+  3 passed (1.0m)

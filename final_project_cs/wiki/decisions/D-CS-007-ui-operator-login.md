@@ -3,7 +3,7 @@ type: decision
 title: 운영 화면(/ui/*)은 로그인한 운영자만 — 쓰기는 그 운영자의 scope 로
 description: 화면이 scope 키를 스스로 만들어 쓰던 구조라 /ui 에 닿으면 누구나 승인할 수 있었다. 운영자 계정·서명 쿠키·scope 검사로 막고, 승인자를 실제 운영자 id 로 남긴다
 status: draft
-tags: [security, auth, ui]
+tags: [security, ui]
 owners: [human:미배정]
 domain: travel
 ---

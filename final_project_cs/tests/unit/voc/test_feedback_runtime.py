@@ -17,11 +17,11 @@ def test_real_cases_trigger_voc_surge_and_boundary_does_not():
                     cur.execute("INSERT INTO customers (customer_id,tenant_id,external_id) VALUES (%s,%s,%s)", (customer, tenant, "voc-runtime"))
                     for index in range(6):
                         cur.execute("""INSERT INTO customer_cases (tenant_id,customer_id,status,subject,intent,issue_code,sentiment,created_at)
-                                       VALUES (%s,%s,'running',%s,'billing','runtime_surge','negative',%s)""",
+                                       VALUES (%s,%s,'running',%s,'incident_report','runtime_surge','negative',%s)""",
                                     (tenant, customer, f"today-{index}", datetime(2026, 8, 12, 12, index, tzinfo=timezone.utc)))
                     for index in range(2):
                         cur.execute("""INSERT INTO customer_cases (tenant_id,customer_id,status,subject,intent,issue_code,sentiment,created_at)
-                                       VALUES (%s,%s,'running',%s,'billing','runtime_surge','negative',%s)""",
+                                       VALUES (%s,%s,'running',%s,'incident_report','runtime_surge','negative',%s)""",
                                     (tenant, customer, f"prior-{index}", datetime(2026, 8, 10, 12, index, tzinfo=timezone.utc)))
             with conn.transaction():
                 alert_report = run_daily_feedback(conn, report_date=report_date, tenant_id=tenant)
@@ -33,11 +33,11 @@ def test_real_cases_trigger_voc_surge_and_boundary_does_not():
                     # today=4 is below the minimum-count condition (5).
                     for index in range(4):
                         cur.execute("""INSERT INTO customer_cases (tenant_id,customer_id,status,subject,intent,issue_code,sentiment,created_at)
-                                       VALUES (%s,%s,'running',%s,'billing','runtime_boundary','negative',%s)""",
+                                       VALUES (%s,%s,'running',%s,'incident_report','runtime_boundary','negative',%s)""",
                                     (tenant, customer, f"boundary-today-{index}", datetime(2026, 8, 12, 12, index, tzinfo=timezone.utc)))
                     for index in range(7):
                         cur.execute("""INSERT INTO customer_cases (tenant_id,customer_id,status,subject,intent,issue_code,sentiment,created_at)
-                                       VALUES (%s,%s,'running',%s,'billing','runtime_boundary','negative',%s)""",
+                                       VALUES (%s,%s,'running',%s,'incident_report','runtime_boundary','negative',%s)""",
                                     (tenant, customer, f"boundary-prior-{index}", datetime(2026, 8, 10, 12, index, tzinfo=timezone.utc)))
             with conn.transaction():
                 boundary_report = run_daily_feedback(conn, report_date=report_date, tenant_id=tenant)

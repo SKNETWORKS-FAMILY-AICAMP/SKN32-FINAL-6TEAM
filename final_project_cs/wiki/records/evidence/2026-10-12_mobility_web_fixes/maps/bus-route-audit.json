@@ -1,0 +1,5021 @@
+[
+  {
+    "route_id": "100100412",
+    "route": "6001",
+    "stop_count": 63,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100413",
+    "route": "6002",
+    "stop_count": 69,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100414",
+    "route": "6003",
+    "stop_count": 54,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100415",
+    "route": "6004",
+    "stop_count": 38,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100416",
+    "route": "6005",
+    "stop_count": 60,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100506",
+    "route": "6006",
+    "stop_count": 58,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000014",
+    "route": "6007",
+    "stop_count": 46,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100417",
+    "route": "6008",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100507",
+    "route": "6009",
+    "stop_count": 75,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100584",
+    "route": "6010",
+    "stop_count": 71,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100418",
+    "route": "6011",
+    "stop_count": 63,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100419",
+    "route": "6012",
+    "stop_count": 61,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100420",
+    "route": "6013",
+    "stop_count": 64,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100421",
+    "route": "6014",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100422",
+    "route": "6015",
+    "stop_count": 52,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100423",
+    "route": "6016",
+    "stop_count": 63,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100533",
+    "route": "6017",
+    "stop_count": 61,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100538",
+    "route": "6018",
+    "stop_count": 59,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115000006",
+    "route": "6019",
+    "stop_count": 62,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100509",
+    "route": "6020",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100513",
+    "route": "6100",
+    "stop_count": 49,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122000012",
+    "route": "6100-1",
+    "stop_count": 49,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100373",
+    "route": "6101",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122000002",
+    "route": "6102",
+    "stop_count": 42,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000013",
+    "route": "6103",
+    "stop_count": 49,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122000011",
+    "route": "6104",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000006",
+    "route": "6200",
+    "stop_count": 73,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100508",
+    "route": "6300",
+    "stop_count": 84,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "123000014",
+    "route": "6500",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "123000002",
+    "route": "6600",
+    "stop_count": 41,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100567",
+    "route": "6701",
+    "stop_count": 41,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100573",
+    "route": "6702",
+    "stop_count": 59,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100572",
+    "route": "6703",
+    "stop_count": 54,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100570",
+    "route": "6705A",
+    "stop_count": 56,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000016",
+    "route": "N6000",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115000009",
+    "route": "N6002",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122000004",
+    "route": "N6701",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122000006",
+    "route": "N6703",
+    "stop_count": 43,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900003",
+    "route": "강남01",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900006",
+    "route": "강남02",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900004",
+    "route": "강남03",
+    "stop_count": 33,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900002",
+    "route": "강남05",
+    "stop_count": 45,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900005",
+    "route": "강남06",
+    "stop_count": 46,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900007",
+    "route": "강남06-1",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900010",
+    "route": "강남06-2",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900001",
+    "route": "강남07",
+    "stop_count": 46,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900008",
+    "route": "강남08",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122900009",
+    "route": "강남10",
+    "stop_count": 43,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124900002",
+    "route": "강동01",
+    "stop_count": 79,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124900003",
+    "route": "강동02",
+    "stop_count": 92,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124900001",
+    "route": "강동05",
+    "stop_count": 82,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900006",
+    "route": "강북01",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900002",
+    "route": "강북02",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900003",
+    "route": "강북03",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900005",
+    "route": "강북04",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900008",
+    "route": "강북05",
+    "stop_count": 40,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900007",
+    "route": "강북06",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900013",
+    "route": "강북08",
+    "stop_count": 16,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900004",
+    "route": "강북09",
+    "stop_count": 52,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900009",
+    "route": "강북10",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115900006",
+    "route": "강서01",
+    "stop_count": 41,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115900003",
+    "route": "강서02",
+    "stop_count": 49,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115900004",
+    "route": "강서03",
+    "stop_count": 71,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115900001",
+    "route": "강서04",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115900005",
+    "route": "강서05",
+    "stop_count": 72,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115900008",
+    "route": "강서05-1",
+    "stop_count": 15,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115900002",
+    "route": "강서06",
+    "stop_count": 38,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115900007",
+    "route": "강서07",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900005",
+    "route": "관악01",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900011",
+    "route": "관악02-1",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900012",
+    "route": "관악02-2",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900003",
+    "route": "관악03",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900009",
+    "route": "관악04",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900010",
+    "route": "관악05",
+    "stop_count": 21,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900004",
+    "route": "관악06",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900006",
+    "route": "관악07",
+    "stop_count": 10,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900007",
+    "route": "관악08",
+    "stop_count": 37,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900002",
+    "route": "관악10",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104900005",
+    "route": "광진01",
+    "stop_count": 45,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104900003",
+    "route": "광진02",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104900002",
+    "route": "광진03",
+    "stop_count": 45,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104900001",
+    "route": "광진04",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104900004",
+    "route": "광진05",
+    "stop_count": 37,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900013",
+    "route": "구로01",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900014",
+    "route": "구로02",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900010",
+    "route": "구로03",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900011",
+    "route": "구로04",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900009",
+    "route": "구로05",
+    "stop_count": 35,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900012",
+    "route": "구로06",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900006",
+    "route": "구로07",
+    "stop_count": 46,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900015",
+    "route": "구로08",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900007",
+    "route": "구로09",
+    "stop_count": 53,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900003",
+    "route": "구로10",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900008",
+    "route": "금천01",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900006",
+    "route": "금천02",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900003",
+    "route": "금천03",
+    "stop_count": 31,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900002",
+    "route": "금천04",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900001",
+    "route": "금천05",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900004",
+    "route": "금천06",
+    "stop_count": 46,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900007",
+    "route": "금천07",
+    "stop_count": 49,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900005",
+    "route": "금천08",
+    "stop_count": 43,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110900004",
+    "route": "노원01",
+    "stop_count": 13,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110900009",
+    "route": "노원02",
+    "stop_count": 46,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110900005",
+    "route": "노원03",
+    "stop_count": 33,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110900003",
+    "route": "노원05",
+    "stop_count": 31,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110900007",
+    "route": "노원08",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110900006",
+    "route": "노원09",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900001",
+    "route": "도봉01",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900010",
+    "route": "도봉02",
+    "stop_count": 31,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900007",
+    "route": "도봉03",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900008",
+    "route": "도봉04",
+    "stop_count": 18,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900004",
+    "route": "도봉05",
+    "stop_count": 37,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900003",
+    "route": "도봉06",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900002",
+    "route": "도봉07",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900006",
+    "route": "도봉08",
+    "stop_count": 45,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900005",
+    "route": "도봉09",
+    "stop_count": 54,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "105900003",
+    "route": "동대문01",
+    "stop_count": 6,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "105900002",
+    "route": "동대문02",
+    "stop_count": 21,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "105900006",
+    "route": "동대문03",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "105900001",
+    "route": "동대문05",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900007",
+    "route": "동작01",
+    "stop_count": 43,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900013",
+    "route": "동작02",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900020",
+    "route": "동작03",
+    "stop_count": 35,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900022",
+    "route": "동작05",
+    "stop_count": 40,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900023",
+    "route": "동작05-1",
+    "stop_count": 21,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900014",
+    "route": "동작06",
+    "stop_count": 21,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900018",
+    "route": "동작07",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900009",
+    "route": "동작08",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900019",
+    "route": "동작09",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900006",
+    "route": "동작10",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900001",
+    "route": "동작20",
+    "stop_count": 19,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "102900001",
+    "route": "마포01",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900005",
+    "route": "마포02",
+    "stop_count": 17,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900002",
+    "route": "마포03",
+    "stop_count": 19,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900011",
+    "route": "마포05",
+    "stop_count": 11,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900012",
+    "route": "마포06",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900010",
+    "route": "마포07",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900013",
+    "route": "마포08",
+    "stop_count": 53,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900015",
+    "route": "마포09",
+    "stop_count": 42,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900008",
+    "route": "마포10",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900010",
+    "route": "서대문01",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900014",
+    "route": "서대문02대",
+    "stop_count": 43,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900015",
+    "route": "서대문02소",
+    "stop_count": 18,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900004",
+    "route": "서대문03",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900011",
+    "route": "서대문04",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900009",
+    "route": "서대문05",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900007",
+    "route": "서대문06",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900003",
+    "route": "서대문07",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900012",
+    "route": "서대문08",
+    "stop_count": 19,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900012",
+    "route": "서대문09대",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900013",
+    "route": "서대문09소",
+    "stop_count": 17,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900001",
+    "route": "서대문10",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900009",
+    "route": "서초01",
+    "stop_count": 17,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900008",
+    "route": "서초02",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900005",
+    "route": "서초03",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900003",
+    "route": "서초05",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900002",
+    "route": "서초06",
+    "stop_count": 17,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900011",
+    "route": "서초07",
+    "stop_count": 21,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900002",
+    "route": "서초08",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900007",
+    "route": "서초09",
+    "stop_count": 47,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900003",
+    "route": "서초10",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900004",
+    "route": "서초20",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900003",
+    "route": "성동01",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900004",
+    "route": "성동02",
+    "stop_count": 62,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900011",
+    "route": "성동03-1",
+    "stop_count": 37,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900012",
+    "route": "성동03-2",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "101900001",
+    "route": "성동05",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900002",
+    "route": "성동08",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900001",
+    "route": "성동09",
+    "stop_count": 18,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900008",
+    "route": "성동10",
+    "stop_count": 21,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900008",
+    "route": "성북01",
+    "stop_count": 31,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900003",
+    "route": "성북02",
+    "stop_count": 38,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900002",
+    "route": "성북03",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900005",
+    "route": "성북04",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900011",
+    "route": "성북05",
+    "stop_count": 11,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900012",
+    "route": "성북06",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900013",
+    "route": "성북07",
+    "stop_count": 13,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900007",
+    "route": "성북08",
+    "stop_count": 19,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900006",
+    "route": "성북09",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900018",
+    "route": "성북10",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "105900004",
+    "route": "성북20",
+    "stop_count": 37,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "123900001",
+    "route": "송파01",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "123900002",
+    "route": "송파02",
+    "stop_count": 31,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "123900003",
+    "route": "송파03",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "114900001",
+    "route": "양천01",
+    "stop_count": 35,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "114900002",
+    "route": "양천02",
+    "stop_count": 38,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "114900003",
+    "route": "양천03",
+    "stop_count": 56,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900018",
+    "route": "양천04",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900008",
+    "route": "영등포01",
+    "stop_count": 45,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "118900004",
+    "route": "영등포02",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "118900005",
+    "route": "영등포03",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "118900001",
+    "route": "영등포04",
+    "stop_count": 38,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "118900006",
+    "route": "영등포05",
+    "stop_count": 42,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "118900003",
+    "route": "영등포06",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "118900002",
+    "route": "영등포07",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "118900007",
+    "route": "영등포08",
+    "stop_count": 16,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900017",
+    "route": "영등포09",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "118900008",
+    "route": "영등포10",
+    "stop_count": 13,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "102900003",
+    "route": "용산01",
+    "stop_count": 19,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "102900002",
+    "route": "용산02",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "102900004",
+    "route": "용산03",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "101900002",
+    "route": "용산04",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900003",
+    "route": "은평02",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900014",
+    "route": "은평03-1",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900015",
+    "route": "은평03-2",
+    "stop_count": 14,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900004",
+    "route": "은평04",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900005",
+    "route": "은평05",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900007",
+    "route": "은평06",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900006",
+    "route": "은평07",
+    "stop_count": 14,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900011",
+    "route": "은평08-1",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900012",
+    "route": "은평08-2",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900009",
+    "route": "은평09",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111900010",
+    "route": "은평10",
+    "stop_count": 19,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900006",
+    "route": "종로01",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900008",
+    "route": "종로02",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900010",
+    "route": "종로03",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900011",
+    "route": "종로05",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900004",
+    "route": "종로07",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900005",
+    "route": "종로08",
+    "stop_count": 31,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900003",
+    "route": "종로09",
+    "stop_count": 19,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "106900001",
+    "route": "중랑01",
+    "stop_count": 18,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "106900002",
+    "route": "중랑02",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104000014",
+    "route": "040",
+    "stop_count": 85,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100549",
+    "route": "100",
+    "stop_count": 122,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100006",
+    "route": "101",
+    "stop_count": 81,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100007",
+    "route": "102",
+    "stop_count": 67,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100008",
+    "route": "103",
+    "stop_count": 70,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100009",
+    "route": "104",
+    "stop_count": 65,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100010",
+    "route": "105",
+    "stop_count": 86,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100012",
+    "route": "107",
+    "stop_count": 120,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100014",
+    "route": "109",
+    "stop_count": 64,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100016",
+    "route": "110A고려대",
+    "stop_count": 88,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100015",
+    "route": "110B국민대",
+    "stop_count": 91,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100017",
+    "route": "120",
+    "stop_count": 90,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100018",
+    "route": "130",
+    "stop_count": 87,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100019",
+    "route": "140",
+    "stop_count": 88,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100029",
+    "route": "150",
+    "stop_count": 123,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100033",
+    "route": "160",
+    "stop_count": 120,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100038",
+    "route": "201",
+    "stop_count": 116,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100039",
+    "route": "202",
+    "stop_count": 131,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100407",
+    "route": "240",
+    "stop_count": 122,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100042",
+    "route": "260",
+    "stop_count": 97,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100046",
+    "route": "270",
+    "stop_count": 98,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100051",
+    "route": "301",
+    "stop_count": 100,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100052",
+    "route": "302",
+    "stop_count": 126,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100053",
+    "route": "303",
+    "stop_count": 106,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100564",
+    "route": "320",
+    "stop_count": 88,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100055",
+    "route": "340",
+    "stop_count": 106,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100553",
+    "route": "350",
+    "stop_count": 97,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100057",
+    "route": "360",
+    "stop_count": 91,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100061",
+    "route": "370",
+    "stop_count": 94,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100596",
+    "route": "400",
+    "stop_count": 104,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100062",
+    "route": "401",
+    "stop_count": 99,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100063",
+    "route": "402",
+    "stop_count": 110,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100597",
+    "route": "405",
+    "stop_count": 87,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100064",
+    "route": "406",
+    "stop_count": 68,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100068",
+    "route": "420",
+    "stop_count": 89,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100459",
+    "route": "440",
+    "stop_count": 95,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100073",
+    "route": "470",
+    "stop_count": 85,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100076",
+    "route": "500",
+    "stop_count": 84,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100077",
+    "route": "501",
+    "stop_count": 59,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100410",
+    "route": "502",
+    "stop_count": 132,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100078",
+    "route": "503",
+    "stop_count": 89,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100079",
+    "route": "504",
+    "stop_count": 97,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100080",
+    "route": "505",
+    "stop_count": 97,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100081",
+    "route": "506",
+    "stop_count": 100,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100082",
+    "route": "507",
+    "stop_count": 105,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100083",
+    "route": "540",
+    "stop_count": 94,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100085",
+    "route": "600",
+    "stop_count": 71,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100086",
+    "route": "601",
+    "stop_count": 77,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100087",
+    "route": "602",
+    "stop_count": 87,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100088",
+    "route": "603",
+    "stop_count": 82,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100089",
+    "route": "604",
+    "stop_count": 89,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100090",
+    "route": "605",
+    "stop_count": 105,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100091",
+    "route": "606",
+    "stop_count": 125,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100093",
+    "route": "640",
+    "stop_count": 79,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100097",
+    "route": "650",
+    "stop_count": 97,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116000004",
+    "route": "660",
+    "stop_count": 101,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100440",
+    "route": "700",
+    "stop_count": 95,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100103",
+    "route": "701",
+    "stop_count": 73,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100104",
+    "route": "702A",
+    "stop_count": 79,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100105",
+    "route": "702B",
+    "stop_count": 80,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116000006",
+    "route": "703",
+    "stop_count": 116,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100107",
+    "route": "704",
+    "stop_count": 77,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100587",
+    "route": "705",
+    "stop_count": 69,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000027",
+    "route": "706",
+    "stop_count": 64,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000022",
+    "route": "707",
+    "stop_count": 126,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "123000011",
+    "route": "708",
+    "stop_count": 62,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000028",
+    "route": "709",
+    "stop_count": 69,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100110",
+    "route": "710",
+    "stop_count": 75,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100111",
+    "route": "720",
+    "stop_count": 111,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100537",
+    "route": "740",
+    "stop_count": 93,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100114",
+    "route": "750A",
+    "stop_count": 83,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100565",
+    "route": "750B",
+    "stop_count": 76,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100511",
+    "route": "760",
+    "stop_count": 101,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100000025",
+    "route": "동대문A01",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "101900003",
+    "route": "동작A01",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100000024",
+    "route": "새벽A160",
+    "stop_count": 87,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "101000010",
+    "route": "새벽A504",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100000027",
+    "route": "서대문A01",
+    "stop_count": 14,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115000011",
+    "route": "서울02출근",
+    "stop_count": 7,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115000013",
+    "route": "서울02퇴근",
+    "stop_count": 7,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000021",
+    "route": "서울04출근",
+    "stop_count": 13,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000025",
+    "route": "서울04퇴근",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109000002",
+    "route": "서울05출근",
+    "stop_count": 9,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109000004",
+    "route": "서울05퇴근",
+    "stop_count": 9,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "102000001",
+    "route": "서울07출근",
+    "stop_count": 9,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "106000005",
+    "route": "서울07퇴근",
+    "stop_count": 9,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000023",
+    "route": "서울08출근",
+    "stop_count": 13,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000026",
+    "route": "서울08퇴근",
+    "stop_count": 13,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110000007",
+    "route": "서울09출근",
+    "stop_count": 14,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110000008",
+    "route": "서울09퇴근",
+    "stop_count": 14,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109000003",
+    "route": "서울10출근",
+    "stop_count": 8,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109000006",
+    "route": "서울10퇴근",
+    "stop_count": 8,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100124",
+    "route": "0017",
+    "stop_count": 41,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104000012",
+    "route": "0411",
+    "stop_count": 96,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100129",
+    "route": "1014",
+    "stop_count": 37,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100130",
+    "route": "1017",
+    "stop_count": 70,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100131",
+    "route": "1020",
+    "stop_count": 54,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100138",
+    "route": "1120",
+    "stop_count": 85,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100146",
+    "route": "1130",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100155",
+    "route": "1140",
+    "stop_count": 49,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100186",
+    "route": "2012",
+    "stop_count": 113,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100188",
+    "route": "2013",
+    "stop_count": 62,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100189",
+    "route": "2014",
+    "stop_count": 67,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100190",
+    "route": "2015",
+    "stop_count": 83,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100522",
+    "route": "2016",
+    "stop_count": 138,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100203",
+    "route": "2230",
+    "stop_count": 92,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100438",
+    "route": "3011",
+    "stop_count": 88,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100218",
+    "route": "3220",
+    "stop_count": 91,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100579",
+    "route": "3420",
+    "stop_count": 89,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100248",
+    "route": "5012",
+    "stop_count": 103,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100264",
+    "route": "5530",
+    "stop_count": 115,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100277",
+    "route": "5620",
+    "stop_count": 68,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100284",
+    "route": "5630",
+    "stop_count": 71,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100300",
+    "route": "6620",
+    "stop_count": 61,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100307",
+    "route": "6630",
+    "stop_count": 97,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100601",
+    "route": "6640A",
+    "stop_count": 48,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100602",
+    "route": "6640B",
+    "stop_count": 47,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100450",
+    "route": "7011",
+    "stop_count": 79,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100449",
+    "route": "7013A",
+    "stop_count": 78,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100448",
+    "route": "7013B",
+    "stop_count": 80,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100447",
+    "route": "7016",
+    "stop_count": 106,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100337",
+    "route": "7017",
+    "stop_count": 91,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100338",
+    "route": "7018",
+    "stop_count": 56,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100339",
+    "route": "7019",
+    "stop_count": 89,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100340",
+    "route": "7021",
+    "stop_count": 75,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100341",
+    "route": "7022",
+    "stop_count": 72,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100342",
+    "route": "7024",
+    "stop_count": 31,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100446",
+    "route": "7025",
+    "stop_count": 71,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100352",
+    "route": "7720",
+    "stop_count": 76,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100360",
+    "route": "7730",
+    "stop_count": 74,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000003",
+    "route": "8002",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000004",
+    "route": "8003",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110000005",
+    "route": "8101",
+    "stop_count": 55,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100001",
+    "route": "01A",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "106000004",
+    "route": "01B",
+    "stop_count": 15,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100000026",
+    "route": "청계A01",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100389",
+    "route": "9401",
+    "stop_count": 65,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113000004",
+    "route": "9401-1",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100391",
+    "route": "9404",
+    "stop_count": 60,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100392",
+    "route": "9408",
+    "stop_count": 123,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000005",
+    "route": "9409",
+    "stop_count": 87,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100400",
+    "route": "9707",
+    "stop_count": 78,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000006",
+    "route": "서울01출근",
+    "stop_count": 11,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000010",
+    "route": "서울01퇴근",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000020",
+    "route": "서울03출근",
+    "stop_count": 7,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000024",
+    "route": "서울03퇴근",
+    "stop_count": 7,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113000005",
+    "route": "서울06출근",
+    "stop_count": 11,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109000005",
+    "route": "서울06퇴근",
+    "stop_count": 11,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900016",
+    "route": "TOUR01",
+    "stop_count": 15,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "101000001",
+    "route": "TOUR02",
+    "stop_count": 11,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "101000003",
+    "route": "TOUR04",
+    "stop_count": 9,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100591",
+    "route": "N30",
+    "stop_count": 96,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900001",
+    "route": "강북11",
+    "stop_count": 50,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900012",
+    "route": "강북12",
+    "stop_count": 17,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "114900004",
+    "route": "관악11",
+    "stop_count": 16,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900004",
+    "route": "구로11",
+    "stop_count": 41,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900002",
+    "route": "구로12",
+    "stop_count": 17,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900001",
+    "route": "구로13",
+    "stop_count": 13,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900005",
+    "route": "구로14",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116900016",
+    "route": "구로15",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900010",
+    "route": "금천11",
+    "stop_count": 35,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117900012",
+    "route": "금천11-1",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110900002",
+    "route": "노원11",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900011",
+    "route": "노원14",
+    "stop_count": 66,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "109900010",
+    "route": "노원15",
+    "stop_count": 82,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900011",
+    "route": "동작11",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900021",
+    "route": "동작12",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120900001",
+    "route": "동작13",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900012",
+    "route": "동작14",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900010",
+    "route": "동작15",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900017",
+    "route": "동작16",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900016",
+    "route": "동작17",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900015",
+    "route": "동작18",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900008",
+    "route": "동작19",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900024",
+    "route": "동작21",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900004",
+    "route": "마포11",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900003",
+    "route": "마포12",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900007",
+    "route": "마포13",
+    "stop_count": 33,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900014",
+    "route": "마포15",
+    "stop_count": 42,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900009",
+    "route": "마포16",
+    "stop_count": 40,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900001",
+    "route": "마포17",
+    "stop_count": 14,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900016",
+    "route": "마포18",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113900017",
+    "route": "마포18-1",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900006",
+    "route": "서대문11",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900002",
+    "route": "서대문12",
+    "stop_count": 19,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900005",
+    "route": "서대문13",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112900008",
+    "route": "서대문14",
+    "stop_count": 21,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108900014",
+    "route": "서대문15",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900006",
+    "route": "서초11",
+    "stop_count": 37,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900013",
+    "route": "서초13",
+    "stop_count": 51,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900010",
+    "route": "서초14",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900012",
+    "route": "서초15",
+    "stop_count": 38,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900005",
+    "route": "서초16",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "119900004",
+    "route": "서초17",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900016",
+    "route": "서초18",
+    "stop_count": 45,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900015",
+    "route": "서초18-1",
+    "stop_count": 35,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900001",
+    "route": "서초21",
+    "stop_count": 50,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900009",
+    "route": "성동12",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900010",
+    "route": "성동13",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900013",
+    "route": "성동14",
+    "stop_count": 13,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103900014",
+    "route": "성동15",
+    "stop_count": 17,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900004",
+    "route": "성북12",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900001",
+    "route": "성북13",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900010",
+    "route": "성북14-1",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900016",
+    "route": "성북14-2",
+    "stop_count": 18,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900015",
+    "route": "성북15",
+    "stop_count": 17,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "105900005",
+    "route": "성북21",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "118900009",
+    "route": "영등포11",
+    "stop_count": 10,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "114900006",
+    "route": "영등포12",
+    "stop_count": 27,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "114900005",
+    "route": "영등포13",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900007",
+    "route": "종로11",
+    "stop_count": 20,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900009",
+    "route": "종로12",
+    "stop_count": 16,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100900002",
+    "route": "종로13",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104000009",
+    "route": "111",
+    "stop_count": 116,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100583",
+    "route": "121",
+    "stop_count": 86,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100020",
+    "route": "141",
+    "stop_count": 105,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100021",
+    "route": "142",
+    "stop_count": 106,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100022",
+    "route": "143",
+    "stop_count": 113,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100023",
+    "route": "144",
+    "stop_count": 99,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100024",
+    "route": "145",
+    "stop_count": 103,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100025",
+    "route": "146",
+    "stop_count": 135,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100026",
+    "route": "147",
+    "stop_count": 115,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100027",
+    "route": "148",
+    "stop_count": 84,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100030",
+    "route": "151",
+    "stop_count": 95,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100031",
+    "route": "152",
+    "stop_count": 131,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100034",
+    "route": "162",
+    "stop_count": 77,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100032",
+    "route": "163",
+    "stop_count": 112,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100036",
+    "route": "171",
+    "stop_count": 84,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100037",
+    "route": "172",
+    "stop_count": 108,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110000002",
+    "route": "173",
+    "stop_count": 112,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100595",
+    "route": "241",
+    "stop_count": 124,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100043",
+    "route": "261",
+    "stop_count": 120,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100047",
+    "route": "271",
+    "stop_count": 123,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100056",
+    "route": "341",
+    "stop_count": 93,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100454",
+    "route": "361",
+    "stop_count": 95,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100409",
+    "route": "421",
+    "stop_count": 113,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100070",
+    "route": "441",
+    "stop_count": 127,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100071",
+    "route": "461",
+    "stop_count": 139,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100574",
+    "route": "541",
+    "stop_count": 123,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100084",
+    "route": "571",
+    "stop_count": 121,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100094",
+    "route": "641",
+    "stop_count": 98,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100098",
+    "route": "651",
+    "stop_count": 99,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100102",
+    "route": "661",
+    "stop_count": 126,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100112",
+    "route": "721",
+    "stop_count": 90,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "123000010",
+    "route": "741",
+    "stop_count": 95,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000014",
+    "route": "761",
+    "stop_count": 83,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100437",
+    "route": "771",
+    "stop_count": 102,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110000004",
+    "route": "8146",
+    "stop_count": 135,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "101000009",
+    "route": "새벽A148",
+    "stop_count": 41,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100000028",
+    "route": "새벽A741",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100132",
+    "route": "1111",
+    "stop_count": 77,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000007",
+    "route": "1112",
+    "stop_count": 62,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100133",
+    "route": "1113",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100134",
+    "route": "1114",
+    "stop_count": 25,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100566",
+    "route": "1115",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000001",
+    "route": "1116",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100137",
+    "route": "1119",
+    "stop_count": 65,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100425",
+    "route": "1122",
+    "stop_count": 63,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100139",
+    "route": "1124",
+    "stop_count": 37,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100142",
+    "route": "1126",
+    "stop_count": 66,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100143",
+    "route": "1127",
+    "stop_count": 60,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100144",
+    "route": "1128",
+    "stop_count": 81,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100145",
+    "route": "1129",
+    "stop_count": 22,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100147",
+    "route": "1131",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100148",
+    "route": "1132",
+    "stop_count": 65,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100149",
+    "route": "1133",
+    "stop_count": 48,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100150",
+    "route": "1135",
+    "stop_count": 59,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100151",
+    "route": "1136",
+    "stop_count": 39,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100152",
+    "route": "1137",
+    "stop_count": 78,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100153",
+    "route": "1138",
+    "stop_count": 52,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100154",
+    "route": "1139",
+    "stop_count": 72,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100156",
+    "route": "1141",
+    "stop_count": 54,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100157",
+    "route": "1142",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100158",
+    "route": "1143",
+    "stop_count": 70,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100159",
+    "route": "1144",
+    "stop_count": 61,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100164",
+    "route": "1154",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100170",
+    "route": "1162",
+    "stop_count": 38,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100171",
+    "route": "1164",
+    "stop_count": 29,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100172",
+    "route": "1165",
+    "stop_count": 66,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108000002",
+    "route": "1167",
+    "stop_count": 51,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100175",
+    "route": "1213",
+    "stop_count": 68,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100177",
+    "route": "1218",
+    "stop_count": 85,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100178",
+    "route": "1221",
+    "stop_count": 45,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100179",
+    "route": "1222",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100181",
+    "route": "1224",
+    "stop_count": 88,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100183",
+    "route": "1226",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100184",
+    "route": "1227",
+    "stop_count": 67,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100185",
+    "route": "1711",
+    "stop_count": 64,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100191",
+    "route": "2112",
+    "stop_count": 112,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100192",
+    "route": "2113",
+    "stop_count": 68,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100193",
+    "route": "2114",
+    "stop_count": 79,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100598",
+    "route": "2115",
+    "stop_count": 108,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110000009",
+    "route": "2155",
+    "stop_count": 71,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100194",
+    "route": "2211",
+    "stop_count": 51,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100166",
+    "route": "2212",
+    "stop_count": 88,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100198",
+    "route": "2221",
+    "stop_count": 61,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100599",
+    "route": "2311",
+    "stop_count": 117,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "106000008",
+    "route": "2312A",
+    "stop_count": 105,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100611",
+    "route": "2312B",
+    "stop_count": 105,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100209",
+    "route": "2412",
+    "stop_count": 76,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100210",
+    "route": "2413",
+    "stop_count": 69,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100211",
+    "route": "2415",
+    "stop_count": 52,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104000010",
+    "route": "2416",
+    "stop_count": 88,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100212",
+    "route": "3212",
+    "stop_count": 67,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100213",
+    "route": "3214",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100215",
+    "route": "3216",
+    "stop_count": 91,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100216",
+    "route": "3217",
+    "stop_count": 83,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100219",
+    "route": "3313",
+    "stop_count": 42,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100220",
+    "route": "3314",
+    "stop_count": 69,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100221",
+    "route": "3315",
+    "stop_count": 75,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100222",
+    "route": "3316",
+    "stop_count": 42,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100478",
+    "route": "3317",
+    "stop_count": 42,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100498",
+    "route": "3318",
+    "stop_count": 114,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100501",
+    "route": "3319",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100578",
+    "route": "3321",
+    "stop_count": 74,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100223",
+    "route": "3411",
+    "stop_count": 91,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100224",
+    "route": "3412",
+    "stop_count": 117,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100225",
+    "route": "3413",
+    "stop_count": 101,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100226",
+    "route": "3414",
+    "stop_count": 89,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100228",
+    "route": "3416",
+    "stop_count": 65,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100229",
+    "route": "3417",
+    "stop_count": 60,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100604",
+    "route": "4211",
+    "stop_count": 75,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100234",
+    "route": "4212",
+    "stop_count": 72,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100500",
+    "route": "4312",
+    "stop_count": 86,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100237",
+    "route": "4318",
+    "stop_count": 108,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100427",
+    "route": "4319",
+    "stop_count": 78,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100249",
+    "route": "5413",
+    "stop_count": 86,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100250",
+    "route": "5511",
+    "stop_count": 73,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100251",
+    "route": "5513",
+    "stop_count": 44,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100252",
+    "route": "5515",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100253",
+    "route": "5516",
+    "stop_count": 74,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100254",
+    "route": "5517",
+    "stop_count": 90,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100255",
+    "route": "5519",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100265",
+    "route": "5531",
+    "stop_count": 110,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100295",
+    "route": "5611",
+    "stop_count": 38,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100272",
+    "route": "5615",
+    "stop_count": 64,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100273",
+    "route": "5616",
+    "stop_count": 116,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100274",
+    "route": "5617",
+    "stop_count": 18,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100275",
+    "route": "5618",
+    "stop_count": 68,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100276",
+    "route": "5619",
+    "stop_count": 54,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100278",
+    "route": "5621",
+    "stop_count": 18,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100286",
+    "route": "5712",
+    "stop_count": 92,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100287",
+    "route": "5713",
+    "stop_count": 92,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100288",
+    "route": "5714",
+    "stop_count": 95,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100289",
+    "route": "6211",
+    "stop_count": 110,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100290",
+    "route": "6411",
+    "stop_count": 117,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100291",
+    "route": "6511",
+    "stop_count": 89,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100292",
+    "route": "6512",
+    "stop_count": 81,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100294",
+    "route": "6514",
+    "stop_count": 107,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100521",
+    "route": "6515",
+    "stop_count": 112,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100576",
+    "route": "6516",
+    "stop_count": 121,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115000014",
+    "route": "6611",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100453",
+    "route": "6613",
+    "stop_count": 81,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100297",
+    "route": "6614",
+    "stop_count": 91,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116000002",
+    "route": "6615",
+    "stop_count": 43,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100298",
+    "route": "6616",
+    "stop_count": 80,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100299",
+    "route": "6617",
+    "stop_count": 56,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100308",
+    "route": "6631",
+    "stop_count": 92,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100330",
+    "route": "6712",
+    "stop_count": 86,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100293",
+    "route": "6713",
+    "stop_count": 73,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100331",
+    "route": "6714",
+    "stop_count": 68,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100332",
+    "route": "6715",
+    "stop_count": 61,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100451",
+    "route": "6716",
+    "stop_count": 105,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100344",
+    "route": "7211",
+    "stop_count": 109,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100499",
+    "route": "7212",
+    "stop_count": 143,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100345",
+    "route": "7611",
+    "stop_count": 80,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100346",
+    "route": "7612",
+    "stop_count": 47,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100347",
+    "route": "7613",
+    "stop_count": 88,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100348",
+    "route": "7711",
+    "stop_count": 41,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100349",
+    "route": "7713",
+    "stop_count": 68,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100462",
+    "route": "7715",
+    "stop_count": 61,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112000005",
+    "route": "7716",
+    "stop_count": 45,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000008",
+    "route": "7719",
+    "stop_count": 33,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000009",
+    "route": "8111",
+    "stop_count": 30,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "110000006",
+    "route": "8112",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "106000001",
+    "route": "8221",
+    "stop_count": 15,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000010",
+    "route": "8331",
+    "stop_count": 14,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "103000001",
+    "route": "8441",
+    "stop_count": 10,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100383",
+    "route": "8541",
+    "stop_count": 56,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "108000001",
+    "route": "8551",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116000005",
+    "route": "8561",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "114000002",
+    "route": "8641",
+    "stop_count": 117,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "120000003",
+    "route": "8661",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "114000003",
+    "route": "8671",
+    "stop_count": 31,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000009",
+    "route": "8771",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "101000006",
+    "route": "상암A21",
+    "stop_count": 8,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100607",
+    "route": "9711",
+    "stop_count": 80,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100000017",
+    "route": "TOUR11",
+    "stop_count": 18,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100000018",
+    "route": "TOUR12",
+    "stop_count": 10,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100593",
+    "route": "N13",
+    "stop_count": 146,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100610",
+    "route": "N15",
+    "stop_count": 146,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100592",
+    "route": "N16",
+    "stop_count": 132,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104000011",
+    "route": "N31",
+    "stop_count": 146,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "117000002",
+    "route": "N51",
+    "stop_count": 162,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100589",
+    "route": "N61",
+    "stop_count": 188,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "101000005",
+    "route": "심야A21",
+    "stop_count": 44,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121900014",
+    "route": "서초22",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107900009",
+    "route": "성북22",
+    "stop_count": 23,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104000006",
+    "route": "242",
+    "stop_count": 108,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100044",
+    "route": "262",
+    "stop_count": 136,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100048",
+    "route": "272",
+    "stop_count": 94,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100049",
+    "route": "273",
+    "stop_count": 113,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000038",
+    "route": "342",
+    "stop_count": 111,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000008",
+    "route": "422",
+    "stop_count": 116,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113000002",
+    "route": "452",
+    "stop_count": 127,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100075",
+    "route": "472",
+    "stop_count": 75,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100099",
+    "route": "652",
+    "stop_count": 117,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100550",
+    "route": "662",
+    "stop_count": 75,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100495",
+    "route": "672",
+    "stop_count": 80,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100116",
+    "route": "742",
+    "stop_count": 132,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100117",
+    "route": "752",
+    "stop_count": 103,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100199",
+    "route": "2222",
+    "stop_count": 62,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100201",
+    "route": "2224",
+    "stop_count": 55,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100202",
+    "route": "2227",
+    "stop_count": 108,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100204",
+    "route": "2233",
+    "stop_count": 120,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000019",
+    "route": "2236",
+    "stop_count": 86,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100613",
+    "route": "3322",
+    "stop_count": 61,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000039",
+    "route": "3323",
+    "stop_count": 78,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "104000013",
+    "route": "3324",
+    "stop_count": 57,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100232",
+    "route": "3422",
+    "stop_count": 92,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100612",
+    "route": "3426",
+    "stop_count": 87,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100609",
+    "route": "4425",
+    "stop_count": 109,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100246",
+    "route": "4432",
+    "stop_count": 58,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100257",
+    "route": "5522A난곡",
+    "stop_count": 59,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100258",
+    "route": "5522B호암",
+    "stop_count": 54,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100259",
+    "route": "5523",
+    "stop_count": 36,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100260",
+    "route": "5524",
+    "stop_count": 94,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100261",
+    "route": "5525",
+    "stop_count": 44,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100263",
+    "route": "5528",
+    "stop_count": 82,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100279",
+    "route": "5623",
+    "stop_count": 120,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100281",
+    "route": "5625",
+    "stop_count": 78,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100282",
+    "route": "5626",
+    "stop_count": 106,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100283",
+    "route": "5627",
+    "stop_count": 67,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100301",
+    "route": "6623",
+    "stop_count": 69,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100302",
+    "route": "6624",
+    "stop_count": 70,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100303",
+    "route": "6625",
+    "stop_count": 74,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100304",
+    "route": "6627",
+    "stop_count": 71,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100305",
+    "route": "6628",
+    "stop_count": 59,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100306",
+    "route": "6629",
+    "stop_count": 95,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100309",
+    "route": "6632",
+    "stop_count": 66,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100316",
+    "route": "6642",
+    "stop_count": 74,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100353",
+    "route": "7722",
+    "stop_count": 49,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100354",
+    "route": "7723",
+    "stop_count": 40,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100357",
+    "route": "7726",
+    "stop_count": 66,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100358",
+    "route": "7727",
+    "stop_count": 104,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100359",
+    "route": "7728",
+    "stop_count": 108,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000040",
+    "route": "8332",
+    "stop_count": 32,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "121000002",
+    "route": "8442출근",
+    "stop_count": 15,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "106000006",
+    "route": "8442퇴근",
+    "stop_count": 15,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "116000001",
+    "route": "8552",
+    "stop_count": 12,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113000003",
+    "route": "8762출근",
+    "stop_count": 15,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112000006",
+    "route": "8762퇴근",
+    "stop_count": 15,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100525",
+    "route": "8772",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100586",
+    "route": "N26",
+    "stop_count": 134,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100588",
+    "route": "N62",
+    "stop_count": 167,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000017",
+    "route": "N72",
+    "stop_count": 170,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100496",
+    "route": "333",
+    "stop_count": 103,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "107000002",
+    "route": "343",
+    "stop_count": 69,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "124000036",
+    "route": "345",
+    "stop_count": 87,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100605",
+    "route": "463",
+    "stop_count": 95,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100096",
+    "route": "643",
+    "stop_count": 86,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100497",
+    "route": "653",
+    "stop_count": 56,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100551",
+    "route": "673",
+    "stop_count": 108,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100118",
+    "route": "753",
+    "stop_count": 104,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100247",
+    "route": "4433",
+    "stop_count": 34,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "122000001",
+    "route": "4435",
+    "stop_count": 56,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100267",
+    "route": "5535",
+    "stop_count": 82,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100268",
+    "route": "5536",
+    "stop_count": 65,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100269",
+    "route": "5537",
+    "stop_count": 28,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100285",
+    "route": "5633",
+    "stop_count": 112,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100266",
+    "route": "5634",
+    "stop_count": 56,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115000012",
+    "route": "6633",
+    "stop_count": 93,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100312",
+    "route": "6637",
+    "stop_count": 79,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100313",
+    "route": "6638",
+    "stop_count": 69,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000010",
+    "route": "7734",
+    "stop_count": 98,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100363",
+    "route": "7737",
+    "stop_count": 64,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100364",
+    "route": "7738",
+    "stop_count": 54,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100552",
+    "route": "7739",
+    "stop_count": 43,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "106000007",
+    "route": "8333",
+    "stop_count": 26,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112000003",
+    "route": "8773출근",
+    "stop_count": 76,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112000007",
+    "route": "8773퇴근",
+    "stop_count": 76,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100585",
+    "route": "N37",
+    "stop_count": 112,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "123000013",
+    "route": "N73",
+    "stop_count": 159,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115000007",
+    "route": "654",
+    "stop_count": 103,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000008",
+    "route": "674",
+    "stop_count": 58,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100318",
+    "route": "6645",
+    "stop_count": 68,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100320",
+    "route": "6647",
+    "stop_count": 54,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115000005",
+    "route": "6648",
+    "stop_count": 77,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100387",
+    "route": "8774",
+    "stop_count": 60,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "115000010",
+    "route": "N64",
+    "stop_count": 166,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "100100329",
+    "route": "6657",
+    "stop_count": 51,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "113000007",
+    "route": "8775출근",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000029",
+    "route": "8775퇴근",
+    "stop_count": 24,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "111000016",
+    "route": "N75",
+    "stop_count": 176,
+    "complete_stop_line": true,
+    "reason": null
+  },
+  {
+    "route_id": "112000001",
+    "route": "8777",
+    "stop_count": 18,
+    "complete_stop_line": true,
+    "reason": null
+  }
+]

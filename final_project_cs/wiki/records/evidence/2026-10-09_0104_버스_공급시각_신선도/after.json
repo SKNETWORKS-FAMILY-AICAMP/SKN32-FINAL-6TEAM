@@ -1,0 +1,47 @@
+{
+  "input": {
+    "kind": "bus_arrival",
+    "source": "seoul_bus_arrival",
+    "route_id": "100",
+    "confirmed_at": "2026-10-09T10:00:00+09:00",
+    "stops": [
+      {
+        "stop_id": "101",
+        "stop_sequence": 5,
+        "received_at": "2026-10-09T09:40:00+09:00",
+        "direction": "서울역",
+        "buses": [
+          {
+            "order": 1,
+            "eta_seconds": 180,
+            "eta_basis": "provider_message",
+            "full": false
+          },
+          {
+            "order": 2,
+            "eta_seconds": 420,
+            "eta_basis": "provider_message",
+            "full": false
+          }
+        ]
+      }
+    ]
+  },
+  "result": {
+    "source": "seoul_bus_arrival",
+    "route_id": "100",
+    "stop_id": "101",
+    "stop_sequence": 5,
+    "confirmed_at": "2026-10-09T10:00:00+09:00",
+    "observation_age_seconds": 0.0,
+    "ready_at": "2026-10-09T10:06:00+09:00",
+    "provider_received_at": "2026-10-09T09:40:00+09:00",
+    "direction": "서울역",
+    "provider_received_at_normalized": "2026-10-09T09:40:00+09:00",
+    "provider_age_seconds": 1200.0,
+    "max_provider_age_seconds": 90,
+    "max_provider_clock_ahead_seconds": 2,
+    "status": "stale",
+    "reason": "provider_refresh_required"
+  }
+}

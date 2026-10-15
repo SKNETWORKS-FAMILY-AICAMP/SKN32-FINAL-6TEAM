@@ -72,7 +72,8 @@ class Kakao:
         self.asked: list = []
         self.misses: dict = {}
 
-    def search(self, query, size=5, near=None):
+    def search(self, query, size=5, near=None, **_):
+        # ★`[2026-10-13]` 실제 어댑터처럼 반경 · 분류 인자(`radius` · `category_group_code`)도 받는다 — 시장 근처 식당 찾기가 넘긴다
         self.asked.append((query, near))
         if query.startswith("올리브영"):
             hits = [b for b in self.BRANCHES if query == "올리브영" or query.replace(" ", "") in b["name"].replace(" ", "")]
@@ -109,6 +110,9 @@ def rv(api, monkeypatch):  # noqa: F811
     #   개발 DB 원장에는 광장시장 근처 빈대떡 가게가 있어 시험 결과가 DB 내용을 따라갔다(메뉴 찾기 자체는 시험 test_intake_chain_resolve · test_dining_find_by_name)
     from app.domains.travel_ops.instances.dining.place_lookup import LedgerPlaceLookup
     monkeypatch.setattr(LedgerPlaceLookup, "find_dish_near", lambda self, text, latitude, longitude: None)
+    # ★`[2026-10-13]` 같은 이유로 「시장 · 동네 근처 식당 찾기」(`find_meal_near`)도 끈다 — 개발 DB 원장의 광장시장 근처 식당을 따라가지 않게
+    #   (근처 식당 찾기 자체는 tests/unit/travel/test_intake_meal_landmark.py)
+    monkeypatch.setattr(LedgerPlaceLookup, "find_meal_near", lambda self, latitude, longitude: None)
     op_stream._OPEN.clear()
     yield api
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
@@ -344,8 +348,10 @@ def test_a_locked_item_is_registered_as_customer_pinned(rv):
 
     with get_connection() as conn:
         items = TripStore(rv["tenant"]).latest(conn, UUID(done.json()["trip"]["trip_id"]))[1]
-    pinned = {i.title: bool(i.detail.get("customer_pinned")) for i in items}
+    pinned = {i.title: bool(i.detail.get("customer_pinned")) for i in items if i.kind != "mobility"}
     assert pinned == {"경복궁": True, "광장시장": False}      # ★감시 루프가 다시 자동으로 바꾸지 않는 일정이 된다
+    assert any(i.kind == "mobility" for i in items)
+    assert all(not i.detail.get("customer_pinned") for i in items if i.kind == "mobility")
 
 
 def test_only_existing_items_can_be_edited_and_locking_is_sent_alone(rv):
@@ -409,6 +415,7 @@ def test_a_place_the_customer_picked_is_taken_as_shown_and_stays_private_to_the_
     assert after["place_state"] == "customer" and after["place"]["name"] == "올리브영 명동 플래그십"
     assert after["place"]["source"] == "customer_pick"                    # 고객이 보낸 값은 카카오 값으로 위장하지 않는다
     assert _row(after, "place")["result"] == "ok" and after["edited"] is True and after["status"] == "adjusted"
+    assert all(m["status"] != "review" for m in done["review"]["moves"]), done["review"]
     asked_before = len(kakao.asked)
     assert asked_before >= 1                                              # 읽을 때만 물었고, 고른 값은 다시 찾지 않았다
     # 서울 밖 · 잘못된 값은 거절 — 지어낸 좌표를 받지 않는다

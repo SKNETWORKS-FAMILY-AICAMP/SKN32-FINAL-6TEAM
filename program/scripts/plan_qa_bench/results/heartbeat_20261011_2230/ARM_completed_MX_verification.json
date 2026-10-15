@@ -1,0 +1,33 @@
+{
+  "saved": 4014,
+  "expected": 4014,
+  "correct": 3637,
+  "unparsed": 0,
+  "archive_sha256": "39a5d49778c8259b70b2b27903deacc1ffcbb4083aa017e6873c31644f8a6370",
+  "verified_files": 4,
+  "audit": [
+    {
+      "name": "summary.json",
+      "sha256": "6dbd1f0500f179d3b567d2d3d5160809bee5d44ac2061ea33688038257623ccb",
+      "bytes": 371
+    },
+    {
+      "name": "attempt_1791660805262937323.json",
+      "sha256": "4ddc6836c973e6b69b306a7526ac3b182fb8333728bffcbb9a715d29a0450e15",
+      "bytes": 1349
+    },
+    {
+      "name": "engine.log",
+      "sha256": "9f1311ddc099234e266a266fa99b1de02e3840aed454ca4f7ab0f701475171d9",
+      "bytes": 3954715
+    },
+    {
+      "name": "answers.jsonl",
+      "sha256": "7c3cb33629e4e5b78cf591b05ddaff72f26d48ca2066ced4ada15279a705d5f3",
+      "bytes": 1984358
+    }
+  ],
+  "training_lineage": "existing merged e4bt; exact oos recipe unverified",
+  "not_application_accuracy": true,
+  "independent_holdout": false
+}

@@ -34,7 +34,7 @@ from app.core.contracts import ActionProposal, NextAction, TeamResult, TeamTask,
 from app.core.idempotency import idempotency_key
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, item_from_dict
-from app.domains.travel_ops.components.actions.itinerary_actions import ACTION_TYPE, CHOSEN_BY_CUSTOMER, change_arguments
+from app.domains.travel_ops.components.actions.itinerary_actions import ACTION_TYPE, CHOSEN_BY_CUSTOMER, change_arguments, options_arguments
 from app.domains.travel_ops.components.itinerary.itinerary_fit import fit_change
 from app.tools.read_tools import ToolBudgetExceeded, ToolLoopExceeded
 
@@ -80,7 +80,7 @@ class ItineraryWork:
     @property
     def question_capability(self) -> str:
         """`[2026-09-25]` 규정 질문 — **규정을 읽는** capability. 면제 목록(`policy_optional_capabilities`)에
-        넣지 않는다 → Controller 가 RAG 를 돌고, 근거가 없으면(degraded) 사람에게 간다."""
+        넣지 않는다 → Controller 가 RAG 를 돌고, 근거가 없으면(degraded) `escalated`(처리 불가)로 닫는다."""
         return f"{self.manifest.team_id}.itinerary_question"
 
     @classmethod
@@ -222,7 +222,7 @@ class ItineraryWork:
           `read.booking_terms`(취소 기한·위약금 수치)도 읽는다. 판정 입력은 **예약이 아니라 일정 항목**이다
           (v11 결정 — `activity.check_cancelable` 은 `read.booking` 을 전제해 무료·무예약 항목에서 「모름」이 된다).
         ★모델로 문장을 짓지 않는다 — 규정 절에 써 둔 **고객용 문장**을 출처와 함께 싣는다(근거 없는 문장 금지).
-          규정을 못 찾으면 지어내지 않고 「모름」으로 사람에게 간다.
+          규정을 못 찾으면 지어내지 않고 「모름」으로 `escalated`(처리 불가) 닫는다.
         """
         ref, items, seen = ctx["ref"], ctx["items"], ctx["seen"]
         item = next((i for i in items if str(i.item_id) == str(ref.get("part_id"))), None) \
@@ -302,7 +302,7 @@ class ItineraryWork:
         return datetime.now(KST)
 
     def settle(self, task: TeamTask, ctx: dict[str, Any], plan: ItineraryChange | NoChange) -> TeamResult:
-        """계산 결과 → Team 결과. 바꾸면 제안 + 통지 문구, 안 바꾸면 답 또는 사람에게."""
+        """계산 결과 → Team 결과. 바꾸면 제안 + 통지 문구, 안 바꾸면 답 또는 처리 불가(`escalated`)."""
         evidence = ctx["evidence"]
         if isinstance(plan, NoChange):
             if plan.status in ANSWERS:
@@ -349,6 +349,29 @@ class ItineraryWork:
                             warnings=plan.notice.get("warnings") or [],
                             action_proposals=[proposal],
                             decisions=[{"itinerary": plan.reason, **self._plain(plan.summary)}])
+
+    def offer(self, task: TeamTask, ctx: dict[str, Any], item: Item, *, options: list[dict[str, Any]], text: str,
+              causes: list[dict[str, Any]], decision: dict[str, Any], shown_key: str | None = None,
+              summary: dict[str, Any] | None = None) -> TeamResult:
+        """★`[2026-10-13]` 고를 안을 **일정을 바꾸지 않고** 내민다 — 「선택이 필요해요」 보류 제안(`options_arguments`).
+
+        식당 · 활동의 「다른 후보」(`TripDesk.propose_alternatives`)와 같은 모양이다. 고르면 고르기 경로(`pending.choose` → `plan_swap`)가 바꾼다.
+        ☆숙소 · 항공 팀은 전에 후보를 항목 상세에 싣는 `itinerary.apply` 로 내서 후보를 볼 때마다 일정 판이 오르고 「일정이 바뀌었어요」가 나갔다."""
+        trip = ctx["trip"]
+        base = int(ctx["ref"].get("base_version") or trip["version"])
+        arguments = options_arguments(trip_id=trip["trip_id"], base_version=base, item_id=item.item_id, options=options,
+                                      text=text, causes=causes, shown_key=shown_key, summary=summary)
+        proposal = ActionProposal(
+            action_type=ACTION_TYPE, arguments=arguments,
+            idempotency_key=idempotency_key(
+                tenant_id=task.context.tenant_id,
+                request_id=str(task.context.current_state.get("request_id") or task.case_id),
+                action_type=ACTION_TYPE, business_subject=f"{trip['trip_id']}:v{base}"),
+            # ★일정은 안 바꾼다 — 보류 제안을 열기만 한다. 고르는 것은 고객이다
+            approval_required=False, risk_level="low", rationale_evidence_ids=[])
+        return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
+                            answer=text, next_action=NextAction.RESPOND, action_proposals=[proposal],
+                            decisions=[self._plain(decision)])
 
     @staticmethod
     def _plain(value: dict[str, Any]) -> dict[str, Any]:
@@ -435,7 +458,9 @@ def customer_lines() -> dict[str, str]:
 
         manifest = Path(__file__).resolve().parents[5] / "knowledge" / "travel" / "manifest.json"
         found: dict[str, str] = {}
-        for document in load_corpus(manifest):
+        current = manifest.parent.parent / "current-travel" / "manifest.json"
+        manifests = [manifest] + ([current] if current.is_file() else [])
+        for document in (doc for path in manifests for doc in load_corpus(path)):
             answers = document.frontmatter.get("customer_answers") or {}
             for section in document.sections:
                 line = answers.get(section.title)

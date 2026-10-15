@@ -102,7 +102,7 @@ def options(found: dict[str, Any], from_id: str, to_id: str, *,
     pa, pb, a_end, b_start, b_hhmm = _inputs(a, b, move)
     modes = (only,) if only else MOVE_MODES
     if engine_for_mode is None:
-        engine_for_mode = _default_factory(party_size)
+        engine_for_mode = _default_factory(party_size, found.get("taxi_pricing"))
     if engine_for_mode is None:
         raise NotAvailable("이동 계산기가 꺼져 있다")
     engines = {m: engine_for_mode(m) for m in modes}
@@ -132,11 +132,17 @@ def options(found: dict[str, Any], from_id: str, to_id: str, *,
             "recommended_mode": move.get("recommended_mode") or current, "options": rows}
 
 
-def _default_factory(party_size: int | None) -> Callable[[str], Any] | None:
+def _default_factory(party_size: int | None, pricing=None) -> Callable[[str], Any] | None:
     """기본 계산기 팩토리. 이동 팀이 없으면 None."""
     from .review import default_engine
-    if default_engine(party_size) is None:
+    from .taxi_pricing import constraints, default
+    selected = constraints(pricing)
+    if pricing == default():
+        selected = {}  # 같은 일반호출 기본값은 옛 수단 계산기 시그니처도 유지한다.
+    if (default_engine(party_size, constraints=selected) if selected else default_engine(party_size)) is None:
         return None
+    if selected:
+        return lambda mode: default_engine(party_size, [mode], constraints=selected)
     return lambda mode: default_engine(party_size, [mode])
 
 
@@ -185,7 +191,7 @@ def choose(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision
     new = _store(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision,
                  field=f"moves[{from_id}~{to_id}].mode", value=None if mode == "recommended" else mode)
     _, found2 = pipeline.current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=new)
-    return {"revision": new, "review": review_module.public(found2)}
+    return {"revision": new, "review": review_module.public(found2, tenant_id=tenant_id)}
 
 
 def _store(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, field: str, value: Any) -> int:

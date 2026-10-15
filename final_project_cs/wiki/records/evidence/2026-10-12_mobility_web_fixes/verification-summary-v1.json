@@ -1,0 +1,25 @@
+{
+  "unique_passed": 657,
+  "unique_total": 657,
+  "runs": [
+    {
+      "path": "integrated-final-v1/result.xml",
+      "tests": 651,
+      "failures_errors_skips": 0
+    },
+    {
+      "path": "car-exceptions-public.xml",
+      "tests": 1,
+      "failures_errors_skips": 0
+    },
+    {
+      "path": "reduce-followup/after-v1/result.xml",
+      "tests": 5,
+      "failures_errors_skips": 0
+    }
+  ],
+  "source_changed_during_integrated_run": [],
+  "developer_api_calls": 0,
+  "is_field_validation": false,
+  "note": "최종 성공 실행의 시험 클래스/이름 합집합. 재실행 중복·이전 실패는 통과수에 더하지 않음."
+}

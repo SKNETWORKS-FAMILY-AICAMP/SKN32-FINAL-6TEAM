@@ -1,0 +1,65 @@
+{
+  "created_at": "2026-10-09T02:49:54.796370+09:00",
+  "osm_via_node": 4604019409,
+  "graph_node": 126485,
+  "pbf_incident_ways": [
+    {
+      "id": 333090154,
+      "tags": {
+        "highway": "primary_link",
+        "oneway": "yes"
+      },
+      "nodes": [
+        2359012515,
+        3402008603,
+        3402008604,
+        3402008607,
+        3402008610,
+        4604019409
+      ]
+    },
+    {
+      "id": 333090175,
+      "tags": {
+        "highway": "primary",
+        "name": "방화대로",
+        "name:en": "Banghwa-daero",
+        "name:ko": "방화대로",
+        "oneway": "yes"
+      },
+      "nodes": [
+        4604019409,
+        13800646803,
+        13800646942,
+        13800646895,
+        13800646861,
+        13800646899,
+        1327540325,
+        13800646873,
+        13800646936,
+        4604024500,
+        4604102194,
+        10814323760
+      ]
+    },
+    {
+      "id": 495779055,
+      "tags": {
+        "highway": "primary",
+        "name": "방화대로",
+        "name:en": "Banghwa-daero",
+        "name:ko": "방화대로",
+        "oneway": "yes"
+      },
+      "nodes": [
+        4875263068,
+        13800646896,
+        4875263069,
+        13800646840,
+        4604019409
+      ]
+    }
+  ],
+  "graph_incident_edges": [],
+  "scope": "current local PBF and graph records only; present-day physical road not observed"
+}

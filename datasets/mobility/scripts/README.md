@@ -42,3 +42,19 @@
 6. 새 파일은 `git add -f`(팀 `.gitignore` 가 `processed/**` 를 막는다 · 추적 중인 파일은 보통 `git add`).
 
 공휴일 표가 바뀌면(`holiday_collect`) 엔진 규칙 폴더 파일이 바뀌므로 회귀 기대값(요일형)을 같이 본다.
+
+
+## 2026-10-09_1402 TAGO 수집 성공·빈 자료 구분
+
+기본/빈조합재조회는 `_tago_checked.py`의 정상 결과·페이지 전체검사를 사용합니다. 실패는 기본 완료목록에 넣지 않고 재조회는 error로 보존합니다. 원문행은 raw_item·조회시각과 보존하며 기존 출력은 첫 쓰기 전 백업합니다. 성공 조합마다 완료 JSON을 교체하되 행/완료 두 파일 사이 전원장애 중복은 남았습니다. 신규38/38·관련505/505는 통제 응답 시험, 이번 실제수집0이며 기존 시간표/공표대조/명세는 바꾸지 않았습니다. [검증 보고서](../../../final_project_cs/wiki/records/reports/2026-10-09_1402_지하철_수집실패와_페이지누락_복구검증.md).
+
+## 2026-10-14 도로 사건 방향 · 역 안 통로 (「이동경로 최적화」 세션)
+
+| 산출 | 스크립트 | 원자료 |
+|---|---|---|
+| `stdlink_v1/` · `stdlink_v2/`(OSM 도로 조각 × 방향 → 전국 표준 링크 번호 · v2 는 경로 도로망 큰길 · 연결로 전체 + 일방통행은 갈 수 있는 방향만) | `build_osm_way_seg_stdlink_v1` · `build_osm_way_seg_stdlink_v2` | 국가교통정보센터 전국표준노드링크 2026-10-14판(`raw/mobility/its_nodelink_20261014_v1/`) · `graph/osm_way_geom_v1.csv` · `road_graph_v2/` |
+| `stdlink_reverse_v2/`(표준 링크마다 같은 도로 이름 · 반대 방향 짝 — 도로 사건 재현 시험 근거용) | `build_stdlink_reverse_v2` | 같은 표준노드링크 |
+| `link_reverse_v1/`(시작 · 끝 노드가 뒤바뀐 링크 — 참고용, 고리 모양 길이 많아 판정에 안 씀) | `build_link_reverse_v1` | 같은 표준노드링크 |
+| `walk_graph_seoul_v3/`(서울 보행 그래프 v2 + 지하철역 · 지하상가 안 통로) | `build_seoul_walk_indoor_v3`(읽기 도구 `juso_shp`) | 도로명주소 내부도로 전자지도 2025-12판(`raw/mobility/juso_internal_road_202512_v1/` — 주소기반산업지원서비스에서 본인 확인 후 신청) |
+
+모두 기존 폴더를 덮지 않습니다(있으면 멈춤). 결과 보고: `final_project_cs/wiki/records/reports/2026-10-14_road_event_direction_stdlink_v2/` · `2026-10-14_walk_indoor_v3/`.

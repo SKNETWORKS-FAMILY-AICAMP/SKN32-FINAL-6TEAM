@@ -20,7 +20,7 @@ LEVELS = ("여유", "보통", "혼잡", "매우혼잡", "극심")
 
 class Congestion:
     def __init__(self):
-        self.by_key = {}        # (line, station, dir, day_type, slot_min) → row
+        self.by_key = {}        # (line, station, dir, day_type, slot_min, service) → row
         self.rows = 0
         self.source_ids = set()
         self.files = []
@@ -42,13 +42,13 @@ class Congestion:
                     r = json.loads(raw)
                     if wanted is not None and (r.get("line"), r.get("station_nm")) not in wanted:
                         continue
-                    if r.get("service") not in (None, "local"):
-                        continue                      # 9호선 급행 열은 안 쓴다 — 통합 시간표에 급행 구분이 없다(33번)
+                    if r.get("service") not in (None, "local", "express"):
+                        continue
                     hh, mm = r["slot"].split(":")
                     slot = int(hh) * 60 + int(mm)
                     if slot < 5 * 60:                 # 00:00·00:30 → 24:00·24:30 (시간표와 같은 자)
                         slot += 24 * 60
-                    k = (r["line"], r["station_nm"], r["dir"], r["day_type"], slot)
+                    k = (r["line"], r["station_nm"], r["dir"], r["day_type"], slot, r.get("service"))
                     if k in cg.by_key and r.get("branch"):
                         continue                      # 본선 행이 먼저다 — 지선(branch)은 본선 값이 없을 때만
                     cg.by_key[k] = r
@@ -73,13 +73,16 @@ class Congestion:
         three = "saturday" if (wd == 5 and not is_holiday) else "sunday"
         return [three, "holiday"]
 
-    def lookup(self, line, station, dir, day_type, date, minute, levels, is_holiday=False):
-        """(값, 등급명, 행) — 없거나 근거없음이면 None."""
+    def lookup(self, line, station, dir, day_type, date, minute, levels, is_holiday=False, service=None):
+        """(값, 등급명, 행). 9호선은 선택 열차의 일반/급행을 모르면 완행으로 대신하지 않는다."""
         if minute is None:
             return None
+        if line == "09호선" and service not in ("local", "express"):
+            return None
+        row_service = service if line == "09호선" else None
         slot = (minute // 30) * 30
         for dk in self.day_key(day_type, date, is_holiday):
-            r = self.by_key.get((line, station, dir, dk, slot))
+            r = self.by_key.get((line, station, dir, dk, slot, row_service))
             if r is not None:
                 break
         else:

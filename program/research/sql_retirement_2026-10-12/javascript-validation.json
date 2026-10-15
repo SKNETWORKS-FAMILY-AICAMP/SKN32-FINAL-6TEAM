@@ -1,0 +1,5 @@
+{
+  "passed": 10,
+  "total": 10,
+  "scope": "Node VM with simulated DOM; not actual browser rendering"
+}

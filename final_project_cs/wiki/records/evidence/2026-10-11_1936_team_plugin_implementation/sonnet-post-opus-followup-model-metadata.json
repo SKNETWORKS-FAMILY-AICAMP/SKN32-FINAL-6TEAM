@@ -1,0 +1,26 @@
+{
+  "requested_model": "claude-sonnet-5-5",
+  "canonical_models": {
+    "claude-sonnet-5-5": "claude-sonnet-5-5"
+  },
+  "is_error": false,
+  "subtype": "success",
+  "claude_exit": 0,
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 44,
+      "outputTokens": 16543,
+      "cacheReadInputTokens": 1235427,
+      "cacheCreationInputTokens": 100888,
+      "webSearchRequests": 0,
+      "costUSD": 0.8161554000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 6148,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": []
+}

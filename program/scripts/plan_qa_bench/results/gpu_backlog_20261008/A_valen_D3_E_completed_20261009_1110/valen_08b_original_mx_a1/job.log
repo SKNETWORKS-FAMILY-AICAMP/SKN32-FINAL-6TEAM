@@ -1,0 +1,43 @@
+Loading weights:   0%|          | 0/506 [00:00<?, ?it/s]Loading weights: 100%|██████████| 506/506 [00:00<00:00, 5181.43it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+valen_08b_original_mx_a1 100 / 4014
+valen_08b_original_mx_a1 200 / 4014
+valen_08b_original_mx_a1 300 / 4014
+valen_08b_original_mx_a1 400 / 4014
+valen_08b_original_mx_a1 500 / 4014
+valen_08b_original_mx_a1 600 / 4014
+valen_08b_original_mx_a1 700 / 4014
+valen_08b_original_mx_a1 800 / 4014
+valen_08b_original_mx_a1 900 / 4014
+valen_08b_original_mx_a1 1000 / 4014
+valen_08b_original_mx_a1 1100 / 4014
+valen_08b_original_mx_a1 1200 / 4014
+valen_08b_original_mx_a1 1300 / 4014
+valen_08b_original_mx_a1 1400 / 4014
+valen_08b_original_mx_a1 1500 / 4014
+valen_08b_original_mx_a1 1600 / 4014
+valen_08b_original_mx_a1 1700 / 4014
+valen_08b_original_mx_a1 1800 / 4014
+valen_08b_original_mx_a1 1900 / 4014
+valen_08b_original_mx_a1 2000 / 4014
+valen_08b_original_mx_a1 2100 / 4014
+valen_08b_original_mx_a1 2200 / 4014
+valen_08b_original_mx_a1 2300 / 4014
+valen_08b_original_mx_a1 2400 / 4014
+valen_08b_original_mx_a1 2500 / 4014
+valen_08b_original_mx_a1 2600 / 4014
+valen_08b_original_mx_a1 2700 / 4014
+valen_08b_original_mx_a1 2800 / 4014
+valen_08b_original_mx_a1 2900 / 4014
+valen_08b_original_mx_a1 3000 / 4014
+valen_08b_original_mx_a1 3100 / 4014
+valen_08b_original_mx_a1 3200 / 4014
+valen_08b_original_mx_a1 3300 / 4014
+valen_08b_original_mx_a1 3400 / 4014
+valen_08b_original_mx_a1 3500 / 4014
+valen_08b_original_mx_a1 3600 / 4014
+valen_08b_original_mx_a1 3700 / 4014
+valen_08b_original_mx_a1 3800 / 4014
+valen_08b_original_mx_a1 3900 / 4014
+valen_08b_original_mx_a1 4000 / 4014
+{"expected": 4014, "saved": 4014, "parsed": 4014, "errors": 0, "missing": 0, "correct": 661, "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48", "smoke": false, "max_gpu_allocated": 4725241344, "memory": {"used": 26669322240, "limit": 30999998464, "headroom": 4330676224}}

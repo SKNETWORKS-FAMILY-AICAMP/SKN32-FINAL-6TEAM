@@ -37,8 +37,8 @@ class TripSurvey(BaseModel):
 
     version: Literal["2026-09-24.v1"]
     # ── 판정에 쓰는 것 ─────────────────────────────────────────
-    #: 15번. 기본은 replace — 지금까지의 동작(최고 안을 먼저 적용하고 알린다)과 같다
-    on_disruption: Literal["replace", "ask_first"] = "replace"
+    #: 직접 켠 기록이 없으면 먼저 묻는다. 옛 저장본의 기본 replace도 동의로 보지 않는다.
+    on_disruption: Literal["replace", "ask_first"] = "ask_first"
     #: 16번. 없으면 밀도 목표를 설문에서 채우지 않는다
     pace: Literal["relaxed", "moderate", "packed"] | None = None
     # ── 받아 두기만 하는 것 (팀이 세부를 정하면 판정에 연결한다) ──────
@@ -75,7 +75,7 @@ def apply_survey(constraints: Mapping[str, Any], item_days: Iterable[date]) -> d
     raw = dict(out["survey"] or {})
     survey = TripSurvey.model_validate(raw)
     out["survey"] = survey.model_dump(mode="json")
-    # ★`[2026-09-29]` **직접 답한 문항**을 따로 남긴다 — 저장본은 기본값까지 채워져(on_disruption 기본 replace),
+    # ★`[2026-09-29]` **직접 답한 문항**을 따로 남긴다 — 옛 저장본은 기본값까지 채워져 있었으므로,
     #   「비슷한 곳으로 바꿔줘」를 고른 것과 문항을 건너뛴 것이 구별되지 않았다. 자동 변경은 직접 고른 경우에만 한다
     #   (`auto_on_disruption` · 사용자 지시 2026-09-29 · 코덱스 합의). 이미 있는 값은 덮지 않는다(합친다)
     answered = {key for key, value in raw.items() if key != "version" and value is not None}
@@ -110,9 +110,10 @@ def apply_survey(constraints: Mapping[str, Any], item_days: Iterable[date]) -> d
 
 
 def on_disruption(constraints: Mapping[str, Any] | None) -> str:
-    """이 여행이 일정이 꼬였을 때 어떻게 하길 원하나. 설문이 없으면 지금까지의 동작(replace)."""
+    """현재 고객 설정. 명시적 응답이 없는 옛 기본값도 먼저 확인으로 읽는다(D-020)."""
     survey = (constraints or {}).get("survey") or {}
-    return str(survey.get("on_disruption") or "replace")
+    answered = set((constraints or {}).get("survey_answered") or [])
+    return "replace" if "on_disruption" in answered and survey.get("on_disruption") == "replace" else "ask_first"
 
 
 def auto_on_disruption(constraints: Mapping[str, Any] | None) -> bool:

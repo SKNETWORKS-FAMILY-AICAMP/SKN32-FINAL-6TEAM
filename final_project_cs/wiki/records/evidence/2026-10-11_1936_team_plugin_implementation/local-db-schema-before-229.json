@@ -1,0 +1,7 @@
+{
+  "local_target_verified": true,
+  "migration_ledger_candidates": [],
+  "existing_recent_tables": [
+    "intake_test_scenarios"
+  ]
+}

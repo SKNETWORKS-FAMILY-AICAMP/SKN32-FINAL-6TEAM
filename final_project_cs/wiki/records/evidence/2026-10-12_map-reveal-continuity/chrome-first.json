@@ -1,0 +1,94 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "map-reveal-continuity-20261012.spec.ts",
+      "first-map-reveal-20261011.spec.ts",
+      "--config",
+      "playwright.location.config.ts",
+      "--output",
+      "C:/Users/playdata2/Documents/final_workspace/.tmp/map-reveal-first",
+      "--reporter=list,json"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\playwright.location.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/map-reveal-first",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "Cannot use({ video }) in a describe group, because it forces a new worker.\nMake it top-level in the test file or put in the configuration file.",
+      "location": {
+        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\map-reveal-continuity-20261012.spec.ts",
+        "line": 13,
+        "column": 10
+      },
+      "snippet": "\u001b[90m   at \u001b[39mmap-reveal-continuity-20261012.spec.ts:13\n\n  11 | for (const width of [375, 1280]) {\n  12 |   test.describe(`${width}px 순서대로 지도 표시`, () => {\n> 13 |     test.use({ viewport: { width, height: 812 }, video: { mode: \"on\", size: { width, height: 812 } } });\n     |          ^\n  14 |     test(\"먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다\", async ({ page, request }) => {\n  15 |       test.setTimeout(60000);\n  16 |       const api = mockServer(request);"
+    },
+    {
+      "message": "Cannot use({ video }) in a describe group, because it forces a new worker.\nMake it top-level in the test file or put in the configuration file.",
+      "location": {
+        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\map-reveal-continuity-20261012.spec.ts",
+        "line": 13,
+        "column": 10
+      },
+      "snippet": "\u001b[90m   at \u001b[39mmap-reveal-continuity-20261012.spec.ts:13\n\n  11 | for (const width of [375, 1280]) {\n  12 |   test.describe(`${width}px 순서대로 지도 표시`, () => {\n> 13 |     test.use({ viewport: { width, height: 812 }, video: { mode: \"on\", size: { width, height: 812 } } });\n     |          ^\n  14 |     test(\"먼 이전 마커는 거리 표시로 남고 새 마커와 합쳐지지 않는다\", async ({ page, request }) => {\n  15 |       test.setTimeout(60000);\n  16 |       const api = mockServer(request);"
+    }
+  ],
+  "stats": {
+    "startTime": "2026-10-11T15:31:30.948Z",
+    "duration": 48826.778000000006,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

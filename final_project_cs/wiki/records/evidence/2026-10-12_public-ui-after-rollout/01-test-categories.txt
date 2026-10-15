@@ -1,0 +1,164 @@
+- alert
+- banner:
+  - link "triPilot — 소개 화면으로 돌아가기":
+    - /url: /
+    - generic: t
+    - text: triPilot
+  - button "항로 지킴이 끄기":
+    - generic: 지금 켜져 있어요
+  - button "메뉴":
+- link "본문으로 이동":
+  - /url: "#main-content"
+- main:
+  - list "여행 등록 단계":
+    - generic: "01"
+    - text: 계획 담기
+    - generic: "02"
+    - text: 함께 확인
+    - generic: "03"
+    - text: 여행 시작
+  - paragraph: A PLAN THAT FEELS LIKE YOU
+  - heading "이제, 여행을 담아볼까요?" [level=1]
+  - paragraph: 준비한 계획을 그대로 붙여 넣어 주세요. 하나씩 살펴보고, 편안한 여행으로 이어갈게요.
+  - region "직접 입력":
+    - heading "직접 입력" [level=2]
+    - generic: 보낼 칸
+    - generic: 나의 여행 계획
+    - button "예시 불러오기"
+    - textbox "나의 여행 계획":
+      - /placeholder: "예시 — 이런 식으로 적어 주세요\n\n1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람"
+    - generic: 날짜 · 시간 · 장소를 함께 적어 주세요.
+    - generic: 0 / 12,000
+    - generic: 테스트 계획
+    - generic "테스트 계획" [active]:
+      - generic: 분류별 테스트 계획 선택
+    - generic "분류별 테스트 계획":
+      - group "문제 없는 기본안 3":
+        - generic: 문제 없는 기본안
+        - generic: "3"
+        - button "test13 여유 있는 도심 산책":
+          - generic: test13
+          - generic: 여유 있는 도심 산책
+        - button "test14 여유 있는 박물관 방문":
+          - generic: test14
+          - generic: 여유 있는 박물관 방문
+        - button "test15 하루 한 곳씩 서울 2일":
+          - generic: test15
+          - generic: 하루 한 곳씩 서울 2일
+      - group "시간 겹침 1":
+        - generic: 시간 겹침
+        - generic: "1"
+        - button "test2 겹치는 일정":
+          - generic: test2
+          - generic: 겹치는 일정
+      - group "운영시간·휴무 2":
+        - generic: 운영시간·휴무
+        - generic: "2"
+        - button "test3 늦은 궁궐 방문":
+          - generic: test3
+          - generic: 늦은 궁궐 방문
+        - button "test4 화요일 궁궐 방문":
+          - generic: test4
+          - generic: 화요일 궁궐 방문
+      - group "장소 미정 1":
+        - generic: 장소 미정
+        - generic: "1"
+        - button "test5 정해지지 않은 숙소":
+          - generic: test5
+          - generic: 정해지지 않은 숙소
+      - group "이동 여유 1":
+        - generic: 이동 여유
+        - generic: "1"
+        - button "test6 짧은 이동 간격":
+          - generic: test6
+          - generic: 짧은 이동 간격
+      - group "입력 확인 2":
+        - generic: 입력 확인
+        - generic: "2"
+        - button "test7 종료 시각 생략":
+          - generic: test7
+          - generic: 종료 시각 생략
+        - button "test10 원문 순서가 다른 일정":
+          - generic: test10
+          - generic: 원문 순서가 다른 일정
+      - group "일반 흐름 5":
+        - generic: 일반 흐름
+        - generic: "5"
+        - button "test1 서울 2일 기본 일정":
+          - generic: test1
+          - generic: 서울 2일 기본 일정
+        - button "test8 같은 장소 재방문":
+          - generic: test8
+          - generic: 같은 장소 재방문
+        - button "test9 예약이 있는 방문":
+          - generic: test9
+          - generic: 예약이 있는 방문
+        - button "test11 서울 7일 일정":
+          - generic: test11
+          - generic: 서울 7일 일정
+        - button "test12 활동과 식사":
+          - generic: test12
+          - generic: 활동과 식사
+    - paragraph: 위 입력란에 test1처럼 적어도 준비된 계획으로 확인해요.
+  - region "파일 선택":
+    - heading "파일 선택" [level=2]
+    - button "파일 선택"
+    - generic: 파일 선택
+    - paragraph: 사진 · PDF · 워드 · 엑셀로 된 계획도 올릴 수 있어요 (최대 5개, 한 개 10MB)
+    - status: 0 / 5개 선택됨
+  - region "계획 짜 주기 (테스트)":
+    - heading "계획 짜 주기 (테스트)" [level=2]
+    - paragraph: 서울 안에서 하루하루를 서버가 짜 드려요. 이 칸을 고르고 「계획 확인하기」를 누르면, 짠 일정이 서버의 판정을 통과하는 대로 바로 여행으로 등록돼요.
+    - generic: 첫날
+    - textbox "첫날"
+    - generic: 일수
+    - combobox "일수":
+      - option "고르기" [selected]
+      - option "1일"
+      - option "2일"
+      - option "3일"
+      - option "4일"
+      - option "5일"
+      - option "6일"
+      - option "7일"
+    - generic: 인원
+    - combobox "인원":
+      - option "고르기" [selected]
+      - option "1명"
+      - option "2명"
+      - option "3명"
+      - option "4명"
+    - generic: 원하는 여행 (선택)
+    - textbox "원하는 여행 (선택)":
+      - /placeholder: "예: 조용하고 걷기 좋은 곳 위주로, 맛집은 하루 한 곳쯤"
+    - generic: 0 / 500
+  - region "읽는 기준":
+    - heading "읽는 기준" [level=2]
+    - paragraph: 처음부터 골라 두었어요. 바꾸고 싶을 때만 눌러 주세요.
+    - heading "하루 일정의 여유" [level=3]
+    - paragraph: 하루를 얼마나 채울까요?
+    - radiogroup "하루 일정의 여유":
+      - radio "여유롭게"
+      - radio "적당히" [checked]:
+        - text: 적당히
+      - radio "꽉 차게"
+    - paragraph: 「적당히」는 「여유롭게」보다 하루에 한 곳쯤 더 담아요.
+  - complementary:
+    - paragraph: 여행 취향
+    - paragraph: 취향 설문을 마치지 않아서 이번 등록에는 취향이 반영되지 않아요. 마이페이지에서도 설정할 수 있어요.
+    - paragraph:
+      - link "취향 설정하기":
+        - /url: /start
+    - separator
+    - heading "작은 준비, 더 편한 여행" [level=2]
+    - list:
+      - listitem: 일차 제목에 날짜를 적어요.
+      - listitem: 시작 시간과 장소를 한 줄씩 적어요.
+      - listitem: 예약한 일정은 ‘예약 있음’으로 표시해요.
+  - link "이전":
+    - /url: /
+    - text: 이전
+  - button "계획 확인하기" [disabled]:
+    - text: 계획 확인하기
+  - text: 당신의 취향대로, 더 편안하게.
+  - paragraph: 서버에 연결된 화면이에요. 일정과 답은 서버가 낸 결과만 보여 드려요.

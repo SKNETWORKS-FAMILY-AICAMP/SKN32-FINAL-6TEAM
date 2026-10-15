@@ -1,0 +1,6 @@
+{
+  "typecheckEvidence": "typecheck.log",
+  "lint": 0,
+  "typecheck": 0,
+  "typecheckScope": "UI test copy with existing Trip.simulation type restored"
+}

@@ -19,8 +19,8 @@ from datetime import date, timedelta
 import re
 from typing import Any
 
-RELATIVE = {"오늘": 0, "내일": 1, "모레": 2, "글피": 3}
-_RELATIVE = re.compile(r"(오늘|내일|모레|글피)")
+RELATIVE = {"오늘": 0, "지금": 0, "당장": 0, "내일": 1, "모레": 2, "글피": 3}   # 「지금 간다」「당장 간다」 = 오늘 (2026-10-12 사용자 보고)
+_RELATIVE = re.compile(r"(오늘|지금|당장|내일|모레|글피)")
 #: 일차 머리줄 — 상대 날짜를 찾으러 올라갈 때 여기서 멈춘다(`rules.DAY_HEADING` 과 같은 모양의 앞머리)
 _HEADING = re.compile(r"^\s*(?:\d+\s*일\s*차|DAY\s*\d+|첫째\s*날|둘째\s*날|셋째\s*날)", re.IGNORECASE)
 
@@ -50,7 +50,7 @@ def resolve_dates(items: list[dict[str, Any]], *, today: date, departure: date |
             out.append(DayDate(filled.isoformat(), "year_filled", True,
                                f"해가 적혀 있지 않아 오늘 기준 다가오는 날로 두었다({filled.year}년)"))
             continue
-        relative = _relative_on_line(lines, item.get("line"))
+        relative = _relative_for_item(lines, item)
         if relative is not None:
             value = today + timedelta(days=relative[1])
             out.append(DayDate(value.isoformat(), "relative", False, f"「{relative[0]}」 — 오늘 기준"))
@@ -80,7 +80,7 @@ def _first_day(items, *, today: date, departure: date | None, lines: list[str]) 
     if departure is not None:
         return departure, False
     for item in items:
-        relative = _relative_on_line(lines, item.get("line"))
+        relative = _relative_for_item(lines, item)
         if relative is not None:
             offset = (int(item["day"]) - 1) if item.get("day") else 0
             return today + timedelta(days=relative[1] - offset), False
@@ -100,12 +100,20 @@ def _fill_year(month_day: str, today: date) -> date:
     return date(today.year + 1, month, min(day, 28))
 
 
-def _relative_on_line(lines: list[str], line_no: int | None) -> tuple[str, int] | None:
+def _relative_for_item(lines: list[str], item: dict[str, Any]) -> tuple[str, int] | None:
+    segment = item.get("segment")
+    text = segment.get("text") if isinstance(segment, dict) else None
+    return _relative_on_line(lines, item.get("line"), text=text)
+
+
+def _relative_on_line(lines: list[str], line_no: int | None, *, text: str | None = None) -> tuple[str, int] | None:
     """그 줄에 상대 날짜가 있으면 그것, 없으면 **그 줄이 속한 일차 머리줄**(「1일차 · 내일」)에서 찾는다.
     ☆2026-09-28 평가셋: 「내일」이 머리줄에만 있어 그날 항목 셋의 날짜를 못 정했다."""
     if not line_no or line_no > len(lines):
         return None
-    match = _RELATIVE.search(lines[line_no - 1])
+    # 장소별 구간이 있으면 같은 줄의 다른 항목에서 상대 날짜를 빌려오지 않는다.
+    # 구간에 없으면 기존처럼 일차 머리줄을 따른다.
+    match = _RELATIVE.search(text if text is not None else lines[line_no - 1])
     if match:
         return match.group(1), RELATIVE[match.group(1)]
     for back in range(line_no - 1, 0, -1):

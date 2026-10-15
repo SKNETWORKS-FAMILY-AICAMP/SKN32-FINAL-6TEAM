@@ -146,6 +146,35 @@ def inherit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> None
         save(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, answers=answers)
 
 
+def last_answer(conn, *, tenant_id: str, customer_id: UUID, question_id: str) -> dict[str, str] | None:
+    """같은 고객이 이 문항에 마지막으로 고른 답 `{option_id, value, label}`. 없거나 뜻이 바뀐 답이면 `None`. `[2026-10-14]`
+
+    ★`inherit` 과 같은 조건이다 — 지금 질문 묶음 버전이고, 지금 매핑으로 읽어도 저장 때 해석과 같은 답만. 직접 쓴 답(`custom:`)은
+      선택지가 아니라 「미리 골라 둘」 수 없으므로 뺀다. 활동 팀이 여행을 못 찾은 예약에서 질문을 다시 물을 때 지난 답을 알려 준다
+      (활동 → 코어 전달 8번 회신 `wiki/records/reports/2026-10-13_활동_전달8_설문전달_회신.md`).
+    """
+    question = _by_id().get(question_id)
+    if question is None:
+        return None
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT a.option_id, a.slot, a.value, a.bundle_version FROM trip_intake_survey_answers a "
+                        "JOIN trip_intakes i ON i.intake_id=a.intake_id AND i.tenant_id=a.tenant_id "
+                        "WHERE a.tenant_id=%s AND i.customer_id=%s AND a.question_id=%s ORDER BY a.seq DESC LIMIT 1",
+                        (tenant_id, customer_id, question_id))
+            row = cur.fetchone()
+    except Exception:                                                  # noqa: BLE001
+        log.warning("intake survey answer history unreadable customer=%s (migration 053?)", customer_id, exc_info=True)
+        return None
+    if row is None:
+        return None
+    option_id, slot, value, version = row
+    if version != QUESTION_SET_VERSION or option_id.startswith(CUSTOM_PREFIX) or resolve(question_id, option_id) != (slot, value):
+        return None
+    label = next((o.label for o in question.options if o.id == option_id), None)
+    return {"option_id": option_id, "value": value, "label": label} if label else None
+
+
 def questions(answers: Mapping[str, str]) -> list[dict[str, Any]]:
     """`GET /v1/web/trip-intakes/{id}` 의 `questions[]`. 이미 답한 문항도 **그대로 둔다**(`answer` 에 고른 번호) — 화면이 새로 고쳐져도 앞 질문으로 돌아가 고칠 수 있게.
 
@@ -303,5 +332,5 @@ def merged_survey(answers: Mapping[str, str], request_survey: Mapping[str, Any] 
     return survey
 
 
-__all__ = ["DIRECT", "IntakeClosed", "InvalidAnswers", "MAX_QUESTIONS", "Option", "QUESTIONS", "QUESTION_SET_VERSION", "Question", "check", "merged_survey",
+__all__ = ["DIRECT", "IntakeClosed", "InvalidAnswers", "MAX_QUESTIONS", "last_answer", "Option", "QUESTIONS", "QUESTION_SET_VERSION", "Question", "check", "merged_survey",
            "questions", "resolve", "save", "stored", "stored_resolved", "to_survey"]

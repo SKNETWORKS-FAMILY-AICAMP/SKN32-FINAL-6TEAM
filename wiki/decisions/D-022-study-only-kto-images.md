@@ -2,8 +2,10 @@
 type: decision
 title: 관광콘텐츠랩 사진·이미지는 학업용으로만 로컬 보관한다 — 상업 전환 때 폐기·재확인
 description: 관광공사 사진·이미지 변환본(약 28만 장)을 git 밖 폴더에 학업용으로 보관한다. 크기 줄이기는 「변경」에 해당할 수 있고 제4유형은 상업 이용 금지라서, 상업으로 넘어가기 전에 지우거나 다시 확인해야 한다
-status: accepted
+status: draft
 domain: travel
+decision_status: accepted
+impl_scope: cs — 여행 제품과 데이터의 결정이다. sample의 독립 계약 검증과 구분한다
 ---
 
 # D-022 관광콘텐츠랩 사진·이미지는 학업용으로만 로컬 보관한다

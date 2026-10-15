@@ -112,7 +112,7 @@ export interface Registration {
 }
 
 /** 제출·등록은 여행 화면의 채팅 단추와 같은 크기·위치의 플로팅 동작이다. 수정안은 기존처럼 저장 후 등록한다. */
-export function ResultFooter({ view, registration, frozen, explain, previewing = false, needsTotal, pendingRemovals = 0, onRecheck, onRegisterPreview, footerRef, muted = false, atListEnd = false, focusHandlers }: {
+export function ResultFooter({ view, registration, frozen, explain, previewing = false, needsTotal, pendingRemovals = 0, onRecheck, onRegisterPreview, footerRef, muted = false, atListEnd = false, focusHandlers, editing = false }: {
   footerRef?: RefObject<HTMLElement | null>;
   muted?: boolean;
   atListEnd?: boolean;
@@ -129,6 +129,8 @@ export function ResultFooter({ view, registration, frozen, explain, previewing =
   explain: (why: string) => void;
   onRecheck?: () => void;
   onRegisterPreview?: () => void;
+  /** `[2026-10-13 사용자 결정 — 수정 모드]` The edit of a registered trip: the last step is 「완료」 (the trip's next version) instead of 「여행 등록」 — `registration` carries it. */
+  editing?: boolean;
 }) {
   const t = useT();
   const total = needsTotal ?? needs(view).total;
@@ -157,9 +159,11 @@ export function ResultFooter({ view, registration, frozen, explain, previewing =
   } else {
     const ready = previewing ? registration?.previewReady ?? registration?.ready : registration?.ready;
     const why = !registration ? t("여행 등록은 준비 중이에요", "Registering is coming")
-      : frozen ?? (registration.busy ? t("등록하는 중이에요", "Registering") : !ready
+      : frozen ?? (registration.busy ? (editing ? t("저장하는 중…", "Saving…") : t("등록하는 중이에요", "Registering")) : !ready
         ? (registration.problems.join(" · ") || t("서버가 아직 등록할 수 없다고 해요 · 위의 확인할 것을 먼저 고쳐 주세요", "The server cannot register it yet · fix what is listed above first")) : null);
-    next = <Act className={`${styles.footButton} ${tripStyles.chatFab}`} data-primary why={why} explain={explain} onPress={() => (previewing && onRegisterPreview ? onRegisterPreview() : registration?.onRegister())} aria-label={registration?.busy ? t("등록하는 중…", "Registering…") : t("여행 등록", "Register trip")} tooltip={t("여행 등록", "Register trip")}>{registration?.busy ? <span className={styles.spinner} aria-hidden="true" /> : <Check size={24} aria-hidden="true" />}</Act>;
+    // `[2026-10-13 사용자 지시 — 수정 모드]` The same last step as the plan check (send again → checked → ✓), and ✓ saves the edit as the trip's next version: it is 「완료」, not 「여행 등록」.
+    const label = editing ? t("완료", "Done") : t("여행 등록", "Register trip");
+    next = <Act className={`${styles.footButton} ${tripStyles.chatFab}`} data-primary why={why} explain={explain} onPress={() => (previewing && onRegisterPreview ? onRegisterPreview() : registration?.onRegister())} aria-label={registration?.busy ? (editing ? t("저장하는 중…", "Saving…") : t("등록하는 중…", "Registering…")) : label} tooltip={label}>{registration?.busy ? <span className={styles.spinner} aria-hidden="true" /> : <Check size={24} aria-hidden="true" />}</Act>;
   }
   return <footer ref={footerRef} className={`${styles.footer} ${tripStyles.chatBar}`} data-at-end={atListEnd || undefined} data-quiet={muted || undefined} inert={muted} aria-hidden={muted || undefined} {...focusHandlers}>
     {status}

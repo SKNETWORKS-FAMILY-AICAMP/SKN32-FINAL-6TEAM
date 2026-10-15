@@ -3,7 +3,7 @@ type: plan
 title: Dining 하이브리드 분류표 — 코드가 판정하고, LLM 은 코드가 못 읽는 자유 질문에만
 description: 「MCP 도구로 바꿔 LLM 손에 쥐여 준다」(dining-agent-design §2)를 다시 따져 정리한 분류. 체크리스트 C1~C5 는 원장으로 코드가 판정하고, LLM 에이전트는 코드 갈래에 맞지 않는 자유 질문(Q)에만 쓴다. SNS 확인은 뺐다. 호출 조건 · 구역 분류 · 인자 · 판정 방향 · 경계 테스트를 정한다
 status: draft
-tags: [agent, mcp, dining, guard, hybrid]
+tags: [agent, api, security, architecture]
 owners: [human:정세환]
 domain: travel
 ---

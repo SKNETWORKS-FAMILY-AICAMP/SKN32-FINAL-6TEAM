@@ -1,0 +1,36 @@
+{
+  "local_links": 18,
+  "feature_rows": 21,
+  "status_counts": {
+    "조건부 사용": 4,
+    "개선 필요": 9,
+    "추가 검증": 8
+  },
+  "svg_accessible": true,
+  "source_data_matches": 76,
+  "backup_hash_matches": 5,
+  "public_files_scanned": 20,
+  "browser_render_checked": false,
+  "tests": {
+    "passed": 64,
+    "total": 64,
+    "parts": [
+      {
+        "name": "turn-cache-tests-v2",
+        "passed": 52,
+        "total": 52,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "turn-cache-taxi-tests-v1",
+        "passed": 12,
+        "total": 12,
+        "failed": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "new_web_observations": 0,
+  "actual_trip_payments": 0
+}

@@ -8,7 +8,7 @@ owners: [human:미배정]
 size_exempt: true
 size_exempt_reason: 불변식 카탈로그. 전체를 훑어야 의미가 있다
 domain: neutral
-domain_note: 불변식 목록이다. 커머스 낱말은 금지 목록과 도메인 교체 대조군 테스트의 이름으로 나온다
+domain_note: 불변식 목록이다. 과거 어휘는 재유입 방지 금지 목록에만 사용하며 동작 사례는 여행 자료로 검증한다
 ---
 
 # 불변식 카탈로그
@@ -49,8 +49,9 @@ Core가 도메인을 모른다는 것을 지킨다. **Pack 교체 가능성의 �
 | `INV-CS-ARCH-002` | Core 파일은 도메인 모듈을 import하지 않는다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_no_basement_file_imports_a_domain_module` |
 | `INV-CS-ARCH-003` | Core는 `app/domains`를 import하지 않는다 | automated | `tests/contract/test_core_isolation.py::test_core_does_not_import_modules` |
 | `INV-CS-ARCH-004` | 도메인 어휘 예외 목록은 작게 유지된다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_allow_list_stays_small` |
-| `INV-CS-ARCH-005` | 엔진 소스에 도메인 어휘가 없다 | automated | `tests/architecture/test_engine_serves_another_domain.py::test_engine_source_has_no_domain_vocabulary` |
+| `INV-CS-ARCH-005` | 엔진 소스에 도메인 어휘가 없다 | automated | `tests/architecture/test_engine_accepts_travel_policies.py::test_engine_source_has_no_domain_vocabulary` |
 | `INV-CS-ARCH-006` | 도메인 모듈은 자기 도메인을 알아도 된다 | automated | `tests/architecture/test_basement_is_domain_free.py::test_domain_modules_are_allowed_to_know_their_domain` |
+| `INV-CS-ARCH-007` | 상태 전이도는 코드의 상태·전이와 일치한다 | automated | `tests/architecture/test_state_diagram_matches_code.py::test_state_diagram_is_regenerated_from_the_code` |
 
 **`INV-CS-ARCH-004`가 특이하다.** 예외 목록의 **크기 자체**를 검사한다. 예외가 늘어나면 그게 설계가 무너지고 있다는 신호다.
 
@@ -82,7 +83,7 @@ DOMAIN_WORDS = (
 | `INV-CS-TEAM-001` | Team manifest는 프로토콜을 구현한다 | automated | `tests/contract/test_team_contract.py::test_team_manifests_implement_protocol` |
 | `INV-CS-TEAM-002` | manifest의 scope는 정확히 선언된다 | automated | `tests/contract/test_team_contract.py::test_manifest_scopes_are_exact` |
 | `INV-CS-TEAM-003` | Team은 side effect를 실행하지 않는다 | review | [../teams/team-boundary.md](../teams/team-boundary.md) |
-| `INV-CS-TEAM-004` | Team은 read 도구를 직접 호출하지 않는다 ★**지금 코드가 어긴다** — 아래 | review | 동 |
+| `INV-CS-TEAM-004` | Team은 허용된 자료 조회 Port·ReadToolbox로만 읽고 고객 권한·허용 목록·예산·근거 경계를 지킨다 (2026-10-12 확정) | review | 동 |
 | `INV-CS-TEAM-005` | Team은 다른 Team을 직접 호출하지 않는다 | review | 동 |
 
 **003~005가 `review`인 게 약점이다.** 설계의 핵심 규칙인데 자동 판정이 없다. 사람이 리뷰에서 잡아야 한다.
@@ -124,8 +125,7 @@ DOMAIN_WORDS = (
 | `INV-CS-SEC-004` | PII는 DB·API·audit 전부에서 마스킹된다 | automated | `tests/security/test_pii_redaction_runtime.py::test_case_message_is_redacted_in_db_api_and_audit` |
 | `INV-CS-SEC-005` | 같은 tenant 안에서도 customer 간 누출이 없다 | automated | `tests/security/test_query_scope.py::test_case_list_does_not_leak_across_customers_in_one_tenant` |
 | `INV-CS-SEC-006` | customer 미지정 조회도 tenant를 벗어나지 않는다 | automated | `tests/security/test_query_scope.py::test_case_list_without_customer_stays_inside_the_tenant` |
-| `INV-CS-SEC-007` | scope 12개는 guardrail이 소유한다(09-06 `composer:admin`·`ops:reload` 추가 전 10개) | automated | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
-| `INV-CS-SEC-008` | **옛** MCP 도구 셋(`app/presentation/api/mcp.py`, 쇼핑몰 Case 도구)은 정확히 3개의 read scope 도구를 갖는다 — ★`[2026-10-02]` 이 셋은 **연결된 적이 없고 지금도 앱에 안 붙는다.** 지금의 MCP 는 아래 009·010 | automated | `tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools` |
+| `INV-CS-SEC-007` | scope 목록은 공통 guardrail 설정이 소유한다 | automated | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
 | `INV-CS-SEC-009` | **MCP 호출자는 사용자 키가 정한다** — 키가 없거나 틀리면 연결 단계에서 401, `mcp` 모듈 토글을 끄면 404. 도구 인자에 `customer_id` 가 없어 본인 여행만 열린다(남의 여행은 404) | automated | `tests/e2e/test_mcp_server.py::test_without_a_key_or_with_a_wrong_key_the_connection_is_401_and_a_disabled_module_is_404` |
 | `INV-CS-SEC-010` | **MCP 쓰기 도구는 `travel.mcp.write_enabled` 가 켜졌을 때만 등록된다**(기본 꺼짐 — 「MCP 는 read-only」). 읽기 도구만 있을 땐 전부 `readOnlyHint` | automated | `tests/e2e/test_mcp_server.py::test_by_default_only_read_tools_exist_and_all_say_they_are_read_only` |
 | `INV-CS-SEC-011` | **바깥 소스 응답 공유 캐시는 허용된 공개 소스만 DB 에 두고, 요청 인자의 서비스 키 원문을 두지 않는다**(열쇠는 해시). 고객 검색어가 담기는 소스(카카오 · 구글 장소)는 메모리에만 — DB 가 안 되면 메모리로 계속한다 | automated | `tests/unit/travel/test_shared_source_cache.py::test_only_allowed_sources_reach_the_db_and_the_service_key_is_not_stored` |
@@ -138,62 +138,21 @@ DOMAIN_WORDS = (
 
 Action을 실행하기 전 근거를 대조한다.
 
-### ★ 왜 이 표가 커머스 어휘인가 — 대조군이기 때문이다
+### 여행 정책 주입 시험의 범위
 
-`[실측 2026-09-10]` **이 불변식들은 제품 도메인(여행)이 아니라 「제품이 쓰지 않는 다른 도메인」에서 돈다.**
+합성 철도 패스·승차권 정책을 기존 예약 정책과 같은 엔진에 주입합니다. 참조·금액·인원 상한과 성공·실패를 검사합니다. **실제 패스 기능 출시나 모든 산업의 범용성을 증명하지 않습니다.** 이전 주문·반품 시험은 D-023에 따라 현재 관문에서 제외했습니다. ID는 검증 책임을 이어받되 데이터와 증명 범위를 명시적으로 개정했습니다.
 
-> 이 저장소의 주장은 "어떤 CS 플랫폼 요청이 와도 대응 가능한 범용 basement" 다. 그 주장은 **선언만으로는 증명되지 않는다.**
-
-`test_engine_serves_another_domain.py` 가 커머스 도메인 선언을 만들어 `app/core/verification.py` 를 **한 줄도 고치지 않고** 돌린다. **제품 도메인이 여행으로 바뀌면서 여기가 커머스 어휘의 정당한 자리가 됐다.**
-
-★**커머스를 저장소에서 걷어낼 때도 이 파일은 지우지 않는다.** 지우면 「도메인을 갈아끼울 수 있다」는 주장을 증명하는 **유일한 대조군**이 사라진다.
-
-| ID | 불변식 (대조 도메인 = 커머스) | 판정 | 실행 위치 |
+| ID | 불변식 | 판정 | 실행 위치 |
 |---|---|---|---|
-| `INV-CS-VER-001` | 존재하지 않는 주문은 거부된다 | automated | `tests/architecture/test_engine_serves_another_domain.py::test_unknown_order_is_rejected` |
-| `INV-CS-VER-002` | 주문 총액을 넘는 환불은 거부된다 | automated | `::test_refund_over_the_order_total_is_rejected` |
-| `INV-CS-VER-003` | 부분 환불은 통과한다 | automated | `::test_partial_refund_passes` |
-| `INV-CS-VER-004` | 주문 수량을 넘는 반품은 거부된다 | automated | `::test_return_quantity_over_the_item_count_is_rejected` |
-| `INV-CS-VER-005` | 주문 범위 내 반품은 통과한다 | automated | `::test_return_quantity_within_the_order_passes` |
-| `INV-CS-VER-006` | 배송 소유권을 확인한다 | automated | `::test_shipment_ownership_is_checked` |
-| `INV-CS-VER-007` | 이 도메인의 불투명 필드는 거부된다 | automated | `::test_this_domains_opaque_field_is_rejected` |
+| `INV-CS-VER-001` | 존재하지 않는 철도 패스는 거부한다 | automated | `tests/architecture/test_engine_accepts_travel_policies.py::test_unknown_pass_is_rejected` |
+| `INV-CS-VER-002` | 패스 결제 금액보다 큰 환급을 거부한다 | automated | `tests/architecture/test_engine_accepts_travel_policies.py::test_refund_over_the_pass_payment_is_rejected` |
+| `INV-CS-VER-003` | 결제 금액 이내의 부분 환급을 통과시킨다 | automated | `tests/architecture/test_engine_accepts_travel_policies.py::test_partial_refund_passes` |
+| `INV-CS-VER-004` | 좌석 상한보다 많은 여행자를 거부한다 | automated | `tests/architecture/test_engine_accepts_travel_policies.py::test_travelers_over_the_seat_limit_are_rejected` |
+| `INV-CS-VER-005` | 좌석 상한 이내의 여행자는 통과시킨다 | automated | `tests/architecture/test_engine_accepts_travel_policies.py::test_travelers_within_the_seat_limit_pass` |
+| `INV-CS-VER-006` | 허용 사실에 포함된 승차권만 통과시킨다 | automated | `tests/architecture/test_engine_accepts_travel_policies.py::test_ticket_ownership_is_checked` |
+| `INV-CS-VER-007` | 대조 수단이 없는 필드를 거부한다 | automated | `tests/architecture/test_engine_accepts_travel_policies.py::test_this_domains_opaque_field_is_rejected` |
 
-전부 `tests/architecture/test_engine_serves_another_domain.py`에 있다.
-
-### 제품 도메인(여행) 쪽 같은 검사
-
-`[실측 2026-09-10]` `tests/unit/core/test_proposal_verification.py` — **같은 엔진에 여행 선언을 물린다.** 둘이 쌍이라는 것이 이 구조의 요점이다.
-
-| 무엇을 본다 | 테스트 |
-|---|---|
-| 예약 금액을 넘는 환급은 거부된다 | `test_refund_larger_than_the_booking_amount_is_rejected` |
-| 없는 예약 id 는 거부된다 | `test_nonexistent_booking_id_is_rejected` |
-| **남의 공급자 예약은 거부된다** | `test_supplier_booking_owned_by_someone_else_is_rejected` |
-| 정원을 넘는 일행 수는 거부된다 | `test_party_size_over_the_capacity_is_rejected` |
-| 확인 못 한 식별자는 **무시가 아니라 거부** | `test_unverifiable_identifier_is_rejected_not_ignored` |
-| 대상 예약 없는 환급은 거부된다 | `test_refund_without_a_target_booking_is_rejected` |
-| **커머스 어휘가 조용히 통과하지 않는다** | `test_commerce_vocabulary_is_not_silently_accepted` |
-| 문제를 첫 건만 보고하지 않는다 | `test_every_problem_is_reported_not_just_the_first` |
-
-★**마지막에서 둘째가 이 판올림의 산물이다.** 커머스 어휘가 여행 경로로 새어 들어오는 것을 **제품 쪽에서도** 막는다.
-
-`[미확보]` **여행 쪽 검사에는 `INV-` 불변식 ID 가 안 붙어 있다.** 커머스 대조군만 ID 를 갖고 있어, 불변식 목록으로는 제품 도메인 검증이 보이지 않는다. ID 부여는 코드 담당 몫이다.
-
-### ★ 이 불변식들이 못 잡는 것
-
-**`INV-CS-VER-002`는 "환불 ≤ 주문 총액"만 본다.** 총액 자체가 잘못된 기준이면 통과한다.
-
-```
-30,000원 주문 · 5,000원 쿠폰 → 실결제 25,000원
-2개 중 1개 반품 → 우리 계산 15,000원
-
-15,000 ≤ 30,000  →  INV-CS-VER-002 통과 ✅
-실제 환불액은 12,500원                    ❌
-```
-
-**불변식이 있다고 안전한 게 아니다.** 기준값이 틀리면 검증도 틀린다.
-
-조치는 [중앙 허브 D-001](../../../wiki/decisions/D-001-payment-ownership.md).
+제품의 여행 예약 정책은 `tests/unit/core/test_proposal_verification.py`가 예약 식별자·금액·정원·미선언 필드를 검사합니다. 필드가 여행과 관련돼도 선언되지 않은 `permit_id`는 거부합니다. 단순 금액 상한 검사는 업체의 실제 환급 규정 계산이 옳다는 보장이 아닙니다. 사실 집합의 범위와 원본 값의 정확성도 별도로 확인해야 합니다.
 
 ---
 
@@ -282,123 +241,26 @@ Action을 실행하기 전 근거를 대조한다.
 
 ## 평가 — `INV-CS-EVAL-*`
 
-`[실측]` 2026-09-03 신설. **결함을 고치면서 같이 걸었다.**
-
 | ID | 불변식 | 판정 | 실행 위치 |
 |---|---|---|---|
-| `INV-CS-EVAL-001` | **Proposed 페널티가 rubric 재계산 뒤에 걸린다** — ★`[2026-10-03]` 쇼핑몰 시절 평가 러너의 불변식이다. 러너와 시험을 `legacy/commerce_eval/` 로 옮겨 **지금은 실행하지 않는다**(D-023). 번호는 재사용하지 않는다 | automated | `legacy/commerce_eval/tests/unit/eval/test_team_failed_penalty.py::test_penalty_reaches_success_in_the_runner` (실행 안 됨) |
-| `INV-CS-EVAL-002` | **여행 분류 평가 자료는 서버 어휘(`feedback.INTENTS` · `ISSUE_CODES`)로 쓰이고 쇼핑몰 낱말이 섞이지 않으며, 재생 시험은 실패를 분모에 넣는다**(쇼핑몰 시절 자료를 쓰지 않는다 — D-023) | automated | `tests/unit/eval/test_travel_classification_eval.py` |
+| `INV-CS-EVAL-002` | 여행 분류 자료는 현재 intent·issue_code 어휘를 사용하고 과거 도메인 재유입을 검사하며 실패도 재생 시험의 분모에 넣는다 | automated | `tests/unit/eval/test_travel_classification_eval.py` |
 
-### 왜 이게 불변식인가
-
-**이 페널티는 한 번도 적용된 적이 없었다.**
-
-```python
-if team_failed:          # :526  ← 여기서 정한 값을
-    success = False
-...
-success = bool(judge["pass"])   # :537  ← 여기서 덮어썼다
-```
-
-인용 검증 결과로 rubric 을 다시 접는 블록이 `success` 를 무조건 다시 계산했다.
-
-**순서가 전부인 종류의 결함이다.** 그래서 불변식이 "페널티가 있다"가 아니라 **"페널티가 나중에 걸린다"**다.
-
-`[실측]` 테스트가 `_one()` 의 소스를 읽어 두 위치의 순서를 비교한다. **순서가 뒤집히면 실패한다.**
-
-### 이 결함이 오래 산 이유
-
-**인라인이라 테스트를 걸 수 없었다.** 순수 함수 `team_failed()` 로 뺐다.
-
-> **틀려도 테스트가 초록으로 나오는 종류의 코드**였다. → [blind-spots.md](blind-spots.md)
-
-`[미확보]` **결함 2(채점식이 승인 대기를 벌점 처리)는 아직 안 고쳤다.** 채점 기준을 바꾸는 일이라 판단이 필요하다. → [evidence.md](evidence.md)
+사용 종료된 `INV-CS-SEC-008`(옛 MCP 도구 수)·`INV-CS-EVAL-001`(옛 평가 러너)은 현재 정의 표에서 제외합니다. 번호는 재사용하지 않으며 과거 정의·증거는 아래 보존 기록에 있습니다. 현재 MCP는 SEC-009·010과 여행 프로토콜 시험으로 확인합니다.
 
 ---
 
-## 코드 쪽 역방향 표식 — 완료
+## 코드 표식과 현재 집계
 
-문서에서 테스트를 가리키는 것만으로는 부족하다. **테스트도 자기가 어떤 불변식을 지키는지 밝힌다.**
+정의 표의 고유 ID·판정 종류는 [자동 집계](invariant-summary.generated.md)에서 확인합니다. `python program/scripts/build_wiki_catalogs.py`로 갱신하고 `--check`로 정합성을 확인합니다. 등록 수·코드 표식 수·시험 연결 수·실행 통과 수는 각각 다른 분모입니다.
 
-```python
-# invariant: INV-CS-ARCH-001
-def test_basement_layers_do_not_know_the_business_domain():
-    ...
-```
+`INV-CS-ARCH-007`은 이미 존재하는 전이도 재생성 시험을 카탈로그에 연결한 것입니다. 새 제품 동작이나 새 제약을 추가하지 않았습니다.
 
-`[실측]` **2026-09-01 기준 48개.** 양방향이 잠겼다.
+TEAM-004의 허용된 자료 조회 계약은 2026-10-12에 확정했습니다. 모든 실제 호출 경로가 권한·예산·근거 경계를 지키는지는 별도 구현 검증 대상입니다. VER 자료를 교체했다는 이유로 다른 계약 검토까지 완료로 올리지 않습니다. 과거 48·52·56·61개 집계와 당시 진단은 수정 전 보존본에 있습니다.
 
-```
-코드 표식 48  ⊂  문서 불변식 51
-코드에만 있는 ID   0개
-문서에만 있는 ID   3개  ← INV-CS-TEAM-003·004·005
-```
+## 관계
 
-**남은 3개는 표식이 없는 게 맞다.** 판정이 `review`라 대응 테스트가 없다. 자동화되면 그때 표식이 붙는다.
-
-## CI가 검사하는 것
-
-```bash
-python program/scripts/check_wiki.py
-```
-
-```text
-1. 문서의 automated 테스트 경로가 실재하는가      ✅ 117개 통과
-2. 그 파일에 해당 test 함수가 실재하는가          ✅
-3. 코드의 invariant ID가 카탈로그에 있는가        ✅ 0건 불일치
-4. ID가 중복되지 않는가                          ✅
-```
-
-`[실측]` 검사기가 실제로 잡는지도 확인했다. 없는 파일·함수를 일부러 넣으니 2건 다 잡았다.
-
-## 현황 요약
-
-**[2026-09-01 정정]** Runtime을 실측으로 다시 세면서 33개 → 54개가 됐다. 불변식이 늘어난 게 아니라 **이미 있던 테스트를 찾아 연결한 것**이다.
-
-| 영역 | 총 | automated | review (자동화 필요) |
-|---|---|---|---|
-| ARCH | 6 | 6 | 0 |
-| TEAM | 5 | 2 | **3** |
-| ACT | 4 | 4 | 0 |
-| SEC | 10 | 10 | 0 |
-| VER | 7 | 7 | 0 |
-| RT | 26 | 26 | 0 |
-| CTX | 2 | 2 | 0 |
-| **합계** | **61** | **58** | **3** |
-
-★`[2026-10-02]` 불변식 4개(SEC-009·010, RT-021·022)를 더해 **56개 · 코드 표식 53개**다(`check_wiki.py` 실행값으로 확인).
-
-★`[정정 2026-09-10]` **51/48 로 적혀 있었다.** 고유 ID 를 세면 **52개**이고 코드 역방향 표식은 **49개**다(`check_wiki.py` 실행값). 2026-09-01 실측 뒤 불변식이 늘었는데 요약만 안 고쳤다.
-
-**남은 사람 판정은 Team 경계 3개뿐이다.**
-
-| ID | 불변식 | 자동화 방법 `[추정]` |
-|---|---|---|
-| `INV-CS-TEAM-003` | side effect를 실행하지 않는다 | Team 모듈이 `access_action/`을 import하는지 검사 |
-| `INV-CS-TEAM-004` | read 도구를 직접 호출하지 않는다 | Team 모듈이 `tools/`를 직접 import하는지 검사 |
-
-### ★ [2026-09-10] `INV-CS-TEAM-004` — 자기 검사 기준으로 깨져 있고, 그 검사가 없다
-
-`[실측 2026-09-10 작업 트리]` 위 줄이 정한 검사 기준은 **「Team 모듈이 `tools/` 를 직접 import 하는가」** 다. 그리고:
-
-| | 실측 |
-|---|---|
-| `travel_ops/instances/_shared/_base.py:35` | **`from app.tools.read_tools import ReadToolbox`** — import 한다 |
-| `_base.py:68` `_read()` | `self.tools.call(...)` 로 **직접 부른다** |
-| 이 기준을 검사하는 테스트 | **없다.** `tests/architecture/` 에 `app.tools`·`ReadToolbox` 를 보는 검사가 0건 |
-
-★**그래서 어겨졌는데 아무도 몰랐다.** `review` 판정은 사람이 보라는 뜻인데 **사람이 안 봤다.** 이 저장소가 여러 번 적은 것과 같은 모양이다 — **검사가 없는 불변식은 선언일 뿐이다.**
-
-★**다만 통제가 사라진 것은 아니다.** 허용 목록과 단계 예산을 `ReadToolbox.call()` 이 강제한다 — **불변식이 막으려던 위험(읽기가 무한정 커지는 것)은 다른 자리에서 막히고 있다.**
-
-`[미확보]` **불변식을 고칠지 코드를 고칠지 안 정해졌다.**
-  · 불변식이 낡았다면 — 문장을 「Team 은 `ReadToolbox` 를 거치지 않고 읽지 않는다」로 바꾸고 **그 게이트를 검사하는 테스트**를 붙인다
-  · 코드가 어겼다면 — 읽기를 Broker 앞으로 되돌린다
-
-**어느 쪽이든 automated 로 올려야 한다.** 코드·계획서 담당 몫이다. 상세 → [../teams/team-boundary.md](../teams/team-boundary.md) §2
-| `INV-CS-TEAM-005` | 다른 Team을 직접 호출하지 않는다 | Team 모듈이 다른 Team을 import하는지 검사 |
-
-`tests/architecture/test_basement_is_domain_free.py`가 이미 import 검사를 하므로 **같은 방식으로 셋 다 가능해 보인다.**
+- [자동 집계](invariant-summary.generated.md) — 정의 표만 세는 생성물
+- [시험 지도](test-map.md) — 실행 위치
 
 ## 이 검증에서 배운 것
 
@@ -414,3 +276,7 @@ python program/scripts/check_wiki.py
 - [blind-spots.md](blind-spots.md) — 불변식을 어겼는데 테스트가 안 우는 지점
 - [../teams/team-boundary.md](../teams/team-boundary.md) — TEAM 불변식의 설명
 - [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD와의 연결
+
+## 개정 전 카탈로그
+
+[과거 정의](../records/commerce_2026-10-11/wiki--quality--invariants.md) — 폐기 ID와 이전 시험 재료의 이력을 보존합니다.

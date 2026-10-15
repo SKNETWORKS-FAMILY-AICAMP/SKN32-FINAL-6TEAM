@@ -1,0 +1,11 @@
+.page{max-width:1000px;margin-inline:auto}
+.switches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;border:1px solid var(--line);border-radius:8px;margin:18px 0;padding:14px}
+.switches legend{padding-inline:6px;font-weight:600}
+.switches label{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px;cursor:pointer}
+.switches small{display:block;color:var(--muted);font-weight:400;font-size:12px;line-height:1.6}
+.switches input{appearance:none;display:block;flex:0 0 40px;width:40px;height:24px;padding:2px;border:1px solid #8c8a84;border-radius:20px;background:#e4e2dc;cursor:pointer}
+.switches input::before{content:"";display:block;width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #8c8a84}
+.switches input:checked{background:var(--accent);border-color:var(--accent)}
+.switches input:checked::before{transform:translateX(16px);border-color:#fff}
+.switches input:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+@media(max-width:700px){.switches{grid-template-columns:minmax(0,1fr);gap:0;padding:8px}.switches label{padding:10px 4px}}

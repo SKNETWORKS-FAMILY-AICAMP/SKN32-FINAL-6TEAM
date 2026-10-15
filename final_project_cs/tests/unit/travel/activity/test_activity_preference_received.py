@@ -7,15 +7,15 @@
 받는 값(활동 쪽 — 지금 코드):
     current_state["activity_preference"]  "activity"(활동 중요) · "mobility"(이동 중요) — 먼저 본다
     current_state["survey"]["priority"]     설문 순서에서 먼저 나오는 activity · mobility (`food` 는 건너뛴다)
-★코어는 아직 이 둘을 팀에 넘기지 않는다(`Controller.TEAM_STATE_KEYS`) — 마지막 시험이 그 사실을 붙잡아 둔다.
-  공통 형식(취향 · 기피 · 가중치)은 코어와 정할 일이다(전달사항 · 협의 메모).
+★`[2026-10-14]` 코어는 Case 상태로 설문을 넘기지 않기로 했다(전달 8번 회신 — `TEAM_STATE_KEYS` 는 그대로). 실제 경로는
+  예약이 속한 여행의 설문을 팀이 도구로 읽는 것이다 — `test_activity_trip_survey.py`. 여기 Case 상태 시험은 받는 자리를 지킨다.
+  옛 「코어가 넘기면 알림」 xfail 시험은 기다리던 경로가 기각돼 지웠다(`wiki/records/reports/2026-10-13_활동_전달8_설문전달_회신.md`).
 """
 from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-import pytest
 
 from app.domains.travel_ops.instances.activity import ActivityTeam
 
@@ -90,12 +90,3 @@ def test_an_unknown_preference_is_not_guessed_and_is_reported():
     assert order == ["same_far"]          # 없을 때와 같다
     assert any("알 수 없는 선호도 값" in w for w in warnings)
 
-
-@pytest.mark.xfail(strict=True, reason="코어 Controller.TEAM_STATE_KEYS 가 취향을 팀에 넘기지 않는다 — 코어가 고치면 "
-                                       "이 시험이 「예상과 달리 통과」로 알린다(xfail 을 지우고 위 시험들을 실경로로 옮긴다)")
-def test_the_core_passes_the_preference_to_the_team():
-    from app.application.controller import Controller
-
-    state = Controller._team_state({"state_json": {"activity_preference": "mobility",
-                                                   "survey": {"priority": ["mobility"]}}})
-    assert state.get("activity_preference") == "mobility" or "survey" in state

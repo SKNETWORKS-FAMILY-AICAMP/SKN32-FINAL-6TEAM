@@ -1,0 +1,736 @@
+{
+  "utc": "2026-10-11T16:02:53.843051+00:00",
+  "purpose": "synthetic intake/search/alternatives audit, not independent accuracy",
+  "checks": {
+    "activity_search": {
+      "http": 422,
+      "seconds": 0.061869710974860936,
+      "value": "{\"error\":{\"code\":\"validation_error\",\"message\":\"request validation failed\",\"fields\":[{\"loc\":\"query.source_id\",\"type\":\"uuid_parsing\"}]}}"
+    },
+    "activity_alternatives": {
+      "http": 422,
+      "seconds": 0.05482169799506664,
+      "value": "{\"error\":{\"code\":\"validation_error\",\"message\":\"request validation failed\",\"fields\":[{\"loc\":\"query.source_id\",\"type\":\"uuid_parsing\"}]}}"
+    },
+    "dining_search": {
+      "http": 422,
+      "seconds": 0.059190531028434634,
+      "value": "{\"error\":{\"code\":\"validation_error\",\"message\":\"request validation failed\",\"fields\":[{\"loc\":\"query.source_id\",\"type\":\"uuid_parsing\"}]}}"
+    },
+    "dining_alternatives": {
+      "http": 422,
+      "seconds": 0.044452658970840275,
+      "value": "{\"error\":{\"code\":\"validation_error\",\"message\":\"request validation failed\",\"fields\":[{\"loc\":\"query.source_id\",\"type\":\"uuid_parsing\"}]}}"
+    }
+  },
+  "create": {
+    "http": 202,
+    "seconds": 0.4428074160241522,
+    "value": {
+      "intake_id": "00c4f1b3-9523-4c4c-a6f2-d698b44db267",
+      "status": "reading",
+      "stage": "received",
+      "human_check": "skipped"
+    }
+  },
+  "intake_id": "00c4f1b3-9523-4c4c-a6f2-d698b44db267",
+  "latest": {
+    "http": 200,
+    "seconds": 0.11339226400014013,
+    "value": {
+      "intake_id": "00c4f1b3-9523-4c4c-a6f2-d698b44db267",
+      "status": "review",
+      "stage": "review",
+      "stage_label": "확인해 주세요",
+      "test_scenario": null,
+      "revision": 1,
+      "fatal": null,
+      "trip_id": null,
+      "received_at": "2026-10-11T16:02:54.261708+00:00",
+      "sources": [
+        {
+          "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+          "kind": "chat",
+          "filename": null,
+          "transcribed": false,
+          "missing": [],
+          "differs": [],
+          "seconds": null,
+          "lines": [
+            {
+              "no": 1,
+              "text": "2026-10-18 서울 여행, 1명",
+              "read": true
+            },
+            {
+              "no": 2,
+              "text": "09:00~10:00 경복궁 관람",
+              "read": true
+            },
+            {
+              "no": 3,
+              "text": "12:00~13:00 광화문 근처 한식 점심",
+              "read": true
+            },
+            {
+              "no": 4,
+              "text": "14:00~15:00 국립민속박물관 관람",
+              "read": true
+            }
+          ],
+          "items": [
+            {
+              "index": 0,
+              "fields": {
+                "ends_at": {
+                  "value": "10:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 11,
+                    "line": 2,
+                    "text": "10:00",
+                    "start": 6,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "title": {
+                  "value": "경복궁 관람",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 18,
+                    "line": 2,
+                    "text": "경복궁 관람",
+                    "start": 12,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "starts_at": {
+                  "value": "09:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 5,
+                    "line": 2,
+                    "text": "09:00",
+                    "start": 0,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "date": {
+                  "value": "2026-10-18",
+                  "method": "rule",
+                  "evidence": {
+                    "how": "written",
+                    "line": 2,
+                    "source": "rule",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "place": {
+                  "value": {
+                    "kind": "activity",
+                    "name": "경복궁",
+                    "source": "places",
+                    "latitude": 37.576,
+                    "place_id": "60dc7085-d3d5-51ba-89fa-f39a3ea2496a",
+                    "longitude": 126.9767,
+                    "content_id": null,
+                    "content_type_id": null
+                  },
+                  "method": "lookup",
+                  "evidence": {
+                    "name": "경복궁",
+                    "query": "경복궁",
+                    "tried": [
+                      "places:경복궁 관람",
+                      "tour_api:경복궁 관람",
+                      "dining_ledger:경복궁 관람",
+                      "kakao:경복궁 관람",
+                      "places:경복궁"
+                    ],
+                    "method": "places",
+                    "source": "places",
+                    "blocked": [],
+                    "place_id": "60dc7085-d3d5-51ba-89fa-f39a3ea2496a",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+                    "content_id": null
+                  },
+                  "needs_review": false,
+                  "note": "원문 「경복궁 관람」에서 「경복궁」로 좁혔다"
+                }
+              },
+              "line": 2,
+              "day": null,
+              "date": "2026-10-18"
+            },
+            {
+              "index": 1,
+              "fields": {
+                "title": {
+                  "value": "광화문 근처 한식",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 21,
+                    "line": 3,
+                    "text": "광화문 근처 한식",
+                    "start": 12,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "kind": {
+                  "value": "dining",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 24,
+                    "line": 3,
+                    "text": "점심",
+                    "start": 22,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": "이름 뒤의 끼니 말"
+                },
+                "ends_at": {
+                  "value": "13:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 11,
+                    "line": 3,
+                    "text": "13:00",
+                    "start": 6,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "starts_at": {
+                  "value": "12:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 5,
+                    "line": 3,
+                    "text": "12:00",
+                    "start": 0,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "date": {
+                  "value": "2026-10-18",
+                  "method": "rule",
+                  "evidence": {
+                    "how": "written",
+                    "line": 3,
+                    "source": "rule",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "place": {
+                  "value": {
+                    "kind": "activity",
+                    "name": "광화문",
+                    "source": "tour_api",
+                    "latitude": 37.5760179589,
+                    "place_id": null,
+                    "longitude": 126.9767880089,
+                    "content_id": "126512",
+                    "content_type_id": "12"
+                  },
+                  "method": "lookup",
+                  "evidence": {
+                    "name": "광화문",
+                    "query": "광화문",
+                    "tried": [
+                      "places:광화문 근처 한식",
+                      "dining_ledger:광화문 근처 한식",
+                      "tour_api:광화문 근처 한식",
+                      "kakao:광화문 근처 한식",
+                      "places:광화문 근처",
+                      "dining_ledger:광화문 근처",
+                      "tour_api:광화문 근처",
+                      "places:광화문",
+                      "dining_ledger:광화문",
+                      "tour_api:광화문",
+                      "dining_ledger:광화문 근처 근처 한식"
+                    ],
+                    "method": "tour_api",
+                    "source": "tour_api",
+                    "blocked": [],
+                    "place_id": null,
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+                    "content_id": "126512"
+                  },
+                  "needs_review": true,
+                  "note": "원문 「광화문 근처 한식」에서 「광화문」로 좁혔다"
+                }
+              },
+              "line": 3,
+              "day": null,
+              "date": "2026-10-18"
+            },
+            {
+              "index": 2,
+              "fields": {
+                "ends_at": {
+                  "value": "15:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 11,
+                    "line": 4,
+                    "text": "15:00",
+                    "start": 6,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "starts_at": {
+                  "value": "14:00",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 5,
+                    "line": 4,
+                    "text": "14:00",
+                    "start": 0,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "title": {
+                  "value": "국립민속박물관 관람",
+                  "method": "rule",
+                  "evidence": {
+                    "end": 22,
+                    "line": 4,
+                    "text": "국립민속박물관 관람",
+                    "start": 12,
+                    "source": "text",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "date": {
+                  "value": "2026-10-18",
+                  "method": "rule",
+                  "evidence": {
+                    "how": "written",
+                    "line": 4,
+                    "source": "rule",
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+                  },
+                  "needs_review": false,
+                  "note": null
+                },
+                "place": {
+                  "value": {
+                    "kind": "activity",
+                    "name": "국립민속박물관과 국립민속박물관 어린이박물관",
+                    "source": "tour_api",
+                    "latitude": 37.5816745310255,
+                    "place_id": null,
+                    "longitude": 126.978889955558,
+                    "content_id": "2608977",
+                    "content_type_id": "12"
+                  },
+                  "method": "lookup",
+                  "evidence": {
+                    "name": "국립민속박물관과 국립민속박물관 어린이박물관",
+                    "query": "국립민속박물관",
+                    "tried": [
+                      "places:국립민속박물관 관람",
+                      "tour_api:국립민속박물관 관람",
+                      "dining_ledger:국립민속박물관 관람",
+                      "kakao:국립민속박물관 관람",
+                      "places:국립민속박물관",
+                      "tour_api:국립민속박물관",
+                      "dining_ledger:국립민속박물관 근처 관람"
+                    ],
+                    "method": "tour_api",
+                    "source": "tour_api",
+                    "blocked": [],
+                    "place_id": null,
+                    "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+                    "content_id": "2608977"
+                  },
+                  "needs_review": false,
+                  "note": "원문 「국립민속박물관 관람」에서 「국립민속박물관」로 좁혔다"
+                }
+              },
+              "line": 4,
+              "day": null,
+              "date": "2026-10-18"
+            }
+          ],
+          "trip": {
+            "party_size": {
+              "value": 1,
+              "evidence": {
+                "end": 20,
+                "line": 1,
+                "text": "1명",
+                "start": 18,
+                "source": "text",
+                "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda"
+              }
+            }
+          },
+          "reading": null
+        }
+      ],
+      "check": {
+        "ready": true,
+        "problems": [],
+        "filled": [],
+        "items": 3,
+        "title": "2026-10-18 서울 여행, 1명",
+        "plan": {
+          "requested": false,
+          "start_date": "2026-10-18",
+          "days": 1,
+          "party_size": 1,
+          "preferences": "2026-10-18 서울 여행, 1명\n09:00~10:00 경복궁 관람\n12:00~13:00 광화문 근처 한식 점심\n14:00~15:00 국립민속박물관 관람"
+        }
+      },
+      "review": {
+        "items": [
+          {
+            "id": "0-0",
+            "day": 1,
+            "date": "2026-10-18",
+            "kind": "activity",
+            "rows": [
+              {
+                "row": "place",
+                "text": "「경복궁 관람」 중 「경복궁」 부분을 우리 장소 목록 정보로 찾았어요",
+                "result": "ok"
+              },
+              {
+                "row": "hours",
+                "text": "09:00–17:00 안에 머물러요",
+                "result": "ok"
+              },
+              {
+                "row": "closed",
+                "text": "화요일 휴무 · 방문은 일요일",
+                "result": "ok"
+              }
+            ],
+            "index": 0,
+            "parts": null,
+            "place": {
+              "kind": "activity",
+              "name": "경복궁",
+              "source": "places",
+              "category": null,
+              "latitude": 37.576,
+              "longitude": 126.9767,
+              "content_id": null,
+              "content_type_id": null
+            },
+            "title": "경복궁 관람",
+            "booked": null,
+            "edited": false,
+            "locked": false,
+            "status": "keep",
+            "ends_at": "10:00",
+            "rereads": [],
+            "can_lock": true,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "starts_at": "09:00",
+            "place_state": "found",
+            "candidates_hint": null
+          },
+          {
+            "id": "0-1",
+            "day": 1,
+            "date": "2026-10-18",
+            "kind": "dining",
+            "rows": [
+              {
+                "row": "place",
+                "text": "가게 이름이 없어 광화문으로 잡았어요",
+                "result": "ok"
+              },
+              {
+                "row": "hours",
+                "text": "09:00–17:00 안에 머물러요",
+                "result": "ok"
+              },
+              {
+                "row": "closed",
+                "text": "화요일 휴무 · 방문은 일요일",
+                "result": "ok"
+              }
+            ],
+            "index": 1,
+            "parts": null,
+            "place": {
+              "kind": "activity",
+              "name": "광화문",
+              "source": "tour_api",
+              "category": "관광지",
+              "latitude": 37.5760179589,
+              "longitude": 126.9767880089,
+              "content_id": "126512",
+              "content_type_id": "12"
+            },
+            "title": "광화문 근처 한식",
+            "booked": null,
+            "edited": false,
+            "locked": false,
+            "status": "keep",
+            "ends_at": "13:00",
+            "rereads": [],
+            "can_lock": true,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "starts_at": "12:00",
+            "place_state": "found",
+            "candidates_hint": null
+          },
+          {
+            "id": "0-2",
+            "day": 1,
+            "date": "2026-10-18",
+            "kind": "activity",
+            "rows": [
+              {
+                "row": "place",
+                "text": "「국립민속박물관 관람」 중 「국립민속박물관」 부분을 관광공사 정보로 찾았어요",
+                "result": "ok"
+              },
+              {
+                "row": "hours",
+                "text": "관광공사 운영시간을 아직 읽지 못했어요",
+                "result": "unknown"
+              },
+              {
+                "row": "closed",
+                "text": "휴무 정보가 없어요",
+                "result": "unknown"
+              }
+            ],
+            "index": 2,
+            "parts": null,
+            "place": {
+              "kind": "activity",
+              "name": "국립민속박물관과 국립민속박물관 어린이박물관",
+              "source": "tour_api",
+              "category": "관광지",
+              "latitude": 37.5816745310255,
+              "longitude": 126.978889955558,
+              "content_id": "2608977",
+              "content_type_id": "12"
+            },
+            "title": "국립민속박물관 관람",
+            "booked": null,
+            "edited": false,
+            "locked": false,
+            "status": "keep",
+            "ends_at": "15:00",
+            "rereads": [],
+            "can_lock": true,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "starts_at": "14:00",
+            "place_state": "found",
+            "candidates_hint": null
+          }
+        ],
+        "moves": [
+          {
+            "km": 0.0,
+            "to": "0-1",
+            "day": 1,
+            "date": "2026-10-18",
+            "from": "0-0",
+            "mode": "walk",
+            "rows": [
+              {
+                "row": "route",
+                "text": "도보",
+                "result": "ok"
+              },
+              {
+                "row": "mode",
+                "text": "도보 1분 · 0.0km",
+                "result": "ok"
+              },
+              {
+                "row": "arrival",
+                "text": "11:49에 나서면 11:50 도착 · 10분 여유",
+                "result": "ok"
+              }
+            ],
+            "basis": "timetable",
+            "arrive": "11:50",
+            "depart": "11:49",
+            "status": "keep",
+            "minutes": 1,
+            "summary": "도보 1분 · 0.0km",
+            "fare_krw": 0,
+            "slack_min": 10,
+            "mode_label": "도보",
+            "mode_choice": null,
+            "recommended_mode": "walk"
+          },
+          {
+            "km": 0.9,
+            "to": "0-2",
+            "day": 1,
+            "date": "2026-10-18",
+            "from": "0-1",
+            "mode": "walk",
+            "rows": [
+              {
+                "row": "route",
+                "text": "도보",
+                "result": "ok"
+              },
+              {
+                "row": "mode",
+                "text": "도보 15분 · 0.9km",
+                "result": "ok"
+              },
+              {
+                "row": "arrival",
+                "text": "13:35에 나서면 13:50 도착 · 10분 여유",
+                "result": "ok"
+              }
+            ],
+            "basis": "timetable",
+            "arrive": "13:50",
+            "depart": "13:35",
+            "status": "keep",
+            "minutes": 15,
+            "summary": "도보 15분 · 0.9km",
+            "fare_krw": 0,
+            "slack_min": 10,
+            "mode_label": "도보",
+            "mode_choice": null,
+            "recommended_mode": "walk"
+          }
+        ],
+        "needs": {
+          "items": 0,
+          "moves": 0,
+          "total": 0
+        },
+        "ready": true,
+        "engine": "timetable",
+        "built_at": "2026-10-12T01:03:02+09:00",
+        "revision": 1
+      },
+      "review_error": null,
+      "questions": [
+        {
+          "id": "preferred_mobility",
+          "kind": "single",
+          "title": "이동은 주로 어떻게 하세요?",
+          "why": "계획서만으로는 이동 방법을 알 수 없어서 여쭤요",
+          "options": [
+            {
+              "id": "public",
+              "label": "대중교통"
+            },
+            {
+              "id": "taxi",
+              "label": "택시"
+            },
+            {
+              "id": "walk",
+              "label": "걷기 위주"
+            }
+          ],
+          "allow_custom": true,
+          "custom_max_length": 1000,
+          "answer": null,
+          "custom_answer": null
+        },
+        {
+          "id": "priority",
+          "kind": "single",
+          "title": "일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요?",
+          "why": "계획서만으로는 알 수 없어요",
+          "options": [
+            {
+              "id": "activity",
+              "label": "하고 싶은 활동이 비슷한 곳"
+            },
+            {
+              "id": "mobility",
+              "label": "이동이 편한 곳"
+            }
+          ],
+          "allow_custom": true,
+          "custom_max_length": 1000,
+          "answer": null,
+          "custom_answer": null
+        }
+      ],
+      "questions_version": "2",
+      "needs_review": [
+        {
+          "field": "items[1].place",
+          "value": {
+            "kind": "activity",
+            "name": "광화문",
+            "source": "tour_api",
+            "latitude": 37.5760179589,
+            "place_id": null,
+            "longitude": 126.9767880089,
+            "content_id": "126512",
+            "content_type_id": "12"
+          },
+          "note": "원문 「광화문 근처 한식」에서 「광화문」로 좁혔다",
+          "evidence": {
+            "name": "광화문",
+            "query": "광화문",
+            "tried": [
+              "places:광화문 근처 한식",
+              "dining_ledger:광화문 근처 한식",
+              "tour_api:광화문 근처 한식",
+              "kakao:광화문 근처 한식",
+              "places:광화문 근처",
+              "dining_ledger:광화문 근처",
+              "tour_api:광화문 근처",
+              "places:광화문",
+              "dining_ledger:광화문",
+              "tour_api:광화문",
+              "dining_ledger:광화문 근처 근처 한식"
+            ],
+            "method": "tour_api",
+            "source": "tour_api",
+            "blocked": [],
+            "place_id": null,
+            "source_id": "1aa7937d-4b4f-459d-9f01-65fcb53b1fda",
+            "content_id": "126512"
+          }
+        }
+      ]
+    }
+  },
+  "review_item_count": 3,
+  "finished_at_utc": "2026-10-11T16:03:05.007875+00:00"
+}

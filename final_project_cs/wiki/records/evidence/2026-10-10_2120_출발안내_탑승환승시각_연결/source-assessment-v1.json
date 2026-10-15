@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-10-10T21:30:45.136750+09:00",
+  "source": "https://gtfs.org/documentation/realtime/feed-entities/trip-updates/",
+  "applied_principle": "도착 예측/시간표/실제 관측을 구분하며 미제공을 정시 운행으로 가정하지 않음",
+  "not_applied": "서울 응답을 GTFS 피드로 간주하거나 첫 열차 지연을 다른 열차에 고정 전파하지 않음",
+  "algorithm_change": false,
+  "paper_performance_claim": false,
+  "process_overlap_scope": "관련 Python 명령 이름 필터 조회에 한정. 해당 필터 결과0이며 전체 작업자 부재를 단정하지 않음",
+  "quota_total_before": "미확인",
+  "quota_total_after": "미확인",
+  "quota_remaining": "미확인",
+  "quota_reset_at": "미확인",
+  "limited_api_calls": 0,
+  "network_attempts_in_replay": 0,
+  "minimum_daily_reserve_percent": 20,
+  "runtime_api_limits_changed": false
+}

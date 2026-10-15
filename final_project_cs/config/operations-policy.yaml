@@ -1,0 +1,15 @@
+source_policy:
+  allow_paid: false
+  daily_paid_cap: 0
+  trip_paid_cap: 0
+  check_interval_seconds: 180
+bounds:
+  daily_paid_cap: [0, 100]
+  trip_paid_cap: [0, 10]
+  check_interval_seconds: [60, 86400]
+diagnostics:
+  retention_days: 30
+  spool_max_bytes: 10485760
+  spool_max_events: 10000
+  page_size: 50
+  replay_limit: 100

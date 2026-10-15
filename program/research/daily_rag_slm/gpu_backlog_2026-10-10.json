@@ -1,0 +1,363 @@
+{
+  "A": {
+    "observed_at_utc": "2026-10-09T23:04:57.958496+00:00",
+    "gpu": "8126 MiB, 100 %",
+    "registered": 147,
+    "status_counts": {
+      "completed": 118,
+      "completed_with_errors": 23,
+      "failed": 2,
+      "running": 1
+    },
+    "ready_jobs": [
+      "e4bbase_oos1_multi_items_bc_a1",
+      "e4bbase_oos3_multi_items_bc_a1",
+      "e4bbase_oos2r_multi_items_bc_a1"
+    ],
+    "worker_lock_held": true,
+    "free_bytes": 3893190656,
+    "added_jobs": 6,
+    "added_questions": 5010
+  },
+  "B": {
+    "training_completed": "B58 cosine/FINCH seed20261014, ALLDONE",
+    "native_execution": {
+      "state": {
+        "jobs": {
+          "original_smoke": {
+            "status": "completed",
+            "exit_code": 0,
+            "expected": 12,
+            "saved": 12,
+            "errors": 0,
+            "unparsed": 0,
+            "correct": 9,
+            "completed_at": "2026-10-09T23:03:13.806561+00:00",
+            "peak_gpu_bytes": 9714851840,
+            "model_adoption": false,
+            "independent_holdout": false
+          },
+          "original_d3": {
+            "status": "completed",
+            "exit_code": 0,
+            "expected": 360,
+            "saved": 360,
+            "errors": 0,
+            "unparsed": 0,
+            "correct": 324,
+            "completed_at": "2026-10-09T23:09:49.561170+00:00",
+            "peak_gpu_bytes": 9727209472,
+            "model_adoption": false,
+            "independent_holdout": false
+          },
+          "cosine_s20261014_d3": {
+            "status": "running",
+            "started_at": "2026-10-09T23:09:51.038448+00:00"
+          }
+        }
+      },
+      "worker_pid": 2806803,
+      "worker_alive": true,
+      "lock_held": true,
+      "manifest": {
+        "jobs": [
+          {
+            "id": "original_smoke",
+            "model": "/root/hf_models/gemma-4-E4B-it",
+            "adapter": null,
+            "our_training": false,
+            "publisher_training": "Google Instruct release",
+            "prompts": "/root/hf_nf4_contract_20261010/smoke.json",
+            "expected": 12,
+            "prompt_sha256": "2cd98981e0b7c5531135fa5d8e94a64764b7ed41b2b33770e3e6f10a4fb520fe",
+            "dependency": null,
+            "purpose": "Missing native HF NF4 execution condition on frozen development inputs; not independent holdout or product adoption"
+          },
+          {
+            "id": "original_d3",
+            "model": "/root/hf_models/gemma-4-E4B-it",
+            "adapter": null,
+            "our_training": false,
+            "publisher_training": "Google Instruct release",
+            "prompts": "/root/hf_nf4_contract_20261010/d3.json",
+            "expected": 360,
+            "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+            "dependency": "original_smoke",
+            "purpose": "Missing native HF NF4 execution condition on frozen development inputs; not independent holdout or product adoption"
+          },
+          {
+            "id": "cosine_s20261014_d3",
+            "model": "/root/hf_models/gemma-4-E4B-it",
+            "adapter": "/root/adapters/oos2r_cosine_5e5_seed20261014_20261009",
+            "our_training": true,
+            "publisher_training": "Google Instruct release",
+            "prompts": "/root/hf_nf4_contract_20261010/d3.json",
+            "expected": 360,
+            "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+            "dependency": "original_smoke",
+            "purpose": "Missing native HF NF4 execution condition on frozen development inputs; not independent holdout or product adoption"
+          },
+          {
+            "id": "finch_s20261014_d3",
+            "model": "/root/hf_models/gemma-4-E4B-it",
+            "adapter": "/root/adapters/oos2r_finch_5e5_seed20261014_20261009",
+            "our_training": true,
+            "publisher_training": "Google Instruct release",
+            "prompts": "/root/hf_nf4_contract_20261010/d3.json",
+            "expected": 360,
+            "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+            "dependency": "original_smoke",
+            "purpose": "Missing native HF NF4 execution condition on frozen development inputs; not independent holdout or product adoption"
+          },
+          {
+            "id": "original_mx",
+            "model": "/root/hf_models/gemma-4-E4B-it",
+            "adapter": null,
+            "our_training": false,
+            "publisher_training": "Google Instruct release",
+            "prompts": "/root/hf_nf4_contract_20261010/mx.json",
+            "expected": 4014,
+            "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+            "dependency": "original_smoke",
+            "purpose": "Missing native HF NF4 execution condition on frozen development inputs; not independent holdout or product adoption"
+          },
+          {
+            "id": "cosine_s20261014_mx",
+            "model": "/root/hf_models/gemma-4-E4B-it",
+            "adapter": "/root/adapters/oos2r_cosine_5e5_seed20261014_20261009",
+            "our_training": true,
+            "publisher_training": "Google Instruct release",
+            "prompts": "/root/hf_nf4_contract_20261010/mx.json",
+            "expected": 4014,
+            "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+            "dependency": "original_smoke",
+            "purpose": "Missing native HF NF4 execution condition on frozen development inputs; not independent holdout or product adoption"
+          },
+          {
+            "id": "finch_s20261014_mx",
+            "model": "/root/hf_models/gemma-4-E4B-it",
+            "adapter": "/root/adapters/oos2r_finch_5e5_seed20261014_20261009",
+            "our_training": true,
+            "publisher_training": "Google Instruct release",
+            "prompts": "/root/hf_nf4_contract_20261010/mx.json",
+            "expected": 4014,
+            "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+            "dependency": "original_smoke",
+            "purpose": "Missing native HF NF4 execution condition on frozen development inputs; not independent holdout or product adoption"
+          }
+        ],
+        "runner": "/root/hf_nf4_contract_20261010/hf_nf4_contract_eval.py",
+        "runner_sha256": "0a43c36e0c80050f56c610e2e410f3dbbc22ade7665d4bdac21b9901bd538141",
+        "python": "/root/venv_imajev/bin/python",
+        "prior_all_done": "/root/daily_rag_seed3_20261009/ALLDONE",
+        "smoke_job": "original_smoke",
+        "frozen_files": {
+          "/root/hf_models/gemma-4-E4B-it/model.safetensors": "cfbd3d2f1cd71bd471c37fe2bf8546d5028d41e5736f64e1ca6c6b8893125503",
+          "/root/hf_models/gemma-4-E4B-it/config.json": "33b10c02df3c2e8536cf323d29d53262aaa2f4d11dbe19bc729373fbe90295d4",
+          "/root/hf_models/gemma-4-E4B-it/tokenizer_config.json": "9f4fec4b1dc6ecddf8f4a92e9caea5971c0e67d81309f3f9066a2bee8c362633",
+          "/root/adapters/oos2r_cosine_5e5_seed20261014_20261009/adapter_model.safetensors": "445c0c589f41cc3a5ced6144a08d2458f2b30935777849c370e656d80f4c0fa6",
+          "/root/adapters/oos2r_cosine_5e5_seed20261014_20261009/adapter_config.json": "4d42e6ad0e0b987e9dd67abcb747c5ca85783cae97c70f9e1f16c00c981886de",
+          "/root/adapters/oos2r_finch_5e5_seed20261014_20261009/adapter_model.safetensors": "07e7fecd8d6fe0e8cc25a342087368c8d79a965939c179a6957a2334aa72945a",
+          "/root/adapters/oos2r_finch_5e5_seed20261014_20261009/adapter_config.json": "4d42e6ad0e0b987e9dd67abcb747c5ca85783cae97c70f9e1f16c00c981886de"
+        },
+        "speed_cross_machine_comparable": false,
+        "automatic_retry": false
+      },
+      "saved": {
+        "original_smoke": 12,
+        "original_d3": 360,
+        "cosine_s20261014_d3": 0
+      }
+    },
+    "gpu": "9691 MiB, 0 %",
+    "full_registered_jobs": 6,
+    "full_registered_questions": 13122,
+    "original_d3": {
+      "files": 5,
+      "verified": 5,
+      "rows": 360,
+      "unique": 360,
+      "normal_correct": 100,
+      "normal_total": 120,
+      "false_pick": 16,
+      "none_total": 240,
+      "unparsed": 0
+    },
+    "same_machine_speed_comparison": false,
+    "note": "The observer caught loading between jobs; 08:09:10 measurement was 100% generation."
+  },
+  "archived": {
+    "A_sets": 16,
+    "A_rows": 23860,
+    "A_expected": 23860,
+    "A_files_verified": 70,
+    "A_files_total": 70,
+    "A_failed_or_unparsed": 6,
+    "B_adapter_files": 18,
+    "B_adapter_verified": 18,
+    "B_basic_files": 5,
+    "B_basic_rows": 835,
+    "B_smoke_rows": 12,
+    "B_native_original_d3_rows": 360
+  },
+  "closing_observation": {
+    "A": {
+      "captured_at_utc": "2026-10-09T23:15:30.384597+00:00",
+      "gpu": "8142 MiB, 100 %",
+      "saluki_saved": 356,
+      "saluki_expected": 835,
+      "ready_jobs": 3
+    },
+    "B": {
+      "captured_at_utc": "2026-10-09T23:15:29.775449+00:00",
+      "gpu": "10087 MiB, 86 %",
+      "current_saved": 223,
+      "current_expected": 360,
+      "full_completed": 1,
+      "full_expected": 6,
+      "ready_jobs": 4,
+      "worker_alive": true,
+      "lock_held": true
+    },
+    "sources": [
+      "program/scripts/plan_qa_bench/results/heartbeat_20261010_0800/A_closing_snapshot.json",
+      "program/scripts/plan_qa_bench/results/heartbeat_20261010_0800/B_closing_snapshot.json"
+    ]
+  },
+  "daily_research_observation": {
+    "recorded_at_utc": "2026-10-10T01:28:52.252411+00:00",
+    "A": {
+      "observed_at_utc": "2026-10-10T01:23:49.660749+00:00",
+      "gpu": "3372 MiB, 88 %",
+      "worker_lock_held": true,
+      "registered": 153,
+      "context_completed": 3,
+      "context_running": 1,
+      "context_ready_pending": 2,
+      "context_expected": 13122,
+      "free_bytes": 3815219200,
+      "existing_worker_restarted": false,
+      "latest_manifest_registration": {
+        "recorded_at_utc": "2026-10-10T01:32:37.352963+00:00",
+        "registered": 154,
+        "added_missing_condition": "e4bbase_oos2_multi_items_bc_a1",
+        "added_expected": 835,
+        "evidence": "program/scripts/plan_qa_bench/results/daily_20261010_1003/missing_oos2_registration.json",
+        "preserved_existing_worker": true
+      }
+    },
+    "B": {
+      "current": "NF4 cosine seed20261014 E running; FINCH E pending",
+      "current_observation_utc": null,
+      "followup_dispatcher_alive": true,
+      "followup_waits_for_prior_exit_and_lock": true,
+      "followup_main_conditions": 4,
+      "followup_main_rows": 8748,
+      "followup_smoke_rows": 24,
+      "existing_worker_preserved": true
+    },
+    "record": "program/research/daily_rag_slm/2026-10-10.json",
+    "old_initial_counts_are_historical": true
+  },
+  "latest_observation_2026_10_10_1411": {
+    "observed_at_utc": "2026-10-10T05:11:20.391942+00:00",
+    "A": {
+      "registered": 162,
+      "status_counts": {
+        "completed": 126,
+        "completed_with_errors": 28,
+        "failed": 2,
+        "running": 1
+      },
+      "ready_pending": 5,
+      "running": 1,
+      "added_conditions": 8,
+      "added_questions": 17496,
+      "order_completed": 2,
+      "order_total": 8,
+      "order_collected": 720,
+      "order_expected": 17496,
+      "worker_preserved": true,
+      "free_bytes": 3771789312,
+      "gpu_instant": "96 MiB, 0 %",
+      "initial_idle_observed": true
+    },
+    "B": {
+      "native_main_completed": 6,
+      "native_main_total": 6,
+      "native_rows_completed": 13122,
+      "native_rows_total": 13122,
+      "followup_saved": {
+        "oos1_smoke": 12,
+        "oos2r_smoke": 12,
+        "oos1_d3": 360,
+        "oos2r_d3": 360,
+        "oos1_mx": 1743
+      },
+      "current": "oos1_mx",
+      "immediate_next": 1,
+      "conditional_new_main_conditions": 4,
+      "conditional_new_main_rows": 8748,
+      "conditional_new_smoke_rows": 24,
+      "dispatcher_alive": true,
+      "worker_preserved": true,
+      "gpu_instant": "10265 MiB, 62 %",
+      "free_bytes": 5609492480
+    }
+  },
+  "latest_report": "final_project_cs/wiki/records/reports/2026-10-10_1400_six-hour-gpu-arm-report.md",
+  "heartbeat_2000": {
+    "observed_at_utc": "2026-10-10T11:10:32.263444+00:00",
+    "latest": {
+      "A": {
+        "registered": 170,
+        "status_counts": {
+          "completed": 133,
+          "completed_with_errors": 28,
+          "failed": 2,
+          "running": 1
+        },
+        "running": 1,
+        "ready_pending": 6,
+        "worker_pid": 342497,
+        "worker_alive": true,
+        "lock_held": true,
+        "free_bytes": 3752742912,
+        "gpu_instant": "3462 MiB, 100 %",
+        "initial_idle_observed": true,
+        "order_completed": 8,
+        "order_total": 8,
+        "order_questions": 17496,
+        "order_admissible_conditions": 0,
+        "order_completed_conditions": 8,
+        "added_conditions": 8,
+        "added_questions": 17496,
+        "extension_completed": 1,
+        "extension_saved": 361,
+        "extension_archived": 360,
+        "worker_preserved": true
+      },
+      "B": {
+        "followup_completed": 6,
+        "followup_total": 6,
+        "followup_main_rows": 8748,
+        "missing_completed": 5,
+        "missing_registered": 6,
+        "current": "oos3_mx",
+        "saved": 2982,
+        "expected": 4014,
+        "immediate_pending": 0,
+        "added_main_conditions": 6,
+        "added_main_rows": 13122,
+        "added_connectivity_rows": 12,
+        "waiting_dispatcher_alive": true,
+        "new_worker_not_started": true,
+        "prior_worker_preserved": true,
+        "free_bytes": 5585080320,
+        "gpu_instant": "10435 MiB, 24 %"
+      }
+    },
+    "report": "final_project_cs/wiki/records/reports/2026-10-10_2000_six-hour-gpu-arm-report.md"
+  },
+  "latest_observation_key": "heartbeat_2000"
+}

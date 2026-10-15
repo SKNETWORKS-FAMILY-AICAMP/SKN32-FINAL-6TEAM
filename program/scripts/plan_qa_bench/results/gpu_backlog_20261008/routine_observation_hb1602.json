@@ -1,0 +1,14 @@
+{
+  "new_completed": 0,
+  "new_failed": 0,
+  "ready_A": 4,
+  "B_existing_base_recipes": 4,
+  "B_automatic_download_recipes": 1,
+  "B_current_variant": "spark_s1_4b_oos",
+  "B_current_phase": "full_training",
+  "B_download_space_deferred": true,
+  "B_future_download_space_must_be_rechecked": true,
+  "queue_refill": false,
+  "restart": false,
+  "backup": "program/research/daily_rag_slm/_backup/2026-10-08_160328_routine_hb1602"
+}

@@ -1,0 +1,31 @@
+{
+  "expected": 1000,
+  "saved": 0,
+  "missing": 1000,
+  "failed_or_missing": 1000,
+  "full": {
+    "total": 1000,
+    "correct": 0,
+    "false_pick": 0,
+    "failed_or_missing": 1000,
+    "correct_wilson95": [
+      2.168404344971009e-19,
+      0.0038267584855551234
+    ],
+    "false_pick_wilson95": [
+      2.168404344971009e-19,
+      0.0038267584855551234
+    ]
+  },
+  "loaded_model": false,
+  "API_calls": 0,
+  "preload_failure": 1,
+  "log_sha256": "ffd42bde3b0540831508e7e433ecd2dcdddbcd62278c49a60470cdbbc5f63715",
+  "prompt_sha256": "0b5a64319f109184c14081df1d0e45e43bf9b3e0d951e43d4ae14fab5d722a38",
+  "failure": "Raw cgroup headroom threshold included reclaimable ordinary file cache",
+  "replacement_attempt": "valen_08b_original_d2_a2",
+  "previous_failure_preserved": true,
+  "accuracy_failure": false,
+  "failures_removed_from_denominator": false,
+  "final_ranking": false
+}

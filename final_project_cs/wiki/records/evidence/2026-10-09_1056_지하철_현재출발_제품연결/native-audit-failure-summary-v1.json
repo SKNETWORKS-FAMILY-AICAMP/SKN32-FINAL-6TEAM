@@ -1,0 +1,19 @@
+{
+  "scope": "native audit v1/v2의 도구에 반환된 실패를 요약. stdout 원문 파일로 수집한 것은 아니며 아래는 원인 요약이다. pytest 원문 XML/log는 별도 보존됨.",
+  "v1": {
+    "result": "fatal",
+    "reason": "no_data",
+    "controlled_terminal": "영등포구청",
+    "cause": "정적 시간표 일반 후보 종착과 현재 단축 종착을 전부 일치시켜야 한다는 과도한 조건"
+  },
+  "v2": {
+    "result": "fatal",
+    "reason": "no_data",
+    "diagnostic": "시간표 하남검단산역/마천 후보의 실제 승차 구간은 같은 양평→영등포구청. 정적 공식ID 경로는 목적지 이후 중간 역명 미대응에서 제외됨."
+  },
+  "reproduction": "short-turn-before-v1.xml 및 log 2/2 실패, 수정 후 after-v7.xml의 대응 2/2 통과",
+  "output_files": [
+    "native-route-controlled-v1.json",
+    "native-route-controlled-v2.json"
+  ]
+}

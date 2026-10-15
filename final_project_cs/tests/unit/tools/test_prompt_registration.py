@@ -34,7 +34,10 @@ def test_prompt_registration_allowlist_matches_cs_pack_teams():
         # ★`[2026-10-06]` 활동 판정 LLM(D-CS-008) 다섯 종류
         "activity_judge.closure", "activity_judge.operating_hours", "activity_judge.weather_sensitive",
         "activity_judge.disaster_effect", "activity_judge.live_status",
+        # ★`[2026-10-13]` 대체 후보 순서(활동 코어 전달 사항 11번)
         "activity_judge.alternative_order",
+        # ★`[2026-10-12]` 숙소 · 항공 확장 에이전트의 해석 프롬프트 둘(`instances/lodging` · `instances/flight` 의 `PROMPT_KEY`)
+        "lodging.interpret", "flight.interpret",
     })
 
 

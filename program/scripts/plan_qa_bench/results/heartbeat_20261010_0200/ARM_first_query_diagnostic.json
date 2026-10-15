@@ -1,0 +1,32 @@
+{
+  "observed_at": "2026-10-09T16:58:11.784577+00:00",
+  "api_bounded_log": [
+    "[10/10/26 01:57:20] WARNING  classification failed          classification.py:83",
+    "                             reason=RuntimeError: \uacb0\uc815 \ub2e8\uc704                     ",
+    "                             \uc2e4\ud328: OllamaError: Ollama \ud638\ucd9c                     ",
+    "                             \uc2e4\ud328: ReadTimeout: timed out                       "
+  ],
+  "model-adapter_bounded_log": [
+    "    result = upstream(os.environ[\"CHAT_URL\"] + \"/v1/chat/completions\", chat_payload(data))",
+    "    with urllib.request.urlopen(req, timeout=600) as response:",
+    "    return opener.open(url, data, timeout)",
+    "TimeoutError: timed out",
+    "    self.reply(502, {\"error\": type(exc).__name__})",
+    "BrokenPipeError: [Errno 32] Broken pipe"
+  ],
+  "health": {
+    "status": "ok"
+  },
+  "slots": [
+    {
+      "id": 0,
+      "n_ctx": 4096,
+      "is_processing": true
+    },
+    {
+      "id": 1,
+      "n_ctx": 4096,
+      "is_processing": true
+    }
+  ]
+}

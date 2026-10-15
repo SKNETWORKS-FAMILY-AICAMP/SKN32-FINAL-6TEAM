@@ -1,0 +1,452 @@
+{
+ "eval": "dining_alternatives",
+ "dataset": "dining_alternatives_pref_holdout_v1.jsonl",
+ "dataset_sha": "9b46ec69a19bd38f",
+ "label": "g-pref-holdout",
+ "seeds": 3,
+ "mobility": false,
+ "env": {
+  "run_at": "2026-10-13T17:14:32+09:00",
+  "git_commit": "687561a0",
+  "git_branch": "role-dining",
+  "git_dirty": true
+ },
+ "summary": {
+  "accuracy": {
+   "num": 6,
+   "den": 6,
+   "rate": 1.0
+  },
+  "acceptable": {
+   "num": 6,
+   "den": 6,
+   "rate": 1.0
+  },
+  "violations": {
+   "num": 0,
+   "den": 6,
+   "rate": 0.0
+  },
+  "violations_any_seed": {
+   "num": 0,
+   "den": 6,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct": 6,
+   "ok": 0,
+   "correct_no_change": 0,
+   "wrong_violation": 0,
+   "wrong": 0,
+   "missed": 0,
+   "wrong_change": 0,
+   "unstable": 0
+  },
+  "by_group": {
+   "preference": {
+    "num": 6,
+    "den": 6,
+    "rate": 1.0
+   }
+  },
+  "added_walk_min_mean": 0.0,
+  "skipped": []
+ },
+ "picker": {
+  "picker": "gemma",
+  "model": "gemma4:e4b",
+  "gate": "auto",
+  "runs_with_meal": 18,
+  "asked": 18,
+  "by": {
+   "llm": 18
+  },
+  "failures": {},
+  "overrides": 12,
+  "override_vs_rule": {
+   "wrong→correct": 12
+  },
+  "seconds_mean": 21.26,
+  "seconds_p95": 35.283
+ },
+ "results": [
+  {
+   "id": "DPH-001",
+   "group": "preference",
+   "why": "매운 것을 피하고 순한 국물",
+   "picked": "C",
+   "picked_name": "곰탕명가",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "C",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객 취향에 맞는 순한 국물 요리인 곰탕명가를 선택했습니다.",
+      "seconds": 35.283,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "C",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객 취향에 맞는 순한 국물 요리인 곰탕명가를 선택했습니다.",
+      "seconds": 13.344,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "C",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객 취향에 맞는 순한 국물 요리인 곰탕명가를 선택했습니다.",
+      "seconds": 15.071,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DPH-002",
+   "group": "preference",
+   "why": "고기 구이 원함 — 국물집 대신 고깃집",
+   "picked": "B",
+   "picked_name": "삼겹살집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고기 구워 먹고 싶다는 취향에 가장 잘 맞는 삼겹살집을 선택했습니다.",
+      "seconds": 34.575,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고기 구워 먹고 싶다는 취향에 가장 잘 맞는 삼겹살집을 선택했습니다.",
+      "seconds": 11.071,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고기 구워 먹고 싶다는 취향에 가장 잘 맞는 삼겹살집을 선택했습니다.",
+      "seconds": 10.097,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DPH-003",
+   "group": "preference",
+   "why": "원래와 같은 메뉴 — 규칙 1등",
+   "picked": "A",
+   "picked_name": "을지면옥",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객 취향에 맞춰 원래와 같은 냉면 메뉴를 제공하는 곳을 선택했습니다.",
+      "seconds": 32.738,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객 취향에 맞춰 원래와 같은 냉면 메뉴를 제공하는 곳을 선택했습니다.",
+      "seconds": 9.562,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객 취향에 맞춰 원래와 같은 냉면 메뉴를 제공하는 곳을 선택했습니다.",
+      "seconds": 33.608,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DPH-004",
+   "group": "preference",
+   "why": "양식 원함 — 파스타",
+   "picked": "B",
+   "picked_name": "트라토리아",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객 취향에 맞는 양식 메뉴인 파스타를 제공하는 곳을 선택했습니다.",
+      "seconds": 34.632,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객 취향에 맞는 양식 메뉴인 파스타를 제공하는 곳을 선택했습니다.",
+      "seconds": 11.716,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객 취향에 맞는 양식 메뉴인 파스타를 제공하는 곳을 선택했습니다.",
+      "seconds": 12.665,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DPH-005",
+   "group": "preference",
+   "why": "해산물 못 먹음 — 비슷한 해산물 대신",
+   "picked": "B",
+   "picked_name": "닭갈비",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "C",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객이 해산물 알레르기가 있어, 해산물이 아닌 닭갈비를 선택했습니다.",
+      "seconds": 31.008,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객이 해산물 알레르기가 있어, 해산물인 1, 2번 대신 닭갈비를 선택했습니다.",
+      "seconds": 33.429,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객이 해산물 알레르기가 있어, 해산물인 1, 2번 대신 닭갈비를 선택했습니다.",
+      "seconds": 12.978,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DPH-006",
+   "group": "preference",
+   "why": "상관없음 — 규칙 1등",
+   "picked": "A",
+   "picked_name": "기사식당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객이 어디든 괜찮다고 했으므로 규칙 1위인 기사식당을 선택했습니다.",
+      "seconds": 30.58,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객이 어디든 괜찮다고 했으므로 규칙 1위인 기사식당을 선택했습니다.",
+      "seconds": 9.853,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "고객이 어디든 괜찮다고 했으므로 규칙 1위인 기사식당을 선택했습니다.",
+      "seconds": 10.412,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  }
+ ]
+}

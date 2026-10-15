@@ -1,0 +1,393 @@
+{
+  "model": "Winnow-E4B our-travel oos adapter Q8_0 base",
+  "our_training": true,
+  "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+  "saved": 4014,
+  "expected": 4014,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "repetitions": 1,
+  "counts": {
+    "control": {
+      "request": {
+        "total": 1033,
+        "correct": 1006,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9622382815064879,
+          0.9819755051543165
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 943,
+        "false_pick": 31,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9551780928683282,
+          0.977488436836701
+        ],
+        "false_pick_wilson95": [
+          0.022511563163299005,
+          0.04482190713167181
+        ]
+      }
+    },
+    "mixed": {
+      "request": {
+        "total": 1033,
+        "correct": 1000,
+        "false_pick": 0,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9554764675067913,
+          0.9771637078772719
+        ],
+        "false_pick_wilson95": [
+          0.0,
+          0.0037049625938602128
+        ]
+      },
+      "no_request": {
+        "total": 974,
+        "correct": 954,
+        "false_pick": 20,
+        "failed_or_missing": 0,
+        "correct_wilson95": [
+          0.9684963330654975,
+          0.9866687313473285
+        ],
+        "false_pick_wilson95": [
+          0.013331268652671533,
+          0.03150366693450251
+        ]
+      }
+    }
+  },
+  "paired": {
+    "request": {
+      "pairs": 1033,
+      "itineraries": 59,
+      "correct_control": 1006,
+      "correct_mixed": 1000,
+      "loss_pp": 0.5808325266214908,
+      "loss_cluster95_pp": [
+        -0.1970491930704149,
+        1.2707722385141729
+      ],
+      "mixed_accuracy_cluster95": [
+        0.9567715370029979,
+        0.9786007785875221
+      ],
+      "paired_exact": {
+        "a_only": 12,
+        "b_only": 6,
+        "p": 0.237884521484375
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    },
+    "no_request": {
+      "pairs": 974,
+      "itineraries": 59,
+      "correct_control": 943,
+      "correct_mixed": 954,
+      "loss_pp": -1.1293634496919918,
+      "loss_cluster95_pp": [
+        -2.472386714727077,
+        0.10330845590434455
+      ],
+      "mixed_accuracy_cluster95": [
+        0.9692906005653147,
+        0.9885678461967121
+      ],
+      "paired_exact": {
+        "a_only": 7,
+        "b_only": 18,
+        "p": 0.043285250663757324
+      },
+      "bootstrap_replicates": 2000,
+      "bootstrap_seed": 7
+    }
+  },
+  "subtypes_mixed": {
+    "MX1": {
+      "total": 525,
+      "correct": 510,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9533980842203416,
+        0.9826102255363105
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0072639138944599795
+      ]
+    },
+    "MX2": {
+      "total": 474,
+      "correct": 456,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9407756506977965,
+        0.9758463625552556
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.008039191137108092
+      ]
+    },
+    "MX3": {
+      "total": 457,
+      "correct": 447,
+      "false_pick": 10,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9601937423423856,
+        0.9880716353393337
+      ],
+      "false_pick_wilson95": [
+        0.011928364660666263,
+        0.039806257657614454
+      ]
+    },
+    "MX4": {
+      "total": 121,
+      "correct": 116,
+      "false_pick": 5,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9069051929166947,
+        0.9822225139248748
+      ],
+      "false_pick_wilson95": [
+        0.017777486075125137,
+        0.09309480708330535
+      ]
+    },
+    "MX5a": {
+      "total": 236,
+      "correct": 231,
+      "false_pick": 5,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9513718541301528,
+        0.9909172776623534
+      ],
+      "false_pick_wilson95": [
+        0.009082722337646662,
+        0.048628145869847116
+      ]
+    },
+    "MX5b": {
+      "total": 160,
+      "correct": 160,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9765538048284949,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.02344619517150519
+      ]
+    },
+    "MX6a": {
+      "total": 34,
+      "correct": 34,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8984854458466761,
+        0.9999999999999999
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.10151455415332376
+      ]
+    }
+  },
+  "sources": {
+    "code": {
+      "control": {
+        "request": {
+          "total": 940,
+          "correct": 914,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9597804525792114,
+            0.9810555233160766
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 811,
+          "false_pick": 17,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9673665146151949,
+            0.987142294221597
+          ],
+          "false_pick_wilson95": [
+            0.012857705778403018,
+            0.03263348538480512
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 940,
+          "correct": 908,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9523377683412246,
+            0.9757842078798027
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.004070025516249234
+          ]
+        },
+        "no_request": {
+          "total": 828,
+          "correct": 816,
+          "false_pick": 12,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.9748399199624767,
+            0.9916904103961892
+          ],
+          "false_pick_wilson95": [
+            0.008309589603810768,
+            0.02516008003752342
+          ]
+        }
+      }
+    },
+    "llm": {
+      "control": {
+        "request": {
+          "total": 93,
+          "correct": 92,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.94158082764513,
+            0.9980993579713445
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 132,
+          "false_pick": 14,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8454801865828679,
+            0.9420188202254093
+          ],
+          "false_pick_wilson95": [
+            0.057981179774590684,
+            0.15451981341713203
+          ]
+        }
+      },
+      "mixed": {
+        "request": {
+          "total": 93,
+          "correct": 92,
+          "false_pick": 0,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.94158082764513,
+            0.9980993579713445
+          ],
+          "false_pick_wilson95": [
+            0.0,
+            0.03966750261173514
+          ]
+        },
+        "no_request": {
+          "total": 146,
+          "correct": 138,
+          "false_pick": 8,
+          "failed_or_missing": 0,
+          "correct_wilson95": [
+            0.8956073281741972,
+            0.971976323394244
+          ],
+          "false_pick_wilson95": [
+            0.028023676605756095,
+            0.10439267182580285
+          ]
+        }
+      }
+    }
+  },
+  "aggregate_gates": {
+    "request_accuracy": true,
+    "false_pick": false,
+    "request_loss": true,
+    "false_pick_increase": true
+  },
+  "aggregate_gates_passed": 3,
+  "aggregate_gates_total": 4,
+  "subtype_gates": {
+    "MX3": true,
+    "MX4": false,
+    "MX5a": true
+  },
+  "complete_valid": true,
+  "failed_records": [],
+  "false_pick_increase_pp": -1.1293634496919918,
+  "answer_sha256": "8e18f91b3e902e108a0deaab5b8162b496f4390fd2c826655962c02949e406ac",
+  "gold_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+  "execution": {
+    "job": {
+      "id": "winnow_oos_mx",
+      "label": "Winnow-E4B our-travel oos adapter Q8_0 base",
+      "our_training": true,
+      "model": "/workspace/deciders/winnow_e4b/gguf/Winnow-E4B-Q8_0.gguf",
+      "prompts": "/workspace/heavy/all_prompts_mx.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "mx_backlog_winnow_oos",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 4014,
+      "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+      "lora": "/tmp/tripilot-trained-adapters-20261008/winnow_e4b_oos_f16.gguf",
+      "training_base_revision": "aabbd52f5dfce0f7d9d22ca9e53e75259d865239",
+      "base_revision": "1b257e8fa80b270a62338362a8b35e37f7890273",
+      "base_same_blob_across_revisions": true,
+      "adapter_sha256": "3a4f2646ed55ce3758bc0c6e66b6ee005840886c499da4189e2503b2301ef963"
+    },
+    "started": "2026-10-08T05:36:11.766056+00:00",
+    "prompt_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "limits": [
+    "one run",
+    "existing developer/regression suite; not new independent final holdout",
+    "paired exact p does not remove shared itinerary correlation; cluster intervals supplied",
+    "no complete matched original cohort ranking",
+    "token p_null is not verbal confidence or calibrated option probability"
+  ]
+}

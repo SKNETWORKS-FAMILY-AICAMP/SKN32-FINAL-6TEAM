@@ -88,7 +88,33 @@ def state(conn, tenant_id: str, place_id: str | None, at: datetime | None, until
     """
     if not isinstance(at, datetime):
         return None
-    row = place_row(conn, tenant_id, place_id)
+    return _with_live_status(_state_of_row(place_row(conn, tenant_id, place_id), at, until, holiday),
+                             conn, tenant_id, place_id, at)
+
+
+def content_row(conn, content_id: str | None) -> dict[str, Any] | None:
+    """관광공사 번호 → 원장 행(`_ROW` 칸). 없으면 `None`. `[2026-10-13 코어 연결]`"""
+    if not content_id:
+        return None
+    with conn.cursor() as cur:
+        cur.execute("SELECT " + ", ".join(_ROW) + " FROM activity.ac_place WHERE content_id = %s LIMIT 1",
+                    (str(content_id),))
+        row = cur.fetchone()
+    return dict(zip(_ROW, row)) if row is not None else None
+
+
+def state_by_content(conn, content_id: str | None, at: datetime | None, until: datetime | None = None, *,
+                     holiday: HolidayLookup | None = None) -> dict[str, Any] | None:
+    """`state` 와 같은 판정을 관광공사 번호로 — 코어 장소 행을 만들기 전(확인 화면 단계)에 쓴다. `[2026-10-13 코어 연결]`
+
+    ★코어가 확인 화면에서 읽은 장소는 관광공사 번호만 있고 장소 행(`places`)이 없을 때가 많다. 그때 `state` 는 원장을 못 찾는다."""
+    if not isinstance(at, datetime):
+        return None
+    return _state_of_row(content_row(conn, content_id), at, until, holiday)
+
+
+def _state_of_row(row: dict[str, Any] | None, at: datetime, until: datetime | None,
+                  holiday: HolidayLookup | None) -> dict[str, Any] | None:
     if row is None:
         return None
     hours = hours_from_row(row)
@@ -100,6 +126,14 @@ def state(conn, tenant_id: str, place_id: str | None, at: datetime | None, until
                 break      # ★같은 소스가 또 모른다고 할 것이다(team._hours_check 와 같다)
     verdict = hours_verdict(hours, at, until=until if isinstance(until, datetime) else None, holiday=facts.get)
     out = {**verdict, "content_id": row["content_id"], "name": row["name_ko"]}
+    return out
+
+
+def _with_live_status(out: dict[str, Any] | None, conn, tenant_id: str, place_id: str | None,
+                      at: datetime) -> dict[str, Any] | None:
+    """저장된 실시간 운영 상태를 `live_status` 칸으로 싣는다. 원장에 없어 판정이 `None` 이면 그대로 `None`."""
+    if out is None:
+        return None
     live = _live_status(conn, tenant_id, place_id, at)
     if live is not None:
         out["live_status"] = live

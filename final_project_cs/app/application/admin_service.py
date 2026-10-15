@@ -139,20 +139,7 @@ def mutate(conn, tenant: str, actor: str, command: dict) -> None:
             raise AdminServiceError(404, "템플릿을 찾을 수 없습니다.")
         put(conn, tenant, "template", identity, {"title": command["title"], "body": command["body"]}, actor=actor, action=kind, reason=command["body"])
     elif kind in ("inquiry-status", "reply"):
-        identity = command["inquiryId"]
-        with conn.cursor() as cur:
-            cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"admin:{tenant}:inquiry:{identity}",))
-        value = record(conn, tenant, "inquiry", identity, lock=True)
-        if not value:
-            raise AdminServiceError(404, "문의를 찾을 수 없습니다.")
-        at = now.isoformat()
-        if kind == "reply":
-            value.setdefault("replies", []).append({"body": command["body"], "operator": actor, "at": at})
-            value.update(status="답변 완료", assignee=actor)
-        else:
-            value.update(status=command["status"], assignee=command["assignee"])
-        value.setdefault("history", []).append({"text": f"{value['status']} · {reason}", "at": at})
-        put(conn, tenant, "inquiry", identity, value, actor=actor, action=kind, reason=reason)
+        raise AdminServiceError(422, "상담원 배정과 개별 답변은 지원하지 않습니다. 결함 사후 분석을 사용해 주세요.")
     elif kind == "api-cap":
         if command["daily"] > command["monthly"]:
             raise AdminServiceError(422, "월 한도는 하루 한도 이상이어야 합니다.")

@@ -1,0 +1,153 @@
+{
+  "created_at": "2026-10-09T10:51:39.973904+09:00",
+  "input_path": "datasets/mobility/raw/2026-10-09_1009_지하철응답_빈값오인_public_sample/normalized-v1.json",
+  "input_sha256": "0a830eadd600e4de1a390c0a9e8523fbdc0c3e3a29fe20e1564b5f35b4918c14",
+  "snapshot_original_confirmed_at": "2026-10-09T01:10:52.598367+00:00",
+  "new_live_snapshots": 0,
+  "audit_only_name_bridge": {
+    "01호선|서울역": "1호선|서울"
+  },
+  "production_alias_changed": false,
+  "unique_historical_snapshots": 1,
+  "partial_provider_rows": 5,
+  "binding": {
+    "status": "matched",
+    "line_id": "1001",
+    "station_id": "1001000133",
+    "target_station_id": "1001000132",
+    "query_station": "서울",
+    "target_station": "시청",
+    "line": "1호선"
+  },
+  "static_service_patterns": 2,
+  "discarded_timetable_audit_diagnostics": {
+    "candidate_count": 244,
+    "run_bound": 244,
+    "inferred_destination": 0
+  },
+  "historical_selection": {
+    "source": "seoul_subway_arrival",
+    "line_id": "1001",
+    "station_id": "1001000133",
+    "target_station_id": "1001000132",
+    "confirmed_at": "2026-10-09T01:10:52.598367+00:00",
+    "observation_age_seconds": 0.0,
+    "ready_at": "2026-10-09T01:10:52.598367+00:00",
+    "excluded": [
+      {
+        "train_number": "0622",
+        "reason": "arrives_before_ready"
+      },
+      {
+        "train_number": "2210",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "A2071",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "4046",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "1910",
+        "reason": "zero_eta_without_arrival_state"
+      }
+    ],
+    "status": "no_boardable_prediction",
+    "reason": "no_vehicle_after_ready"
+  },
+  "historical_exclusion_counts": {
+    "arrives_before_ready": 1,
+    "boarding_identity_mismatch": 3,
+    "zero_eta_without_arrival_state": 1
+  },
+  "stale_replay": {
+    "source": "seoul_subway_arrival",
+    "line_id": "1001",
+    "station_id": "1001000133",
+    "target_station_id": "1001000132",
+    "confirmed_at": "2026-10-09T01:10:52.598367+00:00",
+    "observation_age_seconds": 30.0,
+    "ready_at": "2026-10-09T01:11:22.598367+00:00",
+    "status": "stale",
+    "reason": "refresh_required"
+  },
+  "controlled_abba_runs": [
+    {
+      "cache_age_seconds": 0,
+      "mode": "A",
+      "remaining_seconds": 180.0,
+      "predicted_boardable": true
+    },
+    {
+      "cache_age_seconds": 0,
+      "mode": "B",
+      "remaining_seconds": 180,
+      "predicted_boardable": true
+    },
+    {
+      "cache_age_seconds": 0,
+      "mode": "A",
+      "remaining_seconds": 180.0,
+      "predicted_boardable": true
+    },
+    {
+      "cache_age_seconds": 0,
+      "mode": "B",
+      "remaining_seconds": 180,
+      "predicted_boardable": true
+    },
+    {
+      "cache_age_seconds": 5,
+      "mode": "A",
+      "remaining_seconds": 180.0,
+      "predicted_boardable": true
+    },
+    {
+      "cache_age_seconds": 5,
+      "mode": "B",
+      "remaining_seconds": 175,
+      "predicted_boardable": false
+    },
+    {
+      "cache_age_seconds": 5,
+      "mode": "A",
+      "remaining_seconds": 180.0,
+      "predicted_boardable": true
+    },
+    {
+      "cache_age_seconds": 5,
+      "mode": "B",
+      "remaining_seconds": 175,
+      "predicted_boardable": false
+    },
+    {
+      "cache_age_seconds": 15,
+      "mode": "A",
+      "remaining_seconds": 180.0,
+      "predicted_boardable": true
+    },
+    {
+      "cache_age_seconds": 15,
+      "mode": "B",
+      "remaining_seconds": 165,
+      "predicted_boardable": false
+    },
+    {
+      "cache_age_seconds": 15,
+      "mode": "A",
+      "remaining_seconds": 180.0,
+      "predicted_boardable": true
+    },
+    {
+      "cache_age_seconds": 15,
+      "mode": "B",
+      "remaining_seconds": 165,
+      "predicted_boardable": false
+    }
+  ],
+  "elapsed_seconds": 6.704348100000061,
+  "claim": "Historical five-row partial response with static route identity, not five independent samples or observed ETA accuracy. ABBA is deterministic controlled arithmetic, not statistical performance."
+}

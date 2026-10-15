@@ -1,0 +1,83 @@
+{
+  "phase": "ready_for_integration",
+  "updated_at_kst": "2026-10-12T04:45:42.297178+09:00",
+  "w_ids": [
+    "W03",
+    "W06",
+    "W08",
+    "W12"
+  ],
+  "changed_files": [
+    "final_project_cs/app/composition.py",
+    "final_project_cs/app/domains/travel_ops/components/core_hooks/feedback.py",
+    "final_project_cs/app/domains/travel_ops/components/planning/execution_plan.py",
+    "final_project_cs/app/domains/travel_ops/components/watch/batch_executor.py",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_batch.py",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py",
+    "final_project_cs/app/domains/travel_ops/components/planning/survey.py",
+    "final_project_cs/app/domains/travel_ops/components/planning/pending.py",
+    "final_project_cs/app/domains/travel_ops/components/planning/guardian.py",
+    "final_project_cs/app/domains/travel_ops/components/actions/itinerary_actions.py",
+    "final_project_cs/app/domains/travel_ops/components/watch/safety_pause.py",
+    "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary.py",
+    "final_project_cs/app/domains/travel_ops/scenarios/case_engine.py",
+    "final_project_cs/config/guardrails.yaml",
+    "final_project_cs/tests/unit/travel/execution_plan_fixture.py",
+    "final_project_cs/tests/unit/travel/test_classification_execution_plan.py",
+    "final_project_cs/tests/unit/travel/activity/test_watch_batch_unit.py",
+    "final_project_cs/tests/scenario/test_watch_batch.py",
+    "final_project_cs/tests/scenario/test_case_version_day.py",
+    "final_project_cs/tests/scenario/test_execution_plan_isolation.py",
+    "final_project_cs/tests/e2e/test_trip_guardian.py",
+    "final_project_cs/wiki/teams/classification-execution-plan.md",
+    "final_project_cs/tests/e2e/test_ask_first.py",
+    "final_project_cs/tests/e2e/test_trip_survey.py"
+  ],
+  "tests": [
+    {
+      "passed": 179,
+      "total": 179,
+      "evidence": "unit-final.xml"
+    },
+    {
+      "passed": 129,
+      "total": 129,
+      "denominator": "3개 실행에서 동일 시험을 중복 제거하고 마지막 결과를 사용. 현재 사양으로 바꾼 시험 이름 3개를 대응시켰다.",
+      "runs": [
+        {
+          "run": "2026-10-12_042915",
+          "passed": 94,
+          "total": 97,
+          "exit": 1
+        },
+        {
+          "run": "2026-10-12_043751",
+          "passed": 53,
+          "total": 56,
+          "exit": 1
+        },
+        {
+          "run": "2026-10-12_044322",
+          "passed": 3,
+          "total": 3,
+          "exit": 0
+        }
+      ]
+    }
+  ],
+  "report": "program/research/baseline_completion_2026-10-12/tasks/orchestration/report.md",
+  "dependencies_remaining": [
+    "운영 담당: travel_execution_diagnostic 사건을 진단 저장기에 연결",
+    "검증 담당: 새 시험 2개를 tests/test-suites.json travel에 편입",
+    "통합 담당: 공용 rest-endpoints·quality/invariants 접합 및 독립 계약 검토"
+  ],
+  "unresolved": [],
+  "unverified": [
+    "실제 분류 모델 품질·지연",
+    "외부 자료 실응답·실제 고객 전달",
+    "원격 A2A 다중 팀 조정",
+    "운영 반영"
+  ],
+  "deployment": "not_deployed",
+  "ready_reason": "허용 범위의 로컬 구현과 실제 조립·저장·장애 복구·권한·경합·Core 경계 격리 검증 통과. 공용 접합과 운영 반영은 별도."
+}

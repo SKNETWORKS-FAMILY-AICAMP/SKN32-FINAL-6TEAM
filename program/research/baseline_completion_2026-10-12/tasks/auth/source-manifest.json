@@ -1,0 +1,50 @@
+[
+  {
+    "path": "app/domains/travel_ops/modules/web_account/personal_ai_api.py",
+    "sha256": "90B2C89620491ECA23B07E022A060A193D4DE91CEF37D33183807F92BB5A2CC5"
+  },
+  {
+    "path": "app/domains/travel_ops/modules/web_account/personal_ai_oauth.py",
+    "sha256": "A2B76DB3C8780DCAAC3DD41AEA79801F6E61412DB4B00045123612E121272FF5"
+  },
+  {
+    "path": "app/domains/travel_ops/modules/web_account/personal_ai_store.py",
+    "sha256": "FCEFFCBD0859472BDCFF25973841198BEDDF9F4E38A24FBB2C4488412411EC8C"
+  },
+  {
+    "path": "app/domains/travel_ops/modules/web_account/personal_ai_context.py",
+    "sha256": "59FC2F8EA16545FCEBDD075A652980CCD1D5D6E890EAD9630B7E5FDA112F2CC0"
+  },
+  {
+    "path": "app/domains/travel_ops/modules/web_account/personal_ai_views.py",
+    "sha256": "5C4561E280C261AF8B6F8EDFF8BA3FDB6E7BEE0DE3794C055F38CBD2AB4E0B79"
+  },
+  {
+    "path": "app/domains/travel_ops/modules/web_account/web_auth_api.py",
+    "sha256": "D8FB90D615D4FF530463D0A1F0C9F1EE77E328B2FCFFF45D069ED9C3DBC2B46A"
+  },
+  {
+    "path": "app/domains/travel_ops/modules/web_account/web_cookie.py",
+    "sha256": "205280E3E9789C037FCA06DB695950CB8C95C1C8E369151959CACEEDFC3C11A9"
+  },
+  {
+    "path": "app/domains/travel_ops/modules/mcp/mcp_server.py",
+    "sha256": "ACEE1C8016116EE541447276DBD85271411E1D657E2A4838C2174E492F4A986E"
+  },
+  {
+    "path": "app/infrastructure/db/migrations/901_personal_ai_oauth.sql",
+    "sha256": "3BA6E51105120CB40B5FAB3CF03E3CF6F8E64837D8E3166434663904A0737C07"
+  },
+  {
+    "path": "config/personal-ai-oauth.json",
+    "sha256": "9AAD1D8EC3391E33010A346D76E21E3159D3662683ADA6E8BAB5114134BD50B0"
+  },
+  {
+    "path": "tests/security/test_personal_ai_oauth.py",
+    "sha256": "6886CFEF5DCC98CD3BAB6FB68BB4E90077EE7C62F4E656D8FE15DC592A7DEA8A"
+  },
+  {
+    "path": "tests/e2e/test_personal_ai_oauth_db.py",
+    "sha256": "C2C392C78CD82CCE38C4E1B682DFCEBBD28B83FFDA77F26145984A0D393A3CF4"
+  }
+]

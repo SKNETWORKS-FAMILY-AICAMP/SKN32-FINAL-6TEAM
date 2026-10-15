@@ -1,0 +1,5 @@
+{
+  "removed": true,
+  "stoppedBeforeCleanup": true,
+  "scope": "auth task-owned synthetic PostgreSQL cluster only"
+}

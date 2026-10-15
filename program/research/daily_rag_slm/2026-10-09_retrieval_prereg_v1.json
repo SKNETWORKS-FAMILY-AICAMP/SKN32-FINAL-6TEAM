@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-09",
+  "scope": "Offline travel retrieval development diagnostic; no generation or deployment",
+  "sources": ["https://arxiv.org/html/2610.09412v1", "https://arxiv.org/html/2609.34776v1"],
+  "datasets": {"A": "program/scripts/rag_gate/fixtures/rag_questions.json", "B": "program/scripts/rag_gate/blind/fixtures/rag_questions.json"},
+  "holdout_policy": "Never open or rescore the previously used H holdout. A/B are development evidence only. A new independent reviewed holdout is required before adoption.",
+  "corpus": "Existing 130 travel-only policy chunks; original source IDs and text preserved",
+  "encoder": "Existing bge-m3:latest 1024-dimensional cached vectors; artifact SHA pinned at execution, original model revision unavailable",
+  "variants": ["dense_E", "RRF_dense_BM25", "RNG_gamma0", "adaptive_MMR_h1", "adaptive_MMR_h2_assumed_diagnostic"],
+  "parameters": {"top_k": 3, "candidate_pool": 20, "rrf_rank_constant": 60, "rrf_each_pool": 60, "BM25_char_ngram": 2, "BM25_k1": 1.2, "BM25_b": 0.75, "MMR_lambda": 0.7, "RNG_gamma": 0.0, "display_cosine_threshold": 0.55, "bootstrap_seed": 20261009, "bootstrap_repetitions": 2000},
+  "evidence_requirement": "h1 is exact single-evidence fallback control; h2 is an assumed workload sensitivity diagnostic, not inferred from gold and not a deployed estimator. Alternative gold IDs must not be counted as independent evidence requirements.",
+  "metrics": ["Recall@3 any acceptable gold", "shown_gold/answerable", "shown_wrong_only/answerable", "shown_any/(uncovered+offtopic)", "near_miss shown separately", "paired difference CI", "exact McNemar", "selector latency only", "trigger rate"],
+  "candidate_gate": {"each_set_recall_at3_min": 0.90, "each_set_null_false_show_max": 0.02, "shown_gold_not_lower_than_dense": true, "null_false_show_not_higher_than_dense": true, "independent_validation_required": true},
+  "failures": "Cache missing or schema error stops execution explicitly; no network, no silent omitted question, no old artifact overwrite",
+  "status": "parameters frozen before first execution"
+}

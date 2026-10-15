@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/tmp/tripilot-valen-20261009/valen_native_eval_20261009.py", line 19, in <module>
+    from transformers import AutoModel, AutoProcessor
+ModuleNotFoundError: No module named 'transformers'

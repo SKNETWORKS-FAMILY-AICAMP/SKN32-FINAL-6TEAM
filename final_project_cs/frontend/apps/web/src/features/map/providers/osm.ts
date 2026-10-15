@@ -240,11 +240,12 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           setHiddenPoints([...hiddenPoints]);
           relayout();
         }
+        const revealId = points.find(point => point.revealFocus)?.id;   // `[2026-10-13]` 검증 로딩 중 지금 드러나는 마커
         markers.forEach(({ id, pin, marker }) => {
           const selected = id === nextSelectedId;
-          setPinSelected(pin, selected);
+          setPinSelected(pin, selected, id === revealId);
           marker.getElement()?.setAttribute("aria-pressed", String(selected));
-          marker.setZIndexOffset(selected ? 1000 : 0);
+          marker.setZIndexOffset(selected || id === revealId ? 1000 : 0);
         });
         if (changed) {
           previousGeometry = geometry;

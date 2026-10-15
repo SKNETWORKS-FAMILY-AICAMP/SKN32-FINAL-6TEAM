@@ -1,0 +1,16 @@
+{
+  "source_sha256": {
+    "app/application/controller.py": "3363b7903ed10e94dfdf288ef601a77da94f800b7874838fe830e4e83a874064",
+    "wiki/teams/team-contract/plugin-availability.md": "5d40e46b4f1ee6ea64f6f200700772230883ceb216875eaf36ddc546e9dfb579",
+    "tests/unit/core/test_controller_resume_recovery.py": "0d378a4d4a274f0622dd6db8faadff811207c79d6040ba5d6a9296c3e4016131"
+  },
+  "change_since_v1": "contract added link to completed 70-test report only; product and tests unchanged",
+  "tests": {
+    "passed": 70,
+    "total": 70,
+    "new": 10,
+    "seconds": 3.71
+  },
+  "database_used": false,
+  "external_io": false
+}

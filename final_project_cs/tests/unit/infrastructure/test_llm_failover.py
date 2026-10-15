@@ -128,7 +128,7 @@ def test_luna_structured_uses_the_callers_schema_and_output_budget():
     schema = {"type": "object", "properties": {"action": {"type": "string"}}}
     assert chat.structured("할 일을 고르라", "서울 여행 일정 확인", schema, num_predict=180) == {"action": "answer_fact"}
     assert api.calls[0]["max_completion_tokens"] == 720
-    assert api.calls[0]["response_format"]["json_schema"]["schema"] == schema
+    assert api.calls[0]["response_format"]["json_schema"]["schema"] == lf.strict_schema(schema)   # `[2026-10-15]` strict 모양으로 바꿔 보낸다
 
 
 def test_switch_on_with_the_key_returns_the_failover_chat_with_the_same_surface():
@@ -350,7 +350,7 @@ def test_structured_sends_the_schema_as_the_response_format_and_returns_the_obje
     chat, _ = build(server, api)
     assert chat.structured("sys", "hi", SCHEMA, num_predict=400) == {"action": "a"}
     fmt = api.calls[0]["response_format"]
-    assert fmt["type"] == "json_schema" and fmt["json_schema"]["schema"] == SCHEMA and fmt["json_schema"]["strict"] is False
+    assert fmt["type"] == "json_schema" and fmt["json_schema"]["schema"] == lf.strict_schema(SCHEMA) and fmt["json_schema"]["strict"] is True
     assert api.calls[0]["temperature"] == 0 and api.calls[0]["max_tokens"] >= 400
 
 
@@ -415,6 +415,18 @@ def test_warm_and_loaded_go_to_the_first_ollama_only():
     chat, _ = build(server)
     chat.warm()
     assert posted == [URL + "/api/chat"]
+
+
+def test_warm_waits_for_the_model_load_time_not_the_short_answer_time():
+    """식은 모델은 올리는 데 수십 초가 걸린다(x600 서버 실측 28초). 예열이 고객 응답용 짧은 시간(6초)으로 기다리면 끝내 못 올린다."""
+    lf.reset_state()
+    server = Server(ok())
+    primary = OllamaChat(base_url=URL, model="gemma4:12b", timeout=150.0, transport=server)
+    chat = lf.wrap_from_settings(primary, settings(ollama_timeout_seconds=150.0), api_client=Api(), budget=lambda: True)
+    assert chat._backends[0].chat.timeout == 6.0               # 고객 응답 경로는 그대로 짧게 기다린다
+    assert chat._warm_chat is primary and chat._warm_chat.timeout == 150.0
+    chat.warm()
+    assert server.calls == 1
 
 
 def test_every_call_leaves_a_path_record_and_counts():
@@ -554,3 +566,29 @@ def test_the_openai_client_is_shared_between_requests():
     first = lf.OpenAIChat(api_key=KEY, model="m", timeout=8.0)._api()
     second = lf.OpenAIChat(api_key=KEY, model="m", timeout=8.0)._api()
     assert first is second
+
+
+def test_every_ollama_call_sends_the_same_context_length():
+    """문맥 길이를 안 보내면 Ollama 기본(4,096)으로 요청 해석 입력의 앞(지시문)이 잘린다. 호출마다 값이 다르면 모델을 다시 올리므로 예열까지 같은 값을 보낸다."""
+    sent = []
+
+    def server(url, payload):
+        sent.append(payload["options"].get("num_ctx"))
+        return httpx.Response(200, json={"message": {"content": '{"action": "other"}'}}, request=httpx.Request("POST", url))
+    lf.reset_state()
+    primary = OllamaChat(base_url=URL, model="gemma4:12b", transport=server, num_ctx=8192)
+    chat = lf.wrap_from_settings(primary, settings(), api_client=Api(), budget=lambda: True)
+    chat.structured("s", "u", {"type": "object"})
+    chat.json("s", "u")
+    chat.warm()
+    assert sent == [8192, 8192, 8192]
+
+
+def test_without_a_context_length_the_option_is_not_sent():
+    sent = []
+
+    def server(url, payload):
+        sent.append("num_ctx" in payload["options"])
+        return httpx.Response(200, json={"message": {"content": "{}"}}, request=httpx.Request("POST", url))
+    OllamaChat(base_url=URL, model="m", transport=server).json("s", "u")
+    assert sent == [False]

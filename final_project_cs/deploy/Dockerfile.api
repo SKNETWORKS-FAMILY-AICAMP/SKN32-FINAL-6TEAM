@@ -27,6 +27,11 @@ COPY prompts ./prompts
 COPY knowledge/ingest.py ./knowledge/ingest.py
 COPY knowledge/travel ./knowledge/travel
 COPY scripts ./scripts
+# 고객 답변은 배포된 지식의 고객용 문장을 검증해 읽는다.
+COPY knowledge/ingest.py ./knowledge/ingest.py
+COPY knowledge/travel ./knowledge/travel
+COPY knowledge/service ./knowledge/service
+COPY knowledge/current-travel ./knowledge/current-travel
 COPY var/notice_phrasebook.json ./var/notice_phrasebook.json
 COPY deploy/worker.sh ./deploy/worker.sh
 

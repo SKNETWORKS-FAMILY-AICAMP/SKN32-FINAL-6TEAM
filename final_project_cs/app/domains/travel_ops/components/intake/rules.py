@@ -70,8 +70,98 @@ _WORDS = (r"(?:점심|저녁|아침|식사|밥|커피|쇼핑|구경|관람|체�
 _TAIL_WORDS = re.compile(r"\s*(?:에서|에|은|는|을|를|으로|로)?\s*" + _WORDS + r"\s*$")
 _TAIL_MEAL = re.compile(r"\s*(?:에서|에)\s*(?:점심|저녁|아침|식사|밥|커피)\s*$")
 _TAIL_PUNCT = re.compile(r"[\s,.;·|/\-]+$")
-#: 이름 뒤에 **띄어 쓴 끼니 말**(「토속촌삼계탕 점심」) — 이름에서 떼고 「식사 항목」 단서로 남긴다
-_MEAL_SUFFIX = re.compile(r"\s+(?P<meal>아침|조식|점심|중식|저녁|석식|식사)\s*$")
+#: 끼니 말 — 「점심」 · 「점심식사」 · 「점심 식사」 · 「식사」. ★`[2026-10-13]` 하나의 규칙으로 바꿨다(모양마다 늘리지 않는다)
+#:  ☆전에는 이름 뒤에 **띄어 쓴 한 단어**만 뗐다 — 「광장시장 점심식사」 · 「광장시장·점심」은 이름에 남고 식사가 아니었고,
+#:    「점심 · 광장시장」은 이름이 「점심」이 됐다(테스트 서버). 결함: debugs/2026-10-13_시장_점심이_다른_동네의_같은_이름_가게가_된다.md
+_MEAL_WORD = r"(?:(?:아침|조식|점심|중식|저녁|석식)(?:\s*식사)?|식사)"
+#: 줄 어디에 있든 **낱말로 선** 끼니 말 — 앞뒤가 글자로 이어지면 이름의 일부다(「아침고요수목원」 · 「북경중식」 · 「저녁노을카페」).
+#:  조사(「에서」 · 「에」) 바로 뒤는 낱말의 시작으로 본다(「광장시장에서점심」)
+_MEAL_ANY = re.compile(r"(?:(?<=에서)|(?<=에)|(?<![가-힣A-Za-z0-9]))(?P<meal>" + _MEAL_WORD + r")(?![가-힣A-Za-z0-9])")
+#: 이름 **앞머리**의 끼니 말(「점심 · 광장시장」 · 「점심은 광장시장」) — 띄어쓰기나 구분자가 있어야 뗀다. ☆`^` 를 쓰지 않는다 — `match(line, pos)` 에서 `^` 는 줄 맨 앞만 맞는다
+#:  ☆`^` 를 쓰지 않는다 — `match(line, pos)` 에서 `^` 는 줄 맨 앞에서만 맞아 시각 뒤의 앞머리를 못 봤다
+_MEAL_HEAD = re.compile(r"\s*(?P<meal>" + _MEAL_WORD + r")(?:은|는|엔)?(?:\s*[·,/:|]\s*|\s+)")
+#: 이름 **뒤**의 끼니 말(「광장시장 점심식사」 · 「광장시장·점심」 · 「광장시장에서 점심」)
+_MEAL_TAIL = re.compile(r"(?:\s*(?:에서|에)\s*|\s*[·,/]\s*|\s+)(?P<meal>" + _MEAL_WORD + r")\s*$")
+_MEAL_CODE = {"아침": "breakfast", "조식": "breakfast", "점심": "lunch", "중식": "lunch", "저녁": "dinner", "석식": "dinner"}
+#: 끼니 말 뒤가 **때**를 말한다(「저녁 무렵 남산타워」) — 시각만 주고 식사로 보지 않는다
+_MEAL_AS_TIME = re.compile(r"\s*(?:무렵|쯤|즈음|께|때|시간대)")
+#: 끼니 말 뒤가 **먹은 뒤**다(「아침 먹고 나와서 경복궁」) — 그 장소의 일이 아니다. 시각도 주지 않는다
+_MEAL_BEFORE = re.compile(r"\s*(?:을|를)?\s*(?:먹고|먹은\s*(?:뒤|후|다음)|드시고|하고\s*나서|후|뒤|이후|다음)")
+
+
+#: 낱말로 선 끼니 말 — 뒤에 조사(은·는·엔·에·도)가 붙어도 된다(「점심은 통인시장」). 이름의 일부(「아침고요수목원」)는 아니다
+_MEAL_MENTION = re.compile(r"(?:(?<=에서)|(?<=에)|(?<![가-힣A-Za-z0-9]))(?P<meal>아침|조식|점심|중식|저녁|석식)"
+                           r"(?=$|[^가-힣A-Za-z0-9]|은|는|엔|에|도|으로|식사|먹|무렵|쯤|즈음|께|때)")
+
+
+def meal_mention(text: str, *, place_start: int | None = None) -> tuple[str, str, bool] | None:
+    """조각 안 끼니 말 → (말, 끼니, 식사인가). 없거나 「먹고 나서」처럼 다른 일을 말하면 None.
+    ★`[2026-10-14]` 줄 전체에 끼니 말이 있는지만 보다가 「아침 먹고 … 경복궁」이 08:00 이 되고 「저녁 무렵 남산타워」의 저녁이 서촌에 붙었다(테스트 서버 접수 87858b77)."""
+    for match in _MEAL_MENTION.finditer(text):
+        word = match.group("meal")
+        rest = text[match.end():]
+        # 「광장시장에서 점심 먹고」는 그 장소의 식사다. 장소 앞의
+        # 「아침 먹고 경복궁」만 이미 끝난 식사로 제외한다.
+        if _MEAL_BEFORE.match(rest) and (place_start is None or match.start() < place_start):
+            continue
+        return word, _MEAL_CODE[word], not _MEAL_AS_TIME.match(rest)
+    return None
+
+
+#: 끼니 말 없이 「먹는다」는 말 — 장소 이름 **뒤**에 있을 때만 그 장소의 식사다(`eat_mention`). `[2026-10-15 사용자 결정 (가)]`
+#:  「카페거리」 · 「커피박물관」처럼 이름의 일부면 아니다. 「술」은 「미술관」 · 「기술」에 들어 있어 넣지 않는다
+_EAT = re.compile(
+    r"(?:먹(?:고|자|을|어|기|으러|는|었|겠|던|은|으면)|드시|마시(?:고|러|기|자|면)|마실|식사|맛집|요기"
+    r"|한\s*끼|한\s*잔|한잔|브런치"
+    r"|(?<![가-힣A-Za-z0-9])밥(?![가-힣])|(?<![가-힣A-Za-z0-9])(?:카페|커피)(?!거리|골목|박물관|축제))")
+
+
+def eat_mention(text: str, *, place_end: int = 0) -> str | None:
+    """장소 이름 뒤(`place_end` 부터)의 「먹는다」 말 → 그 말. 없으면 None.
+    ★이름 **앞**의 말은 보지 않는다 — 「밥 먹고 나서 창덕궁」 · 「아침 먹고 나와서 경복궁」은 앞선 식사다(`meal_mention` 과 같은 뜻).
+    ☆`[2026-10-15]` 세 방식 비교(eval/reports/2026-10-15_intake_meal_kind.md)에서 규칙만으로는 「뭐 좀 먹고」 · 「한잔하고」 · 「맛집」을 0/7 잡았다."""
+    for match in _EAT.finditer(text, max(0, place_end)):
+        if not _EAT_BEFORE.match(text, match.end()):
+            return match.group(0)
+    return None
+
+
+def _meal_head(line: str, start: int, end: int) -> tuple[int, re.Match | None]:
+    """이름 앞머리의 끼니 말을 건너뛴다 — 뒤에 이름이 남을 때만. (새 시작, 끼니 말)."""
+    head = _MEAL_HEAD.match(line, start, end)
+    if head is None or not line[head.end():end].strip():
+        return start, None
+    return head.end(), head
+
+
+def _meal_tail(line: str, start: int, end: int) -> tuple[int, re.Match | None]:
+    """이름 뒤의 끼니 말을 잘라 낸다 — 앞에 이름이 남을 때만. (새 끝, 끼니 말)."""
+    tail = _MEAL_TAIL.search(line, start, end)
+    if tail is None or tail.start() <= start:
+        return end, None
+    return tail.start(), tail
+
+
+#: 「먹는다」 말 뒤가 **먹은 뒤 출발**이다(「밥 먹고 나서 창덕궁」) — 그 줄 장소의 식사가 아니다
+_EAT_BEFORE = re.compile(r"\s*(?:나서|나와서|후|뒤|다음|이후)")
+
+
+def _eat_claim(result: "ReadResult", position: int, number: int, line: str, s: int, region_end: int) -> int | None:
+    """끼니 말이 없을 때 — 이름 첫 글자 **뒤**의 「먹고」 · 「맛집」 · 「한잔」이면 식사다(`eat_mention`). `[2026-10-15 사용자 결정 (가)]`
+    제목 안에서 찾았으면(「익선동 맛집」) 그 앞까지가 이름이다 — 새 이름 끝을 돌려준다. 못 찾으면 None."""
+    eat = _EAT.search(line, s + 1, region_end)
+    if eat is None or _EAT_BEFORE.match(line, eat.end()):
+        return None
+    result.claims.append(Claim(f"items[{position}].kind", "dining", Span(number, eat.start(), eat.end(), eat.group(0)),
+                               note="이름 뒤의 「먹는다」 말"))
+    return eat.start()
+
+
+def _meal_claim(result: "ReadResult", position: int, number: int, line: str, meal: re.Match | None) -> None:
+    if meal is not None:
+        m0, m1 = meal.start("meal"), meal.end("meal")
+        result.claims.append(Claim(f"items[{position}].kind", "dining", Span(number, m0, m1, line[m0:m1]),
+                                   note="이름 앞뒤의 끼니 말"))
 
 
 @dataclass
@@ -263,14 +353,17 @@ def _table_rest(line: str, heading, date_match) -> tuple[int, int] | None:
 
 
 def _untimed_item(result: ReadResult, number: int, line: str, span: tuple[int, int], day, date, *, note: str) -> None:
-    s, e = _narrow(line, span[0], span[1])
-    meal = _MEAL_SUFFIX.search(line[s:e])
     position = len(result.items)
-    if meal and meal.start() > 0:
-        m0, m1 = s + meal.start("meal"), s + meal.end("meal")
-        result.claims.append(Claim(f"items[{position}].kind", "dining", Span(number, m0, m1, line[m0:m1]),
-                                   note="이름 뒤의 끼니 말"))
-        e = s + meal.start()
+    start, head = _meal_head(line, span[0], span[1])
+    # ★끼니 말은 이름을 좁히기(`_narrow` — 「에서 점심」 · 「점심 먹기」를 자른다) **전에** 찾는다 — 좁히면 식사 단서를 잃었다
+    meal = head or _MEAL_ANY.search(line, start, span[1])
+    s, e = _narrow(line, start, span[1])
+    e, tail = _meal_tail(line, s, e)
+    _meal_claim(result, position, number, line, meal or tail)
+    if meal is None and tail is None and e > s:
+        cut = _eat_claim(result, position, number, line, s, span[1])
+        if cut is not None and cut < e:
+            s, e = _narrow(line, s, cut)
     if e <= s:
         return
     item = ReadItem(day, date, None, None, Span(number, s, e, line[s:e]))
@@ -405,16 +498,19 @@ def _time_items(result: ReadResult, number: int, line: str, times: list[re.Match
         #   이름을 통째로 잘랐다(docx·xlsx 시험에서 찾았다)
         lead = _LEAD.match(line[body_start:title_end])
         name_start = body_start + (lead.end() if lead else 0)
+        # ★앞머리 끼니 말(「점심 · 광장시장」)을 먼저 건너뛴다 — 아래 「 · 」 자르기가 「점심」만 이름으로 남겼다
+        name_start, head = _meal_head(line, name_start, title_end)
         cut = re.search(r"[(\[（【]|\s[·|]\s", line[name_start:title_end])
         if cut:
             title_end = name_start + cut.start()
-        s, e = _narrow(line, body_start, title_end)
-        meal = _MEAL_SUFFIX.search(line[s:e])
-        if meal and meal.start() > 0:
-            m0, m1 = s + meal.start("meal"), s + meal.end("meal")
-            result.claims.append(Claim(f"items[{position}].kind", "dining", Span(number, m0, m1, line[m0:m1]),
-                                       note="이름 뒤의 끼니 말"))
-            e = s + meal.start()
+        meal = head or _MEAL_ANY.search(line, name_start, title_end)
+        s, e = _narrow(line, name_start, title_end)
+        e, tail = _meal_tail(line, s, e)
+        _meal_claim(result, position, number, line, meal or tail)
+        if meal is None and tail is None and e > s:
+            cut = _eat_claim(result, position, number, line, s, body_end)
+            if cut is not None and cut < e:
+                s, e = _narrow(line, s, cut)
         if e > s:
             item.title = Span(number, s, e, line[s:e])
             result.claims.append(Claim(f"items[{position}].title", line[s:e], item.title))
@@ -458,4 +554,4 @@ def _arrow_items(result: ReadResult, number: int, line: str, day: int | None, da
     result.read_lines.add(number)
 
 
-__all__ = ["Claim", "ReadItem", "ReadResult", "Span", "read_plan"]
+__all__ = ["Claim", "ReadItem", "ReadResult", "Span", "eat_mention", "meal_mention", "read_plan"]

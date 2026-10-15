@@ -45,6 +45,8 @@ _BUS_NO = re.compile(r"^(?:"
 #: 도로명으로 쓰면 무관한 사건까지 걸리는 **일반 명사**. UTIC 대조가 「포함 여부」라서다
 #: (`app/domains/travel_ops/ports/data_sources/utic.py`).
 _TOO_GENERIC_ROADS = frozenset({"대로", "로", "길", "도로", "고속도로", "간선도로"})
+#: 도로 구간 번호 — 교통 표준 링크 ID(UTIC 원문 `linkId` 와 같은 번호 체계, 서울 실측 10자리)
+_LINK_ID = re.compile(r"^\d{6,12}$")
 
 
 def problem(value: Any) -> str | None:
@@ -63,6 +65,11 @@ def problem(value: Any) -> str | None:
             return (f"버스는 **노선번호**를 적는다 — `{tail}` 은 번호 모양이 아니다"
                     " (정류장·동네 이름은 안 된다. 서울시 노선 API 의 노선명 — 예 `버스:2224` · `버스:01A` · `버스:성동10` · `버스:서울01출근`)")
         return None
+    if head == "링크":
+        # ★`[2026-10-13]` 도로 구간 번호(교통 표준 링크 ID — 진행 방향마다 다른 번호). 도로 이름을 알면 `도로:` 와 함께, 모르면 `링크:` 만 적는다
+        if not _LINK_ID.match(tail):
+            return f"`링크:` 는 도로 구간 번호(숫자 6~12자리)만 적는다 — `{tail}` 은 번호 모양이 아니다(예 `링크:1210012300`)"
+        return None
     if head == "도로":
         if tail in _TOO_GENERIC_ROADS or len(tail) < 2:
             return (f"`도로:{tail}` 은 너무 짧다 — 통제 대조가 포함 여부라 무관한 사건까지 걸린다."
@@ -72,7 +79,7 @@ def problem(value: Any) -> str | None:
     if _ZERO_PADDED.match(head):
         return f"노선명은 `{head.lstrip('0')}` 로 적는다(`{head}` ✗)"
     if not (_NUMBERED_LINE.match(head) or head in OTHER_LINES):
-        return (f"`{head}` 는 모르는 종류다 — 지하철 노선명(`2호선`·`경의중앙선` 등) · `버스` · `도로`"
+        return (f"`{head}` 는 모르는 종류다 — 지하철 노선명(`2호선`·`경의중앙선` 등) · `버스` · `도로` · `링크`"
                 " 중 하나여야 한다")
     if "(" in tail or ")" in tail:
         return f"역명의 괄호 병기는 뺀다 — `{tail}` → `{tail.split('(')[0].strip()}`"

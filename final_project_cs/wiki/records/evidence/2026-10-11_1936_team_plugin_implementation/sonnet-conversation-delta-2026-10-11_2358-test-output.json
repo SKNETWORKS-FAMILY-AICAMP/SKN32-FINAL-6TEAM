@@ -1,0 +1,8 @@
+[
+  {
+    "tool_use_id": "toolu_01Hfcu6ByPajtECBfEydnWip",
+    "type": "tool_result",
+    "content": "FIXED_PYTEST_COMMAND=C:\\Users\\playdata2\\anaconda3\\python.exe -m pytest tests/unit/travel/test_initial_retry_boundaries.py tests/unit/core/test_controller_resume_recovery.py tests/unit/travel/test_watch_recovery_race.py -q --tb=short -o faulthandler_timeout=60\r\n...........................                                              [100%]\r\n27 passed in 12.43s\r\nPYTEST_EXIT=0",
+    "is_error": false
+  }
+]

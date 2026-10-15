@@ -1,0 +1,9 @@
+
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1228_지하철_문자열열차번호_선택연결\after-v1.xml -
+no tests ran in 0.02s
+ERROR: file or directory not found: tests/unit/travel/test_subway_arrival_identity_v1.py
+
+Exception ignored in: <function Console.__del__ at 0x0000023667C4DC60>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>triPilot — Jev API 단독 순위의 역할 분담</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:28px;background:#fbfcfd;color:#161c28;font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif}main{max-width:980px;margin:auto}h1{font-family:'Instrument Serif','Noto Serif KR',serif;font-size:30px;font-weight:400}p{line-height:1.7;color:#6b7488}.canvas{overflow:auto}svg{width:100%;min-width:720px}svg text{font-size:17px;text-anchor:middle;fill:#161c28}.small{font-size:14px;fill:#6b7488}.node{fill:#f1f4f8;stroke:#dbe0ea;stroke-width:1.5}.end{fill:#fbfcfd;stroke:#6b7488;stroke-width:1.5}.focus{fill:rgba(168,114,12,.10);stroke:#a8720c;stroke-width:1.5}.edge{fill:none;stroke:#6b7488;stroke-width:1.6;marker-end:url(#arrow)}table{border-collapse:collapse;width:100%;line-height:1.7}td,th{padding:10px;border-bottom:1px solid #dbe0ea;text-align:left}
+</style><main>
+<h1>의미는 모델이 판단하고, 순위는 코드가 계산합니다</h1>
+<p>연구용 정상 입력의 처리 범위: 사실 확인과 필수 조건 검사를 통과한 후보가 두 개 이상이고, 취향·기피·가중치가 제공된 경우입니다. 이 구성에서 Luna 호출의 필요성을 별도로 검증합니다.</p>
+<div class="canvas"><svg viewBox="0 0 960 756" role="img" aria-labelledby="title desc" xmlns="http://www.w3.org/2000/svg">
+<title id="title">Jev API 단독 특성 판단과 코드 순위</title><desc id="desc">가능 후보와 고객 가중치를 받습니다. Jev API가 후보의 특성 제공 여부를 판단합니다. 정상 응답이면 코드가 이산화·가중합·정렬하여 상위 후보를 반환하고 종료합니다. 응답 실패는 명시적 실패로 종료합니다.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6b7488"/></marker></defs>
+<path class="edge" d="M320 80V128"/><path class="edge" d="M320 208V256"/>
+<path class="edge" d="M320 336V384"/><path class="edge" d="M320 504V560"/>
+<path class="edge" d="M480 444H636"/><path class="edge" d="M320 640V688"/>
+<ellipse class="end" cx="320" cy="52" rx="188" ry="28"/><text x="320" y="58">시작：가능 후보·고객 가중치 수신</text>
+<rect class="node" x="128" y="128" width="384" height="80" rx="6"/><text x="320" y="159">선호·기피마다 질문을 분리</text><text class="small" x="320" y="187">예: 이 설명은 조용한 공간을 제공하나요?</text>
+<rect class="focus" x="128" y="256" width="384" height="80" rx="6"/><text x="320" y="287">Jev API(유료) Noul 판단</text><text class="small" x="320" y="315">질문마다 예·아니요 확률 반환</text>
+<polygon class="node" points="320,384 480,444 320,504 160,444"/><text x="320" y="439">모든 응답이</text><text x="320" y="463">정상인가요?</text>
+<text class="small" x="320" y="536">정상</text><text class="small" x="560" y="425">실패</text>
+<ellipse class="end" cx="780" cy="444" rx="144" ry="32"/><text x="780" y="450">명시적 실패로 종료</text>
+<rect class="node" x="128" y="560" width="384" height="80" rx="6"/><text x="320" y="591">코드로 참·거짓 결정·가중합·정렬</text><text class="small" x="320" y="619">취향·기피·실제 이동시간·분류 유사도</text>
+<ellipse class="end" cx="320" cy="716" rx="188" ry="28"/><text x="320" y="722">종료：상위 후보 반환</text>
+</svg></div>
+<table><tr><th>비교하는 방식</th><th>모델이 하는 일</th><th>코드가 하는 일</th></tr>
+<tr><td>Choice 단독</td><td>후보 한 곳 선택</td><td>선택 ID 검증</td></tr>
+<tr><td>Score + 코드</td><td>취향 적합 등급 평가</td><td>거리·유사도 결합과 정렬</td></tr>
+<tr><td>Noul 특성 판단 + 코드</td><td>특성이 실제 제공되는지 판정</td><td>취향 계산과 모든 순위 연산</td></tr></table>
+<p>중간 확률을 취향의 강도로 쓰지 않습니다. 이번 추가 시험은 사전에 정한 0.5 기준으로 참·거짓을 결정합니다. 고객에게 적절한 임계값인지 확인하려면 실제 사람 검수가 필요합니다. 이 그림은 연구 설계이며 운영 반영 완료를 뜻하지 않습니다.</p>
+</main></html>

@@ -1,0 +1,118 @@
+
+[WebServer] (node:23480) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:8808) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:16600) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19808) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:5376) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[WebServer] (node:8332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22136) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:24936) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:26172) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:4468) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:25352) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:18576) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:9584) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 32 tests using 1 worker
+
+
+(node:20208) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/32] tests\live\location-entry.spec.ts:13:34 › 375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다
+[2/32] tests\live\location-entry.spec.ts:13:34 › 1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다
+  1) tests\live\location-entry.spec.ts:13:34 › 1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for getByRole('status').filter({ hasText: '계획 확인 화면이에요' }).getByRole('button', { name: '닫기', exact: true })
+        - locator resolved to <button type="button" aria-label="닫기" class="toast-view_close__vTQwF">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not stable
+        - retrying click action
+        - waiting 20ms
+        - waiting for element to be visible, enabled and stable
+      - element was detached from the DOM, retrying
+
+
+      16 |   await openFinished(page, request);
+      17 |   const tour = page.getByRole("status").filter({ hasText: "계획 확인 화면이에요" });
+    > 18 |   if (await tour.count()) await tour.getByRole("button", { name: "닫기", exact: true }).click();
+         |                                                                                       ^
+      19 |   await page.getByRole("button", { name: "목록 높이 바꾸기" }).focus();
+      20 |   for (let press = 0; press < 5; press += 1) await page.keyboard.press("ArrowUp");
+      21 |   await expand(page);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\location-entry.spec.ts:18:87
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    location-results-v3\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: location-results-v3\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\error-context.md
+
+
+
+(node:24392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[3/32] tests\live\location-entry.spec.ts:48:1 › 버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으로 이동하며 동의 철회 뒤에는 지운다
+[4/32] tests\live\location-entry.spec.ts:68:1 › 시간 초과 뒤에도 버튼을 다시 눌러 성공하면 점과 카메라를 복구한다
+[5/32] tests\live\location-entry.spec.ts:92:58 › denied: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다
+[6/32] tests\live\location-entry.spec.ts:92:58 › unsupported: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다
+[7/32] tests\live\location-entry.spec.ts:113:1 › 약관 전문은 동의 창을 대체하고 Esc로 돌아온 뒤 취소하면 초점을 돌려준다
+[8/32] tests\live\location-entry.spec.ts:130:1 › 거절했던 권한을 허용한 뒤 버튼으로 찾으면 이후 위치 이동도 계속 따라간다
+[9/32] tests\live\location-entry.spec.ts:150:1 › 위치 권한을 확인하는 사이 동의를 철회하면 GPS 조회를 시작하지 않는다
+[10/32] tests\live\map-controls.spec.ts:23:1 › 접기 단추에 거리가 함께 나오고 확대·축소·모든 일정 보기 순서로 선다
+[11/32] tests\live\map-controls.spec.ts:37:1 › 거리 눈금은 지도에 담긴 거리를 말하고, 확대하면 더 짧은 거리로 바뀐다
+[12/32] tests\live\map-controls.spec.ts:52:1 › 접으면 눈금과 탭이 남고 다시 열어도 기본은 접힌 상태다
+[13/32] tests\live\map-controls.spec.ts:69:1 › 목록 창을 크게 열어 지도가 낮아지면 같은 단추가 가로 한 줄로 서고, 더 낮으면 접는 탭만 남는다
+[14/32] tests\live\map-controls.spec.ts:88:1 › 지도를 확대하면 화면 밖으로 나간 일정이 가장자리에 「번호 · 거리」 칩으로 서고, 누르면 그 일정으로 가며 골라진다
+[15/32] tests\live\map-controls.spec.ts:106:1 › 멀리 끌어 핀이 모두 화면 밖이면 칩 하나가 모두를 담아 서고(「2 · 3 · 4」), 지도 층(타일 · 핀 층) 위에 그려지고, 가장자리에서 잘리지 않는다
+[16/32] tests\live\map-controls.spec.ts:141:1 › 일정이 있는 날을 처음 보여 줄 때 첫 일정의 핀이 한 번 두근거린다 (고리가 퍼졌다 사라진다)
+[17/32] tests\live\my-location.spec.ts:46:1 › 위치 동의가 있으면 여행 지도를 열자마자 「내 위치」가 파란 점과 정확도 원으로 보이고, 점은 누름을 받지 않아 같은 자리의 핀이 그대로 눌린다
+[18/32] tests\live\my-location.spec.ts:70:1 › 위치 동의가 없으면 브라우저에 위치를 묻지도, 점을 그리지도, 서버로 보내지도 않고 아무 말도 하지 않는다
+[19/32] tests\live\my-location.spec.ts:84:1 › 브라우저 위치 권한이 꺼져 있으면 점 없이 기존 오류 토스트로 알린다
+[20/32] tests\live\my-location.spec.ts:93:1 › 이미 거절된 권한이면 다시 묻지 않고(위치 호출 0번) 바로 오류 토스트로 알린다
+[21/32] tests\live\my-location.spec.ts:107:1 › 위치가 바뀌면 점이 따라 움직이고(지도는 따라가지 않는다), 정확도가 500 m 보다 나쁘면 원은 빼고 점만 둔다
+[22/32] tests\live\my-location.spec.ts:124:1 › 여행 화면은 읽은 위치를 서버에 보낸다 — 모았다가 화면이 숨겨질 때 한꺼번에, 30 m 안쪽 움직임은 새 점이 아니고 같은 점은 다시 가지 않는다
+[23/32] tests\live\my-location.spec.ts:157:1 › 서버가 위치 동의가 없다고 하면(403 consent_required) 더는 보내지 않는다
+[24/32] tests\live\my-location.spec.ts:173:1 › 서버에 위치 받기가 없으면(옛 서버 404) 조용히 멈춘다 — 오류 문구도 다시 보내기도 없다
+[25/32] tests\live\my-location.spec.ts:189:1 › 위치 동의를 끄면 점이 바로 사라지고 더는 위치를 따라가지 않는다
+[26/32] tests\live\my-location.spec.ts:201:1 › 계획 확인 화면의 지도에도 「내 위치」가 보이지만, 여행 번호가 없으니 서버로 보내지도 머문 곳을 묻지도 않는다
+[27/32] tests\live\my-location.spec.ts:215:1 › 「모든 일정 보기」는 핀만 맞춘다 — 멀리 있는 내 위치 때문에 핀이 작아지지 않는다
+[28/32] tests\live\my-location.spec.ts:234:1 › 지도 단추의 「내 위치로」: 위치 동의가 있으면 누를 때 지도가 내 위치로 간다
+[29/32] tests\live\my-location.spec.ts:253:1 › 위치 동의가 없어도 지도 단추에 「내 위치로」가 있다
+[30/32] tests\live\my-location.spec.ts:263:1 › 핀이 하나도 없는 날은 내 위치로 지도 가운데를 맞춘다
+[31/32] tests\live\my-location.spec.ts:279:1 › 서버가 머문 곳을 알려 주면 그날 지도에 회색 점으로 올린다 — 가까운 일정 이름과 시각을 읽어 주고, 다른 날에는 없다
+[32/32] tests\live\my-location.spec.ts:292:1 › 위치 동의가 없으면 서버가 머문 곳을 갖고 있어도 묻지도 그리지도 않는다
+  1 failed
+    tests\live\location-entry.spec.ts:13:34 › 1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다 
+  31 passed (4.2m)

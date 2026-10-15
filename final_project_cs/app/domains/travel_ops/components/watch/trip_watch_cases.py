@@ -21,13 +21,13 @@
   `unchecked`(경로 소스가 답할 수 없는 대상)는 시나리오 버전과 같게 **센다.**
 
 ★`[2026-10-02 결함 인계 #1·#2·#3]` 이 반복이 **멈추지 않고 끝을 맺게** 한다.
-  ① Case 하나의 실행이 예외로 터져도 **그 회차의 나머지 Case 는 계속 돈다** — 터진 Case 는 `escalated`(`team_error`)로 닫아 운영자가 오류로 본다(죽은 채
+  ① Case 하나의 실행이 예외로 터져도 **그 회차의 나머지 Case 는 계속 돈다** — 터진 Case 는 `escalated`(`team_error`)로 닫아 개발자·QA 가 결함으로 본다(죽은 채
      `running` 으로 남지 않는다)
   ② 무응답 제안 만료(`PendingStore.expire`)를 이 반복도 한다 — 전에는 시나리오 버전(`trip_watch`)만 불러서, 기본 일꾼(Case 버전)이 도는 동안 끝난 일정의
      제안이 `open` 으로 남았다
   ③ 바꿀 곳을 못 찾아 Team 이 `itinerary_unresolved` 로 끝나면 **고객에게 알린다**(`pending.unresolved_notice` — 일정은 그대로 두었다는 것과 원인). 사람 대기 약속은 없다
   ④ 일시 실패(`fatal_source_failure` 점검 소스 · `team_error` 실행 예외)로 닫힌 Case 는 **다음 회차가 다시 연다** — 같은 지문의 닫힌 Case 가 영원히 막지 않게
-     (`retry_max` 번까지 · 사이를 `retry_cooldown_seconds` 이상 두고). 이 실패는 고객에게 알리지 않는다(바뀐 것이 있는지 모른다 — 운영자 몫)
+     (`retry_max` 번까지 · 사이를 `retry_cooldown_seconds` 이상 두고). 이 실패는 기존 일정을 유지한다는 안내와 오류 근거를 남긴다
 
 ★`[2026-10-03 사용자 지시]` **같은 여행의 문제는 Case 하나로 묶는다**(`trip_watch_batch`). 한 회차에 한 여행의 항목이 둘 이상 깨졌으면(새로 열 것이 둘 이상) 항목마다 Case 를 열지 않고
   **묶음 Case 하나**를 연다 — 한 초안 위에서 차례로 고쳐 판 하나 · 알림 하나. 하나뿐이면 전과 똑같이 그 항목의 Case 다.
@@ -49,11 +49,12 @@ from uuid import UUID
 
 from app.application.case_intake import open_case
 from app.application.case_service import ActiveRunError
+from app.domains.travel_ops.components.watch.monitoring import record as record_check
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
 from app.domains.travel_ops.components.actions.itinerary_actions import RECHECK_FAILED
-from app.domains.travel_ops.components.itinerary.itinerary_changes import planned_option, route_of, route_targets
-from app.domains.travel_ops.components.planning.pending import PendingStore, cause_fingerprint, unresolved_notice
+from app.domains.travel_ops.components.itinerary.itinerary_changes import option_hits, planned_option, route_of, route_targets
+from app.domains.travel_ops.components.planning.pending import PendingStore, cause_fingerprint, forecast_attention, unresolved_notice
 from app.domains.travel_ops.components.planning.replan import WEATHER_LIKE
 from app.domains.travel_ops.components.core_hooks.subjects import KIND, resolve_subject
 
@@ -64,7 +65,12 @@ ACTOR = "trip_watch"
 #: 다음 회차가 **다시 열어도 되는** 닫힘 사유 — 일시적이다(점검 소스 실패 · 실행 예외). 바꿀 곳이 없음(`itinerary_unresolved`)은 아니다 — 같은 사건이 그대로면 같은 답이다
 #: ★`[2026-10-03]` `action_target_changed`(Team 이 계산하는 사이 일정 판이 움직였다 — 낡은 기준이라 적용기가 거절) · `team_timeout_seconds`(묶음은 항목이 많아 Team 시간 제한에 걸릴 수 있다)를 더했다.
 #:  둘 다 **같은 사건이 그대로면 다음 회차에 새 기준으로 다시 계산하면 되는** 일시 실패다 — 전에는 같은 지문의 닫힌 Case 가 영원히 막았다(고객이 일정을 만지는 순간 그 항목의 감시가 멈췄다)
-RETRYABLE_GUARDRAILS = frozenset({"fatal_source_failure", "team_error", "action_target_changed", "team_timeout_seconds"})
+RETRYABLE_GUARDRAILS = frozenset({"fatal_source_failure", "classification_failed", "team_error", "action_target_changed", "team_timeout_seconds"})
+
+
+def _code(guardrail: str | None) -> str:
+    """고객 문장에 싣는 오류 코드 — 닫힘 사유 이름만(내부 관찰 문구는 싣지 않는다). 글자 · 숫자 · 밑줄 · 공백 · 점 · 줄표만 남긴다."""
+    return re.sub(r"[^\w .-]", "_", str(guardrail or "escalated"))[:80]
 
 
 @dataclass
@@ -112,11 +118,17 @@ class TripWatchCaseOpener:
     def __init__(self, *, store: TripStore, check: Callable[..., dict[str, Any]],
                  connection_factory: Callable[[], Any], clock: Callable[[], datetime],
                  repository: Any, run_case: Callable[..., Any] | None,
-                 route_events: Any = None, routes: dict[str, Any] | None = None) -> None:
+                 route_events: Any = None, routes: dict[str, Any] | None = None,
+                 departure_observer: Callable[..., dict[str, Any]] | None = None,
+                 diagnostic_recorder: Callable[[dict], dict] | None = None,
+                 place_status: Any | None = None) -> None:
         self.store, self.check = store, check
         self._connect, self.clock = connection_factory, clock
         self.repository, self.run_case = repository, run_case
         self.route_events, self.routes = route_events, routes or {}
+        self.departure_observer = departure_observer
+        self.diagnostic_recorder = diagnostic_recorder
+        self.place_status = place_status
 
     def tick(self, lookahead: timedelta = DEFAULT_LOOKAHEAD) -> CaseTickResult:
         result = CaseTickResult()
@@ -127,6 +139,10 @@ class TripWatchCaseOpener:
                               for row in PendingStore(self.store.tenant_id).expire(conn, now=now)]
         with self._connect() as conn:
             due = self.store.due(conn, start=now, end=now + lookahead)
+            if self.departure_observer is not None:
+                seen = {(trip_id, item.item_id) for trip_id, item in due}
+                due += [(trip_id, item) for trip_id, item in self.store.pending_departures(conn, now=now)
+                        if (trip_id, item.item_id) not in seen]
         opened: list[UUID] = []
         self._contexts: dict[UUID, dict[str, Any]] = {}
         issues: list[Issue] = []
@@ -135,6 +151,8 @@ class TripWatchCaseOpener:
             skipped = skipped_watch(item.kind, trip_id=trip_id, item_id=item.item_id)
             if skipped is not None:
                 result.unavailable.append(skipped)
+                record_check('schedule', trip_id=trip_id, item_id=item.item_id, target_title=item.title,
+                             report=skipped)
                 continue
             if item.detail.get("customer_pinned"):
                 # ★`[2026-10-03 사용자 결정 — D-020]` 고정(「변경 안 할 일정」)은 **자동으로 바꾸지 않는다**는 뜻이지 점검에서 빼라는 뜻이 아니다 — 사용자 말:
@@ -148,15 +166,41 @@ class TripWatchCaseOpener:
                 self._route(trip_id, item, now, result, issues)
                 continue
             if item.place is None:
+                record_check('schedule', trip_id=trip_id, item_id=item.item_id, target_title=item.title,
+                             report={'verdict': 'skipped', 'reason': 'no_place'})
                 continue
             result.checked += 1
-            report = self.check(place=item.place, starts_at=item.starts_at)
+            try:
+                report = self.check(place=item.place, starts_at=item.starts_at)
+                if not isinstance(report, dict) or report.get("verdict") not in ("clear", "disrupted", "fatal"):
+                    raise ValueError("source_contract_invalid")
+                if self.place_status is not None and item.kind == 'dining' and not item.place.get('_watch_simulation'):
+                    with self._connect() as conn:
+                        trip, _ = self.store.latest(conn, trip_id)
+                    status = self.place_status.lookup(tenant=self.store.tenant_id, customer_id=trip['customer_id'],
+                                                     trip_id=trip_id, place=item.place, start=item.starts_at,
+                                                     end=item.ends_at, now=now, scheduled=True)
+                    if status['status'] == 'skipped':
+                        result.checked -= 1
+                        result.unchecked.append({'trip_id': str(trip_id), 'item': item.title, 'reason': status['reason']})
+                        record_check('schedule', trip_id=trip_id, item_id=item.item_id, target_title=item.title, report=status)
+                        continue
+                    report = self.place_status.merge(report, status)
+            except Exception as exc:  # 한 자료 조회의 실패가 다른 항목 점검을 끊지 않는다.
+                report = {"verdict": "fatal", "failed_categories": ["place_check"],
+                          "error_code": type(exc).__name__}
+            record_check('schedule', trip_id=trip_id, item_id=item.item_id, target_title=item.title, report=report)
             verdict = report.get("verdict")
+            with self._connect() as conn, conn.transaction():
+                attention = forecast_attention(conn, store=self.store, trip_id=trip_id, item=item, report=report)
+            if attention is not None:
+                result.notified.append(attention)
             if verdict == "clear":
                 continue
             entry = {"trip_id": str(trip_id), "item": item.title, "report": report}
             if verdict == "fatal":
                 result.fatal.append(entry)
+                self._defer_notice(trip_id, item, report, now, result)
                 continue
             causes = report.get("disruptions", [])
             if item.kind == "dining":
@@ -192,15 +236,49 @@ class TripWatchCaseOpener:
                     logger.exception("watch: run_case failed case=%s", case_id)
                     result.failed.append({"case_id": str(case_id), "error": type(exc).__name__})
                     self._close_failed(case_id, exc)
+                    self._after_run(case_id, {"status": "escalated"}, result)
                     continue
                 result.ran.append({"case_id": str(case_id), "status": (outcome or {}).get("status")})
                 self._after_run(case_id, outcome, result)
         return result
 
     # ── 실행 뒤 ───────────────────────────────────────────────
+    def _defer_notice(self, trip_id, item, report, now, result, *, case_id=None):
+        """의존 항목만 유지하고 재조회한다. 같은 항목·오류 안내는 한 번만 저장한다."""
+        from app.domains.travel_ops.components.watch.trip_watch_batch import Outcome, digest
+
+        code = str(report.get("error_code") or "source_failed")
+        # 오류 본문·외부 응답을 고객에게 복사하지 않는다.
+        code = re.sub(r"[^a-zA-Z0-9_.-]", "_", code)[:80]
+        categories = sorted(str(c) for c in report.get("failed_categories", []))
+        causes = [{"category": c, "kind": "source_unavailable"} for c in categories]
+        payload = digest([Outcome(item, "source_failed", causes=causes, reasons=[code],
+                                  checked_at=now.isoformat())], kind="guidance")
+        with self._connect() as conn, conn.transaction():
+            trip, _ = self.store.latest(conn, trip_id)
+            fingerprint = hashlib.sha256(json.dumps([categories, code]).encode()).hexdigest()[:16]
+            key = f"watch-deferred:{item.item_id}:{fingerprint}"
+            added = self.store.enqueue_message(conn, trip_id=trip_id, key=key, payload=payload)
+        diagnostic = {"event": "travel_execution_diagnostic", "plan_sha256": None,
+                      "tenant_id": str(self.store.tenant_id), "customer_id": str(trip['customer_id']),
+                      "trip_id": str(trip_id), "item_id": str(item.item_id),
+                      "case_id": str(case_id) if case_id else None,
+                      "code": "source_failed", "error_code": code, "checked_at": now.isoformat()}
+        collection = report.get('diagnostic')
+        if collection is None and self.diagnostic_recorder is not None:
+            try:
+                collection = self.diagnostic_recorder(diagnostic)
+            except Exception:
+                collection = {"status": "collection_degraded"}
+            if collection.get("status") == "collection_degraded":
+                logger.error("travel_diagnostic status=collection_degraded code=source_failed")
+        logger.warning("travel_execution_diagnostic", extra={"diagnostic": diagnostic, "collection": collection})
+        if added:
+            result.notified.append({"trip_id": str(trip_id), "item": item.title, "code": code})
+
     def _close_failed(self, case_id: UUID, exc: BaseException) -> None:
-        """예외로 터진 Case — **죽은 채 `running` 으로 남기지 않고** `escalated`(`team_error`)로 닫는다. 운영자가 오류로 본다.
-        (Controller 는 예외가 나면 그 실행 기록만 실패로 닫고 Case 는 그대로 둔다 — 다시 실행되지도, 사람 눈에 띄지도 않았다.)"""
+        """예외로 터진 Case — **죽은 채 `running` 으로 남기지 않고** `escalated`(`team_error`)로 닫는다. 개발자·QA 가 결함으로 본다(상주 운영자는 없다).
+        (Controller 는 예외가 나면 그 실행 기록만 실패로 닫고 Case 는 그대로 둔다 — 다시 실행되지도, 결함 기록에 잡히지도 않았다.)"""
         from app.core.transition import transition_case
         from app.core.case_lifecycle.events import CaseStatus, EventType
 
@@ -236,12 +314,19 @@ class TripWatchCaseOpener:
         if "batch" in context:
             return self._after_batch(case_id, context, result)
         guardrail, observed = self._escalation(case_id)
-        # ★바꿀 곳이 없어서(`itinerary_unresolved`) 또는 **바꿀 곳은 찾았는데 일정 전체 재판정이 막아서**(`action_rejected` + 머리가 `RECHECK_FAILED`). 다른 `action_rejected`(인자 오류 등)는
-        #   운영자 몫이라 고객에게 알리지 않는다
+        if guardrail in RETRYABLE_GUARDRAILS:
+            self._defer_notice(context["trip_id"], context["item"],
+                               {"error_code": guardrail, "failed_categories": ["execution"]},
+                               self.clock(), result, case_id=case_id)
+            return
+        # ★바꿀 곳이 없어서(`itinerary_unresolved`) 또는 **바꿀 곳은 찾았는데 일정 전체 재판정이 막아서**(`action_rejected` + 머리가 `RECHECK_FAILED`).
         # ★`[2026-10-03]` Team 이 다음 순위 안까지 다 시험해 걸렸으면(`itinerary_recheck_failed`) 적용기에 닿기 전에 끝난다 — 같은 문장으로 알린다
         recheck_failed = (guardrail == "itinerary_recheck_failed"
                           or (guardrail == "action_rejected" and observed.startswith(RECHECK_FAILED)))
         if guardrail != "itinerary_unresolved" and not recheck_failed:
+            # ★`[2026-10-14]` 그 밖의 실패(인자 오류로 적용기 거절 · 모름 · 제안 검증 실패 · 시간 초과 …)는 다시 시도하지 않는다. 전에는 「운영자 몫」이라
+            #   알리지 않았는데 운영자가 없다(D-018 · D-CS-014) — 고객도 모르고 아무도 처리하지 않았다. 일정은 그대로라는 것과 시각 · 코드를 한 번 알린다
+            self._unhandled_notice(context["trip_id"], context["item"], context["causes"], guardrail, result, case_id)
             return
         item, causes = context["item"], context["causes"]
         # ★`[2026-10-03 사용자 지적]` 못 찾았다고 곧바로 끝내지 않는다 — 조건을 풀어 **비슷한 안**이 있으면 그것을 묻는다(자동 적용 없음). 한 곳도 없을 때만 아래 옛 알림
@@ -252,6 +337,21 @@ class TripWatchCaseOpener:
                                        key=f"watch-unresolved:{item.item_id}:{_fingerprint(causes)}",
                                        payload=unresolved_notice(item=item, causes=causes, recheck_failed=recheck_failed))
         result.notified.append({"case_id": str(case_id), "trip_id": str(context["trip_id"]), "item": item.title})
+
+    def _unhandled_notice(self, trip_id: UUID, item: Item, causes: list[dict[str, Any]], guardrail: str | None,
+                          result: CaseTickResult, case_id: UUID) -> None:
+        """다시 시도하지 않는 실패를 고객에게 한 번 알린다 — 같은 항목 · 같은 원인 · 같은 코드면 다시 안 보낸다."""
+        from app.domains.travel_ops.components.watch.trip_watch_batch import Outcome, digest
+
+        code = _code(guardrail)
+        payload = digest([Outcome(item, "unhandled", causes=causes, reasons=[code], checked_at=self.clock().isoformat())],
+                         kind="guidance")
+        with self._connect() as conn, conn.transaction():
+            added = self.store.enqueue_message(conn, trip_id=trip_id,
+                                               key=f"watch-unhandled:{item.item_id}:{_fingerprint(causes)}:{code}",
+                                               payload=payload)
+        if added:
+            result.notified.append({"case_id": str(case_id), "trip_id": str(trip_id), "item": item.title, "code": code})
 
     def _offer_relaxed(self, trip_id: UUID, item: Item, causes: list[dict[str, Any]], recheck_failed: bool,
                        result: CaseTickResult, case_id: UUID) -> bool:
@@ -269,24 +369,83 @@ class TripWatchCaseOpener:
 
     def _route(self, trip_id: UUID, item: Item, now: datetime, result: CaseTickResult,
                issues: list[Issue]) -> None:
+        if self.departure_observer is not None and item.starts_at <= now:
+            self._departure(trip_id, item, now, result, issues)
+            return
         route = route_of(item, self.routes)
         if not route or self.route_events is None:
+            record_check('mobility', trip_id=trip_id, item_id=item.item_id, target_title=item.title,
+                         report={'verdict': 'unchecked', 'reason': 'route_or_source_missing'})
             return
         _, planned = planned_option(item, route)
-        events = self.route_events.affecting(route_targets(route))
+        try:
+            events = self.route_events.affecting(route_targets(route))
+        except Exception:  # 조회 오류는 이 구간에만 격리한다.
+            events = None
         if events is None:
+            record_check('mobility', trip_id=trip_id, item_id=item.item_id, target_title=item.title,
+                         report={'verdict': 'fatal', 'failed_categories': ['route_events']})
             result.fatal.append({"trip_id": str(trip_id), "item": item.title,
                                  "report": {"verdict": "fatal", "failed_categories": ["route_events"]}})
+            self._defer_notice(trip_id, item, {"failed_categories": ["route_events"]}, now, result)
             return
         unsupported = getattr(self.route_events, "unsupported", None)
         blind = unsupported(planned.get("uses", [])) if callable(unsupported) else []
         if blind:
             result.unchecked.append({"trip_id": str(trip_id), "item": item.title, "targets": blind})
-        hit = [target for target in planned.get("uses", []) if target in events]
+        hit = list(option_hits(planned, events))
+        record_check('mobility', trip_id=trip_id, item_id=item.item_id, target_title=item.title,
+                     report={'verdict': 'disrupted' if hit else 'unchecked' if blind else 'clear',
+                             'targets': blind, 'disruptions': [{'target': target, **events[target]} for target in hit]})
         if not hit:
             return
         causes = [{"category": "route_event", "target": target, **events[target]} for target in hit]
         issues.append(Issue(trip_id, item, causes, "mobility_missed_or_disrupted", "route"))
+
+    def _departure(self, trip_id: UUID, item: Item, now: datetime,
+                   result: CaseTickResult, issues: list[Issue]) -> None:
+        from app.domains.travel_ops.components.watch.trip_reminders import build_departure
+
+        with self._connect() as conn:
+            if self.store.message_exists(conn, trip_id=trip_id, key=f"departure:{item.item_id}"):
+                return
+            trip, items = self.store.latest(conn, trip_id)
+        # 다른 회차의 항목을 최신 일정으로 오인하지 않는다.
+        current = next((i for i in items if i.item_id == item.item_id), None)
+        following = next((i for i in sorted(items, key=lambda i: i.seq)
+                          if i.seq > item.seq and i.kind != "mobility"), None)
+        if current is None or following is None or not current.starts_at <= now < following.starts_at:
+            return
+        observed = []
+
+        def observe(*args, **kwargs):
+            got = self.departure_observer(*args, **kwargs)
+            observed.append(got)
+            return got
+
+        try:
+            status, _ = build_departure(current, items, route_events=self.route_events,
+                routes=self.routes, now=now, departure_observer=observe, trip=trip)
+        except Exception as exc:  # noqa: BLE001 — 다른 이동 점검을 끊지 않고 실패를 센다
+            status = "fatal"
+            observed.append({"reason": "departure_revalidation_failed", "exception_type": type(exc).__name__})
+        observation = observed[-1] if observed and isinstance(observed[-1], dict) else {}
+        record_check('departure', trip_id=trip_id, item_id=item.item_id, target_title=current.title,
+                     report={'verdict': status, 'observation': observation})
+        if status == "fatal":
+            result.fatal.append({"trip_id": str(trip_id), "item": current.title,
+                "report": {"verdict": "fatal", "failed_categories": ["departure_revalidation"],
+                           "observation": observation}})
+            self._defer_notice(trip_id, current, {"failed_categories": ["departure_revalidation"],
+                "error_code": observation.get("exception_type") or "departure_revalidation_failed"}, now, result)
+        elif status == "held":
+            reason = observation.get("reason") or ("route_missing" if not route_of(current, self.routes)
+                                                    else "route_event")
+            causes = [{"category": "departure_revalidation", "kind": reason}]
+            issues.append(Issue(trip_id, current, causes, "mobility_missed_or_disrupted", "departure"))
+        elif status == "unchecked":
+            result.unchecked.append({"trip_id": str(trip_id), "item": current.title,
+                                     "targets": "departure_route_events"})
 
     # ── 여행별로 모아 연다 ───────────────────────────────────────
     def _open_issues(self, issues: list[Issue], now: datetime, result: CaseTickResult, opened: list[UUID]) -> None:
@@ -323,6 +482,44 @@ class TripWatchCaseOpener:
                 else:
                     self._open_batch(trip_id, chunk, now, result, opened)
 
+    def _recover_existing(self, conn: Any, issue: Issue, case_id: str, group: list[Issue],
+                          result: CaseTickResult, opened: list[UUID]) -> None:
+        """직전 실행이 실패한 watch Case를 같은 판의 실행 관문으로 다시 보낸다."""
+        from app.core.service_bindings import current_bindings
+
+        identifier = UUID(str(case_id))
+        if identifier in opened or self.run_case is None:
+            return
+        case = self.repository.get_case(conn, tenant_id=self.store.tenant_id, case_id=identifier)
+        if case is None or str(case["status"]) != "running":
+            return
+        state = case.get("state_json") or {}
+        table = current_bindings()
+        # 운영 회차는 항상 고정 판이 있다. 명시 standalone 재생은 Controller 관문을 쓴다.
+        if table is not None:
+            try:
+                registry = table.registry
+                if registry is None:
+                    raise TeamUnavailable(case["owner_team_id"], "composition_unbound")
+                entry = registry.require_runnable(case["owner_team_id"])
+                capability = registry.capability_for(entry, case.get("intent"),
+                    input_text=state.get("customer_input") or case.get("subject"),
+                    state={**state, "issue_code": case.get("issue_code")})
+                registry.require_runnable(case["owner_team_id"], capability)
+            except TeamUnavailable as exc:
+                logger.warning("watch_recovery_unavailable team_id=%s reason=%s composition_revision=%s",
+                               exc.team_id, exc.reason, table.revision)
+                result.unavailable.append({"case_id": str(identifier), "kind": exc.team_id, "reason": exc.reason})
+                return
+        opened.append(identifier)
+        result.retried.append({**issue.record(), "case_id": str(identifier), "same_case": True})
+        trigger = state.get("trigger") or {}
+        if "batch" in trigger:
+            members = {str(member["item_id"]) for member in trigger["batch"]}
+            self._contexts[identifier] = {"trip_id": issue.trip_id,
+                                          "batch": [member for member in group if str(member.item.item_id) in members]}
+        else:
+            self._contexts[identifier] = {"trip_id": issue.trip_id, "item": issue.item, "causes": issue.causes}
 
     def _attempt(self, conn: Any, base_id: str, item_id: UUID) -> tuple[int | None, str | None]:
         """(몇 번째 시도인가, 덮은 Case). 이 문제(`base_id`)를 **덮은 Case** 가 단일이든 묶음이든 없으면 (0, None) — 새로 연다.
@@ -398,7 +595,7 @@ class TripWatchCaseOpener:
 
     def _open_batch(self, trip_id: UUID, chunk: list[tuple[Issue, int]], now: datetime, result: CaseTickResult,
                     opened: list[UUID]) -> None:
-        """한 여행의 문제 둘 이상 — **묶음 Case 하나**. 라벨은 첫 구성원의 담당을 따른다. Activity가 꺼져도 다른 담당의 묶음은 진행한다.
+        """한 여행의 문제 둘 이상 — 묶음 Case 하나. 라벨은 진입 표지이고 처리 계획은 분류 에이전트가 정한다.
         요청 id 는 묶음 구성원의 정체(`base_id`) 목록의 지문 — 같은 묶음을 두 번 안 열고, 일시 실패로 닫혔으면 `:r{n}` 으로 다시 연다."""
         issues = [issue for issue, _ in chunk]
         members = sorted(issue.base_id for issue in issues)
@@ -420,8 +617,9 @@ class TripWatchCaseOpener:
                 subject_ref={"kind": KIND, "id": str(trip_id)},
                 subject_resolver=resolve_subject, trigger_source="schedule",
                 trigger={"batch": [{"item_id": str(i.item.item_id), "base_id": i.base_id, "detected": i.detected,
+                                    "attempt": attempt,
                                     "issue_code": i.issue_code,
-                                    "categories": sorted({str(c.get("category")) for c in i.causes})} for i in issues],
+                                    "categories": sorted({str(c.get("category")) for c in i.causes})} for i, attempt in chunk],
                          "at": now.isoformat(), "detected": "batch",
                          "categories": sorted({str(c.get("category")) for i in issues for c in i.causes})},
                 labels={"intent": "incident_report", "issue_code": issues[0].issue_code, "sentiment": "neutral"})
@@ -439,7 +637,7 @@ class TripWatchCaseOpener:
 
     def _after_batch(self, case_id: UUID, context: dict[str, Any], result: CaseTickResult) -> None:
         """묶음 Case 가 **아무것도 못 바꾸고** 끝났다 — Team 이 남긴 항목별 표지(`outcome:{항목}:{결과}`)로 못 푼 항목을 고객에게 **한 번에** 알린다.
-        표지가 없으면(점검 소스 실패 · 예외) 알리지 않는다 — 바뀐 것이 있는지 모른다(운영자 몫)."""
+        재시도 가능한 실패에는 표지가 없어도 기존 일정 유지·재확인 안내를 남긴다."""
         from app.domains.travel_ops.components.watch.trip_watch_batch import Outcome, digest, guidance_key
 
         guardrail, observed = self._escalation(case_id)
@@ -449,11 +647,20 @@ class TripWatchCaseOpener:
             found = [(item_id, "recheck_failed") for item_id in issues]
         else:
             found = [(match.group(1), match.group(2))
-                     for match in re.finditer(r"outcome:([0-9a-fA-F-]{36}):(no_alternate|recheck_failed)", observed)]
-        outcomes = [Outcome(issues[item_id].item, kind, causes=issues[item_id].causes) for item_id, kind in found if item_id in issues]
+                     for match in re.finditer(r"outcome:([0-9a-fA-F-]{36}):(no_alternate|recheck_failed|source_failed|error|retry)", observed)]
+            if not found and guardrail in RETRYABLE_GUARDRAILS:
+                found = [(item_id, "retry") for item_id in issues]
+            elif not found:
+                # ★`[2026-10-14]` 항목 표지 없이 다시 시도하지 않는 실패로 끝났다 — 전에는 구성원 전원이 말없이 남았다(단일 Case 의 `_unhandled_notice` 와 같다)
+                found = [(item_id, "unhandled") for item_id in issues]
+        outcomes = [Outcome(issues[item_id].item, kind, causes=issues[item_id].causes,
+                            reasons=[_code(guardrail) if kind == "unhandled" else (guardrail or kind)],
+                            checked_at=self.clock().isoformat())
+                    for item_id, kind in found if item_id in issues]
         # ★`[2026-10-03 사용자 지적]` 못 푼 항목마다 조건을 푼 안을 먼저 묻는다 — 묻는 항목은 이 「그대로 두었어요」 알림에서 빠진다(제안 알림이 따로 나간다). 하나도 없는 항목만 남는다
         outcomes = [o for o in outcomes
-                    if not self._offer_relaxed(context["trip_id"], o.item, o.causes, o.kind == "recheck_failed", result, case_id)]
+                    if o.kind in ("source_failed", "error", "retry", "unhandled") or
+                    not self._offer_relaxed(context["trip_id"], o.item, o.causes, o.kind == "recheck_failed", result, case_id)]
         if not outcomes:
             return
         payload = digest(outcomes, kind="guidance")

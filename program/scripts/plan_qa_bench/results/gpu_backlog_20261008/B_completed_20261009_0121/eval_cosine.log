@@ -1,0 +1,22 @@
+Loading weights:   0%|          | 0/2076 [00:00<?, ?it/s]Loading weights:   4%|▍         | 82/2076 [00:00<00:02, 815.02it/s]Loading weights:  18%|█▊        | 384/2076 [00:00<00:00, 2108.11it/s]Loading weights:  30%|██▉       | 615/2076 [00:00<00:00, 1796.35it/s]Loading weights:  39%|███▊      | 801/2076 [00:01<00:03, 332.60it/s] Loading weights:  44%|████▍     | 919/2076 [00:01<00:03, 360.45it/s]Loading weights:  49%|████▊     | 1012/2076 [00:02<00:02, 360.13it/s]Loading weights:  52%|█████▏    | 1086/2076 [00:02<00:02, 336.91it/s]Loading weights:  55%|█████▌    | 1145/2076 [00:02<00:02, 343.72it/s]Loading weights:  58%|█████▊    | 1197/2076 [00:02<00:02, 347.00it/s]Loading weights:  60%|██████    | 1250/2076 [00:02<00:02, 371.63it/s]Loading weights:  63%|██████▎   | 1298/2076 [00:03<00:02, 380.62it/s]Loading weights:  65%|██████▍   | 1344/2076 [00:03<00:01, 389.79it/s]Loading weights:  67%|██████▋   | 1389/2076 [00:03<00:01, 393.42it/s]Loading weights:  69%|██████▉   | 1433/2076 [00:03<00:01, 387.87it/s]Loading weights:  85%|████████▍ | 1763/2076 [00:03<00:00, 1091.33it/s]Loading weights: 100%|██████████| 2076/2076 [00:03<00:00, 584.13it/s] 
+  mix10 lora 50문제 · 1.63s/q
+  mix10 lora 100문제 · 1.64s/q
+  mix10 lora 150문제 · 1.59s/q
+mix10 lora 160문제 1.59s/q 읽기실패 0
+  mix11 lora 50문제 · 1.62s/q
+  mix11 lora 100문제 · 1.61s/q
+  mix11 lora 150문제 · 1.62s/q
+mix11 lora 163문제 1.61s/q 읽기실패 0
+  mix12 lora 50문제 · 1.70s/q
+  mix12 lora 100문제 · 1.71s/q
+  mix12 lora 150문제 · 1.70s/q
+mix12 lora 176문제 1.69s/q 읽기실패 0
+  mix8 lora 50문제 · 1.64s/q
+  mix8 lora 100문제 · 1.65s/q
+  mix8 lora 150문제 · 1.64s/q
+mix8 lora 171문제 1.63s/q 읽기실패 0
+  mix9 lora 50문제 · 1.60s/q
+  mix9 lora 100문제 · 1.57s/q
+  mix9 lora 150문제 · 1.58s/q
+mix9 lora 165문제 1.57s/q 읽기실패 0
+EVAL_DONE oos2r_cosine_5e5_20261008

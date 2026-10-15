@@ -1,0 +1,10 @@
+{
+  "files": [
+    "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "app/domains/travel_ops/components/watch/trip_reminders.py",
+    "tests/unit/travel/test_departure_boarding_guidance_v1.py"
+  ],
+  "exit_code": 0,
+  "stdout": "All checks passed!\n",
+  "stderr": ""
+}

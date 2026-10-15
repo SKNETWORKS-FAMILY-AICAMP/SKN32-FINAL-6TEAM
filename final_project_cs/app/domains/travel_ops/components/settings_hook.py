@@ -45,3 +45,54 @@ def operator_setting(tenant_id: str, name: str) -> Any:
         return _reader(tenant_id, name)
     except Exception:                                   # noqa: BLE001 — 표를 못 읽으면 기본값으로 간다
         return None
+
+
+GOOGLE_PRICE = "travel.dining.google_price_enabled"
+
+
+def google_price_enabled(tenant_id: str) -> bool:
+    """식당 대체 후보의 구글 가격 조회를 켰나. `[2026-10-13 사용자 지시]` 유료 결제 뒤 관리 콘솔에서 켠다.
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.google_price_enabled`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다 — 켜는 것은 명시한 경우뿐이다.
+    """
+    value = operator_setting(tenant_id, GOOGLE_PRICE)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import google_price_enabled as guardrail_default
+
+    return guardrail_default()
+
+
+TAXI_CALL_PRODUCT = "travel.mobility.taxi_call_product_enabled"
+
+
+def taxi_call_product_enabled(tenant_id: str) -> bool:
+    """확인 화면에서 택시 호출 상품을 고르게 하나. `[2026-10-14 사용자 지시 · 핫픽스]` 택시 요금 계산 확인 뒤 관리 콘솔에서 켠다.
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.taxi_call_product_enabled`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다 — 켜는 것은 명시한 경우뿐이다.
+    """
+    value = operator_setting(tenant_id, TAXI_CALL_PRODUCT)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import taxi_call_product_enabled as guardrail_default
+
+    return guardrail_default()
+
+
+ACTIVITY_LIVE_CHECK = "travel.activity_judge.live_status_batch_enabled"
+
+
+def activity_live_check_enabled(tenant_id: str) -> bool:
+    """활동 장소 임시휴무 · 폐업 새벽 웹 확인을 돌리나. `[2026-10-14 사용자 지시]` 유료 웹 검색이라 관리 콘솔에서 켤 때만.
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.activity_live_check_enabled`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다 — 켜는 것은 명시한 경우뿐이다.
+    """
+    value = operator_setting(tenant_id, ACTIVITY_LIVE_CHECK)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import activity_live_check_enabled as guardrail_default
+
+    return guardrail_default()

@@ -1,0 +1,77 @@
+--- final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0920_버스정류장_접근후보/bus.py
++++ final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py
+@@ -152,15 +152,19 @@
+         out.sort(key=lambda x: x[0])
+         return out
+ 
+-    def routes_between(self, a_lat, a_lng, b_lat, b_lng, within_m):
++    def routes_between(self, a_lat, a_lng, b_lat, b_lng, within_m, include_access=False):
+         """두 좌표를 **한 노선으로** 잇는 후보. (route, 타는 정류장, 내리는 정류장, 정거장 수, 도보 m).
+ 
+         ★ seq 증가만 보면 안 된다 — 목적지에 가지 않는 노선이 잡힌다(시연 v0.1 의 성동10).
+           여기서는 **양쪽 정류장이 목적지 반경 안에 있어야** 하므로 그 사례가 구조적으로 걸러진다.
++        include_access=True면 노선당 최소 접근 도보 쌍도 최대 하나 추가한다.
++        최소 승차 구간이 장소에서 멀 수 있으므로 실제 운행 판정 전에 버리지 않는다.
++        기본 동작과 최소 승차 구간은 보존하며 전체 조합 최적해를 보장하지 않는다.
+         """
+         A = self.stops_near(a_lat, a_lng, within_m)
+         B = self.stops_near(b_lat, b_lng, within_m)
+         bybus = {}
++        byaccess = {}
+         for da, x in A:
+             for db, y in B:
+                 if x["route_id"] != y["route_id"] or x["seq"] >= y["seq"]:
+@@ -172,7 +176,19 @@
+                 cur = bybus.get(r.route_nm)
+                 if cur is None or span < cur[3]:
+                     bybus[r.route_nm] = (r, x, y, span, round(da), round(db))
+-        return sorted(bybus.values(), key=lambda t: t[3])
++                if include_access:
++                    access_key = (da + db, span, da, db, x["seq"], y["seq"])
++                    prev = byaccess.get(r.route_nm)
++                    if prev is None or access_key < prev[0]:
++                        byaccess[r.route_nm] = (access_key, (r, x, y, span, round(da), round(db)))
++        candidates = list(bybus.values())
++        if include_access:
++            selected = {(r.route_id, x["seq"], y["seq"]) for r, x, y, *_ in candidates}
++            for _key, candidate in byaccess.values():
++                r, x, y, *_ = candidate
++                if (r.route_id, x["seq"], y["seq"]) not in selected:
++                    candidates.append(candidate)
++        return sorted(candidates, key=lambda t: t[3])
+ 
+     def segment(self, route_id, from_nm, to_nm):
+         """from → to 로 **순서가 증가하는** 구간을 찾는다. 없으면 None.
+--- final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0920_버스정류장_접근후보/plan.py
++++ final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py
+@@ -528,7 +528,7 @@
+         excluded = v.rv("bus", "route_type_제외") or []
+         found = []
+         for i, (r, x, y, _span, da, db) in enumerate(v.bus.routes_between(
+-                a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius)):
++                a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius, True)):
+             if r.route_type_nm in excluded or max(da, db) > wlim:
+                 continue
+             da, db = self._stop_walk(a_place, x, da), self._stop_walk(b_place, y, db)      # #13 — 거른 뒤에만 길로
+@@ -1215,7 +1215,7 @@
+             radius = v.rv("alternatives", "정류장_반경_m")
+             excluded = v.rv("bus", "route_type_제외") or []
+             for i, (r_, x, y, _span, da, db) in enumerate(v.bus.routes_between(
+-                    a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius)):
++                    a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius, True)):
+                 if r_.route_type_nm in excluded or max(da, db) > wlim:
+                     continue
+                 da, db = self._stop_walk(a_place, x, da), self._stop_walk(b_place, y, db)  # #13 — 거른 뒤에만 길로
+--- final_project_cs/tests/unit/travel/mobility/_backup/2026-10-11_0932_후보순서_시험가정/test_plan_v1.py
++++ final_project_cs/tests/unit/travel/mobility/test_plan_v1.py
+@@ -899,7 +899,9 @@
+     pl = P.Planner(rt, modes=["bus"])
+     arrive = datetime(2026, 9, 29, 15, 0, tzinfo=KST)
+     sdate, by = P.service_day(arrive)
+-    o = pl._bus_direct(_NT[0], _NT[1], arrive, sdate, by, {}, True, "rv", pl._walk_limit({}))[0]
++    direct = pl._bus_direct(_NT[0], _NT[1], arrive, sdate, by, {}, True, "rv", pl._walk_limit({}))
++    # 반환 순서는 접근 도보 순이다. 복구 시험의 기준은 가장 늦게 떠나는 직행이다.
++    o = max(direct, key=lambda candidate: candidate["_start"])
+     early = dict(o, _start=o["_start"] - 30, eta_min=o["eta_min"] + 7, _route="살릴 후보", _n=700, _lr=None)
+     orig = P.Planner._bus_direct
+     tr = []

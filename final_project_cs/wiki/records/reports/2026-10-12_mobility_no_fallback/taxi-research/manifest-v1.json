@@ -1,0 +1,44 @@
+{
+  "observed_at": "2026-10-12T16:32:31.643776+09:00",
+  "scope": "공개 문서 조사; 제품 수정 없음",
+  "api_calls": 0,
+  "private_data_reads": 0,
+  "files": [
+    {
+      "name": "electric-annex-web-0-266.txt",
+      "bytes": 21902,
+      "sha256": "a5e3d3cfb98a7ebdcf76276c7340b1fa057a98d10a8a2eca68bf743dce20a561"
+    },
+    {
+      "name": "electric-annex-web-90-332.txt",
+      "bytes": 22260,
+      "sha256": "2a42bfbbad2a04887d0999bd78296741bc21188cb7e017f82fc916aac407d789"
+    },
+    {
+      "name": "REPORT.md",
+      "bytes": 8332,
+      "sha256": "078f0aeda6ead33e7afe52243b02a24d3d9cb6af7c4134d7747caa33206247f9"
+    },
+    {
+      "name": "seoul-announcement.hwp",
+      "bytes": 88576,
+      "sha256": "a5bafaa17635ffc8b796ca1a71b013f6d92cd4b02119eeab9d942e52a4bf7a3c"
+    },
+    {
+      "name": "seoul-announcement.txt",
+      "bytes": 1360,
+      "sha256": "c9c0a9eec6f911cba36beed47462182128b58619ad47c0d155749417e18c2034"
+    },
+    {
+      "name": "seoul-tariff-decision.hwp",
+      "bytes": 55808,
+      "sha256": "35aa2c43fdb7c74cb8e5ac8fd08d2bfb7f96da4e468c40e31759031b8615ac8f"
+    },
+    {
+      "name": "seoul-tariff-decision.txt",
+      "bytes": 3118,
+      "sha256": "cd4e49efdf6d40939af8e188f2eaaf533049122955eef9225bfc6247f7d16b45"
+    }
+  ],
+  "backup": "_backup/2026-10-12_1633_observation_timestamp"
+}

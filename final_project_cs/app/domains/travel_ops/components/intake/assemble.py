@@ -28,6 +28,9 @@ from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.planning import planner
 
+from .rules import meal_mention
+from .span_segments import split_segments
+
 KST = ZoneInfo("Asia/Seoul")
 MAX_PARTY = 4                      #: 상품 범위 — 서울 · 최대 7일 · 4인
 _HHMM = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)$")
@@ -40,6 +43,11 @@ _SOURCE_ATTRS = {"tour_api": "source_content_id",
                  # ★`[2026-10-05]` 인허가(사업자 등록) 자료에서 찾은 식당 — 관광공사 번호가 아니라 인허가 관리번호다(영업시간은 모른다)
                  "dining_license": "license_mgt_no"}
 #: 원문 줄의 끼니 말 → 시각. 우리가 고른 값(planner 의 LUNCH_FROM · DINNER_FROM 과 같다)
+#: `[2026-10-13 사용자 결정 — 숙소 항목 B안]` 숙소 한 항목 = 한 숙박. 체크인 줄이 시작, 그 뒤 체크아웃 줄이 끝(다른 날)이다
+_CHECK_IN = re.compile(r"체크\s*인|check[\s-]*in", re.IGNORECASE)
+_CHECK_OUT = re.compile(r"체크\s*아웃|check[\s-]*out|퇴실", re.IGNORECASE)
+#: 적혀 있지 않을 때 두는 체크인 · 체크아웃 시각 — 국내 숙소의 흔한 시각. 규칙으로 채웠다고 적는다(`filled`)
+STAY_IN, STAY_OUT = "15:00", "11:00"
 _MEAL_TIMES = (("아침", "08:00"), ("조식", "08:00"), ("점심", "12:00"), ("중식", "12:00"),
                ("저녁", "18:00"), ("석식", "18:00"))
 
@@ -88,10 +96,13 @@ def collect(*, sources: list[dict[str, Any]], claims: list[dict[str, Any]]) -> C
 
     각 줄(`rows[]`)은 `index`(원본 안 항목 번호 — 고치는 칸 이름 `items[n]` 의 n) · `source_id` · `title` · `date` · `start` · `end` · `kind` ·
     `place`(좌표를 아는 장소 값 또는 None) · `claims`(그 항목의 칸별 값 줄 — 근거·확인 필요·메모) · `locked`(고객이 「꼭 넣을 일정」으로 고정) 을 든다."""
+    original_titles = {(c["source_id"], c["field"]): c.get("evidence") or {} for c in claims
+                       if c["field"].endswith(".title") and isinstance((c.get("evidence") or {}).get("start"), int)}
     claims = effective(claims)
     trip = {c["field"][5:]: c for c in claims if c["field"].startswith("trip.")}
     problems: list[Problem] = []
     rows: list[dict[str, Any]] = []
+    all_rows: list[tuple[dict[str, Any], bool]] = []
     first_day = _date_value(trip.get("first_day"))
     for source in sources:
         mine = [c for c in claims if c["source_id"] == source["source_id"]]
@@ -103,13 +114,17 @@ def collect(*, sources: list[dict[str, Any]], claims: list[dict[str, Any]]) -> C
                 by_index.setdefault(index, {})[claim["field"][claim["field"].index("]") + 2:]] = claim
         for index in sorted(by_index):
             fields = by_index[index]
-            if (fields.get("removed") or {}).get("value") is True:
-                continue
-            rows.append(_row(source, index, fields, marks, first_day, problems))
+            removed = (fields.get("removed") or {}).get("value") is True
+            # 삭제한 항목도 원문 경계를 정할 때는 남긴다. 그 항목의 수식어가
+            # 살아 있는 앞 항목으로 다시 들어오면 안 된다.
+            all_rows.append((_row(source, index, fields, marks, first_day, [] if removed else problems), removed))
+    _split_shared_lines([row for row, _ in all_rows], original_titles)
+    rows = [row for row, removed in all_rows if not removed]
     # ★시각이 없는 것은 **원문 순서** 안에서 규칙으로 배치한다 — 시각순으로 먼저 세우면 시각 없는 「점심」이
     #   그날 마지막 항목 뒤로 밀려 저녁이 된다. 채운 뒤에 날짜·시각 순으로 세운다.
     rows.sort(key=lambda r: (r["date"] or "9999", r["order"]))       # order = (원본, 원문 줄, 번호)
     filled: list[dict[str, Any]] = []
+    rows = _stays(rows, filled, problems)
     _fill_times(rows, filled, problems)
     rows.sort(key=lambda r: (r["date"] or "9999", r["start"] or "99:99", r["order"]))
     return Collected(rows=rows, filled=filled, problems=problems, trip=trip, first_day=first_day)
@@ -128,9 +143,11 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
             key = f"p{len(places) + 1}"
             places.append(_place_in(key, row["place"], row["kind"]))
         detail: dict[str, Any] = {"provenance": row["provenance"],
-                                  "intake": {"intake_id": intake_id, "revision": revision}}
-        if row["booking_no"]:
-            detail["booking"] = {"booking_no": row["booking_no"], "declared_by": "customer_plan"}
+                                  "intake": {"intake_id": intake_id, "revision": revision,
+                                             "source_id": row["source_id"], "index": row["index"]}}
+        if row["booking_no"] or row["booked"] is True:
+            detail["booking"] = {"declared_by": "customer_plan",
+                                 **({"booking_no": row["booking_no"]} if row["booking_no"] else {})}
         if row["locked"]:
             # ★`[2026-10-02 사용자 지시]` 고객이 「꼭 넣을 일정」으로 고정했다 — 등록되면 **감시 루프가 다시 자동으로 바꾸지 않고**
             #   바꾸기 전에 묻는다(`pending.protected_reason` 「customer_pinned」 · `trip_watch`). 되살린 항목과 같은 표시다.
@@ -138,11 +155,16 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
         if row["date"] and row["start"]:
             items.append({"seq": seq, "kind": row["kind"], "title": row["title"] or "(제목 없음)", "place": key,
                           "starts_at": _at(row["date"], row["start"]).isoformat(),
-                          "ends_at": _at(row["date"], row["end"]).isoformat() if row["end"] else None,
+                          # 숙소는 끝이 다른 날이다(체크아웃 날 · `_stays`)
+                          "ends_at": _at(row.get("end_date") or row["date"], row["end"]).isoformat() if row["end"] else None,
                           "detail": detail})
     body = {"request_id": f"intake:{intake_id}:r{revision}", "title": _title(trip, sources),
             "locale": "ko", "party_size": _int_value(trip.get("party_size")),
             "places": places, "items": items}
+    from . import taxi_pricing
+    pricing = taxi_pricing.from_trip(trip)
+    if pricing is not None:
+        body["constraints"] = taxi_pricing.constraints(pricing, body.get("constraints"))
     plan = _plan_basis(trip, rows, sources, first_day)
     if not rows and not plan["requested"]:
         problems.append(Problem("no_items", "items", "읽은 일정이 없습니다 — 항목을 하나 이상 넣어 주세요"))
@@ -178,7 +200,8 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
         problems.append(Problem("no_date", f"{where}.date", f"「{title or '이 항목'}」의 날짜를 모릅니다 — "
                                 "첫날 날짜를 알려 주세요", sid))
     place = value("place")
-    no_place = (fields.get("place") or {}).get("method") == "customer" and place is None
+    # ★`[2026-10-13]` 수정 접수가 등록한 여행에서 가져온 「장소 없음」(`method: trip`)도 고객이 정한 「장소 없음」과 같다(`reopen.py`)
+    no_place = (fields.get("place") or {}).get("method") in ("customer", "trip") and place is None
     if not place and not no_place:
         problems.append(Problem("no_place", f"{where}.place", f"「{title or '이 항목'}」의 장소를 정하지 못했습니다 — "
                                 "장소 이름을 고치거나 「장소 없음」으로 두세요", sid))
@@ -195,13 +218,72 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
             "end": end if end and _HHMM.match(str(end)) else None, "kind": kind,
             "place": place if place and place.get("latitude") is not None else None,
             "booking_no": value("booking_no"), "provenance": _provenance(fields), "where": where,
-            "claims": fields, "locked": value("locked") is True, "day": day, "no_place": no_place}
+            "claims": fields, "locked": value("locked") is True, "day": day, "no_place": no_place,
+            "end_date": None}           # 끝이 다른 날인 항목(숙소)만 채운다 — `_stays`
+
+
+def _stays(rows, filled, problems) -> list[dict[str, Any]]:
+    """체크인 줄 + 그 뒤 체크아웃 줄 → **숙소 항목 하나**(`kind: lodging`, 끝 = 체크아웃 날 · 시각). `[2026-10-13 사용자 결정 — B안]`
+
+    ★숙소 팀은 항목의 시작 날을 체크인, 끝 날을 체크아웃으로 읽는다(`instances/lodging/team._stay_query`). 전에는 「롯데호텔 체크인」이
+      숙소 분류 활동 하나로, 「체크아웃」은 장소를 못 찾은 활동으로 따로 남았다.
+    ★합친 체크아웃 줄은 항목이 되지 않는다 — 그 줄에 붙은 문제(장소를 못 정함 등)도 뺀다.
+    ★적혀 있지 않은 값은 규칙으로 채우고 그렇게 적는다(`filled` — 화면이 「규칙으로 채움」 배지로 보인다):
+      체크인 시각 없음 → 15:00 · 체크아웃 줄 없음 → 다음 체크인 날(없으면 여행 마지막 날, 같은 날이면 다음 날) 11:00 · 체크아웃 시각 없음 → 11:00.
+    ★식사 줄(「호텔 조식」)은 숙소가 아니다 — 체크인 말이 있어도 건드리지 않는다."""
+    def words(row):
+        return f"{row['title'] or ''} {row['text'] or ''}"
+
+    ins = [r for r in rows if r["date"] and r["kind"] != "dining" and _CHECK_IN.search(words(r))]
+    if not ins:
+        return rows
+    outs = [r for r in rows if r["date"] and _CHECK_OUT.search(words(r)) and not any(r is i for i in ins)]
+    last_day = max(r["date"] for r in rows if r["date"])
+    merged: list[int] = []
+
+    def fill(row, field, value, note):
+        filled.append({"source_id": row["source_id"], "field": f"{row['where']}.{field}", "value": value,
+                       "method": "rule", "note": note})
+        row["provenance"][field] = {"method": "rule", "rule": "intake.stay_default", "why": note}
+
+    for n, row in enumerate(ins):
+        next_in = ins[n + 1]["date"] if n + 1 < len(ins) else None
+        begin = (row["date"], row["start"] or "00:00")
+        out = next((o for o in outs if id(o) not in merged and (o["date"], o["start"] or "99:99") > begin
+                    and (next_in is None or o["date"] <= next_in)), None)
+        row["kind"] = "lodging"
+        row["title"] = _CHECK_IN.sub("", row["title"] or "").strip(" ·-~") or (row["place"] or {}).get("name") or row["title"]
+        if not row["start"]:
+            row["start"] = STAY_IN
+            fill(row, "starts_at", STAY_IN, f"체크인 시각이 없어 {STAY_IN} 에 두었다")
+        if out is not None:
+            merged.append(id(out))
+            row["end_date"], row["end"] = out["date"], out["start"] or STAY_OUT
+            row["provenance"]["ends_at"] = {"method": "rule", "rule": "intake.stay_checkout", "from": out["where"],
+                                            "source_id": out["source_id"]}
+            if not out["start"]:
+                fill(row, "ends_at", STAY_OUT, f"체크아웃 시각이 없어 {STAY_OUT} 로 두었다")
+        else:
+            end_date = next_in or last_day
+            if end_date <= row["date"]:
+                end_date = (date.fromisoformat(row["date"]) + timedelta(days=1)).isoformat()
+            row["end_date"], row["end"] = end_date, STAY_OUT
+            fill(row, "ends_at", STAY_OUT, f"체크아웃 줄이 없어 {end_date} {STAY_OUT} 로 두었다")
+    gone = [o for o in outs if id(o) in merged]
+    problems[:] = [p for p in problems
+                   if not any(p.source_id == o["source_id"] and (p.field == o["where"] or p.field.startswith(o["where"] + "."))
+                              for o in gone)]
+    return [r for r in rows if id(r) not in merged]
 
 
 def _fill_times(rows, filled, problems) -> None:
     previous_end: dict[str, str] = {}
     for n, row in enumerate(rows):
         if not row["date"]:
+            continue
+        if row["kind"] == "lodging":
+            # 숙소는 `_stays` 가 시각을 정했다 — 그날 뒤 일정은 체크인 시각 뒤로 둔다(끝은 체크아웃 날이다)
+            previous_end[row["date"]] = row["start"]
             continue
         if not row["start"]:
             row["start"], why = _placed(row, previous_end.get(row["date"]))
@@ -229,11 +311,39 @@ def _fill_times(rows, filled, problems) -> None:
         previous_end[row["date"]] = row["end"] or row["start"]
 
 
+def _split_shared_lines(rows, original_titles=None) -> None:
+    """저장된 항목 구간을 재사용한다. 옛 근거는 삭제 전 항목들로 같은 경계를 계산한다."""
+    shared: dict[tuple[str, int], list[tuple[int, int, dict[str, Any], str, dict[str, Any]]]] = {}
+    for row in rows:
+        evidence = (row["claims"].get("title") or {}).get("evidence") or {}
+        if not isinstance(evidence.get("start"), int):
+            evidence = (original_titles or {}).get((row["source_id"], f"{row['where']}.title"), evidence)
+        if isinstance(evidence.get("start"), int) and isinstance(evidence.get("end"), int) and row["text"]:
+            row["_title_start"] = evidence["start"]
+            shared.setdefault((row["source_id"], row["order"][1]), []).append(
+                (evidence["start"], evidence["end"], row, row["text"], evidence))
+    for group in shared.values():
+        group.sort(key=lambda g: g[0])
+        bounds = split_segments(group[0][3], [(start, end) for start, end, *_ in group])
+        for (start, end, row, text, evidence), (left, right) in zip(group, bounds):
+            segment = evidence.get("segment") or {}
+            saved_left, saved_right = segment.get("start"), segment.get("end")
+            if isinstance(saved_left, int) and isinstance(saved_right, int) and \
+                    0 <= saved_left <= start < end <= saved_right <= len(text) and \
+                    segment.get("text") == text[saved_left:saved_right]:
+                left, right = saved_left, saved_right
+            row["text"] = text[left:right]
+            row["_segment_start"] = left
+
+
 def _placed(row, previous: str | None) -> tuple[str, str]:
-    """(시각, 그렇게 정한 이유)."""
-    for word, at in _MEAL_TIMES:
-        if word in row["text"]:
-            return at, f"시각이 없어 원문의 「{word}」로 {at} 에 두었다"
+    """(시각, 그렇게 정한 이유). ★끼니 말은 그 항목 몫에서, 「먹고 나서」는 빼고 본다(`rules.meal_mention`)."""
+    title_start = row.get("_title_start", row["text"].find(row["title"] or ""))
+    offset = title_start - row.get("_segment_start", 0)
+    mention = meal_mention(row["text"], place_start=offset if offset >= 0 else None)
+    at = dict(_MEAL_TIMES).get(mention[0]) if mention else None
+    if at:
+        return at, f"시각이 없어 원문의 「{mention[0]}」로 {at} 에 두었다"
     if row["kind"] == "dining":
         at = "12:00" if not previous or previous <= "12:00" else "18:00"
         return at, f"시각이 없어 식사 시간({at})에 두었다"

@@ -1,0 +1,52 @@
+{
+  "observed_window_kst": [
+    "2026-10-12T00:58:00+09:00",
+    "2026-10-12T01:09:59+09:00"
+  ],
+  "scope": "live_stack_and_selected_synthetic_functions_not_product_acceptance",
+  "core_running": {
+    "passed": 6,
+    "total": 6
+  },
+  "search_and_alternatives": {
+    "passed": 4,
+    "total": 4
+  },
+  "movement_and_map_paths": {
+    "passed": 2,
+    "total": 2
+  },
+  "intake_place_kind_agreement": {
+    "passed": 2,
+    "total": 3
+  },
+  "latest_repeated_soak": {
+    "passed": 11,
+    "total": 11,
+    "independent_accuracy": false
+  },
+  "chat_seconds": [
+    59.500684586,
+    50.981284589,
+    59.457842579,
+    53.574120799
+  ],
+  "pending": [
+    "intake_dining_attached_to_activity",
+    "vector_and_knowledge_tables_empty",
+    "shelters_empty",
+    "google_missing_dawn_check_skipped",
+    "discord_missing_82_accumulated_dead_letters",
+    "chat_latency",
+    "hotfix_cd_persistence"
+  ],
+  "product_code_changed_this_audit": false,
+  "synthetic_intakes_created": 1,
+  "human_trip_changed": false,
+  "external_notices_sent": false,
+  "backups": [
+    "final_project_cs/wiki/operations/_backup/2026-10-12_011606_arm_stack_audit/current-state.md",
+    "final_project_cs/wiki/_backup/2026-10-12_011606_arm_stack_audit/log.md"
+  ],
+  "report": "final_project_cs/wiki/records/reports/2026-10-12_0110_arm-stack-functional-audit.md"
+}

@@ -1,0 +1,12 @@
+SYNTHETIC_INDEX {"explicit_public_files": 1308, "operating_files_read": false, "candidate_runtime_source_changed": false}
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\playdata2\anaconda3\python.exe
+rootdir: C:\Users\playdata2\Documents\final_workspace\final_project_cs\legacy\isolated_linux_checks\2026-10-12_021241_v11_gates_inputs
+configfile: pytest.ini
+collecting ... collected 3 items
+
+tests/security/test_no_infra_in_tracked_files.py::test_no_tracked_text_file_leaks_infrastructure <- ..\2026-10-12_014812_v10_gates_inputs\tests\security\test_no_infra_in_tracked_files.py PASSED [ 33%]
+tests/contract/test_api_key_file.py::test_the_real_key_file_is_ignored_by_git <- ..\2026-10-12_014812_v10_gates_inputs\tests\contract\test_api_key_file.py PASSED [ 66%]
+tests/contract/test_api_key_file.py::test_the_template_itself_is_not_ignored <- ..\2026-10-12_014812_v10_gates_inputs\tests\contract\test_api_key_file.py PASSED [100%]
+
+============================== 3 passed in 8.52s ==============================

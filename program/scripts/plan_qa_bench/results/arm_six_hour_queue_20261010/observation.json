@@ -1,0 +1,68 @@
+{
+  "observed_at": "2026-10-09T16:15:04.936310+00:00",
+  "units": {
+    "tripilot-arm-cd.timer": {
+      "active": "active",
+      "enabled": "enabled"
+    },
+    "tripilot-arm-probe.timer": {
+      "active": "inactive",
+      "enabled": "disabled"
+    },
+    "tripilot-arm-refill.timer": {
+      "active": "active",
+      "enabled": "enabled"
+    },
+    "tripilot-arm-work-queue.service": {
+      "active": "active",
+      "enabled": "enabled"
+    },
+    "tripilot-arm-serving.service": {
+      "active": "active",
+      "enabled": "enabled"
+    }
+  },
+  "timer": "TimersCalendar={ OnCalendar=*-*-* 00,06,12,18:00:00 Asia/Seoul ; next_elapse=Fri 2026-10-09 21:00:00 UTC }\nNextElapseUSecRealtime=Fri 2026-10-09 21:00:00 UTC",
+  "queue": {
+    "jobs": 45,
+    "planned_checks": 495,
+    "counts": {
+      "pending": 45
+    },
+    "blocked_on": "mobility_data_missing",
+    "estimated_pending_seconds": 21600.0,
+    "target_seconds": 21600,
+    "estimate_not_actual_runtime": true,
+    "repeat_refill_added": 0
+  },
+  "benchmark": {
+    "counts": {
+      "completed": 6,
+      "running": 1
+    },
+    "registered_jobs": 14,
+    "active_fields": [
+      "at",
+      "job_id",
+      "engine_pid",
+      "expected",
+      "saved"
+    ],
+    "running": [
+      "e4bt_q4_d3_concurrent2"
+    ]
+  },
+  "resource_sample_count": 61,
+  "resource_first_at": "2026-10-09T16:10:02.077717+00:00",
+  "resource_last_at": "2026-10-09T16:15:02.148078+00:00",
+  "resource_window_seconds": 305.070976101968,
+  "host_cpu_busy_mean": 91.00795683043447,
+  "host_steal_mean": 0.19097934855189475,
+  "cpu_two_core_mean": 88.4398839556577,
+  "disk": {
+    "used_bytes": 55931056128,
+    "free_bytes": 46940262400,
+    "total_bytes": 102888095744
+  },
+  "deployment_blocked_on": "mobility_data_missing"
+}

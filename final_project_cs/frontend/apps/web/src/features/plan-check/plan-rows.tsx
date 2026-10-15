@@ -1,6 +1,6 @@
 "use client";
 
-import { Bike, Bus, Car, Check, ChevronsUpDown, Footprints, Lock, LockOpen, Minus, Pencil, Plus, Sparkles, Trash2, TrainFront, Undo2, X } from "lucide-react";
+import { BedDouble, Bike, Bus, Car, Check, ChevronsUpDown, Footprints, Lock, LockOpen, Minus, Pencil, Plus, Sparkles, Trash2, TrainFront, Undo2, X } from "lucide-react";
 import { Fragment, type MouseEvent, type ReactNode } from "react";
 import type { MoveOptionMode } from "@/lib/live/move-options";
 import { ro } from "@/lib/josa";
@@ -11,13 +11,14 @@ import { MoveModeBox } from "./move-mode";
 import { Act, Checks, NeedsLine, needsOf, VerdictMark } from "./parts";
 import type { PlanCheckActions } from "./plan-check";
 import { insertionPoints, type InsertionPoint } from "./insertion-points";
-import { RailList } from "./rail-list";
+import { RailList, type RailNow } from "./rail-list";
 import { StopKind } from "./stop-kind";
 import type { Grab, TimeEditHandles, TimeKind } from "./use-time-edit";
 import styles from "./plan-check.module.css";
 
 /** Everything a row of the list needs from the screen, in one place (the list is drawn twice when a preview stands under the plan). */
 export interface RowContext {
+  revision?: number;
   done: boolean;
   /** Only the currently revealed check opens; future read stops remain quiet and folded. */
   reveal?: { activeId: string | null; waiting: ReadonlySet<string> };
@@ -93,7 +94,7 @@ export interface TimeEditUi {
 }
 
 /** The days of a view, each with its timeline: stops (cards) and the moves between them. */
-export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }: {
+export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading, now }: {
   view: PlanCheckView;
   days: PlanDay[];
   listDay: number | "all";
@@ -101,20 +102,29 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
   mapDay: number;
   onShowDay: (day: number) => void;
   heading: (day: PlanDay) => ReactNode;
+  /** `[2026-10-13 사용자 결정 — 수정 모드]` The trip screen's 「지금」 on a day's line (the edit of a registered trip); none on the plan check of a new plan. */
+  now?: (date: string) => RailNow | null;
 }) {
+  const t = useT();
   return <>{days.filter((day) => (listDay === "all" || day.day === listDay) && timeline(view, day.day).some(ctx.visible)).map((day) =>
     <section key={day.day} aria-labelledby={`${ctx.prefix}plan-day-${day.day}`}>
       <h3 id={`${ctx.prefix}plan-day-${day.day}`} className={styles.day}>{ctx.done
         ? <button type="button" className={styles.dayButton} aria-pressed={mapDay === day.day} onClick={() => onShowDay(day.day)}>{heading(day)}</button>
         : heading(day)}</h3>
-      <RailList className={styles.timeline}>{(() => {
+      <RailList className={styles.timeline} now={now?.(day.date)}>{(() => {
         const times = dayTimes(view, day.day);
         const points = ctx.insertion ? insertionPoints(view, day) : [];
-        return <>{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
+        // `[2026-10-13 사용자 지시]` A day the customer wakes up in a stay: 「○○에서 출발」 at the top (the move from it follows, when the check found one).
+        const stay = view.items.find((item) => isStayItem(item) && item.date < day.date && day.date <= item.endDate!);
+        return <>{stay && <li className={styles.stayBand} data-entry-id={`${stay.id}:from`}>
+          <BedDouble size={16} strokeWidth={1.8} aria-hidden="true" />
+          <span>{t(`${stay.title}에서 출발`, `Leaving from ${stay.title}`)}</span>
+          <small>{day.date === stay.endDate ? t("마지막 날", "Last day") : t(`${nightOf(stay, day.date)}박째`, `Night ${nightOf(stay, day.date)}`)}</small>
+        </li>}{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
           {points[index] && ctx.insertion?.(points[index])}
           {entry.type === "item"
-            ? <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
-            : <MoveRow move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={ctx} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />}
+            ? entry.item.past ? <PastItemRow item={entry.item} ctx={ctx} /> : <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
+            : <MoveRow move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={{ ...ctx, revision: view.revision }} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />}
         </Fragment>)}{points.at(-1) && ctx.insertion?.(points.at(-1)!)}</>;
       })()}</RailList>
     </section>)}</>;
@@ -126,6 +136,20 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading }
  * 2026-10-08: 제목 옆에는 바뀐 일정의 체크만 둔다. 확인 필요와 시간 되돌리기는 카드 하단 오른쪽에 놓는다.
  * A stop marked for deletion is grey and has Undo where the bin is.
  */
+/** `[2026-10-13 사용자 결정 — 숙소 항목 B안]` A stay (kind lodging with a later end day): 「○○ 체크인」 and its nights 「3박 · 11/6~11/9」. Other stops keep their title. */
+const isStayItem = (item: PlanItem) => item.kind === "lodging" && !!item.endDate && item.endDate > item.date;
+/** Which night of the stay the morning of `date` follows (the day after check-in is night 2 …, as the trip screen says it). */
+const nightOf = (stay: PlanItem, date: string) => Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${stay.date}T00:00:00Z`)) / 86_400_000) + 1;
+const monthDay = (iso: string) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
+function stayTitle(item: PlanItem, t: ReturnType<typeof useT>): string {
+  return isStayItem(item) ? t(`${item.title} 체크인`, `Check in · ${item.title}`) : item.title;
+}
+function stayPillOf(item: PlanItem, t: ReturnType<typeof useT>): string | null {
+  if (!isStayItem(item)) return null;
+  const nights = Math.round((Date.parse(`${item.endDate}T00:00:00Z`) - Date.parse(`${item.date}T00:00:00Z`)) / 86_400_000);
+  return t(`${nights}박 · ${monthDay(item.date)}~${monthDay(item.endDate!)}`, `${nights} night${nights === 1 ? "" : "s"} · ${monthDay(item.date)}–${monthDay(item.endDate!)}`);
+}
+
 function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; rechecking: boolean }) {
   const t = useT();
   const { done, actions, explain, frozen } = ctx;
@@ -173,9 +197,12 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
     if ((event.target as HTMLElement).closest("button, a, input, select, textarea, label, form, [data-details]")) return;
     ctx.onPick(item.id);
   };
+  // `[2026-10-14 실서버 확인]` The time editor opens inside the card: the card is then «open» for the rail too, so the day's other folded cards are not stretched to the editor's
+  //   height (they were — empty tall boxes above and below it — because only an opened card was left out of 「every folded card as tall as the tallest」).
+  const editingTime = done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed;
   // `[2026-10-12 사용자 결정]` The rail (`rail-list.tsx`) reads the stop's start and end to draw it to scale; an opened card carries its line to the card's end.
   return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-reveal-current={current || undefined} data-reveal-waiting={waiting || undefined} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-time-follow={done && (open || review || showUndo || removed || Boolean(changedFrom && actions.canUndoAll?.())) || undefined} data-time-focused={timeFocused || undefined} data-changed={changed || undefined} data-removed={removed || undefined}
-    data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-rail-open={(open && !checking) || undefined}>
+    data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-rail-open={((open || editingTime) && !checking) || undefined}>
     {done
       // `[2026-10-12 사용자 결정 — A]` Every stop shows its end under its start (it was only the picked or opened one, 2026-10-10).
       ? <Act className={styles.time} data-editing={(ctx.time?.id === item.id && ctx.time.kind === "start") || undefined} data-adjusted={adjusted || undefined} data-grab={grab ? true : undefined} {...grab} why={timeWhy} explain={explain}
@@ -192,7 +219,8 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
               {item.locked ? <Lock size={18} strokeWidth={1.8} aria-hidden="true" /> : <LockOpen size={18} strokeWidth={1.8} aria-hidden="true" />}</Act> : <StopKind item={item} />}
             <h4 className={styles.cardHeading}><button type="button" className={styles.cardHead} title={item.title} aria-labelledby={`${ctx.prefix}plan-item-${item.id}`} aria-expanded={open} aria-controls={`${ctx.prefix}plan-item-${item.id}-checks`} onClick={() => ctx.onPick(item.id)}>
               <span className={styles.cardName}>
-                <span className={styles.cardTitleLine}><span id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</span>{changedMark}</span>
+                <span className={styles.cardTitleLine}><span id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{stayTitle(item, t)}</span>{changedMark}</span>
+                {stayPillOf(item, t) && <small className={styles.pill} data-stay-nights>{stayPillOf(item, t)}</small>}
                 {item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}
               </span>
             </button></h4>
@@ -207,8 +235,8 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
               : <Act id={`${ctx.prefix}plan-delete-${item.id}`} className={styles.icon} why={deleteWhy} explain={explain} onPress={() => ctx.onDelete(item)} aria-label={t(`${item.title} 삭제`, `Delete ${item.title}`)} tooltip={t(`${item.title} 삭제`, `Delete ${item.title}`)}><Trash2 size={16} strokeWidth={1.8} aria-hidden="true" /></Act>}
             </span>
           </div>
-        : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
-      {done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed && <TimeEditor item={item} ui={ctx.time} />}
+        : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{stayTitle(item, t)}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights>{stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
+      {editingTime && <TimeEditor item={item} ui={ctx.time!} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
         {rows.length
           ? <Checks rows={rows} />
@@ -232,6 +260,20 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
         </div>
       </div>}
     </article>
+  </li>;
+}
+
+/**
+ * `[2026-10-13 사용자 결정 — 수정 모드]` A stop of the registered trip that is over: the trip screen's thin grey line (its name, 「~end」). It is not in the edit — the server keeps it as it is —
+ * so it has no tools, and pressed it says why.
+ */
+function PastItemRow({ item, ctx }: { item: PlanItem; ctx: RowContext }) {
+  const t = useT();
+  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-past data-passed>
+    <span className={styles.time}>{item.startsAt}</span>
+    <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
+    <div><Act className={styles.pastLine} why={t("지난 일정이라 바꿀 수 없어요", "This stop is over, so it cannot change")} explain={ctx.explain} onPress={() => undefined}
+      aria-label={t(`${item.title} · 지난 일정`, `${item.title} · past`)}><span>{item.title}</span><small>~{item.endsAt || "—"}</small></Act></div>
   </li>;
 }
 
@@ -363,7 +405,7 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
       : done
         ? <><button type="button" className={styles.moveHead} aria-expanded={open} aria-controls={`${ctx.prefix}plan-move-${move.id}-checks`} onClick={() => ctx.onToggleMove(move.id)}>{line}</button>
           {/* `[2026-10-07 사용자 지시 — 이동수단 고르기]` 펼친 칸 맨 위: 「이동 수단」 박스(서버가 이 기능을 주지 않으면 없다). 확인 중 · 삭제 예정 일정 옆 구간은 잠기고 이유를 말한다. */}
-          {open && ctx.actions.moveOptions && <MoveModeBox move={move} to={to} ctx={ctx}
+          {open && ctx.actions.moveOptions && <MoveModeBox key={`${move.id}:${ctx.revision ?? "preview"}`} move={move} to={to} ctx={ctx}
             locked={dim ? t("삭제할 일정 앞뒤의 이동이라 바꿀 수 없어요", "This leg belongs to a stop marked for deletion") : ctx.frozen} />}
           {open && <Checks id={`${ctx.prefix}plan-move-${move.id}-checks`} rows={move.checks} />}</>
         : <div className={styles.moveHead}>{line}</div>}</div>

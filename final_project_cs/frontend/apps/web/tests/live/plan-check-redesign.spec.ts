@@ -360,7 +360,7 @@ async function openTime(page: Page, title: string) {
 const editsOf = async (server: ReturnType<typeof mockServer>) => (await server.received("POST", "/edits")).map((entry) => entry.body as { revision: number; edits: { field: string; value: unknown }[] });
 const fieldsOf = (body: { edits: { field: string; value: unknown }[] }) => Object.fromEntries(body.edits.map((edit) => [edit.field, edit.value]));
 
-test("일정 사이 간격은 비는 시간만큼 벌어지고, 15분 넘게 비면 「여유 N분」을 한 번 연하게 적는다", async ({ page, request }) => {
+test("일정 사이 간격은 정해진 길이(② 이동 점선 · 도착 뒤 여유)이고, 15분 넘게 비면 「여유 N분」을 한 번 연하게 적는다", async ({ page, request }) => {
   await openFinished(page, request);
   await expect(page.getByText("여유 21분")).toBeVisible();                                            // 경복궁 → 올리브영: 11:00 − (10:30 + 이동 9분) = 21분
   // `[2026-10-05 사용자 지시]` 한 줄에 다 보인다: 「지하철 3호선 9분 · 0.6km」와 「여유 21분」이 같은 줄(같은 높이)에 있고, 시간은 자기 원과 같은 줄에 있다
@@ -369,10 +369,10 @@ test("일정 사이 간격은 비는 시간만큼 벌어지고, 15분 넘게 비
   expect(Math.abs((textBox.y + textBox.height / 2) - (freeBox.y + freeBox.height / 2))).toBeLessThan(3);
   await expect(move.locator("[class*=moveText]")).toContainText("지하철 3호선");
   await expect(page.getByText(/^여유 /)).toHaveCount(1);                                              // 올리브영 → 광장시장은 14분이라 말은 없다(간격만)
-  // `[2026-10-12 사용자 결정 — 줄 길이 = 실제 시간 · 2026-10-13 ④ 1분 = 0.8px]` 사이 공간은 왼쪽 줄의 길이가 시간을 그린다 — 옛 「이동 줄 위 · 아래로 나뉜 빈칸」(freeGap, 10-07)은 없어졌다.
+  // `[2026-10-13 팀 회의 — 줄 간격 ②]` 사이 공간은 시간 비례가 아니다(④ 1분 = 0.8px 를 바꿨다) — 이동은 점선 36px, 도착 뒤 여유가 있으면 가는 선 12px(`time-rail.ts` `RAIL_GAP`).
   const segments = await page.locator("[data-rail-lines] > i").evaluateAll((lines) => lines.map((line) => ({ kind: (line as HTMLElement).dataset.kind, height: line.getBoundingClientRect().height })));
-  expect(segments.some((segment) => segment.kind === "travel" && Math.abs(segment.height - 9 * 0.8) < 1)).toBe(true);   // 지하철 9분 = 점선 7.2px
-  expect(segments.some((segment) => segment.kind === "free" && Math.abs(segment.height - 21 * 0.8) < 1)).toBe(true);    // 도착 뒤 여유 21분 = 가는 선 16.8px
+  expect(segments.some((segment) => segment.kind === "travel" && Math.abs(segment.height - 36) < 1)).toBe(true);   // 지하철 9분도 점선 36px
+  expect(segments.some((segment) => segment.kind === "free" && Math.abs(segment.height - 12) < 1)).toBe(true);     // 도착 뒤 여유 21분도 가는 선 12px
 });
 
 /** 글자 자체의 세로 가운데(단추의 위 안쪽 여백은 빼고 잰다). */
@@ -432,7 +432,7 @@ test("일정 카드의 시간 · 원 · 이름은 한 줄에 놓인다(이름만
 test("시간 편집기에 시각을 적으면 밀리는 일정이 미리 보이고, 적용하면 모든 일정이 요청 하나로 간다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   const form = await openTime(page, "광장시장");
-  await expect(form.getByText("가능한 시각 02:55 ~ 23:00")).toBeVisible();                              // 앞 일정들을 하루 맨 앞까지 밀 수 있는 만큼
+  await expect(form.getByText("가능한 시각 08:55 ~ 23:00")).toBeVisible();                              // 앞 일정들을 하루 맨 앞까지 밀 수 있는 만큼
   await form.getByLabel("시작", { exact: true }).fill("11:30");                                                          // 앞 올리브영(12:00 끝)과 겹치니 앞 일정들이 밀린다
   await expect(form.getByRole("status")).toContainText("함께 바뀌는 일정 2개");
   await expect(form.getByRole("status")).toContainText("올리브영");

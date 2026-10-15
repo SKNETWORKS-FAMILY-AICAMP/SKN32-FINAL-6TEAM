@@ -1,0 +1,12 @@
+{
+  "command": [
+    "C:/Users/playdata2/anaconda3/python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/test_subway_train_identity_v1.py",
+    "-q",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1228_\uc9c0\ud558\ucca0_\ubb38\uc790\uc5f4\uc5f4\ucc28\ubc88\ud638_\uc120\ud0dd\uc5f0\uacb0\\before-v1.xml"
+  ],
+  "cwd": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs",
+  "exit_code": 1
+}

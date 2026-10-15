@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { dayTimes, type DayTimes } from "./day-times";
 import type { PlanCheckView, PlanItem } from "./model";
-import { ASSUMED_MINUTES, endRanges, formatHm, holdAtLimit, moveEnd, moveStop, ownRange, parseHm, pushRange, SNAP, type Held, type Retime, type TimeRange } from "./time-plan";
+import { ASSUMED_MINUTES, endRanges, formatHm, holdAtLimit, moveEnd, moveStop, ownRange, parseHm, pushRange, PUSH_DAY_START, SNAP, type Held, type Retime, type TimeRange } from "./time-plan";
 
 type List = "before" | "after";
 /** What is being changed: the START of a stop (its time at the left of the card) or the time of LEAVING it for the next place (its end, shown at the left of the leg). */
@@ -123,7 +123,7 @@ export function useTimeEdit({ views, commit, onNotice }: {
     const { times, index } = subject;
     return edit.kind === "depart"
       ? endRanges(times.stops, times.legs, index, 1)
-      : { own: ownRange(times.stops, times.legs, index, 1), reach: pushRange(times.stops, times.legs, index, 1) };
+      : { own: ownRange(times.stops, times.legs, index, 1), reach: pushRange(times.stops, times.legs, index, 1, PUSH_DAY_START) };
   }, [edit?.kind, subject]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const preview = useMemo<TimePreview | null>(() => {

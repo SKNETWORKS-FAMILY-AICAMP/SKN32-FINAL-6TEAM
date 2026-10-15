@@ -1,0 +1,35 @@
+{
+  "observed_at": "2026-10-09T17:18:17.038904+00:00",
+  "added_jobs": [
+    {
+      "id": "frog_multi_items_bc_a1",
+      "label": "FrogNano-4B-2609",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-ea42d264c21d88b9bf6ce583bb3fd4dfddb22eb5b30efba9e305c56f75974c86",
+      "prompts": "/tmp/tripilot-multi-items-20261009/prompts.json",
+      "script": "/tmp/tripilot-multi-items-20261009/multi_items_eval_20261009.py",
+      "tag": "frog_multi_items_bc_a1",
+      "port": 8401,
+      "logprobs": "0",
+      "expected": 835,
+      "model_sha256": "ea42d264c21d88b9bf6ce583bb3fd4dfddb22eb5b30efba9e305c56f75974c86",
+      "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+      "runner_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+      "suite": "multi_items_bc",
+      "output_contract": "Strict items array; same itinerary/question/information; max_tokens64; fixed single/no-request/compound denominators",
+      "role": "Previously missing multi-item B/C role; not a rerun of completed single-item D/E and not independent holdout",
+      "automatic_retry": false,
+      "comparison_runs": 1,
+      "purpose": "Previously missing FrogNano original strict multi-item B/C generation role. Same input and items-array contract; generation is separate from prior token-probability selection and speeds are not directly comparable. No our travel training; fixed development regression."
+    }
+  ],
+  "added_questions": 835,
+  "manifest_jobs": 131,
+  "backup": "/tmp/tripilot-a-backlog-20261008/_backup/2026-10-09_171817_missing_multi_bc/manifest.json",
+  "worker_pid": 342497,
+  "worker_lock_held": true,
+  "no_worker_restart": true,
+  "no_download": true,
+  "model_and_adapter_whole_sha_reverified": true,
+  "manifest_sha256": "24ea40a0ce9af3cfcddab2973e24cf459463145835ce61ceadf6425791303ea8"
+}

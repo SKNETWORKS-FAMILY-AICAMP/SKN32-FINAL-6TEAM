@@ -1,0 +1,56 @@
+**감사 결과: 실제 결함 1건(확신 중간~높음), 시험 불일치 1건, 나머지는 새 지적 없음**
+
+배포 후보 v7이나 운영 배포 완료는 주장하지 않습니다.
+
+## 실제 결함
+- **초기 재시도 경합이 500으로 샙니다.** `case_dispatch.py:147`의 `retry_initial`은 `conn.commit()`(141행)으로 행 잠금을 풀고 나서 `run_case`를 호출합니다. 이때 두 요청이 사전 점검을 모두 통과하면 `start_run`에서 진 쪽이 `ActiveRunError`(RuntimeError)를 받습니다.
+  - `case_dispatch.py` 안에는 `ActiveRunError`를 잡는 곳이 없습니다.
+  - `trip_api.py:1045-1054`와 `1983-1992`는 이를 매핑하지 않아 500이 됩니다. 약속은 409입니다.
+  - 재현 조건은 같은 `request_id`로, 상태가 `running`이고 활성 run이 없는 Case에 동시에 재전송하는 경우입니다. `routing` 상태는 ROUTED 전이의 `expected_version` 때문에 `StateConflict`(409)가 되어 안전합니다.
+  - 코드를 읽어서 얻은 판단이며 실행해서 재현하지는 않았습니다.
+
+## 시험과 코드의 불일치 (고정 runner 이후 workspace가 바뀐 것으로 보임)
+- 고정 runner 결과는 **27/27 통과, PYTEST_EXIT=0**입니다.
+- 그런데 지금 `test_initial_retry_boundaries.py`는 17건입니다. `test_run_started_after_preflight_is_a_conflict_instead_of_unhandled_error`(96-104행)가 runner 실행 뒤에 추가된 것으로 보입니다. 이 시험은 `ActiveRunError`가 `StateConflict("아직 실행 중")`로 바뀌어야 통과합니다.
+- 제가 읽은 시점의 코드에는 그 변환이 없습니다. 위 결함을 고치는 변경이 아직 반영되지 않았거나 반영 중이라고 봅니다.
+- 따라서 현재 workspace 기준으로는 이 시험이 실패할 가능성이 큽니다. 재실행은 허용 범위 밖이라 확인하지 못했습니다. 부모가 확인해 주세요.
+
+## 직접 확인했고 이상 없는 항목
+- **재개 복구(1번)**: `controller.py:834-854`는 동일 event가 `idempotent`이고 Case가 running/resuming이며 활성 run이 없을 때만 VALID_INPUT과 토큰을 다시 소비하지 않고 `run_case`를 호출합니다.
+  - `ActiveRunError`는 여기서 현재 상태 반환으로 처리됩니다.
+  - 만료 토큰은 담당 사전관문 → WAIT_EXPIRED → `ResumeExpiredError`, 그 밖의 토큰 오류는 `ControllerError` 순서로 구분됩니다.
+  - 사전관문은 동적 교차 의존을 약속하지 않으며, 계약 문서 설명과도 일치합니다.
+- **암묵 답변 연결(2번)**: `_matches_implicit_reply`는 저장된 질문 형식(선택지, 분, 버전, 확인)에 맞는 짧은 답만 연결합니다.
+  - 암묵 응답의 만료는 `None`을 반환해 새 메시지로 접수되고, 명시 case/token은 예외를 그대로 올립니다.
+- **초기 계획 저장(3번)**: `classify_case`는 분류기 호출 뒤에 `state_patch`를 평가하므로 `dispatch_state`가 비어 있다가 채워져도 CLASSIFIED 이벤트에 저장됩니다.
+  - `retry_initial`의 상태 분기, 답변 이력 409, base_version 불일치 409, 모델 재호출 없음은 코드와 시험이 일치합니다.
+- **동시 접수(4번)**: `create_case_once`는 advisory lock과 `action_requests` 장부를 한 트랜잭션에서 사용합니다.
+  - `_open_message_case`는 앞뒤로 `conn.commit()`을 해서 생성 잠금이 모델/Team 호출까지 이어지지 않습니다.
+  - 패자는 409, 같은 마스킹 결과의 다른 원문은 SHA 비교로 409이며, SHA가 없는 옛 Case는 masked subject 비교로 호환됩니다.
+- **감시 복구(5번)**: `_attempt`의 복구 조건은 running이고 활성 run이 없으며 마지막 run이 failed인 경우뿐입니다. run 기록이 없으면 NULL이라 제외됩니다.
+  - `TeamUnavailable`과 `ActiveRunError`는 Case를 닫지 않고 건너뜁니다.
+  - 복구는 새 `request_id`(`:r{n}`)를 만들지 않아 `retry_max`와 cooldown을 소모하지 않습니다.
+  - observed는 리스트와 스칼라 모두 처리합니다.
+
+## 의도 정책 또는 미확인 위험
+- 신규 Case는 원문의 SHA-256을 state와 장부에 저장합니다. 짧거나 엔트로피가 낮은 원문은 추측으로 역산될 수 있습니다. 지시하신 의도 정책이라 결함으로 올리지 않습니다.
+- 재개 idempotent 경로(`controller.py:844`)는 담당 Team만 다시 확인하고 capability는 `run_case`에 맡깁니다. `run_case`의 capability 점검은 읽지 못해 미확인입니다.
+- `retry_initial`이 `None`을 반환하는 경로(대기·종결)는 `FOR UPDATE` 잠금이 요청 연결이 닫힐 때까지 유지됩니다. 영향은 작아 보이지만 측정하지 않았습니다.
+- 동시 최초 요청에서 모델이 2번 호출될 수 있다는 점은 지시하신 의도 정책으로 확인했습니다.
+
+## 시험 fixture 판단
+- `Conn`과 `SimpleNamespace` controller 대역은 생산 의미를 약화시키지 않습니다. 이 대역으로 확인하는 것은 호출 순서, 커밋 횟수, 예외 종류뿐입니다.
+- 다만 `Conn.fetchone`이 모든 쿼리에 같은 값을 돌려줍니다. 그래서 FOR UPDATE 직렬화와 실제 경합은 이 단위 시험으로는 증명되지 않고, DB 근거 로그에 의존합니다.
+
+## 직접 실행
+- 고정 runner 1회: **27/27 통과, PYTEST_EXIT=0**. 구성은 초기 재시도 16, 재개 복구 10, 감시 경합 1입니다. 실패와 건너뜀은 0이며, 이 수치는 위의 시점 불일치 이전 상태입니다.
+
+## 읽은 범위와 읽지 못한 범위
+- **직접 읽음**: RULE.md, AGENTS.md, plugin-availability.md, runner 전체, `case_dispatch.py` 전체, `controller.py` 770-935행, `case_intake.py` 전체, `trip_messages.py`의 262-515, 600-720, 895-1015행, `trip_watch_cases.py` 전체, `classification.py`의 `classify_case`, `case_service.py` 14-74행, `trip_api.py`의 두 예외 매핑 구간, `test_initial_retry_boundaries.py` 1-105행.
+- **읽지 못함**:
+  - `case_service.py`의 validate 계열, `events.py`와 `reducer.py`.
+  - `test_controller_resume_recovery.py`, `test_watch_recovery_race.py`, `test_web_*`와 e2e 시험 전부.
+  - evidence 로그(29/29, 2/2, 43/43).
+  - `run_case`의 capability 점검.
+
+  이 항목들은 판정하지 않았습니다.

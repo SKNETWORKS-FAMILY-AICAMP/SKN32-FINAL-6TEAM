@@ -1,0 +1,95 @@
+{
+  "created_at": "2026-10-09T13:06:51.963247+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/subway_boarding.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_124839_방면대조_수정전/subway_boarding.py",
+      "sha256": "a5f0830f0ff03eaaf77323f76f0edbf7d45f7e1135bbe85ac8578536067fce5b"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_124839_방면대조_수정전/subway_departure.py",
+      "sha256": "b3e5d0e5609fd87aca74934cc876e8cf45f6a52b95f475d71a4b53d662b28ae9"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_124839_방면대조_수정전/mobility.md",
+      "sha256": "f0bca3c8f7afa5e88c58d660b33bbbfe237651a09d5804421049153d3a54a37f"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_125234_방면근거_콜백전달전/departure_observer.py",
+      "sha256": "eeff33af03cf9a8eb850363ecf2ed901b2e1ff2b4efa00c1a3a79b2fdecccf74"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/test_subway_direction_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/_backup/2026-10-09_125234_방면근거_콜백전달전/test_subway_direction_v1.py",
+      "sha256": "503359139b720938917f99b629103c23f2489e08e352b6c7c9d2632fef92cce2"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_125234_방면근거_콜백전달전/mobility.md",
+      "sha256": "921c2161d080b5ab8ace275d3fa16c5aa5e482ef9f1f68dbaa70185c7f9cdd8b"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_125930_공식_이름대응_추가전/subway_identity.py",
+      "sha256": "1330e72fc4da7bfd1973fcd09ccb2d51295880afa73b86f36c56a96fc757b1e4"
+    },
+    {
+      "source": "datasets/mobility/processed/mobility/subway_realtime_stations_20260902_v1.json",
+      "backup": "datasets/mobility/processed/mobility/_backup/2026-10-09_125930_공식_이름대응_추가전/subway_realtime_stations_20260902_v1.json",
+      "sha256": "c3c2c13114f7d174f4ef1989fba2c9dc968f57919368587864171b2a26f2a244"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_125930_공식_이름대응_추가전/mobility.md",
+      "sha256": "2fe86cb861cfd230d37a00356653c78800c973ce7a84934f99fd3f0ac02420c9"
+    },
+    {
+      "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1248_지하철_방면과_인접역ID_대조.md",
+      "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_125930_공식_이름대응_추가전/2026-10-09_1248_지하철_방면과_인접역ID_대조.md",
+      "sha256": "bbefee45f3f56522363b5de46fd0b1b748d1d9dbb3271ea43ea07d1126e04a51"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/test_subway_direction_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/_backup/2026-10-09_125058_방면시험_제품연결추가전/test_subway_direction_v1.py",
+      "sha256": "7bf07f3bf7efbe3bf8a85573d090b6252d37418ec27c7ef94082e5d470990990"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_130034_별명코드_직전원본_해시확인/subway_identity.py",
+      "sha256": "113d0f64a8d41a0aed6aea6fcf7c79c93d26d06c01e6f01d543ca4f17b476916",
+      "role": "직전 원본·해시 일치"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_130034_별명코드_작성중판/subway_identity.py",
+      "sha256": "1330e72fc4da7bfd1973fcd09ccb2d51295880afa73b86f36c56a96fc757b1e4",
+      "role": "작성 중 판"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_130651_방면대조_결과기록전/mobility.md",
+      "sha256": "418775f703da2d75ea7db20ee4e003b7c5d71f7b096bc7ac1071fd067e776cda"
+    },
+    {
+      "source": "datasets/mobility/REPORT.md",
+      "backup": "datasets/mobility/_backup/2026-10-09_130651_방면대조_결과기록전/REPORT.md",
+      "sha256": "e78cf74c17ad4596e6a09dad7e730c09c4a48712d8ccea5d76ad00643760676f"
+    },
+    {
+      "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1248_지하철_방면과_인접역ID_대조.md",
+      "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_130651_방면대조_결과기록전/2026-10-09_1248_지하철_방면과_인접역ID_대조.md",
+      "sha256": "bbefee45f3f56522363b5de46fd0b1b748d1d9dbb3271ea43ea07d1126e04a51"
+    }
+  ],
+  "order_correction": {
+    "created_at": "2026-10-09T13:00:34.384275+09:00",
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py",
+    "verified_original_backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_130034_별명코드_직전원본_해시확인/subway_identity.py",
+    "original_sha256": "113d0f64a8d41a0aed6aea6fcf7c79c93d26d06c01e6f01d543ca4f17b476916",
+    "draft_backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_130034_별명코드_작성중판/subway_identity.py",
+    "note": "초안 코드가 이름 계약보다 먼저 적용된 순서 오류를 정정합니다. 이전 보존본 검색은 실패했습니다. 내 추가 구간만 되돌린 원문 바이트가 직전 해시와 일치함을 확인하여 보존·복원했습니다. 이름 계약은 현재 wiki에 먼저 기록됐고 이 원본 위에 최종 코드를 다시 적용합니다. 최초 source-alias-backups의 해당 코드 사본은 초안이며 이 파일이 직전 원본입니다."
+  }
+}

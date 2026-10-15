@@ -34,7 +34,7 @@ export function OptionalConsentPrompt({ code, why, onAgreed, onCancel, onReadTer
 
   return <div className={styles.prompt} role="group" aria-label={t(`${plainTitle(doc.title)[0]} 동의`, `${plainTitle(doc.title)[1]} consent`)}>
     <p className={styles.promptText}><span className={styles.itemTag}>{t("[선택]", "[Optional]")}</span>{why}</p>
-    <p className={styles.managerNote}>{t("동의하지 않아도 앱은 그대로 쓸 수 있어요. 동의는 마이페이지에서 언제든 철회할 수 있어요.", "You can keep using the app without agreeing, and withdraw this on My page at any time.")}</p>
+    <p className={styles.managerNote}>{t("동의하지 않아도 앱은 그대로 쓸 수 있어요. 동의는 설정 › 「약관 · 동의」에서 언제든 철회할 수 있어요.", "You can keep using the app without agreeing, and withdraw this in Settings → “Terms & consents” at any time.")}</p>
     <div className={styles.itemActions}>
       <Button variant="quiet" onClick={() => onReadTerms ? onReadTerms(doc) : setReading(true)}>{t("전문 보기", "Read in full")}</Button>
       <Button variant="primary" disabled={busy} onClick={() => void agree()}>{busy ? t("기록하는 중…", "Recording…") : t(`${plainTitle(doc.title)[0]}에 동의하고 계속`, `Agree to ${plainTitle(doc.title)[1]} and continue`)}</Button>

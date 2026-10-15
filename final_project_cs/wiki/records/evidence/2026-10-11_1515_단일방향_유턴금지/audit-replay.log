@@ -1,0 +1,22 @@
+{"created_at": "2026-10-11T15:19:35.320049+09:00", "source_relations": 6258, "same_way_without_other_reasons": 2224, "added": 2219, "old": 2487, "new": 4706, "previously_permitted": 2218, "excluded_same_way_ids": [6948999, 6982319, 8166647, 8166650, 19911154], "graph_identity_checked": 2219, "all_added_reverse_forbidden": 2219, "network_attempts": 0}
+before 10/100
+before 20/100
+before 30/100
+before 40/100
+before 50/100
+before 60/100
+before 70/100
+before 80/100
+before 90/100
+before 100/100
+after 10/100
+after 20/100
+after 30/100
+after 40/100
+after 50/100
+after 60/100
+after 70/100
+after 80/100
+after 90/100
+after 100/100
+{"total": 100, "before_success": 100, "after_success": 100, "before_routes_with_new_uturn": 2, "after_routes_with_new_uturn": 0, "network_attempts": 0, "limited_api_calls": 0, "actual_driving": 0}

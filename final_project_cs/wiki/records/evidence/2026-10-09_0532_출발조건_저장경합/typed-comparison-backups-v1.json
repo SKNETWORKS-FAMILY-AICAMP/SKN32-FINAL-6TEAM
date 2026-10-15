@@ -1,0 +1,17 @@
+[
+  {
+    "file": "app/domains/travel_ops/components/itinerary/itinerary.py",
+    "backup": "app\\domains\\travel_ops\\components\\itinerary\\_backup\\2026-10-09_0542_JSONB형식_비교\\itinerary.py",
+    "sha256": "a0e0be2135af5b886efcf38876dc89016cccda7e2cab39becbf0691aa75d6eb9"
+  },
+  {
+    "file": "scripts/mobility/build_readiness_visual_v20.py",
+    "backup": "scripts\\mobility\\_backup\\2026-10-09_0542_JSONB형식_비교\\build_readiness_visual_v20.py",
+    "sha256": "119db94004692cfda29521849d3d7df550dd1c265a36fb24a779e1eab7046273"
+  },
+  {
+    "file": "wiki/teams/mobility.md",
+    "backup": "wiki\\teams\\_backup\\2026-10-09_0542_JSONB형식_비교\\mobility.md",
+    "sha256": "883f19052aa50284b4b81edafda821bc9c7e65a05f8d842ff972236312785141"
+  }
+]

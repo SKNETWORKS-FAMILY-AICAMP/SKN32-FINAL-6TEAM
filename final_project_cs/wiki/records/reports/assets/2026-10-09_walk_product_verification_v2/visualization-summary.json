@@ -1,0 +1,231 @@
+{
+  "created_at": "2026-10-09T00:03:43.330785+09:00",
+  "public_30_pairs": {
+    "requested_n": 30,
+    "provided_n": 0,
+    "policy_excluded_n": 30,
+    "defect_n": 0,
+    "policy_limit_m": 1200
+  },
+  "public_time_accuracy": {
+    "n": 0,
+    "not_applicable": true,
+    "reason": "No public walking option in this development cohort"
+  },
+  "public_distance_accuracy": {
+    "n": 0,
+    "not_applicable": true
+  },
+  "raw_diagnostic_before": {
+    "n": 30,
+    "within_5_min_n": 15,
+    "mae_min": 7.037553418803417,
+    "median_delta_min": 0.28766025641025195,
+    "median_delta_bootstrap95": [
+      -1.28846153846154,
+      5.616185897435894
+    ],
+    "mae_bootstrap95": [
+      4.495057425213674,
+      10.221888354700848
+    ]
+  },
+  "raw_diagnostic_after": {
+    "n": 30,
+    "within_5_min_n": 15,
+    "mae_min": 6.782234343579654,
+    "median_delta_min": 0.7830279485107923,
+    "median_delta_bootstrap95": [
+      -0.36067380012662653,
+      5.783353434394449
+    ],
+    "mae_bootstrap95": [
+      4.2841283322091845,
+      9.885309067838364
+    ]
+  },
+  "raw_distance_before": {
+    "n": 30,
+    "within_10_percent_n": 17,
+    "median_delta_percent": 2.0897727272727207,
+    "mean_absolute_percent": 12.506318808352889
+  },
+  "raw_distance_after": {
+    "n": 30,
+    "within_10_percent_n": 17,
+    "median_delta_percent": 2.0897727272727207,
+    "mean_absolute_percent": 12.507490127123452
+  },
+  "paired_raw_absolute_error_change": {
+    "n": 30,
+    "mean_min": -0.2553190752237628,
+    "bootstrap95": [
+      -0.7265473329408612,
+      0.0856159266132309
+    ],
+    "improved_n": 10,
+    "worsened_n": 12,
+    "same_within_1e6_min_n": 8
+  },
+  "public_repeats_per_pair": 2,
+  "raw_diagnostic_repeats_per_pair": 1,
+  "development_reused": true,
+  "bootstrap_replicates": 10000,
+  "bootstrap_seed": 20261008,
+  "prior_15_of_30_is_not_public_provision_rate": true,
+  "raw_metrics_are_not_product_readiness": true,
+  "api_attempts": 0,
+  "source_changes_during_run": [],
+  "input_changes_during_run": [],
+  "W02": {
+    "independent_OD_n": 1,
+    "direction_n": 2,
+    "public_success_n": 2,
+    "same_engine_hashes_as_30_pair_run": true,
+    "decoded_cells": {
+      "seoul_station": {
+        "center_lnglat": [
+          126.970828125,
+          37.55403749999999
+        ],
+        "height_degrees": 2.5e-05,
+        "width_degrees": 3.125e-05,
+        "height_m": 2.783000000092386,
+        "width_m": 2.757879407500172,
+        "bounds_lnglat": [
+          126.9708125,
+          37.554024999999996,
+          126.97084375,
+          37.55404999999999
+        ]
+      },
+      "namdaemun_market": {
+        "center_lnglat": [
+          126.977703125,
+          37.559287499999996
+        ],
+        "height_degrees": 2.5e-05,
+        "width_degrees": 3.125e-05,
+        "height_m": 2.783000000092386,
+        "width_m": 2.757685110465104,
+        "bounds_lnglat": [
+          126.9776875,
+          37.559275,
+          126.97771875000001,
+          37.55929999999999
+        ]
+      }
+    },
+    "rows": [
+      {
+        "direction": "forward",
+        "a_lnglat": [
+          126.970828125,
+          37.55403749999999
+        ],
+        "b_lnglat": [
+          126.977703125,
+          37.559287499999996
+        ],
+        "straight_m": 842.4120097323123,
+        "policy_walk_limit_m": 1200,
+        "raw_min": 19.169205006974725,
+        "raw_distance_m": 1179.3768136252372,
+        "public_eta_min": 20,
+        "public_distance_m": 1179,
+        "public_repeats": [
+          {
+            "id": "walk",
+            "label": "도보",
+            "eta_min": 20,
+            "walk_m": 1179,
+            "fare_krw": 0,
+            "uses": []
+          },
+          {
+            "id": "walk",
+            "label": "도보",
+            "eta_min": 20,
+            "walk_m": 1179,
+            "fare_krw": 0,
+            "uses": []
+          }
+        ],
+        "foot_timing": {
+          "flat_mps": 1.39,
+          "stairs_m": 25.223402495929488,
+          "seconds": 785.9579703668962
+        },
+        "quality": {
+          "access_max_m": 87.9,
+          "arterial_pct": 51.1,
+          "optimistic": true
+        },
+        "web_diagnostic_forward_only": [
+          {
+            "provider": "naver",
+            "distance_m": 738,
+            "min": 13
+          },
+          {
+            "provider": "kakao",
+            "distance_m": 972,
+            "min": 19
+          }
+        ],
+        "web_endpoint_route_identity_confirmed": false
+      },
+      {
+        "direction": "reverse",
+        "a_lnglat": [
+          126.977703125,
+          37.559287499999996
+        ],
+        "b_lnglat": [
+          126.970828125,
+          37.55403749999999
+        ],
+        "straight_m": 842.4120097323123,
+        "policy_walk_limit_m": 1200,
+        "raw_min": 19.169205006974725,
+        "raw_distance_m": 1179.3768136252372,
+        "public_eta_min": 20,
+        "public_distance_m": 1179,
+        "public_repeats": [
+          {
+            "id": "walk",
+            "label": "도보",
+            "eta_min": 20,
+            "walk_m": 1179,
+            "fare_krw": 0,
+            "uses": []
+          },
+          {
+            "id": "walk",
+            "label": "도보",
+            "eta_min": 20,
+            "walk_m": 1179,
+            "fare_krw": 0,
+            "uses": []
+          }
+        ],
+        "foot_timing": {
+          "flat_mps": 1.39,
+          "stairs_m": 25.223402495929488,
+          "seconds": 785.9579703668962
+        },
+        "quality": {
+          "access_max_m": 87.9,
+          "arterial_pct": 51.1,
+          "optimistic": true
+        },
+        "web_diagnostic_forward_only": null,
+        "web_endpoint_route_identity_confirmed": false
+      }
+    ],
+    "endpoint_route_identity_confirmed": false,
+    "accuracy_gate_eligible": false
+  },
+  "report": "2026-10-09_0003_도보_실제제품_정책범위와_계단시간_재검증_v2.md",
+  "evidence": "2026-10-09_0003_도보_실제제품_재검증_근거_v2.md"
+}

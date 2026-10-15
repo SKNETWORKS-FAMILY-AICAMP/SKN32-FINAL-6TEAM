@@ -1,0 +1,23 @@
+{
+  "our_training": true,
+  "seed": 20261014,
+  "reference_seeds": [
+    20261012,
+    20261013
+  ],
+  "mode_order": [
+    "cosine",
+    "finch"
+  ],
+  "epochs": 2,
+  "rank": 16,
+  "accum": 8,
+  "max_lr": 5e-05,
+  "prepared_jobs": 2,
+  "dependency": "B57 ALLDONE",
+  "source_hashes_verified": 3,
+  "purpose": "Third distinct seed estimates schedule variation using frozen travel training data; separate from independent holdout and product adoption",
+  "new_model_download": false,
+  "available_bytes": 22522576896,
+  "pid": 2798582
+}

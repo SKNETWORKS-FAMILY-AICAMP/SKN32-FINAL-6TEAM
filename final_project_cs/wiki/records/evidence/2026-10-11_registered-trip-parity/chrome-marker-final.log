@@ -1,0 +1,21 @@
+[WebServer] (node:18184) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:30024) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:27528) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\day-marker-recovery-20261011.spec.ts:27:3 › 수정안 왕복·직접 수정 복귀 시 선택 배경 전체 정렬 375px (8.4s)
+  ok  2 tests\live\day-marker-recovery-20261011.spec.ts:53:3 › 수정안에서 보던 날짜가 없어지면 첫 유효 날짜로 복귀 375px (2.7s)
+  ok  3 tests\live\day-marker-recovery-20261011.spec.ts:63:3 › 탭 너비 변경·숨김 복원·화면 크기 변경 시 재측정 375px (3.0s)
+  ok  4 tests\live\day-marker-recovery-20261011.spec.ts:74:3 › 중간 스와이프 취소·확정·빠른 연속 전환·움직임 줄이기 375px (5.6s)
+  ok  5 tests\live\day-marker-recovery-20261011.spec.ts:94:3 › 문제 항목 배치 비교 촬영·좁은 카드 줄바꿈 375px (2.0s)
+  ok  6 tests\live\day-marker-recovery-20261011.spec.ts:27:3 › 수정안 왕복·직접 수정 복귀 시 선택 배경 전체 정렬 1280px (8.1s)
+  ok  7 tests\live\day-marker-recovery-20261011.spec.ts:53:3 › 수정안에서 보던 날짜가 없어지면 첫 유효 날짜로 복귀 1280px (5.6s)
+  ok  8 tests\live\day-marker-recovery-20261011.spec.ts:63:3 › 탭 너비 변경·숨김 복원·화면 크기 변경 시 재측정 1280px (6.0s)
+  ok  9 tests\live\day-marker-recovery-20261011.spec.ts:74:3 › 중간 스와이프 취소·확정·빠른 연속 전환·움직임 줄이기 1280px (8.5s)
+  ok 10 tests\live\day-marker-recovery-20261011.spec.ts:94:3 › 문제 항목 배치 비교 촬영·좁은 카드 줄바꿈 1280px (2.3s)
+
+  10 passed (56.3s)

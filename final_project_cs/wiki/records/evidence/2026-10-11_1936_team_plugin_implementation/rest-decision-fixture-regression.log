@@ -1,0 +1,94 @@
+EE.......................                                                [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_a_delay_sentence_changes_the_trip_through_the_rest_path _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001A1FFF44530>
+
+    @pytest.fixture()
+    def rest(monkeypatch):
+        original = settings_module.get_settings()
+        tenant = "caserest_" + uuid4().hex[:10]
+        settings = original.model_copy(update={"tenant_id": tenant})
+        monkeypatch.setattr(settings_module, "get_settings", lambda: settings)
+        monkeypatch.setattr(security, "get_settings", lambda: settings)
+        store, customer, trip_id = _seed(tenant)
+        clock = Clock(_at("08:00"))
+        check, route_events = _sources(clock)
+        tools = ReadToolbox(get_connection, policy_search=lambda *a, **k: [], travel=None, check=check,
+                            route_events=route_events, report_extractor=_extractor)
+        config = load_project_config()
+        controller = composition.build_controller(
+            registry=composition.build_registry(tools=tools, llm=None, config=config), llm=None, config=config)
+        client = TestClient(create_app(controller=controller, classifier=_classifier, domain_routers=[]))
+>       calculation_calls = publish_fixed_mobility(client.app, source="case_rest_test")
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\e2e\test_case_version_rest.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\helpers\plugin_bindings.py:47: in publish_fixed_mobility
+    publish_test_services(app, {
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+app = <fastapi.applications.FastAPI object at 0x000001A180024560>
+replacements = {('legs', 'basis'): <function publish_fixed_mobility.<locals>.<lambda> at 0x000001A1803496C0>, ('legs', 'leg_planner')...000001A1803B84A0>, ('legs', 'walk_limit_m'): <function publish_fixed_mobility.<locals>.<lambda> at 0x000001A180349620>}
+
+    def publish_test_services(app, replacements):
+        """���� ���ǥ���� ��ȣ�� ������ �� ����� ��� ǥ�� �����Ѵ�."""
+        runtime = app.state.runtime
+        published = runtime.published_snapshot()
+        controller = copy.copy(published.controller)
+        prior = controller.service_bindings
+        assert isinstance(prior, BindingTable), "���赵 ������ ���� ǥ�� ����ؾ� �մϴ�"
+>       assert prior.registry is controller.registry and prior.revision == published.revision
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError
+
+tests\helpers\plugin_bindings.py:17: AssertionError
+_ ERROR at setup of test_a_stock_question_is_answered_without_changing_the_trip _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001A180077140>
+
+    @pytest.fixture()
+    def rest(monkeypatch):
+        original = settings_module.get_settings()
+        tenant = "caserest_" + uuid4().hex[:10]
+        settings = original.model_copy(update={"tenant_id": tenant})
+        monkeypatch.setattr(settings_module, "get_settings", lambda: settings)
+        monkeypatch.setattr(security, "get_settings", lambda: settings)
+        store, customer, trip_id = _seed(tenant)
+        clock = Clock(_at("08:00"))
+        check, route_events = _sources(clock)
+        tools = ReadToolbox(get_connection, policy_search=lambda *a, **k: [], travel=None, check=check,
+                            route_events=route_events, report_extractor=_extractor)
+        config = load_project_config()
+        controller = composition.build_controller(
+            registry=composition.build_registry(tools=tools, llm=None, config=config), llm=None, config=config)
+        client = TestClient(create_app(controller=controller, classifier=_classifier, domain_routers=[]))
+>       calculation_calls = publish_fixed_mobility(client.app, source="case_rest_test")
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\e2e\test_case_version_rest.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\helpers\plugin_bindings.py:47: in publish_fixed_mobility
+    publish_test_services(app, {
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+app = <fastapi.applications.FastAPI object at 0x000001A180076C60>
+replacements = {('legs', 'basis'): <function publish_fixed_mobility.<locals>.<lambda> at 0x000001A1803BB740>, ('legs', 'leg_planner')...000001A1803BA340>, ('legs', 'walk_limit_m'): <function publish_fixed_mobility.<locals>.<lambda> at 0x000001A1803BB380>}
+
+    def publish_test_services(app, replacements):
+        """���� ���ǥ���� ��ȣ�� ������ �� ����� ��� ǥ�� �����Ѵ�."""
+        runtime = app.state.runtime
+        published = runtime.published_snapshot()
+        controller = copy.copy(published.controller)
+        prior = controller.service_bindings
+        assert isinstance(prior, BindingTable), "���赵 ������ ���� ǥ�� ����ؾ� �մϴ�"
+>       assert prior.registry is controller.registry and prior.revision == published.revision
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError
+
+tests\helpers\plugin_bindings.py:17: AssertionError
+=========================== short test summary info ===========================
+ERROR tests/e2e/test_case_version_rest.py::test_a_delay_sentence_changes_the_trip_through_the_rest_path
+ERROR tests/e2e/test_case_version_rest.py::test_a_stock_question_is_answered_without_changing_the_trip
+23 passed, 2 errors in 48.07s

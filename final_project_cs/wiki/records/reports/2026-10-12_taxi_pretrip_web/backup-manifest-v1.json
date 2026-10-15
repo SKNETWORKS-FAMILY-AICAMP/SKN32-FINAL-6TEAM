@@ -1,0 +1,230 @@
+{
+  "checked_at": "2026-10-12T04:45:23.723665+09:00",
+  "scope": "이번 택시 제품 연결 관련 명시 태그의 백업, 전체 작업폴더 백업 목록이 아님",
+  "files": [
+    {
+      "path": ".tmp/mobility_taxi_practical_20261012/_backup/2026-10-12_0442_artifact_paths/build_finish_artifacts_v1.py",
+      "sha256": "4fd37d39e865a0bbc1c00a4eca13a310072e8ca0841a4d12c0b9f9e76d57eb7e"
+    },
+    {
+      "path": "datasets/mobility/_backup/2026-10-12_0446_taxi_data_links/REPORT.md",
+      "sha256": "448def05a4faf5b82f3968f44229f2370902f00a4638939b00ac4ac50bb2551b"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/intake/_backup/2026-10-12_0430_web_taxi_pricing/assemble.py",
+      "sha256": "c0ac8267f7f2cf9a4fc70d232db17b96db71febb0f030dc242cc80c18655e84a"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/intake/_backup/2026-10-12_0430_web_taxi_pricing/move_options.py",
+      "sha256": "99688209345d82d5faa62ddc6ad353f1ff2237e71f7307d37d25a79dd9845222"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/intake/_backup/2026-10-12_0430_web_taxi_pricing/pipeline.py",
+      "sha256": "730a21d33a30213f04ff54ed1b90bda6a5554624f924b9e4ad1333bb1173803c"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/intake/_backup/2026-10-12_0430_web_taxi_pricing/registered_moves.py",
+      "sha256": "ad8caf19fd367907e499852801155d2ecba0b3eec4378e89874382ebf0f21e1c"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/intake/_backup/2026-10-12_0430_web_taxi_pricing/review.py",
+      "sha256": "948c236a55af7fd0b1e419d5d26cebf7a71af68af7fd85b2ebd2055d230e18ed"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/intake/_backup/2026-10-12_0432_mycap_official_web/taxi_pricing.py",
+      "sha256": "61ab4465ff23310e7693ce70cb76d5eb758ae5bd939bd46281e54e414e5f1f75"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/entry/_backup/2026-10-12_0430_web_taxi_pricing/trip_api.py",
+      "sha256": "c5ee597675b99813161a59399ee648ebfe3529a8cf9528a0f8ddb61ca2a378a4"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/_backup/2026-10-12_0359_precall_bounds/wiring.py",
+      "sha256": "78b4da60d7131f779973f602a6139c4e0296f914089f1c487490b9120d185cf8"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_0359_precall_bounds/plan.py",
+      "sha256": "27544b2cfee22018955ea0da59475e2db0887b4d95a7e91f117270f0aa9d27a6"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_0359_precall_bounds/taxi_call_policy.py",
+      "sha256": "4a553c035a56c2a078afebe9cfebecc851dd3a9fb6a937da8a32e2c613e4e56a"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_0455_prevent_double_fee/taxi_budget.py",
+      "sha256": "1f848e027e03c207ed42c48e4c86b7039957dc5b25f1a739312253873e07b2b4"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/_backup/2026-10-12_0401_capsi_official/taxi_call_policies_v1.json",
+      "sha256": "3d5be7fb93bf37890d03b4476ee5da797328d67362ef359d1c68bb33b5891f55"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/_backup/2026-10-12_0433_mycap_official/taxi_call_policies_v1.json",
+      "sha256": "b154ac5af019ba615727b5b42a18455cfffe8d152df26298a9500fd7388b9c4d"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/plan-check/_backup/2026-10-12_0432_mycap_official_web/taxi-pricing.tsx",
+      "sha256": "fc67cdfe38f654f96cfc311810b56bac16ceea4342d865b22486ecd95e036ec1"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/plan-check/_backup/2026-10-12_0435_taxi_product_ui/from-review.ts",
+      "sha256": "5df8f48a25bff30bce4e6559ceea320f84ee6ac198bf0dc26ca6fe272eb2a866"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/plan-check/_backup/2026-10-12_0435_taxi_product_ui/model.ts",
+      "sha256": "56c5b847897ae3ea5c772ce254235e83ef2d2f65de8567a153caaed63dfe1af1"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/plan-check/_backup/2026-10-12_0435_taxi_product_ui/plan-check.tsx",
+      "sha256": "402d269c56f8c24bd9ed7f5962ca5c31a58dd9633903b12fe1356b9dfda2d213"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/plan-check/_backup/2026-10-12_0450_taxi_candidate_revision/from-review.ts",
+      "sha256": "2055527c364162dc530c25b3490e6a59048129a429761e00deea138be6f59e5f"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/plan-check/_backup/2026-10-12_0450_taxi_candidate_revision/model.ts",
+      "sha256": "cd5fe5eb19ebe5d250fe464e459e2b73bb350dcc2d680c69565423ecd7db58be"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/plan-check/_backup/2026-10-12_0450_taxi_candidate_revision/plan-rows.tsx",
+      "sha256": "c5827bf1ab224be4f9644abd0a4bd3874fe657631ce0a446807880bd007d4652"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/features/plan-check/_backup/2026-10-12_0455_pricing_mapping_test/from-review.test.ts",
+      "sha256": "c0d9363e9a18be27f3ed3d30ffaf599651ba918aa011e18112425cc7d3464072"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/lib/live/_backup/2026-10-12_0432_mycap_official_web/taxi-pricing.test.ts",
+      "sha256": "55ac079f1950723612f5b2011b2223c3540587ca4ac1e8f5524ed95cbe309247"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/lib/live/_backup/2026-10-12_0432_mycap_official_web/taxi-pricing.ts",
+      "sha256": "9670b6b31f64e7661517fd31c58d701bc1a5e7ba0c08f7c69a6476948a4bce34"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/lib/live/_backup/2026-10-12_0435_taxi_product_ui/intake-review.ts",
+      "sha256": "cd4fa61a8711c2f153e1fcbe15066fda7b79ad179128009c036dc5f353313756"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/lib/live/_backup/2026-10-12_0440_taxi_product_labels/taxi-pricing.test.ts",
+      "sha256": "db67678ff524c3633f74ca5217bc7b9fdbf7f1a3ea63db0108c82dabad1e30f4"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/src/lib/live/_backup/2026-10-12_0440_taxi_product_labels/taxi-pricing.ts",
+      "sha256": "cd70dd9ee06c2d40600bc6f951445a7430bbb56ac902c3f83a466692550853e5"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/tests/live/_backup/2026-10-12_0436_candidate_test_name/taxi-pricing-20261012.spec.ts",
+      "sha256": "c22b26af453f5cf5e4bf064f5299f3213f9197f142b879f6aa69ccbe6119ed98"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/web/tests/live/_backup/2026-10-12_0500_stale_taxi_candidates/taxi-pricing-20261012.spec.ts",
+      "sha256": "fb72b18542a665998412909c94df1688a64051eb36d5944e428f4a0c35908d63"
+    },
+    {
+      "path": "final_project_cs/scripts/mobility/_backup/2026-10-12_0433_mycap_official/compare_taxi_pretrip_v2.py",
+      "sha256": "454ffa0528d02d2434c137b4f13d1944e96a0bb3e95ae6fd79fbd6852da7c79d"
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/_backup/2026-10-12_0432_mycap_official_web/test_web_taxi_persisted_v1.py",
+      "sha256": "df3c91458e1f13ec8bc8bdb756b7e0d9d5ba9998031f5c7a0701dcf9c13fcf92"
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/_backup/2026-10-12_0432_mycap_official_web/test_web_taxi_pricing_v1.py",
+      "sha256": "1b853c164c6bbf9b58e578f64241f1fc10b552ada4b1dd589bee2bd76d5010c6"
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-12_0359_precall_bounds/test_taxi_call_product_flow_v1.py",
+      "sha256": "9116c58c9ba77f298e13855ddd0b20e75f8a3f72ee806350541a4e2a310089b8"
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-12_0401_capsi_official/test_taxi_call_policy_v1.py",
+      "sha256": "5f32c349d4c27f240d967dcba1afd4eaf55998a320c18245b0405d7d0fe5f4ca"
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-12_0401_capsi_official/test_taxi_call_product_flow_v1.py",
+      "sha256": "937f3a1b29fc3a10a53bdd3efce6a69465fa035532a1585236a4aee592c1fc31"
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-12_0403_quote_bound/test_taxi_call_policy_v1.py",
+      "sha256": "73c875bfeeb8ae6d72fc3e0d997abe77549ffe085528977d524d7c245f1fa46d"
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-12_0433_mycap_official/test_taxi_call_policy_v1.py",
+      "sha256": "e5b01c621869893ae431c1f9e36800b79acc62ccdccbc2670637826129c14a17"
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-12_0433_mycap_official/test_taxi_call_product_flow_v1.py",
+      "sha256": "1e36eaff334af6faa93394919de3466bb024aaa78a2c932f90fab7db0bceff11"
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-12_0455_prevent_double_fee/test_taxi_call_product_flow_v1.py",
+      "sha256": "0e48b8d213c91fa4cd9d08d3d2bd969a1f3d4e77f190bae737eb427ed5d70686"
+    },
+    {
+      "path": "final_project_cs/wiki/external/_backup/2026-10-12_0423_revision_candidate/taxi-pricing-web-v1.md",
+      "sha256": "52f45f88f294877934b60992fc4334c609032ce2bab3e98a80f406a8d961508e"
+    },
+    {
+      "path": "final_project_cs/wiki/external/_backup/2026-10-12_0430_web_taxi_pricing/taxi-pricing-web-v1.md",
+      "sha256": "15175f747f267541664d2a84bf191fa40aa6d0a68c6b13236609132bdf9aac9b"
+    },
+    {
+      "path": "final_project_cs/wiki/external/_backup/2026-10-12_0432_mycap_official_web/taxi-pricing-web-v1.md",
+      "sha256": "2ddfde33b19ea31bdd5a0023d0efd2e95e77a935ef4298d7052c137aef32edeb"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/_backup/2026-10-12_0359_precall_bounds/mobility.md",
+      "sha256": "1cbf0e1683be889219aaa0cad187c8c9683d62dd83b758266a0ea0f003129486"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/_backup/2026-10-12_0401_capsi_official/mobility.md",
+      "sha256": "46a81da5e720738953dc1dfb044e46f658ffb5370ada85ead538cc0c5f7cf24e"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/_backup/2026-10-12_0433_mycap_official/mobility.md",
+      "sha256": "8dc810ac5c2583cd4228250bb4a4624a0a46e2d6c8e74cbc43b8355e3060380f"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/_backup/2026-10-12_0446_final_taxi_evidence/mobility.md",
+      "sha256": "e8b6b4206d0bfb303a15352f2a96b79949ca018a09d4bd2a6bf16fe53227179d"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_032606_taxi_practical/car.py",
+      "sha256": "39043140bdc8ab795baa3913f6e9bc0ad3c35d204266eeafc6415f285eac6b47"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_033354_precall_pricing/car.py",
+      "sha256": "407e7219a580d674a2caaa526856723d69ac0bb6a51d5a3d10125b528c30dcc6"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_033354_precall_pricing/departure_context.py",
+      "sha256": "b082caf0222e6374afc87671a59ddeb976a1ebe656c0827ddf225964e7cb2c85"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_033354_precall_pricing/departure_observer.py",
+      "sha256": "00c2acff3e20da1c79963b9255f031aef5f7020e327719b5c87a6af2ea7ebd87"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_033354_precall_pricing/plan.py",
+      "sha256": "7de46002b1a7a58d048445d2af8af512270f8974ec66df459c8d738f6f780886"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_0341_precall_review/car.py",
+      "sha256": "52f3d1003ee2952f4b22fc90555fb742084baa01951ed7e585a76d4a50efdb56"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_0341_precall_review/departure_observer.py",
+      "sha256": "d06cf6f5dee715cc9f020f7d619cefc06f8ed1c43e1a2edc611473245b52e52e"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_0341_precall_review/plan.py",
+      "sha256": "1ce07d1ad0e356a74b11fa0370c7bc731a5bf76d8e86b27e48476f9feb6d12c2"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-12_0355_current_taxi_product/taxi_pricing.py",
+      "sha256": "032b33389af64d8af881aef31b94d43a11d29c7f3a4e303889586be234cb3125"
+    }
+  ]
+}

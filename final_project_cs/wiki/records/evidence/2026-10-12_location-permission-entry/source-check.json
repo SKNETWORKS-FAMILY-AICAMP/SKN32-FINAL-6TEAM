@@ -1,0 +1,22 @@
+[
+  {
+    "Path": "src/features/map/use-my-location.ts",
+    "Matches": true
+  },
+  {
+    "Path": "src/features/map/trip-map.tsx",
+    "Matches": true
+  },
+  {
+    "Path": "src/features/onboarding/terms.tsx",
+    "Matches": false
+  },
+  {
+    "Path": "src/features/consent/consent-store.ts",
+    "Matches": false
+  },
+  {
+    "Path": "src/lib/location.ts",
+    "Matches": false
+  }
+]

@@ -644,7 +644,7 @@ class Controller:
                 # The Team value is advisory. The server owns the final key at the write boundary.
                 # ★`[2026-09-18]` v11 §4-E — 적용기가 있으면 키의 대상은 **적용기가 인자에서 꺼낸 대상 id**다.
                 #   Case id 로 두면 한 Case 가 서로 다른 대상 둘에 같은 종류의 제안을 낼 때 둘째가
-                #   같은 키로 합쳐져 **조용히 사라진다**. 대상을 못 꺼내면 폴백하지 않고 사람에게 넘긴다.
+                #   같은 키로 합쳐져 **조용히 사라진다**. 대상을 못 꺼내면 폴백하지 않고 `escalated`(처리 불가)로 닫는다.
                 #   적용기가 없는 도메인은 예전 그대로(Case id).
                 handler = self.action_handlers.get(proposal.action_type)
                 subject = str(case["case_id"])
@@ -659,7 +659,7 @@ class Controller:
                 )
                 # ★`[2026-09-20]` 적용기가 없어 키의 대상이 Case id 인 제안은 **둘째가 조용히 합쳐진다**
                 #   (`ON CONFLICT … DO UPDATE` 가 같은 행을 돌려준다). 합치기 전에 인자가 같은지 보고,
-                #   다르면 사람에게 넘긴다 — 제안 하나가 말없이 사라지지 않게. 같은 인자면 그대로 멱등이다.
+                #   다르면 `escalated`(처리 불가)로 닫는다 — 제안 하나가 말없이 사라지지 않게. 같은 인자면 그대로 멱등이다.
                 existing = self.repository.find_action_request(conn, tenant_id=case["tenant_id"],
                                                                idempotency_key=server_key)
                 if existing is not None and existing.get("arguments") != _plain(proposal.arguments):

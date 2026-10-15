@@ -33,6 +33,11 @@ export function stopKind(kind: string | null | undefined): keyof typeof kinds {
   return "unknown";
 }
 
+/** `[2026-10-13]` The icon and name of a kind, for a screen that draws them its own way (the registered trip's card — `trip-rows.tsx`). */
+export function kindLook(kind: string | null | undefined) {
+  return kinds[stopKind(kind)];
+}
+
 export function StopKind({ item }: { item: Pick<PlanItem, "kind" | "info"> }) {
   const t = useT();
   const kind = stopKind(item.kind || item.info?.kind);

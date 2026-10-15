@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-10-09T16:30:23.225091+00:00",
+  "samples": 61,
+  "first_at": "2026-10-09T16:25:22.961664+00:00",
+  "last_at": "2026-10-09T16:30:23.063067+00:00",
+  "window_seconds": 305.1019853859907,
+  "benchmark_workload_cpu_pct_of_two_cores": 81.44578267877397,
+  "host_cpu_busy_pct": 93.10055496314432,
+  "host_cpu_steal_pct": 0.5547472708107699,
+  "memory": {
+    "total_bytes": 12503744512,
+    "used_excluding_available_bytes": 6532313088
+  },
+  "disk": {
+    "total_bytes": 102888095744,
+    "used_bytes": 56216858624,
+    "free_bytes": 46654459904
+  },
+  "scope": "short_observation_not_24h_or_provider_reclamation_rule_verification"
+}

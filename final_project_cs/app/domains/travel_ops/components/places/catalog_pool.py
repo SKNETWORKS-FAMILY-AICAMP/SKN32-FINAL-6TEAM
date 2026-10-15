@@ -39,21 +39,38 @@ def _catalog_tenants(tenant_id: str) -> list[str]:
 
 
 def nearby_activities(conn, tenant_id: str, *, latitude: float, longitude: float, radius_m: float,
-                      exclude_names: set[str], limit: int = POOL_LIMIT, types: Sequence[str] | None = None) -> list[Cand]:
+                      exclude_names: set[str], limit: int = POOL_LIMIT, types: Sequence[str] | None = None,
+                      require_hours: bool = False, now: datetime | None = None) -> list[Cand]:
     """목록(`place_catalog`)에서 반경 안 활동을 가까운 순으로.
 
     `types` — 읽을 관광공사 분류 번호. 안 주면 활동 분류(`ACTIVITY_TYPES`)다. ★`[2026-10-07]` 숙소 줄의 후보를 위해 숙박(32)을 읽을 수 있게 열었다
     (전에는 활동 분류만 읽어 「호텔」 줄의 후보가 늘 0 이었다)."""
     dlat = radius_m / 111_000
     dlon = radius_m / (111_000 * max(0.2, math.cos(math.radians(latitude))))
+    # 시간 미보유 장소가 가까운 자리를 채워도 뒤쪽의 유효한 후보를 놓치지 않는다.
+    hours_filter = ""
+    hours_params: tuple[Any, ...] = ()
+    if require_hours:
+        if now is None:
+            raise ValueError("운영시간 후보 조회에는 기준 시각이 필요합니다")
+        hours_filter = (
+            "AND (EXISTS (SELECT 1 FROM catalog_hours h WHERE h.tenant_id=ANY(%s) "
+            "AND h.source='tour_api' AND h.content_id=c.content_id "
+            "AND h.hours_week IS NOT NULL AND h.hours_week <> '{}'::jsonb) "
+            "OR EXISTS (SELECT 1 FROM places p WHERE p.tenant_id=%s "
+            "AND COALESCE(p.source_content_id,p.attributes->>'source_content_id')=c.content_id "
+            "AND p.attributes->'hours_week' IS NOT NULL AND p.attributes->'hours_week' <> '{}'::jsonb "
+            "AND (p.attributes->'hours_read'->>'read_at')::timestamptz > %s - make_interval(days => %s))) ")
+        hours_params = (_catalog_tenants(tenant_id), tenant_id, now, REUSE_DAYS)
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT content_id, content_type_id, title, address, latitude, longitude FROM place_catalog "
+            "SELECT content_id, content_type_id, title, address, latitude, longitude FROM place_catalog c "
             "WHERE tenant_id = ANY(%s) AND source='tour_api' AND content_type_id = ANY(%s) "
             "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s "
+            + hours_filter +
             "ORDER BY (latitude - %s)^2 + ((longitude - %s) * %s)^2 LIMIT %s",
             (_catalog_tenants(tenant_id), list(types) if types else ACTIVITY_TYPES, latitude - dlat, latitude + dlat, longitude - dlon,
-             longitude + dlon, latitude, longitude, math.cos(math.radians(latitude)), limit * 3))
+             longitude + dlon, *hours_params, latitude, longitude, math.cos(math.radians(latitude)), limit * 3))
         rows = cur.fetchall()
     out: list[Cand] = []
     for content_id, content_type, title, address, lat, lon in rows:
@@ -196,7 +213,7 @@ def widen_activity_pool(conn, *, tenant_id: str, trip_id: UUID, place: dict[str,
             return {"added": 0, "reason": "이미 넓혔다"}
         _WIDENED[key] = time.time()
     cands = nearby_activities(conn, tenant_id, latitude=float(place["latitude"]), longitude=float(place["longitude"]),
-                              radius_m=radius_m, exclude_names=known_names)
+                              radius_m=radius_m, exclude_names=known_names, require_hours=True, now=now)
     reused = reuse_hours(conn, tenant_id, cands, now)
     known = [c for c in cands if c.attributes.get("hours_week")]
     with conn.transaction(), conn.cursor() as cur:

@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "name": "25개 항목과 각 3개 선택지 유지",
+      "passed": true
+    },
+    {
+      "name": "최신 폴더 결정 연결",
+      "passed": true
+    },
+    {
+      "name": "담당 선택·실행·등록 계산 구분",
+      "passed": true
+    },
+    {
+      "name": "새 코드 근거 7개 해시 일치",
+      "passed": true
+    },
+    {
+      "name": "실제 대상 파일 존재",
+      "passed": true
+    },
+    {
+      "name": "상한·스위치 제한 명시",
+      "passed": true
+    },
+    {
+      "name": "Claude 검토 이후 용어 수정 구분",
+      "passed": true
+    },
+    {
+      "name": "모호한 호출 순서 교체",
+      "passed": true
+    }
+  ],
+  "passed_count": 8,
+  "total": 8,
+  "scope": "문서 용어와 정적 코드 근거 대조; 앱 실행·배포 검증 아님",
+  "validation_note": "초기 검사에서 과거 근거 3개까지 신규 근거 개수에 포함한 집계 오류를 수정했습니다. 신규 코드 근거 7개 모두 현재 해시와 일치합니다."
+}

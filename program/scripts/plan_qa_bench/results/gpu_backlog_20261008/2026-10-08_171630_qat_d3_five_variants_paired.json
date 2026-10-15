@@ -1,0 +1,62 @@
+{
+  "paired": {
+    "e4bqat_oos1_d3": {
+      "request": {
+        "total": 120,
+        "trained_only_correct": 7,
+        "original_only_correct": 1,
+        "exact_p": 0.0703125
+      },
+      "no_request": {
+        "total": 240,
+        "trained_only_correct": 22,
+        "original_only_correct": 0,
+        "exact_p": 4.76837158203125e-07
+      }
+    },
+    "e4bqat_oos2_d3": {
+      "request": {
+        "total": 120,
+        "trained_only_correct": 7,
+        "original_only_correct": 1,
+        "exact_p": 0.0703125
+      },
+      "no_request": {
+        "total": 240,
+        "trained_only_correct": 22,
+        "original_only_correct": 0,
+        "exact_p": 4.76837158203125e-07
+      }
+    },
+    "e4bqat_oos3_d3": {
+      "request": {
+        "total": 120,
+        "trained_only_correct": 8,
+        "original_only_correct": 1,
+        "exact_p": 0.0390625
+      },
+      "no_request": {
+        "total": 240,
+        "trained_only_correct": 19,
+        "original_only_correct": 0,
+        "exact_p": 3.814697265625e-06
+      }
+    },
+    "e4bqat_oos2r_d3": {
+      "request": {
+        "total": 120,
+        "trained_only_correct": 5,
+        "original_only_correct": 2,
+        "exact_p": 0.453125
+      },
+      "no_request": {
+        "total": 240,
+        "trained_only_correct": 22,
+        "original_only_correct": 0,
+        "exact_p": 4.76837158203125e-07
+      }
+    }
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

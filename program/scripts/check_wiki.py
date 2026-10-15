@@ -10,10 +10,14 @@ wiki/governance/ 의 규칙을 실제로 검사한다.
 from __future__ import annotations
 
 import glob
+import json
 import os
 import re
+from urllib.parse import unquote  # 링크의 %20(띄어쓰기) 같은 표기를 풀어서 찾는다 — 2026-10-14
 import sys
+from datetime import datetime
 from collections import Counter, defaultdict
+from pathlib import Path
 
 # Windows 콘솔이 cp949 라 한글 외 기호에서 깨진다. 출력만 utf-8 로 고정한다.
 if hasattr(sys.stdout, "reconfigure"):
@@ -29,7 +33,7 @@ ROOTS = [
     "acop_dojo/wiki",
 ]
 
-#: governance/front-matter.md — type 11개.
+#: governance/front-matter.md — type 12개.
 #: evidence·runbook 은 표본 A 검증에서, reference 는 표본 B blind 대조에서 추가됐다.
 #: 셋 다 두 판정자가 같은 자리에서 막혀 드러난 빈 자리다. (type-verification.md)
 TYPES = {
@@ -148,9 +152,52 @@ CODE_ROOTS_GLOB = ("datasets/*/*",)
 #:     → governance/evidence-grades.md 「코드 실측은 무엇을 셌는지 밝힌다」
 
 FENCE = re.compile(r"(?ms)^```.*?^```+\s*$")
-LINK = re.compile(r"\]\(([^)#]*\.md)\)")
+LINK = re.compile(r"\]\(([^)#]*\.md)(?:#[^)]*)?\)")
 INV_DOC = re.compile(r"`(INV-[A-Z]+-[A-Z]+-\d{3})`")
 INV_CODE = re.compile(r"#\s*invariant:\s*(INV-[A-Z]+-[A-Z]+-\d{3})")
+
+IMPLEMENTATION_STATUSES = {"planned", "partial", "implemented", "unverified"}
+VALIDATION_STATUSES = {"unverified", "partial", "verified"}
+# 예전 페이지의 표기를 정규 값으로 승격하지 않는다. 개별 담당자가 범위를 확인한다.
+LEGACY_IMPLEMENTATION = {"implemented-local", "implemented-partial"}
+
+
+def state_fields(fm: dict[str, str]) -> tuple[list[str], list[str]]:
+    """상태 필드의 형식만 검사한다. 코드·시험·배포의 진실성은 판정하지 않는다."""
+    errors, notes = [], []
+    for field, allowed in (("implementation_status", IMPLEMENTATION_STATUSES),
+                           ("validation_status", VALIDATION_STATUSES)):
+        if field not in fm:
+            continue  # 기존 초안의 선택 필드를 일괄 필수로 바꾸지 않는다.
+        value = fm[field].strip("\"'")
+        if field == "implementation_status" and value in LEGACY_IMPLEMENTATION:
+            notes.append(f"{field}: {value} — 개별 담당자의 범위 확인·정규화 필요")
+        elif value not in allowed:
+            errors.append(f"{field}: {value}")
+    if "verified_at" in fm:
+        value = fm["verified_at"].strip("\"'")
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                raise ValueError("timezone missing")
+        except ValueError:
+            errors.append("verified_at: 시간대 포함 ISO 8601 시각 필요")
+    if fm.get("validation_status") == "verified" and not fm.get("verified_at"):
+        notes.append("verified 검증의 확인 시각 미표시 — 실행 근거와 verified_at 연결 필요")
+    if "decision_status" in fm and not fm["decision_status"].strip("\"'"):
+        errors.append("decision_status: 빈 값")
+    return errors, notes
+
+
+def collect_code_ids(root: str) -> set[str]:
+    """현재 시험만 센다. 백업의 옛 표식이 현재 규칙을 추가하지 않게 한다."""
+    ids: set[str] = set()
+    for folder, dirs, files in os.walk(root):
+        dirs[:] = sorted(d for d in dirs if not d.startswith(("_", ".")))
+        for name in sorted(files):
+            if name.endswith(".py"):
+                ids.update(INV_CODE.findall((Path(folder) / name).read_text(encoding="utf-8-sig", errors="replace")))
+    return ids
 
 
 def front_matter(text: str) -> dict[str, str] | None:
@@ -167,12 +214,43 @@ def front_matter(text: str) -> dict[str, str] | None:
     return fm
 
 
+def collect_docs(roots: list[str]) -> tuple[list[str], list[str], dict[str, int]]:
+    """현재 문서와 기록을 분리한다. 백업·이관 작업 폴더는 규칙 대상이 아니다."""
+    docs, records = [], []
+    counts: Counter[str] = Counter({key: 0 for key in (
+        "current_documents", "generated_documents", "record_documents",
+        "excluded_backup_directories", "excluded_staging_directories")})
+    for root in roots:
+        for folder, dirs, files in os.walk(root):
+            kept = []
+            for name in dirs:
+                if name == "_backup":
+                    counts["excluded_backup_directories"] += 1
+                elif name.startswith(("_", ".")):
+                    counts["excluded_staging_directories"] += 1
+                else:
+                    kept.append(name)
+            dirs[:] = sorted(kept)
+            for name in sorted(files):
+                if not name.endswith(".md"):
+                    continue
+                p = Path(folder) / name
+                rel = p.as_posix()
+                if "records" in p.parts:
+                    records.append(rel)
+                    counts["record_documents"] += 1
+                else:
+                    docs.append(rel)
+                    kind = "generated_documents" if name.endswith(".generated.md") or "generated" in p.parts else "current_documents"
+                    counts[kind] += 1
+    return sorted(docs), sorted(records), dict(counts)
+
+
 def main() -> int:
-    docs: list[str] = []
-    for r in ROOTS:
-        docs += sorted(glob.glob(r + "/**/*.md", recursive=True))
+    docs, records, scope_counts = collect_docs(ROOTS)
 
     problems: dict[str, list[str]] = defaultdict(list)
+    warnings: dict[str, list[str]] = defaultdict(list)
     pending: list[str] = []               # 아직 안 쓴 문서로 가는 링크. 위반 아님
     record_broken: list[str] = []         # records/ 안의 깨진 링크. 집계만 한다
     inv_in_docs: Counter[str] = Counter()
@@ -202,8 +280,16 @@ def main() -> int:
     stale_todo: list[str] = []       # 옛 도메인인데 이유가 없다 = 다시 써야 한다
     stale_recorded: list[str] = []   # 옛 도메인이지만 이유가 있다 = 그대로 둔다
 
+    # 기록은 기본 실행에서 본문을 읽지 않는다. 요청했을 때만 링크 낡음 통계를 낸다.
+    if "--include-records" in sys.argv:
+        for f in records:
+            raw = Path(f).read_text(encoding="utf-8-sig", errors="replace")
+            for p in LINK.findall(FENCE.sub("", raw)):
+                if not os.path.exists(os.path.normpath(os.path.join(os.path.dirname(f), unquote(p)))):
+                    record_broken.append(f"{f} -> {p}")
+
     for f in docs:
-        raw = open(f, encoding="utf-8").read()
+        raw = open(f, encoding="utf-8-sig").read()
         body = FENCE.sub("", raw)
         rel = f.replace("\\", "/")
         n_lines = raw.count("\n") + 1
@@ -216,7 +302,7 @@ def main() -> int:
         if "/records/" in rel:
             d = os.path.dirname(f)
             for p in LINK.findall(FENCE.sub("", raw)):
-                if not os.path.exists(os.path.normpath(os.path.join(d, p))):
+                if not os.path.exists(os.path.normpath(os.path.join(d, unquote(p)))):
                     record_broken.append(f"{rel} -> {p}")
             continue
 
@@ -225,12 +311,21 @@ def main() -> int:
         if fm is None:
             problems["front matter 없음"].append(rel)
             fm = {}
+            unmarked.append(rel)
         else:
             t = fm.get("type", "")
             if not t:
                 problems["type 없음"].append(rel)
             elif t not in TYPES:
                 problems["알 수 없는 type"].append(f"{rel}  (type: {t})")
+
+            if fm.get("status", "draft") not in {"draft", "stable", "deprecated"}:
+                problems["알 수 없는 문서 검토 상태"].append(f"{rel}  (status: {fm['status']})")
+            errors, notes = state_fields(fm)
+            problems["상태 필드 형식 위반"].extend(f"{rel}  ({x})" for x in errors)
+            warnings["상태 필드 확인 필요"].extend(f"{rel}  ({x})" for x in notes)
+            if "manual_edit: false" in raw and not fm.get("automation") and "automation:\n" not in raw:
+                problems["자동 생성 문서의 automation 없음"].append(rel)
 
             if fm.get("status") == "stable":
                 for req in ("title", "description", "owners"):
@@ -273,17 +368,16 @@ def main() -> int:
             if n_lines > HARD_LINES:
                 problems["500줄 초과 (분할 필요)"].append(f"{rel}  ({n_lines}줄)")
             elif n_lines > SOFT_LINES:
-                problems["300줄 초과 (분할 검토)"].append(f"{rel}  ({n_lines}줄)")
+                warnings["300줄 초과 (분할 검토)"].append(f"{rel}  ({n_lines}줄)")
 
-        # --- 링크
-        #   폴더가 있으면 "아직 안 쓴 문서", 폴더도 없으면 "경로 오타"로 나눈다.
+        # --- 현재 문서의 없는 대상은 부모 폴더 유무와 관계없이 위반이다.
         d = os.path.dirname(f)
         for p in LINK.findall(body):
-            target = os.path.normpath(os.path.join(d, p))
+            target = os.path.normpath(os.path.join(d, unquote(p)))
             if os.path.exists(target):
                 continue
             if os.path.isdir(os.path.dirname(target)):
-                pending.append(f"{rel} -> {p}")
+                problems["깨진 링크 (대상 파일 없음)"].append(f"{rel} -> {p}")
             else:
                 problems["경로 오타 (폴더도 없음)"].append(f"{rel} -> {p}")
 
@@ -322,7 +416,8 @@ def main() -> int:
     #   ★ `_` 로 시작하는 폴더는 스테이징이다. 탐색 계층이 아니므로 면제한다.
     #     루트에는 index.md 를 둬서 무엇을 하는 곳인지 밝힌다.
     for r in ROOTS:
-        for dirpath, _, files in os.walk(r):
+        for dirpath, dirs, files in os.walk(r):
+            dirs[:] = sorted(d for d in dirs if d != "records" and not d.startswith(("_", ".")))
             d = dirpath.replace("\\", "/")
             inner = d[len(r):].strip("/")
             if any(part.startswith("_") for part in inner.split("/") if part):
@@ -363,9 +458,7 @@ def main() -> int:
                 )
 
     # --- 코드 쪽 역방향 표식
-    code_ids: set[str] = set()
-    for py in glob.glob("final_project_cs/tests/**/*.py", recursive=True):   # 코드는 원래 자리
-        code_ids |= set(INV_CODE.findall(open(py, encoding="utf-8", errors="replace").read()))
+    code_ids = collect_code_ids("final_project_cs/tests")
     doc_ids = set(inv_in_docs)
     for cid in sorted(code_ids - doc_ids):
         problems["코드에만 있는 불변식 ID"].append(cid)
@@ -398,17 +491,18 @@ def main() -> int:
 
     # --- 출력
     print(f"문서 {len(docs)}개 검사")
-    print(f"불변식 {len(doc_ids)}개 (automated 연결 {len(inv_tests)}개)")
+    print(f"현재 검사 문서 전체의 인용 고유 불변식 ID {len(doc_ids)}개 (automated 연결 행 {len(inv_tests)}개)")
+    print("cs 정의 카탈로그 수는 invariant-summary.generated.md를 확인합니다. 위 수는 실행 통과 수가 아닙니다.")
     print(f"코드 역방향 표식 {len(code_ids)}개")
-    n_records = sum(1 for f in docs if "/records/" in f.replace("\\", "/"))
-    if n_records:
-        print(f"기록(records/) {n_records}개 — 규칙 면제. 깨진 링크 {len(record_broken)}곳은 집계만 한다")
+    print("검사 범위: " + json.dumps(scope_counts, ensure_ascii=False))
+    print(f"기록 {len(records)}개 — 현재 문서 규칙 제외. 기록 링크 통계: " +
+          (f"{len(record_broken)}곳" if "--include-records" in sys.argv else "미실행 (--include-records로 실행)"))
 
     # --- 도메인 축 집계
     n_axis = sum(len(v) for v in by_domain.values())
     n_all = n_axis + len(unmarked)
     if n_all:
-        pct = round(100 * n_axis / n_all)
+        pct = round(100 * n_axis / n_all, 2)
         parts = " · ".join(f"{k} {len(v)}" for k, v in sorted(by_domain.items()))
         print(f"도메인 축 표시 {n_axis}/{n_all} = {pct}%" + (f"  ({parts})" if parts else ""))
         if unmarked:
@@ -467,6 +561,34 @@ def main() -> int:
         print()
 
     total = sum(len(v) for v in problems.values())
+    for kind, items in warnings.items():
+        if not items:
+            continue
+        print(f"경고 [{len(items)}] {kind}")
+        for item in items:
+            print(f"    {item}")
+    if "--json-output" in sys.argv:
+        i = sys.argv.index("--json-output")
+        if i + 1 >= len(sys.argv):
+            raise ValueError("--json-output 뒤에 저장 경로가 필요합니다")
+        target = Path(sys.argv[i + 1])
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            import shutil
+            from datetime import datetime
+            backup = target.parent / "_backup" / (datetime.now().strftime("%Y-%m-%d_%H%M%S_%f") + "_checker-output") / target.name
+            backup.parent.mkdir(parents=True)
+            shutil.copy2(target, backup)
+        target.write_text(json.dumps({
+            "scope": scope_counts, "checked_documents": docs,
+            "invariant_references": {"definition": "현재 검사 문서 전체의 본문 인용 고유 ID; cs 정의 행 수·실행 통과 수가 아님", "unique_ids": sorted(doc_ids), "automated_link_rows": len(inv_tests), "current_test_marker_ids": sorted(code_ids)},
+            "record_links_checked": "--include-records" in sys.argv,
+            "record_broken_links": record_broken, "problems": dict(problems),
+            "warnings": dict(warnings),
+            "total_violations": total, "unmarked_domain": unmarked,
+            "dead_code_references": dead_code, "untracked_code_references": untracked_code,
+            "domain_documents": dict(by_domain),
+        }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if not total:
         print("통과. 위반 없음.")
         return 0

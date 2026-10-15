@@ -1,0 +1,9 @@
+{
+  "observed_at_utc": "2026-10-11T15:47:25.165726+00:00",
+  "apply_receipt.json": "{\n  \"utc\": \"2026-10-11T15:46:53.010294+00:00\",\n  \"before\": {\n    \"tripilot-arm-app-model.service\": {\n      \"ActiveState\": \"active\",\n      \"MainPID\": \"1353353\",\n      \"MemoryCurrent\": \"3670093824\",\n      \"MemoryMax\": \"6815744000\"\n    },\n    \"tripilot-arm-serving.service\": {\n      \"ActiveState\": \"active\",\n      \"MainPID\": \"171515\",\n      \"MemoryCurrent\": \"4468137984\",\n      \"MemoryMax\": \"10737418240\"\n    }\n  },\n  \"after\": {\n    \"tripilot-arm-app-model.service\": {\n      \"ActiveState\": \"active\",\n      \"MainPID\": \"1502033\",\n      \"MemoryCurrent\": \"4312981504\",\n      \"MemoryMax\": \"6815744000\"\n    },\n    \"tripilot-arm-serving.service\": {\n      \"ActiveState\": \"active\",\n      \"MainPID\": \"171515\",\n      \"MemoryCurrent\": \"4067885056\",\n      \"MemoryMax\": \"10737418240\"\n    }\n  },\n  \"cache_mib_before\": 64,\n  \"cache_mib_after\": 256,\n  \"same_model_weights\": true,\n  \"idle_model_restarted\": true,\n  \"benchmark_interrupted\": false,\n  \"backup\": \"/home/ubuntu/bench/app-cache256-20261012-v1/_backup/cache64\",\n  \"whole_product_latency_gain_proven\": false\n}",
+  "engine_log.json": null,
+  "http_answers.jsonl": "",
+  "summary.json": null,
+  "unit": "ActiveState=active\nSubState=running\nExecMainStatus=0\n",
+  "journal": "Started tripilot-arm-cache256-20261012-v1.service - [systemd-run] /usr/bin/python3 -u /home/ubuntu/bench/app-cache256-20261012-v1/runner.py.\n"
+}

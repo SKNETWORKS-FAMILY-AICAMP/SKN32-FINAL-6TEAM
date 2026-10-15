@@ -1,0 +1,9 @@
+{
+  "whole_files_sha_verified": 7,
+  "whole_files_expected": 7,
+  "all_hashes_match": true,
+  "completed_only": true,
+  "failed_or_unparsed": 20,
+  "metadata_matched": 835,
+  "fixed_denominator": 835
+}

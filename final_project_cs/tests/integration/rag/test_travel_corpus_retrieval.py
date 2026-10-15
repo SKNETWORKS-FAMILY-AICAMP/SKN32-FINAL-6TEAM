@@ -92,7 +92,9 @@ def test_only_the_travel_corpus_is_loaded():
         cur.execute("SELECT DISTINCT scope FROM knowledge_documents WHERE tenant_id=%s", ("demo",))
         scopes = {row[0] for row in cur.fetchall()}
     assert set(TRAVEL_SCOPES) <= scopes, f"적재되지 않은 여행 scope: {set(TRAVEL_SCOPES) - scopes}"
-    assert scopes == set(TRAVEL_SCOPES), f"여행 밖 scope 가 적재돼 있다: {sorted(scopes - set(TRAVEL_SCOPES))}"
+    # 고객 사용법은 별도 코퍼스다. 업무 규정 12문서/130청크 집계에는 섞지 않는다.
+    allowed = set(TRAVEL_SCOPES) | {"travel_service"}
+    assert scopes <= allowed, f"여행 밖 scope 가 적재돼 있다: {sorted(scopes - allowed)}"
 
 
 def test_registered_teams_only_search_travel_scopes():

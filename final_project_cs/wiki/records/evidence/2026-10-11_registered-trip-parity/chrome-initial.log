@@ -1,0 +1,169 @@
+[WebServer] (node:16488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:8272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:18040) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:10064) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22952) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[WebServer] (node:4736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:25688) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28168) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[WebServer] (node:7984) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:26900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:26060) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:6840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[WebServer] (node:3828) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 16 tests using 1 worker
+
+(node:27936) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/16] tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 375px 일반: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다
+[2/16] tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 375px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다
+  1) tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 375px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다 
+
+    Error: expect(locator).toHaveCSS(expected) failed
+
+    Locator:  locator('[data-entry-id="i-a"]').locator('[data-stop-end]')
+    Expected: "0s"
+    Received: "1e-05s"
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveCSS" locator('[data-entry-id="i-a"]').locator('[data-stop-end]') with timeout 12000ms
+      - waiting for locator('[data-entry-id="i-a"]').locator('[data-stop-end]')
+        27 × locator resolved to <time aria-hidden="false" data-stop-end="true" class="plan-check_rangeEnd__RD_7V">~09:00</time>
+           - unexpected value "1e-05s"
+
+
+      29 |     await expect(first.locator("[data-stop-end]")).toHaveCSS("font-size", "12px");
+      30 |     await expect(first.locator("[data-stop-end]")).toHaveCSS("font-weight", "400");
+    > 31 |     if (reduced) await expect(first.locator("[data-stop-end]")).toHaveCSS("transition-duration", "0s");
+         |                                                                 ^
+      32 |     await noHorizontalScroll(page);
+      33 |     await mkdir("mockups/registered-trip-parity-2026-10-11-v1", { recursive: true });
+      34 |     await page.mouse.move(0, 0);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\registered-trip-parity-20261011.spec.ts:31:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-registered-trip-parity\registered-trip-parity-202-0b8ea--표시하고-검증-화면의-선택-시각·경로를-유지한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-registered-trip-parity\registered-trip-parity-202-0b8ea--표시하고-검증-화면의-선택-시각·경로를-유지한다\error-context.md
+
+
+
+(node:27068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[3/16] tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 1280px 일반: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다
+[4/16] tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 1280px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다
+  2) tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 1280px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다 
+
+    Error: expect(locator).toHaveCSS(expected) failed
+
+    Locator:  locator('[data-entry-id="i-a"]').locator('[data-stop-end]')
+    Expected: "0s"
+    Received: "1e-05s"
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveCSS" locator('[data-entry-id="i-a"]').locator('[data-stop-end]') with timeout 12000ms
+      - waiting for locator('[data-entry-id="i-a"]').locator('[data-stop-end]')
+        27 × locator resolved to <time aria-hidden="false" data-stop-end="true" class="plan-check_rangeEnd__RD_7V">~09:00</time>
+           - unexpected value "1e-05s"
+
+
+      29 |     await expect(first.locator("[data-stop-end]")).toHaveCSS("font-size", "12px");
+      30 |     await expect(first.locator("[data-stop-end]")).toHaveCSS("font-weight", "400");
+    > 31 |     if (reduced) await expect(first.locator("[data-stop-end]")).toHaveCSS("transition-duration", "0s");
+         |                                                                 ^
+      32 |     await noHorizontalScroll(page);
+      33 |     await mkdir("mockups/registered-trip-parity-2026-10-11-v1", { recursive: true });
+      34 |     await page.mouse.move(0, 0);
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\registered-trip-parity-20261011.spec.ts:31:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-registered-trip-parity\registered-trip-parity-202-ba4a7--표시하고-검증-화면의-선택-시각·경로를-유지한다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-registered-trip-parity\registered-trip-parity-202-ba4a7--표시하고-검증-화면의-선택-시각·경로를-유지한다\error-context.md
+
+
+
+(node:19624) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[5/16] tests\live\route-lines.spec.ts:28:1 › 선이 있는 여행: 길을 아는 구간은 실선, 직선으로 이은 구간은 점선·옅은 색으로 그리고, 출처와 점선·버스의 뜻을 목록 끝 출처 줄에 적는다
+[6/16] tests\live\route-lines.spec.ts:55:1 › 서버에 이 경로가 아직 없으면(404) 선도 출처 문구도 오류 문구도 없이 핀만 보인다
+[7/16] tests\live\route-lines.spec.ts:64:1 › 선을 읽다 실패하면(500) 읽지 못했다고 말하고 핀은 그대로 보인다 — 선이 없다는 말이 아니다
+[8/16] tests\live\route-lines.spec.ts:72:1 › 서버가 선을 늦게 줘도(길 자료를 올리는 중) 핀이 먼저 보이고, 선은 오면 그려진다
+[9/16] tests\live\route-lines.spec.ts:80:1 › 다른 날로 바꾸면 그 날 장소 사이의 선만 남는다(둘째 날에는 선이 없다)
+[10/16] tests\live\route-lines.spec.ts:89:1 › 확대하면 상세 경로선을 따로 한 번 받아 그린다: 축소 상태는 짧은 선, 확대 수준 15 이상에서 상세 선으로 바뀌고, 다시 줄여도 상세 선이 남는다
+  3) tests\live\route-lines.spec.ts:89:1 › 확대하면 상세 경로선을 따로 한 번 받아 그린다: 축소 상태는 짧은 선, 확대 수준 15 이상에서 상세 선으로 바뀌고, 다시 줄여도 상세 선이 남는다 
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '확대' })
+
+
+      16 | async function zoom(page: Page, name: "확대" | "축소") {
+      17 |   await page.getByRole("region", { name: "여행 지도", exact: true }).hover({ position: { x: 150, y: 120 } });
+    > 18 |   await page.getByRole("group", { name: "지도 단추" }).getByRole("button", { name }).click();
+         |                                                                                  ^
+      19 | }
+      20 |
+      21 | async function openMap(page: Page) {
+        at zoom (C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\route-lines.spec.ts:18:82)
+        at C:\Users\playdata2\Documents\final_workspace\.tmp\location-controls-20261011\tests\live\route-lines.spec.ts:99:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-registered-trip-parity\route-lines-확대하면-상세-경로선을-따-d49b3-상세-선으로-바뀌고-다시-줄여도-상세-선이-남는다\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-registered-trip-parity\route-lines-확대하면-상세-경로선을-따-d49b3-상세-선으로-바뀌고-다시-줄여도-상세-선이-남는다\error-context.md
+
+
+
+(node:14900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[11/16] tests\live\trip-layout.spec.ts:8:1 › 375px와 320px에서 지도 위 시트의 「일정 | 채팅」으로 칸을 바꾸고 가로로 넘치지 않으며, 빈 메시지는 막는다
+[12/16] tests\live\trip-layout.spec.ts:27:1 › 채팅 버튼은 막대만 펼치고(입력칸에 초점 없음), 입력칸에 초점이 가면 채팅 칸으로 넘어간다 — 일정 칸으로 돌아오면 쓰던 글은 막대에 남는다
+[13/16] tests\live\trip-layout.spec.ts:47:1 › 일차·일정·지도 선택이 이어진다: 지도 보기는 안내 토스트 없이 핀을 선택하고, 핀을 누르면 그 일정이 목록에서 펼쳐진다
+[14/16] tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 375px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다
+[15/16] tests\live\trip-marker-no-toast-20261011.spec.ts:10:3 › 1280px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다
+[16/16] tests\live\trip-marker-no-toast-20261011.spec.ts:36:1 › 실제 선택 요청 알림은 마커를 선택·해제해도 유지한다
+  3 failed
+    tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 375px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다 
+    tests\live\registered-trip-parity-20261011.spec.ts:9:3 › 1280px 동작 줄임: 예약 있는 일정만 표시하고 검증 화면의 선택 시각·경로를 유지한다 
+    tests\live\route-lines.spec.ts:89:1 › 확대하면 상세 경로선을 따로 한 번 받아 그린다: 축소 상태는 짧은 선, 확대 수준 15 이상에서 상세 선으로 바뀌고, 다시 줄여도 상세 선이 남는다 
+  13 passed (9.0m)

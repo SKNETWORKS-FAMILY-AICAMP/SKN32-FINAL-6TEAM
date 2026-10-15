@@ -1,0 +1,57 @@
+{
+  "current_source_hashes_match": true,
+  "hashed_source_count": 57,
+  "consumer_golden_sha256": "912d18fae104789dc6f0d11c21953709924fffe1c47edbfb956c198df3d91a4a",
+  "comparison_script_sha256": "343972e70edb8fb0b18825fc3d1f582983b34125066ae89891f8d7e307b3d412",
+  "claude": {
+    "actual_model": [
+      "claude-sonnet-5-5"
+    ],
+    "effort": "medium",
+    "usage": {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 3182,
+      "cache_read_input_tokens": 535,
+      "output_tokens": 2907,
+      "output_tokens_details": {
+        "thinking_tokens": 1187
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 3182,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 2907,
+          "cache_read_input_tokens": 535,
+          "cache_creation_input_tokens": 3182,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 0,
+            "ephemeral_1h_input_tokens": 3182
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard",
+      "fallback_credit": null
+    },
+    "total_cost_usd": 0.041909,
+    "account_remaining_percent": null,
+    "initial_attempt": "sandbox DNS ENOTFOUND; zero usage; initial result file replaced by successful retry, original diagnostic only retained in tool transcript"
+  },
+  "developer_api_calls": 0,
+  "code_and_data_replay": {
+    "routes": 6,
+    "fare_matches": 6,
+    "service_matches": 6,
+    "duration_within_tolerance": 5,
+    "blocked_network_attempts": 0
+  }
+}

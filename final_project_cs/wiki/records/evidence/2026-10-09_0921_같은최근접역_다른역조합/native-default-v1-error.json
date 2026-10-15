@@ -1,0 +1,7 @@
+{
+  "exit_code": 1,
+  "phase": "JSON publication after native assertions",
+  "error": "date is not JSON serializable",
+  "partial_json_preserved": "native-default-and-earliest-v1.json",
+  "repair": "new script v2, explicit ISO serialization of date and datetime; no product logic changed"
+}

@@ -74,13 +74,18 @@ class Settings(BaseSettings):
     #: Ollama(로컬 LLM 서버) 주소 — 채우면 분류·추출·번역을 **Ollama 로** 한다. 비우면 OpenAI.
     #:  ★2026-09-14 OpenAI 크레딧 소진(429 실측) — Gemma 4 를 포트포워딩으로 붙여 쓴다.
     #:  ★OpenAI 호환 경로(`/v1`)는 쓰지 않는다 — 생각(thinking)이 본문에 섞여 나왔다(실측).
-    #:    자체 API(`/api/chat`, `think:false`)는 `gemma4:12b` 가 1.3초에 JSON 을 냈다.
+    #:    자체 API(`/api/chat`, `think:false`)는 `gemma4:12b` 가 1.3초에 JSON 을 냈다(2026-09 측정 당시 모델 — 지금 기본은 아래 `ollama_model`).
     #:  실제 주소는 `.env` 에만 적는다(공용 파일에 호스트를 적지 않는다).
     ollama_base_url: str = ""
     #: ★`[2026-09-30]` 더는 쓰지 않는다 — 시나리오(시연) 모드를 운영 앱에서 뗐다(`legacy/scenario_mode/`). 이름만 남겼다:
     #:  설정 검사가 모르는 이름을 거부(`extra="forbid"`)해서, 옛 `.env` 가 이 이름을 적고 있으면 앱이 못 뜬다.
     scenario_mode_enabled: bool = False
-    ollama_model: str = "gemma4:12b"
+    #: ★`[2026-10-14 사용자 지시]` 기본 모델은 **우리 데이터로 가르친 E4B** `tripilot-pointer:e4b-ft`(Ollama `gemma4:e4b` Q4_K_M 에 일정 항목 짚기 자료로 LoRA 학습).
+    #:  전에는 학습 없는 `gemma4:12b` 였다. 요청 해석(할 일 고르기)·일정 짚기를 이 모델 하나가 맡는다 — 12GB GPU 에서 모델 교체가 없고,
+    #:  434 문장 재생(채점용 126)에서 할 일 85%·대상 78% 로 학습 없는 12B(74%·72%)보다 맞고 빠르다(`wiki/records/reports/2026-10-14_채팅해석_근본개선_1차.md`).
+    #:  ★이 이름의 모델은 학습으로 만든 것이라 Ollama 에 올려 둔 곳에만 있다. 없는 곳(개발 PC 등)은 `ACOP_OLLAMA_MODEL` 로 있는 모델을 지정한다(예 `gemma4:12b`).
+    #:  문맥 길이는 아래 `ollama_num_ctx`(8192)와 함께여야 한다(Ollama 기본 4,096 이면 해석 입력의 앞이 잘린다).
+    ollama_model: str = "tripilot-pointer:e4b-ft"
     #: 정책 검색(RAG)의 임베딩을 어디서 만드나 — `openai` | `ollama`.
     #:  ★`[2026-09-22]` 크레딧 없이 돌릴 길을 **명시적으로** 둔다. 조용한 폴백이 아니다 —
     #:    고른 쪽의 벡터가 없으면 검색이 예외를 낸다(RULE.md §3.2 「신호 없는 축소 금지」).
@@ -149,10 +154,18 @@ class Settings(BaseSettings):
     #: ★`[2026-09-29]` 모델을 붙잡아 둘 시간(Ollama `keep_alive`, 예 `30m` · `2h`). 비우면 Ollama 기본(5분).
     #:  길게 두면 잠든 모델의 느린 첫 호출(ui 세션 실측 29.8초)이 줄지만 원격 GPU 메모리를 그만큼 잡는다 — 값은 운영이 정한다
     ollama_keep_alive: str = ""
+    #: ★`[2026-10-14]` Ollama 문맥 길이(`num_ctx`). 요청 해석 입력이 약 4,600 토큰이라 Ollama 기본(12~16GB GPU 에서 4,096)이면 앞이 잘린다
+    #:  (`ollama_chat.OllamaChat.num_ctx`). 0 이면 Ollama 기본을 쓴다
+    ollama_num_ctx: int = 8192
     #: ★`[2026-10-07 사용자 지시]` 일정 항목 짚기 **가르친 모델**(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 낱말 규칙만 쓴다.
     #:  켜고 끄기는 가드레일 `travel.pointer.mode`. 모델이 못 부르면 규칙으로 돌아간다(`item_pointer.py`).
     ollama_pointer_model: str = ""
     ollama_pointer_timeout_seconds: float = 30.0
+    #: ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 **2차 확인** 모델(Ollama 에 올린 이름, 예 `tripilot-pointer:e4b-ft`). 비우면 규칙만 쓴다.
+    #:  켜고 끄기는 가드레일 `travel.notice_end.mode`. 규칙과 모델이 둘 다 끝남일 때만 끝남이고, 모델을 못 부르면 규칙 결과를 쓴다(`notice_end_model.py`).
+    ollama_notice_model: str = ""
+    #:  ★첫 호출은 모델을 올리느라 길다(2026-10-13 x600 실측 53.7초, 이어지는 호출 약 1.3초) — 감시 루프는 고객을 기다리게 하지 않으므로 넉넉히 둔다
+    ollama_notice_timeout_seconds: float = 90.0
     # ── 모델 서버가 죽거나 늦을 때 **서버용 OpenAI 키**로 넘기는 장치 `[2026-10-07 사용자 지시]` ──
     #:  「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」. 코드 `app/infrastructure/llm_failover.py`.
     #:  ★스위치는 **기본 꺼짐**이다 — 개발 PC 에서 모델 서버 연결이 끊겼을 때 시험 · 측정이 조용히 유료 API 로 새지 않게. 운영(배포) 환경 파일에서만 켠다.
@@ -163,7 +176,10 @@ class Settings(BaseSettings):
     #:  작은 모델은 엉뚱한 대상을 바꾸거나(4o-mini 1건) 쓸데없이 되묻는다(4.1-mini 9건)
     llm_failover_model: str = "gpt-4.1"
     #:  Ollama 를 기다리는 시간(초) — 고객 응답 SLA 15초 안에 API 까지 끝나게 `ollama_timeout_seconds`(60)보다 짧다. 서버가 식어 느린 첫 호출도 여기서 걸러진다(예열이 그 몫)
-    llm_failover_primary_timeout_seconds: float = 6.0
+    #:  ★`[2026-10-14 사용자 지시]` 6 → 9초. 기본 모델이 가르친 E4B 로 바뀌었고(`ollama_model`), 그 해석 한 건이 5.1~7.3초(x600 실측 —
+    #:    지시문 읽기 약 2초는 문장마다 다시 든다)라 6초면 8건 중 6건이 유료 대체로 넘어갔다. 9초면 8/8 로컬(운영이 이미 9초).
+    #:    넘어가도 유료 대체(2~3초)까지 `llm_failover_total_seconds`(15) 안이다. 정책 검색의 임베딩 대기(`rag/retriever.py`)도 같은 값을 쓴다.
+    llm_failover_primary_timeout_seconds: float = 9.0
     #:  OpenAI 를 기다리는 시간(초)
     llm_failover_api_timeout_seconds: float = 8.0
     #:  한 호출에 쓸 수 있는 전체 시간(초) — 이 안에 다시 시도(429·5xx 1회)와 넘김이 다 들어가야 한다
@@ -214,6 +230,12 @@ class Settings(BaseSettings):
     #: 행정안전부 지진옥외대피장소(전국) — 재난 일정 정지 때 가까운 대피 장소 안내  data.go.kr/data/15138868
     #:  ★`[2026-10-06]` 예시 파일에 이름이 먼저 들어가 `extra="forbid"` 라 이 PC 에서 설정이 통째로 거부됐다(시험 수집 78개 파일 · 재생 도구 불통). 비우면 서울시 자료(DB 에 적재한 곳)로만 안내한다.
     safetydata_shelter_api_key: str = ""
+    #: 행정안전부 도로명주소 「도로명주소 검색 API」 승인키 — 장소 주소 글자 → 정식 주소 번호(행정구역 · 도로 · 건물 번호)  business.juso.go.kr
+    #:  ★`[2026-10-14]` 자리만 선언했다 — 아직 어느 코드도 읽지 않는다. 아래 좌표제공 API 와 짝으로 건물 출입구 좌표를 얻어
+    #:  걷는 길을 출입구에서 시작하게 할 예정(이동). 공공데이터포털 공통 키와 다른 별도 승인키이고, 신청서의 URL(IP)(x600 서버 주소)에 묶인다.
+    juso_search_api_key: str = ""
+    #: 행정안전부 도로명주소 「좌표제공 검색 API」 승인키 — 주소 번호 → 건물 출입구 좌표(UTM-K). 위 검색 API 와 별개 승인키.
+    juso_coord_api_key: str = ""
     #: 서울교통공사 지하철알림정보 — 무정차 통과 감시(문제목록 #36)  data.go.kr/data/15144070
     #:  ★공통 키로 충분하다. 이 칸은 다른 계정을 쓸 때만 채운다.
     subway_notice_api_key: str = ""
@@ -275,6 +297,14 @@ class Settings(BaseSettings):
     #   근거 정리: `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md` §4-6 「2026-09-28 재판단」.
     tour_catalog_enabled: bool = True
     google_maps_api_key: str = ""            # 구글 Maps Platform(Places) console.cloud.google.com
+    # ★`[2026-10-08]` LiteAPI(Nuitee) — 서비스 안 숙소 예약 시험(샌드박스 키 `sand_`). 비어 있으면 부르지 않는다.
+    #   지금은 `scripts/probe_liteapi_booking.py` 만 읽는다.
+    liteapi_api_key: str = ""
+    # ★`[2026-10-08]` Ignav — 항공 검색·예약 링크(MCP https://ignav.com/mcp). 비어 있으면 부르지 않는다.
+    #   지금은 `scripts/probe_ignav_mcp.py` 만 읽는다.
+    ignav_api_key: str = ""
+    # ★[2026-10-09] SerpApi Google Flights — 구글 항공권 한국 설정(gl=kr · hl=ko · KRW) 검색. 무료 월 250회. 비면 쓰지 않는다
+    serpapi_api_key: str = ""
     # ★`[2026-10-01]` 네이버 검색(블로그 · 카페글) — 대체 후보에 후기 몇 건을 곁들인다. 비어 있으면 부르지 않는다.
     #   NAVER API HUB(네이버 클라우드) 「검색」 키 — 2026-07-31 부터 개발자센터 신규 발급이 끝나 HUB 로 옮겨 갔다.
     #   주소 naverapihub.apigw.ntruss.com/search/v1/{blog,cafearticle}, 헤더 X-NCP-APIGW-API-KEY-ID · X-NCP-APIGW-API-KEY.
@@ -347,6 +377,8 @@ class Settings(BaseSettings):
     rate_subway_notice_per_day: int = 5000
     #: 확인(2026-10-04 공식 안내): 서울 「실시간 지하철 인증키」 하루 최대 1,000건 → 절반만(여유 2배). 도착정보는 지금 값이라 캐시를 짧게 둔다
     rate_seoul_subway_arrival_per_day: int = 500
+    #: 확인(2026-10-08): 버스도착정보 개발계정 1,000/일. 절반을 운영 한도로 둔다.
+    rate_seoul_bus_arrival_per_day: int = 500
     #: 서울 열린데이터광장 **일반 인증키**(따릉이 실시간 거치 대수 `bikeList`) 하루 상한 — ★공식 하루 한도를 못 찾았다(안내에 숫자 없음 · 「이용 제약 없이 쓰려면 활용사례 등록」)
     #:  `[미확인]` 그래서 **우리가 고른 보수적 값**이다. 이 값에서 막히면 따릉이 거치 대수가 「근거없음」이 되고(후보는 유지) 서비스는 계속된다. 0 = 제한 없음
     rate_seoul_bike_per_day: int = 1000
@@ -366,6 +398,11 @@ class Settings(BaseSettings):
     #      초과 $10/1,000 → 5,000 / 31 / 2 = 80.  TRANSIT 모드의 등급은 문서에 없다(미확인)
     rate_google_places_per_day: int = 16
     rate_google_routes_per_day: int = 80
+    #  ★`[2026-10-13 사용자 지시]` SerpApi(구글 호텔 · 구글 항공권 — 한 계정) — **무료 월 250회**. 월 줄 250 · 하루 줄 250 / 31 = 8.
+    #    DB 로 센다(가드레일 `travel.source_budget_sources` 의 `serpapi`) — 프로세스 · 재시작을 건너 같은 줄이다. 월 · 일 중 하나라도 차면 부르지 않는다
+    #    (「바꿔 줘」 한 번 = 목록 1 + 상세 최대 3, 고를 때 재확인 1).
+    rate_serpapi_per_day: int = 8
+    rate_serpapi_per_month: int = 250
 
     #: 간격이 안 찼을 때 기다려 볼 최대 시간(초). 고객 요청이 여기서 멈춘다.
     #:  넘으면 기다리지 않고 거부하고, Team 은 「모름」으로 넘어간다.
@@ -373,7 +410,8 @@ class Settings(BaseSettings):
 
     def source_monthly_limits(self) -> dict[str, int]:
         """`TravelSource.name` -> 월 한도(알려진 것만). DB 예산(`source_budget.py`)이 월 줄로 쓴다."""
-        return {name: value for name, value in {"its": self.rate_its_per_month}.items() if value and value > 0}
+        return {name: value for name, value in {"its": self.rate_its_per_month,
+                                                "serpapi": self.rate_serpapi_per_month}.items() if value and value > 0}
 
     def source_rate_limits(self) -> dict[str, int]:
         """`TravelSource.name` -> 하루 한도. 어댑터 이름과 정확히 맞춘다.
@@ -400,11 +438,13 @@ class Settings(BaseSettings):
             "odsay": self.rate_odsay_per_day,
             "subway_notice": self.rate_subway_notice_per_day,
             "seoul_subway_arrival": self.rate_seoul_subway_arrival_per_day,
+            "seoul_bus_arrival": self.rate_seoul_bus_arrival_per_day,
             "seoul_bike": self.rate_seoul_bike_per_day,
             "kakao": self.rate_kakao_per_day,
             "naver_search": self.rate_naver_search_per_day,
             "google_places": self.rate_google_places_per_day,
             "google_routes": self.rate_google_routes_per_day,
+            "serpapi": self.rate_serpapi_per_day,
         }
 
     def utic_key(self, *, proxied: bool) -> str:
@@ -503,6 +543,45 @@ def get_guardrails() -> Guardrails:
     return Guardrails(data, path)
 
 
+def dining_agent_shadow() -> dict[str, Any] | None:
+    """요식 판정 에이전트 그림자 운행 설정 — 가드레일 `travel.dining.agent_shadow`. 켜져 있으면 `{model, deadline_s}`, 아니면 None. ★기본 꺼짐.
+
+    `[2026-10-13]` 접수 확인의 규칙 검사와 나란히 판정해 기록만 한다(고객 결과는 그대로). 가드레일을 못 읽어도 **꺼짐**으로 본다.
+    """
+    try:
+        section = get_guardrails().get("travel.dining.agent_shadow")
+    except ConfigError:
+        return None
+    if not isinstance(section, dict) or section.get("enabled") is not True:
+        return None
+    return {"model": str(section.get("model") or "openai:gpt-6-luna"), "deadline_s": float(section.get("deadline_s") or 120)}
+
+
+def dining_meal_pick() -> dict[str, Any] | None:
+    """대체 식당 셋 중 고르기 설정 — 가드레일 `travel.dining.meal_pick`. 켜져 있으면 `{model}`, 아니면 None. ★기본 꺼짐.
+
+    `[2026-10-15]` 켜면 고객 결과가 바뀐다(그림자 아님) — 가드레일을 못 읽어도 **꺼짐**으로 본다.
+    """
+    try:
+        section = get_guardrails().get("travel.dining.meal_pick")
+    except ConfigError:
+        return None
+    if not isinstance(section, dict) or section.get("enabled") is not True:
+        return None
+    return {"model": str(section.get("model") or "openai:gpt-6-luna")}
+
+
+def activity_live_check_enabled() -> bool:
+    """활동 장소 임시휴무 · 폐업 새벽 웹 확인을 돌리나 — 가드레일 `travel.activity_judge.live_status_batch_enabled`. ★기본 꺼짐.
+
+    `[2026-10-14 사용자 지시]` 유료 웹 검색이라 관리 콘솔에서 켤 때만 돈다. 가드레일을 못 읽어도 **꺼짐**으로 본다.
+    """
+    try:
+        return get_guardrails().get("travel.activity_judge.live_status_batch_enabled") is True
+    except ConfigError:
+        return False
+
+
 def google_price_enabled() -> bool:
     """식당 대안의 구글 가격 조회를 켰나 — 가드레일 `travel.dining.google_price_enabled`. ★기본 꺼짐.
 
@@ -511,5 +590,16 @@ def google_price_enabled() -> bool:
     """
     try:
         return get_guardrails().get("travel.dining.google_price_enabled") is True
+    except ConfigError:
+        return False
+
+
+def taxi_call_product_enabled() -> bool:
+    """확인 화면의 택시 호출 상품 고르기를 켰나 — 가드레일 `travel.mobility.taxi_call_product_enabled`. ★기본 꺼짐.
+
+    `[2026-10-14 사용자 지시 · 핫픽스]` 택시 요금 계산이 믿을 만해질 때까지 끈다. 가드레일을 못 읽어도 **꺼짐**이다(켜는 것은 명시한 경우뿐).
+    """
+    try:
+        return get_guardrails().get("travel.mobility.taxi_call_product_enabled") is True
     except ConfigError:
         return False

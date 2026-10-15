@@ -74,13 +74,25 @@ def test_ambiguous_departure_never_uses_the_destination_next_leg():
 
 
 def test_customer_selected_place_conflict_is_exposed_and_keeps_target_for_followup():
+    """★`[2026-10-14]` 고객이 고른 장소로 답하되 제목과 다른 곳임을 먼저 밝힌다 — 전에는 되묻기만 하고 아무 정보도 주지 않았다."""
     a=item("솔빛전시관",1)
     a.place["name"]="바람축제"
     a.detail={"provenance":{"place":{"method":"customer"}}}
     result,basis,focus=render([a],[read("hours")],"솔빛전시관 운영시간")
-    assert a.title in result["text"] and "바람축제" in result["text"]
-    assert basis["questions"][0]["unresolved"] == "place_identity"
-    assert focus["item_id"] == str(a.item_id)
+    assert result["text"].startswith("「솔빛전시관」 일정에 연결된 장소는 등록 때 고르신 「바람축제」이라 「바람축제」 기준으로 답할게요.")
+    assert "제목의 「솔빛전시관」 자체 정보는 아니에요." in result["text"]
+    question = basis["questions"][0]
+    assert "unresolved" not in question and question["place_identity"]["place"] == "바람축제"
+    assert question["item_id"] == str(a.item_id) and focus["item_id"] == str(a.item_id)
+    assert a.title == "솔빛전시관"                                   # 원래 일정 항목은 그대로다
+
+
+def test_a_title_that_contains_the_place_name_is_not_a_conflict():
+    a=item("경복궁 관람",1)
+    a.place["name"]="경복궁"
+    a.detail={"provenance":{"place":{"method":"customer"}}}
+    result,basis,_=render([a],[read("hours")],"경복궁 운영시간")
+    assert "등록 때 고르신" not in result["text"] and "place_identity" not in basis["questions"][0]
 
 
 def test_absent_booking_requirement_does_not_become_no_reservation_needed():
@@ -154,3 +166,41 @@ def test_general_request_cannot_smuggle_actions_or_omit_the_answer(general):
                         choices=[],reads=[],social="",general_requests=general)
     with pytest.raises(du.DecisionFailed):
         du.decide(Chat(),stops=[],changes=[],history=[],selected_item_id=None,message="책 추천")
+
+
+def _decide_general(general, social=""):
+    class Chat:
+        def structured(self,*args,**kwargs):
+            return dict(action="other",target_item="none",target_change="none",fact="none",minutes=0,
+                        choices=[],reads=[],social=social,general_requests=general)
+    return du.decide(Chat(),stops=[],changes=[],history=[],selected_item_id=None,message="추천해줘")
+
+
+def test_general_answers_carry_one_fixed_note_that_they_are_not_trip_data():
+    d=_decide_general([dict(question="조용한 곳 추천",answer="일정이 빡빡하셨다니 조용한 정원을 권해요."),
+                       dict(question="책 추천",answer="짧은 에세이를 권해요.")],social="수고하셨어요.")
+    assert d.social.count(du.GENERAL_NOTE) == 1 and d.social.endswith(du.GENERAL_NOTE)
+    assert d.social.startswith("수고하셨어요.") and "짧은 에세이" in d.social
+
+
+def test_note_is_not_added_without_a_general_request():
+    d=_decide_general([],social="수고하셨어요.")
+    assert d.social == "수고하셨어요." and du.GENERAL_NOTE not in d.social
+
+
+def test_prompt_routes_out_of_itinerary_history_to_evidence_and_limits_recommendation_reasons():
+    assert "action=ask_policy" in du.SYSTEM and "일정 목록에 없는 장소" in du.SYSTEM
+    assert "이 프롬프트에 실제로 있는 근거만" in du.SYSTEM and "취향을 기억하거나 저장한다고 말하지 않는다" in du.SYSTEM
+
+
+def test_unfound_place_history_is_reported_as_not_found_instead_of_answered_from_memory():
+    from app.domains.travel_ops.components.conversation import trip_replies
+    seen=[]
+    def search(**kwargs):
+        seen.append(kwargs)
+        return []
+    status,text,evidence=trip_replies.question_reply(
+        message="이 옛 성터는 언제 누가 세웠어?",items=[item("솔빛전시관",1)],tenant_id="t",policy_search=search,
+        scopes=list(trip_replies.QUESTION_SCOPES),min_score=0.5,now=NOW)
+    assert seen and status=="answered" and "지어내 답하지 않았어요" in text
+    assert evidence["policy_hits"]==0 and evidence["unmatched"] is True

@@ -1,0 +1,8 @@
+.........................................                                [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-10_0311_차량회전자료_내용갱신\after-v1.xml -
+41 passed in 45.07s
+
+Exception ignored in: <function Console.__del__ at 0x000001E65B09D260>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

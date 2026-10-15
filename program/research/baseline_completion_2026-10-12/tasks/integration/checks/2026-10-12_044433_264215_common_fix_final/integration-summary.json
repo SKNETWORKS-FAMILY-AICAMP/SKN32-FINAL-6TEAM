@@ -1,0 +1,30 @@
+{
+  "recorded_at_kst": "2026-10-12T04:46:44.149235+09:00",
+  "counts": {
+    "total": 228,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 228
+  },
+  "run": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_044433_264215_common_fix_final",
+  "original_reports": {
+    "total": 167,
+    "changed": []
+  },
+  "unverified_annotations": 18,
+  "source_count": 172,
+  "scope": "선택한 3개 시험 파일. 전체 common/travel 통과 판정 아님",
+  "sandbox_attempts": [
+    {
+      "result": "interrupted_before_completion",
+      "junit_written": false
+    },
+    {
+      "result": "interrupted_in_event_loop_setup",
+      "observed_stack": "socket.accept -> _fallback_socketpair -> asyncio.ProactorEventLoop -> pytest_asyncio event_loop fixture"
+    }
+  ],
+  "permissions": "검증 실행기만 자동 승인 검토를 거쳐 확장 실행. 외부/기존 앱 연결·업무 DB 차단, 시험이 바인딩한 루프백만 허용",
+  "deployment": "not_deployed"
+}

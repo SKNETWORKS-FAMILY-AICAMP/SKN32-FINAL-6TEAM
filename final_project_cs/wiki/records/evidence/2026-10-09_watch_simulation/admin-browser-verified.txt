@@ -1,0 +1,11 @@
+[WebServer] (node:16708) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:19412) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\live\simulation.spec.ts:6:1 › 재난 N종 선택·적용·중지와 실행별 알림을 실제 관리자 화면에서 확인한다 (1.2s)
+  ok 2 tests\live\simulation.spec.ts:50:1 › 좁은 화면에서 6개 스위치를 키보드로 조작한다 (554ms)
+
+  2 passed (4.2s)

@@ -1,0 +1,14 @@
+--- before/final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py
++++ after/final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py
+@@ -148,7 +148,10 @@
+         from .subway_departure import boarding_services
+         rail_identity, rail_services = boarding_services(runtime, first)
+         if rail_identity.get('status') == 'matched':
+-            public_services = [{k: service[k] for k in ('train_status', 'path_station_ids')} for service in rail_services]
++            fields = ('train_status', 'path_station_ids', 'next_station_names',
++                      'terminal_station_names', 'boarding_neighbor_ids')
++            public_services = [{k: deepcopy(service[k]) for k in fields if k in service}
++                               for service in rail_services]
+             observation = subway_arrival(rail_identity['query_station'], line_id=rail_identity['line_id'],
+                 station_id=rail_identity['station_id'], target_station_id=rail_identity['target_station_id'],
+                 allowed_services=public_services, now=now, ready_at=ready)

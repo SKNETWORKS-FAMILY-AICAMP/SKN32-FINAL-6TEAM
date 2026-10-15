@@ -1,0 +1,10 @@
+.....F...                                                                [100%]
+================================== FAILURES ===================================
+_ test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set _
+tests\scenario\test_watch_batch.py:219: in test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set
+    [opened] = first.opened
+    ^^^^^^^^
+E   ValueError: too many values to unpack (expected 1)
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_watch_batch.py::test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set
+1 failed, 8 passed in 25.32s

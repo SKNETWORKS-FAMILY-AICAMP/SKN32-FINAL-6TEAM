@@ -1,0 +1,36 @@
+{
+  "body": {
+    "case_id": "5268e64c-9e80-4ab2-88cc-08fc8ba79c97",
+    "case_status": "escalated",
+    "version": 4,
+    "classification": {
+      "intent": "incident_report",
+      "issue_code": "dining_hours"
+    },
+    "status": "escalated",
+    "reason": "team_conversation",
+    "outcome": {
+      "status": "escalated"
+    },
+    "answer": "요청을 완료하지 못했어요. 계획서에서 현재 일정을 확인해 주세요."
+  },
+  "status": "escalated",
+  "state": {
+    "last_event": "guardrail_escalated",
+    "subject_ref": {
+      "id": "66ffdcc2-4e41-4b0c-8746-4e1d28ad1627",
+      "kind": "trip",
+      "request": {
+        "at": "2030-01-01T09:00:00+09:00",
+        "type": "conversation",
+        "action": "report_delay",
+        "minutes": 30
+      },
+      "base_version": 1
+    },
+    "trip_message": {
+      "trip_id": "66ffdcc2-4e41-4b0c-8746-4e1d28ad1627",
+      "request_id": "late-1"
+    }
+  }
+}

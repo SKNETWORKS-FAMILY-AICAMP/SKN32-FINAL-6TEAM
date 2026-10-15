@@ -1,0 +1,195 @@
+{
+  "created_at": "2026-10-11T19:38:44.754206+09:00",
+  "scope": "routine documented facts only; no DB/code runtime/deployment changes",
+  "changes": [
+    {
+      "path": "final_project_cs/wiki/data/index.md",
+      "findings": [
+        "W14"
+      ],
+      "backup": "final_project_cs/wiki/data/_backup/2026-10-11_193844_current-facts/index.md",
+      "before_sha256": "deac103a6a1c4a6b4954e844accf5ee49112cf4e329d0ebe20847dd5c4616af4",
+      "after_sha256": "54b6a045a9945c80877090b1a4914609d66fbd59fc89a8bf3911408888ee77ce"
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/index.md",
+      "findings": [
+        "W14"
+      ],
+      "backup": "final_project_cs/wiki/data/schema/_backup/2026-10-11_193844_current-facts/index.md",
+      "before_sha256": "040698bd34dd932d3f8b3dd7742cd6af0b05e2879424095098283b6501699b0e",
+      "after_sha256": "a3b50992ece465a6a83aecef837f303c8a9dd3d8872bc2102360e4b96be738cb"
+    },
+    {
+      "path": "final_project_cs/wiki/data/migrations.md",
+      "findings": [
+        "W14"
+      ],
+      "backup": "final_project_cs/wiki/data/_backup/2026-10-11_193844_current-facts/migrations.md",
+      "before_sha256": "4d1be2fc87d49ac01f1593baafd2233525b2869eebb2c30ab44fe34043d1debd",
+      "after_sha256": "f7d2cb258aceddb6af5cc726e1a79ec49816609ab45183a2b526aed825cfba05"
+    },
+    {
+      "path": "wiki/evaluation/index.md",
+      "findings": [
+        "W10"
+      ],
+      "backup": "wiki/evaluation/_backup/2026-10-11_193844_current-facts/index.md",
+      "before_sha256": "dc67c3335d388236dc4fb5c843fcede2d98c2638dca0512815e40b3278375b92",
+      "after_sha256": "199d786c3b89ab81684023bd683e5e8a3615b6aa0dcf9627b9428fed2f186744"
+    },
+    {
+      "path": "wiki/evaluation/finetuning.md",
+      "findings": [
+        "W15"
+      ],
+      "backup": "wiki/evaluation/_backup/2026-10-11_193844_current-facts/finetuning.md",
+      "before_sha256": "b959c5b3db7766eb554440a886c32969ada2342dd5261aee04c471431a463b7e",
+      "after_sha256": "18a3e7c6e70449cdb6561b8289b4ba22974b801c64599b7239e67f4c5af0ce68"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/code-layout.md",
+      "findings": [
+        "W16"
+      ],
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_193844_current-facts/code-layout.md",
+      "before_sha256": "0027e2f81c106e7911e80e97a3ad4ae97baa1a285ffa76fd5da930b12e5a040a",
+      "after_sha256": "d535d9b229d0633d55e41f7927c21c4e5f5c0891f1e8be199829fa1fee678c79"
+    },
+    {
+      "path": "wiki/delivery/roles.md",
+      "findings": [
+        "W16"
+      ],
+      "backup": "wiki/delivery/_backup/2026-10-11_193844_current-facts/roles.md",
+      "before_sha256": "0915529edb9747ecfa7fdecf3a1f597e0bd74f91d25ec80bbab1c35098339246",
+      "after_sha256": "4c0176918becef56337067c52a7b76d230e093a5cfdaa3231cd2e0984e77f471"
+    },
+    {
+      "path": "wiki/delivery/timeline.md",
+      "findings": [
+        "W17"
+      ],
+      "backup": "wiki/delivery/_backup/2026-10-11_193844_current-facts/timeline.md",
+      "before_sha256": "30c8c14e512146afbabe3dca4de1a5cd3b70e0e89e4a6578af3ec05898f015c1",
+      "after_sha256": "e0ea1160a81d74c1c6359483822a6765cf942fa2c83b5500efb496faf304ae43"
+    },
+    {
+      "path": "datasets/wiki/index.md",
+      "findings": [
+        "W19"
+      ],
+      "backup": "datasets/wiki/_backup/2026-10-11_193844_current-facts/index.md",
+      "before_sha256": "cc09f6a09ecc168461c50c63b947fa983c40545e32690343d058eb5a5de932f4",
+      "after_sha256": "3ce270059113e88e75015a322d321ee8963f52430922cbb13e3922e3534c9752"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints.md",
+      "findings": [
+        "W21"
+      ],
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_193844_current-facts/rest-endpoints.md",
+      "before_sha256": "ad4fd85368d7a2f8ddeb6728ec7f72fb135f51a0481e91765673211dd6c18a79",
+      "after_sha256": "8a3ae8f4d19a1377ba24644ac1b431747f07784155cd95a9d7d51992946794b9"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+      "findings": [
+        "W21"
+      ],
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_193844_current-facts/D-CS-011-browser-session-cookie.md",
+      "before_sha256": "1ee1e1e74cadde24f0663c32190dafc45f46ad3f29d1060a836d91a543fb8527",
+      "after_sha256": "711bffd5010089256c5f210b05f8cb066f554dbabfbb64a69059b13ad52566f8"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining-agent-design.md",
+      "findings": [
+        "W21"
+      ],
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_193844_current-facts/dining-agent-design.md",
+      "before_sha256": "ea5b54cc8322e83a301d7387b64d615102683272e03a32c26ac0b0035fa702a8",
+      "after_sha256": "517b08e3ad90a7a35d418768e776e9ebfa662b62b00885cbcf00a338c2ff211a"
+    },
+    {
+      "path": "AGENTS.md",
+      "findings": [
+        "W01"
+      ],
+      "backup": "_backup/2026-10-11_193844_current-facts/AGENTS.md",
+      "before_sha256": "681f2ddd639c04808ba202efc8e83e39a9af3bbe033c5845428981331023f9df",
+      "after_sha256": "1edd71c03893ae39c25809591d131995bc3580a658827500ad8333c377807940"
+    },
+    {
+      "path": "program/research/index.md",
+      "findings": [
+        "W01"
+      ],
+      "backup": "program/research/_backup/2026-10-11_193844_current-facts/index.md",
+      "before_sha256": "325d2ce8e2336ee55742e3ab29928169784e008692410cd190aac4b544b72c1e",
+      "after_sha256": "e112a9cb675480064ded667c104b4fe2e01a262bfaecd2ac98b9a3f4875d10cf"
+    },
+    {
+      "path": "wiki/index.md",
+      "findings": [
+        "W01"
+      ],
+      "backup": "wiki/_backup/2026-10-11_193844_current-facts/index.md",
+      "before_sha256": "a864050fe4229a63fbf5a6fc487ff147985b32b88e84779c9218be28afb992ab",
+      "after_sha256": "a6f810e28235707167cf0367eb98c975ee1df010f3b345d12827d63e1ec450c9"
+    },
+    {
+      "path": "final_project_cs/AGENTS.md",
+      "findings": [
+        "W01"
+      ],
+      "backup": "final_project_cs/_backup/2026-10-11_193844_current-facts/AGENTS.md",
+      "before_sha256": "ead5eec13c3ec490795a5587c76608a2aa6d5a8981b43d59242c1473be0eeff3",
+      "after_sha256": "03858a9bab4befad833e4fe4673a8b4a08dcbf1896976bc55ddac8a1a208dabb"
+    },
+    {
+      "path": "final_project_cs/CLAUDE.md",
+      "findings": [
+        "W01"
+      ],
+      "backup": "final_project_cs/_backup/2026-10-11_193844_current-facts/CLAUDE.md",
+      "before_sha256": "beae288df3a5688c4bd5337c5625734e71f433486ccd08f018f692d5fe0ea556",
+      "after_sha256": "daaa81e0db0055588a08b54ff553e555e9d8e4f9aebf5c11bba46bc6c45e458f"
+    },
+    {
+      "path": "final_project_cs/RULE.md",
+      "findings": [
+        "W01"
+      ],
+      "backup": "final_project_cs/_backup/2026-10-11_193844_current-facts/RULE.md",
+      "before_sha256": "c9508c185fa816da6ffd79bae67f2a7de563cd55daa44951af1b417fbc8a75ec",
+      "after_sha256": "986a30f4519889b220985eff20453670a572e3b1584341c9700135797a500c98"
+    },
+    {
+      "path": "README.md",
+      "findings": [
+        "W01"
+      ],
+      "backup": "_backup/2026-10-11_193844_current-facts/README.md",
+      "before_sha256": "b95775476b87595a5081e332d8aa1fed6115e2ea37de826e85089ce28006538d",
+      "after_sha256": "15898ad9fa8d399dc1afb12003e7e3dc1780e279a1eefd88234934d663129fbd"
+    },
+    {
+      "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+      "findings": [
+        "W07",
+        "W08",
+        "W25"
+      ],
+      "backup": "wiki/decisions/_backup/2026-10-11_193844_current-facts/D-017-watch-cadence-golden-time.md",
+      "before_sha256": "c3dc4c7393c00036dd4deea627d1b5ebaf8781311bc893281cb52ecbff1ef71e",
+      "after_sha256": "5b4ec965b2128c80f055c46a358f1d6176649192c87e7025519379edeaa4b757"
+    }
+  ],
+  "dataset_rows": {
+    "travel_golden.jsonl": 72,
+    "travel_holdout.jsonl": 24,
+    "travel_scenarios.jsonl": 10
+  },
+  "sql_active": 89,
+  "sql_pending": 1
+}

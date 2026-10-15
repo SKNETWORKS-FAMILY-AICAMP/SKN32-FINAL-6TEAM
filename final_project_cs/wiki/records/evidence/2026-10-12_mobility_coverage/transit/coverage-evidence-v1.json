@@ -1,0 +1,621 @@
+{
+  "schema_version": 1,
+  "checked_date": "2026-10-12",
+  "feature_catalog_entries": 9,
+  "feature_scope": [
+    5,
+    6,
+    7,
+    14,
+    15,
+    16,
+    17,
+    18,
+    20
+  ],
+  "features": [
+    {
+      "feature_number": 5,
+      "name": "대중교통 전체 소요 시간",
+      "product_paths": [
+        "app/domains/travel_ops/instances/mobility/engine/plan.py",
+        "app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+        "app/domains/travel_ops/instances/mobility/engine/departure_observer.py"
+      ],
+      "tests": [
+        "test_departure_observer_v1.py",
+        "test_subway_departure_v1.py",
+        "test_departure_boarding_guidance_v1.py"
+      ],
+      "official_source_ids": [
+        "seoul-arrival",
+        "seoul-bus-arrival",
+        "seoul-timetable"
+      ],
+      "offline_scope": "모델은 현재 첫 승차 이후 환승을 다시 계산; 실시간 조회 실패 시 시간표 모델임을 표시",
+      "remaining": [
+        "문 앞 출발부터 목적지 도착까지 같은 경로 실제 총소요",
+        "실제 승차·하차 및 접근/이탈 도보를 분리 기록"
+      ],
+      "actual_use_completed": false,
+      "tolerance": {
+        "public_schedule_boundary_minutes": null,
+        "field_observation_seconds": "explicit input required; no default invented"
+      }
+    },
+    {
+      "feature_number": 6,
+      "name": "지하철 경로 산출",
+      "product_paths": [
+        "app/domains/travel_ops/instances/mobility/engine/candidates.py",
+        "app/domains/travel_ops/instances/mobility/engine/express.py",
+        "app/domains/travel_ops/instances/mobility/engine/verify_time.py"
+      ],
+      "tests": [
+        "test_verify55_v1.py",
+        "test_express_runs.py",
+        "test_subway_departure_v1.py"
+      ],
+      "official_source_ids": [
+        "seoul-timetable",
+        "arex-hongdae"
+      ],
+      "offline_scope": "보유 시간표·열차 단위 급행표 및 공식 공표분 제약",
+      "remaining": [
+        "새 날짜·시간·행선지에서 같은 경로 외부 대조",
+        "순환선·급행·운행 예외 전역 커버"
+      ],
+      "actual_use_completed": false,
+      "tolerance": {
+        "public_schedule_boundary_minutes": null,
+        "field_observation_seconds": "explicit input required; no default invented"
+      }
+    },
+    {
+      "feature_number": 7,
+      "name": "버스 직행·환승 경로",
+      "product_paths": [
+        "app/domains/travel_ops/instances/mobility/engine/candidates.py",
+        "app/domains/travel_ops/instances/mobility/engine/bus_identity.py",
+        "app/domains/travel_ops/instances/mobility/engine/plan.py"
+      ],
+      "tests": [
+        "test_bus_direct_transfer_competition_v1.py",
+        "test_plan_left_out_bus_shape_v1.py",
+        "test_departure_observer_v1.py"
+      ],
+      "official_source_ids": [
+        "seoul-bus-arrival"
+      ],
+      "offline_scope": "버스 구간 프로파일 모델·정류장 ID 기반 현재 승차 재계산; 직행 때문에 환승 삭제하지 않음",
+      "remaining": [
+        "버스 다중환승 실제 이용·추천경로 대조",
+        "모든 노선의 현재 운행 변경"
+      ],
+      "actual_use_completed": false,
+      "tolerance": {
+        "public_schedule_boundary_minutes": null,
+        "field_observation_seconds": "explicit input required; no default invented"
+      }
+    },
+    {
+      "feature_number": 14,
+      "name": "첫차·막차·출발 시각",
+      "product_paths": [
+        "app/domains/travel_ops/instances/mobility/engine/timeutil.py",
+        "app/domains/travel_ops/instances/mobility/engine/published_boarding.py",
+        "app/domains/travel_ops/instances/mobility/engine/departure_observer.py"
+      ],
+      "tests": [
+        "test_published_boarding_v1.py",
+        "test_departure_service_day_boundary_v1.py"
+      ],
+      "official_source_ids": [
+        "seoul-timetable",
+        "arex-hongdae"
+      ],
+      "offline_scope": "현재 공표분12그룹2044개 무결성; 새 홍대 첫/막차 경계8개 웹 대조",
+      "remaining": [
+        "정기 시간표 밖 임시 연장·운휴 공지 적용",
+        "모든 노선·역·요일 첫막차 최신성"
+      ],
+      "actual_use_completed": false,
+      "tolerance": {
+        "public_schedule_boundary_minutes": 0,
+        "field_observation_seconds": "explicit input required; no default invented"
+      }
+    },
+    {
+      "feature_number": 15,
+      "name": "환승·역 출구·승차 칸",
+      "product_paths": [
+        "app/domains/travel_ops/instances/mobility/engine/options.py",
+        "app/domains/travel_ops/instances/mobility/engine/plan.py"
+      ],
+      "tests": [
+        "test_departure_boarding_guidance_v1.py",
+        "test_subway_departure_v1.py"
+      ],
+      "official_source_ids": [
+        "arex-hongdae"
+      ],
+      "offline_scope": "출구 좌표는 OSM 추정; 공식 홍대 출구번호9개 존재만 새 대조; 현재 승차·환승 시각 안내 연결",
+      "remaining": [
+        "출구 좌표·환승 통로 실제 보행",
+        "승차 칸의 같은 경로·방향 공식 표 대조"
+      ],
+      "actual_use_completed": false,
+      "tolerance": {
+        "public_schedule_boundary_minutes": null,
+        "field_observation_seconds": "explicit input required; no default invented"
+      }
+    },
+    {
+      "feature_number": 16,
+      "name": "실시간 도착정보",
+      "product_paths": [
+        "app/domains/travel_ops/ports/data_sources/seoul_subway.py",
+        "app/domains/travel_ops/ports/data_sources/subway_boarding.py",
+        "app/domains/travel_ops/instances/mobility/engine/departure_observer.py"
+      ],
+      "tests": [
+        "test_subway_departure_v1.py",
+        "test_departure_observer_v1.py",
+        "test_departure_boarding_guidance_v1.py"
+      ],
+      "official_source_ids": [
+        "seoul-arrival",
+        "seoul-bus-arrival"
+      ],
+      "offline_scope": "생성시각·정확한 역/방향·접근 후 승차 가능성 검사, 미래 환승은 모델과 구별",
+      "remaining": [
+        "조회 시점에 저장한 예측과 실제 동일 열차 도착/탑승을 연결",
+        "실제 도착 오차 분포"
+      ],
+      "actual_use_completed": false,
+      "tolerance": {
+        "public_schedule_boundary_minutes": null,
+        "field_observation_seconds": "explicit input required; no default invented"
+      }
+    },
+    {
+      "feature_number": 17,
+      "name": "혼잡 안내",
+      "product_paths": [
+        "app/domains/travel_ops/instances/mobility/engine/congestion.py",
+        "app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+        "app/domains/travel_ops/instances/mobility/engine/options.py"
+      ],
+      "tests": [
+        "test_congestion_service_v1.py"
+      ],
+      "official_source_ids": [
+        "line9-crowding"
+      ],
+      "offline_scope": "9호선 일반5776+급행2432 행을 구분 적용; 종류 미상은 일반으로 확정하지 않음",
+      "remaining": [
+        "특정 열차 실제 혼잡과 통계 안내 일치",
+        "새 운영 자료로 통계 시차 확인"
+      ],
+      "actual_use_completed": false,
+      "tolerance": {
+        "public_schedule_boundary_minutes": null,
+        "field_observation_seconds": "explicit input required; no default invented"
+      }
+    },
+    {
+      "feature_number": 18,
+      "name": "무정차·도로 사고 감시",
+      "product_paths": [
+        "app/domains/travel_ops/ports/data_sources/subway_notice.py",
+        "app/domains/travel_ops/ports/data_sources/utic.py",
+        "app/domains/travel_ops/ports/data_sources/its_traffic.py"
+      ],
+      "tests": [
+        "test_subway_notice.py",
+        "test_subway_notice_station_lists_v1.py",
+        "test_its_route_events_alternate.py"
+      ],
+      "official_source_ids": [
+        "metro-notice"
+      ],
+      "offline_scope": "공지 다역명·종료·시간 창 및 도로 대체 소스 경계 재생; 양 소스 실패를 사건 없음으로 합치지 않음",
+      "remaining": [
+        "새 실제 사건과 공급자 게시 시각의 정렬",
+        "지원 밖 노선·공지 누락·탐지 지연 분포"
+      ],
+      "actual_use_completed": false,
+      "tolerance": {
+        "public_schedule_boundary_minutes": null,
+        "field_observation_seconds": "explicit input required; no default invented"
+      }
+    },
+    {
+      "feature_number": 20,
+      "name": "사건 후 일정 자동 조정",
+      "product_paths": [
+        "app/domains/travel_ops/components/itinerary/itinerary_changes.py",
+        "app/domains/travel_ops/instances/mobility/team.py"
+      ],
+      "tests": [
+        "test_route_reroute_engine.py",
+        "test_departure_replan_v1.py",
+        "test_scenario_services.py"
+      ],
+      "official_source_ids": [
+        "metro-notice"
+      ],
+      "offline_scope": "사건을 계산기 조건으로 옮기고 최신 출발하한·여행조건으로 재경로; 실제 호출 경계 시험 수정",
+      "remaining": [
+        "격리된 실행 환경의 DB·계획서·알림 전체 연결 확인",
+        "새 실제 사건 또는 명시적 재생의 여행 전체 결과"
+      ],
+      "actual_use_completed": false,
+      "tolerance": {
+        "public_schedule_boundary_minutes": null,
+        "field_observation_seconds": "explicit input required; no default invented"
+      }
+    }
+  ],
+  "official_sources": [
+    {
+      "id": "seoul-bus-arrival",
+      "url": "https://www.data.go.kr/data/15000314/openapi.do",
+      "checked_date": "2026-10-12",
+      "fact": "노선ID별 정류소 도착정보; 도착 메시지·출발대기와 정류소 번호를 구별; 예정여행시간을 현장 승차 관측으로 읽지 않음",
+      "scope": "protocol_metadata",
+      "cannot_prove": "동일 차량 실제 도착·탑승 오차"
+    },
+    {
+      "id": "seoul-arrival",
+      "url": "https://data.seoul.go.kr/dataList/OA-12764/A/1/datasetView.do",
+      "checked_date": "2026-10-12",
+      "fact": "생성시각 이후 경과시간 보정 필요; 서울 밖 일부 역 미제공; 과거 실시간 자료는 별도 제공하지 않음",
+      "scope": "protocol_metadata",
+      "cannot_prove": "실제 열차 도착·탑승 시각과의 오차"
+    },
+    {
+      "id": "seoul-timetable",
+      "url": "https://data.seoul.go.kr/dataList/OA-101/A/1/datasetView.do",
+      "checked_date": "2026-10-12",
+      "fact": "역별 예정 시간표이며 실제 도착시각과 다를 수 있음",
+      "scope": "protocol_metadata",
+      "cannot_prove": "현재 실제 운행의 정확도"
+    },
+    {
+      "id": "arex-hongdae",
+      "url": "https://www.airportrailroad.com/train/normal/info/030/0",
+      "checked_date": "2026-10-12",
+      "fact": "평일·휴일 양방향 첫차·자정 이후 막차 및 안내도 출구 1~9번 확인",
+      "scope": "fresh_public_schedule_and_exit_presence",
+      "cannot_prove": "출구 좌표 오차·보행 시간·실제 환승 소요"
+    },
+    {
+      "id": "line9-crowding",
+      "url": "https://data.seoul.go.kr/dataList/OA-22197/F/1/datasetView.do",
+      "checked_date": "2026-10-12",
+      "fact": "30분간 역을 지나는 열차 평균; 평일/휴일·방향별 통계; 6량 922명=100%",
+      "scope": "published_statistic",
+      "cannot_prove": "지금 특정 열차의 혼잡도"
+    },
+    {
+      "id": "metro-notice",
+      "url": "https://www.data.go.kr/data/15144070/openapi.do",
+      "checked_date": "2026-10-12",
+      "fact": "지연·사고·무정차·시간표 변경 공지와 시작/종료 항목; 1분 갱신 안내",
+      "scope": "protocol_metadata",
+      "cannot_prove": "오늘 발생한 모든 사건의 탐지율"
+    }
+  ],
+  "public_inputs": {
+    "claim": "공식 공표 시각 경계와 출구 번호 존재 대조; 실제 도착/출구좌표/현장 혼잡 측정 아님",
+    "published_groups": [
+      {
+        "line": "공항철도",
+        "station_nm": "홍대입구",
+        "day_type": "weekday",
+        "dir": "U",
+        "matched": 183,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "홍대입구",
+        "day_type": "weekday",
+        "dir": "D",
+        "matched": 182,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "홍대입구",
+        "day_type": "holiday",
+        "dir": "U",
+        "matched": 159,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "홍대입구",
+        "day_type": "holiday",
+        "dir": "D",
+        "matched": 158,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dir": "U",
+        "matched": 183,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "weekday",
+        "dir": "D",
+        "matched": 182,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dir": "U",
+        "matched": 159,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "디지털미디어시티",
+        "day_type": "holiday",
+        "dir": "D",
+        "matched": 158,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "김포공항",
+        "day_type": "weekday",
+        "dir": "U",
+        "matched": 182,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "김포공항",
+        "day_type": "weekday",
+        "dir": "D",
+        "matched": 182,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "김포공항",
+        "day_type": "holiday",
+        "dir": "U",
+        "matched": 158,
+        "excluded": 26
+      },
+      {
+        "line": "공항철도",
+        "station_nm": "김포공항",
+        "day_type": "holiday",
+        "dir": "D",
+        "matched": 158,
+        "excluded": 26
+      }
+    ],
+    "published_group_count": 12,
+    "published_minutes_matched": 2044,
+    "nonpublished_base_rows_excluded_in_scoped_groups": 312,
+    "selected_product_timetable": "timetable_v1.jsonl.gz",
+    "loaded_base_timetable_rows": 453356,
+    "loaded_line_station_count": 798,
+    "fresh_official_arex_boundaries": [
+      {
+        "station": "홍대입구",
+        "day_type": "weekday",
+        "direction": "U",
+        "boundary": "first",
+        "official_minute": 334,
+        "stored_minute": 334,
+        "matches": true,
+        "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+      },
+      {
+        "station": "홍대입구",
+        "day_type": "weekday",
+        "direction": "U",
+        "boundary": "last",
+        "official_minute": 1471,
+        "stored_minute": 1471,
+        "matches": true,
+        "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+      },
+      {
+        "station": "홍대입구",
+        "day_type": "weekday",
+        "direction": "D",
+        "boundary": "first",
+        "official_minute": 328,
+        "stored_minute": 328,
+        "matches": true,
+        "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+      },
+      {
+        "station": "홍대입구",
+        "day_type": "weekday",
+        "direction": "D",
+        "boundary": "last",
+        "official_minute": 1448,
+        "stored_minute": 1448,
+        "matches": true,
+        "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+      },
+      {
+        "station": "홍대입구",
+        "day_type": "holiday",
+        "direction": "U",
+        "boundary": "first",
+        "official_minute": 334,
+        "stored_minute": 334,
+        "matches": true,
+        "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+      },
+      {
+        "station": "홍대입구",
+        "day_type": "holiday",
+        "direction": "U",
+        "boundary": "last",
+        "official_minute": 1471,
+        "stored_minute": 1471,
+        "matches": true,
+        "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+      },
+      {
+        "station": "홍대입구",
+        "day_type": "holiday",
+        "direction": "D",
+        "boundary": "first",
+        "official_minute": 328,
+        "stored_minute": 328,
+        "matches": true,
+        "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+      },
+      {
+        "station": "홍대입구",
+        "day_type": "holiday",
+        "direction": "D",
+        "boundary": "last",
+        "official_minute": 1448,
+        "stored_minute": 1448,
+        "matches": true,
+        "source_url": "https://www.airportrailroad.com/train/normal/info/030/0"
+      }
+    ],
+    "fresh_official_exit_number_presence": [
+      {
+        "station": "홍대입구",
+        "exit_ref": "1",
+        "exists_in_osm_data": true
+      },
+      {
+        "station": "홍대입구",
+        "exit_ref": "2",
+        "exists_in_osm_data": true
+      },
+      {
+        "station": "홍대입구",
+        "exit_ref": "3",
+        "exists_in_osm_data": true
+      },
+      {
+        "station": "홍대입구",
+        "exit_ref": "4",
+        "exists_in_osm_data": true
+      },
+      {
+        "station": "홍대입구",
+        "exit_ref": "5",
+        "exists_in_osm_data": true
+      },
+      {
+        "station": "홍대입구",
+        "exit_ref": "6",
+        "exists_in_osm_data": true
+      },
+      {
+        "station": "홍대입구",
+        "exit_ref": "7",
+        "exists_in_osm_data": true
+      },
+      {
+        "station": "홍대입구",
+        "exit_ref": "8",
+        "exists_in_osm_data": true
+      },
+      {
+        "station": "홍대입구",
+        "exit_ref": "9",
+        "exists_in_osm_data": true
+      }
+    ],
+    "station_exit_data": {
+      "source": "OSM Overpass node[railway=subway_entrance] bbox 36.75,126.40,38.12,129.10",
+      "grade": "추정",
+      "station_names": 645,
+      "exit_nodes": 3044
+    },
+    "line9_rows": 8208,
+    "line9_service_counts": {
+      "local": 5776,
+      "express": 2432
+    },
+    "file_sha256": {
+      "timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+      "timetable_v1.jsonl": "63a5b503dfe0d129e4a69993a9003669f3bf35ba8c833a55aa790d63db6478d0",
+      "published_boarding_timetable_v1.json": "7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+      "station_exits_v1.json": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+      "congestion_v1.jsonl": "e1e92ebb954b2900482b9f5a2ccdf91df386059577ff006ddb421972f9add07b",
+      "congestion_line9_v1.jsonl": "1b680c5dd069334b9a3fb4e03f0cbe7ab8cca35ed05792994775b007c70e9ae0"
+    },
+    "developer_api_calls": 0,
+    "private_data_accessed": false
+  },
+  "current_test_runs": {
+    "transit-regression-v2.xml": {
+      "executed": 257,
+      "passed": 257,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "helper-final-v2.xml": {
+      "executed": 41,
+      "passed": 41,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "unique_executed_development_tests": {
+    "passed": 259,
+    "total": 259,
+    "deduplication_key": "JUnit classname+name; helper-final-v2 supersedes same cases in regression"
+  },
+  "cli_runs": {
+    "development_replay_example": {
+      "exit_code": 0,
+      "compared": 1,
+      "passed": 1,
+      "actual_measured": 0
+    },
+    "unfilled_field_template": {
+      "exit_code": 1,
+      "compared": 0,
+      "unaligned": 1,
+      "actual_measured": 0
+    }
+  },
+  "artifact_limitations": [
+    "새 현장 탑승 관측0건",
+    "운영 서비스 연결·DB·외부 알림 미실행",
+    "범위별 시험 수는 서로 중복되므로 합산 금지"
+  ],
+  "code_sha256": {
+    "scripts/mobility/compare_transit_observations_v1.py": "ff2378a1676a23eac9664915662af09bca6444a91cca611165b18b2cb6f27060",
+    "tests/unit/travel/mobility/test_transit_observation_comparison_v1.py": "dd5075f9edec2e757facad2a8ff9544184b8c2ec0f37242c07245625b2595bbd",
+    "tests/unit/travel/test_route_reroute_engine.py": "85296784fd0a620c768d3376479a1a6a9e566ec155a2a0a2df3763f8bb17bf04"
+  },
+  "developer_api_calls": 0,
+  "private_data_accessed": false,
+  "external_messages_sent": 0,
+  "deployed": false,
+  "corrections": [
+    "최초 공개 감사는 제품이 선택하지 않는 jsonl을 지정해 해시 오류; 실제 제품의 timetable_file 선택 gz로 바로잡고 v1 로그 보존",
+    "최초 단독 helper CLI 시험은 sandbox 임시폴더 권한으로2개 setup오류; workspace basetemp에서41개 모두 재실행"
+  ],
+  "previous_output_backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_coverage_20261012\\transit\\_backup\\2026-10-11_180331_coverage_evidence_724885e7\\coverage-evidence-v1.json"
+}

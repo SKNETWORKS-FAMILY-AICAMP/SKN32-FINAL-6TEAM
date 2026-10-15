@@ -35,7 +35,7 @@ def task(team_id: str, capability: str, context: ContextPack,
         task_id=uuid4(), run_id=uuid4(), case_id=context.case_id, team_id=team_id,
         capability=capability, case_version=1, input_text=input_text,
         context=context, allowed_tools=allowed,
-        deadline_at=NOW + timedelta(seconds=90))
+        deadline_at=datetime.now(UTC) + timedelta(seconds=90))
 
 
 class FakeTools:

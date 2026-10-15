@@ -1,0 +1,34 @@
+{
+  "input_script_engine_model_match": true,
+  "registered_adapter_hash_match": true,
+  "full_ids_gold_type_match": true,
+  "paired": {
+    "control_request": {
+      "total": 1033,
+      "trained_only_correct": 19,
+      "original_only_correct": 15,
+      "exact_p": 0.6075913612730801
+    },
+    "control_no_request": {
+      "total": 974,
+      "trained_only_correct": 206,
+      "original_only_correct": 4,
+      "exact_p": 9.75777741153089e-56
+    },
+    "mixed_request": {
+      "total": 1033,
+      "trained_only_correct": 20,
+      "original_only_correct": 18,
+      "exact_p": 0.8714146793645341
+    },
+    "mixed_no_request": {
+      "total": 974,
+      "trained_only_correct": 145,
+      "original_only_correct": 18,
+      "exact_p": 7.580929489001171e-26
+    }
+  },
+  "our_training": true,
+  "repetitions": 1,
+  "final_ranking": false
+}

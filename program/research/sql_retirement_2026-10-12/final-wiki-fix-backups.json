@@ -1,0 +1,12 @@
+[
+  {
+    "file": "wiki/architecture/system-context.md",
+    "backup": "wiki\\architecture\\_backup\\2026-10-12_final-wiki-check-fix\\system-context.md",
+    "sha256": "491a3ed6abd04019eaed4817987b43998405446a74ee2866f0c3e32a8a2b479e"
+  },
+  {
+    "file": "final_project_cs/wiki/quality/invariants.md",
+    "backup": "final_project_cs\\wiki\\quality\\_backup\\2026-10-12_final-wiki-check-fix\\invariants.md",
+    "sha256": "c990c0c3984515dc3d8248feae292dc1a2ce660c8d760de48cd0d2ee35e07756"
+  }
+]

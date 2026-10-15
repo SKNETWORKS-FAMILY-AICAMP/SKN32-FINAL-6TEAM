@@ -72,6 +72,18 @@ def table() -> str:
 
 def render() -> str:
     return "\n".join([
+        "---",
+        "type: guide",
+        "title: Case 상태 전이도",
+        "description: 코드의 상태·전이 표에서 만드는 상태 전이도와 전이 목록",
+        "status: draft",
+        "domain: neutral",
+        "automation:",
+        "  command: python -m scripts.make_state_diagram",
+        "  owner: process:state-diagram",
+        "  manual_edit: false",
+        "---",
+        "",
         "<!-- 이 파일은 `python -m scripts.make_state_diagram` 이 만든다. 손으로 고치지 않는다. -->",
         "<!-- 출처: app/core/case_lifecycle/events.py:TRANSITIONS -->",
         "",
@@ -87,6 +99,10 @@ def render() -> str:
         "## 전이표",
         "",
         table(),
+        "",
+        "## 관계",
+        "",
+        "- [Case 생명주기](case-lifecycle.md) — 상태와 전이의 책임·경계",
         "",
     ])
 
@@ -108,6 +124,12 @@ def main() -> int:
         return 1
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
+    if OUT.exists() and OUT.read_text(encoding="utf-8") != want:
+        from datetime import datetime
+        import shutil
+        backup = OUT.parent / "_backup" / (datetime.now().strftime("%Y-%m-%d_%H%M%S_%f") + "_state-diagram") / OUT.name
+        backup.parent.mkdir(parents=True)
+        shutil.copy2(OUT, backup)
     OUT.write_text(want, encoding="utf-8", newline="\n")
     print("만듦: %s · 상태 %d · 전이 %d"
           % (OUT.relative_to(REPO_ROOT), len(CaseStatus), len(TRANSITIONS)))

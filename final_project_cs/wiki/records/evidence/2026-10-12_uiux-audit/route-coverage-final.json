@@ -1,0 +1,283 @@
+{
+  "scope": "13 entry routes at 375px and 1280px, strict original route audit assertions",
+  "counts": {
+    "planned": 26,
+    "uniquePassed": 26,
+    "uniqueScreenshotsVisuallyReviewed": 26,
+    "initialStrictLogPassed": 17,
+    "latestIntakePassed": 2,
+    "remainingRoutesPassed": 7
+  },
+  "excluded": [
+    "route-audit-final temporary selector-fallback diagnostic run",
+    "latest-audit interrupted build"
+  ],
+  "initialRunNote": "Interrupted by Ctrl+C during confirmed PC memory and disk shortage; no route-audit.json was written. Seventeen passed routes are supported by the preserved original route-audit.log and screenshots.",
+  "limits": [
+    "Mock API responses, not actual cs project API verification.",
+    "Support subsequent cache guard change is absent from the reused build; support route verifies ordinary page rendering only.",
+    "Route coverage does not establish every possible UI state or action is bug free."
+  ],
+  "entries": [
+    {
+      "screen": "account",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes.json",
+      "sourceType": "completed-run-json",
+      "sourceTitle": "전체 경로 · account · 375px: 화면 표시·가로 넘침·실행 오류",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes-evidence\\uiux-route-audit-20261012--e25da-t-·-375px-화면-표시·가로-넘침·실행-오류\\account-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "account",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes.json",
+      "sourceType": "completed-run-json",
+      "sourceTitle": "전체 경로 · account · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes-evidence\\uiux-route-audit-20261012--b651c--·-1280px-화면-표시·가로-넘침·실행-오류\\account-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "intake",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\latest-core.json",
+      "sourceType": "completed-run-json",
+      "sourceTitle": "전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\latest-core-evidence\\uiux-route-audit-20261012--f4aa1-e-·-375px-화면-표시·가로-넘침·실행-오류\\intake-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "intake",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\latest-core.json",
+      "sourceType": "completed-run-json",
+      "sourceTitle": "전체 경로 · intake · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\latest-core-evidence\\uiux-route-audit-20261012--3a59a--·-1280px-화면-표시·가로-넘침·실행-오류\\intake-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "intro",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok  1 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intro · 375px: 화면 표시·가로 넘침·실행 오류 (2.6s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--153e0-o-·-375px-화면-표시·가로-넘침·실행-오류\\intro-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "intro",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok 14 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intro · 1280px: 화면 표시·가로 넘침·실행 오류 (2.0s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--7ed21--·-1280px-화면-표시·가로-넘침·실행-오류\\intro-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "profile",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok 11 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · profile · 375px: 화면 표시·가로 넘침·실행 오류 (5.7s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--37cfd-e-·-375px-화면-표시·가로-넘침·실행-오류\\profile-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "profile",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes.json",
+      "sourceType": "completed-run-json",
+      "sourceTitle": "전체 경로 · profile · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes-evidence\\uiux-route-audit-20261012--a244c--·-1280px-화면-표시·가로-넘침·실행-오류\\profile-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "registered-trip",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok  5 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registered-trip · 375px: 화면 표시·가로 넘침·실행 오류 (2.0s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--16368-p-·-375px-화면-표시·가로-넘침·실행-오류\\registered-trip-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "registered-trip",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes.json",
+      "sourceType": "completed-run-json",
+      "sourceTitle": "전체 경로 · registered-trip · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes-evidence\\uiux-route-audit-20261012--2c972--·-1280px-화면-표시·가로-넘침·실행-오류\\registered-trip-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "registration",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok  3 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registration · 375px: 화면 표시·가로 넘침·실행 오류 (1.9s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--93e14-n-·-375px-화면-표시·가로-넘침·실행-오류\\registration-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "registration",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok 16 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · registration · 1280px: 화면 표시·가로 넘침·실행 오류 (3.2s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--0bff6--·-1280px-화면-표시·가로-넘침·실행-오류\\registration-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "results-redirect",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok  7 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · results-redirect · 375px: 화면 표시·가로 넘침·실행 오류 (2.6s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--b2dab-t-·-375px-화면-표시·가로-넘침·실행-오류\\results-redirect-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "results-redirect",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok 20 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · results-redirect · 1280px: 화면 표시·가로 넘침·실행 오류 (2.4s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--c9058--·-1280px-화면-표시·가로-넘침·실행-오류\\results-redirect-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "social-cancelled",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok 13 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · social-cancelled · 375px: 화면 표시·가로 넘침·실행 오류 (2.2s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--d4fe8-d-·-375px-화면-표시·가로-넘침·실행-오류\\social-cancelled-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "social-cancelled",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes.json",
+      "sourceType": "completed-run-json",
+      "sourceTitle": "전체 경로 · social-cancelled · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes-evidence\\uiux-route-audit-20261012--818e1--·-1280px-화면-표시·가로-넘침·실행-오류\\social-cancelled-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "starting-revisit",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok  9 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · starting-revisit · 375px: 화면 표시·가로 넘침·실행 오류 (2.5s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--c2b47-t-·-375px-화면-표시·가로-넘침·실행-오류\\starting-revisit-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "starting-revisit",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes.json",
+      "sourceType": "completed-run-json",
+      "sourceTitle": "전체 경로 · starting-revisit · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes-evidence\\uiux-route-audit-20261012--a273c--·-1280px-화면-표시·가로-넘침·실행-오류\\starting-revisit-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "support",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok 12 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · support · 375px: 화면 표시·가로 넘침·실행 오류 (2.0s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--ebd94-t-·-375px-화면-표시·가로-넘침·실행-오류\\support-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "support",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes.json",
+      "sourceType": "completed-run-json",
+      "sourceTitle": "전체 경로 · support · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\remaining-routes-evidence\\uiux-route-audit-20261012--19225--·-1280px-화면-표시·가로-넘침·실행-오류\\support-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "terms-preferences",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok  2 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · terms-preferences · 375px: 화면 표시·가로 넘침·실행 오류 (2.6s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--f562c-s-·-375px-화면-표시·가로-넘침·실행-오류\\terms-preferences-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "terms-preferences",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok 15 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · terms-preferences · 1280px: 화면 표시·가로 넘침·실행 오류 (2.7s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--2b1d2--·-1280px-화면-표시·가로-넘침·실행-오류\\terms-preferences-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "trips",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok  4 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · trips · 375px: 화면 표시·가로 넘침·실행 오류 (1.7s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--f0aaf-s-·-375px-화면-표시·가로-넘침·실행-오류\\trips-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "trips",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok 17 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · trips · 1280px: 화면 표시·가로 넘침·실행 오류 (3.2s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--93007--·-1280px-화면-표시·가로-넘침·실행-오류\\trips-1280.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "verification-redirect",
+      "width": 375,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok  6 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · verification-redirect · 375px: 화면 표시·가로 넘침·실행 오류 (2.3s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--d9802-t-·-375px-화면-표시·가로-넘침·실행-오류\\verification-redirect-375.png",
+      "screenshotVisuallyReviewed": true
+    },
+    {
+      "screen": "verification-redirect",
+      "width": 1280,
+      "status": "passed",
+      "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-audit.log",
+      "sourceType": "interrupted-run-log",
+      "sourceLine": "ok 19 tests\\live\\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · verification-redirect · 1280px: 화면 표시·가로 넘침·실행 오류 (3.3s)",
+      "screenshot": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\route-evidence\\uiux-route-audit-20261012--ec347--·-1280px-화면-표시·가로-넘침·실행-오류\\verification-redirect-1280.png",
+      "screenshotVisuallyReviewed": true
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/mobility/test_review_fixes_verify.py",
+    "tests/unit/travel/mobility/test_verify55_v1.py",
+    "tests/unit/travel/mobility/test_transfer_fare_clock_v1.py",
+    "tests/unit/travel/test_departure_replan_v1.py",
+    "tests/unit/travel/test_departure_source_gate_v1.py",
+    "tests/unit/travel/test_departure_watch_v1.py",
+    "-q",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-subway-depart-extra",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1056_\uc9c0\ud558\ucca0_\ud604\uc7ac\ucd9c\ubc1c_\uc81c\ud488\uc5f0\uacb0\\supplemental-v1.xml"
+  ],
+  "exit_code": 0
+}

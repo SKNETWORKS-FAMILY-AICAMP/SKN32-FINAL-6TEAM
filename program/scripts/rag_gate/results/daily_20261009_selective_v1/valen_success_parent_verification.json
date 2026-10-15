@@ -1,0 +1,21 @@
+{
+  "verified_at_kst": "2026-10-09T10:31:49.453159+09:00",
+  "parsed": 12,
+  "expected": 12,
+  "correct": 4,
+  "errors": 0,
+  "full_input_checked": 9425,
+  "full_input_expected": 9425,
+  "max_tokens": 3934,
+  "max_choices": 47,
+  "answer_SHA256": "338c465872da11e903bc10bfef114741b75821637e6119ce859d95f0a75bfd6f",
+  "context_SHA256": "3e0b136f56b40aa71e8be5b34c482143d213fe4d9132f733718736ff473d9481",
+  "full_model_benchmark_completed": false,
+  "first_failure_preserved": true,
+  "backups": [
+    "program/research/daily_rag_slm/_backup/2026-10-09_103149_valen_actual_success/model_release_watchlist.json",
+    "program/research/daily_rag_slm/_backup/2026-10-09_103149_valen_actual_success/2026-10-09.json",
+    "final_project_cs/wiki/records/reports/_backup/2026-10-09_103149_valen_actual_success/2026-10-09_1015_daily-research-and-serving.md",
+    "program/research/daily_rag_slm/_backup/2026-10-09_103149_valen_actual_success/2026-10-09.md"
+  ]
+}

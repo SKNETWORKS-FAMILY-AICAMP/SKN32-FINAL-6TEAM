@@ -1,0 +1,4908 @@
+{
+  "created_at": "2026-10-09T09:56:42.116924+09:00",
+  "official_rows": 696,
+  "official_lines": 19,
+  "by_line": {
+    "1호선": 102,
+    "2호선": 51,
+    "3호선": 44,
+    "4호선": 48,
+    "5호선": 56,
+    "6호선": 39,
+    "7호선": 53,
+    "8호선": 24,
+    "9호선": 38,
+    "GTX-A": 9,
+    "경의중앙선": 57,
+    "공항철도": 14,
+    "경춘선": 25,
+    "수인분당선": 63,
+    "신분당선": 16,
+    "경강선": 12,
+    "우이신설선": 13,
+    "서해선": 21,
+    "신림선": 11
+  },
+  "coordinate_rows": 793,
+  "exact_matches": 587,
+  "matched": [
+    {
+      "coordinate_key": "01호선|명학",
+      "official_station_id": "1001080148",
+      "line_id": "1001",
+      "official_query_name": "명학"
+    },
+    {
+      "coordinate_key": "01호선|군포",
+      "official_station_id": "1001080150",
+      "line_id": "1001",
+      "official_query_name": "군포"
+    },
+    {
+      "coordinate_key": "01호선|부개",
+      "official_station_id": "1001000151",
+      "line_id": "1001",
+      "official_query_name": "부개"
+    },
+    {
+      "coordinate_key": "01호선|소사",
+      "official_station_id": "1001000147",
+      "line_id": "1001",
+      "official_query_name": "소사"
+    },
+    {
+      "coordinate_key": "01호선|구일",
+      "official_station_id": "1001000142",
+      "line_id": "1001",
+      "official_query_name": "구일"
+    },
+    {
+      "coordinate_key": "01호선|인천",
+      "official_station_id": "1001000161",
+      "line_id": "1001",
+      "official_query_name": "인천"
+    },
+    {
+      "coordinate_key": "01호선|동인천",
+      "official_station_id": "1001000160",
+      "line_id": "1001",
+      "official_query_name": "동인천"
+    },
+    {
+      "coordinate_key": "01호선|제물포",
+      "official_station_id": "1001000158",
+      "line_id": "1001",
+      "official_query_name": "제물포"
+    },
+    {
+      "coordinate_key": "01호선|주안",
+      "official_station_id": "1001000156",
+      "line_id": "1001",
+      "official_query_name": "주안"
+    },
+    {
+      "coordinate_key": "01호선|동암",
+      "official_station_id": "1001000154",
+      "line_id": "1001",
+      "official_query_name": "동암"
+    },
+    {
+      "coordinate_key": "01호선|백운",
+      "official_station_id": "1001000153",
+      "line_id": "1001",
+      "official_query_name": "백운"
+    },
+    {
+      "coordinate_key": "01호선|부평",
+      "official_station_id": "1001000152",
+      "line_id": "1001",
+      "official_query_name": "부평"
+    },
+    {
+      "coordinate_key": "01호선|오류동",
+      "official_station_id": "1001000144",
+      "line_id": "1001",
+      "official_query_name": "오류동"
+    },
+    {
+      "coordinate_key": "01호선|개봉",
+      "official_station_id": "1001000143",
+      "line_id": "1001",
+      "official_query_name": "개봉"
+    },
+    {
+      "coordinate_key": "01호선|천안",
+      "official_station_id": "1001080169",
+      "line_id": "1001",
+      "official_query_name": "천안"
+    },
+    {
+      "coordinate_key": "01호선|두정",
+      "official_station_id": "1001080168",
+      "line_id": "1001",
+      "official_query_name": "두정"
+    },
+    {
+      "coordinate_key": "01호선|직산",
+      "official_station_id": "1001080167",
+      "line_id": "1001",
+      "official_query_name": "직산"
+    },
+    {
+      "coordinate_key": "01호선|성환",
+      "official_station_id": "1001080166",
+      "line_id": "1001",
+      "official_query_name": "성환"
+    },
+    {
+      "coordinate_key": "01호선|진위",
+      "official_station_id": "1001080161",
+      "line_id": "1001",
+      "official_query_name": "진위"
+    },
+    {
+      "coordinate_key": "01호선|수원",
+      "official_station_id": "1001080155",
+      "line_id": "1001",
+      "official_query_name": "수원"
+    },
+    {
+      "coordinate_key": "01호선|화서",
+      "official_station_id": "1001080154",
+      "line_id": "1001",
+      "official_query_name": "화서"
+    },
+    {
+      "coordinate_key": "01호선|창동",
+      "official_station_id": "1001000116",
+      "line_id": "1001",
+      "official_query_name": "창동"
+    },
+    {
+      "coordinate_key": "01호선|남영",
+      "official_station_id": "1001000134",
+      "line_id": "1001",
+      "official_query_name": "남영"
+    },
+    {
+      "coordinate_key": "01호선|용산",
+      "official_station_id": "1001000135",
+      "line_id": "1001",
+      "official_query_name": "용산"
+    },
+    {
+      "coordinate_key": "01호선|노량진",
+      "official_station_id": "1001000136",
+      "line_id": "1001",
+      "official_query_name": "노량진"
+    },
+    {
+      "coordinate_key": "01호선|대방",
+      "official_station_id": "1001000137",
+      "line_id": "1001",
+      "official_query_name": "대방"
+    },
+    {
+      "coordinate_key": "01호선|영등포",
+      "official_station_id": "1001000139",
+      "line_id": "1001",
+      "official_query_name": "영등포"
+    },
+    {
+      "coordinate_key": "01호선|신도림",
+      "official_station_id": "1001000140",
+      "line_id": "1001",
+      "official_query_name": "신도림"
+    },
+    {
+      "coordinate_key": "01호선|봉명",
+      "official_station_id": "1001080170",
+      "line_id": "1001",
+      "official_query_name": "봉명"
+    },
+    {
+      "coordinate_key": "01호선|아산",
+      "official_station_id": "1001080172",
+      "line_id": "1001",
+      "official_query_name": "아산"
+    },
+    {
+      "coordinate_key": "01호선|탕정",
+      "official_station_id": "1001080173",
+      "line_id": "1001",
+      "official_query_name": "탕정"
+    },
+    {
+      "coordinate_key": "01호선|배방",
+      "official_station_id": "1001080174",
+      "line_id": "1001",
+      "official_query_name": "배방"
+    },
+    {
+      "coordinate_key": "01호선|외대앞",
+      "official_station_id": "1001000122",
+      "line_id": "1001",
+      "official_query_name": "외대앞"
+    },
+    {
+      "coordinate_key": "01호선|신이문",
+      "official_station_id": "1001000121",
+      "line_id": "1001",
+      "official_query_name": "신이문"
+    },
+    {
+      "coordinate_key": "01호선|온양온천",
+      "official_station_id": "1001080175",
+      "line_id": "1001",
+      "official_query_name": "온양온천"
+    },
+    {
+      "coordinate_key": "01호선|신창",
+      "official_station_id": "1001080176",
+      "line_id": "1001",
+      "official_query_name": "신창"
+    },
+    {
+      "coordinate_key": "01호선|동묘앞",
+      "official_station_id": "1001000127",
+      "line_id": "1001",
+      "official_query_name": "동묘앞"
+    },
+    {
+      "coordinate_key": "01호선|청량리",
+      "official_station_id": "1001000124",
+      "line_id": "1001",
+      "official_query_name": "청량리"
+    },
+    {
+      "coordinate_key": "01호선|제기동",
+      "official_station_id": "1001000125",
+      "line_id": "1001",
+      "official_query_name": "제기동"
+    },
+    {
+      "coordinate_key": "01호선|신설동",
+      "official_station_id": "1001000126",
+      "line_id": "1001",
+      "official_query_name": "신설동"
+    },
+    {
+      "coordinate_key": "01호선|동대문",
+      "official_station_id": "1001000128",
+      "line_id": "1001",
+      "official_query_name": "동대문"
+    },
+    {
+      "coordinate_key": "01호선|종로5가",
+      "official_station_id": "1001000129",
+      "line_id": "1001",
+      "official_query_name": "종로5가"
+    },
+    {
+      "coordinate_key": "01호선|종로3가",
+      "official_station_id": "1001000130",
+      "line_id": "1001",
+      "official_query_name": "종로3가"
+    },
+    {
+      "coordinate_key": "01호선|종각",
+      "official_station_id": "1001000131",
+      "line_id": "1001",
+      "official_query_name": "종각"
+    },
+    {
+      "coordinate_key": "01호선|시청",
+      "official_station_id": "1001000132",
+      "line_id": "1001",
+      "official_query_name": "시청"
+    },
+    {
+      "coordinate_key": "01호선|지행",
+      "official_station_id": "1001000104",
+      "line_id": "1001",
+      "official_query_name": "지행"
+    },
+    {
+      "coordinate_key": "01호선|송내",
+      "official_station_id": "1001000150",
+      "line_id": "1001",
+      "official_query_name": "송내"
+    },
+    {
+      "coordinate_key": "01호선|부천",
+      "official_station_id": "1001000148",
+      "line_id": "1001",
+      "official_query_name": "부천"
+    },
+    {
+      "coordinate_key": "01호선|역곡",
+      "official_station_id": "1001000146",
+      "line_id": "1001",
+      "official_query_name": "역곡"
+    },
+    {
+      "coordinate_key": "01호선|망월사",
+      "official_station_id": "1001000112",
+      "line_id": "1001",
+      "official_query_name": "망월사"
+    },
+    {
+      "coordinate_key": "01호선|석계",
+      "official_station_id": "1001000120",
+      "line_id": "1001",
+      "official_query_name": "석계"
+    },
+    {
+      "coordinate_key": "01호선|광운대",
+      "official_station_id": "1001000119",
+      "line_id": "1001",
+      "official_query_name": "광운대"
+    },
+    {
+      "coordinate_key": "01호선|도봉산",
+      "official_station_id": "1001000113",
+      "line_id": "1001",
+      "official_query_name": "도봉산"
+    },
+    {
+      "coordinate_key": "01호선|월계",
+      "official_station_id": "1001000118",
+      "line_id": "1001",
+      "official_query_name": "월계"
+    },
+    {
+      "coordinate_key": "01호선|도봉",
+      "official_station_id": "1001000114",
+      "line_id": "1001",
+      "official_query_name": "도봉"
+    },
+    {
+      "coordinate_key": "01호선|방학",
+      "official_station_id": "1001000115",
+      "line_id": "1001",
+      "official_query_name": "방학"
+    },
+    {
+      "coordinate_key": "01호선|광명",
+      "official_station_id": "1001075410",
+      "line_id": "1001",
+      "official_query_name": "광명"
+    },
+    {
+      "coordinate_key": "01호선|서동탄",
+      "official_station_id": "1001801571",
+      "line_id": "1001",
+      "official_query_name": "서동탄"
+    },
+    {
+      "coordinate_key": "01호선|가산디지털단지",
+      "official_station_id": "1001080142",
+      "line_id": "1001",
+      "official_query_name": "가산디지털단지"
+    },
+    {
+      "coordinate_key": "01호선|금천구청",
+      "official_station_id": "1001080144",
+      "line_id": "1001",
+      "official_query_name": "금천구청"
+    },
+    {
+      "coordinate_key": "01호선|당정",
+      "official_station_id": "1001080151",
+      "line_id": "1001",
+      "official_query_name": "당정"
+    },
+    {
+      "coordinate_key": "01호선|녹천",
+      "official_station_id": "1001000117",
+      "line_id": "1001",
+      "official_query_name": "녹천"
+    },
+    {
+      "coordinate_key": "01호선|석수",
+      "official_station_id": "1001080145",
+      "line_id": "1001",
+      "official_query_name": "석수"
+    },
+    {
+      "coordinate_key": "01호선|관악",
+      "official_station_id": "1001080146",
+      "line_id": "1001",
+      "official_query_name": "관악"
+    },
+    {
+      "coordinate_key": "01호선|평택",
+      "official_station_id": "1001080165",
+      "line_id": "1001",
+      "official_query_name": "평택"
+    },
+    {
+      "coordinate_key": "01호선|서정리",
+      "official_station_id": "1001080163",
+      "line_id": "1001",
+      "official_query_name": "서정리"
+    },
+    {
+      "coordinate_key": "01호선|구로",
+      "official_station_id": "1001000141",
+      "line_id": "1001",
+      "official_query_name": "구로"
+    },
+    {
+      "coordinate_key": "01호선|동두천중앙",
+      "official_station_id": "1001000103",
+      "line_id": "1001",
+      "official_query_name": "동두천중앙"
+    },
+    {
+      "coordinate_key": "01호선|동두천",
+      "official_station_id": "1001000101",
+      "line_id": "1001",
+      "official_query_name": "동두천"
+    },
+    {
+      "coordinate_key": "01호선|소요산",
+      "official_station_id": "1001000100",
+      "line_id": "1001",
+      "official_query_name": "소요산"
+    },
+    {
+      "coordinate_key": "01호선|청산",
+      "official_station_id": "1001001001",
+      "line_id": "1001",
+      "official_query_name": "청산"
+    },
+    {
+      "coordinate_key": "01호선|전곡",
+      "official_station_id": "1001001002",
+      "line_id": "1001",
+      "official_query_name": "전곡"
+    },
+    {
+      "coordinate_key": "01호선|성균관대",
+      "official_station_id": "1001080153",
+      "line_id": "1001",
+      "official_query_name": "성균관대"
+    },
+    {
+      "coordinate_key": "01호선|의왕",
+      "official_station_id": "1001080152",
+      "line_id": "1001",
+      "official_query_name": "의왕"
+    },
+    {
+      "coordinate_key": "01호선|송탄",
+      "official_station_id": "1001080162",
+      "line_id": "1001",
+      "official_query_name": "송탄"
+    },
+    {
+      "coordinate_key": "01호선|오산",
+      "official_station_id": "1001080160",
+      "line_id": "1001",
+      "official_query_name": "오산"
+    },
+    {
+      "coordinate_key": "01호선|오산대",
+      "official_station_id": "1001080159",
+      "line_id": "1001",
+      "official_query_name": "오산대"
+    },
+    {
+      "coordinate_key": "01호선|세마",
+      "official_station_id": "1001080158",
+      "line_id": "1001",
+      "official_query_name": "세마"
+    },
+    {
+      "coordinate_key": "01호선|병점",
+      "official_station_id": "1001080157",
+      "line_id": "1001",
+      "official_query_name": "병점"
+    },
+    {
+      "coordinate_key": "01호선|세류",
+      "official_station_id": "1001080156",
+      "line_id": "1001",
+      "official_query_name": "세류"
+    },
+    {
+      "coordinate_key": "01호선|독산",
+      "official_station_id": "1001080143",
+      "line_id": "1001",
+      "official_query_name": "독산"
+    },
+    {
+      "coordinate_key": "01호선|안양",
+      "official_station_id": "1001080147",
+      "line_id": "1001",
+      "official_query_name": "안양"
+    },
+    {
+      "coordinate_key": "01호선|연천",
+      "official_station_id": "1001001003",
+      "line_id": "1001",
+      "official_query_name": "연천"
+    },
+    {
+      "coordinate_key": "01호선|회룡",
+      "official_station_id": "1001000111",
+      "line_id": "1001",
+      "official_query_name": "회룡"
+    },
+    {
+      "coordinate_key": "01호선|의정부",
+      "official_station_id": "1001000110",
+      "line_id": "1001",
+      "official_query_name": "의정부"
+    },
+    {
+      "coordinate_key": "01호선|가능",
+      "official_station_id": "1001000109",
+      "line_id": "1001",
+      "official_query_name": "가능"
+    },
+    {
+      "coordinate_key": "01호선|녹양",
+      "official_station_id": "1001000108",
+      "line_id": "1001",
+      "official_query_name": "녹양"
+    },
+    {
+      "coordinate_key": "01호선|양주",
+      "official_station_id": "1001000107",
+      "line_id": "1001",
+      "official_query_name": "양주"
+    },
+    {
+      "coordinate_key": "01호선|덕계",
+      "official_station_id": "1001000106",
+      "line_id": "1001",
+      "official_query_name": "덕계"
+    },
+    {
+      "coordinate_key": "01호선|덕정",
+      "official_station_id": "1001000105",
+      "line_id": "1001",
+      "official_query_name": "덕정"
+    },
+    {
+      "coordinate_key": "01호선|보산",
+      "official_station_id": "1001000102",
+      "line_id": "1001",
+      "official_query_name": "보산"
+    },
+    {
+      "coordinate_key": "01호선|회기",
+      "official_station_id": "1001000123",
+      "line_id": "1001",
+      "official_query_name": "회기"
+    },
+    {
+      "coordinate_key": "01호선|금정",
+      "official_station_id": "1001080149",
+      "line_id": "1001",
+      "official_query_name": "금정"
+    },
+    {
+      "coordinate_key": "01호선|신길",
+      "official_station_id": "1001000138",
+      "line_id": "1001",
+      "official_query_name": "신길"
+    },
+    {
+      "coordinate_key": "01호선|도화",
+      "official_station_id": "1001000157",
+      "line_id": "1001",
+      "official_query_name": "도화"
+    },
+    {
+      "coordinate_key": "01호선|중동",
+      "official_station_id": "1001000149",
+      "line_id": "1001",
+      "official_query_name": "중동"
+    },
+    {
+      "coordinate_key": "01호선|온수",
+      "official_station_id": "1001000145",
+      "line_id": "1001",
+      "official_query_name": "온수"
+    },
+    {
+      "coordinate_key": "01호선|도원",
+      "official_station_id": "1001000159",
+      "line_id": "1001",
+      "official_query_name": "도원"
+    },
+    {
+      "coordinate_key": "01호선|간석",
+      "official_station_id": "1001000155",
+      "line_id": "1001",
+      "official_query_name": "간석"
+    },
+    {
+      "coordinate_key": "02호선|강변",
+      "official_station_id": "1002000214",
+      "line_id": "1002",
+      "official_query_name": "강변"
+    },
+    {
+      "coordinate_key": "02호선|상왕십리",
+      "official_station_id": "1002000207",
+      "line_id": "1002",
+      "official_query_name": "상왕십리"
+    },
+    {
+      "coordinate_key": "02호선|역삼",
+      "official_station_id": "1002000221",
+      "line_id": "1002",
+      "official_query_name": "역삼"
+    },
+    {
+      "coordinate_key": "02호선|서초",
+      "official_station_id": "1002000224",
+      "line_id": "1002",
+      "official_query_name": "서초"
+    },
+    {
+      "coordinate_key": "02호선|성수",
+      "official_station_id": "1002000211",
+      "line_id": "1002",
+      "official_query_name": "성수"
+    },
+    {
+      "coordinate_key": "02호선|용두",
+      "official_station_id": "1002002113",
+      "line_id": "1002",
+      "official_query_name": "용두"
+    },
+    {
+      "coordinate_key": "02호선|신정네거리",
+      "official_station_id": "1002002343",
+      "line_id": "1002",
+      "official_query_name": "신정네거리"
+    },
+    {
+      "coordinate_key": "02호선|양천구청",
+      "official_station_id": "1002002342",
+      "line_id": "1002",
+      "official_query_name": "양천구청"
+    },
+    {
+      "coordinate_key": "02호선|도림천",
+      "official_station_id": "1002002341",
+      "line_id": "1002",
+      "official_query_name": "도림천"
+    },
+    {
+      "coordinate_key": "02호선|신설동",
+      "official_station_id": "1002002114",
+      "line_id": "1002",
+      "official_query_name": "신설동"
+    },
+    {
+      "coordinate_key": "02호선|신답",
+      "official_station_id": "1002002112",
+      "line_id": "1002",
+      "official_query_name": "신답"
+    },
+    {
+      "coordinate_key": "02호선|용답",
+      "official_station_id": "1002002111",
+      "line_id": "1002",
+      "official_query_name": "용답"
+    },
+    {
+      "coordinate_key": "02호선|동대문역사문화공원",
+      "official_station_id": "1002000205",
+      "line_id": "1002",
+      "official_query_name": "동대문역사문화공원"
+    },
+    {
+      "coordinate_key": "02호선|을지로입구",
+      "official_station_id": "1002000202",
+      "line_id": "1002",
+      "official_query_name": "을지로입구"
+    },
+    {
+      "coordinate_key": "02호선|교대",
+      "official_station_id": "1002000223",
+      "line_id": "1002",
+      "official_query_name": "교대"
+    },
+    {
+      "coordinate_key": "02호선|시청",
+      "official_station_id": "1002000201",
+      "line_id": "1002",
+      "official_query_name": "시청"
+    },
+    {
+      "coordinate_key": "02호선|충정로",
+      "official_station_id": "1002000243",
+      "line_id": "1002",
+      "official_query_name": "충정로"
+    },
+    {
+      "coordinate_key": "02호선|아현",
+      "official_station_id": "1002000242",
+      "line_id": "1002",
+      "official_query_name": "아현"
+    },
+    {
+      "coordinate_key": "02호선|이대",
+      "official_station_id": "1002000241",
+      "line_id": "1002",
+      "official_query_name": "이대"
+    },
+    {
+      "coordinate_key": "02호선|신촌",
+      "official_station_id": "1002000240",
+      "line_id": "1002",
+      "official_query_name": "신촌"
+    },
+    {
+      "coordinate_key": "02호선|홍대입구",
+      "official_station_id": "1002000239",
+      "line_id": "1002",
+      "official_query_name": "홍대입구"
+    },
+    {
+      "coordinate_key": "02호선|왕십리",
+      "official_station_id": "1002000208",
+      "line_id": "1002",
+      "official_query_name": "왕십리"
+    },
+    {
+      "coordinate_key": "02호선|한양대",
+      "official_station_id": "1002000209",
+      "line_id": "1002",
+      "official_query_name": "한양대"
+    },
+    {
+      "coordinate_key": "02호선|뚝섬",
+      "official_station_id": "1002000210",
+      "line_id": "1002",
+      "official_query_name": "뚝섬"
+    },
+    {
+      "coordinate_key": "02호선|신림",
+      "official_station_id": "1002000230",
+      "line_id": "1002",
+      "official_query_name": "신림"
+    },
+    {
+      "coordinate_key": "02호선|잠실나루",
+      "official_station_id": "1002000215",
+      "line_id": "1002",
+      "official_query_name": "잠실나루"
+    },
+    {
+      "coordinate_key": "02호선|신당",
+      "official_station_id": "1002000206",
+      "line_id": "1002",
+      "official_query_name": "신당"
+    },
+    {
+      "coordinate_key": "02호선|합정",
+      "official_station_id": "1002000238",
+      "line_id": "1002",
+      "official_query_name": "합정"
+    },
+    {
+      "coordinate_key": "02호선|당산",
+      "official_station_id": "1002000237",
+      "line_id": "1002",
+      "official_query_name": "당산"
+    },
+    {
+      "coordinate_key": "02호선|을지로4가",
+      "official_station_id": "1002000204",
+      "line_id": "1002",
+      "official_query_name": "을지로4가"
+    },
+    {
+      "coordinate_key": "02호선|잠실",
+      "official_station_id": "1002000216",
+      "line_id": "1002",
+      "official_query_name": "잠실"
+    },
+    {
+      "coordinate_key": "02호선|잠실새내",
+      "official_station_id": "1002000217",
+      "line_id": "1002",
+      "official_query_name": "잠실새내"
+    },
+    {
+      "coordinate_key": "02호선|강남",
+      "official_station_id": "1002000222",
+      "line_id": "1002",
+      "official_query_name": "강남"
+    },
+    {
+      "coordinate_key": "02호선|까치산",
+      "official_station_id": "1002002344",
+      "line_id": "1002",
+      "official_query_name": "까치산"
+    },
+    {
+      "coordinate_key": "02호선|영등포구청",
+      "official_station_id": "1002000236",
+      "line_id": "1002",
+      "official_query_name": "영등포구청"
+    },
+    {
+      "coordinate_key": "02호선|문래",
+      "official_station_id": "1002000235",
+      "line_id": "1002",
+      "official_query_name": "문래"
+    },
+    {
+      "coordinate_key": "02호선|신도림",
+      "official_station_id": "1002000234",
+      "line_id": "1002",
+      "official_query_name": "신도림"
+    },
+    {
+      "coordinate_key": "02호선|대림",
+      "official_station_id": "1002000233",
+      "line_id": "1002",
+      "official_query_name": "대림"
+    },
+    {
+      "coordinate_key": "02호선|낙성대",
+      "official_station_id": "1002000227",
+      "line_id": "1002",
+      "official_query_name": "낙성대"
+    },
+    {
+      "coordinate_key": "02호선|구로디지털단지",
+      "official_station_id": "1002000232",
+      "line_id": "1002",
+      "official_query_name": "구로디지털단지"
+    },
+    {
+      "coordinate_key": "02호선|사당",
+      "official_station_id": "1002000226",
+      "line_id": "1002",
+      "official_query_name": "사당"
+    },
+    {
+      "coordinate_key": "02호선|봉천",
+      "official_station_id": "1002000229",
+      "line_id": "1002",
+      "official_query_name": "봉천"
+    },
+    {
+      "coordinate_key": "02호선|서울대입구",
+      "official_station_id": "1002000228",
+      "line_id": "1002",
+      "official_query_name": "서울대입구"
+    },
+    {
+      "coordinate_key": "02호선|건대입구",
+      "official_station_id": "1002000212",
+      "line_id": "1002",
+      "official_query_name": "건대입구"
+    },
+    {
+      "coordinate_key": "02호선|방배",
+      "official_station_id": "1002000225",
+      "line_id": "1002",
+      "official_query_name": "방배"
+    },
+    {
+      "coordinate_key": "02호선|종합운동장",
+      "official_station_id": "1002000218",
+      "line_id": "1002",
+      "official_query_name": "종합운동장"
+    },
+    {
+      "coordinate_key": "02호선|삼성",
+      "official_station_id": "1002000219",
+      "line_id": "1002",
+      "official_query_name": "삼성"
+    },
+    {
+      "coordinate_key": "02호선|선릉",
+      "official_station_id": "1002000220",
+      "line_id": "1002",
+      "official_query_name": "선릉"
+    },
+    {
+      "coordinate_key": "02호선|을지로3가",
+      "official_station_id": "1002000203",
+      "line_id": "1002",
+      "official_query_name": "을지로3가"
+    },
+    {
+      "coordinate_key": "02호선|신대방",
+      "official_station_id": "1002000231",
+      "line_id": "1002",
+      "official_query_name": "신대방"
+    },
+    {
+      "coordinate_key": "02호선|구의",
+      "official_station_id": "1002000213",
+      "line_id": "1002",
+      "official_query_name": "구의"
+    },
+    {
+      "coordinate_key": "03호선|정발산",
+      "official_station_id": "1003000311",
+      "line_id": "1003",
+      "official_query_name": "정발산"
+    },
+    {
+      "coordinate_key": "03호선|화정",
+      "official_station_id": "1003000315",
+      "line_id": "1003",
+      "official_query_name": "화정"
+    },
+    {
+      "coordinate_key": "03호선|대치",
+      "official_station_id": "1003000345",
+      "line_id": "1003",
+      "official_query_name": "대치"
+    },
+    {
+      "coordinate_key": "03호선|대화",
+      "official_station_id": "1003000309",
+      "line_id": "1003",
+      "official_query_name": "대화"
+    },
+    {
+      "coordinate_key": "03호선|주엽",
+      "official_station_id": "1003000310",
+      "line_id": "1003",
+      "official_query_name": "주엽"
+    },
+    {
+      "coordinate_key": "03호선|가락시장",
+      "official_station_id": "1003000350",
+      "line_id": "1003",
+      "official_query_name": "가락시장"
+    },
+    {
+      "coordinate_key": "03호선|신사",
+      "official_station_id": "1003000337",
+      "line_id": "1003",
+      "official_query_name": "신사"
+    },
+    {
+      "coordinate_key": "03호선|압구정",
+      "official_station_id": "1003000336",
+      "line_id": "1003",
+      "official_query_name": "압구정"
+    },
+    {
+      "coordinate_key": "03호선|삼송",
+      "official_station_id": "1003000318",
+      "line_id": "1003",
+      "official_query_name": "삼송"
+    },
+    {
+      "coordinate_key": "03호선|약수",
+      "official_station_id": "1003000333",
+      "line_id": "1003",
+      "official_query_name": "약수"
+    },
+    {
+      "coordinate_key": "03호선|금호",
+      "official_station_id": "1003000334",
+      "line_id": "1003",
+      "official_query_name": "금호"
+    },
+    {
+      "coordinate_key": "03호선|고속터미널",
+      "official_station_id": "1003000339",
+      "line_id": "1003",
+      "official_query_name": "고속터미널"
+    },
+    {
+      "coordinate_key": "03호선|을지로3가",
+      "official_station_id": "1003000330",
+      "line_id": "1003",
+      "official_query_name": "을지로3가"
+    },
+    {
+      "coordinate_key": "03호선|도곡",
+      "official_station_id": "1003000344",
+      "line_id": "1003",
+      "official_query_name": "도곡"
+    },
+    {
+      "coordinate_key": "03호선|매봉",
+      "official_station_id": "1003000343",
+      "line_id": "1003",
+      "official_query_name": "매봉"
+    },
+    {
+      "coordinate_key": "03호선|양재",
+      "official_station_id": "1003000342",
+      "line_id": "1003",
+      "official_query_name": "양재"
+    },
+    {
+      "coordinate_key": "03호선|종로3가",
+      "official_station_id": "1003000329",
+      "line_id": "1003",
+      "official_query_name": "종로3가"
+    },
+    {
+      "coordinate_key": "03호선|수서",
+      "official_station_id": "1003000349",
+      "line_id": "1003",
+      "official_query_name": "수서"
+    },
+    {
+      "coordinate_key": "03호선|일원",
+      "official_station_id": "1003000348",
+      "line_id": "1003",
+      "official_query_name": "일원"
+    },
+    {
+      "coordinate_key": "03호선|원당",
+      "official_station_id": "1003000316",
+      "line_id": "1003",
+      "official_query_name": "원당"
+    },
+    {
+      "coordinate_key": "03호선|대청",
+      "official_station_id": "1003000347",
+      "line_id": "1003",
+      "official_query_name": "대청"
+    },
+    {
+      "coordinate_key": "03호선|옥수",
+      "official_station_id": "1003000335",
+      "line_id": "1003",
+      "official_query_name": "옥수"
+    },
+    {
+      "coordinate_key": "03호선|학여울",
+      "official_station_id": "1003000346",
+      "line_id": "1003",
+      "official_query_name": "학여울"
+    },
+    {
+      "coordinate_key": "03호선|원흥",
+      "official_station_id": "1003000317",
+      "line_id": "1003",
+      "official_query_name": "원흥"
+    },
+    {
+      "coordinate_key": "03호선|남부터미널",
+      "official_station_id": "1003000341",
+      "line_id": "1003",
+      "official_query_name": "남부터미널"
+    },
+    {
+      "coordinate_key": "03호선|교대",
+      "official_station_id": "1003000340",
+      "line_id": "1003",
+      "official_query_name": "교대"
+    },
+    {
+      "coordinate_key": "03호선|안국",
+      "official_station_id": "1003000328",
+      "line_id": "1003",
+      "official_query_name": "안국"
+    },
+    {
+      "coordinate_key": "03호선|독립문",
+      "official_station_id": "1003000326",
+      "line_id": "1003",
+      "official_query_name": "독립문"
+    },
+    {
+      "coordinate_key": "03호선|무악재",
+      "official_station_id": "1003000325",
+      "line_id": "1003",
+      "official_query_name": "무악재"
+    },
+    {
+      "coordinate_key": "03호선|홍제",
+      "official_station_id": "1003000324",
+      "line_id": "1003",
+      "official_query_name": "홍제"
+    },
+    {
+      "coordinate_key": "03호선|오금",
+      "official_station_id": "1003000352",
+      "line_id": "1003",
+      "official_query_name": "오금"
+    },
+    {
+      "coordinate_key": "03호선|연신내",
+      "official_station_id": "1003000321",
+      "line_id": "1003",
+      "official_query_name": "연신내"
+    },
+    {
+      "coordinate_key": "03호선|구파발",
+      "official_station_id": "1003000320",
+      "line_id": "1003",
+      "official_query_name": "구파발"
+    },
+    {
+      "coordinate_key": "03호선|지축",
+      "official_station_id": "1003000319",
+      "line_id": "1003",
+      "official_query_name": "지축"
+    },
+    {
+      "coordinate_key": "03호선|동대입구",
+      "official_station_id": "1003000332",
+      "line_id": "1003",
+      "official_query_name": "동대입구"
+    },
+    {
+      "coordinate_key": "03호선|충무로",
+      "official_station_id": "1003000331",
+      "line_id": "1003",
+      "official_query_name": "충무로"
+    },
+    {
+      "coordinate_key": "03호선|잠원",
+      "official_station_id": "1003000338",
+      "line_id": "1003",
+      "official_query_name": "잠원"
+    },
+    {
+      "coordinate_key": "03호선|마두",
+      "official_station_id": "1003000312",
+      "line_id": "1003",
+      "official_query_name": "마두"
+    },
+    {
+      "coordinate_key": "03호선|녹번",
+      "official_station_id": "1003000323",
+      "line_id": "1003",
+      "official_query_name": "녹번"
+    },
+    {
+      "coordinate_key": "03호선|불광",
+      "official_station_id": "1003000322",
+      "line_id": "1003",
+      "official_query_name": "불광"
+    },
+    {
+      "coordinate_key": "03호선|경복궁",
+      "official_station_id": "1003000327",
+      "line_id": "1003",
+      "official_query_name": "경복궁"
+    },
+    {
+      "coordinate_key": "03호선|백석",
+      "official_station_id": "1003000313",
+      "line_id": "1003",
+      "official_query_name": "백석"
+    },
+    {
+      "coordinate_key": "03호선|대곡",
+      "official_station_id": "1003000314",
+      "line_id": "1003",
+      "official_query_name": "대곡"
+    },
+    {
+      "coordinate_key": "03호선|경찰병원",
+      "official_station_id": "1003000351",
+      "line_id": "1003",
+      "official_query_name": "경찰병원"
+    },
+    {
+      "coordinate_key": "04호선|회현",
+      "official_station_id": "1004000425",
+      "line_id": "1004",
+      "official_query_name": "회현"
+    },
+    {
+      "coordinate_key": "04호선|오이도",
+      "official_station_id": "1004000456",
+      "line_id": "1004",
+      "official_query_name": "오이도"
+    },
+    {
+      "coordinate_key": "04호선|정왕",
+      "official_station_id": "1004000455",
+      "line_id": "1004",
+      "official_query_name": "정왕"
+    },
+    {
+      "coordinate_key": "04호선|사당",
+      "official_station_id": "1004000433",
+      "line_id": "1004",
+      "official_query_name": "사당"
+    },
+    {
+      "coordinate_key": "04호선|남태령",
+      "official_station_id": "1004000434",
+      "line_id": "1004",
+      "official_query_name": "남태령"
+    },
+    {
+      "coordinate_key": "04호선|금정",
+      "official_station_id": "1004000443",
+      "line_id": "1004",
+      "official_query_name": "금정"
+    },
+    {
+      "coordinate_key": "04호선|범계",
+      "official_station_id": "1004000442",
+      "line_id": "1004",
+      "official_query_name": "범계"
+    },
+    {
+      "coordinate_key": "04호선|평촌",
+      "official_station_id": "1004000441",
+      "line_id": "1004",
+      "official_query_name": "평촌"
+    },
+    {
+      "coordinate_key": "04호선|인덕원",
+      "official_station_id": "1004000440",
+      "line_id": "1004",
+      "official_query_name": "인덕원"
+    },
+    {
+      "coordinate_key": "04호선|동작",
+      "official_station_id": "1004000431",
+      "line_id": "1004",
+      "official_query_name": "동작"
+    },
+    {
+      "coordinate_key": "04호선|이촌",
+      "official_station_id": "1004000430",
+      "line_id": "1004",
+      "official_query_name": "이촌"
+    },
+    {
+      "coordinate_key": "04호선|신용산",
+      "official_station_id": "1004000429",
+      "line_id": "1004",
+      "official_query_name": "신용산"
+    },
+    {
+      "coordinate_key": "04호선|불암산",
+      "official_station_id": "1004000409",
+      "line_id": "1004",
+      "official_query_name": "불암산"
+    },
+    {
+      "coordinate_key": "04호선|선바위",
+      "official_station_id": "1004000435",
+      "line_id": "1004",
+      "official_query_name": "선바위"
+    },
+    {
+      "coordinate_key": "04호선|경마공원",
+      "official_station_id": "1004000436",
+      "line_id": "1004",
+      "official_query_name": "경마공원"
+    },
+    {
+      "coordinate_key": "04호선|대공원",
+      "official_station_id": "1004000437",
+      "line_id": "1004",
+      "official_query_name": "대공원"
+    },
+    {
+      "coordinate_key": "04호선|과천",
+      "official_station_id": "1004000438",
+      "line_id": "1004",
+      "official_query_name": "과천"
+    },
+    {
+      "coordinate_key": "04호선|중앙",
+      "official_station_id": "1004000450",
+      "line_id": "1004",
+      "official_query_name": "중앙"
+    },
+    {
+      "coordinate_key": "04호선|한대앞",
+      "official_station_id": "1004000449",
+      "line_id": "1004",
+      "official_query_name": "한대앞"
+    },
+    {
+      "coordinate_key": "04호선|상록수",
+      "official_station_id": "1004000448",
+      "line_id": "1004",
+      "official_query_name": "상록수"
+    },
+    {
+      "coordinate_key": "04호선|반월",
+      "official_station_id": "1004000447",
+      "line_id": "1004",
+      "official_query_name": "반월"
+    },
+    {
+      "coordinate_key": "04호선|상계",
+      "official_station_id": "1004000410",
+      "line_id": "1004",
+      "official_query_name": "상계"
+    },
+    {
+      "coordinate_key": "04호선|대야미",
+      "official_station_id": "1004000446",
+      "line_id": "1004",
+      "official_query_name": "대야미"
+    },
+    {
+      "coordinate_key": "04호선|정부과천청사",
+      "official_station_id": "1004000439",
+      "line_id": "1004",
+      "official_query_name": "정부과천청사"
+    },
+    {
+      "coordinate_key": "04호선|산본",
+      "official_station_id": "1004000444",
+      "line_id": "1004",
+      "official_query_name": "산본"
+    },
+    {
+      "coordinate_key": "04호선|노원",
+      "official_station_id": "1004000411",
+      "line_id": "1004",
+      "official_query_name": "노원"
+    },
+    {
+      "coordinate_key": "04호선|창동",
+      "official_station_id": "1004000412",
+      "line_id": "1004",
+      "official_query_name": "창동"
+    },
+    {
+      "coordinate_key": "04호선|쌍문",
+      "official_station_id": "1004000413",
+      "line_id": "1004",
+      "official_query_name": "쌍문"
+    },
+    {
+      "coordinate_key": "04호선|수유",
+      "official_station_id": "1004000414",
+      "line_id": "1004",
+      "official_query_name": "수유"
+    },
+    {
+      "coordinate_key": "04호선|미아",
+      "official_station_id": "1004000415",
+      "line_id": "1004",
+      "official_query_name": "미아"
+    },
+    {
+      "coordinate_key": "04호선|미아사거리",
+      "official_station_id": "1004000416",
+      "line_id": "1004",
+      "official_query_name": "미아사거리"
+    },
+    {
+      "coordinate_key": "04호선|길음",
+      "official_station_id": "1004000417",
+      "line_id": "1004",
+      "official_query_name": "길음"
+    },
+    {
+      "coordinate_key": "04호선|수리산",
+      "official_station_id": "1004000445",
+      "line_id": "1004",
+      "official_query_name": "수리산"
+    },
+    {
+      "coordinate_key": "04호선|안산",
+      "official_station_id": "1004000453",
+      "line_id": "1004",
+      "official_query_name": "안산"
+    },
+    {
+      "coordinate_key": "04호선|초지",
+      "official_station_id": "1004000452",
+      "line_id": "1004",
+      "official_query_name": "초지"
+    },
+    {
+      "coordinate_key": "04호선|고잔",
+      "official_station_id": "1004000451",
+      "line_id": "1004",
+      "official_query_name": "고잔"
+    },
+    {
+      "coordinate_key": "04호선|삼각지",
+      "official_station_id": "1004000428",
+      "line_id": "1004",
+      "official_query_name": "삼각지"
+    },
+    {
+      "coordinate_key": "04호선|성신여대입구",
+      "official_station_id": "1004000418",
+      "line_id": "1004",
+      "official_query_name": "성신여대입구"
+    },
+    {
+      "coordinate_key": "04호선|한성대입구",
+      "official_station_id": "1004000419",
+      "line_id": "1004",
+      "official_query_name": "한성대입구"
+    },
+    {
+      "coordinate_key": "04호선|혜화",
+      "official_station_id": "1004000420",
+      "line_id": "1004",
+      "official_query_name": "혜화"
+    },
+    {
+      "coordinate_key": "04호선|동대문",
+      "official_station_id": "1004000421",
+      "line_id": "1004",
+      "official_query_name": "동대문"
+    },
+    {
+      "coordinate_key": "04호선|동대문역사문화공원",
+      "official_station_id": "1004000422",
+      "line_id": "1004",
+      "official_query_name": "동대문역사문화공원"
+    },
+    {
+      "coordinate_key": "04호선|충무로",
+      "official_station_id": "1004000423",
+      "line_id": "1004",
+      "official_query_name": "충무로"
+    },
+    {
+      "coordinate_key": "04호선|명동",
+      "official_station_id": "1004000424",
+      "line_id": "1004",
+      "official_query_name": "명동"
+    },
+    {
+      "coordinate_key": "04호선|숙대입구",
+      "official_station_id": "1004000427",
+      "line_id": "1004",
+      "official_query_name": "숙대입구"
+    },
+    {
+      "coordinate_key": "05호선|개화산",
+      "official_station_id": "1005000511",
+      "line_id": "1005",
+      "official_query_name": "개화산"
+    },
+    {
+      "coordinate_key": "05호선|둔촌동",
+      "official_station_id": "1005080549",
+      "line_id": "1005",
+      "official_query_name": "둔촌동"
+    },
+    {
+      "coordinate_key": "05호선|양평",
+      "official_station_id": "1005000522",
+      "line_id": "1005",
+      "official_query_name": "양평"
+    },
+    {
+      "coordinate_key": "05호선|목동",
+      "official_station_id": "1005000520",
+      "line_id": "1005",
+      "official_query_name": "목동"
+    },
+    {
+      "coordinate_key": "05호선|왕십리",
+      "official_station_id": "1005000540",
+      "line_id": "1005",
+      "official_query_name": "왕십리"
+    },
+    {
+      "coordinate_key": "05호선|거여",
+      "official_station_id": "1005080554",
+      "line_id": "1005",
+      "official_query_name": "거여"
+    },
+    {
+      "coordinate_key": "05호선|김포공항",
+      "official_station_id": "1005000512",
+      "line_id": "1005",
+      "official_query_name": "김포공항"
+    },
+    {
+      "coordinate_key": "05호선|송정",
+      "official_station_id": "1005000513",
+      "line_id": "1005",
+      "official_query_name": "송정"
+    },
+    {
+      "coordinate_key": "05호선|명일",
+      "official_station_id": "1005000551",
+      "line_id": "1005",
+      "official_query_name": "명일"
+    },
+    {
+      "coordinate_key": "05호선|고덕",
+      "official_station_id": "1005000552",
+      "line_id": "1005",
+      "official_query_name": "고덕"
+    },
+    {
+      "coordinate_key": "05호선|길동",
+      "official_station_id": "1005000549",
+      "line_id": "1005",
+      "official_query_name": "길동"
+    },
+    {
+      "coordinate_key": "05호선|답십리",
+      "official_station_id": "1005000542",
+      "line_id": "1005",
+      "official_query_name": "답십리"
+    },
+    {
+      "coordinate_key": "05호선|상일동",
+      "official_station_id": "1005000553",
+      "line_id": "1005",
+      "official_query_name": "상일동"
+    },
+    {
+      "coordinate_key": "05호선|마장",
+      "official_station_id": "1005000541",
+      "line_id": "1005",
+      "official_query_name": "마장"
+    },
+    {
+      "coordinate_key": "05호선|신금호",
+      "official_station_id": "1005000538",
+      "line_id": "1005",
+      "official_query_name": "신금호"
+    },
+    {
+      "coordinate_key": "05호선|마천",
+      "official_station_id": "1005080555",
+      "line_id": "1005",
+      "official_query_name": "마천"
+    },
+    {
+      "coordinate_key": "05호선|강일",
+      "official_station_id": "1005000554",
+      "line_id": "1005",
+      "official_query_name": "강일"
+    },
+    {
+      "coordinate_key": "05호선|하남검단산",
+      "official_station_id": "1005000558",
+      "line_id": "1005",
+      "official_query_name": "하남검단산"
+    },
+    {
+      "coordinate_key": "05호선|마곡",
+      "official_station_id": "1005000514",
+      "line_id": "1005",
+      "official_query_name": "마곡"
+    },
+    {
+      "coordinate_key": "05호선|발산",
+      "official_station_id": "1005000515",
+      "line_id": "1005",
+      "official_query_name": "발산"
+    },
+    {
+      "coordinate_key": "05호선|우장산",
+      "official_station_id": "1005000516",
+      "line_id": "1005",
+      "official_query_name": "우장산"
+    },
+    {
+      "coordinate_key": "05호선|까치산",
+      "official_station_id": "1005000518",
+      "line_id": "1005",
+      "official_query_name": "까치산"
+    },
+    {
+      "coordinate_key": "05호선|신길",
+      "official_station_id": "1005000525",
+      "line_id": "1005",
+      "official_query_name": "신길"
+    },
+    {
+      "coordinate_key": "05호선|을지로4가",
+      "official_station_id": "1005000535",
+      "line_id": "1005",
+      "official_query_name": "을지로4가"
+    },
+    {
+      "coordinate_key": "05호선|청구",
+      "official_station_id": "1005000537",
+      "line_id": "1005",
+      "official_query_name": "청구"
+    },
+    {
+      "coordinate_key": "05호선|동대문역사문화공원",
+      "official_station_id": "1005000536",
+      "line_id": "1005",
+      "official_query_name": "동대문역사문화공원"
+    },
+    {
+      "coordinate_key": "05호선|광화문",
+      "official_station_id": "1005000533",
+      "line_id": "1005",
+      "official_query_name": "광화문"
+    },
+    {
+      "coordinate_key": "05호선|서대문",
+      "official_station_id": "1005000532",
+      "line_id": "1005",
+      "official_query_name": "서대문"
+    },
+    {
+      "coordinate_key": "05호선|충정로",
+      "official_station_id": "1005000531",
+      "line_id": "1005",
+      "official_query_name": "충정로"
+    },
+    {
+      "coordinate_key": "05호선|애오개",
+      "official_station_id": "1005000530",
+      "line_id": "1005",
+      "official_query_name": "애오개"
+    },
+    {
+      "coordinate_key": "05호선|공덕",
+      "official_station_id": "1005000529",
+      "line_id": "1005",
+      "official_query_name": "공덕"
+    },
+    {
+      "coordinate_key": "05호선|강동",
+      "official_station_id": "1005000548",
+      "line_id": "1005",
+      "official_query_name": "강동"
+    },
+    {
+      "coordinate_key": "05호선|종로3가",
+      "official_station_id": "1005000534",
+      "line_id": "1005",
+      "official_query_name": "종로3가"
+    },
+    {
+      "coordinate_key": "05호선|마포",
+      "official_station_id": "1005000528",
+      "line_id": "1005",
+      "official_query_name": "마포"
+    },
+    {
+      "coordinate_key": "05호선|여의도",
+      "official_station_id": "1005000526",
+      "line_id": "1005",
+      "official_query_name": "여의도"
+    },
+    {
+      "coordinate_key": "05호선|영등포시장",
+      "official_station_id": "1005000524",
+      "line_id": "1005",
+      "official_query_name": "영등포시장"
+    },
+    {
+      "coordinate_key": "05호선|영등포구청",
+      "official_station_id": "1005000523",
+      "line_id": "1005",
+      "official_query_name": "영등포구청"
+    },
+    {
+      "coordinate_key": "05호선|방화",
+      "official_station_id": "1005000510",
+      "line_id": "1005",
+      "official_query_name": "방화"
+    },
+    {
+      "coordinate_key": "05호선|장한평",
+      "official_station_id": "1005000543",
+      "line_id": "1005",
+      "official_query_name": "장한평"
+    },
+    {
+      "coordinate_key": "05호선|화곡",
+      "official_station_id": "1005000517",
+      "line_id": "1005",
+      "official_query_name": "화곡"
+    },
+    {
+      "coordinate_key": "05호선|행당",
+      "official_station_id": "1005000539",
+      "line_id": "1005",
+      "official_query_name": "행당"
+    },
+    {
+      "coordinate_key": "05호선|개롱",
+      "official_station_id": "1005080553",
+      "line_id": "1005",
+      "official_query_name": "개롱"
+    },
+    {
+      "coordinate_key": "05호선|오금",
+      "official_station_id": "1005080552",
+      "line_id": "1005",
+      "official_query_name": "오금"
+    },
+    {
+      "coordinate_key": "05호선|여의나루",
+      "official_station_id": "1005000527",
+      "line_id": "1005",
+      "official_query_name": "여의나루"
+    },
+    {
+      "coordinate_key": "05호선|하남시청",
+      "official_station_id": "1005000557",
+      "line_id": "1005",
+      "official_query_name": "하남시청"
+    },
+    {
+      "coordinate_key": "05호선|하남풍산",
+      "official_station_id": "1005000556",
+      "line_id": "1005",
+      "official_query_name": "하남풍산"
+    },
+    {
+      "coordinate_key": "05호선|미사",
+      "official_station_id": "1005000555",
+      "line_id": "1005",
+      "official_query_name": "미사"
+    },
+    {
+      "coordinate_key": "05호선|방이",
+      "official_station_id": "1005080551",
+      "line_id": "1005",
+      "official_query_name": "방이"
+    },
+    {
+      "coordinate_key": "06호선|합정",
+      "official_station_id": "1006000622",
+      "line_id": "1006",
+      "official_query_name": "합정"
+    },
+    {
+      "coordinate_key": "06호선|불광",
+      "official_station_id": "1006000612",
+      "line_id": "1006",
+      "official_query_name": "불광"
+    },
+    {
+      "coordinate_key": "06호선|독바위",
+      "official_station_id": "1006000613",
+      "line_id": "1006",
+      "official_query_name": "독바위"
+    },
+    {
+      "coordinate_key": "06호선|디지털미디어시티",
+      "official_station_id": "1006000618",
+      "line_id": "1006",
+      "official_query_name": "디지털미디어시티"
+    },
+    {
+      "coordinate_key": "06호선|망원",
+      "official_station_id": "1006000621",
+      "line_id": "1006",
+      "official_query_name": "망원"
+    },
+    {
+      "coordinate_key": "06호선|상수",
+      "official_station_id": "1006000623",
+      "line_id": "1006",
+      "official_query_name": "상수"
+    },
+    {
+      "coordinate_key": "06호선|광흥창",
+      "official_station_id": "1006000624",
+      "line_id": "1006",
+      "official_query_name": "광흥창"
+    },
+    {
+      "coordinate_key": "06호선|효창공원앞",
+      "official_station_id": "1006000627",
+      "line_id": "1006",
+      "official_query_name": "효창공원앞"
+    },
+    {
+      "coordinate_key": "06호선|삼각지",
+      "official_station_id": "1006000628",
+      "line_id": "1006",
+      "official_query_name": "삼각지"
+    },
+    {
+      "coordinate_key": "06호선|녹사평",
+      "official_station_id": "1006000629",
+      "line_id": "1006",
+      "official_query_name": "녹사평"
+    },
+    {
+      "coordinate_key": "06호선|이태원",
+      "official_station_id": "1006000630",
+      "line_id": "1006",
+      "official_query_name": "이태원"
+    },
+    {
+      "coordinate_key": "06호선|한강진",
+      "official_station_id": "1006000631",
+      "line_id": "1006",
+      "official_query_name": "한강진"
+    },
+    {
+      "coordinate_key": "06호선|버티고개",
+      "official_station_id": "1006000632",
+      "line_id": "1006",
+      "official_query_name": "버티고개"
+    },
+    {
+      "coordinate_key": "06호선|석계",
+      "official_station_id": "1006000644",
+      "line_id": "1006",
+      "official_query_name": "석계"
+    },
+    {
+      "coordinate_key": "06호선|태릉입구",
+      "official_station_id": "1006000645",
+      "line_id": "1006",
+      "official_query_name": "태릉입구"
+    },
+    {
+      "coordinate_key": "06호선|신내",
+      "official_station_id": "1006000648",
+      "line_id": "1006",
+      "official_query_name": "신내"
+    },
+    {
+      "coordinate_key": "06호선|고려대",
+      "official_station_id": "1006000640",
+      "line_id": "1006",
+      "official_query_name": "고려대"
+    },
+    {
+      "coordinate_key": "06호선|봉화산",
+      "official_station_id": "1006000647",
+      "line_id": "1006",
+      "official_query_name": "봉화산"
+    },
+    {
+      "coordinate_key": "06호선|연신내",
+      "official_station_id": "1006000614",
+      "line_id": "1006",
+      "official_query_name": "연신내"
+    },
+    {
+      "coordinate_key": "06호선|구산",
+      "official_station_id": "1006000615",
+      "line_id": "1006",
+      "official_query_name": "구산"
+    },
+    {
+      "coordinate_key": "06호선|약수",
+      "official_station_id": "1006000633",
+      "line_id": "1006",
+      "official_query_name": "약수"
+    },
+    {
+      "coordinate_key": "06호선|청구",
+      "official_station_id": "1006000634",
+      "line_id": "1006",
+      "official_query_name": "청구"
+    },
+    {
+      "coordinate_key": "06호선|신당",
+      "official_station_id": "1006000635",
+      "line_id": "1006",
+      "official_query_name": "신당"
+    },
+    {
+      "coordinate_key": "06호선|동묘앞",
+      "official_station_id": "1006000636",
+      "line_id": "1006",
+      "official_query_name": "동묘앞"
+    },
+    {
+      "coordinate_key": "06호선|창신",
+      "official_station_id": "1006000637",
+      "line_id": "1006",
+      "official_query_name": "창신"
+    },
+    {
+      "coordinate_key": "06호선|보문",
+      "official_station_id": "1006000638",
+      "line_id": "1006",
+      "official_query_name": "보문"
+    },
+    {
+      "coordinate_key": "06호선|돌곶이",
+      "official_station_id": "1006000643",
+      "line_id": "1006",
+      "official_query_name": "돌곶이"
+    },
+    {
+      "coordinate_key": "06호선|마포구청",
+      "official_station_id": "1006000620",
+      "line_id": "1006",
+      "official_query_name": "마포구청"
+    },
+    {
+      "coordinate_key": "06호선|공덕",
+      "official_station_id": "1006000626",
+      "line_id": "1006",
+      "official_query_name": "공덕"
+    },
+    {
+      "coordinate_key": "06호선|역촌",
+      "official_station_id": "1006000611",
+      "line_id": "1006",
+      "official_query_name": "역촌"
+    },
+    {
+      "coordinate_key": "07호선|도봉산",
+      "official_station_id": "1007000710",
+      "line_id": "1007",
+      "official_query_name": "도봉산"
+    },
+    {
+      "coordinate_key": "07호선|면목",
+      "official_station_id": "1007000721",
+      "line_id": "1007",
+      "official_query_name": "면목"
+    },
+    {
+      "coordinate_key": "07호선|사가정",
+      "official_station_id": "1007000722",
+      "line_id": "1007",
+      "official_query_name": "사가정"
+    },
+    {
+      "coordinate_key": "07호선|용마산",
+      "official_station_id": "1007000723",
+      "line_id": "1007",
+      "official_query_name": "용마산"
+    },
+    {
+      "coordinate_key": "07호선|중곡",
+      "official_station_id": "1007000724",
+      "line_id": "1007",
+      "official_query_name": "중곡"
+    },
+    {
+      "coordinate_key": "07호선|부천종합운동장",
+      "official_station_id": "1007000752",
+      "line_id": "1007",
+      "official_query_name": "부천종합운동장"
+    },
+    {
+      "coordinate_key": "07호선|장승배기",
+      "official_station_id": "1007000740",
+      "line_id": "1007",
+      "official_query_name": "장승배기"
+    },
+    {
+      "coordinate_key": "07호선|반포",
+      "official_station_id": "1007000733",
+      "line_id": "1007",
+      "official_query_name": "반포"
+    },
+    {
+      "coordinate_key": "07호선|남구로",
+      "official_station_id": "1007000745",
+      "line_id": "1007",
+      "official_query_name": "남구로"
+    },
+    {
+      "coordinate_key": "07호선|장암",
+      "official_station_id": "1007000709",
+      "line_id": "1007",
+      "official_query_name": "장암"
+    },
+    {
+      "coordinate_key": "07호선|상봉",
+      "official_station_id": "1007000720",
+      "line_id": "1007",
+      "official_query_name": "상봉"
+    },
+    {
+      "coordinate_key": "07호선|중화",
+      "official_station_id": "1007000719",
+      "line_id": "1007",
+      "official_query_name": "중화"
+    },
+    {
+      "coordinate_key": "07호선|먹골",
+      "official_station_id": "1007000718",
+      "line_id": "1007",
+      "official_query_name": "먹골"
+    },
+    {
+      "coordinate_key": "07호선|태릉입구",
+      "official_station_id": "1007000717",
+      "line_id": "1007",
+      "official_query_name": "태릉입구"
+    },
+    {
+      "coordinate_key": "07호선|하계",
+      "official_station_id": "1007000715",
+      "line_id": "1007",
+      "official_query_name": "하계"
+    },
+    {
+      "coordinate_key": "07호선|마들",
+      "official_station_id": "1007000712",
+      "line_id": "1007",
+      "official_query_name": "마들"
+    },
+    {
+      "coordinate_key": "07호선|부평구청",
+      "official_station_id": "1007000759",
+      "line_id": "1007",
+      "official_query_name": "부평구청"
+    },
+    {
+      "coordinate_key": "07호선|온수",
+      "official_station_id": "1007000750",
+      "line_id": "1007",
+      "official_query_name": "온수"
+    },
+    {
+      "coordinate_key": "07호선|철산",
+      "official_station_id": "1007000747",
+      "line_id": "1007",
+      "official_query_name": "철산"
+    },
+    {
+      "coordinate_key": "07호선|가산디지털단지",
+      "official_station_id": "1007000746",
+      "line_id": "1007",
+      "official_query_name": "가산디지털단지"
+    },
+    {
+      "coordinate_key": "07호선|수락산",
+      "official_station_id": "1007000711",
+      "line_id": "1007",
+      "official_query_name": "수락산"
+    },
+    {
+      "coordinate_key": "07호선|고속터미널",
+      "official_station_id": "1007000734",
+      "line_id": "1007",
+      "official_query_name": "고속터미널"
+    },
+    {
+      "coordinate_key": "07호선|내방",
+      "official_station_id": "1007000735",
+      "line_id": "1007",
+      "official_query_name": "내방"
+    },
+    {
+      "coordinate_key": "07호선|신대방삼거리",
+      "official_station_id": "1007000741",
+      "line_id": "1007",
+      "official_query_name": "신대방삼거리"
+    },
+    {
+      "coordinate_key": "07호선|천왕",
+      "official_station_id": "1007000749",
+      "line_id": "1007",
+      "official_query_name": "천왕"
+    },
+    {
+      "coordinate_key": "07호선|광명사거리",
+      "official_station_id": "1007000748",
+      "line_id": "1007",
+      "official_query_name": "광명사거리"
+    },
+    {
+      "coordinate_key": "07호선|남성",
+      "official_station_id": "1007000737",
+      "line_id": "1007",
+      "official_query_name": "남성"
+    },
+    {
+      "coordinate_key": "07호선|보라매",
+      "official_station_id": "1007000742",
+      "line_id": "1007",
+      "official_query_name": "보라매"
+    },
+    {
+      "coordinate_key": "07호선|신중동",
+      "official_station_id": "1007000754",
+      "line_id": "1007",
+      "official_query_name": "신중동"
+    },
+    {
+      "coordinate_key": "07호선|중계",
+      "official_station_id": "1007000714",
+      "line_id": "1007",
+      "official_query_name": "중계"
+    },
+    {
+      "coordinate_key": "07호선|노원",
+      "official_station_id": "1007000713",
+      "line_id": "1007",
+      "official_query_name": "노원"
+    },
+    {
+      "coordinate_key": "07호선|논현",
+      "official_station_id": "1007000732",
+      "line_id": "1007",
+      "official_query_name": "논현"
+    },
+    {
+      "coordinate_key": "07호선|학동",
+      "official_station_id": "1007000731",
+      "line_id": "1007",
+      "official_query_name": "학동"
+    },
+    {
+      "coordinate_key": "07호선|강남구청",
+      "official_station_id": "1007000730",
+      "line_id": "1007",
+      "official_query_name": "강남구청"
+    },
+    {
+      "coordinate_key": "07호선|청담",
+      "official_station_id": "1007000729",
+      "line_id": "1007",
+      "official_query_name": "청담"
+    },
+    {
+      "coordinate_key": "07호선|건대입구",
+      "official_station_id": "1007000727",
+      "line_id": "1007",
+      "official_query_name": "건대입구"
+    },
+    {
+      "coordinate_key": "07호선|신풍",
+      "official_station_id": "1007000743",
+      "line_id": "1007",
+      "official_query_name": "신풍"
+    },
+    {
+      "coordinate_key": "07호선|대림",
+      "official_station_id": "1007000744",
+      "line_id": "1007",
+      "official_query_name": "대림"
+    },
+    {
+      "coordinate_key": "07호선|석남",
+      "official_station_id": "1007000761",
+      "line_id": "1007",
+      "official_query_name": "석남"
+    },
+    {
+      "coordinate_key": "07호선|산곡",
+      "official_station_id": "1007000760",
+      "line_id": "1007",
+      "official_query_name": "산곡"
+    },
+    {
+      "coordinate_key": "07호선|굴포천",
+      "official_station_id": "1007000758",
+      "line_id": "1007",
+      "official_query_name": "굴포천"
+    },
+    {
+      "coordinate_key": "07호선|삼산체육관",
+      "official_station_id": "1007000757",
+      "line_id": "1007",
+      "official_query_name": "삼산체육관"
+    },
+    {
+      "coordinate_key": "07호선|상동",
+      "official_station_id": "1007000756",
+      "line_id": "1007",
+      "official_query_name": "상동"
+    },
+    {
+      "coordinate_key": "07호선|까치울",
+      "official_station_id": "1007000751",
+      "line_id": "1007",
+      "official_query_name": "까치울"
+    },
+    {
+      "coordinate_key": "07호선|부천시청",
+      "official_station_id": "1007000755",
+      "line_id": "1007",
+      "official_query_name": "부천시청"
+    },
+    {
+      "coordinate_key": "07호선|춘의",
+      "official_station_id": "1007000753",
+      "line_id": "1007",
+      "official_query_name": "춘의"
+    },
+    {
+      "coordinate_key": "08호선|복정",
+      "official_station_id": "1008000820",
+      "line_id": "1008",
+      "official_query_name": "복정"
+    },
+    {
+      "coordinate_key": "08호선|남위례",
+      "official_station_id": "1008000821",
+      "line_id": "1008",
+      "official_query_name": "남위례"
+    },
+    {
+      "coordinate_key": "08호선|문정",
+      "official_station_id": "1008000818",
+      "line_id": "1008",
+      "official_query_name": "문정"
+    },
+    {
+      "coordinate_key": "08호선|송파",
+      "official_station_id": "1008000816",
+      "line_id": "1008",
+      "official_query_name": "송파"
+    },
+    {
+      "coordinate_key": "08호선|장자호수공원",
+      "official_station_id": "1008000808",
+      "line_id": "1008",
+      "official_query_name": "장자호수공원"
+    },
+    {
+      "coordinate_key": "08호선|가락시장",
+      "official_station_id": "1008000817",
+      "line_id": "1008",
+      "official_query_name": "가락시장"
+    },
+    {
+      "coordinate_key": "08호선|장지",
+      "official_station_id": "1008000819",
+      "line_id": "1008",
+      "official_query_name": "장지"
+    },
+    {
+      "coordinate_key": "08호선|동구릉",
+      "official_station_id": "1008000806",
+      "line_id": "1008",
+      "official_query_name": "동구릉"
+    },
+    {
+      "coordinate_key": "08호선|구리",
+      "official_station_id": "1008000807",
+      "line_id": "1008",
+      "official_query_name": "구리"
+    },
+    {
+      "coordinate_key": "08호선|다산",
+      "official_station_id": "1008000805",
+      "line_id": "1008",
+      "official_query_name": "다산"
+    },
+    {
+      "coordinate_key": "08호선|별내",
+      "official_station_id": "1008000804",
+      "line_id": "1008",
+      "official_query_name": "별내"
+    },
+    {
+      "coordinate_key": "08호선|잠실",
+      "official_station_id": "1008000814",
+      "line_id": "1008",
+      "official_query_name": "잠실"
+    },
+    {
+      "coordinate_key": "08호선|강동구청",
+      "official_station_id": "1008000812",
+      "line_id": "1008",
+      "official_query_name": "강동구청"
+    },
+    {
+      "coordinate_key": "08호선|암사",
+      "official_station_id": "1008000810",
+      "line_id": "1008",
+      "official_query_name": "암사"
+    },
+    {
+      "coordinate_key": "08호선|암사역사공원",
+      "official_station_id": "1008000809",
+      "line_id": "1008",
+      "official_query_name": "암사역사공원"
+    },
+    {
+      "coordinate_key": "08호선|모란",
+      "official_station_id": "1008000827",
+      "line_id": "1008",
+      "official_query_name": "모란"
+    },
+    {
+      "coordinate_key": "08호선|수진",
+      "official_station_id": "1008000826",
+      "line_id": "1008",
+      "official_query_name": "수진"
+    },
+    {
+      "coordinate_key": "08호선|신흥",
+      "official_station_id": "1008000825",
+      "line_id": "1008",
+      "official_query_name": "신흥"
+    },
+    {
+      "coordinate_key": "08호선|단대오거리",
+      "official_station_id": "1008000824",
+      "line_id": "1008",
+      "official_query_name": "단대오거리"
+    },
+    {
+      "coordinate_key": "08호선|산성",
+      "official_station_id": "1008000822",
+      "line_id": "1008",
+      "official_query_name": "산성"
+    },
+    {
+      "coordinate_key": "08호선|석촌",
+      "official_station_id": "1008000815",
+      "line_id": "1008",
+      "official_query_name": "석촌"
+    },
+    {
+      "coordinate_key": "09호선|등촌",
+      "official_station_id": "1009000909",
+      "line_id": "1009",
+      "official_query_name": "등촌"
+    },
+    {
+      "coordinate_key": "09호선|종합운동장",
+      "official_station_id": "1009000930",
+      "line_id": "1009",
+      "official_query_name": "종합운동장"
+    },
+    {
+      "coordinate_key": "09호선|봉은사",
+      "official_station_id": "1009000929",
+      "line_id": "1009",
+      "official_query_name": "봉은사"
+    },
+    {
+      "coordinate_key": "09호선|삼성중앙",
+      "official_station_id": "1009000928",
+      "line_id": "1009",
+      "official_query_name": "삼성중앙"
+    },
+    {
+      "coordinate_key": "09호선|사평",
+      "official_station_id": "1009000924",
+      "line_id": "1009",
+      "official_query_name": "사평"
+    },
+    {
+      "coordinate_key": "09호선|고속터미널",
+      "official_station_id": "1009000923",
+      "line_id": "1009",
+      "official_query_name": "고속터미널"
+    },
+    {
+      "coordinate_key": "09호선|신반포",
+      "official_station_id": "1009000922",
+      "line_id": "1009",
+      "official_query_name": "신반포"
+    },
+    {
+      "coordinate_key": "09호선|구반포",
+      "official_station_id": "1009000921",
+      "line_id": "1009",
+      "official_query_name": "구반포"
+    },
+    {
+      "coordinate_key": "09호선|노들",
+      "official_station_id": "1009000918",
+      "line_id": "1009",
+      "official_query_name": "노들"
+    },
+    {
+      "coordinate_key": "09호선|흑석",
+      "official_station_id": "1009000919",
+      "line_id": "1009",
+      "official_query_name": "흑석"
+    },
+    {
+      "coordinate_key": "09호선|동작",
+      "official_station_id": "1009000920",
+      "line_id": "1009",
+      "official_query_name": "동작"
+    },
+    {
+      "coordinate_key": "09호선|석촌",
+      "official_station_id": "1009000933",
+      "line_id": "1009",
+      "official_query_name": "석촌"
+    },
+    {
+      "coordinate_key": "09호선|송파나루",
+      "official_station_id": "1009000934",
+      "line_id": "1009",
+      "official_query_name": "송파나루"
+    },
+    {
+      "coordinate_key": "09호선|한성백제",
+      "official_station_id": "1009000935",
+      "line_id": "1009",
+      "official_query_name": "한성백제"
+    },
+    {
+      "coordinate_key": "09호선|신논현",
+      "official_station_id": "1009000925",
+      "line_id": "1009",
+      "official_query_name": "신논현"
+    },
+    {
+      "coordinate_key": "09호선|언주",
+      "official_station_id": "1009000926",
+      "line_id": "1009",
+      "official_query_name": "언주"
+    },
+    {
+      "coordinate_key": "09호선|선정릉",
+      "official_station_id": "1009000927",
+      "line_id": "1009",
+      "official_query_name": "선정릉"
+    },
+    {
+      "coordinate_key": "09호선|샛강",
+      "official_station_id": "1009000916",
+      "line_id": "1009",
+      "official_query_name": "샛강"
+    },
+    {
+      "coordinate_key": "09호선|올림픽공원",
+      "official_station_id": "1009000936",
+      "line_id": "1009",
+      "official_query_name": "올림픽공원"
+    },
+    {
+      "coordinate_key": "09호선|노량진",
+      "official_station_id": "1009000917",
+      "line_id": "1009",
+      "official_query_name": "노량진"
+    },
+    {
+      "coordinate_key": "09호선|개화",
+      "official_station_id": "1009000901",
+      "line_id": "1009",
+      "official_query_name": "개화"
+    },
+    {
+      "coordinate_key": "09호선|김포공항",
+      "official_station_id": "1009000902",
+      "line_id": "1009",
+      "official_query_name": "김포공항"
+    },
+    {
+      "coordinate_key": "09호선|공항시장",
+      "official_station_id": "1009000903",
+      "line_id": "1009",
+      "official_query_name": "공항시장"
+    },
+    {
+      "coordinate_key": "09호선|신방화",
+      "official_station_id": "1009000904",
+      "line_id": "1009",
+      "official_query_name": "신방화"
+    },
+    {
+      "coordinate_key": "09호선|선유도",
+      "official_station_id": "1009000912",
+      "line_id": "1009",
+      "official_query_name": "선유도"
+    },
+    {
+      "coordinate_key": "09호선|당산",
+      "official_station_id": "1009000913",
+      "line_id": "1009",
+      "official_query_name": "당산"
+    },
+    {
+      "coordinate_key": "09호선|중앙보훈병원",
+      "official_station_id": "1009000938",
+      "line_id": "1009",
+      "official_query_name": "중앙보훈병원"
+    },
+    {
+      "coordinate_key": "09호선|둔촌오륜",
+      "official_station_id": "1009000937",
+      "line_id": "1009",
+      "official_query_name": "둔촌오륜"
+    },
+    {
+      "coordinate_key": "09호선|석촌고분",
+      "official_station_id": "1009000932",
+      "line_id": "1009",
+      "official_query_name": "석촌고분"
+    },
+    {
+      "coordinate_key": "09호선|신목동",
+      "official_station_id": "1009000911",
+      "line_id": "1009",
+      "official_query_name": "신목동"
+    },
+    {
+      "coordinate_key": "09호선|염창",
+      "official_station_id": "1009000910",
+      "line_id": "1009",
+      "official_query_name": "염창"
+    },
+    {
+      "coordinate_key": "09호선|삼전",
+      "official_station_id": "1009000931",
+      "line_id": "1009",
+      "official_query_name": "삼전"
+    },
+    {
+      "coordinate_key": "09호선|증미",
+      "official_station_id": "1009000908",
+      "line_id": "1009",
+      "official_query_name": "증미"
+    },
+    {
+      "coordinate_key": "09호선|가양",
+      "official_station_id": "1009000907",
+      "line_id": "1009",
+      "official_query_name": "가양"
+    },
+    {
+      "coordinate_key": "09호선|양천향교",
+      "official_station_id": "1009000906",
+      "line_id": "1009",
+      "official_query_name": "양천향교"
+    },
+    {
+      "coordinate_key": "09호선|마곡나루",
+      "official_station_id": "1009000905",
+      "line_id": "1009",
+      "official_query_name": "마곡나루"
+    },
+    {
+      "coordinate_key": "09호선|여의도",
+      "official_station_id": "1009000915",
+      "line_id": "1009",
+      "official_query_name": "여의도"
+    },
+    {
+      "coordinate_key": "09호선|국회의사당",
+      "official_station_id": "1009000914",
+      "line_id": "1009",
+      "official_query_name": "국회의사당"
+    },
+    {
+      "coordinate_key": "GTX-A|서울",
+      "official_station_id": "1032000351",
+      "line_id": "1032",
+      "official_query_name": "서울"
+    },
+    {
+      "coordinate_key": "GTX-A|구성",
+      "official_station_id": "1032000355",
+      "line_id": "1032",
+      "official_query_name": "구성"
+    },
+    {
+      "coordinate_key": "GTX-A|연신내",
+      "official_station_id": "1032000350",
+      "line_id": "1032",
+      "official_query_name": "연신내"
+    },
+    {
+      "coordinate_key": "GTX-A|대곡",
+      "official_station_id": "1032000348",
+      "line_id": "1032",
+      "official_query_name": "대곡"
+    },
+    {
+      "coordinate_key": "GTX-A|수서",
+      "official_station_id": "1032000353",
+      "line_id": "1032",
+      "official_query_name": "수서"
+    },
+    {
+      "coordinate_key": "GTX-A|성남",
+      "official_station_id": "1032000354",
+      "line_id": "1032",
+      "official_query_name": "성남"
+    },
+    {
+      "coordinate_key": "경강선|곤지암",
+      "official_station_id": "1081037415",
+      "line_id": "1081",
+      "official_query_name": "곤지암"
+    },
+    {
+      "coordinate_key": "경강선|경기광주",
+      "official_station_id": "1081037413",
+      "line_id": "1081",
+      "official_query_name": "경기광주"
+    },
+    {
+      "coordinate_key": "경강선|여주",
+      "official_station_id": "1081037420",
+      "line_id": "1081",
+      "official_query_name": "여주"
+    },
+    {
+      "coordinate_key": "경강선|성남",
+      "official_station_id": "1081037410",
+      "line_id": "1081",
+      "official_query_name": "성남"
+    },
+    {
+      "coordinate_key": "경강선|신둔도예촌",
+      "official_station_id": "1081037416",
+      "line_id": "1081",
+      "official_query_name": "신둔도예촌"
+    },
+    {
+      "coordinate_key": "경강선|초월",
+      "official_station_id": "1081037414",
+      "line_id": "1081",
+      "official_query_name": "초월"
+    },
+    {
+      "coordinate_key": "경강선|판교",
+      "official_station_id": "1081037409",
+      "line_id": "1081",
+      "official_query_name": "판교"
+    },
+    {
+      "coordinate_key": "경강선|이매",
+      "official_station_id": "1081037411",
+      "line_id": "1081",
+      "official_query_name": "이매"
+    },
+    {
+      "coordinate_key": "경강선|부발",
+      "official_station_id": "1081037418",
+      "line_id": "1081",
+      "official_query_name": "부발"
+    },
+    {
+      "coordinate_key": "경강선|삼동",
+      "official_station_id": "1081037412",
+      "line_id": "1081",
+      "official_query_name": "삼동"
+    },
+    {
+      "coordinate_key": "경강선|이천",
+      "official_station_id": "1081037417",
+      "line_id": "1081",
+      "official_query_name": "이천"
+    },
+    {
+      "coordinate_key": "경춘선|사릉",
+      "official_station_id": "1067080126",
+      "line_id": "1067",
+      "official_query_name": "사릉"
+    },
+    {
+      "coordinate_key": "경춘선|광운대",
+      "official_station_id": "1067080119",
+      "line_id": "1067",
+      "official_query_name": "광운대"
+    },
+    {
+      "coordinate_key": "경춘선|청량리",
+      "official_station_id": "1067080116",
+      "line_id": "1067",
+      "official_query_name": "청량리"
+    },
+    {
+      "coordinate_key": "경춘선|평내호평",
+      "official_station_id": "1067080128",
+      "line_id": "1067",
+      "official_query_name": "평내호평"
+    },
+    {
+      "coordinate_key": "경춘선|천마산",
+      "official_station_id": "1067080129",
+      "line_id": "1067",
+      "official_query_name": "천마산"
+    },
+    {
+      "coordinate_key": "경춘선|마석",
+      "official_station_id": "1067080130",
+      "line_id": "1067",
+      "official_query_name": "마석"
+    },
+    {
+      "coordinate_key": "경춘선|대성리",
+      "official_station_id": "1067080131",
+      "line_id": "1067",
+      "official_query_name": "대성리"
+    },
+    {
+      "coordinate_key": "경춘선|청평",
+      "official_station_id": "1067080132",
+      "line_id": "1067",
+      "official_query_name": "청평"
+    },
+    {
+      "coordinate_key": "경춘선|상천",
+      "official_station_id": "1067080133",
+      "line_id": "1067",
+      "official_query_name": "상천"
+    },
+    {
+      "coordinate_key": "경춘선|가평",
+      "official_station_id": "1067080134",
+      "line_id": "1067",
+      "official_query_name": "가평"
+    },
+    {
+      "coordinate_key": "경춘선|춘천",
+      "official_station_id": "1067080140",
+      "line_id": "1067",
+      "official_query_name": "춘천"
+    },
+    {
+      "coordinate_key": "경춘선|남춘천",
+      "official_station_id": "1067080139",
+      "line_id": "1067",
+      "official_query_name": "남춘천"
+    },
+    {
+      "coordinate_key": "경춘선|김유정",
+      "official_station_id": "1067080138",
+      "line_id": "1067",
+      "official_query_name": "김유정"
+    },
+    {
+      "coordinate_key": "경춘선|굴봉산",
+      "official_station_id": "1067080135",
+      "line_id": "1067",
+      "official_query_name": "굴봉산"
+    },
+    {
+      "coordinate_key": "경춘선|금곡",
+      "official_station_id": "1067080127",
+      "line_id": "1067",
+      "official_query_name": "금곡"
+    },
+    {
+      "coordinate_key": "경춘선|퇴계원",
+      "official_station_id": "1067080125",
+      "line_id": "1067",
+      "official_query_name": "퇴계원"
+    },
+    {
+      "coordinate_key": "경춘선|별내",
+      "official_station_id": "1067080124",
+      "line_id": "1067",
+      "official_query_name": "별내"
+    },
+    {
+      "coordinate_key": "경춘선|갈매",
+      "official_station_id": "1067080123",
+      "line_id": "1067",
+      "official_query_name": "갈매"
+    },
+    {
+      "coordinate_key": "경춘선|신내",
+      "official_station_id": "1067080122",
+      "line_id": "1067",
+      "official_query_name": "신내"
+    },
+    {
+      "coordinate_key": "경춘선|망우",
+      "official_station_id": "1067080121",
+      "line_id": "1067",
+      "official_query_name": "망우"
+    },
+    {
+      "coordinate_key": "경춘선|상봉",
+      "official_station_id": "1067080120",
+      "line_id": "1067",
+      "official_query_name": "상봉"
+    },
+    {
+      "coordinate_key": "경춘선|중랑",
+      "official_station_id": "1067080118",
+      "line_id": "1067",
+      "official_query_name": "중랑"
+    },
+    {
+      "coordinate_key": "경춘선|강촌",
+      "official_station_id": "1067080137",
+      "line_id": "1067",
+      "official_query_name": "강촌"
+    },
+    {
+      "coordinate_key": "경춘선|회기",
+      "official_station_id": "1067080117",
+      "line_id": "1067",
+      "official_query_name": "회기"
+    },
+    {
+      "coordinate_key": "경춘선|백양리",
+      "official_station_id": "1067080136",
+      "line_id": "1067",
+      "official_query_name": "백양리"
+    },
+    {
+      "coordinate_key": "공항철도|마곡나루",
+      "official_station_id": "1065065042",
+      "line_id": "1065",
+      "official_query_name": "마곡나루"
+    },
+    {
+      "coordinate_key": "공항철도|디지털미디어시티",
+      "official_station_id": "1065006504",
+      "line_id": "1065",
+      "official_query_name": "디지털미디어시티"
+    },
+    {
+      "coordinate_key": "공항철도|영종",
+      "official_station_id": "1065065072",
+      "line_id": "1065",
+      "official_query_name": "영종"
+    },
+    {
+      "coordinate_key": "공항철도|홍대입구",
+      "official_station_id": "1065006503",
+      "line_id": "1065",
+      "official_query_name": "홍대입구"
+    },
+    {
+      "coordinate_key": "공항철도|인천공항2터미널",
+      "official_station_id": "1065006511",
+      "line_id": "1065",
+      "official_query_name": "인천공항2터미널"
+    },
+    {
+      "coordinate_key": "공항철도|인천공항1터미널",
+      "official_station_id": "1065006510",
+      "line_id": "1065",
+      "official_query_name": "인천공항1터미널"
+    },
+    {
+      "coordinate_key": "공항철도|공항화물청사",
+      "official_station_id": "1065006509",
+      "line_id": "1065",
+      "official_query_name": "공항화물청사"
+    },
+    {
+      "coordinate_key": "공항철도|운서",
+      "official_station_id": "1065006508",
+      "line_id": "1065",
+      "official_query_name": "운서"
+    },
+    {
+      "coordinate_key": "공항철도|공덕",
+      "official_station_id": "1065006502",
+      "line_id": "1065",
+      "official_query_name": "공덕"
+    },
+    {
+      "coordinate_key": "공항철도|계양",
+      "official_station_id": "1065006506",
+      "line_id": "1065",
+      "official_query_name": "계양"
+    },
+    {
+      "coordinate_key": "공항철도|검암",
+      "official_station_id": "1065006507",
+      "line_id": "1065",
+      "official_query_name": "검암"
+    },
+    {
+      "coordinate_key": "공항철도|김포공항",
+      "official_station_id": "1065006505",
+      "line_id": "1065",
+      "official_query_name": "김포공항"
+    },
+    {
+      "coordinate_key": "공항철도|청라국제도시",
+      "official_station_id": "1065065071",
+      "line_id": "1065",
+      "official_query_name": "청라국제도시"
+    },
+    {
+      "coordinate_key": "서해선|시흥능곡",
+      "official_station_id": "1093004017",
+      "line_id": "1093",
+      "official_query_name": "시흥능곡"
+    },
+    {
+      "coordinate_key": "서해선|능곡",
+      "official_station_id": "1093004006",
+      "line_id": "1093",
+      "official_query_name": "능곡"
+    },
+    {
+      "coordinate_key": "서해선|곡산",
+      "official_station_id": "1093004004",
+      "line_id": "1093",
+      "official_query_name": "곡산"
+    },
+    {
+      "coordinate_key": "서해선|부천종합운동장",
+      "official_station_id": "1093004009",
+      "line_id": "1093",
+      "official_query_name": "부천종합운동장"
+    },
+    {
+      "coordinate_key": "서해선|원종",
+      "official_station_id": "1093004008",
+      "line_id": "1093",
+      "official_query_name": "원종"
+    },
+    {
+      "coordinate_key": "서해선|백마",
+      "official_station_id": "1093004003",
+      "line_id": "1093",
+      "official_query_name": "백마"
+    },
+    {
+      "coordinate_key": "서해선|풍산",
+      "official_station_id": "1093004002",
+      "line_id": "1093",
+      "official_query_name": "풍산"
+    },
+    {
+      "coordinate_key": "서해선|일산",
+      "official_station_id": "1093004001",
+      "line_id": "1093",
+      "official_query_name": "일산"
+    },
+    {
+      "coordinate_key": "서해선|원시",
+      "official_station_id": "1093004022",
+      "line_id": "1093",
+      "official_query_name": "원시"
+    },
+    {
+      "coordinate_key": "서해선|시우",
+      "official_station_id": "1093004021",
+      "line_id": "1093",
+      "official_query_name": "시우"
+    },
+    {
+      "coordinate_key": "서해선|초지",
+      "official_station_id": "1093004020",
+      "line_id": "1093",
+      "official_query_name": "초지"
+    },
+    {
+      "coordinate_key": "서해선|소새울",
+      "official_station_id": "1093004011",
+      "line_id": "1093",
+      "official_query_name": "소새울"
+    },
+    {
+      "coordinate_key": "서해선|선부",
+      "official_station_id": "1093004019",
+      "line_id": "1093",
+      "official_query_name": "선부"
+    },
+    {
+      "coordinate_key": "서해선|달미",
+      "official_station_id": "1093004018",
+      "line_id": "1093",
+      "official_query_name": "달미"
+    },
+    {
+      "coordinate_key": "서해선|대곡",
+      "official_station_id": "1093004005",
+      "line_id": "1093",
+      "official_query_name": "대곡"
+    },
+    {
+      "coordinate_key": "서해선|신현",
+      "official_station_id": "1093004014",
+      "line_id": "1093",
+      "official_query_name": "신현"
+    },
+    {
+      "coordinate_key": "서해선|소사",
+      "official_station_id": "1093004010",
+      "line_id": "1093",
+      "official_query_name": "소사"
+    },
+    {
+      "coordinate_key": "서해선|신천",
+      "official_station_id": "1093004013",
+      "line_id": "1093",
+      "official_query_name": "신천"
+    },
+    {
+      "coordinate_key": "서해선|김포공항",
+      "official_station_id": "1093004007",
+      "line_id": "1093",
+      "official_query_name": "김포공항"
+    },
+    {
+      "coordinate_key": "서해선|시흥대야",
+      "official_station_id": "1093004012",
+      "line_id": "1093",
+      "official_query_name": "시흥대야"
+    },
+    {
+      "coordinate_key": "서해선|시흥시청",
+      "official_station_id": "1093004016",
+      "line_id": "1093",
+      "official_query_name": "시흥시청"
+    },
+    {
+      "coordinate_key": "수인분당선|인천",
+      "official_station_id": "1075075271",
+      "line_id": "1075",
+      "official_query_name": "인천"
+    },
+    {
+      "coordinate_key": "수인분당선|고색",
+      "official_station_id": "1075075246",
+      "line_id": "1075",
+      "official_query_name": "고색"
+    },
+    {
+      "coordinate_key": "수인분당선|사리",
+      "official_station_id": "1075075250",
+      "line_id": "1075",
+      "official_query_name": "사리"
+    },
+    {
+      "coordinate_key": "수인분당선|청량리",
+      "official_station_id": "1075075209",
+      "line_id": "1075",
+      "official_query_name": "청량리"
+    },
+    {
+      "coordinate_key": "수인분당선|정왕",
+      "official_station_id": "1075075257",
+      "line_id": "1075",
+      "official_query_name": "정왕"
+    },
+    {
+      "coordinate_key": "수인분당선|야탑",
+      "official_station_id": "1075075226",
+      "line_id": "1075",
+      "official_query_name": "야탑"
+    },
+    {
+      "coordinate_key": "수인분당선|안산",
+      "official_station_id": "1075075255",
+      "line_id": "1075",
+      "official_query_name": "안산"
+    },
+    {
+      "coordinate_key": "수인분당선|달월",
+      "official_station_id": "1075075259",
+      "line_id": "1075",
+      "official_query_name": "달월"
+    },
+    {
+      "coordinate_key": "수인분당선|월곶",
+      "official_station_id": "1075075260",
+      "line_id": "1075",
+      "official_query_name": "월곶"
+    },
+    {
+      "coordinate_key": "수인분당선|수원",
+      "official_station_id": "1075075245",
+      "line_id": "1075",
+      "official_query_name": "수원"
+    },
+    {
+      "coordinate_key": "수인분당선|태평",
+      "official_station_id": "1075075224",
+      "line_id": "1075",
+      "official_query_name": "태평"
+    },
+    {
+      "coordinate_key": "수인분당선|인천논현",
+      "official_station_id": "1075075262",
+      "line_id": "1075",
+      "official_query_name": "인천논현"
+    },
+    {
+      "coordinate_key": "수인분당선|수내",
+      "official_station_id": "1075075229",
+      "line_id": "1075",
+      "official_query_name": "수내"
+    },
+    {
+      "coordinate_key": "수인분당선|정자",
+      "official_station_id": "1075075230",
+      "line_id": "1075",
+      "official_query_name": "정자"
+    },
+    {
+      "coordinate_key": "수인분당선|미금",
+      "official_station_id": "1075075231",
+      "line_id": "1075",
+      "official_query_name": "미금"
+    },
+    {
+      "coordinate_key": "수인분당선|오리",
+      "official_station_id": "1075075232",
+      "line_id": "1075",
+      "official_query_name": "오리"
+    },
+    {
+      "coordinate_key": "수인분당선|이매",
+      "official_station_id": "1075075227",
+      "line_id": "1075",
+      "official_query_name": "이매"
+    },
+    {
+      "coordinate_key": "수인분당선|보정",
+      "official_station_id": "1075075234",
+      "line_id": "1075",
+      "official_query_name": "보정"
+    },
+    {
+      "coordinate_key": "수인분당선|신갈",
+      "official_station_id": "1075075236",
+      "line_id": "1075",
+      "official_query_name": "신갈"
+    },
+    {
+      "coordinate_key": "수인분당선|매탄권선",
+      "official_station_id": "1075075242",
+      "line_id": "1075",
+      "official_query_name": "매탄권선"
+    },
+    {
+      "coordinate_key": "수인분당선|수원시청",
+      "official_station_id": "1075075243",
+      "line_id": "1075",
+      "official_query_name": "수원시청"
+    },
+    {
+      "coordinate_key": "수인분당선|소래포구",
+      "official_station_id": "1075075261",
+      "line_id": "1075",
+      "official_query_name": "소래포구"
+    },
+    {
+      "coordinate_key": "수인분당선|어천",
+      "official_station_id": "1075075248",
+      "line_id": "1075",
+      "official_query_name": "어천"
+    },
+    {
+      "coordinate_key": "수인분당선|가천대",
+      "official_station_id": "1075075223",
+      "line_id": "1075",
+      "official_query_name": "가천대"
+    },
+    {
+      "coordinate_key": "수인분당선|선정릉",
+      "official_station_id": "1075075214",
+      "line_id": "1075",
+      "official_query_name": "선정릉"
+    },
+    {
+      "coordinate_key": "수인분당선|강남구청",
+      "official_station_id": "1075075213",
+      "line_id": "1075",
+      "official_query_name": "강남구청"
+    },
+    {
+      "coordinate_key": "수인분당선|압구정로데오",
+      "official_station_id": "1075075212",
+      "line_id": "1075",
+      "official_query_name": "압구정로데오"
+    },
+    {
+      "coordinate_key": "수인분당선|서울숲",
+      "official_station_id": "1075075211",
+      "line_id": "1075",
+      "official_query_name": "서울숲"
+    },
+    {
+      "coordinate_key": "수인분당선|오목천",
+      "official_station_id": "1075075247",
+      "line_id": "1075",
+      "official_query_name": "오목천"
+    },
+    {
+      "coordinate_key": "수인분당선|인하대",
+      "official_station_id": "1075075268",
+      "line_id": "1075",
+      "official_query_name": "인하대"
+    },
+    {
+      "coordinate_key": "수인분당선|신포",
+      "official_station_id": "1075075270",
+      "line_id": "1075",
+      "official_query_name": "신포"
+    },
+    {
+      "coordinate_key": "수인분당선|모란",
+      "official_station_id": "1075075225",
+      "line_id": "1075",
+      "official_query_name": "모란"
+    },
+    {
+      "coordinate_key": "수인분당선|호구포",
+      "official_station_id": "1075075263",
+      "line_id": "1075",
+      "official_query_name": "호구포"
+    },
+    {
+      "coordinate_key": "수인분당선|한티",
+      "official_station_id": "1075075216",
+      "line_id": "1075",
+      "official_query_name": "한티"
+    },
+    {
+      "coordinate_key": "수인분당선|기흥",
+      "official_station_id": "1075075237",
+      "line_id": "1075",
+      "official_query_name": "기흥"
+    },
+    {
+      "coordinate_key": "수인분당선|야목",
+      "official_station_id": "1075075249",
+      "line_id": "1075",
+      "official_query_name": "야목"
+    },
+    {
+      "coordinate_key": "수인분당선|선릉",
+      "official_station_id": "1075075215",
+      "line_id": "1075",
+      "official_query_name": "선릉"
+    },
+    {
+      "coordinate_key": "수인분당선|상갈",
+      "official_station_id": "1075075238",
+      "line_id": "1075",
+      "official_query_name": "상갈"
+    },
+    {
+      "coordinate_key": "수인분당선|청명",
+      "official_station_id": "1075075239",
+      "line_id": "1075",
+      "official_query_name": "청명"
+    },
+    {
+      "coordinate_key": "수인분당선|영통",
+      "official_station_id": "1075075240",
+      "line_id": "1075",
+      "official_query_name": "영통"
+    },
+    {
+      "coordinate_key": "수인분당선|도곡",
+      "official_station_id": "1075075217",
+      "line_id": "1075",
+      "official_query_name": "도곡"
+    },
+    {
+      "coordinate_key": "수인분당선|구룡",
+      "official_station_id": "1075075218",
+      "line_id": "1075",
+      "official_query_name": "구룡"
+    },
+    {
+      "coordinate_key": "수인분당선|개포동",
+      "official_station_id": "1075075219",
+      "line_id": "1075",
+      "official_query_name": "개포동"
+    },
+    {
+      "coordinate_key": "수인분당선|대모산입구",
+      "official_station_id": "1075075220",
+      "line_id": "1075",
+      "official_query_name": "대모산입구"
+    },
+    {
+      "coordinate_key": "수인분당선|왕십리",
+      "official_station_id": "1075075210",
+      "line_id": "1075",
+      "official_query_name": "왕십리"
+    },
+    {
+      "coordinate_key": "수인분당선|수서",
+      "official_station_id": "1075075221",
+      "line_id": "1075",
+      "official_query_name": "수서"
+    },
+    {
+      "coordinate_key": "수인분당선|복정",
+      "official_station_id": "1075075222",
+      "line_id": "1075",
+      "official_query_name": "복정"
+    },
+    {
+      "coordinate_key": "수인분당선|망포",
+      "official_station_id": "1075075241",
+      "line_id": "1075",
+      "official_query_name": "망포"
+    },
+    {
+      "coordinate_key": "수인분당선|매교",
+      "official_station_id": "1075075244",
+      "line_id": "1075",
+      "official_query_name": "매교"
+    },
+    {
+      "coordinate_key": "수인분당선|원인재",
+      "official_station_id": "1075075265",
+      "line_id": "1075",
+      "official_query_name": "원인재"
+    },
+    {
+      "coordinate_key": "수인분당선|연수",
+      "official_station_id": "1075075266",
+      "line_id": "1075",
+      "official_query_name": "연수"
+    },
+    {
+      "coordinate_key": "수인분당선|송도",
+      "official_station_id": "1075075267",
+      "line_id": "1075",
+      "official_query_name": "송도"
+    },
+    {
+      "coordinate_key": "수인분당선|숭의",
+      "official_station_id": "1075075269",
+      "line_id": "1075",
+      "official_query_name": "숭의"
+    },
+    {
+      "coordinate_key": "수인분당선|중앙",
+      "official_station_id": "1075075252",
+      "line_id": "1075",
+      "official_query_name": "중앙"
+    },
+    {
+      "coordinate_key": "수인분당선|오이도",
+      "official_station_id": "1075075258",
+      "line_id": "1075",
+      "official_query_name": "오이도"
+    },
+    {
+      "coordinate_key": "수인분당선|죽전",
+      "official_station_id": "1075075233",
+      "line_id": "1075",
+      "official_query_name": "죽전"
+    },
+    {
+      "coordinate_key": "수인분당선|초지",
+      "official_station_id": "1075075254",
+      "line_id": "1075",
+      "official_query_name": "초지"
+    },
+    {
+      "coordinate_key": "수인분당선|고잔",
+      "official_station_id": "1075075253",
+      "line_id": "1075",
+      "official_query_name": "고잔"
+    },
+    {
+      "coordinate_key": "수인분당선|한대앞",
+      "official_station_id": "1075075251",
+      "line_id": "1075",
+      "official_query_name": "한대앞"
+    },
+    {
+      "coordinate_key": "수인분당선|남동인더스파크",
+      "official_station_id": "1075075264",
+      "line_id": "1075",
+      "official_query_name": "남동인더스파크"
+    },
+    {
+      "coordinate_key": "수인분당선|구성",
+      "official_station_id": "1075075235",
+      "line_id": "1075",
+      "official_query_name": "구성"
+    },
+    {
+      "coordinate_key": "수인분당선|서현",
+      "official_station_id": "1075075228",
+      "line_id": "1075",
+      "official_query_name": "서현"
+    },
+    {
+      "coordinate_key": "신림선|보라매",
+      "official_station_id": "1094000404",
+      "line_id": "1094",
+      "official_query_name": "보라매"
+    },
+    {
+      "coordinate_key": "신림선|서울지방병무청",
+      "official_station_id": "1094000403",
+      "line_id": "1094",
+      "official_query_name": "서울지방병무청"
+    },
+    {
+      "coordinate_key": "신림선|신림",
+      "official_station_id": "1094000408",
+      "line_id": "1094",
+      "official_query_name": "신림"
+    },
+    {
+      "coordinate_key": "신림선|당곡",
+      "official_station_id": "1094000407",
+      "line_id": "1094",
+      "official_query_name": "당곡"
+    },
+    {
+      "coordinate_key": "신림선|보라매병원",
+      "official_station_id": "1094000406",
+      "line_id": "1094",
+      "official_query_name": "보라매병원"
+    },
+    {
+      "coordinate_key": "신림선|보라매공원",
+      "official_station_id": "1094000405",
+      "line_id": "1094",
+      "official_query_name": "보라매공원"
+    },
+    {
+      "coordinate_key": "신림선|관악산",
+      "official_station_id": "1094000411",
+      "line_id": "1094",
+      "official_query_name": "관악산"
+    },
+    {
+      "coordinate_key": "신림선|서울대벤처타운",
+      "official_station_id": "1094000410",
+      "line_id": "1094",
+      "official_query_name": "서울대벤처타운"
+    },
+    {
+      "coordinate_key": "신림선|서원",
+      "official_station_id": "1094000409",
+      "line_id": "1094",
+      "official_query_name": "서원"
+    },
+    {
+      "coordinate_key": "신림선|대방",
+      "official_station_id": "1094000402",
+      "line_id": "1094",
+      "official_query_name": "대방"
+    },
+    {
+      "coordinate_key": "신림선|샛강",
+      "official_station_id": "1094000401",
+      "line_id": "1094",
+      "official_query_name": "샛강"
+    },
+    {
+      "coordinate_key": "신분당선|동천",
+      "official_station_id": "1077006814",
+      "line_id": "1077",
+      "official_query_name": "동천"
+    },
+    {
+      "coordinate_key": "신분당선|양재",
+      "official_station_id": "1077000688",
+      "line_id": "1077",
+      "official_query_name": "양재"
+    },
+    {
+      "coordinate_key": "신분당선|강남",
+      "official_station_id": "1077000687",
+      "line_id": "1077",
+      "official_query_name": "강남"
+    },
+    {
+      "coordinate_key": "신분당선|신사",
+      "official_station_id": "1077000684",
+      "line_id": "1077",
+      "official_query_name": "신사"
+    },
+    {
+      "coordinate_key": "신분당선|양재시민의숲",
+      "official_station_id": "1077000689",
+      "line_id": "1077",
+      "official_query_name": "양재시민의숲"
+    },
+    {
+      "coordinate_key": "신분당선|판교",
+      "official_station_id": "1077006811",
+      "line_id": "1077",
+      "official_query_name": "판교"
+    },
+    {
+      "coordinate_key": "신분당선|정자",
+      "official_station_id": "1077006812",
+      "line_id": "1077",
+      "official_query_name": "정자"
+    },
+    {
+      "coordinate_key": "신분당선|논현",
+      "official_station_id": "1077000685",
+      "line_id": "1077",
+      "official_query_name": "논현"
+    },
+    {
+      "coordinate_key": "신분당선|미금",
+      "official_station_id": "1077006813",
+      "line_id": "1077",
+      "official_query_name": "미금"
+    },
+    {
+      "coordinate_key": "신분당선|수지구청",
+      "official_station_id": "1077006815",
+      "line_id": "1077",
+      "official_query_name": "수지구청"
+    },
+    {
+      "coordinate_key": "신분당선|성복",
+      "official_station_id": "1077006816",
+      "line_id": "1077",
+      "official_query_name": "성복"
+    },
+    {
+      "coordinate_key": "신분당선|상현",
+      "official_station_id": "1077006817",
+      "line_id": "1077",
+      "official_query_name": "상현"
+    },
+    {
+      "coordinate_key": "신분당선|광교중앙",
+      "official_station_id": "1077006818",
+      "line_id": "1077",
+      "official_query_name": "광교중앙"
+    },
+    {
+      "coordinate_key": "신분당선|신논현",
+      "official_station_id": "1077000686",
+      "line_id": "1077",
+      "official_query_name": "신논현"
+    },
+    {
+      "coordinate_key": "신분당선|광교",
+      "official_station_id": "1077006819",
+      "line_id": "1077",
+      "official_query_name": "광교"
+    },
+    {
+      "coordinate_key": "신분당선|청계산입구",
+      "official_station_id": "1077006810",
+      "line_id": "1077",
+      "official_query_name": "청계산입구"
+    }
+  ],
+  "unmatched": [
+    {
+      "coordinate_key": "01호선|쌍용",
+      "line": "01호선",
+      "station": "쌍용",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "01호선|서울역",
+      "line": "01호선",
+      "station": "서울역",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "01호선|평택지제",
+      "line": "01호선",
+      "station": "평택지제",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "04호선|총신대입구",
+      "line": "04호선",
+      "station": "총신대입구",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "04호선|진접",
+      "line": "04호선",
+      "station": "진접",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "04호선|오남",
+      "line": "04호선",
+      "station": "오남",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "04호선|별내별가람",
+      "line": "04호선",
+      "station": "별내별가람",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "04호선|서울역",
+      "line": "04호선",
+      "station": "서울역",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "05호선|올림픽공원",
+      "line": "05호선",
+      "station": "올림픽공원",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "05호선|군자",
+      "line": "05호선",
+      "station": "군자",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "05호선|아차산",
+      "line": "05호선",
+      "station": "아차산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "05호선|오목교",
+      "line": "05호선",
+      "station": "오목교",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "05호선|굽은다리",
+      "line": "05호선",
+      "station": "굽은다리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "05호선|천호",
+      "line": "05호선",
+      "station": "천호",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "05호선|광나루",
+      "line": "05호선",
+      "station": "광나루",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "05호선|신정",
+      "line": "05호선",
+      "station": "신정",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "06호선|월드컵경기장",
+      "line": "06호선",
+      "station": "월드컵경기장",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "06호선|응암",
+      "line": "06호선",
+      "station": "응암",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "06호선|새절",
+      "line": "06호선",
+      "station": "새절",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "06호선|증산",
+      "line": "06호선",
+      "station": "증산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "06호선|월곡",
+      "line": "06호선",
+      "station": "월곡",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "06호선|화랑대",
+      "line": "06호선",
+      "station": "화랑대",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "06호선|안암",
+      "line": "06호선",
+      "station": "안암",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "06호선|상월곡",
+      "line": "06호선",
+      "station": "상월곡",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "06호선|대흥",
+      "line": "06호선",
+      "station": "대흥",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "07호선|어린이대공원",
+      "line": "07호선",
+      "station": "어린이대공원",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "07호선|상도",
+      "line": "07호선",
+      "station": "상도",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "07호선|숭실대입구",
+      "line": "07호선",
+      "station": "숭실대입구",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "07호선|공릉",
+      "line": "07호선",
+      "station": "공릉",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "07호선|군자",
+      "line": "07호선",
+      "station": "군자",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "07호선|이수",
+      "line": "07호선",
+      "station": "이수",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "07호선|자양",
+      "line": "07호선",
+      "station": "자양",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "08호선|몽촌토성",
+      "line": "08호선",
+      "station": "몽촌토성",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "08호선|천호",
+      "line": "08호선",
+      "station": "천호",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "08호선|남한산성입구",
+      "line": "08호선",
+      "station": "남한산성입구",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경강선|세종대왕릉",
+      "line": "경강선",
+      "station": "세종대왕릉",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|양평",
+      "line": "경의선",
+      "station": "양평",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|홍대입구",
+      "line": "경의선",
+      "station": "홍대입구",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|원덕",
+      "line": "경의선",
+      "station": "원덕",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|청량리",
+      "line": "경의선",
+      "station": "청량리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|한남",
+      "line": "경의선",
+      "station": "한남",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|옥수",
+      "line": "경의선",
+      "station": "옥수",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|용산",
+      "line": "경의선",
+      "station": "용산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|용문",
+      "line": "경의선",
+      "station": "용문",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|지평",
+      "line": "경의선",
+      "station": "지평",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|망우",
+      "line": "경의선",
+      "station": "망우",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|상봉",
+      "line": "경의선",
+      "station": "상봉",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|중랑",
+      "line": "경의선",
+      "station": "중랑",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|가좌",
+      "line": "경의선",
+      "station": "가좌",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|디지털미디어시티",
+      "line": "경의선",
+      "station": "디지털미디어시티",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|수색",
+      "line": "경의선",
+      "station": "수색",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|한국항공대",
+      "line": "경의선",
+      "station": "한국항공대",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|강매",
+      "line": "경의선",
+      "station": "강매",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|행신",
+      "line": "경의선",
+      "station": "행신",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|풍산",
+      "line": "경의선",
+      "station": "풍산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|일산",
+      "line": "경의선",
+      "station": "일산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|탄현",
+      "line": "경의선",
+      "station": "탄현",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|야당",
+      "line": "경의선",
+      "station": "야당",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|운정",
+      "line": "경의선",
+      "station": "운정",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|금릉",
+      "line": "경의선",
+      "station": "금릉",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|금촌",
+      "line": "경의선",
+      "station": "금촌",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|파주",
+      "line": "경의선",
+      "station": "파주",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|문산",
+      "line": "경의선",
+      "station": "문산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|임진강",
+      "line": "경의선",
+      "station": "임진강",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|운천",
+      "line": "경의선",
+      "station": "운천",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|구리",
+      "line": "경의선",
+      "station": "구리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|양원",
+      "line": "경의선",
+      "station": "양원",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|능곡",
+      "line": "경의선",
+      "station": "능곡",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|월롱",
+      "line": "경의선",
+      "station": "월롱",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|백마",
+      "line": "경의선",
+      "station": "백마",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|회기",
+      "line": "경의선",
+      "station": "회기",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|대곡",
+      "line": "경의선",
+      "station": "대곡",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|이촌",
+      "line": "경의선",
+      "station": "이촌",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|곡산",
+      "line": "경의선",
+      "station": "곡산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|응봉",
+      "line": "경의선",
+      "station": "응봉",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|왕십리",
+      "line": "경의선",
+      "station": "왕십리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|서빙고",
+      "line": "경의선",
+      "station": "서빙고",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|양수",
+      "line": "경의선",
+      "station": "양수",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|도심",
+      "line": "경의선",
+      "station": "도심",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|덕소",
+      "line": "경의선",
+      "station": "덕소",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|양정",
+      "line": "경의선",
+      "station": "양정",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|팔당",
+      "line": "경의선",
+      "station": "팔당",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|국수",
+      "line": "경의선",
+      "station": "국수",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|운길산",
+      "line": "경의선",
+      "station": "운길산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|신원",
+      "line": "경의선",
+      "station": "신원",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|서울역",
+      "line": "경의선",
+      "station": "서울역",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|아신",
+      "line": "경의선",
+      "station": "아신",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|신촌",
+      "line": "경의선",
+      "station": "신촌",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|효창공원앞",
+      "line": "경의선",
+      "station": "효창공원앞",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|공덕",
+      "line": "경의선",
+      "station": "공덕",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|오빈",
+      "line": "경의선",
+      "station": "오빈",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|도농",
+      "line": "경의선",
+      "station": "도농",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "경의선|서강대",
+      "line": "경의선",
+      "station": "서강대",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "공항철도|서울역",
+      "line": "공항철도",
+      "station": "서울역",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|사우",
+      "line": "김포도시철도",
+      "station": "사우",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|김포공항",
+      "line": "김포도시철도",
+      "station": "김포공항",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|고촌",
+      "line": "김포도시철도",
+      "station": "고촌",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|풍무",
+      "line": "김포도시철도",
+      "station": "풍무",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|걸포북변",
+      "line": "김포도시철도",
+      "station": "걸포북변",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|운양",
+      "line": "김포도시철도",
+      "station": "운양",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|장기",
+      "line": "김포도시철도",
+      "station": "장기",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|마산",
+      "line": "김포도시철도",
+      "station": "마산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|구래",
+      "line": "김포도시철도",
+      "station": "구래",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "김포도시철도|양촌",
+      "line": "김포도시철도",
+      "station": "양촌",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|고진",
+      "line": "용인경전철",
+      "station": "고진",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|기흥",
+      "line": "용인경전철",
+      "station": "기흥",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|전대.에버랜드",
+      "line": "용인경전철",
+      "station": "전대.에버랜드",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|삼가",
+      "line": "용인경전철",
+      "station": "삼가",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|시청.용인대",
+      "line": "용인경전철",
+      "station": "시청.용인대",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|동백",
+      "line": "용인경전철",
+      "station": "동백",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|지석",
+      "line": "용인경전철",
+      "station": "지석",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|보평",
+      "line": "용인경전철",
+      "station": "보평",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|둔전",
+      "line": "용인경전철",
+      "station": "둔전",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|초당",
+      "line": "용인경전철",
+      "station": "초당",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|어정",
+      "line": "용인경전철",
+      "station": "어정",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|강남대",
+      "line": "용인경전철",
+      "station": "강남대",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|김량장",
+      "line": "용인경전철",
+      "station": "김량장",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|용인중앙시장",
+      "line": "용인경전철",
+      "station": "용인중앙시장",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "용인경전철|명지대",
+      "line": "용인경전철",
+      "station": "명지대",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|보문",
+      "line": "우이신설경전철",
+      "station": "보문",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|화계",
+      "line": "우이신설경전철",
+      "station": "화계",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|신설동",
+      "line": "우이신설경전철",
+      "station": "신설동",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|북한산우이",
+      "line": "우이신설경전철",
+      "station": "북한산우이",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|솔밭공원",
+      "line": "우이신설경전철",
+      "station": "솔밭공원",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|4·19민주묘지",
+      "line": "우이신설경전철",
+      "station": "4·19민주묘지",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|가오리",
+      "line": "우이신설경전철",
+      "station": "가오리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|삼양",
+      "line": "우이신설경전철",
+      "station": "삼양",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|삼양사거리",
+      "line": "우이신설경전철",
+      "station": "삼양사거리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|솔샘",
+      "line": "우이신설경전철",
+      "station": "솔샘",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|북한산보국문",
+      "line": "우이신설경전철",
+      "station": "북한산보국문",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|정릉",
+      "line": "우이신설경전철",
+      "station": "정릉",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "우이신설경전철|성신여대입구",
+      "line": "우이신설경전철",
+      "station": "성신여대입구",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|경전철의정부",
+      "line": "의정부경전철",
+      "station": "경전철의정부",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|흥선",
+      "line": "의정부경전철",
+      "station": "흥선",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|범골",
+      "line": "의정부경전철",
+      "station": "범골",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|회룡",
+      "line": "의정부경전철",
+      "station": "회룡",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|발곡",
+      "line": "의정부경전철",
+      "station": "발곡",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|의정부중앙",
+      "line": "의정부경전철",
+      "station": "의정부중앙",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|동오",
+      "line": "의정부경전철",
+      "station": "동오",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|새말",
+      "line": "의정부경전철",
+      "station": "새말",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|경기도청북부청사",
+      "line": "의정부경전철",
+      "station": "경기도청북부청사",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|효자",
+      "line": "의정부경전철",
+      "station": "효자",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|곤제",
+      "line": "의정부경전철",
+      "station": "곤제",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|어룡",
+      "line": "의정부경전철",
+      "station": "어룡",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|송산",
+      "line": "의정부경전철",
+      "station": "송산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|탑석",
+      "line": "의정부경전철",
+      "station": "탑석",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "의정부경전철|의정부시청",
+      "line": "의정부경전철",
+      "station": "의정부시청",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|검단사거리",
+      "line": "인천2호선",
+      "station": "검단사거리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|왕길",
+      "line": "인천2호선",
+      "station": "왕길",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|주안",
+      "line": "인천2호선",
+      "station": "주안",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|가정중앙시장",
+      "line": "인천2호선",
+      "station": "가정중앙시장",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|검단오류",
+      "line": "인천2호선",
+      "station": "검단오류",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|검바위",
+      "line": "인천2호선",
+      "station": "검바위",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|가정",
+      "line": "인천2호선",
+      "station": "가정",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|아시아드경기장",
+      "line": "인천2호선",
+      "station": "아시아드경기장",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|인천가좌",
+      "line": "인천2호선",
+      "station": "인천가좌",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|서부여성회관",
+      "line": "인천2호선",
+      "station": "서부여성회관",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|마전",
+      "line": "인천2호선",
+      "station": "마전",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|석남",
+      "line": "인천2호선",
+      "station": "석남",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|독정",
+      "line": "인천2호선",
+      "station": "독정",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|검암",
+      "line": "인천2호선",
+      "station": "검암",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|완정",
+      "line": "인천2호선",
+      "station": "완정",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|가재울",
+      "line": "인천2호선",
+      "station": "가재울",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|주안국가산단",
+      "line": "인천2호선",
+      "station": "주안국가산단",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|인천시청",
+      "line": "인천2호선",
+      "station": "인천시청",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|석천사거리",
+      "line": "인천2호선",
+      "station": "석천사거리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|모래내시장",
+      "line": "인천2호선",
+      "station": "모래내시장",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|만수",
+      "line": "인천2호선",
+      "station": "만수",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|남동구청",
+      "line": "인천2호선",
+      "station": "남동구청",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|인천대공원",
+      "line": "인천2호선",
+      "station": "인천대공원",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|운연",
+      "line": "인천2호선",
+      "station": "운연",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|석바위시장",
+      "line": "인천2호선",
+      "station": "석바위시장",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천2호선|시민공원",
+      "line": "인천2호선",
+      "station": "시민공원",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|원인재",
+      "line": "인천선",
+      "station": "원인재",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|선학",
+      "line": "인천선",
+      "station": "선학",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|간석오거리",
+      "line": "인천선",
+      "station": "간석오거리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|예술회관",
+      "line": "인천선",
+      "station": "예술회관",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|신연수",
+      "line": "인천선",
+      "station": "신연수",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|검단호수공원",
+      "line": "인천선",
+      "station": "검단호수공원",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|인천시청",
+      "line": "인천선",
+      "station": "인천시청",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|부평삼거리",
+      "line": "인천선",
+      "station": "부평삼거리",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|송도달빛축제공원",
+      "line": "인천선",
+      "station": "송도달빛축제공원",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|계양",
+      "line": "인천선",
+      "station": "계양",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|동수",
+      "line": "인천선",
+      "station": "동수",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|신검단중앙",
+      "line": "인천선",
+      "station": "신검단중앙",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|박촌",
+      "line": "인천선",
+      "station": "박촌",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|센트럴파크",
+      "line": "인천선",
+      "station": "센트럴파크",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|인천대입구",
+      "line": "인천선",
+      "station": "인천대입구",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|임학",
+      "line": "인천선",
+      "station": "임학",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|부평구청",
+      "line": "인천선",
+      "station": "부평구청",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|갈산",
+      "line": "인천선",
+      "station": "갈산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|작전",
+      "line": "인천선",
+      "station": "작전",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|경인교대입구",
+      "line": "인천선",
+      "station": "경인교대입구",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|부평시장",
+      "line": "인천선",
+      "station": "부평시장",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|귤현",
+      "line": "인천선",
+      "station": "귤현",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|아라",
+      "line": "인천선",
+      "station": "아라",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|계산",
+      "line": "인천선",
+      "station": "계산",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|부평",
+      "line": "인천선",
+      "station": "부평",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|문학경기장",
+      "line": "인천선",
+      "station": "문학경기장",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|인천터미널",
+      "line": "인천선",
+      "station": "인천터미널",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|국제업무지구",
+      "line": "인천선",
+      "station": "국제업무지구",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|지식정보단지",
+      "line": "인천선",
+      "station": "지식정보단지",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|테크노파크",
+      "line": "인천선",
+      "station": "테크노파크",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|캠퍼스타운",
+      "line": "인천선",
+      "station": "캠퍼스타운",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|동막",
+      "line": "인천선",
+      "station": "동막",
+      "reason": "no_exact_line_and_station_match"
+    },
+    {
+      "coordinate_key": "인천선|동춘",
+      "line": "인천선",
+      "station": "동춘",
+      "reason": "no_exact_line_and_station_match"
+    }
+  ],
+  "injected_variants": [
+    {
+      "variant": "before",
+      "retained": 652,
+      "by_line": {
+        "1호선": 102,
+        "2호선": 51,
+        "3호선": 44,
+        "4호선": 48,
+        "5호선": 56,
+        "6호선": 39,
+        "7호선": 53,
+        "8호선": 24,
+        "9호선": 38,
+        "GTX-A": 9,
+        "경의중앙선": 57,
+        "공항철도": 14,
+        "경춘선": 25,
+        "수인분당선": 63,
+        "신분당선": 16,
+        "우이신설선": 13
+      }
+    },
+    {
+      "variant": "after",
+      "retained": 696,
+      "by_line": {
+        "1호선": 102,
+        "2호선": 51,
+        "3호선": 44,
+        "4호선": 48,
+        "5호선": 56,
+        "6호선": 39,
+        "7호선": 53,
+        "8호선": 24,
+        "9호선": 38,
+        "GTX-A": 9,
+        "경의중앙선": 57,
+        "공항철도": 14,
+        "경춘선": 25,
+        "수인분당선": 63,
+        "신분당선": 16,
+        "경강선": 12,
+        "우이신설선": 13,
+        "서해선": 21,
+        "신림선": 11
+      }
+    },
+    {
+      "variant": "after",
+      "retained": 696,
+      "by_line": {
+        "1호선": 102,
+        "2호선": 51,
+        "3호선": 44,
+        "4호선": 48,
+        "5호선": 56,
+        "6호선": 39,
+        "7호선": 53,
+        "8호선": 24,
+        "9호선": 38,
+        "GTX-A": 9,
+        "경의중앙선": 57,
+        "공항철도": 14,
+        "경춘선": 25,
+        "수인분당선": 63,
+        "신분당선": 16,
+        "경강선": 12,
+        "우이신설선": 13,
+        "서해선": 21,
+        "신림선": 11
+      }
+    },
+    {
+      "variant": "before",
+      "retained": 652,
+      "by_line": {
+        "1호선": 102,
+        "2호선": 51,
+        "3호선": 44,
+        "4호선": 48,
+        "5호선": 56,
+        "6호선": 39,
+        "7호선": 53,
+        "8호선": 24,
+        "9호선": 38,
+        "GTX-A": 9,
+        "경의중앙선": 57,
+        "공항철도": 14,
+        "경춘선": 25,
+        "수인분당선": 63,
+        "신분당선": 16,
+        "우이신설선": 13
+      }
+    }
+  ],
+  "homonym_yangpyeong": [
+    {
+      "line_id": "1005",
+      "station_id": "1005000522",
+      "station": "양평",
+      "line": "5호선",
+      "query_station": "양평",
+      "source_row": 259
+    },
+    {
+      "line_id": "1063",
+      "station_id": "1063075135",
+      "station": "양평",
+      "line": "경의중앙선",
+      "query_station": "양평",
+      "source_row": 491
+    }
+  ],
+  "network_attempts": [],
+  "new_route_web_samples": 0,
+  "actual_arrival_samples": 0,
+  "scope": "official static identity rows injected into public arrivals; not live station service coverage"
+}

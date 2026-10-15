@@ -1,0 +1,10 @@
+{
+  "deployed": {
+    "own_restore_database_removed": true,
+    "backup_files_preserved": true
+  },
+  "local": {
+    "own_restore_database_removed": true,
+    "backup_files_preserved": true
+  }
+}

@@ -1,0 +1,198 @@
+import type { Coordinates, MapPoint, MapView } from "./model";
+
+/**
+ * `[2026-10-05 사용자 선택 — 지도 단추 · 가장자리 마커 안 B]` The maths the map's own buttons need, kept apart from any map SDK: every provider (Leaflet, Google, Naver) says what it shows as a `MapView`
+ * (the corners of the view and its size in px), and the scale ruler and the chips for stops out of view are worked out from that alone. All three draw Web Mercator, so the corners are enough.
+ * Pure - tested without a browser.
+ */
+const EARTH_RADIUS_M = 6_371_000;
+const rad = (degrees: number) => (degrees * Math.PI) / 180;
+const mercatorY = (lat: number) => Math.log(Math.tan(Math.PI / 4 + rad(lat) / 2));
+
+/** Where a coordinate stands in the view, in px from its top-left corner (outside 0..width / 0..height when it is out of view). */
+export function toPixels(view: MapView, at: Coordinates): { x: number; y: number } {
+  const x = ((at.lng - view.west) / (view.east - view.west)) * view.width;
+  const top = mercatorY(view.north), bottom = mercatorY(view.south);
+  const y = ((top - mercatorY(at.lat)) / (top - bottom)) * view.height;
+  return { x, y };
+}
+
+/** toPixels의 역변환. 지도 화면의 Web Mercator 좌표를 사용한다. */
+export function fromPixels(view: MapView, at: { x: number; y: number }): Coordinates {
+  const top = mercatorY(view.north), bottom = mercatorY(view.south);
+  return { lat: (Math.atan(Math.exp(top - at.y / view.height * (top - bottom))) * 2 - Math.PI / 2) * 180 / Math.PI,
+    lng: view.west + at.x / view.width * (view.east - view.west) };
+}
+
+/** Metres on the ground that one px of the view covers (at its middle). */
+export function metersPerPixel(view: MapView): number {
+  const middle = (view.north + view.south) / 2;
+  return (Math.abs(view.east - view.west) * 111_320 * Math.cos(rad(middle))) / view.width;
+}
+
+export function distanceM(a: Coordinates, b: Coordinates): number {
+  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(h));
+}
+
+/** 「850m」 · 「1.2km」 · 「12km」 */
+export function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.max(10, Math.round(meters / 10) * 10)}m`;
+  const km = meters / 1000;
+  return `${km < 10 ? km.toFixed(1).replace(/\.0$/, "") : Math.round(km)}km`;
+}
+
+/** The ruler: the longest round distance (1 · 2 · 5 × a power of ten) whose bar is at most `maxPx` wide; `px` is the bar's length. */
+export function niceScale(view: MapView, maxPx = 34): { meters: number; px: number; label: string } | null {
+  const perPx = metersPerPixel(view);
+  if (!Number.isFinite(perPx) || perPx <= 0) return null;
+  const limit = perPx * maxPx;
+  const power = 10 ** Math.floor(Math.log10(limit));
+  const meters = [5, 2, 1].map((step) => step * power).find((candidate) => candidate <= limit) ?? power;
+  return { meters, px: Math.round(meters / perPx), label: formatDistance(meters).replace(/^(\d+)(m|km)$/, "$1$2") };
+}
+
+/** A stop that is out of view, drawn as a chip at the edge of the visible map pointing at it (stops close together share one). */
+export interface EdgeChip {
+  ids: string[];
+  /** What the pins say (the order number, or the letter of a candidate), in the order of the day. */
+  labels: string[];
+  /** Where the chip stands, in px from the view's top-left corner. */
+  x: number;
+  y: number;
+  /** Degrees, 0 = to the right, 90 = down. */
+  angle: number;
+  /** Metres from the middle of the visible map to the nearest stop of the chip. */
+  distanceM: number;
+  /** 공개 중 공간이 부족하면 번호와 방향을 44px 단추로 남긴다. 거리는 접근성 안내로 유지한다. */
+  crowded?: boolean;
+}
+
+export interface EdgeArea {
+  /** Placement space reserved for the top bar; coordinates here remain inside the map. */
+  top?: number;
+  /** Placement space reserved for the sheet; coordinates here remain inside the map. */
+  bottom?: number;
+  /** Px at the right kept free for the map's own buttons (a chip never stands over them). */
+  rightKeep?: number;
+  /** 실측한 단추 영역만 피한다. 단추가 없는 높이는 오른쪽 끝까지 쓴다. */
+  obstacles?: readonly { left: number; top: number; right: number; bottom: number }[];
+}
+
+/** A chip stands this far inside the edge (px): its own half-width sideways (a chip like 「3 · 2.3km」 is about 80 px wide) and its half-height up and down, and a little air. */
+const CHIP_INSET_X = 46;
+const CHIP_INSET_Y = 18;
+/** Chips closer than this (px) become one. */
+const GROUP_PX = 52;
+/** `[2026-10-06 사용자 지적 — 일정 이상 멀어지면 마커 표시가 안 된다]` Up to this many chips (it was 5: with more stops spread out the farthest ones had no sign at all). */
+const MAX_CHIPS = 8;
+
+/**
+ * Only coordinates outside the physical viewport get chips. Overlay insets reserve placement space,
+ * not geographic visibility: an inside pin moves clear of controls and keeps a leader to its coordinate.
+ * Stops shown muted (the context of the change screen) have no chip.
+ */
+export function edgeChips(view: MapView, points: readonly MapPoint[], area: EdgeArea = {}): EdgeChip[] {
+  if (!(view.width > 0 && view.height > 0) || view.east === view.west || view.north === view.south) return [];
+  const top = area.top ?? 0;
+  const rect = { left: 0, top, right: view.width, bottom: view.height - (area.bottom ?? 0) };
+  const centre = { x: (rect.left + rect.right) / 2, y: (rect.top + rect.bottom) / 2 };
+  const middle: Coordinates = { lat: (view.north + view.south) / 2, lng: (view.east + view.west) / 2 };
+  const focusId = points.find(point => point.revealFocus)?.id;
+  const revealing = focusId !== undefined;
+  const found = points.flatMap((point) => {
+    if (point.tone === "muted") return [];
+    const at = toPixels(view, point.coordinates);
+    if (at.x >= 0 && at.x <= view.width && at.y >= 0 && at.y <= view.height) return [];
+    const dx = at.x - centre.x, dy = at.y - centre.y;
+    const halfW = (rect.right - rect.left) / 2 - CHIP_INSET_X, halfH = (rect.bottom - rect.top) / 2 - CHIP_INSET_Y;
+    const t = Math.min(dx === 0 ? Infinity : halfW / Math.abs(dx), dy === 0 ? Infinity : halfH / Math.abs(dy));
+    let x = centre.x + dx * t;
+    const y = centre.y + dy * t;
+    if (!area.obstacles && area.rightKeep && y < top + 140) x = Math.min(x, view.width - area.rightKeep - CHIP_INSET_X);
+    return [{ id: point.id, label: point.label ?? String(point.order), x, y, angle: (Math.atan2(dy, dx) * 180) / Math.PI, distance: distanceM(middle, point.coordinates), order: point.order }];
+  }).sort((a, b) => a.order - b.order);
+  const groups: EdgeChip[] = [];
+  for (const entry of found) {
+    const near = revealing ? undefined : groups.find((group) => Math.hypot(group.x - entry.x, group.y - entry.y) < GROUP_PX);
+    if (near) { near.ids.push(entry.id); near.labels.push(entry.label); near.distanceM = Math.min(near.distanceM, entry.distance); }
+    else groups.push({ ids: [entry.id], labels: [entry.label], x: entry.x, y: entry.y, angle: entry.angle, distanceM: entry.distance });
+  }
+  // 표시 공간이 부족하면 가까운 칩에 합친다. 먼 일정도 목록에서 빠지지 않는다.
+  const placed: EdgeChip[] = [];
+  const reserveRight = area.obstacles ? 0 : area.rightKeep ?? 0;
+  const safeRight = Math.max(CHIP_INSET_X, view.width - (reserveRight ? 82 : CHIP_INSET_X) - reserveRight);
+  const positions: { x: number; y: number }[] = [];
+  for (let y = top + 24; y <= rect.bottom - 24; y += 38) {
+    positions.push({ x: CHIP_INSET_X, y }, { x: safeRight, y });
+  }
+  const low = positions.length === 0;
+  if (low) positions.push({ x: CHIP_INSET_X, y: centre.y }, { x: safeRight, y: centre.y });
+  // 충돌 회피로 실제 서쪽 일정을 오른쪽에 보내지 않는다. 정북·정남은 양쪽을 쓴다.
+  const sideOf = (chip: EdgeChip) => {
+    const horizontal = Math.cos(rad(chip.angle));
+    return Math.abs(horizontal) < 1e-6 ? 0 : Math.sign(horizontal);
+  };
+  const onGeographicSide = (chip: EdgeChip, at: { x: number }) => !revealing || sideOf(chip) === 0 || (at.x - centre.x) * sideOf(chip) > 0;
+  // 전부를 같은 중심에 놓으면 개별 버튼이 있어도 앞선 일정은 가려진다.
+  // 빈 칸이 없는 공개 화면에서만 작은 개별 단추로 바꾸어 번호가 서로 가려지지 않게 한다.
+  const spreadCrowded = (chips: readonly EdgeChip[]): EdgeChip[] => {
+    const half = 22;
+    const left = Math.min(half, view.width / 2), right = Math.max(left, Math.min(safeRight, view.width - half));
+    const minY = Math.min(top + CHIP_INSET_Y, centre.y), maxY = Math.max(minY, rect.bottom - CHIP_INSET_Y);
+    const ys = [...new Set([centre.y, ...positions.map(at => at.y), ...chips.map(chip => chip.y)].map(y => Math.max(minY, Math.min(maxY, y))))];
+    const sides = [...new Set(chips.map(sideOf))];
+    const hasVertical = sides.includes(0), hasHorizontal = sides.some(side => side !== 0);
+    return sides.flatMap(side => {
+      const members = chips.filter(chip => sideOf(chip) === side);
+      // 정북·정남만 있으면 전폭을 쓴다. 동서 일정과 함께 있으면 가운데 자리를 남긴다.
+      const gap = hasVertical && hasHorizontal ? half + 3 : 3;
+      const sideLeft = side > 0 ? Math.max(left, centre.x + gap) : side === 0 && hasHorizontal ? Math.max(left, centre.x - half) : left;
+      const sideRight = side < 0 ? Math.min(right, centre.x - gap) : side === 0 && hasHorizontal ? Math.min(right, centre.x + half) : right;
+      let best: { left: number; right: number; y: number } | null = null;
+      for (const y of ys) {
+        let intervals = [{ left: sideLeft, right: Math.max(sideLeft, sideRight) }];
+        for (const obstacle of area.obstacles ?? []) {
+          if (y + 18 < obstacle.top - 6 || y - 18 > obstacle.bottom + 6) continue;
+          intervals = intervals.flatMap(interval => {
+            if (interval.right < obstacle.left - half - 6 || interval.left > obstacle.right + half + 6) return [interval];
+            return [
+              { left: interval.left, right: Math.min(interval.right, obstacle.left - half - 7) },
+              { left: Math.max(interval.left, obstacle.right + half + 7), right: interval.right },
+            ].filter(part => part.right >= part.left);
+          });
+        }
+        for (const interval of intervals) if (!best || interval.right - interval.left > best.right - best.left) best = { ...interval, y };
+      }
+      const span = best ?? { left: sideLeft, right: Math.max(sideLeft, sideRight), y: Math.max(minY, Math.min(maxY, centre.y)) };
+      // 동서 단추는 해당 가장자리부터 44px+6px씩 채운다. 적은 단추를 중앙까지
+      // 벌리면 현재 마커의 충돌 회피가 작동해 마커 본체가 중심에서 밀려난다.
+      const step = (span.right - span.left) / Math.max(1, members.length - 1);
+      return members.map((chip, index) => ({ ...chip, crowded: true,
+        x: side === 0 ? span.left + step * index : side < 0 ? span.left + Math.min(50, step) * index : span.right - Math.min(50, step) * index,
+        y: span.y }));
+    });
+  };
+  for (const chip of groups.sort((a, b) => Number(b.ids.includes(focusId ?? "")) - Number(a.ids.includes(focusId ?? "")) || a.distanceM - b.distanceM)) {
+    const original = { x: Math.min(chip.x, safeRight), y: chip.y };
+    const widthOf = () => 150;
+    const clearOfControls = (at: { x: number; y: number }) => (area.obstacles ?? []).every((other) => at.x+75 < other.left-6 || at.x-75 > other.right+6 || at.y+18 < other.top-6 || at.y-18 > other.bottom+6);
+    const candidates = (revealing && low ? [...positions] : [original, ...positions]).filter(at => onGeographicSide(chip, at)).sort((a, b) => Math.hypot(a.x-chip.x,a.y-chip.y)-Math.hypot(b.x-chip.x,b.y-chip.y));
+    const free = candidates.find((at) => clearOfControls(at) && placed.every((other) => Math.abs(at.y-other.y) >= 36 || Math.abs(at.x-other.x) >= (widthOf()+widthOf())/2+8));
+    // 공개 중에는 이전 먼 일정도 각각 남긴다. 공간 부족 시에도 접기 단추를 피할 수 있는 자리를 먼저 쓴다.
+    const fallback = [...candidates, { x: CHIP_INSET_X, y: chip.y }, { x: safeRight, y: chip.y }].find(at => onGeographicSide(chip, at) && clearOfControls(at)) ?? original;
+    if (free && (revealing || placed.length < MAX_CHIPS)) placed.push({ ...chip, ...free });
+    else if (!revealing && placed.length) {
+      const near = placed.filter(group => !group.ids.includes(focusId ?? "")).sort((a,b) => Math.hypot(a.x-chip.x,a.y-chip.y)-Math.hypot(b.x-chip.x,b.y-chip.y))[0];
+      if (near) { near.ids.push(...chip.ids); near.labels.push(...chip.labels); near.distanceM = Math.min(near.distanceM, chip.distanceM); }
+      else placed.push({ ...chip, ...fallback });
+    }
+    else if (revealing && placed.length) {
+      const spread = spreadCrowded([...placed, { ...chip, ...fallback }]);
+      placed.splice(0, placed.length, ...spread);
+    }
+    else placed.push({ ...chip, ...fallback });
+  }
+  return placed;
+}

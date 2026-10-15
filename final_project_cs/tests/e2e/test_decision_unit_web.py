@@ -41,6 +41,15 @@ class _Decider:
             return {**none, "action": "answer_fact", "target_item": self._alias(user, "성수 점심"), "fact": "detail"}
         if "위치에서 성수 점심" in message:
             return {**none, "action": "answer_fact", "target_item": self._alias(user, "성수 점심"), "fact": "route_here"}
+        if "성수 점심 근처 맛집" in message:
+            # 일정의 곳 근처 — 모델이 지어낸 일반 추천도 함께 낸다(서버가 버려야 한다)
+            return {**none, "action": "answer_fact", "target_item": self._alias(user, "성수 점심"), "fact": "dining_near",
+                    "general_requests": [{"question": message, "answer": "지어낸가게 본점이 유명합니다."}]}
+        if "어딘가동 근처 맛집" in message:
+            return {**none, "action": "answer_fact", "target_item": "none", "fact": "dining_near", "place_text": "어딘가동"}
+        if "성수동 근처에 저녁 먹을 데" in message:
+            # ☆gpt-4o-mini 실측 — 이름을 복사하고도 현재 위치 질문(nearby_dining)을 고른다
+            return {**none, "action": "answer_fact", "target_item": "none", "fact": "nearby_dining", "place_text": "성수동"}
         if "근처 식당" in message:
             return {**none, "action": "answer_fact", "target_item": "none", "fact": "nearby_dining"}
         if "근처 볼거리" in message:
@@ -427,3 +436,28 @@ def test_the_nearby_sentence_reads_naturally_and_leaves_out_price_warnings():
     assert nearby("nearby_dining", fix, found=meals, radius_m=700, sought=1) == \
         "지금 위치에서 가까운 식당이에요 — 1) 이북만두 (도보 약 2분) — 14:30 브레이크타임 1시간 안에 식사가 끝나요"
     assert "찾지 못했어요" in nearby("nearby_dining", fix, found=[], radius_m=3000, sought=4)
+
+
+# ── 어떤 곳 근처의 먹을 곳 — 「서촌 근처 맛집 있어?」 `[2026-10-15]` ──────────────────────────
+# 모델은 해석만(무엇을 · 어디 근처) 한다. 가게는 요식 원장이 낸 것만이고, 일정은 바꾸지 않는다.
+
+def test_restaurants_near_an_itinerary_place_come_from_the_ledger_not_from_the_model(decided):
+    before = _version(decided)
+    body = _say(decided, "성수 점심 근처 맛집 있어?", "near-item", at=NOON)
+    assert body["status"] == "answered" and body["decision"]["fact"] == "dining_near", body
+    assert body["answer"].startswith("「") and "근처" in body["answer"], body["answer"]
+    assert "지어낸가게" not in body["answer"]                  # 모델의 일반 추천은 싣지 않는다
+    assert "needs_location" not in body                         # 현재 위치가 필요 없다
+    assert _version(decided) == before                          # 알아보기만 — 일정은 그대로
+
+
+def test_a_named_place_that_cannot_be_located_is_asked_back_not_guessed(decided):
+    body = _say(decided, "어딘가동 근처 맛집 있어?", "near-unknown", at=NOON)
+    assert body["status"] == "answered" and "어느 곳 근처" in body["answer"], body["answer"]
+
+
+def test_the_server_reads_a_named_place_as_near_that_place_not_the_current_location(decided):
+    """모델이 이름(place_text)을 문장에서 그대로 복사하고도 현재 위치 질문을 골랐다 — 「지금 · 여기」가 없으면 그 곳 근처로 읽는다."""
+    body = _say(decided, "성수동 근처에 저녁 먹을 데 있어?", "near-reroute", at=NOON)
+    assert body["decision"]["fact"] == "dining_near", body["decision"]
+    assert "needs_location" not in body and "현재 위치를 알려 주시면" not in body["answer"], body["answer"]

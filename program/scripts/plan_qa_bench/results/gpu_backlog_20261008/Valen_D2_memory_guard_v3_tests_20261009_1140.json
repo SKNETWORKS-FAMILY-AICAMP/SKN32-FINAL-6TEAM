@@ -1,0 +1,10 @@
+{
+  "runner_sha256": "2bdf9cd85d262ff8dda05ba67055410d00c93f086e38c6c4a12542239c2ec49e",
+  "cases_passed": 5,
+  "cases_expected": 5,
+  "original_direct_margin_GiB": 4,
+  "new_file_cache_accounted_margin_GiB": 8,
+  "shmem_excluded_from_reclaimable": true,
+  "no_limit_change": true,
+  "gpu_idle_sha_and_output_contract_unchanged": true
+}

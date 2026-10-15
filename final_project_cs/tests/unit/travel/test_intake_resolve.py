@@ -7,7 +7,8 @@
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.intake.dates import resolve_dates
 from app.domains.travel_ops.components.intake.llm_spans import label_lines
@@ -84,6 +85,19 @@ def test_a_time_comes_from_rereading_the_quote_not_from_the_model():
     claims, items, _ = label_lines(lines, [1], chat)
     assert [c.value for c in claims] == ["15:30"] and items[0].start == "15:30"
     assert claims[0].method == "llm_span" and lines[0][claims[0].span.start:claims[0].span.end] == "오후 3시 반"
+
+
+def test_relative_now_uses_the_intake_timestamp_for_time_and_date():
+    anchor = datetime(2026, 10, 12, 11, 7, tzinfo=ZoneInfo("Asia/Seoul"))
+    lines = ["남부터미널 지금 당장 갈거야"]
+    claims, items, _ = label_lines(lines, [1], Chat([
+        {"line": 1, "quote": "남부터미널", "role": "place"},
+        {"line": 1, "quote": "지금 당장", "role": "time"},
+    ]), now=anchor)
+    assert items[0].start == "11:07"
+    assert claims[0].value == "11:07" and claims[0].note == "접수 시각 기준 현재 시각"
+    dated, ask = resolve_dates([{"day": None, "date": items[0].date, "line": 1}], today=anchor.date(), lines=lines)
+    assert dated[0].value == "2026-10-12" and not ask
 
 
 def test_a_plan_request_is_flagged():
@@ -272,6 +286,119 @@ def test_a_vague_activity_takes_the_candidate_nearest_to_the_neighbouring_stops(
     assert place["needs_review"] is True and "가장 가까운" in place["note"]
     assert place["evidence"]["chosen_from"] == ["잠실카약클럽", "망원카약", "망원한강 카약체험장"]   # 「한강」 자체는 후보가 아니다
     assert place["evidence"]["neighbours"] == 2 and len(kakao.near_asked) == 1
+
+
+def test_a_neighbourhood_walk_takes_the_neighbourhood_not_the_nearest_restaurant_named_after_it():
+    """★`[2026-10-14 테스트 서버 접수 cbd50b1d]` 「오후엔 서촌 골목 좀 걷다가」가 카카오 후보 10곳 중 가장 가까운 「서촌닭갈비 광화문본점」이 됐다 —
+    식사가 아닌 항목인데 음식점을 고르고, 이름이 정확히 「서촌」인 후보(동네 자체)를 먼저 보지 않았다. 찾은 곳이 식당이라 항목이 식사가 돼 18:00 에 놓였다."""
+    from app.domains.travel_ops.components.intake.pipeline import read_source
+
+    chicken = _at("서촌닭갈비 광화문본점", 37.5420, 126.9140, "음식점 > 한식 > 닭요리", "FD6")
+    dumpling = _at("서촌만두", 37.5430, 126.9150, "음식점 > 분식", "FD6")
+    village = _at("서촌", 37.5790, 126.9700, "여행 > 관광,명소")
+    village_far = _at("서촌", 37.6500, 127.0500, "지역명")
+    kakao = Kakao({"서촌": [chicken, village, dumpling, village_far]})
+    # 서버 접수처럼 시각 없는 문장 — 규칙이 못 읽고 모델이 장소만 가리킨다
+    text = "\n".join(["2026-10-15 수요일", "아침에 망원한강공원부터 둘러보고", "오후엔 서촌 골목 좀 걷다가",
+                      "저녁 무렵 여의도한강공원 가 볼까 해요"])
+    rows = read_source(text, tour=GeoTour({}), kakao=kakao, our_places=[], today=date(2026, 9, 28),
+                       chat=_SpanChat([{"line": 2, "quote": "망원한강공원", "role": "place"},
+                                       {"line": 3, "quote": "서촌", "role": "place"},
+                                       {"line": 4, "quote": "여의도한강공원", "role": "place"}]))
+    index = next(r["field"][6:r["field"].index("]")] for r in rows if r["field"].endswith(".title") and r["value"] == "서촌")
+    place = next(r for r in rows if r["field"] == f"items[{index}].place")
+    assert place["value"]["name"] == "서촌" and place["value"]["kind"] == "activity"
+    assert (place["value"]["latitude"], place["value"]["longitude"]) == (37.5790, 126.9700)   # 앞뒤에 더 가까운 「서촌」
+    assert not any(r["field"] == f"items[{index}].kind" and r["value"] == "dining" for r in rows)
+
+
+def _walk_place(hits, *, line="오후엔 서촌 골목 좀 걷다가", quote="서촌"):
+    """서버 접수 모양(시각 없는 문장 · 모델은 장소만 가리킴)으로 읽고 그 항목의 (장소 줄, 종류 값)."""
+    from app.domains.travel_ops.components.intake.pipeline import read_source
+
+    text = "\n".join(["2026-10-15 수요일", "아침에 망원한강공원부터 둘러보고", line, "저녁 무렵 여의도한강공원 가 볼까 해요"])
+    rows = read_source(text, tour=GeoTour({}), kakao=Kakao({quote: hits}), our_places=[], today=date(2026, 9, 28),
+                       chat=_SpanChat([{"line": 2, "quote": "망원한강공원", "role": "place"},
+                                       {"line": 3, "quote": quote, "role": "place"},
+                                       {"line": 4, "quote": "여의도한강공원", "role": "place"}]))
+    index = next(r["field"][6:r["field"].index("]")] for r in rows if r["field"].endswith(".title") and r["value"] == quote)
+    kind = next((r["value"] for r in rows if r["field"] == f"items[{index}].kind"), None)
+    return next(r for r in rows if r["field"] == f"items[{index}].place"), kind
+
+
+def test_a_walk_with_a_single_restaurant_hit_does_not_become_that_restaurant():
+    """★`[2026-10-14 리뷰]` 후보가 하나면 이름 비교(`_kakao_match`)로 바로 확정돼 거르는 단계를 건너뛰었다 — 「서촌」 → 「서촌닭갈비」(앞부분 일치 하나)."""
+    place, kind = _walk_place([_at("서촌닭갈비 광화문본점", 37.5420, 126.9140, "음식점 > 한식 > 닭요리", "FD6")])
+    assert place["value"] is None and place["needs_review"] is True
+    assert kind != "dining"
+
+
+def test_a_walk_with_only_restaurant_candidates_picks_nothing_instead_of_a_restaurant():
+    """★`[2026-10-14 리뷰]` 음식점만 남으면 `fits or pool` 이 뺀 음식점을 되살려 산책이 식사가 됐다. 맞는 후보가 없으면 고르지 않는다(고객이 고친다)."""
+    place, kind = _walk_place([_at("서촌닭갈비 광화문본점", 37.5420, 126.9140, "음식점 > 한식 > 닭요리", "FD6"),
+                               _at("서촌만두", 37.5430, 126.9150, "음식점 > 분식", "FD6")])
+    assert place["value"] is None and place["needs_review"] is True
+    assert kind != "dining"
+
+
+def test_a_walk_does_not_become_a_restaurant_chain_with_the_neighbourhood_name():
+    place, kind = _walk_place([_at("서촌 광화문점", 37.542, 126.914, "음식점 > 한식", "FD6"),
+                               _at("서촌 종각점", 37.543, 126.915, "음식점 > 한식", "FD6")])
+    assert place["value"] is None and place["needs_review"] is True
+    assert kind != "dining"
+
+
+def test_an_activity_hint_does_not_confirm_a_different_restaurant_with_the_same_prefix():
+    found = resolve("서촌", kind_hint="activity", our_places=[], tour=Tour({"서촌닭갈비": "39"}),
+                    kakao=Kakao({"서촌": [_at("서촌닭갈비", 37.542, 126.914, "음식점 > 한식", "FD6")]}))
+    assert found.status == "unresolved" and found.kind != "dining"
+
+
+def test_a_walk_named_exactly_after_a_shop_still_takes_that_shop():
+    """원문이 가게 이름 그대로면(지점 표시만 다름) 식사 말이 없어도 그 가게다 — 거르는 것은 이름이 원문과 다른 음식점뿐."""
+    place, _ = _walk_place([_at("블루보틀 성수점", 37.5480, 127.0450, "음식점 > 카페 > 커피전문점", "CE7")],
+                           line="오후엔 블루보틀 들렀다가", quote="블루보틀")
+    assert place["value"]["name"] == "블루보틀 성수점"
+
+
+def test_chain_branches_stay_candidates_when_none_is_named_exactly():
+    """★`normalize` 로 비교하면 지점 표시가 떨어져 「올리브영 광화문점」만 「올리브영」과 같아지고 나머지 지점이 사라졌다(e2e 시험이 잡았다)."""
+    from app.domains.travel_ops.components.intake.pipeline import _fitting
+
+    pool = [_at("올리브영 명동 플래그십", 37.56, 126.98, "쇼핑 > 화장품"), _at("올리브영 광화문점", 37.57, 126.97, "쇼핑 > 화장품"),
+            _at("올리브영 강남타운", 37.50, 127.02, "쇼핑 > 화장품")]
+    assert [c["name"] for c in _fitting(pool, "올리브영", meal=False)] == [c["name"] for c in pool]
+    exact = _fitting(pool + [_at("서촌", 37.58, 126.97), _at("서촌닭갈비", 37.57, 126.97, "", "FD6")], "서촌", meal=False)
+    assert [c["name"] for c in exact] == ["서촌"]
+
+
+def test_named_cafe_branches_survive_without_a_meal_marker():
+    from app.domains.travel_ops.components.intake.pipeline import _fitting
+
+    branches = [_at("블루보틀 성수점", 37.548, 127.045, "음식점 > 카페", "CE7"),
+                _at("블루보틀 삼청점", 37.580, 126.981, "음식점 > 카페", "CE7")]
+    unrelated = _at("블루보틀옆식당", 37.547, 127.044, "음식점 > 한식", "FD6")
+    assert _fitting(branches + [unrelated], "블루보틀", meal=False) == branches
+    assert _fitting(branches, "블루보틀 성수점", meal=False) == branches[:1]
+
+
+def test_no_fitting_candidate_leaves_the_place_empty_and_reviewable():
+    from app.domains.travel_ops.components.intake.pipeline import _place_rows
+    from app.domains.travel_ops.components.intake.places import Resolved, _kind_hits, nearest
+
+    found = Resolved("unresolved", candidates=[_at("서촌만두", 37.543, 126.915, "음식점 > 분식", "FD6")])
+    rows = _place_rows(0, found, items=[{"title": "서촌", "meal": False, "line": 1}], resolved={}, dated=[],
+                       rows=[], kakao=None, nearest=nearest, kind_hits=_kind_hits)
+    assert rows[0]["value"] is None and rows[0]["needs_review"] is True
+    assert "맞는 후보가 없어" in rows[0]["note"]
+
+
+class _SpanChat:
+    def __init__(self, spans):
+        self.spans = spans
+
+    def json(self, system, user):
+        return {"spans": self.spans}
 
 
 def test_several_sections_of_a_trail_are_candidates_not_the_first_one():

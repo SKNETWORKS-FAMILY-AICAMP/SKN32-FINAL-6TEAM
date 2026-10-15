@@ -3,7 +3,7 @@ type: contract
 title: 모델 서버 장애 시 OpenAI 로 자동 전환
 description: Ollama(GPU 서버)가 모두 죽거나 늦으면 서버용 OpenAI 키로 자동으로 넘기는 장치 — 넘기는 조건 · 회로 차단기 · 개인정보 · 비용 상한 · 켜는 법
 status: draft
-tags: [llm, reliability, security]
+tags: [agent, state, security]
 owners: [human:미배정]
 domain: neutral
 domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도메인 낱말이 없다. 코드 `app/infrastructure/llm_failover.py`
@@ -17,6 +17,10 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 
 `[2026-10-07 사용자 지시]` 「올라마나 외부 GPU 서버가 모두 장애면 서버키(개인키 말고)로 자동 전환돼서 동작하게」.
 코드 [llm_failover.py](../../app/infrastructure/llm_failover.py) · 시험 `tests/unit/infrastructure/test_llm_failover.py` · `test_retriever_failover.py`.
+
+## 평소 경로의 모델 `[2026-10-14 사용자 지시]`
+
+평소 경로(Ollama)의 코드 기본 모델은 우리 데이터로 가르친 E4B `tripilot-pointer:e4b-ft` 다(전에는 학습 없는 `gemma4:12b`). 요청 해석·일정 짚기를 이 모델 하나가 맡고, 문맥 길이 `ollama_num_ctx` 기본 8192 와 함께 쓴다. 그 모델이 없는 곳(개발 PC 등)은 `ACOP_OLLAMA_MODEL` 로 있는 모델을 지정한다. 아래 「정확도」 표의 Gemma 4 12B 는 **2026-10-07 에 잰 당시 평소 경로**다. 로컬 대기 한도도 6초에서 9초로 올려 x600 서버 운영과 맞췄다(학습 E4B 한 건 5.1~7.3초라 6초면 8건 중 6건이 유료 대체로 넘어갔다 — `wiki/records/reports/2026-10-14_채팅해석_근본개선_1차.md`).
 
 ## 한 줄 요약
 
@@ -52,7 +56,7 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 
 1. **경로 순서.** `ollama_base_url`, 그다음 `ollama_fallback_base_urls`(쉼표로 이은 Ollama 들 — 예: 무료 서버 + GPU 서버). 하나라도 답하면 그 답을 쓴다. **모두** 안 될 때만 OpenAI 로 간다.
 2. **넘기는 조건.** 연결 실패 · 시간 초과 · 5xx · 429 · 빈 답. 429 · 5xx 는 **한 번만** 0.4초 쉬었다가 다시 시도한다(전체 시간 안에 다 들어갈 때만). 모양이 틀린 답(JSON 이 아님)은 그 한 호출만 넘기고 서킷에는 세지 않는다 — 서버는 살아 있다.
-3. **시간.** Ollama 는 6초(`llm_failover_primary_timeout_seconds`, 연결은 5초), OpenAI 는 8초, 한 호출 전체 15초 안에 끝나게 한다(고객 응답 SLA).
+3. **시간.** Ollama 는 9초(`llm_failover_primary_timeout_seconds`, 2026-10-14 에 6초에서 올렸다. 연결은 5초), OpenAI 는 8초, 한 호출 전체 15초 안에 끝나게 한다(고객 응답 SLA).
 4. **회로 차단기.** 한 서버가 **연속 3번** 서버 문제로 실패하면 60초 동안 **건너뛴다**(바로 다음 경로로). 60초가 지나면 한 호출만 시험해서 성공하면 닫고 실패하면 다시 60초를 연다. 상태는 프로세스 안 전역이라 요청마다 `from_settings` 를 불러도 이어진다. OpenAI 쪽도 같은 서킷이 있다(키가 틀렸을 때 매번 8초씩 기다리지 않게).
 5. **넘긴 답도 같은 검증.** 목록 밖 번호 거부(`decide`) · 분류 라벨 검사 · 번역의 숫자 · 단위 대조는 모델이 달라도 그대로 돈다. 이 장치는 모양만 맞춘다(스키마를 `response_format` 으로 주고, 거부되면 글로 적은 JSON 모드로 한 번 더).
 6. **개인정보.** OpenAI 로 보내는 글은 `redaction.masked` 로 한 번 더 가린다(전화 · 카드 · 이메일 · `sk-` 키). 호출부가 이미 가린 글이라 보통 달라지지 않는다. 일정 제목 · 시각 같은 판단에 필요한 칸만 이미 프롬프트에 들어 있고 이름 · 연락처 칸은 처음부터 없다. **이미지는 가릴 수 없다** — 그래서 기본은 안 넘긴다.
@@ -91,7 +95,7 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 | `ACOP_LLM_FAILOVER_MODEL` | `gpt-4.1`(기본) | 비우면 `ACOP_LLM_MODEL`(지금 `gpt-4o-mini`). 왜 `gpt-4.1` 인지는 아래 「정확도」 |
 | `ACOP_OLLAMA_FALLBACK_BASE_URLS` | 비움 | Ollama 가 둘 이상일 때만 |
 | `ACOP_LLM_FAILOVER_VISION` | `false` | 이미지도 넘길지(기본 안 넘김) |
-| `…_PRIMARY_TIMEOUT_SECONDS` · `…_API_TIMEOUT_SECONDS` · `…_TOTAL_SECONDS` · `…_FAILURES` · `…_OPEN_SECONDS` · `…_DAILY_CAP` · `…_MONTHLY_CAP` | 6 · 8 · 15 · 3 · 60 · 2000 · 30000 | 기본값은 [settings.py](../../app/core/settings.py) |
+| `…_PRIMARY_TIMEOUT_SECONDS` · `…_API_TIMEOUT_SECONDS` · `…_TOTAL_SECONDS` · `…_FAILURES` · `…_OPEN_SECONDS` · `…_DAILY_CAP` · `…_MONTHLY_CAP` | 9 · 8 · 15 · 3 · 60 · 2000 · 30000 | 기본값은 [settings.py](../../app/core/settings.py) |
 
 ## 한계 — 확인한 것과 못 한 것
 
@@ -99,3 +103,7 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 - **실서버 확인:** 서버용 키로 **실제 OpenAI** 를 불러 넘어가는 것을 확인했다 — json · text · structured · embedding 각 1번, 규정 검색 1번(로컬 개발 DB), 결정 단위 재생 약 300번(모델 비교, 위 표). Ollama 자리는 닫힌 포트였다. x600 서버의 실제 Ollama · GPU 서버를 죽여 보는 시험, **배포 환경에 켜는 일은 하지 않았다**.
 - 결정 단위 정확도는 위 표(실제 대화 66문장)만 쟀다 — 다른 호출(번역 · 분류 · 계획 읽기)의 OpenAI 경로 정확도는 `[미측정]`. 재생 도구는 `from_settings` 를 쓰므로 스위치가 꺼진 개발 환경에서는 늘 Ollama 만 잰다(OpenAI 경로로 재려면 `ACOP_OLLAMA_BASE_URL` 을 닫힌 주소로 두고 스위치를 켠다).
 - 지표는 프로세스를 다시 띄우면 0 으로 돌아간다(영구 기록은 로그).
+
+## 운영 반영 확인 — 2026-10-08
+
+GPT-6 Luna 자동 전환을 운영 환경에 반영했고 실제 Ollama 연결 실패를 거친 응답 3/3이 API로 성공했다. [작업 리포트](../records/reports/2026-10-08_2245_Luna_자동전환_운영반영.md).

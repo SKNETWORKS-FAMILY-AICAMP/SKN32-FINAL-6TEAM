@@ -1,0 +1,196 @@
+{
+  "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+  "saved": 835,
+  "expected": 835,
+  "missing": 0,
+  "failed_or_unparsed": 4,
+  "metadata_matches": 835,
+  "counts": {
+    "all": {
+      "total": 835,
+      "B": 822,
+      "C": 801,
+      "first_item_diagnostic": 817,
+      "false_pick": 2,
+      "failed_or_missing": 4,
+      "C_wilson95": [
+        0.9436393015083685,
+        0.9707170311868537
+      ]
+    },
+    "single": {
+      "total": 583,
+      "B": 573,
+      "C": 565,
+      "first_item_diagnostic": 568,
+      "false_pick": 0,
+      "failed_or_missing": 3,
+      "C_wilson95": [
+        0.9517261554459648,
+        0.9803824946470965
+      ]
+    },
+    "compound": {
+      "total": 66,
+      "B": 65,
+      "C": 52,
+      "first_item_diagnostic": 65,
+      "false_pick": 0,
+      "failed_or_missing": 1,
+      "C_wilson95": [
+        0.6748692879502294,
+        0.8692201489207618
+      ]
+    },
+    "no_request": {
+      "total": 186,
+      "B": 184,
+      "C": 184,
+      "first_item_diagnostic": 184,
+      "false_pick": 2,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9616484427064622,
+        0.9970462551250561
+      ]
+    }
+  },
+  "answer_sha256": "a01cf2aa17129c542fbe0dc31cac1025157b7c1251c52fa30d116b0c2012a162",
+  "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+  "execution": {
+    "job": {
+      "id": "e4bqat_oos1_multi_items_bc_a1",
+      "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel oos1 adapter",
+      "our_training": true,
+      "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "prompts": "/tmp/tripilot-multi-items-20261009/prompts.json",
+      "script": "/tmp/tripilot-multi-items-20261009/multi_items_eval_20261009.py",
+      "tag": "e4bqat_oos1_multi_items_bc_a1",
+      "port": 8401,
+      "logprobs": "0",
+      "expected": 835,
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "publisher_training": "Google Instruct release and quantization-aware training; our-travel adapter recorded separately",
+      "purpose": "Missing matched QAT D/D2 normal-request and no-selection regression coverage; diagnose H improvement versus mixed-request retention losses; retain compound diagnostic separately; no repeats or adoption",
+      "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+      "lora": "/workspace/tripilot/oos1_lora_f16.gguf",
+      "lora_sha256": "6d3cf6786fb5e99511930e493776d38695adf6fd201fd16398df7ade01f767ba",
+      "suite": "multi_items_bc",
+      "runner_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+      "output_contract": "Strict items array; same itinerary/question/information; max_tokens64; fixed single/no-request/compound denominators",
+      "role": "Previously missing multi-item B/C role; not a rerun of completed single-item D/E and not independent holdout",
+      "automatic_retry": false,
+      "comparison_runs": 1
+    },
+    "started": "2026-10-09T02:42:30.248976+00:00",
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "failed_records": [
+    {
+      "i": 1589,
+      "set": "mix10",
+      "qi": 48,
+      "type": "compound_intent",
+      "gold": 21,
+      "gold_set": [
+        21,
+        22
+      ],
+      "content": "{\"items\": [21, 21]}",
+      "parsed": false,
+      "pick": null,
+      "usage": {
+        "completion_tokens": 12,
+        "prompt_tokens": 1812,
+        "total_tokens": 1824,
+        "prompt_tokens_details": {
+          "cached_tokens": 1693
+        }
+      },
+      "finish_reason": "stop",
+      "ms": 338
+    },
+    {
+      "i": 1732,
+      "set": "mix11",
+      "qi": 105,
+      "type": "nameless_description",
+      "gold": 13,
+      "gold_set": [
+        13
+      ],
+      "content": "{\"items\": [13, 13]}",
+      "parsed": false,
+      "pick": null,
+      "usage": {
+        "completion_tokens": 12,
+        "prompt_tokens": 1826,
+        "total_tokens": 1838,
+        "prompt_tokens_details": {
+          "cached_tokens": 1712
+        }
+      },
+      "finish_reason": "stop",
+      "ms": 335
+    },
+    {
+      "i": 2149,
+      "set": "mix11",
+      "qi": 110,
+      "type": "nameless_description",
+      "gold": 24,
+      "gold_set": [
+        24
+      ],
+      "content": "{\"items\": [27, 24, 32, 27]}",
+      "parsed": false,
+      "pick": null,
+      "usage": {
+        "completion_tokens": 20,
+        "prompt_tokens": 1827,
+        "total_tokens": 1847,
+        "prompt_tokens_details": {
+          "cached_tokens": 1712
+        }
+      },
+      "finish_reason": "stop",
+      "ms": 498
+    },
+    {
+      "i": 2354,
+      "set": "mix12",
+      "qi": 119,
+      "type": "nameless_description",
+      "gold": 22,
+      "gold_set": [
+        22
+      ],
+      "content": "{\"items\": [22, 22]}",
+      "parsed": false,
+      "pick": null,
+      "usage": {
+        "completion_tokens": 12,
+        "prompt_tokens": 2001,
+        "total_tokens": 2013,
+        "prompt_tokens_details": {
+          "cached_tokens": 1887
+        }
+      },
+      "finish_reason": "stop",
+      "ms": 334
+    }
+  ],
+  "repetitions": 1,
+  "independent_holdout": false,
+  "final_ranking": false,
+  "limits": [
+    "Changed output contract; compare only models with this exact contract",
+    "Existing development fixture; not new independent holdout",
+    "No output grammar enforcement; exact JSON and allowed IDs required",
+    "Failure and missing count as wrong; observed false picks separately reported"
+  ]
+}

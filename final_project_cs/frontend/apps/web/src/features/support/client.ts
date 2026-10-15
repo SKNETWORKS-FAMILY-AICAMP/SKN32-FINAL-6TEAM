@@ -13,7 +13,7 @@ export interface ServiceStatus {
   notices: ServiceNotice[];
   maintenance: { enabled: boolean; message: string; messageEn?: string; endsAt?: string | null };
 }
-export const inquiries = (language: Language) => api<{ inquiries: Inquiry[] }>("/v1/web/support/inquiries", language);
+export const inquiries = (language: Language, before?: string) => api<{ inquiries: Inquiry[]; next?: string | null }>(`/v1/web/support/inquiries${before ? `?before=${encodeURIComponent(before)}` : ""}`, language);
 export const createInquiry = (language: Language, draft: { title: string; body: string; requestId: string }) =>
   api<{ inquiry: Inquiry }>("/v1/web/support/inquiries", language, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...draft, language }) });
 

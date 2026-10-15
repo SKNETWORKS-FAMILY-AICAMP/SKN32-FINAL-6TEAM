@@ -1,0 +1,17 @@
+[
+  {
+    "path": "final_project_cs/wiki/records/reports/2026-10-09_1402_지하철_수집실패와_페이지누락_복구검증.md",
+    "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-09_140413_최종검사보완/2026-10-09_1402_지하철_수집실패와_페이지누락_복구검증.md",
+    "sha256": "7afb953f7c757ded0be39068f84fdbcf5732b71c96ce666740794921fc72289f"
+  },
+  {
+    "path": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v48/mobility-readiness.html",
+    "backup": "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v48/_backup/2026-10-09_140413_최종검사보완/mobility-readiness.html",
+    "sha256": "f89c34ca85a59e55aafea38c766aa1411d76564e9b985836bf6cc5d3a1526c41"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_140413_최종검사보완/mobility.md",
+    "sha256": "7d4936ac724fd4be7f508736ef2188eff8ed7c00e46214500e3baf228199a1fc"
+  }
+]

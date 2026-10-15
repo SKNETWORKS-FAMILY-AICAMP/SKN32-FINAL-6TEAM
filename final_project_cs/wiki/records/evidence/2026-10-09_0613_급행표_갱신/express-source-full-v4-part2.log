@@ -1,0 +1,7 @@
+.....                                                                    [100%]
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\express-source-full-v4-part2.xml -
+5 passed in 46.09s
+Exception ignored in: <function Console.__del__ at 0x000001BCE1C11E40>
+Traceback (most recent call last):
+  File "<python-runtime>\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -1,0 +1,64 @@
+{
+  "checked_at": "2026-10-11T17:59:39.364021+00:00",
+  "official_sources": [
+    {
+      "url": "https://news.seoul.go.kr/traffic/archives/505738?listPage=1",
+      "title": "서울시 공공자전거 따릉이 어플 사용법 안내(설치~대여)",
+      "page_updated": "2026-03-11",
+      "claims": [
+        "서울자전거 따릉이 공식 앱",
+        "이용권 구매는 앱의 이용권 구매 메뉴와 결제 단계를 거칩니다.",
+        "대여 전에 Bluetooth와 GPS 상태를 확인합니다.",
+        "앱에서 QR 촬영 후 대여 완료 상태를 확인합니다.",
+        "반납은 뒷바퀴 단말기 잠금장치를 잠그는 절차입니다."
+      ],
+      "license_note": "공공누리 제4유형. 원본 이미지/HTML 미복제, 링크와 사실 요약만 보존."
+    },
+    {
+      "url": "https://developers.google.com/maps/documentation/urls/get-started",
+      "title": "Google Maps URLs: Get Started",
+      "claims": [
+        "Maps URLs에는 API key가 필요하지 않습니다.",
+        "api=1과 URL 인코딩 및 2048자 상한이 필요합니다.",
+        "Android/iOS에서 앱이 설치·사용 가능하면 앱을 열고 그렇지 않으면 브라우저를 엽니다."
+      ],
+      "not_claimed": "현재 사용자의 휴대폰에서 실제로 열렸다는 실측은 없습니다."
+    }
+  ],
+  "web_access_failures": [
+    {
+      "url": "https://www.bikeseoul.com/upload/family/manual_family.pdf",
+      "observed": "공급자 방화벽 차단 페이지",
+      "successful_field_sample": false
+    },
+    {
+      "url": "https://www.bikeseoul.com/info/infoReg.do?useInfo=bike_tab-3",
+      "observed": "공급자 방화벽 차단 페이지",
+      "successful_field_sample": false
+    },
+    {
+      "url": "https://bikeseoul.com/info/infoDuty.do",
+      "observed": "공급자 방화벽 차단 페이지",
+      "successful_field_sample": false
+    }
+  ],
+  "browser_connection_probe": {
+    "observed_at": null,
+    "observed_between_utc": [
+      "2026-10-11T17:54:29Z",
+      "2026-10-11T18:00:09Z"
+    ],
+    "timestamp_precision": "같은 실행의 전후 clock 기록으로 제한한 관측 구간",
+    "apps": [],
+    "browsers": [],
+    "actual_browser_measurements": 0
+  },
+  "privacy": "개인 영수증·개인 주소·실제 키·토큰을 읽거나 외부 전송하지 않았습니다.",
+  "developer_api_calls": 0,
+  "real_http_api_calls": 0,
+  "api_daily_usage_before": null,
+  "api_daily_usage_after": null,
+  "api_remaining": null,
+  "api_reset_at": null,
+  "api_budget_decision": "공유 누적 사용량·갱신 시각 미확인. 제한 API 호출 0건. 20% 예비량 규칙 유지."
+}

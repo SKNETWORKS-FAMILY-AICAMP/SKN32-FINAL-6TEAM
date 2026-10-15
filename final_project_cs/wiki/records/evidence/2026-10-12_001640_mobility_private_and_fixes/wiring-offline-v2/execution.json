@@ -1,0 +1,16 @@
+{
+  "args": [
+    "-m",
+    "not live",
+    "tests/unit/travel/mobility/test_review_fixes_wiring.py",
+    "-q",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\wiring-offline-v2\\temp",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\wiring-offline-v2\\after.xml"
+  ],
+  "exit_code": 0,
+  "elapsed_s": 4.7,
+  "network": "Only current-thread standard socketpair internal loopback connect is allowed; other connect/create_connection/connect_ex blocked",
+  "source_changes": "validation harness only; product and existing test sources unchanged"
+}
