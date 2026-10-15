@@ -1,10 +1,21 @@
 """모든 읽기 질문의 대상·범위를 각각 검증하고 실제 자료만 답한다."""
 from __future__ import annotations
 
+import re
 from copy import copy
 from dataclasses import is_dataclass, replace
 
 from . import fact_context, schedule_query, time_anchor, trip_facts
+
+#: ★`[2026-10-15]` 「지금 몇 시야?」 — 일정이 아니라 **지금 시각**을 묻는 말. 전에는 일정을 찾다 「어느 일정을 물으신 건지 찾지 못했어요」로 끝났다
+#:  (x600 서버 웹 채팅 재시험 2026-10-14 12:14 · 16:23). 서버 시계로 답한다 — 모델이 시각을 말하게 하지 않는다. 문장 전체가 이 모양일 때만 쓴다.
+_CLOCK_QUESTION = re.compile(r"^\s*(?:지금|현재)\s*(?:은\s*)?(?:몇\s*시|시각|시간)\s*(?:이야|야|예요|에요|인가요|입니까|니|죠|지|알려\s*줘|알려\s*줄래|알려\s*주세요)?\s*[?？]?\s*$")
+_WEEKDAYS = "월화수목금토일"
+
+
+def _clock_text(now) -> str:
+    local = now.astimezone(trip_facts.KST)
+    return f"지금은 {local.month}월 {local.day}일({_WEEKDAYS[local.weekday()]}) {local:%H:%M}이에요(한국 시각). 일정은 바꾸지 않았어요."
 
 
 def _origin_matches(items, phrase):
@@ -56,6 +67,13 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
     for request in decision.reads:
         fact = request["fact"]
         item = by_alias.get(request["target_item"])
+        if (fact == "time" and item is None and request.get("anchor_kind", "none") in ("none", "now")
+                and _CLOCK_QUESTION.match(request.get("text") or message or "")):
+            core = _clock_text(now)
+            if core not in answers:
+                answers.append(core)
+            evidence.append({"kind": "clock", "item_id": None, "version": version, "now": now.isoformat()})
+            continue
         # ★`[2026-10-14]` 앞뒤 · 시각 질문은 모델이 적은 **기준**(일정 · 끼니 · 시각 · 지금 · 앞 답)으로 서버가 답할 일정을 계산한다
         #   (`time_anchor.py`, Codex 와 합의한 D안) — 모델이 고른 일정보다 앞선다. 「다음」 사실은 그 자체로 「기준 바로 뒤」다.
         clause = request.get("text") or ""

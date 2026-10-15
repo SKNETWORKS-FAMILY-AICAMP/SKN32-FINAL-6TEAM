@@ -20,7 +20,7 @@
 from __future__ import annotations
 
 import math
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any, Callable
 
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
@@ -144,6 +144,17 @@ def _catalog_places(conn, tenant_id: str, ref: tuple[float, float], content_type
     cands = cands[:limit]
     reuse_hours(conn, tenant_id, cands, now)
     return _tour_places(cands)
+
+
+def place_kind_of(item: dict[str, Any]) -> str:
+    """후보 장소와 견줄 종류 — 숙소 항목(`lodging`)의 후보는 목록 · 지도에서 **활동(`activity`) 쪽 종류의 숙박 분류**로 읽히므로 `activity` 와 견준다.
+    `[2026-10-15 숙박예약 점검 LB-01]` ☆전에는 항목 종류(`lodging`)를 그대로 견줘 후보 · 검색 결과가 전부 걸러져 늘 `no_same_kind` 였다."""
+    return "activity" if item.get("kind") == "lodging" else item["kind"]
+
+
+def _is_lodging_place(place: dict[str, Any]) -> bool:
+    """숙소로 읽히는 곳 — 관광공사 숙박 분류(32)이거나 지도의 분류에 「숙박」이 든 곳."""
+    return str(place.get("content_type_id") or "") == LODGING_TYPE or "숙박" in str(place.get("category") or "")
 
 
 def _is_stay_line(item: dict[str, Any]) -> bool:
@@ -317,8 +328,10 @@ def _dedupe(places: list[dict[str, Any]], taken: list[tuple[str, float | None, f
 def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], prev: dict[str, Any] | None,
            nxt: dict[str, Any] | None, engine: Callable[..., Any] | None) -> dict[str, Any]:
     """`place` 가 이 일정의 날짜 · 시각에 맞나 — 장소 · (닿는 시간) · 운영시간 · 휴무일 줄과 맞는지(`fits`)."""
-    start, end = _dt(item["date"], item["starts_at"]), _dt(item["date"], item["ends_at"])
-    kind = place.get("kind") or item["kind"]          # ★끼니 시간의 시장 줄(`meal_inferred`)은 식당 후보도 받는다 — 그 후보는 식당으로 판정한다
+    stay_item = item["kind"] == "lodging"
+    # ★`[2026-10-15]` 숙소 항목은 끝이 체크아웃 날이다(`end_date`) — 시작 날로 끝을 읽으면 끝이 시작보다 빨라진다. 숙소는 운영시간 판정 대상이 아니다(종류 `lodging`)
+    start, end = _dt(item["date"], item["starts_at"]), _dt(item.get("end_date") or item["date"], item["ends_at"])
+    kind = "lodging" if stay_item else (place.get("kind") or item["kind"])          # ★끼니 시간의 시장 줄(`meal_inferred`)은 식당 후보도 받는다 — 그 후보는 식당으로 판정한다
     facts = facts_for(conn, tenant_id, place, kind, start, end)
     vios = []
     if start is not None:
@@ -326,6 +339,10 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
                                      place={"name": place["name"], "attributes": dict(facts.attributes)})])
     row = {"date": item["date"], "start": item["starts_at"], "end": item["ends_at"], "place": place}
     hours_line, closed_line = _hours_lines(row, facts, vios)
+    if hours_line["result"] == "unknown" and kind == "activity" and start is not None and _odd_hour(start, end):
+        # ★`[2026-10-15 핫픽스]` 운영시간을 못 읽은 활동이 **이른 아침 · 늦은 밤** 자리에 「맞아요」로 올라왔다(「경복궁 08:00」 대신 두산아트센터 · 세운상가 — 관광공사 운영시간을
+        #   아직 못 읽은 곳이 맞는 곳으로 센 것). 낮 시간이면 모르는 것을 맞는 것으로 두지만(없는 정보로 후보를 다 버리지 않는다), 문 여는 곳이 드문 시각에는 **확인 못 한 곳은 맞는 곳이 아니다**
+        hours_line = _line("hours", "warn", f"{start.strftime('%H:%M')}에는 문을 열었는지 확인하지 못했어요 · {UNVERIFIED_HOURS}")
     label = SOURCE_LABEL.get(place.get("source") or "", "장소 정보")
     lines = [_line("place", "ok", f"{label} 정보로 찾았어요")]
     # 앞 · 뒤 일정에 닿는 시간 — 늦으면 줄을 더한다
@@ -343,11 +360,12 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
                 estimated = estimated or leg.basis == "estimate"
                 if leg.slack_min < 0:
                     late.append(f"{prev['place']['name']}에서 오면 {late_text(leg.slack_min)}")
-        if nxt and nxt["place"] and end is not None:
+        leave = start if stay_item else end            # 숙소는 체크인 시각에 떠난다고 본다(끝은 며칠 뒤 — `review.build` 와 같다)
+        if nxt and nxt["place"] and leave is not None:
             n_start = _dt(nxt["date"], nxt["starts_at"])
             if n_start is not None:
                 leg = leg_between(engine, pa, {"key": "next", "name": nxt["place"]["name"], "lat": nxt["place"]["latitude"],
-                                               "lon": nxt["place"]["longitude"]}, end, n_start, deep=False)
+                                               "lon": nxt["place"]["longitude"]}, leave, n_start, deep=False)
                 slacks["after"] = leg.slack_min
                 estimated = estimated or leg.basis == "estimate"
                 if leg.slack_min < 0:
@@ -359,6 +377,25 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
     fits = worst in ("ok", "unknown") and hours_line["result"] != "warn"
     return {"rows": lines, "fits": fits, "status": "bad" if worst == "bad" else ("warn" if worst == "warn" else "ok"),
             "slack": slacks, "estimated": estimated}
+
+
+#: 「운영시간을 못 읽음」 표시 문구 — 순위가 「확인한 곳 → 못 읽은 곳 → 닫는 것이 확인된 곳」을 가를 때 본다
+UNVERIFIED_HOURS = "운영시간을 읽지 못한 곳이에요"
+#: 활동이 보통 문을 여는 시간 — 이 밖의 시각에 운영시간을 못 읽은 곳은 맞는 곳으로 세지 않는다
+ODD_BEFORE, ODD_AFTER = time(9, 0), time(20, 0)
+
+
+def _odd_hour(start: datetime, end: datetime | None) -> bool:
+    return start.time() < ODD_BEFORE or (end is not None and end.date() == start.date() and end.time() > ODD_AFTER)
+
+
+def _hours_rank(rows: list[dict[str, Any]]) -> int:
+    """운영시간을 **확인한** 곳이 먼저 — 0 확인함 · 1 못 읽음(모름) · 2 그 밖. 같은 「맞는 곳」 안에서 모르는 곳이 확인한 곳을 앞서지 않게."""
+    hours = next((r for r in rows if r.get("row") == "hours"), {})
+    result = hours.get("result")
+    if result == "unknown" or UNVERIFIED_HOURS in str(hours.get("text") or ""):
+        return 1                                   # 못 읽음 — 이른 아침 · 늦은 밤이라 「주의」로 내린 곳도 닫는 것이 확인된 곳보다는 앞이다
+    return 0 if result == "ok" else 2
 
 
 def _present(place: dict[str, Any], assessed: dict[str, Any], prev, nxt, ref, area: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -579,7 +616,9 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     area = area_of(item)
     # ★`[2026-10-04]` 「호텔 조식」 — 일정은 식사지만 장소는 숙소다. 식당 후보 · 지도 식당 검색으로 채우지 않고 숙박 분류 후보만 본다(없으면 비워 둔다)
     lodging = bool((item.get("parts") or {}).get("lodging_meal"))
-    stay = _is_stay_line(item)                    # 「호텔」 · 「호텔 조식」 — 숙소 후보와 숙소 안 식사 후보를 함께 보인다
+    stay_item = item["kind"] == "lodging"         # ★`[2026-10-15]` 체크인 ~ 체크아웃으로 묶인 숙소 항목 — 숙소 후보만 보이고 식사 짝은 붙이지 않는다(식사 일정이 아니다)
+    want = place_kind_of(item)
+    stay = _is_stay_line(item) and not stay_item  # 「호텔」 · 「호텔 조식」 — 숙소 후보와 숙소 안 식사 후보를 함께 보인다
     if stay:
         limit = limit * 2                         # 숙소마다 짝(식사)이 붙으므로 칸을 두 배로
     cls: dict[str, Any] | None = None            # 원래 장소의 분류(같은 종류 다른 곳 블록에서 찾는다)
@@ -601,12 +640,12 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
             # ★`[2026-10-07]` 숙소 줄(「호텔 조식」)도 「숙소」로 찾는다 — 전에는 숙소 줄에서 이 길을 막아 후보가 늘 0 이었다(사용자 지적 「전에는 카카오로 줬다」).
             #   카카오가 음식점(FD6 · CE7)을 섞어 내도 아래 종류 거르기(숙소 줄은 활동만)가 버린다
             words = " ".join(w for w in ((area or {}).get("name"), parts.get("label")) if w)
-            found += _kakao_places(kakao, words, ref, item["kind"], notes)
+            found += _kakao_places(kakao, words, ref, want, notes)
         if ref is not None and not found:
             notes.append("no_candidates_in_area")            # 그 지역 둘레에 같은 종류가 하나도 없다 — 화면이 「이름을 직접 알려 주세요」로 안내하게
     if branch:
         # ① 같은 이름의 다른 지점
-        hits = _kakao_places(kakao, item["title"] or "", ref, item["kind"], notes)
+        hits = _kakao_places(kakao, item["title"] or "", ref, want, notes)
         words = (item["title"] or "").split()
         brand = normalize_full(words[0]) if words else ""
         found += [p for p in hits if brand and brand in normalize_full(p["name"])] or hits
@@ -614,6 +653,11 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         # ② 같은 종류의 다른 곳 — ★이름이 모호한 체인(올리브영)은 다른 지점이 없다고 해서 엉뚱한 관광지를 대신 권하지 않는다(`notes` 에 이유)
         if item["kind"] == "dining":
             found += _ledger_places(conn, tenant_id, ref)
+        elif stay_item:
+            # ★`[2026-10-15]` 숙소 항목은 같은 숙박 분류에서만 찾는다 — 분류를 모르는 활동처럼 쇼핑만 빼고 관광지까지 권하지 않는다. 목록이 모자라면 지도의 「숙소」로 채운다
+            found += _catalog_places(conn, tenant_id, ref, LODGING_TYPE, now)
+            if len(found) < limit + POOL_EXTRA:
+                found += _kakao_places(kakao, "숙소", ref, want, notes)
         else:
             cls = _original_class(conn, tenant_id, current)
             eat = _eats_there(items, item, cls)
@@ -656,8 +700,10 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         notes.append("no_alternative")                    # 같은 종류도 비슷한 경험도 취향 갈래도 없다 — 화면이 이유를 말하게
     # ★후보의 종류는 일정의 종류와 같다 — 맞는 것이 없으면 다른 종류로 채우지 않는다(식사 자리에 약국 · 활동 자리에 식당)
     before = len(found)
-    kinds = {"activity", "dining"} if "meal_inferred" in notes else {"activity" if (lodging or stay) else item["kind"]}
+    kinds = {"activity", "dining"} if "meal_inferred" in notes else {"activity" if (lodging or stay) else want}
     found = [p for p in found if p.get("kind") in kinds]
+    if stay_item:
+        found = [{**p, "basis": p.get("basis") or "lodging"} for p in found if _is_lodging_place(p)]     # 숙소 항목의 후보는 숙소만 — 지도의 관광지 · 편의시설은 거른다
     if stay and item["place_state"] == "needs_choice" and found:
         # 종류를 거른 **뒤에** 짝을 붙인다 — 지도의 음식점(호텔 뷔페)이 식사 후보로 섞이지 않고, 짝은 숙소 이름 그대로인 것만 생긴다
         found = _with_stay_meals(found)
@@ -673,8 +719,20 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     first: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for place in found[:30]:
         first.append((place, assess(conn, tenant_id, item, place, prev, nxt, None)))
-    first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", -(pa[0].get("similarity") or 0),
+    first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", _hours_rank(pa[1]["rows"]), -(pa[0].get("similarity") or 0),
                                _score(pa[0], prev, nxt, ref, bool(area))))
+    if (group and item["kind"] == "activity" and not stay and not lodging and ref and "similar_experience" not in notes
+            and sum(1 for pa in first if pa[1]["fits"]) < limit):
+        # ★`[2026-10-15 핫픽스]` 같은 종류(궁궐)가 **이 시각에 맞는 곳이 셋 못 되면**(이른 아침엔 궁궐이 다 닫는다) 같은 경험의 다른 곳(공원 · 광장 · 둘레길)까지 넓혀 다시 줄 세운다 —
+        #   전에는 같은 종류가 충분히 많으면 넓히지 않아 닫은 곳만 후보로 남았다
+        more = _dedupe(_experience_places(conn, tenant_id, ref, group, now, limit=24), taken + [
+            (normalize_full(p["name"]), p.get("latitude"), p.get("longitude")) for p in found])
+        if more:
+            notes.append("similar_experience")
+            for place in more[:30]:
+                first.append((place, assess(conn, tenant_id, item, place, prev, nxt, None)))
+            first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", _hours_rank(pa[1]["rows"]), -(pa[0].get("similarity") or 0),
+                                       _score(pa[0], prev, nxt, ref, bool(area))))
     pool = first[:limit + POOL_EXTRA]
     if "meal_inferred" in notes:
         eating_first = [pa for pa in first if pa[0].get("kind") == "dining"][:2]
@@ -684,7 +742,7 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         full = cheap if rank_only else assess(conn, tenant_id, item, place, prev, nxt, budget)
         out.append({"rank": 0, **_present(place, full, prev, nxt, ref, area)})
     # 시간표로 잰 곳이 어림으로 잰 곳보다 앞(같은 적합성 안에서) — 계산기 시간 상한이 일찍 닿아 뒤 후보가 어림으로 평가돼도 순위가 뒤섞이지 않게
-    out.sort(key=lambda c: (not c["fits"], c["status"] == "bad", _BASIS_ORDER.get(c["basis"], 0), -(c["similarity"] or 0),
+    out.sort(key=lambda c: (not c["fits"], c["status"] == "bad", _hours_rank(c["rows"]), _BASIS_ORDER.get(c["basis"], 0), -(c["similarity"] or 0),
                             -((c.get("taste") or {}).get("score") or 0), c["estimated"],     # 취향 후보는 임베딩 점수가 있으면 그 순서(`taste.ranked_by == "embedding"`)
                             c["distance_m"] if c["distance_m"] is not None else 10**9))
     if "meal_inferred" in notes:
@@ -726,22 +784,25 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     taken = _taken(items, item, include_self=False)
     # ★`[2026-10-04]` 숙소 + 끼니(「호텔 조식」)는 식사 일정이지만 장소는 숙소 — 숙소를 찾는 검색이라 식당 목록은 안 섞는다
     lodging = bool((item.get("parts") or {}).get("lodging_meal"))
+    stay_item = item["kind"] == "lodging"          # ★`[2026-10-15]` 숙소 항목 — 후보는 지도 · 목록의 숙소만(종류는 활동 쪽으로 읽힌다)
     found = _db_places_by_name(conn, tenant_id, q, ref, now)
-    if ref and not lodging:
+    if ref and not lodging and not stay_item:
         found += _ledger_places(conn, tenant_id, ref, query=q, radius_m=5000)
-    found += _kakao_places(kakao, q, ref, "activity" if lodging else item["kind"], notes, size=10)
+    found += _kakao_places(kakao, q, ref, "activity" if lodging else place_kind_of(item), notes, size=10)
     key = normalize_full(q)
     current = item["place"]
     if current and key in normalize_full(current["name"]):
         # 지금 장소가 검색어에 맞으면 결과에 남긴다 — 임시로 고른 곳을 「맞아요」로 확정하려고 다시 고르는 길이다
         found.insert(0, _place(current["name"], current["latitude"], current["longitude"], current.get("source") or "places",
-                               kind=current.get("kind") or item["kind"], category=current.get("category"), content_id=current.get("content_id"),
+                               kind=current.get("kind") or place_kind_of(item), category=current.get("category"), content_id=current.get("content_id"),
                                content_type_id=current.get("content_type_id"),
                                ref=f"tour:{current['content_id']}" if current.get("content_id") else None))
     found = _dedupe(found, taken)
     # ★검색 결과도 일정의 종류와 같은 곳만 — 식당 자리를 찾는데 약국 · 공원이 섞이지 않게(맞는 것이 없으면 이유가 `no_same_kind`)
     before = len(found)
-    found = [p for p in found if p.get("kind") == ("activity" if lodging else item["kind"])]
+    found = [p for p in found if p.get("kind") == ("activity" if lodging else place_kind_of(item))]
+    if stay_item:
+        found = [p for p in found if _is_lodging_place(p)]
     if before and not found:
         notes.append("no_same_kind")
     # 이름이 검색어와 정확히 같은 곳 → 검색어로 시작하는 곳 순, 그 안에서 **일정에 맞는 곳**(휴무 · 운영시간 밖이 아닌 곳)이 앞, 같으면 앞뒤 일정에서 가까운 순

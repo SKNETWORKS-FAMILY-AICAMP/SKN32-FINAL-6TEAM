@@ -359,6 +359,7 @@ def _price_note(check: dict[str, Any]) -> str:
 
 
 class FlightTeam(ItineraryWork, TravelTeamBase):
+    conversation_change_by_team = True        # ★`[2026-10-15]` 웹 채팅의 「다른 항공편」도 이 팀의 `_change`(MCP 후보 → 「선택이 필요해요」)로 온다 — 숙소 팀과 같다(LB-02)
     manifest = TeamManifest(
         team_id="flight",
         display_name="Flight Team",
@@ -386,7 +387,8 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
     def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
         """여행 Case 가 **일정 항목을 가리킬 때만**(`part_id`) 일정 관리로 — 숙소 팀과 같다. 항목 없이 여행만 붙은 Case 는 `flight.assist`."""
         ref = (state or {}).get("subject_ref") or {}
-        if not ref.get("part_id"):
+        # ★`[2026-10-15]` 웹 채팅이 만든 구조화 요청(`request.type: conversation` — 되묻기 포함)은 항목 없이도 일정 관리로 — 숙소 팀과 같다(LB-02)
+        if not ref.get("part_id") and (ref.get("request") or {}).get("type") != "conversation":
             return None
         return ItineraryWork.itinerary_route("flight", state)
 
@@ -602,6 +604,15 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         if choice:
             return self._choose(task, ctx, item, str(choice))
         query = self._flight_query(item, trip)
+        if query is None and (ctx.get("request") or {}).get("type") == "conversation":
+            # ★`[2026-10-15]` 인원만 모르면 사람에게 넘기지 않고 고객에게 묻는다 — 숙소 팀과 같다
+            from app.domains.travel_ops.instances._shared.conversation_work import ask_party, stated_party
+
+            said = stated_party(task)
+            if said is not None:
+                query = self._flight_query(item, {**trip, "party_size": said})
+            elif self._flight_query(item, {**trip, "party_size": 1}) is not None:
+                return ask_party(self, task, ctx, "항공편")
         if query is None:
             return self._unknown(task, "항공편 항목의 공항 · 날짜 · 인원", ctx["evidence"])
         booked = self._read(task, "read.booking_search_flights", {**query, "max_results": FETCH}, ctx["seen"]) or {}
