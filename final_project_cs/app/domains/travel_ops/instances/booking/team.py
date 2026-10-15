@@ -59,6 +59,7 @@ from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TO
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, applied_record, with_request
 from .interpret import _KOREAN_AIRPORTS, TIME_BANDS, Interpretation, InterpretationInvalid, ask, ground, needs, parse, settle_years
 from .interpret_rules import interpret as interpret_rules
+from .interpret_rules import weekday_notes
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +196,22 @@ def _pick_transit(options: list[dict[str, Any]], wanted: list[str]) -> tuple[lis
         return picked[:TRANSIT_SHOWN], [band for band in wanted if band not in by_band]
     picked = [option for name, _, _, _ in TIME_BANDS for option in by_band.get(name, [])[:TRANSIT_PER_BAND]]
     return picked, []
+
+
+def _clock_window(clock: Any, after: str | None, before: str | None) -> bool:
+    """출발 시각(HH:MM)이 말한 경계 안인가 — 아래 경계 포함 · 위 경계 제외. 시각을 모르면 False(경계를 말했으면 거른다)."""
+    text = str(clock or "")
+    if len(text) != 5 or text[2] != ":":
+        return False
+    return (after is None or text >= after) and (before is None or text < before)
+
+
+def _limit_label(after: str | None, before: str | None) -> str:
+    return " ~ ".join(part for part in ((f"{after} 이후" if after else ""), (f"{before} 전" if before else "")) if part)
+
+
+#: 고르는 방식 → 답 표시(GPT 검토 #9, 10-15)
+PREFER_LABEL = {"cheapest": "가격이 낮은 순으로", "first": "출발이 이른 순으로", "last": "출발이 늦은 순으로"}
 
 
 def _transit_line(option: dict[str, Any], adults: int | None) -> str:
@@ -549,6 +566,8 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         decision = {"task": found.task,
                     "interpretation": found.model_dump(mode="json", exclude={"question", "missing"}),
                     "ungrounded": ungrounded, "year_fixed": year_fixed}
+        if notes := weekday_notes(found):
+            decision["date_notes"] = notes                  # `[2026-10-15 검수]` 날짜와 요일이 안 맞음 — 날짜로 찾고 답에 적는다
 
         if found.task == "status":
             return self._status(task, seen, evidence)
@@ -605,7 +624,25 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         if via:
             pool = directs
         pool, notes, limits = _apply_limits(pool, found)
+        if found.depart_after or found.depart_before:
+            # `[2026-10-15 검수 · GPT 검토 #9]` 「오후 3시 이후」 — 시간대(오후 12~18시)보다 좁다. 받은 결과에서 거르고, 없으면 전체를 보여 주고 그렇다고 적는다
+            limit = _limit_label(found.depart_after, found.depart_before)
+            within = [option for option in pool
+                      if _clock_window((option["legs"][0] if option["legs"] else {}).get("departTime"), found.depart_after, found.depart_before)]
+            notes.append(f"출발 {limit} 편만 골랐습니다." if within else f"받은 결과에 출발 {limit} 편이 없어 전체에서 골랐습니다.")
+            pool = within or pool
         picked, empty = _pick(pool, wanted)
+        prefer = found.prefer if not wanted else None
+        if prefer:
+            # `[2026-10-15 검수 · GPT 검토 #9]` 「최저가」 「마지막 비행기」 「첫 비행기」 — 시간대마다 최저가 대신 그 순서로 `SHOWN` 개
+            def first_clock(option: dict[str, Any]) -> str:
+                return str((option["legs"][0] if option["legs"] else {}).get("departTime") or "")
+            ordered = (list(pool) if prefer == "cheapest"
+                       else sorted([o for o in pool if first_clock(o)], key=first_clock, reverse=prefer == "last"))
+            picked, empty = [(option, BAND_LABEL.get(_band(option) or "", "") or "시각 모름") for option in ordered[:SHOWN]], []
+            if prefer in ("first", "last"):
+                notes.append("소스마다 가격이 낮은 순으로 일부만 받아서, 그날의 실제 " + ("첫" if prefer == "first" else "마지막")
+                             + " 편이 아닐 수 있습니다. 판매처 화면에서 확인해 주세요.")
         fallback = bool(wanted) and not picked
         if fallback:
             # 말한 시간대 편이 받은 결과에 하나도 없다 — 빈 답 대신 다른 시간대 최저가를 보여 주고 그렇다고 적는다
@@ -681,7 +718,8 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                     "다른 출발 시간대마다 가장 싼 편을 보여 드립니다(가격이 낮은 순으로 일부만 받습니다).")
         else:
             how = (f"{said} 출발 편을 가격이 낮은 순으로 {len(shown_options)}개" if len(wanted) == 1
-                   else f"{said} 출발 시간대마다 가장 싼 편을" if wanted else "출발 시간대마다 가장 싼 편을")
+                   else f"{said} 출발 시간대마다 가장 싼 편을" if wanted
+                   else f"{PREFER_LABEL[prefer]} {len(shown_options)}개" if prefer else "출발 시간대마다 가장 싼 편을")
             # ★편 목록을 준 소스가 하나뿐이면(왕복 등) 「같은 편끼리 묶어」라고 하지 않는다 — 묶은 것이 없다
             listed = sum(1 for name, state in states.items() if state == "ok" and count.get(name))
             merged = "같은 편끼리 묶어 " if listed > 1 else ""
@@ -703,6 +741,7 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                 for option in options if {offer["source"] for offer in option["offers"]} >= {"myrealtrip", "ignav"}]
         return self._respond(task, evidence, {**decision, "found": len(options), "shown": shown, "both": both,
                                               "times": wanted or None, "empty_bands": empty, "fallback": fallback,
+                                              "prefer": prefer, "clock_limit": [found.depart_after, found.depart_before],
                                               "dropped_slow": slow, "dropped_connecting": via, "no_direct": no_direct,
                                               **limits},
                              "\n".join([head, *lines, *pages, *others, tail]))
@@ -767,13 +806,30 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
                 note += (f"어른 1인 {_won(found.max_price, 'KRW')} 이하만 " if within
                          else f"어른 1인 {_won(found.max_price, 'KRW')} 이하 운행은 없어 전체를 보여 드립니다. ")
                 options = within or options
-            picked, bands_empty = _pick_transit(options, list(times or []))
+            going = name == "가는 편"
+            if going and (found.depart_after or found.depart_before):
+                # `[2026-10-15 검수 · GPT 검토 #9]` 가는 편 출발 시각 경계 — 없으면 전체를 보여 주고 그렇다고 적는다
+                limit = _limit_label(found.depart_after, found.depart_before)
+                within = [option for option in options if _clock_window(option.get("depart"), found.depart_after, found.depart_before)]
+                note += f"출발 {limit} " if within else f"출발 {limit} 운행은 없어 전체를 보여 드립니다. "
+                options = within or options
+            prefer = found.prefer if going and not times else None
+            if prefer:
+                ordered = (sorted(options, key=lambda o: (not isinstance(o.get("price"), int), o.get("price") or 0, str(o.get("depart"))))
+                           if prefer == "cheapest" else sorted(options, key=lambda o: str(o.get("depart") or ""), reverse=prefer == "last"))
+                picked, bands_empty = ordered[:TRANSIT_SHOWN], []
+                if prefer == "last":
+                    picked = sorted(picked, key=lambda o: str(o.get("depart") or ""))   # 늦은 편들을 시각순으로 — 맨 아래가 막차
+            else:
+                picked, bands_empty = _pick_transit(options, list(times or []))
             fallback = bool(times) and not picked
             if fallback:
                 picked, bands_empty = _pick_transit(options, [])
             said = " · ".join(BAND_LABEL[band] for band in (times or []))
             how = (f"{said} 출발 {len(picked)}편" if times and not fallback
-                   else f"{said} 출발은 없어 시간대마다 앞 운행을" if fallback else "시간대마다 앞 운행을")
+                   else f"{said} 출발은 없어 시간대마다 앞 운행을" if fallback
+                   else {"cheapest": f"요금이 낮은 {len(picked)}편을", "first": f"첫 운행부터 {len(picked)}편을",
+                         "last": f"막차까지 마지막 {len(picked)}편을"}[prefer] if prefer else "시간대마다 앞 운행을")
             lines.append(f"[{name}] {where} · 전체 {len(options)}편 중 {note}{how} 보여 드립니다.")
             terminals = (got or {}).get("terminals") or {}
             if terminals.get("origin") and resolved.get("origin"):          # `[10-15]` 출발 터미널이 여럿 — 기본 터미널 기준으로 봤다고 알린다
@@ -1116,6 +1172,8 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
     def _respond(self, task: TeamTask, evidence: list[Evidence], decision: dict[str, Any], answer: str) -> TeamResult:
         # `[2026-10-11]` 고객이 말했지만 우리가 받는 칸이 없는 요청(모델이 문장에서 그대로 옮긴 조각, 서버가 문장에 있는지 확인함)은
         #   조용히 버리지 않고 답 끝에 적는다 — ☆10-11 사용자 문장 측정: 「욕조 있는」 「얼리체크인」 「저가항공 말고」가 말없이 사라졌다
+        for note in decision.get("date_notes") or []:
+            answer = answer + "\n" + note
         others = (decision.get("interpretation") or {}).get("other_requests") or []
         if others:
             answer = answer + "\n말씀하신 조건 중 아직 반영하지 못한 것: " + " · ".join(f"「{item}」" for item in others) \

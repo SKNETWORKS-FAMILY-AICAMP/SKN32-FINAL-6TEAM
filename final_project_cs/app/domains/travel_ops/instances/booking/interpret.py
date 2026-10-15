@@ -63,6 +63,12 @@ class Interpretation(BaseModel):
     #: `[2026-10-14]` 기차 · 버스 — 열차 등급 · 버스 등급 바람(그대로 문장 조각), 버스 종류(express · suburbs)
     grade: str | None = Field(default=None, max_length=20)
     kind: Literal["express", "suburbs"] | None = None
+    #: `[2026-10-15 검수 · GPT 검토 #6 · #9]` 왕복이라고 말함(오는 날을 받아야 한다) · 고르는 방식(막차 · 첫차 · 가장 싼 것) ·
+    #:  가는 편 출발 시각 경계(「오후 3시 이후」 → 15:00, 「저녁 7시 전」 → 19:00 — 아래 경계 포함, 위 경계 제외)
+    round_trip: bool | None = None
+    prefer: Literal["cheapest", "first", "last"] | None = None
+    depart_after: str | None = Field(default=None, pattern=r"^\d{2}:\d{2}$")
+    depart_before: str | None = Field(default=None, pattern=r"^\d{2}:\d{2}$")
     missing: list[str] = Field(default_factory=list)
     question: str | None = None
 
@@ -108,7 +114,17 @@ def needs(found: Interpretation, *, today: date) -> list[str]:
     missing = [name for name in REQUIRED if values.get(name) in (None, "")]
     if found.return_date is not None and values["depart_date"] is not None and found.return_date < found.depart_date:
         missing.append("return_date")
+    elif found.round_trip and found.return_date is None:
+        missing.append("return_date")                    # 「왕복」이라고 했는데 오는 날이 없다 — 편도로 찾지 않고 묻는다(GPT 검토 #6)
     return missing
+
+
+def _object(word: str) -> str:
+    """목적격 조사 — 받침이 있으면 「을」, 없으면 「를」(검수 10-15: 「도착지을(를)」)."""
+    last = word[-1:] if word else ""
+    if "가" <= last <= "힣":
+        return "을" if (ord(last) - 0xAC00) % 28 else "를"
+    return "을(를)"
 
 
 def ask(found: Interpretation, missing: list[str]) -> str:
@@ -121,11 +137,13 @@ def ask(found: Interpretation, missing: list[str]) -> str:
     values = found.model_dump(mode="json")
     rejected = [f"{LABELS[name]} {values[name]}" for name in missing if values.get(name) not in (None, "")]
     if rejected:
+        names = " · ".join(LABELS[name] for name in missing)
         return (f"{' · '.join(rejected)}(으)로 읽었는데 지난 날짜이거나 앞뒤가 맞지 않습니다. "
-                f"{' · '.join(LABELS[name] for name in missing)}을(를) 다시 알려 주세요.")
+                f"{names}{_object(names)} 다시 알려 주세요.")
     if found.question and set(found.missing) == set(missing):
         return found.question
-    return f"{' · '.join(LABELS[name] for name in missing)}을(를) 알려 주시면 이어서 찾아 드리겠습니다."
+    names = " · ".join(LABELS[name] for name in missing)
+    return f"{names}{_object(names)} 알려 주시면 이어서 찾아 드리겠습니다."
 
 #: 날짜 값 → 그 값의 근거로 모델이 옮겨 적은 문장 조각 칸
 GROUNDS = {"depart_date": "depart_date_text", "return_date": "return_date_text", "depart_times": "depart_times_text",

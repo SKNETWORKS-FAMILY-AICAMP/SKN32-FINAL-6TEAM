@@ -365,7 +365,7 @@ def test_missing_values_are_asked_back_without_any_search():
     reply = {**SEARCH, "origin": None, "depart_date": None, "adults": None, "domestic": None,
              "missing": ["origin", "depart_date", "adults"], "question": "어디서, 언제, 몇 분이 출발하시나요?"}
     result, _, tools = _run(reply)
-    assert tools.calls == [] and result.answer == "출발지 · 출발 날짜 · 성인 인원을(를) 알려 주시면 이어서 찾아 드리겠습니다."
+    assert tools.calls == [] and result.answer == "출발지 · 출발 날짜 · 성인 인원을 알려 주시면 이어서 찾아 드리겠습니다."
     assert result.decisions[0]["needs"] == ["origin", "depart_date", "adults"]
 
 
@@ -730,3 +730,28 @@ def test_a_non_flight_item_or_a_missing_airport_is_not_guessed():
     result, _, tools = _legrun(plan)
     assert result.outcome == "escalated" and result.failure_code.startswith("unknown_")
     assert [name for name, _ in tools.calls] == ["read.itinerary"]
+
+
+# ── 검수 10-15 고침 묶음 A (GPT 검토 #9) ─────────────
+def test_an_explicit_cheapest_request_lists_by_price_instead_of_one_per_time_band():
+    text = TEXT_MORNING.replace("오전 출발로", "최저가로")
+    result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=text)
+    shown = [option["best"] for option in result.decisions[0]["shown"]]
+    assert result.decisions[0]["prefer"] == "cheapest" and shown == sorted(shown)
+    assert "가격이 낮은 순으로" in result.answer
+
+
+def test_the_last_flight_lists_the_latest_departures_and_warns_the_list_is_partial():
+    text = TEXT_MORNING.replace("오전 출발로", "마지막 비행기로")
+    result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=text)
+    bands = [option["band"] for option in result.decisions[0]["shown"]]
+    assert result.decisions[0]["prefer"] == "last" and bands[0] == "evening"
+    assert "출발이 늦은 순으로" in result.answer and "그날의 실제 마지막 편이 아닐 수 있습니다" in result.answer
+
+
+def test_a_clock_limit_keeps_only_flights_leaving_after_it():
+    text = TEXT_MORNING.replace("오전 출발로", "오후 3시 이후 출발로")
+    result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=text)
+    assert result.decisions[0]["clock_limit"] == ["15:00", None]
+    assert all(option["band"] in ("afternoon", "evening") for option in result.decisions[0]["shown"])
+    assert "출발 15:00 이후 편만 골랐습니다." in result.answer or "받은 결과에 출발 15:00 이후 편이 없어" in result.answer

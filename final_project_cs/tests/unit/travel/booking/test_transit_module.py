@@ -582,3 +582,100 @@ def test_a_booked_train_is_kept_and_a_bus_item_asks_tago_with_its_terminal_kind(
     assert result.answer.startswith("서울 → 부산 고속버스 대신 탈 수 있는 버스 운행이에요 (서울경부 → 부산) — 1) 우등 08:00→?(1인 43,300원) · "
                                     "2) 프리미엄 10:00→?(1인 45,000원).")
     assert result.action_proposals[0].arguments["ask_options"]["options"][0]["link"] == "https://www.kobus.co.kr/"
+
+
+# ── 검수 10-15 고침 묶음 A (GPT 검토 #2 · #3 · #6 · #7 · #9) ─────────────
+_WD = "월화수목금토일"
+GO_WD, WRONG_WD = _WD[GO.weekday()], _WD[(GO.weekday() + 1) % 7]
+
+
+@pytest.mark.parametrize("said", [GO_WD, WRONG_WD])
+def test_a_weekday_right_after_a_date_is_that_date_not_a_return_date(said):
+    """「10월 24일 토요일」 — 맞는 요일이든 틀린 요일이든 귀국일을 만들지 않는다(전에는 이번 주 그 요일을 귀국일로 읽고 「지난 날짜」라고 되물었다)."""
+    found, missing = _rules(f"{GO.month}월 {GO.day}일 {said}요일 서울에서 부산 KTX 오전 2명")
+    assert (found.depart_date, found.return_date, missing) == (GO, None, [])
+    assert found.depart_date_text == f"{GO.month}월 {GO.day}일 {said}요일"
+    paren, _ = _rules(f"{GO.month}/{GO.day}({said}) 서울에서 부산 기차 1명")
+    assert (paren.depart_date, paren.return_date) == (GO, None)
+
+
+def test_two_dates_with_weekdays_stay_a_round_trip_and_bare_weekdays_still_work():
+    found, _ = _rules(f"{GO.month}월 {GO.day}일 {GO_WD}요일 김포에서 제주 갔다가 {BACK.day}일 {_WD[BACK.weekday()]}요일 오는 비행기 2명")
+    assert (found.depart_date, found.return_date) == (GO, BACK)
+    bare, _ = _rules("토요일에 가서 일요일 저녁에 오는 김포 제주 2명")
+    assert bare.depart_date is not None and bare.return_date == bare.depart_date + timedelta(days=1)
+
+
+def test_a_wrong_weekday_is_told_in_the_answer_and_the_date_is_used():
+    tago = FakeTago(trains=[_train("KTX", "07:00", "09:40", 59800, "101")])
+    result, tools = _run(f"{GO.month}월 {GO.day}일 {WRONG_WD}요일 서울에서 부산 기차 1명", tago)
+    assert tools.calls and tools.calls[0][1]["depart_date"] == GO.isoformat()
+    assert f"{GO.month}월 {GO.day}일은 {GO_WD}요일이에요 — 요일 대신 날짜 기준으로 했어요." in result.answer
+    assert result.decisions[0]["date_notes"]
+    right, _ = _run(f"{GO.month}월 {GO.day}일 {GO_WD}요일 서울에서 부산 기차 1명", FakeTago(trains=[_train("KTX", "07:00", "09:40", 59800)]))
+    assert "date_notes" not in right.decisions[0] and "날짜 기준으로 했어요" not in right.answer
+
+
+@pytest.mark.parametrize("text,mode,kind,grade,origin,destination", [
+    ("내일 저녁 서울에서 광주 우등 2명", "bus", None, "우등", "서울", "광주"),                    # B02 — 전에는 항공(ICN → 광주 경유 2회)
+    ("고속버스 말고 시외로 내일 서울에서 천안 1명", "bus", "suburbs", None, "서울", "천안"),       # C03 — 전에는 항공으로 떨어져 천안을 못 읽음
+    ("시외버스 말고 고속버스로 내일 서울에서 대전 1명", "bus", "express", None, "서울", "대전"),   # 반대 방향 빼는 말
+    ("내일 동서울에서 속초 버스 2명", "bus", None, None, "동서울", "속초"),                        # B04 — 동서울 보존 · 속초
+    ("내일 밤 서울에서 속초 버스 1명", "bus", None, None, "서울", "속초"),                          # C05
+    ("내일 서울경부터미널에서 대전복합 프리미엄 1명", "bus", None, "프리미엄", "서울경부", "대전복합"),
+    ("프리미엄 이코노미로 11월 6일 인천에서 도쿄 1명", "flight", None, None, "ICN", "NRT"),        # 항공 좌석 말은 버스가 아니다
+    ("11월 6일 서울에서 부산 고속철 1명", "train", None, None, "서울", "부산"),                    # 고속철은 기차
+])
+def test_bus_grade_and_kind_words_pick_the_bus_and_bus_places_are_read(text, mode, kind, grade, origin, destination):
+    found, _ = _rules(text)
+    assert (found.mode, found.kind, found.grade, found.origin, found.destination) == (mode, kind, grade, origin, destination)
+
+
+def test_a_same_day_round_trip_keeps_the_return_on_the_same_day_and_round_trip_without_return_is_asked():
+    found, missing = _rules(f"{GO.month}월 {GO.day}일 서울에서 강릉 당일치기 기차 왕복 2명")
+    assert (found.depart_date, found.return_date, found.round_trip, missing) == (GO, GO, True, [])
+    asked, missing = _rules(f"{GO.month}월 {GO.day}일 김포에서 제주 왕복 2명")
+    assert asked.return_date is None and missing == ["return_date"]
+    one_way, missing = _rules(f"{GO.month}월 {GO.day}일 김포에서 제주 편도 2명")
+    assert one_way.round_trip is None and missing == []
+
+
+def test_a_same_day_round_trip_searches_both_legs():
+    tago = FakeTago(trains=[_train("KTX", "07:00", "09:40", 59800, "101"), _train("KTX", "19:00", "21:40", 59800, "161")])
+    result, tools = _run(f"{GO.month}월 {GO.day}일 서울에서 부산 당일치기 기차 2명", tago)
+    assert [call[1]["depart_date"] for call in tools.calls] == [GO.isoformat(), GO.isoformat()]
+    assert "[가는 편]" in result.answer and "[오는 편]" in result.answer
+
+
+@pytest.mark.parametrize("text,prefer,after,before", [
+    ("11월 9일 제주에서 김포 마지막 비행기 1명", "last", None, None),
+    ("부산에서 서울 막차 내일 1명", "last", None, None),
+    ("12월 5일 인천에서 뉴욕 경유 괜찮으니 최저가 1명", "cheapest", None, None),
+    ("내일 서울에서 부산 첫 기차 1명", "first", None, None),
+    ("11월 6일 오후 3시 이후 김포에서 제주 1명", None, "15:00", None),
+    ("내일 서울에서 대전 버스 저녁 7시 전에 1명", None, None, "19:00"),
+    ("11월 6일 오전 9시 반부터 김포에서 제주 1명", None, "09:30", None),
+])
+def test_the_rules_keep_last_first_cheapest_and_clock_limits(text, prefer, after, before):
+    found, _ = _rules(text)
+    assert (found.prefer, found.depart_after, found.depart_before) == (prefer, after, before)
+
+
+def test_the_last_train_shows_the_latest_runs_with_the_last_one_at_the_bottom():
+    runs = [_train("KTX", clock, "23:59", 59800, str(n)) for n, clock in enumerate(("06:00", "09:00", "12:00", "15:00", "18:00", "20:00", "21:00", "22:30"))]
+    result, _ = _run(f"{GO.month}월 {GO.day}일 서울에서 부산 마지막 기차 1명", FakeTago(trains=runs))
+    lines = [line for line in result.answer.splitlines() if line.strip().startswith(tuple("123456789"))]
+    assert "막차까지 마지막 6편을" in result.answer and lines[-1].count("22:30") == 1 and "06:00" not in result.answer
+
+
+def test_a_clock_limit_filters_the_going_runs_and_says_so_when_nothing_fits():
+    runs = [_train("KTX", clock, "23:59", 59800, str(n)) for n, clock in enumerate(("13:00", "14:59", "15:00", "16:30"))]
+    result, _ = _run(f"{GO.month}월 {GO.day}일 오후 3시 이후 서울에서 부산 기차 1명", FakeTago(trains=runs))
+    assert "15:00" in result.answer and "16:30" in result.answer and "14:59" not in result.answer and "13:00" not in result.answer
+    late, _ = _run(f"{GO.month}월 {GO.day}일 밤 11시 이후 서울에서 부산 기차 1명", FakeTago(trains=runs))
+    assert "출발 23:00 이후 운행은 없어 전체를 보여 드립니다." in late.answer
+
+
+def test_the_question_uses_the_right_particle():
+    result, _ = _run("내일 동서울에서 버스 2명", FakeTago())
+    assert result.answer == "도착지를 알려 주시면 이어서 찾아 드리겠습니다."

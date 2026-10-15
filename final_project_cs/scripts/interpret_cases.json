@@ -1815,6 +1815,133 @@
         "needs": []
       },
       "note": "팀장 점검 LB-07(10-15) — 「출발」 절은 가는 편"
+    },
+    {
+      "id": "T25",
+      "text": "11월 6일 금요일 서울에서 부산 KTX 오전 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "서울",
+        "destination": "부산",
+        "depart_date": "2026-11-06",
+        "return_date": null,
+        "adults": 2,
+        "grade": "KTX",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #2 — 날짜 뒤 요일은 그 날짜(귀국일 아님)"
+    },
+    {
+      "id": "T26",
+      "text": "11월 7일 금요일 서울에서 부산 기차 1명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "depart_date": "2026-11-07",
+        "return_date": null,
+        "adults": 1,
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #2 — 틀린 요일(11-07 은 토)도 날짜 숫자를 믿고, 답에 요일을 알린다"
+    },
+    {
+      "id": "T27",
+      "text": "11월 6일 저녁 서울에서 광주 우등 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "grade": "우등",
+        "origin": "서울",
+        "destination": "광주",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #3 — 「우등」만 말해도 버스(전에는 항공)"
+    },
+    {
+      "id": "T28",
+      "text": "고속버스 말고 시외로 11월 6일 서울에서 천안 1명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "kind": "suburbs",
+        "origin": "서울",
+        "destination": "천안",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #3 — 「시외로」 · 빼는 말"
+    },
+    {
+      "id": "T29",
+      "text": "11월 6일 동서울에서 속초 버스 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "origin": "동서울",
+        "destination": "속초",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #7 — 버스 지명 · 터미널 이름"
+    },
+    {
+      "id": "T30",
+      "text": "11월 6일 서울에서 강릉 당일치기 기차 왕복 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "depart_date": "2026-11-06",
+        "return_date": "2026-11-06",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #6 — 당일 왕복"
+    },
+    {
+      "id": "T31",
+      "text": "11월 6일 김포에서 제주 왕복 2명",
+      "set": "rules",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "CJU",
+        "return_date": null,
+        "needs": [
+          "return_date"
+        ]
+      },
+      "note": "검수 10-15 GPT 검토 #6 — 왕복인데 오는 날이 없으면 묻는다"
+    },
+    {
+      "id": "T32",
+      "text": "11월 8일 일요일 부산에서 서울 마지막 기차 1명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "depart_date": "2026-11-08",
+        "return_date": null,
+        "prefer": "last",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #9 — 막차"
+    },
+    {
+      "id": "T33",
+      "text": "11월 6일 오후 3시 이후 김포에서 제주 1명",
+      "set": "rules",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "CJU",
+        "depart_after": "15:00",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #9 — 시각 경계"
     }
   ]
 }

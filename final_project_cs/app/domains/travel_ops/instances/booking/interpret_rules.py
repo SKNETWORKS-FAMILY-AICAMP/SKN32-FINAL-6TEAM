@@ -29,7 +29,7 @@ from datetime import date, timedelta
 import re
 from typing import Any
 
-from app.domains.travel_ops.components.booking.offers.transit import STATIONS
+from app.domains.travel_ops.components.booking.offers.transit import BUS_PLACES, STATIONS
 
 #: 공항 · 도시 이름 → 코드. 긴 이름을 먼저 맞춘다(「김포공항」 「인천공항」). 우리가 고른 표 — 자주 가는 곳 위주
 AIRPORTS: dict[str, str] = {
@@ -89,6 +89,9 @@ _DAY_ONLY = re.compile(r"(?<![\d/월])(\d{1,2})\s*일(?!\s*(?:뒤|후|동안|간
 _RELATIVE = {"오늘": 0, "내일": 1, "모레": 2, "낼모레": 2, "글피": 3, "내일모레": 2}
 _WEEK = re.compile(r"(다다음\s*주|다음\s*주|담주|이번\s*주)\s*([월화수목금토일])요일")
 _BARE_WEEKDAY = re.compile(r"(?<![주\s])\s*([월화수목금토일])요일|(?<=^)([월화수목금토일])요일")
+#: `[2026-10-15 검수]` 날짜 바로 뒤의 요일 — 「10월 24일 토요일」 「10/24(토)」. 새 날짜가 아니라 그 날짜의 요일이다(GPT 검토 #2)
+_PAREN_WEEKDAY = re.compile(r"\(\s*([월화수목금토일])\s*\)")
+_ADJACENT_GAP = re.compile(r"^[\s,(]*$")
 _OFFSET = re.compile(r"(\d+|일|이|삼|사|오|한|두|세|네)\s*(주일|일|주|달|개월)\s*(뒤|후|있다가|지나서)")
 _KOREAN_NUMBER = {"일": 1, "한": 1, "이": 2, "두": 2, "삼": 3, "세": 3, "사": 4, "네": 4, "오": 5}
 #: 받는 칸이 없는 바람 — 답 끝에 「아직 반영하지 못한 것」으로 돌려준다(문장 조각 그대로)
@@ -184,10 +187,19 @@ def _airports(text: str) -> tuple[str | None, str | None]:
 _STATION_TABLE: dict[str, str] = {name: name for name in STATIONS}
 _STATION_TABLE.update({f"{name}역": name for name in STATIONS if not name.endswith("역")})
 _STATION_TABLE.update({f"{name} 터미널": name for name in STATIONS} | {f"{name}터미널": name for name in STATIONS})
-_MODE_WORDS = {"train": ("기차", "열차", "ktx", "srt", "itx", "무궁화", "새마을", "train"),
-               "bus": ("고속버스", "시외버스", "고속 버스", "시외 버스", "버스", "bus"),
+#: `[2026-10-15 검수 · GPT 검토 #7]` 버스는 철도 역 사전만으로 모자란다 — 「속초」 「동서울」을 못 읽었다(B04 · C05). 버스 지명 · 터미널 이름을 더한다.
+#: 값은 말한 이름 그대로(공급자 터미널 목록을 이름 조각으로 찾는다 — `offers/transit._terminals`). 긴 이름이 먼저 맞으므로 「동서울」이 「서울」보다 앞선다.
+_BUS_TABLE: dict[str, str] = {**_STATION_TABLE, **{name: name for name in BUS_PLACES}}
+_BUS_TABLE.update({f"{name} 터미널": name for name in BUS_PLACES} | {f"{name}터미널": name for name in BUS_PLACES})
+_MODE_WORDS = {"train": ("기차", "열차", "ktx", "srt", "itx", "무궁화", "새마을", "train", "고속철"),
+               # `[2026-10-15 검수 · GPT 검토 #3]` 「시외로」 「고속으로」 「우등」 「프리미엄」만 말해도 버스 — 전에는 항공으로 떨어졌다(B02 · C03)
+               "bus": ("고속버스", "시외버스", "고속 버스", "시외 버스", "버스", "bus", "시외", "고속", "우등", "프리미엄"),
                "flight": ("비행기", "항공권", "항공편", "항공", "flight", "플라이트")}
 _NOT_BUS = ("공항버스", "공항 버스", "리무진", "시내버스", "셔틀")
+#: 「고속」이 버스가 아닌 말 — 고속철 · 고속열차(기차) · 고속도로
+_NOT_BUS_SPEED = ("고속철", "고속열차", "고속 열차", "고속도로")
+#: 「우등 · 프리미엄」은 항공 말(좌석 · 항공)과 같이 나오면 버스로 보지 않는다 — 「프리미엄 이코노미」
+_FLIGHT_CONTEXT = ("이코노미", "비즈니스", "비지니스", "퍼스트", "일등석", "비행기", "항공", "직항", "경유", "공항")
 #: 교통수단 뒤에 붙는 빼는 말 — 「기차 말고 · 빼고 · 제외하고 · 아니고 · 안 타고 · 타지 말고」 (팀장 점검 LB-06 「제외」 추가, 10-15)
 _MODE_NEG = ("말고", "빼고", "말구", "아니고", "아니라", "제외", "빼구", "안 타", "안타", "타지 말", "타지 않", "싫", "피해")
 _GRADES = ("KTX", "SRT", "ITX", "무궁화", "새마을", "프리미엄", "우등", "일반")
@@ -204,6 +216,10 @@ def _mode(text: str) -> str | None:
                 start = index + len(word)
                 if mode == "bus" and any(low[max(0, index - 4):index + 6].find(no) >= 0 for no in _NOT_BUS):
                     continue
+                if word == "고속" and any(low.startswith(no, index) for no in _NOT_BUS_SPEED):
+                    continue
+                if word in ("우등", "프리미엄") and any(flight in low for flight in _FLIGHT_CONTEXT):
+                    continue
                 if word.isascii() and (_ascii_letter(low[index - 1:index]) or _ascii_letter(low[start:start + 1])):
                     continue                                 # 「ktx로」 「srt를」 — 한글 조사는 단어 경계(검토 10-14)
                 tail = low[start:start + 8]
@@ -216,12 +232,19 @@ def _mode(text: str) -> str | None:
 
 
 def _kind(text: str) -> str | None:
+    """버스 종류. 빼는 말이 붙은 쪽은 뺀다(「고속버스 말고 시외로」 → 시외, 「시외버스 말고 고속버스로」 → 고속 — GPT 검토 #3). 둘 다 남으면 먼저 말한 쪽."""
     low = text.casefold()
-    if "시외" in low:
-        return "suburbs"
-    if "고속" in low:
-        return "express"
-    return None
+    said: list[tuple[int, str]] = []
+    for word, kind in (("시외", "suburbs"), ("고속", "express")):
+        start = 0
+        while (index := low.find(word, start)) >= 0:
+            start = index + len(word)
+            if word == "고속" and any(low.startswith(no, index) for no in _NOT_BUS_SPEED):
+                continue
+            if any(no in low[start:start + 8] for no in _MODE_NEG):
+                continue
+            said.append((index, kind))
+    return sorted(said)[0][1] if said else None
 
 
 def _grade(text: str) -> str | None:
@@ -260,10 +283,6 @@ def _dates(text: str, *, today: date, trip: dict[str, Any] | None) -> list[tuple
         weeks = 2 if head.startswith("다다음") else 1 if head in ("다음주", "담주") else 0
         monday = today - timedelta(days=today.weekday()) + timedelta(days=7 * weeks)
         put(m.start(), m.end(), monday + timedelta(days=weekday), m.group(0))
-    for m in _BARE_WEEKDAY.finditer(text):
-        # `[2026-10-14]` 「토요일에 가서 일요일 저녁에」 — 주(週) 말 없이 요일만: 오늘 이후 가장 가까운 그 요일(오늘이 그 요일이면 오늘)
-        weekday = "월화수목금토일".index(m.group(1))
-        put(m.start(), m.end(), today + timedelta(days=(weekday - today.weekday()) % 7), m.group(0))
     for m in _OFFSET.finditer(text):
         raw, unit = m.group(1), m.group(2)
         count = int(raw) if raw.isdigit() else _KOREAN_NUMBER.get(raw, 1)
@@ -289,6 +308,24 @@ def _dates(text: str, *, today: date, trip: dict[str, Any] | None) -> list[tuple
         earlier = [value for start, value, _ in sorted(out) if start < m.start()]
         base = earlier[-1] if earlier else today
         put(m.start(), m.end(), _safe(base.year, base.month, int(m.group(1))), m.group(0))
+    for pattern in (_PAREN_WEEKDAY, _BARE_WEEKDAY):
+        for m in pattern.finditer(text):
+            letter_at = m.start(1) if m.group(1) else m.start(2)
+            weekday = "월화수목금토일".index(text[letter_at])
+            # `[2026-10-15 검수 · GPT 검토 #2]` 날짜 바로 뒤(공백 · 쉼표 · 괄호만 사이)의 요일은 그 날짜에 붙인다 — 새 날짜(귀국일)가 아니다.
+            #   근거 조각을 요일까지 늘려 두면 서버 검증(`settle_dates`)은 날 숫자를 믿고, 요일이 안 맞으면 `weekday_notes` 가 답에 적는다.
+            near = next((i for i, (start, _, _) in enumerate(out)
+                         if (span := next((e for s, e in taken if s == start), None)) is not None
+                         and span <= m.start() and _ADJACENT_GAP.match(text[span:letter_at])), None)
+            if near is not None:
+                start, value, quote = out[near]
+                end = m.end()
+                out[near] = (start, value, text[start:end].strip())
+                taken[:] = [(s, end if s == start else e) for s, e in taken]
+                continue
+            if pattern is _BARE_WEEKDAY:
+                # `[2026-10-14]` 「토요일에 가서 일요일 저녁에」 — 주(週) 말 없이 요일만: 오늘 이후 가장 가까운 그 요일(오늘이 그 요일이면 오늘)
+                put(m.start(), m.end(), today + timedelta(days=(weekday - today.weekday()) % 7), m.group(0))
     if trip and ("이번 여행" in text or "이 여행" in text) and not out and trip.get("first_day"):
         try:
             out.append((text.index("여행"), date.fromisoformat(str(trip["first_day"])), "trip"))
@@ -431,6 +468,63 @@ def _price(text: str) -> tuple[int | None, str | None]:
     return None, None
 
 
+#: `[2026-10-15 검수 · GPT 검토 #6]` 당일 왕복 — 오는 날 = 가는 날
+_SAME_DAY = re.compile(r"당일\s*(?:치기|왕복|로\s*(?:왕복|다녀|갔다))")
+#: `[2026-10-15 검수 · GPT 검토 #9]` 고르는 방식 — 막차 · 첫차 · 가장 싼 것(시간대마다 최저가 대신)
+_LAST = re.compile(r"마지막\s*(?:비행기|항공편|편|기차|열차|버스|차|KTX|SRT|ktx|srt)|막차|막편|막비행기")
+_FIRST = re.compile(r"첫\s*(?:비행기|항공편|편|기차|열차|버스)|첫차|첫편")
+_CHEAPEST = re.compile(r"최저가|제일\s*싼|가장\s*싼|제일\s*저렴|가장\s*저렴|싼\s*순")
+#: 「오후 3시 이후 · 저녁 7시 전」 — 출발 시각 경계(가는 편). 시간대보다 좁은 조건
+_CLOCK_LIMIT = re.compile(r"(오전|오후|저녁|밤|새벽|아침|낮)?\s*(\d{1,2})\s*시\s*(?:(\d{1,2})\s*분|(반))?\s*"
+                          r"(이후|넘어서|넘어|부터|후에|후|이전|전에|전까지|전|까지)")
+
+
+def _clock_limits(text: str) -> tuple[str | None, str | None]:
+    """가는 편 출발 시각의 아래 · 위 경계(HH:MM). 오는 편 절(귀국 · 돌아 …)에 있는 것은 보지 않는다."""
+    after = before = None
+    for clause in _split_depart_return([c.strip() for c in _CLAUSE.split(text) if c and c.strip()]):
+        if any(word in clause for word in _RETURN_WORDS) and not any(word in clause for word in _DEPART_WORDS):
+            continue
+        for m in _CLOCK_LIMIT.finditer(clause):
+            hour, minute = int(m.group(2)), int(m.group(3) or (30 if m.group(4) else 0))
+            if hour < 12 and m.group(1) in ("오후", "저녁", "밤", "낮") or hour < 12 and m.group(1) is None and "오후" in clause:
+                hour += 12
+            if hour > 24 or minute > 59:
+                continue
+            clock = f"{min(hour, 23):02d}:{minute:02d}" if hour < 24 else "23:59"
+            if m.group(5) in ("이후", "넘어서", "넘어", "부터", "후에", "후"):
+                after = after or clock
+            else:
+                before = before or clock
+    return after, before
+
+
+def _prefer(text: str) -> str | None:
+    if _LAST.search(text):
+        return "last"
+    if _CHEAPEST.search(text):
+        return "cheapest"
+    if _FIRST.search(text):
+        return "first"
+    return None
+
+
+def weekday_notes(found: Any) -> list[str]:
+    """근거 조각에 요일이 있는데 그 날짜의 요일과 다르면 알리는 줄 — 날짜(숫자)로 찾았다고 적는다(GPT 검토 #2, 지어내지 않고 묻지도 않는다)."""
+    notes = []
+    for field, label in (("depart_date", "가는 날"), ("return_date", "오는 날")):
+        value, quote = getattr(found, field, None), getattr(found, field + "_text", None) or ""
+        m = re.search(r"([월화수목금토일])요일|\(\s*([월화수목금토일])\s*\)", quote)
+        if value is None or m is None or not re.search(r"\d", quote):
+            continue
+        said = m.group(1) or m.group(2)
+        real = "월화수목금토일"[value.weekday()]
+        if said != real:
+            notes.append(f"{label}을 「{quote}」(으)로 말씀하셨는데 {value.month}월 {value.day}일은 {real}요일이에요 — 요일 대신 날짜 기준으로 했어요. "
+                         "요일이 맞다면 날짜를 다시 알려 주세요.")
+    return notes
+
+
 def _task(text: str) -> str:
     if re.search(r"(항공권|비행기|항공|티켓|기차|열차|버스)\s*(은|는)?\s*말고\s*(숙소|호텔|식당|맛집|렌터카)", text):
         return "unclear"
@@ -446,7 +540,8 @@ def interpret(text: str, *, today: date, trip: dict[str, Any] | None = None) -> 
     if task != "search":
         return {"task": task, "other_requests": [], "missing": [], "question": None}
     mode = _mode(text) or "flight"
-    origin, destination = _airports(text) if mode == "flight" else _endpoints(text, _STATION_TABLE)
+    origin, destination = (_airports(text) if mode == "flight"
+                           else _endpoints(text, _BUS_TABLE if mode == "bus" else _STATION_TABLE))
     if origin and destination and origin == destination:
         destination = None
     dates = _dates(text, today=today, trip=trip)
@@ -469,11 +564,16 @@ def interpret(text: str, *, today: date, trip: dict[str, Any] | None = None) -> 
                 depart = (moved, corrected.group(0))
     if one_way:
         back = None
+    same_day = _SAME_DAY.search(text)
+    if same_day and depart is not None and back is None and not one_way:
+        back = (depart[0], depart[1])                     # 당일 왕복 — 오는 편도 같은 날(GPT 검토 #6). 근거는 가는 날 조각(서버 검증이 날짜로 읽는다)
+    round_trip = not one_way and (bool(same_day) or "왕복" in text)
     adults, children, infants = _people(text)
     if adults is None and trip and depart and depart[1] == "trip" and isinstance(trip.get("party_size"), int):
         adults = trip["party_size"]                         # 「이번 여행」 — 인원은 여행 인원
     others = [m.group(0).strip() for m in _WISH.finditer(text)][:5]
     depart_times, depart_quote, return_times, return_quote = _times(text)
+    after, before = _clock_limits(text)
     price, basis = _price(text)
     domestic = None
     if mode != "flight":
@@ -490,8 +590,9 @@ def interpret(text: str, *, today: date, trip: dict[str, Any] | None = None) -> 
         "depart_times": depart_times, "depart_times_text": depart_quote,
         "return_times": return_times, "return_times_text": return_quote,
         "max_price": price, "max_price_basis": basis if price else None, "domestic": domestic,
+        "round_trip": round_trip or None, "prefer": _prefer(text), "depart_after": after, "depart_before": before,
         "other_requests": others, "missing": [], "question": None,
     }
 
 
-__all__ = ["AIRPORTS", "STATIONS", "interpret"]
+__all__ = ["AIRPORTS", "STATIONS", "interpret", "weekday_notes"]
