@@ -244,7 +244,6 @@
 .stopCard[data-stay] { border-color: var(--color-selected-soft); background: var(--color-paper); }
 .stopKind[data-stay] { color: var(--color-primary); }
 .stopDot[data-stay] { border-color: var(--color-primary); background: var(--color-soft); }
-.stayNote { font-size: 12px; font-weight: 750; color: var(--color-primary); }   /* `[2026-10-15 사용자 결정]` 「체크아웃」 — as 「체크인」 on the card (`.stayWord`) */
 .stayBand { list-style: none; margin: 2px 0 6px; }
 .stayBandButton { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border: 1px dashed var(--color-success); border-radius: 10px; background: var(--color-paper); color: var(--color-primary); font: inherit; font-size: 12.5px; font-weight: 600; text-align: left; cursor: pointer; }
 .stayBandButton small { flex: none; margin-left: auto; font-size: 12px; font-weight: 500; color: var(--color-muted); white-space: nowrap; }   /* `[2026-10-15 ST4F-498]` 「2박째」 is not broken by a long name */
