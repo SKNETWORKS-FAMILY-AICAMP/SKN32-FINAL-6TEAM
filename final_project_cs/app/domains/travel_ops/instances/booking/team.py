@@ -88,8 +88,11 @@ def _leg(leg: dict[str, Any]) -> str:
     # 국내선 응답에는 경유 칸이 없다(2026-10-07 17:31 playdata) — 모르면 적지 않는다
     route = "직항, " if leg.get("isDirect") or stops == 0 else (f"경유 {stops}회, " if isinstance(stops, int) else "")
     number = f" {leg['flightNumber']}" if leg.get("flightNumber") else ""
+    # `[2026-10-15 검수]` 도착 날짜가 출발 날짜보다 뒤면 적는다(☆F06 20:55 → 00:20) — 공급자 날짜가 있을 때만, 다르면 그 날짜를
+    arrive_day, depart_day = str(leg.get("arriveDate") or ""), str(leg.get("departDate") or "")
+    later = f"({arrive_day[5:7].lstrip('0')}/{arrive_day[8:10].lstrip('0')}) " if arrive_day and depart_day and arrive_day > depart_day else ""
     return (f"{leg.get('departDate') or ''} {leg.get('origin') or '?'} {leg.get('departTime') or '?'} → "
-            f"{leg.get('destination') or '?'} {leg.get('arriveTime') or '?'}{number} ({route}{took})")
+            f"{leg.get('destination') or '?'} {later}{leg.get('arriveTime') or '?'}{number} ({route}{took})")
 
 
 def _band(option: dict[str, Any]) -> str | None:
@@ -431,15 +434,16 @@ def _flight_option(rank: int, option: dict[str, Any], item: Any, people: int) ->
 
 
 def _same_flight(option: dict[str, Any], pick: dict[str, Any]) -> bool:
-    """다시 찾은 편이 고른 편과 같은가 — 항공사 · 첫 다리 출발 공항 · 날짜 · 시각 · 마지막 다리 도착 공항 · 다리 수.
-    편명은 보지 않는다 — 편명은 소스마다 있거나 없어(묶일 때 빌려 온다) 같은 편이어도 열쇠(`_flight_key`)가 달라질 수 있다."""
+    """다시 찾은 편이 고른 편과 같은가 — 항공사 + **다리마다** 출발 공항 · 도착 공항 · 출발 날짜 · 시각(booking 묶기 열쇠와 같은 규칙).
+    `[2026-10-15 검수 · GPT 검토 #1]` 전에는 첫 다리 · 마지막 도착 · 다리 수만 봐서 오는 편 · 경유 편이 다른 상품도 같은 편으로 재확인했다.
+    다리 정보가 하나라도 비면 같은 편으로 보지 않는다(재확인 「모름」 쪽 — 다른 상품을 같다고 하는 것보다 낫다).
+    편명은 보지 않는다 — 소스마다 있거나 없어(묶일 때 빌려 온다) 같은 편이어도 달라질 수 있다."""
     def mark(flight: dict[str, Any]) -> tuple[Any, ...] | None:
         legs = flight.get("legs") or []
-        if not legs:
+        parts = tuple((leg.get("origin"), leg.get("destination"), leg.get("departDate"), leg.get("departTime")) for leg in legs)
+        if not legs or not flight.get("airline") or not all(all(part) for part in parts):
             return None
-        first, last = legs[0], legs[-1]
-        return (flight.get("airline"), first.get("origin"), first.get("departDate"), first.get("departTime"),
-                last.get("destination"), len(legs))
+        return (flight.get("airline"), parts)
     return mark(option) is not None and mark(option) == mark(pick)
 
 

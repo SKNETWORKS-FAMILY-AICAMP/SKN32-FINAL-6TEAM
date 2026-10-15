@@ -789,3 +789,41 @@ def test_one_source_raising_keeps_the_other_sources():
                   depart_date=GO, domestic=False, adults=2)
     assert got["sources"]["ignav"] == {"status": "failed", "error": "ValueError"}
     assert got["sources"]["myrealtrip"]["status"] == "ok" and got["options"], "정상 소스 결과는 남는다"
+
+
+# ── 검수 10-15 고침 묶음 C (GPT 검토 #1) ─────────────
+def _rt(back_time, price, *, number="TW702"):
+    go = {"origin": "GMP", "destination": "CJU", "departDate": "2026-11-06", "departTime": "17:25", "flightNumber": "TW725"}
+    back = {"origin": "CJU", "destination": "GMP", "departDate": "2026-11-09", "departTime": back_time, "flightNumber": number}
+    return {"airline": "티웨이항공", "airline_code": "TW", "legs": [go, back], "price_total": price, "currency": "KRW",
+            "duration_minutes": 150, "link": f"https://x/{back_time}", "link_kind": "route_search"}
+
+
+def test_round_trips_with_different_return_legs_are_not_merged():
+    from app.domains.travel_ops.components.booking.offers.flights import merge
+    options = merge([("myrealtrip", [_rt("09:00", 300000), _rt("21:00", 200000, number="TW718")])])
+    assert len(options) == 2, "오는 편이 다르면 다른 상품"
+    assert sorted((o["legs"][1]["departTime"], o["best"]) for o in options) == [("09:00", 300000), ("21:00", 200000)]
+    same = merge([("myrealtrip", [_rt("09:00", 300000)]), ("google", [{**_rt("09:00", 290000), "flight_number": None}])])
+    assert len(same) == 1 and len(same[0]["offers"]) == 2, "같은 상품은 소스끼리 묶인다"
+    missing = merge([("myrealtrip", [_rt("09:00", 300000)]),
+                     ("google", [{**_rt("09:00", 290000), "legs": [_rt("09:00", 0)["legs"][0], {**_rt("09:00", 0)["legs"][1], "departTime": None}]}])])
+    assert len(missing) == 2, "다리 정보가 비면 묶지 않는다"
+
+
+def test_recheck_does_not_match_a_different_return_or_connection():
+    from app.domains.travel_ops.instances.booking.team import _same_flight
+    pick = {"airline": "티웨이항공", "legs": _rt("09:00", 0)["legs"]}
+    assert _same_flight({"airline": "티웨이항공", "legs": _rt("09:00", 0)["legs"]}, pick)
+    assert not _same_flight({"airline": "티웨이항공", "legs": _rt("21:00", 0)["legs"]}, pick), "오는 편 시각이 다르면 다른 편"
+    via = [{**pick["legs"][0], "destination": "PUS"}, {"origin": "PUS", "destination": "CJU", "departDate": "2026-11-06", "departTime": "19:00"}]
+    assert not _same_flight({"airline": "티웨이항공", "legs": via}, {"airline": "티웨이항공", "legs": [*via[:1], {**via[1], "departTime": "20:00"}]})
+    assert not _same_flight({"airline": "티웨이항공", "legs": [{**pick["legs"][0], "departTime": None}]}, pick), "정보가 비면 같다고 하지 않는다"
+
+
+def test_an_overnight_flight_shows_its_arrival_date():
+    from app.domains.travel_ops.instances.booking.team import _leg
+    leg = {"origin": "ICN", "destination": "DAD", "departDate": "2026-11-13", "departTime": "20:55", "arriveDate": "2026-11-14",
+           "arriveTime": "00:20", "durationMinutes": 325, "isDirect": True}
+    assert "→ DAD (11/14) 00:20" in _leg(leg)
+    assert "(11/" not in _leg({**leg, "arriveDate": "2026-11-13", "arriveTime": "23:20"}) and "(11/" not in _leg({**leg, "arriveDate": None})
