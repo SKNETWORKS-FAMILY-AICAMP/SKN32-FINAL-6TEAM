@@ -121,3 +121,45 @@ def test_another_customers_trip_is_never_returned(world):
     _trip(world, [DAY], customer="stranger")                                   # 남의 여행 기간에 들어도
 
     assert _read(world, booking)["trip"] == {"trip_id": None, "matched_by": None, "why_unknown": "not_linked"}
+
+
+# ── `[2026-10-15]` 맨 바깥 `trip_id` 한 칸 — 활동 → 코어 전달 3번 (TeamFlow ST4F-535) ─────────────────────────
+#   활동 팀(develop 판)은 `read.booking` 결과의 `trip_id` 를 바로 읽는다. 값은 **그 예약이 든 최신 일정의 여행**(확인된 연결)이고, 없으면 `None`.
+#   기간으로 추정한 여행(`trip_period`)은 `trip` 칸에만 있다 — 추정을 확정처럼 맨 바깥에 싣지 않는다.
+
+def test_top_level_trip_id_is_the_trip_whose_latest_itinerary_holds_the_booking(world):
+    booking = _booking(world, DAY)
+    trip = _trip(world, [DAY], booking=booking)
+    _trip(world, [DAY])                                                        # 기간이 겹치는 다른 여행
+
+    found = _read(world, booking)
+    assert found["trip_id"] == trip and found["trip"]["trip_id"] == trip
+
+
+def test_top_level_trip_id_is_null_when_only_an_old_version_or_a_period_guess_points_there(world):
+    booking = _booking(world, DAY)
+    trip = _trip(world, [DAY], booking=booking, versions=2, linked_version=1)  # 바꾼 뒤 최신판에서는 빠졌다
+
+    found = _read(world, booking)
+    assert "trip_id" in found and found["trip_id"] is None
+    assert found["trip"]["trip_id"] == trip and found["trip"]["matched_by"] == "trip_period"   # 추정은 trip 칸에만
+
+
+@pytest.mark.parametrize("shape", ["ambiguous", "not_linked", "other_customers"])
+def test_top_level_trip_id_is_null_when_there_is_no_trip(world, shape):
+    booking = _booking(world, DAY)
+    if shape == "ambiguous":
+        _trip(world, [DAY])
+        _trip(world, [DAY - timedelta(days=1), DAY + timedelta(days=1)])
+    elif shape == "other_customers":
+        _trip(world, [DAY], customer="stranger", booking=booking)
+
+    found = _read(world, booking)
+    assert found is not None and "trip_id" in found and found["trip_id"] is None
+
+
+def test_top_level_trip_id_never_shows_another_customers_trip(world):
+    booking = _booking(world, DAY)
+    _trip(world, [DAY], customer="stranger", booking=booking)
+
+    assert _read(world, booking, customer="owner")["trip_id"] is None

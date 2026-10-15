@@ -763,7 +763,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     Outside collection this remains the explicit standalone/unit-test assembly seam.
     Production stores the returned registrations in a per-controller BindingTable.
     """
-    from app.domains.travel_ops.components.team_hooks import activity_ledger, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
 
     if active_ids is not None:
         pass
@@ -830,6 +830,11 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                  indoor=activity_ledger_impl.indoor,
                                  disaster=activity_verdicts.disaster_verdict)
 
+        # 활동 — 확인 화면 「다른 곳」 후보를 고르는 대체안 엔진(`[2026-10-15]` 후보 공급은 팀이, 조립은 우리가). 미등록이면 확인 화면 자체 고르기로 간다
+        from app.domains.travel_ops.instances.activity import review_alternatives as activity_review_alternatives
+
+        activity_alternatives.register(rank=activity_review_alternatives.rank)
+
     if "activity" in active_ids:
         from app.domains.travel_ops.instances.activity.team import plan_activity_trigger
         watch_planners.register("activity", plan_activity_trigger)
@@ -868,10 +873,12 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         #   판정 LLM 이 없으면(`rule` · 키 없음) 작업이 `disabled` 로 답한다. 만드는 것 자체는 I/O 가 없다.
         from app.domains.travel_ops.instances.activity import jobs as activity_jobs
 
-        activity_jobs.configure(connection_factory=get_connection, judge_llm=build_activity_judge_llm(),
-                                budget=build_activity_judge_budget())
+        from app.application.job_gate import claim
 
-    names = {"mobility": ("legs",), "dining": ("dining_ledger",), "activity": ("similarity", "activity_ledger")}
+        activity_jobs.configure(connection_factory=get_connection, judge_llm=build_activity_judge_llm(),
+                                budget=build_activity_judge_budget(), claim=claim)
+
+    names = {"mobility": ("legs",), "dining": ("dining_ledger",), "activity": ("similarity", "activity_ledger", "activity_alternatives")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
     hook_names = {**names, "lodging": ("lodging_ledger",)}
     connected = [name for owner, hooks in hook_names.items() if owner in active_ids for name in hooks]

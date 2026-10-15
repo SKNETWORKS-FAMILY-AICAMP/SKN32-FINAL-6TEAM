@@ -30,12 +30,21 @@ _HOLIDAY = re.compile(r"공휴일|휴일")
 _LAST = re.compile(r"(?:입장\s*마감|입장마감|마감)\s*[:：]?\s*(\d{1,2}):(\d{2})")
 _DAY_TOKENS = {"평일": ("mon", "tue", "wed", "thu", "fri"), "주말": ("sat", "sun"), "매일": DAYS}
 _DAY_RANGE = re.compile(r"([월화수목금토일])(?:요일)?\s*[~\-]\s*([월화수목금토일])(?:요일)?")
+#: 시간 구간 바로 뒤에 요일 말이 오면 새 조각이다 — 「평일 12:00~20:00 주말 10:00~22:00」(2026-10-15).
+#: 전에는 「/」로만 갈라 한 조각에 두 구간이 들어가 평일 · 주말 모두 「구간 둘」로 버려졌다.
+#: 요일 말 없이 구간만 이어지면(「10:00~12:00 13:00~18:00」 점심 휴게) 가르지 않는다 — 같은 날 두 구간이라 모름 그대로.
+_NEXT_LABEL = re.compile(rf"({_TIME_RANGE.pattern})\s*,?\s*"
+                         r"(?=평일|주말|매일|공휴일|[월화수목금토일](?:요일)?(?:\s*[~\-·,:]|\s|$))")
 #: 휴무 글: 매주 → 그 요일이 매주 쉰다. n번째·격주·매월은 매주가 아니다.
 _WEEKLY = re.compile(r"매주\s*([^<(※]*)")
 _NOT_WEEKLY = re.compile(r"[첫둘셋넷다섯]째|\d\s*째|격주|매월|매달|월\s*\d+회")
 _DAYS_ONLY = re.compile(r"^(?:[월화수목금토일](?:요일)?\s*[,·~\-]?\s*)+(?:정기)?(?:휴무|휴관|휴업)?\.?$")
 _NONE_REST = ("연중무휴", "없음", "휴무없음", "무휴")
 _IRREGULAR = re.compile(r"부정기|비정기|불규칙|수시|임시|사정에")
+#: 매주가 아닌 휴무가 **어느 요일인지** 적힌 조각 — 「매달 1, 3, 5번째 일요일」 · 「매월 둘째, 넷째 주 월요일」 · 「월1회 월요일」 · 「격주 화요일」.
+#: 그 요일만 모르고 다른 요일은 안다(2026-10-15). 요일 없이 「월 1회」뿐이면 어느 날인지 몰라 잡지 않는다.
+_NTH_DAY = re.compile(r"(?:[첫둘셋넷다섯]째|\d\s*(?:번\s*)?째|\d\s*주차?|격주|매월|매달|월\s*\d+\s*회|마지막)"
+                      r"[^※/]*?([월화수목금토일])요일")
 
 
 def _hm(hour: str, minute: str) -> str:
@@ -78,6 +87,38 @@ def closed_weekdays(rest: str | None) -> set[str] | None:
     return set()                                      # 공휴일·명절만 있다 — 매주 쉬는 요일은 없다(공휴일은 펴지 않는다)
 
 
+def _rest_body(text: str) -> str:
+    return re.sub(r"※.*", "", re.sub(r"\(.*?\)", "", text))
+
+
+def _nth_days(body: str) -> set[str]:
+    """매주가 아닌 휴무(n번째 · 격주 · 월 N회)에 적힌 요일."""
+    return {day for m in _NTH_DAY.finditer(body) for day in days_in(f"{m.group(1)}요일")}
+
+
+def _partial_rest(rest: str | None) -> tuple[set[str], set[str]] | None:
+    """`closed_weekdays` 가 모른다고 한 휴무 글 중 **매주가 아닌 휴무의 요일이 적힌 것** → (매주 쉬는 요일, 모르는 요일).
+
+    ★그 요일만 모른다 — 다른 요일은 매주 휴무 규칙대로 안다. 요일이 안 적힌 매월 휴무(「월 1회」)가 남거나,
+      나머지 글을 못 읽으면 `None`(전처럼 전부 모름)."""
+    text = clean(rest)
+    if not text or any(marker in text for marker in _REST_UNSURE):
+        return None
+    body = _rest_body(text)
+    if _IRREGULAR.search(body):
+        return None
+    unknown = _nth_days(body)
+    if not unknown:
+        return None
+    leftover = _NTH_DAY.sub(" ", body)
+    if _NOT_WEEKLY.search(leftover):
+        return None
+    weekly = closed_weekdays(leftover)
+    if weekly is None:
+        return None
+    return weekly, unknown - weekly
+
+
 def _segment_days(label: str) -> set[str] | None:
     """구간 앞뒤 글자에서 적용 요일. 라벨이 없으면 매일, 못 읽는 글자가 남으면 `None`."""
     rest = _HOLIDAY.sub("", label)
@@ -107,6 +148,7 @@ def _open_windows(business_hours: str | None) -> dict[str, tuple[str, str]] | No
     if not raw or any(marker in raw for marker in _HOURS_UNSURE):
         return None
     text = re.sub(r"\(.*?\)", "", raw).strip()
+    text = _NEXT_LABEL.sub(r"\1 / ", text)
     has_range = _TIME_RANGE.search(text) is not None
     if _ALWAYS_OPEN.search(text):
         return {day: ("00:00", "23:59") for day in DAYS} if not has_range else None
@@ -142,6 +184,13 @@ def read_week(business_hours: str | None, closed_days: str | None) -> HoursRead 
 
     돌려주는 `HoursRead.week` 의 요일 칸: `{"open","close","last_entry"}` · `"closed"` · (없음 = 모름)."""
     rest = closed_weekdays(closed_days)
+    unknown: set[str] = set()                     # n번째 · 격주 휴무 요일 — 그날만 모른다(칸을 비운다)
+    if rest is None and (partial := _partial_rest(closed_days)) is not None:
+        rest, unknown = partial
+    elif rest is not None:
+        # 「매주 월요일, 매월 마지막 주 화요일」 — 매주 휴무(월)는 읽고 뒤쪽 n번째 휴무는 버렸다. 그 화요일을 「연다」로 내면
+        # 마지막 주 화요일에 열린다고 말한다(2026-10-15 발견) — 그 요일은 모름으로 비운다.
+        unknown = _nth_days(_rest_body(clean(closed_days))) - rest
     windows = _open_windows(business_hours) if rest is not None else None
     last = _LAST.search(clean(business_hours))
     last_entry = _hm(*last.groups()) if last else None
@@ -149,7 +198,7 @@ def read_week(business_hours: str | None, closed_days: str | None) -> HoursRead 
     for day in DAYS:
         if rest is not None and day in rest:
             week[day] = "closed"
-        elif windows and day in windows:
+        elif windows and day in windows and day not in unknown:
             week[day] = {"open": windows[day][0], "close": windows[day][1], "last_entry": last_entry}
     if not week:
         return None

@@ -1,0 +1,184 @@
+[
+ {
+  "id": "R-01",
+  "query": "예약 없는 산책도 일정에서 확인할 수 있나요?",
+  "expect_scope": "travel_activity",
+  "ms": 1107,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "예약이 없다는 것과 모른다는 것",
+    "score": 0.495
+   },
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "예약이 필요 없다는 확인",
+    "score": 0.487
+   },
+   {
+    "scope": "travel_activity",
+    "document": "관람·자연 갈래의 운영 중단과 통제",
+    "section": "통제가 확인되지 않을 때",
+    "score": 0.433
+   }
+  ]
+ },
+ {
+  "id": "R-02",
+  "query": "비 오면 야외 일정을 무조건 취소하나요?",
+  "expect_scope": "travel_weather",
+  "ms": 346,
+  "top3": [
+   {
+    "scope": "travel_weather",
+    "document": "날씨로 활동을 바꾸는 경우",
+    "section": "날씨로 활동을 바꾸는 경우",
+    "score": 0.758
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "업체 취소 조건과 일정 변경 구분",
+    "section": "업체 취소 조건과 일정 변경 구분",
+    "score": 0.527
+   },
+   {
+    "scope": "travel_weather",
+    "document": "기상 사유로 활동이 깨졌을 때의 순연과 취소",
+    "section": "우천으로 야외 활동이 깨진 경우의 부담",
+    "score": 0.517
+   }
+  ]
+ },
+ {
+  "id": "R-03",
+  "query": "취소하면 위약금이 얼마인가요?",
+  "expect_scope": "travel_cancellation",
+  "ms": 223,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "업체 취소 조건과 일정 변경 구분",
+    "section": "업체 취소 조건과 일정 변경 구분",
+    "score": 0.675
+   },
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "접수 전에 먼저 가리는 것",
+    "score": 0.554
+   },
+   {
+    "scope": "travel_activity",
+    "document": "관람·자연 갈래의 운영 중단과 통제",
+    "section": "관람 갈래에 위약금 문장을 붙이지 않는다",
+    "score": 0.541
+   }
+  ]
+ },
+ {
+  "id": "R-04",
+  "query": "휠체어로 이용할 수 있는 장소인가요?",
+  "expect_scope": "travel_access",
+  "ms": 233,
+  "top3": [
+   {
+    "scope": "travel_access",
+    "document": "동행자의 이용 조건 확인",
+    "section": "동행자의 이용 조건 확인",
+    "score": 0.642
+   },
+   {
+    "scope": "travel_access",
+    "document": "동행 조건을 확인하고 안내하는 기준",
+    "section": "휠체어 이용과 이동 보조",
+    "score": 0.546
+   },
+   {
+    "scope": "travel_activity",
+    "document": "관람·자연 갈래의 운영 중단과 통제",
+    "section": "행사와 혼잡",
+    "score": 0.262
+   }
+  ]
+ },
+ {
+  "id": "R-05",
+  "query": "무료 취소는 언제까지 가능한가요?",
+  "expect_scope": "travel_activity",
+  "ms": 228,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "업체 취소 조건과 일정 변경 구분",
+    "section": "업체 취소 조건과 일정 변경 구분",
+    "score": 0.567
+   },
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "무료인데 예약이 필요한 경우",
+    "score": 0.527
+   },
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "무료·무예약이면 취소 대상이 아니다",
+    "score": 0.5
+   }
+  ]
+ },
+ {
+  "id": "R-06",
+  "query": "휴관일에 가면 어떻게 되나요?",
+  "expect_scope": "travel_activity",
+  "ms": 213,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "관람·자연 갈래의 운영 중단과 통제",
+    "section": "휴관일은 규정이 아니라 사실이다",
+    "score": 0.571
+   },
+   {
+    "scope": "travel_activity",
+    "document": "관람·자연 갈래의 운영 중단과 통제",
+    "section": "임시 휴관과 정기 휴관을 나눈다",
+    "score": 0.548
+   },
+   {
+    "scope": "travel_weather",
+    "document": "날씨로 활동을 바꾸는 경우",
+    "section": "날씨로 활동을 바꾸는 경우",
+    "score": 0.424
+   }
+  ]
+ },
+ {
+  "id": "R-07",
+  "query": "오늘 주식 시장 전망 알려줘",
+  "expect_scope": "(범위 밖)",
+  "ms": 174,
+  "top3": [
+   {
+    "scope": "travel_weather",
+    "document": "대기질·폭염·한파·지진 경보와 야외 일정",
+    "section": "한파 구간의 야외 항목",
+    "score": 0.333
+   },
+   {
+    "scope": "travel_weather",
+    "document": "대기질·폭염·한파·지진 경보와 야외 일정",
+    "section": "폭염 구간의 야외 항목",
+    "score": 0.298
+   },
+   {
+    "scope": "travel_weather",
+    "document": "기상 사유로 활동이 깨졌을 때의 순연과 취소",
+    "section": "이어지는 항목까지 함께 본다",
+    "score": 0.294
+   }
+  ]
+ }
+]

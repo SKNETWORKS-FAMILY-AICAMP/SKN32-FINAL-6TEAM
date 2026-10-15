@@ -15,14 +15,16 @@
 """
 from __future__ import annotations
 
+import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 
 from app.domains.travel_ops.components.places.place_hours import read_by_rule
 
 from .verdicts import HolidayLookup, holidays_needed, hours_verdict
 
 SOURCE = "activity.ac_place"
+_log = logging.getLogger(__name__)
 
 _PLACE_SQL = (
     "SELECT a.content_id, a.name_ko, a.usetime_text, a.restdate_text, a.hours_week, a.hours_read FROM places p "
@@ -86,7 +88,10 @@ def state(conn, tenant_id: str, place_id: str | None, at: datetime | None, until
     """
     if not isinstance(at, datetime):
         return None
-    return _state_of_row(place_row(conn, tenant_id, place_id), at, until, holiday)
+    from . import live_store
+
+    return _with_live_status(_state_of_row(place_row(conn, tenant_id, place_id), at, until, holiday), at,
+                             lambda day: live_store.lookup(conn, tenant_id, place_id, day))
 
 
 def content_row(conn, content_id: str | None) -> dict[str, Any] | None:
@@ -107,7 +112,12 @@ def state_by_content(conn, content_id: str | None, at: datetime | None, until: d
     ★코어가 확인 화면에서 읽은 장소는 관광공사 번호만 있고 장소 행(`places`)이 없을 때가 많다. 그때 `state` 는 원장을 못 찾는다."""
     if not isinstance(at, datetime):
         return None
-    return _state_of_row(content_row(conn, content_id), at, until, holiday)
+    # ★`[2026-10-15]` ST4F-573 — 이 길(확인 화면이 장소 행 없이 번호만 가진 때)에도 `live_status` 칸을 싣는다. 전에는 `state` 에만 있어
+    #   확인 화면이 `core_id` 없이 부르면 칸이 비어 있었다. 저장소는 같고 키만 관광공사 번호다(`live_store.read`).
+    from . import live_store
+
+    return _with_live_status(_state_of_row(content_row(conn, content_id), at, until, holiday), at,
+                             lambda day: live_store.read(conn, content_id, day))
 
 
 def _state_of_row(row: dict[str, Any] | None, at: datetime, until: datetime | None,
@@ -122,4 +132,51 @@ def _state_of_row(row: dict[str, Any] | None, at: datetime, until: datetime | No
             if facts[day] is None:
                 break      # ★같은 소스가 또 모른다고 할 것이다(team._hours_check 와 같다)
     verdict = hours_verdict(hours, at, until=until if isinstance(until, datetime) else None, holiday=facts.get)
-    return {**verdict, "content_id": row["content_id"], "name": row["name_ko"]}
+    out = {**verdict, "content_id": row["content_id"], "name": row["name_ko"]}
+    return out
+
+
+def _with_live_status(out: dict[str, Any] | None, at: datetime,
+                      read: Callable[[Any], dict[str, Any] | None]) -> dict[str, Any] | None:
+    """저장된 실시간 운영 상태를 `live_status` 칸으로 싣는다. 원장에 없어 판정이 `None` 이면 그대로 `None`."""
+    if out is None:
+        return None
+    live = _live_status(at, read)
+    if live is not None:
+        out["live_status"] = live
+        # ★`llm` 일 때만 판정에 반영한다 — 인용이 있는 「닫혔다」만 저장돼 있다(`live_store.record`). 「열었다」는 풀어 주지 않는다.
+        #   `shadow` 에서는 판정을 그대로 두고 칸만 싣는다(코어 회신 9번 — 정확도를 재기 전에는 고객 결과를 바꾸지 않는다).
+        if live.get("applied") and live.get("value") == "closed" and out.get("closed") is not True:
+            quote = next((c.get("quote") for c in live.get("citations") or [] if c.get("quote")), None)
+            out.update({"closed": True, "closure_reason": "live_status", "quote": quote})
+    return out
+
+
+def _live_status(at: datetime, read: Callable[[Any], dict[str, Any] | None]) -> dict[str, Any] | None:
+    """저장된 실시간 운영 상태(`activity.ac_live_status`) — 별도 칸. `[2026-10-14]` 코어 회신(10-13) 「확인 화면 · 감시도 보게」.
+
+    ★`rule`(꺼짐)이면 `None` — 칸이 없다. 켜져 있는데 못 읽으면 숨기지 않고 `unknown`(+ 이유)으로 싣는다(조용한 대체 금지).
+    ★줄이 없으면 `unchecked`(아직 안 봤다) — 「열었다」가 아니다. 값은 `open` · `closed` · `unknown` · `unchecked`.
+    """
+    from .judge.modes import kind_mode
+    from .judge.requests import KST
+    from .judge.types import LIVE_STATUS
+    from . import live_store
+
+    mode = kind_mode(LIVE_STATUS)
+    if mode == "rule":
+        return None
+    day = at.astimezone(KST).date() if at.tzinfo else at.date()
+    try:
+        stored = read(day)
+    except Exception as exc:  # noqa: BLE001 — 읽지 못한 것을 「열었다」로 보지 않는다. 종류만 남기고 모름
+        _log.warning("live_status_ledger_lookup_failed %s", type(exc).__name__)
+        return {"value": "unknown", "mode": mode, "applied": False, "why": f"lookup_failed:{type(exc).__name__}",
+                "visit_date": day.isoformat()}
+    if stored is None or stored.get("value") not in live_store.VALUES:
+        return {"value": "unchecked", "mode": mode, "applied": False, "visit_date": day.isoformat()}
+    checked = stored.get("checked_at")
+    citations = [{"url": c.get("url"), "quote": c.get("quote"), "published_at": c.get("published_at")}
+                 for c in stored.get("citations") or [] if isinstance(c, dict)]
+    return {"value": stored["value"], "mode": mode, "applied": mode == "llm", "visit_date": day.isoformat(),
+            "checked_at": checked.isoformat() if hasattr(checked, "isoformat") else checked, "citations": citations}

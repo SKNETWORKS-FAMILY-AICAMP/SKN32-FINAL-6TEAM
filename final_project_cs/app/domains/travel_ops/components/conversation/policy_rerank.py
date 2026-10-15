@@ -40,6 +40,7 @@ SYSTEM = ("당신은 여행 서비스의 규정 검색 재순위 담당입니다
           '출력은 JSON 한 줄: {"ranking":[번호,...]}')
 
 MODES = ("off", "shadow", "on")
+BACKENDS = ("local", "api")
 FIRST_STAGES = ("operating", "customer_text")
 
 #: 실행 중 센 값 — 운영이 「재순위가 쓰이고 있나 · 얼마나 지금 방식으로 돌아가나」를 볼 수 있게(조용한 폴백을 만들지 않는다)
@@ -61,6 +62,9 @@ class RerankSettings:
     failures: int
     open_seconds: float
     embed_timeout_seconds: float
+    backend: str = "local"          # local: 요청 해석과 같은 로컬 모델 · api: 서버용 OpenAI 키로 유료 모델(루나급) — 호출 예산 상한 안에서만
+    api_model: str = ""              # 비면 `llm_failover_model`
+    api_timeout_seconds: float = 6.0
 
 
 def load_settings(guardrails: Any) -> RerankSettings:
@@ -73,11 +77,15 @@ def load_settings(guardrails: Any) -> RerankSettings:
         raise ValueError(f"travel.question.rerank.mode 는 {MODES} 중 하나여야 한다(따옴표 필수 — 맨 off/on 은 YAML 불리언): {mode!r}")
     if stage not in FIRST_STAGES:
         raise ValueError(f"travel.question.rerank.first_stage 는 {FIRST_STAGES} 중 하나여야 한다: {stage!r}")
+    backend = str(get("backend"))
+    if backend not in BACKENDS:
+        raise ValueError(f"travel.question.rerank.backend 는 {BACKENDS} 중 하나여야 한다: {backend!r}")
     return RerankSettings(
         mode=mode, first_stage=stage, candidates=int(get("candidates")), max_picks=int(get("max_picks")),
         min_score=float(get("min_score")), model=str(get("model") or ""), timeout_seconds=float(get("timeout_seconds")),
         min_remaining_seconds=float(get("min_remaining_seconds")), total_seconds=float(get("total_seconds")),
-        failures=int(get("failures")), open_seconds=float(get("open_seconds")), embed_timeout_seconds=float(get("embed_timeout_seconds")))
+        failures=int(get("failures")), open_seconds=float(get("open_seconds")), embed_timeout_seconds=float(get("embed_timeout_seconds")),
+        backend=backend, api_model=str(get("api_model") or ""), api_timeout_seconds=float(get("api_timeout_seconds")))
 
 
 @dataclass(frozen=True)
@@ -252,9 +260,11 @@ class PolicyRerank:
                  sections: Callable[[], dict[str, dict[str, str]]] | None = None,
                  chat_factory: Callable[[RerankSettings, float], Any] | None = None,
                  prior_seconds: Callable[[], float] | None = None, app_settings: Callable[[], Any] | None = None,
+                 budget: Callable[[Any], Callable[[], bool] | None] | None = None,
                  clock: Callable[[], float] = time.monotonic) -> None:
         self._base, self._load, self._index_factory = base_search, settings_loader, index_factory
         self._app_settings = app_settings
+        self._budget = budget
         self._sections, self._chat_factory, self._prior_seconds, self._clock = sections, chat_factory, prior_seconds, clock
         self._index: CustomerTextIndex | None = None
         self._shadow_slot = threading.Semaphore(1)
@@ -346,25 +356,55 @@ class PolicyRerank:
         if remaining < cfg.min_remaining_seconds:
             STATS["skipped"] += 1
             return plain_result(f"time_budget: 남은 {remaining:.1f}초 < {cfg.min_remaining_seconds:g}초(해석에 {prior:.1f}초 사용)")
-        timeout = min(cfg.timeout_seconds, remaining)
+        api = cfg.backend == "api"
+        timeout = min(cfg.api_timeout_seconds if api else cfg.timeout_seconds, remaining)
+        if api:
+            timeout = max(0.5, int(timeout * 2) / 2)                          # 0.5초 단위로 내린다 — 유료 호출 클라이언트가 제한시간마다 하나씩 생기므로 가짓수를 줄인다
         from app.core.settings import get_settings
         from app.infrastructure import llm_failover
 
         settings = (self._app_settings or get_settings)()
-        base_url = (settings.ollama_base_url or "").strip()
-        if self._chat_factory is None and not base_url:
-            STATS["skipped"] += 1
-            return plain_result("no_model_server: ACOP_OLLAMA_BASE_URL 이 비어 있다")
-        breaker = llm_failover.breaker_for(f"rerank@{base_url}", threshold=cfg.failures, open_seconds=cfg.open_seconds)
+        info["backend"] = cfg.backend
+        if api:
+            target = "openai"
+            if self._chat_factory is None and not (getattr(settings, "openai_api_key_server", "") or "").strip():
+                STATS["skipped"] += 1
+                return plain_result("no_api_key: 서버용 OpenAI 키가 없다")
+        else:
+            target = (settings.ollama_base_url or "").strip()
+            if self._chat_factory is None and not target:
+                STATS["skipped"] += 1
+                return plain_result("no_model_server: ACOP_OLLAMA_BASE_URL 이 비어 있다")
+        breaker = llm_failover.breaker_for(f"rerank-{cfg.backend}@{target}", threshold=cfg.failures, open_seconds=cfg.open_seconds)
         if not breaker.allow():
             STATS["skipped"] += 1
             return plain_result("circuit_open: 재순위 모델 호출이 연속으로 실패해 잠시 건너뛴다")
+        if api:
+            gate = self._budget(settings) if self._budget is not None else llm_failover.budget_gate(settings)
+            if gate is None:                                               # 유료 호출이라 상한을 셀 장치가 없으면 부르지 않는다(실패해도 안전한 쪽)
+                breaker.release()
+                STATS["skipped"] += 1
+                return plain_result("budget_unavailable: 유료 호출 상한을 세는 장치가 없다")
+            if not gate():
+                breaker.release()
+                STATS["skipped"] += 1
+                return plain_result("budget_exhausted: 유료 호출 하루 · 한 달 상한을 다 썼다")
         # 3) 모델 호출
         STATS["calls"] += 1
         llm_started = self._clock()
         try:
-            chat = self._chat_factory(cfg, timeout) if self._chat_factory else self._default_chat(cfg, settings, timeout)
-            picks = parse_ranking(chat.json(SYSTEM, build_user_prompt(query, candidates)), len(candidates), min(cfg.max_picks, top_k))
+            if self._chat_factory:
+                chat = self._chat_factory(cfg, timeout)
+            elif api:
+                chat = self._api_chat(cfg, settings, timeout)
+            else:
+                chat = self._default_chat(cfg, settings, timeout)
+            user = build_user_prompt(query, candidates)
+            if api:
+                from app.core.redaction import masked
+
+                user = masked(user)                                        # 바깥으로 나가는 글은 한 번 더 가린다(전화 · 이메일 같은 것)
+            picks = parse_ranking(chat.json(SYSTEM, user), len(candidates), min(cfg.max_picks, top_k))
         except Exception as exc:                                           # noqa: BLE001 — 시간 초과 · 연결 · 형식 모두 지금 방식으로(이유는 남긴다)
             breaker.failure()
             STATS["failed"] += 1
@@ -399,6 +439,13 @@ class PolicyRerank:
 
         path = llm_failover.current_path()
         return float((path or {}).get("seconds") or 0.0)
+
+    @staticmethod
+    def _api_chat(cfg: RerankSettings, settings: Any, timeout: float) -> Any:
+        from app.infrastructure.llm_failover import OpenAIChat
+
+        model = (cfg.api_model or getattr(settings, "llm_failover_model", "") or getattr(settings, "llm_model", "")).strip()
+        return OpenAIChat(api_key=settings.openai_api_key_server.strip(), model=model, timeout=timeout)
 
     @staticmethod
     def _default_chat(cfg: RerankSettings, settings: Any, timeout: float) -> Any:

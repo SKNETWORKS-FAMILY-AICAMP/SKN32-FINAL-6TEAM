@@ -94,6 +94,10 @@ def closed_on(closed_days: str | None, at: datetime, holiday: Any = None) -> boo
 
 KST = timezone(timedelta(hours=9))
 _TIME_RANGE = re.compile(r"(\d{1,2}):(\d{2})\s*[~\-–]\s*(\d{1,2}):(\d{2})")
+#: 시간 구간 바로 뒤에 요일 말이 오면 새 조각이다 — 「평일 : 14:10 ~ 18:00 토 일 공휴일 : 12:10 ~ 18:00」(2026-10-15, `hours_text._NEXT_LABEL` 과 같다).
+#: 전에는 「/」로만 갈라 두 구간이 모든 요일에 붙어, 수요일 13:00 을 「열림」(주말 12:10 구간)으로 냈다.
+_NEXT_LABEL = re.compile(rf"({_TIME_RANGE.pattern})\s*,?\s*"
+                         r"(?=평일|주말|매일|공휴일|[월화수목금토일](?:요일)?(?:\s*[~\-·,:]|\s|$))")
 _ALWAYS_OPEN = re.compile(r"상시|24\s*시간")
 #: 이 말이 있으면 원문을 해석하지 않는다(모름). 층·시설·계절·휴게처럼 시간표 하나로 못 읽는 표현이다.
 _HOURS_UNSURE = ("상이", "참조", "확인", "문의", "별도", "변동", "브레이크", "휴게", "[", "<br", "하계", "동계",
@@ -141,7 +145,7 @@ def open_at(business_hours: str | None, at: datetime) -> bool | None:
     raw = (business_hours or "").strip()
     if not raw or any(marker in raw for marker in _HOURS_UNSURE):
         return None
-    text = re.sub(r"\(.*?\)", "", raw).strip()
+    text = _NEXT_LABEL.sub(r"\1 / ", re.sub(r"\(.*?\)", "", raw).strip())
     ranges_found = _TIME_RANGE.search(text) is not None
     if _ALWAYS_OPEN.search(text):
         return True if not ranges_found else None
