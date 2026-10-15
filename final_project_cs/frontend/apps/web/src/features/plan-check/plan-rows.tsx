@@ -270,14 +270,22 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
 /**
  * `[2026-10-13 사용자 결정 — 수정 모드]` A stop of the registered trip that is over: the trip screen's thin grey line (its name, 「~end」). It is not in the edit — the server keeps it as it is —
  * so it has no tools, and pressed it says why.
+ * `[2026-10-15 사용자 지적 — ST4F-490]` Only a stop that is over is called over (`fixedReason`): the others say what keeps them out of the edit. A locked stay, flight or booking is not here —
+ * it is a card of the edit, locked (pressed, it says it is locked).
  */
 function PastItemRow({ item, ctx }: { item: PlanItem; ctx: RowContext }) {
   const t = useT();
-  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-past data-passed>
+  const why = item.fixedReason === "overnight" ? t("자정을 넘는 일정이라 여기서는 바꿀 수 없어요", "This stop runs past midnight, so it cannot change here")
+    : item.fixedReason === "no_place" ? t("장소 위치를 몰라 여기서는 바꿀 수 없어요", "Its place has no position, so it cannot change here")
+    : item.fixedReason === "kind" ? t("이 일정은 여기서 바꿀 수 없어요", "This stop cannot change here")
+    : item.fixedReason === "past" ? t("지난 일정이라 바꿀 수 없어요", "This stop is over, so it cannot change")
+    : t("여기서는 바꿀 수 없는 일정이에요", "This stop cannot change here");
+  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-past
+    data-passed={item.fixedReason === "past" || undefined} data-fixed={item.fixedReason ?? undefined}>
     <span className={styles.time}>{item.startsAt}</span>
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
-    <div><Act className={styles.pastLine} why={t("지난 일정이라 바꿀 수 없어요", "This stop is over, so it cannot change")} explain={ctx.explain} onPress={() => undefined}
-      aria-label={t(`${item.title} · 지난 일정`, `${item.title} · past`)}><span>{item.title}</span><small>~{item.endsAt || "—"}</small></Act></div>
+    <div><Act className={styles.pastLine} why={why} explain={ctx.explain} onPress={() => undefined}
+      aria-label={item.fixedReason === "past" ? t(`${item.title} · 지난 일정`, `${item.title} · past`) : t(`${item.title} · 바꿀 수 없는 일정`, `${item.title} · cannot change here`)}><span>{item.title}</span><small>~{item.endsAt || "—"}</small></Act></div>
   </li>;
 }
 

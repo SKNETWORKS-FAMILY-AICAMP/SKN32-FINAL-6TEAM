@@ -721,14 +721,17 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       await actions.lock!(item.id, on);
       if (on && timeEdit.edit?.id === item.id) timeEdit.close();
       return on ? { text: t(`${eul(item.title)} 꼭 넣을 일정으로 고정했어요`, `Locked ${item.title} in`), sub: t("다시 짜거나 바꿔도 빠지지 않게 서버에 알렸어요", "Re-planning and recommendations keep it") }
-        : { text: t(`${item.title} 고정을 풀었어요`, `Unlocked ${item.title}`), sub: t("이제 바꾸거나 삭제할 수 있어요", "It can be changed or deleted now") };
+        // `[2026-10-15 사용자 결정 — 연결 유지 + 안내]` A vendor's booking is not changed by changing the stop: it is said when it is unlocked.
+        : { text: t(`${item.title} 고정을 풀었어요`, `Unlocked ${item.title}`), sub: item.vendorBooking ? t("이제 바꾸거나 삭제할 수 있어요 · 업체 예약은 따로 취소·변경해야 해요", "It can be changed or deleted now · change or cancel the booking with the vendor yourself")
+          : t("이제 바꾸거나 삭제할 수 있어요", "It can be changed or deleted now") };
     }, true);
   }
   function unlockAll() {
+    const vendor = view.items.some((item) => item.locked && item.vendorBooking);
     void run(async () => {
       const count = await actions.unlockAll!();
       requestAnimationFrame(() => document.getElementById("plan-recommend-all")?.focus({ preventScroll: true }));
-      return { text: t(`일정 ${count}개의 잠금을 모두 풀었어요`, `Unlocked all ${count} stops`) };
+      return { text: t(`일정 ${count}개의 잠금을 모두 풀었어요`, `Unlocked all ${count} stops`), ...(vendor ? { sub: t("업체 예약은 따로 취소·변경해야 해요", "Change or cancel vendor bookings with the vendor yourself") } : {}) };
     }, true);
   }
   /**

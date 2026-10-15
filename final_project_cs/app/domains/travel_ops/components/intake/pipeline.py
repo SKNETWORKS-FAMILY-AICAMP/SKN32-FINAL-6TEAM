@@ -272,6 +272,7 @@ def reap_stalled(conn, *, tenant_id: str, intake_id: UUID) -> None:
 
 def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[str, Any] | None:
     """확인 화면이 읽는 모양. ★남의 접수는 없는 것과 같다(None)."""
+    from .reopen import frozen_entries as reopen_frozen_entries
     reap_stalled(conn, tenant_id=tenant_id, intake_id=intake_id)
     with conn.cursor() as cur:
         cur.execute("SELECT status, stage, revision, fatal_code, fatal_detail, trip_id, received_at, "
@@ -326,7 +327,10 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "revision": revision, "fatal": {"code": fatal_code, "detail": fatal_detail} if fatal_code else None,
             "trip_id": str(trip_id) if trip_id else None, "received_at": received_at.isoformat(),
             # ★`[2026-10-13]` 등록한 여행을 다시 연 수정 접수(`reopen.py`) — 어느 여행의 몇 판인가 · 접수에 넣지 않고 그대로 두는 일정. 보통 접수는 None
-            "reopen": ({"trip_id": str(reopen_trip), "version": reopen_version, "frozen_item_ids": list(frozen or [])}
+            "reopen": ({"trip_id": str(reopen_trip), "version": reopen_version,
+                        "frozen_item_ids": [e["item_id"] for e in reopen_frozen_entries(frozen)],
+                        # `[2026-10-15 ST4F-490]` 고정한 이유 — 화면은 `past` 만 「지난 일정」이라 부른다
+                        "frozen": reopen_frozen_entries(frozen)}
                        if reopen_trip else None),
             "sources": out_sources, "check": check, "review": review, "review_error": review_error,
             # ★`[2026-10-06]` 로딩 중 질문 — 계획서만으로 알 수 없는 것만(쓰는 문항만, 최대 3). 답은 `POST …/survey` 로 한 문항씩 저장한다(`survey_answers.py`)

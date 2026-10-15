@@ -100,7 +100,8 @@ def test_reopen_puts_only_the_stops_still_ahead_into_a_check_screen_intake(api):
     by_title = {i.title: str(i.item_id) for i in items}
     assert view["status"] == "review" and view["trip_id"] is None
     assert view["reopen"] == {"trip_id": trip["trip_id"], "version": trip["version"],
-                              "frozen_item_ids": [by_title["경복궁"]]}          # ★끝난 일정은 접수에 넣지 않는다
+                              "frozen_item_ids": [by_title["경복궁"]],          # ★끝난 일정은 접수에 넣지 않는다
+                              "frozen": [{"item_id": by_title["경복궁"], "reason": "past"}]}   # 화면이 「지난 일정」이라 부르는 이유
     source = view["sources"][0]
     assert source["kind"] == "trip"
     assert [i["fields"]["title"]["value"] for i in source["items"]] == ["북촌한옥마을", "인사동", "N서울타워"]
@@ -374,6 +375,7 @@ def test_an_item_past_midnight_is_frozen_so_done_is_not_refused(api):
     _, items = _stored(api, trip["trip_id"])
     by_title = {i.title: str(i.item_id) for i in items}
     assert view["reopen"]["frozen_item_ids"] == [by_title["인사동"]]
+    assert view["reopen"]["frozen"] == [{"item_id": by_title["인사동"], "reason": "overnight"}]    # 지난 일정이 아니다 — 화면이 이유를 말한다
     assert [i["fields"]["title"]["value"] for i in view["sources"][0]["items"]] == ["북촌한옥마을"]
     source = view["sources"][0]["source_id"]
     view = _edit(api, key, view, {"source_id": source, "field": f"items[{_index(view, '북촌한옥마을')}].starts_at", "value": "10:30"})
@@ -382,3 +384,244 @@ def test_an_item_past_midnight_is_frozen_so_done_is_not_refused(api):
     assert done["changed"] is True and done["version"] == trip["version"] + 1
     kept = next(i for i in _stored(api, trip["trip_id"])[1] if i.title == "인사동")
     assert str(kept.item_id) == by_title["인사동"]                                          # 고정 일정은 같은 id 그대로
+
+
+# ── `[2026-10-15 ST4F-490]` 고정 일정 · 잠금 일정 옆 구간 — 재검사가 보고, 「완료」 때 이동이 남는다 ──
+# 근거: Codex 검토 records/reports/debugs/2026-10-14_0922_수정모드_develop_통합본_검토.md ② · 교차검증 재현 4가지
+# `[2026-10-15 사용자 결정]` 항공 · 숙소 · 업체 예약 일정은 고정이 아니라 **잠금**으로 접수에 들어온다(풀면 고칠 수 있다). 고정은 지난 일정 등뿐이다
+
+def _fake_calc(monkeypatch):
+    from app.domains.travel_ops.components.intake import review as review_module
+
+    from .test_intake_move_mode import FakeCalc
+
+    fake = FakeCalc()                                                              # 시험용 이동 계산기(mock) — 지하철 16분 + 여유 10분
+    monkeypatch.setattr(review_module, "default_engine", fake.factory)
+    return fake
+
+
+def _trip_of(api, key: str, places: list, items: list, request_id: str) -> dict:
+    body = {"request_id": request_id, "title": "고정 일정 옆 구간", "locale": "ko", "party_size": 2, "constraints": {},
+            "places": [_place(*p) for p in places], "items": items}
+    response = api["client"].post("/v1/web/trips", json=body, headers=_h(key))
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+GIMPO, BUKCHON, HOTEL = ("gp", "김포공항", 37.5624, 126.8013), ("bc", "북촌한옥마을", 37.5826, 126.9836), ("ht", "롯데호텔 서울", 37.5651, 126.9810)
+
+
+def _review_id(view, title):
+    return next(i["id"] for i in view["review"]["items"] if i["title"] == title)
+
+
+def _boundary(view, a, b):
+    return next((m for m in view["review"]["moves"] if m["from"] == a and m["to"] == b), None)
+
+
+def _shift(api, key, view, title, start, end):
+    source = view["sources"][0]["source_id"]
+    index = _index(view, title)
+    return _edit(api, key, view, {"source_id": source, "field": f"items[{index}].starts_at", "value": start},
+                 {"source_id": source, "field": f"items[{index}].ends_at", "value": end})
+
+
+def test_a_move_after_a_flight_is_checked_and_kept_when_the_next_stop_moves(api, monkeypatch):
+    """재현 ① 항공 → 이동 → 활동, 활동 시작을 10분 늦추면 새 판에 이동이 없었다. 항공은 잠금으로 접수에 들어온다."""
+    _fake_calc(monkeypatch)
+    key = _user(api)
+    trip = _trip_of(api, key, [GIMPO, BUKCHON], [
+        _item(1, "flight", "김포 도착", "gp", TOMORROW, "09:00", "10:00"),
+        _item(2, "mobility", "김포공항 → 북촌한옥마을", None, TOMORROW, "10:30", "11:20"),
+        _item(3, "activity", "북촌한옥마을", "bc", TOMORROW, "11:30", "13:00")], "frozen-flight")
+    flight = next(i for i in _stored(api, trip["trip_id"])[1] if i.kind == "flight")
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    assert view["reopen"]["frozen"] == []                                             # ★항공은 고정이 아니다(지난 일정이 아니다)
+    plane = next(i for i in view["review"]["items"] if i["title"] == "김포 도착")
+    assert (plane["kind"], plane["locked"]) == ("flight", True)                       # 잠금으로 들어온다
+    seen = _boundary(view, plane["id"], _review_id(view, "북촌한옥마을"))
+    assert seen is not None and seen["status"] == "keep"                              # ★재검사가 항공 ↔ 다음 일정 구간을 본다
+    view = _shift(api, key, view, "북촌한옥마을", "11:40", "13:10")
+    done = _confirm(api, key, view)
+    assert done["changed"] is True
+    _, after = _stored(api, trip["trip_id"])
+    assert [i.kind for i in after] == ["flight", "mobility", "activity"]              # ★이동이 남는다(전에는 [flight, activity])
+    assert after[0].item_id == flight.item_id                                          # 잠금만 보고 바뀌었다고 하지 않는다 — 같은 항공 그대로
+    move = after[1]
+    assert move.starts_at >= flight.ends_at and move.ends_at <= datetime.fromisoformat(_at(TOMORROW, "11:40"))
+    assert move.detail.get("route_def")                                                # 검증한 경로 — 출발 알림이 이 항목으로 나간다
+
+
+def test_a_move_after_a_stop_that_is_over_today_is_kept_when_the_next_stop_moves(api, monkeypatch):
+    """재현 ② 오늘 끝난 일정 → 출발 전 이동 → 다음 일정 고침 → 이동이 사라졌다."""
+    import pytest
+
+    _fake_calc(monkeypatch)
+    now = datetime.now(KST)
+    a0, a1 = now - timedelta(hours=2), now - timedelta(minutes=30)
+    b0, b1 = now + timedelta(hours=2), now + timedelta(hours=3)
+    if a0.date() != now.date() or (b1 + timedelta(minutes=10)).date() != now.date():
+        pytest.skip("자정 근처라 오늘 안에 지난 일정과 앞으로의 일정을 둘 수 없다")
+    today = now.date().isoformat()
+
+    def hm(t):
+        return t.strftime("%H:%M")
+
+    key = _user(api)
+    trip = _trip_of(api, key, [GIMPO, BUKCHON], [
+        _item(1, "activity", "김포공항", "gp", today, hm(a0), hm(a1)),
+        _item(2, "mobility", "김포공항 → 북촌한옥마을", None, today, hm(b0 - timedelta(minutes=40)), hm(b0 - timedelta(minutes=5))),
+        _item(3, "activity", "북촌한옥마을", "bc", today, hm(b0), hm(b1))], "frozen-past")
+    past = next(i for i in _stored(api, trip["trip_id"])[1] if i.title == "김포공항")
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    assert view["reopen"]["frozen"] == [{"item_id": str(past.item_id), "reason": "past"}]   # 끝난 일정은 고정
+    assert _boundary(view, str(past.item_id), _review_id(view, "북촌한옥마을")) is not None
+    view = _shift(api, key, view, "북촌한옥마을", hm(b0 + timedelta(minutes=10)), hm(b1 + timedelta(minutes=10)))
+    _confirm(api, key, view)
+    _, after = _stored(api, trip["trip_id"])
+    assert [i.kind for i in after] == ["activity", "mobility", "activity"]
+
+
+def test_the_morning_move_from_the_stay_is_kept_when_the_first_stop_of_the_day_moves(api, monkeypatch):
+    """재현 ③ 숙소 여행에서 그날 첫 일정을 고치면 아침 「숙소 → 첫 일정」 이동이 사라졌다. 묵는 중인 숙소는 잠금으로 들어온다(체크아웃 날 포함)."""
+    _fake_calc(monkeypatch)
+    key = _user(api)
+    stay = {**_item(1, "lodging", "롯데호텔 서울", "ht", YESTERDAY, "15:00", "15:00"), "ends_at": _at(TOMORROW, "11:00")}
+    morning = {**_item(2, "mobility", "롯데호텔 서울 → 북촌한옥마을", None, TOMORROW, "09:30", "09:50"), "detail": {"from_stay": True}}
+    trip = _trip_of(api, key, [HOTEL, BUKCHON], [stay, morning, _item(3, "activity", "북촌한옥마을", "bc", TOMORROW, "10:00", "11:30")],
+                    "frozen-stay")
+    hotel = next(i for i in _stored(api, trip["trip_id"])[1] if i.kind == "lodging")
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    assert view["reopen"]["frozen"] == []                                             # ★아직 체크아웃 전 — 고정이 아니다
+    stay_item = next(i for i in view["review"]["items"] if i["kind"] == "lodging")
+    assert (stay_item["locked"], stay_item["date"], stay_item["end_date"], stay_item["ends_at"]) == (True, YESTERDAY, TOMORROW, "11:00")
+    seen = _boundary(view, stay_item["id"], _review_id(view, "북촌한옥마을"))
+    assert seen is not None and seen.get("from_stay") is True                         # ★재검사가 아침 구간을 본다
+    view = _shift(api, key, view, "북촌한옥마을", "10:10", "11:40")
+    _confirm(api, key, view)
+    _, after = _stored(api, trip["trip_id"])
+    assert next(i for i in after if i.kind == "lodging").item_id == hotel.item_id    # 숙소는 그대로(체크아웃 날도 그대로)
+    first = next(n for n, i in enumerate(after) if i.title == "북촌한옥마을")
+    assert after[first - 1].kind == "mobility" and after[first - 1].detail.get("from_stay") is True   # ★아침 이동이 남는다
+
+
+def test_a_stop_moved_too_close_to_a_flight_is_caught_by_the_check_and_refused_on_done(api, monkeypatch):
+    """재현 ④ 비행기 도착 5분 뒤 13 km 떨어진 곳에서 시작하도록 고쳐도 재검사 ready · 「완료」 200 이었다(갈 수 없는 시각 통과)."""
+    _fake_calc(monkeypatch)
+    key = _user(api)
+    trip = _trip_of(api, key, [GIMPO, BUKCHON], [
+        _item(1, "flight", "김포 도착", "gp", TOMORROW, "09:00", "10:00"),
+        _item(2, "mobility", "김포공항 → 북촌한옥마을", None, TOMORROW, "10:30", "11:20"),
+        _item(3, "activity", "북촌한옥마을", "bc", TOMORROW, "11:30", "13:00")], "frozen-late")
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    view = _shift(api, key, view, "북촌한옥마을", "10:05", "11:30")
+    late = _boundary(view, _review_id(view, "김포 도착"), _review_id(view, "북촌한옥마을"))
+    assert late is not None and late["status"] == "review" and late["slack_min"] < 0    # ★늦게 닿는다 — 확인 필요
+    assert view["review"]["ready"] is False
+    refused = _confirm(api, key, view, status=422)
+    assert refused["error"]["code"] == "itinerary_infeasible", refused
+    assert _stored(api, trip["trip_id"])[0]["version"] == trip["version"]           # 아무것도 쓰지 않았다
+
+
+def test_a_fixed_stop_between_two_stops_splits_the_way_into_two_moves(api, monkeypatch):
+    """고정 일정이 접수 일정 둘 사이에 끼면 그 둘을 곧장 잇지 않는다 — 고정 일정을 거쳐 두 구간으로 본다.
+    고정 일정 = 접수가 다루지 않는 종류(`kind` — 항공 · 숙소는 이제 잠금으로 들어온다)."""
+    _fake_calc(monkeypatch)
+    key = _user(api)
+    trip = _trip_of(api, key, [GIMPO, BUKCHON, ("is", "인사동", 37.5740, 126.9850)], [
+        _item(1, "activity", "북촌한옥마을", "bc", TOMORROW, "08:00", "09:00"),
+        _item(2, "event", "김포 행사", "gp", TOMORROW, "11:00", "12:00"),
+        _item(3, "activity", "인사동", "is", TOMORROW, "15:00", "16:00")], "frozen-between")
+    fixed = next(i for i in _stored(api, trip["trip_id"])[1] if i.kind == "event")
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    assert view["reopen"]["frozen"] == [{"item_id": str(fixed.item_id), "reason": "kind"}]
+    a, c, f = _review_id(view, "북촌한옥마을"), _review_id(view, "인사동"), str(fixed.item_id)
+    assert _boundary(view, a, f) is not None and _boundary(view, f, c) is not None
+    assert _boundary(view, a, c) is None                                               # 이웃이 아니다
+
+
+# ── `[2026-10-15 사용자 결정 — ST4F-490]` 잠금 일정(숙소 · 항공 · 업체 예약)은 풀면 고칠 수 있다 ──
+
+def _unlock_and_shift(api, key, view, title, start, end):
+    source = view["sources"][0]["source_id"]
+    index = _index(view, title)
+    return _edit(api, key, view, {"source_id": source, "field": f"items[{index}].locked", "value": False},
+                 {"source_id": source, "field": f"items[{index}].starts_at", "value": start},
+                 {"source_id": source, "field": f"items[{index}].ends_at", "value": end})
+
+
+def test_a_locked_flight_needs_unlocking_and_then_its_time_can_change(api, monkeypatch):
+    """내일 항공은 지난 일정이 아니다 — 잠금을 풀고 시각을 바꾸면 새 판의 항공이 원래 항공을 가리키고 세부(편명)는 이어진다."""
+    _fake_calc(monkeypatch)
+    key = _user(api)
+    plane = {**_item(1, "flight", "김포 도착", "gp", TOMORROW, "09:00", "10:00"), "detail": {"flight_no": "KE1234"}}
+    trip = _trip_of(api, key, [GIMPO, BUKCHON], [plane, _item(2, "activity", "북촌한옥마을", "bc", TOMORROW, "13:00", "14:30")],
+                    "locked-flight")
+    flight = next(i for i in _stored(api, trip["trip_id"])[1] if i.kind == "flight")
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    source = view["sources"][0]["source_id"]
+    refused = _edit(api, key, view, {"source_id": source, "field": f"items[{_index(view, '김포 도착')}].starts_at", "value": "10:00"},
+                    status=409)
+    assert refused["error"]["code"] == "item_locked"                                    # 잠긴 채로는 못 바꾼다
+    view = _unlock_and_shift(api, key, view, "김포 도착", "10:00", "11:00")
+    assert next(i for i in view["review"]["items"] if i["title"] == "김포 도착")["locked"] is False
+    done = _confirm(api, key, view)
+    assert done["changed"] is True
+    new = next(i for i in _stored(api, trip["trip_id"])[1] if i.kind == "flight")
+    assert new.item_id != flight.item_id and new.replaces_item_id == flight.item_id
+    assert new.starts_at == datetime.fromisoformat(_at(TOMORROW, "10:00")) and new.detail.get("flight_no") == "KE1234"
+    assert not new.detail.get("customer_pinned")                                         # 정책 잠금은 고객 잠금으로 따로 적지 않는다
+    again = _reopen(api, key, trip["trip_id"], done["version"])
+    assert next(i for i in again["review"]["items"] if i["title"] == "김포 도착")["locked"] is True   # 다시 열면 다시 잠금
+
+
+def test_unlocking_a_flight_without_changing_it_writes_no_new_version(api, monkeypatch):
+    _fake_calc(monkeypatch)
+    key = _user(api)
+    trip = _trip_of(api, key, [GIMPO, BUKCHON], [_item(1, "flight", "김포 도착", "gp", TOMORROW, "09:00", "10:00"),
+                                                  _item(2, "activity", "북촌한옥마을", "bc", TOMORROW, "13:00", "14:30")], "unlock-only")
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    source = view["sources"][0]["source_id"]
+    view = _edit(api, key, view, {"source_id": source, "field": f"items[{_index(view, '김포 도착')}].locked", "value": False})
+    done = _confirm(api, key, view)
+    assert (done["changed"], done["version"]) == (False, trip["version"])               # 잠금을 풀기만 한 것은 바뀐 것이 아니다
+
+
+def test_a_vendor_booked_stop_enters_locked_and_keeps_its_booking_after_a_time_change(api, monkeypatch):
+    """업체 예약 표에 묶인 일정 — 잠금 + `vendor_booking` 으로 들어오고, 시각을 고쳐도 같은 업체 예약을 가리킨다(연결 유지)."""
+    from uuid import uuid4
+
+    _fake_calc(monkeypatch)
+    key = _user(api)
+    trip = _trip_of(api, key, [BUKCHON, ("is", "인사동", 37.5740, 126.9850)], [
+        _item(1, "activity", "북촌한옥마을", "bc", TOMORROW, "10:00", "11:30"),
+        _item(2, "activity", "인사동", "is", TOMORROW, "14:00", "15:30")], "vendor-booked")
+    stop = next(i for i in _stored(api, trip["trip_id"])[1] if i.title == "북촌한옥마을")
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT customer_id FROM trips WHERE trip_id=%s", (trip["trip_id"],))
+            customer = cur.fetchone()[0]
+            cur.execute("INSERT INTO bookings (tenant_id,customer_id,place_id,booking_no,kind,status,starts_at,party_size) "
+                        "VALUES (%s,%s,%s,%s,'activity','confirmed',%s,2) RETURNING booking_id",
+                        (api["tenant"], customer, stop.place_id, f"BK-{uuid4().hex[:8]}", stop.starts_at))
+            booking = cur.fetchone()[0]
+            cur.execute("UPDATE itinerary_items SET booking_id=%s WHERE trip_id=%s AND item_id=%s", (booking, trip["trip_id"], stop.item_id))
+        conn.commit()
+    try:
+        view = _reopen(api, key, trip["trip_id"], trip["version"])
+        assert view["reopen"]["frozen"] == []                                            # ★전에는 업체 예약 일정도 고정이었다
+        seen = next(i for i in view["review"]["items"] if i["title"] == "북촌한옥마을")
+        assert (seen["locked"], seen["vendor_booking"], seen["booked"]) == (True, True, True)
+        assert next(i for i in view["review"]["items"] if i["title"] == "인사동")["vendor_booking"] is False
+        view = _unlock_and_shift(api, key, view, "북촌한옥마을", "10:30", "12:00")
+        done = _confirm(api, key, view)
+        assert done["changed"] is True
+        new = next(i for i in _stored(api, trip["trip_id"])[1] if i.title == "북촌한옥마을")
+        assert new.replaces_item_id == stop.item_id and new.booking_id == booking        # ★같은 업체 예약을 가리킨다
+        assert "booking" not in new.detail                                               # 고객이 적은 예약 표시를 지어 붙이지 않는다
+    finally:
+        with get_connection() as conn:                                                   # 픽스처는 예약 표를 안 지운다 — 장소를 지우기 전에 치운다
+            with conn.cursor() as cur:
+                cur.execute("UPDATE itinerary_items SET booking_id=NULL WHERE booking_id=%s", (booking,))
+                cur.execute("DELETE FROM bookings WHERE booking_id=%s", (booking,))
+            conn.commit()

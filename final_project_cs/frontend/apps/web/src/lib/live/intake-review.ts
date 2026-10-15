@@ -60,6 +60,8 @@ export interface ReviewItem {
   place: ReviewPlace | null;
   /** The plan says it is booked (`true`), says it is not (`false`), or says nothing (`null`; also an older server). */
   booked?: boolean | null;
+  /** `[2026-10-15 ST4F-490]` An edit's stop tied to a vendor's booking: unlocking it does not change that booking (the customer changes it with the vendor). Absent on an older server. */
+  vendor_booking?: boolean;
   candidates_hint: number | null;
   rows?: CheckLine<ItemRow>[];
   /**

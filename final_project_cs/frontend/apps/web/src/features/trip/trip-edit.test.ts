@@ -32,6 +32,19 @@ describe("the edit of a registered trip", () => {
     expect(view.items[0]).toMatchObject({ locked: false, checks: [], verdict: "keep", startsAt: "10:00", endsAt: "12:00", coordinates: { lat: 37.57, lng: 126.98 } });
   });
 
+  it("`[2026-10-15 ST4F-490]` puts a move beside a fixed stop after its grey line, and the morning move from a fixed stay on the day it goes to", () => {
+    const stayTrip = { ...trip, stops: [...trip.stops, { ...stop("h", "2026-10-14", "15:00"), endDate: "2026-10-16" }] };
+    const boundary = { ...edit, moves: [move("b", "0-0", 1), { ...move("h", "0-1", 2), fromStay: true }] };
+    const view = withTrip(boundary, stayTrip, ["a", "b", "h"]);
+    expect(view.moves.map((entry) => [entry.fromId, entry.day])).toEqual([["b", 2], ["h", 3]]);   // the stay is on day 1 (check-in) — its morning move is on day 3
+  });
+
+  it("`[2026-10-15 ST4F-490]` carries why each grey stop is kept out — only an over stop is called over", () => {
+    const view = withTrip(edit, trip, ["a", "b"], { a: "past", b: "overnight" });
+    expect(view.items.slice(0, 2).map((entry) => [entry.id, entry.past, entry.fixedReason])).toEqual([["a", true, "past"], ["b", true, "overnight"]]);
+    expect(withTrip(edit, trip, ["a"]).items[0].fixedReason).toBeNull();               // an edit opened before the server said why
+  });
+
   it("leaves a trip's stop out when the server did not say it is kept as it is (it is in the edit, under the intake's own id)", () => {
     const view = withTrip(edit, trip, []);
     expect(view.items.map((entry) => entry.id)).toEqual(["0-0", "0-1"]);

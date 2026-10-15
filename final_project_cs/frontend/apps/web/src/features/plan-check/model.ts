@@ -78,6 +78,12 @@ export interface PlanItem {
    * nothing pushes it. Absent on the plan check of a new plan.
    */
   past?: boolean;
+  /**
+   * `[2026-10-15 ST4F-490]` Why a `past` stop is not in the edit — only `past` is called over; the others say what keeps them out (`reopen.frozen`). Null when the server did not say.
+   */
+  fixedReason?: "past" | "overnight" | "no_place" | "kind" | null;
+  /** `[2026-10-15 사용자 결정 — 연결 유지 + 안내]` Tied to a vendor's booking: unlocking it says the booking is changed with the vendor (`vendor_booking`). */
+  vendorBooking?: boolean;
 }
 
 /**
