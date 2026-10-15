@@ -93,6 +93,9 @@ TourAPI 응답이 비었거나 그 타입에 필드가 없어 빈 칸을, 사람
 - **DB 적재**(`scripts/enrich_place_catalog_from_csv.py`): DB 로 가는 사람 값은 영업시간 글 두 칸(`business_hours` · `closed_days` → `catalog_hours`)뿐이다.
   그 행은 `hours_read.source = "official_web"` 에 `hours_read.field_sources`(칸별 url · 확인한 날)를 함께 적는다 — 관광공사 원문(`activity_csv`)으로 적지 않는다.
   `field_sources` 형식이 틀리면 DB 에 쓰지 않고 멈춘다. 다른 사람 값(`tel` · `fee` 등)은 이 스크립트가 원래 DB 로 옮기지 않는 칸이다.
+- `[2026-10-15 사용자 「2번 진행」]` **나머지 사실 칸**(`scripts/activity/load_csv_facts.py`): `tel` · `homepage` · `fee` · `reservation_info` · `spendtime` · `capacity` · `pet` · `age_limit` · `lDongSignguCd` 와 `field_sources` 를
+  `place_catalog.raw_json` 의 같은 키에 CSV 와 같게 맞춘다(CSV 가 빈 칸이면 그 키를 지운다). 소개글 · 체험 안내는 옮기지 않는다. 기본은 세어 보기, `--apply` 는 백업 뒤, `--restore` 로 되돌린다.
+  화면: 사람 · Claude 가 채운 연락처는 `place_info.source_note` 에 「연락처: 직접 확인(날짜)」 · 「연락처: 공식 페이지(날짜 AI 확인)」를 붙인다(`catalog_fact_note`). 요금 · 예약 · 연령은 DB 에 있지만 아직 읽는 화면 · 답변이 없다.
 - **새벽 작업**(`catalog_hours.prefill`, 관광공사 목록 수정 시각이 바뀐 곳을 다시 읽는다): `official_web` 행은 **관광공사 응답이 채워진 칸만** 관광공사 값으로 바꾸고 그 칸의 출처를 지운다.
   두 칸 다 비어 오면 사람 값을 그대로 두고 목록 수정 시각만 맞춘다(다음 틱이 또 읽지 않게). 관광공사 원문 행은 전처럼 응답으로 덮어쓴다.
 - **보이는 곳**: 일정 장소 정보(`place_info`)의 `source_note` 에 「운영시간 · 휴무일: 공식 페이지(확인한 날)」를 덧붙이고 `hours_evidence` 에 url 을 싣는다([rest-endpoints.md](../external/rest-endpoints.md)). 채팅의 「저장된 값」 줄도 같은 표시를 붙인다.
