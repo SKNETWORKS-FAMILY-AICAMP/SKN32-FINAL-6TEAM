@@ -35,7 +35,7 @@ def _chunk(n: int, score: float) -> PolicyChunk:
 
 
 def _cfg(**over) -> pr.RerankSettings:
-    base = dict(mode="on", first_stage="operating", candidates=5, max_picks=3, min_score=0.5, model="", timeout_seconds=5.0,
+    base = dict(mode="on", first_stage="operating", backend="local", api_model="", api_timeout_seconds=6.0, candidates=5, max_picks=3, min_score=0.5, model="", timeout_seconds=5.0,
                 min_remaining_seconds=2.0, total_seconds=14.0, failures=2, open_seconds=60.0, embed_timeout_seconds=30.0)
     base.update(over)
     return pr.RerankSettings(**base)
@@ -173,14 +173,15 @@ def test_no_candidates_returns_empty_without_calling_the_model():
 # ── ④ 가드레일 ──
 def test_shipped_guardrails_are_off_and_valid():
     cfg = pr.load_settings(get_guardrails())
-    assert cfg.mode == "off" and cfg.first_stage == "operating" and cfg.candidates == 20 and cfg.max_picks == 3
+    assert cfg.mode == "off" and cfg.first_stage == "operating" and cfg.candidates == 20 and cfg.max_picks == 3 and cfg.backend == "local"
     assert cfg.total_seconds == 14.0 and cfg.min_score == 0.55
 
 
-@pytest.mark.parametrize("key,value", [("mode", True), ("mode", "maybe"), ("first_stage", "dense")])
+@pytest.mark.parametrize("key,value", [("mode", True), ("mode", "maybe"), ("first_stage", "dense"), ("backend", "cloud")])
 def test_bad_guardrail_values_are_rejected(key, value):
     values = {"mode": "on", "first_stage": "operating", "candidates": 20, "max_picks": 3, "min_score": 0.55, "model": "", "timeout_seconds": 5,
-              "min_remaining_seconds": 2, "total_seconds": 15, "failures": 3, "open_seconds": 60, "embed_timeout_seconds": 30}
+              "min_remaining_seconds": 2, "total_seconds": 15, "failures": 3, "open_seconds": 60, "embed_timeout_seconds": 30,
+              "backend": "local", "api_model": "", "api_timeout_seconds": 6}
     values[key] = value
 
     class G:
@@ -190,6 +191,44 @@ def test_bad_guardrail_values_are_rejected(key, value):
     with pytest.raises(ValueError):
         pr.load_settings(G())
     assert ConfigError  # (가져오기 확인)
+
+
+# ── 유료 API 길(backend=api) ──
+def test_api_backend_masks_the_question_counts_the_budget_and_calls_the_model():
+    chat = _Chat({"ranking": [2]})
+    calls = []
+    obj, _ = _rerank(_cfg(backend="api"), chat, budget=lambda s: (lambda: calls.append(1) or True))
+    chunks, info = obj.search_detailed("t", "전화 010-1234-5678 로 연락 주세요 취소하면 환불돼요?", ["s"], top_k=3)
+    assert [c.chunk_no for c in chunks] == [2] and info["status"] == "ok" and info["backend"] == "api" and calls == [1]
+    assert "010-1234-5678" not in chat.calls[0][1] and "010-****-5678" in chat.calls[0][1]          # 바깥으로 나가는 글은 가린다
+
+
+def test_api_backend_does_not_call_when_the_budget_is_used_up():
+    chat = _Chat({"ranking": [2]})
+    obj, _ = _rerank(_cfg(backend="api"), chat, budget=lambda s: (lambda: False))
+    chunks, info = obj.search_detailed("t", "질문", ["s"], top_k=3)
+    assert info["status"] == "plain:budget_exhausted" and chat.calls == [] and len(chunks) == 3 and info["gate"] is None
+
+
+def test_api_backend_never_calls_when_there_is_no_budget_counter():
+    chat = _Chat({"ranking": [2]})
+    obj, _ = _rerank(_cfg(backend="api"), chat, budget=lambda s: None)
+    assert obj.search_detailed("t", "질문", ["s"], top_k=3)[1]["status"] == "plain:budget_unavailable" and chat.calls == []
+
+
+def test_api_backend_without_a_server_key_falls_back_to_plain():
+    app = SimpleNamespace(ollama_base_url="http://m", openai_api_key_server="", llm_failover_model="m")
+    obj = pr.PolicyRerank(base_search=_search([_chunk(n, .8) for n in range(1, 4)]), settings_loader=lambda: _cfg(backend="api"), sections=lambda: SECTIONS,
+                          prior_seconds=lambda: 0.0, app_settings=lambda: app)
+    chunks, info = obj.search_detailed("t", "질문", ["s"], top_k=3)
+    assert info["status"] == "plain:no_api_key" and len(chunks) == 3
+
+
+def test_api_chat_uses_the_failover_model_and_the_server_key_only():
+    app = SimpleNamespace(openai_api_key_server=" sk-test ", llm_failover_model="gpt-6-luna", llm_model="other")
+    chat = pr.PolicyRerank._api_chat(_cfg(backend="api"), app, 4.0)
+    assert chat.model == "gpt-6-luna" and chat.timeout == 4.0
+    assert pr.PolicyRerank._api_chat(_cfg(backend="api", api_model="x"), app, 4.0).model == "x"
 
 
 # ── ⑤ 고객 문장 색인 ──

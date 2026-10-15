@@ -77,7 +77,7 @@ Oracle ARM 기계에서 다음 명령을 사용한다. 무료 기존 자원만 �
 | `systemctl is-active tripilot-arm-serving.service` | 기존 추론 시험 유지 |
 | `docker ps --filter name=tripilot-arm-admin` | `healthy`, 관리자웹앱·운영 API |
 | `ss -ltn \| grep -E ':(3300\|8070) '` | `127.0.0.1` 에서만 받는다 |
-| `tailscale serve status` | 팀원 주소 `:3300` → `127.0.0.1:3300` |
+| `tailscale serve status` | 팀원 주소 `tcp://…:3300` → `127.0.0.1:3300` |
 
 실패 시 로그와 상태 파일을 먼저 보존한다. 필수 환경값·호환성·남은 공간 등 원인을 고친 후 같은 SHA를 재개한다. 앱 기동 실패를 시험 문항 성공으로 세지 않는다. 취약점 검사에서 나온 배포 원본의 의존성 문제도 공개 전 검토 항목으로 기록하며, 검증 없이 의존성 전체를 강제 갱신하지 않는다.
 
