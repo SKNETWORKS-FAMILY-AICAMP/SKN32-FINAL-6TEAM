@@ -46,10 +46,12 @@ def test_no_measurement_is_stated_as_no_measurement_not_guessed():
     assert row["verdict"] == "측정 없음"
 
 
-def test_no_row_claims_the_real_human_question_condition_or_a_rerun_on_todays_product():
-    """오늘 이 모듈에 든 값은 모두 저장된 결과를 다시 센 것이다 — 사람이 쓴 실제 질문 기준을 충족한 줄은 없다."""
+def test_no_row_claims_the_real_human_question_condition_and_a_rerun_is_marked_with_its_date():
+    """사람이 쓴 실제 질문 기준을 충족한 줄은 없다. 오늘 제품으로 다시 잰 줄은 날짜가 2026-10-15 이다(저장 결과를 다시 센 줄과 섞지 않는다)."""
     assert not any(m.real_human_questions for m in cc.MEASUREMENTS)
-    assert not any(m.reran_on_current_product for m in cc.MEASUREMENTS)
+    reran = [m for m in cc.MEASUREMENTS if m.reran_on_current_product]
+    assert reran and all(m.measured_on == "2026-10-15" for m in reran)
+    assert all(m.measured_on != "2026-10-15" for m in cc.MEASUREMENTS if not m.reran_on_current_product)
 
 
 def test_every_criterion_has_a_row_even_without_a_measurement():
