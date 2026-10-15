@@ -23,6 +23,7 @@ domain: travel
 - [여행 사양 허브](../../../wiki/index.md) — 현재 정본을 찾는 입구
 - [운영 앱 화면 API](admin-screen-api.md) — 운영 앱 검토 자료 · API 계약 협의 · 백엔드/프론트/통합 상태
 - [개발자 콘솔 API](dev-console-api.md) — 관리 앱 오류 검색 · 발생 상세의 표시 요구와 API 협의 · 연결 상태
+- [모델 경로](llm-model-route.md) — 관리 콘솔에서 로컬 모델 · SSH(런팟) · API 고르기, SSH 터널을 앱 밖에서 여는 설치 순서
 
 
 ## 이전 절 링크
