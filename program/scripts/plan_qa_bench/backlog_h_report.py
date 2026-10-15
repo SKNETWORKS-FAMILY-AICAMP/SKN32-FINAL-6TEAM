@@ -7,7 +7,7 @@ job=sys.argv[1]
 folder=HERE/'results/gpu_backlog_20261008'/job
 execution=json.loads((folder/'started.json').read_text(encoding='utf-8'))
 answer=folder/f"d_test_{execution['job']['tag']}.jsonl"
-gold_path=HERE/'results/hard_set/h_set_test_30_20261015_agree.json'
+gold_path=HERE.parents[2]/'datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json'
 gold=json.loads(gold_path.read_text(encoding='utf-8'))
 rows=[json.loads(l) for l in answer.read_text(encoding='utf-8').splitlines()]
 run={r['i']:r for r in rows}; ref={r['i']:r for r in gold}

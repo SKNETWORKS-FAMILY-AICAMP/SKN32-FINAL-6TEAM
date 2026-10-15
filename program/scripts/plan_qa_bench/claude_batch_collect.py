@@ -5,6 +5,7 @@ import json, os, shutil, sys
 from collections import Counter, defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 BD, TAG, SETS = sys.argv[1], sys.argv[2], sys.argv[3].split(',')
 MERGE = '--merge' in sys.argv
 KEY = {'fable': 'claude-fable-5.1-묶음', 'opus': 'claude-opus-5.5-묶음'}[TAG]
@@ -18,7 +19,7 @@ for name in SETS:
         continue
     ans = json.load(open(f, encoding='utf-8'))['answers']
     perm = json.load(open(os.path.join(BD, f'perm_{name}.json')))
-    job = json.load(open(os.path.join(HERE, 'fixtures', f'{name}.json'), encoding='utf-8'))['sets'][name]
+    job = json.load(open(fixture(f'{name}.json'), encoding='utf-8'))['sets'][name]
     ids = {i['id'] for i in job['items']}
     n = len(job['qs'])
     picks = [None] * n

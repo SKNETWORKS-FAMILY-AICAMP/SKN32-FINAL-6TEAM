@@ -5,6 +5,7 @@ import json, os, sys
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 OUT = sys.argv[1]
 os.makedirs(OUT, exist_ok=True)
 W = '월화수목금토일'
@@ -15,7 +16,7 @@ L = ['# 과제 — 고객 문장이 가리키는 일정 항목을 모두 찾기'
 idx = {}
 n = 0
 for w in SETS:
-    job = json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]
+    job = json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]
     items = sorted(job['items'], key=lambda i: (i['date'], i['start']))
     days = sorted({i['date'] for i in items})
 

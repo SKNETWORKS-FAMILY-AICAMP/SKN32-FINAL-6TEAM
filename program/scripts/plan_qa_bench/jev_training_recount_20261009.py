@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 HERE = Path(__file__).resolve().parent
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 RES = HERE / "results"
 SOURCES = {}
 
@@ -17,7 +18,7 @@ def read(path):
 
 
 def main():
-    gold = read(HERE / "fixtures/gold_sets.json")
+    gold = read(Path(fixture("gold_sets.json")))
     specs = [
         ("Winnow-E4B", "previous", "winnow_e4b", RES / "_pull/distill_eval"),
         ("jevify-gemma4-e4b", "previous", "jevify_e4b", RES / "_pull/distill_eval"),
@@ -31,9 +32,9 @@ def main():
         picks, correctness = {}, {}
         errors = saved = 0
         for suite in ["mix8", "mix9", "mix10", "mix11", "mix12"]:
-            fixture = read(HERE / f"fixtures/{suite}.json")["sets"][suite]["qs"]
+            fixture_qs = read(Path(fixture(f"{suite}.json")))["sets"][suite]["qs"]
             result = read(folder / f"eval_{tag}_{suite}.json")[tag + "#lora"]
-            assert len(result["picks"]) == len(fixture)
+            assert len(result["picks"]) == len(fixture_qs)
             errors += result["_errors"]
             # Older files expose only aggregate errors. These trained rows all
             # have zero errors; otherwise reject rather than credit a failed NONE.

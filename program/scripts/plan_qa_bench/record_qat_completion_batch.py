@@ -51,7 +51,7 @@ def main():
         registered = next(j for j in a['manifest']['jobs'] if j['id'] == job)
         assert r['execution']['job']['lora_sha256'] == registered['lora_sha256']
         answer = BASE/job/f"d_test_{r['execution']['job']['tag']}.jsonl"
-        goldpath = ROOT/('datasets/travel/mx_testset/mx_main_prompts.json' if mx else 'program/scripts/plan_qa_bench/results/hard_set/h_set_test_30_20261015_agree.json')
+        goldpath = ROOT/('datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json' if mx else 'datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json')
         rows = [json.loads(x) for x in answer.read_text(encoding='utf-8').splitlines()]
         run = {x['i']: x for x in rows}
         gold = {x['i']: x for x in read(goldpath)}

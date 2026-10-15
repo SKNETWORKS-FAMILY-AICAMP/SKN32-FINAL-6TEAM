@@ -7,12 +7,13 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 sys.path.insert(0, os.path.join(HERE, '..', 'eval_kit'))
 from stats import fmt_ratio, mcnemar_exact, paired_bootstrap_diff  # noqa: E402
 
 sys.stdout.reconfigure(encoding='utf-8')
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
-FX = {s: json.load(open(os.path.join(HERE, f'fixtures/{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
+FX = {s: json.load(open(fixture(f'{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
 
 
 def load(tag):

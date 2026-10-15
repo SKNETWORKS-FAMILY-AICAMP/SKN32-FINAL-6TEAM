@@ -5,11 +5,12 @@ import json, os, random, sys
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 OUT, SETS = sys.argv[1], sys.argv[2].split(',')
 os.makedirs(OUT, exist_ok=True)
 W = '월화수목금토일'
 for name in SETS:
-    _f = os.path.join(HERE, 'fixtures', f'{name}.json')
+    _f = fixture(f'{name}.json')
     if not os.path.exists(_f):
         _f = os.path.join(HERE, 'fixtures', 'distill', f'{name}.json')
     job = json.load(open(_f, encoding='utf-8'))['sets'][name]

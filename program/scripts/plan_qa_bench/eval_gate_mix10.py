@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 R = lambda f: os.path.join(HERE, 'results', f)
 meta = json.load(open(os.path.join(HERE, 'fixtures', 'gate_meta.json'), encoding='utf-8'))
 LAB = ['heavy', 'mix4', 'mix5', 'mix6', 'mix7']
@@ -20,7 +21,7 @@ chk = [m for m in rows['lab'] if m['set'] == 'mix9'][:20]
 diff = max(abs(float(clf.predict_proba(X[m['i']][None])[0, 1]) - old['p']['mix9'][str(m['qi'])]) for m in chk)
 print('mix9 재현 최대 차이', diff)
 assert diff < 1e-6, '분류기가 앞서 쓴 것과 다르다'
-st = json.load(open(os.path.join(HERE, 'fixtures', 'mix10.json'), encoding='utf-8'))['sets']['mix10']
+st = json.load(open(fixture('mix10.json'), encoding='utf-8'))['sets']['mix10']
 assert len(X10) == len(st['qs'])
 old['p']['mix10'] = {str(k): float(clf.predict_proba(X10[k][None])[0, 1]) for k in range(len(X10))}
 json.dump(old, open(R('gate_p_e16d.json'), 'w'))

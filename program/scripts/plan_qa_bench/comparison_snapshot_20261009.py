@@ -6,6 +6,7 @@ from collections import defaultdict
 from backlog_mx_report import summarize, paired, valid
 
 HERE=Path(__file__).resolve().parent
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 ROOT=HERE.parents[2]
 RES=HERE/'results'
 sys.stdout.reconfigure(encoding='utf-8')
@@ -14,11 +15,11 @@ def read(p, lines=False):
     p=Path(p); raw=p.read_bytes(); SOURCES[p.relative_to(ROOT).as_posix()]=hashlib.sha256(raw).hexdigest()
     return [json.loads(l) for l in raw.decode('utf-8-sig').splitlines() if l.strip()] if lines else json.loads(raw.decode('utf-8-sig'))
 
-FX={s:read(HERE/f'fixtures/{s}.json')['sets'][s] for s in ['mix8','mix9','mix10','mix11','mix12']}
-GS=read(HERE/'fixtures/gold_sets.json')
-GOLDS={'d':read(RES/'empty_probe/all_prompts.json'), 'd2':read(RES/'empty_probe/all_prompts_d2.json'),
-       'd3':read(RES/'empty_probe/all_prompts_d3.json'), 'h':read(RES/'hard_set/h_set_test_30_20261015_agree.json'),
-       'mx':read(ROOT/'datasets/travel/mx_testset/mx_main_prompts.json')}
+FX={s:read(Path(fixture(f'{s}.json')))['sets'][s] for s in ['mix8','mix9','mix10','mix11','mix12']}
+GS=read(Path(fixture('gold_sets.json')))
+GOLDS={'d':read(ROOT/'datasets/core/pointing/testset/questions_plus_chitchat_v1/all_prompts.json'), 'd2':read(ROOT/'datasets/core/pointing/testset/chitchat_only_holdout_v1/all_prompts_d2.json'),
+       'd3':read(ROOT/'datasets/core/pointing/testset/synthetic_chitchat_plus_questions_v1/all_prompts_d3.json'), 'h':read(ROOT/'datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json'),
+       'mx':read(ROOT/'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json')}
 KEYS=[(s,i) for s in FX for i in range(len(FX[s]['qs']))]
 MAPPING={}
 for s,i in KEYS:

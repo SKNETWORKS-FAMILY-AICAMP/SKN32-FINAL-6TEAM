@@ -33,7 +33,7 @@ def jacc(a, b):
 # 시험의 잡담 문장(겹침 검사용)
 test_chat = []
 for n in (8, 9, 10, 11, 12):
-    d = json.load(open(os.path.join(TRAVEL, 'mixed_testset', f'mixed{n}.json'), encoding='utf-8'))
+    d = json.load(open(os.path.join(ROOT, 'datasets', 'core', 'pointing', 'testset', 'questions_plus_chitchat_v1', 'source', f'mixed{n}.json'), encoding='utf-8'))
     for q in d['sets'][f'mixed{n}']['qs']:
         if q['type'] == 'chitchat':
             test_chat.append(q['q'].strip())

@@ -7,11 +7,11 @@ import re
 HERE = Path(__file__).resolve().parents[2]
 ROOT = HERE.parents[2]
 OUT = ROOT/'datasets/travel/valen_native_eval_20261009'
-SOURCES = dict(d=HERE/'results/empty_probe/all_prompts.json',
-               d2=HERE/'results/empty_probe/all_prompts_d2.json',
-               d3=HERE/'results/empty_probe/all_prompts_d3.json',
-               h=HERE/'results/hard_set/h_set_test_30_20261015_agree.json',
-               mx=ROOT/'datasets/travel/mx_testset/mx_main_prompts.json')
+SOURCES = dict(d=ROOT/'datasets/core/pointing/testset/questions_plus_chitchat_v1/all_prompts.json',
+               d2=ROOT/'datasets/core/pointing/testset/chitchat_only_holdout_v1/all_prompts_d2.json',
+               d3=ROOT/'datasets/core/pointing/testset/synthetic_chitchat_plus_questions_v1/all_prompts_d3.json',
+               h=ROOT/'datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json',
+               mx=ROOT/'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json')
 
 
 def convert(row):

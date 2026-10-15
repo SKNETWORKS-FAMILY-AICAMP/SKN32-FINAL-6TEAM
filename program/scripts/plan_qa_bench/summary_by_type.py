@@ -5,6 +5,7 @@ import json, math, os
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 df = pd.read_csv(os.path.join(HERE, 'results', 'export', 'per_question.csv'))
 df = df[df['set'].isin(SETS) & df['kind'].isin(['direct', 'direct_reference_unfair', 'combo'])]
@@ -16,7 +17,7 @@ for (m, k), g in df.groupby(['model', 'kind']):
         rec.append((m, k, r['set'], int(r['q_index']), r['q_type'], int(r['correct']), r['fair_comparison']))
 for nm, tag in (('Claude Opus 5.5 문제별(생각 끔·CLI)', 'claude_opus_5_5'), ('Claude Fable 5.1 문제별(생각 끔·CLI)', 'claude_fable_5_1')):
     for w in SETS:
-        qs = json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']
+        qs = json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']
         rows = json.load(open(os.path.join(HERE, 'results', f'claude_{tag}_{w}.json'), encoding='utf-8'))['rows']
         for i, q in enumerate(qs):
             rec.append((nm, 'direct', w, i, q['type'], int(rows[str(i)]['pick'] == q['gold']), True))

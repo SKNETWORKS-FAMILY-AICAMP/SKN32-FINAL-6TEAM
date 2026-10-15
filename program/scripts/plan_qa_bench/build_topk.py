@@ -3,6 +3,7 @@
 # 사용: python build_topk.py [K=5] [세트,세트…]   (기본 세트: heavy,mix4,mix5,mix6,mix7,mix8 — mix9 는 앞단 점수가 서버에서 나온 뒤)
 import json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 K = int(sys.argv[1]) if len(sys.argv) > 1 else 5
 want = sys.argv[2].split(',') if len(sys.argv) > 2 else ['heavy', 'mix4', 'mix5', 'mix6', 'mix7', 'mix8']
 argv0 = sys.argv
@@ -15,7 +16,7 @@ SETS, S, stage = G0['SETS'], G0['S'], G0['stage']
 J = G0['J']
 for w in want:
     if w not in SETS:                      # mix8·mix9 는 eval_router 가 기본으로 싣지 않는다 — 점수 파일에서 직접 주입
-        SETS[w] = J(os.path.join(HERE, 'fixtures', f'{w}.json'))['sets'][w]
+        SETS[w] = J(fixture(f'{w}.json'))['sets'][w]
         for p, v in zip(J(os.path.join(HERE, 'fixtures', f'pairs_{w}.json')), J(G0['R'](f'ft_e16d_{w}_scores.json'))['ft/emb_e16d']):
             S[(p['set'], p['qi'])][p['item']] = v
         G0['G'][w] = {M: [None] * len(SETS[w]['qs']) for M in (G0['M'],)}

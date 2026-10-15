@@ -9,6 +9,7 @@ from collections import Counter
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 D = os.path.join(HERE, 'fixtures', 'distill')
 args = sys.argv[1:]
 NO_COMPOUND = '--no-compound' in args
@@ -32,7 +33,7 @@ def grams(s):
 
 ev_exact, ev_grams = set(), []
 for w in EVAL:
-    f = os.path.join(HERE, 'fixtures', f'{w}.json')
+    f = fixture(f'{w}.json')
     if os.path.exists(f):
         for q in json.load(open(f, encoding='utf-8'))['sets'][w]['qs']:
             ev_exact.add(norm(q['q']))

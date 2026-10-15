@@ -6,6 +6,7 @@ from pathlib import Path
 from backlog_mx_report import summarize, valid
 
 HERE = Path(__file__).resolve().parent
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 sys.stdout.reconfigure(encoding='utf-8')
 
 
@@ -15,7 +16,7 @@ def main():
     folder = HERE / 'results/gpu_backlog_20261008' / job
     execution = json.loads((folder / 'started.json').read_text(encoding='utf-8'))
     name = {'D': 'all_prompts.json', 'D2': 'all_prompts_d2.json', 'D3': 'all_prompts_d3.json'}[suite]
-    gold_path = HERE / 'results/empty_probe' / name
+    gold_path = Path(fixture(name))
     gold_hash = hashlib.sha256(gold_path.read_bytes()).hexdigest()
     assert gold_hash == execution['prompt_sha256'], 'Frozen prompt hash mismatch'
     gold = json.loads(gold_path.read_text(encoding='utf-8'))

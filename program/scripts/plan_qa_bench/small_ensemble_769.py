@@ -7,6 +7,7 @@ import csv, itertools, json, math, os, sys
 from collections import Counter, defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -224,7 +225,7 @@ print(line('위임(E4B, 12B 둘이 합의하면 12B)', 'DELEG'))
 print('\n## 10. 규칙 라우터 — 질문에 일정 항목의 이름·장소 조각이 하나도 안 들었으면(=이름 없는 묘사 후보) Decider-12B 에게, 아니면 가르친 E4B')
 FEAT = {}
 for s in SETS:
-    job = json.load(open(os.path.join(HERE, 'fixtures', f'{s}.json'), encoding='utf-8'))['sets'][s]
+    job = json.load(open(fixture(f'{s}.json'), encoding='utf-8'))['sets'][s]
     names = []
     for it in job['items']:
         for fld in ('title', 'place'):
@@ -296,7 +297,7 @@ from scipy.sparse import hstack, csr_matrix
 
 QTXT = {}
 for s in SETS:
-    job = json.load(open(os.path.join(HERE, 'fixtures', f'{s}.json'), encoding='utf-8'))['sets'][s]
+    job = json.load(open(fixture(f'{s}.json'), encoding='utf-8'))['sets'][s]
     for i, q in enumerate(job['qs']):
         QTXT[(s, i)] = q['q']
 y = np.array([1 if TYPE[k] == 'nameless_description' else 0 for k in KEYS])
