@@ -703,6 +703,48 @@ def _name_of(item: Any) -> str:
     return str((item.place or {}).get("name") or item.title or "")
 
 
+_ORD_WORD = {"첫": 1, "한": 1, "두": 2, "둘": 2, "세": 3, "셋": 3, "네": 4, "넷": 4, "다섯": 5, "여섯": 6, "일곱": 7, "여덟": 8, "아홉": 9, "열": 10}
+#: 「두 번째 활동」「첫식당」「3번째 식당」 — 그날 같은 종류 안의 순번을 문장이 **직접** 센 말
+_KIND_ORDINAL = re.compile(r"(\d+|첫|한|두|둘|세|셋|네|넷|다섯|여섯|일곱|여덟|아홉|열)\s*(?:번\s*째|째)?\s*(식당|활동)")
+_DAY_SAID = re.compile(r"(\d+)\s*일\s*차|(첫|둘|셋|넷|다섯|여섯|일곱)\s*째\s*날|(첫날)")
+#: 날 · 순번을 다른 말로 바꿔 부르는 말 — 있으면 위의 단순 세기로는 못 푼다(검사하지 않고 지나간다)
+_RELATIVE = re.compile(r"오늘|내일|모레|어제|글피|다음|이전|방금|아까|그날|마지막|이틀|사흘|그 ")
+
+
+def ordinal_conflict(message: str, target: Stop, stops: list[Stop]) -> Stop | None:
+    """`[2026-10-15 재측정]` 문장이 「둘째 날 두 번째 활동」처럼 날 · 순번을 **직접 센** 말을 했는데 모델이 고른 일정이 그 자리와 다르면 그 자리의 일정을 돌려준다(맞으면 None).
+
+    ☆왜: 근거 검사 ④(`_PINPOINT`)는 「첫」「번째」 같은 말이 **있기만** 하면 근거로 쳐서, 모델이 한 칸 어긋나게 센 대상(「첫식당 바꿔」→ 둘째 식당,
+      「둘째 날 두 번째 활동」→ 다른 활동)을 막지 못했다(오늘 제품 모델로 결정 단위 172사례 재생: 엉뚱한 변경 3사례 중 2사례).
+      서버는 줄마다 같은 방식으로 날 · 순번을 세어 보여 주므로(`item_lines`) 문장이 센 말과 같은 자리인지는 계산으로 가릴 수 있다.
+    날을 말하지 않은 순번은 1일차에서 찾는다(`SYSTEM` 의 약속). 상대적인 말(오늘 · 내일 · 다음 …)이 있으면 단순 세기로 못 풀어 검사하지 않는다."""
+    if _RELATIVE.search(message):
+        return None
+    kinds = _KIND_ORDINAL.findall(message)
+    if len(kinds) != 1:
+        return None
+    word, kind_ko = kinds[0]
+    nth = int(word) if word.isdigit() else _ORD_WORD.get(word)
+    if not nth:
+        return None
+    day = 1
+    said_day = _DAY_SAID.search(message)
+    if said_day:
+        if said_day.group(1):
+            day = int(said_day.group(1))
+        elif said_day.group(3):
+            day = 1
+        else:
+            day = {"첫": 1, "둘": 2, "셋": 3, "넷": 4, "다섯": 5, "여섯": 6, "일곱": 7}[said_day.group(2)]
+    first = stops[0].item.starts_at if stops else None
+    kind = {"식당": "dining", "활동": "activity"}[kind_ko]
+    same = [s for s in stops if s.item.kind == kind and _day_no(s.item, first) == day]
+    if len(same) < nth:
+        return None
+    expected = same[nth - 1]
+    return None if expected is target else expected
+
+
 def guard_target(decision: Decision, *, stops: list[Stop], changes: list[Change], history: list[dict[str, Any]], selected: str, message: str) -> Decision:
     """★`[2026-10-06 사용자 지시 — 엉뚱한 대상 변경 0건]` **문장이 가리키지 않은 일정을 모델이 짐작으로 바꾸게 두지 않는다.**
 
@@ -717,6 +759,12 @@ def guard_target(decision: Decision, *, stops: list[Stop], changes: list[Change]
     target = next((s for s in stops if s.item is item), None)
     if target is None:
         return decision
+    # ★`[2026-10-15 재측정]` 문장이 날 · 순번을 직접 셌는데 모델이 한 칸 어긋나게 고른 경우 — 바꾸지 않고 맞는 자리를 첫 후보로 되묻는다
+    expected = ordinal_conflict(message, target, stops)
+    if expected is not None:
+        raw = {**decision.raw, "guard": {"ordinal_conflict": target.alias, "expected": expected.alias, "asked": [expected.alias, target.alias]}}
+        return replace(decision, action="clarify", item=None, change=None, raw=raw,
+                       choices=[{"action": decision.action, "item": x.item, "change": None, "fact": "none"} for x in (expected, target)])
     # ⑤ 같은 종류 · 같은 끼니가 하나뿐이면 가리킬 것이 하나다
     peers = [s for s in stops if s.item.kind == item.kind and (item.kind != "dining" or _meal(s.item) == _meal(item))]
     if len(peers) <= 1:
