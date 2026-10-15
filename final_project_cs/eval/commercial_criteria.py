@@ -154,7 +154,7 @@ MEASUREMENTS: list[Measurement] = [
     # 응답 시간 — x600 서버 10-14 재시험(해석 단계). 전체 응답이 아니라 「요청 해석」 단계만이다.
     Measurement("response_15s", "해석 단계(요청 해석 모델 호출)가 15초 초과한 비율 · x600 서버 실사용 재시험", 0, 324, "2026-10-14",
                 "x600 서버 웹 채팅 재시험 433질문 중 해석 기록이 있는 324건(10:02~16:35) · 학습 E4B · 1회씩 · 해석 중앙 5.64초 · p95 10.49초 · 최대 13.47초",
-                "datasets/chat_probe/2026-10-14_x600_web_chat_rerun/raw/trip_{a,b}_cases.csv 의 state_json.decision.seconds (이번에 다시 셈)",
+                "datasets/core/chat_probe/2026-10-14_x600_web_chat_rerun/raw/trip_{a,b}_cases.csv 의 state_json.decision.seconds (이번에 다시 셈)",
                 partial_scope=True,
                 note="해석 단계만이다 — 규정 검색 · 일정 조회 · 답 작성을 합친 전체 응답 시간은 기록에 없다. 같은 날 Oracle ARM(무료 CPU 시험 기계)은 59.8~68.5초(4건)"),
     Measurement("response_15s", "전체 채팅 응답이 15초 초과한 비율 · x600 서버 공개 배포 실서버 6단계 시험(새 게스트 · 학습 E4B · 유료 대체 포함 제품 경로)", 3, 4, "2026-10-15",
