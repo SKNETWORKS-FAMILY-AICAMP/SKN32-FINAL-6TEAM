@@ -61,6 +61,8 @@ def main() -> None:
                 print(f"  → {link['name']}: {link['url']}")
             if source.get("unresolved"):
                 print(f"  못 찾은 곳: {source['unresolved']}")
+            if not got["options"] or got.get("terminals"):
+                print(f"  호출: {source['calls']} · 터미널 규칙: {got.get('terminals')}")   # 0편이거나 터미널이 여럿일 때 어디를 물었는지
         print(f"\n-- 미스 {dict(tago.misses)}")
         return
 

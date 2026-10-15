@@ -265,12 +265,40 @@ def test_bus_search_asks_every_matching_terminal_pair_express_first_and_suburbs_
     tago = FakeTago(express=express, suburbs={})
     got = search_transit(SimpleNamespace(transit_schedule=tago), mode="bus", origin="서울", destination="부산", depart_date=GO.isoformat())
     pairs = [(c[2], c[3]) for c in tago.calls if c[0] == "bus_schedules"]
-    assert pairs == [("T1", "T7"), ("T1", "T8"), ("T2", "T7"), ("T2", "T8"), ("T4", "T7"), ("T4", "T8")], \
-        "「서울」로 시작하는 터미널 3곳(TERMINALS_EACH — 동서울은 뒤로) × 도착 2곳"
+    assert pairs == [("T1", "T7"), ("T1", "T8")], "`[10-15]` 부산은 경부권 → 서울경부 먼저, 거기 운행이 있으면 다른 출발 터미널은 안 묻는다(호출 6 → 2)"
+    assert got["terminals"] == {"origin": ["서울경부", "동서울", "서울호남"], "rule": "부산"}, "기본 순서 뒤 3곳(TERMINALS_EACH) — 동서울이 잘리지 않는다"
     assert all(c[1] == "express" for c in tago.calls if c[0] == "bus_schedules"), "고속에 결과가 있으면 시외는 안 본다"
-    assert got["resolved"] == {"origin": "서울경부 · 서울남부", "destination": "부산 · 부산사상"}
-    assert [option["depart"] for option in got["options"]] == ["06:00", "07:10"]
+    assert got["resolved"] == {"origin": "서울경부", "destination": "부산"}
+    assert [option["depart"] for option in got["options"]] == ["06:00"]
     assert [site["name"] for site in got["elsewhere"]] == ["코버스 고속버스 예매"]
+
+    tago = FakeTago(express=express, suburbs={}, terminals={"서울남부": [{"id": "T4", "name": "서울남부"}],
+                                                            "부산": [{"id": "T7", "name": "부산"}, {"id": "T8", "name": "부산사상"}]})
+    got = search_transit(SimpleNamespace(transit_schedule=tago), mode="bus", origin="서울남부", destination="부산", depart_date=GO.isoformat())
+    assert [(c[2], c[3]) for c in tago.calls if c[0] == "bus_schedules"] == [("T4", "T7"), ("T4", "T8")], "터미널을 말하면 그 터미널만"
+    assert got["resolved"] == {"origin": "서울남부", "destination": "부산사상"} and "terminals" not in got
+
+    honam = FakeTago(express={("T2", "T9"): [_bus("express", "서울호남", "광주", "08:00", 20000)]}, suburbs={},
+                     terminals={"서울": [{"id": "T1", "name": "서울경부"}, {"id": "T2", "name": "서울호남"}, {"id": "T3", "name": "동서울"}],
+                                "광주": [{"id": "T9", "name": "광주"}]})
+    got = search_transit(SimpleNamespace(transit_schedule=honam), mode="bus", origin="서울", destination="광주", depart_date=GO.isoformat())
+    assert [(c[2], c[3]) for c in honam.calls if c[0] == "bus_schedules"] == [("T2", "T9")], "광주는 호남권 → 서울호남 먼저"
+    empty = FakeTago(express={("T3", "T9"): [_bus("express", "동서울", "강릉", "08:00", 15000)]}, suburbs={},
+                     terminals={"서울": [{"id": "T1", "name": "서울경부"}, {"id": "T3", "name": "동서울"}], "강릉": [{"id": "T9", "name": "강릉"}]})
+    got = search_transit(SimpleNamespace(transit_schedule=empty), mode="bus", origin="서울", destination="강릉", depart_date=GO.isoformat())
+    assert [(c[2], c[3]) for c in empty.calls if c[0] == "bus_schedules"] == [("T3", "T9")], "강원은 동서울 먼저"
+    wrong = FakeTago(express={("T1", "T9"): [_bus("express", "서울경부", "강릉", "08:00", 15000)]}, suburbs={},
+                     terminals={"서울": [{"id": "T1", "name": "서울경부"}, {"id": "T3", "name": "동서울"}], "강릉": [{"id": "T9", "name": "강릉"}]})
+    got = search_transit(SimpleNamespace(transit_schedule=wrong), mode="bus", origin="서울", destination="강릉", depart_date=GO.isoformat())
+    assert [(c[2], c[3]) for c in wrong.calls if c[0] == "bus_schedules"] == [("T3", "T9"), ("T1", "T9")], "기본 터미널에 없으면 다음 터미널 — 답이 비지 않는다"
+    assert got["resolved"]["origin"] == "서울경부"
+    budget = FakeTago(express={}, suburbs={("T3", "T9"): [_bus("suburbs", "동서울", "광주", "08:00", 20000)]},
+                      terminals={"서울": [{"id": "T1", "name": "서울경부"}, {"id": "T2", "name": "서울호남"}, {"id": "T3", "name": "동서울"}],
+                                 "광주": [{"id": "T9", "name": "광주"}, {"id": "T10", "name": "광주비아"}, {"id": "T11", "name": "광주운암"}]})
+    got = search_transit(SimpleNamespace(transit_schedule=budget), mode="bus", origin="서울", destination="광주", depart_date=GO.isoformat())
+    kinds = [c[1] for c in budget.calls if c[0] == "bus_schedules"]
+    assert kinds.count("express") == 4 and kinds.count("suburbs") >= 1 and got["options"], \
+        "`[10-15]` 예산은 종류마다(고속 4) — 고속이 전부 0편이어도 시외를 묻는다(서울→광주 실호출에서 못 물었던 것)"
 
     tago = FakeTago(express={}, suburbs={("T4", "T9"): [_bus("suburbs", "서울남부", "강릉", "09:00", 15000)]},
                     terminals={"서울": [{"id": "T4", "name": "서울남부"}], "강릉": [{"id": "T9", "name": "강릉"}]})
@@ -420,6 +448,7 @@ def test_a_bus_sentence_shows_the_terminal_used_and_the_bus_links():
     result, tools = _run(f"{GO.month}월 {GO.day}일 서울에서 부산 가는 고속버스 3명 새벽", FakeTago(express=express, suburbs={}))
     assert tools.calls[0][1]["kind"] == "express"
     assert "[가는 편] 서울경부 → 부산 · 전체 1편 중 새벽 출발 1편 보여 드립니다." in result.answer
+    assert "  서울은(는) 터미널이 여럿이라 서울경부 출발 기준이에요 — 동서울 · 서울호남 출발을 원하시면 터미널 이름으로 말씀해 주세요." in result.answer
     assert "[새벽] 고속우등 — 서울경부 06:00 → 부산 ? (소요 모름) · 어른 26,600원 (성인 3명 79,800원)" in result.answer
     assert "예매는 아래 사이트에서 직접(조건을 채워 주지는 않습니다" in result.answer, "고속버스는 조건을 채워 여는 주소가 없다(코버스 POST 전용)"
     assert "코버스 고속버스 예매: https://www.kobus.co.kr/" in result.answer
@@ -496,13 +525,21 @@ def test_the_bus_the_customer_already_rides_is_not_offered_again_and_recheck_mat
                ("T2", "T7"): [_bus("express", "서울호남", "부산", "10:00", 39000)]}
     plan = _plan(kind="bus", detail={"bus_kind": "express", "grade": "우등", "number": None, "per_person": 43300}, starts="09:00", ends="13:00")
     plan["items"][0]["title"] = "서울 → 부산 고속버스"
-    first, _ = _runchange(plan, tago=FakeTago(express=express, suburbs={}))
+    terminals = {"서울": [{"id": "T1", "name": "서울경부"}, {"id": "T2", "name": "서울호남"}], "서울호남": [{"id": "T2", "name": "서울호남"}],
+                 "부산": [{"id": "T7", "name": "부산"}]}
+    first, _ = _runchange(plan, tago=FakeTago(express=express, suburbs={}, terminals=terminals))
     options = first.action_proposals[0].arguments["ask_options"]["options"]
-    assert [(o["origin"], o["depart"]) for o in options] == [("서울경부", "10:00"), ("서울호남", "10:00")], "09:00 우등(지금 타는 것)은 뺀다"
+    assert [(o["origin"], o["depart"]) for o in options] == [("서울경부", "10:00")], "09:00 우등(지금 타는 것)은 뺀다 · `[10-15]` 「서울」은 기본 터미널(서울경부)만"
+    plan["items"][0]["detail"] = {**plan["items"][0]["detail"], "origin": "서울호남"}      # 항목이 서울호남 출발이면 그 터미널로 찾는다
+    first, _ = _runchange(plan, tago=FakeTago(express=express, suburbs={}, terminals=terminals))
+    options = first.action_proposals[0].arguments["ask_options"]["options"]
+    assert [(o["origin"], o["depart"]) for o in options] == [("서울호남", "10:00")]
     plan["items"][0]["detail"] = {**plan["items"][0]["detail"], "alternates": options, "other_options": [o["name"] for o in options]}
-    key = options[1]["key"]                                           # 서울호남 10:00 39,000원
+    key = options[0]["key"]                                           # 서울호남 10:00 39,000원
     state = {**RUN_STATE, "subject_ref": {**RUN_STATE["subject_ref"], "request": {"type": "change", "choice": key}}}
-    result, _ = _runchange(plan, tago=FakeTago(express=express, suburbs={}), text="2번", state=state)
+    tago = FakeTago(express=express, suburbs={}, terminals=terminals)
+    result, _ = _runchange(plan, tago=tago, text="1번", state=state)
+    assert ("bus_terminals", "express", "서울호남") in tago.calls, "재확인은 고른 운행의 터미널 이름으로 찾는다(10-15)"
     new = result.action_proposals[0].arguments["replacements"][0]["item"]
     assert new["detail"]["chosen"]["origin"] == "서울호남" and new["detail"]["chosen"]["per_person"] == 39000, "같은 시각 서울경부 운행과 섞지 않는다"
     assert result.answer.endswith(" 지금 가격도 1인 39,000원 그대로예요.")

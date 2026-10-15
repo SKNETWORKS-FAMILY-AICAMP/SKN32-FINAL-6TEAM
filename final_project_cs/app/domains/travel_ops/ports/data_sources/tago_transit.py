@@ -185,8 +185,9 @@ class TagoTransit(TravelSource):
         found: list[dict[str, Any]] = []
         for row in rows:
             item = {"id": _text(row.get("terminalid")), "name": _text(row.get("terminalnm"))}
-            if item["id"] and item["name"] and item["name"] not in {f["name"] for f in found}:
-                found.append(item)                        # ☆10-14 탐침: 「센트럴시티(서울)」이 두 줄로 온다 — 이름으로 하나만
+            if item["id"] and item["name"] and item["id"] not in {f["id"] for f in found}:
+                found.append(item)                        # ☆10-14 「센트럴시티(서울)」이 두 줄(id 둘)로 온다 — `[10-15]` id 로 가른다: 이름으로 하나만
+                                                          #   남기면 죽은 id 가 남아 호남선 0편(서울→광주 · 전주 실호출)이 될 수 있어 둘 다 둔다
         return [item for item in found if keyword in item["name"]] or found
 
     def bus_schedules(self, kind: str, *, dep_id: str, arr_id: str, date: str) -> list[dict[str, Any]] | None:

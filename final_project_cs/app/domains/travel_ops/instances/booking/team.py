@@ -773,6 +773,12 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
             how = (f"{said} 출발 {len(picked)}편" if times and not fallback
                    else f"{said} 출발은 없어 시간대마다 앞 운행을" if fallback else "시간대마다 앞 운행을")
             lines.append(f"[{name}] {where} · 전체 {len(options)}편 중 {note}{how} 보여 드립니다.")
+            terminals = (got or {}).get("terminals") or {}
+            if terminals.get("origin") and resolved.get("origin"):          # `[10-15]` 출발 터미널이 여럿 — 기본 터미널 기준으로 봤다고 알린다
+                others = [t for t in terminals["origin"] if t not in str(resolved["origin"])]
+                if others:
+                    lines.append(f"  {found.origin}은(는) 터미널이 여럿이라 {resolved['origin']} 출발 기준이에요 — "
+                                 f"{' · '.join(others)} 출발을 원하시면 터미널 이름으로 말씀해 주세요.")
             for number, option in enumerate(picked, start=1):
                 lines.append(f"  {number}. {_transit_line(option, found.adults)}")
             if times and bands_empty and not fallback:
@@ -1055,6 +1061,9 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         query = item.detail.get("query") or self._transit_query(item, ctx["trip"])
         if not query:
             return pick, unchecked
+        if item.kind == "bus" and pick.get("origin") and pick.get("destination"):
+            # `[10-15]` 고른 운행의 터미널 이름으로 다시 찾는다 — 「서울」로 찾으면 기본 터미널(서울경부)에서 멈춰 서울호남 운행이 「없음」이 된다
+            query = {**query, "origin": str(pick["origin"]), "destination": str(pick["destination"])}
         got = self._read(task, "read.booking_search_transit", query, ctx["seen"]) or {}
         ctx["evidence"] = self._evidence(task, source_id="read.booking_search_transit:recheck",
                                          claim="고른 운행 재확인(booking: TAGO)", value=got or None, base=ctx["evidence"])

@@ -5,7 +5,7 @@
 
 - 고객이 말한 곳 이름(「서울」 「부산」 「동대구」 「광주」)을 **역 · 터미널**로 옮긴다 — 열차는 역 사전(`STATIONS`: 이름 → 역 이름 · 시 · 도)으로
   시 · 도의 역 목록에서 찾고, 버스는 공급자 터미널 목록을 이름 조각으로 찾는다. 「서울」처럼 터미널이 여럿이면(서울경부 · 서울호남 · 동서울)
-  앞의 몇 곳(`TERMINALS_EACH`)을 다 물어 합친다 — 어느 터미널인지는 결과 줄에 그대로 적는다.
+  행선지 권역의 기본 터미널부터 묻고 운행이 있으면 멈춘다(`_prefer`, 10-15) — 어느 터미널인지는 결과 줄과 `terminals` 에 적는다.
 - 버스는 고속을 먼저 보고, 고객이 「시외」라고 했거나 고속에 결과가 없을 때 시외를 본다(호출 수를 아끼려고 — 하루 한도 `rate_tago_per_day`).
 - 돌려주는 모양은 항공과 같은 골격 — `options`(운행 하나씩, 출발 시각순) · `sources`(`tago` 의 status · count · seconds · 부른 횟수) ·
   `resolved`(출발 · 도착으로 쓴 역 · 터미널 이름) · `elsewhere`(예매 사이트 첫 화면 링크) · `confirmed_at`. 운행마다 `links` — 조건을 채워
@@ -44,8 +44,40 @@ TERMINAL_HINT: dict[str, str] = {"서울역": "서울", "부산역": "부산", "
 
 #: 「서울」 같은 이름에 터미널이 여럿일 때 물어볼 최대 수(출발 × 도착 조합이 호출 수)
 TERMINALS_EACH = 3
-#: 한 검색에서 운행 조회를 부를 최대 수(열차 1 + 버스 고속 ≤ 6 + 시외 ≤ 6 보다 작게)
-MAX_SCHEDULE_CALLS = 8
+
+#: `[2026-10-15 고도화]` 터미널이 여럿인 출발지(서울)는 **행선지 권역으로 기본 터미널을 먼저** 묻고, 운행이 있으면 거기서 멈춘다(호출 10 → 3).
+#: 권역은 역 사전(`STATIONS`)의 시 · 도 — 사전에 없는 곳은 기본 순서. 고객이 터미널 이름을 말하면(「동서울에서」) 이 규칙은 안 탄다(그 터미널만 찾힌다).
+#: 순서는 우리가 정한 값(한국 고속 · 시외 노선망 상식) — 틀린 권역이면 다음 터미널로 넘어가므로 답이 비는 일은 없고 호출만 는다.
+_HONAM = {"광주", "전남", "전북"}
+_GANGWON = {"강원"}
+_SOUTH_SUBURBS = {"충남", "경남", "전북", "전남", "광주"}            # 시외: 서울남부터미널이 맡는 쪽(충남 서해안 · 경남 서부 · 호남)
+_TERMINAL_ORDER: dict[str, dict[str, tuple[str, ...]]] = {
+    "express": {"honam": ("서울호남", "센트럴", "동서울", "서울경부"), "gangwon": ("동서울", "서울경부", "서울호남"),
+                "default": ("서울경부", "동서울", "서울호남", "센트럴")},
+    "suburbs": {"south": ("서울남부", "동서울", "서울경부"), "default": ("동서울", "서울남부", "서울경부")},
+}
+
+
+def _region(said: str) -> str | None:
+    entry = STATIONS.get(said) or STATIONS.get(said.replace("역", ""))
+    return entry[1] if entry else None
+
+
+def _prefer(kind: str, terminals: list[dict[str, Any]], destination: str) -> list[dict[str, Any]]:
+    """출발 터미널 후보를 행선지 권역의 기본 터미널 순으로 — 이름에 순서표의 조각이 든 것을 앞으로, 나머지는 원래 순서."""
+    if len(terminals) < 2:
+        return terminals
+    region = _region(destination)
+    table = _TERMINAL_ORDER[kind]
+    if kind == "express":
+        order = table["honam"] if region in _HONAM else table["gangwon"] if region in _GANGWON else table["default"]
+    else:
+        order = table["south"] if region in _SOUTH_SUBURBS else table["default"]
+    rank = {t["name"]: next((i for i, piece in enumerate(order) if piece in t["name"]), len(order)) for t in terminals}
+    return sorted(terminals, key=lambda t: rank[t["name"]])
+#: 버스 종류(고속 · 시외)마다 운행 조회를 부를 최대 수 — `[10-15]` 전체 8 에서 종류별 4 로: 고속이 전부 0편이면(서울→광주 10-16 실호출)
+#: 예산을 다 써 시외는 묻지도 못했다. 기본 터미널 순서(`_prefer`)라 앞 조합이 가장 그럴듯하다.
+MAX_SCHEDULE_CALLS = 4
 
 #: 예매 사이트 **첫 화면** — 조건을 채워 여는 주소는 `transit_links`(SRT · 트립닷컴 · 버스타고)에 있고, 여기는 그것이 없을 때의 대비.
 #: `[2026-10-14 저녁]` 코레일은 `letskorail.com` 이 `korail.com` 으로 넘어가고(302), 버스타고 루트는 404 라 주소를 바꿨다(직접 열어 봄).
@@ -89,7 +121,7 @@ def _terminals(adapter: Any, kind: str, said: str, calls: list[str]) -> list[dic
     exact = [t for t in found if t["name"] == keyword]
     starts = [t for t in found if t["name"].startswith(keyword) and t not in exact]
     rest = [t for t in found if t not in exact and t not in starts]
-    return (exact + starts + rest)[:TERMINALS_EACH]
+    return exact + starts + rest                           # 자르기는 부르는 쪽이(`_prefer` 뒤에 `TERMINALS_EACH`) — 동서울이 잘리지 않게(10-15)
 
 
 #: 버스 운행은 공급자(TAGO)가 가까운 날만 준다 — 10-14 저녁 관찰: 10-16 까지 있고 10-17 부터 0편(팀장 점검 LB-03). 이 날 수 밖인데 0편이면
@@ -170,11 +202,14 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
                     unresolved = [name for name, found in ((origin, deps), (destination, arrs)) if not found]
                 continue
             paired = True
+            deps, arrs = _prefer(bus_kind, deps, destination)[:TERMINALS_EACH], arrs[:TERMINALS_EACH]
             first_pair = first_pair or (bus_kind, deps[0], arrs[0])
+            if len(deps) > 1:
+                result["terminals"] = {"origin": [t["name"] for t in deps], "rule": _region(destination) or "default"}
             got_any = False
             for dep in deps:
                 for arr in arrs:
-                    if len([c for c in calls if c.startswith("bus_schedules")]) >= MAX_SCHEDULE_CALLS:
+                    if len([c for c in calls if c.startswith(f"bus_schedules:{bus_kind}:")]) >= MAX_SCHEDULE_CALLS:
                         break
                     calls.append(f"bus_schedules:{bus_kind}:{dep['name']}→{arr['name']}")
                     rows = adapter.bus_schedules(bus_kind, dep_id=dep["id"], arr_id=arr["id"], date=depart_date)
@@ -183,6 +218,8 @@ def search_transit(travel: Any, *, mode: str, origin: str, destination: str, dep
                         continue
                     got_any = got_any or bool(rows)
                     options.extend(rows)
+                if got_any:
+                    break                                  # 기본 터미널에 운행이 있으면 다른 출발 터미널은 안 묻는다(`[10-15]` 호출 아끼기)
             if got_any:
                 used.append(bus_kind)
                 unresolved = []
