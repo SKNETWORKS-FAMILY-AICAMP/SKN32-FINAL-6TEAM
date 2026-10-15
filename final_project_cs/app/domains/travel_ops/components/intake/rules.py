@@ -146,6 +146,10 @@ def _meal_tail(line: str, start: int, end: int) -> tuple[int, re.Match | None]:
 _EAT_BEFORE = re.compile(r"\s*(?:나서|나와서|후|뒤|다음|이후)")
 
 
+#: 장소 이름 뒤에 붙어 「거기서」를 뜻하는 말 — 「먹는다」 말로 제목을 자를 때 이름 끝을 찾는다
+_AT_PLACE = re.compile(r"(?<=\S)\s*(?:에서|에\s*가서|가서|들러서|들려서)(?=\s|$)")
+
+
 def _eat_claim(result: "ReadResult", position: int, number: int, line: str, s: int, region_end: int) -> int | None:
     """끼니 말이 없을 때 — 이름 첫 글자 **뒤**의 「먹고」 · 「맛집」 · 「한잔」이면 식사다(`eat_mention`). `[2026-10-15 사용자 결정 (가)]`
     제목 안에서 찾았으면(「익선동 맛집」) 그 앞까지가 이름이다 — 새 이름 끝을 돌려준다. 못 찾으면 None."""
@@ -154,7 +158,10 @@ def _eat_claim(result: "ReadResult", position: int, number: int, line: str, s: i
         return None
     result.claims.append(Claim(f"items[{position}].kind", "dining", Span(number, eat.start(), eat.end(), eat.group(0)),
                                note="이름 뒤의 「먹는다」 말"))
-    return eat.start()
+    # ★`[2026-10-15]` 「통인시장에서 뭐 좀 먹고」 · 「광장시장에서 빈대떡 먹기」 — 「먹고」 앞에서만 자르면 「에서 뭐 좀」이 이름에 남아
+    #   장소를 못 찾았다(로컬 접수 실측). 이름 뒤 첫 「에서 · 가서 · 들러서」 자리에서 자른다
+    place_end = _AT_PLACE.search(line, s + 1, eat.start())
+    return place_end.start() if place_end else eat.start()
 
 
 def _meal_claim(result: "ReadResult", position: int, number: int, line: str, meal: re.Match | None) -> None:
