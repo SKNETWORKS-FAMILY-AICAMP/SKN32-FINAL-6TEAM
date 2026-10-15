@@ -362,3 +362,13 @@ def test_the_day_word_in_the_sentence_beats_the_models_day_when_it_gave_a_clock_
     body = _say(chat, "N서울타워를 모레 점심으로 옮겨줘", "meal-day-word")
     after, _ = _latest(chat)
     assert after == before and "없는 날" in body["answer"], body
+
+
+def test_a_chat_replacement_does_not_teach_the_name_as_an_alias(chat):
+    """★x600 실서버 확인(2026-10-15): 「경복궁 대신 창덕궁 가자」 뒤 같은 고객의 새 계획에서 「경복궁」이 창덕궁으로 찾아졌다 — 일정 바꾸기는 이름 고침(별칭)이 아니다."""
+    _answer(chat, "apply_change", target="인사동", destination_text="덕수궁", change_scope="place")
+    assert _say(chat, "인사동 대신 덕수궁 가자", "alias-none")["status"] == "adjusted"
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM place_aliases WHERE tenant_id=%s AND source='customer' AND replacement=%s",
+                    (chat["tenant"], "덕수궁"))
+        assert cur.fetchone()[0] == 0

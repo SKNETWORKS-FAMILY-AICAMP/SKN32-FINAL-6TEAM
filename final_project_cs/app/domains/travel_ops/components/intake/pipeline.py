@@ -375,7 +375,7 @@ class IntakeConflict(ValueError):
 
 def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
          edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None,
-         dining: Any = None) -> int:
+         dining: Any = None, learn_aliases: bool = True) -> int:
     """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
 
     `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
@@ -452,7 +452,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                             "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
                             (tenant_id, intake_id, current, source_id, field_name[:-len("place")] + "title"))
                 was = cur.fetchone()
-                if was and isinstance(was[0], str):
+                if learn_aliases and was and isinstance(was[0], str):
+                    # ★`[2026-10-15]` 채팅 「A 대신 B 가자」는 이름 고침이 아니라 **일정 바꾸기**다 — 별칭으로 쌓으면 다음 계획에서 A 라고 적어도 B 로 읽힌다
+                    #   (x600 실서버: 「경복궁 대신 창덕궁」 뒤 새 계획의 「경복궁」이 창덕궁으로 찾아졌다). 채팅 고치기는 `learn_aliases=False`
                     remember_alias(cur, tenant_id, customer_id, was[0], typed)
             if via:
                 evidence = {**evidence, "via": via}            # 전체 자동 추천이 낸 값이면 그렇게 적는다(고객이 고른 값과 구별)

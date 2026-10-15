@@ -204,3 +204,49 @@ def test_the_josa_follows_the_last_syllable():
 
     assert with_josa("경복궁") == "경복궁과" and with_josa("북촌") == "북촌과" and with_josa("서울숲") == "서울숲과"
     assert with_josa("광장시장") == "광장시장과" and with_josa("남산타워") == "남산타워와" and with_josa("63") == "63와"
+
+
+# ── 이른 아침 · 닫는 시각 — 운영시간을 못 읽은 곳을 「맞는 곳」으로 올리지 않는다 `[2026-10-15 핫픽스]` ───────────────────
+def _early_review(start="08:00"):
+    review, item = _palace_review()
+    item = {**item, "starts_at": start, "ends_at": "09:30"}
+    return {"items": [item]}, item
+
+
+@pytest.fixture()
+def early_world(park_world):
+    from .test_intake_review import OPEN_ALL, _hours
+
+    _row(park_world, "960006", "12", "창덕궁 낙선재", 37.5794, 126.9910, "HS", "HS01", "HS010100")      # 같은 종류 · 운영시간 못 읽음
+    _row(park_world, "960007", "12", "창경궁 명정전", 37.5790, 126.9950, "HS", "HS01", "HS010100")      # 같은 종류 · 09:00 에 연다(확인함)
+    _hours(park_world, "960007", OPEN_ALL)
+    yield park_world
+
+
+def test_at_eight_in_the_morning_a_place_with_unread_hours_is_not_counted_as_fitting_and_the_confirmed_closed_one_is_last(early_world):
+    review, item = _early_review("08:00")
+    got = _alternatives(early_world, review, item)
+    by_name = {c["place"]["name"]: c for c in got["candidates"]}
+    unread = by_name["창덕궁 낙선재"]
+    assert unread["fits"] is False and any("확인하지 못했어요" in r["text"] for r in unread["rows"] if r["row"] == "hours"), unread
+    names = [c["place"]["name"] for c in got["candidates"]]
+    # 09:00 에 여는 것이 확인된 곳은 맨 뒤이거나(셋 칸이 다 차면) 아예 밀려난다 — 못 읽은 곳보다 앞에 서지 않는다
+    assert "창경궁 명정전" not in names or names.index("창경궁 명정전") > names.index("창덕궁 낙선재"), names
+    if "창경궁 명정전" in by_name:
+        assert any("09:00" in r["text"] for r in by_name["창경궁 명정전"]["rows"] if r["row"] == "hours"), by_name["창경궁 명정전"]
+
+
+def test_in_the_daytime_a_place_with_unread_hours_still_counts_as_fitting_but_after_the_confirmed_open_one(early_world):
+    review, item = _early_review("10:30")
+    got = _alternatives(early_world, review, item)
+    by_name = {c["place"]["name"]: c for c in got["candidates"]}
+    assert by_name["창덕궁 낙선재"]["fits"] is True and by_name["창경궁 명정전"]["fits"] is True, by_name
+    names = [c["place"]["name"] for c in got["candidates"]]
+    assert names.index("창경궁 명정전") < names.index("창덕궁 낙선재"), names                       # 확인한 곳이 못 읽은 곳보다 앞
+
+
+def test_when_fewer_than_three_places_fit_the_time_the_experience_group_is_added(early_world):
+    review, item = _early_review("08:00")
+    got = _alternatives(early_world, review, item)
+    assert "similar_experience" in got["notes"], got["notes"]
+    assert {"광화문 어린이공원", "북악 둘레길"} & {c["place"]["name"] for c in got["candidates"]}, got

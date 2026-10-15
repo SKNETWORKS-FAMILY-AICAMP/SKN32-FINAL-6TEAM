@@ -20,7 +20,7 @@
 from __future__ import annotations
 
 import math
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any, Callable
 
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
@@ -339,6 +339,10 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
                                      place={"name": place["name"], "attributes": dict(facts.attributes)})])
     row = {"date": item["date"], "start": item["starts_at"], "end": item["ends_at"], "place": place}
     hours_line, closed_line = _hours_lines(row, facts, vios)
+    if hours_line["result"] == "unknown" and kind == "activity" and start is not None and _odd_hour(start, end):
+        # ★`[2026-10-15 핫픽스]` 운영시간을 못 읽은 활동이 **이른 아침 · 늦은 밤** 자리에 「맞아요」로 올라왔다(「경복궁 08:00」 대신 두산아트센터 · 세운상가 — 관광공사 운영시간을
+        #   아직 못 읽은 곳이 맞는 곳으로 센 것). 낮 시간이면 모르는 것을 맞는 것으로 두지만(없는 정보로 후보를 다 버리지 않는다), 문 여는 곳이 드문 시각에는 **확인 못 한 곳은 맞는 곳이 아니다**
+        hours_line = _line("hours", "warn", f"{start.strftime('%H:%M')}에는 문을 열었는지 확인하지 못했어요 · {UNVERIFIED_HOURS}")
     label = SOURCE_LABEL.get(place.get("source") or "", "장소 정보")
     lines = [_line("place", "ok", f"{label} 정보로 찾았어요")]
     # 앞 · 뒤 일정에 닿는 시간 — 늦으면 줄을 더한다
@@ -373,6 +377,25 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
     fits = worst in ("ok", "unknown") and hours_line["result"] != "warn"
     return {"rows": lines, "fits": fits, "status": "bad" if worst == "bad" else ("warn" if worst == "warn" else "ok"),
             "slack": slacks, "estimated": estimated}
+
+
+#: 「운영시간을 못 읽음」 표시 문구 — 순위가 「확인한 곳 → 못 읽은 곳 → 닫는 것이 확인된 곳」을 가를 때 본다
+UNVERIFIED_HOURS = "운영시간을 읽지 못한 곳이에요"
+#: 활동이 보통 문을 여는 시간 — 이 밖의 시각에 운영시간을 못 읽은 곳은 맞는 곳으로 세지 않는다
+ODD_BEFORE, ODD_AFTER = time(9, 0), time(20, 0)
+
+
+def _odd_hour(start: datetime, end: datetime | None) -> bool:
+    return start.time() < ODD_BEFORE or (end is not None and end.date() == start.date() and end.time() > ODD_AFTER)
+
+
+def _hours_rank(rows: list[dict[str, Any]]) -> int:
+    """운영시간을 **확인한** 곳이 먼저 — 0 확인함 · 1 못 읽음(모름) · 2 그 밖. 같은 「맞는 곳」 안에서 모르는 곳이 확인한 곳을 앞서지 않게."""
+    hours = next((r for r in rows if r.get("row") == "hours"), {})
+    result = hours.get("result")
+    if result == "unknown" or UNVERIFIED_HOURS in str(hours.get("text") or ""):
+        return 1                                   # 못 읽음 — 이른 아침 · 늦은 밤이라 「주의」로 내린 곳도 닫는 것이 확인된 곳보다는 앞이다
+    return 0 if result == "ok" else 2
 
 
 def _present(place: dict[str, Any], assessed: dict[str, Any], prev, nxt, ref, area: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -696,8 +719,20 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     first: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for place in found[:30]:
         first.append((place, assess(conn, tenant_id, item, place, prev, nxt, None)))
-    first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", -(pa[0].get("similarity") or 0),
+    first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", _hours_rank(pa[1]["rows"]), -(pa[0].get("similarity") or 0),
                                _score(pa[0], prev, nxt, ref, bool(area))))
+    if (group and item["kind"] == "activity" and not stay and not lodging and ref and "similar_experience" not in notes
+            and sum(1 for pa in first if pa[1]["fits"]) < limit):
+        # ★`[2026-10-15 핫픽스]` 같은 종류(궁궐)가 **이 시각에 맞는 곳이 셋 못 되면**(이른 아침엔 궁궐이 다 닫는다) 같은 경험의 다른 곳(공원 · 광장 · 둘레길)까지 넓혀 다시 줄 세운다 —
+        #   전에는 같은 종류가 충분히 많으면 넓히지 않아 닫은 곳만 후보로 남았다
+        more = _dedupe(_experience_places(conn, tenant_id, ref, group, now, limit=24), taken + [
+            (normalize_full(p["name"]), p.get("latitude"), p.get("longitude")) for p in found])
+        if more:
+            notes.append("similar_experience")
+            for place in more[:30]:
+                first.append((place, assess(conn, tenant_id, item, place, prev, nxt, None)))
+            first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", _hours_rank(pa[1]["rows"]), -(pa[0].get("similarity") or 0),
+                                       _score(pa[0], prev, nxt, ref, bool(area))))
     pool = first[:limit + POOL_EXTRA]
     if "meal_inferred" in notes:
         eating_first = [pa for pa in first if pa[0].get("kind") == "dining"][:2]
@@ -707,7 +742,7 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         full = cheap if rank_only else assess(conn, tenant_id, item, place, prev, nxt, budget)
         out.append({"rank": 0, **_present(place, full, prev, nxt, ref, area)})
     # 시간표로 잰 곳이 어림으로 잰 곳보다 앞(같은 적합성 안에서) — 계산기 시간 상한이 일찍 닿아 뒤 후보가 어림으로 평가돼도 순위가 뒤섞이지 않게
-    out.sort(key=lambda c: (not c["fits"], c["status"] == "bad", _BASIS_ORDER.get(c["basis"], 0), -(c["similarity"] or 0),
+    out.sort(key=lambda c: (not c["fits"], c["status"] == "bad", _hours_rank(c["rows"]), _BASIS_ORDER.get(c["basis"], 0), -(c["similarity"] or 0),
                             -((c.get("taste") or {}).get("score") or 0), c["estimated"],     # 취향 후보는 임베딩 점수가 있으면 그 순서(`taste.ranked_by == "embedding"`)
                             c["distance_m"] if c["distance_m"] is not None else 10**9))
     if "meal_inferred" in notes:

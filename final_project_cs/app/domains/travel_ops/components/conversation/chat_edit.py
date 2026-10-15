@@ -199,7 +199,7 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             try:
                 with connect() as conn:
                     revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
-                                             revision=revision, edits=batch, tour=tour, kakao=kakao, dining=dining)
+                                             revision=revision, edits=batch, tour=tour, kakao=kakao, dining=dining, learn_aliases=False)
             except pipeline.IntakeConflict as exc:
                 add_days = {o.date for o in ops if o.kind == "add" and o.date}
                 if batch is not edits or exc.code != "schedule_conflict" or not add_days:
@@ -218,7 +218,7 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                         raise exc
                     with connect() as conn:
                         revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
-                                                 revision=revision, edits=retry, tour=tour, kakao=kakao, dining=dining)
+                                                 revision=revision, edits=retry, tour=tour, kakao=kakao, dining=dining, learn_aliases=False)
                     relock = [{"source_id": source_id, "field": f"{p}.locked", "value": True} for p in release]
                     log.info("chat edit add: pushed past pinned stops trip=%s released=%d", trip_id, len(release))
                 except pipeline.IntakeConflict as again:
@@ -229,7 +229,7 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             try:
                 with connect() as conn:
                     revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
-                                             revision=revision, edits=[lock], tour=tour, kakao=kakao, dining=dining)
+                                             revision=revision, edits=[lock], tour=tour, kakao=kakao, dining=dining, learn_aliases=False)
             except (pipeline.IntakeConflict, pipeline.IntakeRejected):
                 log.warning("chat edit relock skipped field=%s", lock["field"])        # 다시 고정하지 못해도 넣기는 이미 됐다
         with connect() as conn:
