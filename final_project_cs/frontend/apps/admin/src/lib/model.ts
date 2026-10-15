@@ -50,6 +50,7 @@ export type AdminCommand =
   | { type: 'user-limit'; userId: string; limit: number | null; period: 'today' | 'until-cleared'; reason: string }
   | { type: 'save-limits'; chatLimit: number; rules: WatchRule[]; reason: string }
   | { type: 'api-cap'; apiId: string; daily: number; monthly: number; reason: string }
+  | { type: 'api-cap-clear'; apiId: string; reason: string }
   | { type: 'inquiry-status'; inquiryId: string; status: InquiryStatus; assignee: string; reason: string }
   | { type: 'reply'; inquiryId: string; body: string }
   | { type: 'save-template'; id?: string; title: string; body: string }
@@ -66,6 +67,10 @@ export interface ScreenProps {
 }
 export const formatNumber = (value: number) => value.toLocaleString('ko-KR');
 export const chatLimitFor = (user: User, data: AdminSnapshot) => user.exceptionLimit ?? data.chatLimit;
+/** 채팅 하루 한도 0 은 한도 없음 — `[2026-10-15 사용자 지시]` 서버도 같은 규칙으로 막지 않는다. */
+export const chatUnlimited = (limit: number) => limit <= 0;
+export const chatLimitReached = (user: User, data: AdminSnapshot) => { const limit = chatLimitFor(user, data); return !chatUnlimited(limit) && user.chat >= limit; };
+export const chatLimitText = (limit: number) => chatUnlimited(limit) ? '한도 없음' : formatNumber(limit);
 export function watchState(api: ApiUsage, rules: WatchRule[]) {
   if (api.used === null || api.dailyCap === null) return '미계측';
   const ratio = Math.max(api.used / api.dailyCap, api.monthlyUsed !== null && api.monthlyCap !== null ? api.monthlyUsed / api.monthlyCap : 0);

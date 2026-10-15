@@ -317,11 +317,10 @@ def count(tenant_id: str, action: str, *, customer_id: UUID | str, ip: str,
 
                 raise HTTPException(exc.status, {"error": {"code": exc.code, "message": exc.message}}) from None
         for kind, who, scope in rows:
-            cap = int(limits[f"web.{action}.{scope}"])
+            cap: int | None = int(limits[f"web.{action}.{scope}"])
             if action == "message" and kind == "key":
-                operator_cap = access_policy(conn, tenant_id, str(customer_id), now)["chat_limit"]
-                if operator_cap is not None:
-                    cap = int(operator_cap)
+                # ★사용자 한 명의 채팅 한도는 관리자 화면 「② 채팅 하루 한도」(사용자별 예외 포함)가 정한다 — None 은 한도 없음(0 으로 저장)
+                cap = access_policy(conn, tenant_id, str(customer_id), now)["chat_limit"]
             got = _bump(cur, tenant_id, kind, who, action, day, cap if enabled else None)
             if got is None:
                 cur.execute("SELECT used FROM web_usage WHERE tenant_id=%s AND who_kind=%s AND who=%s AND action=%s "

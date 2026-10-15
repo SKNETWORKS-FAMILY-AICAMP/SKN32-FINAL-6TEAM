@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 from psycopg.types.json import Jsonb
 from app.core.redaction import mask_json, masked
+from app.core.settings import get_guardrails
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -65,7 +66,20 @@ def access_policy(conn, tenant_id: str, customer_id: str, now: datetime | None =
     exception = user.get("exceptionLimit")
     if user.get("exceptionPeriod") == "today" and user.get("exceptionDay") != now.date().isoformat():
         exception = None
-    return {"blocked": bool(user.get("blocked")), "chat_limit": exception if exception is not None else limits.get("chatLimit"), "maintenance": maintenance}
+    # ★`[2026-10-15 사용자 지시]` 저장한 값이 없으면 관리자 화면이 보여 주는 기본값을 그대로 적용한다(전에는 「한도 없음」으로 돌아
+    #   화면에는 50 이 보이는데 76번째 채팅도 통과했다). 0 은 한도 없음 — 사용자별 예외도 같다.
+    chosen = exception if exception is not None else limits.get("chatLimit", default_chat_limit())
+    return {"blocked": bool(user.get("blocked")), "chat_limit": chat_cap(chosen), "maintenance": maintenance}
+
+
+def default_chat_limit() -> int:
+    """「② 채팅 하루 한도」를 아직 저장하지 않았을 때의 값 — 관리자 화면(스냅숏)이 보여 주는 값과 같은 곳에서 읽는다."""
+    return int(get_guardrails().get("web_guard.limits.message.per_key_day"))
+
+
+def chat_cap(value: Any) -> int | None:
+    """저장값 → 실제 상한. 0 이하는 한도 없음(None)."""
+    return None if value is None or int(value) <= 0 else int(value)
 
 
 class AdminPolicyRefused(Exception):
@@ -84,7 +98,7 @@ def consume_chat(conn, tenant_id: str, customer_id: str, now: datetime | None = 
         raise AdminPolicyRefused(503, "maintenance", policy["maintenance"]["message"])
     cap = policy["chat_limit"]
     if cap is None:
-        # 별도 운영자 한도가 없으면 기존 웹 횟수 집계만 사용한다.
+        # 한도 없음(0 으로 저장) — 막지 않는다. 사용 수는 웹 횟수 집계(`web_usage`)에 그대로 남는다.
         return 0
     with conn.cursor() as cur:
         cur.execute("INSERT INTO admin_chat_usage(tenant_id,customer_id,day,used) VALUES(%s,%s,%s,COALESCE((SELECT used FROM web_usage WHERE tenant_id=%s AND who_kind='key' AND who=%s AND action='message' AND period=%s),0)) ON CONFLICT DO NOTHING", (tenant_id, customer_id, now.date(), tenant_id, str(customer_id), f"day:{now:%Y-%m-%d}"))
@@ -158,13 +172,30 @@ def mutate(conn, tenant: str, actor: str, command: dict) -> None:
     elif kind == "api-cap":
         if command["daily"] > command["monthly"]:
             raise AdminServiceError(422, "월 한도는 하루 한도 이상이어야 합니다.")
+        from app.application.api_limits import adjustable
+
+        # ★`[2026-10-15]` 호출 기록이 없어도 DB 예산을 거치는 API 면 정할 수 있다(전에는 한 번이라도 불린 API 만 — 「API 환경설정 한도」 화면에서 조정이 안 됐다)
+        bound = adjustable().get(command["apiId"])
+        if bound is not None:
+            if command["daily"] > bound["day"] or (bound["month"] is not None and command["monthly"] > bound["month"]):
+                env_month = f"{bound['month']:,}회" if bound["month"] is not None else "미설정"
+                raise AdminServiceError(422, f"운영자 상한은 ENV 상한(하루 {bound['day']:,}회 · 월 {env_month})보다 낮게만 정할 수 있습니다. "
+                                             "올리려면 .env.apikeys 를 바꾸고 cs 프로젝트 서버를 다시 띄웁니다.")
         with conn.cursor() as cur:
             cur.execute("SELECT 1 FROM external_call_budget WHERE meter=%s LIMIT 1", (command["apiId"],))
-            if cur.fetchone() is None:
-                raise AdminServiceError(422, "계측하지 않은 API의 상한은 바꿀 수 없습니다.")
+            if bound is None and cur.fetchone() is None:
+                raise AdminServiceError(422, "호출 전 DB 예산을 거치지 않는 API라 운영자 상한을 정해도 걸리지 않습니다.")
             cur.execute("SELECT daily,monthly FROM admin_api_caps WHERE meter=%s FOR UPDATE", (command["apiId"],))
             before = cur.fetchone()
             cur.execute("INSERT INTO admin_api_caps(meter,daily,monthly,updated_by) VALUES(%s,%s,%s,%s) ON CONFLICT(meter) DO UPDATE SET daily=EXCLUDED.daily,monthly=EXCLUDED.monthly,updated_by=EXCLUDED.updated_by,updated_at=now()", (command["apiId"], command["daily"], command["monthly"], actor))
         audit(conn, tenant, actor, kind, command["apiId"], list(before) if before else None, {"daily": command["daily"], "monthly": command["monthly"]}, reason)
+    elif kind == "api-cap-clear":
+        # 운영자 상한을 지우고 ENV 상한으로 돌린다
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM admin_api_caps WHERE meter=%s RETURNING daily,monthly", (command["apiId"],))
+            before = cur.fetchone()
+        if before is None:
+            raise AdminServiceError(404, "지정한 운영자 상한이 없습니다.")
+        audit(conn, tenant, actor, kind, command["apiId"], {"daily": before[0], "monthly": before[1]}, None, reason)
     else:
         raise AdminServiceError(422, "지원하지 않는 저장 명령입니다.")
