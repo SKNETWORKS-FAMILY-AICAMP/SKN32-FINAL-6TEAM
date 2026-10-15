@@ -10,6 +10,8 @@
 비교하는 체크 — 규칙 검사 줄 → 체크
     place  → found       hours → open_at       closed → closed_day
   규칙 검사의 결과 ok · filled · warn 은 ok(warn 은 「주의」지 「안 된다」가 아니다), bad 는 bad, unknown 은 unknown.
+  ★`[2026-10-15]` 단 운영시간 줄은 그 줄이 따로 싣는 **시작 시각에 열려 있나**(`open_at`)가 있으면 그것과 비교한다 — 운영시간 warn 에는
+    「시작 때 이미 닫힘」이 섞여 있어 ok 로 세면 같은 판단(「영업 안 함」)이 어긋남으로 잡혔다(접수 8건 중 3줄).
 """
 from __future__ import annotations
 
@@ -35,7 +37,9 @@ def rule_verdicts(item: dict[str, Any]) -> dict[str, str]:
     out: dict[str, str] = {}
     for row in item.get("rows") or []:
         check = RULE_ROWS.get(row.get("row"))
-        if check and row.get("result") in RULE_RESULT:
+        if check == "open_at" and row.get("open_at") in ("ok", "bad"):
+            out[check] = row["open_at"]
+        elif check and row.get("result") in RULE_RESULT:
             out[check] = RULE_RESULT[row["result"]]
     return out
 
