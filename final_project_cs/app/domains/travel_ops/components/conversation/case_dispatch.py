@@ -265,6 +265,10 @@ def _matches_implicit_reply(state: dict[str, Any], message: str) -> bool:
     if required == ["minutes"]:
         return re.fullmatch(r"(?:약\s*)?\d+\s*(?:분(?:\s*정도)?(?:이요|이예요|이에요|요)?|이요|요)?[.!]?"
                             r"|\d+\s*시간\s*(?:\d+\s*분)?(?:이요|이에요|요)?[.!]?", text) is not None
+    if required == ["adults"]:
+        from app.domains.travel_ops.instances._shared.conversation_work import party_size_from
+
+        return party_size_from(text) is not None            # ★`[2026-10-15]` 숙소 · 항공 인원 질문의 답
     if required == ["to_version"]:
         return re.fullmatch(r"(?:v|버전\s*)?\d+\s*(?:버전|판)?(?:이요|요)?[.!]?", text, re.IGNORECASE) is not None
     if required == ["confirmed"]:

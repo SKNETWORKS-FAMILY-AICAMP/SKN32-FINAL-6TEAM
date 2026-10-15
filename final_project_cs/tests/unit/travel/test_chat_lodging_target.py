@@ -87,3 +87,11 @@ def test_a_flight_is_targeted_the_same_way_when_the_sentence_says_flight_or_it_i
     assert _change_target(items, "숙소 바꿔 줘", None, AT) is stay, "숙소 요청은 여전히 숙소"
     assert _change_target(items, "숙소랑 항공 바꿔 줘", None, AT) is None, "두 종류를 함께 말하면 가리지 않는다"
     assert _change_target(items, "5번 바꿔 줘", None, AT) is None, "번호는 식사 · 활동만 센다"
+
+
+def test_a_party_size_reply_is_read_only_when_it_looks_like_one():
+    """`[2026-10-15]` 숙소 · 항공 팀이 인원을 물은 뒤 답 읽기 — 인원으로 읽히는 짧은 답만."""
+    from app.domains.travel_ops.instances._shared.conversation_work import party_size_from
+
+    assert [party_size_from(t) for t in ("2", "2명", "성인 2명이요", "두 명", "혼자", "20명")] == [2, 2, 2, 2, 1, 20]
+    assert [party_size_from(t) for t in ("0", "21", "010-1234-5678", "글쎄요", "30분 늦어요", "", None)] == [None] * 7

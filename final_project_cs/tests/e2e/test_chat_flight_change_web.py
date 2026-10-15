@@ -6,6 +6,7 @@
   되묻기 목록에서 항공편을 고르는 길(`case_dispatch._resume_route`)과 항공 팀이 되묻기를 항목 없이 맡는 길도 막혀 있었다.
 
 ★지키려는 것
+ ⑤인원이 빈 여행이면 항공 팀이 사람에게 넘기지 않고 인원을 묻고, 답한 인원으로 찾는다 `[2026-10-15]`
  ①항공편 항목을 가리킨 「바꿔 줘」 · 「다른 편」은 항공 팀 일정 관리(`flight.itinerary`)로 가고 그 팀의 답이 고객에게 나간다
  ②식당 요청은 그대로 · 숙소 요청은 여전히 숙소 팀
  ③되묻기 번호 고르기에서 항공편을 고르면 항공 팀으로 간다
@@ -159,3 +160,53 @@ def test_the_item_list_the_model_sees_calls_a_flight_a_flight_in_korean(flight_c
     _say(flight_chat, "항공 다른 편으로 보여 줘", "flt-e")
     line = next(l for l in flight_chat["decider"].prompts[-1].split("\n") if "김포 → 제주" in l and re.match(r"i\d+ \|", l))
     assert "항공편" in line and "flight" not in line, line
+
+
+@pytest.fixture()
+def flight_chat_unknown_party(api, monkeypatch):
+    """인원이 빈 여행 + 항공 팀의 진짜 「바꿔 줘」 — 외부 검색(MCP)만 막고 어떤 조건으로 부르는지 적는다."""
+    from fastapi.testclient import TestClient
+
+    from app.domains.travel_ops.components.conversation import trip_messages
+    from app.domains.travel_ops.entry.trip_api import build_trip_router
+    from app.domains.travel_ops.instances.flight import FlightTeam
+    from app.presentation.api.app import create_app
+
+    searches: list[tuple[str, dict]] = []
+    original = FlightTeam._read
+
+    def spy(self, task, tool, args, seen):
+        if tool == "read.itinerary":
+            return original(self, task, tool, args, seen)
+        searches.append((tool, dict(args)))
+        return None
+
+    monkeypatch.setattr(FlightTeam, "_read", spy)
+    monkeypatch.setattr(trip_messages, "_decision_mode", lambda chat, tenant=None: "on")
+    client = TestClient(create_app(
+        classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
+        domain_routers=[build_trip_router(classifier_factory=lambda: (lambda m: {"intent": "other", "issue_code": "other",
+                                                                                 "sentiment": "neutral"}),
+                                          chat_factory=lambda: _Decider())]))
+    publish_fixed_mobility(client.app, source="chat_flight_party_test")
+    me = _session(api)
+    body = _web_body(api, request_id="fltp-" + uuid4().hex[:6])
+    body["party_size"] = None
+    last = max(it["seq"] for it in body["items"])
+    body["items"].append({"seq": last + 1, "kind": "flight", "title": "김포 → 제주", "place": None, "route": None,
+                          "starts_at": f"{DAY}T21:00:00+09:00", "ends_at": f"{DAY}T22:10:00+09:00",
+                          "detail": {"origin": "GMP", "destination": "CJU"}})
+    trip = client.post("/v1/web/trips", json=body, headers=_h(me["user_key"]))
+    assert trip.status_code in (200, 201), trip.text
+    yield {"client": client, "key": me["user_key"], "trip": trip.json(), "searches": searches}
+
+
+def test_an_unknown_party_size_is_asked_for_a_flight_too(flight_chat_unknown_party):
+    chat = flight_chat_unknown_party
+    ask = _say(chat, "항공 다른 편으로 보여 줘", "fltp-a")
+    assert ask["case_status"] == "waiting_input" and "몇 분" in ask["answer"], ask
+    assert ask["required_input_schema"]["required"] == ["adults"], ask
+    assert chat["searches"] == [], "인원을 모르는 채로 외부 검색을 부르지 않는다"
+    _say(chat, "두 명", "fltp-b", case_id=ask["case_id"])
+    asked = [args for _tool, args in chat["searches"] if "adults" in args]
+    assert asked and all(args["adults"] == 2 for args in asked), chat["searches"]
