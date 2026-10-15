@@ -444,6 +444,34 @@ def _chunk(chunk: Any) -> tuple[str, str, float]:
 
 
 _LINES: dict[str, str] | None = None
+_SECTIONS: dict[str, dict[str, str]] | None = None
+
+
+def customer_sections() -> dict[str, dict[str, str]]:
+    """규정 절(`t_doc_02#c5`) → `{doc_title, section, line}`. **고객용 문장이 있는 절만** 든다(내부 절차 절은 없다).
+
+    ★`[2026-10-15]` 규정 재순위·고객 문장 색인(`components/conversation/policy_rerank.py`)이 후보를 「문서 제목 / 절 제목: 고객용 문장」으로
+      보이고 임베딩하려고 `customer_lines` 가 읽던 같은 문서 머리에서 제목까지 함께 읽는다(문서를 두 번 읽지 않는다)."""
+    global _SECTIONS
+    if _SECTIONS is None:
+        from pathlib import Path
+
+        from knowledge.ingest import load_corpus
+
+        manifest = Path(__file__).resolve().parents[5] / "knowledge" / "travel" / "manifest.json"
+        found: dict[str, dict[str, str]] = {}
+        current = manifest.parent.parent / "current-travel" / "manifest.json"
+        manifests = [manifest] + ([current] if current.is_file() else [])
+        for document in (doc for path in manifests for doc in load_corpus(path)):
+            answers = document.frontmatter.get("customer_answers") or {}
+            for section in document.sections:
+                line = answers.get(section.title)
+                if line and str(line).strip():
+                    found[f"{document.frontmatter['document_id']}#c{section.number}"] = {
+                        "doc_title": str(document.frontmatter.get("title") or ""), "section": str(section.title),
+                        "line": str(line).strip()}
+        _SECTIONS = found
+    return _SECTIONS
 
 
 def customer_lines() -> dict[str, str]:
@@ -455,21 +483,7 @@ def customer_lines() -> dict[str, str]:
     ★문서 본문을 바꾸지 않아 청크·임베딩은 그대로다. 문장과 규정이 한 파일에 있어 규정을 고치면 같이 고친다."""
     global _LINES
     if _LINES is None:
-        from pathlib import Path
-
-        from knowledge.ingest import load_corpus
-
-        manifest = Path(__file__).resolve().parents[5] / "knowledge" / "travel" / "manifest.json"
-        found: dict[str, str] = {}
-        current = manifest.parent.parent / "current-travel" / "manifest.json"
-        manifests = [manifest] + ([current] if current.is_file() else [])
-        for document in (doc for path in manifests for doc in load_corpus(path)):
-            answers = document.frontmatter.get("customer_answers") or {}
-            for section in document.sections:
-                line = answers.get(section.title)
-                if line and str(line).strip():
-                    found[f"{document.frontmatter['document_id']}#c{section.number}"] = str(line).strip()
-        _LINES = found
+        _LINES = {source: entry["line"] for source, entry in customer_sections().items()}
     return _LINES
 
 
@@ -510,4 +524,4 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
     return "\n".join(lines), sources
 
 
-__all__ = ["ANSWERS", "Consent", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "mentioned_item", "question_answer", "set_item_pointer"]
+__all__ = ["ANSWERS", "Consent", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "customer_sections", "mentioned_item", "question_answer", "set_item_pointer"]

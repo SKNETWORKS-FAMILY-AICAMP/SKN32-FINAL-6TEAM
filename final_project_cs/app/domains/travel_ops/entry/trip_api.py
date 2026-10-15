@@ -2214,6 +2214,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         from app.infrastructure.rag.retriever import warm_embedding
 
         background.add_task(warm_embedding)
+        # ★`[2026-10-15]` 규정 재순위가 「고객 문장 색인」을 쓰는 중이면 그 색인(규정 절 100여 개의 벡터)도 미리 만든다 — 아니면 아무것도 안 한다
+        policy = _lazy("policy", policy_search_factory)
+        if hasattr(policy, "warm"):
+            background.add_task(policy.warm)
         return model_warmup.warmup(
             _lazy("chat", chat_factory), count=lambda: _count("warmup", tenant, customer, http),
             defer=background.add_task,
