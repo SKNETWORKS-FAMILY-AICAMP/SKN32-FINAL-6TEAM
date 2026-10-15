@@ -14,6 +14,8 @@ domain: travel
 
 사용자가 지정한 공개 HTTPS 주소로 접근하는 develop 서빙 시험이다. API와 웹 프로세스는 루프백 주소에서만 받고 기존 Caddy가 고객용 경로를 연결한다. API 문서·내부 점검 경로는 공개하지 않는다. 운영 DB·실제 사용자·외부 통지 자격 증명은 가져오지 않는다. 최초 시험용 여행과 사용자만 별도 DB에 만든다. 장소 검색·실시간 외부 데이터·이동 경로의 전체 기능 완료를 뜻하지 않는다.
 
+`[2026-10-15 사용자 지시]` **관리자웹앱(3300)과 그 안의 운영 API(8070)도 같은 회차에서 빌드·기동·건강 검사·실패 복구한다.** 둘 다 루프백에서만 받고 공개 Caddy 에는 연결하지 않는다. 팀원은 Tailscale `serve` 로만 닿는다 — 사람 손 작업은 [팀원 접속 따라 하기](arm-admin-tailscale.md). 이미지는 같은 SHA 의 API 단계 위에 쌓는다(제한 빌더가 이 기계 이미지를 못 보므로 bake `target:api`). 받는 주소를 고를 수 없는 옛 실행기(`ADMIN_HOST` 없음)의 SHA 는 관리자웹앱을 만들지 않고, 그런 판으로 되돌릴 때는 관리자웹앱만 멈춘다. 운영자 계정·고객 API 열쇠는 기계 안 `control/.env.admin`(없어도 기동, 로그인만 닫힘). [설치 기록](../records/reports/2026-10-15_arm-admin-web-tailscale.md).
+
 웹 이미지는 API 기본 주소를 빈 값으로 빌드해 같은 출처의 고객 API를 사용한다. 방문자 PC의 루프백 주소를 사용하지 않는다. 기계 내부 환경 파일에 공개 기본 주소·웹 출처·허용 출처를 설정하고 HTTPS 쿠키와 CSRF 검사를 유지한다. 출처 변경에 필요한 앱 교체는 기존 질의 회차의 배포 잠금을 획득한 뒤 수행한다. 실제 도메인과 접속 정보는 공용 문서에 쓰지 않는다. [공개 연결·실측·백업](../records/reports/2026-10-10_0237_arm-develop-public-domain.md).
 
 상태·관측·실패·원본 위치는 [승인 자료 전송·배포와 최신 관측](../records/reports/2026-10-10_0130_arm-approved-mobility-transfer-and-deployment.md) · [대기열 최초 설치](../records/reports/2026-10-10_0115_arm-server-local-six-hour-queue.md) · [최초 Docker 준비 기록](../records/reports/2026-10-09_arm-docker-develop-cd.md)이 정본이다. 코드와 단위 시험은 [배포 도구](../../deploy/arm/)에 있다. 모델 품질·장시간 부하 시험은 [기존 ARM 실행기](arm-serving-queue.md)와 구분한다.
@@ -73,6 +75,9 @@ Oracle ARM 기계에서 다음 명령을 사용한다. 무료 기존 자원만 �
 | `systemctl is-active tripilot-arm-work-queue.service` | `active`, 상시 소비·조건 대기 |
 | `systemctl is-enabled tripilot-arm-probe.timer` | `disabled`, 옛 중복 경로 중지 |
 | `systemctl is-active tripilot-arm-serving.service` | 기존 추론 시험 유지 |
+| `docker ps --filter name=tripilot-arm-admin` | `healthy`, 관리자웹앱·운영 API |
+| `ss -ltn \| grep -E ':(3300\|8070) '` | `127.0.0.1` 에서만 받는다 |
+| `tailscale serve status` | 팀원 주소 `:3300` → `127.0.0.1:3300` |
 
 실패 시 로그와 상태 파일을 먼저 보존한다. 필수 환경값·호환성·남은 공간 등 원인을 고친 후 같은 SHA를 재개한다. 앱 기동 실패를 시험 문항 성공으로 세지 않는다. 취약점 검사에서 나온 배포 원본의 의존성 문제도 공개 전 검토 항목으로 기록하며, 검증 없이 의존성 전체를 강제 갱신하지 않는다.
 
