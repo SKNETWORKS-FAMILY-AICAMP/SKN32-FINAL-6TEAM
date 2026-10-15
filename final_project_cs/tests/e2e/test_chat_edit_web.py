@@ -333,3 +333,23 @@ def test_the_open_slot_text_is_found_when_nothing_can_make_room():
     assert "「덕수궁」" in text and "13:45" in text and "덕수궁 넣어줘" in text, text           # 13:30 끝 + 이동 15분
     packed = [stop("가", "08:00", "11:30"), stop("나", "12:00", "21:30")]
     assert "빈 시간이 없어" in _no_room_text([op], packed, now)
+
+
+def test_a_lunch_stop_named_as_a_palace_becomes_that_palace_not_a_restaurant_with_its_name(chat):
+    """★x600 실서버 확인(2026-10-15): 식사 일정에 「덕수궁」이라고만 말하면 식당에서 찾아 「탁사발두부공방 덕수궁점」으로 바뀌었다 — 이름으로 찾아 그 종류(활동)로 맞춘다."""
+    from .test_trip_reopen import TOMORROW, _h as _hh, _item, _place
+
+    body = {"request_id": "meal-trip", "title": "점심 시험", "locale": "ko", "party_size": 2, "constraints": {},
+            "places": [_place("bc", "북촌한옥마을", 37.5826, 126.9836), {**_place("mj", "미진", 37.5712, 126.9790), "kind": "dining"},
+                       _place("is", "인사동", 37.5740, 126.9850), _place("ds", "덕수궁", 37.5658, 126.9751)],
+            "items": [_item(1, "activity", "북촌한옥마을", "bc", TOMORROW, "10:00", "11:30"),
+                      _item(2, "dining", "미진", "mj", TOMORROW, "12:00", "13:00"),
+                      _item(3, "activity", "인사동", "is", TOMORROW, "14:00", "15:30")]}
+    response = chat["client"].post("/v1/web/trips", json=body, headers=_hh(chat["key"]))
+    assert response.status_code == 201, response.text
+    chat = {**chat, "trip": response.json()}
+    _answer(chat, "apply_change", target="미진", destination_text="덕수궁", change_scope="place")
+    said = _say(chat, "점심 대신 덕수궁 가자", "meal-named")
+    _, items = _latest(chat)
+    assert said["status"] == "adjusted" and "덕수궁" in items and "미진" not in items, said
+    assert items["덕수궁"].kind == "activity", items["덕수궁"].kind

@@ -173,6 +173,17 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                     if value is not None:
                         edits.append({"source_id": source_id, "field": f"{prefix}.{name}", "value": value})
             elif op.kind == "place":
+                # ★`[2026-10-15 x600 실서버 확인]` 식사 일정에 「덕수궁」이라고만 쓰면 웹 고치기는 식사 일정이라 **식당에서** 찾아 「탁사발두부공방 덕수궁점」으로 바꿨다.
+                #   고객이 이름으로 말했으니 종류 힌트 없이 먼저 찾고, 찾은 곳의 종류(활동 · 식사)가 일정의 종류와 다르면 일정의 종류도 함께 맞춘다
+                item = by_id[op.item_id]
+                if item.kind in ("dining", "activity") and op.place_name:
+                    from app.domains.travel_ops.components.intake.places import resolve
+
+                    with connect() as conn:
+                        named = resolve(op.place_name, our_places=pipeline._our_places(conn, tenant), tour=tour, kakao=kakao, dining=dining)
+                    new_kind = "dining" if named.kind == "dining" else ("activity" if named.kind else None)
+                    if named.status == "resolved" and new_kind and new_kind != item.kind:
+                        edits.append({"source_id": source_id, "field": f"{prefix}.kind", "value": new_kind})
                 edits.append({"source_id": source_id, "field": f"{prefix}.place", "value": {"name": op.place_name}})
                 if op.title:
                     edits.append({"source_id": source_id, "field": f"{prefix}.title", "value": op.title})

@@ -786,7 +786,12 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         # ★`[2026-10-15]` 말한 곳을 **먼저 찾는다**(웹 「일정 수정」과 같은 이름 찾기). 한 곳으로 찾으면 그곳으로 바꾸고(`TripDesk.edit`),
         #   못 찾으면 — 「다른 식당」 같은 설명이거나 모르는 이름이다 — 바꾸지 않고 다른 안을 보여 고르게 한다(찾지 못했다고 먼저 밝힌다, `case_dispatch.response`)
         named = dict((decision.raw or {}).get("named_destination") or {})
-        found = desk.find_place(str(named.get("text") or ""), kind_hint=getattr(decision.item, "kind", None))
+        # ★`[2026-10-15 x600 실서버 확인]` 종류 힌트 없이 **이름으로 먼저** 찾는다 — 식사 일정에 「덕수궁」이라고 말하면 식당에서만 찾아 「탁사발두부공방 덕수궁점」으로 바뀌었다.
+        #   못 찾았고 바꿀 일정이 식사면 식사 힌트로 한 번 더 찾는다(식당 이름만 말한 경우)
+        text = str(named.get("text") or "")
+        found = desk.find_place(text)
+        if found is None and getattr(decision.item, "kind", None) == "dining":
+            found = desk.find_place(text, kind_hint="dining")
         if found is None:
             from dataclasses import replace as _replace
 
