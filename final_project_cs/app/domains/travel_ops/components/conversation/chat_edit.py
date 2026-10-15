@@ -423,10 +423,12 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
             raise EditRefused("need_target", "어느 일정을 옮길지 알려 주세요. 일정 이름이나 「점심」처럼 말씀해 주시면 옮길게요.")
         ops = []
         meal = None
-        if not anchor_time and not decision.minutes and raw.get("anchor_kind") in (None, "none", "time"):
+        if not decision.minutes and raw.get("anchor_kind") in (None, "none", "time"):
             meal = spoken_meal_target(message, now)
             if meal is not None:
-                anchor_time = meal[1]
+                # 시각은 모델이 낸 것이 우선(없으면 끼니의 약속값), **날은 문장의 말(오늘 · 내일 · 모레)이 우선**이다 —
+                # ★`[2026-10-15 x600 실서버 확인]` 「모레 점심으로」를 모델이 12:00 · 1일차로 읽어 모레가 아닌 날로 옮겼다
+                anchor_time = anchor_time or meal[1]
                 day = meal[0] or day
         for target in targets:
             if raw.get("anchor_kind") == "now" and len(targets) == 1 and not decision.minutes:

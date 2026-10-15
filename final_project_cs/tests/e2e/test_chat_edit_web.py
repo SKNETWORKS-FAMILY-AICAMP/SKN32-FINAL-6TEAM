@@ -353,3 +353,12 @@ def test_a_lunch_stop_named_as_a_palace_becomes_that_palace_not_a_restaurant_wit
     _, items = _latest(chat)
     assert said["status"] == "adjusted" and "덕수궁" in items and "미진" not in items, said
     assert items["덕수궁"].kind == "activity", items["덕수궁"].kind
+
+
+def test_the_day_word_in_the_sentence_beats_the_models_day_when_it_gave_a_clock_time(chat):
+    """★x600 실서버 확인(2026-10-15): 「모레 점심으로 옮겨줘」를 모델이 12:00 · 1일차로 읽어 여행 안의 날로 옮겨 버렸다 — 날은 문장의 말이 이긴다."""
+    before, _ = _latest(chat)
+    _answer(chat, "change_time", target="N서울타워", anchor_kind="time", anchor_time="12:00", at_day="d1")
+    body = _say(chat, "N서울타워를 모레 점심으로 옮겨줘", "meal-day-word")
+    after, _ = _latest(chat)
+    assert after == before and "없는 날" in body["answer"], body
