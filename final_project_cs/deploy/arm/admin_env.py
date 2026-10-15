@@ -4,6 +4,8 @@
 
     keys               고객 API 를 부를 열쇠 3개를 이 기계의 비밀값으로 만들어 넣는다(화면에 찍지 않는다)
     operator --id ID   운영자 계정을 넣거나 비밀번호를 바꾼다(비밀번호는 직접 입력, 두 번, 12자 이상)
+                       권한은 기본으로 관리자웹앱 화면 전체(CONSOLE_SCOPES) — 좁히려면 --scopes
+    scopes --id ID     비밀번호는 그대로 두고 권한만 바꾼다(기본: 화면 전체)
     remove --id ID     운영자 계정을 뺀다
     list               운영자 id 와 열쇠가 있는지만 보여 준다(비밀값은 보이지 않는다)
 
@@ -22,6 +24,10 @@ import sys
 ENV = Path(os.environ.get("ADMIN_ENV_FILE", "/control/.env.admin"))
 # 운영 앱이 고객 API 를 부를 때 쓰는 scope(app/presentation/admin_api.py · ui/routes.py 의 _call_api)
 OPS_SCOPES = ("action:approve", "delegation:read", "delegation:write")
+# 관리자웹앱 화면 전체를 쓰는 운영자 scope(app/presentation/admin_api.py 의 require) —
+# 첫 화면(snapshot)이 ops:introspect, 접수 목록이 case:read, 한도 화면이 limits:read/write 를 본다.
+CONSOLE_SCOPES = ("action:approve", "case:read", "delegation:read", "delegation:write",
+                  "limits:read", "limits:write", "ops:introspect")
 
 
 def read() -> dict[str, str]:
@@ -58,7 +64,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("keys")
     add = sub.add_parser("operator")
     add.add_argument("--id", required=True)
-    add.add_argument("--scopes", default="action:approve,delegation:read,delegation:write")
+    add.add_argument("--scopes", default=",".join(CONSOLE_SCOPES))
+    grant = sub.add_parser("scopes")
+    grant.add_argument("--id", required=True)
+    grant.add_argument("--scopes", default=",".join(CONSOLE_SCOPES))
     drop = sub.add_parser("remove")
     drop.add_argument("--id", required=True)
     sub.add_parser("list")
@@ -66,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     rows = read()
 
     if args.command == "list":
-        print("운영자:", ", ".join(row["id"] for row in operators(rows)) or "없음")
+        print("운영자:", ", ".join(f"{row['id']}({len(row.get('scopes', []))}권한)" for row in operators(rows)) or "없음")
         keys = json.loads(rows.get("ACOP_OPS_API_KEYS") or "{}")
         print("고객 API 열쇠:", ", ".join(scope for scope in OPS_SCOPES if keys.get(scope)) or "없음")
         return 0
@@ -90,13 +99,27 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     from app.core.settings import get_guardrails
-    from app.presentation.ui.auth import hash_password
     allowed = set(get_guardrails().get("security.scopes"))
     scopes = sorted({s.strip() for s in args.scopes.split(",") if s.strip()})
     unknown = [s for s in scopes if s not in allowed]
     if unknown:
         print(f"모르는 scope: {unknown}", file=sys.stderr)
         return 2
+
+    if args.command == "scopes":
+        # 비밀번호는 그대로 두고 권한만 바꾼다.
+        everyone = operators(rows)
+        target = next((row for row in everyone if row.get("id") == args.id), None)
+        if target is None:
+            print(f"{args.id} 계정이 없다 — 아무것도 바꾸지 않았다", file=sys.stderr)
+            return 2
+        target["scopes"] = scopes
+        rows["ACOP_UI_OPERATORS"] = json.dumps(everyone, ensure_ascii=False, separators=(",", ":"))
+        write(rows)
+        print(f"{args.id} 권한 {len(scopes)}개 — " + ", ".join(scopes))
+        return 0
+
+    from app.presentation.ui.auth import hash_password
     first = getpass.getpass(f"{args.id} 의 비밀번호(12자 이상, 화면에 안 보임): ")
     if len(first) < 12:
         print("비밀번호는 12자 이상이어야 한다 — 아무것도 바꾸지 않았다", file=sys.stderr)

@@ -96,7 +96,8 @@ def _tick(parts, hour, minute):
 
 
 def test_the_job_is_registered_for_the_dawn_window():
-    assert [(job.name, job.window) for job in jobs.JOBS] == [("activity_live_status", "dawn")]
+    # 웹 확인은 그대로, 활동 정기 작업 3종이 같은 자리에 더 올라갔다(ST4F-538, 2026-10-15 — test_activity_team_batch_jobs)
+    assert ("activity_live_status", "dawn") in [(job.name, job.window) for job in jobs.JOBS]
 
 
 def test_remaining_is_counted_from_the_targets_not_asked_of_the_team(on):
@@ -166,8 +167,10 @@ def test_the_assembly_wires_the_job(monkeypatch):
     scheduled_jobs.clear()
     monkeypatch.setattr(jobs, "_wired", {})
     composition._wire_domain_providers(active_ids={"activity"})
-    assert [job.name for job in scheduled_jobs.registered()] == ["activity_live_status"]
-    assert set(jobs._wired) == {"connection_factory", "judge_llm", "budget"}
+    # 활동 정기 작업 4종(ST4F-538, 2026-10-15) — 웹 확인 + 장소 갱신 · 요일표 펴기 · 실내외 정하기
+    assert [job.name for job in scheduled_jobs.registered()] == [
+        "activity_decide_indoor", "activity_live_status", "activity_read_hours", "activity_refresh_places"]
+    assert set(jobs._wired) == {"connection_factory", "judge_llm", "budget", "claim"}
     scheduled_jobs.clear()
 
 

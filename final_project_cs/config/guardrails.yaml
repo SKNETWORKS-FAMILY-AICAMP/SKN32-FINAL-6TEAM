@@ -282,6 +282,7 @@ travel:
     #   ★따옴표 필수 — YAML 은 맨 off/on 을 불리언으로 읽는다. ★기본 off: 켤지는 사용자 결정 대기(보고서 2026-10-15_규정검색_재순위_제품연결.md)
     #   first_stage  operating: 지금 색인(직원용 본문)에서 후보 · customer_text: 「문서 제목 / 절 제목: 고객용 문장」 색인에서 후보(DB 를 안 바꾸고 프로세스 안에서 만든다)
     #   min_score  고른 줄을 보이는 점수 문턱 — 후보를 뽑은 색인의 점수. 지금 방식으로 돌아간 답에는 위 min_policy_score 를 쓴다
+    #   backend  local: 로컬 모델 · api: 유료 모델(서버용 키 · 질문 글은 개인정보 가림 `masked` 를 거쳐 나간다 · 호출마다 하루·한 달 상한을 센다). 루나급 실측 B 상위3 83%, 약 $0.13/902건
     #   model  비면 요청 해석과 같은 모델(ollama_model) — 12GB GPU 에서 모델을 번갈아 올리지 않는다
     #   timeout_seconds / min_remaining_seconds / total_seconds  total_seconds(고객 응답 15초에서 답 조립 몫 1초를 뺀 값)에서 해석이 쓴 시간을 빼고 남은 시간이 min_remaining_seconds 보다 적으면 재순위를 건너뛴다. 모델 호출 제한 = min(timeout_seconds, 남은 시간)
     #   failures / open_seconds  재순위 호출이 연속 실패하면 그 시간 동안 건너뛴다(고객이 시간 초과를 매번 기다리지 않게)
@@ -299,6 +300,9 @@ travel:
       failures: 3
       open_seconds: 60.0
       embed_timeout_seconds: 30.0
+      backend: "local"            # local: 요청 해석과 같은 로컬 모델 · api: 서버용 OpenAI 키(gpt-6-luna 급) — 호출 상한 `external_call_budget` 안에서만, 상한 장치가 없으면 안 부른다
+      api_model: ""               # 비면 `ACOP_LLM_FAILOVER_MODEL`
+      api_timeout_seconds: 6.0    # 루나 호출 902건 실측: 중앙 1.7초 · p95 5.2초 · 최대 9.3초(이 PC → API, 2026-10-15)
   # -- 채팅 기능 안내 (2026-10-14 사용자 지시 「추천대로」, `service_help.reply`) --
   # ★기능 안내 지식(`travel_service`)에서 이 점수 이상인 조각만 답에 싣는다. 규정 답(위 0.55)과 따로 둔다.
   # ★출처: **우리가 고른 값**, 실측 근거 — x600 서버(bge-m3)에서 기능 안내 질문 14개의 1위 점수 0.502~0.656,
@@ -337,6 +341,9 @@ travel:
     #  30건 안팎 오처리. 운영 설정 `chat.decision_mode` 로 재기동 없이 끈다. 오변경 의심(바꾼 뒤 15분 안 되돌림)이 1건이라도 나오면 shadow
     mode: "on"            # ★따옴표 필수 — YAML 은 맨 on 을 참(True)으로 읽는다(그래서 한 번 꺼진 채로 돌았다)
     num_predict: 1200    # 답 길이 상한(토큰). ★160 이면 되묻기 후보(choices)가 붙은 답이 중간에 잘려 JSON 이 깨졌다(재생 시험 2026-09-29) — 짧은 답은 일찍 끝나 지연이 거의 같다
+  # -- 확인 화면 「다른 곳」 후보 공급 (2026-10-15 사용자 결정) --
+  candidates:
+    team_first: true     # 활동 일정의 후보를 활동 팀 엔진(`team_hooks.activity_alternatives`)이 먼저 고른다. false 면 확인 화면 자체 고르기(`candidates.py`)만 쓴다
   # -- 후보 이유 문장을 모델이 쓴다 (2026-10-07 사용자 결정, 마이그레이션 057 · `components/intake/reasons.py`) --
   # ★「이유 문장만 모델이 확인된 값으로 쓴다 — 보이는 후보 2~3개만, 결과 저장, 실패하면 지금의 틀 문장」. 모델은 **사실 목록만** 받고(이름 · 단 · 거리 · 영업 · 여유 · 일정의 장소),
   #   그 밖의 이름 · 숫자 · 평가를 쓴 문장은 검사(`guard`)가 버려 틀 문장으로 돌아간다. 출처: **우리가 고른 값**
@@ -459,6 +466,13 @@ travel:
       dawn:
         start: "03:00"
         until: "08:00"
+  # -- 활동 팀 정기 작업 중 외부 호출이 있는 것 (2026-10-15 — 활동 → 코어 전달 사항 6번 · TeamFlow ST4F-538) --
+  # ★`activity_read_hours`(규칙 단계) · `activity_decide_indoor`(분류 단계)는 DB 만 읽고 쓰므로 스위치가 없다 — 모델 단계(`--model`)는 정기 작업에 넣지 않았다(유료).
+  # ★`activity_refresh_places` 는 관광공사 목록을 **전국 분류별로 끝까지** 받고(쪽마다 대기) 바뀐 곳만 상세를 다시 받는다(하루 한 번 · 개발 계정 하루 1,000건 안에서).
+  #   한 회차가 몇 분 걸릴 수 있어 일꾼의 다른 일을 늦춘다 — 걸리는 시간을 재고 켠다. 기본은 꺼짐. 켜면 키(`ACOP_TOUR_API_KEY`)가 있어야 한다(없으면 작업이 터져 운영 진단에 남는다).
+  activity_batch:
+    refresh_places_enabled: false
+    refresh_places_max_calls: 300
   # -- 일일 정기점검 (2026-10-14 사용자 지시 — 「3시 시작, 가능하면 3시 30분까지 마감, 안 끝나면 관리자 웹앱에 보고, 8시에는 모두 멈춤 — 지금처럼」) --
   # ★새벽 작업(일정에 넣은 장소 다시 읽기 · 관광공사 운영시간 읽기 · 식당 새벽 확인 · 팀 정기 작업)의 시각을 한 곳에 둔다(`watch/daily_check.py`).
   #   `finish_by` 까지 끝나도록 한 번에 하는 양을 늘리고(많아야 `max_per_tick` — 관광공사 몰림 허용 30 안), 그 시각이 지난 첫 회차에 남은 일이 있으면

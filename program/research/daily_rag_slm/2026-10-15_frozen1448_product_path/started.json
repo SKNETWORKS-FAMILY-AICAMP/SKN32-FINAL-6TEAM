@@ -1,0 +1,26 @@
+{
+  "job": {
+    "id": "ft_e4b_ollama_develop_frozen1448_v1",
+    "tag": "ft_e4b_ollama_develop_frozen1448_v1",
+    "label": "Product path: tripilot-pointer:e4b-ft (our-trained E4B, Ollama 0.31.1, num_ctx 8192) + origin/develop a1edea43 decision code; frozen historical 1448 rows",
+    "our_training": true,
+    "model": "/dev/shm/ollama_replay_20261014/blobs/sha256-4c27e0f5b5adf02ac956c7322bd2ee7636fe3f45a8512c9aba5385242cb6e09a",
+    "model_sha256": "4c27e0f5b5adf02ac956c7322bd2ee7636fe3f45a8512c9aba5385242cb6e09a",
+    "adapter_sha256_prefix": "f01456d8",
+    "prompts": "/root/frozen_product_decision_20261015/prompts.json",
+    "prompt_sha256": "f6df047e6710d3cbe2933999209cee91548cd38f2c463be31829fa7783f65fb1",
+    "script": "/root/frozen_product_decision_20261015/runner.py",
+    "runner_sha256": "239143535d19d11617a37d809ca0d074e32f1602618458d244de93b2c88dc560",
+    "contract": "/root/frozen_product_decision_20261015/contract.json",
+    "port": 11435,
+    "logprobs": "0",
+    "expected": 1448,
+    "automatic_retry": false,
+    "independent_holdout": false,
+    "purpose": "Product-path regression of decision step only (no regulatory search, no mutations); all failures kept in denominator; not adoption evidence"
+  },
+  "started": "2026-10-15T06:45:49.035165+00:00",
+  "prompt_sha256": "f6df047e6710d3cbe2933999209cee91548cd38f2c463be31829fa7783f65fb1",
+  "script_sha256": "239143535d19d11617a37d809ca0d074e32f1602618458d244de93b2c88dc560",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

@@ -1108,6 +1108,14 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
         chosen = next((i for i in current_items if typed_choices
                        and str(i.item_id) == str(typed_choices[0].get("item_id"))), None)
         owner = chosen.kind if chosen is not None else "activity"
+    if owner in ("lodging", "flight"):
+        # ★`[2026-10-15]` 인원을 이미 받았으면 팀이 그것을 쓰게 요청에 싣는다(묻는 것은 어디에도 없을 때뿐) — 이번 문장에 적힌 인원, 아니면 이 여행 채팅에서 이미 답한 인원
+        from app.domains.travel_ops.components.conversation import chat_log
+        from app.domains.travel_ops.instances._shared.conversation_work import party_from_history, party_in_text
+
+        hint = party_in_text(message) or party_from_history(chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id))
+        if hint:
+            request["party_hint"] = hint
     plan = case_dispatch.descriptor(trip=trip, team=owner, request=request, item=item)
     if prepare_only:
         return plan

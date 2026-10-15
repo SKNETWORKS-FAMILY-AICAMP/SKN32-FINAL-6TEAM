@@ -696,9 +696,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         query = self._stay_query(item, trip)
         if query is None and (ctx.get("request") or {}).get("type") == "conversation":
             # ★`[2026-10-15]` 인원만 모르면(웹 접수로 만든 여행은 인원이 비어 있다) 사람에게 넘기지 않고 고객에게 묻는다 — 답이 오면 그 인원으로 찾는다
-            from app.domains.travel_ops.instances._shared.conversation_work import ask_party, stated_party
+            from app.domains.travel_ops.instances._shared.conversation_work import ask_party, known_party
 
-            said = stated_party(task)
+            said = known_party(task, ctx)
             if said is not None:
                 query = self._stay_query(item, {**trip, "party_size": said})
             elif self._stay_query(item, {**trip, "party_size": 1}) is not None:
