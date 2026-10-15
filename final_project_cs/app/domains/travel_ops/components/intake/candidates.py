@@ -203,6 +203,24 @@ def _similar_places(conn, tenant_id: str, ref: tuple[float, float], lcls: list[s
     return [{**place, "basis": "same_kind", "class_grade": grade} for place in _tour_places(cands)]
 
 
+def _catalog_content_id(conn, tenant_id: str, current: dict[str, Any] | None) -> str | None:
+    """관광공사 번호가 없는 원래 장소(우리 장소 목록에서 찾은 「경복궁」 등)를 **같은 이름의 목록 항목**으로 잇는다 — 정확히 한 곳일 때만(`_original_class` 와 같은 이름 규칙).
+    ★`[2026-10-15 x600 실서버 확인]` 우리 장소 목록 행은 번호가 비어 있는 경우가 많아 팀 엔진을 못 부르고 자체 고르기로 떨어졌다. 여럿이면 모름(`None`)."""
+    name = ((current or {}).get("name") or "").strip()
+    if not name:
+        return None
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT DISTINCT content_id FROM place_catalog WHERE tenant_id = ANY(%s) AND source='tour_api' AND title = %s",
+                        (_tenants(tenant_id), name))
+            ids = [row[0] for row in cur.fetchall() if row[0]]
+    except Exception as exc:                                  # noqa: BLE001 — 목록이 없는 DB 면 모른다
+        if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable"):
+            raise
+        return None
+    return str(ids[0]) if len(ids) == 1 else None
+
+
 def _team_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, Any] | None,
                  items: list[dict[str, Any]]) -> list[dict[str, Any]] | None:
     """활동 일정의 다른 곳 후보를 **활동 팀 엔진**(`team_hooks.activity_alternatives`)에게 받는다. `[2026-10-15 사용자 결정]` 후보 공급은 팀이, 조립은 우리가.
@@ -215,7 +233,7 @@ def _team_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, 
 
     if get_guardrails().get("travel.candidates.team_first") is False:
         return None
-    content_id = (current or {}).get("content_id")
+    content_id = (current or {}).get("content_id") or _catalog_content_id(conn, tenant_id, current)
     start = _dt(item["date"], item["starts_at"])
     if not content_id or start is None:
         return None
