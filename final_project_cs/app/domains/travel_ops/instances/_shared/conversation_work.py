@@ -53,6 +53,35 @@ def wait_for_input(work: Any, task: TeamTask, ctx: dict[str, Any], question: str
                                     **({"choices": choices} if choices else {})}])
 
 
+_KO_PARTY = {"혼자": 1, "한": 1, "하나": 1, "두": 2, "둘": 2, "세": 3, "셋": 3, "네": 4, "넷": 4, "다섯": 5}
+#: 인원 답 — 「2」 · 「2명」 · 「성인 2명이요」 · 「두 명」 · 「혼자」. 1~20명만(전화번호 · 금액을 인원으로 읽지 않는다)
+PARTY_REPLY = re.compile(r"\s*(?:성인\s*)?(?:(\d{1,2})|(혼자|한|하나|두|둘|세|셋|네|넷|다섯))\s*(?:명|분|인|사람)?(?:이요|이에요|이예요|요)?[.!]?\s*")
+
+
+def party_size_from(text: Any) -> int | None:
+    """인원을 묻는 질문(`ask_party`)에 대한 짧은 답 → 인원. 인원으로 읽히지 않으면 None."""
+    found = PARTY_REPLY.fullmatch(text) if isinstance(text, str) else None
+    if found is None:
+        return None
+    value = int(found[1]) if found[1] else _KO_PARTY[found[2]]
+    return value if 1 <= value <= 20 else None
+
+
+def stated_party(task: TeamTask) -> int | None:
+    """고객이 인원 질문에 답한 값(가장 나중 답). 답이 없으면 None."""
+    for answer in reversed(replies(task)):
+        value = party_size_from(answer)
+        if value is not None:
+            return value
+    return None
+
+
+def ask_party(work: Any, task: TeamTask, ctx: dict[str, Any], what: str) -> TeamResult:
+    """★`[2026-10-15 x600 서버 실서버 확인]` 웹 접수로 만든 여행에는 인원이 비어 있어 숙소 · 항공 후보를 못 찾고 사람에게 넘어갔다 — 지어내지 않고 **고객에게 묻는다**.
+    답은 같은 업무의 빈칸을 채운다(`stated_party`)."""
+    return wait_for_input(work, task, ctx, f"{what}을(를) 찾으려면 몇 분이 함께 가시는지 알아야 해요. 예를 들어 ‘2명이요’라고 알려 주세요.", "adults")
+
+
 def _choice(choices: list[dict[str, Any]], text: str) -> dict[str, Any] | None:
     match = re.fullmatch(r"\s*(\d+)\s*(?:번(?:이요|요)?|번째)?[.!]?\s*", text)
     if match and 1 <= int(match[1]) <= len(choices):
@@ -158,6 +187,13 @@ async def run_conversation(work: Any, task: TeamTask, ctx: dict[str, Any]) -> Te
             choices = [{"label": i.title, "message": i.title, "item_id": str(i.item_id),
                         "action": action} for i in ctx["items"] if i.kind == work.manifest.team_id and i.place]
             return wait_for_input(work, task, ctx, "어느 일정을 다른 곳으로 바꿀까요?", "target_item_id", choices=choices)
+        if getattr(work, "conversation_change_by_team", False):
+            # ★`[2026-10-15 숙박예약 점검 LB-02]` 후보를 **직접 찾는** 팀(숙소)은 식당 · 활동의 장소 목록으로 대신 고르지 않는다 — 전에는 이 갈래에 들어오지 못하고
+            #   아래 공용 계획(`_fresh_plan`)이 「장소를 바꿀 수 있는 일정(식사 · 활동)이 아니다」로 답했다. 팀 자신의 「바꿔 줘」(`_change`: 새 후보를
+            #   「선택이 필요해요」 제안으로 내거나, 고른 후보로 바꾼다)로 보낸다
+            if chosen and chosen.get("choice") is not None:
+                request["choice"] = chosen["choice"]
+            return work._change(task, ctx)
         if action == "propose_alternatives":
             return _propose_alternatives(work, task, ctx, item)
         if item.detail.get("alternates"):

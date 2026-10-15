@@ -22,9 +22,12 @@ def main() -> int:
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
+    # x600 서버는 컨테이너 네트워크 안이라 0.0.0.0 으로 받고 포트 묶음(127.0.0.1)이 바깥을 막는다.
+    # 오라클 서버는 host 네트워크라 0.0.0.0 이면 기계 바깥에 열린다 — 거기서는 ADMIN_HOST=127.0.0.1 로 준다.
+    admin_host = os.environ.get("ADMIN_HOST", "0.0.0.0")
     commands = [
         [sys.executable, "-m", "uvicorn", "app.ops_entrypoint:app", "--host", "127.0.0.1", "--port", "8070"],
-        ["node", str(Path("/srv/admin/node_modules/next/dist/bin/next")), "start", "--hostname", "0.0.0.0", "--port", "3300"],
+        ["node", str(Path("/srv/admin/node_modules/next/dist/bin/next")), "start", "--hostname", admin_host, "--port", "3300"],
     ]
     try:
         for index, command in enumerate(commands):

@@ -133,3 +133,40 @@ def test_itinerary_change_records_who_picked():
     assert result.notice["other_options"][0] == "연탄불고기"                       # 규칙 1등은 「다른 안」으로 남는다
     old = plain.replacements[meal.item_id]
     assert keys[str(old.place["place_id"])] == "A" and "meal_pick" not in old.detail   # 선택기가 없으면 지금 그대로
+
+
+# ── 연결 `[2026-10-15]` — 취향은 설문에서도 읽고, 선택기는 가드레일을 켰을 때만 꽂힌다 ──────────────
+
+def test_preference_comes_from_the_survey_when_the_trip_has_no_explicit_sentence():
+    from app.domains.travel_ops.components.planning.meal_pick import preference_of
+
+    assert preference_of({"meal_preference": "매운 거 좋아해요"}) == "매운 거 좋아해요"
+    assert preference_of({"survey": {"custom_answers": {"food": "국물 요리 위주로"}}}) == "국물 요리 위주로"
+    assert preference_of({"survey": {"priority_details": {"food": ["michelin", "vegetarian", "nopo"]}}}) == "미쉐린 선정 식당 · 오래된 노포"
+    assert preference_of({"survey": {"priority_details": {"food": ["vegetarian"]}}}) == ""      # 채식은 조건 — 취향이 아니다
+    assert preference_of({}) == "" and preference_of(None) == ""
+
+
+def test_the_picker_is_wired_only_when_the_guardrail_is_on(monkeypatch):
+    from app import composition
+    from app.core import settings as settings_module
+    from app.infrastructure.llm_failover import OpenAIChat
+
+    monkeypatch.setattr(settings_module, "dining_meal_pick", lambda: None)
+    assert composition._dining_meal_picker() is None                               # 기본 꺼짐 — 규칙 1등
+
+    made = []
+    monkeypatch.setattr(settings_module, "dining_meal_pick", lambda: {"model": "openai:gpt-4o-mini"})
+    monkeypatch.setattr(settings_module, "get_settings",
+                        lambda: type("S", (), {"openai_api_key": "sk-test", "ollama_base_url": "", "ollama_model": ""})())
+    from app.domains.travel_ops.components.planning import meal_pick
+    monkeypatch.setattr(meal_pick, "make_picker", lambda chat, **_: made.append(chat) or "picker")
+    assert composition._dining_meal_picker() == "picker"
+    assert isinstance(made[0], OpenAIChat) and made[0].model == "gpt-4o-mini"
+
+
+def test_without_a_wired_picker_the_hook_answers_none():
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+    dining_ledger.clear()
+    assert dining_ledger.meal_picker() is None

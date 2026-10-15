@@ -1,0 +1,836 @@
+{
+ "eval": "dining_alternatives",
+ "dataset": "dining_alternatives_pref_v1.jsonl",
+ "dataset_sha": "eca4db68ea6996c2",
+ "label": "2026-10-15-luna",
+ "seeds": 3,
+ "mobility": false,
+ "env": {
+  "run_at": "2026-10-15T11:00:07+09:00",
+  "git_commit": "68d268f1",
+  "git_branch": "role-dining",
+  "git_dirty": true
+ },
+ "summary": {
+  "accuracy": {
+   "num": 12,
+   "den": 12,
+   "rate": 1.0
+  },
+  "acceptable": {
+   "num": 12,
+   "den": 12,
+   "rate": 1.0
+  },
+  "violations": {
+   "num": 0,
+   "den": 12,
+   "rate": 0.0
+  },
+  "violations_any_seed": {
+   "num": 0,
+   "den": 12,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct": 12,
+   "ok": 0,
+   "correct_no_change": 0,
+   "wrong_violation": 0,
+   "wrong": 0,
+   "missed": 0,
+   "wrong_change": 0,
+   "unstable": 0
+  },
+  "by_group": {
+   "preference": {
+    "num": 12,
+    "den": 12,
+    "rate": 1.0
+   }
+  },
+  "added_walk_min_mean": 0.0,
+  "skipped": []
+ },
+ "picker": {
+  "picker": "openai",
+  "model": "gpt-6-luna",
+  "gate": "auto",
+  "runs_with_meal": 36,
+  "asked": 36,
+  "by": {
+   "llm": 36
+  },
+  "failures": {},
+  "overrides": 27,
+  "override_vs_rule": {
+   "wrong→correct": 24,
+   "ok→correct": 3
+  },
+  "seconds_mean": 3.83,
+  "seconds_p95": 5.643,
+  "usage": {
+   "prompt_tokens": 28185,
+   "completion_tokens": 2120,
+   "calls": 36
+  }
+ },
+ "results": [
+  {
+   "id": "DP-001",
+   "group": "preference",
+   "why": "고기를 빼 달라 — 가장 비슷한 고깃집 대신 비빔밥집",
+   "picked": "B",
+   "picked_name": "산채비빔밥",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고기를 빼고 채식 위주로 먹고 싶으므로 비빔밥 후보를 고릅니다.",
+      "seconds": 4.33,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고기를 빼고 채식 위주로 먹고 싶어 비빔밥 후보를 골랐습니다.",
+      "seconds": 2.541,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "고기를 제외하고 채식 위주로 먹고 싶다는 취향에 맞는 비빔밥 후보입니다.",
+      "seconds": 2.214,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-002",
+   "group": "preference",
+   "why": "날것을 못 먹는다 — 비슷한 횟집 대신 국물 · 면",
+   "picked": "C",
+   "picked_name": "손칼국수",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "C",
+      "asked": 3,
+      "failure": null,
+      "reason": "회나 날것을 피할 수 있는 칼국수 후보를 고릅니다.",
+      "seconds": 2.61,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "회나 날것이 아닌 곰탕을 먹을 수 있는 후보를 골랐습니다.",
+      "seconds": 3.092,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "회와 날것을 피할 수 있는 곰탕을 고릅니다.",
+      "seconds": 3.509,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-003",
+   "group": "preference",
+   "why": "국물을 원한다 — 가까운 한상차림 대신 국밥집",
+   "picked": "B",
+   "picked_name": "순대국밥",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "따뜻한 국물 메뉴를 원해 국물요리인 순대국밥을 골랐어요.",
+      "seconds": 4.626,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "따뜻한 국물 취향에 맞는 국물요리인 순대국밥을 고릅니다.",
+      "seconds": 4.46,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "따뜻한 국물 메뉴를 원하셔서 국밥을 고릅니다.",
+      "seconds": 4.174,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-004",
+   "group": "preference",
+   "why": "면을 원한다 — 비슷한 국물집 대신 칼국수",
+   "picked": "B",
+   "picked_name": "명동칼국수",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "면 요리를 선호해 칼국수를 파는 후보를 골랐습니다.",
+      "seconds": 4.361,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "면 요리를 선호하므로 칼국수를 파는 후보를 고릅니다.",
+      "seconds": 5.643,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "면 요리를 선호하므로 칼국수를 파는 후보를 고릅니다.",
+      "seconds": 3.915,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-005",
+   "group": "preference",
+   "why": "간단히 브런치 — 한상차림 대신 브런치",
+   "picked": "B",
+   "picked_name": "선데이브런치",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "브런치처럼 간단히 먹고 싶다는 취향에 맞습니다.",
+      "seconds": 4.266,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "브런치처럼 간단히 먹고 싶다는 취향에 맞습니다.",
+      "seconds": 4.178,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "브런치처럼 간단히 먹고 싶다는 취향에 맞는 후보입니다.",
+      "seconds": 4.446,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-006",
+   "group": "preference",
+   "why": "비슷한 곳을 원한다 — 규칙 1등 그대로",
+   "picked": "A",
+   "picked_name": "고려삼계탕",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "원래 먹으려던 삼계탕과 같은 메뉴라서 골랐어요.",
+      "seconds": 3.576,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "원래와 같은 삼계탕 메뉴를 파는 곳입니다.",
+      "seconds": 3.319,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "원래와 같은 삼계탕 메뉴를 제공해 가장 비슷합니다.",
+      "seconds": 2.818,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-007",
+   "group": "preference",
+   "why": "아무거나 — 바꿀 이유가 없다",
+   "picked": "A",
+   "picked_name": "시장국수",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "아무거나 괜찮다고 하셔서 규칙 1위인 시장국수를 골랐어요.",
+      "seconds": 3.029,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "아무거나 괜찮다고 하셨으므로 규칙 1위인 시장국수를 고릅니다.",
+      "seconds": 2.658,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "아무거나 괜찮다고 하셔서 규칙 1위 후보를 골랐습니다.",
+      "seconds": 3.0,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-008",
+   "group": "preference",
+   "why": "일식을 원한다 — 한식 국물집 대신 초밥",
+   "picked": "B",
+   "picked_name": "스시하루",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "오늘 일식을 원하므로 일식 후보인 스시하루를 고릅니다.",
+      "seconds": 3.765,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "오늘 먹고 싶은 일식인 후보를 골랐습니다.",
+      "seconds": 4.216,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "오늘 일식이 먹고 싶다는 취향에 맞는 후보입니다.",
+      "seconds": 4.808,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-009",
+   "group": "preference",
+   "why": "중식은 싫다 — 비슷한 중식 대신 다른 종류",
+   "picked": "C",
+   "picked_name": "카츠야",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "C",
+      "asked": 3,
+      "failure": null,
+      "reason": "중식이 아닌 일식을 원해 카츠야를 선택했습니다.",
+      "seconds": 5.666,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "C",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "C",
+      "asked": 3,
+      "failure": null,
+      "reason": "중식이 아닌 일식 후보이며, 돈가스를 메뉴로 제공합니다.",
+      "seconds": 4.521,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "중식이 아닌 한식 후보이며, 다른 종류의 식당입니다.",
+      "seconds": 4.331,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-010",
+   "group": "preference",
+   "why": "커피 한 잔이면 된다 — 카페",
+   "picked": "B",
+   "picked_name": "골목카페",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "커피 한 잔을 원해 커피를 메뉴로 하는 골목카페를 골랐어요.",
+      "seconds": 4.434,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "배가 고프지 않아 커피만 원하는 취향에 맞는 후보입니다.",
+      "seconds": 4.59,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "커피 한 잔을 원한다는 취향에 맞는 후보입니다.",
+      "seconds": 4.419,
+      "final_label": "correct",
+      "rule_label": "wrong"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-011",
+   "group": "preference",
+   "why": "든든하게 — 브런치 대신 고깃집",
+   "picked": "B",
+   "picked_name": "숯불갈비",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "든든하게 먹고 싶다는 취향에 맞는 후보는 갈비입니다.",
+      "seconds": 4.166,
+      "final_label": "correct",
+      "rule_label": "ok"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "든든하게 먹고 싶다는 취향에 맞는 갈비를 고릅니다.",
+      "seconds": 3.544,
+      "final_label": "correct",
+      "rule_label": "ok"
+     }
+    },
+    {
+     "picked": "B",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "B",
+      "asked": 3,
+      "failure": null,
+      "reason": "든든하게 먹고 싶은 취향에 맞춰 갈비 메뉴를 고릅니다.",
+      "seconds": 3.287,
+      "final_label": "correct",
+      "rule_label": "ok"
+     }
+    }
+   ]
+  },
+  {
+   "id": "DP-012",
+   "group": "preference",
+   "why": "원하는 종류가 후보에 없다 — 규칙 1등 그대로",
+   "picked": "A",
+   "picked_name": "잔치국수",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct",
+   "runs": [
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "태국 음식에 맞는 후보가 없어 규칙 1위를 골랐습니다.",
+      "seconds": 2.931,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "태국 음식에 맞는 후보가 없어 규칙 1위를 고릅니다.",
+      "seconds": 3.146,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    },
+    {
+     "picked": "A",
+     "label": "correct",
+     "pick": {
+      "by": "llm",
+      "rule_key": "A",
+      "llm_key": "A",
+      "asked": 3,
+      "failure": null,
+      "reason": "태국 음식 후보가 없어 규칙 1위인 잔치국수를 골랐어요.",
+      "seconds": 3.142,
+      "final_label": "correct",
+      "rule_label": "correct"
+     }
+    }
+   ]
+  }
+ ]
+}

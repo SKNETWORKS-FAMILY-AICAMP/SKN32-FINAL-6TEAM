@@ -39,13 +39,17 @@ from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleIti
 from app.domains.travel_ops.components.itinerary.itinerary_changes import (DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
                                 plan_delay, plan_fresh_alternate, plan_nearby_store, plan_rollback, plan_swap)
 from app.domains.travel_ops.components.planning.pending import PendingStore, decide, options_from, proposal_notice
+# 요식 끼움 자리 — 생성자 인자 `dining_ledger`(원장을 쓰나)와 이름이 겹치지 않게 별칭으로 둔다
+from app.domains.travel_ops.components.team_hooks import dining_ledger as dining_hook
 
 
 class TripDesk:
     def __init__(self, *, store: TripStore, connection_factory: Callable[[], Any],
                  check: Callable[..., dict[str, Any]] | None = None, dining_ledger: bool = True,
-                 catalog_pool: bool = False) -> None:
+                 catalog_pool: bool = False, edit_lookups: Callable[[], tuple[Any, Any, Any]] | None = None) -> None:
         self.store, self._connect = store, connection_factory
+        #: ★`[2026-10-15]` 채팅 고치기(`chat_edit`)의 이름 찾기 부품 — (관광공사, 카카오, 요식 원장). 웹 「일정 수정」의 고치기와 같은 것(`trip_api._desk`)
+        self._edit_lookups = edit_lookups or (lambda: (None, None, None))
         #: ★`[2026-09-29]` 활동 대체 후보를 관광공사 목록(DB)에서 넓히나(`catalog_pool`). 끄면(시나리오 · 시험 일부) 장소 표만 본다
         self._catalog_pool = catalog_pool
         #: 요식 원장을 쓰나 — ★`[2026-09-28 사용자 지시]` 시나리오 모드는 **대본대로만 도는 데모 모드**다 — 실제 요식 원장(DB 의 식당 표)을
@@ -127,7 +131,8 @@ class TripDesk:
 
         def plan(candidates):
             return plan_delay(trip=trip, items=items, places=candidates, at=at, minutes=minutes,
-                              message=message, request_id=request_id, state_lookup=self._state_lookup())
+                              message=message, request_id=request_id, state_lookup=self._state_lookup(),
+                              meal_picker=dining_hook.meal_picker())
         meal = next((i for i in items if i.kind == "dining" and i.starts_at >= at), None)   # plan_delay 와 같은 식사
         return self._outcome(trip_id, trip["version"], items,
                              self._with_nearby(trip_id, meal, places, plan), gate=True)
@@ -140,7 +145,8 @@ class TripDesk:
 
         def plan(candidates):
             return plan_closed(trip=trip, items=items, places=candidates, at=at, message=message,
-                               request_id=request_id, state_lookup=self._state_lookup())
+                               request_id=request_id, state_lookup=self._state_lookup(),
+                               meal_picker=dining_hook.meal_picker())
         meal = next((i for i in items if i.kind == "dining"                                # plan_closed 와 같은 식사
                      and i.starts_at <= at < (i.ends_at or i.starts_at + timedelta(hours=1))), None)
         return self._outcome(trip_id, trip["version"], items,
@@ -289,6 +295,44 @@ class TripDesk:
             return written
         return {"status": "rolled_back", "version": written["version"],
                 "restored": plan.summary["restored"], "notice": plan.notice}
+
+    def find_place(self, name: str, *, kind_hint: str | None = None) -> Any | None:
+        """이름 → 장소 **한 곳**(`intake.places.resolve` — 우리 장소 표 → 관광공사 → 요식 원장 → 카카오). 못 찾으면 None.
+        ★`[2026-10-15]` 이름 말한 곳으로 바꾸기 전에 본다 — 「다른 식당」처럼 이름이 아닌 설명이면 못 찾으므로 다른 안 보여 주기로 돌린다."""
+        from app.domains.travel_ops.components.intake import pipeline
+        from app.domains.travel_ops.components.intake.places import resolve
+
+        if not (name or "").strip():
+            return None
+        tour, kakao, dining = self._edit_lookups()
+        with self._connect() as conn:
+            found = resolve(name.strip(), our_places=pipeline._our_places(conn, self.store.tenant_id), tour=tour, kakao=kakao,
+                            dining=dining, kind_hint=kind_hint)
+        return found if found.status == "resolved" else None
+
+    def edit(self, *, trip_id: UUID, base_version: int, decision: Any, now: datetime, message: str | None = None,
+             request_id: str | None = None) -> dict[str, Any]:
+        """★`[2026-10-15 사용자 지시]` 채팅으로 일정 고치기 — 시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳으로 바꾸기 · 순서 · 고정.
+        웹 「일정 수정」과 **같은 길**(`chat_edit.run` — 다시 열기 → 고치기 → 검사 → 「완료」). 못 고치면 까닭을 그대로 답한다."""
+        from app.domains.travel_ops.components.conversation import chat_edit
+
+        with self._connect() as conn:
+            trip, items = self.store.latest(conn, trip_id)
+        try:
+            ops, what = chat_edit.ops_for(decision, items=items, now=now, message=message or "")
+            done = chat_edit.run(store=self.store, connect=self._connect, tenant=self.store.tenant_id,
+                                 customer_id=trip["customer_id"], trip_id=trip_id, base_version=base_version, ops=ops,
+                                 lookups=self._edit_lookups, now=now,
+                                 cause_extra={"message": (message or "")[:200], **({"chat_request_id": request_id} if request_id else {})})
+        except chat_edit.EditRefused as refused:
+            status = "clarify" if refused.code.startswith("need_") else "edit_refused"
+            return {"status": status, "text": refused.message, "reason": refused.code, **refused.detail}
+        if not done["changed"]:
+            return {"status": "already_applied", "text": "말씀하신 대로 이미 되어 있어 일정은 바꾸지 않았어요.", "reason": "unchanged"}
+        with self._connect() as conn:
+            _, after = self.store.latest(conn, trip_id)
+        return {"status": "adjusted", "version": done["version"], "edit": what,
+                "text": chat_edit.done_text(ops, items_after=after, plan=done["plan"])}
 
     # ── 적용(버전 + 통지를 한 트랜잭션) ─────────────────────────
     def _outcome(self, trip_id: UUID, base_version: int, items: list[Item],

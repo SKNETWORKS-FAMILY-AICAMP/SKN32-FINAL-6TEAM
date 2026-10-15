@@ -77,6 +77,26 @@ services:
       interval: 15s
       timeout: 5s
       retries: 12
+  # `[2026-10-15 사용자 지시]` 관리자웹앱(3300)과 운영 API(8070) — 이 기계 안(127.0.0.1)에서만 받는다.
+  # 팀원은 Tailscale 로만 닿는다(tailscale serve 가 루프백으로 넘겨 준다). 공개 Caddy 에는 연결하지 않는다.
+  admin:
+    image: tripilot-arm-admin:${IMAGE_TAG:?}
+    restart: unless-stopped
+    network_mode: host
+    env_file:                              # x600 서버의 운영 프로파일과 같은 세 파일 — 뒤가 이긴다
+      - .env
+      - .env.apikeys
+      - path: .env.admin                   # 운영자 계정 · 고객 API 열쇠. 없으면 로그인 화면이 「닫혀 있다」고 말한다
+        required: false
+    environment:
+      ADMIN_HOST: 127.0.0.1
+      ADMIN_OPS_API_URL: http://127.0.0.1:8070
+      ACOP_OPS_API_BASE_URL: http://127.0.0.1:8043
+      ACOP_DEPLOYMENT_VERSION: ${IMAGE_TAG:?}
+      ACOP_DIAGNOSTIC_SPOOL: /srv/var/operations-diagnostics/pending.sqlite3
+    volumes: ["ops:/srv/var/ops", "diagnostics:/srv/var/operations-diagnostics", "${MOBILITY_DIR:?}:/data/mobility/processed:ro"]
+    mem_limit: 1g
+    cpus: 0.3
 volumes:
   pg:
   ops:

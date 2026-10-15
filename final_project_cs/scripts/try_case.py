@@ -82,6 +82,7 @@ def main():
             print(f"\n행을 남겼다 — 테넌트 {tenant}")
         else:
             with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+                cur.execute("SET LOCAL app.case_events_purge = 'on'")     # case_events 는 DB 가 추가만 하게 막는다(904) — 정리 때만 연다
                 for statement in CLEANUP:
                     cur.execute(statement, (tenant,))
             print(f"\n테넌트 {tenant} 의 행을 지웠다")

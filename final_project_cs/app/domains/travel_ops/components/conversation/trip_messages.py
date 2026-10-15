@@ -89,6 +89,10 @@ def _asked_day(message: str, stops: list[Any]):
     return days[0] + timedelta(days=n)
 
 
+#: 자기 팀이 있는 일정 종류(식사 · 활동이 아닌 것) → 문장이 그 종류를 말하는 낱말. 규칙 경로 대상 고르기가 쓴다
+_OWN_TEAM_WORDS = {"lodging": r"숙소|숙박|호텔", "flight": r"항공|비행기"}
+
+
 def _change_target(items: list[Any], message: str, selected: UUID | None, at: datetime):
     """「바꿔 줘」가 가리키는 식사·활동.
 
@@ -137,14 +141,36 @@ def _change_target(items: list[Any], message: str, selected: UUID | None, at: da
             found = (today or upcoming or meals or [None])[0]
             if found is not None:
                 return found
+    # ★`[2026-10-15 숙박예약 점검 LB-02]` 숙소 · 항공편은 번호 · 서수 · 끼니로 세는 목록(식사 · 활동)에 넣지 않는다(「2번」 같은 번호가 밀리지 않게). 문장이 **그 종류를 말했을 때**만 대상이다 —
+    #   이름이 있는 식사 · 활동(「호텔 조식」)은 위에서 이미 골랐다. 같은 종류가 여럿이면 이름의 단어가 겹친 것, 못 가리면 None(부르는 쪽이 되묻는다). 두 종류를 함께 말했으면 가리지 않는다
+    said = [own for own, words in _OWN_TEAM_WORDS.items() if re.search(words, text)]
+    if kind is None and len(said) == 1:
+        own_items = [i for i in items if i.kind == said[0]]
+        pick = own_items[0] if len(own_items) == 1 else _rule_named(own_items, text)
+        if pick is not None:
+            return pick
     if selected is not None:
-        chosen = next((i for i in stops if i.item_id == selected), None)
+        # 화면에서 고른 일정이 숙소 · 항공편이면 그것이 대상이다(문장이 다른 종류를 말하지 않았을 때)
+        chosen = next((i for i in [*stops, *(x for x in items if x.kind in _OWN_TEAM_WORDS)] if i.item_id == selected), None)
         if chosen is not None and (kind is None or chosen.kind == kind) and (
                 day is None or chosen.starts_at.astimezone(KST).date() == day):   # 문장이 말한 종류 · 날과 맞을 때만
             return chosen
     if day is not None and on_day:
         return on_day[0]
     return None
+
+
+def _rule_named(stays: list[Any], text: str):
+    """같은 종류가 여럿일 때 문장의 단어가 가장 많이 겹친 하나 — 동점이거나 겹침이 없으면 None(지어내지 않는다)."""
+    import re
+
+    scored = []
+    for stay in stays:
+        name = f"{stay.title} {(stay.place or {}).get('name', '')}"
+        words = {w for w in re.split(r"[\s·()\[\],./→\-]+", name) if len(w) >= 2}
+        scored.append((sum(1 for w in words if w in text), stay))
+    scored.sort(key=lambda pair: -pair[0])
+    return scored[0][1] if scored and scored[0][0] > 0 and (len(scored) == 1 or scored[0][0] > scored[1][0]) else None
 
 
 def _rollback_target(store: TripStore, trip_id: UUID, items: list[Any], message: str,
@@ -193,7 +219,7 @@ def _latest_changed_item(store: TripStore, trip_id: UUID):
 
 
 #: 일정 항목의 종류이자 그 종류를 맡는 팀 id — 둘이 같은 말이다(`config/project.yaml`)
-ITEM_TEAMS = frozenset({"activity", "dining", "mobility", "lodging"})
+ITEM_TEAMS = frozenset({"activity", "dining", "mobility", "lodging", "flight"})
 
 
 def owner_team(team: str, *, items: list[Any], message: str, selected: UUID | None,
@@ -264,6 +290,7 @@ def _finish_fact_case(*, tenant: str, case_id: UUID, trip_id: UUID, message: str
 def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message: str,
                         at: datetime, classifier: Any, chat: Any, desk: TripDesk,
                         actor_id: str, policy_search: Any = None, place_source: Any = None,
+                        kakao_source: Any = None,
                         defer: Callable[[Callable[[], None]], None] | None = None,
                         selected_item_id: UUID | None = None, location: Any = None,
                         progress: Callable[[str], None] | None = None,
@@ -391,7 +418,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                                      decision=decision, failure=failure, actor_id=actor_id,
                                      policy_search=policy_search, place_source=place_source,
                                      selected=selected_item_id, here=_fix_of(location, at), controller=controller,
-                                     read_snapshot=snapshot)
+                                     read_snapshot=snapshot, kakao_source=kakao_source)
             marker = {**marker}                         # shadow — 결정만 기록하고 아래 경로로 답한다
             shadow = {"decision_shadow": record}
         else:
@@ -687,6 +714,7 @@ def _open_message_case(conn, *, tenant: str, trip: dict[str, Any], message: str,
 #: 처리한 것(답이 나간 것) — 사람 대기가 아니다. 바꾸지 않고 물은 것 · 되물은 것도 여기다
 #: ★`[2026-10-05]` `needs_check`(영업 여부를 못 알아 바꾸지 않고 알린 것)도 답이다 — 사람 대기로 떨어지지 않게
 _DONE = ("adjusted", "answered", "still_fits", "needs_check", "asked", "rolled_back", "not_today", "no_meal", "clear", "gone",
+         "edit_refused",
          "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale", "knock_on", "rechecked")
 #: 바꾼 뒤 이 시간 안에 되돌리면 오변경 의심으로 표시한다 — ★우리가 고른 값(2026-09-29, Codex 합의의 「오변경 감지」)
 SUSPECT_UNDO_SECONDS = 15 * 60
@@ -696,7 +724,8 @@ _CLARIFY = "어느 일정을 말씀하시는지 알려 주세요 — 화면에�
 def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: str, request_id: str, at: datetime,
                   desk: TripDesk, store: TripStore, items: list[Any], decision: Any, failure: str | None,
                   actor_id: str, policy_search: Any, place_source: Any, selected: UUID | None,
-                  here: Any = None, controller: Any = None, read_snapshot: dict[str, Any] | None = None) -> dict[str, Any]:
+                  here: Any = None, controller: Any = None, read_snapshot: dict[str, Any] | None = None,
+                  kakao_source: Any = None) -> dict[str, Any]:
     """결정 단위가 고른 할 일을 **서버가 확인하고** 기존 실행 함수로 처리한다. 결과는 늘 「한 일」·「고를 안」·「되물음」이다."""
     import re
 
@@ -708,7 +737,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     from app.domains.travel_ops.components.conversation import trip_facts
     from app.domains.travel_ops.components.conversation import trip_replies
-    from app.domains.travel_ops.components.conversation.decision_unit import LOCATION_FACTS, fact_first, labels, maybe_meant
+    from app.domains.travel_ops.components.conversation.decision_unit import EDIT_ACTIONS, LOCATION_FACTS, PLACE_NEAR_FACTS, fact_first, labels, maybe_meant
 
     def move(event_type, payload):
         case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
@@ -755,6 +784,23 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         turns=turns,
         version=current_context["version"], now=context_now,
         ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
+    if decision.action == "replace_named":
+        # ★`[2026-10-15]` 말한 곳을 **먼저 찾는다**(웹 「일정 수정」과 같은 이름 찾기). 한 곳으로 찾으면 그곳으로 바꾸고(`TripDesk.edit`),
+        #   못 찾으면 — 「다른 식당」 같은 설명이거나 모르는 이름이다 — 바꾸지 않고 다른 안을 보여 고르게 한다(찾지 못했다고 먼저 밝힌다, `case_dispatch.response`)
+        named = dict((decision.raw or {}).get("named_destination") or {})
+        # ★`[2026-10-15 x600 실서버 확인]` 종류 힌트 없이 **이름으로 먼저** 찾는다 — 식사 일정에 「덕수궁」이라고 말하면 식당에서만 찾아 「탁사발두부공방 덕수궁점」으로 바뀌었다.
+        #   못 찾았고 바꿀 일정이 식사면 식사 힌트로 한 번 더 찾는다(식당 이름만 말한 경우)
+        text = str(named.get("text") or "")
+        found = desk.find_place(text)
+        if found is None and getattr(decision.item, "kind", None) == "dining":
+            found = desk.find_place(text, kind_hint="dining")
+        if found is None:
+            from dataclasses import replace as _replace
+
+            decision = _replace(decision, action="propose_alternatives",
+                                raw={**decision.raw, "named_destination": {**named, "found": False}})
+        else:
+            decision.raw["named_destination"] = {**named, "found": True, "name": found.name}
     # 복합 읽기는 각 질문의 대상·범위를 따로 검증한다.
     if decision.reads:
         focus, stale_selection = None, False
@@ -855,6 +901,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         text, basis = schedule_query.reply(decision.fact, decision.query, items=now_items, now=at)
         basis["version"] = base
         outcome = {"status": "answered", "text": text}
+    elif action == "answer_fact" and decision.fact in PLACE_NEAR_FACTS:
+        outcome = _answer_near_place(conn, decision=decision, message=message, trip=current, items=now_items, at=at,
+                                     store=store, desk=desk, trip_id=trip_id, place_source=place_source,
+                                     kakao_source=kakao_source)
     elif action == "answer_fact" and decision.fact in LOCATION_FACTS:
         # ★`[2026-09-30 사용자 지시]` 현재 위치가 필요한 질문 — 위치가 없으면 **일정을 바꾸지 않고** 위치를 부탁한다(`needs_location`)
         outcome = _answer_here(conn, kind=decision.fact, fix=here, trip=current, items=now_items, item=item, at=at,
@@ -945,6 +995,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         else:
             outcome = desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
                                     request_id=request_id)
+    elif action in EDIT_ACTIONS:
+        # ★`[2026-10-15 사용자 지시]` 시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳 · 순서 · 고정 — 웹 「일정 수정」과 같은 길로 실행한다(`TripDesk.edit`)
+        outcome = desk.edit(trip_id=trip_id, base_version=base, decision=decision, now=at, message=message,
+                            request_id=request_id)
     elif action == "report_delay":
         outcome = ({"status": "clarify", "text": "몇 분쯤 늦으세요? 「30분 늦어요」처럼 알려 주시면 식사가 아직 괜찮은지, 뒤 일정에 걸리는 곳이 없는지 확인해 드릴게요."}
                    if decision.minutes is None else
@@ -1044,7 +1098,9 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
                              and i.starts_at <= at < (i.ends_at or i.starts_at)), None)
         if current_meal is None or current_meal.item_id != item.item_id:
             request["action"] = "apply_change"
-    owner = item.kind if item is not None and item.kind in ("activity", "dining", "mobility") else None
+    # ★`[2026-10-15 숙박예약 점검 LB-02]` 숙소 항목도 자기 팀(`lodging`)이 맡는다 — 전에는 식당 · 활동 · 이동만 알아서 숙소를 가리킨 「바꿔 줘」가
+    #   활동 팀으로 넘어가 처리 못 한 채 사람에게 넘어갔다(`ITEM_TEAMS` = 일정 항목 종류 = 맡는 팀 id)
+    owner = item.kind if item is not None and item.kind in ITEM_TEAMS else None
     if action in ("report_delay", "report_closed") and request["action"] != "apply_change":
         owner = "dining"
     if owner is None:
@@ -1160,8 +1216,6 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
             text = trip_here.route_here(fix, dest, now=at,
                                         leg=legs.leg_planner(trip.get("party_size"), trip.get("constraints")))
     else:
-        from app.domains.travel_ops.components.itinerary.itinerary_changes import plan_nearby
-
         wanted = "dining" if kind == "nearby_dining" else "activity"
         if wanted == "activity":
             from app.domains.travel_ops.components.places.catalog_pool import widen_activity_pool
@@ -1171,26 +1225,87 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
             widen_activity_pool(conn, tenant_id=store.tenant_id, trip_id=trip_id, place=origin,
                                 known_names={str(p.get("name")) for p in store.places(conn, trip_id)},
                                 radius_m=RELAX_WIDE_M, now=at, memo=False)
-        places = store.places(conn, trip_id)
-        state_lookup = None
-        if wanted == "dining" and getattr(desk, "_use_ledger", True):
-            # ★`[2026-10-05]` 요식 원장이 식당의 정본이다(팀 방식). 현재 위치 둘레의 원장 가게를 **이 여행 전용 장소**로 들여놓고
-            #   (`dining.nearby.add_nearby`) 영업 판정은 원장(`dining_states`)에게 묻는다. 전에는 후보를 원장에서 직접 받았다(A 방식 · 걷어냄).
-            #   ★판정은 **이 연결**로 묻는다 — 방금 들여놓은 장소 · 연결이 아직 커밋 전이라 다른 연결에는 안 보인다.
-            #   ★반경은 1.5km 까지만 들여놓는다(3km 는 한 번에 수백~수천 곳이라 여행 전용 장소 표를 부풀린다 · 우리가 고른 값).
-            from types import SimpleNamespace
-
-            # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
-            from app.domains.travel_ops.components.team_hooks import dining_ledger
-
-            places = dining_ledger.add_nearby(conn, store, trip_id,
-                                              [SimpleNamespace(kind="dining", place=fix.as_origin())], places,
-                                              radius_m=NEARBY_HERE_RADIUS_M)
-            state_lookup = dining_ledger.state_lookup(conn, store.tenant_id)
-        found, radius, sought = plan_nearby(wanted, trip=trip, places=places, origin=fix.as_origin(), at=at,
-                                            state_lookup=state_lookup, items=items)
+        found, radius, sought = _nearby(conn, wanted, origin=fix.as_origin(), trip=trip, items=items, at=at,
+                                        store=store, desk=desk, trip_id=trip_id)
         text = trip_here.nearby(kind, fix, found=found, radius_m=radius, sought=sought)
     return {"status": "answered", "text": (note + " " if note else "") + text}
+
+
+def _nearby(conn, wanted: str, *, origin: dict[str, Any], trip: dict[str, Any], items: list[Any], at: datetime,
+            store: TripStore, desk: TripDesk, trip_id: UUID) -> tuple[list[Any], int | None, int]:
+    """기준점(`origin` — 현재 위치 · 일정의 곳 · 이름을 댄 곳) 둘레의 후보. 식당이면 원장 가게를 들여놓고 원장으로 영업을 판정한다."""
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import plan_nearby
+
+    places = store.places(conn, trip_id)
+    state_lookup = None
+    if wanted == "dining" and getattr(desk, "_use_ledger", True):
+        # ★`[2026-10-05]` 요식 원장이 식당의 정본이다(팀 방식). 기준점 둘레의 원장 가게를 **이 여행 전용 장소**로 들여놓고
+        #   (`dining.nearby.add_nearby`) 영업 판정은 원장(`dining_states`)에게 묻는다. 전에는 후보를 원장에서 직접 받았다(A 방식 · 걷어냄).
+        #   ★판정은 **이 연결**로 묻는다 — 방금 들여놓은 장소 · 연결이 아직 커밋 전이라 다른 연결에는 안 보인다.
+        #   ★반경은 1.5km 까지만 들여놓는다(3km 는 한 번에 수백~수천 곳이라 여행 전용 장소 표를 부풀린다 · 우리가 고른 값).
+        from types import SimpleNamespace
+
+        # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        places = dining_ledger.add_nearby(conn, store, trip_id, [SimpleNamespace(kind="dining", place=origin)], places,
+                                          radius_m=NEARBY_HERE_RADIUS_M)
+        state_lookup = dining_ledger.state_lookup(conn, store.tenant_id)
+    return plan_nearby(wanted, trip=trip, places=places, origin=origin, at=at, state_lookup=state_lookup, items=items)
+
+
+def _answer_near_place(conn, *, decision: Any, message: str, trip: dict[str, Any], items: list[Any], at: datetime,
+                       store: TripStore, desk: TripDesk, trip_id: UUID, place_source: Any,
+                       kakao_source: Any) -> dict[str, Any]:
+    """★`[2026-10-15]` 「서촌 근처 맛집 있어?」 — 일정의 곳이나 고객이 이름을 댄 곳 근처의 먹을 곳. **일정은 바꾸지 않는다.**
+    모델은 해석만 한다(무엇을 · 어디 근처). 가게는 요식 원장이 낸 것만, 영업은 원장으로 판정한다 — 모델 기억으로 가게 이름을 만들지 않는다.
+    ☆전에는 길이 없어 「현재 위치 근처」로 읽거나 · 대체 후보로 읽거나 · 모델이 일반 추천(「익선동 떡볶이가 유명합니다」)을 지어냈다(gpt-4o-mini 실측)."""
+    from app.domains.travel_ops.components.conversation import trip_here
+
+    anchor, when = _near_anchor(decision, message=message, items=items, at=at, store=store, conn=conn, trip_id=trip_id,
+                                place_source=place_source, kakao_source=kakao_source)
+    if anchor is None:
+        return {"status": "answered", "text": "어느 곳 근처의 식당을 찾을까요? 일정에 있는 곳이나 동네 이름을 말씀해 주세요."}
+    found, radius, sought = _nearby(conn, "dining", origin=anchor, trip=trip, items=items, at=when,
+                                    store=store, desk=desk, trip_id=trip_id)
+    return {"status": "answered", "text": trip_here.near_place(anchor["name"], at=when, now=at, found=found,
+                                                               radius_m=radius, sought=sought),
+            "near": {"name": anchor["name"], "source": anchor.get("source"), "at": when.isoformat(),
+                     "found": [(c.place or {}).get("name") or c.name for c in found[:trip_here.NEARBY_SHOWN]]}}
+
+
+def _near_anchor(decision: Any, *, message: str, items: list[Any], at: datetime, store: TripStore, conn, trip_id: UUID,
+                 place_source: Any, kakao_source: Any) -> tuple[dict[str, Any] | None, datetime]:
+    """(기준점, 볼 시각). 일정의 곳이면 그 좌표와 그 일정 시각(지났으면 지금), 이름만 댔으면 찾은 좌표와 지금. 못 찾으면 (None, 지금).
+    ★이름은 고객 문장에 **글자 그대로** 있어야 받는다 — 모델이 바꿔 적은 이름으로 찾지 않는다."""
+    item = decision.item
+    place = getattr(item, "place", None) or {}
+    if item is not None and place.get("latitude") is not None:
+        return ({"place_id": place.get("place_id"), "name": place.get("name") or item.title, "kind": item.kind,
+                 "latitude": place["latitude"], "longitude": place["longitude"], "attributes": {}, "source": "itinerary"},
+                max(item.starts_at, at))
+    text = str((decision.raw or {}).get("place_text") or "").strip()
+    if len(text) < 2 or text not in message:
+        return None, at
+    from app.domains.travel_ops.components.intake.places import normalize, resolve
+
+    known = [p for p in store.places(conn, trip_id) if p.get("latitude") is not None]
+    same = next((p for p in known if normalize(str(p.get("name") or "")) == normalize(text)), None)
+    if same is not None:
+        return {**same, "attributes": {}, "source": "trip_places"}, at
+    # 동네 · 명소 이름 — 장소 찾기(관광공사 · 카카오)로 좌표만 얻는다. ★활동으로 찾는다: 「서촌」이 「서촌닭갈비」가 되지 않게
+    found = resolve(text, our_places=[], tour=place_source, kakao=kakao_source, kind_hint="activity")
+    if found.status == "resolved" and found.latitude is not None:
+        return ({"place_id": None, "name": found.name, "kind": "activity", "latitude": found.latitude,
+                 "longitude": found.longitude, "attributes": {}, "source": found.method}, at)
+    pool = [c for c in (found.candidates or []) if c.get("latitude") is not None
+            and c.get("category_group") not in ("FD6", "CE7")]
+    exact = [c for c in pool if normalize(c["name"]) == normalize(text)]
+    pick = (exact or pool or [None])[0]
+    if pick is None:
+        return None, at
+    return ({"place_id": None, "name": pick["name"], "kind": "activity", "latitude": pick["latitude"],
+             "longitude": pick["longitude"], "attributes": {}, "source": "kakao"}, at)
 
 
 #: 「근처 식당」 — 현재 위치 둘레에서 원장 가게를 이 여행 전용 장소로 들여놓는 반경(m). ★우리가 고른 값(2026-10-05)

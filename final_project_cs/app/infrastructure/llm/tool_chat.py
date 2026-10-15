@@ -57,6 +57,9 @@ class OpenAIToolChat:
             kwargs["response_format"] = {"type": "json_object"}
         if not self.model.startswith(("o1", "o3", "o4", "gpt-5", "gpt-6")):
             kwargs["temperature"] = 0
+        if self.model.startswith("gpt-6-luna"):
+            # `[2026-10-15]` luna 는 chat completions 에서 도구를 쓰려면 추론을 꺼야 한다(안 주면 400) — `llm_failover.OpenAIChat` 과 같은 값
+            kwargs["reasoning_effort"] = "none"
         try:
             response = self._client.chat.completions.create(**kwargs)
             message = response.choices[0].message

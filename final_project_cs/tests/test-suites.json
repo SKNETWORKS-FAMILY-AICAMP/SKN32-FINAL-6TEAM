@@ -500,6 +500,7 @@
     "tests/unit/travel/test_plugin_unavailable_propagation.py",
     "tests/unit/travel/test_plugin_worker_availability.py",
     "tests/unit/travel/test_policy_customer_lines.py",
+    "tests/unit/travel/test_policy_rerank.py",
     "tests/unit/travel/test_rate_limit.py",
     "tests/unit/travel/test_read_requests.py",
     "tests/unit/travel/test_recheck_inputs.py",
