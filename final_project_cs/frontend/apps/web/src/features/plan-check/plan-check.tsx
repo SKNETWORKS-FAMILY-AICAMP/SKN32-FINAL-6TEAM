@@ -43,6 +43,7 @@ import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal } from "./use-reveal";
 import { AddStop, type AddStopPlace, type NewStop } from "./add-stop";
 import type { InsertionPoint } from "./insertion-points";
+import { useCenterFocus } from "./use-center-focus";
 import { useInsertionPoint } from "./use-insertion-point";
 import { PlaceSearchHeader } from "./place-search-header";
 import { useBackgroundBack } from "./use-background-back";
@@ -1166,6 +1167,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view, "center");
   const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !timeEdit.edit && !removed.length;
   useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
+  // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (a card or a way) wears a grey border, by the ＋'s measure — chosen apart from the ＋, so both can show.
+  useCenterFocus(bodyBox, done && !changing, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
   const closeInsertion = (key: string) => {
     if (addingBusy) return;
     setMapPicking(false); setMapCoordinate(null); setInserting(null); setSlide("prev");

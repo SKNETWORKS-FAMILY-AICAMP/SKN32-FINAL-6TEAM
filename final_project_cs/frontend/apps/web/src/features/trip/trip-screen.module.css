@@ -140,7 +140,16 @@
 @keyframes chatSendIn { from { transform: scale(1.32); } }
 @keyframes chatIconIn { from { opacity: 0; transform: rotate(90deg) scale(.6); } }
 @keyframes chatIconOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: rotate(-90deg) scale(.6); } }
-@media (prefers-reduced-motion: reduce) { .chatBar, .chatBar[data-open] { transition: none; } .chatBar[data-open] > .chatClose, .chatBar[data-open] .chatField, .chatBar[data-open] .chatSend, .chatSendTo, .chatSendFrom { animation: none; } }
+/* `[2026-10-15 사용자 결정 — ST4F-493 · 목업 A안 「칸 안 둥근 입력칸」]` 채팅 칸에 있는 동안 막대는 바닥 · 폭 가득으로 붙고(`data-docked`), 입력칸은 막대 안의 둥근 칸이며
+   포커스 링도 입력칸에 둔다. 일정 칸에서 연 막대는 위처럼 떠 있고, ← 로 일정 칸에 돌아가면 다시 떠오른다(0.38초). 막대 높이(입력칸 44px · 3줄까지)는 그대로다. */
+.chatBar[data-open] { transition: width .55s cubic-bezier(.34, 1.45, .64, 1), right .38s cubic-bezier(.2, .8, .2, 1), bottom .38s cubic-bezier(.2, .8, .2, 1), border-radius .38s, padding .38s, box-shadow .3s, border-color .3s; }
+.chatBar[data-open][data-docked] { right: 0; bottom: 0; width: 100%; border-radius: 0; border-color: transparent; border-top-color: var(--color-divider); padding: 8px 3px 14px; box-shadow: none;
+  transition: width .38s cubic-bezier(.2, .8, .2, 1), right .38s cubic-bezier(.2, .8, .2, 1), bottom .38s cubic-bezier(.2, .8, .2, 1), border-radius .38s, padding .38s, box-shadow .3s, border-color .3s; }
+.chatBar[data-open][data-docked]:focus-within { border-color: transparent; border-top-color: var(--color-divider); box-shadow: none; }
+.chatBar[data-open][data-docked] .chatField { padding: 0 10px; border-radius: 22px; background: var(--color-subtle); transition: box-shadow .3s, background-color .3s; }
+.chatBar[data-open][data-docked] .chatHint { left: 12px; right: 12px; }
+.chatBar[data-open][data-docked] .chatField:focus-within { box-shadow: inset 0 0 0 1px var(--color-selected), 0 0 0 4px var(--color-selected-soft); }
+@media (prefers-reduced-motion: reduce) { .chatBar, .chatBar[data-open], .chatBar[data-open][data-docked], .chatBar[data-open][data-docked] .chatField { transition: none; } .chatBar[data-open] > .chatClose, .chatBar[data-open] .chatField, .chatBar[data-open] .chatSend, .chatSendTo, .chatSendFrom { animation: none; } }
 .chatFab { display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--color-on-primary); cursor: pointer; }
 .chatClose { display: grid; flex: none; place-items: center; width: 40px; height: 40px; margin-left: 7px; padding: 0; border: 0; border-radius: 50%; background: var(--color-subtle); color: var(--color-muted); cursor: pointer; }
 .chatForm { display: flex; flex: 1; align-items: flex-end; justify-content: flex-end; gap: 6px; min-width: 0; padding: 0 6px 0 12px; }
