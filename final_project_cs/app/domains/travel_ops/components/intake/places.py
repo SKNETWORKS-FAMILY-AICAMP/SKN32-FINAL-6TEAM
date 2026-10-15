@@ -311,6 +311,13 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                     if slot == "dining":
                         again = (_tour(dining, match["name"], blocked, label="dining_ledger", near=near)
                                  if dining is not None and match["name"] != query else None)
+                        if again is None and dining is not None and match["name"] != query and match.get("latitude") is not None:
+                            # ★`[2026-10-15]` 앞뒤 일정 자리(`near`)로 못 찾았을 때만 — 카카오가 찾은 **그 가게 자리**에서 한 번 더 본다.
+                            #   「광화문미진 본점」(카카오)과 원장 「미진」(6m)을 잇지 못해 원장 영업시간을 두고도 「운영시간을 모른다」가 됐다.
+                            #   앞뒤 일정 기준(같은 이름 여럿 중 고르기)은 위에서 그대로 쓴다 — 이 줄은 그때 못 찾은 경우만 바꾼다
+                            inside = getattr(dining, "find_inside_name", None)
+                            again = (inside(match["name"], float(match["latitude"]), float(match["longitude"]))
+                                     if inside is not None else None)
                         if again is not None and (not activity or _fits_item_kind(again, query, meal=False, activity=True)):
                             tried.append(f"dining_ledger:{match['name']}")
                             return _from_tour(again, query, title, tried, via=match["name"],

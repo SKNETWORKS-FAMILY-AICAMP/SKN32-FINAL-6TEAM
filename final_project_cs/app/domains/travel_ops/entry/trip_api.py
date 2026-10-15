@@ -133,6 +133,14 @@ def _dining_lookup(ctx: _PlaceCtx | None = None) -> Any:
         def find_dish_near(self, *args, **kwargs):
             return self._provider().find_dish_near(*args, **kwargs)
 
+        # ★`[2026-10-15]` 이 두 길이 빠져 있었다 — 접수가 `getattr(dining, …)` 로 찾아 없으면 건너뛰어, 웹 접수에서
+        #   「통인시장 근처 점심」이 원장 식당 대신 카카오 첫 가게(타코야끼집)가 됐고 「광화문미진 본점」을 원장 「미진」에 잇지 못했다
+        def find_meal_near(self, *args, **kwargs):
+            return self._provider().find_meal_near(*args, **kwargs)
+
+        def find_inside_name(self, *args, **kwargs):
+            return self._provider().find_inside_name(*args, **kwargs)
+
     return DeferredDiningLookup()
 
 

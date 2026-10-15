@@ -19,7 +19,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any, Callable
 
 from app.domains.travel_ops.instances.dining.ledger import (DEFAULT_ORDER_MARGIN_MIN, _as_datetime, find_license_shop_by_name,
-                                                            find_place_by_name)
+                                                            find_place_by_name, find_place_inside_name)
 
 KST = timezone(timedelta(hours=9))
 #: 판정 한 번의 도구 호출 상한 — 설계 §4 「식사 항목당 8회」 × 식사 넷 안팎
@@ -171,6 +171,9 @@ class DiningTools:
         near = (float(lat), float(lng)) if lat is not None and lng is not None else None
         with self.connect() as conn:
             found = find_place_by_name(conn, name, near=near)
+            if found is None and near is not None:
+                # ★`[2026-10-15]` 「광화문 미진」 — 원장은 「미진」. 이름 단계가 못 맞추면 준 좌표(그 항목 장소) 100m 안에서 이름 안의 원장 가게를 본다
+                found = find_place_inside_name(conn, name, near)
             if found is not None:
                 return {"found": True, "source": "ledger", "place_uid": found.get("dining_place_uid"),
                         "name": found["matched_title"], "address": found.get("address"),
