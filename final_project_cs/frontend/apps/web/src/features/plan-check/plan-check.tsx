@@ -580,21 +580,37 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     setOpen(id, list);
     if (from === "map") {
       if (sheet === "peek") setSheet("half");
-      const bringUp = () => requestAnimationFrame(() => requestAnimationFrame(() => {
-        const box = bodyBox.current;
-        const card = document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`);
-        const row = card?.closest<HTMLElement>('li[data-type="item"]') ?? card;
-        if (!box || !row) return;
-        const head = sheetBox.current?.querySelector<HTMLElement>(`header.${styles.sheetHead}`);
-        const visibleTop = Math.max(box.getBoundingClientRect().top, head?.getBoundingClientRect().bottom ?? 0) + 12;
-        // Reserve only the missing room; the source and preview hint already provide space below the final stop.
-        box.style.removeProperty("--focus-room");
-        const target = box.scrollTop + row.getBoundingClientRect().top - visibleTop;
-        box.style.setProperty("--focus-room", `${Math.max(0, target - (box.scrollHeight - box.clientHeight))}px`);
-        dampedScrollTo(box, target);
-      }));
-      bringUp();
+      bringCardUp(id, list);
     }
+  }
+  /** A stop's card brought to the top of the list once it is drawn (its day may change first). */
+  function bringCardUp(id: string, list: "before" | "after") {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const box = bodyBox.current;
+      const card = document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`);
+      const row = card?.closest<HTMLElement>('li[data-type="item"]') ?? card;
+      if (!box || !row) return;
+      const head = sheetBox.current?.querySelector<HTMLElement>(`header.${styles.sheetHead}`);
+      const visibleTop = Math.max(box.getBoundingClientRect().top, head?.getBoundingClientRect().bottom ?? 0) + 12;
+      // Reserve only the missing room; the source and preview hint already provide space below the final stop.
+      box.style.removeProperty("--focus-room");
+      const target = box.scrollTop + row.getBoundingClientRect().top - visibleTop;
+      box.style.setProperty("--focus-room", `${Math.max(0, target - (box.scrollHeight - box.clientHeight))}px`);
+      dampedScrollTo(box, target);
+    }));
+  }
+  /**
+   * `[2026-10-15 사용자 결정 — ST4F-498]` 「○○에서 출발」 pressed: the stay itself, as the trip screen's band does — its check-in day, its card marked, opened and brought into view.
+   * Not a toggle: pressed again the card stays open.
+   */
+  function showStay(id: string, list: "before" | "after") {
+    const item = shown.items.find((entry) => entry.id === id);
+    if (!item) return;
+    setSelectedLine(null);
+    setSelected(id);
+    setChosenDay(item.day);
+    setOpen(id, list);
+    bringCardUp(id, list);
   }
   /**
    * `[2026-10-06 사용자 지시 — 경로를 누르면 해당 경로가 나온다]` A route line pressed on the map: it is drawn picked, its leg is opened in the list (and brought into view), and a card over the map describes it. Pressed again it is let go.
@@ -1256,6 +1272,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     reveal: done ? undefined : { activeId: readingList.activeId, waiting: readingList.waiting },
     prefix: list === "after" ? "after-" : "",
     onPick: (id) => pick(id, "list", list),
+    onShowStay: (id) => showStay(id, list),
     // ★`[2026-10-07 사용자 지적 — 목록에서 이동을 다시 눌러 닫아도 지도의 선은 골라진 채였다]` The list and the map say the same: opening a leg picks its line on the map, closing it lets the line go.
     onToggleMove: (id) => {
       const closing = openAt?.id === id && openAt.list === list;

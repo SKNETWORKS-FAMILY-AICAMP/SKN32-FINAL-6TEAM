@@ -30,6 +30,12 @@ describe("railSpans — the minutes each row of a day stands for", () => {
     expect(railSpans([stay(1380, 30)])[0]).toEqual({ from: 1380, to: null });
   });
 
+  it("a way that opens the day (the morning way from the stay) starts when it leaves — after a stop it still starts where the stop ends", () => {
+    // leave the hotel 09:35 arrive 09:50, 10:00–12:00
+    expect(railSpans([move(575, 590), stay(600, 720)])).toEqual([{ from: 575, to: 600 }, { from: 600, to: 720 }]);
+    expect(railSpans([stay(540, 560), move(575, 590), stay(600, 720)])[1]).toEqual({ from: 560, to: 600 });
+  });
+
   it("unknown starts stay unknown", () => {
     expect(railSpans([stay(null, null), move(null, null), stay(null, 700)])).toEqual([
       { from: null, to: null }, { from: null, to: null }, { from: null, to: 700 },

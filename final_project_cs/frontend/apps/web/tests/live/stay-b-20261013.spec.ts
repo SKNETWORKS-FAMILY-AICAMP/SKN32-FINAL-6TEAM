@@ -28,8 +28,9 @@ test.describe("숙소 항목 B안 — 여행 화면", () => {
     await expect(tripScreen(page)).toBeVisible();
 
     const first = await openDay(page, 1, "2026-10-01");
-    await expect(first.getByText("롯데호텔 서울 체크인", { exact: true })).toBeVisible();
-    await expect(first.getByText("3박 · 10/1~10/4", { exact: true })).toBeVisible();
+    // `[2026-10-15 사용자 결정]` The title is the name only; 「체크인」 leads the nights' line (the card's second line, or the right of a past line).
+    await expect(first.getByText("롯데호텔 서울", { exact: true })).toBeVisible();
+    await expect(first.getByText("체크인 · 3박 · 10/1~10/4", { exact: true })).toBeVisible();
 
     if (SHOTS) await first.screenshot({ path: `${SHOTS}/stay-2026-10-01.png` });
     const second = await openDay(page, 2, "2026-10-02");
@@ -46,7 +47,9 @@ test.describe("숙소 항목 B안 — 여행 화면", () => {
     if (SHOTS) await third.screenshot({ path: `${SHOTS}/stay-2026-10-03.png` });
     const last = await openDay(page, 4, "2026-10-04");
     await expect(last.getByText("마지막 날", { exact: true })).toBeVisible();
-    await expect(last.getByText("롯데호텔 서울 체크아웃", { exact: true })).toBeVisible();
+    const checkout = last.locator('[data-entry-id="s4:checkout"]');
+    await expect(checkout.locator("strong")).toHaveText("롯데호텔 서울");                       // the name, and 「체크아웃」 at the right
+    await expect(checkout.getByText("체크아웃", { exact: true })).toBeVisible();
     const lastOrder = await last.locator("[data-entry-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-entry-id")));
     expect(lastOrder.indexOf("s4:checkout")).toBeGreaterThan(lastOrder.indexOf("s10"));    // 09:30 광장시장 뒤, 13:00 창덕궁 앞
     expect(lastOrder.indexOf("s4:checkout")).toBeLessThan(lastOrder.indexOf("s11"));
