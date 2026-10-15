@@ -575,6 +575,28 @@ def test_a_locked_flight_needs_unlocking_and_then_its_time_can_change(api, monke
     assert next(i for i in again["review"]["items"] if i["title"] == "김포 도착")["locked"] is True   # 다시 열면 다시 잠금
 
 
+def test_an_unlocked_stay_moves_its_check_in_and_keeps_its_check_out_day(api, monkeypatch):
+    """숙소 잠금을 풀고 체크인 시각만 바꾸면 새 판의 숙소는 체크아웃 날 · 시각 그대로다(끝 날짜를 값 줄로 담는다)."""
+    _fake_calc(monkeypatch)
+    key = _user(api)
+    after_day = (NOW + timedelta(days=2)).date().isoformat()
+    stay = {**_item(1, "lodging", "롯데호텔 서울", "ht", TOMORROW, "15:00", "15:00"), "ends_at": _at(after_day, "11:00")}
+    trip = _trip_of(api, key, [HOTEL, BUKCHON], [_item(2, "activity", "북촌한옥마을", "bc", TOMORROW, "10:00", "11:30"), stay], "stay-check-in")
+    hotel = next(i for i in _stored(api, trip["trip_id"])[1] if i.kind == "lodging")
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    source = view["sources"][0]["source_id"]
+    index = _index(view, "롯데호텔 서울")
+    view = _edit(api, key, view, {"source_id": source, "field": f"items[{index}].locked", "value": False},
+                 {"source_id": source, "field": f"items[{index}].starts_at", "value": "16:00"})
+    seen = next(i for i in view["review"]["items"] if i["kind"] == "lodging")
+    assert (seen["starts_at"], seen["end_date"], seen["ends_at"]) == ("16:00", after_day, "11:00")
+    done = _confirm(api, key, view)
+    assert done["changed"] is True
+    new = next(i for i in _stored(api, trip["trip_id"])[1] if i.kind == "lodging")
+    assert new.replaces_item_id == hotel.item_id
+    assert (new.starts_at, new.ends_at) == (datetime.fromisoformat(_at(TOMORROW, "16:00")), hotel.ends_at)
+
+
 def test_unlocking_a_flight_without_changing_it_writes_no_new_version(api, monkeypatch):
     _fake_calc(monkeypatch)
     key = _user(api)
