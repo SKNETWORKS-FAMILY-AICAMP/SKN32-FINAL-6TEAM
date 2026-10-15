@@ -94,3 +94,15 @@ def test_ambiguous_legacy_number_still_requires_a_case(monkeypatch):
     with pytest.raises(StateConflict, match="업무를 지정"):
         call()
     assert seen == []
+
+
+def test_several_typed_answers_go_to_the_latest_question_but_a_bare_number_still_asks(monkeypatch):
+    """`[2026-10-15 사용자 지시 — 코어]` 질문 형식에 맞는 짧은 답(인원)이 여러 대기 건에 맞으면 가장 나중에 보인 질문(없으면 가장 최근 건)으로 — 숫자만 있는 답은 옛 규칙대로 지정을 받는다."""
+    adults = {"required": ["adults"]}
+    call, seen, _, _, waiting, _ = prepare(monkeypatch, latest="none", extra=True, message="2명이요", schema=adults)
+    assert call()["case_id"] != waiting and len(seen) == 1, "마지막(가장 최근) 건으로 이어진다 — 앞의 건이 아니다"
+    call, seen, _, _, waiting, _ = prepare(monkeypatch, latest="same", extra=True, message="2명이요", schema=adults)
+    assert call()["case_id"] == waiting, "방금 보인 질문의 건이 우선이다"
+    call, seen, _, _, _, _ = prepare(monkeypatch, latest="none", extra=True, message="2", schema={"required": ["adults"], "choices": [{"message": "a"}, {"message": "b"}]})
+    with pytest.raises(StateConflict, match="업무를 지정"):
+        call()
