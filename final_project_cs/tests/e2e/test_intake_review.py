@@ -257,7 +257,8 @@ def test_opening_hours_and_closing_days_come_from_what_is_stored_and_use_the_reg
     headers = _key(client)
     thursday = _send(client, headers, "2026-10-15\n10시 경복궁")
     palace = thursday["review"]["items"][0]
-    assert _row(palace, "hours") == {"row": "hours", "result": "ok", "text": "09:00–18:00 안에 머물러요"}
+    assert _row(palace, "hours") == {"row": "hours", "result": "ok", "text": "09:00–18:00 안에 머물러요",
+                                     "open_at": "ok"}            # `[2026-10-15]` 비교용 — 시작 시각에 열려 있나(요식 판정 그림자가 읽는다)
     assert _row(palace, "closed") == {"row": "closed", "result": "ok", "text": "화요일 휴무 · 방문은 목요일"}
     # 화요일 — 쉬는 날이면 고쳐야 하는 항목이다
     tuesday = _send(client, headers, "2026-10-13\n10시 경복궁")
@@ -267,7 +268,7 @@ def test_opening_hours_and_closing_days_come_from_what_is_stored_and_use_the_reg
     # 열기 전 — 주의(등록 판정기의 before_opening 과 같은 판정)
     early = _send(client, headers, "2026-10-15\n7시 반 경복궁")
     row = _row(early["review"]["items"][0], "hours")
-    assert row["result"] == "warn" and row["text"].startswith("09:00에 열어요")
+    assert row["result"] == "warn" and row["text"].startswith("09:00에 열어요") and row["open_at"] == "bad"
     assert early["review"]["items"][0]["status"] == "review"
 
 

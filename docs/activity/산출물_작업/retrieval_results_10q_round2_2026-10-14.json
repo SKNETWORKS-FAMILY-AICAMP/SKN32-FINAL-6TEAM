@@ -1,0 +1,293 @@
+[
+ {
+  "id": "M01",
+  "query": "체험 예약했는데 홍보 사진과 실제가 너무 달라서 환불받고 싶어요",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 광고나 계약 내용과 실제가 다른 경우"
+  ],
+  "ms": 1705,
+  "rank": null,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "업체 취소 조건과 일정 변경 구분",
+    "section": "업체 취소 조건과 일정 변경 구분",
+    "score": 0.394
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "인원 미달과 불가항력으로 취소하는 경우",
+    "score": 0.389
+   },
+   {
+    "scope": "travel_activity",
+    "document": "관람·자연 갈래의 운영 중단과 통제",
+    "section": "관람 갈래에 위약금 문장을 붙이지 않는다",
+    "score": 0.372
+   }
+  ]
+ },
+ {
+  "id": "M02",
+  "query": "서핑 강습 소개 영상과 다르게 진행됐는데 돈을 돌려받을 수 있나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 광고나 계약 내용과 실제가 다른 경우"
+  ],
+  "ms": 257,
+  "rank": 2,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "취소·환급의 일반 기준과 업체 인계",
+    "section": "되돌림은 새로운 거래다",
+    "score": 0.317
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "광고나 계약 내용과 실제가 다른 경우",
+    "score": 0.312
+   },
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "금액 한도가 판정에 들어온다",
+    "score": 0.304
+   }
+  ]
+ },
+ {
+  "id": "M03",
+  "query": "예약하고 갔는데 수영장이 만원이라 입장을 못 했어요",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 시설을 정상적으로 이용할 수 없을 때"
+  ],
+  "ms": 221,
+  "rank": null,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "예약이 없다는 것과 모른다는 것",
+    "score": 0.365
+   },
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "예약이 필요 없다는 확인",
+    "score": 0.361
+   },
+   {
+    "scope": "travel_activity",
+    "document": "관람·자연 갈래의 운영 중단과 통제",
+    "section": "해수욕장과 계절 운영",
+    "score": 0.34
+   }
+  ]
+ },
+ {
+  "id": "M04",
+  "query": "예약한 클라이밍장이 정원이 차서 이용을 못 했어요",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 시설을 정상적으로 이용할 수 없을 때"
+  ],
+  "ms": 264,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "시설을 정상적으로 이용할 수 없을 때",
+    "score": 0.408
+   },
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "예약이 없다는 것과 모른다는 것",
+    "score": 0.36
+   },
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "인원이 정원을 넘을 때",
+    "score": 0.357
+   }
+  ]
+ },
+ {
+  "id": "M05",
+  "query": "할머니가 돌아가셔서 여행을 못 가게 됐어요. 취소 수수료는요?",
+  "expect": [
+   "국내여행 표준약관 — 해제·변경·해지 · 위약금 없이 해제할 수 있는 사유"
+  ],
+  "ms": 265,
+  "rank": 3,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "인원 미달과 불가항력으로 취소하는 경우",
+    "score": 0.512
+   },
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "무료인데 예약이 필요한 경우",
+    "score": 0.47
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "위약금 없이 해제할 수 있는 사유",
+    "score": 0.467
+   }
+  ]
+ },
+ {
+  "id": "M06",
+  "query": "삼촌 장례 때문에 일정을 취소하려고 해요. 위약금이 있나요?",
+  "expect": [
+   "국내여행 표준약관 — 해제·변경·해지 · 위약금 없이 해제할 수 있는 사유"
+  ],
+  "ms": 365,
+  "rank": null,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "인원 미달과 불가항력으로 취소하는 경우",
+    "score": 0.5
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "업체 취소 조건과 일정 변경 구분",
+    "section": "업체 취소 조건과 일정 변경 구분",
+    "score": 0.483
+   },
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "무료인데 예약이 필요한 경우",
+    "score": 0.459
+   }
+  ]
+ },
+ {
+  "id": "M07",
+  "query": "몸이 많이 아파서 여행 참가가 어려운데 위약금 없이 취소되나요?",
+  "expect": [
+   "국내여행 표준약관 — 해제·변경·해지 · 위약금 없이 해제할 수 있는 사유"
+  ],
+  "ms": 242,
+  "rank": null,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "인원 미달과 불가항력으로 취소하는 경우",
+    "score": 0.632
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "업체 취소 조건과 일정 변경 구분",
+    "section": "업체 취소 조건과 일정 변경 구분",
+    "score": 0.517
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "여행 도중 계약을 해지할 때",
+    "score": 0.517
+   }
+  ]
+ },
+ {
+  "id": "M08",
+  "query": "필라테스 센터 이용권을 사정이 생겨 해지하면 위약금이 얼마예요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 소비자 책임으로 해제하는 경우의 반환 금액"
+  ],
+  "ms": 254,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "소비자 책임으로 해제하는 경우의 반환 금액",
+    "score": 0.418
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "감염병과 재난으로 해제를 요청하는 경우",
+    "score": 0.39
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "사업자 책임으로 해제하는 경우의 반환 금액",
+    "score": 0.357
+   }
+  ]
+ },
+ {
+  "id": "M09",
+  "query": "공연 당일 오전에 표를 취소하면 얼마나 돌려받나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 관객이 환급을 요구하는 경우"
+  ],
+  "ms": 213,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "관객이 환급을 요구하는 경우",
+    "score": 0.553
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행자 사유로 취소하는 경우",
+    "score": 0.506
+   },
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "되돌릴 수 있는 기한",
+    "score": 0.48
+   }
+  ]
+ },
+ {
+  "id": "M10",
+  "query": "여행사가 일정을 바꿔서 해지했어요. 통보 시점에 따라 보상이 다른가요?",
+  "expect": [
+   "소비자분쟁해결기준 — 국내여행 · 여행사가 계약 조건을 바꿔 해지하는 경우",
+   "국내여행 표준약관 — 해제·변경·해지 · 여행 조건을 바꿀 수 있는 경우"
+  ],
+  "ms": 248,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행사가 계약 조건을 바꿔 해지하는 경우",
+    "score": 0.65
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행사 사유로 취소하는 경우",
+    "score": 0.625
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행자 사유로 취소하는 경우",
+    "score": 0.537
+   }
+  ]
+ }
+]

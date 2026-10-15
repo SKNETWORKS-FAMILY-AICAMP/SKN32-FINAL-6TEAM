@@ -125,3 +125,19 @@ def test_chosen_mode_is_used_for_reflow(monkeypatch):
     # 도보 외 수단은 기존 시간표 맞춤의 5분 탐색·올림 여유까지 포함한다.
     assert values(got) == {"items[1].starts_at": "10:10", "items[1].ends_at": "11:10"}
     assert ["taxi"] in asked
+
+
+def test_a_chosen_mode_that_cannot_reach_falls_back_to_the_recommended_engine(monkeypatch):
+    """★x600 실서버 확인(2026-10-15): 저장된 도보 구간이 바뀐 장소 사이에서 닿지 않으면 「고른 수단 안의 후보가 없다」로 저장을 막았다 — 추천 수단으로 돌아가 계산한다."""
+    from app.domains.travel_ops.components.intake import review
+
+    def factory(party=None, modes=None):
+        if modes is None:
+            return walk11
+        def unreachable(a, b, arrive, not_before=None):
+            return None, {"code": "no_candidate", "reason": "고른 수단(walk) 안의 후보가 없다"}
+        return unreachable
+    monkeypatch.setattr(review, "default_engine", factory)
+    got = schedule.fit(None, tenant_id="test", rows=[row(0, "09:00", "10:00"), row(1, "10:05", "11:05")],
+                       touched={("source", 0)}, mode_picks={"0-0~0-1": "walk"})
+    assert values(got) == {"items[1].starts_at": "10:15", "items[1].ends_at": "11:15"}

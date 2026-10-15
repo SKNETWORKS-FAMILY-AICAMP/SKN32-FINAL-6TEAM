@@ -968,6 +968,15 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         if choice:
             return self._choose(task, ctx, item, str(choice))
         query = self._stay_query(item, trip)
+        if query is None and (ctx.get("request") or {}).get("type") == "conversation":
+            # ★`[2026-10-15]` 인원만 모르면(웹 접수로 만든 여행은 인원이 비어 있다) 사람에게 넘기지 않고 고객에게 묻는다 — 답이 오면 그 인원으로 찾는다
+            from app.domains.travel_ops.instances._shared.conversation_work import ask_party, known_party
+
+            said = known_party(task, ctx)
+            if said is not None:
+                query = self._stay_query(item, {**trip, "party_size": said})
+            elif self._stay_query(item, {**trip, "party_size": 1}) is not None:
+                return ask_party(self, task, ctx, "숙소")
         if query is None:
             return self._unknown(task, "숙소 항목의 날짜 · 인원 · 지역", ctx["evidence"])
         dates = {"check_in": query["check_in"], "check_out": query["check_out"]}

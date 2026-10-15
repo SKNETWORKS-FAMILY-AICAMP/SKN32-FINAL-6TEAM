@@ -1,0 +1,295 @@
+[
+ {
+  "id": "D01",
+  "query": "할아버지 상을 당해서 이번 주 여행은 못 갈 것 같아요. 수수료 없이 취소돼요?",
+  "expect": [
+   "국내여행 표준약관 — 해제·변경·해지 · 가족 사망·질병 등 개인 사유로 위약금 없이 해제하는 경우"
+  ],
+  "ms": 1370,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "가족 사망·질병 등 개인 사유로 위약금 없이 해제하는 경우",
+    "score": 0.499
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "천재지변·정부 명령 같은 불가항력으로 취소하는 경우",
+    "score": 0.404
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "인원 미달로 여행사가 취소하는 경우",
+    "score": 0.397
+   }
+  ]
+ },
+ {
+  "id": "D02",
+  "query": "태풍 때문에 비행기가 결항돼서 국내 여행을 못 가요. 계약금은 돌려받나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 국내여행 · 천재지변·정부 명령 같은 불가항력으로 취소하는 경우",
+   "국내여행 표준약관 — 해제·변경·해지 · 천재지변·정부 명령 등 위약금 없이 해제할 수 있는 공통 사유"
+  ],
+  "ms": 238,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "천재지변·정부 명령 같은 불가항력으로 취소하는 경우",
+    "score": 0.67
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "천재지변·정부 명령 등 위약금 없이 해제할 수 있는 공통 사유",
+    "score": 0.598
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "여행 도중 계약을 해지할 때",
+    "score": 0.574
+   }
+  ]
+ },
+ {
+  "id": "D03",
+  "query": "수영 강습 10회권을 샀는데 3번 다니고 이사를 가게 됐어요. 환불 가능한가요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 소비자 책임으로 해제하는 경우의 반환 금액"
+  ],
+  "ms": 214,
+  "rank": 2,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "사업자 책임으로 해제하는 경우의 반환 금액",
+    "score": 0.483
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "소비자 책임으로 해제하는 경우의 반환 금액",
+    "score": 0.473
+   },
+   {
+    "scope": "travel_weather",
+    "document": "기상 사유로 활동이 깨졌을 때의 순연과 취소",
+    "section": "고객이 먼저 물어 왔을 때",
+    "score": 0.439
+   }
+  ]
+ },
+ {
+  "id": "D04",
+  "query": "스쿠버다이빙 체험 광고에는 1대1이라고 했는데 실제는 10명이 같이 했어요. 환불해 주세요",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 광고나 계약 내용과 실제가 다른 경우"
+  ],
+  "ms": 368,
+  "rank": null,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "같은 예약을 몇 번까지 자동으로 바꾸나",
+    "score": 0.322
+   },
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "금액 한도가 판정에 들어온다",
+    "score": 0.288
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "공연이 취소되거나 연기된 경우",
+    "score": 0.288
+   }
+  ]
+ },
+ {
+  "id": "D05",
+  "query": "뮤지컬 예매했는데 공연 3일 전에 취소하면 얼마나 환불되나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 관객이 환급을 요구하는 경우"
+  ],
+  "ms": 228,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "관객이 환급을 요구하는 경우",
+    "score": 0.646
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "공연이 취소되거나 연기된 경우",
+    "score": 0.578
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행자 사유로 취소하는 경우",
+    "score": 0.538
+   }
+  ]
+ },
+ {
+  "id": "D06",
+  "query": "방탈출 카페가 갑자기 문을 닫아서 이용을 못 했어요. 환불받을 수 있나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 시설을 정상적으로 이용할 수 없을 때"
+  ],
+  "ms": 272,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "시설을 정상적으로 이용할 수 없을 때",
+    "score": 0.538
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "천재지변·정부 명령 같은 불가항력으로 취소하는 경우",
+    "score": 0.452
+   },
+   {
+    "scope": "travel_weather",
+    "document": "기상 사유로 활동이 깨졌을 때의 순연과 취소",
+    "section": "고객이 먼저 물어 왔을 때",
+    "score": 0.426
+   }
+  ]
+ },
+ {
+  "id": "D07",
+  "query": "여행사가 일정에 있던 관광지를 빼고 다른 곳으로 바꿨는데 환불되나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 국내여행 · 여행사가 계약 조건을 바꿔 해지하는 경우",
+   "국내여행 표준약관 — 해제·변경·해지 · 여행 조건을 바꿀 수 있는 경우"
+  ],
+  "ms": 222,
+  "rank": 3,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "여행 도중 계약을 해지할 때",
+    "score": 0.52
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "교통 지연으로 생긴 손해",
+    "score": 0.514
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "여행 조건을 바꿀 수 있는 경우",
+    "score": 0.504
+   }
+  ]
+ },
+ {
+  "id": "D08",
+  "query": "여행 출발 전날 갑자기 몸이 안 좋아서 못 가겠어요. 위약금이 나오나요?",
+  "expect": [
+   "국내여행 표준약관 — 해제·변경·해지 · 가족 사망·질병 등 개인 사유로 위약금 없이 해제하는 경우",
+   "소비자분쟁해결기준 — 국내여행 · 여행자 사유로 취소하는 경우"
+  ],
+  "ms": 343,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "가족 사망·질병 등 개인 사유로 위약금 없이 해제하는 경우",
+    "score": 0.64
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "천재지변·정부 명령 같은 불가항력으로 취소하는 경우",
+    "score": 0.549
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "감염병과 재난으로 해제를 요청하는 경우",
+    "score": 0.53
+   }
+  ]
+ },
+ {
+  "id": "D09",
+  "query": "숙박 여행인데 닷새 전에 취소하면 수수료가 있나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 국내여행 · 여행자 사유로 취소하는 경우"
+  ],
+  "ms": 268,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행자 사유로 취소하는 경우",
+    "score": 0.732
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행사 사유로 취소하는 경우",
+    "score": 0.653
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "인원 미달로 여행사가 취소하는 경우",
+    "score": 0.609
+   }
+  ]
+ },
+ {
+  "id": "D10",
+  "query": "버스가 고속도로 정체로 두 시간이나 늦어서 일정이 틀어졌어요. 보상받을 수 있나요?",
+  "expect": [
+   "국내여행 표준약관 — 해제·변경·해지 · 교통 지연으로 생긴 손해"
+  ],
+  "ms": 352,
+  "rank": 3,
+  "top3": [
+   {
+    "scope": "travel_weather",
+    "document": "날씨로 활동을 바꾸는 경우",
+    "section": "날씨로 활동을 바꾸는 경우",
+    "score": 0.467
+   },
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "되돌릴 수 있는 기한",
+    "score": 0.441
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "교통 지연으로 생긴 손해",
+    "score": 0.436
+   }
+  ]
+ }
+]

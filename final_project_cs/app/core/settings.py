@@ -557,7 +557,21 @@ def dining_agent_shadow() -> dict[str, Any] | None:
         return None
     if not isinstance(section, dict) or section.get("enabled") is not True:
         return None
-    return {"model": str(section.get("model") or "openai:gpt-4o-mini"), "deadline_s": float(section.get("deadline_s") or 120)}
+    return {"model": str(section.get("model") or "openai:gpt-6-luna"), "deadline_s": float(section.get("deadline_s") or 120)}
+
+
+def dining_meal_pick() -> dict[str, Any] | None:
+    """대체 식당 셋 중 고르기 설정 — 가드레일 `travel.dining.meal_pick`. 켜져 있으면 `{model}`, 아니면 None. ★기본 꺼짐.
+
+    `[2026-10-15]` 켜면 고객 결과가 바뀐다(그림자 아님) — 가드레일을 못 읽어도 **꺼짐**으로 본다.
+    """
+    try:
+        section = get_guardrails().get("travel.dining.meal_pick")
+    except ConfigError:
+        return None
+    if not isinstance(section, dict) or section.get("enabled") is not True:
+        return None
+    return {"model": str(section.get("model") or "openai:gpt-6-luna")}
 
 
 def activity_live_check_enabled() -> bool:

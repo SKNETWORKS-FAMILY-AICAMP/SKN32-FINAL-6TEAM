@@ -141,6 +141,10 @@ def nearby(kind: str, fix: Fix, *, found: list[Any], radius_m: int | None, sough
     if not found:
         return (f"지금 위치 근처 {_km(radius_m or 0)} 안에서 지금 갈 수 있는 {label}을 찾지 못했어요"
                 f"(살펴본 곳 {sought}곳 — 문을 닫았거나 영업시간을 몰라요).")
+    return f"지금 위치에서 가까운 {label}{ending} — " + " · ".join(_lines(found))
+
+
+def _lines(found: list[Any]) -> list[str]:
     lines = []
     for n, cand in enumerate(found[:NEARBY_SHOWN], start=1):
         name = cand.place["name"] if cand.place else cand.name
@@ -149,7 +153,18 @@ def nearby(kind: str, fix: Fix, *, found: list[Any], radius_m: int | None, sough
         # ★가격 모름 경고는 「비용을 계산할 수 없다」는 바꾸기용 말이라 여기서는 뺀다 — 영업 · 마감 경고만 싣는다
         warnings = [w for w in (cand.warnings or []) if not w.startswith("가격을 몰라")]
         lines.append(f"{n}) {name} ({walk})" + (f" — {warnings[0]}" if warnings else ""))
-    return f"지금 위치에서 가까운 {label}{ending} — " + " · ".join(lines)
+    return lines
 
 
-__all__ = ["Fix", "assess", "ask_for_location", "in_seoul", "nearby", "route_here"]
+def near_place(name: str, *, at: datetime, now: datetime, found: list[Any], radius_m: int | None, sought: int) -> str:
+    """★`[2026-10-15]` 어떤 곳(일정의 곳 · 이름을 댄 곳) 근처의 식당 문장 — `nearby` 와 같은 줄 모양. 가게는 원장이 낸 것만이다.
+    그 일정 시각을 봤으면 시각을 밝힌다(「18:00 기준」). 일정은 바꾸지 않았다는 것을 덧붙인다."""
+    when = "" if at <= now else f" {at:%H:%M} 기준으로"
+    if not found:
+        return (f"「{name}」 근처 {_km(radius_m or 0)} 안에서{when} 갈 수 있는 식당을 찾지 못했어요"
+                f"(살펴본 곳 {sought}곳 — 문을 닫았거나 영업시간을 몰라요).")
+    return (f"「{name}」 근처{when} 갈 수 있는 식당이에요 — " + " · ".join(_lines(found))
+            + ". 일정은 바꾸지 않았어요 — 넣고 싶으면 말씀해 주세요.")
+
+
+__all__ = ["Fix", "assess", "ask_for_location", "in_seoul", "near_place", "nearby", "route_here"]

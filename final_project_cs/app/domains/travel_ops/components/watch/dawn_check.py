@@ -57,6 +57,8 @@ class DawnResult:
     fatal: list[dict[str, Any]] = field(default_factory=list)
     #: `[2026-10-03]` 닫힌 곳의 대체를 찾았는데 일정 **전체** 재판정에 걸려 바꾸지 않았다(D-017) — 고객에게는 「일정은 그대로 두었어요」가 나갔다
     rechecked: list[dict[str, Any]] = field(default_factory=list)
+    #: `[2026-10-15]` 활동 → 코어 전달 4번 — 웹 공지로는 닫혔다고 나왔지만 **섀도 기간이라 판정에 반영하지 않은** 곳(참고). 판정 · 건수(`counts`)에는 들어가지 않는다
+    references: list[dict[str, Any]] = field(default_factory=list)
 
     def counts(self) -> dict[str, Any]:
         return {"disabled": self.disabled, "outside_window": self.outside_window, "checked": self.checked,
@@ -122,6 +124,8 @@ class DawnCheck:
             status = self.place_status.lookup(tenant=self.store.tenant_id, customer_id=trip['customer_id'],
                                              trip_id=trip_id, place=meal.place, start=meal.starts_at,
                                              end=meal.ends_at, now=self.clock(), context='dawn', kind=meal.kind)
+            if status.get('live_status_reference'):
+                result.references.append({**entry, 'live_status': status['live_status_reference']})
             if status['status'] == 'unverifiable':
                 result.fatal.append({**entry, 'failed': status['reason'], 'diagnostic': status.get('diagnostic')})
                 # 검증 불가를 하루 완료로 기록하지 않는다. 같은 유지·재확인 안내는 한 번만 쌓는다.
@@ -132,8 +136,8 @@ class DawnCheck:
                     self.store.enqueue_message(conn, trip_id=trip_id,
                                                key=f"dawn-deferred:{meal.item_id}:{day}:{status['reason']}", payload=payload)
                 return
-            return self._apply_verdict(trip_id, meal, day, places, result, status['status'],
-                                       '방문 구간 영업 상태 확인', source=status['source'])
+            detail = '웹 공지 임시 휴무 확인' if status['source'] == 'activity_live_status' else '방문 구간 영업 상태 확인'
+            return self._apply_verdict(trip_id, meal, day, places, result, status['status'], detail, source=status['source'])
         with self._connect() as conn:
             google_id = self._provider_id(conn, meal.place["place_id"])
         if google_id is None:

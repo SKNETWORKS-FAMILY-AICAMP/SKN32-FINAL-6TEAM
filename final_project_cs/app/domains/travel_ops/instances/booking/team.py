@@ -944,6 +944,15 @@ class BookingTeam(ItineraryWork, TravelTeamBase):
         if item.kind != "flight":
             return self._change_transit(task, ctx, item)
         query = self._flight_query(item, trip)
+        if query is None and (ctx.get("request") or {}).get("type") == "conversation":
+            # ★`[2026-10-15]` 인원만 모르면 사람에게 넘기지 않고 고객에게 묻는다 — 숙소 팀과 같다
+            from app.domains.travel_ops.instances._shared.conversation_work import ask_party, known_party
+
+            said = known_party(task, ctx)
+            if said is not None:
+                query = self._flight_query(item, {**trip, "party_size": said})
+            elif self._flight_query(item, {**trip, "party_size": 1}) is not None:
+                return ask_party(self, task, ctx, "항공편")
         if query is None:
             return self._unknown(task, "항공편 항목의 공항 · 날짜 · 인원", ctx["evidence"])
         booked = self._read(task, "read.booking_search_flights", {**query, "max_results": FETCH}, ctx["seen"]) or {}

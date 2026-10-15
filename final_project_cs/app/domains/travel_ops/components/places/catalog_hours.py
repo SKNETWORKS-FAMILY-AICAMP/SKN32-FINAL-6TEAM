@@ -63,6 +63,19 @@ def merge_official_web(read: dict[str, Any] | None, origin: dict[str, Any] | Non
     return texts["usetime"], texts["restdate"], remaining
 
 
+#: 관광공사가 **정상으로 답했지만** 운영정보 칸이 없는 경우(`tour_api.operating`) — 호출 실패(한도 · 공급자 문제)와 다르다
+_EMPTY_ANSWERS = ("no_intro", "no_operating_fields")
+
+
+def _answered_without_hours(source: Any, before: dict[str, int]) -> bool:
+    """방금 `operating` 이 `None` 을 돌려준 까닭이 「답은 정상인데 운영정보가 없다」인가 — 소스의 이유 세는 칸(`misses`)이 그 이유만 늘었을 때."""
+    after = getattr(source, "misses", None)
+    if not after:
+        return False
+    grown = {reason for reason, count in dict(after).items() if count > before.get(reason, 0)}
+    return bool(grown) and grown <= set(_EMPTY_ANSWERS)
+
+
 def day_start(now: datetime, start: str) -> datetime:
     """`now` 가 속한 정기점검 회차의 시작 — 오늘 `start` 가 지났으면 오늘, 아니면 어제의 `start`."""
     begun = now.replace(hour=_clock(start).hour, minute=_clock(start).minute, second=0, microsecond=0)
@@ -109,11 +122,30 @@ def prefill(conn, *, tenant_id: str, source: Any, chat: Any, now: datetime, star
     out: dict[str, Any] = {"asked": len(rows), "read": 0, "unknown": 0, "stopped": None,
                            "done_tonight": done_tonight, "remaining": left}
     for content_id, type_id, title, modified, old_read, old_origin in rows:
+        before = dict(getattr(source, "misses", None) or {})
         try:
             intro = source.operating(str(content_id), str(type_id))
         except Exception as exc:                    # noqa: BLE001 — 한도 · 공급자 문제는 이번 틱을 멈춘다(다음 틱이 잇는다)
             out["stopped"] = f"{title}: {type(exc).__name__}"
             break
+        if not intro and _answered_without_hours(source, before):
+            # ★`[2026-10-15 x600 서버 실측]` 관광공사가 **정상으로 답했는데** 운영정보 칸이 하나도 없는 곳(동상 · 기념비 · 사당)에서 이 작업이 멈춰 있었다 —
+            #   멈추면 그 곳이 다음 틱에도 맨 앞이라 **같은 곳만 매 분 다시 부르고(하룻밤 300번) 뒤로 못 나갔다**(09-30 이후 읽은 곳 0).
+            #   없는 것을 「운영시간 모름」 행으로 적어 두고 다음 곳으로 간다(`retry_days` 뒤에 한 번 다시 본다)
+            with conn.transaction(), conn.cursor() as cur:
+                cur.execute(
+                    "INSERT INTO catalog_hours (tenant_id, source, content_id, content_type_id, hours_week, hours_read, hours_origin, "
+                    "phone, source_modified_at, read_at) VALUES (%s,'tour_api',%s,%s,NULL,%s,%s,NULL,%s,%s) "
+                    "ON CONFLICT (tenant_id, source, content_id) DO UPDATE SET content_type_id=EXCLUDED.content_type_id, "
+                    "hours_week=NULL, hours_read=EXCLUDED.hours_read, hours_origin=EXCLUDED.hours_origin, "
+                    "source_modified_at=EXCLUDED.source_modified_at, read_at=EXCLUDED.read_at",
+                    (tenant_id, str(content_id), str(type_id),
+                     json.dumps({"source": "tour_api", "method": "none", "quotes": [], "conditions": [], "dropped": ["관광공사에 운영정보가 없다"],
+                                 "read_at": now.isoformat()}, ensure_ascii=False),
+                     json.dumps({"usetime": None, "restdate": None}, ensure_ascii=False), modified, now))
+            out["unknown"] += 1
+            out["no_operating_info"] = out.get("no_operating_info", 0) + 1
+            continue
         if not intro:
             out["stopped"] = f"{title}: 운영정보를 받지 못했다"
             break

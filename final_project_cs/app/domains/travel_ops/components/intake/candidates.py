@@ -19,8 +19,9 @@
 """
 from __future__ import annotations
 
+import logging
 import math
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any, Callable
 
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
@@ -29,6 +30,8 @@ from .moves import leg_between, late_text
 from .terms import category_label
 from .places import distance_m, normalize_full
 from .review import (KST, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _line, _worst, default_engine, public_place)
+
+log = logging.getLogger(__name__)
 
 LIMIT = 3                    #: 목업의 후보 A · B · C
 POOL_EXTRA = 2               #: 최종 셋을 고르기 전에 이동 계산기로 더 재 보는 후보 수
@@ -200,6 +203,105 @@ def _similar_places(conn, tenant_id: str, ref: tuple[float, float], lcls: list[s
     return [{**place, "basis": "same_kind", "class_grade": grade} for place in _tour_places(cands)]
 
 
+def _catalog_content_id(conn, tenant_id: str, current: dict[str, Any] | None) -> str | None:
+    """관광공사 번호가 없는 원래 장소(우리 장소 목록에서 찾은 「경복궁」 등)를 **같은 이름의 목록 항목**으로 잇는다 — 정확히 한 곳일 때만(`_original_class` 와 같은 이름 규칙).
+    ★`[2026-10-15 x600 실서버 확인]` 우리 장소 목록 행은 번호가 비어 있는 경우가 많아 팀 엔진을 못 부르고 자체 고르기로 떨어졌다. 여럿이면 모름(`None`)."""
+    name = ((current or {}).get("name") or "").strip()
+    if not name:
+        return None
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT DISTINCT content_id FROM place_catalog WHERE tenant_id = ANY(%s) AND source='tour_api' AND title = %s",
+                        (_tenants(tenant_id), name))
+            ids = [row[0] for row in cur.fetchall() if row[0]]
+    except Exception as exc:                                  # noqa: BLE001 — 목록이 없는 DB 면 모른다
+        if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable"):
+            raise
+        return None
+    return str(ids[0]) if len(ids) == 1 else None
+
+
+def _team_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, Any] | None,
+                 items: list[dict[str, Any]]) -> list[dict[str, Any]] | None:
+    """활동 일정의 다른 곳 후보를 **활동 팀 엔진**(`team_hooks.activity_alternatives`)에게 받는다. `[2026-10-15 사용자 결정]` 후보 공급은 팀이, 조립은 우리가.
+
+    팀이 닫은 곳(휴무 요일 · 운영시간 밖)과 이미 일정에 있는 곳을 먼저 빼고 비슷한 정도 · 거리로 줄 세워 준다(`team_rank` 순서 · 분류 가까움은 `similarity` 로).
+    ★`None` = 팀이 없거나 답하지 못함(원래 장소가 관광공사 번호 · 목록에 없음 · 좌표 없음 · 오류) — 그때만 부르는 쪽이 자체 후보 고르기로 간다.
+      팀이 「없다」고 답한 빈 목록은 대비책으로 넘어가지 않는다. 끄는 스위치: 가드레일 `travel.candidates.team_first` = false."""
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives
+
+    if get_guardrails().get("travel.candidates.team_first") is False:
+        return None
+    content_id = (current or {}).get("content_id") or _catalog_content_id(conn, tenant_id, current)
+    start = _dt(item["date"], item["starts_at"])
+    if not content_id or start is None:
+        return None
+    exclude = {str(x["place"]["content_id"]) for x in items
+               if x.get("place") and x["place"].get("content_id") and x["id"] != item["id"] and x["date"] == item["date"]}
+    try:
+        got = activity_alternatives.ranked(conn, tenant_id, str(content_id), start, exclude_content_ids=exclude)
+    except Exception:                                     # noqa: BLE001 — 팀이 답하지 못한 것으로 보고 자체 길로 간다
+        log.warning("activity alternatives failed — falling back to the local candidate picker", exc_info=True)
+        return None
+    if got is None:
+        return None
+    return [{**_place(alt["title"], alt["latitude"], alt["longitude"], "tour_api", kind="activity", address=alt.get("address"),
+                      category=category_label(alt.get("content_type_id")), content_id=alt["contentid"],
+                      content_type_id=alt.get("content_type_id"), ref=f"tour:{alt['contentid']}"),
+             "basis": "same_kind", "team_rank": rank, "similarity": alt.get("tier")}
+            for rank, alt in enumerate(got["alternatives"])]
+
+
+def _dining_uid(conn, current: dict[str, Any] | None) -> str | None:
+    """원래 식당의 요식 원장 번호 — 장소 값에 있으면 그것, 없으면 그 공용 장소 행의 속성에서."""
+    if not current:
+        return None
+    if current.get("dining_place_uid"):
+        return str(current["dining_place_uid"])
+    place_ref = str(current.get("place_id") or "") or (str(current.get("ref") or "")[6:] if str(current.get("ref") or "").startswith("place:") else "")
+    if not place_ref:
+        return None
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT attributes->>'dining_place_uid' FROM places WHERE place_id::text = %s", (place_ref,))
+            row = cur.fetchone()
+    except Exception as exc:                                  # noqa: BLE001 — 열이 없는 DB 면 모른다
+        if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable", "InvalidTextRepresentation"):
+            raise
+        return None
+    return str(row[0]) if row and row[0] else None
+
+
+def _team_dining_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, Any] | None,
+                        nxt: dict[str, Any] | None) -> list[dict[str, Any]] | None:
+    """식사 일정의 다른 식당 후보를 **요식 팀 대체안**(`team_hooks.dining_alternatives`)에게 받는다. `[2026-10-15 사용자 결정]`
+    ★`None` = 팀이 없거나 답하지 못함(원래 식당이 원장에 없음 · 오류) — 그때만 자체 고르기(원장 근처 식당). 끄는 스위치: `travel.candidates.team_first`."""
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.team_hooks import dining_alternatives
+
+    if get_guardrails().get("travel.candidates.team_first") is False:
+        return None
+    uid = _dining_uid(conn, current)
+    start = _dt(item["date"], item["starts_at"])
+    if not uid or start is None:
+        return None
+    end = _dt(item["date"], item["ends_at"]) if item.get("ends_at") else None
+    nplace = (nxt or {}).get("place") or {}
+    next_point = (float(nplace["latitude"]), float(nplace["longitude"])) if nplace.get("latitude") is not None and nplace.get("longitude") is not None else None
+    try:
+        got = dining_alternatives.ranked(conn, tenant_id, uid, start, end, next_point=next_point)
+    except Exception:                                     # noqa: BLE001 — 팀이 답하지 못한 것으로 보고 자체 길로 간다
+        log.warning("dining alternatives failed — falling back to the local candidate picker", exc_info=True)
+        return None
+    if got is None:
+        return None
+    return [{**_place(alt["name"], alt["latitude"], alt["longitude"], "places", kind="dining", address=alt.get("address"),
+                      category=category_label("39"), place_id=alt["place_id"], ref=f"place:{alt['place_id']}"),
+             "team_rank": rank}
+            for rank, alt in enumerate(got["alternatives"])]
+
+
 def _experience_places(conn, tenant_id: str, ref: tuple[float, float], group: str, now: datetime, *,
                        limit: int = 12, radius_m: float = RADIUS_M) -> list[dict[str, Any]]:
     """**비슷한 경험** — 원래 장소와 같은 종류는 모자랄 때, 같은 경험 갈래(`EXPERIENCE_GROUPS`)의 곳을 가까운 순으로. 쇼핑 · 약국 같은 생활 시설은 갈래에 없다."""
@@ -339,6 +441,10 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
                                      place={"name": place["name"], "attributes": dict(facts.attributes)})])
     row = {"date": item["date"], "start": item["starts_at"], "end": item["ends_at"], "place": place}
     hours_line, closed_line = _hours_lines(row, facts, vios)
+    if hours_line["result"] == "unknown" and kind == "activity" and start is not None and _odd_hour(start, end):
+        # ★`[2026-10-15 핫픽스]` 운영시간을 못 읽은 활동이 **이른 아침 · 늦은 밤** 자리에 「맞아요」로 올라왔다(「경복궁 08:00」 대신 두산아트센터 · 세운상가 — 관광공사 운영시간을
+        #   아직 못 읽은 곳이 맞는 곳으로 센 것). 낮 시간이면 모르는 것을 맞는 것으로 두지만(없는 정보로 후보를 다 버리지 않는다), 문 여는 곳이 드문 시각에는 **확인 못 한 곳은 맞는 곳이 아니다**
+        hours_line = _line("hours", "warn", f"{start.strftime('%H:%M')}에는 문을 열었는지 확인하지 못했어요 · {UNVERIFIED_HOURS}")
     label = SOURCE_LABEL.get(place.get("source") or "", "장소 정보")
     lines = [_line("place", "ok", f"{label} 정보로 찾았어요")]
     # 앞 · 뒤 일정에 닿는 시간 — 늦으면 줄을 더한다
@@ -373,6 +479,25 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
     fits = worst in ("ok", "unknown") and hours_line["result"] != "warn"
     return {"rows": lines, "fits": fits, "status": "bad" if worst == "bad" else ("warn" if worst == "warn" else "ok"),
             "slack": slacks, "estimated": estimated}
+
+
+#: 「운영시간을 못 읽음」 표시 문구 — 순위가 「확인한 곳 → 못 읽은 곳 → 닫는 것이 확인된 곳」을 가를 때 본다
+UNVERIFIED_HOURS = "운영시간을 읽지 못한 곳이에요"
+#: 활동이 보통 문을 여는 시간 — 이 밖의 시각에 운영시간을 못 읽은 곳은 맞는 곳으로 세지 않는다
+ODD_BEFORE, ODD_AFTER = time(9, 0), time(20, 0)
+
+
+def _odd_hour(start: datetime, end: datetime | None) -> bool:
+    return start.time() < ODD_BEFORE or (end is not None and end.date() == start.date() and end.time() > ODD_AFTER)
+
+
+def _hours_rank(rows: list[dict[str, Any]]) -> int:
+    """운영시간을 **확인한** 곳이 먼저 — 0 확인함 · 1 못 읽음(모름) · 2 그 밖. 같은 「맞는 곳」 안에서 모르는 곳이 확인한 곳을 앞서지 않게."""
+    hours = next((r for r in rows if r.get("row") == "hours"), {})
+    result = hours.get("result")
+    if result == "unknown" or UNVERIFIED_HOURS in str(hours.get("text") or ""):
+        return 1                                   # 못 읽음 — 이른 아침 · 늦은 밤이라 「주의」로 내린 곳도 닫는 것이 확인된 곳보다는 앞이다
+    return 0 if result == "ok" else 2
 
 
 def _present(place: dict[str, Any], assessed: dict[str, Any], prev, nxt, ref, area: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -629,7 +754,13 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     if not found and ref and item["place_state"] not in ("picked_nearest", "needs_choice", "needs_name"):
         # ② 같은 종류의 다른 곳 — ★이름이 모호한 체인(올리브영)은 다른 지점이 없다고 해서 엉뚱한 관광지를 대신 권하지 않는다(`notes` 에 이유)
         if item["kind"] == "dining":
-            found += _ledger_places(conn, tenant_id, ref)
+            # ★`[2026-10-15]` 식사 일정은 **요식 팀 대체안이 먼저**다 — 팀이 없거나 답하지 못할 때만 원장 근처 식당(자체 고르기)
+            team = _team_dining_places(conn, tenant_id, item, current, nxt)
+            if team is not None:
+                found += team
+                notes.append("team_ranked")
+            else:
+                found += _ledger_places(conn, tenant_id, ref)
         elif stay_item:
             # ★`[2026-10-15]` 숙소 항목은 같은 숙박 분류에서만 찾는다 — 분류를 모르는 활동처럼 쇼핑만 빼고 관광지까지 권하지 않는다. 목록이 모자라면 지도의 「숙소」로 채운다
             found += _catalog_places(conn, tenant_id, ref, LODGING_TYPE, now)
@@ -639,7 +770,12 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
             cls = _original_class(conn, tenant_id, current)
             eat = _eats_there(items, item, cls)
             group = _experience_of(cls["lcls"][1]) if cls and cls["lcls"] else None
-            if cls and cls["lcls"]:
+            # ★`[2026-10-15]` 시장 끼니(`eat`)는 팀 엔진이 모르는 규칙이라 자체 길로 두고, 그 밖의 활동은 **활동 팀 엔진이 먼저**다 — 팀이 없거나 답하지 못할 때만 자체 고르기
+            team = None if eat else _team_places(conn, tenant_id, item, current, items)
+            if team is not None:
+                found += team
+                notes.append("team_ranked")
+            elif cls and cls["lcls"]:
                 # ★`[2026-10-07 사용자]` 비슷한 곳 — 같은 소분류 → 중분류 → 대분류 순(가까운 순), 다른 대분류로는 넘어가지 않는다. 끼니 시간의 시장은 같은 중분류(시장)까지만
                 found += _similar_places(conn, tenant_id, ref, cls["lcls"], now, min_level=2 if eat else 1,
                                          grade=cls.get("grade") if cls.get("grade") == "estimated" else None)
@@ -696,8 +832,20 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     first: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for place in found[:30]:
         first.append((place, assess(conn, tenant_id, item, place, prev, nxt, None)))
-    first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", -(pa[0].get("similarity") or 0),
-                               _score(pa[0], prev, nxt, ref, bool(area))))
+    first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", _hours_rank(pa[1]["rows"]), pa[0].get("team_rank", 10**6),
+                               -(pa[0].get("similarity") or 0), _score(pa[0], prev, nxt, ref, bool(area))))
+    if (group and item["kind"] == "activity" and not stay and not lodging and ref and "similar_experience" not in notes
+            and sum(1 for pa in first if pa[1]["fits"]) < limit):
+        # ★`[2026-10-15 핫픽스]` 같은 종류(궁궐)가 **이 시각에 맞는 곳이 셋 못 되면**(이른 아침엔 궁궐이 다 닫는다) 같은 경험의 다른 곳(공원 · 광장 · 둘레길)까지 넓혀 다시 줄 세운다 —
+        #   전에는 같은 종류가 충분히 많으면 넓히지 않아 닫은 곳만 후보로 남았다
+        more = _dedupe(_experience_places(conn, tenant_id, ref, group, now, limit=24), taken + [
+            (normalize_full(p["name"]), p.get("latitude"), p.get("longitude")) for p in found])
+        if more:
+            notes.append("similar_experience")
+            for place in more[:30]:
+                first.append((place, assess(conn, tenant_id, item, place, prev, nxt, None)))
+            first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", _hours_rank(pa[1]["rows"]), pa[0].get("team_rank", 10**6),
+                                       -(pa[0].get("similarity") or 0), _score(pa[0], prev, nxt, ref, bool(area))))
     pool = first[:limit + POOL_EXTRA]
     if "meal_inferred" in notes:
         eating_first = [pa for pa in first if pa[0].get("kind") == "dining"][:2]
@@ -707,7 +855,7 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         full = cheap if rank_only else assess(conn, tenant_id, item, place, prev, nxt, budget)
         out.append({"rank": 0, **_present(place, full, prev, nxt, ref, area)})
     # 시간표로 잰 곳이 어림으로 잰 곳보다 앞(같은 적합성 안에서) — 계산기 시간 상한이 일찍 닿아 뒤 후보가 어림으로 평가돼도 순위가 뒤섞이지 않게
-    out.sort(key=lambda c: (not c["fits"], c["status"] == "bad", _BASIS_ORDER.get(c["basis"], 0), -(c["similarity"] or 0),
+    out.sort(key=lambda c: (not c["fits"], c["status"] == "bad", _hours_rank(c["rows"]), _BASIS_ORDER.get(c["basis"], 0), -(c["similarity"] or 0),
                             -((c.get("taste") or {}).get("score") or 0), c["estimated"],     # 취향 후보는 임베딩 점수가 있으면 그 순서(`taste.ranked_by == "embedding"`)
                             c["distance_m"] if c["distance_m"] is not None else 10**9))
     if "meal_inferred" in notes:

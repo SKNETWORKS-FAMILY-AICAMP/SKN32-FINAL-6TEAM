@@ -7,6 +7,7 @@
   같은 줄기가 둘 더 있었다: ①되묻기에서 고른 항목의 팀을 찾는 곳(`case_dispatch._resume_route`)이 숙소를 모른다 ②규칙 해석 경로의 대상 고르기(`_change_target`)가 식사 · 활동만 센다.
 
 ★지키려는 것
+ ⑤웹 접수로 만든 여행은 인원이 비어 있다 — 숙소 팀이 사람에게 넘기지 않고 「몇 분이 함께 가시나요」를 묻고, 답한 인원으로 찾는다 `[2026-10-15 x600 서버 실서버 확인에서 찾음]`
  ①숙소 항목을 가리킨 「바꿔 줘」 · 「다른 곳」은 숙소 팀 일정 관리(`lodging.itinerary`)로 가고, 그 팀의 답이 고객에게 나간다 — 활동 팀이 받지 않는다
  ②식당 · 활동의 담당은 그대로다(식당을 가리키면 식당 팀)
  ③되묻기 번호 고르기에서 숙소를 고르면 숙소 팀으로 간다
@@ -137,3 +138,111 @@ def test_picking_the_lodging_from_a_clarify_list_goes_to_the_lodging_team(hotel_
     picked = _say(hotel_chat, f"{number}번", "lodg-d2", case_id=ask["case_id"])
     assert "해밀톤 호텔" in picked["answer"], picked
     assert [c["team"] for c in hotel_chat["calls"]] == ["lodging"], hotel_chat["calls"]
+
+
+@pytest.fixture()
+def hotel_chat_unknown_party(api, monkeypatch):
+    """인원이 빈 여행(웹 접수가 만든 여행과 같다) + 숙소 팀의 진짜 「바꿔 줘」 — 외부 검색(MCP)만 막고 어떤 조건으로 부르는지 적는다."""
+    from fastapi.testclient import TestClient
+
+    from app.domains.travel_ops.components.conversation import trip_messages
+    from app.domains.travel_ops.entry.trip_api import build_trip_router
+    from app.domains.travel_ops.instances.lodging import LodgingTeam
+    from app.presentation.api.app import create_app
+
+    searches: list[tuple[str, dict]] = []
+    original = LodgingTeam._read
+
+    def spy(self, task, tool, args, seen):
+        if tool == "read.itinerary":
+            return original(self, task, tool, args, seen)
+        searches.append((tool, dict(args)))
+        return None                                           # 검색 결과 없음 — 여기서는 어떤 조건으로 불렀는지만 본다
+
+    monkeypatch.setattr(LodgingTeam, "_read", spy)
+    monkeypatch.setattr(trip_messages, "_decision_mode", lambda chat, tenant=None: "on")
+    client = TestClient(create_app(
+        classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
+        domain_routers=[build_trip_router(classifier_factory=lambda: (lambda m: {"intent": "other", "issue_code": "other",
+                                                                                 "sentiment": "neutral"}),
+                                          chat_factory=lambda: _Decider())]))
+    publish_fixed_mobility(client.app, source="chat_lodging_party_test")
+    me = _session(api)
+    body = _web_body(api, request_id="lodgp-" + uuid4().hex[:6])
+    body["party_size"] = None
+    last = max(it["seq"] for it in body["items"])
+    body["items"].append({"seq": last + 1, "kind": "lodging", "title": "롯데호텔 서울", "place": "hotel", "route": None,
+                          "starts_at": f"{DAY}T21:00:00+09:00", "ends_at": f"{NEXT_DAY}T10:00:00+09:00", "detail": {}})
+    trip = client.post("/v1/web/trips", json=body, headers=_h(me["user_key"]))
+    assert trip.status_code in (200, 201), trip.text
+    assert trip.json().get("party_size") is None
+    yield {"client": client, "key": me["user_key"], "trip": trip.json(), "searches": searches}
+
+
+def test_an_unknown_party_size_is_asked_not_escalated_and_the_answer_fills_the_search(hotel_chat_unknown_party):
+    chat = hotel_chat_unknown_party
+    ask = _say(chat, "숙소 다른 곳으로 보여 줘", "lodgp-a")
+    assert ask["case_status"] == "waiting_input" and "몇 분" in ask["answer"], ask               # 사람에게 넘기지 않고 묻는다
+    assert ask["required_input_schema"]["required"] == ["adults"], ask
+    assert chat["searches"] == [], "인원을 모르는 채로 외부 검색을 부르지 않는다"
+    _say(chat, "2명이요", "lodgp-b", case_id=ask["case_id"])
+    asked = [args for _tool, args in chat["searches"] if "adults" in args]
+    assert asked and all(args["adults"] == 2 for args in asked), chat["searches"]
+
+
+def test_a_reply_that_is_not_a_party_size_does_not_search(hotel_chat_unknown_party):
+    chat = hotel_chat_unknown_party
+    ask = _say(chat, "숙소 다른 곳으로 보여 줘", "lodgp-c")
+    assert ask["case_status"] == "waiting_input", ask
+    _say(chat, "글쎄요", "lodgp-d", case_id=ask["case_id"])
+    assert chat["searches"] == [], "인원으로 읽히지 않는 답으로 검색하지 않는다"
+
+
+def test_the_party_size_typed_without_the_case_id_still_answers_the_question(hotel_chat_unknown_party):
+    """웹은 답에 대기 건 번호를 항상 붙이지는 않는다 — 번호 없이 「2명이요」만 보내도 방금 그 질문의 답으로 이어진다."""
+    chat = hotel_chat_unknown_party
+    ask = _say(chat, "숙소 다른 곳으로 보여 줘", "lodgp-e")
+    assert ask["case_status"] == "waiting_input", ask
+    _say(chat, "2명이요", "lodgp-f")
+    asked = [args for _tool, args in chat["searches"] if "adults" in args]
+    assert asked and all(args["adults"] == 2 for args in asked), chat["searches"]
+
+
+def _adults(chat):
+    return [args["adults"] for _tool, args in chat["searches"] if "adults" in args]
+
+
+def test_a_party_size_written_in_the_same_sentence_is_used_without_asking(hotel_chat_unknown_party):
+    """`[2026-10-15 사용자 지시]` 인원을 이미 받았으면 그것으로 하고, 어디에도 없을 때만 묻는다 — 이번 문장에 적힌 인원."""
+    chat = hotel_chat_unknown_party
+    got = _say(chat, "2명 기준으로 숙소 다른 곳으로 보여 줘", "lodgp-g")
+    assert got["case_status"] != "waiting_input" or "몇 분" not in got["answer"], got
+    assert _adults(chat) and set(_adults(chat)) == {2}, chat["searches"]
+
+
+def test_a_party_size_already_answered_in_this_trip_chat_is_not_asked_again(hotel_chat_unknown_party):
+    chat = hotel_chat_unknown_party
+    ask = _say(chat, "숙소 다른 곳으로 보여 줘", "lodgp-h")
+    assert ask["case_status"] == "waiting_input" and "몇 분" in ask["answer"], ask
+    _say(chat, "3명이요", "lodgp-i", case_id=ask["case_id"])
+    before = len(_adults(chat))
+    again = _say(chat, "숙소 다른 곳으로 보여 줘", "lodgp-j")
+    assert "몇 분" not in again["answer"], again                       # 한 번 답한 인원은 다시 묻지 않는다
+    assert len(_adults(chat)) > before and set(_adults(chat)) == {3}, chat["searches"]
+
+
+def test_the_party_size_registered_with_the_trip_is_used_and_never_asked(hotel_chat_unknown_party, api):
+    """계획을 쓰거나 만들 때 받은 인원(여행에 적힌 `party_size`)이 있으면 그것으로 찾는다."""
+    chat = hotel_chat_unknown_party
+    body = _web_body(api, request_id="lodgp-k-" + uuid4().hex[:6])
+    body["party_size"] = 4
+    last = max(it["seq"] for it in body["items"])
+    body["items"].append({"seq": last + 1, "kind": "lodging", "title": "롯데호텔 서울", "place": "hotel", "route": None,
+                          "starts_at": f"{DAY}T21:00:00+09:00", "ends_at": f"{NEXT_DAY}T10:00:00+09:00", "detail": {}})
+    other = _session(api)                                          # 게스트는 여행을 1개까지만 — 다른 게스트로 만든다
+    trip = chat["client"].post("/v1/web/trips", json=body, headers=_h(other["user_key"]))
+    assert trip.status_code in (200, 201), trip.text
+    known = {**chat, "trip": trip.json(), "key": other["user_key"]}
+    got = _say(known, "숙소 다른 곳으로 보여 줘", "lodgp-l")
+    assert "몇 분" not in got["answer"], got
+    assert _adults(chat) and set(_adults(chat)) == {4}, chat["searches"]

@@ -108,6 +108,24 @@ def meal_mention(text: str, *, place_start: int | None = None) -> tuple[str, str
     return None
 
 
+#: 끼니 말 없이 「먹는다」는 말 — 장소 이름 **뒤**에 있을 때만 그 장소의 식사다(`eat_mention`). `[2026-10-15 사용자 결정 (가)]`
+#:  「카페거리」 · 「커피박물관」처럼 이름의 일부면 아니다. 「술」은 「미술관」 · 「기술」에 들어 있어 넣지 않는다
+_EAT = re.compile(
+    r"(?:먹(?:고|자|을|어|기|으러|는|었|겠|던|은|으면)|드시|마시(?:고|러|기|자|면)|마실|식사|맛집|요기"
+    r"|한\s*끼|한\s*잔|한잔|브런치"
+    r"|(?<![가-힣A-Za-z0-9])밥(?![가-힣])|(?<![가-힣A-Za-z0-9])(?:카페|커피)(?!거리|골목|박물관|축제))")
+
+
+def eat_mention(text: str, *, place_end: int = 0) -> str | None:
+    """장소 이름 뒤(`place_end` 부터)의 「먹는다」 말 → 그 말. 없으면 None.
+    ★이름 **앞**의 말은 보지 않는다 — 「밥 먹고 나서 창덕궁」 · 「아침 먹고 나와서 경복궁」은 앞선 식사다(`meal_mention` 과 같은 뜻).
+    ☆`[2026-10-15]` 세 방식 비교(eval/reports/2026-10-15_intake_meal_kind.md)에서 규칙만으로는 「뭐 좀 먹고」 · 「한잔하고」 · 「맛집」을 0/7 잡았다."""
+    for match in _EAT.finditer(text, max(0, place_end)):
+        if not _EAT_BEFORE.match(text, match.end()):
+            return match.group(0)
+    return None
+
+
 def _meal_head(line: str, start: int, end: int) -> tuple[int, re.Match | None]:
     """이름 앞머리의 끼니 말을 건너뛴다 — 뒤에 이름이 남을 때만. (새 시작, 끼니 말)."""
     head = _MEAL_HEAD.match(line, start, end)
@@ -122,6 +140,21 @@ def _meal_tail(line: str, start: int, end: int) -> tuple[int, re.Match | None]:
     if tail is None or tail.start() <= start:
         return end, None
     return tail.start(), tail
+
+
+#: 「먹는다」 말 뒤가 **먹은 뒤 출발**이다(「밥 먹고 나서 창덕궁」) — 그 줄 장소의 식사가 아니다
+_EAT_BEFORE = re.compile(r"\s*(?:나서|나와서|후|뒤|다음|이후)")
+
+
+def _eat_claim(result: "ReadResult", position: int, number: int, line: str, s: int, region_end: int) -> int | None:
+    """끼니 말이 없을 때 — 이름 첫 글자 **뒤**의 「먹고」 · 「맛집」 · 「한잔」이면 식사다(`eat_mention`). `[2026-10-15 사용자 결정 (가)]`
+    제목 안에서 찾았으면(「익선동 맛집」) 그 앞까지가 이름이다 — 새 이름 끝을 돌려준다. 못 찾으면 None."""
+    eat = _EAT.search(line, s + 1, region_end)
+    if eat is None or _EAT_BEFORE.match(line, eat.end()):
+        return None
+    result.claims.append(Claim(f"items[{position}].kind", "dining", Span(number, eat.start(), eat.end(), eat.group(0)),
+                               note="이름 뒤의 「먹는다」 말"))
+    return eat.start()
 
 
 def _meal_claim(result: "ReadResult", position: int, number: int, line: str, meal: re.Match | None) -> None:
@@ -327,6 +360,10 @@ def _untimed_item(result: ReadResult, number: int, line: str, span: tuple[int, i
     s, e = _narrow(line, start, span[1])
     e, tail = _meal_tail(line, s, e)
     _meal_claim(result, position, number, line, meal or tail)
+    if meal is None and tail is None and e > s:
+        cut = _eat_claim(result, position, number, line, s, span[1])
+        if cut is not None and cut < e:
+            s, e = _narrow(line, s, cut)
     if e <= s:
         return
     item = ReadItem(day, date, None, None, Span(number, s, e, line[s:e]))
@@ -420,8 +457,13 @@ def _time_items(result: ReadResult, number: int, line: str, times: list[re.Match
         # 「11:00 종료」처럼 끝을 말하는 시각은 항목이 아니다 — 앞 항목의 끝
         if END_MARK.match(line[start_match.end():]) and result.items and result.items[-1].end is None \
                 and produced > 0:
-            value, _, _ = _hhmm(start_match)
+            value, end_review, end_note = _hhmm(start_match)
             result.items[-1].end = value
+            # ★`[2026-10-15 x600 실서버 확인]` 값만 항목에 달고 **값 줄(`ends_at`)을 만들지 않아** 「08:00 경복궁 · 한복 체험, 12:00 종료」의 끝이 확인 화면에서 사라지고
+            #   「끝 시각이 없어 90분으로 두었어요」가 됐다 — 끝을 말한 시각도 다른 끝 시각과 같이 근거(원문 조각)를 단 값 줄로 싣는다
+            result.claims.append(Claim(f"items[{len(result.items) - 1}].ends_at", value,
+                                       Span(number, start_match.start(), start_match.end(), start_match.group(0)),
+                                       needs_review=end_review, note=end_note))
             index += 1
             continue
         start_value, review, note = _hhmm(start_match)
@@ -470,6 +512,10 @@ def _time_items(result: ReadResult, number: int, line: str, times: list[re.Match
         s, e = _narrow(line, name_start, title_end)
         e, tail = _meal_tail(line, s, e)
         _meal_claim(result, position, number, line, meal or tail)
+        if meal is None and tail is None and e > s:
+            cut = _eat_claim(result, position, number, line, s, body_end)
+            if cut is not None and cut < e:
+                s, e = _narrow(line, s, cut)
         if e > s:
             item.title = Span(number, s, e, line[s:e])
             result.claims.append(Claim(f"items[{position}].title", line[s:e], item.title))
@@ -513,4 +559,4 @@ def _arrow_items(result: ReadResult, number: int, line: str, day: int | None, da
     result.read_lines.add(number)
 
 
-__all__ = ["Claim", "ReadItem", "ReadResult", "Span", "meal_mention", "read_plan"]
+__all__ = ["Claim", "ReadItem", "ReadResult", "Span", "eat_mention", "meal_mention", "read_plan"]

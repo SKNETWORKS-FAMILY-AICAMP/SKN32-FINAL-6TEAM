@@ -256,7 +256,11 @@ class ReadToolbox:
                               (scope.tenant_id, scope.customer_id), self._BOOKING_COLUMNS)
         if found is None:
             return None
-        return {**found, "matched_by": matched_by, "trip": self._booking_trip(scope, found)}
+        trip = self._booking_trip(scope, found)
+        # ★`[2026-10-15]` 활동 → 코어 전달 3번 — 맨 바깥 `trip_id` 한 칸: **그 예약이 든 최신 일정의 여행**, 없으면 `None`.
+        #   확인된 연결(`itinerary_item`)일 때만 채운다 — 기간으로 추정한 여행(`trip_period`)은 `trip` 칸에만 있다(추정을 확정처럼 싣지 않는다).
+        return {**found, "matched_by": matched_by, "trip": trip,
+                "trip_id": trip["trip_id"] if trip.get("matched_by") == "itinerary_item" else None}
 
     def _booking_trip(self, scope: ToolContext, booking: dict[str, Any]) -> dict[str, Any]:
         """이 예약이 속한 여행. `{trip_id, matched_by, why_unknown}` — 못 찾으면 `trip_id` 가 `None` 이고 이유를 적는다.

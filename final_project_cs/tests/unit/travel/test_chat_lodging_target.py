@@ -87,3 +87,26 @@ def test_a_flight_is_targeted_the_same_way_when_the_sentence_says_flight_or_it_i
     assert _change_target(items, "숙소 바꿔 줘", None, AT) is stay, "숙소 요청은 여전히 숙소"
     assert _change_target(items, "숙소랑 항공 바꿔 줘", None, AT) is None, "두 종류를 함께 말하면 가리지 않는다"
     assert _change_target(items, "5번 바꿔 줘", None, AT) is None, "번호는 식사 · 활동만 센다"
+
+
+def test_a_party_size_reply_is_read_only_when_it_looks_like_one():
+    """`[2026-10-15]` 숙소 · 항공 팀이 인원을 물은 뒤 답 읽기 — 인원으로 읽히는 짧은 답만."""
+    from app.domains.travel_ops.instances._shared.conversation_work import party_size_from
+
+    assert [party_size_from(t) for t in ("2", "2명", "성인 2명이요", "두 명", "혼자", "20명")] == [2, 2, 2, 2, 1, 20]
+    assert [party_size_from(t) for t in ("0", "21", "010-1234-5678", "글쎄요", "30분 늦어요", "", None)] == [None] * 7
+
+
+def test_a_party_size_inside_a_sentence_and_in_the_chat_history():
+    """`[2026-10-15 사용자 지시]` 이미 받은 인원은 문장 안에서도 · 채팅 기록에서도 읽는다. 시각 · 분 · 지명은 인원이 아니다."""
+    from app.domains.travel_ops.instances._shared.conversation_work import party_from_history, party_in_text
+
+    assert [party_in_text(t) for t in ("2명 기준으로 숙소 다른 곳", "성인 두 명이에요", "3명", "세 명이서")] == [2, 2, 3, 3]
+    assert [party_in_text(t) for t in ("30분 늦어요", "10시 명동 점심", "숙소 바꿔 줘", "25명", "1.5명", None)] == [None] * 6
+    turns = [{"role": "customer", "text": "숙소 바꿔 줘"},
+             {"role": "assistant", "text": "숙소을(를) 찾으려면 몇 분이 함께 가시는지 알아야 해요."},
+             {"role": "customer", "text": "3명이요"}, {"role": "assistant", "text": "후보예요"}]
+    assert party_from_history(turns) == 3
+    assert party_from_history(turns[:2]) is None and party_from_history([]) is None
+    other = [{"role": "assistant", "text": "점심 후보예요"}, {"role": "customer", "text": "3명이요"}]
+    assert party_from_history(other) is None, "인원 질문에 대한 답이 아니면 쓰지 않는다"
