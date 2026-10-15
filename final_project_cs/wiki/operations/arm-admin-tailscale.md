@@ -86,6 +86,7 @@ sudo ~/tripilot-serving/control/admin_env.sh operator --id <아이디>
 | 운영자 계정 빼기 | `sudo ~/tripilot-serving/control/admin_env.sh remove --id <아이디>` |
 | 비밀번호 바꾸기 | ①을 같은 아이디로 다시 한다(다른 계정은 그대로) |
 | 지금 계정 보기 | `sudo ~/tripilot-serving/control/admin_env.sh list` — 아이디와 열쇠 유무만 보인다 |
+| 권한만 바꾸기 | `sudo ~/tripilot-serving/control/admin_env.sh scopes --id <아이디>` — 기본은 관리자웹앱 화면 전체 7개. 바꾼 뒤 그 사람은 로그아웃했다가 다시 로그인해야 새 권한이 붙는다 |
 
 ## 막힐 때
 
@@ -98,6 +99,7 @@ sudo ~/tripilot-serving/control/admin_env.sh operator --id <아이디>
 | 「운영 API에 연결하지 못했습니다」 | 관리자웹앱 안의 운영 API 가 내려갔다 | 오라클 서버에서 `sudo docker ps` 로 `tripilot-arm-admin-1` 이 healthy 인지 본다. 자동 배포 로그는 `journalctl -u tripilot-arm-cd.service` |
 | `관리자웹앱 이미지가 아직 없다` | 이 develop 판의 관리자웹앱을 아직 안 만들었거나 건너뛰었다 | 자동 배포 로그에서 「관리자웹앱 건너뜀」 · 빌드 실패를 찾는다 |
 | 승인 버튼이 「키가 설정되지 않았다」로 실패 | 고객 API 열쇠가 없다 | `sudo ~/tripilot-serving/control/admin_env.sh keys` (처음 한 번 — 2026-10-15 넣어 두었다) |
+| 「불러오기 실패 · ops:introspect 권한이 없습니다」 | 계정 권한이 화면 전체보다 좁다(2026-10-15 전 도구로 만든 계정은 3개뿐) | 위 「권한만 바꾸기」 뒤 로그아웃 → 다시 로그인 |
 
 ## 관계
 
