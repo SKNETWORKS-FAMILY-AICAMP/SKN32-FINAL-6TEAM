@@ -36,8 +36,8 @@ flowchart TD
 
 | 순서 | 어디서 | 무엇을 | 끝나면 보이는 것 |
 |---|---|---|---|
-| 1 | 오라클 서버에서 `sudo tailscale up --hostname=tripilot-admin --accept-dns=false` 가 보여 준 `https://login.tailscale.com/a/…` 주소 | 브라우저로 열고 Google · Microsoft · GitHub 중 하나로 로그인 → **Connect** | [기기 목록](https://login.tailscale.com/admin/machines)에 `tripilot-admin` 이 **Connected** |
-| 2 | 오라클 서버 | `sudo tailscale serve --bg --tcp=3300 tcp://127.0.0.1:3300` | `tailscale serve status` 에 `tcp://tripilot-admin.<내 망 이름>.ts.net:3300` → `tcp://127.0.0.1:3300` |
+| 1 | 오라클 서버에서 `sudo tailscale up --hostname=guguroute-admin --accept-dns=false` 가 보여 준 `https://login.tailscale.com/a/…` 주소 | 브라우저로 열고 Google · Microsoft · GitHub 중 하나로 로그인 → **Connect** | [기기 목록](https://login.tailscale.com/admin/machines)에 `guguroute-admin` 이 **Connected** |
+| 2 | 오라클 서버 | `sudo tailscale serve --bg --tcp=3300 tcp://127.0.0.1:3300` | `tailscale serve status` 에 `tcp://guguroute-admin.<내 망 이름>.ts.net:3300` → `tcp://127.0.0.1:3300` |
 
 2 는 서버 설정이라 Claude 가 대신해도 된다. 한 번 하면 재부팅 뒤에도 남는다.
 
@@ -62,7 +62,7 @@ sudo ~/tripilot-serving/control/admin_env.sh operator --id <아이디>
 
 ### ② 기계 공유하기 — 관리하는 사람
 
-1. [기기 목록](https://login.tailscale.com/admin/machines)에서 `tripilot-admin` 줄 오른쪽 **⋯** → **Share…**
+1. [기기 목록](https://login.tailscale.com/admin/machines)에서 `guguroute-admin` 줄 오른쪽 **⋯** → **Share…**
 2. 팀원 이메일을 넣거나 **Copy share link** 로 링크를 복사해 팀원에게 보낸다.
 
 공유는 **그 기계 하나만** 보이게 한다 — 팀원은 내 Tailscale 망의 다른 기기를 보지 못한다. 망 전체에 들이는 「초대(Invite users)」는 쓰지 않는다.
@@ -72,8 +72,8 @@ sudo ~/tripilot-serving/control/admin_env.sh operator --id <아이디>
 | 순서 | 무엇을 | 끝나면 보이는 것 |
 |---|---|---|
 | 1 | [tailscale.com/download](https://tailscale.com/download) 에서 앱을 깔고 아무 계정으로 로그인 | 앱이 **Connected** |
-| 2 | 받은 공유 링크를 열고 **Accept** | 앱 기기 목록에 `tripilot-admin` |
-| 3 | 브라우저에서 `http://tripilot-admin.<공유한 사람의 망 이름>.ts.net:3300` (관리하는 사람이 정확한 주소를 알려 준다) | 「운영자 로그인」 화면 |
+| 2 | 받은 공유 링크를 열고 **Accept** | 앱 기기 목록에 `guguroute-admin` |
+| 3 | 브라우저에서 `http://guguroute-admin.<공유한 사람의 망 이름>.ts.net:3300` (관리하는 사람이 정확한 주소를 알려 준다) | 「운영자 로그인」 화면 |
 | 4 | ①에서 받은 아이디 · 비밀번호로 로그인 | 관리자웹앱 첫 화면 |
 
 주소창에 「주의 요함(http)」이 떠도 괜찮다 — 오가는 내용은 Tailscale 이 암호화한다.
@@ -82,7 +82,7 @@ sudo ~/tripilot-serving/control/admin_env.sh operator --id <아이디>
 
 | 할 일 | 방법 |
 |---|---|
-| 접속 길 끊기 | 기기 목록 → `tripilot-admin` → **⋯** → **Share…** → 그 사람 옆 **Revoke** |
+| 접속 길 끊기 | 기기 목록 → `guguroute-admin` → **⋯** → **Share…** → 그 사람 옆 **Revoke** |
 | 운영자 계정 빼기 | `sudo ~/tripilot-serving/control/admin_env.sh remove --id <아이디>` |
 | 비밀번호 바꾸기 | ①을 같은 아이디로 다시 한다(다른 계정은 그대로) |
 | 지금 계정 보기 | `sudo ~/tripilot-serving/control/admin_env.sh list` — 아이디와 열쇠 유무만 보인다 |
@@ -92,7 +92,7 @@ sudo ~/tripilot-serving/control/admin_env.sh operator --id <아이디>
 | 화면 · 오류 | 원인 | 고치는 법 |
 |---|---|---|
 | 주소가 아예 안 열린다 | 팀원 앱이 꺼졌거나 공유를 안 받았다 | 앱을 켜고 ②의 링크를 다시 연다 |
-| `DNS_PROBE_FINISHED_NXDOMAIN` · 「주소를 찾을 수 없음」 | 그 기기에 Tailscale 앱이 없거나 꺼져 있다(`ts.net` 이름은 앱이 켜진 기기에서만 찾아진다) | 앱을 깔고 켠다. 이름이 안 찾아지면 앱 기기 목록의 `tripilot-admin` 숫자 주소(100.…)에 `:3300` 을 붙여 연다 |
+| `DNS_PROBE_FINISHED_NXDOMAIN` · 「주소를 찾을 수 없음」 | 그 기기에 Tailscale 앱이 없거나 꺼져 있다(`ts.net` 이름은 앱이 켜진 기기에서만 찾아진다) | 앱을 깔고 켠다. 이름이 안 찾아지면 앱 기기 목록의 `guguroute-admin` 숫자 주소(100.…)에 `:3300` 을 붙여 연다 |
 | 「운영자 계정이 설정되지 않아 접근이 닫혀 있습니다」 | 운영자 계정이 0개다 | ①을 한다 |
 | 로그인이 안 되고 15분 동안 막힌다 | 5번 틀려 잠겼다 | 15분 기다리거나 ①로 비밀번호를 다시 정한다 |
 | 「운영 API에 연결하지 못했습니다」 | 관리자웹앱 안의 운영 API 가 내려갔다 | 오라클 서버에서 `sudo docker ps` 로 `tripilot-arm-admin-1` 이 healthy 인지 본다. 자동 배포 로그는 `journalctl -u tripilot-arm-cd.service` |

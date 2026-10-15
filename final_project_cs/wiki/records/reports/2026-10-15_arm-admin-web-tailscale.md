@@ -25,7 +25,7 @@ domain: travel
 - 바꾼 배포 파일을 기계 안 `control/` 에 설치했다. 원본은 `control/_backup/2026-10-15_admin-cd/`(compose.yml · deploy.py). develop 판 compose 가 이미 갖고 있던 진단 저장 볼륨(`diagnostics`)도 같이 들어왔다 — 그동안 기계 안 사본이 develop 보다 뒤였다.
 - 현재 develop 판(386973a45)으로 관리자웹앱 이미지를 자동 배포와 같은 잠금 아래에서 만들었다(arm64 · 2.14GB · 빌드 약 6분).
 - 고객 API 열쇠 3개(`action:approve` · `delegation:read` · `delegation:write`)를 기계 안 비밀값으로 만들어 `.env.admin` 에 넣었다(값은 아무 데도 출력하지 않았다).
-- Tailscale 1.104.1 을 공식 패키지 저장소로 설치했다. 기계 이름 `tripilot-admin`, 서버 DNS 는 바꾸지 않게(`--accept-dns=false`).
+- Tailscale 1.104.1 을 공식 패키지 저장소로 설치했다. 기계 이름 `tripilot-admin` 으로 설치 뒤 같은 날 `guguroute-admin` 으로 바꿈, 서버 DNS 는 바꾸지 않게(`--accept-dns=false`).
 
 ## 확인 `[실측 2026-10-15]`
 
@@ -37,7 +37,7 @@ domain: travel
 | 고객 API 가 열쇠를 받는지 | 맞는 열쇠 200 · 틀린 열쇠 401 |
 | 컨테이너 상태 · 메모리 | admin healthy · 134MiB / 1GiB |
 | 바깥에서 | 서버 주소 `:3300` 연결 시간 초과 · 공개 주소 `/admin/api/session` 404(관리자 경로 없음) |
-| Tailscale 로그인 · `serve` 연결(사용자 로그인 뒤) | `tripilot-admin` 연결됨, `tailscale serve --bg --http=3300 http://127.0.0.1:3300` — tailscaled 가 Tailscale 망 주소에서만 3300 을 받는다 |
+| Tailscale 로그인 · `serve` 연결(사용자 로그인 뒤) | `guguroute-admin` 연결됨, `tailscale serve --bg --http=3300 http://127.0.0.1:3300` — tailscaled 가 Tailscale 망 주소에서만 3300 을 받는다 |
 | Tailscale 망 기기 이름으로 `/` · `/admin/api/session` | 200 · 200 ((HTTP 방식일 때) 숫자 주소로는 404 — 그래서 TCP 전달로 바꿨다). 공개 주소 :3300 은 여전히 시간 초과 |
 | `serve` 를 TCP 전달로 바꿈(같은 날, 숫자 주소로도 열리게) | `tailscale serve --bg --tcp=3300 tcp://127.0.0.1:3300` — 숫자 주소 · 기기 이름 둘 다 200, 공개 :3300 시간 초과 |
 
