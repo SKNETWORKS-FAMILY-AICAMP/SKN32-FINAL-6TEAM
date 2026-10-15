@@ -20,6 +20,7 @@
 """
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 import re
@@ -161,6 +162,8 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
     body = {"request_id": f"intake:{intake_id}:r{revision}", "title": _title(trip, sources),
             "locale": "ko", "party_size": _int_value(trip.get("party_size")),
             "places": places, "items": items}
+    if trip.get("constraints") is not None:
+        body["constraints"] = deepcopy(trip["constraints"]["value"])
     from . import taxi_pricing
     pricing = taxi_pricing.from_trip(trip)
     if pricing is not None:

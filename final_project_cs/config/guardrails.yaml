@@ -417,6 +417,29 @@ travel:
   # slow 8초 — 깨어 있는 모델은 2초 안팎에 답한다(ui 세션 실측 2.0·2.1초) → 8초면 평소보다 확실히 느린 것이라 「모델이 느려요」를 알린다.
   # max_seconds — 채팅은 식은 모델 첫 호출 34초 + 모델 시간 제한 20초 여유로 90초, 일정 짜기는 생성기가 더 오래 걸려 240초, 접수 읽기는 사진·PDF 라 600초.
   # 한 사용자가 열 수 있는 실시간 작업 3개(채팅 · 일정 짜기 · 접수 읽기 동시). intake_stalled_seconds — 읽는 일꾼이 갱신 없이 이만큼 조용하면 죽은 것으로 본다.
+  # 고객이 보낸 공개 SNS 맛집 링크. 수치는 첫 범위의 요청/조회 예산으로 고른 값이다.
+  social_dining:
+    max_links: 10
+    max_url_chars: 2048
+    timeout_seconds: 8
+    # [2026-10-15 실측] YouTube 영상 페이지는 1.4MB, og:title 은 약 770KB 지점. HTML 은 </head> 에서 멈춘다
+    max_response_bytes: 1048576
+    max_redirects: 3
+    max_metadata_chars: 6000
+    max_restaurants_per_link: 5
+    max_preview_pairs: 40
+    allowed_hosts:
+      - instagram.com
+      - www.instagram.com
+      - tiktok.com
+      - www.tiktok.com
+      - m.tiktok.com
+      - vm.tiktok.com
+      - vt.tiktok.com
+      - youtube.com
+      - www.youtube.com
+      - m.youtube.com
+      - youtu.be
   op_stream:
     beat_seconds: 3
     slow_seconds: 8
