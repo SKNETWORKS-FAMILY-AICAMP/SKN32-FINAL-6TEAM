@@ -138,7 +138,7 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
     #:  (`judge.modes.budget_meter` · `budget_caps`, 코어 협의). `None` 이면 세지 않는다(지금까지와 같다).
     judge_budget: Any | None = None
     #: ★`[2026-10-13]` 저장된 실시간 운영 상태(웹 공지) 읽기 — `(tenant_id, place_id, 방문 날짜) -> 저장된 값 | None`.
-    #:  조립이 `live_store.build_lookup(get_connection)` 으로 만들어 넣는다(코어 협의). `None` 이면 이 확인은 꺼져 있다(경고도 없다).
+    #:  조립이 `live_store.build_lookup(get_connection)` 으로 만들어 넣는다(코어 협의). `None` 인데 모드가 켜져 있으면 경고를 남기고 `unchecked` 로 답한다(조용히 꺼지지 않는다).
     #:  ★고객 요청은 웹을 부르지 않는다 — 웹 확인은 장소 · 날짜당 한 번 배치(`scripts/activity/check_live_status.py`)가 한다.
     live_lookup: Any | None = None
     #: 이 팀이 받는 판정 LLM 모드. ★`llm` 은 D-CS-015 범위 밖이다 — 조립이 기동 때 막는다(조용히 섀도로 바꾸지 않는다).
@@ -656,15 +656,20 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
 
         ★전에는 고객 요청마다 웹 검색을 불렀다(요청 수에 비례 · p95 40.7초 · 429). 이제 웹 확인은 장소 · 날짜당 한 번 배치가 하고
           (`scripts/activity/check_live_status.py` → `activity.ac_live_status`), 여기서는 `live_lookup` 으로 읽기만 한다.
-        ★`rule` · 읽기 함수 없음 → 꺼져 있다(`None`, 경고도 없다). 켜져 있는데 값이 없거나 모르면 숨기지 않는다 — `unchecked` ·
+        ★`rule` → 꺼져 있다(`None`, 경고도 없다). 읽기 함수가 없으면 로그 경고 + `unchecked`(`lookup_not_wired`). 켜져 있는데 값이 없거나 모르면 숨기지 않는다 — `unchecked` ·
           `unknown` 으로 남기고 「임시휴무는 확인하지 못했다」 경고를 붙인다(근거 없이 성립을 확정하지 않는다).
         ★`shadow` → 값만 기록하고 고객 결과는 그대로다. `llm` → 「닫혔다」(인용이 있는 것만 저장돼 있다)이면 대체 장소를 붙여
           바꾸자고 제안한다(승인 대기). 「열었다」는 막지도 풀지도 않는다 — 규칙의 휴무 판정을 바꾸지 않는다.
         반환: (`decisions.live_status` 에 실을 값 | None, 근거, 여기서 멈출 결과 | None).
         """
         mode = kind_mode(LIVE_STATUS)
-        if mode == "rule" or self.live_lookup is None or not place.get("name"):
+        if mode == "rule" or not place.get("name"):
             return None, evidence, None
+        if self.live_lookup is None:
+            # ★`[2026-10-14]` 코어 회신(10-13) — 읽기 함수가 안 꽂혔는데 켜져 있으면 조용히 꺼지지 않는다. 로그는 프로세스당 한 번,
+            #   결과에는 매번 「확인하지 못했다」 경고가 붙는다(`unchecked` 와 같은 길).
+            self._warn_lookup_unwired()
+            return {"value": "unchecked", "source": "stored", "why": "lookup_not_wired"}, evidence, None
         day = self._visit_date(booking.get("starts_at"))
         if day is None:
             return {"value": "unchecked", "source": "stored", "why": "visit_date_unknown"}, evidence, None
@@ -696,6 +701,15 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
             decisions={"feasible": False, "reason": "live_closed",
                        "failure_code": self._record_failure(task, fc.LIVE_CLOSED), "live_status": decision})
         return decision, evidence, stop
+
+    _lookup_unwired_logged = False
+
+    @classmethod
+    def _warn_lookup_unwired(cls) -> None:
+        if not cls._lookup_unwired_logged:
+            cls._lookup_unwired_logged = True
+            _failure_log.warning("live_status_lookup_not_wired kind_modes.live_status 가 켜져 있는데 live_lookup 이 꽂히지 않았다"
+                                 " — 조립이 live_store.build_lookup(get_connection) 을 넣어야 한다")
 
     @staticmethod
     def _visit_date(starts_at: Any):

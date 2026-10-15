@@ -99,13 +99,23 @@ def test_shadow_records_the_stored_value_but_keeps_the_customer_answer(monkeypat
     assert not result.action_proposals
 
 
-def test_rule_mode_or_no_lookup_means_the_check_is_off(monkeypatch):
+def test_rule_mode_means_the_check_is_off(monkeypatch):
     off, calls, _ = _run(monkeypatch, CLOSED_ROW, mode="rule")
     assert calls == [] and "live_status" not in off.decisions[0]
+    unwired_off, _, _ = _run(monkeypatch, CLOSED_ROW, mode="rule", wired=False)
+    assert "live_status" not in unwired_off.decisions[0]
+    assert not any("임시휴무" in w for w in unwired_off.warnings), "꺼져 있으면 경고도 없다"
 
-    unwired, _, _ = _run(monkeypatch, CLOSED_ROW, wired=False)
-    assert "live_status" not in unwired.decisions[0]
-    assert not any("임시휴무" in w for w in unwired.warnings), "꺼져 있으면 경고도 없다"
+
+def test_enabled_but_unwired_lookup_warns_instead_of_turning_off_silently(monkeypatch, caplog):
+    # ★코어 회신(10-13) — 읽기 함수가 안 꽂혔는데 켜져 있으면 조용히 꺼지지 않는다(로그 + 고객 결과 경고)
+    ActivityTeam._lookup_unwired_logged = False
+    with caplog.at_level("WARNING"):
+        unwired, _, _ = _run(monkeypatch, CLOSED_ROW, mode="shadow", wired=False)
+    decision = unwired.decisions[0]["live_status"]
+    assert decision["value"] == "unchecked" and decision["why"] == "lookup_not_wired"
+    assert any("임시휴무 · 폐업은 확인하지 못했다" in w for w in unwired.warnings)
+    assert any("live_status_lookup_not_wired" in r.getMessage() for r in caplog.records)
 
 
 class _NoWriteCursor:
@@ -209,3 +219,92 @@ def test_the_batch_respects_the_limit():
                                  budget=lambda kind: True, record=lambda t, v: None, now=CHECKED, limit=1)
 
     assert result["checked"] == 1 and result["left"] == 2
+
+
+def test_the_batch_does_not_recheck_far_dates_but_rechecks_near_ones():
+    # ★코어 회신(10-13) 예산 — 72시간 앞 + 6시간 재확인이면 같은 곳을 3번까지 불렀다. 먼 대상은 한 번이면 된다.
+    batch = _batch()
+    now = datetime(2026, 11, 9, 18, 0, tzinfo=timezone.utc)
+    far = batch.Target("200", "먼곳", None, date(2026, 11, 12), now + timedelta(hours=57))
+    near = batch.Target("201", "가까운곳", None, date(2026, 11, 10), now + timedelta(hours=9))
+    old = {"checked_at": now - timedelta(hours=30)}
+    asked = []
+    result = batch.check_targets([far, near], read_row=lambda t: old, judge=lambda t: (asked.append(t.content_id), _V("open"))[1],
+                                 budget=lambda kind: True, record=lambda t, v: None, now=now, near_hours=24)
+    assert asked == ["201"] and result["fresh"] == 1 and result["checked"] == 1
+    # 줄이 아직 없으면 먼 대상도 한 번은 본다
+    asked.clear()
+    batch.check_targets([far], read_row=lambda t: None, judge=lambda t: (asked.append(t.content_id), _V("open"))[1],
+                        budget=lambda kind: True, record=lambda t, v: None, now=now, near_hours=24)
+    assert asked == ["200"]
+
+
+def _patch_modes(monkeypatch, **modes):
+    """배치 · 원장은 판정 모드를 `judge.modes.kind_mode` 에서 읽는다 — 가드레일 대신 이 표로."""
+    import importlib
+
+    modes_module = importlib.import_module("app.domains.travel_ops.instances.activity.judge.modes")
+    current = modes_module.kind_mode
+    real = getattr(current, "_real", current)          # 두 번 패치해도 원래 함수를 감싼다
+    patched = lambda kind, _modes=None: real(kind, modes)  # noqa: E731
+    patched._real = real
+    monkeypatch.setattr(modes_module, "kind_mode", patched)
+
+
+def test_the_batch_window_is_korean_time_and_run_once_skips_outside_it(monkeypatch):
+    batch = _batch()
+    assert batch.in_window(datetime(2026, 11, 9, 18, 0, tzinfo=timezone.utc), 3, 8) is True     # 03:00 KST
+    assert batch.in_window(datetime(2026, 11, 9, 22, 59, tzinfo=timezone.utc), 3, 8) is True    # 07:59 KST
+    assert batch.in_window(datetime(2026, 11, 9, 23, 0, tzinfo=timezone.utc), 3, 8) is False    # 08:00 KST
+    assert batch.in_window(datetime(2026, 11, 9, 5, 0, tzinfo=timezone.utc), 3, 8) is False     # 14:00 KST
+
+    _patch_modes(monkeypatch, **_modes("shadow"))
+    # 창 밖이면 DB · 웹을 건드리지 않는다 — 이 시험에 DB 가 없어도 끝나야 한다
+    out = batch.run_once(datetime(2026, 11, 9, 5, 0, tzinfo=timezone.utc))
+    assert out == {"skipped": "outside_window"}
+    _patch_modes(monkeypatch, **_modes("rule"))
+    assert batch.run_once(datetime(2026, 11, 9, 18, 0, tzinfo=timezone.utc)) == {"skipped": "mode_rule"}
+
+
+def test_ledger_carries_the_stored_live_status_in_a_separate_field(monkeypatch):
+    # ★코어 회신(10-13) — 확인 화면 · 감시도 보게 원장 판정에 별도 칸. `shadow` 면 판정(closed)은 그대로다.
+    from zoneinfo import ZoneInfo
+
+    from app.domains.travel_ops.instances.activity import ledger
+
+    at = datetime(2026, 11, 10, 11, tzinfo=ZoneInfo("Asia/Seoul"))
+    place = ("126508", "경복궁", "09:00~18:00", None, None, None)
+    live = ("126508", date(2026, 11, 10), "closed", '[{"url": "https://x", "quote": "임시 휴관", "published_at": null}]',
+            "basis", "m", CHECKED)
+
+    class Cur:
+        def __init__(self, conn):
+            self.conn = conn
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def execute(self, sql, params):
+            self.last = sql
+
+        def fetchone(self):
+            return live if "ac_live_status" in self.last else place
+
+    class Conn:
+        def cursor(self):
+            return Cur(self)
+
+    _patch_modes(monkeypatch, **_modes("shadow"))
+    shadow = ledger.state(Conn(), "demo", "p1", at)
+    assert shadow["closed"] is False and shadow["live_status"]["value"] == "closed"
+    assert shadow["live_status"]["applied"] is False and shadow["live_status"]["citations"][0]["quote"] == "임시 휴관"
+
+    _patch_modes(monkeypatch, **_modes("llm"))
+    applied = ledger.state(Conn(), "demo", "p1", at)
+    assert applied["closed"] is True and applied["closure_reason"] == "live_status" and applied["quote"] == "임시 휴관"
+
+    _patch_modes(monkeypatch, **_modes("rule"))
+    assert "live_status" not in ledger.state(Conn(), "demo", "p1", at)

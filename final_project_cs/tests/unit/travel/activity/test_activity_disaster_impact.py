@@ -109,7 +109,9 @@ def test_an_outdoor_only_hazard_with_unknown_indoor_asks_the_customer():
 
 def test_an_ignored_kind_does_not_block():
     result, _ = _run([_message("실종", "실종자를 찾습니다")])
-    assert result.decisions[0]["feasible"] is True and not result.warnings
+    # ★읽기 함수가 안 꽂힌 시험 조립 — 10-14 부터 「임시휴무 · 폐업은 확인하지 못했다」 경고가 붙는다(조용히 꺼지지 않는다). 그 밖의 경고는 없다.
+    assert result.decisions[0]["feasible"] is True
+    assert [w for w in result.warnings if "임시휴무" not in w] == []
 
 
 def test_an_unclassified_kind_is_kept_as_a_warning_not_a_block():
