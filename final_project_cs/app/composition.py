@@ -763,7 +763,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     Outside collection this remains the explicit standalone/unit-test assembly seam.
     Production stores the returned registrations in a per-controller BindingTable.
     """
-    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
 
     if active_ids is not None:
         pass
@@ -812,6 +812,11 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                closure_observation=dining_ledger_impl.closure_observation,
                                agent_shadow=_dining_agent_shadow(),
                                meal_picker=_dining_meal_picker())
+
+        # 요식 — 확인 화면 「다른 식당」 후보(`[2026-10-15]` 후보 공급은 팀이, 조립은 우리가). 미등록이면 확인 화면 자체 고르기로 간다
+        from app.domains.travel_ops.instances.dining import review_alternatives as dining_review_alternatives
+
+        dining_alternatives.register(rank=dining_review_alternatives.rank)
 
     if "activity" in active_ids:
         # 활동 — 비슷한 곳 순서와 설문 선호.
@@ -878,7 +883,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         activity_jobs.configure(connection_factory=get_connection, judge_llm=build_activity_judge_llm(),
                                 budget=build_activity_judge_budget(), claim=claim)
 
-    names = {"mobility": ("legs",), "dining": ("dining_ledger",), "activity": ("similarity", "activity_ledger", "activity_alternatives")}
+    names = {"mobility": ("legs",), "dining": ("dining_ledger", "dining_alternatives"), "activity": ("similarity", "activity_ledger", "activity_alternatives")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
     hook_names = {**names, "lodging": ("lodging_ledger",)}
     connected = [name for owner, hooks in hook_names.items() if owner in active_ids for name in hooks]
