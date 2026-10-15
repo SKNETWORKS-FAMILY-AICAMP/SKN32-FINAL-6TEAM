@@ -495,8 +495,18 @@ travel:
     # model = openai:<모델>(키 ACOP_OPENAI_API_KEY) · ollama:<모델>(주소 ACOP_OLLAMA_BASE_URL). 읽는 곳: `app.core.settings.dining_agent_shadow()`.
     agent_shadow:
       enabled: false
-      model: "openai:gpt-4o-mini"
+      # `[2026-10-15]` 기본 모델 luna — 실측 그림자 규칙과 같음 8/10 · 하루 약 $0.001~0.002(eval/reports/2026-10-15_intake_meal_kind.md §6)
+      model: "openai:gpt-6-luna"
       deadline_s: 120
+    # -- 대체 식당 셋 중 고르기 (2026-10-15 · 설계 §7-2 연결) --
+    # 규칙이 거른 상위 3곳 중 하나를 모델이 고객 취향에 맞춰 고른다(`components/planning/meal_pick.py`). 취향 문장이 없으면 부르지 않는다.
+    # 취향 = 일정 constraints.meal_preference > 설문 custom_answers.food > 설문 음식 세부 선택지(맛 · 미쉐린 · 노포 …).
+    # 모델 답은 서버가 확인하고 어기면 규칙 1등 — 고객 결과가 바뀐다(그림자 아님). ★기본 꺼짐 — 켜는 것은 사람이 정한다.
+    # 쓰는 곳: 채팅 신고(늦음 · 휴무)와 요식 팀 Case. 새벽 확인에는 쓰지 않는다. 읽는 곳: `app.core.settings.dining_meal_pick()`.
+    meal_pick:
+      enabled: false
+      # `[2026-10-15]` 기본 모델 luna — 실측 12/12(gpt-4o-mini 10/12) · 위반 0 · 평균 3.8초
+      model: "openai:gpt-6-luna"
   # -- 확인 화면의 「택시 호출 상품」 고르기 (2026-10-14 사용자 지시 · 핫픽스) --
   # 택시 요금(호출 상품별 이용료) 계산이 아직 믿을 만하지 않아 고객 화면의 상품 고르기 칸을 **기본 꺼짐**으로 둔다.
   # 꺼짐: 검사 응답에 `taxi_pricing` 을 싣지 않아 칸이 사라지고, 고르기 요청(`trip.taxi_pricing`)은 거절하고, 이미 저장된 고른 값은 계산에 쓰지 않는다.

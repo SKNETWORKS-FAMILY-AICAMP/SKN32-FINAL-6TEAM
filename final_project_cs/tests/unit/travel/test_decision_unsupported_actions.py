@@ -63,7 +63,7 @@ def test_edit_actions_are_offered_to_the_model_but_server_only_ones_are_not():
     _, schema = _decide({"action": "other"})
     offered = set(schema["properties"]["action"]["enum"])
     assert {"change_time", "add_item", "remove_item", "swap_order", "lock_item", "unlock_item"} <= offered
-    assert "replace_named" not in offered and not du.UNSUPPORTED
+    assert "replace_named" not in offered and not set(du.UNSUPPORTED) & set(du.EDIT_ACTIONS)   # `[2026-10-15 재측정]` 일정 고치기는 하나도 막지 않는다(여행 설정 edit_trip 만 안내)
     decision, _ = _decide({"action": "clarify", "choices": [{"action": "change_time", "target_item": "i1",
                                                             "target_change": "none", "fact": "none"}]})
     assert [c["action"] for c in decision.choices] == ["change_time"]
@@ -159,3 +159,48 @@ def test_one_bad_read_is_dropped_when_another_read_is_valid():
     import pytest as _pytest
     with _pytest.raises(du.DecisionFailed):
         _decide({"action": "answer_fact", "target_item": "none", "fact": "schedule", "reads": [bad]}, message="일정 보여줘")
+
+
+def test_trip_settings_are_the_only_request_still_answered_as_unsupported():
+    """`[2026-10-15 재측정]` 인원 · 여행 이름 · 기간은 일정 고치기(`chat_edit`)로 실행할 길이 없다 — 장소 바꾸기 되묻기로 끼우지 않고 정직한 안내로 답한다."""
+    assert set(du.UNSUPPORTED) == {"edit_trip"}
+    decision, schema = _decide({"action": "edit_trip", "target_item": "none"})
+    assert decision.action == "other" and decision.raw["unsupported"] == "edit_trip"
+    assert "일정은 바꾸지 않았어요" in decision.social and du.stands_alone(decision)
+    offered = schema["properties"]["choices"]["items"]["properties"]["action"]["enum"]
+    assert "edit_trip" not in offered                     # 실행할 수 없는 것을 되묻기 후보로 내지 않는다
+
+
+def test_list_question_with_an_empty_scope_reads_the_models_day_or_everything_instead_of_failing():
+    """`[2026-10-15]` 「내일 일정 보여줘」인데 모델이 조회 범위를 비웠다 — 해석 전체를 버리지 않는다(재생 434건 중 6건)."""
+    decision, _ = _decide({"action": "answer_fact", "fact": "schedule", "at_day": "tomorrow", "query": None})
+    assert decision.action == "answer_fact" and decision.query["day"] == "tomorrow" and decision.query["position"] == "all"
+    assert decision.raw["query_defaulted"] == decision.query
+    decision, _ = _decide({"action": "answer_fact", "fact": "schedule", "query": None})
+    assert decision.query == {"day": "all", "period": "all", "kind": "all", "position": "all"}
+
+
+def test_a_change_request_with_a_stray_scope_on_a_non_list_fact_is_not_discarded():
+    """`[2026-10-15]` 「신안촌 식당이 문을 닫았어요」 — 운영시간 사실에 붙은 조회 범위 때문에 해석이 버려졌다."""
+    decision, _ = _decide({"action": "report_closed", "target_item": "i1", "fact": "hours",
+                           "query": {"day": "today", "period": "all", "kind": "dining", "position": "all"}})
+    assert decision.action == "report_closed" and decision.query is None
+    assert decision.raw["ignored_for_action"]["query"]["day"] == "today"
+
+
+def test_a_change_request_that_is_really_a_list_scope_is_still_refused():
+    """조회를 원했는지 변경을 원했는지 애매한 것(「오늘 일정이랑 내일 일정 통째로 바꿔줘」)은 바꾸지 않는다.
+    ★`[2026-10-15 develop 합치기]` 채팅 일정 고치기 2차가 실패 대신 되묻기로 바꿨다(scoped_change) — 바꾸는 할 일로 남지 않는 것은 같다."""
+    decision, _ = _decide({"action": "apply_change", "fact": "schedule", "query": None})
+    assert decision.action == "clarify" and decision.change is None and decision.item is None
+
+
+def test_service_help_question_with_an_empty_general_answer_keeps_the_action():
+    """`[2026-10-15]` 「사용법 알려줘」 — 서비스 안내는 서버가 답한다. 빈 일반 질문 칸은 그 칸만 버린다."""
+    decision, _ = _decide({"action": "answer_service", "general_requests": [{"question": "사용법 알려줘", "answer": ""}]})
+    assert decision.action == "answer_service" and decision.raw["ignored_for_action"]["general_requests"] == 1
+
+
+def test_an_other_action_with_an_empty_general_answer_still_surfaces_as_a_failure():
+    with pytest.raises(du.DecisionFailed):
+        _decide({"action": "other", "general_requests": [{"question": "오늘 서울 날씨 어때?", "answer": ""}]})

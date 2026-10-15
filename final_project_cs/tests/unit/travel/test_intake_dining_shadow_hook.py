@@ -54,3 +54,18 @@ def test_composition_builds_the_runner_only_when_switched_on(monkeypatch):
     assert composition._dining_agent_shadow() is None                                 # 모델 서버 주소가 없으면 만들지 않는다
     stub.ollama_base_url = "http://model-server.test:11434"
     assert isinstance(composition._dining_agent_shadow().keywords["chat"], OllamaToolChat)
+
+
+def test_luna_tool_calls_turn_reasoning_off():
+    """`[2026-10-15]` gpt-6-luna 는 chat completions 에서 도구와 추론을 함께 못 쓴다(400) — 추론을 끄고 보낸다. 다른 모델에는 넣지 않는다."""
+    from types import SimpleNamespace
+
+    from app.infrastructure.llm.tool_chat import OpenAIToolChat
+
+    sent = []
+    reply = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="{}", tool_calls=None))],
+                            usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1))
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=lambda **kw: sent.append(kw) or reply)))
+    for model in ("gpt-6-luna", "gpt-4o-mini"):
+        OpenAIToolChat(api_key="sk-test", model=model, client=client).step([{"role": "user", "content": "hi"}], [])
+    assert sent[0].get("reasoning_effort") == "none" and "reasoning_effort" not in sent[1]

@@ -718,7 +718,7 @@ def _dining_agent_shadow():
     settings = get_settings()
     kind, _, model = shadow_settings["model"].partition(":")
     if kind == "openai" and (settings.openai_api_key or "").strip():
-        chat = OpenAIToolChat(api_key=settings.openai_api_key, model=model or "gpt-4o-mini")
+        chat = OpenAIToolChat(api_key=settings.openai_api_key, model=model or "gpt-6-luna")
     elif kind == "ollama" and (settings.ollama_base_url or "").strip():
         chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model)
     else:
@@ -726,6 +726,35 @@ def _dining_agent_shadow():
                                             shadow_settings["model"])
         return None
     return partial(dining_shadow.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"])
+
+
+def _dining_meal_picker():
+    """대체 식당 셋 중 고르기 — 가드레일 `travel.dining.meal_pick.enabled` 를 켰을 때만 선택기를 만든다(기본 꺼짐 → None). `[2026-10-15]`
+
+    모델은 가드레일 `model` — `openai:<모델>`(키 `ACOP_OPENAI_API_KEY`) · `ollama:<모델>`(주소 `ACOP_OLLAMA_BASE_URL`).
+    ★키 · 주소가 없으면 만들지 않고 경고만 남긴다 — 선택기가 없으면 규칙 1등 그대로다(기동을 막지 않는다)."""
+    from app.core.settings import dining_meal_pick, get_settings
+
+    pick_settings = dining_meal_pick()
+    if pick_settings is None:
+        return None
+    from app.domains.travel_ops.components.planning import meal_pick
+
+    settings = get_settings()
+    kind, _, model = pick_settings["model"].partition(":")
+    if kind == "openai" and (settings.openai_api_key or "").strip():
+        from app.infrastructure.llm_failover import OpenAIChat
+
+        chat = OpenAIChat(api_key=settings.openai_api_key, model=model or "gpt-6-luna", timeout=30.0)
+    elif kind == "ollama" and (settings.ollama_base_url or "").strip():
+        from app.infrastructure.ollama_chat import OllamaChat
+
+        chat = OllamaChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model, timeout=60.0)
+    else:
+        logging.getLogger(__name__).warning("dining meal_pick enabled but model %s has no key/address — rule pick only",
+                                            pick_settings["model"])
+        return None
+    return meal_pick.make_picker(chat)
 
 
 def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> list[str]:
@@ -781,7 +810,8 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                planner_factory=dining_ledger_impl.PlannerLedger,
                                link_core_place=dining_ledger_impl.link_core_place_to,
                                closure_observation=dining_ledger_impl.closure_observation,
-                               agent_shadow=_dining_agent_shadow())
+                               agent_shadow=_dining_agent_shadow(),
+                               meal_picker=_dining_meal_picker())
 
     if "activity" in active_ids:
         # 활동 — 비슷한 곳 순서와 설문 선호.

@@ -81,9 +81,26 @@ class Pick:
 MealPicker = Callable[[Any, list[Any], MealContext], Pick]
 
 
+#: 설문 음식 세부 선택지 중 **취향** 코드 → 모델이 읽을 말(`dining/survey.py` — 채식 · 할랄은 조건이라 대안을 거르는 쪽이 쓴다)
+SURVEY_TASTE_WORDS = {"taste": "맛있는 곳", "kindness": "친절한 곳", "clean": "깨끗한 곳", "michelin": "미쉐린 선정 식당", "nopo": "오래된 노포"}
+
+
 def preference_of(constraints: Mapping[str, Any] | None) -> str:
+    """고객 취향 문장 — `constraints.meal_preference` > 설문의 음식 원문(`custom_answers.food`) > 설문 음식 세부 취향 선택지.
+    ★`[2026-10-15]` 설문에서도 채운다 — 전에는 `meal_preference` 를 채우는 길이 없어 선택기가 늘 부르지 않았다(평가만 넣었다).
+    없으면 "" — 선택기를 부르지 않는다(규칙 1등)."""
     value = (constraints or {}).get(PREFERENCE_KEY)
-    return value.strip() if isinstance(value, str) else ""
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    survey = (constraints or {}).get("survey")
+    if not isinstance(survey, Mapping):
+        return ""
+    custom = (survey.get("custom_answers") or {}).get("food") if isinstance(survey.get("custom_answers"), Mapping) else None
+    if isinstance(custom, str) and custom.strip():
+        return custom.strip()[:200]
+    details = survey.get("priority_details") if isinstance(survey.get("priority_details"), Mapping) else {}
+    tastes = [SURVEY_TASTE_WORDS[c] for c in (details.get("food") or []) if c in SURVEY_TASTE_WORDS]
+    return " · ".join(tastes)
 
 
 def _hm(moment: datetime | None) -> str | None:

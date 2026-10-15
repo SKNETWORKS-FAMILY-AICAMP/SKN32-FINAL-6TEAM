@@ -379,7 +379,7 @@ class IntakeConflict(ValueError):
 
 def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
          edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None,
-         dining: Any = None) -> int:
+         dining: Any = None, learn_aliases: bool = True) -> int:
     """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
 
     `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
@@ -456,7 +456,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                             "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
                             (tenant_id, intake_id, current, source_id, field_name[:-len("place")] + "title"))
                 was = cur.fetchone()
-                if was and isinstance(was[0], str):
+                if learn_aliases and was and isinstance(was[0], str):
+                    # ★`[2026-10-15]` 채팅 「A 대신 B 가자」는 이름 고침이 아니라 **일정 바꾸기**다 — 별칭으로 쌓으면 다음 계획에서 A 라고 적어도 B 로 읽힌다
+                    #   (x600 실서버: 「경복궁 대신 창덕궁」 뒤 새 계획의 「경복궁」이 창덕궁으로 찾아졌다). 채팅 고치기는 `learn_aliases=False`
                     remember_alias(cur, tenant_id, customer_id, was[0], typed)
             if via:
                 evidence = {**evidence, "via": via}            # 전체 자동 추천이 낸 값이면 그렇게 적는다(고객이 고른 값과 구별)
@@ -1071,7 +1073,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                     on_progress("places", placed, titled, index, item["title"])
                 continue
             resolved[index] = resolve(query, our_places=our_places or [], tour=tour, kakao=kakao,
-                                      kind_hint="dining" if item["meal"] else None, aliases=aliases, dining=dining,
+                                      kind_hint=_place_kind_hint(item), aliases=aliases, dining=dining,
                                       near=_near_hint(index, items, resolved, dated))
             if resolved[index].status == "resolved":
                 # 이름이 특정된 곳은 앞뒤 일정을 볼 필요가 없다 — 찾은 즉시 알린다(실시간 진행에서 한 곳씩 나타난다)
@@ -1087,7 +1089,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             point = _near_hint(index, items, resolved, dated)
             if point is not None:
                 resolved[index] = resolve(_lookup_title(items[index]["title"], aliases), our_places=our_places or [], tour=tour, kakao=kakao,
-                                          kind_hint="dining" if items[index]["meal"] else None, aliases=aliases,
+                                          kind_hint=_place_kind_hint(items[index]), aliases=aliases,
                                           dining=dining, near=point)
     for index in sorted(set(resolved) | nameless):
         if index in early:
@@ -1128,6 +1130,14 @@ def flag_differing(rows: list[dict[str, Any]], differs: dict[int, dict[str, Any]
         row["note"] = f"{row['note']} · {note}" if row.get("note") else note
 
 
+def _place_kind_hint(item: dict[str, Any]) -> str | None:
+    """장소를 찾을 종류 단서 — 활동 표현은 같은 줄 전체가 아닌 이 항목의 원문에서만 본다."""
+    if item["meal"]:
+        return "dining"
+    text = (item.get("segment") or {}).get("text") or item.get("title") or ""
+    return "activity" if re.search(r"산책|걷|관람|둘러보|구경|견학|탐방|관광|나들이", text) else None
+
+
 def _place_rows(index: int, found: Any, *, items: list[dict[str, Any]], resolved: dict[int, Any], dated: Any,
                 rows: list[dict[str, Any]], kakao: Any, nearest: Any, kind_hits: Any) -> list[dict[str, Any]]:
     """찾은 결과 하나 → 그 항목의 장소 값 줄(+ 종류 줄). 이름이 특정하지 않으면 종류가 맞는 후보 중 앞뒤 일정에 가장 가까운 곳을 고른다."""
@@ -1153,18 +1163,24 @@ def _place_rows(index: int, found: Any, *, items: list[dict[str, Any]], resolved
             around = kakao.search(query, near=mid) or []
             seen = {c["name"] for c in pool}
             pool += [h for h in kind_hits(query, around) if h["name"] not in seen]
-        pick, metres = nearest(pool, near)
-        value = {"name": pick["name"], "kind": "dining" if pick.get("category_group") in ("FD6", "CE7")
-                 else (found.kind or "activity"), "latitude": pick["latitude"], "longitude": pick["longitude"],
-                 "place_id": None, "content_id": None, "source": "kakao"}
-        evidence = {**evidence, "source": "kakao", "method": "kakao_nearest", "name": pick["name"],
-                    "chosen_from": [c["name"] for c in pool],
-                    "neighbours": len(near), "mean_distance_m": round(metres) if metres is not None else None}
+        pool = _fitting(pool, items[index]["title"], meal=bool(items[index]["meal"]),
+                        activity=_place_kind_hint(items[index]) == "activity")
         review = True
-        note = (f"이름이 특정하지 않아 종류가 맞는 {len(pool)}곳 중 "
-                + (f"앞뒤 일정에 가장 가까운 「{pick['name']}」(평균 {round(metres):,}m)을 골랐다"
-                   if metres is not None else f"앞뒤 일정 좌표가 없어 카카오 첫 후보 「{pick['name']}」을 골랐다")
-                + " — 이 여행에만 싣는다. 다르면 고쳐 주세요")
+        if pool:
+            pick, metres = nearest(pool, near)
+            value = {"name": pick["name"], "kind": "dining" if pick.get("category_group") in ("FD6", "CE7")
+                     else (found.kind or "activity"), "latitude": pick["latitude"], "longitude": pick["longitude"],
+                     "place_id": None, "content_id": None, "source": "kakao"}
+            evidence = {**evidence, "source": "kakao", "method": "kakao_nearest", "name": pick["name"],
+                        "chosen_from": [c["name"] for c in pool],
+                        "neighbours": len(near), "mean_distance_m": round(metres) if metres is not None else None}
+            note = (f"이름이 특정하지 않아 종류가 맞는 {len(pool)}곳 중 "
+                    + (f"앞뒤 일정에 가장 가까운 「{pick['name']}」(평균 {round(metres):,}m)을 골랐다"
+                       if metres is not None else f"앞뒤 일정 좌표가 없어 카카오 첫 후보 「{pick['name']}」을 골랐다")
+                    + " — 이 여행에만 싣는다. 다르면 고쳐 주세요")
+        else:
+            evidence = {**evidence, "chosen_from": []}
+            note = "항목에 맞는 후보가 없어 장소를 정하지 못했다 — 장소를 확인하고 고쳐 주세요"
     out.append({"field": f"items[{index}].place", "value": value, "method": "lookup",
                 "evidence": evidence, "needs_review": review, "note": note})
     if found.item_kind and not any(r["field"] == f"items[{index}].kind" for r in rows):
@@ -1173,6 +1189,22 @@ def _place_rows(index: int, found: Any, *, items: list[dict[str, Any]], resolved
                     "evidence": {"source": "kakao", "rule": "food_hint", "line": items[index]["line"]},
                     "needs_review": False, "note": "뗀 말로 찾은 곳이 대부분 음식점이라 식사 일정으로 본다"})
     return out
+
+
+def _fitting(pool: list[dict[str, Any]], title: str, *, meal: bool, activity: bool = False) -> list[dict[str, Any]]:
+    """이름이 특정하지 않은 항목의 후보를 **그 항목에 맞는 것**으로 좁힌다(남는 것이 없으면 빈 목록).
+
+    ★`[2026-10-14 테스트 서버 접수 cbd50b1d]` 「오후엔 서촌 골목 좀 걷다가」가 후보 10곳 중 앞뒤 일정에 가장 가까운 「서촌닭갈비 광화문본점」이 됐다 —
+      찾은 곳이 식당이라 항목이 식사가 되고 18:00 에 놓였다. 이제
+        1 식사가 아닌 항목은 이름이 다른 음식점 · 카페를 빼고, 식사 항목은 음식점 · 카페만 본다
+        2 그중 이름이 원문과 **정확히 같은** 후보(「서촌」 — 동네 자체)가 있으면 그것들 중에서 고른다.
+          ☆지점 표시까지 비교한다(`normalize_full`) — 떼면 「올리브영 광화문점」이 「올리브영」과 같아져 체인 지점 후보가 하나로 줄었다"""
+    from .places import _fits_item_kind, normalize_full
+
+    pool = [c for c in pool if _fits_item_kind(c, title, meal=meal, activity=activity)]
+    key = normalize_full(title)
+    same = [c for c in pool if normalize_full(c["name"]) == key]
+    return same or pool
 
 
 def _nameless_rows(index: int, parts: Any, item: dict[str, Any], rows: list[dict[str, Any]]) -> list[dict[str, Any]]:

@@ -204,3 +204,18 @@ def test_unfound_place_history_is_reported_as_not_found_instead_of_answered_from
         scopes=list(trip_replies.QUESTION_SCOPES),min_score=0.5,now=NOW)
     assert seen and status=="answered" and "지어내 답하지 않았어요" in text
     assert evidence["policy_hits"]==0 and evidence["unmatched"] is True
+
+
+@pytest.mark.parametrize("text", ["지금 몇 시야?", "지금 몇시야", "현재 시각 알려줘", "지금 시간 알려 줘"])
+def test_asking_the_clock_is_answered_with_the_server_time_not_an_item(text):
+    """`[2026-10-15]` 「지금 몇 시야?」는 일정이 아니다 — 전에는 「어느 일정을 물으신 건지 찾지 못했어요」로 끝났다."""
+    a = item("솔빛전시관", 1)
+    result, basis, focus = render([a], [{**read("time", "none", "none"), "text": text, "anchor_kind": "now", "relation": "at"}], text)
+    assert "지금은 3월 10일(월) 09:00이에요(한국 시각)" in result["text"] and "일정은 바꾸지 않았어요" in result["text"]
+    assert basis["questions"][0]["kind"] == "clock" and focus is None
+
+
+def test_a_time_question_about_an_item_is_not_taken_for_the_clock():
+    a = item("솔빛전시관", 1)
+    result, basis, _ = render([a], [{**read("time", "i1"), "text": "솔빛전시관 몇 시야?"}], "솔빛전시관 몇 시야?")
+    assert basis["questions"][0]["kind"] == "time" and a.title in result["text"]

@@ -14,7 +14,10 @@ BASE = Path(os.environ["DEPLOY_BASE"])
 REPO = BASE / "repo"
 CONTROL = BASE / "control"
 STATE = BASE / "state.json"
-PATHS = ["app", "config", "prompts", "scripts", "deploy", "frontend/apps/web", "requirements.txt", "knowledge"]
+PATHS = ["app", "config", "prompts", "scripts", "deploy", "frontend/apps/web", "frontend/apps/admin",
+         "requirements.txt", "knowledge"]
+# `[2026-10-15 사용자 지시]` 관리자웹앱도 고객 웹·API 와 같은 회차에서 빌드·기동·검사·복구한다.
+APP_REPOS = ["tripilot-arm-api", "tripilot-arm-web", "tripilot-arm-admin"]
 # 서버 전용 덧씌움(2026-10-12 검색 수정). develop 원본이 바뀌면 멈추고 사람이 본다 — 수정이 develop 에 들어가면 지운다.
 OVERLAY = CONTROL / "prepare_search_release.py"
 
@@ -47,16 +50,31 @@ def start_app(tag):
         compose(tag, "run", "--rm", "--no-deps", "-v",
                 str(CONTROL / "prepare_guardrails.py") + ":/prepare_guardrails.py:ro",
                 "api", "python", "/prepare_guardrails.py")
+    # 관리자웹앱 이미지가 없는 옛 판(추가 전 SHA)으로 되돌릴 때는 관리자웹앱을 멈추고 나머지만 띄운다.
+    admin = has_admin_image(tag)
     # HTTP 건강 검사를 끈 worker를 Compose --wait에 넣으면 실제 기동 중에도 오류가 난다.
-    compose(tag, "up", "-d", "--wait", "--wait-timeout", "360", "db", "model-adapter", "api", "web")
+    compose(tag, "up", "-d", "--wait", "--wait-timeout", "360", "db", "model-adapter", "api", "web",
+            *(["admin"] if admin else []))
+    if not admin:
+        compose(tag, "rm", "-s", "-f", "admin")
     compose(tag, "up", "-d", "worker")
-    healthy(tag)
+    healthy(tag, admin)
 
 
-def healthy(tag):
+def has_admin_image(tag):
+    try:
+        return subprocess.run(["docker", "image", "inspect", f"tripilot-arm-admin:{tag}"],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+    except OSError:
+        return False
+
+
+def healthy(tag, admin=False):
+    # 관리자웹앱(3300)과 그 안의 운영 API(8070)도 이 기계 안에서만 연다 — 루프백으로만 확인한다.
+    checks = ((8043, "/health"), (13000, "/")) + (((8070, "/health"), (3300, "/")) if admin else ())
     for _ in range(90):
         try:
-            for port, path in ((8043, "/health"), (13000, "/")):
+            for port, path in checks:
                 with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=5) as response:
                     assert response.status == 200
             time.sleep(10)
@@ -65,13 +83,37 @@ def healthy(tag):
                                           env={**os.environ, "IMAGE_TAG": tag}, text=True)
             ids = raw.split()
             rows = json.loads(subprocess.check_output(["docker", "inspect", *ids], text=True))
-            assert len(rows) == 5
+            assert len(rows) == (6 if admin else 5)
             assert all(row["State"]["Running"] and row["RestartCount"] == 0 for row in rows)
             assert all(row["State"].get("Health", {}).get("Status", "healthy") == "healthy" for row in rows)
             return
         except Exception:
             time.sleep(5)
     raise RuntimeError("상태 검사 실패")
+
+
+def build_admin(src, release, tag):
+    """관리자웹앱 이미지는 고객 API 이미지 위에 쌓는다(`Dockerfile.admin` 의 `FROM ${API_IMAGE}`).
+    자원을 제한한 빌더(docker-container)는 이 기계의 이미지 저장소를 못 보므로, bake 의 `target:api` 로
+    같은 SHA 의 API 단계를 기반 이미지 자리에 끼운다 — 바로 앞에서 같은 빌더로 만든 단계라 캐시로 끝난다.
+    ★host 네트워크라 받는 주소를 고를 수 없는 옛 실행기(ADMIN_HOST 없음)면 0.0.0.0 으로 기계 바깥에 열린다 —
+      그런 SHA 는 관리자웹앱을 만들지 않는다(start_app 이 관리자웹앱만 멈추고 나머지를 띄운다)."""
+    runner = src / "deploy" / "admin_runner.py"
+    if not runner.is_file() or "ADMIN_HOST" not in runner.read_text(encoding="utf-8"):
+        print("관리자웹앱 건너뜀: 실행기가 받는 주소(ADMIN_HOST)를 모른다", flush=True)
+        return False
+    bake = release / "admin-bake.json"
+    target = {"context": str(src), "platforms": ["linux/arm64"]}
+    bake.write_text(json.dumps({"target": {
+        "api": {**target, "dockerfile": "deploy/Dockerfile.api"},
+        "admin": {**target, "dockerfile": "deploy/Dockerfile.admin",
+                  "contexts": {"tripilot-api:local": "target:api"},
+                  "tags": [f"tripilot-arm-admin:{tag}"]},
+    }}, indent=2), encoding="utf-8")
+    # bake 는 작업 폴더 밖 읽기를 막는다 — 이 SHA 의 소스 폴더만 읽게 허락한다.
+    run("docker", "buildx", "bake", "--builder", "tripilot-arm", "--progress", "plain", "--load",
+        f"--allow=fs.read={src}", "-f", str(bake), "admin")
+    return True
 
 
 def prune_old_releases(state):
@@ -83,7 +125,7 @@ def prune_old_releases(state):
         current, previous = state["current"], state.get("previous")
         good = {row["sha"]: datetime.fromtimestamp(row["at"], timezone.utc) for row in state.get("history", [])}
         protected = [sha for sha in (current, previous) if sha]
-        result = ir.run_retention(ir.Docker(), app_repos=["tripilot-arm-api", "tripilot-arm-web"],
+        result = ir.run_retention(ir.Docker(), app_repos=APP_REPOS,
                                   protected_tags=[sha[:12] for sha in protected], good=good, apply=True,
                                   say=lambda line: print(line, flush=True))
         ir.prune_release_dirs(BASE / "releases", set(result["apps"]["keep"]), protected, True,
@@ -151,13 +193,14 @@ def main():
                     # 공개 프록시와 같은 출처를 사용한다. 방문자 PC의 루프백으로 보내지 않는다.
                     cmd += ["--build-arg", "NEXT_PUBLIC_API_BASE="]
                 run(*cmd, str(src))
+            built = ["api", "web"] + (["admin"] if build_admin(src, release, tag) else [])
             compose(tag, "up", "-d", "--wait", "db", "model-adapter")
             compose(tag, "run", "--rm", "--no-deps", "api", "python", "-m", "app.infrastructure.db.migrate")
             compose(tag, "run", "--rm", "--no-deps", "-v", str(CONTROL / "init_test_db.py") + ":/init_test_db.py:ro",
                     "api", "python", "-c", "exec(open('/init_test_db.py').read())")
             start_app(tag)
             images = json.loads(subprocess.check_output(["docker", "image", "inspect",
-                                f"tripilot-arm-api:{tag}", f"tripilot-arm-web:{tag}"], text=True))
+                                *[f"tripilot-arm-{kind}:{tag}" for kind in built]], text=True))
             save({"current": sha, "previous": previous, "deployed_at": time.time(),
                   "history": [*state.get("history", []), {"sha": sha, "at": time.time()}][-400:],
                   "image_ids": [row["Id"] for row in images],

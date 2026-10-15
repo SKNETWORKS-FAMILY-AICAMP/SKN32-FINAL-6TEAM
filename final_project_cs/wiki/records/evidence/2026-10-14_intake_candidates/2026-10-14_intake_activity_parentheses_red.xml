@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="4" time="43.134" timestamp="2026-10-14T17:29:01.648143+09:00" hostname="DESKTOP-A5H6T7G"><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_a_parenthesized_restaurant_branch_is_not_the_named_neighbourhood[our_places]" time="12.860"><failure message="AssertionError: assert ('resolved' == 'unresolved'&#10;  &#10;  - unresolved&#10;  ? --&#10;  + resolved)">source = 'our_places'
+
+    @pytest.mark.parametrize("source", ["our_places", "tour", "dining", "kakao"])
+    def test_a_parenthesized_restaurant_branch_is_not_the_named_neighbourhood(source):
+        name = "서촌(광화문점)"
+        options = {"our_places": []}
+        if source == "our_places":
+            options[source] = [_place(name)]
+        elif source == "kakao":
+            options[source] = Kakao({"서촌": [_hit(name)]})
+        else:
+            options[source] = NamedSource({"서촌": _source_place(name)})
+    
+        found = resolve("서촌", kind_hint="activity", **options)
+    
+&gt;       assert found.status == "unresolved" and found.needs_review is True
+E       AssertionError: assert ('resolved' == 'unresolved'
+E         
+E         - unresolved
+E         ? --
+E         + resolved)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:106: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_a_parenthesized_restaurant_branch_is_not_the_named_neighbourhood[tour]" time="0.018"><failure message="AssertionError: assert ('resolved' == 'unresolved'&#10;  &#10;  - unresolved&#10;  ? --&#10;  + resolved)">source = 'tour'
+
+    @pytest.mark.parametrize("source", ["our_places", "tour", "dining", "kakao"])
+    def test_a_parenthesized_restaurant_branch_is_not_the_named_neighbourhood(source):
+        name = "서촌(광화문점)"
+        options = {"our_places": []}
+        if source == "our_places":
+            options[source] = [_place(name)]
+        elif source == "kakao":
+            options[source] = Kakao({"서촌": [_hit(name)]})
+        else:
+            options[source] = NamedSource({"서촌": _source_place(name)})
+    
+        found = resolve("서촌", kind_hint="activity", **options)
+    
+&gt;       assert found.status == "unresolved" and found.needs_review is True
+E       AssertionError: assert ('resolved' == 'unresolved'
+E         
+E         - unresolved
+E         ? --
+E         + resolved)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:106: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_a_parenthesized_restaurant_branch_is_not_the_named_neighbourhood[dining]" time="0.016"><failure message="AssertionError: assert ('resolved' == 'unresolved'&#10;  &#10;  - unresolved&#10;  ? --&#10;  + resolved)">source = 'dining'
+
+    @pytest.mark.parametrize("source", ["our_places", "tour", "dining", "kakao"])
+    def test_a_parenthesized_restaurant_branch_is_not_the_named_neighbourhood(source):
+        name = "서촌(광화문점)"
+        options = {"our_places": []}
+        if source == "our_places":
+            options[source] = [_place(name)]
+        elif source == "kakao":
+            options[source] = Kakao({"서촌": [_hit(name)]})
+        else:
+            options[source] = NamedSource({"서촌": _source_place(name)})
+    
+        found = resolve("서촌", kind_hint="activity", **options)
+    
+&gt;       assert found.status == "unresolved" and found.needs_review is True
+E       AssertionError: assert ('resolved' == 'unresolved'
+E         
+E         - unresolved
+E         ? --
+E         + resolved)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:106: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_a_parenthesized_restaurant_branch_is_not_the_named_neighbourhood[kakao]" time="0.029"><failure message="AssertionError: assert ('resolved' == 'unresolved'&#10;  &#10;  - unresolved&#10;  ? --&#10;  + resolved)">source = 'kakao'
+
+    @pytest.mark.parametrize("source", ["our_places", "tour", "dining", "kakao"])
+    def test_a_parenthesized_restaurant_branch_is_not_the_named_neighbourhood(source):
+        name = "서촌(광화문점)"
+        options = {"our_places": []}
+        if source == "our_places":
+            options[source] = [_place(name)]
+        elif source == "kakao":
+            options[source] = Kakao({"서촌": [_hit(name)]})
+        else:
+            options[source] = NamedSource({"서촌": _source_place(name)})
+    
+        found = resolve("서촌", kind_hint="activity", **options)
+    
+&gt;       assert found.status == "unresolved" and found.needs_review is True
+E       AssertionError: assert ('resolved' == 'unresolved'
+E         
+E         - unresolved
+E         ? --
+E         + resolved)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:106: AssertionError</failure></testcase></testsuite></testsuites>

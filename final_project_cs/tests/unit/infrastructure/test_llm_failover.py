@@ -128,7 +128,7 @@ def test_luna_structured_uses_the_callers_schema_and_output_budget():
     schema = {"type": "object", "properties": {"action": {"type": "string"}}}
     assert chat.structured("할 일을 고르라", "서울 여행 일정 확인", schema, num_predict=180) == {"action": "answer_fact"}
     assert api.calls[0]["max_completion_tokens"] == 720
-    assert api.calls[0]["response_format"]["json_schema"]["schema"] == schema
+    assert api.calls[0]["response_format"]["json_schema"]["schema"] == lf.strict_schema(schema)   # `[2026-10-15]` strict 모양으로 바꿔 보낸다
 
 
 def test_switch_on_with_the_key_returns_the_failover_chat_with_the_same_surface():
@@ -350,7 +350,7 @@ def test_structured_sends_the_schema_as_the_response_format_and_returns_the_obje
     chat, _ = build(server, api)
     assert chat.structured("sys", "hi", SCHEMA, num_predict=400) == {"action": "a"}
     fmt = api.calls[0]["response_format"]
-    assert fmt["type"] == "json_schema" and fmt["json_schema"]["schema"] == SCHEMA and fmt["json_schema"]["strict"] is False
+    assert fmt["type"] == "json_schema" and fmt["json_schema"]["schema"] == lf.strict_schema(SCHEMA) and fmt["json_schema"]["strict"] is True
     assert api.calls[0]["temperature"] == 0 and api.calls[0]["max_tokens"] >= 400
 
 
