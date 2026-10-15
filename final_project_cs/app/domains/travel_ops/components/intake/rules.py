@@ -457,8 +457,13 @@ def _time_items(result: ReadResult, number: int, line: str, times: list[re.Match
         # 「11:00 종료」처럼 끝을 말하는 시각은 항목이 아니다 — 앞 항목의 끝
         if END_MARK.match(line[start_match.end():]) and result.items and result.items[-1].end is None \
                 and produced > 0:
-            value, _, _ = _hhmm(start_match)
+            value, end_review, end_note = _hhmm(start_match)
             result.items[-1].end = value
+            # ★`[2026-10-15 x600 실서버 확인]` 값만 항목에 달고 **값 줄(`ends_at`)을 만들지 않아** 「08:00 경복궁 · 한복 체험, 12:00 종료」의 끝이 확인 화면에서 사라지고
+            #   「끝 시각이 없어 90분으로 두었어요」가 됐다 — 끝을 말한 시각도 다른 끝 시각과 같이 근거(원문 조각)를 단 값 줄로 싣는다
+            result.claims.append(Claim(f"items[{len(result.items) - 1}].ends_at", value,
+                                       Span(number, start_match.start(), start_match.end(), start_match.group(0)),
+                                       needs_review=end_review, note=end_note))
             index += 1
             continue
         start_value, review, note = _hhmm(start_match)
