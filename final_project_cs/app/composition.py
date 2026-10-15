@@ -637,6 +637,13 @@ def wire_optional_features() -> list[str]:
 
     settings_hook.register(lambda tenant_id, name: web_guard.values(tenant_id).get(name))
 
+    # ★`[2026-10-15 사용자 지시]` 관리 콘솔 「모델 경로」(local · ssh · api) — 채팅 해석 · 계획 읽기 · 번역은 부를 때마다,
+    #  일정 짚기 · 공지 확인은 주소를 부를 때마다 읽는다(재기동 없이 반영, 운영 설정 캐시만큼 늦을 수 있다). SSH 터널은 앱 밖 프로그램이 연다.
+    from app.infrastructure import ollama_chat
+
+    route_tenant = get_settings().tenant_id
+    ollama_chat.register_route_provider(lambda: settings_hook.model_route(route_tenant))
+
     # 접수 읽기의 진행 알림을 화면이 읽는 모양(SSE)으로 포장하는 자리.
     from app.domains.travel_ops.components import progress_hook
     from app.domains.travel_ops.modules.live_progress import op_stream
@@ -652,13 +659,14 @@ def wire_optional_features() -> list[str]:
     #  (없으면 낱말 규칙만 — 지금까지와 같다). 켜고 끄기: 가드레일 `travel.pointer.mode`(off · shadow · on).
     from app.domains.travel_ops.components.conversation import item_pointer
 
-    pointer = item_pointer.register_from_settings(get_settings())
+    route_settings = get_settings()
+    pointer = item_pointer.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings))
 
     # ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 2차 확인 — 규칙이 「끝남」이라 한 공지를 가르친 모델이 한 번 더 본다. `.env` 에
     #  `ACOP_OLLAMA_NOTICE_MODEL` 이 있을 때만 꽂는다(없으면 규칙만). 켜고 끄기: 가드레일 `travel.notice_end.mode`(off · shadow · on).
     from app.domains.travel_ops.ports.data_sources import notice_end_model
 
-    notice_judge = notice_end_model.register_from_settings(get_settings())
+    notice_judge = notice_end_model.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings))
     # `[2026-10-13 사용자 결정]` 여행 영향이 없다고 보고 보내지 않은 「기타」 재난 문자를 DB 에 남긴다(관리자 웹앱 「걸러진 재난 문자」)
     from app.domains.travel_ops.components.watch import notice_exclusions
 
@@ -763,7 +771,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     Outside collection this remains the explicit standalone/unit-test assembly seam.
     Production stores the returned registrations in a per-controller BindingTable.
     """
-    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
 
     if active_ids is not None:
         pass
@@ -812,6 +820,11 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                closure_observation=dining_ledger_impl.closure_observation,
                                agent_shadow=_dining_agent_shadow(),
                                meal_picker=_dining_meal_picker())
+
+        # 요식 — 확인 화면 「다른 식당」 후보(`[2026-10-15]` 후보 공급은 팀이, 조립은 우리가). 미등록이면 확인 화면 자체 고르기로 간다
+        from app.domains.travel_ops.instances.dining import review_alternatives as dining_review_alternatives
+
+        dining_alternatives.register(rank=dining_review_alternatives.rank)
 
     if "activity" in active_ids:
         # 활동 — 비슷한 곳 순서와 설문 선호.
@@ -878,7 +891,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         activity_jobs.configure(connection_factory=get_connection, judge_llm=build_activity_judge_llm(),
                                 budget=build_activity_judge_budget(), claim=claim)
 
-    names = {"mobility": ("legs",), "dining": ("dining_ledger",), "activity": ("similarity", "activity_ledger", "activity_alternatives")}
+    names = {"mobility": ("legs",), "dining": ("dining_ledger", "dining_alternatives"), "activity": ("similarity", "activity_ledger", "activity_alternatives")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
     hook_names = {**names, "lodging": ("lodging_ledger",)}
     connected = [name for owner, hooks in hook_names.items() if owner in active_ids for name in hooks]

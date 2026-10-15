@@ -1,0 +1,391 @@
+{
+ "run_date": "2026-10-14",
+ "command": "pytest tests/unit/travel/activity + 활동 관련 단위·eval·DB 통합 + tests/scenario -m \"not live\"",
+ "python": "3.12.15",
+ "pytest": "8.4.2",
+ "files": {
+  "unit.travel.activity.test_activity_alternative_order": {
+   "pass": 10,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.44
+  },
+  "unit.travel.activity.test_activity_brand_stores": {
+   "pass": 6,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.01
+  },
+  "unit.travel.activity.test_activity_cancelable": {
+   "pass": 9,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.03
+  },
+  "unit.travel.activity.test_activity_closed_alternatives": {
+   "pass": 8,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.03
+  },
+  "unit.travel.activity.test_activity_customer_answer": {
+   "pass": 11,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.04
+  },
+  "unit.travel.activity.test_activity_disaster_impact": {
+   "pass": 37,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.07
+  },
+  "unit.travel.activity.test_activity_fit": {
+   "pass": 6,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.11
+  },
+  "unit.travel.activity.test_activity_hours_check": {
+   "pass": 9,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.05
+  },
+  "unit.travel.activity.test_activity_indoor_outdoor": {
+   "pass": 8,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.03
+  },
+  "unit.travel.activity.test_activity_judge_faults": {
+   "pass": 7,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.28
+  },
+  "unit.travel.activity.test_activity_judge_shadow": {
+   "pass": 21,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.1
+  },
+  "unit.travel.activity.test_activity_ledger": {
+   "pass": 13,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.02
+  },
+  "unit.travel.activity.test_activity_live_status_stored": {
+   "pass": 14,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.06
+  },
+  "unit.travel.activity.test_activity_load_places": {
+   "pass": 5,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.17
+  },
+  "unit.travel.activity.test_activity_merge_develop_1001": {
+   "pass": 50,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.06
+  },
+  "unit.travel.activity.test_activity_merge_pr6": {
+   "pass": 14,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.03
+  },
+  "unit.travel.activity.test_activity_notices": {
+   "pass": 6,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.01
+  },
+  "unit.travel.activity.test_activity_preference_received": {
+   "pass": 6,
+   "fail": 0,
+   "skip": 1,
+   "sec": 0.04
+  },
+  "unit.travel.activity.test_activity_read_hours": {
+   "pass": 5,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.01
+  },
+  "unit.travel.activity.test_activity_rule_first": {
+   "pass": 12,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.06
+  },
+  "unit.travel.activity.test_activity_safety_gap": {
+   "pass": 6,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.02
+  },
+  "unit.travel.activity.test_activity_submit_redirect": {
+   "pass": 8,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.02
+  },
+  "unit.travel.activity.test_activity_team_from_develop_1005": {
+   "pass": 8,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.02
+  },
+  "unit.travel.activity.test_activity_trigger_budget": {
+   "pass": 3,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.01
+  },
+  "unit.travel.activity.test_activity_unknown_inputs": {
+   "pass": 13,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.05
+  },
+  "unit.travel.activity.test_activity_verdicts": {
+   "pass": 12,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.01
+  },
+  "unit.travel.activity.test_activity_weather": {
+   "pass": 9,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.03
+  },
+  "unit.travel.activity.test_closure_rules": {
+   "pass": 29,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.16
+  },
+  "unit.travel.activity.test_judge_llm": {
+   "pass": 26,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.08
+  },
+  "unit.travel.activity.test_judge_modes": {
+   "pass": 20,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.17
+  },
+  "unit.travel.activity.test_judge_prompts": {
+   "pass": 2,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.01
+  },
+  "unit.travel.activity.test_judge_requests": {
+   "pass": 8,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.01
+  },
+  "unit.travel.activity.test_judge_rule": {
+   "pass": 34,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.08
+  },
+  "unit.travel.activity.test_policy_query": {
+   "pass": 8,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.01
+  },
+  "unit.travel.activity.test_watch_batch_unit": {
+   "pass": 15,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.07
+  },
+  "unit.travel.test_activity_alternatives": {
+   "pass": 77,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.3
+  },
+  "unit.travel.test_activity_data_quality": {
+   "pass": 23,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.49
+  },
+  "unit.travel.test_activity_failure_codes": {
+   "pass": 1,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.0
+  },
+  "unit.travel.test_activity_place_lookup": {
+   "pass": 11,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.01
+  },
+  "unit.test_activity_judge_wiring": {
+   "pass": 8,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.02
+  },
+  "unit.test_eval_activity_a": {
+   "pass": 4,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.06
+  },
+  "unit.test_try_activity_judge_script": {
+   "pass": 8,
+   "fail": 0,
+   "skip": 0,
+   "sec": 1.22
+  },
+  "unit.eval.test_activity_judge_eval": {
+   "pass": 64,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.13
+  },
+  "unit.eval.test_activity_judge_review": {
+   "pass": 7,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.31
+  },
+  "integration.db.test_activity_indoor_db": {
+   "pass": 6,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.41
+  },
+  "integration.db.test_activity_judge_shadow_db": {
+   "pass": 4,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.06
+  },
+  "integration.db.test_activity_ledger_db": {
+   "pass": 3,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.18
+  },
+  "integration.db.test_activity_refresh_db": {
+   "pass": 6,
+   "fail": 0,
+   "skip": 0,
+   "sec": 1.64
+  },
+  "integration.travel.test_activity_catalog_pool": {
+   "pass": 6,
+   "fail": 0,
+   "skip": 0,
+   "sec": 1.57
+  },
+  "scenario.test_apply_or_ask_recheck": {
+   "pass": 5,
+   "fail": 0,
+   "skip": 0,
+   "sec": 1.36
+  },
+  "scenario.test_apply_recheck": {
+   "pass": 3,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.4
+  },
+  "scenario.test_case_path_gate": {
+   "pass": 5,
+   "fail": 0,
+   "skip": 0,
+   "sec": 1.3
+  },
+  "scenario.test_case_question": {
+   "pass": 6,
+   "fail": 0,
+   "skip": 0,
+   "sec": 4.46
+  },
+  "scenario.test_case_version_day": {
+   "pass": 8,
+   "fail": 0,
+   "skip": 0,
+   "sec": 6.86
+  },
+  "scenario.test_case_watch_dining": {
+   "pass": 3,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.9
+  },
+  "scenario.test_confirmed_scenario": {
+   "pass": 9,
+   "fail": 0,
+   "skip": 0,
+   "sec": 1.56
+  },
+  "scenario.test_dawn_check": {
+   "pass": 29,
+   "fail": 0,
+   "skip": 0,
+   "sec": 3.61
+  },
+  "scenario.test_desk_report_recheck": {
+   "pass": 4,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.53
+  },
+  "scenario.test_dining_needs_check": {
+   "pass": 1,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.29
+  },
+  "scenario.test_pinned_items_are_watched": {
+   "pass": 3,
+   "fail": 0,
+   "skip": 0,
+   "sec": 0.88
+  },
+  "scenario.test_travel_eval_scenarios": {
+   "pass": 5,
+   "fail": 0,
+   "skip": 0,
+   "sec": 2.36
+  },
+  "scenario.test_trip_reminders": {
+   "pass": 13,
+   "fail": 0,
+   "skip": 0,
+   "sec": 1.68
+  },
+  "scenario.test_watch_batch": {
+   "pass": 9,
+   "fail": 0,
+   "skip": 0,
+   "sec": 3.3
+  }
+ },
+ "total": {
+  "pass": 789,
+  "fail": 0,
+  "skip": 1
+ }
+}

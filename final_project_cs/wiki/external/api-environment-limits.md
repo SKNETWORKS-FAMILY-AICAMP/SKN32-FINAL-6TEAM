@@ -21,4 +21,11 @@ domain: travel
 - DB 조회에 실패하면 `usage_error`를 명시하고 ENV 설정은 계속 표시한다. DB 사용량은 미계측이다. 예외 원문·API 키·토큰·환경파일 내용은 반환하지 않는다.
 - 목록은 현재 프로세스 기준이다. 여러 프로세스의 설정 일치나 다른 DB의 계정 사용량 합산을 증명하지 않는다.
 
-응답: `as_of`, `timezone=Asia/Seoul`, `usage_error`, `limits[]` (`id`, `name`, `daily`, `monthly`, `budget_timezone`, `recorded`, `operator_cap`).
+응답: `as_of`, `timezone=Asia/Seoul`, `usage_error`, `limits[]` (`id`, `name`, `daily`, `monthly`, `budget_timezone`, `recorded`, `operator_cap`, `adjustable`, `adjust_note`).
+
+## 운영자 상한 조정 — 2026-10-15
+
+- 같은 화면의 각 줄에서 운영자 상한(하루 · 월)을 정하고 지운다 — 명령 `api-cap`(저장) · `api-cap-clear`(지정 해제, ENV 로 돌림). 사유는 필수이고 운영 기록에 남는다. 다음 호출부터 적용되며 재시작이 필요 없다.
+- `adjustable=true` 는 호출 전 DB 예산을 확보하는 소스(가드레일 `travel.source_budget_sources`, `travel.source_budget_shared=true`, ENV 하루 상한 > 0)뿐이다. 그 밖의 소스는 운영자 상한이 실제 호출에 걸리지 않으므로 `adjust_note` 로 이유를 싣고 조정 단추를 만들지 않는다(Open-Meteo 날씨 · 대기질 · ODsay 등). 카카오 · 구글 · OpenAI 장애 대체는 전용 예산이라 「외부 API별 현황」에서 조정한다.
+- 운영자 상한은 ENV 상한보다 **낮게만** 정한다(`admin_service.api_cap` 이 작은 쪽을 쓴다). 높게 보내면 422. 올리려면 `.env.apikeys` 를 바꾸고 cs 프로젝트 서버를 다시 띄운다. 호출 기록이 없는 소스도 정할 수 있다(전에는 한 번이라도 불린 API 만 됐다).
+- 근거: [2026-10-15 관리자웹앱 점검 · 수정](../records/reports/2026-10-15_1830_관리자웹앱_점검_수정.md).

@@ -21,6 +21,8 @@ from app.presentation.ui.routes import _api_key, _call_api, _case, _cases
 
 Text = Annotated[str, Field(min_length=1, max_length=5000, pattern=r"\S")]
 Count = Annotated[int, Field(strict=True, ge=1, le=100000000)]
+#: 채팅 하루 한도 — `[2026-10-15 사용자 지시]` 0 은 한도 없음
+ChatQuota = Annotated[int, Field(strict=True, ge=0, le=100000000)]
 
 
 class Input(BaseModel):
@@ -37,7 +39,7 @@ class Block(Input):
 class UserLimit(Input):
     type: Literal["user-limit"]
     userId: UUID
-    limit: Count | None
+    limit: ChatQuota | None
     period: Literal["today", "until-cleared"]
     reason: Text
 
@@ -50,7 +52,7 @@ class Rule(Input):
 
 class Limits(Input):
     type: Literal["save-limits"]
-    chatLimit: Count
+    chatLimit: ChatQuota
     rules: Annotated[list[Rule], Field(max_length=5)]
     reason: Text
 
@@ -60,6 +62,12 @@ class ApiCap(Input):
     apiId: Text
     daily: Count
     monthly: Count
+    reason: Text
+
+
+class ApiCapClear(Input):
+    type: Literal["api-cap-clear"]
+    apiId: Text
     reason: Text
 
 
@@ -136,7 +144,7 @@ class Check(Input):
     type: Literal["check-server"]
 
 
-Command = Annotated[Block | UserLimit | Limits | ApiCap | InquiryStatus | Reply | Template | Maintenance | Publish | Approval | Delegation | Resolve | Check, Field(discriminator="type")]
+Command = Annotated[Block | UserLimit | Limits | ApiCap | ApiCapClear | InquiryStatus | Reply | Template | Maintenance | Publish | Approval | Delegation | Resolve | Check, Field(discriminator="type")]
 COMMAND = TypeAdapter(Command)
 SCOPES = {"approval": "action:approve", "delegation": "delegation:write", "resolve-outbox": "action:approve", "check-server": "ops:introspect"}
 PRE_COOKIE = "acop_admin_csrf"
@@ -207,7 +215,7 @@ def build_router(*, snapshot_provider: Callable | None = None) -> APIRouter:
     def snapshot(op=Depends(operator)):
         require(op, "ops:introspect")
         with get_connection() as conn:
-            data = measured_snapshot(conn, get_settings().tenant_id, int(get_guardrails().get("web_guard.limits.message.per_key_day")))
+            data = measured_snapshot(conn, get_settings().tenant_id, admin_service.default_chat_limit())
         return JSONResponse(data, headers={"Cache-Control": "no-store"})
 
     @router.get("/cases")
@@ -267,7 +275,7 @@ def build_router(*, snapshot_provider: Callable | None = None) -> APIRouter:
                 return {"ok": True}
         if kind == "check-server":
             with get_connection() as conn:
-                measured_snapshot(conn, tenant, int(get_guardrails().get("web_guard.limits.message.per_key_day")))
+                measured_snapshot(conn, tenant, admin_service.default_chat_limit())
             return {"ok": True}
         with get_connection() as conn, conn.transaction():
             try:

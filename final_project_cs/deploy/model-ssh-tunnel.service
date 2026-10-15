@@ -1,0 +1,22 @@
+# 관리 콘솔 「모델 경로 → SSH」 가 부르는 입구를 여는 SSH 터널 — 앱(cs 프로젝트 서버)과 따로 도는 프로그램. `[2026-10-15]`
+# 안내: wiki/external/llm-model-route.md
+#
+# ★<...> 칸은 설치하는 기계에서 채운다. 주소 · 포트 · 계정 · 별칭을 이 파일(저장소)에 적어 넣지 않는다 — 채운 사본은 /etc/systemd/system/ 에만 둔다.
+#   <터널 계정>       SSH 키와 ~/.ssh/config(런팟 별칭)를 가진 리눅스 계정. 앱 컨테이너는 이 키를 보지 못한다
+#   <입구 주소>       앱 컨테이너가 닿는 이 기계의 주소(앱이 지금 Ollama 를 부르는 길과 같은 쪽)
+#   <입구 포트>       비어 있는 포트 하나(이 기계 Ollama 의 11434 와 겹치지 않게)
+#   <런팟 별칭>       ~/.ssh/config 의 Host 이름 — 런팟 포드를 다시 만들면 거기 주소 · 포트만 바꾼다
+[Unit]
+Description=triPilot model SSH tunnel (RunPod Ollama)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=<터널 계정>
+# -N 명령 없이 통로만 · 30초마다 살아 있나 확인 · 3번 못 받으면 끊고 다시 연다 · 입구를 못 열면 바로 실패(조용히 반쯤 뜨지 않게)
+ExecStart=/usr/bin/ssh -N -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -L <입구 주소>:<입구 포트>:127.0.0.1:11434 <런팟 별칭>
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

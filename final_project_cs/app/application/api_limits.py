@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from psycopg import Error as DatabaseError
 
-from app.core.settings import get_settings
+from app.core.settings import get_guardrails, get_settings
 
 KST = ZoneInfo('Asia/Seoul')
 NAMES = {
@@ -26,6 +26,19 @@ def _setting(settings, field: str, zero_meaning: str):
         return dict(env=None, value=None, origin='absent', zero_meaning=None)
     return dict(env='ACOP_' + field.upper(), value=int(getattr(settings, field)),
                 origin='configured' if field in settings.model_fields_set else 'default', zero_meaning=zero_meaning)
+
+
+def adjustable(settings=None) -> dict[str, dict[str, int | None]]:
+    """운영자가 관리자 화면에서 상한을 정할 수 있는 API — 호출 전에 DB 예산을 확보하는 소스(가드레일 `travel.source_budget_sources`)뿐이다.
+    값은 ENV 상한(하루 · 월, 월 미설정은 None). ★`[2026-10-15]` 운영자 상한은 ENV 보다 **낮게만** 정한다(`admin_service.api_cap` 이 작은 쪽을 쓴다) —
+    올리려면 `.env.apikeys` 를 바꾸고 cs 프로젝트 서버를 다시 띄운다."""
+    settings = settings if settings is not None else get_settings()
+    guard = get_guardrails()
+    if not guard.get("travel.source_budget_shared"):
+        return {}
+    daily, monthly = settings.source_rate_limits(), settings.source_monthly_limits()
+    return {name: {"day": int(daily[name]), "month": int(monthly[name]) if monthly.get(name) else None}
+            for name in (guard.get("travel.source_budget_sources") or []) if int(daily.get(name) or 0) > 0}
 
 
 def snapshot(*, connection_factory, settings=None, now=None):
@@ -58,7 +71,13 @@ def snapshot(*, connection_factory, settings=None, now=None):
         # 오류를 명시한다. ENV는 읽었지만 계측을 못 읽은 상태를 0회로 위장하지 않는다.
         records, overrides = {}, {}
         error = 'DB 사용 기록을 읽지 못했습니다. 연결·DB 표를 확인하고 다시 읽어 주세요.'
+    bounds = adjustable(settings)
     for row in limits:
         row['recorded'] = {kind: records.get((row['id'], periods[row['id']][kind])) for kind in ('day', 'month')}
         row['operator_cap'] = overrides.get(row['id'])
+        # 화면의 「조정」 — DB 예산을 거치는 소스만 운영자 상한이 실제 호출에 걸린다. 나머지는 이유를 싣는다(눌러도 안 먹는 단추를 만들지 않는다)
+        row['adjustable'] = row['id'] in bounds
+        row['adjust_note'] = None if row['adjustable'] else (
+            '전용 예산으로 셉니다 — 아래 「외부 API별 현황」에서 조정합니다.' if row['id'] in ('kakao', 'google_places', 'google_routes', 'openai_failover')
+            else '호출 전 DB 예산을 거치지 않는 API라 운영자 상한이 걸리지 않습니다. ENV 를 바꾸고 cs 프로젝트 서버를 다시 띄웁니다.')
     return dict(as_of=now.isoformat(), timezone='Asia/Seoul', usage_error=error, limits=limits)

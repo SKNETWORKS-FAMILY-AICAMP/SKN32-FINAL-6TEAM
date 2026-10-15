@@ -113,3 +113,22 @@ def activity_live_check_enabled(tenant_id: str) -> bool:
     from app.core.settings import activity_live_check_enabled as guardrail_default
 
     return guardrail_default()
+
+
+MODEL_ROUTE = "llm.model_route"
+MODEL_ROUTES = ("local", "ssh", "api")
+
+
+def model_route(tenant_id: str) -> str:
+    """모델을 어디서 부르나 — local(이 기계의 Ollama 학습 모델) · ssh(SSH 터널 너머 런팟 GPU 서버) · api(유료 API). `[2026-10-15 사용자 지시]`
+
+    운영자가 관리 콘솔에서 고른 값이 먼저, 없거나 못 읽으면 가드레일(`web_guard.model_route.default`, 기본 local).
+    ★목록 밖 값은 고른 값으로 보지 않는다. 실제로 경로를 바꾸는 곳은 `app.infrastructure.ollama_chat`(조립 루트가 이 함수를 꽂는다).
+    """
+    value = operator_setting(tenant_id, MODEL_ROUTE)
+    if value in MODEL_ROUTES:
+        return str(value)
+    from app.core.settings import get_guardrails
+
+    default = str(get_guardrails().get("web_guard.model_route.default") or "local")
+    return default if default in MODEL_ROUTES else "local"

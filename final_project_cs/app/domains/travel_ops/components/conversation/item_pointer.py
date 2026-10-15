@@ -61,6 +61,8 @@ class OllamaItemPointer:
                  mode: Callable[[], str] | str = "on", post: Callable[[str, dict, float], Any] | None = None, cache_size: int = 256,
                  background_warm: bool = False, warm_timeout: float = 180.0, num_ctx: int = 0) -> None:
         self.base_url, self.model, self.timeout, self.keep_alive = base_url.rstrip("/"), model, timeout, keep_alive
+        #: ★`[2026-10-15]` 관리 콘솔 「모델 경로」를 따를 때 조립이 꽂는 주소 함수(부를 때마다 읽는다). 비면 `base_url` 고정
+        self.base_url_for: Callable[[], str] | None = None
         self.background_warm, self.warm_timeout = background_warm, warm_timeout
         #: ★`[2026-10-14]` 요청 해석과 **같은 모델**을 쓰면 문맥 길이도 같아야 한다 — 다르면 Ollama 가 부를 때마다 모델을 다시 올린다
         #:  (`ollama_chat.OllamaChat.num_ctx`). 0 이면 보내지 않는다(모델 기본)
@@ -74,6 +76,17 @@ class OllamaItemPointer:
         self._cache_size = cache_size
         self._lock = threading.Lock()
 
+    def current_base_url(self) -> str:
+        """이번 호출이 부를 Ollama 주소 — 꽂힌 주소 함수가 있으면 그 값(비면 고정 주소), 없으면 고정 주소."""
+        if self.base_url_for is not None:
+            try:
+                chosen = (self.base_url_for() or "").strip().rstrip("/")
+            except Exception:                    # noqa: BLE001 — 경로를 못 읽으면 고정 주소로 부른다
+                chosen = ""
+            if chosen:
+                return chosen
+        return self.base_url
+
     def _http(self, url: str, payload: dict, timeout: float) -> Any:
         import httpx
 
@@ -86,7 +99,7 @@ class OllamaItemPointer:
                                    "messages": [{"role": "user", "content": prompt}]}
         if self.keep_alive:
             payload["keep_alive"] = self.keep_alive
-        response = self._post(f"{self.base_url}/api/chat", payload, timeout or self.timeout)
+        response = self._post(f"{self.current_base_url()}/api/chat", payload, timeout or self.timeout)
         if response.status_code != 200:
             raise RuntimeError(f"Ollama HTTP {response.status_code}: {response.text[:120]}")
         value = json.loads(response.json()["message"]["content"])
@@ -184,8 +197,9 @@ OllamaItemPointer._warm = _warm_impl            # type: ignore[attr-defined]
 OllamaItemPointer.wait_idle = _wait_idle        # type: ignore[attr-defined]
 
 
-def register_from_settings(settings: Any) -> OllamaItemPointer | None:
-    """조립 때 한 번. 설정에 모델 이름과 Ollama 주소가 있을 때만 꽂는다(없으면 규칙만 — 지금까지와 같다)."""
+def register_from_settings(settings: Any, *, base_url_for: Callable[[], str] | None = None) -> OllamaItemPointer | None:
+    """조립 때 한 번. 설정에 모델 이름과 Ollama 주소가 있을 때만 꽂는다(없으면 규칙만 — 지금까지와 같다).
+    `base_url_for` — 관리 콘솔 「모델 경로」를 따르는 주소 함수(`[2026-10-15]`, 조립이 넘긴다). 비면 `ollama_base_url` 고정."""
     from app.core.settings import get_guardrails
     from app.domains.travel_ops.instances._shared import itinerary_team
 
@@ -206,6 +220,7 @@ def register_from_settings(settings: Any) -> OllamaItemPointer | None:
                                 warm_timeout=float(getattr(settings, "ollama_pointer_warm_timeout_seconds", 180.0)),
                                 num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0)
                                 if model == (getattr(settings, "ollama_model", "") or "").strip() else 0)
+    pointer.base_url_for = base_url_for
     itinerary_team.set_item_pointer(pointer)
     logger.info("일정 항목 짚기 모델 연결: %s (mode=%s)", model, mode())
     return pointer

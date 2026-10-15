@@ -27,7 +27,7 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, Violation, check_itinerary
-from app.domains.travel_ops.components.places.place_hours import DayHours, hours_on
+from app.domains.travel_ops.components.places.place_hours import DayHours, break_span, hours_on
 from .assemble import collect
 from .hours import HoursFacts, closed_weekdays, facts_for, week_known_all, weekday_ko
 from .moves import Leg, late_text, leg_between
@@ -268,15 +268,52 @@ def _live_reference(act: dict[str, Any]) -> str | None:
 
 
 def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) -> tuple[dict[str, str], dict[str, str]]:
-    """(운영시간 줄, 휴무일 줄). 웹 공지 참고(`_live_reference`)는 휴무일 줄 끝에 덧붙인다 — 줄의 결과는 바꾸지 않는다."""
-    hours_line, closed_line = _hours_lines_core(row, facts, vios)
+    """(운영시간 줄, 휴무일 줄). 운영시간 줄에는 화면 문장과 따로 **시작 시각에 열려 있나**(`open_at` ok · bad)를 싣는다 — 알 때만.
+    웹 공지 참고(`_live_reference`)는 휴무일 줄 끝에 덧붙인다 — 줄의 결과는 바꾸지 않는다.
+
+    ★`[2026-10-15]` 운영시간 줄의 결과 `warn` 은 「시작 때 이미 닫힘」과 「끝나기 전에 닫음 · 마지막 주문 임박」을 함께 담는다.
+      요식 판정 그림자(`instances/dining/shadow.py`)가 이 둘을 가르지 못해 「시작 때 닫힘」을 규칙 ok 로 세었다(정식당 11:30 · 하동관 18:00 · 진진 23:30).
+      화면 문장 · 결과는 그대로 두고 비교용 값만 더한다."""
+    hours, closed = _hours_and_closed(row, facts, vios)
+    opened = _open_at_start(row, facts, vios)
+    if opened is not None:
+        hours = {**hours, "open_at": opened}
     note = _live_reference(facts.activity or {}) if row["place"] is not None else None
     if note:
-        closed_line = {**closed_line, "text": f"{closed_line['text']} · {note}"}
-    return hours_line, closed_line
+        closed = {**closed, "text": f"{closed['text']} · {note}"}
+    return hours, closed
 
 
-def _hours_lines_core(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) -> tuple[dict[str, str], dict[str, str]]:
+def _open_at_start(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) -> str | None:
+    """시작 시각에 열려 있나 — ok · bad · None(모름). 요식 원장의 그 시각 판정이 먼저, 없으면 그날 운영시간 · 입장 마감 · 브레이크로 본다."""
+    when = _dt(row["date"], row["start"])
+    if when is None or row["place"] is None or not facts.known:
+        return None
+    codes = {v.code for v in vios}
+    today = hours_on(facts.attributes, when.date())
+    act = facts.activity or {}
+    if today == "closed" or "closed_day" in codes or act.get("closed") is True:
+        return "bad"
+    if facts.open_at_slot is not None:
+        return "ok" if facts.open_at_slot else "bad"
+    if not isinstance(today, DayHours):
+        return {True: "ok", False: "bad"}.get(act.get("within_hours"))
+    start = when.time()
+    if today.closes < today.opens:                    # 밤을 넘겨 닫는 곳(17:00–02:00) — 여는 시각 뒤이거나 닫는 시각 전이면 연다
+        if today.closes <= start < today.opens:
+            return "bad"
+    elif start < today.opens or (start >= today.closes and today.closes != dtime(23, 59)):
+        return "bad"
+    if today.last_entry and start > today.last_entry:
+        return "bad"
+    rest = break_span(facts.attributes)
+    if rest is not None and rest[0] <= start < rest[1]:
+        return "bad"
+    return "ok"
+
+
+def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) -> tuple[dict[str, str], dict[str, str]]:
+    """(운영시간 줄, 휴무일 줄) — 화면 문장."""
     when = _dt(row["date"], row["start"])
     if when is None or row["place"] is None:
         why = facts.why_unknown or "장소를 정하면 확인해요"
@@ -861,3 +898,4 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
 
 
 __all__ = ["ENGINE_BUDGET_S", "build", "default_engine", "ensure", "load", "place_state", "store"]
+

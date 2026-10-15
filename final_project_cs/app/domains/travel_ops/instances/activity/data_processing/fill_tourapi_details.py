@@ -111,6 +111,8 @@ HUMAN_FILLABLE = ("business_hours", "closed_days", "fee", "tel", "homepage", "re
                   "capacity", "pet", "age_limit")
 #: `[2026-10-12 사용자]` `claude` — Claude 가 공식 페이지 본문을 열어 확인한 값(근거 문구 `quote` 필수). 사람이 검토하면 `human`.
 SOURCE_BY = ("human", "claude")
+#: `[2026-10-14 사용자]` 출처의 `from` — 값을 페이지가 아니라 같은 행 `overview`(관광공사 소개글)에서 뽑았을 때.
+FROM_OVERVIEW = "overview"
 #: 한 구에 코드가 여럿일 때 브랜드 행에 쓰려면 한 코드가 이만큼 이상이어야 한다(경계에 걸친 장소 한두 곳은 넘긴다).
 BRAND_CODE_SHARE = 0.95
 
@@ -163,6 +165,11 @@ def targets(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return sorted(todo, key=lambda r: PRIORITY.index(r["contenttypeid"]))
 
 
+def _plain(text: str) -> str:
+    """quote 대조용 — `<br>` 과 공백 차이만 없앤다."""
+    return re.sub(r"\s+", " ", re.sub(r"<br\s*/?>", " ", text, flags=re.IGNORECASE)).strip()
+
+
 def read_sources(row: dict[str, str]) -> dict[str, dict[str, str]]:
     text = (row.get(SOURCES_COLUMN) or "").strip()
     return json.loads(text) if text else {}
@@ -201,14 +208,20 @@ def source_errors(rows: list[dict[str, str]]) -> list[str]:
             if not (row.get(column) or "").strip():
                 errors.append(f"{where}: {column} 칸이 비었는데 출처만 있다")
             # ★`[2026-10-12 사용자]` url 은 claude 에만 필수 — 사람이 직접 확인해 값만 준 경우(`human`)는 url 없이 note 로 남긴다
-            if not isinstance(source, dict) or not {"by", "checked"} <= set(source) <= {"by", "url", "checked", "quote", "note"}:
-                errors.append(f"{where}: {column} 출처는 by · checked (+ url · quote · note) 키여야 한다")
+            if not isinstance(source, dict) or not {"by", "checked"} <= set(source) <= {"by", "url", "checked", "quote", "note", "from"}:
+                errors.append(f"{where}: {column} 출처는 by · checked (+ url · quote · note · from) 키여야 한다")
                 continue
             if source["by"] == "claude" and not str(source.get("quote") or "").strip():
                 errors.append(f"{where}: {column} by=claude 는 근거 문구(quote)가 있어야 한다")
             if source["by"] not in SOURCE_BY:
                 errors.append(f"{where}: {column} by={source['by']!r} (허용 {SOURCE_BY})")
-            if "url" in source or source["by"] == "claude":
+            if "from" in source:
+                # ★`[2026-10-14 사용자]` 같은 행 소개글에서 뽑은 값 — url 대신 quote 가 그 소개글에 글자 그대로 있어야 한다
+                if source["from"] != FROM_OVERVIEW:
+                    errors.append(f"{where}: {column} from={source['from']!r} (허용 {FROM_OVERVIEW!r})")
+                elif _plain(str(source.get("quote") or "")) not in _plain(row.get("overview") or ""):
+                    errors.append(f"{where}: {column} quote 가 이 행 overview 에 없다")
+            elif "url" in source or source["by"] == "claude":
                 if not re.match(r"https?://\S+$", str(source.get("url") or "")):
                     errors.append(f"{where}: {column} url 이 http(s) 주소가 아니다")
             elif not str(source.get("note") or "").strip():
