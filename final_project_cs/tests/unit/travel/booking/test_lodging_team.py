@@ -1203,3 +1203,13 @@ def test_dates_the_model_left_empty_are_read_by_rule():
     assert not rule_dates(Interpretation(task="search"), "11월 12일 비행기라 11월 11일 1박", today=today)[1], "날이 둘이면 그대로 둔다"
     kept = Interpretation(task="search", check_in=day(2026, 11, 20))
     assert rule_dates(kept, "11월 14일부터 2박", today=today) == (kept, False), "모델 값이 있으면 건드리지 않는다"
+
+
+def test_a_seoul_search_without_an_anchor_still_drops_places_outside_seoul():
+    """☆19:03 playdata 검수 L09 「한강」 — 기준점을 안 찾는 검색어에 구글 칸으로 「롯데호텔앤리조트 김해」가 왔다. 서울 경계 밖 좌표는 뺀다."""
+    google = _google([("롯데호텔앤리조트 김해", 160824.0, 5, 35.2285, 128.8894), ("용산 5성 호텔", 300000.0, 5, 37.5290, 126.9640)])
+    result, _, _ = _run({**SEARCH, "keyword": "한강", "min_rating": None, "max_price_per_night": None},
+                        {"read.stay_search": _listing([(1, "용산 호텔", "5성급 · 호텔 · 용산구 · 서울", 250000)]),
+                         "read.stay_detail": lambda a: None, "read.stay_google": google},
+                        text="다음 달 6일부터 3박 한강 5성급 호텔")
+    assert "김해" not in result.answer and "용산 5성 호텔" in result.answer

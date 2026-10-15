@@ -424,6 +424,16 @@ def _listing_reason(stay: dict[str, Any], wants: Wants, seoul: bool, *, anchored
     return stars_reason(wants, stay_stars(description))
 
 
+def _outside_seoul(where: tuple[float, float] | None) -> bool:
+    """좌표가 서울 대략 경계(`_SEOUL`) 밖인가 — 맞닿은 시(김포 · 고양 등)는 남게 0.03도(약 3km) 넓혀 본다. 좌표가 없으면 `False`(모름).
+    `[2026-10-15]` ☆19:03 playdata 검수 L09 「한강」(기준점 없음)에 구글 칸으로 「롯데호텔앤리조트 김해」가 왔다."""
+    if where is None:
+        return False
+    margin = 0.03
+    return not (_SEOUL[0][0] - margin <= where[0] <= _SEOUL[0][1] + margin
+                and _SEOUL[1][0] - margin <= where[1] <= _SEOUL[1][1] + margin)
+
+
 def _google_keyword(keyword: str | None, wants: Wants, anchor: dict[str, Any] | None) -> str | None:
     """구글 호텔에만 쓸 검색어 — 기준점이 서울에서 찾혔으면 앞에 「서울」, 원하는 유형(호텔 밖)이 있으면 뒤에 그 말. 바뀐 게 없으면 `None`.
     ☆10-15 검수 L05 「홍대」 → 제주, L03 「강남역」 → 속초 · 부산. 「서울 ○○」로 물었을 때 결과는 **확인 안 함**(다음 검수에서 본다)."""
@@ -593,7 +603,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         listing, google = booked.get("myrealtrip"), booked.get("google")
         resting = states["myrealtrip"] == "resting"
         block = {"wants": wants, "anchor": anchor, "max_price": found.max_price_per_night, "limit": limit, "base": base,
-                 "label": label, "query": google_keyword, "walker": walker}
+                 "label": label, "query": google_keyword, "walker": walker, "seoul": seoul}
         notes = self._wants_lines(found, wants, anchor, limit, children, party, text=task.input_text, walker=walker is not None)
         place_lines = self._anchor_line(anchor) if base is anchor and anchor else self._center_line(center)
         extra = self._google_block(google, [], booked.get("elsewhere") or [], center, **block)
@@ -664,6 +674,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                 where, evidence = self._locate(task, stay["name"], seen, evidence)
                 located = "kakao" if where is not None else None
             minutes = None
+            if seoul and anchor is None and _outside_seoul(where):
+                skipped.append({"gid": stay["gid"], "name": stay["name"], "reason": "region"})
+                continue
             if anchor is not None and where is not None:
                 gap = _km(anchor["latitude"], anchor["longitude"], *where)
                 if walker is not None and gap <= REGION_KM and walks < WALK_CHECKS:
@@ -1236,7 +1249,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
     def _google_block(google: dict[str, Any] | None, shown_names: list[str], links: list[dict[str, str]],
                       center: dict[str, Any] | None = None, *, wants: Wants | None = None, anchor: dict[str, Any] | None = None,
                       max_price: int | None = None, limit: float | None = None, base: dict[str, Any] | None = None,
-                      label: str = "일정 가운데에서", query: str | None = None, walker: Any = None) -> list[str]:
+                      label: str = "일정 가운데에서", query: str | None = None, walker: Any = None, seoul: bool = False) -> list[str]:
         """구글 호텔 쪽 줄 + 다른 곳에서 보기 링크. 이미 보인 이름(이름 핵심 `_core` — 공백 · 「호텔」 · 「서울」 무시)과 숙박 공유(vacation rental)는 뺀다.
 
         ★숙박 공유를 빼는 까닭 — ☆2026-10-10 14:21 playdata 「서울 명동」 앞의 셋이 숙박 공유(Bluepillow · Vio)였고 평점 · 후기가 없었다.
@@ -1269,6 +1282,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     continue
                 if (max_price is not None and stay["price_per_night"] > max_price) \
                         or (gap is not None and (gap > REGION_KM or (straight_cap is not None and gap > straight_cap))) \
+                        or (seoul and anchor is None and _outside_seoul(where)) \
                         or kind_reason(wants, stay_kinds(None, stay.get("name")), strict=False) \
                         or stars_reason(wants, stay_stars(None, stay.get("hotel_class"))):
                     dropped += 1
