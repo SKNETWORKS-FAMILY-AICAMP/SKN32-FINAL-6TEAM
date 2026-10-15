@@ -164,7 +164,9 @@ def test_a_market_at_lunch_with_no_other_meal_offers_markets_and_restaurants_nev
     assert by_name["남대문시장"]["similarity"] == 3 and by_name["시장 빈대떡집"]["similarity"] is None
 
 
-def test_with_a_meal_already_planned_a_market_stays_a_market_branch(market_world):
+def test_with_a_meal_already_planned_a_market_stays_a_market_branch(market_world, monkeypatch):
+    """★`[2026-10-15]` 활동 팀 엔진이 없거나 답하지 못할 때의 대비책(확인 화면 자체 고르기) — 같은 대분류의 다른 가지가 뒤에 붙는다."""
+    monkeypatch.setattr(candidates, "_team_places", lambda *args, **kwargs: None)
     review, item = _review(extra_items=[{"id": "lunch", "kind": "dining", "starts_at": "12:00"}])
     with get_connection() as conn:
         got = candidates.alternatives(conn, tenant_id=market_world["tenant"], review=review, item=item, kakao=None, use_engine=False, now=NOW)
@@ -172,3 +174,24 @@ def test_with_a_meal_already_planned_a_market_stays_a_market_branch(market_world
     assert "meal_inferred" not in got["notes"] and "시장 빈대떡집" not in names                  # 식사 일정이 따로 있으면 식당을 권하지 않는다
     assert names[0] == "남대문시장"                                                          # 같은 소분류(시장)가 먼저, 쇼핑 전문매장은 그 뒤(같은 대분류)
     assert "올리브영 종로" in names and names.index("남대문시장") < names.index("올리브영 종로")      # 더 가까워도 같은 대분류 안의 다른 가지는 뒤다
+
+
+def test_with_the_activity_team_answering_a_market_gets_only_what_the_team_ranked(market_world):
+    """★`[2026-10-15 사용자 결정]` 후보 공급은 활동 팀이 먼저 — 팀 엔진은 느슨한 후보(다른 가지)로 칸을 채우지 않고 닫은 곳을 먼저 뺀다."""
+    review, item = _review(extra_items=[{"id": "lunch", "kind": "dining", "starts_at": "12:00"}])
+    with get_connection() as conn:
+        got = candidates.alternatives(conn, tenant_id=market_world["tenant"], review=review, item=item, kakao=None, use_engine=False, now=NOW)
+    assert "team_ranked" in got["notes"], got["notes"]
+    names = [c["place"]["name"] for c in got["candidates"]]
+    assert names[0] == "남대문시장" and "올리브영 종로" not in names and "우정약국" not in names, names
+
+
+def test_when_the_activity_team_cannot_answer_the_local_picker_takes_over(market_world, monkeypatch):
+    """팀이 답하지 못하면(`None`) 확인 화면 자체 고르기가 대신한다 — 그때는 `team_ranked` 표시가 없다."""
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives
+
+    monkeypatch.setattr(activity_alternatives, "ranked", lambda *a, **k: None)
+    review, item = _review(extra_items=[{"id": "lunch", "kind": "dining", "starts_at": "12:00"}])
+    with get_connection() as conn:
+        got = candidates.alternatives(conn, tenant_id=market_world["tenant"], review=review, item=item, kakao=None, use_engine=False, now=NOW)
+    assert "team_ranked" not in got["notes"] and got["candidates"], got["notes"]

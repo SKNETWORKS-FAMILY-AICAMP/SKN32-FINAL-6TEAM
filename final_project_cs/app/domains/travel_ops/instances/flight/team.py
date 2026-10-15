@@ -606,9 +606,9 @@ class FlightTeam(ItineraryWork, TravelTeamBase):
         query = self._flight_query(item, trip)
         if query is None and (ctx.get("request") or {}).get("type") == "conversation":
             # ★`[2026-10-15]` 인원만 모르면 사람에게 넘기지 않고 고객에게 묻는다 — 숙소 팀과 같다
-            from app.domains.travel_ops.instances._shared.conversation_work import ask_party, stated_party
+            from app.domains.travel_ops.instances._shared.conversation_work import ask_party, known_party
 
-            said = stated_party(task)
+            said = known_party(task, ctx)
             if said is not None:
                 query = self._flight_query(item, {**trip, "party_size": said})
             elif self._flight_query(item, {**trip, "party_size": 1}) is not None:

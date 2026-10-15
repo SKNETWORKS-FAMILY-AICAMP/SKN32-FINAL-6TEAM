@@ -498,6 +498,11 @@ def register_budget_provider(provider: Callable[[Any], Callable[[], bool]] | Non
     _budget_provider = provider
 
 
+def budget_gate(settings: Any) -> Callable[[], bool] | None:
+    """`[2026-10-15]` 유료 호출을 해도 되나를 답하는 함수. 상한을 셀 장치(조립 루트가 꽂는다)가 없으면 `None` — 부르는 쪽이 유료 호출을 안 한다."""
+    return _budget_provider(settings) if _budget_provider is not None else None
+
+
 def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[], bool] | None = None, api_client: Any = None,
                        clock: Callable[[], float] = time.monotonic, sleep: Callable[[float], None] = time.sleep) -> Any:
     """스위치가 꺼져 있거나 서버용 키가 없으면 `primary` 를 **그대로** 돌려준다. 켜져 있으면 `FailoverChat`."""
@@ -566,5 +571,5 @@ def record_fallback(op: str, reason: str, *, backend: str = "openai") -> None:
     log.warning("llm_failover op=%s path=api backend=%s reasons=ollama:%s", op, backend, reason)
 
 
-__all__ = ["CircuitBreaker", "FailoverChat", "ModelCallError", "OpenAIChat", "breaker_for", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "record_fallback", "register_budget_provider", "reset_state",
+__all__ = ["CircuitBreaker", "FailoverChat", "ModelCallError", "OpenAIChat", "breaker_for", "budget_gate", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "record_fallback", "register_budget_provider", "reset_state",
            "snapshot", "wrap_from_settings"]

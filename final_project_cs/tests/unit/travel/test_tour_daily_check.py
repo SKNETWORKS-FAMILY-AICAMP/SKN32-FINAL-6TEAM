@@ -235,3 +235,65 @@ def test_nothing_is_reported_before_half_past_three_after_eight_or_when_all_is_d
     out, events = _deadline(monkeypatch, _at(3, 31), {"place_facts": {"remaining": 0}})
     assert out["late"] == [] and events == []
     assert _deadline(monkeypatch, _at(4, 0), {"place_facts": {"remaining": 9}}, claimed=False)[0] is None   # 오늘 이미 판정했다
+
+
+# ── 운영정보 칸이 없는 곳에서 멈추지 않는다 `[2026-10-15 x600 서버 실측]` ─────────────────────
+class _DueConn:
+    """읽을 곳 둘을 돌려주는 흉내 연결 — 첫째가 운영정보 없는 곳(동상), 둘째가 정상."""
+
+    def __init__(self):
+        self.writes, self._rows, self._answers = [], [("1603296", "12", "서빙고동 부군당", "20250924", None, None),
+                                                      ("1604580", "12", "정상 장소", "20250711", None, None)], [(0,), (2,)]
+
+    def cursor(self):
+        return self
+
+    def transaction(self):
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def execute(self, sql, params=()):
+        if sql.startswith("INSERT"):
+            self.writes.append(params)
+
+    def fetchone(self):
+        return self._answers.pop(0)
+
+    def fetchall(self):
+        return self._rows
+
+
+class _NoInfoThenOk:
+    def __init__(self, reason):
+        from collections import Counter
+
+        self.misses, self.reason, self.calls = Counter(), reason, []
+
+    def operating(self, content_id, type_id):
+        self.calls.append(content_id)
+        if content_id == "1603296":
+            self.misses[self.reason] += 1
+            return None
+        return {"usetime_text": "09:00~18:00", "restdate_text": "", "info_phone": None}
+
+
+def test_a_place_the_provider_answered_without_hours_is_recorded_as_unknown_and_the_job_moves_on():
+    """전에는 첫 곳(운영정보 칸 없음)에서 멈춰 다음 틱도 같은 곳만 불렀다 — 09-30 이후 읽은 곳 0 · 하룻밤 300번 호출."""
+    conn, tour = _DueConn(), _NoInfoThenOk("no_operating_fields")
+    got = ch.prefill(conn, tenant_id="t", source=tour, chat=None, now=_at(3, 0), start="03:00", until="08:00",
+                     per_night=600, per_tick=10, retry_days=7)
+    assert tour.calls == ["1603296", "1604580"] and got["stopped"] is None, got            # 첫 곳 뒤로 나아갔다
+    assert got["no_operating_info"] == 1 and got["read"] == 1 and len(conn.writes) == 2, got
+    assert conn.writes[0][0:3] == ("t", "1603296", "12")                                    # 첫 곳은 「모름」 행으로 적었다
+
+
+def test_a_real_call_failure_still_stops_the_tick_and_writes_nothing():
+    conn, tour = _DueConn(), _NoInfoThenOk("rate_limited")
+    got = ch.prefill(conn, tenant_id="t", source=tour, chat=None, now=_at(3, 0), start="03:00", until="08:00",
+                     per_night=600, per_tick=10, retry_days=7)
+    assert tour.calls == ["1603296"] and "운영정보를 받지 못했다" in got["stopped"] and conn.writes == [], got

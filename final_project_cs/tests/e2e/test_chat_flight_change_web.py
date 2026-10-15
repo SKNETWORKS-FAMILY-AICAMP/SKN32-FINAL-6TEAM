@@ -210,3 +210,20 @@ def test_an_unknown_party_size_is_asked_for_a_flight_too(flight_chat_unknown_par
     _say(chat, "두 명", "fltp-b", case_id=ask["case_id"])
     asked = [args for _tool, args in chat["searches"] if "adults" in args]
     assert asked and all(args["adults"] == 2 for args in asked), chat["searches"]
+
+
+def _adults(chat):
+    return [args["adults"] for _tool, args in chat["searches"] if "adults" in args]
+
+
+def test_a_party_size_written_in_the_sentence_or_answered_before_is_not_asked_for_a_flight(flight_chat_unknown_party):
+    chat = flight_chat_unknown_party
+    _say(chat, "2명 기준으로 항공 다른 편으로 보여 줘", "fltp-c")
+    assert _adults(chat) and set(_adults(chat)) == {2}, chat["searches"]
+    ask = _say(chat, "항공 다른 편으로 보여 줘", "fltp-d")                    # 앞 요청의 「2명」은 이 요청에 적힌 인원이 아니다 → 기록에도 질문 · 답이 없으니 묻는다
+    assert ask["case_status"] == "waiting_input" and "몇 분" in ask["answer"], ask
+    _say(chat, "4명이요", "fltp-e", case_id=ask["case_id"])
+    before = len(_adults(chat))
+    again = _say(chat, "항공 다른 편으로 보여 줘", "fltp-f")
+    assert "몇 분" not in again["answer"], again
+    assert len(_adults(chat)) > before and _adults(chat)[-1] == 4, chat["searches"]

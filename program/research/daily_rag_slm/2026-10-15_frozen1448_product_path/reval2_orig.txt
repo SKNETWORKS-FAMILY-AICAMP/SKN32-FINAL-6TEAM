@@ -1,0 +1,27 @@
+{
+ "unrelated_conversation": {
+  "planned": 1300,
+  "completed": 1200,
+  "failed": 100,
+  "unfinished": 0,
+  "pinned": 50,
+  "attempted_change_with_target": 14,
+  "recognized_policy": 16,
+  "correct_policy_source": 0,
+  "unresolved": 100,
+  "denominator": 1300
+ },
+ "answerable_policy": {
+  "planned": 148,
+  "completed": 146,
+  "failed": 2,
+  "unfinished": 0,
+  "pinned": 42,
+  "attempted_change_with_target": 10,
+  "recognized_policy": 86,
+  "correct_policy_source": 0,
+  "unresolved": 2,
+  "denominator": 148
+ }
+}
+{"DecisionFailed('일반 요청의 질문·답이 유효하지 않습니다')": 102}

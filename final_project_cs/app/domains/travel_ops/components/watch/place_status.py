@@ -1,9 +1,9 @@
 """방문 구간별 무료 휴무 관측과 새벽 구글 조회의 정책 접합."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from app.application import operations_policy as policy
-from app.domains.travel_ops.components.team_hooks import dining_ledger
+from app.domains.travel_ops.components.team_hooks import activity_ledger, dining_ledger
 from app.domains.travel_ops.ports.data_sources.google_places import METER_DETAILS, METER_SEARCH
 
 
@@ -22,12 +22,33 @@ class PlaceStatus:
         def unknown(source='dining_observation'):
             return policy.Verdict(status='unverifiable', source=source, checked_at=now, valid_until=now)
 
+        #: 활동 원장 판정의 `live_status` 칸(웹 공지로 확인한 임시휴무) — `free()` 가 읽은 것을 아래 「참고」 덧붙임이 다시 쓴다
+        seen: dict = {}
+
         def free():
+            if kind == 'activity':
+                return live_verdict()
             if kind != 'dining':
                 return unknown()
             with self.connect() as conn:
                 value = dining_ledger.closure_observation(conn, tenant, place['place_id'], start, end, now)
             return policy.Verdict(**value) if value else unknown()
+
+        def live_verdict():
+            """`[2026-10-15]` 활동 → 코어 전달 4번 — 활동 원장 판정의 `live_status` 칸을 읽는다(DB 만 본다 — 웹을 부르지 않는다).
+
+            `llm` 모드이고 판정에 반영(`applied`)된 「닫힘」만 닫힘으로 낸다. `shadow`(정확도를 재는 기간)면 닫힘이어도
+            판정은 그대로 모름이고, 값은 결과의 `live_status_reference` 로만 따라간다. 열었다 · 모름 · 아직 안 봄은 닫힘도 열림도 아니다."""
+            with self.connect() as conn:
+                state = activity_ledger.state(conn, tenant, str(place['place_id']), start, end)
+            live = (state or {}).get('live_status')
+            if not isinstance(live, dict):
+                return unknown('activity_ledger')
+            seen['live'] = live
+            if live.get('mode') == 'llm' and live.get('applied') is True and live.get('value') == 'closed':
+                return policy.Verdict(status='closed', source='activity_live_status', checked_at=_checked_at(live, now),
+                                      valid_until=max(end, now + timedelta(seconds=1)))
+            return unknown('activity_ledger')
 
         # 같은 공급 객체를 고객별 상태 보관소로 사용하지 않는다.
         provider = self.google.for_lookup() if self.google is not None else None
@@ -59,11 +80,18 @@ class PlaceStatus:
             return policy.Verdict(status=verdict[0], source='google_places', checked_at=now,
                                   valid_until=max(end, now+timedelta(seconds=1)))
 
-        return policy.select(connection_factory=self.connect, tenant=tenant, customer_id=UUID(str(customer_id)),
-                             trip_id=UUID(str(trip_id)), resource=resource,
-                             free=free, paid=paid if provider is not None else None,
-                             provider_reserve=(lambda: provider.reserve_first(METER_DETAILS if google_id else METER_SEARCH))
-                             if provider is not None else None, context=context, now=now)
+        status = policy.select(connection_factory=self.connect, tenant=tenant, customer_id=UUID(str(customer_id)),
+                               trip_id=UUID(str(trip_id)), resource=resource,
+                               free=free, paid=paid if provider is not None else None,
+                               provider_reserve=(lambda: provider.reserve_first(METER_DETAILS if google_id else METER_SEARCH))
+                               if provider is not None else None, context=context, now=now)
+        live = seen.get('live')
+        if live and live.get('mode') != 'llm' and live.get('value') == 'closed':
+            # 섀도: 판정에는 넣지 않았다. 감시 결과에는 「참고」로만 싣는다(구분해서 보이게)
+            status = {**status, 'live_status_reference': {'value': 'closed', 'mode': live.get('mode'), 'applied': False,
+                                                          'checked_at': live.get('checked_at'),
+                                                          'citations': live.get('citations') or []}}
+        return status
 
     @staticmethod
     def merge(report, status):
@@ -101,3 +129,15 @@ class PlaceStatus:
         status = self.lookup(tenant=scope.tenant_id, customer_id=scope.customer_id, trip_id=trip_id,
                              place=place, start=start, end=target[2], now=now)
         return self.merge(report, status)
+
+
+def _checked_at(live: dict, now: datetime) -> datetime:
+    """저장된 확인 시각(`live_status.checked_at`, ISO 글). 읽을 수 없거나 시각대가 없거나 미래면 지금 — 확인 시각을 지어내 앞당기지 않는다."""
+    raw = live.get('checked_at')
+    try:
+        value = datetime.fromisoformat(raw) if isinstance(raw, str) else raw
+    except ValueError:
+        return now
+    if not isinstance(value, datetime) or value.tzinfo is None or value > now:
+        return now
+    return value
