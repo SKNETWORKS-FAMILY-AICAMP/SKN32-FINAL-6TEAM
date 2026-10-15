@@ -203,6 +203,9 @@ class ReadToolbox:
             "read.booking_search_stays": self.booking_search_stays,
             # ★`[2026-10-13]` 숙소 이름 → 주소 · 좌표(카카오 로컬 → 관광공사). 숙소 팀이 마이리얼트립을 못 쓸 때 「내 숙소」 위치에만 쓴다
             "read.stay_lookup": self.stay_lookup,
+            # ★`[2026-10-15]` 지역 · 장소 이름 → 기준점 하나(이름 · 좌표, 카카오 · 서울 안). 숙소 팀이 「강남역 도보」 「경복궁 근처」의 거리와
+            #   검색 지역이 서울인지 볼 때 쓴다(검수 D · 사용자 결정 「카카오로 기준점 찾기」)
+            "read.landmark": self.landmark,
             # ★`[2026-10-13]` 구글 호텔 숙소 여럿의 상세(판매처별 가격 · 주소 · 사진)를 동시에 — 숙소 팀이 후보마다 판매처 가격을 붙일 때
             "read.stay_google_details": self.stay_google_details,
             # ★`[2026-10-13]` 숙소 · 항공 일정 항목에 앞서 보여 준 후보(숙소 · 항공 원장) — 「또 바꿔 줘」에서 뺀다
@@ -963,6 +966,30 @@ class ReadToolbox:
                                                          "latitude": hit.get("latitude"), "longitude": hit.get("longitude")}]}
         return {"source": None, "stays": []} if answered else None
 
+    def landmark(self, scope: ToolContext, *, name: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """지역 · 장소 이름 → 기준점 하나(이름 · 위도 · 경도). `[2026-10-15]` 숙소 팀 — 「강남역 걸어서」 「경복궁 근처」 「김포공항 근처」의 기준점,
+        그리고 검색 지역이 서울인지(카카오 어댑터는 서울 주소만 돌려준다).
+
+        카카오 로컬 키워드 검색, 서울 전역을 관련도 순으로(`anywhere`). 이름이 「…역」이면 지하철역(`SW8`)으로 먼저 찾고 없으면 분류 없이.
+        돌려주는 것: `{"source": "kakao", "found": True, "name", "latitude", "longitude"}` — 이름 · 좌표만(응답은 저장하지 않는다, 카카오 약관).
+        서울에서 못 찾았으면 `{"source": "kakao", "found": False}`, 카카오를 부를 수 없었으면 `None`(모름).
+        """
+        word = str(name or "").strip()
+        if not word or self.kakao is None:
+            return None
+        tries = [{"category_group_code": "SW8"}, {}] if word.endswith("역") else [{}]
+        answered = False
+        for options in tries:
+            found = self.kakao.search(word, size=1, anywhere=True, **options)
+            if found is None:
+                continue
+            answered = True
+            if found:
+                top = found[0]
+                return {"source": "kakao", "found": True, "name": top.get("name"),
+                        "latitude": top.get("latitude"), "longitude": top.get("longitude")}
+        return {"source": "kakao", "found": False} if answered else None
+
     def stay_google_details(self, scope: ToolContext, *, tokens: Any = None, keyword: str | None = None,
                             check_in: str | None = None, check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
         """구글 호텔 숙소 여럿의 상세(booking 모듈 `google_details`) — 판매처별 1박 가격 · 주소 · 사진. 소스가 없으면 `None`. `[2026-10-13]`"""
@@ -1025,7 +1052,7 @@ class ReadToolbox:
             return None
         from app.domains.travel_ops.components.booking.offers import search_stays
 
-        wanted = ("adults", "children", "domestic", "size", "max_price", "min_review_rating")
+        wanted = ("adults", "children", "domestic", "size", "max_price", "min_review_rating", "google_keyword")
         return search_stays(self.travel, keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
                             **{key: options[key] for key in wanted if options.get(key) is not None})
 

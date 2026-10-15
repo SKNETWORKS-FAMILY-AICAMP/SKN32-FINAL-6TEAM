@@ -67,15 +67,22 @@ def _status(got: dict[str, Any] | None, *, absent: bool) -> dict[str, Any]:
 
 def search_stays(travel: Any, *, keyword: str, check_in: str, check_out: str, adults: int | None = None,
                  children: int | None = None, domestic: bool | None = None, size: int = 20,
-                 max_price: int | None = None, min_review_rating: float | None = None) -> dict[str, Any]:
+                 max_price: int | None = None, min_review_rating: float | None = None,
+                 google_keyword: str | None = None) -> dict[str, Any]:
     """숙소 비교 한 번. 돌려주는 것: `myrealtrip`(목록 그대로, 못 받았으면 `None`) · `google`(목록 그대로 또는 `None`) ·
-    `sources`(소스별 `status` — ok · failed · resting) · `elsewhere` · `confirmed_at`."""
+    `sources`(소스별 `status` — ok · failed · resting) · `elsewhere` · `confirmed_at`.
+
+    `google_keyword` — 구글 호텔에만 쓸 검색어(`[2026-10-15 검수 D]` 「서울 홍대 게스트하우스」처럼). ☆10-15 playdata 검수 L05 · L03:
+    「홍대」 「강남역」만 넣었더니 제주 · 속초 숙소가 왔다. 마이리얼트립 검색어는 그대로 둔다(다른 말을 붙였을 때 결과는 확인 안 함)."""
     query = {"keyword": keyword, "check_in": check_in, "check_out": check_out, "adults": adults, "children": children,
              "domestic": domestic, "size": size, "max_price": max_price, "min_review_rating": min_review_rating}
-    wanted = {"myrealtrip": ("travel_search", query),
+    google_query = {key: query[key] for key in ("keyword", "check_in", "check_out", "adults", "children", "size", "max_price")}
+    if google_keyword:
+        google_query["keyword"] = google_keyword
+        query["google_keyword"] = google_keyword
+    wanted = {"myrealtrip": ("travel_search", {key: value for key, value in query.items() if key != "google_keyword"}),
               # 구글 호텔은 국내 여부 · 최소 평점을 받지 않는다
-              "google": ("stay_google", {key: query[key] for key in ("keyword", "check_in", "check_out", "adults",
-                                                                      "children", "size", "max_price")})}
+              "google": ("stay_google", google_query)}
     results: dict[str, Any] = {}
     sources: dict[str, dict[str, Any]] = {}
     for name, (slot, arguments) in wanted.items():
