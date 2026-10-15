@@ -713,6 +713,7 @@ def _open_message_case(conn, *, tenant: str, trip: dict[str, Any], message: str,
 #: 처리한 것(답이 나간 것) — 사람 대기가 아니다. 바꾸지 않고 물은 것 · 되물은 것도 여기다
 #: ★`[2026-10-05]` `needs_check`(영업 여부를 못 알아 바꾸지 않고 알린 것)도 답이다 — 사람 대기로 떨어지지 않게
 _DONE = ("adjusted", "answered", "still_fits", "needs_check", "asked", "rolled_back", "not_today", "no_meal", "clear", "gone",
+         "edit_refused",
          "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale", "knock_on", "rechecked")
 #: 바꾼 뒤 이 시간 안에 되돌리면 오변경 의심으로 표시한다 — ★우리가 고른 값(2026-09-29, Codex 합의의 「오변경 감지」)
 SUSPECT_UNDO_SECONDS = 15 * 60
@@ -734,7 +735,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     from app.domains.travel_ops.components.conversation import trip_facts
     from app.domains.travel_ops.components.conversation import trip_replies
-    from app.domains.travel_ops.components.conversation.decision_unit import LOCATION_FACTS, fact_first, labels, maybe_meant
+    from app.domains.travel_ops.components.conversation.decision_unit import EDIT_ACTIONS, LOCATION_FACTS, fact_first, labels, maybe_meant
 
     def move(event_type, payload):
         case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
@@ -781,6 +782,18 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         turns=turns,
         version=current_context["version"], now=context_now,
         ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
+    if decision.action == "replace_named":
+        # ★`[2026-10-15]` 말한 곳을 **먼저 찾는다**(웹 「일정 수정」과 같은 이름 찾기). 한 곳으로 찾으면 그곳으로 바꾸고(`TripDesk.edit`),
+        #   못 찾으면 — 「다른 식당」 같은 설명이거나 모르는 이름이다 — 바꾸지 않고 다른 안을 보여 고르게 한다(찾지 못했다고 먼저 밝힌다, `case_dispatch.response`)
+        named = dict((decision.raw or {}).get("named_destination") or {})
+        found = desk.find_place(str(named.get("text") or ""), kind_hint=getattr(decision.item, "kind", None))
+        if found is None:
+            from dataclasses import replace as _replace
+
+            decision = _replace(decision, action="propose_alternatives",
+                                raw={**decision.raw, "named_destination": {**named, "found": False}})
+        else:
+            decision.raw["named_destination"] = {**named, "found": True, "name": found.name}
     # 복합 읽기는 각 질문의 대상·범위를 따로 검증한다.
     if decision.reads:
         focus, stale_selection = None, False
@@ -971,6 +984,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         else:
             outcome = desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
                                     request_id=request_id)
+    elif action in EDIT_ACTIONS:
+        # ★`[2026-10-15 사용자 지시]` 시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳 · 순서 · 고정 — 웹 「일정 수정」과 같은 길로 실행한다(`TripDesk.edit`)
+        outcome = desk.edit(trip_id=trip_id, base_version=base, decision=decision, now=at, message=message,
+                            request_id=request_id)
     elif action == "report_delay":
         outcome = ({"status": "clarify", "text": "몇 분쯤 늦으세요? 「30분 늦어요」처럼 알려 주시면 식사가 아직 괜찮은지, 뒤 일정에 걸리는 곳이 없는지 확인해 드릴게요."}
                    if decision.minutes is None else

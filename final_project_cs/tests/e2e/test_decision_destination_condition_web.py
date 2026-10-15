@@ -26,12 +26,15 @@ def _answer_with(decided, **fields):
 
 
 def test_a_named_destination_is_not_replaced_by_the_nearest_candidate(decided):
+    """`[2026-10-15]` 말한 곳은 **그곳을 찾아** 바꾼다(`chat_edit` — 웹 「일정 수정」과 같은 이름 찾기). 못 찾으면 근처 후보로 바꾸지 않고
+    그렇게 답한다 — 전에는 근처 첫 후보로 바꾸고 「요청하신 대로」라고 답했다(10-13), 그다음엔 다른 안만 보였다(10-14). 찾은 경우는 `test_chat_edit_web.py`."""
     _answer_with(decided, destination_text="통인시장")
     before = _versions(decided)
     body = _say(decided, "점심 통인시장으로 바꿔", "named-destination")
-    assert _versions(decided) == before, body                     # 일정은 바뀌지 않았다
+    assert _versions(decided) == before, body                     # 이 시험 테넌트의 장소 표에 통인시장이 없다 — 일정은 바뀌지 않았다
     assert body["status"] != "adjusted" and body["decision"]["action"] == "propose_alternatives", body
-    assert body["answer"].startswith("말씀하신 「통인시장」(으)로 바로 바꾸는 기능은 아직 없어 일정은 바꾸지 않았어요."), body
+    assert "요청하신 대로" not in body["answer"], body
+    assert body["answer"].startswith("말씀하신 「통인시장」을(를) 장소 목록 · 관광 정보 · 지도에서 한 곳으로 찾지 못해"), body
     assert body["decision"]["raw"]["named_destination"]["text"] == "통인시장"
 
 

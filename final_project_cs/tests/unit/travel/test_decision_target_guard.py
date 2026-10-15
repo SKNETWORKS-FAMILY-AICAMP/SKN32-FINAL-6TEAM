@@ -134,7 +134,9 @@ def test_questions_and_rollbacks_are_not_guarded():
 
 
 def test_a_time_only_change_cannot_enter_the_place_replacement_executor():
+    """`[2026-10-15]` 시간만 바꾸라는 말은 장소 교체로 실행하지 않는다 — 이제 막고 끝내지 않고 **시각 옮기기**로 보낸다(웹 「일정 수정」과 같은 길).
+    이 문장은 옮길 일정을 가리키지 않아(이름 · 날 · 순서 없음) 대상 근거 검사가 되묻기로 바꾼다 — 짐작으로 옮기지 않는다."""
     got, _ = _run("long7", "아니 시간 지금으로 바꾸라고", "apply_change", "i35", change_scope="time")
-    assert got.action == "other" and got.item is None and got.change is None
-    assert got.raw["scope_guard"] == {"requested": "time", "blocked_action": "apply_change"}
-    assert "시간이나 날짜 변경 요청을 장소 교체로 실행하지 않았습니다" in got.social
+    assert got.action in ("change_time", "clarify") and got.action != "apply_change"
+    assert got.raw["scope_moved"] == {"requested": "time", "from_action": "apply_change"}
+    assert "scope_guard" not in got.raw

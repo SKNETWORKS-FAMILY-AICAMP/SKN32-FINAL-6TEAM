@@ -60,9 +60,10 @@ def response(*, tenant: str, case_id: UUID, execution: dict[str, Any], decision:
         result["reason"] = f"decision_{decision.action}"
         named = (getattr(decision, "raw", None) or {}).get("named_destination")
         if named and case["status"] not in ("escalated", "failed"):
-            # ★`[2026-10-13]` 말한 곳으로 바로 바꾸지 못했음을 먼저 밝힌다(`decision_unit.decide` — 바꾸지 않고 후보를 보여 준다)
-            result["answer"] = (f"말씀하신 「{named['text']}」(으)로 바로 바꾸는 기능은 아직 없어 일정은 바꾸지 않았어요. "
-                                f"아래에서 고르시면 그곳으로 바꿔 드릴게요.\n{result['answer']}")
+            # ★`[2026-10-15]` 말한 곳을 찾아 바꾸는 길이 생겼다(`TripDesk.edit`) — 여기 오는 것은 그 이름으로 장소 **한 곳을 찾지 못한** 때다
+            #   (「다른 식당」 같은 설명이거나 모르는 이름). 찾지 못했다고 먼저 밝히고 다른 안을 고르게 한다
+            result["answer"] = (f"말씀하신 「{named['text']}」을(를) 장소 목록 · 관광 정보 · 지도에서 한 곳으로 찾지 못해 그대로 바꾸지는 않았어요. "
+                                f"아래에서 고르시면 그곳으로 바꿔 드릴게요(정확한 장소 이름을 알려 주셔도 돼요).\n{result['answer']}")
     if case["status"] == "waiting_input":
         result["required_input_schema"] = state.get("required_input_schema")
         if execution.get("resume_token"):
