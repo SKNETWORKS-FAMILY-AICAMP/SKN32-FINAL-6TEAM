@@ -315,7 +315,7 @@ class TripDesk:
         with self._connect() as conn:
             trip, items = self.store.latest(conn, trip_id)
         try:
-            ops, what = chat_edit.ops_for(decision, items=items, now=now)
+            ops, what = chat_edit.ops_for(decision, items=items, now=now, message=message or "")
             done = chat_edit.run(store=self.store, connect=self._connect, tenant=self.store.tenant_id,
                                  customer_id=trip["customer_id"], trip_id=trip_id, base_version=base_version, ops=ops,
                                  lookups=self._edit_lookups, now=now,

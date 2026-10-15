@@ -130,3 +130,32 @@ def test_the_direction_comes_from_the_sentence_first_and_unknown_direction_is_no
     unknown, _ = _decide({"action": "change_time", "target_item": "i1", "minutes": 0}, message="명동교자 30분 옮겨줘")
     assert (earlier.minutes, flipped.minutes, unknown.minutes) == (-30, -30, None)
     assert [du.spoken_direction(m) for m in ("늦춰줘", "당겨줘", "옮겨줘", "늦게 일찍")] == [1, -1, None, None]
+
+
+def test_english_and_slang_sizes_and_directions_are_read_from_the_sentence():
+    """`[2026-10-15]` 재생에서 「Can you push my lunch back by 30 minutes?」 · 「점심 땡겨줘」가 크기 · 방향을 못 읽어 되묻기로 끝났다."""
+    assert [du.spoken_minutes(m) for m in ("push my lunch back by 30 minutes", "move it up an hour", "half an hour later",
+                                           "push it back an hour and a half", "점심 땡겨줘")] == [30, 60, 30, 90, None]
+    assert [du.spoken_direction(m) for m in ("push my lunch back", "move it up", "move it earlier", "점심 땡겨줘", "식사 시간 좀 당길 수 있어?",
+                                             "delay dinner")] == [1, -1, -1, -1, -1, 1]
+    later, _ = _decide({"action": "change_time", "target_item": "i1", "minutes": 0}, message="Can you push my lunch back by 30 minutes?")
+    assert later.minutes == 30
+
+
+def test_a_change_mixed_with_a_list_fact_is_asked_back_not_failed():
+    """`[2026-10-15]` 「어제 일정 바꿔줘」 — 모델이 바꾸기와 조회 칸(schedule)을 함께 적으면 해석 전체가 실패하던 것을 되묻기로."""
+    decision, _ = _decide({"action": "apply_change", "target_item": "i1", "fact": "schedule"}, message="어제 일정 바꿔줘")
+    assert decision.action == "clarify" and decision.item is None and decision.raw["scoped_change"]["fact"] == "schedule"
+    assert "통째로 바꾸지는 못해요" in decision.question
+
+
+def test_one_bad_read_is_dropped_when_another_read_is_valid():
+    """`[2026-10-15]` 「아침 9시에 서울역 도착 맞지?」 — 시각 읽기와 범위 없는 schedule 읽기를 함께 적어 전부 실패하던 것."""
+    good = {"fact": "time", "target_item": "i1", "origin_item": "none", "origin_text": "", "transport_mode": "any",
+            "reference": "explicit", "query": None, "text": "서울역 몇 시", "advice": ""}
+    bad = {**good, "fact": "schedule", "target_item": "none", "reference": "none"}
+    decision, _ = _decide({"action": "answer_fact", "target_item": "i1", "fact": "time", "reads": [good, bad]}, message="아침 9시에 명동교자 도착 맞지?")
+    assert [r["fact"] for r in decision.reads] == ["time"] and decision.raw["dropped_reads"][0]["fact"] == "schedule"
+    import pytest as _pytest
+    with _pytest.raises(du.DecisionFailed):
+        _decide({"action": "answer_fact", "target_item": "none", "fact": "schedule", "reads": [bad]}, message="일정 보여줘")

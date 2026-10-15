@@ -87,7 +87,7 @@ def test_identical_read_choice_is_canonicalized_without_losing_raw_evidence():
     {'query':{'day':'d99','period':'afternoon','kind':'all'}},
     {'query':{'day':[],'period':'afternoon','kind':'all'}},
     {'query':{'day':'all','period':'afternoon','kind':'all','execute':True}},
-    {'action':'apply_change'},{'target_item':'i1'},
+    {'target_item':'i1'},
     {'choices':None},{'choices':''},{'choices':0},
     {'choices':[{'action':'apply_change','target_item':'i1'}]},
 ])
@@ -145,6 +145,18 @@ def test_single_position_query_uses_scope_instead_of_redundant_item_hint(positio
 
 def test_first_last_scope_does_not_canonicalize_a_write_or_other_trip_hint():
     base=raw(fact="schedule",query=dict(day="d1",period="all",kind="all",position="last"))
-    for extra in [dict(action="apply_change"),dict(target_item="i999"),
+    for extra in [dict(target_item="i999"),
                   dict(choices=[dict(action="apply_change",fact="schedule",target_item="i2",target_change="none")])]:
         with pytest.raises(du.DecisionFailed):decide(base|extra)
+    assert_scoped_change_is_asked_back(decide(base|dict(action="apply_change")))
+
+
+def assert_scoped_change_is_asked_back(d, fact='schedule'):
+    """`[2026-10-15]` 바꾸기(`apply_change`)에 조회 범위가 붙으면 예전엔 해석 전체가 실패했다(「어제 일정 바꿔줘」가 「해석하지 못했어요」). 이제 **되묻는다** —
+    여전히 아무것도 바꾸지 않고(바꾸는 할 일로 남지 않는다) 읽기로 답하지도 않는다."""
+    assert d.action == "clarify" and d.item is None and d.change is None and d.query is None and d.fact == "none"
+    assert d.raw["scoped_change"] == {"action": "apply_change", "fact": fact} and "통째로 바꾸지는 못해요" in d.question
+
+
+def test_a_change_with_a_list_scope_is_asked_back_and_changes_nothing():
+    assert_scoped_change_is_asked_back(decide(raw(action='apply_change')), fact='changeability')

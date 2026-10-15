@@ -153,6 +153,15 @@ def test_an_add_without_a_time_or_anchor_asks_instead_of_guessing(chat):
     assert after == before and body["status"] == "clarify" and "몇 시에" in body["answer"], body
 
 
+def test_an_add_with_only_a_kind_of_place_asks_for_the_name_without_searching(chat):
+    """★x600 실서버 확인(2026-10-15): 「오후 3시에 카페 하나 추가해줘」 — 「카페」를 장소 이름으로 찾으러 가 조회 한도만 쓰고 막혔다."""
+    before, _ = _latest(chat)
+    _answer(chat, "add_item", destination_text="카페", anchor_kind="time", anchor_time="15:00", at_day="none")
+    body = _say(chat, "오후 3시에 카페 하나 추가해줘", "edit-add-kind")
+    after, _ = _latest(chat)
+    assert after == before and body["status"] == "clarify" and "장소 이름" in body["answer"], body
+
+
 def test_two_stops_swap_their_order_without_overlapping(chat):
     _answer(chat, "swap_order", target="북촌한옥마을", anchor_kind="item", anchor="인사동")
     body = _say(chat, "북촌이랑 인사동 순서 바꿔줘", "edit-swap")
@@ -219,3 +228,57 @@ def test_an_empty_edit_screen_left_open_is_not_shared_and_is_closed(chat):
         assert cur.fetchone()[0] == "closed"                                   # 웹이 연 빈 접수는 닫혔다(채팅이 쓰지 않았다)
         cur.execute("SELECT count(*) FROM trip_intakes WHERE reopen_trip_id=%s AND status='review'", (chat["trip"]["trip_id"],))
         assert cur.fetchone()[0] == 0
+
+
+def test_a_whole_range_shifts_even_when_the_model_gave_no_range(chat):
+    """`[2026-10-15]` 재생에서 「오후 일정 전부 한 시간씩 밀어줘」 6문장이 모델이 범위(query)를 안 적어 되묻기로 끝났다 — 문장의 「전부 · 오후」로 범위를 만든다."""
+    before, _ = _latest(chat)
+    _answer(chat, "change_time", minutes=60)                        # 대상 · 범위 없음 — 문장에서만 읽는다
+    body = _say(chat, "오후 일정 전부 한 시간씩 밀어줘", "edit-bulk-sentence")
+    after, items = _latest(chat)
+    assert body["status"] == "adjusted" and after == before + 1, body
+    assert (_hm(items["인사동"].starts_at), _hm(items["N서울타워"].starts_at)) == ("13:00", "16:00"), body
+    assert _hm(items["북촌한옥마을"].starts_at) == "10:00", body                 # 오전은 그대로
+
+
+def test_a_single_stop_without_all_words_is_not_turned_into_a_range(chat):
+    before, _ = _latest(chat)
+    _answer(chat, "change_time", minutes=60)
+    body = _say(chat, "일정 한 시간 밀어줘", "edit-not-range")
+    after, _ = _latest(chat)
+    assert after == before and body["status"] == "clarify" and "어느 일정을 옮길지" in body["answer"], body
+
+
+def test_a_stop_the_customer_already_touched_can_still_be_replaced_or_removed_by_chat(chat):
+    """★x600 실서버 확인(2026-10-15): 앞선 고치기 · 되돌리기가 일정에 붙인 「고객이 만진 일정」 표시가 다시 열면 고정으로 실려
+    「경복궁 대신 창덕궁 가자」가 「고정한 일정이라 바꿀 수 없습니다」로 거절됐다. 고객이 지금 직접 말한 요청은 그 자동 표시를 풀고 처리한다."""
+    _answer(chat, "change_time", target="인사동", minutes=10, anchor_kind="none")
+    assert _say(chat, "인사동 10분 늦춰줘", "touch-shift")["status"] == "adjusted"
+    _answer(chat, "apply_change", target="인사동", destination_text="덕수궁", change_scope="place")
+    body = _say(chat, "인사동 대신 덕수궁 가자", "touch-named")
+    _, items = _latest(chat)
+    assert body["status"] == "adjusted" and "덕수궁" in items and "인사동" not in items, body
+    _answer(chat, "remove_item", target="덕수궁")
+    body = _say(chat, "덕수궁 빼줘", "touch-remove")
+    _, items = _latest(chat)
+    assert body["status"] == "adjusted" and "덕수궁" not in items, body
+
+
+def test_a_stop_pinned_in_chat_is_replaced_when_the_customer_later_asks_for_it_directly(chat):
+    """고객이 「고정해줘」로 고정한 일정도 같은 칸(`customer_pinned`)이라 자동 표시와 가를 수 없다 — 나중에 직접 말한 바꾸기 요청이 이긴다."""
+    _answer(chat, "lock_item", target="인사동")
+    assert _say(chat, "인사동 고정해줘", "pin-lock")["status"] == "adjusted"
+    _answer(chat, "apply_change", target="인사동", destination_text="덕수궁", change_scope="place")
+    body = _say(chat, "인사동 대신 덕수궁 가자", "pin-named")
+    _, items = _latest(chat)
+    assert body["status"] == "adjusted" and "덕수궁" in items and "인사동" not in items, body
+
+
+def test_a_lodging_change_on_a_trip_without_lodging_does_not_change_another_stop(chat):
+    """★x600 실서버 확인(2026-10-15): 「숙소 다른 데로 바꿔줘」 — 숙소 일정이 없는 여행에서 모델이 가까운 활동을 대상으로 골라 엉뚱한 곳으로 바꿔 버렸다."""
+    before, items_before = _latest(chat)
+    _answer(chat, "apply_change", target="인사동", change_scope="place")
+    body = _say(chat, "숙소 다른 데로 바꿔줘", "lodging-none")
+    after, items = _latest(chat)
+    assert after == before and set(items) == set(items_before), body
+    assert "숙소가 들어 있지 않아" in body["answer"], body

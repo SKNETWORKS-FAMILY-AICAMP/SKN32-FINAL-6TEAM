@@ -56,6 +56,9 @@ def _hm(value: datetime) -> str:
 
 def _refusal(code: str, message: str) -> str:
     """접수 · 「완료」의 거절 → 고객 말. 웹 화면이 보이는 문장과 같은 뜻으로 쓴다."""
+    if code == "place_not_found" and ("budget_exhausted" in message or "조회가 막혀" in message):
+        # 찾는 쪽(관광 정보 조회)의 오늘 한도가 찼거나 막힌 것 — 없는 곳이라는 뜻이 아니다(실서버 확인 10-15: 안내가 「고객이 고친다」로 샜다)
+        return "지금 장소 조회가 잠시 막혀 찾지 못해 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요."
     if code == "place_not_found":
         return f"말씀하신 곳을 장소 목록 · 관광 정보 · 지도에서 하나로 찾지 못해 일정은 바꾸지 않았어요({message}). 장소 이름을 조금 더 정확히 알려 주세요."
     if code == "item_in_past":
@@ -64,8 +67,8 @@ def _refusal(code: str, message: str) -> str:
         return f"그렇게 바꾸면 일정이 맞지 않아 바꾸지 않았어요 — {message.split(':', 1)[-1].strip()}"
     if code == "stale_itinerary":
         return "그 사이 일정이 바뀌어 바꾸지 않았어요. 최신 일정에서 다시 말씀해 주세요."
-    if code == "lock_with_changes" or code == "locked_item":
-        return "고정한 일정이라 바꾸지 않았어요. 고정을 푼 뒤 다시 말씀해 주세요."
+    if code in ("lock_with_changes", "locked_item", "item_locked"):
+        return "고정한 일정이라 바꾸지 않았어요. 「○○ 고정 풀어줘」라고 먼저 말씀해 주세요."
     return f"일정을 바꾸지 못했어요 — {message}"
 
 
@@ -139,6 +142,9 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 op.item_kind = "dining" if found.kind == "dining" else "activity"
         edits: list[dict[str, Any]] = []
         locks: list[dict[str, Any]] = []
+        unpinned: set[Any] = set()
+        auto_pinned = {f"items[{where[i.item_id]}]" for i in items
+                       if i.item_id in where and not i.locked and (i.detail or {}).get("customer_pinned")}
         for op in ops:
             if op.kind == "add":
                 fields = {"title": op.title or op.place_name, "date": op.date, "starts_at": op.starts_at,
@@ -154,6 +160,13 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                     raise EditRefused("frozen_item", f"「{title}」은(는) 이미 지났거나 예약이 묶인 일정이라 채팅으로 바꾸지 않았어요.")
                 raise EditRefused("unknown_item", "바꿀 일정을 지금 일정에서 하나로 찾지 못해 일정은 바꾸지 않았어요. 일정 이름을 알려 주세요.")
             prefix = f"items[{where[op.item_id]}]"
+            if op.kind in ("place", "remove", "time") and prefix in auto_pinned and op.item_id not in unpinned:
+                # ★`[2026-10-15 실서버 확인]` 서버가 **고객이 만진 일정**(되돌리기 · 앞선 고치기 · 직접 지정한 곳)에 붙인 자동 표시(`customer_pinned`)는 다시 열면
+                #   「고정」으로 실려 장소 바꾸기 · 빼기가 「고정한 일정이라 바꿀 수 없습니다」로 거절됐다(x600 「경복궁 대신 창덕궁 가자」). 고객이 지금 직접 말한 요청이므로
+                #   같은 요청 안에서 푼다 — 자동 표시와 고객이 「고정해줘」라고 한 표시는 같은 칸(`customer_pinned`)이라 가를 수 없고, **나중에 한 직접 요청이 이긴다**.
+                #   예약이 묶인 일정(`locked`)은 푸는 대상이 아니라 그대로 거절한다
+                edits.append({"source_id": source_id, "field": f"{prefix}.locked", "value": False})
+                unpinned.add(op.item_id)
             if op.kind == "time":
                 for name in ("date", "starts_at", "ends_at"):
                     value = getattr(op, name)
@@ -231,6 +244,10 @@ def moved_to(item: Any, *, day: str | None, start: str | None) -> tuple[str, str
 
 # ── 해석 → 고칠 것 ─────────────────────────────────────────────────────
 _TIME = __import__("re").compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
+#: 이름이 아니라 **종류만** 말한 장소 — 이 낱말뿐이면 장소로 찾지 않고 되묻는다
+_GENERIC_PLACE = __import__("re").compile(
+    r"(?:(?:괜찮은|좋은|근처|아무|어디)\s*)*(?:카페|커피숍?|커피\s*집|식당|맛집|음식점|레스토랑|밥집|술집|바|빵집|디저트(?:\s*카페)?|관광지|명소|공원|박물관|미술관|쇼핑몰?|시장|점심|저녁|아침|간식|장소|곳)"
+    r"(?:\s*(?:하나|한\s*곳|한\s*군데|좀))?")
 
 
 def _day_of(token: str | None, stops: list[Any], now: datetime) -> str | None:
@@ -258,7 +275,29 @@ def _same_day(day: str, start: str, end: str | None, title: str) -> None:
         raise EditRefused("crosses_midnight", f"「{title}」이(가) 자정을 넘기게 돼 채팅으로는 옮기지 않았어요. 일정 수정 화면에서 날짜와 시각을 함께 고쳐 주세요.")
 
 
-def ops_for(decision: Any, *, items: list[Any], now: datetime) -> tuple[list[EditOp], str]:
+_ALL = __import__("re").compile(r"전부|전체|모두|다\s*(?:미뤄|밀어|당겨|늦춰)|all\s+(?:of\s+)?(?:my|the)|everything", __import__("re").IGNORECASE)
+_PERIOD_WORDS = (("morning", __import__("re").compile(r"오전|아침")), ("afternoon", __import__("re").compile(r"오후")),
+                 ("evening", __import__("re").compile(r"저녁|밤|evening|night", __import__("re").IGNORECASE)))
+
+
+def _range_from_sentence(message: str, token: str | None, stops: list[Any], now: datetime) -> dict[str, str] | None:
+    """「오후 일정 전부 한 시간씩 밀어줘」 — 모델이 범위(`query`)를 안 적었어도 문장의 「전부」 · 시간대 말로 범위를 만든다.
+    ★문장에 **전부 · 전체 · 모두**가 있을 때만 — 일정 하나를 가리킨 말이면 범위로 보지 않는다. 날을 말하지 않았으면 오늘 이후 일정이 있는 가장 가까운 날."""
+    if not message or not _ALL.search(message) or not stops:
+        return None
+    dates = sorted({s.starts_at.astimezone(KST).date() for s in stops})
+    today = now.astimezone(KST).date()
+    if token and token not in ("none", "all"):
+        day = token
+    else:
+        # 날을 말하지 않았다 — 오늘 이후 일정이 있는 가장 가까운 날(오늘 일정이 없으면 다음 일정 날, 다 지났으면 1일차)
+        pick = next((d for d in dates if d >= today), dates[0])
+        day = "today" if pick == today else f"d{(pick - dates[0]).days + 1}"
+    period = next((name for name, rx in _PERIOD_WORDS if rx.search(message)), "all")
+    return {"day": day, "period": period, "kind": "all", "position": "all"}
+
+
+def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = "") -> tuple[list[EditOp], str]:
     """해석(`decision_unit.Decision`) → 고칠 것들 · 무엇을 하는지 한 줄. 값이 모자라면 `EditRefused`(고객에게 물을 말).
 
     ★값은 해석이 낸 칸만 쓴다 — 시각(`anchor_time`) · 날(`at_day`) · 옮길 크기(`minutes`, 문장에 적힌 시간 · 분) · 기준 일정(`anchor_item`) ·
@@ -279,8 +318,13 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime) -> tuple[list[Edi
 
     if action == "change_time":
         targets = [item] if item is not None else []
-        if item is None and decision.query is not None:
-            targets = [i for i in matching(decision.query, items=items, now=now)[0] if i.kind in ("activity", "dining")]
+        query = decision.query if item is None else None
+        if item is None and query is None and decision.minutes:
+            query = _range_from_sentence(message, raw.get("at_day"), stops, now)
+        if item is None and query is not None:
+            # 범위 안에서 **아직 안 지났고 예약이 묶이지 않은** 활동 · 식사만(지난 일정 · 예약 일정은 웹과 같이 못 옮기므로 빼고 나머지를 옮긴다)
+            targets = [i for i in matching(query, items=items, now=now)[0]
+                       if i.kind in ("activity", "dining") and (i.ends_at or i.starts_at) > now and not i.booking_id]
         if not targets:
             raise EditRefused("need_target", "어느 일정을 옮길지 알려 주세요. 일정 이름이나 「점심」처럼 말씀해 주시면 옮길게요.")
         ops = []
@@ -337,8 +381,11 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime) -> tuple[list[Edi
             _same_day(d, st, en, target.title)
         return [EditOp("time", item_id=t.item_id, date=d, starts_at=st, ends_at=en) for t, d, st, en in pairs], f"{item.title} · {other.title} 순서 바꾸기"
     if action == "add_item":
-        if not name:
-            raise EditRefused("need_place", "어떤 곳을 넣을지 장소 이름을 알려 주세요. 이름을 알려 주시면 그곳을 찾아 넣을게요.")
+        if not name or _GENERIC_PLACE.fullmatch(name.strip()):
+            # ★`[2026-10-15 x600 실서버 확인]` 「오후 3시에 카페 하나 추가해줘」 — 종류만 말했는데 「카페」라는 이름을 장소로 찾으러 가 조회 한도만 쓰고 막혔다.
+            #   종류만 말했으면 찾지 않고 이름을 되묻는다
+            raise EditRefused("need_place", "어떤 곳을 넣을지 장소 이름을 알려 주세요. 이름을 알려 주시면 그곳을 찾아 넣을게요. "
+                                            "예: 「오후 3시에 ○○ 카페 넣어줘」")
         if anchor_time:
             first_day = min((s.starts_at.astimezone(KST).date() for s in stops), default=now.astimezone(KST).date())
             today = now.astimezone(KST).date()
