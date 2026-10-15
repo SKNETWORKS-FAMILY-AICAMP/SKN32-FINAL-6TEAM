@@ -17,6 +17,7 @@ from app.core.transition import transition_case
 from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.presentation.api.cases import build_router
 from app.presentation.security import Principal
 
@@ -83,6 +84,7 @@ def travel():
                 with conn.cursor() as cur:
                     for table in ("team_tasks", "llm_calls"):
                         cur.execute(f"DELETE FROM {table} WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
+                    allow_case_events_purge(cur)
                     for table in ("agent_runs", "action_requests", "case_events", "outbox", "customer_cases", "customers", "tenants"):
                         cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (tenant,))
 

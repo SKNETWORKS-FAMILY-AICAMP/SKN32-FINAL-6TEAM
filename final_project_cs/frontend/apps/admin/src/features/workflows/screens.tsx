@@ -72,6 +72,7 @@ export function InquiriesScreen({ data, onCommand, navigate, inquiryId, listStat
   const setOwner = (owner: string) => onListStateChange({ ...listState, owner });
   const [manageTemplates, setManageTemplates] = useState(false);
   const operators = [...new Set([DEMO_OPERATOR, ...data.inquiries.map(item => item.assignee), ...data.audit.map(item => item.actor)])].filter(Boolean).sort();
+  const statuses: Inquiry['status'][] = data.inquiries.some(item => item.status === '기록 완료') ? [...INQUIRY_STATUSES, '기록 완료'] : INQUIRY_STATUSES;
   const filtered = data.inquiries.filter(item => (status === '전체' || item.status === status) && (owner === 'all' || (owner === 'unassigned' ? !item.assignee : item.assignee === owner)) && `${item.title} ${item.body} ${item.userId}`.toLowerCase().includes(query.toLowerCase().trim()));
   const requestedInquiry = inquiryId ? data.inquiries.find(item => item.id === inquiryId) : undefined;
   const selected = inquiryId ? filtered.find(item => item.id === inquiryId) : filtered[0];
@@ -80,7 +81,7 @@ export function InquiriesScreen({ data, onCommand, navigate, inquiryId, listStat
     <header className={styles.heading}><div><p className={styles.eyebrow}>INBOX</p><h1>문의함</h1><p className="muted">사용자에게 필요한 답변을, 한곳에서.</p></div><span className="badge">미답변 {data.inquiries.filter(item => item.status !== '답변 완료').length}건</span></header>
     <div className={styles.inbox}>
       <section className={`panel ${styles.inboxList}`} aria-label="문의 목록">
-        <div className={styles.tabs} aria-label="문의 상태 필터">{(['전체', ...INQUIRY_STATUSES] as const).map(value => <button key={value} type="button" aria-pressed={status === value} className={status === value ? styles.activeTab : ''} onClick={() => setStatus(value)}>{value}<span>{value === '전체' ? data.inquiries.length : data.inquiries.filter(item => item.status === value).length}</span></button>)}</div>
+        <div className={styles.tabs} aria-label="문의 상태 필터">{(['전체', ...statuses] as const).map(value => <button key={value} type="button" aria-pressed={status === value} className={status === value ? styles.activeTab : ''} onClick={() => setStatus(value)}>{value}<span>{value === '전체' ? data.inquiries.length : data.inquiries.filter(item => item.status === value).length}</span></button>)}</div>
         <div className={styles.listFilters}><label>문의 찾기<input value={query} onChange={event => setQuery(event.target.value)} placeholder="제목, 내용 또는 사용자 ID" /></label><label>담당자 필터<select value={owner} onChange={event => setOwner(event.target.value)}><option value="all">담당 전체</option><option value="unassigned">미지정</option><option value={DEMO_OPERATOR}>내 담당</option>{operators.filter(operator => operator !== DEMO_OPERATOR).map(operator => <option key={operator}>{operator}</option>)}</select></label></div>
         <div className={styles.inquiryItems}>{filtered.length ? filtered.map(item => <button key={item.id} type="button" className={`${styles.inquiryItem} ${selected?.id === item.id ? styles.selectedItem : ''}`} aria-pressed={selected?.id === item.id} onClick={() => navigate(`/inquiries/${item.id}`)}><div className={styles.row}><span className={`badge ${item.status === '접수' ? styles.warmBadge : ''}`}>{item.status}</span><time className={styles.small}>{displayTime(item.receivedAt)}</time></div><strong>{item.title}</strong><span className={styles.excerpt}>{item.body}</span><span className={styles.small}>{item.userId} · {item.assignee || '담당 미지정'}</span></button>) : <Empty>조건에 맞는 문의가 없습니다.</Empty>}</div>
       </section>
@@ -91,7 +92,7 @@ export function InquiriesScreen({ data, onCommand, navigate, inquiryId, listStat
 }
 
 function InquiryDetail({ inquiry, data, onCommand, navigate, operators, onManageTemplates }: ScreenProps & { inquiry: Inquiry; operators: string[]; onManageTemplates: () => void }) {
-  const [status, setStatus] = useState(inquiry.status);
+  const [status, setStatus] = useState<InquiryStatus>(inquiry.status === '기록 완료' ? '접수' : inquiry.status);
   const [assignee, setAssignee] = useState(inquiry.assignee);
   const [reason, setReason] = useState('');
   const [reply, setReply] = useState('');
@@ -102,12 +103,12 @@ function InquiryDetail({ inquiry, data, onCommand, navigate, operators, onManage
     event.preventDefault();
     if (!reason.trim()) return feedback.invalid('문의 상태·담당 변경 사유를 입력해 주세요.');
     if (status === inquiry.status && assignee === inquiry.assignee) return feedback.invalid('변경할 상태 또는 담당자를 선택해 주세요.');
-    if (await feedback.run({ type: 'inquiry-status', inquiryId: inquiry.id, status, assignee, reason }, '문의 상태와 담당자를 데모에 저장했습니다.')) setReason('');
+    if (await feedback.run({ type: 'inquiry-status', inquiryId: inquiry.id, status, assignee, reason }, '문의 상태와 담당자를 저장했습니다.')) setReason('');
   }
   async function sendReply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!reply.trim()) return feedback.invalid('답변 내용을 입력해 주세요.');
-    if (await feedback.run({ type: 'reply', inquiryId: inquiry.id, body: reply }, '답변을 데모에 저장했습니다. 상태가 답변 완료로 바뀌었습니다.')) { setReply(''); setTemplate(''); setStatus('답변 완료'); setAssignee(DEMO_OPERATOR); }
+    if (await feedback.run({ type: 'reply', inquiryId: inquiry.id, body: reply }, '답변을 저장했습니다. 상태가 답변 완료로 바뀌었습니다.')) { setReply(''); setTemplate(''); setStatus('답변 완료'); setAssignee(DEMO_OPERATOR); }
   }
   return <section className={`panel ${styles.detail}`} aria-label="문의 상세">
     <div className={styles.row}><span className="badge">{inquiry.status}</span><span className={styles.small}>{inquiry.id}</span></div>
@@ -129,7 +130,7 @@ function TemplateManager({ data, onCommand, onClose }: Pick<ScreenProps, 'data' 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!title.trim() || !body.trim()) return feedback.invalid('템플릿 제목과 본문을 모두 입력해 주세요.');
-    if (await feedback.run({ type: 'save-template', ...(id ? { id } : {}), title, body }, '답변 템플릿을 데모에 저장했습니다.')) { setId(''); setTitle(''); setBody(''); }
+    if (await feedback.run({ type: 'save-template', ...(id ? { id } : {}), title, body }, '답변 템플릿을 저장했습니다.')) { setId(''); setTitle(''); setBody(''); }
   }
   return <WorkflowDialog titleId="template-title" locked={feedback.pending} onClose={onClose}><div className={styles.row}><h2 id="template-title">답변 템플릿 관리</h2><button type="button" aria-label="템플릿 관리 닫기" onClick={onClose} disabled={feedback.pending}>닫기</button></div><p className="muted">반복되는 안내를 저장하고, 답변 전에 내용을 다듬어 주세요.</p><form onSubmit={save} className={styles.stack} noValidate><label>편집할 템플릿<select value={id} onChange={event => { const found = data.templates.find(item => item.id === event.target.value); setId(found?.id ?? ''); setTitle(found?.title ?? ''); setBody(found?.body ?? ''); }}><option value="">새 템플릿</option>{data.templates.map(item => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label><label>템플릿 제목<input value={title} onChange={event => setTitle(event.target.value)} /></label><label>템플릿 본문<textarea rows={7} value={body} onChange={event => setBody(event.target.value)} /></label><Feedback {...feedback} /><div className={styles.actions}><button type="submit" className="primary" disabled={feedback.pending}>템플릿 저장</button></div></form></WorkflowDialog>;
 }

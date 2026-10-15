@@ -21,6 +21,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
 from app.presentation.api.app import create_app
@@ -62,6 +63,7 @@ def approval_case():
             cur.execute("DELETE FROM action_approvals WHERE action_id IN "
                         "(SELECT action_id FROM action_requests WHERE case_id=%s)", (case_id,))
             cur.execute("DELETE FROM action_requests WHERE case_id=%s", (case_id,))
+            allow_case_events_purge(cur)
             cur.execute("DELETE FROM case_events WHERE case_id=%s", (case_id,))
             cur.execute("DELETE FROM customer_cases WHERE case_id=%s", (case_id,))
             cur.execute("DELETE FROM supplier_bookings WHERE booking_id IN "

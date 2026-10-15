@@ -96,7 +96,19 @@ def question_reply(*, message: str, items: list[Any], tenant_id: str,
             {**evidence, "policy": "unavailable"}
     query = message if item is None else f"{item.title} {message}"
     try:
-        chunks = policy_search(tenant_id=tenant_id, query=query, allowed_scopes=scopes, top_k=3) or []
+        # ★`[2026-10-15]` 재순위 검색(`policy_rerank.PolicyRerank`)이면 후보를 모델이 다시 고른 줄과 정보를 받는다. 스위치가 꺼져 있으면(기본) 정보가 없고
+        #   지금과 똑같다. 정보의 `gate` 는 그 줄을 뽑은 색인의 점수 문턱이다(지금 방식으로 돌아갔으면 없다 → 아래 `min_score` 그대로)
+        from app.domains.travel_ops.components.conversation.policy_rerank import PolicyRerank
+
+        if isinstance(policy_search, PolicyRerank):
+            chunks, rerank_info = policy_search.search_detailed(tenant_id=tenant_id, query=query, allowed_scopes=scopes, top_k=3)
+            chunks = chunks or []
+            if rerank_info is not None:
+                evidence["rerank"] = {k: v for k, v in rerank_info.items() if k != "gate"}
+                if rerank_info.get("gate") is not None:
+                    min_score = float(rerank_info["gate"])
+        else:
+            chunks = policy_search(tenant_id=tenant_id, query=query, allowed_scopes=scopes, top_k=3) or []
     except Exception as exc:                          # noqa: BLE001 — 검색 실패도 답에 그대로 말한다
         # ★`[2026-10-13]` 이유를 로그에도 남긴다 — 전에는 처리 기록에 `RuntimeError` 이름만 남아 원인을 x600 서버에서 다시 재현해야 했다
         import logging

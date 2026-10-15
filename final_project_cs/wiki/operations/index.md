@@ -18,6 +18,7 @@ domain: travel
 | 공개 배포 정의·절차 | [Docker 배포 파일](../../deploy/README.md) |
 | 도커 이미지 정리·월별 복원·WSL 디스크 압축 | [이미지 정리와 월별 복원용 보존](image-retention.md) |
 | Oracle ARM 앱 실험 | [앱 배포·실제 요청 검사](arm-develop-cd.md) |
+| Oracle ARM 관리자웹앱 팀원 접속 | [Tailscale 따라 하기](arm-admin-tailscale.md) |
 | 모델·GPU 연구 | [ARM 모델 시험](arm-serving-queue.md)·[GPU 대기열](gpu-work-queue.md) |
 | 결과를 모르는 부수효과 | [unknown 상태 확인](unknown-state.md) |
 | 여행 자료·평가 | [현재 평가 도구](../quality/eval-harness.md)·[SQL 적용](../data/migrations.md) |

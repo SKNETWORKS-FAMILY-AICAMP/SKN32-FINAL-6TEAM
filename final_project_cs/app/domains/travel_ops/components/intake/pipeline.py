@@ -26,6 +26,7 @@ from . import review as review_module
 from . import survey_answers
 from .areas import areas_for
 from .assemble import assemble, effective
+from .line_parts import lookup_title
 from .rules import read_plan
 from .sources import UnsupportedSource, other_reading, sniff, to_text
 
@@ -374,7 +375,7 @@ class IntakeConflict(ValueError):
 
 def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
          edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None,
-         dining: Any = None) -> int:
+         dining: Any = None, learn_aliases: bool = True) -> int:
     """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
 
     `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
@@ -451,7 +452,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                             "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
                             (tenant_id, intake_id, current, source_id, field_name[:-len("place")] + "title"))
                 was = cur.fetchone()
-                if was and isinstance(was[0], str):
+                if learn_aliases and was and isinstance(was[0], str):
+                    # ★`[2026-10-15]` 채팅 「A 대신 B 가자」는 이름 고침이 아니라 **일정 바꾸기**다 — 별칭으로 쌓으면 다음 계획에서 A 라고 적어도 B 로 읽힌다
+                    #   (x600 실서버: 「경복궁 대신 창덕궁」 뒤 새 계획의 「경복궁」이 창덕궁으로 찾아졌다). 채팅 고치기는 `learn_aliases=False`
                     remember_alias(cur, tenant_id, customer_id, was[0], typed)
             if via:
                 evidence = {**evidence, "via": via}            # 전체 자동 추천이 낸 값이면 그렇게 적는다(고객이 고른 값과 구별)
@@ -932,6 +935,13 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
 
 
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
+def _lookup_title(title: str, aliases: dict[str, str] | None) -> str:
+    """장소를 찾을 말 — 체크인 · 체크아웃 동작 말을 뺀다(`line_parts.lookup_title`). 고객이 이 글을 다른 이름으로 고친 적이 있으면(별칭) 옛 길이 원문으로 찾아야 하므로 그대로 둔다."""
+    from .places import normalize
+
+    return title if normalize(title) in (aliases or {}) else lookup_title(title)
+
+
 def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = None,
                 our_places: list[dict[str, Any]] | None = None, today: date, now: datetime | None = None,
                 aliases: dict[str, str] | None = None, areas: Any = None, dining: Any = None,
@@ -1047,7 +1057,9 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     for index, item in enumerate(items):
         if item["title"]:
             # ★이름 없는 줄(종류 + 지역만) — 가게 이름으로 찾지 않는다. 고객이 앞서 이 글을 다른 이름으로 고친 적이 있으면(별칭) 그 이름으로 다시 찾는 옛 길이 먼저다
-            parts = parse_line(item["title"], areas=areas, kind_hint="dining" if item["meal"] else None)
+            # ★`[2026-10-15 숙박예약 점검 LB-01]` 장소는 체크인 · 체크아웃 말을 뺀 말로 찾는다(숙소 줄) — 고객이 이 글을 다른 이름으로 고친 적이 있으면(별칭) 원문 그대로
+            query = _lookup_title(item["title"], aliases)
+            parts = parse_line(query, areas=areas, kind_hint="dining" if item["meal"] else None)
             if parts.nameless and normalize(item["title"]) not in (aliases or {}):
                 nameless.add(index)
                 early[index] = _nameless_rows(index, parts, item, rows)
@@ -1056,7 +1068,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 if on_progress is not None:
                     on_progress("places", placed, titled, index, item["title"])
                 continue
-            resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
+            resolved[index] = resolve(query, our_places=our_places or [], tour=tour, kakao=kakao,
                                       kind_hint=_place_kind_hint(item), aliases=aliases, dining=dining,
                                       near=_near_hint(index, items, resolved, dated))
             if resolved[index].status == "resolved":
@@ -1072,7 +1084,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         if getattr(found, "chain_deferred", False) and index not in early:
             point = _near_hint(index, items, resolved, dated)
             if point is not None:
-                resolved[index] = resolve(items[index]["title"], our_places=our_places or [], tour=tour, kakao=kakao,
+                resolved[index] = resolve(_lookup_title(items[index]["title"], aliases), our_places=our_places or [], tour=tour, kakao=kakao,
                                           kind_hint=_place_kind_hint(items[index]), aliases=aliases,
                                           dining=dining, near=point)
     for index in sorted(set(resolved) | nameless):
@@ -1143,9 +1155,10 @@ def _place_rows(index: int, found: Any, *, items: list[dict[str, Any]], resolved
         if near and kakao is not None:
             # 앞뒤 일정 가운데에서 **거리순**으로 한 번 더 찾는다 — 서울 전역 상위 5곳만으로는 14km 밖을 골랐다(실측)
             mid = (sum(p[0] for p in near) / len(near), sum(p[1] for p in near) / len(near))
-            around = kakao.search(items[index]["title"], near=mid) or []
+            query = lookup_title(items[index]["title"])
+            around = kakao.search(query, near=mid) or []
             seen = {c["name"] for c in pool}
-            pool += [h for h in kind_hits(items[index]["title"], around) if h["name"] not in seen]
+            pool += [h for h in kind_hits(query, around) if h["name"] not in seen]
         pool = _fitting(pool, items[index]["title"], meal=bool(items[index]["meal"]),
                         activity=_place_kind_hint(items[index]) == "activity")
         review = True

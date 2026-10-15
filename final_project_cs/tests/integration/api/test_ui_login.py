@@ -22,6 +22,7 @@ from psycopg.types.json import Json
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.presentation import security
 from app.presentation.api.app import create_app
 from app.presentation.ui import auth
@@ -55,6 +56,7 @@ def world(monkeypatch):
     yield {"client": client, "tenant": tenant, "case_id": case_id, "action_id": action_id}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM action_approvals WHERE action_id=%s", (action_id,))
+        allow_case_events_purge(cur)
         for table in ("case_events", "action_requests", "customer_cases", "customers", "tenants"):
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (tenant,))
 

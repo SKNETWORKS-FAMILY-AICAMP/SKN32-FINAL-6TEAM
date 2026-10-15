@@ -27,6 +27,7 @@ domain: travel
 
 | 보고일 | 모델·판본·실험 제목 | 독립 보고서 |
 |---|---|---|
+| 2026-10-15 | Claude 평가 세션(10-07~10-08) 한 일 목록 — 어려운 세트 H · 검토자 후보 · MX 세트 · 규모 판정 근거 · 학습법 검토 · 부하시험 계획 | [한 일 목록·한계·확인 안 한 것](../records/reports/2026-10-15_평가세션_한일목록과_위키연결.md) |
 | 2026-10-09 | E 혼합 평문 평가셋의 고도화 범위와 검수 상태 | [구성·검수 감사](../records/reports/2026-10-09_0214_e-testset-maturity-audit.md) |
 | 2026-10-08 | RAG·모델 비교 문서 관리 점검 — 2026-10-08 | [문서 점검 기록](../records/reports/2026-10-08_rag-wiki-document-audit.md) |
 | 2026-10-08 | FrogNano 배포 원본의 혼합 요청 평가 완료 — 2026-10-08 | [완료·집계·한계 기록](../records/reports/2026-10-08_frog-original-mx-completion.md) |

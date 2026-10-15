@@ -31,7 +31,6 @@ import contextlib
 import hashlib
 import hmac
 import html
-import json
 import logging
 from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
@@ -59,6 +58,7 @@ from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStor
 from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
 from app.domains.travel_ops.components.planning import guardian as guardian_module
 from app.domains.travel_ops.components.watch import safety_pause, safety_recovery
+from app.domains.travel_ops.components import settings_hook
 
 # ★`[2026-10-05 병합]` 팀 판의 `_CsvFallbackTour`(활동팀 CSV 로 관광공사를 대신 조회) 는 싣지 않았다 — 관광공사 호출 제한 · 카카오 403 을
 #   피하려는 활동팀의 임시 우회이고 자료 파일(`activity_total_data.csv`)이 우리 쪽에 없다. 접수의 관광공사 조회는 전처럼 `place_factory` 가 한다.
@@ -155,16 +155,8 @@ class PlaceIn(BaseModel):
     attributes: dict[str, Any] = Field(default_factory=dict)
 
 
-#: ★외부 서비스에서 받은 장소 — 공용 장소 표에 쌓지 않고 **그 여행 전용 행**으로 넣는다(마이그레이션 029).
-#:  `places[].attributes.source` 로 가린다. 일정 생성기의 관광공사 후보도 이 값을 단다(`planner.py`).
-EXTERNAL_PLACE_SOURCES = frozenset({"tour_api", "kakao", "google_places",
-                                    # ★`[2026-10-02]` 고객이 확인 화면에서 후보 · 검색 · 지도로 고른 장소(`intake/assemble._place_in`)
-                                    "customer_pick",
-                                    # ★`[2026-10-01 · 10-05 병합]` 요식 원장(`dining_ledger`)에서 찾은 가게도 여행 전용 행이다 — 공용 표에 쌓으면
-                                    #   일정 접수의 이름 찾기 · 오타 교정이 그 이름들을 먼저 보게 된다(액티비티 항목까지 영향)
-                                    "dining_ledger",
-                                    # ★`[2026-10-05]` 인허가(사업자 등록) 자료에서 이름으로 찾은 식당 — 역시 그 여행 전용 행(영업시간 모름)
-                                    "dining_license"})
+#: ★외부 서비스에서 받은 장소 — 그 여행 전용 행으로 넣는다. 정의는 공용 모듈(`intake/reopen_commit.py`)로 옮겼다 — 채팅 고치기도 같은 규칙을 쓴다
+from app.domains.travel_ops.components.intake.reopen_commit import EXTERNAL_PLACE_SOURCES  # noqa: E402,F401
 
 
 class ItemIn(BaseModel):
@@ -587,6 +579,8 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
             "guardian": guardian_module.view(conn, tenant_id=store.tenant_id, trip_id=trip["trip_id"],
                                              constraints=trip.get("constraints")),
             "safety": safety,
+            # ★`[2026-10-15 사용자 결정 — ST4F-494]` 여행 화면 「지금 HH:MM」 시각 꼬리표 — 관리 콘솔 스위치(기본 켜짐). 계약 rest-endpoints/web-trips.md
+            "now_label": settings_hook.trip_now_label_enabled(store.tenant_id),
             "items": views, "map": map_view(views),
             "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
             # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더). 둘 다 거절이 아니라 알림이다
@@ -811,7 +805,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     def _desk(store: TripStore) -> TripDesk:
         # ★`[2026-09-29]` 활동 대체 후보를 관광공사 목록에서 넓힐 때 운영시간을 읽는다(`catalog_pool`) — 부를 때만 만든다
-        return TripDesk(store=store, connection_factory=get_connection, check=_check(), catalog_pool=True)
+        # ★`[2026-10-15]` 채팅 고치기의 이름 찾기 = 웹 「일정 수정」의 고치기(`/edits`)와 같은 부품(관광공사 · 카카오 · 요식 원장)
+        return TripDesk(store=store, connection_factory=get_connection, check=_check(), catalog_pool=True,
+                        edit_lookups=lambda: (_lazy("place", place_factory), _lazy("kakao", kakao_factory),
+                                              _dining_lookup(_PlaceCtx())))
 
     def _trip_or_404(conn, store: TripStore, trip_id: UUID, customer_id: UUID | None = None):
         try:
@@ -911,41 +908,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     def _store_place(conn, cur, tenant: str, trip_id: UUID, *, name: str, kind: str, lat: float, lon: float,
                      weather_sensitive: bool | None, attributes: dict[str, Any]) -> UUID:
-        """장소 한 곳 → 장소 행 id. 등록(`_insert`)과 수정 모드의 「완료」(`_confirm_reopened`)가 **같은 규칙**으로 넣는다."""
-        # ★장소는 테넌트 안에서 (이름, 종류)로 하나다(UNIQUE). 이미 있으면 **그것을 쓴다.**
-        #   ☆2026-09-14 — 처음엔 무조건 INSERT 해서, 두 번째 여행이 경복궁을 적자
-        #     500 이 났다(개발 서버에서 발견. 시험은 여행마다 테넌트를 새로 만들어
-        #     못 잡았다). 보낸 속성은 **빈 칸만 채운다** — 카탈로그 값을 고객 한 명의
-        #     제출이 덮어쓰지 않게(`EXCLUDED || places` 는 오른쪽이 이긴다).
-        if str(attributes.get("source") or "") in EXTERNAL_PLACE_SOURCES:
-            # ☆같은 여행 안에서 같은 장소를 두 번 적을 수 있다 — 그 여행 행을 다시 쓴다
-            cur.execute(
-                "INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,"
-                "attributes,trip_scope) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) "
-                "ON CONFLICT (tenant_id, trip_scope, name, kind) WHERE trip_scope IS NOT NULL "
-                "DO UPDATE SET attributes = EXCLUDED.attributes || places.attributes "
-                "RETURNING place_id",
-                (tenant, name, kind, lat, lon, weather_sensitive,
-                 json.dumps(attributes, ensure_ascii=False), trip_id))
-        else:
-            cur.execute(
-                "INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,"
-                "attributes) VALUES (%s,%s,%s,%s,%s,%s,%s) "
-                "ON CONFLICT (tenant_id, name, kind) WHERE trip_scope IS NULL "
-                # ★`[2026-09-28]` 요식 식당 행은 이 유일 조건 밖이다(마이그레이션 222) — 충돌 대상을 맞춘다
-                "AND source_name IS DISTINCT FROM 'dining_ledger' DO UPDATE "
-                "SET attributes = EXCLUDED.attributes || places.attributes "
-                "RETURNING place_id",
-                (tenant, name, kind, lat, lon, weather_sensitive,
-                 json.dumps(attributes, ensure_ascii=False)))
-        place_id = cur.fetchone()[0]
-        # ★`[2026-10-02]` 원장에서 고른 식당은 원장 가게와 바로 잇는다 — 새벽 확인 · 하루 점검이 코어 장소로
-        #   원장을 찾는다(`dining.ledger.resolve_place`). 관광공사 ID 가 없는 원장 가게는 이렇게만 이어진다
-        if attributes.get("dining_place_uid"):
-            from app.domains.travel_ops.components.team_hooks import dining_ledger
+        """장소 한 곳 → 장소 행 id. 등록(`_insert`) · 수정 모드의 「완료」 · 채팅 고치기가 **같은 규칙**(`intake/reopen_commit.store_place`)으로 넣는다."""
+        from app.domains.travel_ops.components.intake.reopen_commit import store_place
 
-            dining_ledger.link_core_place(conn, tenant, str(place_id), str(attributes["dining_place_uid"]))
-        return place_id
+        return store_place(conn, cur, tenant, trip_id, name=name, kind=kind, lat=lat, lon=lon,
+                           weather_sensitive=weather_sensitive, attributes=attributes)
 
     def _insert(conn, store: TripStore, request: CreateTrip, key: str, body_sha: str) -> UUID:
         tenant = store.tenant_id
@@ -1744,99 +1711,29 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                           reopened: dict[str, Any], status: str, built: Any) -> dict[str, Any]:
         """★`[2026-10-13 사용자 결정]` 수정 접수의 「완료」 — 새 여행이 아니라 **같은 여행의 새 판**(계약 「등록한 여행 고치기」).
 
-        쓰기는 채팅 변경과 같다(`TripDesk._write` — 판 · 변경 이력 · 알림 하나, 낡은 판이면 409). 판정도 채팅 변경과 같이 **이번 변경으로 새로 생긴 위반**만 막는다.
+        새 판 쓰기는 공용 함수(`intake/reopen_commit.commit`)가 한다 — `[2026-10-15]` 채팅 고치기(시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳)도 같은 함수다.
         - `request_id` = `intake:{접수}:r{판}` — 두 번 눌러도 판은 하나. 바뀐 것이 없으면 판을 쓰지 않는다(`changed: false`)
         - 지난 일정(끝 ≤ 지금)을 바꾸거나 빼거나 지난 때에 더하면 422 `item_in_past`
         """
-        from app.domains.travel_ops.components.actions.itinerary_actions import introduced_violations
-        from app.domains.travel_ops.components.intake import reopen
         from app.domains.travel_ops.components.intake.pipeline import mark_confirmed
-        from app.domains.travel_ops.components.itinerary.itinerary import StaleItinerary, fill_weather_sensitive
-        from app.domains.travel_ops.components.itinerary.itinerary_changes import with_request
+        from app.domains.travel_ops.components.intake.reopen_commit import CommitRefused, commit
 
         if request.survey is not None:
             raise _error(422, "trip_field_locked", "등록한 여행의 설문은 여기서 바꾸지 않아요")
         store = TripStore(tenant)
-        trip_id, base_version = UUID(reopened["trip_id"]), int(reopened["version"])
-        request_id = f"intake:{intake_id}:r{request.revision}"
-
-        def done(version: int, changed: bool) -> dict[str, Any]:
-            with get_connection() as conn:
-                mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=trip_id)
-                return {"intake_id": str(intake_id), "status": "confirmed", "trip": _trip_view(conn, store, trip_id),
-                        "version": version, "changed": changed}
-
+        trip_id = UUID(reopened["trip_id"])
         with get_connection() as conn:
             _trip_or_404(conn, store, trip_id, customer)
-            applied = store.version_for_request(conn, trip_id, request_id)
-        if applied is not None:
-            return done(applied, True)                 # 이미 쓴 판 — 같은 「완료」를 다시 눌렀다
-        if status == "confirmed":
-            return done(base_version, False)           # 이미 「완료」했고 바뀐 것이 없어 판을 안 쓴 접수
-        # 고정 일정(지난 일정 등)이 남아 있으면 앞으로의 일정을 다 빼도 된다 — 「읽은 일정이 없어요」로 막지 않는다
-        problems = [p for p in built.problems if not (p.code == "no_items" and reopened["frozen_item_ids"])]
-        if problems:
-            raise _error(422, "intake_incomplete", "등록 전에 채워야 할 값이 있습니다",
-                         problems=[p.as_dict() for p in problems])
+        try:
+            version, changed, _ = commit(store=store, connect=get_connection, tenant=tenant, intake_id=intake_id,
+                                         revision=request.revision, reopened=reopened, status=status, built=built,
+                                         now=datetime.now(KST), before_write=lambda: _count("confirm", tenant, customer, http))
+        except CommitRefused as refused:
+            raise _error(refused.status, refused.code, refused.message, **refused.detail) from None
         with get_connection() as conn:
-            trip, base_items = store.latest(conn, trip_id)
-            if trip["version"] != base_version:
-                raise _error(409, "stale_itinerary", "그 사이 일정이 바뀌었어요 — 일정 수정을 다시 열어 주세요",
-                             version=trip["version"])
-            plan = reopen.prepare(conn, tenant_id=tenant, intake_id=intake_id, revision=request.revision,
-                                  base_items=base_items, frozen_ids=set(reopened["frozen_item_ids"]),
-                                  now=datetime.now(KST))
-        if plan.past:
-            raise _error(422, "item_in_past", "지난 일정은 바꿀 수 없어요: " + ", ".join(plan.past), items=plan.past)
-        if plan.unchanged:
-            return done(base_version, False)
-        _count("confirm", tenant, customer, http)
-        if any(spec["attributes"].get("dining_place_uid") for spec in plan.places.values()):
-            from app.domains.travel_ops.components.team_hooks import dining_ledger
-
-            dining_ledger.require_link_core_place()
-        summary = plan.summary()
-        cause = with_request({"category": "customer_request", "type": "edit", "summary": summary,
-                              "intake_id": str(intake_id)}, request_id)
-        with get_connection() as conn:
-            with conn.transaction():
-                with conn.cursor() as cur:
-                    for item in plan.items:
-                        spec = plan.places.get(item.item_id)
-                        if spec is None:
-                            continue
-                        found = None
-                        if spec.get("place_id"):
-                            # 접수가 아는 행 — 공용 행이거나 이 여행의 행일 때만 그대로 쓴다(다른 여행 전용 행을 가리키지 않게, 029)
-                            cur.execute("SELECT place_id FROM places WHERE tenant_id=%s AND place_id=%s "
-                                        "AND (trip_scope IS NULL OR trip_scope=%s)", (tenant, spec["place_id"], trip_id))
-                            row = cur.fetchone()
-                            found = row[0] if row else None
-                        item.place_id = found or _store_place(
-                            conn, cur, tenant, trip_id, name=spec["name"], kind=spec["kind"], lat=spec["lat"],
-                            lon=spec["lon"], weather_sensitive=spec["weather_sensitive"], attributes=spec["attributes"])
-                fill_weather_sensitive(conn, tenant)           # 등록과 같다 — 방금 넣은 장소의 실내·야외 모름을 확실한 분류로 채운다
-                placed = store.places_by_id(conn, [i.place_id for i in plan.items if i.item_id in plan.places])
-                for item in plan.items:
-                    if item.item_id in plan.places:
-                        item.place = placed.get(item.place_id)
-                violations = introduced_violations(trip, base_items, plan.items)
-                if violations:
-                    raise _error(422, "itinerary_infeasible",
-                                 "이 일정은 그대로 수행할 수 없습니다: " + " / ".join(v.reason for v in violations),
-                                 violations=[v.as_dict() for v in violations])
-                try:
-                    version = store.append_version(conn, trip_id=trip_id, base_version=base_version, items=plan.items,
-                                                   reason="customer_request", causes=[cause])
-                except StaleItinerary:
-                    now_trip, _ = store.latest(conn, trip_id)
-                    raise _error(409, "stale_itinerary", "그 사이 일정이 바뀌었어요 — 일정 수정을 다시 열어 주세요",
-                                 version=now_trip["version"]) from None
-                store.enqueue_notice(conn, trip_id=trip_id, version=version, payload={
-                    "text": summary + ".", "language": "ko", "causes": [cause],
-                    "changed": {"edit": {"changed": plan.changed, "added": plan.added, "removed": plan.removed}},
-                    "other_options": [], "replay": False, "version": version})
-        return done(version, True)
+            mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=trip_id)
+            return {"intake_id": str(intake_id), "status": "confirmed", "trip": _trip_view(conn, store, trip_id),
+                    "version": version, "changed": changed}
 
     @router.post("/v1/web/trip-intakes/{intake_id}/plan")
     def web_intake_plan(intake_id: UUID, request: IntakePlanIn, http: Request,
@@ -2318,6 +2215,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         from app.infrastructure.rag.retriever import warm_embedding
 
         background.add_task(warm_embedding)
+        # ★`[2026-10-15]` 규정 재순위가 「고객 문장 색인」을 쓰는 중이면 그 색인(규정 절 100여 개의 벡터)도 미리 만든다 — 아니면 아무것도 안 한다
+        policy = _lazy("policy", policy_search_factory)
+        if hasattr(policy, "warm"):
+            background.add_task(policy.warm)
         return model_warmup.warmup(
             _lazy("chat", chat_factory), count=lambda: _count("warmup", tenant, customer, http),
             defer=background.add_task,

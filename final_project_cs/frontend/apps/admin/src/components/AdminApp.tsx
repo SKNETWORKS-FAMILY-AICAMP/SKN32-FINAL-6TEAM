@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, ArrowRight, Bell, Gauge, Home, Inbox, ListChecks, LogOut, PanelLeft, RotateCcw, Settings2, ShieldCheck, Users } from 'lucide-react';
+import { Activity, ArrowRight, Bell, Bug, Gauge, Home, Inbox, ListChecks, LogOut, PanelLeft, RotateCcw, Settings2, ShieldCheck, Users } from 'lucide-react';
 import { createAdminGateway, operatorSession, operatorLogin, operatorLogout } from '../lib/gateway';
 import { isDemoMode } from '../lib/data-mode';
 import { DEMO_OPERATOR } from '../lib/demo/fixtures';
@@ -28,6 +28,7 @@ const MENUS = [
   { group: '설정', path: '/settings', title: '운영 설정 · 보관', icon: Settings2 },
   { group: '설정', path: '/simulations', title: '재난 시뮬레이션', icon: Activity },
   { group: '운영', path: '/cases', title: '접수 · 처리 근거', icon: ListChecks },
+  { group: '기록', path: '/diagnostics', title: '결함 사후 분석', icon: Bug },
   { group: '임시', path: '/ops', title: '승인 · 위임 · 발송', icon: ShieldCheck },
 ];
 const SCENARIO = [
@@ -95,7 +96,7 @@ function Console({ mode, initialPath = '/', standalone = false, operatorId, onLo
   const screenProps: ScreenProps | null = data ? { data, onCommand, navigate } : null;
   let screen = <section className="panel"><h1>화면을 찾을 수 없습니다</h1><button onClick={() => navigate('/')}>운영 홈으로</button></section>;
   if (screenProps) {
-    if ((route === '/inquiries' || route.startsWith('/inquiries/')) && !isDemoMode(mode)) screen = <DiagnosticsPanel />;
+    if (route === '/diagnostics' && !isDemoMode(mode)) screen = <DiagnosticsPanel />;
     else if (route === '/settings' && !isDemoMode(mode)) screen = <OperationsSettings />;
     else if (route === '/simulations' && !isDemoMode(mode)) screen = <DisasterSimulation />;
     else if (route === '/monitoring' && !isDemoMode(mode)) screen = <WatchMonitoring />;
@@ -116,7 +117,7 @@ function Console({ mode, initialPath = '/', standalone = false, operatorId, onLo
     <a href="#main-content" className={styles.skip} onClick={event => { event.preventDefault(); document.getElementById('main-content')?.focus(); }}>본문으로 건너뛰기</a>
     <aside className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`}>
       <div className={styles.brand}>triPilot<span>OPERATIONS</span></div>
-      <nav aria-label="운영 메뉴">{MENUS.filter(item => !isDemoMode(mode) || !['/settings', '/cases', '/simulations', '/monitoring'].includes(item.path)).map((item, i) => <div key={item.path}>{(i === 0 || MENUS[i-1].group !== item.group) && <p className={styles.navGroup}>{item.group}</p>}<button aria-current={(item.path === '/' ? route === '/' : route.startsWith(item.path)) ? 'page' : undefined} onClick={() => navigate(item.path)}><item.icon size={18} /><span>{item.title}</span>{item.path === '/inquiries' && data && <b>{data.inquiries.filter(q => q.status !== '답변 완료').length}</b>}</button></div>)}</nav>
+      <nav aria-label="운영 메뉴">{MENUS.filter(item => !isDemoMode(mode) || !['/settings', '/cases', '/simulations', '/monitoring', '/diagnostics'].includes(item.path)).map((item, i) => <div key={item.path}>{(i === 0 || MENUS[i-1].group !== item.group) && <p className={styles.navGroup}>{item.group}</p>}<button aria-current={(item.path === '/' ? route === '/' : route.startsWith(item.path)) ? 'page' : undefined} onClick={() => navigate(item.path)}><item.icon size={18} /><span>{item.title}</span>{item.path === '/inquiries' && data && <b>{data.inquiries.filter(q => q.status !== '답변 완료').length}</b>}</button></div>)}</nav>
       <div className={styles.sidebarBottom}>{isDemoMode(mode) && <button onClick={() => setGuide(v => !v)} aria-expanded={guide}><ListChecks size={17} /> 시연 가이드 {guide ? '닫기' : '열기'}</button>}<p>운영자 전용 · 고객 화면과 분리</p></div>
     </aside>
     <div className={styles.workspace}><header className={styles.header}><button className={styles.menuButton} aria-label="메뉴 열기" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}><PanelLeft size={20} /></button><span className={styles.breadcrumb}>워크스페이스 <span>/</span> <strong>{breadcrumb}</strong></span><div className={styles.operator}><span className={styles.avatar}>OP</span><span>{operatorId || DEMO_OPERATOR}<small>{isDemoMode(mode) ? '시연 운영자' : '인증된 운영자'}</small></span><button aria-label="로그아웃" onClick={() => { if (onLogout) void onLogout(); else navigate('/login'); }}><LogOut size={17} /></button></div></header>

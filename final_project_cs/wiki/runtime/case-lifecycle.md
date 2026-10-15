@@ -108,7 +108,7 @@ cancelled       → (없음)
 
 **`customer_cases`를 직접 `UPDATE`하지 않는다.** `transition_case()`만이 진입점이다.
 
-`case_events`는 append-only다. `UPDATE`·`DELETE`하지 않는다.
+`case_events`는 append-only다. `UPDATE`·`DELETE`하지 않는다. DB 가 `UPDATE`·`DELETE`·`TRUNCATE` 를 막는다(마이그레이션 904) — 정리 작업(여행 삭제·회원·게스트 정리의 처리 기록 파기, 시험 정리)만 그 트랜잭션에서 `app.case_events_purge` 를 켜고 문을 연다.
 
 ```
 transition_case()  →  case_events 추가  →  customer_cases projection 갱신

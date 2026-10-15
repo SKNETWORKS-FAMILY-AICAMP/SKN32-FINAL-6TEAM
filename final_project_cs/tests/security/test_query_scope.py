@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.infrastructure.db.repository import create_case, list_cases
 
 from tests.integration.controller.test_controller_integration import db  # noqa: F401
@@ -57,6 +58,7 @@ def test_case_list_without_customer_stays_inside_the_tenant(db):  # noqa: F811
         assert outside_case not in {row["case_id"] for row in rows}
     finally:
         with conn.transaction(), conn.cursor() as cur:
+            allow_case_events_purge(cur)
             cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (other_tenant,))
             cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (other_tenant,))
             cur.execute("DELETE FROM customers WHERE tenant_id=%s", (other_tenant,))

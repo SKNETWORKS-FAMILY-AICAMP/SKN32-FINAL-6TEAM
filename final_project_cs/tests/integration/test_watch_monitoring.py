@@ -93,8 +93,13 @@ def test_failed_run_keeps_prior_results_and_does_not_leak_exception_text(world):
 def test_safety_first_simulation_keeps_all_six_actual_input_checks(world,monkeypatch):
     from app.domains.travel_ops.components.watch import simulation
     from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+    from app.domains.travel_ops.ports.data_sources import simulation_hook
     w=world
     monkeypatch.setattr(simulation,'get_connection',w.connect)
+    # ★`[2026-10-14]` 점검은 시험 입력을 연결 자리(simulation_hook)에서 꺼낸다 — 조립(composition) 없이 돌면 비어 있어
+    #   시험 입력 경로를 안 타고 simulation_full 기록이 안 남았다(단독 실행에서 실패 · 앞 시험이 조립하면 통과하던 순서 의존).
+    #   test_watch_simulation.py 와 같은 방식으로 이 시험 안에서만 채운다(monkeypatch 가 끝나면 되돌린다).
+    monkeypatch.setattr(simulation_hook,'_provider',simulation)
     simulation.configure(w.conn,w.tenant,w.trip_id,actor='test',expected_revision=0,expected_version=1,
                          item_id=w.item.item_id,categories=list(simulation.CATEGORIES),duration_minutes=15,reason='6종 회차 기록 시험')
     checker=DisruptionCheck(SimpleNamespace())

@@ -139,7 +139,22 @@ def mutate(conn, tenant: str, actor: str, command: dict) -> None:
             raise AdminServiceError(404, "템플릿을 찾을 수 없습니다.")
         put(conn, tenant, "template", identity, {"title": command["title"], "body": command["body"]}, actor=actor, action=kind, reason=command["body"])
     elif kind in ("inquiry-status", "reply"):
-        raise AdminServiceError(422, "상담원 배정과 개별 답변은 지원하지 않습니다. 결함 사후 분석을 사용해 주세요.")
+        identity = command["inquiryId"]
+        with conn.cursor() as cur:
+            cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"admin:{tenant}:inquiry:{identity}",))
+        value = record(conn, tenant, "inquiry", identity, lock=True)
+        if not value:
+            raise AdminServiceError(404, "문의를 찾을 수 없습니다.")
+        history = [*value.get("history", [])]
+        if kind == "reply":
+            value["replies"] = [*value.get("replies", []), {"body": command["body"], "operator": actor, "at": now.isoformat()}]
+            value.update(status="답변 완료", assignee=actor)
+            history.append({"at": now.isoformat(), "text": "답변 완료 · 답변 본문은 운영 기록에 보관"})
+        else:
+            value.update(status=command["status"], assignee=command["assignee"])
+            history.append({"at": now.isoformat(), "text": f"{command['status']} · {reason}"})
+        value["history"] = history
+        put(conn, tenant, "inquiry", identity, value, actor=actor, action=kind, reason=reason)
     elif kind == "api-cap":
         if command["daily"] > command["monthly"]:
             raise AdminServiceError(422, "월 한도는 하루 한도 이상이어야 합니다.")
