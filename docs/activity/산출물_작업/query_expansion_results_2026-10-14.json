@@ -1,0 +1,11 @@
+{
+ "note": "규정 검색 질문 변환(사전) 켠 때/끈 때 — 절 단위 Hit@3, 같은 DB(절 분리 후), top-3. 규칙은 C·D 질문을 본 뒤 작성했고 E 는 규칙 작성 뒤 만든 질문이지만 규칙 어휘와 겹치는 질문(E01·E06·E08)이 있다.",
+ "sets": [
+  {"set": "20문항(Q01~Q20)", "off": 11, "on": 14, "n": 20, "rules_seen": true},
+  {"set": "새 10문항 1차(N01~N10)", "off": 6, "on": 9, "n": 10, "rules_seen": true},
+  {"set": "새 10문항 2차(M01~M10)", "off": 5, "on": 7, "n": 10, "rules_seen": true},
+  {"set": "C01~C10", "off": 5, "on": 9, "n": 10, "rules_seen": true},
+  {"set": "D01~D10", "off": 6, "on": 9, "n": 10, "rules_seen": true},
+  {"set": "E01~E10", "off": 4, "on": 7, "n": 10, "rules_seen": false, "gain_only_on": ["E01", "E06", "E08"], "still_miss": ["E05", "E09", "E10"]}
+ ]
+}

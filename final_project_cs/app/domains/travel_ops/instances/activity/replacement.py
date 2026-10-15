@@ -60,7 +60,7 @@ class ReplacementMixin:
                     or operating.get("hours_verdict") == "outside")
 
     def _survey(self, task: TeamTask, booking: dict[str, Any] | None, seen: set[str], evidence: list, *,
-                reserve: int = 0) -> tuple[dict[str, Any] | None, dict[str, Any], list, list[str]]:
+                reserve: int = 0, plan_out: dict[str, Any] | None = None) -> tuple[dict[str, Any] | None, dict[str, Any], list, list[str]]:
         """여행 설문(`trips.constraints.survey`)과 어디서 읽었나 — `(설문, 출처, 근거, 경고)`. 못 찾으면 설문이 `None`.
 
         찾는 순서(`[2026-10-14]` 활동 → 코어 전달 8번 회신):
@@ -68,6 +68,8 @@ class ReplacementMixin:
           2. 예약이 속한 여행(`read.booking` 의 `trip` — 공용 도구가 찾는다) → `read.itinerary` 로 그 여행의 설문.
              여행을 기간으로 추정했거나(`trip_period`) 예약 자체를 추정으로 골랐으면(`nearest`) 추정이라고 남긴다.
         ★`reserve` — 뒤에 꼭 불러야 하는 도구 수. 도구 호출 상한이 모자라면 설문을 읽지 않고 경고만 남긴다(판정을 멈추지 않는다).
+        ★`plan_out` — 일정을 이미 읽었으면 그 결과(`view`)를 담아 돌려준다. 같은 도구를 한 번 더 부르지 않으려는 것이다
+          (`_itinerary_places` — 이미 일정에 있는 곳은 대체 후보가 아니다).
         ★근거에는 설문 칸 이름만 싣는다 — 고객이 직접 쓴 답(자유 글)을 근거 · 로그에 복사하지 않는다.
         """
         state = task.context.current_state or {}
@@ -86,6 +88,8 @@ class ReplacementMixin:
         except Exception as exc:  # noqa: BLE001 — 실패 코드는 `_read` 가 남겼다. 설문 없이 판정은 계속한다(경고로 드러낸다)
             return (None, {"from": None, "why": "itinerary_unreadable", "trip_id": trip_id}, evidence,
                     [f"예약이 속한 여행의 설문을 읽지 못했다({type(exc).__name__})"])
+        if plan_out is not None:
+            plan_out["view"] = view
         guessed = trip.get("matched_by") == "trip_period" or (booking or {}).get("matched_by") == "nearest"
         info = {"from": "trip", "trip_id": trip_id, "matched_by": trip.get("matched_by"), "guessed": guessed}
         survey = (((view or {}).get("trip") or {}).get("constraints") or {}).get("survey")
@@ -95,6 +99,37 @@ class ReplacementMixin:
                                   value={"trip_id": trip_id, "matched_by": trip.get("matched_by"), "guessed": guessed,
                                          "survey_fields": sorted(survey)}, base=evidence)
         return survey, info, evidence, (["예약이 속한 여행을 추정으로 찾아 그 여행의 설문을 썼다"] if guessed else [])
+
+    def _itinerary_places(self, task: TeamTask, booking: dict[str, Any] | None, seen: set[str],
+                          view: Any, *, reserve: int = 0) -> tuple[set[str], set[str], list[str]]:
+        """이 예약이 속한 여행 일정에 **이미 들어 있는 장소** — `(관광공사 contentid 들, 이름들, 경고)`. `[2026-10-15 피드백]`
+
+        ★전에는 `rank_alternatives(exclude_ids=)` 가 있는데 부르는 쪽이 넘기지 않아 같은 여행의 다른 일정 장소가 대체 후보로 나갔다.
+          같은 곳이 다른 contentid 로 있을 수 있어 이름도 함께 본다(`itinerary_changes.unused_places` 와 같은 기준).
+        ★일정을 못 읽으면 「겹침 없음」으로 읽지 않고 경고로 남긴다(조용한 스킵 금지). `view` 는 `_survey` 가 읽은 결과(없으면 여기서 읽는다).
+        """
+        ref = (task.context.current_state or {}).get("subject_ref") or {}
+        trip_id = ((booking or {}).get("trip") or {}).get("trip_id") or (ref.get("id") if ref.get("kind") == "trip" else None)
+        if view is None and trip_id and len(seen) + 1 + reserve <= self.manifest.max_steps:
+            try:
+                view = self._read(task, "read.itinerary", {"trip_id": str(trip_id)}, seen)
+            except Exception:  # noqa: BLE001 — 실패 코드는 `_read` 가 남겼다. 경고로 드러낸다
+                view = None
+        if not isinstance(view, dict):
+            return set(), set(), ["여행 일정을 읽지 못해 후보가 이미 일정에 있는 곳인지 확인하지 못했다"]
+        ids: set[str] = set()
+        names: set[str] = set()
+        for item in view.get("items") or []:
+            if item.get("kind") == "mobility":
+                continue
+            placed = item.get("place") or {}
+            content_id = placed.get("source_content_id") or (placed.get("attributes") or {}).get("source_content_id")
+            if content_id:
+                ids.add(str(content_id))
+            name = str(placed.get("name") or item.get("title") or "").strip()
+            if name:
+                names.add(name)
+        return ids, names, []
 
     @staticmethod
     def _preference(task: TeamTask, survey: dict[str, Any] | None) -> tuple[str | None, list[str], str | None]:
@@ -174,11 +209,18 @@ class ReplacementMixin:
                                          "pool_size": len(candidates), "source": pool.get("source"),
                                          "confirmed_at": pool.get("confirmed_at")},
                                   base=evidence)
+        plan: dict[str, Any] = {}
         survey, survey_info, evidence, warnings = self._survey(task, booking, seen, evidence,
-                                                               reserve=1 if disaster_blocked else 0)
+                                                               reserve=1 if disaster_blocked else 0, plan_out=plan)
         preference, more_warnings, source = self._preference(task, survey)
         warnings = [*warnings, *more_warnings]
-        ranked = rank_alternatives(pool["origin"], candidates, starts_at, preference=preference)
+        in_plan_ids, in_plan_names, plan_warnings = self._itinerary_places(
+            task, booking, seen, plan.get("view"), reserve=1 if disaster_blocked else 0)
+        warnings += plan_warnings
+        if in_plan_names:
+            candidates = [c for c in candidates if str(c.get("title") or "").strip() not in in_plan_names]
+        ranked = rank_alternatives(pool["origin"], candidates, starts_at, preference=preference,
+                                   exclude_ids=in_plan_ids)
         if ranked["reason"] == "origin_no_coordinates":
             # ★근처를 잴 기준이 없다 — 「근처에 없음」으로 읽지 않는다.
             self._record_failure(task, fc.ALTERNATIVES_NO_COORDINATES)

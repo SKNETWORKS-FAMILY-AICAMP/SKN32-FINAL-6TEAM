@@ -16,7 +16,7 @@ import pytest
 
 from app.domains.travel_ops.instances.activity.hours_text import closed_weekdays, read_week
 from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
-from app.domains.travel_ops.components.places.place_hours import fits
+from app.domains.travel_ops.components.places.place_hours import DAYS, fits
 
 
 def _week(business, closed):
@@ -46,12 +46,38 @@ def test_closed_weekdays(closed, expected):
     assert closed_weekdays(closed) == expected
 
 
-@pytest.mark.parametrize("closed", ["점포별 상이", "홈페이지 참조", "매월 둘째, 넷째 주 월요일", "부정기 휴무",
-                                    "[1월~3월/8월]매주 월요일[4월~7월/9~12월]매주 일요일", "화요일"])
+@pytest.mark.parametrize("closed", ["점포별 상이", "홈페이지 참조", "부정기 휴무",
+                                    "[1월~3월/8월]매주 월요일[4월~7월/9~12월]매주 일요일", "화요일",
+                                    "명절, 월1회", "매월 둘째 주 휴관"])
 def test_a_closure_we_cannot_read_is_unknown_not_none(closed):
-    """★읽을 수 없으면 `None`(모름) — 「쉬는 날 없음」으로 읽지 않는다. 그러면 열린 시간도 내지 않는다."""
+    """★읽을 수 없으면 `None`(모름) — 「쉬는 날 없음」으로 읽지 않는다. 그러면 열린 시간도 내지 않는다.
+    요일이 안 적힌 매월 휴무(「월1회」 · 「둘째 주 휴관」)는 어느 요일인지 몰라 여전히 전부 모름이다."""
     assert closed_weekdays(closed) is None
     assert _week("10:00~18:00", closed) is None
+
+
+@pytest.mark.parametrize("hours, closed, unknown, closed_days", [
+    ("평일 6:00~21:50 토요일 6:00~16:50 일요일 9:00~16:50", "매달 1, 3, 5번째 일요일", {"sun"}, set()),   # 마곡 실내배드민턴장
+    ("10:00~18:00", "매월 둘째, 넷째 주 월요일", {"mon"}, set()),
+    ("10:00~18:00", "명절, 월1회 월요일", {"mon"}, set()),
+    ("10:00~18:00", "2·4주차 일요일", {"sun"}, set()),
+    ("10:00~18:00", "격주 화요일", {"tue"}, set()),
+    ("10:00~18:00", "매주 월요일, 매월 마지막 주 화요일", {"tue"}, {"mon"}),
+])
+def test_an_nth_weekday_closure_leaves_only_that_day_unknown(hours, closed, unknown, closed_days):
+    """`[2026-10-15]` n번째 · 격주 휴무는 **그 요일만** 모른다 — 다른 요일의 열린 시간은 낸다(전에는 전부 모름)."""
+    week = _week(hours, closed)
+    assert week is not None
+    assert not (unknown & set(week)), "모르는 요일은 칸을 비운다"
+    assert {d for d, v in week.items() if v == "closed"} == closed_days
+    assert set(week) == set(DAYS) - unknown
+
+
+def test_magok_badminton_weekday_and_saturday_hours_are_read():
+    week = _week("평일 6:00~21:50 토요일 6:00~16:50 일요일 9:00~16:50", "매달 1, 3, 5번째 일요일")
+    assert week["wed"] == {"open": "06:00", "close": "21:50", "last_entry": None}
+    assert week["sat"] == {"open": "06:00", "close": "16:50", "last_entry": None}
+    assert "sun" not in week
 
 
 def test_slash_closed_days_remove_both_days_from_the_open_week():
@@ -63,6 +89,28 @@ def test_slash_closed_days_remove_both_days_from_the_open_week():
 def test_weekday_labels_split_the_week():
     week = _week("평일 09:00~18:00 / 주말 10:00~17:00", "없음")
     assert week["mon"]["open"] == "09:00" and week["sat"]["open"] == "10:00" and week["sun"]["close"] == "17:00"
+
+
+@pytest.mark.parametrize("hours, weekday, weekend", [
+    ("평일 12:00~20:00 주말 10:00~22:00", ("12:00", "20:00"), ("10:00", "22:00")),        # ★전에는 둘 다 모름
+    ("평일 : 14:10 ~ 18:00 토 일 공휴일 : 12:10 ~ 18:00", ("14:10", "18:00"), ("12:10", "18:00")),
+    ("월~금 09:00~18:00, 토~일 10:00~17:00", ("09:00", "18:00"), ("10:00", "17:00")),
+])
+def test_weekday_labels_without_a_slash_split_the_week(hours, weekday, weekend):
+    """`[2026-10-15]` 구간 뒤에 요일 말이 오면 「/」 없이도 새 조각이다."""
+    week = _week(hours, "연중무휴")
+    assert (week["wed"]["open"], week["wed"]["close"]) == weekday
+    assert (week["sun"]["open"], week["sun"]["close"]) == weekend
+
+
+def test_saturday_and_sunday_labels_split_without_a_slash():
+    week = _week("평일 6:00~21:50 토요일 6:00~16:50 일요일 9:00~16:50", "연중무휴")
+    assert week["mon"]["close"] == "21:50" and week["sat"]["close"] == "16:50" and week["sun"]["open"] == "09:00"
+
+
+def test_two_windows_without_day_labels_stay_unknown():
+    """요일 말 없이 이어진 두 구간은 같은 날의 점심 휴게다 — 가르지 않고 모름."""
+    assert _week("10:00~12:00 13:00~18:00", "연중무휴") is None
 
 
 def test_two_windows_on_the_same_day_are_not_read():
