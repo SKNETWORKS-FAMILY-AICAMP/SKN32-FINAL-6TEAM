@@ -82,8 +82,10 @@ def test_identical_read_choice_is_canonicalized_without_losing_raw_evidence():
     assert d.action=='answer_fact' and d.choices==[] and d.raw['choices']==value['choices']
 
 
+# ★`[2026-10-15]` `{'query':None}` 는 여기서 뺐다 — 조회 범위를 비운 목록 조회는 이제 해석 전체를 버리지 않고 모델이 낸 날(없으면 전체)로 읽는다
+#   (일정을 바꾸지 않는 읽기라 안전하다 · 재생 434건 중 6건이 이 이유로 「해석 실패」). 아래 test_empty_scope_* 가 새 동작을 지킨다. 잘못된 값은 여전히 막는다.
 @pytest.mark.parametrize('extra',[
-    {'query':None},{'query':{'day':'all','period':'night','kind':'all'}},
+    {'query':{'day':'all','period':'night','kind':'all'}},
     {'query':{'day':'d99','period':'afternoon','kind':'all'}},
     {'query':{'day':[],'period':'afternoon','kind':'all'}},
     {'query':{'day':'all','period':'afternoon','kind':'all','execute':True}},
@@ -160,3 +162,11 @@ def assert_scoped_change_is_asked_back(d, fact='schedule'):
 
 def test_a_change_with_a_list_scope_is_asked_back_and_changes_nothing():
     assert_scoped_change_is_asked_back(decide(raw(action='apply_change')), fact='changeability')
+
+
+def test_empty_scope_on_a_list_question_reads_the_models_day_or_everything():
+    d=decide(raw(query=None,at_day='d1'))
+    assert d.action=='answer_fact' and d.query=={'day':'d1','period':'all','kind':'all','position':'all'}
+    assert d.raw['query_defaulted']==d.query
+    d=decide(raw(query=None))
+    assert d.query['day']=='all'

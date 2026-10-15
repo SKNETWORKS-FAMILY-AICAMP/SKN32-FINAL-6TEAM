@@ -25,7 +25,7 @@ KST = ZoneInfo("Asia/Seoul")
 
 ACTIONS = ("apply_change", "propose_alternatives", "rollback", "redo", "answer_fact", "ask_policy", "answer_service",
            "report_delay", "report_closed", "change_time", "add_item", "remove_item", "swap_order", "lock_item", "unlock_item",
-           "replace_named", "clarify", "other")
+           "replace_named", "edit_trip", "clarify", "other")
 #: ★`[2026-10-15]` 서버만 쓰는 할 일 — 모델은 고르지 않는다(답 양식에 없다). 고객이 바꿀 곳 이름을 말한 장소 바꾸기(`apply_change` + `destination_text`)를 서버가 이것으로 옮긴다
 SERVER_ACTIONS = ("replace_named",)
 #: ★`[2026-10-15]` 채팅이 웹 「일정 수정」과 같은 길(`chat_edit`)로 실행하는 고치기 — 바꾸는 할 일이라 대상 근거 검사(`guard_target`)를 똑같이 지난다
@@ -37,7 +37,11 @@ EDIT_ACTIONS = ("change_time", "add_item", "remove_item", "swap_order", "lock_it
 #:  10-14 에 막은 것은 「엉뚱한 되묻기」를 「정직한 안내」로 바꾼 것일 뿐 기능을 잇지 않았다 — 실서버 재시험(10-14)에서 옮기기 51건 중 40 ·
 #:  넣기 8/8 · 빼기 10/11 이 막혔다. 사용자: 「이미 있는 기능 그냥 써서 처리해서 답 주면 되는 건데 왜 안 하고 있었어?」
 #:  `[2026-10-14 활동 회신 10번]` 의 「채팅으로 넣기는 최종발표 뒤」도 이 지시로 앞당겼다(넣기는 이름 찾기 → 웹 「일정 수정」의 ＋ 와 같은 고치기).
-UNSUPPORTED: dict[str, str] = {}
+#:  ★`[2026-10-15 재측정]` 단 **여행 설정**(인원 · 여행 이름 · 기간) 바꾸기는 일정 고치기가 아니라 실행 길이 없다 — 재생 434건에서 「인원 4명으로 바꿔줘」
+#:  「여행 이름을 …로」를 모델이 장소 바꾸기로 끼워 「어느 일정을 바꿀까요?」로 되물었다(엉뚱한 되묻기). 이것만 정직한 안내로 막는다.
+UNSUPPORTED: dict[str, str] = {
+    "edit_trip": "여행 인원·이름·기간 같은 여행 설정을 바꾸는 일은 아직 채팅에서 하지 못해 일정은 바꾸지 않았어요.",
+}
 FACTS = ("detail", "address", "phone", "hours", "time", "next", "booking", "day", "move",
          "route_here", "nearby_dining", "nearby_activity", "dining_near", "schedule", "changeability",
          "description", "duration", "price", "entry_booking", "outdoor", "food", "none")
@@ -89,6 +93,7 @@ SYSTEM = """너는 여행 일정 서비스의 요청 해석기다. 고객 문장
 - remove_item: 일정을 빼거나 취소해 달라(다른 곳으로 바꾸라는 말이 아니다). target_item=뺄 일정.
 - swap_order: 두 일정의 순서를 바꿔 달라. target_item=한 일정, anchor_kind=item · anchor_item=다른 일정.
 - lock_item: 일정을 고정해 달라(「절대 바꾸지 마」). unlock_item: 고정을 풀어 달라. target_item=그 일정.
+- edit_trip: 인원 수·여행 이름·기간 같은 여행 설정을 바꿔 달라(「인원 4명으로 바꿔줘」). 일정의 장소를 바꾸라는 말이 아니다.
 - clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**
   1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나
   직전 대화로 정할 수 없으면 clarify.
@@ -123,6 +128,7 @@ kind는 all, activity, dining, lodging. 항목이 없어도 범위를 그대로 
   근처 식당·맛집 추천을 general_requests로 답하지 않는다 — 가게 이름은 서버가 확인한 자료에서만 나온다.
 - 범위 조회의 날짜를 고객이나 앞 대화가 지정하지 않았다면 query.day는 all이다. today나 tomorrow를 추측하지 않는다.
 - 맨 위 「지금」 줄이 있으면 오늘·내일·지금·몇 분 뒤 같은 상대적인 때는 그 줄의 날짜·시각을 기준으로 푼다. 「오늘」은 그 줄의 날짜다.
+- 「~ 갈 수 있을까?」처럼 가능 여부를 묻는 말은 answer_fact 다. 「몇 시야」는 일정 시각(time), 「몇 시까지 해」「몇 시에 열어·닫아」는 운영시간(hours)이다.
 """
 
 # 읽기 질문의 범위를 실행 단계까지 보존한다. 예문을 외우는 대신 같은 계약으로 모든 표현을 해석한다.
@@ -161,7 +167,8 @@ at_day: 고객이 말한 날(today/tomorrow/dN). 말하지 않았으면 none.
 relation: 기준 그 자체면 at, 기준 바로 앞(「바로 앞·그 전·직전·~ 전에」)이면 before, 기준 바로 뒤(「다음·직후·~ 먹고 나서·다다음」)면 after. steps 는 몇 번째(다다음 2), 보통 1.
 target_item 은 앞뒤 · 시각 질문에서 none 으로 둔다(서버가 계산한다).
 예: 「오후 3시에 뭐 해?」 time 15:00 at / 「국립현대미술관 바로 앞 일정」 item=미술관 별칭 before / 「점심 먹고 나서 뭐 해?」 item=점심 일정 별칭 after /
-「저녁 먹기 전에 어디 가?」 item=저녁 일정 별칭 before / 「다음 일정 뭐야?」 now after / 「그럼 그 전에는?」 previous before / 「미술관 몇 시야?」 기준 없음, target_item=미술관.
+「저녁 먹기 전에 어디 가?」 item=저녁 일정 별칭 before / 「점심 전에 시간 남아?」 item=점심 일정 별칭 before / 「이따 저녁에 어디 가?」 item=저녁 일정 별칭 at /
+「다음 일정 뭐야?」 now after / 「다다음 일정은?」 now after steps=2 / 「그럼 그 전에는?」 previous before / 「미술관 몇 시야?」 기준 없음, target_item=미술관.
 """
 
 # 일정 밖 장소의 역사·유래와 추천 이유는 모델 기억만으로 사실처럼 말하지 않는다. 확인 자료가 있는 경로(규정·여행 자료 검색)로 보내거나, 근거를 밝힌다.
@@ -395,6 +402,14 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
                      "destination_text", "condition_text", "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"]}
 
 
+def default_query(raw: dict[str, Any], stops: list[Stop]) -> dict[str, str]:
+    """모델이 비운 목록 조회 범위 — 모델이 같은 문장에서 낸 날(at_day)만 쓰고 나머지는 전체(all)다. 지어내지 않는다."""
+    from .schedule_query import query_days
+
+    day = raw.get("at_day")
+    return {"day": day if day in query_days(stops) and day != "none" else "all", "period": "all", "kind": "all", "position": "all"}
+
+
 def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list[dict[str, Any]],
            selected_item_id: UUID | None, message: str, num_predict: int = 400, now: datetime | None = None) -> Decision:
     """모델 한 번. 스키마 밖 · 목록 밖 값이면 `DecisionFailed`."""
@@ -497,7 +512,8 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
             raise DecisionFailed("일반 요청의 질문·답이 유효하지 않습니다")
         if not (request["question"].strip() and request["answer"].strip()):
             handled = raw.get("unsupported") or raw.get("scope_guard") or raw.get("condition_guard") or raw.get("lodging_guard")
-            if action in ("other", "answer_service") and not handled:
+            # ★`[2026-10-15]` 서비스 사용법 질문(answer_service)은 서버가 서비스 안내로 답한다 — 빈 일반 질문 칸은 그 칸만 버린다(재생 434건 중 1건).
+            if action == "other" and not handled:
                 # 일반 질문 자체가 고객 요청인데 답이 비었다 — 조용히 넘기지 않고 실패로 드러낸다
                 raise DecisionFailed("일반 요청의 질문·답이 유효하지 않습니다")
             # ★`[2026-10-14]` 빈 답이 든 일반 질문 칸은 그 칸만 버린다(일정과 무관한 덧붙임 답이다). 전에는 해석 전체를 버렸다
@@ -537,6 +553,14 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
             ignored["query"], query = query, None
         if fact in (*QUERY_FACTS, "day", "outdoor"):
             ignored["fact"], fact = fact, "none"
+    if action in ("apply_change", "rollback", "redo", "report_closed") and query is not None and fact not in (*QUERY_FACTS, "day", "outdoor"):
+        # ★`[2026-10-15]` 일정 종류가 아닌 사실(운영시간 · 시각 …)을 가진 변경 요청에 붙은 조회 범위는 쓰지 않는 칸이다 — 버린다. 변경 자체는 그대로 대상 확인을 거친다.
+        ignored["query"], query = query, None
+    if action == "answer_fact" and query is None and fact in QUERY_FACTS and not raw.get("reads") and (raw.get("target_item") or "none") == "none":
+        # ★`[2026-10-15]` 목록 조회(「내일 일정 보여줘」)인데 모델이 조회 범위를 비웠으면 해석 전체를 버리지 않는다 — 모델이 낸 날(at_day)이 있으면 그 날,
+        #   없으면 프롬프트 규칙대로 전체(all). 일정을 바꾸지 않는 읽기라 안전하다(재생 434건 중 6건이 이 이유로 해석 실패).
+        query = default_query(raw, stops)
+        raw = {**raw, "query_defaulted": query}
     if action == "answer_fact" and query is not None and fact not in (*QUERY_FACTS, "day", "outdoor") and not raw.get("reads"):
         # ★`[2026-10-14]` 한 일정을 묻는 사실(다음 · 시각 · 이동 · 영업시간 …)에 붙은 조회 범위는 쓰지 않는 칸이다 — 버린다.
         #   전에는 해석 전체를 버렸다(학습 E4B 재생 434건 중 30건). 일정을 바꾸지 않는 읽기라 안전하다
