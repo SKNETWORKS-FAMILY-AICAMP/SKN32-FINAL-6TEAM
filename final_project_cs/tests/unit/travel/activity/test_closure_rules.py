@@ -52,6 +52,8 @@ def test_every_weekly_text_in_the_csv_closes_on_some_weekday():
     ("매주 월, 화, 공휴일 휴무", at(10, 13), True, "weekly"),          # 요일 글자 나열
     ("주말", at(10, 17), True, "weekend"),
     ("연중무휴", at(10, 12), False, None),
+    ("휴무일 없음", at(10, 12), False, None),                         # 한강 수영장 · 눈썰매장 공식 문구(2026-10-15)
+    ("휴관일 없음", at(10, 12), False, None),
     ("매월 둘째 주 화요일 휴무", at(10, 13), True, "nth_weekday"),
     ("매월 둘째 주 화요일 휴무", at(10, 20), False, None),
     ("매월 첫째·셋째 주 월요일", at(10, 19), True, "nth_weekday"),
@@ -121,6 +123,11 @@ def test_closure_is_judged_on_the_korean_date():
     ("2·4주차 일요일", at(10, 18), False),                 # ★전에는 매주 일요일 True — 셋째 일요일
     ("2,4주 수요일", at(10, 14), True),
     ("2,4주 수요일", at(10, 21), False),
+    ("매달 1, 3, 5번째 일요일", at(11, 1), True),           # 첫째 일요일 — ★전에는 5 만 읽어 모름
+    ("매달 1, 3, 5번째 일요일", at(11, 15), True),          # 셋째
+    ("매달 1, 3, 5번째 일요일", at(11, 29), True),          # 다섯째
+    ("매달 1, 3, 5번째 일요일", at(11, 8), False),          # 둘째
+    ("매달 1, 3, 5번째 일요일", at(11, 2), False),          # 월요일 — ★「매달」이 군말 목록에 없어 모름이었다
 ])
 def test_monthly_count_is_not_a_monday(text, when, expected):
     """결함 2026-10-14_2208 — 「월 N회」의 「월」은 달이다. 날짜가 정해지지 않았으니 모름이다."""
