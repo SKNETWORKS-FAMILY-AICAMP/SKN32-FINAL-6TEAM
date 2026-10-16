@@ -206,12 +206,16 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             def places_progress(phase, done, total, index, title, _position=source["position"]):
                 push("progress", {"phase": phase, "done": done, "total": total, "current": {"id": f"{_position}-{index}", "title": title}})
 
+            def reading_progress(tally):
+                # ★`[2026-10-16]` 남은 줄 모델 호출이 묶음 하나 끝날 때마다 「읽는 중 n/m 묶음」(`llm_spans.label_lines`) — 지어낸 진행률이 아니라 끝난 묶음 수다
+                push("progress", {"phase": "reading", **tally})
+
             read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao, our_places=our_places,
                         aliases=aliases, areas=areas, dining=dining, today=(today or received_at.date()), now=received_at,
                         on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress,
                         differs=differs_by_line(source.get("differs_json")), agent=agent, agent_mode=reader["mode"],
                         position=int(source["position"]), agent_num_predict=reader["num_predict"],
-                        agent_chunk_chars=reader["chunk_chars"])
+                        agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress)
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
@@ -1012,6 +1016,19 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
 
 
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
+def _reading_limits(chunk_lines: int | None, total_seconds: float | None) -> tuple[int, float]:
+    """남은 줄 모델 호출의 묶음 크기 · 전체 상한 — 넘겨받은 값이 없으면 가드레일 `travel.intake_reading.*`(근거는 그 설정의 주석)."""
+    if chunk_lines is not None and total_seconds is not None:
+        return int(chunk_lines), float(total_seconds)
+    from app.core.settings import get_guardrails
+
+    guard = get_guardrails()
+    size = int(guard.get("travel.intake_reading.chunk_lines")) if chunk_lines is None else int(chunk_lines)
+    cap = float(guard.get("travel.intake_reading.total_seconds")) if total_seconds is None else float(total_seconds)
+    return size, cap
+
+
+
 def _lookup_title(title: str, aliases: dict[str, str] | None) -> str:
     """장소를 찾을 말 — 체크인 · 체크아웃 동작 말을 뺀다(`line_parts.lookup_title`). 고객이 이 글을 다른 이름으로 고친 적이 있으면(별칭) 옛 길이 원문으로 찾아야 하므로 그대로 둔다."""
     from .places import normalize
@@ -1025,7 +1042,9 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 on_rows: Callable[[list[dict[str, Any]]], None] | None = None,
                 on_progress: Callable[[str, int, int, int, str | None], None] | None = None,
                 differs: dict[int, dict[str, Any]] | None = None, agent: Any = None, agent_mode: str = "off",
-                position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None) -> list[dict[str, Any]]:
+                position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None,
+                chunk_lines: int | None = None, reading_seconds: float | None = None,
+                on_reading: Callable[[dict[str, Any]], None] | None = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·llm_agent·lookup)과 근거가 붙는다.
 
     `agent` · `agent_mode` `[2026-10-16 사용자 지시]` — 읽기 에이전트(`agent_read.py`, 가르친 모델 한 번 호출). `on` 이면 에이전트가 먼저 읽고
@@ -1043,6 +1062,9 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
 
     `differs` `[2026-10-06 사용자 지시 — 값 변조 줄이기]` — 사진 · 스캔 받아쓰기가 같은 줄을 **두 번 다르게 읽은 곳**(`sources.differing_lines`). 그 줄에서 읽은 제목 · 예약번호는 「확인 필요」로 표시한다 —
     고객이 확인하기 전에는 확정 값으로 쓰지 않는다(`flag_differing`).
+
+    `chunk_lines` · `reading_seconds` · `on_reading` `[2026-10-16]` — 남은 줄을 모델에 **줄 묶음으로** 나눠 보낸다(`llm_spans.label_lines`). 비우면(None)
+    가드레일 `travel.intake_reading.chunk_lines` · `total_seconds` 를 읽는다. `on_reading({done, total, failed, skipped})` 는 묶음 하나가 끝날 때마다 불린다.
 
     `dining` `[2026-10-05]` — 요식 원장 이름 조회(`dining/place_lookup.py`, 관광공사 자리와 같은 계약 `find` + `misses`). 식사 항목은 이것이 먼저, 그 밖의 항목은 관광공사 자리 뒤다(`places.resolve`). 없으면(None) 건너뛴다."""
     from .dates import resolve_dates
@@ -1094,7 +1116,9 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         #   규칙 미리보기 + 못 읽은 줄 표시로 끝낸다(남은 줄은 확인 화면의 「못 읽은 줄」로 보인다)
         if chat is not None and read.unread_lines and agent_error is None:
             try:
-                _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now)
+                size, cap = _reading_limits(chunk_lines, reading_seconds)
+                _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now, chunk_lines=size,
+                                                    total_seconds=cap, on_chunk=on_reading)
             except Exception as exc:                      # noqa: BLE001 — 모델 장애는 기록하고 넘어간다
                 span_items, report = [], {"error": f"{type(exc).__name__}: {exc}"[:200]}
             rows.append({"field": "reading.llm", "value": report, "method": "llm_span",

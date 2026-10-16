@@ -7,12 +7,14 @@
     그대로 인용**하게 하고 서버가 그 조각을 원문에서 찾는다. ★원문에 **글자 그대로 없는** 인용은 버린다 — 실측
     (triPilot : RAG, 2026-09-26)에서 모델이 「토속촌」을 「토속툰」으로 바꿔 적었다. 그런 값은 원문에 없으니 들어오지 못한다.
 ★시각·날짜는 인용 조각을 **규칙으로 다시 읽어** 값을 만든다 — 모델이 정규화한 값을 쓰지 않는다.
+★`[2026-10-16]` 남은 줄이 많으면 **줄 묶음으로 나눠** 부른다(`label_lines` · 가드레일 `travel.intake_reading`) — 묶음마다 넘김 장치를 따로 거친다.
 ★모델 호출: 설정의 기본 모델(`ollama_model` — 2026-10-14 부터 가르친 E4B `tripilot-pointer:e4b-ft`, 설계 당시에는 `gemma4:12b`) · think=false · 온도 0 · JSON(설계서 §3-4). 실패하면 이 단계만 건너뛰고 그 줄은 남은 줄로 둔다.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import time
 from typing import Any, Callable
 
 from .rules import _EAT, _EAT_BEFORE, TIME, Claim, Span, _date_in, _hhmm, _narrow, eat_mention, meal_mention
@@ -49,33 +51,153 @@ class SpanItem:
     segment: Span | None = None
 
 
-def label_lines(lines: list[str], unread: list[int], chat: Any, *, now: datetime | None = None) -> tuple[list[Claim], list[SpanItem], dict[str, Any]]:
+def split_chunks(unread: list[int], size: int) -> list[list[int]]:
+    """못 읽은 줄 번호를 **고른 크기**의 묶음으로 나눈다. `size` 가 0 이하이거나 줄이 그보다 적으면 한 묶음.
+    ★끝 묶음만 작게 남기지 않는다 — 46줄을 8줄씩이면 8 · 8 · 8 · 8 · 7 · 7(묶음 수는 같고 크기만 고르게)."""
+    numbers = list(unread)
+    if size <= 0 or len(numbers) <= size:
+        return [numbers] if numbers else []
+    count = -(-len(numbers) // size)
+    base, extra = divmod(len(numbers), count)
+    out, at = [], 0
+    for index in range(count):
+        width = base + (1 if index < extra else 0)
+        out.append(numbers[at:at + width])
+        at += width
+    return out
+
+
+def _call_path() -> dict[str, Any] | None:
+    """직전 모델 호출이 어느 경로(로컬 · 유료)로 답했나 — 넘김 장치가 꺼져 있으면 None."""
+    try:
+        from app.infrastructure import llm_failover
+
+        return llm_failover.current_path()
+    except Exception:                                    # noqa: BLE001 — 기록용이다. 못 읽어도 읽기를 막지 않는다
+        return None
+
+
+def _clear_path() -> None:
+    try:
+        from app.infrastructure import llm_failover
+
+        llm_failover.clear_path()
+    except Exception:                                    # noqa: BLE001
+        pass
+
+
+def label_lines(lines: list[str], unread: list[int], chat: Any, *, now: datetime | None = None,
+                chunk_lines: int = 0, total_seconds: float = 0.0,
+                on_chunk: Callable[[dict[str, Any]], None] | None = None,
+                clock: Callable[[], float] = time.monotonic) -> tuple[list[Claim], list[SpanItem], dict[str, Any]]:
     """(claims, 항목, 보고). ★모델이 가리킨 조각 중 원문에 그대로 있는 것만 받는다.
 
     ★`[2026-10-14]` 한 줄을 장소마다 나눈다 — 줄마다 항목 하나로 묶었더니 「서촌 … 저녁 무렵 남산타워」에서 남산타워가 빠지고
       「저녁」이 서촌에 붙었다(테스트 서버 접수 87858b77). 시각 · 날짜 · 끼니는 같은 원문 구간의 장소에 붙인다.
     ★끼니는 모델이 가리키지 않아도 **그 장소 몫의 원문**에서 규칙으로 다시 본다(`rules.meal_mention`) — 같은 접수에서 모델이
-      「점심은 통인시장 근처에서」의 「점심」을 가리키지 않아 식사가 활동이 됐다."""
+      「점심은 통인시장 근처에서」의 「점심」을 가리키지 않아 식사가 활동이 됐다.
+
+    ★`[2026-10-16]` **줄 묶음으로 나눠 부른다**(`chunk_lines` 줄씩, 0 이면 전처럼 한 번). 근거: 실측 보고서
+      `wiki/records/reports/2026-10-16_계획읽기_묶음나누기.md`. 묶음마다 넘김 장치(`llm_failover`)를 그대로 거치므로 **실패한 묶음만** 유료로 간다.
+      - 묶음 안에서는 줄 번호를 **1부터** 다시 매겨 보내고, 답의 번호를 원래 줄 번호로 되돌린다. 묶음 밖 번호는 버린다.
+        ☆가르친 E4B 는 받은 번호(16 · 17 · 18 · 20)를 무시하고 목록 안 순서(1 · 2 · 3 · 4)로 답했다 — 원래 번호로 보냈더니
+          4줄 묶음에서 가리킨 조각 54개 중 45개가 버려졌다(실측 보고서 「줄 번호」). 유료(gpt-6-luna)는 어느 쪽으로 보내도 맞게 답했다.
+      - 한 묶음이 실패하면(로컬 · 유료 다 안 됨) 그 묶음의 줄만 남은 줄로 두고 다음 묶음으로 간다(`report.chunks[].error`).
+      - `total_seconds`(0 이면 없음) — **묶음을 보내기 전마다** 이 단계에 쓴 시간을 보고, 넘었으면 남은 묶음은 보내지 않고 남은 줄로 둔다
+        (`report.chunks[].skipped`). ☆넘김 장치의 전체 15초는 로컬 · 유료 첫 시도 쌍(9 + 8초)을 막지 않으므로 여기서 따로 센다.
+        한 묶음은 시작하면 끝까지 기다리므로 실제 시간은 상한 + 묶음 하나의 최대 시간까지 갈 수 있다.
+      - `on_chunk(진행)` — 처음 한 번(`done` 0)과 묶음 하나가 끝날 때마다 `{done, total, failed, skipped}` 를 알린다.
+        `done` = 답을 받았거나 실패해 **끝난** 묶음 수, `total` = 보낼 묶음 전체, `skipped` = 상한 때문에 안 보낸 묶음(마지막 알림에서 정해진다).
+        분모는 묶음 수이지 읽어 낸 비율이 아니다. 알림 쪽 오류는 읽기를 막지 않는다."""
     report: dict[str, Any] = {"asked_lines": len(unread), "spans": 0, "accepted": 0, "rejected": [], "plan_request": False}
     if not unread or chat is None:
         return [], [], report
-    user = "\n".join(f"{n}: {lines[n - 1]}" for n in unread)
-    raw = chat.json(SYSTEM, user)
-    spans = raw.get("spans") if isinstance(raw, dict) else None
+    batches = split_chunks(unread, chunk_lines)
+    report["chunk_lines"] = int(chunk_lines)
+    report["chunks"] = []
+    started = clock()
+    tally = {"done": 0, "total": len(batches), "failed": 0, "skipped": 0}
+
+    def tell() -> None:
+        if on_chunk is None:
+            return
+        try:
+            on_chunk(dict(tally))
+        except Exception:                                # noqa: BLE001 — 진행 알림은 부가 기능이다
+            pass
+
+    tell()
+    spans: list[tuple[list[int], Any]] = []
+    for index, batch in enumerate(batches):
+        spent = clock() - started
+        if total_seconds > 0 and spent >= total_seconds:
+            left = [n for rest in batches[index:] for n in rest]
+            tally["skipped"] = len(batches) - index
+            report["chunks"] += [{"lines": rest, "skipped": "total_seconds"} for rest in batches[index:]]
+            report["left_lines"] = report.get("left_lines", []) + left
+            report["deadline"] = {"total_seconds": total_seconds, "spent": round(spent, 2), "skipped_chunks": tally["skipped"]}
+            break
+        user = "\n".join(f"{at}: {lines[n - 1]}" for at, n in enumerate(batch, start=1))
+        entry: dict[str, Any] = {"lines": batch}
+        _clear_path()
+        at = clock()
+        try:
+            raw = chat.json(SYSTEM, user)
+        except Exception as exc:                         # noqa: BLE001 — 모델 장애는 그 묶음만 남은 줄로 둔다(기록하고 넘어간다)
+            entry["error"] = f"{type(exc).__name__}: {exc}"[:200]
+            report["left_lines"] = report.get("left_lines", []) + batch
+            tally["failed"] += 1
+            raw = None
+        entry["seconds"] = round(clock() - at, 2)
+        path = _call_path()
+        if path:
+            entry["path"] = path.get("path")
+            if path.get("reasons"):
+                entry["reasons"] = [list(r) for r in path["reasons"]]
+        report["chunks"].append(entry)
+        tally["done"] += 1
+        if raw is not None:
+            spans.append((batch, raw.get("spans") if isinstance(raw, dict) else None))
+        tell()
+    if tally["skipped"]:
+        tell()
+    errors = [c["error"] for c in report["chunks"] if c.get("error")]
+    if errors:
+        # 화면이 읽는 한 줄(`reading.error`) — 전처럼 첫 오류를 싣고, 몇 묶음이 실패했는지 붙인다
+        report["error"] = errors[0] if len(batches) == 1 else f"{len(errors)}/{len(batches)} 묶음 실패 — {errors[0]}"[:240]
     accepted: dict[int, list[tuple[int, int, str, str]]] = {}
     cursors: dict[tuple[int, str, str], int] = {}
+    for batch_lines, batch_spans in spans:
+        _accept(lines, batch_lines, batch_spans, report, accepted, cursors)
+    return _collect(lines, accepted, now, report)
+
+
+def _accept(lines: list[str], batch: list[int], spans: Any, report: dict[str, Any],
+            accepted: dict[int, list[tuple[int, int, str, str]]], cursors: dict[tuple[int, str, str], int]) -> None:
+    """한 묶음의 답 → 받은 조각. 답의 줄 번호(묶음 안 순서, 1부터)를 원래 줄 번호로 되돌린다.
+    ★그 순서의 줄에 인용이 글자 그대로 없고, 답의 번호가 **그 묶음의 원래 줄 번호**이며 그 줄에 인용이 있으면 원래 번호로 본다 —
+      원래 번호로 답하는 모델(2026-10-16 전 계약 · 그 계약으로 쓴 시험)도 같은 결과가 나오게. 어느 쪽이든 인용이 그 줄에 있어야 받는다.
+    ★원문에 글자 그대로 없는 인용 · 그 묶음 밖 번호 · 모르는 역할은 버린다."""
     for entry in spans or []:
         report["spans"] += 1
         try:
-            number, quote, role = int(entry["line"]), str(entry["quote"]), str(entry["role"])
+            asked, quote, role = int(entry["line"]), str(entry["quote"]), str(entry["role"])
         except (KeyError, TypeError, ValueError):
             report["rejected"].append({"why": "모양이 다르다", "entry": str(entry)[:80]})
             continue
-        if number not in unread or role not in ROLES or not quote.strip():
-            report["rejected"].append({"why": "남은 줄이 아니거나 모르는 역할", "line": number, "role": role})
+        candidates = [batch[asked - 1]] if 1 <= asked <= len(batch) else []
+        if asked in batch and asked not in candidates:
+            candidates.append(asked)
+        if not candidates or role not in ROLES or not quote.strip():
+            report["rejected"].append({"why": "남은 줄이 아니거나 모르는 역할", "line": asked, "role": role})
             continue
+        number, at = candidates[0], -1
+        for number in candidates:
+            at = lines[number - 1].find(quote, cursors.get((number, role, quote), 0))
+            if at >= 0:
+                break
+        number = number if at >= 0 else candidates[0]
         key = number, role, quote
-        at = lines[number - 1].find(quote, cursors.get(key, 0))
         if at < 0:
             # ★원문에 글자 그대로 없다 — 모델이 바꿔 적었다. 받지 않는다
             report["rejected"].append({"why": "원문에 없는 인용", "line": number, "quote": quote})
@@ -85,6 +207,10 @@ def label_lines(lines: list[str], unread: list[int], chat: Any, *, now: datetime
             report["plan_request"] = True
         accepted.setdefault(number, []).append((at, at + len(quote), quote, role))
         report["accepted"] += 1
+
+
+def _collect(lines: list[str], accepted: dict[int, list[tuple[int, int, str, str]]], now: datetime | None,
+             report: dict[str, Any]) -> tuple[list[Claim], list[SpanItem], dict[str, Any]]:
     claims: list[Claim] = []
     items: list[SpanItem] = []
     for number in sorted(accepted):
@@ -173,4 +299,4 @@ def make_labeler(chat: Any) -> Callable[[list[str], list[int]], tuple[list[Claim
     return lambda lines, unread: label_lines(lines, unread, chat)
 
 
-__all__ = ["ROLES", "SYSTEM", "SpanItem", "label_lines", "make_labeler"]
+__all__ = ["ROLES", "SYSTEM", "SpanItem", "label_lines", "make_labeler", "split_chunks"]
