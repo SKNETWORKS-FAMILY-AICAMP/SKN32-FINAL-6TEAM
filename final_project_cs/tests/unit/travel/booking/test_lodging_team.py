@@ -1126,6 +1126,9 @@ def test_landmark_prefers_same_name_station_then_name_match():
     assert pick("DDP", {("DDP", None): [spot("서울디자인로드"), spot("동대문디자인플라자(DDP)")]}) == "동대문디자인플라자(DDP)"
     assert pick("성동구", {("성동구", None): [spot("성수동카페거리"), spot("성동구청")]}) == "성동구청"
     assert pick("경리단길", {("경리단길", None): [spot("경리단길")]}) == "경리단길"
+    assert pick("서울 강남", {("강남역", "SW8"): [spot("강남역 2호선")], ("강남", None): [spot("서울선릉과정릉")]}) == "강남역 2호선", \
+        "「서울 강남」의 「서울」은 떼고 찾는다"
+    assert pick("망원동", {("망원역", "SW8"): [spot("망원역 6호선")], ("망원동", None): [spot("망리단길")]}) == "망원역 6호선"
 
 
 def test_a_city_less_stay_name_with_seoul_coordinates_searches_in_seoul():
@@ -1339,6 +1342,14 @@ def test_date_ranges_people_and_vague_dates_are_read_by_rules():
     assert rule_checks(parents, "부모님 모시고 종로 한옥 12월 18일 1박")[1] == ["adults"]
     family = Interpretation(task="search", adults=2, children=1)
     assert rule_checks(family, "엄마랑 아빠, 그리고 10개월 된 아기 이렇게 세 식구가 묵을 온돌방 숙소")[1] == [], "세 식구 · 엄마 아빠는 인원 근거(H-31)"
+    from app.domains.travel_ops.instances.lodging.interpret import rule_nights
+
+    start = day(2026, 11, 12)
+    for text, out in (("서울 신림 11월 12일부터 하룻밤 성인 둘 모텔 1박 6만 원 이하", day(2026, 11, 13)),
+                      ("11월 12일부터 2박 성인 둘", day(2026, 11, 14)), ("11월 12일 두 밤 묵을 곳", day(2026, 11, 14))):
+        assert rule_nights(Interpretation(task="search", check_in=start), text)[0].check_out == out, text
+    assert rule_nights(Interpretation(task="search", check_in=start), "11월 12일 1박 6만 원 이하")[1] is False, "값 단위 「1박」은 박수가 아니다"
+    assert rule_nights(Interpretation(task="search", check_in=start), "11월 12일 2박인데 3박도 괜찮아")[1] is False, "박수가 둘이면 손대지 않는다"
     assert parse({"task": "search", "max_price_per_night": 0}).max_price_per_night is None, "「0원」으로 해석 전체가 거절되지 않는다(I-05)"
 
 

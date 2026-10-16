@@ -982,12 +982,15 @@ class ReadToolbox:
         word = str(name or "").strip()
         if not word or self.kakao is None:
             return None
+        word = re.sub(r"^서울(?:특별시|시)?\s+", "", word) or word      # 「서울 강남」 → 「강남」(카카오는 이미 서울 안만 찾는다)
         compact = "".join(word.split())
         # `[2026-10-16 평가 2차 · GPT 검수]` 관련도 1위만 쓰니 「여의도」→「한강」, 「신촌」→「안산자락길」, 「DDP」→「서울디자인로드」처럼
         #   다른 곳이 기준점이 됐다. 동네 이름이면 같은 이름 역(「여의도역」)부터, 아니면 이름에 검색어가 든 곳을 고른다.
-        station_first = bool(re.fullmatch(r"[가-힣]{2,6}", word)) and not re.search(r"[역구동로길]$", word)
+        # 「망원동」 · 「성수동」은 「망원역」 · 「성수역」으로(☆10-16 재실행: 「망원동」→「망리단길」, 「연남동」→ 골목 이름)
+        stem = word[:-1] if re.fullmatch(r"[가-힣]{2,5}동", word) else word
+        station_first = bool(re.fullmatch(r"[가-힣]{2,6}", stem)) and not re.search(r"[역구동로길]$", stem)
         tries = ([(word, {"category_group_code": "SW8"}, None), (word, {}, compact)] if word.endswith("역") else
-                 ([(word + "역", {"category_group_code": "SW8"}, compact + "역")] if station_first else []) + [(word, {}, compact)])
+                 ([(stem + "역", {"category_group_code": "SW8"}, stem + "역")] if station_first else []) + [(word, {}, compact)])
         answered = False
         for query, options, must in tries:
             found = self.kakao.search(query, size=5, anywhere=True, **options)

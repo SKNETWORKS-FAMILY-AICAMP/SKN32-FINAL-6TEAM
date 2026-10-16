@@ -248,6 +248,22 @@ def rule_ranges(found: Interpretation, text: str, *, today: date) -> tuple[Inter
                                     "check_out_text": hits[0].group(0)}), True
 
 
+#: `[2026-10-16 평가 4차]` 체크인만 있고 체크아웃이 비었을 때 박수 — 「11월 12일부터 하룻밤」(G-38)을 모델이 비워 되물었다.
+#: 「1박 6만 원」 · 「1박에 10만」 · 「1박당」처럼 값 단위로 쓴 「N박」은 박수가 아니다
+_NIGHTS = re.compile(r"(\d+)\s*박(?!\s*(?:에\s*|당\s*)?[\d,]+\s*(?:만|천|원))(?!\s*당)|(하룻\s*밤|한\s*밤|두\s*밤|세\s*밤|이틀\s*밤|사흘\s*밤)")
+_NIGHT_WORDS = {"하룻밤": 1, "한밤": 1, "두밤": 2, "이틀밤": 2, "세밤": 3, "사흘밤": 3}
+
+
+def rule_nights(found: Interpretation, text: str) -> tuple[Interpretation, bool]:
+    """체크인은 있는데 체크아웃이 없으면, 문장의 박수가 하나로 정해질 때 체크아웃 = 체크인 + 박수. (해석, 채웠나)"""
+    if found.task != "search" or found.check_in is None or found.check_out is not None:
+        return found, False
+    counts = {int(m.group(1)) if m.group(1) else _NIGHT_WORDS["".join(m.group(2).split())] for m in _NIGHTS.finditer(text or "")}
+    if len(counts) != 1 or not 1 <= (nights := counts.pop()) <= 30:
+        return found, False
+    return found.model_copy(update={"check_out": found.check_in + timedelta(days=nights)}), True
+
+
 #: `[2026-10-16 평가 2차]` 날 숫자도 · 정해진 날 말도 없는 근거(「주말」 「연말」 「11월 중」)는 날짜로 쓰지 않는다 — 「11월 중에 주말 2박」을 11/6~8 로 정했다
 #: 「1월의 마지막 토요일」 · 「첫째 주 금요일」처럼 몇째 요일도 날짜(F-33). 「주말」만 있으면 어느 주인지 몰라 날짜가 아니다
 _DAY_GIVEN = re.compile(r"\d+\s*일|\d+\s*[/.]\s*\d+|오늘|내일|모레|이번|다음|담주|금주|크리스마스|성탄|이브|새해|신정|첫날|마지막\s*날|말일|\d+\s*(?:st|nd|rd|th)|"
