@@ -249,7 +249,10 @@ def rule_ranges(found: Interpretation, text: str, *, today: date) -> tuple[Inter
 
 
 #: `[2026-10-16 평가 2차]` 날 숫자도 · 정해진 날 말도 없는 근거(「주말」 「연말」 「11월 중」)는 날짜로 쓰지 않는다 — 「11월 중에 주말 2박」을 11/6~8 로 정했다
+#: 「1월의 마지막 토요일」 · 「첫째 주 금요일」처럼 몇째 요일도 날짜(F-33). 「주말」만 있으면 어느 주인지 몰라 날짜가 아니다
 _DAY_GIVEN = re.compile(r"\d+\s*일|\d+\s*[/.]\s*\d+|오늘|내일|모레|이번|다음|담주|금주|크리스마스|성탄|이브|새해|신정|첫날|마지막\s*날|말일|\d+\s*(?:st|nd|rd|th)|"
+                        r"(?:첫|첫째|둘째|셋째|넷째|다섯째|마지막)\s*(?:주\s*)?(?:[월화수목금토일]요일|주말)|"
+                        r"(?:first|second|third|fourth|last)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekend)|"
                         r"jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec", re.I)
 #: 「오늘 · 내일」은 숙박 말과 붙어 있을 때만 날짜 — 「오늘 날씨 진짜 추운데」의 「오늘」을 체크인으로 읽었다(H-39)
 _RELATIVE_STAY = re.compile(r"(오늘|내일|모레)\s*(?:부터|밤|하룻밤|\d+\s*박|체크\s*인|입실|묵|숙박|자|들어|저녁|당일|1박)")

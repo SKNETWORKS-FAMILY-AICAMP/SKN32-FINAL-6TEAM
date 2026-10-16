@@ -1307,6 +1307,8 @@ def test_date_ranges_people_and_vague_dates_are_read_by_rules():
     assert rule_checks(weather, "오늘 날씨 추운데 종로 1박 모텔")[1] == ["check_in", "adults"]
     weekend = Interpretation(task="search", check_in=day(2026, 11, 6), check_out=day(2026, 11, 8), check_in_text="주말", adults=2)
     assert rule_checks(weekend, "11월 중에 주말 2박 신촌 성인 둘")[1] == ["check_in"]
+    last_sat = Interpretation(task="search", check_in=day(2027, 1, 30), check_out=day(2027, 1, 31), check_in_text="2027년 1월의 마지막 토요일", adults=2)
+    assert rule_checks(last_sat, "2027년 1월의 마지막 토요일에 들어가서 다음 날 나올 용산 숙소, 성인 2명")[1] == [], "몇째 요일은 날짜다(F-33)"
     parents = Interpretation(task="search", check_in=day(2026, 12, 18), check_in_text="12월 18일", adults=2)
     assert rule_checks(parents, "부모님 모시고 종로 한옥 12월 18일 1박")[1] == ["adults"]
     assert parse({"task": "search", "max_price_per_night": 0}).max_price_per_night is None, "「0원」으로 해석 전체가 거절되지 않는다(I-05)"
