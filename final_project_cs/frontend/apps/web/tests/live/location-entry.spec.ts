@@ -1,8 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer } from "./helpers";
+import { galleryShot, mockServer } from "./helpers";
 import { openFinished } from "./plan-check-kit";
 import { allowLocation, changeLocationConsent, countLocationAsks, locationAsks, startWithLocationConsent } from "./location-kit";
-import { mkdir } from "node:fs/promises";
 
 const tools = (page: Page) => page.getByRole("group", { name: "지도 단추" });
 const locate = (page: Page) => tools(page).getByRole("button", { name: "내 위치로", exact: true });
@@ -32,14 +31,13 @@ for (const width of [375, 1280]) test(`${width}px: 동의 전에도 왼쪽 내 �
   await expect(locate(page)).toBeFocused();
   await expect(locate(page).getByRole("tooltip")).toBeVisible();
   const foldBefore = (await tools(page).getByRole("button", { name: "지도 단추 접기" }).boundingBox())!;
-  await mkdir("mockups/location-entry-2026-10-11-v2", { recursive: true });
-  await page.screenshot({ path: `mockups/location-entry-2026-10-11-v2/tools-${width}.png` });
+  await galleryShot(page, `mockups/location-entry-2026-10-11-v2/tools-${width}.png`);
   await locate(page).click();
   const dialog = page.getByRole("dialog", { name: "내 위치로 이동" });
   await expect(dialog).toBeVisible();
   expect(await locationAsks(page)).toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
-  await page.screenshot({ path: `mockups/location-entry-2026-10-11-v2/consent-${width}.png` });
+  await galleryShot(page, `mockups/location-entry-2026-10-11-v2/consent-${width}.png`);
   await page.waitForTimeout(5_300); // Reading the consent must not fold away its trigger.
   await dialog.getByRole("button", { name: "그만두기" }).click();
   await expect(dialog).toHaveCount(0);
@@ -64,7 +62,7 @@ test("버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으�
     return Math.abs(box.x + box.width / 2 - map.x - map.width / 2);
   }).toBeLessThan(3);
   expect(await locationAsks(page)).toBeGreaterThan(0);
-  await page.screenshot({ path: "mockups/location-entry-2026-10-11-v2/located-375.png" });
+  await galleryShot(page, "mockups/location-entry-2026-10-11-v2/located-375.png");
   await changeLocationConsent(page, false);
   await expect(dot(page)).toHaveCount(0);
 });

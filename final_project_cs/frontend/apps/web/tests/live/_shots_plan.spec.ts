@@ -4,6 +4,8 @@ import { mockServer, start } from "./helpers";
 import { head } from "./plan-check-kit";
 
 // 임시 촬영용 — 저장소에 올리지 않는다(화면을 눈으로 확인하려고 만든 것).
+// `[2026-10-16 사용자 결정 — CI 시간 줄이기 ⑤]` 확인 문장이 없는 촬영 전용이라 촬영 폴더(SHOT_DIR)를 줄 때만 돈다.
+test.skip(!process.env.SHOT_DIR, "촬영 전용 — SHOT_DIR 를 줄 때만 돈다");
 const INTAKE = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
