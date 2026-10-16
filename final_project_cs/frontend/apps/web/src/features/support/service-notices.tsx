@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSettings, useT } from "@/lib/settings";
 import { serviceStatus } from "./client";
@@ -28,8 +28,20 @@ export function ServiceNotices() {
   const identity = JSON.stringify([data?.maintenance, data?.notices]);
   // 앞서 받은 공지가 있으면 다시 묻다 실패해도 그것을 그대로 둔다 — 「확인하지 못했어요」는 한 번도 못 받았을 때만
   const failed = Boolean(query.error) && !data;
-  if ((query.isPending || (!failed && !data?.maintenance.enabled && !data?.notices.length)) || dismissed === identity) return null;
-  return <aside className={styles.banner} aria-label={t("서비스 공지", "Service notices")} aria-live="polite">
+  const shown = !((query.isPending || (!failed && !data?.maintenance.enabled && !data?.notices.length)) || dismissed === identity);
+  const box = useRef<HTMLElement>(null);
+  // ★`[2026-10-17 사용자 지시 — ST4F-603]` 배너는 화면 맨 위에 뜬다(옛: 아래 — 10-08 `bf42b659` 운영 앱 연결 때 들어왔고 아래로 정한 근거는 문서 · 커밋에 없다).
+  //   서버가 늦을 때의 안내(`wait-notice`)도 맨 위라, 배너가 떠 있는 동안 그 높이만큼 아래로 내린다(`--service-notice-space`).
+  useEffect(() => {
+    const node = box.current;
+    if (!shown || !node) return;
+    const root = document.documentElement;
+    const observer = new ResizeObserver(() => root.style.setProperty("--service-notice-space", `${node.offsetHeight + 8}px`));
+    observer.observe(node);
+    return () => { observer.disconnect(); root.style.removeProperty("--service-notice-space"); };
+  }, [shown]);
+  if (!shown) return null;
+  return <aside ref={box} className={styles.banner} aria-label={t("서비스 공지", "Service notices")} aria-live="polite">
     {failed && <><h2>{t("서비스 공지를 확인하지 못했어요", "Could not check service notices")}</h2><p>{t("공지와 점검 상태를 다시 확인해 주세요.", "Please check notices and maintenance status again.")}</p><button type="button" disabled={query.isFetching} onClick={() => void query.refetch()}>{t("다시 확인", "Check again")}</button></>}
     {data?.maintenance.enabled && <><h2>{t("서비스 점검 안내", "Service maintenance")}</h2><p>{language === "en" && data.maintenance.messageEn ? data.maintenance.messageEn : data.maintenance.message}</p>{data.maintenance.endsAt && <p>{t("종료 예정: ", "Expected end: ")}<time dateTime={data.maintenance.endsAt}>{new Date(data.maintenance.endsAt).toLocaleString(language)}</time></p>}</>}
     {data?.notices.map((notice) => <div key={notice.id}><h2>{language === "en" && notice.titleEn ? notice.titleEn : notice.title}</h2><p>{language === "en" && notice.bodyEn ? notice.bodyEn : notice.body}</p></div>)}

@@ -35,6 +35,8 @@ test("운영자가 공지를 올리면 새로고침 없이 15초 안에 배너�
   await server.scenario({ serviceNotice: "one" });
   await page.clock.fastForward(16_000);
   await expect(banner(page)).toContainText("서비스 점검 예정 안내");
+  const box = (await banner(page).boundingBox())!;
+  expect(box.y).toBeLessThan(40);                                                      // `[2026-10-17 사용자 지시]` 화면 맨 위에 뜬다(옛: 아래)
 });
 
 test("탭으로 돌아오면 공지를 바로 다시 읽는다", async ({ page, request }) => {
