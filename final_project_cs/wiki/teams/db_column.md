@@ -79,11 +79,25 @@ TourAPI 응답이 비었거나 그 타입에 필드가 없어 빈 칸을, 사람
 | `checked` | 확인한 날 | `YYYY-MM-DD` |
 | `note` | (선택) 메모 — url 없는 `human` 값은 「사용자 확인」 등 어떻게 확인했는지 |
 | `quote` | (선택) 페이지에서 그 값의 근거가 된 문구 | `claude` 는 **반드시** 적는다 — 검토하는 사람이 페이지를 다시 열지 않고 대조할 수 있게 |
+| `from` | (선택) `[2026-10-14 사용자]` 값을 뽑은 곳이 페이지가 아니라 **같은 행의 `overview`(관광공사 소개글)** 일 때 `"overview"` — **사용자 지시가 있을 때만** 쓴다(아래 절) | 이때는 `url` 이 없어도 되고, `quote` 는 **그 행 `overview` 안에 글자 그대로 있어야 한다**(`<br>` · 공백만 맞춰 대조 — 검사가 확인한다). `by` 는 `claude`(사람 검토 전) |
 
+- **같은 매장 · 브랜드 다른 지점에서 옮겨 적은 값**(`[2026-10-16 사용자]` 「같은 브랜드 다른 지점이면 운영시간이나 휴무를 같게 반영할 수 있는 부분이 있음」):
+  쇼핑(38)의 `business_hours` · `closed_days` 만. `{"by": "sibling", "group": "venue:<입점 매장>" | "brand:<brand 칸>", "basis": ["<근거 contentid>", …], "checked": "YYYY-MM-DD"}`
+  (이 네 키만 — 검사가 확인한다). 근거는 TourAPI 가 직접 준 값뿐이고, 입점 매장은 근거 3곳 이상 중 2/3, 브랜드는 90% 이상이 같을 때만 옮긴다.
+  **확인한 값이 아니라 추정이다** — 화면 · 답변은 「같은 매장(브랜드) 다른 지점 값(추정)」으로 표시한다(`place_info.official_web_note`).
+  그 지점을 TourAPI 로 직접 받으면 사람 값과 같은 규칙으로 TourAPI 값이 들어가고 출처는 지워진다. 실행은 `fill_tourapi_details --siblings`(`sibling_hours.py`) —
+  [2026-10-16 보고](../records/reports/2026-10-16_쇼핑_지점_운영시간_옮겨적기.md).
+- **소개글에서 뽑은 값 — 규칙이 아니다, 사용자가 지시할 때만 한다**(`[2026-10-14 사용자]` 「소개글 기반으로 채우는 것은 규칙에서는 빼줘 · 지시가 있을 때만 채우기」):
+  빈칸을 채울 때 소개글(`overview`)을 **알아서 뒤지지 않는다.** 사용자가 「overview 에서 채워줘」처럼 지시한 때에만, 지시한 범위만 채운다.
+  이미 채운 값의 **형식**은 `{"by": "claude", "from": "overview", "checked": "YYYY-MM-DD", "quote": "<소개글 원문 그대로>"}` 이고, 검사가 quote 를 그 행 소개글과 대조한다(위 `from` 키).
+  지시받은 기록: 2026-10-14 ①타입에 그 칸이 있는 빈칸 83칸 ②사용자가 고른 37칸 — **타입에 원래 없는 칸**(관광지 `reservation_info` · `spendtime` · `fee` 등)도 지시로 채웠다(아래 「타입에 원래 없는 칸」 규칙의 그때 한 번 예외).
 - **「해당 없음」**(`[2026-10-12 사용자]` — 거리 · 골목 · 상권 · 광장 · 공원 · 산 · 계곡처럼 휴무일 · 대표 전화 · 영업시간이 **원래 없는** 곳):
   칸은 **비워 둔 채** `{"by": "human", "na": true, "checked": "YYYY-MM-DD", "note": "왜 없나"}` 를 적는다(`url` 없음).
   빈 칸 = 「모른다」, 빈 칸 + `na` = 「원래 없다」. 칸에 「해당 없음」 글자를 넣지 않는다 — 다른 코드가 그 글자를 전화번호 · 영업시간 글로 읽는다.
   나중에 TourAPI 가 그 칸에 값을 주면 값이 들어가고 `na` 표시는 지워진다. DB 적재는 `na` 를 옮기지 않는다(빈 칸이라 옮길 값이 없다).
+- **타입에 원래 없는 칸은 채우지 않는다**(`[2026-10-13 사용자]` — 아래 표의 `–`): 쇼핑(38)의 `fee` 는 비워 둔다. 「무료」로 적지 않는다 —
+  요금 칸은 입장 · 이용 값인데 쇼핑은 그 개념이 없고(사면 돈이 들고 구경은 공짜), 공방 · 체험처럼 돈을 받는 곳도 쇼핑에 섞여 있다.
+  행마다 `na` 를 붙이지 않는다 — 타입 규칙 하나로 「원래 없다」를 뜻한다. 사람 확인 목록(`manual_fill_todo_*.csv`)에도 넣지 않는다(행사(15)의 `closed_days` 도 같다).
 - **적어도 되는 컬럼**: `business_hours` · `closed_days` · `fee` · `tel` · `homepage` · `reservation_info` · `spendtime` · `capacity` · `pet` · `age_limit`.
   1~11번(식별자 · 좌표 · 분류)은 목록 수집이 정본이고, `overview` · `experience_guide` 는 남의 글이라(저작권 · 소개글 저장 안 함 결정) 넣지 않는다. `indoor_outdoor` 는 29번이 출처다.
 - **사실만 짧게** 쓴다(예: 「매주 월요일 · 1월 1일」). 웹 문장을 그대로 붙이지 않는다.
@@ -93,6 +107,9 @@ TourAPI 응답이 비었거나 그 타입에 필드가 없어 빈 칸을, 사람
 - **DB 적재**(`scripts/enrich_place_catalog_from_csv.py`): DB 로 가는 사람 값은 영업시간 글 두 칸(`business_hours` · `closed_days` → `catalog_hours`)뿐이다.
   그 행은 `hours_read.source = "official_web"` 에 `hours_read.field_sources`(칸별 url · 확인한 날)를 함께 적는다 — 관광공사 원문(`activity_csv`)으로 적지 않는다.
   `field_sources` 형식이 틀리면 DB 에 쓰지 않고 멈춘다. 다른 사람 값(`tel` · `fee` 등)은 이 스크립트가 원래 DB 로 옮기지 않는 칸이다.
+- `[2026-10-15 사용자 「2번 진행」]` **나머지 사실 칸**(`scripts/activity/load_csv_facts.py`): `tel` · `homepage` · `fee` · `reservation_info` · `spendtime` · `capacity` · `pet` · `age_limit` · `lDongSignguCd` 와 `field_sources` 를
+  `place_catalog.raw_json` 의 같은 키에 CSV 와 같게 맞춘다(CSV 가 빈 칸이면 그 키를 지운다). 소개글 · 체험 안내는 옮기지 않는다. 기본은 세어 보기, `--apply` 는 백업 뒤, `--restore` 로 되돌린다.
+  화면: 사람 · Claude 가 채운 연락처는 `place_info.source_note` 에 「연락처: 직접 확인(날짜)」 · 「연락처: 공식 페이지(날짜 AI 확인)」를 붙인다(`catalog_fact_note`). 요금 · 예약 · 연령은 DB 에 있지만 아직 읽는 화면 · 답변이 없다.
 - **새벽 작업**(`catalog_hours.prefill`, 관광공사 목록 수정 시각이 바뀐 곳을 다시 읽는다): `official_web` 행은 **관광공사 응답이 채워진 칸만** 관광공사 값으로 바꾸고 그 칸의 출처를 지운다.
   두 칸 다 비어 오면 사람 값을 그대로 두고 목록 수정 시각만 맞춘다(다음 틱이 또 읽지 않게). 관광공사 원문 행은 전처럼 응답으로 덮어쓴다.
 - **보이는 곳**: 일정 장소 정보(`place_info`)의 `source_note` 에 「운영시간 · 휴무일: 공식 페이지(확인한 날)」를 덧붙이고 `hours_evidence` 에 url 을 싣는다([rest-endpoints.md](../external/rest-endpoints.md)). 채팅의 「저장된 값」 줄도 같은 표시를 붙인다.

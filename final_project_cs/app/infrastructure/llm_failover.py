@@ -498,10 +498,19 @@ def register_budget_provider(provider: Callable[[Any], Callable[[], bool]] | Non
     _budget_provider = provider
 
 
+def budget_gate(settings: Any) -> Callable[[], bool] | None:
+    """`[2026-10-15]` 유료 호출을 해도 되나를 답하는 함수. 상한을 셀 장치(조립 루트가 꽂는다)가 없으면 `None` — 부르는 쪽이 유료 호출을 안 한다."""
+    return _budget_provider(settings) if _budget_provider is not None else None
+
+
 def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[], bool] | None = None, api_client: Any = None,
-                       clock: Callable[[], float] = time.monotonic, sleep: Callable[[float], None] = time.sleep) -> Any:
-    """스위치가 꺼져 있거나 서버용 키가 없으면 `primary` 를 **그대로** 돌려준다. 켜져 있으면 `FailoverChat`."""
-    if not getattr(settings, "llm_failover_enabled", False):
+                       clock: Callable[[], float] = time.monotonic, sleep: Callable[[float], None] = time.sleep,
+                       extra_urls: tuple[str, ...] = (), api_first: bool = False) -> Any:
+    """스위치가 꺼져 있거나 서버용 키가 없으면 `primary` 를 **그대로** 돌려준다. 켜져 있으면 `FailoverChat`.
+
+    ★`[2026-10-15]` 관리 콘솔 「모델 경로」 — `extra_urls` 는 `primary` 바로 뒤에 시도할 Ollama(SSH 를 골랐을 때 이 기계의 Ollama),
+    `api_first` 는 API 를 **맨 앞**에 두고 Ollama 들을 넘김 순서로 쓴다(API 를 고른 것이라 넘김 스위치가 꺼져 있어도 만든다 — 키는 있어야 한다)."""
+    if not getattr(settings, "llm_failover_enabled", False) and not api_first:
         return primary
     key = (getattr(settings, "openai_api_key_server", "") or "").strip()
     if not key:
@@ -511,7 +520,8 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
     open_seconds = float(settings.llm_failover_open_seconds)
     primary_timeout = min(float(settings.ollama_timeout_seconds), float(settings.llm_failover_primary_timeout_seconds))
     backends: list[_Backend] = []
-    urls = [primary.base_url] + [u.strip().rstrip("/") for u in (getattr(settings, "ollama_fallback_base_urls", "") or "").split(",") if u.strip()]
+    urls = ([primary.base_url] + [u.strip().rstrip("/") for u in extra_urls if u and u.strip()]
+            + [u.strip().rstrip("/") for u in (getattr(settings, "ollama_fallback_base_urls", "") or "").split(",") if u.strip()])
     for number, url in enumerate(dict.fromkeys(urls)):
         chat = OllamaChat(base_url=url, model=primary.model, timeout=primary_timeout, keep_alive=primary.keep_alive,
                           num_ctx=getattr(primary, "num_ctx", 0),
@@ -524,9 +534,10 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
     gate = budget or (_budget_provider(settings) if _budget_provider is not None else None)
     if gate is None:
         log.warning("llm_failover has no call-budget gate registered — API calls are not capped")
-    backends.append(_Backend("openai", OpenAIChat(api_key=key, model=model, timeout=api_timeout, client=api_client),
-                             breaker_for("openai", threshold=threshold, open_seconds=open_seconds, clock=clock), is_api=True, timeout=api_timeout,
-                             budget=gate))
+    api = _Backend("openai", OpenAIChat(api_key=key, model=model, timeout=api_timeout, client=api_client),
+                   breaker_for("openai", threshold=threshold, open_seconds=open_seconds, clock=clock), is_api=True, timeout=api_timeout,
+                   budget=gate)
+    backends = [api] + backends if api_first else backends + [api]
     return FailoverChat(backends, total_seconds=float(settings.llm_failover_total_seconds), vision=bool(settings.llm_failover_vision),
                         sleep=sleep, clock=clock, warm_chat=primary)
 
@@ -566,5 +577,5 @@ def record_fallback(op: str, reason: str, *, backend: str = "openai") -> None:
     log.warning("llm_failover op=%s path=api backend=%s reasons=ollama:%s", op, backend, reason)
 
 
-__all__ = ["CircuitBreaker", "FailoverChat", "ModelCallError", "OpenAIChat", "breaker_for", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "record_fallback", "register_budget_provider", "reset_state",
+__all__ = ["CircuitBreaker", "FailoverChat", "ModelCallError", "OpenAIChat", "breaker_for", "budget_gate", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "record_fallback", "register_budget_provider", "reset_state",
            "snapshot", "wrap_from_settings"]

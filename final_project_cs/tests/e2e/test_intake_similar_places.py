@@ -31,7 +31,9 @@ from .test_trip_api import api  # noqa: F401
 
 NOW = datetime(2030, 1, 5, 9, 0, tzinfo=timezone(timedelta(hours=9)))
 PALACE = (37.5796, 126.9770)
-MARKET = (37.5700, 126.9990)
+#: ★`[2026-10-16]` 시장 세계는 **서울 밖(제주 근처)** 에 둔다 — 활동 팀 후보는 공용 원장(`activity.ac_place`, 테넌트 없음)에서 오므로
+#:  서울 좌표면 실데이터 시장(진짜 광장시장 · 방산시장 …)이 10km 안 후보로 섞인다. 거리 관계는 전과 같다(남대문시장 약 2.6km).
+MARKET = (33.5000, 126.5300)
 
 
 def _row(rv, cid, ctype, title, lat, lon, l1, l2, l3):
@@ -130,16 +132,29 @@ def test_another_meal_nearby_or_another_kind_of_place_turns_it_off():
 
 @pytest.fixture()
 def market_world(rv):  # noqa: F811
-    _row(rv, "950001", "38", "광장시장", *MARKET, "SH", "SH06", "SH060200")
-    _row(rv, "950002", "38", "남대문시장", 37.5590, 126.9770, "SH", "SH06", "SH060200")
-    _row(rv, "950003", "38", "올리브영 종로", 37.5701, 126.9991, "SH", "SH04", "SH040100")         # 쇼핑 전문매장 — 가장 가깝다
-    _row(rv, "950004", "38", "우정약국", 37.5702, 126.9992, "SH", "SH04", "SH040100")
+    lat, lon = MARKET
+    rows = [("950001", "광장시장", lat, lon, "SH06", "SH060200"),
+            ("950002", "남대문시장", lat - 0.0110, lon - 0.0220, "SH06", "SH060200"),
+            ("950003", "올리브영 종로", lat + 0.0001, lon + 0.0001, "SH04", "SH040100"),     # 쇼핑 전문매장 — 가장 가깝다
+            ("950004", "우정약국", lat + 0.0002, lon + 0.0002, "SH04", "SH040100")]
+    for cid, title, y, x, l2, l3 in rows:
+        _row(rv, cid, "38", title, y, x, "SH", l2, l3)
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("INSERT INTO places (tenant_id, name, kind, latitude, longitude, source_name, attributes) "
-                    "VALUES (%s,'시장 빈대떡집','dining',37.5703,126.9993,'dining_ledger','{\"source\": \"dining_ledger\"}')", (rv["tenant"],))
+                    "VALUES (%s,'시장 빈대떡집','dining',%s,%s,'dining_ledger','{\"source\": \"dining_ledger\"}')",
+                    (rv["tenant"], lat + 0.0003, lon + 0.0003))
+        # ★`[2026-10-16]` 활동 팀 엔진은 원장(`activity.ac_place`)을 읽는다 — 같은 장소를 원장에도 넣는다
+        cur.execute("INSERT INTO activity.ac_load_meta (source_file, file_sha256, row_count) VALUES ('test', %s, 4) "
+                    "RETURNING load_id", ("0" * 64,))
+        load_id = cur.fetchone()[0]
+        for cid, title, y, x, l2, l3 in rows:
+            cur.execute("INSERT INTO activity.ac_place (content_id, content_type_id, name_ko, name_key, lat, lng, lcls1, lcls2, lcls3, "
+                        "load_id) VALUES (%s,'38',%s,%s,%s,%s,'SH',%s,%s,%s)", (cid, title, title, y, x, l2, l3, load_id))
     yield rv
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM places WHERE tenant_id=%s AND source_name='dining_ledger'", (rv["tenant"],))
+        cur.execute("DELETE FROM activity.ac_place WHERE content_id = ANY(%s)", ([r[0] for r in rows],))
+        cur.execute("DELETE FROM activity.ac_load_meta WHERE load_id=%s", (load_id,))
 
 
 def _review(extra_items=()):
@@ -164,7 +179,9 @@ def test_a_market_at_lunch_with_no_other_meal_offers_markets_and_restaurants_nev
     assert by_name["남대문시장"]["similarity"] == 3 and by_name["시장 빈대떡집"]["similarity"] is None
 
 
-def test_with_a_meal_already_planned_a_market_stays_a_market_branch(market_world):
+def test_with_a_meal_already_planned_a_market_stays_a_market_branch(market_world, monkeypatch):
+    """★`[2026-10-15]` 활동 팀 엔진이 없거나 답하지 못할 때의 대비책(확인 화면 자체 고르기) — 같은 대분류의 다른 가지가 뒤에 붙는다."""
+    monkeypatch.setattr(candidates, "_team_places", lambda *args, **kwargs: None)
     review, item = _review(extra_items=[{"id": "lunch", "kind": "dining", "starts_at": "12:00"}])
     with get_connection() as conn:
         got = candidates.alternatives(conn, tenant_id=market_world["tenant"], review=review, item=item, kakao=None, use_engine=False, now=NOW)
@@ -172,3 +189,24 @@ def test_with_a_meal_already_planned_a_market_stays_a_market_branch(market_world
     assert "meal_inferred" not in got["notes"] and "시장 빈대떡집" not in names                  # 식사 일정이 따로 있으면 식당을 권하지 않는다
     assert names[0] == "남대문시장"                                                          # 같은 소분류(시장)가 먼저, 쇼핑 전문매장은 그 뒤(같은 대분류)
     assert "올리브영 종로" in names and names.index("남대문시장") < names.index("올리브영 종로")      # 더 가까워도 같은 대분류 안의 다른 가지는 뒤다
+
+
+def test_with_the_activity_team_answering_a_market_gets_only_what_the_team_ranked(market_world):
+    """★`[2026-10-15 사용자 결정]` 후보 공급은 활동 팀이 먼저 — 팀 엔진은 느슨한 후보(다른 가지)로 칸을 채우지 않고 닫은 곳을 먼저 뺀다."""
+    review, item = _review(extra_items=[{"id": "lunch", "kind": "dining", "starts_at": "12:00"}])
+    with get_connection() as conn:
+        got = candidates.alternatives(conn, tenant_id=market_world["tenant"], review=review, item=item, kakao=None, use_engine=False, now=NOW)
+    assert "team_ranked" in got["notes"], got["notes"]
+    names = [c["place"]["name"] for c in got["candidates"]]
+    assert names[0] == "남대문시장" and "올리브영 종로" not in names and "우정약국" not in names, names
+
+
+def test_when_the_activity_team_cannot_answer_the_local_picker_takes_over(market_world, monkeypatch):
+    """팀이 답하지 못하면(`None`) 확인 화면 자체 고르기가 대신한다 — 그때는 `team_ranked` 표시가 없다."""
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives
+
+    monkeypatch.setattr(activity_alternatives, "ranked", lambda *a, **k: None)
+    review, item = _review(extra_items=[{"id": "lunch", "kind": "dining", "starts_at": "12:00"}])
+    with get_connection() as conn:
+        got = candidates.alternatives(conn, tenant_id=market_world["tenant"], review=review, item=item, kakao=None, use_engine=False, now=NOW)
+    assert "team_ranked" not in got["notes"] and got["candidates"], got["notes"]

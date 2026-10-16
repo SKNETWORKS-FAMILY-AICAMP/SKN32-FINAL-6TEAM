@@ -85,15 +85,19 @@ def test_expired_explicit_reply_retains_the_existing_token_error(decided):
     assert _saved(first["case_id"])[0] == "escalated"
 
 
-def test_two_pending_cases_allow_facts_and_reject_an_ambiguous_numeric_reply(decided):
+def test_two_pending_cases_allow_facts_and_a_short_reply_goes_to_the_latest_question(decided):
+    """★`[2026-10-15 사용자 지시 — 코어]` 답을 기다리는 질문이 둘이어도 짧은 답(「30분이요」)은 거절하지 않고 **가장 나중에 보인 질문**의 건으로 잇는다(`case_dispatch.resume_pending`).
+    앞 판은 409 를 기대했다. 먼저 만든 건은 그대로 답을 기다린다."""
     _delay(decided)
     first = _say(decided, "식당에 늦어요", "isolation-multi-first")
     second = _say(decided, "식당에 늦어요", "isolation-multi-second")
     assert second["case_id"] != first["case_id"]
     before = [_saved(case["case_id"]) for case in (first, second)]
     assert _post(decided, "성수 점심 식당 알려줘", "isolation-multi-fact").status_code == 200
-    assert _post(decided, "30분이요", "isolation-multi-reply").status_code == 409
-    assert [_saved(case["case_id"]) for case in (first, second)] == before
+    assert _post(decided, "30분이요", "isolation-multi-reply").status_code == 200
+    after = [_saved(case["case_id"]) for case in (first, second)]
+    assert after[0] == before[0]
+    assert after[1] != before[1]
 
 
 def test_initial_disabled_request_retries_same_case_and_applies_once(decided):

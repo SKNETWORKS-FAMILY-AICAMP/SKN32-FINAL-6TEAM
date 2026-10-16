@@ -46,7 +46,7 @@ test('단일 HTML은 오프라인에서 키보드 로그인·예외 한도·문�
   const navigation = page.getByRole('navigation', { name: '운영 메뉴' });
   await navigation.getByRole('button', { name: '사용자', exact: true }).click();
   await main(page).getByRole('button', { name: 'demo-user-01 상세 보기', exact: true }).click();
-  await page.getByLabel('② 채팅 하루 한도', { exact: true }).fill('80');
+  await page.getByLabel('② 채팅 하루 한도 (0 = 한도 없음)', { exact: true }).fill('80');
   await page.getByLabel('예외 한도 사유 (필수)', { exact: true }).fill('오프라인 시나리오: 여행 중 추가 상담');
   await page.getByRole('button', { name: '예외 한도 저장', exact: true }).click();
   await expect(page.getByRole('meter', { name: '오늘 채팅 사용률', exact: true })).toHaveAttribute('aria-valuetext', '50 / 80');

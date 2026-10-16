@@ -140,3 +140,35 @@ def test_a_time_only_change_cannot_enter_the_place_replacement_executor():
     assert got.action in ("change_time", "clarify") and got.action != "apply_change"
     assert got.raw["scope_moved"] == {"requested": "time", "from_action": "apply_change"}
     assert "scope_guard" not in got.raw
+
+
+# ── ⑤ 순번을 직접 센 말과 고른 일정이 다르면 되묻는다 `[2026-10-15 재측정]` ─────────────────────────
+def _nth(trip, day, kind, n):
+    """서버가 줄마다 세는 방식(`item_lines`)과 같은 규칙으로 「day일차 kind n번째」 일정의 별칭."""
+    stops = stops_of(TRIPS[trip][0])
+    first = stops[0].item.starts_at
+    same = [s for s in stops if s.item.kind == kind and (s.item.starts_at.astimezone(first.tzinfo).date() - first.date()).days + 1 == day]
+    return same[n - 1].alias, same[n].alias
+
+
+def test_a_one_off_count_in_the_sentence_is_asked_about_with_the_right_place_first():
+    """실제 제품 모델 재생(결정 단위 172사례): 「둘째 날 두 번째 활동 다른 데로」를 모델이 한 칸 어긋나게 골랐다 — 근거 검사 ④ 는 「둘째 날」이 있다고 통과시켰다."""
+    right, wrong = _nth("long7", 2, "activity", 2)
+    got, alias = _run("long7", "둘째 날 두 번째 활동 다른 데로", "apply_change", wrong)
+    assert got.action == "clarify" and got.item is None
+    assert [alias[c["item"].item_id] for c in got.choices] == [right, wrong]                       # 맞는 자리가 첫 후보
+    assert got.raw["guard"] == {"ordinal_conflict": wrong, "expected": right, "asked": [right, wrong]}
+
+
+def test_the_first_restaurant_without_a_day_means_day_one():
+    right, wrong = _nth("long7", 1, "dining", 1)
+    got, alias = _run("long7", "첫식당 바꿔", "apply_change", wrong)
+    assert got.action == "clarify" and alias[got.choices[0]["item"].item_id] == right
+
+
+def test_the_right_count_is_kept_and_relative_words_skip_the_check():
+    right, wrong = _nth("long7", 2, "activity", 2)
+    kept, alias = _run("long7", "둘째 날 두 번째 활동 다른 데로", "apply_change", right)
+    assert kept.action == "apply_change" and alias[kept.item.item_id] == right and "guard" not in kept.raw
+    relative, alias = _run("long7", "내일 두 번째 활동 바꿔줘", "apply_change", wrong)               # 「내일」은 단순 세기로 못 푼다 — 기존 검사에 맡긴다
+    assert "ordinal_conflict" not in (relative.raw.get("guard") or {})

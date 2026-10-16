@@ -1,0 +1,14 @@
+--- a/final_project_cs/app/domains/travel_ops/components/conversation/decision_unit.py
++++ b/final_project_cs/app/domains/travel_ops/components/conversation/decision_unit.py
+@@ -445,8 +445,10 @@
+             raise DecisionFailed("일반 요청의 질문·답이 유효하지 않습니다")
+         if not (request["question"].strip() and request["answer"].strip()):
+             handled = raw.get("unsupported") or raw.get("scope_guard") or raw.get("condition_guard")
+-            if action in ("other", "answer_service") and not handled:
++            if action in ("other", "answer_service") and not handled and not str(raw.get("social") or "").strip():
+                 # 일반 질문 자체가 고객 요청인데 답이 비었다 — 조용히 넘기지 않고 실패로 드러낸다
++                # ★`[2026-10-15]` 단 모델이 이미 고객 말에 답한 `social` 이 있으면 빈 칸만 버린다 — 잡담 1,300문장 재생에서 100건(7.7%)이
++                #   「해석 실패」로 떨어졌다(잡담을 일반 질문 칸에 옮겨 적고 답은 비움, 같은 답은 `social` 에 이미 있음)
+                 raise DecisionFailed("일반 요청의 질문·답이 유효하지 않습니다")
+             # ★`[2026-10-14]` 빈 답이 든 일반 질문 칸은 그 칸만 버린다(일정과 무관한 덧붙임 답이다). 전에는 해석 전체를 버렸다
+             #   (학습 E4B 재생 434건 중 19건 — 예: 「카페 하나 추가해줘」를 일반 질문으로도 적고 답은 비움)

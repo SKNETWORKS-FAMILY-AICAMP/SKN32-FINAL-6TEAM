@@ -1,0 +1,295 @@
+[
+ {
+  "id": "N01",
+  "query": "리프트가 멈춰서 스키를 못 탔는데 이용권 환불이 되나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 시설을 정상적으로 이용할 수 없을 때"
+  ],
+  "ms": 1283,
+  "rank": 3,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "소비자 책임으로 해제하는 경우의 반환 금액",
+    "score": 0.387
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "사업자 책임으로 해제하는 경우의 반환 금액",
+    "score": 0.314
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "시설을 정상적으로 이용할 수 없을 때",
+    "score": 0.3
+   }
+  ]
+ },
+ {
+  "id": "N02",
+  "query": "헬스장 회원권을 이사 때문에 해지하려는데 얼마나 돌려받나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 소비자 책임으로 해제하는 경우의 반환 금액"
+  ],
+  "ms": 958,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "소비자 책임으로 해제하는 경우의 반환 금액",
+    "score": 0.33
+   },
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "인원이 정원을 넘을 때",
+    "score": 0.313
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "공연이 취소되거나 연기된 경우",
+    "score": 0.283
+   }
+  ]
+ },
+ {
+  "id": "N03",
+  "query": "예약한 패러글라이딩 체험이 광고 영상과 완전히 달랐어요",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 광고나 계약 내용과 실제가 다른 경우"
+  ],
+  "ms": 368,
+  "rank": null,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "예약이 없다는 것과 모른다는 것",
+    "score": 0.329
+   },
+   {
+    "scope": "travel_weather",
+    "document": "기상 사유로 활동이 깨졌을 때의 순연과 취소",
+    "section": "이어지는 항목까지 함께 본다",
+    "score": 0.294
+   },
+   {
+    "scope": "travel_activity",
+    "document": "관람·자연 갈래의 운영 중단과 통제",
+    "section": "관람 갈래에 위약금 문장을 붙이지 않는다",
+    "score": 0.286
+   }
+  ]
+ },
+ {
+  "id": "N04",
+  "query": "뮤지컬 일주일 전에 예매를 취소하면 수수료가 얼마예요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 관객이 환급을 요구하는 경우"
+  ],
+  "ms": 351,
+  "rank": 2,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "공연이 취소되거나 연기된 경우",
+    "score": 0.514
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "관객이 환급을 요구하는 경우",
+    "score": 0.504
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행자 사유로 취소하는 경우",
+    "score": 0.411
+   }
+  ]
+ },
+ {
+  "id": "N05",
+  "query": "비 때문에 야외 공연이 취소됐어요. 표값은 어떻게 되나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 공연이 취소되거나 연기된 경우"
+  ],
+  "ms": 292,
+  "rank": 2,
+  "top3": [
+   {
+    "scope": "travel_weather",
+    "document": "날씨로 활동을 바꾸는 경우",
+    "section": "날씨로 활동을 바꾸는 경우",
+    "score": 0.531
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "공연이 취소되거나 연기된 경우",
+    "score": 0.515
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "관객이 환급을 요구하는 경우",
+    "score": 0.487
+   }
+  ]
+ },
+ {
+  "id": "N06",
+  "query": "주연 배우가 바뀌었는데 환불받을 수 있나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 공연이 취소되거나 연기된 경우"
+  ],
+  "ms": 266,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "공연이 취소되거나 연기된 경우",
+    "score": 0.428
+   },
+   {
+    "scope": "travel_activity",
+    "document": "무료·무예약 활동을 무엇으로 판정하나",
+    "section": "무료인데 예약이 필요한 경우",
+    "score": 0.369
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "관객이 환급을 요구하는 경우",
+    "score": 0.35
+   }
+  ]
+ },
+ {
+  "id": "N07",
+  "query": "수영장에 갔더니 정원이 꽉 차서 못 들어갔어요",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 시설을 정상적으로 이용할 수 없을 때"
+  ],
+  "ms": 249,
+  "rank": null,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "인원이 정원을 넘을 때",
+    "score": 0.351
+   },
+   {
+    "scope": "travel_activity",
+    "document": "관람·자연 갈래의 운영 중단과 통제",
+    "section": "공사와 부분 개방",
+    "score": 0.28
+   },
+   {
+    "scope": "travel_access",
+    "document": "동행 조건을 확인하고 안내하는 기준",
+    "section": "조건이 맞는 후보가 없을 때",
+    "score": 0.263
+   }
+  ]
+ },
+ {
+  "id": "N08",
+  "query": "시설 사정으로 이용권을 해지하면 남은 기간만큼 돌려주나요?",
+  "expect": [
+   "소비자분쟁해결기준 — 체육시설·레저·공연 · 사업자 책임으로 해제하는 경우의 반환 금액"
+  ],
+  "ms": 286,
+  "rank": 3,
+  "top3": [
+   {
+    "scope": "travel_activity",
+    "document": "활동 취소·변경 접수와 시점 구간",
+    "section": "무료 구간은 72시간이다",
+    "score": 0.439
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "시설을 정상적으로 이용할 수 없을 때",
+    "score": 0.424
+   },
+   {
+    "scope": "travel_activity",
+    "document": "소비자분쟁해결기준 — 체육시설·레저·공연",
+    "section": "사업자 책임으로 해제하는 경우의 반환 금액",
+    "score": 0.398
+   }
+  ]
+ },
+ {
+  "id": "N09",
+  "query": "여행사가 최소 인원 미달로 취소하면서 늦게 알려줬어요. 배상은요?",
+  "expect": [
+   "국내여행 표준약관 — 해제·변경·해지 · 최저 인원이 채워지지 않았을 때",
+   "소비자분쟁해결기준 — 국내여행 · 인원 미달과 불가항력으로 취소하는 경우"
+  ],
+  "ms": 242,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "인원 미달과 불가항력으로 취소하는 경우",
+    "score": 0.548
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행자 사유로 취소하는 경우",
+    "score": 0.536
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "소비자분쟁해결기준 — 국내여행",
+    "section": "여행사 사유로 취소하는 경우",
+    "score": 0.474
+   }
+  ]
+ },
+ {
+  "id": "N10",
+  "query": "공기가 나쁜 날에는 야외 체험 일정을 바꿔 주나요?",
+  "expect": [
+   "대기질·폭염·한파·지진 경보와 야외 일정 · 초미세먼지 경보가 걸렸을 때",
+   "대기질·폭염·한파·지진 경보와 야외 일정 · 대기질 단계는 발표된 이름으로 옮긴다",
+   "날씨로 활동을 바꾸는 경우 · 날씨로 활동을 바꾸는 경우"
+  ],
+  "ms": 242,
+  "rank": 1,
+  "top3": [
+   {
+    "scope": "travel_weather",
+    "document": "날씨로 활동을 바꾸는 경우",
+    "section": "날씨로 활동을 바꾸는 경우",
+    "score": 0.525
+   },
+   {
+    "scope": "travel_weather",
+    "document": "대기질·폭염·한파·지진 경보와 야외 일정",
+    "section": "폭염 구간의 야외 항목",
+    "score": 0.485
+   },
+   {
+    "scope": "travel_cancellation",
+    "document": "국내여행 표준약관 — 해제·변경·해지",
+    "section": "위약금 없이 해제할 수 있는 사유",
+    "score": 0.443
+   }
+  ]
+ }
+]

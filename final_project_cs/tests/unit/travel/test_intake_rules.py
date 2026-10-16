@@ -193,3 +193,11 @@ def test_arrows_on_the_heading_line_keep_its_day_and_date():
 def test_a_heading_line_without_arrows_still_makes_no_item():
     assert read_plan("1일차 · 10월 20일").items == []
     assert read_plan("DAY 1 2026-10-20").items == []
+
+
+def test_an_end_time_said_after_a_comma_becomes_an_ends_at_value_with_its_source():
+    """★x600 실서버 확인(2026-10-15): 「08:00 경복궁 · 한복 체험, 12:00 종료」 — 끝 시각이 항목에만 달리고 값 줄이 없어 확인 화면에서 사라졌다."""
+    r = read_plan(chr(10).join(["1일차 · 2026-10-22", "08:00 경복궁 · 한복 체험, 12:00 종료", "12:30 광장시장 · 점심"]))
+    ends = [c for c in r.claims if c.field.endswith(".ends_at")]
+    assert [(c.field, c.value) for c in ends] == [("items[0].ends_at", "12:00")], ends
+    assert ends[0].span.text == "12:00" and [i.start for i in r.items] == ["08:00", "12:30"]

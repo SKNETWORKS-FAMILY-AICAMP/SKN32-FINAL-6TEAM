@@ -254,8 +254,25 @@ def _time_line(row: dict[str, Any], notes: dict[tuple[str, str], str], overlap: 
     return _line("time", result, text)
 
 
+def _live_reference(act: dict[str, Any]) -> str | None:
+    """웹 공지로 확인한 임시휴무가 **판정에 반영되지 않은** 경우의 참고 문장. `[2026-10-15]` 활동 → 코어 전달 4번.
+
+    활동 원장 판정의 `live_status` 칸(`value` · `mode` · `applied`)을 읽는다.
+      - `mode: shadow`(정확도를 재는 기간) — 「닫힘」이어도 판정은 그대로다. 그래서 줄의 결과(ok · warn · bad)는 바꾸지 않고 「참고」로만 덧붙인다.
+      - `mode: llm` 이고 `applied` — 판정에 반영됐다(휴무 줄이 이미 `웹 공지` 이유로 말한다) → 여기서는 덧붙이지 않는다.
+      - 그 밖의 값(열었다 · 모름 · 아직 안 봄) — 보여 줄 근거가 없다. 「열었다」로 풀어 주지도 않는다.
+    """
+    live = act.get("live_status")
+    if not isinstance(live, dict) or live.get("value") != "closed":
+        return None
+    if live.get("mode") == "llm" and live.get("applied") is True:
+        return None
+    return "참고 · 웹 공지에는 임시 휴무로 나와요(확인하는 중이라 판단에는 반영하지 않았어요)"
+
+
 def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) -> tuple[dict[str, str], dict[str, str]]:
     """(운영시간 줄, 휴무일 줄). 운영시간 줄에는 화면 문장과 따로 **시작 시각에 열려 있나**(`open_at` ok · bad)를 싣는다 — 알 때만.
+    웹 공지 참고(`_live_reference`)는 휴무일 줄 끝에 덧붙인다 — 줄의 결과는 바꾸지 않는다.
 
     ★`[2026-10-15]` 운영시간 줄의 결과 `warn` 은 「시작 때 이미 닫힘」과 「끝나기 전에 닫음 · 마지막 주문 임박」을 함께 담는다.
       요식 판정 그림자(`instances/dining/shadow.py`)가 이 둘을 가르지 못해 「시작 때 닫힘」을 규칙 ok 로 세었다(정식당 11:30 · 하동관 18:00 · 진진 23:30).
@@ -264,6 +281,9 @@ def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) 
     opened = _open_at_start(row, facts, vios)
     if opened is not None:
         hours = {**hours, "open_at": opened}
+    note = _live_reference(facts.activity or {}) if row["place"] is not None else None
+    if note:
+        closed = {**closed, "text": f"{closed['text']} · {note}"}
     return hours, closed
 
 
@@ -313,7 +333,11 @@ def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violati
     # 휴무일
     if "closed_day" in codes or today == "closed":
         why = f"({act['quote']})" if act.get("closed") is True and act.get("quote") else ""
-        closed = _line("closed", "bad", f"{dow}요일은 쉬는 날이에요 · 방문일이 휴무예요{why}")
+        if act.get("closed") is True and act.get("closure_reason") == "live_status":
+            # 웹 공지로 확인한 임시휴무(`llm` 모드에서 인용이 있을 때만 판정에 들어온다) — 정기 휴무 요일과 말을 구분한다
+            closed = _line("closed", "bad", f"웹 공지에 임시 휴무로 나와요 · 방문일에 열지 않을 수 있어요{why}")
+        else:
+            closed = _line("closed", "bad", f"{dow}요일은 쉬는 날이에요 · 방문일이 휴무예요{why}")
     else:
         off = closed_weekdays(facts.attributes)
         if off:
@@ -329,6 +353,8 @@ def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violati
                            closed["text"] + " · 공휴일 조건이 있어요(" + "; ".join(facts.conditions[:1]) + ")")
     # 운영시간
     if today == "closed" or "closed_day" in codes:
+        if act.get("closed") is True and act.get("closure_reason") == "live_status":
+            return _line("hours", "unknown", "웹 공지상 임시 휴무라 운영하지 않을 수 있어요"), closed
         return _line("hours", "unknown", "쉬는 날이라 운영하지 않아요"), closed
     if act.get("cut_short") is True and act.get("closes_at") and act.get("usable_minutes"):
         # 도착 때는 열려 있지만 끝나기 전에 닫는다 — 「이미 닫힘」과 안내가 다르다(머물 수 있는 분을 알린다)
@@ -810,3 +836,4 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
 
 
 __all__ = ["ENGINE_BUDGET_S", "build", "default_engine", "ensure", "load", "place_state", "store"]
+

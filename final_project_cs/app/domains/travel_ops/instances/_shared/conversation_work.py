@@ -68,6 +68,32 @@ def party_size_from(text: Any) -> int | None:
     return value if 1 <= value <= 20 else None
 
 
+#: 문장 안에 적힌 인원 — 「2명 기준으로」 · 「성인 두 명」. 숫자는 「명」 앞에 붙은 것만(「30분」 · 「10시」 · 「명동」을 인원으로 읽지 않는다)
+PARTY_IN_TEXT = re.compile(r"(?<![\d.])(\d{1,2})\s*명|(?<![가-힣])(한|두|세|네|다섯)\s*명")
+#: 인원을 물을 때 쓰는 문장의 알아볼 표지 — 채팅 기록에서 「그 질문에 대한 답」을 찾는 데 쓴다
+PARTY_QUESTION_MARK = "몇 분이 함께 가시는지"
+
+
+def party_in_text(text: Any) -> int | None:
+    """한 문장 안에 적힌 인원(1~20명) — 없거나 인원으로 보기 어려우면 None."""
+    found = PARTY_IN_TEXT.search(text) if isinstance(text, str) else None
+    if found is None:
+        return None
+    value = int(found[1]) if found[1] else _KO_PARTY[found[2]]
+    return value if 1 <= value <= 20 else None
+
+
+def party_from_history(turns: list[dict[str, Any]]) -> int | None:
+    """이 여행의 채팅 기록(오래된 것부터)에서 **인원 질문에 고객이 답한 값**(가장 나중 것). 없으면 None. 읽기만 한다."""
+    for i in range(len(turns) - 1, 0, -1):
+        answer, question = turns[i], turns[i - 1]
+        if answer.get("role") == "customer" and question.get("role") == "assistant" and PARTY_QUESTION_MARK in str(question.get("text") or ""):
+            value = party_size_from(answer.get("text"))
+            if value is not None:
+                return value
+    return None
+
+
 def stated_party(task: TeamTask) -> int | None:
     """고객이 인원 질문에 답한 값(가장 나중 답). 답이 없으면 None."""
     for answer in reversed(replies(task)):
@@ -75,6 +101,15 @@ def stated_party(task: TeamTask) -> int | None:
         if value is not None:
             return value
     return None
+
+
+def known_party(task: TeamTask, ctx: dict[str, Any]) -> int | None:
+    """★`[2026-10-15]` **이미 받은 인원이 있으면 그것을 쓴다** — 묻는 것은 어디에도 없을 때뿐이다. 우선순위:
+    ①여행에 적힌 인원(계획 쓸 때 · 등록할 때 받은 값) ②이번 문장에 적힌 인원 · 이 여행 채팅에서 이미 답한 인원(채팅이 요청에 실어 준다 — `party_hint`) ③지금 질문에 한 답."""
+    for value in ((ctx.get("trip") or {}).get("party_size"), (ctx.get("request") or {}).get("party_hint")):
+        if isinstance(value, int) and not isinstance(value, bool) and 1 <= value <= 20:
+            return value
+    return stated_party(task)
 
 
 def ask_party(work: Any, task: TeamTask, ctx: dict[str, Any], what: str) -> TeamResult:

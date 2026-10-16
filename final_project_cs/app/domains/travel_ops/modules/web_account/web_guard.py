@@ -52,6 +52,8 @@ class LimitSpec:
     choices: tuple[str, ...] | None = None
     #: ★`[2026-10-14]` 관리 콘솔이 이름 아래에 보여 주는 설명(무엇이 켜지나 · 비용 · 끄면 어떻게 되나). 비면 싣지 않는다
     help: str = ""
+    #: ★`[2026-10-15]` `choice` 값마다 관리 콘솔이 보여 줄 한국어 이름(값 자체는 그대로 저장한다). 비면 값을 그대로 보인다
+    choice_labels: tuple[tuple[str, str], ...] = ()
 
     def check(self, value: Any) -> str | None:
         """맞으면 None, 아니면 거절 이유 코드."""
@@ -71,7 +73,8 @@ class LimitSpec:
         return {"name": self.name, "label": self.label, "unit": self.unit, "type": self.type,
                 "default": self.default, "min": self.min, "max": self.max,
                 **({"choices": list(self.choices)} if self.choices else {}),
-                **({"text_ko": self.help} if self.help else {})}
+                **({"text_ko": self.help} if self.help else {}),
+                **({"choice_labels_ko": dict(self.choice_labels)} if self.choice_labels else {})}
 
 
 def _mode_text(raw: Any) -> str:
@@ -144,7 +147,35 @@ def specs() -> dict[str, LimitSpec]:
     out["travel.activity_judge.live_status_batch_enabled"] = LimitSpec(
         "travel.activity_judge.live_status_batch_enabled", "활동 장소 임시휴무 · 폐업 웹 확인(유료 — 하루 최대 약 1.6달러)", "", "bool",
         guard.get("travel.activity_judge.live_status_batch_enabled") is True, help=_activity_live_check_help(guard))
+    # ★`[2026-10-15 사용자 지시]` 모델 경로 — 이 기계의 학습 모델(local) · SSH 터널 너머 런팟 GPU 서버(ssh) · 유료 API(api).
+    #   읽는 곳은 `settings_hook.model_route` 하나다(조립이 `ollama_chat.register_route_provider` 로 꽂는다)
+    route = guard.get("web_guard.model_route") or {}
+    out["llm.model_route"] = LimitSpec(
+        "llm.model_route", "모델 경로(채팅 해석 · 일정 짚기 · 공지 확인)", "", "choice",
+        str(route.get("default") or "local"), choices=tuple(route.get("choices") or ("local", "ssh", "api")),
+        help=_model_route_help(), choice_labels=MODEL_ROUTE_LABELS)
     return out
+
+
+MODEL_ROUTE_LABELS = (("local", "로컬 모델 — 이 기계의 학습 E4B"), ("ssh", "SSH — 런팟 GPU 서버"), ("api", "API — 유료(서버용 키)"))
+
+
+def _model_route_help() -> str:
+    """모델 경로 설명 — 무엇이 바뀌고, 지금 이 기계에서 각 경로를 쓸 수 있는지(주소 · 키 값은 싣지 않는다)."""
+    from app.core.settings import get_settings
+
+    settings = get_settings()
+    has = lambda name: bool((getattr(settings, name, "") or "").strip())                      # noqa: E731
+    ready = {"local": has("ollama_base_url"), "ssh": has("ollama_ssh_base_url"), "api": has("openai_api_key_server")}
+    state = " · ".join(f"{label.split(' — ')[0]} {'준비됨' if ready[key] else '설정 없음'}" for key, label in MODEL_ROUTE_LABELS)
+    failover = "켜짐" if getattr(settings, "llm_failover_enabled", False) else "꺼짐"
+    return "\n".join([
+        "하는 일: 채팅 해석 · 계획 읽기 · 번역 · 일정 짚기 · 공지 확인이 모델을 어디서 부를지 고릅니다. 저장하면 재기동 없이 30초 안에 바뀝니다.",
+        "로컬 모델: 이 기계의 Ollama 에 올린 우리 학습 E4B. SSH: 앱 밖 SSH 터널 프로그램을 거쳐 런팟 GPU 서버의 같은 모델. API: 유료 API(하루 · 한 달 호출 상한 적용).",
+        f"넘김: 고른 경로가 먼저입니다. 모델 넘김 장치(지금 {failover})가 켜져 있으면 안 될 때 다른 경로로 넘깁니다 — API 를 고르면 늘 로컬 모델로 넘깁니다.",
+        "일정 짚기 · 공지 확인은 API 를 골라도 학습 모델(로컬)을 부릅니다 — 학습 모델은 API 에 없습니다.",
+        "규정 검색(임베딩)은 따르지 않습니다 — 바꾸면 검색이 깨집니다.",
+        f"지금 이 서버: {state}. 설정 없는 경로를 고르면 로컬 모델로 돕니다."])
 
 
 def _activity_live_check_help(guard: Any) -> str:
@@ -286,11 +317,10 @@ def count(tenant_id: str, action: str, *, customer_id: UUID | str, ip: str,
 
                 raise HTTPException(exc.status, {"error": {"code": exc.code, "message": exc.message}}) from None
         for kind, who, scope in rows:
-            cap = int(limits[f"web.{action}.{scope}"])
+            cap: int | None = int(limits[f"web.{action}.{scope}"])
             if action == "message" and kind == "key":
-                operator_cap = access_policy(conn, tenant_id, str(customer_id), now)["chat_limit"]
-                if operator_cap is not None:
-                    cap = int(operator_cap)
+                # ★사용자 한 명의 채팅 한도는 관리자 화면 「② 채팅 하루 한도」(사용자별 예외 포함)가 정한다 — None 은 한도 없음(0 으로 저장)
+                cap = access_policy(conn, tenant_id, str(customer_id), now)["chat_limit"]
             got = _bump(cur, tenant_id, kind, who, action, day, cap if enabled else None)
             if got is None:
                 cur.execute("SELECT used FROM web_usage WHERE tenant_id=%s AND who_kind=%s AND who=%s AND action=%s "

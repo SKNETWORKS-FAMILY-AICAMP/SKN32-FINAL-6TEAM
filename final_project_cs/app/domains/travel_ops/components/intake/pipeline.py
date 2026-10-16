@@ -26,6 +26,7 @@ from . import review as review_module
 from . import survey_answers
 from .areas import areas_for
 from .assemble import assemble, effective
+from .catalog_names import with_catalog
 from .line_parts import lookup_title
 from .rules import read_plan
 from .sources import UnsupportedSource, other_reading, sniff, to_text
@@ -179,6 +180,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                 source["transcript"] = result.text
                 source["differs_json"] = result.differs
         _stage(connect, tenant_id, intake_id, "reading")
+        tour = with_catalog(tour, connect, tenant_id)          # ★`[2026-10-15]` 관광공사 조회가 못 찾으면 우리 장소 목록에서(공백 · 괄호 무시 · 정확히 하나일 때만)
         with connect() as conn:
             our_places = _our_places(conn, tenant_id)
             with conn.cursor() as cur:
@@ -384,6 +386,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
     """
     if not edits:
         raise IntakeRejected("no_edits", "고칠 값이 없습니다")
+    from contextlib import nullcontext
+
+    tour = with_catalog(tour, lambda: nullcontext(conn), tenant_id)       # ★`[2026-10-15]` 고객이 친 장소 이름도 관광공사가 못 찾으면 우리 장소 목록에서
     with conn.transaction(), conn.cursor() as cur:
         cur.execute("SELECT status, revision, reopen_trip_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s "
                     "AND customer_id=%s FOR UPDATE", (tenant_id, intake_id, customer_id))

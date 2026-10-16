@@ -206,3 +206,55 @@ def test_the_party_size_typed_without_the_case_id_still_answers_the_question(hot
     _say(chat, "2명이요", "lodgp-f")
     asked = [args for _tool, args in chat["searches"] if "adults" in args]
     assert asked and all(args["adults"] == 2 for args in asked), chat["searches"]
+
+
+def _adults(chat):
+    return [args["adults"] for _tool, args in chat["searches"] if "adults" in args]
+
+
+def test_a_party_size_written_in_the_same_sentence_is_used_without_asking(hotel_chat_unknown_party):
+    """`[2026-10-15 사용자 지시]` 인원을 이미 받았으면 그것으로 하고, 어디에도 없을 때만 묻는다 — 이번 문장에 적힌 인원."""
+    chat = hotel_chat_unknown_party
+    got = _say(chat, "2명 기준으로 숙소 다른 곳으로 보여 줘", "lodgp-g")
+    assert got["case_status"] != "waiting_input" or "몇 분" not in got["answer"], got
+    assert _adults(chat) and set(_adults(chat)) == {2}, chat["searches"]
+
+
+def test_a_party_size_already_answered_in_this_trip_chat_is_not_asked_again(hotel_chat_unknown_party):
+    chat = hotel_chat_unknown_party
+    ask = _say(chat, "숙소 다른 곳으로 보여 줘", "lodgp-h")
+    assert ask["case_status"] == "waiting_input" and "몇 분" in ask["answer"], ask
+    _say(chat, "3명이요", "lodgp-i", case_id=ask["case_id"])
+    before = len(_adults(chat))
+    again = _say(chat, "숙소 다른 곳으로 보여 줘", "lodgp-j")
+    assert "몇 분" not in again["answer"], again                       # 한 번 답한 인원은 다시 묻지 않는다
+    assert len(_adults(chat)) > before and set(_adults(chat)) == {3}, chat["searches"]
+
+
+def test_the_party_size_registered_with_the_trip_is_used_and_never_asked(hotel_chat_unknown_party, api):
+    """계획을 쓰거나 만들 때 받은 인원(여행에 적힌 `party_size`)이 있으면 그것으로 찾는다."""
+    chat = hotel_chat_unknown_party
+    body = _web_body(api, request_id="lodgp-k-" + uuid4().hex[:6])
+    body["party_size"] = 4
+    last = max(it["seq"] for it in body["items"])
+    body["items"].append({"seq": last + 1, "kind": "lodging", "title": "롯데호텔 서울", "place": "hotel", "route": None,
+                          "starts_at": f"{DAY}T21:00:00+09:00", "ends_at": f"{NEXT_DAY}T10:00:00+09:00", "detail": {}})
+    other = _session(api)                                          # 게스트는 여행을 1개까지만 — 다른 게스트로 만든다
+    trip = chat["client"].post("/v1/web/trips", json=body, headers=_h(other["user_key"]))
+    assert trip.status_code in (200, 201), trip.text
+    known = {**chat, "trip": trip.json(), "key": other["user_key"]}
+    got = _say(known, "숙소 다른 곳으로 보여 줘", "lodgp-l")
+    assert "몇 분" not in got["answer"], got
+    assert _adults(chat) and set(_adults(chat)) == {4}, chat["searches"]
+
+
+def test_several_waiting_questions_do_not_block_a_short_answer_it_goes_to_the_latest_one(hotel_chat_unknown_party):
+    """`[2026-10-15 사용자 지시 — 코어]` 고객이 질문을 넘기고 같은 요청을 되풀이하면 답을 기다리는 질문이 쌓인다 — 번호 없는 짧은 답이 409 로 거절되지 않고
+    **가장 나중에 보인 질문**의 답으로 이어진다."""
+    chat = hotel_chat_unknown_party
+    first = _say(chat, "숙소 다른 곳으로 보여 줘", "lodgp-m")
+    second = _say(chat, "숙소 다른 곳으로 한 번 더 보여 줘", "lodgp-n")
+    assert first["case_id"] != second["case_id"] and second["case_status"] == "waiting_input", (first, second)
+    got = _say(chat, "2명이요", "lodgp-o")                                   # 대기 건 번호 없이 — 전에는 409
+    assert got["case_id"] == second["case_id"], got
+    assert _adults(chat) and set(_adults(chat)) == {2}, chat["searches"]
