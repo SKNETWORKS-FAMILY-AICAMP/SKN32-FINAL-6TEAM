@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { readFileSync, mkdirSync } from "node:fs";
-import { checkPlan, mockServer, noHorizontalScroll, start } from "./helpers";
+import { readFileSync } from "node:fs";
+import { checkPlan, galleryShot, mockServer, noHorizontalScroll, start } from "./helpers";
 
 // 2026-10-16 — 입력 형식별 테스트 계획(test17~50). 분류는 계획 이해 시험지(eval/intake_diverse)의 형식 이름 그대로다.
 const catalog = JSON.parse(readFileSync(new URL("./fixtures/prepared-test-plans.json", import.meta.url), "utf8")) as { scenarios: { code: string; name: string; category: string; text: string; expected: string }[] };
@@ -31,15 +31,14 @@ for (const width of [375, 1280]) {
 
     const long = catalog.scenarios.find(plan => plan.code === "test26")!;
     await page.locator('button[data-plan-code="test26"]').scrollIntoViewIfNeeded();
-    mkdirSync("mockups/test-plan-forms-2026-10-16", { recursive: true });
-    await page.screenshot({ path: `mockups/test-plan-forms-2026-10-16/list-${width}.png` });
+    await galleryShot(page, `mockups/test-plan-forms-2026-10-16/list-${width}.png`);
     await page.locator('button[data-plan-code="test26"]').click();
     await expect(page.getByLabel("나의 여행 계획")).toHaveValue(long.text);
     await expect(picker).toContainText("문단 자유문");
     await expect(picker).toContainText("test26 · 김 · 4박 5일");
     await expect(page.getByRole("status").filter({ hasText: "10/16 지금 구조:" })).toBeVisible();
     await noHorizontalScroll(page);
-    await page.screenshot({ path: `mockups/test-plan-forms-2026-10-16/selected-${width}.png` });
+    await galleryShot(page, `mockups/test-plan-forms-2026-10-16/selected-${width}.png`);
     await checkPlan(page);
     await expect.poll(async () => (await server.received("POST", "/v1/web/trip-intakes")).length).toBe(1);
     const sent = JSON.stringify((await server.received("POST", "/v1/web/trip-intakes"))[0]);

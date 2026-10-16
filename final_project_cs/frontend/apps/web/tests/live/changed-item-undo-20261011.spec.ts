@@ -1,6 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-import { mockServer, noHorizontalScroll, start } from "./helpers";
+import { galleryShot, mockServer, noHorizontalScroll, start } from "./helpers";
 
 const intake = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 const gallery = "mockups/changed-item-undo-2026-10-11-v1";
@@ -32,9 +31,8 @@ for (const width of [375, 1280]) {
     const original = await card.getByRole("heading").innerText();
     await recommend(page, "0-1");
     await noHorizontalScroll(page);
-    await mkdir(gallery, { recursive: true });
-    await page.screenshot({ path: `${gallery}/changed-${width}.png` });
-    await card.screenshot({ path: `${gallery}/card-changed-${width}.png` });
+    await galleryShot(page, `${gallery}/changed-${width}.png`);
+    await galleryShot(card, `${gallery}/card-changed-${width}.png`);
     // Change a second stop: restoring the first must not invoke whole-plan undo.
     await recommend(page, "0-0");
     const undo = card.getByRole("button", { name: /변경 되돌리기$/ });
@@ -47,8 +45,8 @@ for (const width of [375, 1280]) {
     expect(restores).toHaveLength(1);
     expect(restores[0].body?.item).toEqual({ source_id: "s1", index: 1 });
     await noHorizontalScroll(page);
-    await page.screenshot({ path: `${gallery}/restored-${width}.png` });
-    await card.screenshot({ path: `${gallery}/card-restored-${width}.png` });
+    await galleryShot(page, `${gallery}/restored-${width}.png`);
+    await galleryShot(card, `${gallery}/card-restored-${width}.png`);
   });
 }
 

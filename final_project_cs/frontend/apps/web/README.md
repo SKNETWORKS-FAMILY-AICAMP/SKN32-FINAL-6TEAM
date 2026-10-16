@@ -123,6 +123,8 @@ npm run test:live
 
 서버 계약(`/v1/web/*`)을 그대로 흉내 낸 **테스트용 모방 서버**(실제 서버 아님)(`tests/live/stub-server.mjs`)를 띄우고, live 모드로 빌드한 화면을 실제 브라우저로 끝까지 눌러 본다(첫 방문 → 키 발급 안내 → 계획 접수 → 확인 → 등록 → 여행 화면 → 선택·채팅·키 화면, 그리고 서버 500·409·429·연결 불가·읽기 실패). ★실서버 대신 테스트용 모방 서버를 쓰는 이유: 실서버에서 등록·확인을 누르면 **디스코드 통지가 팀 채널로 나가고** 서버에 데이터가 남는다. 화면이 서버로 실제 무엇을 보냈는지(설문·request_id·key 값)는 모방 서버가 받은 요청 기록으로 검사한다. 별도 빌드 폴더(`.next-live`)를 쓰므로 돌아가는 개발 서버와 부딪히지 않는다. 설치된 브라우저 버전이 다르면 `PLAYWRIGHT_CHANNEL=msedge` 를 붙인다.
 
+★`[2026-10-16]` `mockups/` 갤러리 캡처는 `CAPTURE_SHOTS=1` 일 때만 찍는다(`tests/live/helpers.ts` `galleryShot`) — 평소 실행 · CI 에서는 찍지 않아 추적 중인 PNG 를 덮어쓰거나 새 폴더를 남기지 않는다. 갤러리를 다시 찍을 때는 `$env:CAPTURE_SHOTS="1"` 을 붙인다. CI 처럼 묶음 하나만 돌리려면 `npm run test:live -- --shard=1/4`.
+
 ## 실서버 종단 시험
 
 ```powershell
@@ -135,7 +137,7 @@ $env:REAL_SERVER_E2E="1"; $env:PLAYWRIGHT_CHANNEL="msedge"; npm run test:real
 
 `[2026-09-28]` 두 곳에서 돈다(ST4F-161).
 
-- **웹 관문** [`.github/workflows/ci-web.yml`](../../../../.github/workflows/ci-web.yml): 이 폴더가 바뀐 develop·main PR과 push에서 `npm ci` → `npm run check`(`live`·`osm` 빌드) → Chromium 설치 → `test:live`(테스트용 모방 서버, 실제 서버 아님)를 돌린다. 서버 없이 도는 시험이라 다른 폴더의 변경에는 돌지 않는다. `test:real`은 부작용 때문에 넣지 않았다. ★`[2026-10-08]` 이 파일은 2026-09-28 에 만들어 develop 에 들어갔지만 `role-manager` 가 스냅숏 커밋이라 받지 못했고, 10-07 `role-eval-ui` 를 `role-manager` 위에 다시 세우며 이 브랜치에서도 빠져 있었다. develop 판은 `[2026-10-03]` 에 없앤 데모 빌드 시험(`test:e2e` · `NEXT_PUBLIC_DATA_MODE=demo`)을 불러 병합 뒤 붉어질 것이라, 이 브랜치로 가져와 지금 웹에 맞게 고쳤다. 같은 날 CI 머신에 없는 다른 PC 경로로 스크린샷을 찍어 늘 실패하던 촬영 스크립트 `tests/live/_shots_plan.spec.ts`(단언 없음)를 지웠다.
+- **웹 관문** [`.github/workflows/ci-web.yml`](../../../../.github/workflows/ci-web.yml): 이 폴더가 바뀐 develop·main PR과 push(·수동 실행)에서 `check` 작업(`npm ci` → `npm run check`)과 `live` 작업 4개(Chromium 설치 → `npm run test:live -- --shard=N/4`, 테스트용 모방 서버, 실제 서버 아님)를 **동시에** 돌리고, 마지막 「web (check · e2e · live)」가 결과를 모아 하나라도 실패면 실패로 둔다. ★`[2026-10-16 사용자 결정]` 전에는 한 작업에서 차례로 돌아 50분 안팎이었다 — `live` 네 묶음은 실행 환경이 따로라 모방 서버 · 빌드도 따로고, 한 묶음 안은 그대로 하나씩(workers 1) 돈다(workers 를 늘리면 모방 서버 상태를 시험끼리 나눠 써서 깨진다). 서버 없이 도는 시험이라 다른 폴더의 변경에는 돌지 않는다. `test:real`은 부작용 때문에 넣지 않았다. ★`[2026-10-08]` 이 파일은 2026-09-28 에 만들어 develop 에 들어갔지만 `role-manager` 가 스냅숏 커밋이라 받지 못했고, 10-07 `role-eval-ui` 를 `role-manager` 위에 다시 세우며 이 브랜치에서도 빠져 있었다. develop 판은 `[2026-10-03]` 에 없앤 데모 빌드 시험(`test:e2e` · `NEXT_PUBLIC_DATA_MODE=demo`)을 불러 병합 뒤 붉어질 것이라, 이 브랜치로 가져와 지금 웹에 맞게 고쳤다. 같은 날 CI 머신에 없는 다른 PC 경로로 스크린샷을 찍어 늘 실패하던 촬영 스크립트 `tests/live/_shots_plan.spec.ts`(단언 없음)를 지웠다. ☆`[2026-10-16]` 그 파일은 뒤에 다시 들어와 있었다 — 지금은 촬영 폴더(`SHOT_DIR`)를 줄 때만 돈다.
 - **계약 시험** `final_project_cs/tests/contract/test_web_client_contract.py`: 기존 develop 관문(pytest)에서 돈다. `src/lib/live/`가 부르는 메서드·경로가 서버 라우트에 모두 있는지, `payload.ts`의 설문 판·칸·값을 서버 `TripSurvey`가 받는지 본다. 서버가 `/v1/web/*`나 설문을 바꿔 웹이 깨지는 것을 모방 서버 시험은 못 잡기 때문에 둔다. 웹에서 서버를 부르는 새 모양(`api(`·`send(` 밖)을 쓰면 이 시험이 「읽지 못한 호출」로 실패하니 시험의 `_CALL`을 함께 고친다.
 
 ## 사람 확인(Cloudflare Turnstile)

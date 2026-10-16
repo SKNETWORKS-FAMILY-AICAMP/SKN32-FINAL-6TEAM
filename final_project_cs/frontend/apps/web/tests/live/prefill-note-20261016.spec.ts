@@ -12,6 +12,9 @@ const INTAKE_READ = `**/v1/web/trip-intakes/${INTAKE}`;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 서버 응답을 시험에서 고쳐 쓰는 자리라 모양을 고정하지 않는다
 type Json = Record<string, any>;
 
+// `[2026-10-16]` 시작 때 모방 서버를 초기화한다 — 없으면 앞 파일(`preferences.spec.ts`)이 남긴 상태로 「확인 필요」가 안 떠 전체 실행 · CI 에서 실패했다(따로 돌리면 통과)
+test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
+
 const REASON = "「광장시장」 — 가게 이름이 없는 자리 — 같은 지역 · 같은 종류에서 앞뒤 이동을 맞춰 보고 광장시장(으)로 채웠어요";
 
 async function open(page: Page, request: APIRequestContext, patch?: (view: Json) => void) {
