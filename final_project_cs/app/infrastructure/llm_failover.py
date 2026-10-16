@@ -503,6 +503,16 @@ def budget_gate(settings: Any) -> Callable[[], bool] | None:
     return _budget_provider(settings) if _budget_provider is not None else None
 
 
+def server_api_ready(settings: Any) -> bool:
+    """서버용 키의 준비 여부만 반환한다. 호출부에는 키 값을 넘기지 않는다."""
+    return bool((getattr(settings, "openai_api_key_server", "") or "").strip())
+
+
+def server_api_chat(settings: Any, *, model: str, timeout: float) -> OpenAIChat:
+    """명시적으로 선택된 유료 경로의 클라이언트도 같은 키 접근 경계를 쓴다."""
+    return OpenAIChat(api_key=settings.openai_api_key_server.strip(), model=model, timeout=timeout)
+
+
 def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[], bool] | None = None, api_client: Any = None,
                        clock: Callable[[], float] = time.monotonic, sleep: Callable[[float], None] = time.sleep,
                        extra_urls: tuple[str, ...] = (), api_first: bool = False) -> Any:

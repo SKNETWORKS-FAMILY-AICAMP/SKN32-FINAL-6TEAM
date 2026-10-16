@@ -259,9 +259,9 @@ def _build(settings: Any, route: str) -> Any:
             return wrap_from_settings(ollama(ssh), settings, extra_urls=(base,)) if failover else ollama(ssh)
         _warn_once("ssh:empty:chat", "model route 'ssh' chosen but ACOP_OLLAMA_SSH_BASE_URL is empty — using local Ollama")
     if route == "api":
-        if (getattr(settings, "openai_api_key_server", "") or "").strip():
-            from app.infrastructure.llm_failover import wrap_from_settings
+        from app.infrastructure.llm_failover import server_api_ready, wrap_from_settings
 
+        if server_api_ready(settings):
             return wrap_from_settings(ollama(base), settings, api_first=True)
         _warn_once("api:nokey", "model route 'api' chosen but ACOP_OPENAI_API_KEY_SERVER is empty — using local Ollama")
     chat = ollama(base)

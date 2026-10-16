@@ -182,10 +182,11 @@ def _route_labels(purpose: str, choices: tuple[str, ...]) -> tuple[tuple[str, st
 def _model_route_help(purpose: str) -> str:
     """모델 경로 설명 — 무엇이 바뀌고, 지금 이 기계에서 각 경로를 쓸 수 있는지(주소 · 키 값은 싣지 않는다)."""
     from app.core.settings import get_settings
+    from app.infrastructure.llm_failover import server_api_ready
 
     settings = get_settings()
     has = lambda name: bool((getattr(settings, name, "") or "").strip())                      # noqa: E731
-    ready = {"local": has("ollama_base_url"), "ssh": has("ollama_ssh_base_url"), "api": has("openai_api_key_server")}
+    ready = {"local": has("ollama_base_url"), "ssh": has("ollama_ssh_base_url"), "api": server_api_ready(settings)}
     shown = ("local", "ssh", "api") if purpose == "chat" else ("local", "ssh")
     state = " · ".join(f"{_ROUTE_NAME[key]} {'준비됨' if ready[key] else '설정 없음'}" for key in shown)
     failover = "켜짐" if getattr(settings, "llm_failover_enabled", False) else "꺼짐"
