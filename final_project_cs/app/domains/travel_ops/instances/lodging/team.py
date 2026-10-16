@@ -836,7 +836,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             return None, evidence
         name = str(found.keyword)
         # `[2026-10-16 최종 평가 뒤]` 문장에 검색어가 든 역 이름(「홍대입구역」)이 있으면 그 역으로 — 모델이 「홍대」로 줄였다
-        said = re.search(r"[가-힣A-Za-z0-9]*" + re.escape("".join(name.split())) + r"[가-힣0-9]*역", "".join((task.input_text or "").split()))
+        #   ☆10-16 17:14 새 문장 N8-11: 띄어쓰기를 없애고 앞 글자를 끝없이 받아 「11월13일부터…홍대입구역」 전체가 역 이름이 됐다 — 낱말 안에서만, 앞뒤 4자까지
+        said = re.search(r"(?<![가-힣A-Za-z0-9])[가-힣A-Za-z0-9]{0,4}" + re.escape("".join(name.split())) + r"[가-힣0-9]{0,4}역", task.input_text or "")
         if said and not name.endswith("역"):
             name = said.group(0)
         spot = self._read(task, "read.landmark", {"name": name}, seen)

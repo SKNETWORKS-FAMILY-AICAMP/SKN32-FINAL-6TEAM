@@ -145,6 +145,8 @@ def test_landmark_uses_the_station_named_in_the_sentence():
     reply = {**SEARCH, "keyword": "홍대", "check_in_text": "다음 달 6일부터"}
     _, _, tools = _run(reply, {"read.stay_search": STAYS}, text="홍대입구역 근처 다음 달 6일부터 3박 호텔 성인 2명")
     assert tools.calls[0] == ("read.landmark", {"name": "홍대입구역"})
+    _, _, tools = _run(reply, {"read.stay_search": STAYS}, text="11월 13일부터 2박 성인 둘 숙소 찾는데 홍대입구역에서 걸어서 십분 안쪽이면 돼")
+    assert tools.calls[0] == ("read.landmark", {"name": "홍대입구역"}), "앞 문장까지 역 이름에 붙이지 않는다(☆17:14 N8-11)"
 
 
 def test_google_hotels_are_a_separate_block_without_shown_names_and_rentals():
